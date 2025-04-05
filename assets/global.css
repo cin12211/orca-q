@@ -1,0 +1,7 @@
+html,
+body {
+  height: 100vh;
+  margin: 0; /* Remove default margins */
+  overflow: hidden; /* Disable scrolling */
+  border-radius: 0.5rem;
+}
