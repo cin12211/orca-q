@@ -16,7 +16,7 @@ mod window_ext;
 fn on_window_event(_win: &Window, _event: &WindowEvent) {
     if let WindowEvent::Resized(_) = _event {
         let main_window = _win.get_webview_window("main").unwrap();
-        main_window.position_traffic_lights(10.0, 18.0);
+        main_window.position_traffic_lights(9.0, 18.0);
     }
 }
 
@@ -27,7 +27,7 @@ pub fn run() {
             let main_window = app_handle.get_webview_window("main").unwrap();
             #[cfg(target_os = "macos")]
             {
-                main_window.position_traffic_lights(10.0, 18.0);
+                main_window.position_traffic_lights(9.0, 18.0);
             }
             Ok(())
         })

@@ -80,7 +80,7 @@ provideSidebarContext({
 </script>
 
 <template>
-  <TooltipProvider :delay-duration="10">
+  <TooltipProvider :delay-duration="0">
     <div
       data-slot="sidebar-wrapper"
       :style="{

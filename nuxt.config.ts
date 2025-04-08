@@ -19,7 +19,13 @@ export default defineNuxtConfig({
   compatibilityDate: "2024-11-01",
   devtools: { enabled: true },
   ssr: false,
-  modules: ["@nuxt/icon", "shadcn-nuxt"],
+  modules: [
+    "shadcn-nuxt",
+    "@nuxt/icon",
+    "@nuxtjs/color-mode",
+    "@pinia/nuxt", // required
+    "pinia-plugin-persistedstate/nuxt",
+  ],
   css: ["~/assets/css/tailwind.css"],
   vite: {
     plugins: [tailwindcss()],
