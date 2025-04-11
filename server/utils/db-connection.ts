@@ -28,6 +28,7 @@ export async function executeQuery(query: string) {
     if (!AppDataSource.isInitialized) {
       await AppDataSource.initialize();
     }
+
     const result = await AppDataSource.query(query);
     console.log("Query result:", result);
     return result;

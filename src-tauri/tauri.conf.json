@@ -1,6 +1,6 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "query-editor",
+  "productName": "HeraQ",
   "version": "0.1.0",
   "identifier": "com.query-editor.app",
   "build": {

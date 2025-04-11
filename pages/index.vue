@@ -5,6 +5,5 @@ import ManagementConnection from "~/components/modules/managment-connection/Mana
 
 <template>
   <Editor />
-
   <!-- <ManagementConnection open /> -->
 </template>

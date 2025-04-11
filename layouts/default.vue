@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { type SplitterPanel } from "reka-ui";
 import { provideDefaultLayoutContext } from "../shared/contexts/defaultLayoutContext";
+import { useMagicKeys } from "@vueuse/core";
 
 const primarySideBarPanelRef = useTemplateRef<
   InstanceType<typeof SplitterPanel>
@@ -17,13 +18,23 @@ const togglePanel = (
   panel.isCollapsed ? panel.expand() : panel.collapse();
 };
 
-useShortKey("meta_b", () => {
-  togglePanel(primarySideBarPanelRef.value);
+const { meta_b } = useMagicKeys();
+
+watch(meta_b, (v) => {
+  if (v) togglePanel(primarySideBarPanelRef.value);
 });
 
-useShortKey("meta_alt_b", () => {
-  togglePanel(secondarySideBarPanelRef.value);
-});
+// watch(meta_ctrl_b, (v) => {
+//   if (v) togglePanel(secondarySideBarPanelRef.value);
+// });
+
+// useShortKey("meta_b", () => {
+//   togglePanel(primarySideBarPanelRef.value);
+// });
+
+// useShortKey("meta_alt_b", () => {
+//   togglePanel(secondarySideBarPanelRef.value);
+// });
 
 const isPrimarySideBarPanelCollapsed = computed(
   () => !!primarySideBarPanelRef.value?.isCollapsed

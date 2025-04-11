@@ -1,37 +1,33 @@
 <script setup lang="ts">
-import {
-  Sidebar,
-  SidebarContent,
-  SidebarFooter,
-  SidebarGroup,
-  SidebarGroupContent,
-  SidebarHeader,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-  type SidebarProps,
-} from "@/components/ui/sidebar";
-import { h, ref } from "vue";
+import { NuxtLink } from "#components";
 
-const props = withDefaults(defineProps<SidebarProps>(), {
-  collapsible: "icon",
-});
+const route = useRoute();
+
+const isFileRoute = computed(() =>
+  route.path.startsWith("/activity/code-editor")
+);
+
+const isSchemaRoute = computed(() =>
+  route.path.startsWith("/activity/schemas")
+);
 
 // This is sample data
-const activity = [
+const activity = computed(() => [
   {
     id: "files",
     title: "Files",
-    icon: "hugeicons:file-01",
+    icon: "hugeicons:files-02",
+    path: "activity-code-editor",
+    isActive: isFileRoute.value,
   },
   {
     id: "schema",
     title: "Schemas",
     icon: "hugeicons:chart-relationship",
+    path: "activity-schemas",
+    isActive: isSchemaRoute.value,
   },
-];
-
-const activeActivity = ref(activity[0]);
+]);
 
 const user = {
   name: "shadcn",
@@ -47,17 +43,18 @@ const user = {
         <div class="flex flex-col items-center space-y-2">
           <Tooltip v-for="item in activity">
             <TooltipTrigger as-child>
-              <Button
-                size="icon"
-                :variant="item.id === activeActivity.id ? 'default' : 'ghost'"
-                @click="
-                  () => {
-                    activeActivity = item;
-                  }
-                "
+              <NuxtLink
+                :to="{
+                  name: item.path,
+                }"
               >
-                <Icon :name="item.icon" class="size-6!" />
-              </Button>
+                <Button
+                  size="icon"
+                  :variant="item.isActive ? 'default' : 'ghost'"
+                >
+                  <Icon :name="item.icon" class="size-6!" />
+                </Button>
+              </NuxtLink>
             </TooltipTrigger>
             <TooltipContent side="right">
               <p>{{ item.title }}</p>

@@ -25,6 +25,7 @@ export default defineNuxtConfig({
     "@nuxtjs/color-mode",
     "@pinia/nuxt", // required
     "pinia-plugin-persistedstate/nuxt",
+    "nuxt-typed-router",
   ],
   css: ["~/assets/css/tailwind.css"],
   vite: {
