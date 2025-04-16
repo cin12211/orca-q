@@ -1,34 +1,31 @@
 <script setup lang="ts">
 import { NuxtLink } from "#components";
+import {
+  ActivityBarItemType,
+  useActivityBarStore,
+} from "~/shared/stores/useActivityBarStore";
 
-const route = useRoute();
-
-const isFileRoute = computed(() =>
-  route.path.startsWith("/activity/code-editor")
-);
-
-const isSchemaRoute = computed(() =>
-  route.path.startsWith("/activity/schemas")
-);
+const activityStore = useActivityBarStore();
 
 // This is sample data
 const activity = computed(() => [
   {
-    id: "files",
+    id: ActivityBarItemType.Explorer,
     title: "Files",
     icon: "hugeicons:files-02",
     path: "activity-code-editor",
-    isActive: isFileRoute.value,
+    isActive: activityStore.activityActive === ActivityBarItemType.Explorer,
   },
   {
-    id: "schema",
+    id: ActivityBarItemType.Schemas,
     title: "Schemas",
     icon: "hugeicons:chart-relationship",
     path: "activity-schemas",
-    isActive: isSchemaRoute.value,
+    isActive: activityStore.activityActive === ActivityBarItemType.Schemas,
   },
 ]);
 
+// TODO: update
 const user = {
   name: "shadcn",
   email: "m@example.com",
@@ -51,6 +48,7 @@ const user = {
                 <Button
                   size="icon"
                   :variant="item.isActive ? 'default' : 'ghost'"
+                  @click="activityStore.setActivityActive(item.id)"
                 >
                   <Icon :name="item.icon" class="size-6!" />
                 </Button>

@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import DynamicTable from "~/components/secondary-side-bar/DynamicTable.vue";
-
 const overViewTables = await useFetch("/api/get-over-view-tables", {
   cache: "force-cache",
   keepalive: true,

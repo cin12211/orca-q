@@ -26,6 +26,7 @@ import {
   ChevronsRight,
   Search,
 } from "lucide-vue-next";
+import type { AcceptableValue } from "reka-ui";
 import { computed, ref, watch } from "vue";
 
 type SortDirection = "asc" | "desc" | null;
@@ -188,7 +189,7 @@ const formatCellValue = (value: any): string => {
 };
 
 // Handle page size change
-const handlePageSizeChange = (value: string) => {
+const handlePageSizeChange = (value: AcceptableValue) => {
   pageSize.value = Number(value);
   currentPage.value = 1; // Reset to first page when changing page size
 };

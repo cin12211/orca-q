@@ -38,4 +38,9 @@ export default defineNuxtConfig({
   imports: {
     autoImport: true,
   },
+  components: [
+    { path: "~/components/base", pathPrefix: false },
+
+    "~/components",
+  ],
 });

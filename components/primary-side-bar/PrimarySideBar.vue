@@ -1,13 +1,10 @@
 <script setup lang="ts">
-const route = useRoute();
+import {
+  ActivityBarItemType,
+  useActivityBarStore,
+} from "~/shared/stores/useActivityBarStore";
 
-const isFileRoute = computed(() =>
-  route.path.startsWith("/activity/code-editor")
-);
-
-const isSchemaRoute = computed(() =>
-  route.path.startsWith("/activity/schemas")
-);
+const activityStore = useActivityBarStore();
 </script>
 
 <template>
@@ -20,8 +17,20 @@ const isSchemaRoute = computed(() =>
       <ModulesManagementSchemas v-if="isSchemaRoute" />
     </KeepAlive> -->
 
-    <ModulesManagementExplorer :class="[isFileRoute ? '' : 'hidden']" />
+    <ModulesManagementExplorer
+      :class="[
+        activityStore.activityActive === ActivityBarItemType.Explorer
+          ? ''
+          : 'hidden',
+      ]"
+    />
 
-    <ModulesManagementSchemas :class="[isSchemaRoute ? '' : 'hidden']" />
+    <ModulesManagementSchemas
+      :class="[
+        activityStore.activityActive === ActivityBarItemType.Schemas
+          ? ''
+          : 'hidden',
+      ]"
+    />
   </div>
 </template>

@@ -1,0 +1,5 @@
+.line-gutter-statement-line {
+  width: 2px;
+  height: 100%;
+  background-color: var(--color-amber-400);
+}

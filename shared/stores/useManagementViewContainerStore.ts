@@ -17,6 +17,8 @@ export enum TabViewType {
 
   ViewOverview = "ViewOverview",
   ViewDetail = "ViewDetail",
+
+  CodeQuery = "CodeQuery",
 }
 
 type TabView = {

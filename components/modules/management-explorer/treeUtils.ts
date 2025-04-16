@@ -9,6 +9,7 @@ export enum ETreeFileSystemStatus {
 }
 
 export interface TreeFileSystemItem {
+  id: string;
   title: string;
   icon: string;
   closeIcon?: string;
@@ -112,6 +113,7 @@ export const tree = {
 
     const defaultFolder: TreeFileSystemItem = {
       title,
+      id: title,
       icon: "lucide:folder-open",
       closeIcon: "lucide:folder",
       children: [],
@@ -121,6 +123,7 @@ export const tree = {
 
     const defaultFile = {
       title,
+      id: title,
       icon: "lucide:file",
       paths: [...(paths || []), title],
       status: ETreeFileSystemStatus.edit,

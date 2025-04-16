@@ -8,21 +8,16 @@ import type { RouteNameFromPath, RoutePathSchema } from "@typed-router/__paths";
 
 const expandedState = ref<string[]>(["Tables"]);
 
-const dataBaseNames = await useFetch("/api/get-database-names");
-const schemas = await useFetch("/api/get-schemas");
+// const dataBaseNames = await useFetch("/api/get-database-names");
+// const schemas = await useFetch("/api/get-schemas");
 const tables = await useFetch("/api/get-tables");
 const functions = await useFetch("/api/get-functions");
-const functionsOverView = await useFetch("/api/get-over-view-function");
-
-console.log("🚀 ~ functionsOverView:", functionsOverView.data?.value?.result);
 
 const mappedTables = tables.data.value?.result?.[0]?.metadata?.tables || [];
 const mappedViews = tables.data.value?.result?.[0]?.metadata?.views || [];
 
 const mappedFunctions =
   functions.data.value?.result?.[0]?.functions_metadata || [];
-
-const router = useRouter();
 
 const items = computed(() => [
   {
@@ -31,10 +26,11 @@ const items = computed(() => [
     closeIcon: "material-icon-theme:folder-functions",
     paths: ["Functions"],
     tabViewType: TabViewType.FunctionsOverview,
-
+    id: "Functions",
     children: [
       ...mappedFunctions.map((e) => ({
         title: e.function_name,
+        id: e.function_name,
         icon: "vscode-icons:file-type-haskell",
         paths: ["Functions", e.function_name],
         tabViewType: TabViewType.FunctionsDetail,
@@ -43,6 +39,7 @@ const items = computed(() => [
   },
   {
     title: "Tables",
+    id: "Tables",
     icon: "material-icon-theme:folder-database-open",
     closeIcon: "material-icon-theme:folder-database",
     paths: ["Tables"],
@@ -50,6 +47,7 @@ const items = computed(() => [
     children: [
       ...mappedTables.map((e) => ({
         title: e.table,
+        id: e.table,
         icon: "vscode-icons:file-type-sql",
         paths: ["Tables", e.table],
         tabViewType: TabViewType.TableDetail,
@@ -58,6 +56,7 @@ const items = computed(() => [
   },
   {
     title: "Views",
+    id: "Views",
     icon: "material-icon-theme:folder-database-open",
     closeIcon: "material-icon-theme:folder-database",
     paths: ["Views"],
@@ -65,6 +64,7 @@ const items = computed(() => [
     children: [
       ...mappedViews.map((e) => ({
         title: e.view_name,
+        id: e.view_name,
         icon: "vscode-icons:file-type-sql",
         paths: ["Vies", e.view_name],
         tabViewType: TabViewType.ViewDetail,
@@ -156,7 +156,7 @@ const tabsStore = useManagementViewContainerStore();
         }
       "
     >
-      <template #extra-actions="{ item }">
+      <!-- <template #extra-actions="{ item }">
         <div
           class="flex items-center"
           v-if="item.value.paths.includes('Tables')"
@@ -175,7 +175,7 @@ const tabsStore = useManagementViewContainerStore();
             />
           </Button>
         </div>
-      </template>
+      </template> -->
     </TreeFolder>
   </div>
 </template>
