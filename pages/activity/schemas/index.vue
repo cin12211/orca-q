@@ -1,8 +1,12 @@
-<template>
-  <div>
-    <!-- <h1>Schema</h1>
-    <NuxtLink to="/blog/my-first-post">Xem bài đầu tiên</NuxtLink> -->
+<script setup lang="ts">
+import DynamicTable from "~/components/secondary-side-bar/DynamicTable.vue";
+import { useManagementViewContainerStore } from "~/shared/stores/useManagementViewContainerStore";
 
-    <Editor />
-  </div>
+const { data } = await useFetch("/api/get-over-view-tables");
+
+const viewContainer = useManagementViewContainerStore();
+</script>
+
+<template>
+  {{ viewContainer.activeTab }}
 </template>

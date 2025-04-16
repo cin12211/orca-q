@@ -1,0 +1,86 @@
+<script setup lang="ts">
+import { EditorView, basicSetup } from "codemirror";
+import { sql, PostgreSQL, schemaCompletionSource } from "@codemirror/lang-sql";
+import { autocompletion } from "@codemirror/autocomplete";
+
+import sqlFormatter from "@sqltools/formatter";
+
+definePageMeta({
+  keepalive: true,
+});
+
+const route = useRoute(
+  "activity-schemas-quick-query-function-detail-functionId"
+);
+
+const code = ref("");
+
+await useFetch("/api/execute", {
+  method: "POST",
+  body: {
+    query: `SELECT pg_get_functiondef('${route.params.functionId}'::regproc) as def;`,
+  },
+  key: route.params.functionId,
+  onResponse: (response) => {
+    console.log("response.response._data?.result[0]");
+
+    code.value = response.response._data?.result?.[0]?.def;
+
+    // code.value = response.response._data?.result[0]?.pg_get_functiondef;
+
+    // code.value = sqlFormatter.format(
+    //   response.response._data?.result?.[0]?.def,
+    //   {
+    //     indent: "2",
+    //     language: "pl/sql",
+    //     reservedWordCase: "upper",
+    //   }
+    // );
+  },
+  cache: "force-cache",
+});
+
+// Reference to the DOM element for CodeMirror
+const editorRef = ref<HTMLElement | null>(null);
+let editorView: EditorView | null = null;
+
+// this will be load in by the server with this format
+const schema = {
+  users: ["id", "name", "age", "email", "created_at"],
+  orders: ["order_id", "user_id", "product", "amount", "order_date"],
+};
+
+// Initialize CodeMirror on mount
+onMounted(() => {
+  if (editorRef.value) {
+    editorView = new EditorView({
+      doc: code.value, // Initial content
+      extensions: [
+        basicSetup,
+        sql({
+          dialect: PostgreSQL,
+          upperCaseKeywords: true,
+          schema,
+        }),
+
+        EditorView.updateListener.of((update) => {
+          if (update.docChanged) {
+            code.value = update.state.doc.toString();
+          }
+        }),
+      ],
+      parent: editorRef.value,
+    });
+  }
+});
+
+onUnmounted(() => {
+  if (editorView) {
+    editorView.destroy();
+  }
+});
+</script>
+
+<template>
+  <div class="h-full [&>.cm-editor]:h-full" ref="editorRef"></div>
+</template>

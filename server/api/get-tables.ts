@@ -1,6 +1,80 @@
 import { executeQuery } from "~/server/utils/db-connection";
 
-export default defineEventHandler(async (event) => {
+interface ColumnMetadata {
+  name: string;
+  ordinal_position: number;
+  type: string;
+  character_maximum_length: number | null;
+  precision: { precision: number; scale: number } | null;
+  nullable: boolean;
+  default: string | null;
+  collation: string | null;
+  comment: string | null;
+}
+
+interface ForeignKeyMetadata {
+  foreign_key_name: string;
+  column: string;
+  reference_schema: string;
+  reference_table: string;
+  reference_column: string;
+  fk_def: string;
+}
+
+interface PrimaryKeyMetadata {
+  column: string;
+  pk_def: string;
+}
+
+interface IndexMetadata {
+  index_name: string;
+  column: string;
+  index_type: string;
+  index_size: number;
+  is_unique: boolean;
+  cardinality: number;
+  column_position: number;
+  direction: "ASC" | "DESC";
+}
+
+interface TableMetadata {
+  schema: string;
+  table: string;
+  rows: number;
+  type: string;
+  comment: string | null;
+  columns: ColumnMetadata[];
+  foreign_keys: ForeignKeyMetadata[];
+  primary_keys: PrimaryKeyMetadata[];
+  indexes: IndexMetadata[];
+}
+
+interface ViewMetadata {
+  schema: string;
+  view_name: string;
+  view_definition: string; // Base64-encoded
+}
+
+interface ConfigMetadata {
+  name: string;
+  value: string;
+}
+
+interface DatabaseMetadata {
+  tables: TableMetadata[];
+  views: ViewMetadata[];
+  databaseName: string;
+  version: string;
+  config: ConfigMetadata[];
+}
+
+interface QueryResult {
+  result: {
+    metadata: DatabaseMetadata;
+  }[];
+}
+
+export default defineEventHandler(async (event): Promise<QueryResult> => {
   //   const body: { query: string } = await readBody(event);
 
   const result = await executeQuery(`
@@ -250,18 +324,19 @@ export default defineEventHandler(async (event) => {
                 COALESCE(tbls.tbls_metadata, '[]'),
                 'views',
                 COALESCE(views.views_metadata, '[]'),
-                'database_name',
+                'databaseName',
                 current_database(),
                 'version',
                 version(),
                 'config',
                 COALESCE(config.config_metadata, '[]')
-            ) AS metadata_json_to_import
+            ) AS metadata
         FROM
             tbls,
             views,
             config;
     `);
+
   return {
     result,
   };

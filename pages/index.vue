@@ -4,6 +4,6 @@ import ManagementConnection from "~/components/modules/managment-connection/Mana
 </script>
 
 <template>
-  <Editor />
+  <!-- <Editor /> -->
   <!-- <ManagementConnection open /> -->
 </template>

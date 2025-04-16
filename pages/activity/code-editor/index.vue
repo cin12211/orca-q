@@ -5,6 +5,6 @@
   </div> -->
 
   <div class="w-full h-full">
-    <Editor />
+    <!-- <Editor /> -->
   </div>
 </template>

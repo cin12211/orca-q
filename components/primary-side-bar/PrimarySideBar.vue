@@ -11,13 +11,17 @@ const isSchemaRoute = computed(() =>
 </script>
 
 <template>
-  <div class="w-full h-full overflow-y-auto">
-    <KeepAlive>
+  <div class="w-full h-full overflow-y-auto bg-sidebar">
+    <!-- <KeepAlive>
       <ModulesManagementExplorer v-if="isFileRoute" />
     </KeepAlive>
 
     <KeepAlive>
       <ModulesManagementSchemas v-if="isSchemaRoute" />
-    </KeepAlive>
+    </KeepAlive> -->
+
+    <ModulesManagementExplorer :class="[isFileRoute ? '' : 'hidden']" />
+
+    <ModulesManagementSchemas :class="[isSchemaRoute ? '' : 'hidden']" />
   </div>
 </template>

@@ -34,6 +34,7 @@ type SortDirection = "asc" | "desc" | null;
 const props = defineProps<{
   data?: Record<string, any>[];
   caption?: string;
+  defaultPageSize?: number;
 }>();
 
 // Make tableData reactive to prop changes using computed
@@ -54,7 +55,7 @@ const sortConfig = ref<{
 
 // Pagination state
 const currentPage = ref(1);
-const pageSize = ref(10);
+const pageSize = ref(props?.defaultPageSize || 10);
 
 // Reset pagination and sorting when data changes
 watch(
@@ -122,8 +123,8 @@ const sortedData = computed(() => {
         ? 1
         : -1
       : aValue < bValue
-      ? 1
-      : -1;
+        ? 1
+        : -1;
   });
 });
 
@@ -199,13 +200,13 @@ const clearSearch = () => {
 </script>
 
 <template>
-  <div class="p-2">
+  <div class="p-2 h-full">
     <div v-if="tableData.length === 0" class="space-y-4">
       <div class="p-8 text-center border rounded-lg">
         <p class="text-muted-foreground">No data available</p>
       </div>
     </div>
-    <div v-else class="space-y-2">
+    <div v-else class="space-y-2 h-full flex flex-col">
       <!-- Search Input -->
 
       <div class="flex items-center gap-2">
@@ -233,21 +234,21 @@ const clearSearch = () => {
       <!-- Search Results Summary -->
       <!-- <div v-if="searchQuery" class="text-sm">
       Found {{ filteredData.length }} results for "{{ searchQuery }}"
-    </div> -->
-      <div class="border rounded-md">
+       </div> -->
+      <div class="border rounded-md overflow-y-auto">
         <Table>
           <TableHeader>
             <TableRow>
               <TableHead
                 v-for="column in columnNames"
                 :key="column"
-                class="h-8"
+                class="h-8 px-0"
               >
                 <Button
                   variant="ghost"
                   size="sm"
                   @click="requestSort(column)"
-                  class="flex items-center font-medium"
+                  class="flex items-center px-1! font-medium"
                 >
                   {{ column }}
                   <component :is="getSortIcon(column)" class="ml-2 h-4 w-4" />
@@ -304,7 +305,7 @@ const clearSearch = () => {
               </SelectTrigger>
               <SelectContent side="top">
                 <SelectItem
-                  v-for="size in [5, 10, 20, 50]"
+                  v-for="size in [5, 10, 20, 30, 50]"
                   :key="size"
                   :value="String(size)"
                 >

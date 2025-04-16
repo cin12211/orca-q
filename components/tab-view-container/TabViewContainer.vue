@@ -7,7 +7,7 @@ import {
   X,
 } from "lucide-vue-next";
 import { useDefaultLayout } from "~/shared/contexts/defaultLayoutContext";
-import Separator from "../ui/separator/Separator.vue";
+import { useManagementViewContainerStore } from "~/shared/stores/useManagementViewContainerStore";
 
 const {
   isPrimarySideBarPanelCollapsed,
@@ -17,6 +17,8 @@ const {
 } = useDefaultLayout();
 
 const isAppVersion = computed(() => "__TAURI_INTERNALS__" in window);
+
+const tabsStore = useManagementViewContainerStore();
 </script>
 
 <template>
@@ -41,23 +43,30 @@ const isAppVersion = computed(() => "__TAURI_INTERNALS__" in window);
         class="w-full flex items-center h-full space-x-2 overflow-x-auto custom-x-scrollbar"
         data-tauri-drag-region
       >
-        <div v-for="_ in [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]">
+        <div v-for="tab in tabsStore.tabs">
           <Button
-            variant="ghost"
+            variant="secondary"
             size="sm"
-            @click="togglePrimarySideBarPanel()"
-            class="h-7! max-w-44 justify-start! font-normal p-2! hover:[&>div]:opacity-100"
+            :class="[
+              'h-7! max-w-44 justify-start! hover:bg-background font-normal p-2!  hover:[&>div]:opacity-100 ',
+              tab.id === tabsStore.activeTab?.id
+                ? 'bg-background border'
+                : 'border-transparent border',
+            ]"
+            @click="tabsStore.selectTab(tab.id)"
+            :id="tab.id"
           >
-            <Icon name="vscode-icons:file-type-sql" class="min-w-4 size-4" />
-            <div class="truncate">file name.tsx</div>
-            <div class="hover:bg-card p-0.5 rounded-full opacity-0">
+            <Icon :name="tab.icon" class="min-w-4 size-4" />
+            <div class="truncate">{{ tab.name }}</div>
+            <div
+              class="hover:bg-card p-0.5 rounded-full opacity-0"
+              @click="() => tabsStore.closeTab(tab.id)"
+            >
               <X class="size-3 stroke-[2.5]!" />
             </div>
           </Button>
 
-          <div class="border-l w-0 h-6 inline mx-1"></div>
-
-          <!-- <Separator orientation="vertical" class="h-6!" /> -->
+          <div class="border-l w-0 h-6 inline ml-2"></div>
         </div>
       </div>
 

@@ -1,6 +1,24 @@
 import { executeQuery } from "~/server/utils/db-connection";
 
-export default defineEventHandler(async (event) => {
+interface FunctionMetadata {
+  schema: string;
+  function_name: string;
+  return_type: string;
+  argument_types: string[];
+  language: string;
+  is_strict: boolean;
+  returns_set: boolean;
+  definition: string;
+  description: string | null;
+}
+
+interface QueryResult {
+  result: {
+    functions_metadata: FunctionMetadata[];
+  }[];
+}
+
+export default defineEventHandler(async (event): Promise<QueryResult> => {
   //   const body: { query: string } = await readBody(event);
   const result = await executeQuery(`
         -- select nspname

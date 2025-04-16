@@ -24,10 +24,6 @@ watch(meta_b, (v) => {
   if (v) togglePanel(primarySideBarPanelRef.value);
 });
 
-// watch(meta_ctrl_b, (v) => {
-//   if (v) togglePanel(secondarySideBarPanelRef.value);
-// });
-
 // useShortKey("meta_b", () => {
 //   togglePanel(primarySideBarPanelRef.value);
 // });
@@ -59,7 +55,7 @@ provideDefaultLayoutContext({
     id="default-layout-group-1"
   >
     <div class="h-screen flex flex-col flex-1 max-h-screen overflow-y-auto">
-      <EditorViewContainer />
+      <TabViewContainer />
       <div class="h-full flex overflow-y-auto">
         <ActivityBar />
 

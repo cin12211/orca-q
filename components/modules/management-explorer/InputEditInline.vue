@@ -20,15 +20,19 @@ const props = defineProps<{
   validateName: (name: string) => boolean;
 }>();
 
-const inputValue = ref("");
+const inputValue = ref<string>("");
 const isExitFileNameRef = ref(false);
 
 const onHandleRename = (newName: string, isBlur: boolean) => {
+  console.log("newName", newName);
+
   if (!newName) {
     props.onCancelCreate();
   }
 
   const isExistedFileName = props.validateName(newName);
+
+  console.log("isExistedFileName", isExistedFileName);
 
   if (isExistedFileName) {
     isBlur && props.onCancelCreate();
@@ -45,12 +49,19 @@ const handleKeydown = async (e: FocusEvent) => {
 };
 
 const onEnter = (e: FocusEvent) => {
+  console.log("🚀 ~ onEnter ~ e:", e);
   const name = (e.target as HTMLInputElement).value;
   onHandleRename(name, false);
 };
 
 const onblur = (e: FocusEvent) => {
+  console.log("🚀 ~ onblur ~ e:", e);
+
   const name = (e.target as HTMLInputElement).value;
   onHandleRename(name, true);
 };
+
+defineExpose({
+  inputValue,
+});
 </script>

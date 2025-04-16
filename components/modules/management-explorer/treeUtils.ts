@@ -1,6 +1,7 @@
 // import type { Instruction } from "@atlaskit/pragmatic-drag-and-drop-hitbox/tree-item";
 
 import type { FlattenedItem } from "reka-ui";
+import { uuidv4 } from "~/lib/utils";
 
 export enum ETreeFileSystemStatus {
   edit = "edit",
@@ -10,8 +11,10 @@ export enum ETreeFileSystemStatus {
 export interface TreeFileSystemItem {
   title: string;
   icon: string;
+  closeIcon?: string;
   children?: TreeFileSystemItem[]; // Recursive, optional array of FileSystemItem
   status?: ETreeFileSystemStatus; // Optional, only present in some items
+  paths: string[];
 }
 
 export type TreeFileSystem = TreeFileSystemItem[];
@@ -39,60 +42,140 @@ export type TreeAction =
     }
   | { type: "modal-move"; itemId: string; targetId: string; index: number };
 
+export const getTreeItemPath = (paths: string[]): string => {
+  return paths.join("/");
+};
+
 export const tree = {
-  remove(data: TreeFileSystemItem[], id: string): TreeFileSystemItem[] {
+  removeItemByPaths(
+    data: TreeFileSystem,
+    targetPaths: string[]
+  ): TreeFileSystem {
     return data
-      .filter((item) => item.title !== id)
+      .filter(
+        (item) => getTreeItemPath(item.paths) !== getTreeItemPath(targetPaths)
+      )
       .map((item) => {
-        if (tree.hasChildren(item)) {
+        if (item.children) {
           return {
             ...item,
-            children: tree.remove(item.children ?? [], id),
+            children: tree.removeItemByPaths(item.children, targetPaths),
           };
         }
         return item;
       });
   },
 
-  find(
-    data: TreeFileSystemItem[],
-    itemId: string
-  ): TreeFileSystemItem | undefined {
-    for (const item of data) {
-      if (item.title === itemId) return item;
+  updateByPath({
+    paths,
+    items,
+    newItem,
+  }: {
+    items: TreeFileSystemItem[];
+    paths: string[];
+    newItem: (item: TreeFileSystemItem) => TreeFileSystemItem;
+  }): TreeFileSystemItem[] {
+    const [currentPath, ...remainingPaths] = paths;
 
-      if (tree.hasChildren(item)) {
-        const result = tree.find(item.children ?? [], itemId);
-        if (result) return result;
+    return items.map((item) => {
+      if (item.title === currentPath) {
+        if (remainingPaths.length === 0) {
+          return newItem(item);
+        }
+
+        if (item.children) {
+          return {
+            ...item,
+            children: tree.updateByPath({
+              paths: remainingPaths,
+              items: item.children,
+              newItem,
+            }),
+          };
+        }
       }
-    }
+
+      return item;
+    });
   },
 
-  rename({
+  onAddNewItemByPath({
     data,
-    newName,
+    paths,
+    isFolder,
+  }: {
+    data: TreeFileSystemItem[];
+    paths?: string[];
+    isFolder: boolean;
+  }): TreeFileSystemItem[] {
+    const title = uuidv4();
+
+    const defaultFolder: TreeFileSystemItem = {
+      title,
+      icon: "lucide:folder-open",
+      closeIcon: "lucide:folder",
+      children: [],
+      paths: [...(paths || []), title],
+      status: ETreeFileSystemStatus.edit,
+    };
+
+    const defaultFile = {
+      title,
+      icon: "lucide:file",
+      paths: [...(paths || []), title],
+      status: ETreeFileSystemStatus.edit,
+    };
+
+    const item = isFolder ? defaultFolder : defaultFile;
+
+    if (!paths) {
+      return [item, ...data];
+    }
+
+    const newTree = tree.updateByPath({
+      items: data,
+      paths,
+      newItem: (parent) => {
+        // add new item in to children
+        const children = [
+          {
+            ...item,
+            paths: [...parent.paths, item.title],
+          },
+          ...(parent.children || []),
+        ];
+
+        return {
+          ...parent,
+          children,
+        };
+      },
+    });
+
+    return newTree;
+  },
+
+  setAllowEditFileName({
+    data,
     itemId,
   }: {
     data: TreeFileSystemItem[];
-    newName: string;
     itemId: string;
   }): TreeFileSystemItem[] {
     return data.map((item) => {
       if (item.title === itemId && item.status === ETreeFileSystemStatus.edit) {
         return {
           ...item,
-          title: newName,
-          status: undefined,
+          status: ETreeFileSystemStatus.edit,
         };
       }
 
       if (tree.hasChildren(item)) {
         return {
           ...item,
-          children: tree.rename({
+          children: tree.setAllowEditFileName({
             data: item.children ?? [],
             itemId,
-            newName,
           }),
         };
       }
@@ -101,29 +184,175 @@ export const tree = {
     });
   },
 
-  getPathToItem({
-    current,
-    targetId,
-    parentIds = [],
+  renameByPath({
+    items,
+    newName,
+    paths,
   }: {
-    current: TreeFileSystemItem[];
-    targetId: string;
-    parentIds?: string[];
-  }): string[] | undefined {
-    for (const item of current) {
-      if (item.title === targetId) return parentIds;
+    items: TreeFileSystemItem[];
+    newName: string;
+    paths: string[];
+  }): TreeFileSystemItem[] {
+    let newTree = tree.updateByPath({
+      items: items,
+      paths: paths,
+      newItem: (item) => {
+        const newItemPaths = [...item.paths.slice(0, -1), newName];
 
-      const nested = tree.getPathToItem({
-        current: item.children ?? [],
-        targetId,
-        parentIds: [...parentIds, item.title],
-      });
-      if (nested) return nested;
+        const updateChildPaths = (
+          children: TreeFileSystemItem[],
+          parentPaths: string[]
+        ): TreeFileSystemItem[] => {
+          return children.map((child) => {
+            const childPaths = [...parentPaths, child.title];
+            return {
+              ...child,
+              paths: childPaths,
+              children: child.children
+                ? updateChildPaths(child.children, childPaths)
+                : undefined,
+            };
+          });
+        };
+
+        // Update children with new paths
+        const children = item.children
+          ? updateChildPaths(item.children, newItemPaths)
+          : undefined;
+
+        return {
+          ...item,
+          title: newName,
+          paths: newItemPaths,
+          status: undefined,
+          children,
+        };
+      },
+    });
+
+    newTree = tree.sortChildrenByPath({
+      items: newTree,
+      paths: [...paths.slice(0, -1)],
+    });
+
+    return newTree;
+  },
+
+  sortChildrenByPath({
+    items,
+    paths,
+  }: {
+    items: TreeFileSystemItem[];
+    paths?: string[];
+  }): TreeFileSystemItem[] {
+    if (!paths || paths.length === 0) {
+      const sorted = [...items].sort((a, b) => a.title.localeCompare(b.title));
+
+      return sorted;
     }
+
+    return tree.updateByPath({
+      items,
+      paths,
+      newItem: (item) => {
+        // If no children, return item unchanged
+        if (!item.children || item.children.length === 0) {
+          return item;
+        }
+
+        // Sort children by title in ascending order
+        const sortedChildren = [...item.children].sort((a, b) =>
+          a.title.localeCompare(b.title)
+        );
+
+        return {
+          ...item,
+          children: sortedChildren,
+        };
+      },
+    });
   },
   hasChildren(item: TreeFileSystemItem): boolean {
     return (item.children ?? []).length > 0;
   },
+
+  filterByTitle({
+    data,
+    title,
+  }: {
+    data: TreeFileSystemItem[];
+    title: string;
+  }): TreeFileSystemItem[] {
+    const lowerCaseTitle = title.toLowerCase();
+
+    return data.reduce<TreeFileSystemItem[]>((result, item) => {
+      const matchesTitle = item.title.toLowerCase().includes(lowerCaseTitle);
+      const matchingChildren = item.children
+        ? tree.filterByTitle({ data: item.children, title })
+        : [];
+
+      if (matchesTitle || matchingChildren.length > 0) {
+        result.push({
+          ...item,
+          children:
+            matchingChildren.length > 0 ? matchingChildren : item.children,
+        });
+      }
+
+      return result;
+    }, []);
+  },
+
+  // getPathToItem({
+  //   current,
+  //   targetId,
+  //   parentIds = [],
+  // }: {
+  //   current: TreeFileSystemItem[];
+  //   targetId: string;
+  //   parentIds?: string[];
+  // }): string[] | undefined {
+  //   for (const item of current) {
+  //     if (item.title === targetId) return parentIds;
+
+  //     const nested = tree.getPathToItem({
+  //       current: item.children ?? [],
+  //       targetId,
+  //       parentIds: [...parentIds, item.title],
+  //     });
+  //     if (nested) return nested;
+  //   }
+  // },
+
+  // find(
+  //   data: TreeFileSystemItem[],
+  //   itemId: string
+  // ): TreeFileSystemItem | undefined {
+  //   for (const item of data) {
+  //     if (item.title === itemId) return item;
+
+  //     if (tree.hasChildren(item)) {
+  //       const result = tree.find(item.children ?? [], itemId);
+  //       if (result) return result;
+  //     }
+  //   }
+  // },
+
+  // findByPaths(
+  //   items: TreeFileSystemItem[],
+  //   paths: string[]
+  // ): TreeFileSystemItem | undefined {
+  //   const [currentPath, ...remainingPaths] = paths;
+  //   const treeItem = items.find((item) => item.title === currentPath);
+
+  //   if (remainingPaths.length === 0) {
+  //     return treeItem;
+  //   } else {
+  //     if (treeItem && tree.hasChildren(treeItem)) {
+  //       return tree.findByPaths(treeItem.children ?? [], remainingPaths);
+  //     }
+  //   }
+  // },
 
   //   insertBefore(
   //     data: TreeItem[],
@@ -291,4 +520,45 @@ export const tree = {
 //   }
 
 //   return data;
+// }
+
+// export function mapTreeWithPath(items: TreeFileSystemItem[], parentPath = "") {
+//   return items.map((item) => {
+//     // Construct current path
+//     const currentPath = parentPath ? `${parentPath}/${item.title}` : item.title;
+
+//     // Create new item with path property
+//     const newItem = {
+//       ...item,
+//       path: currentPath,
+//     };
+
+//     // If item has children, recursively map them
+//     if (item.children) {
+//       newItem.children = mapTreeWithPath(item.children, currentPath);
+//     }
+
+//     return newItem;
+//   });
+// }
+
+// remove
+// function mapTreeWithPath(items, parentPath = "") {
+//   return items.map((item) => {
+//     // Construct current path
+//     const currentPath = parentPath ? `${parentPath}/${item.title}` : item.title;
+
+//     // Create new item with path property
+//     const newItem = {
+//       ...item,
+//       path: currentPath,
+//     };
+
+//     // If item has children, recursively map them
+//     if (item.children) {
+//       newItem.children = mapTreeWithPath(item.children, currentPath);
+//     }
+
+//     return newItem;
+//   });
 // }
