@@ -1,9 +1,9 @@
-import { ref } from "vue";
-import { defineStore } from "pinia";
-import type { TreeFileSystem } from "../../components/modules/management-explorer/treeUtils";
+import { defineStore } from 'pinia';
+import { ref } from 'vue';
+import type { TreeFileSystem } from '../../components/modules/management-explorer/treeUtils';
 
 export const useManagementExplorerStore = defineStore(
-  "management-explorer",
+  'management-explorer',
   () => {
     const explorerFiles = ref<TreeFileSystem>([]);
     const expandedState = ref<string[]>([]);

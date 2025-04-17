@@ -1,12 +1,12 @@
 <script setup lang="ts">
-import { Icon } from "@iconify/vue";
-import { TreeItem, TreeRoot } from "reka-ui";
+import { Icon } from '@iconify/vue';
+import { TreeItem, TreeRoot } from 'reka-ui';
 import {
   ETreeFileSystemStatus,
   getTreeItemPath,
   type FlattenedTreeFileSystemItem,
   type TreeFileSystem,
-} from "./treeUtils";
+} from './treeUtils';
 
 defineProps<{
   explorerFiles: TreeFileSystem;
@@ -19,22 +19,22 @@ defineProps<{
 
 // Define emits for updating explorerFiles
 const emits = defineEmits<{
-  (e: "update:explorerFiles", value: TreeFileSystem): void;
-  (e: "update:expandedState", value: string[]): void;
+  (e: 'update:explorerFiles', value: TreeFileSystem): void;
+  (e: 'update:expandedState', value: string[]): void;
 }>();
 
 const onUpdateExpanded = (value: string[]) => {
-  emits("update:expandedState", value);
+  emits('update:expandedState', value);
 };
 
-const defaultCloseIcon = "lucide:folder";
+const defaultCloseIcon = 'lucide:folder';
 </script>
 
 <template>
   <TreeRoot
     class="list-none h-full overflow-y-auto select-none px-1 text-sm font-medium"
     :items="explorerFiles"
-    :get-key="(item) => getTreeItemPath(item.paths || [])"
+    :get-key="item => getTreeItemPath(item.paths || [])"
     :expanded="expandedState"
     v-slot="{ flattenItems }"
     v-on:update:expanded="onUpdateExpanded"

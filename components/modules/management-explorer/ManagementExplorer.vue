@@ -1,14 +1,14 @@
 <script setup lang="ts">
-import { Icon } from "@iconify/vue";
-import { useManagementExplorerStore } from "../../../shared/stores/managementExplorerStore";
-import TreeFolder from "./TreeFolder.vue";
+import { Icon } from '@iconify/vue';
+import { useManagementExplorerStore } from '../../../shared/stores/managementExplorerStore';
+import InputEditInline from './InputEditInline.vue';
+import TreeFolder from './TreeFolder.vue';
 import {
   ETreeFileSystemStatus,
   getTreeItemPath,
   tree,
   type FlattenedTreeFileSystemItem,
-} from "./treeUtils";
-import InputEditInline from "./InputEditInline.vue";
+} from './treeUtils';
 
 const explorerStore = useManagementExplorerStore();
 const { expandedState, explorerFiles } = toRefs(explorerStore);
@@ -17,7 +17,7 @@ const rightClickSelectedItem = ref<FlattenedTreeFileSystemItem | null>(null);
 
 const editFileNameInlineRef = useTemplateRef<InstanceType<
   typeof InputEditInline
-> | null>("editFileNameInline");
+> | null>('editFileNameInline');
 
 const onUpdateExpandedState = (paths: string[], oldPaths?: string[]) => {
   const newStringPath = getTreeItemPath(paths);
@@ -27,7 +27,7 @@ const onUpdateExpandedState = (paths: string[], oldPaths?: string[]) => {
   if (oldPaths) {
     const oldStringPath = getTreeItemPath(oldPaths);
 
-    expandedState.value = [...uniquePaths].map((e) => {
+    expandedState.value = [...uniquePaths].map(e => {
       if (e.startsWith(oldStringPath)) {
         return e.replace(oldStringPath, newStringPath);
       }
@@ -101,7 +101,7 @@ const onSetAllowEditFileName = async (
   explorerFiles.value = tree.updateByPath({
     items: explorerFiles.value,
     paths: fileInfo.value.paths,
-    newItem: (item) => {
+    newItem: item => {
       return {
         ...item,
         status: ETreeFileSystemStatus.edit,
@@ -191,7 +191,7 @@ const onDelayedCallback = (callBack: () => void) => {
               <InputEditInline
                 ref="editFileNameInline"
                 @rename="
-                  (name) => {
+                  name => {
                     onReNameFile(item as FlattenedTreeFileSystemItem, name);
                   }
                 "
@@ -201,13 +201,13 @@ const onDelayedCallback = (callBack: () => void) => {
                   }
                 "
                 :validate-name="
-                  (name) => {
+                  name => {
                     const flattenedFileNames = (
                       (
                         (item as FlattenedTreeFileSystemItem).parentItem
                           ?.children || explorerFiles
-                      )?.map((e) => e.title) ?? []
-                    ).filter((e) => e !== item.value.title);
+                      )?.map(e => e.title) ?? []
+                    ).filter(e => e !== item.value.title);
 
                     return flattenedFileNames.includes(name);
                   }

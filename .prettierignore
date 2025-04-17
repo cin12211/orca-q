@@ -1,0 +1,11 @@
+node_modules
+dist
+.output
+coverage
+.nuxt
+.vscode
+*.min.*
+src-tauri
+tailwind.config.ts
+bun.lock
+.env

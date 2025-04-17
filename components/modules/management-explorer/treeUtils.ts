@@ -1,11 +1,10 @@
 // import type { Instruction } from "@atlaskit/pragmatic-drag-and-drop-hitbox/tree-item";
-
-import type { FlattenedItem } from "reka-ui";
-import { uuidv4 } from "~/lib/utils";
+import type { FlattenedItem } from 'reka-ui';
+import { uuidv4 } from '~/lib/utils';
 
 export enum ETreeFileSystemStatus {
-  edit = "edit",
-  onlyView = "onlyView",
+  edit = 'edit',
+  onlyView = 'onlyView',
 }
 
 export interface TreeFileSystemItem {
@@ -30,21 +29,21 @@ export type TreeAction =
       targetId: string;
     }
   | {
-      type: "toggle";
+      type: 'toggle';
       itemId: string;
     }
   | {
-      type: "expand";
+      type: 'expand';
       itemId: string;
     }
   | {
-      type: "collapse";
+      type: 'collapse';
       itemId: string;
     }
-  | { type: "modal-move"; itemId: string; targetId: string; index: number };
+  | { type: 'modal-move'; itemId: string; targetId: string; index: number };
 
 export const getTreeItemPath = (paths: string[]): string => {
-  return paths.join("/");
+  return paths.join('/');
 };
 
 export const tree = {
@@ -54,9 +53,9 @@ export const tree = {
   ): TreeFileSystem {
     return data
       .filter(
-        (item) => getTreeItemPath(item.paths) !== getTreeItemPath(targetPaths)
+        item => getTreeItemPath(item.paths) !== getTreeItemPath(targetPaths)
       )
-      .map((item) => {
+      .map(item => {
         if (item.children) {
           return {
             ...item,
@@ -78,7 +77,7 @@ export const tree = {
   }): TreeFileSystemItem[] {
     const [currentPath, ...remainingPaths] = paths;
 
-    return items.map((item) => {
+    return items.map(item => {
       if (item.title === currentPath) {
         if (remainingPaths.length === 0) {
           return newItem(item);
@@ -114,8 +113,8 @@ export const tree = {
     const defaultFolder: TreeFileSystemItem = {
       title,
       id: title,
-      icon: "lucide:folder-open",
-      closeIcon: "lucide:folder",
+      icon: 'lucide:folder-open',
+      closeIcon: 'lucide:folder',
       children: [],
       paths: [...(paths || []), title],
       status: ETreeFileSystemStatus.edit,
@@ -124,7 +123,7 @@ export const tree = {
     const defaultFile = {
       title,
       id: title,
-      icon: "lucide:file",
+      icon: 'lucide:file',
       paths: [...(paths || []), title],
       status: ETreeFileSystemStatus.edit,
     };
@@ -138,7 +137,7 @@ export const tree = {
     const newTree = tree.updateByPath({
       items: data,
       paths,
-      newItem: (parent) => {
+      newItem: parent => {
         // add new item in to children
         const children = [
           {
@@ -165,7 +164,7 @@ export const tree = {
     data: TreeFileSystemItem[];
     itemId: string;
   }): TreeFileSystemItem[] {
-    return data.map((item) => {
+    return data.map(item => {
       if (item.title === itemId && item.status === ETreeFileSystemStatus.edit) {
         return {
           ...item,
@@ -199,14 +198,14 @@ export const tree = {
     let newTree = tree.updateByPath({
       items: items,
       paths: paths,
-      newItem: (item) => {
+      newItem: item => {
         const newItemPaths = [...item.paths.slice(0, -1), newName];
 
         const updateChildPaths = (
           children: TreeFileSystemItem[],
           parentPaths: string[]
         ): TreeFileSystemItem[] => {
-          return children.map((child) => {
+          return children.map(child => {
             const childPaths = [...parentPaths, child.title];
             return {
               ...child,
@@ -257,7 +256,7 @@ export const tree = {
     return tree.updateByPath({
       items,
       paths,
-      newItem: (item) => {
+      newItem: item => {
         // If no children, return item unchanged
         if (!item.children || item.children.length === 0) {
           return item;

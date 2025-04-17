@@ -1,4 +1,4 @@
-import { healthCheckConnection } from "~/server/utils/db-connection";
+import { healthCheckConnection } from '~/server/utils/db-connection';
 
 export default defineEventHandler(
   async (event): Promise<{ isConnectedSuccess: boolean }> => {

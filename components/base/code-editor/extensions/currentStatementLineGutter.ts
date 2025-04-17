@@ -1,5 +1,5 @@
-import { GutterMarker, gutter } from "@codemirror/view";
-import { getCurrentStatement } from "../utils";
+import { GutterMarker, gutter } from '@codemirror/view';
+import { getCurrentStatement } from '../utils';
 
 export interface SyntaxTreeNodeData {
   type: string;
@@ -10,8 +10,8 @@ export interface SyntaxTreeNodeData {
 
 const currentStatementMarker = new (class extends GutterMarker {
   override toDOM() {
-    const newDiv = document.createElement("div");
-    newDiv.classList.add("line-gutter-statement-line");
+    const newDiv = document.createElement('div');
+    newDiv.classList.add('line-gutter-statement-line');
 
     return newDiv;
   }

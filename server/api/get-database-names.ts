@@ -1,6 +1,6 @@
-import { executeQuery } from "~/server/utils/db-connection";
+import { executeQuery } from '~/server/utils/db-connection';
 
-export default defineEventHandler(async (event) => {
+export default defineEventHandler(async event => {
   //   const body: { query: string } = await readBody(event);
 
   const result = await executeQuery(`

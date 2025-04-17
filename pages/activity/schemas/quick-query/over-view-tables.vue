@@ -1,6 +1,6 @@
 <script setup lang="ts">
-const overViewTables = await useFetch("/api/get-over-view-tables", {
-  cache: "force-cache",
+const overViewTables = await useFetch('/api/get-over-view-tables', {
+  cache: 'force-cache',
   keepalive: true,
 });
 </script>

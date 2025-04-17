@@ -197,7 +197,7 @@
                 @click="handleCreateConnection"
                 :disabled="testStatus !== 'success'"
               >
-                {{ editingConnection ? "Update" : "Create" }} Connection
+                {{ editingConnection ? 'Update' : 'Create' }} Connection
               </Button>
             </div>
           </DialogFooter>
@@ -208,19 +208,8 @@
 </template>
 
 <script setup lang="ts">
-import { Icon } from "#components";
-import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { reactive, ref, watch } from 'vue';
+import { Icon } from '#components';
 import {
   ArrowLeftIcon,
   CheckIcon,
@@ -232,12 +221,23 @@ import {
   Loader2Icon,
   UserIcon,
   XIcon,
-} from "lucide-vue-next";
-import { reactive, ref, watch } from "vue";
-import DatabaseTypeCard from "./DatabaseTypeCard.vue";
-import type { DatabaseConnection } from "./type/index";
-import { EConnectionMethod } from "./type/index";
-import { databaseSupports, EDatabaseType } from "./constants";
+} from 'lucide-vue-next';
+import { Button } from '@/components/ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import DatabaseTypeCard from './DatabaseTypeCard.vue';
+import { databaseSupports, EDatabaseType } from './constants';
+import type { DatabaseConnection } from './type/index';
+import { EConnectionMethod } from './type/index';
 
 const props = defineProps<{
   open: boolean;
@@ -245,38 +245,38 @@ const props = defineProps<{
 }>();
 
 const emit = defineEmits<{
-  (e: "update:open", value: boolean): void;
-  (e: "save", connection: DatabaseConnection): void;
+  (e: 'update:open', value: boolean): void;
+  (e: 'save', connection: DatabaseConnection): void;
 }>();
 
 const step = ref<1 | 2>(1);
 const dbType = ref<EDatabaseType | null>(null);
-const connectionName = ref("");
+const connectionName = ref('');
 const connectionMethod = ref<EConnectionMethod>(EConnectionMethod.STRING);
-const connectionString = ref("");
+const connectionString = ref('');
 const formData = reactive({
-  host: "",
-  port: "",
-  username: "",
-  password: "",
-  database: "",
+  host: '',
+  port: '',
+  username: '',
+  password: '',
+  database: '',
 });
-const testStatus = ref<"idle" | "testing" | "success" | "error">("idle");
+const testStatus = ref<'idle' | 'testing' | 'success' | 'error'>('idle');
 
 const resetForm = () => {
   step.value = 1;
   dbType.value = null;
-  connectionName.value = "";
+  connectionName.value = '';
   connectionMethod.value = EConnectionMethod.STRING;
-  connectionString.value = "";
+  connectionString.value = '';
 
-  formData.host = "";
-  formData.port = "";
-  formData.username = "";
-  formData.password = "";
-  formData.database = "";
+  formData.host = '';
+  formData.port = '';
+  formData.username = '';
+  formData.password = '';
+  formData.database = '';
 
-  testStatus.value = "idle";
+  testStatus.value = 'idle';
 };
 
 const handleNext = () => {
@@ -287,19 +287,19 @@ const handleNext = () => {
 
 const handleBack = () => {
   step.value = 1;
-  testStatus.value = "idle";
+  testStatus.value = 'idle';
 };
 
 const handleClose = () => {
-  emit("update:open", false);
+  emit('update:open', false);
   setTimeout(resetForm, 300);
 };
 
 const handleTestConnection = () => {
-  testStatus.value = "testing";
+  testStatus.value = 'testing';
   // Simulate testing connection
   setTimeout(() => {
-    testStatus.value = "success";
+    testStatus.value = 'success';
     // For demo purposes, we'll just set success
     // In a real app, you would make an API call to test the connection
   }, 1500);
@@ -314,7 +314,7 @@ const handleCreateConnection = () => {
     createdAt: props.editingConnection?.createdAt || new Date(),
   };
 
-  if (connectionMethod.value === "string") {
+  if (connectionMethod.value === 'string') {
     newConnection.connectionString = connectionString.value;
   } else {
     newConnection.host = formData.host;
@@ -324,40 +324,40 @@ const handleCreateConnection = () => {
     newConnection.database = formData.database;
   }
 
-  emit("save", newConnection);
+  emit('save', newConnection);
   handleClose();
 };
 
 const getDefaultPort = () => {
   switch (dbType.value) {
-    case "postgresql":
-      return "5432";
-    case "mysql":
-      return "3306";
-    case "redis":
-      return "6379";
+    case 'postgresql':
+      return '5432';
+    case 'mysql':
+      return '3306';
+    case 'redis':
+      return '6379';
     default:
-      return "";
+      return '';
   }
 };
 
 const getConnectionPlaceholder = () => {
   switch (dbType.value) {
-    case "postgresql":
-      return "postgresql://username:password@localhost:5432/database";
-    case "mysql":
-      return "mysql://username:password@localhost:3306/database";
-    case "redis":
-      return "redis://username:password@localhost:6379";
+    case 'postgresql':
+      return 'postgresql://username:password@localhost:5432/database';
+    case 'mysql':
+      return 'mysql://username:password@localhost:3306/database';
+    case 'redis':
+      return 'redis://username:password@localhost:6379';
     default:
-      return "";
+      return '';
   }
 };
 
 const isFormValid = () => {
   if (!connectionName.value) return false;
 
-  if (connectionMethod.value === "string") {
+  if (connectionMethod.value === 'string') {
     return !!connectionString.value;
   } else {
     return !!(formData.host && formData.port);
@@ -373,13 +373,13 @@ watch(
         connectionName.value = props.editingConnection.name;
         dbType.value = props.editingConnection.type;
         connectionMethod.value = props.editingConnection.method;
-        connectionString.value = props.editingConnection.connectionString || "";
+        connectionString.value = props.editingConnection.connectionString || '';
 
-        formData.host = props.editingConnection.host || "";
-        formData.port = props.editingConnection.port || "";
-        formData.username = props.editingConnection.username || "";
-        formData.password = props.editingConnection.password || "";
-        formData.database = props.editingConnection.database || "";
+        formData.host = props.editingConnection.host || '';
+        formData.port = props.editingConnection.port || '';
+        formData.username = props.editingConnection.username || '';
+        formData.password = props.editingConnection.password || '';
+        formData.database = props.editingConnection.database || '';
 
         step.value = 2;
       } else {
@@ -391,7 +391,7 @@ watch(
 );
 
 const databaseOptions = computed(() =>
-  databaseSupports.map((e) => ({
+  databaseSupports.map(e => ({
     ...e,
     isActive: dbType.value === e.type,
     onClick: () => (dbType.value = e.type),

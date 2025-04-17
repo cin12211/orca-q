@@ -1,6 +1,6 @@
-import { EditorView, keymap } from "@codemirror/view";
-import { getCurrentStatement } from "../utils";
-import type { SyntaxTreeNodeData } from "./currentStatementLineGutter";
+import { EditorView, keymap } from '@codemirror/view';
+import { getCurrentStatement } from '../utils';
+import type { SyntaxTreeNodeData } from './currentStatementLineGutter';
 
 /**
  * Create a shortcut that executes the current statement on Ctrl-Enter.
@@ -18,8 +18,8 @@ export const shortCutCurrentStatementExecute = (
 ) =>
   keymap.of([
     {
-      key: "Ctrl-Enter",
-      mac: "Cmd-Enter",
+      key: 'Ctrl-Enter',
+      mac: 'Cmd-Enter',
       run: (view: EditorView) => {
         const currentStatement = getCurrentStatement(view);
 

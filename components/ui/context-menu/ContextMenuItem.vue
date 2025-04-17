@@ -1,23 +1,23 @@
 <script setup lang="ts">
-import { cn } from "@/lib/utils";
+import { computed, type HTMLAttributes } from 'vue';
 import {
   ContextMenuItem,
   type ContextMenuItemEmits,
   type ContextMenuItemProps,
   useForwardPropsEmits,
-} from "reka-ui";
-import { computed, type HTMLAttributes } from "vue";
+} from 'reka-ui';
+import { cn } from '@/lib/utils';
 
 const props = withDefaults(
   defineProps<
     ContextMenuItemProps & {
-      class?: HTMLAttributes["class"];
+      class?: HTMLAttributes['class'];
       inset?: boolean;
-      variant?: "default" | "destructive";
+      variant?: 'default' | 'destructive';
     }
   >(),
   {
-    variant: "default",
+    variant: 'default',
   }
 );
 const emits = defineEmits<ContextMenuItemEmits>();

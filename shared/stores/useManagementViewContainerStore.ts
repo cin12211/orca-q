@@ -1,7 +1,7 @@
-import { ref } from "vue";
-import { defineStore } from "pinia";
-import type { RouteNameFromPath, RoutePathSchema } from "@typed-router/__paths";
-import type { RouteRecordName } from "vue-router";
+import { defineStore } from 'pinia';
+import { ref } from 'vue';
+import type { RouteNameFromPath, RoutePathSchema } from '@typed-router/__paths';
+import type { RouteRecordName } from 'vue-router';
 
 // export enum TabViewType {
 //   SmartView = "SmartView",
@@ -9,16 +9,16 @@ import type { RouteRecordName } from "vue-router";
 // }
 
 export enum TabViewType {
-  TableOverview = "TableOverview",
-  TableDetail = "tableDetail",
+  TableOverview = 'TableOverview',
+  TableDetail = 'tableDetail',
 
-  FunctionsOverview = "FunctionsOverview",
-  FunctionsDetail = "FunctionsDetail",
+  FunctionsOverview = 'FunctionsOverview',
+  FunctionsDetail = 'FunctionsDetail',
 
-  ViewOverview = "ViewOverview",
-  ViewDetail = "ViewDetail",
+  ViewOverview = 'ViewOverview',
+  ViewDetail = 'ViewDetail',
 
-  CodeQuery = "CodeQuery",
+  CodeQuery = 'CodeQuery',
 }
 
 type TabView = {
@@ -32,21 +32,21 @@ type TabView = {
 };
 
 export const useManagementViewContainerStore = defineStore(
-  "management-view-container",
+  'management-view-container',
   () => {
     const tabs = ref<TabView[]>([]);
     const activeTab = ref<TabView | null>(null);
     const isLoading = ref(false);
 
     const openTab = (tab: TabView) => {
-      if (!tabs.value.some((t) => t.id === tab.id)) {
+      if (!tabs.value.some(t => t.id === tab.id)) {
         tabs.value.push(tab);
         activeTab.value = tab;
       }
     };
 
     const selectTab = async (tabId: string) => {
-      const tab = tabs.value?.find((t) => t.id === tabId);
+      const tab = tabs.value?.find(t => t.id === tabId);
 
       if (tab) {
         await navigateTo({
@@ -67,14 +67,14 @@ export const useManagementViewContainerStore = defineStore(
         console.error(`Tab with ID ${tabId} does not exist.`);
 
         await navigateTo({
-          name: "activity-schemas",
+          name: 'activity-schemas',
           replace: true,
         });
       }
     };
 
     const closeTab = async (tabId: string) => {
-      const index = tabs.value.findIndex((t) => t.id === tabId);
+      const index = tabs.value.findIndex(t => t.id === tabId);
       if (index !== -1) {
         const wasActive = activeTab.value?.id === tabId;
         tabs.value.splice(index, 1);
@@ -90,7 +90,7 @@ export const useManagementViewContainerStore = defineStore(
         console.error(`Tab with ID ${tabId} does not exist.`);
 
         await navigateTo({
-          name: "activity-schemas",
+          name: 'activity-schemas',
           replace: true,
         });
       }

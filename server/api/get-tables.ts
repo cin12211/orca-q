@@ -1,4 +1,4 @@
-import { executeQuery } from "~/server/utils/db-connection";
+import { executeQuery } from '~/server/utils/db-connection';
 
 interface ColumnMetadata {
   name: string;
@@ -34,7 +34,7 @@ interface IndexMetadata {
   is_unique: boolean;
   cardinality: number;
   column_position: number;
-  direction: "ASC" | "DESC";
+  direction: 'ASC' | 'DESC';
 }
 
 interface TableMetadata {

@@ -5,9 +5,9 @@ import {
   PanelRightClose,
   PanelRightOpen,
   X,
-} from "lucide-vue-next";
-import { useDefaultLayout } from "~/shared/contexts/defaultLayoutContext";
-import { useManagementViewContainerStore } from "~/shared/stores/useManagementViewContainerStore";
+} from 'lucide-vue-next';
+import { useDefaultLayout } from '~/shared/contexts/defaultLayoutContext';
+import { useManagementViewContainerStore } from '~/shared/stores/useManagementViewContainerStore';
 
 const {
   isPrimarySideBarPanelCollapsed,
@@ -16,7 +16,7 @@ const {
   toggleSecondarySideBarPanel,
 } = useDefaultLayout();
 
-const isAppVersion = computed(() => "__TAURI_INTERNALS__" in window);
+const isAppVersion = computed(() => '__TAURI_INTERNALS__' in window);
 
 const tabsStore = useManagementViewContainerStore();
 </script>

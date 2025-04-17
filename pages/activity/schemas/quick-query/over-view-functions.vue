@@ -1,6 +1,6 @@
 <script setup lang="ts">
-const { data } = await useFetch("/api/get-over-view-function", {
-  cache: "force-cache",
+const { data } = await useFetch('/api/get-over-view-function', {
+  cache: 'force-cache',
   keepalive: true,
 });
 </script>

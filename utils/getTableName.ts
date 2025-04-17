@@ -1,5 +1,5 @@
-import { DBSchema } from ".";
+import { DBSchema } from '.';
 
-export const getTableNames = (tables: DBSchema["tables"]): string[] => {
+export const getTableNames = (tables: DBSchema['tables']): string[] => {
   return [];
 };

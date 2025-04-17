@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { NuxtLink } from "#components";
+import { NuxtLink } from '#components';
 import {
   ActivityBarItemType,
   useActivityBarStore,
-} from "~/shared/stores/useActivityBarStore";
+} from '~/shared/stores/useActivityBarStore';
 
 const activityStore = useActivityBarStore();
 
@@ -11,25 +11,25 @@ const activityStore = useActivityBarStore();
 const activity = computed(() => [
   {
     id: ActivityBarItemType.Explorer,
-    title: "Files",
-    icon: "hugeicons:files-02",
-    path: "activity-code-editor",
+    title: 'Files',
+    icon: 'hugeicons:files-02',
+    path: 'activity-code-editor',
     isActive: activityStore.activityActive === ActivityBarItemType.Explorer,
   },
   {
     id: ActivityBarItemType.Schemas,
-    title: "Schemas",
-    icon: "hugeicons:chart-relationship",
-    path: "activity-schemas",
+    title: 'Schemas',
+    icon: 'hugeicons:chart-relationship',
+    path: 'activity-schemas',
     isActive: activityStore.activityActive === ActivityBarItemType.Schemas,
   },
 ]);
 
 // TODO: update
 const user = {
-  name: "shadcn",
-  email: "m@example.com",
-  avatar: "/avatars/shadcn.jpg",
+  name: 'shadcn',
+  email: 'm@example.com',
+  avatar: '/avatars/shadcn.jpg',
 };
 </script>
 

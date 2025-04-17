@@ -33,13 +33,13 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from "vue";
-import { Button } from "@/components/ui/button";
-import { PlusIcon } from "lucide-vue-next";
-import ConnectionsList from "./ConnectionsList.vue";
-import CreateConnectionModal from "./CreateConnectionModal.vue";
-import type { DatabaseConnection } from "./type/index";
-import { useManagementConnectionStore } from "./managementConnectionStore";
+import { ref } from 'vue';
+import { PlusIcon } from 'lucide-vue-next';
+import { Button } from '@/components/ui/button';
+import ConnectionsList from './ConnectionsList.vue';
+import CreateConnectionModal from './CreateConnectionModal.vue';
+import { useManagementConnectionStore } from './managementConnectionStore';
+import type { DatabaseConnection } from './type/index';
 
 const isModalOpen = ref(false);
 
@@ -52,7 +52,7 @@ const openAddConnectionModal = () => {
 
 const handleAddConnection = (connection: DatabaseConnection) => {
   if (data.editingConnection) {
-    data.connections = data.connections.map((c) =>
+    data.connections = data.connections.map(c =>
       c.id === data.editingConnection?.id ? connection : c
     );
     data.editingConnection = null;
@@ -67,6 +67,6 @@ const handleEditConnection = (connection: DatabaseConnection) => {
 };
 
 const handleDeleteConnection = (id: string) => {
-  data.connections = data.connections.filter((c) => c.id !== id);
+  data.connections = data.connections.filter(c => c.id !== id);
 };
 </script>

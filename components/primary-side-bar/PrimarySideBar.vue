@@ -2,7 +2,7 @@
 import {
   ActivityBarItemType,
   useActivityBarStore,
-} from "~/shared/stores/useActivityBarStore";
+} from '~/shared/stores/useActivityBarStore';
 
 const activityStore = useActivityBarStore();
 </script>

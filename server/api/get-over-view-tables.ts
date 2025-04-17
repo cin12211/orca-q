@@ -1,4 +1,4 @@
-import { executeQuery } from "~/server/utils/db-connection";
+import { executeQuery } from '~/server/utils/db-connection';
 
 interface RoutineMetadata {
   name: string;

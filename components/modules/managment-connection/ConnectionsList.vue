@@ -51,7 +51,7 @@
             </span>
             <span v-else class="text-muted-foreground">
               {{ connection.host }}:{{ connection.port }}
-              {{ connection.database ? `/${connection.database}` : "" }}
+              {{ connection.database ? `/${connection.database}` : '' }}
             </span>
           </TableCell>
           <TableCell>{{ formatDate(connection.createdAt) }}</TableCell>
@@ -113,14 +113,13 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from "vue";
+import { ref } from 'vue';
 import {
   DatabaseIcon,
   EditIcon,
   Trash2Icon,
   ExternalLinkIcon,
-} from "lucide-vue-next";
-import { Button } from "@/components/ui/button";
+} from 'lucide-vue-next';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -130,7 +129,8 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+} from '@/components/ui/alert-dialog';
+import { Button } from '@/components/ui/button';
 import {
   Table,
   TableBody,
@@ -138,26 +138,26 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
-import { EDatabaseType, type DatabaseConnection } from "./type";
-import { getDatabaseSupportByType } from "./constants";
+} from '@/components/ui/table';
+import { getDatabaseSupportByType } from './constants';
+import { EDatabaseType, type DatabaseConnection } from './type';
 
 const props = defineProps<{
   connections: DatabaseConnection[];
 }>();
 
 const emit = defineEmits<{
-  (e: "edit", connection: DatabaseConnection): void;
-  (e: "delete", id: string): void;
+  (e: 'edit', connection: DatabaseConnection): void;
+  (e: 'delete', id: string): void;
 }>();
 
 const deleteId = ref<string | null>(null);
 
 const formatDate = (date: Date) => {
-  return new Intl.DateTimeFormat("en-US", {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
+  return new Intl.DateTimeFormat('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
   }).format(date instanceof Date ? date : new Date(date));
 };
 
@@ -167,7 +167,7 @@ const openDeleteDialog = (id: string) => {
 
 const confirmDelete = () => {
   if (deleteId.value) {
-    emit("delete", deleteId.value);
+    emit('delete', deleteId.value);
     deleteId.value = null;
   }
 };

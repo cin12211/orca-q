@@ -1,1 +1,1 @@
-export * from "./getCurrentStatement";
+export * from './getCurrentStatement';

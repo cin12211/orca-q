@@ -1,15 +1,15 @@
 <script setup lang="ts">
-import { type SplitterPanel } from "reka-ui";
-import { provideDefaultLayoutContext } from "../shared/contexts/defaultLayoutContext";
-import { useMagicKeys } from "@vueuse/core";
+import { useMagicKeys } from '@vueuse/core';
+import { type SplitterPanel } from 'reka-ui';
+import { provideDefaultLayoutContext } from '../shared/contexts/defaultLayoutContext';
 
 const primarySideBarPanelRef = useTemplateRef<
   InstanceType<typeof SplitterPanel>
->("primarySideBarPanelRef");
+>('primarySideBarPanelRef');
 
 const secondarySideBarPanelRef = useTemplateRef<
   InstanceType<typeof SplitterPanel>
->("secondarySideBarPanelRef");
+>('secondarySideBarPanelRef');
 
 const togglePanel = (
   panel: InstanceType<typeof SplitterPanel> | null | undefined
@@ -20,7 +20,7 @@ const togglePanel = (
 
 const { meta_b } = useMagicKeys();
 
-watch(meta_b, (v) => {
+watch(meta_b, v => {
   if (v) togglePanel(primarySideBarPanelRef.value);
 });
 

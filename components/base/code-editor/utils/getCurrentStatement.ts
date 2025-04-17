@@ -1,6 +1,6 @@
-import type { EditorView } from "codemirror";
-import type { SyntaxTreeNodeData } from "../extensions";
-import { syntaxTree } from "@codemirror/language";
+import { syntaxTree } from '@codemirror/language';
+import type { EditorView } from 'codemirror';
+import type { SyntaxTreeNodeData } from '../extensions';
 
 /**
  * Find the statement currently under the user's position in the code editor.
@@ -13,7 +13,7 @@ export const getCurrentStatement = (view: EditorView) => {
   const output: SyntaxTreeNodeData[] = [];
 
   tree.iterate({
-    enter: (node) => {
+    enter: node => {
       const nodeName = node.type.name;
       const nodeText = view.state.doc.sliceString(node.from, node.to);
       output.push({
@@ -28,8 +28,8 @@ export const getCurrentStatement = (view: EditorView) => {
   const cursorPos = view.state.selection.main.head;
 
   const currentStatement = output.find(
-    (item) =>
-      item.type == "Statement" && cursorPos >= item.from && cursorPos <= item.to
+    item =>
+      item.type == 'Statement' && cursorPos >= item.from && cursorPos <= item.to
   );
 
   return currentStatement;

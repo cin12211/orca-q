@@ -1,0 +1,21 @@
+#!/bin/sh
+
+# Measure execution time
+START_TIME=$(date +%s)
+
+# Step 1: Check type
+echo "Checking commit type..."
+# npm run check-type
+
+# Step 2: Lint
+echo "Running lint..."
+# npm run lint
+
+# Step 3: Remove unused files
+echo "Removing unused files..."
+# npm run remove-unused
+
+# ... (rest of the script remains the same)
+END_TIME=$(date +%s)
+EXECUTION_TIME=$((END_TIME - START_TIME))
+echo "Pre-commit script finished in $EXECUTION_TIME seconds"

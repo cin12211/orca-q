@@ -1,21 +1,5 @@
 <script setup lang="ts">
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { computed, ref, watch } from 'vue';
 import {
   ArrowDown,
   ArrowUp,
@@ -25,11 +9,27 @@ import {
   ChevronsLeft,
   ChevronsRight,
   Search,
-} from "lucide-vue-next";
-import type { AcceptableValue } from "reka-ui";
-import { computed, ref, watch } from "vue";
+} from 'lucide-vue-next';
+import type { AcceptableValue } from 'reka-ui';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 
-type SortDirection = "asc" | "desc" | null;
+type SortDirection = 'asc' | 'desc' | null;
 
 // Define props
 const props = defineProps<{
@@ -40,10 +40,10 @@ const props = defineProps<{
 
 // Make tableData reactive to prop changes using computed
 const tableData = computed(() => props.data || []);
-const tableCaption = computed(() => props.caption || "Dynamic Data Table");
+const tableCaption = computed(() => props.caption || 'Dynamic Data Table');
 
 // Search state
-const searchQuery = ref("");
+const searchQuery = ref('');
 
 // Sorting state
 const sortConfig = ref<{
@@ -87,9 +87,9 @@ const filteredData = computed(() => {
 
   const query = searchQuery.value.toLowerCase().trim();
 
-  return tableData.value.filter((row) => {
+  return tableData.value.filter(row => {
     // Check if any field in the row contains the search query
-    return Object.values(row).some((value) => {
+    return Object.values(row).some(value => {
       // Convert the value to a string for comparison
       const stringValue = formatCellValue(value).toLowerCase();
       return stringValue.includes(query);
@@ -110,16 +110,16 @@ const sortedData = computed(() => {
     const bValue = b[sortConfig.value.key!];
 
     // Handle different data types
-    if (aValue === null) return sortConfig.value.direction === "asc" ? -1 : 1;
-    if (bValue === null) return sortConfig.value.direction === "asc" ? 1 : -1;
+    if (aValue === null) return sortConfig.value.direction === 'asc' ? -1 : 1;
+    if (bValue === null) return sortConfig.value.direction === 'asc' ? 1 : -1;
 
-    if (typeof aValue === "string" && typeof bValue === "string") {
-      return sortConfig.value.direction === "asc"
+    if (typeof aValue === 'string' && typeof bValue === 'string') {
+      return sortConfig.value.direction === 'asc'
         ? aValue.localeCompare(bValue)
         : bValue.localeCompare(aValue);
     }
 
-    return sortConfig.value.direction === "asc"
+    return sortConfig.value.direction === 'asc'
       ? aValue > bValue
         ? 1
         : -1
@@ -140,12 +140,12 @@ const paginatedData = computed(() => {
 
 // Handle sorting
 const requestSort = (key: string) => {
-  let direction: SortDirection = "asc";
+  let direction: SortDirection = 'asc';
 
   if (sortConfig.value.key === key) {
-    if (sortConfig.value.direction === "asc") {
-      direction = "desc";
-    } else if (sortConfig.value.direction === "desc") {
+    if (sortConfig.value.direction === 'asc') {
+      direction = 'desc';
+    } else if (sortConfig.value.direction === 'desc') {
       direction = null;
     }
   }
@@ -159,11 +159,11 @@ const getSortIcon = (key: string) => {
     return ArrowUpDown;
   }
 
-  if (sortConfig.value.direction === "asc") {
+  if (sortConfig.value.direction === 'asc') {
     return ArrowUp;
   }
 
-  if (sortConfig.value.direction === "desc") {
+  if (sortConfig.value.direction === 'desc') {
     return ArrowDown;
   }
 
@@ -178,10 +178,10 @@ const goToPage = (page: number) => {
 // Helper function to format cell values
 const formatCellValue = (value: any): string => {
   if (value === null || value === undefined) {
-    return "-";
+    return '-';
   }
 
-  if (typeof value === "object") {
+  if (typeof value === 'object') {
     return JSON.stringify(value);
   }
 
@@ -196,7 +196,7 @@ const handlePageSizeChange = (value: AcceptableValue) => {
 
 // Clear search
 const clearSearch = () => {
-  searchQuery.value = "";
+  searchQuery.value = '';
 };
 </script>
 

@@ -1,17 +1,17 @@
 <script setup lang="ts">
+import type { RouteNameFromPath, RoutePathSchema } from '@typed-router/__paths';
 import {
   TabViewType,
   useManagementViewContainerStore,
-} from "~/shared/stores/useManagementViewContainerStore";
-import TreeFolder from "../management-explorer/TreeFolder.vue";
-import type { RouteNameFromPath, RoutePathSchema } from "@typed-router/__paths";
+} from '~/shared/stores/useManagementViewContainerStore';
+import TreeFolder from '../management-explorer/TreeFolder.vue';
 
-const expandedState = ref<string[]>(["Tables"]);
+const expandedState = ref<string[]>(['Tables']);
 
 // const dataBaseNames = await useFetch("/api/get-database-names");
 // const schemas = await useFetch("/api/get-schemas");
-const tables = await useFetch("/api/get-tables");
-const functions = await useFetch("/api/get-functions");
+const tables = await useFetch('/api/get-tables');
+const functions = await useFetch('/api/get-functions');
 
 const mappedTables = tables.data.value?.result?.[0]?.metadata?.tables || [];
 const mappedViews = tables.data.value?.result?.[0]?.metadata?.views || [];
@@ -21,52 +21,52 @@ const mappedFunctions =
 
 const items = computed(() => [
   {
-    title: "Functions",
-    icon: "material-icon-theme:folder-functions-open",
-    closeIcon: "material-icon-theme:folder-functions",
-    paths: ["Functions"],
+    title: 'Functions',
+    icon: 'material-icon-theme:folder-functions-open',
+    closeIcon: 'material-icon-theme:folder-functions',
+    paths: ['Functions'],
     tabViewType: TabViewType.FunctionsOverview,
-    id: "Functions",
+    id: 'Functions',
     children: [
-      ...mappedFunctions.map((e) => ({
+      ...mappedFunctions.map(e => ({
         title: e.function_name,
         id: e.function_name,
-        icon: "vscode-icons:file-type-haskell",
-        paths: ["Functions", e.function_name],
+        icon: 'vscode-icons:file-type-haskell',
+        paths: ['Functions', e.function_name],
         tabViewType: TabViewType.FunctionsDetail,
       })),
     ],
   },
   {
-    title: "Tables",
-    id: "Tables",
-    icon: "material-icon-theme:folder-database-open",
-    closeIcon: "material-icon-theme:folder-database",
-    paths: ["Tables"],
+    title: 'Tables',
+    id: 'Tables',
+    icon: 'material-icon-theme:folder-database-open',
+    closeIcon: 'material-icon-theme:folder-database',
+    paths: ['Tables'],
     tabViewType: TabViewType.TableOverview,
     children: [
-      ...mappedTables.map((e) => ({
+      ...mappedTables.map(e => ({
         title: e.table,
         id: e.table,
-        icon: "vscode-icons:file-type-sql",
-        paths: ["Tables", e.table],
+        icon: 'vscode-icons:file-type-sql',
+        paths: ['Tables', e.table],
         tabViewType: TabViewType.TableDetail,
       })),
     ],
   },
   {
-    title: "Views",
-    id: "Views",
-    icon: "material-icon-theme:folder-database-open",
-    closeIcon: "material-icon-theme:folder-database",
-    paths: ["Views"],
+    title: 'Views',
+    id: 'Views',
+    icon: 'material-icon-theme:folder-database-open',
+    closeIcon: 'material-icon-theme:folder-database',
+    paths: ['Views'],
     tabViewType: TabViewType.ViewOverview,
     children: [
-      ...mappedViews.map((e) => ({
+      ...mappedViews.map(e => ({
         title: e.view_name,
         id: e.view_name,
-        icon: "vscode-icons:file-type-sql",
-        paths: ["Vies", e.view_name],
+        icon: 'vscode-icons:file-type-sql',
+        paths: ['Vies', e.view_name],
         tabViewType: TabViewType.ViewDetail,
       })),
     ],

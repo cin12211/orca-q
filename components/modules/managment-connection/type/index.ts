@@ -1,9 +1,9 @@
-import type { RendererElement, RendererNode } from "vue";
+import type { RendererElement, RendererNode } from 'vue';
 
 export enum EDatabaseType {
-  PG = "postgresql",
-  MYSQL = "mysql",
-  REDIS = "redis",
+  PG = 'postgresql',
+  MYSQL = 'mysql',
+  REDIS = 'redis',
 }
 
 export interface IDBSupport {
@@ -20,8 +20,8 @@ export interface IDBSupport {
 }
 
 export enum EConnectionMethod {
-  STRING = "string",
-  FORM = "form",
+  STRING = 'string',
+  FORM = 'form',
 }
 
 export interface DatabaseConnection {

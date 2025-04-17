@@ -1,33 +1,33 @@
-import { onKeyStroke } from "@vueuse/core";
+import { onKeyStroke } from '@vueuse/core';
 
-type ModifierKey = "ctrl" | "meta" | "alt" | "shift";
+type ModifierKey = 'ctrl' | 'meta' | 'alt' | 'shift';
 type LetterKey = Lowercase<
-  | "a"
-  | "b"
-  | "c"
-  | "d"
-  | "e"
-  | "f"
-  | "g"
-  | "h"
-  | "i"
-  | "j"
-  | "k"
-  | "l"
-  | "m"
-  | "n"
-  | "o"
-  | "p"
-  | "q"
-  | "r"
-  | "s"
-  | "t"
-  | "u"
-  | "v"
-  | "w"
-  | "x"
-  | "y"
-  | "z"
+  | 'a'
+  | 'b'
+  | 'c'
+  | 'd'
+  | 'e'
+  | 'f'
+  | 'g'
+  | 'h'
+  | 'i'
+  | 'j'
+  | 'k'
+  | 'l'
+  | 'm'
+  | 'n'
+  | 'o'
+  | 'p'
+  | 'q'
+  | 'r'
+  | 's'
+  | 't'
+  | 'u'
+  | 'v'
+  | 'w'
+  | 'x'
+  | 'y'
+  | 'z'
 >;
 
 type ShortcutKey =
@@ -41,11 +41,11 @@ export function useShortKey(
   shortcut: ShortcutKey,
   callback: (e: KeyboardEvent) => void
 ) {
-  const parts = shortcut.split("_");
+  const parts = shortcut.split('_');
   const key = parts.pop() as string;
   const modifiers = new Set(parts);
 
-  console.log("key", key);
+  console.log('key', key);
 
   //   document.onkeypress = (e) => {
   //     e.preventDefault();
@@ -88,30 +88,30 @@ export function useShortKey(
   //     }
   //   };
 
-  onKeyStroke(key, (e) => {
-    console.log("e::", modifiers, e.altKey, e);
+  onKeyStroke(key, e => {
+    console.log('e::', modifiers, e.altKey, e);
 
     // Check if the modifiers match exactly
-    const hasCtrl = modifiers.has("ctrl")
+    const hasCtrl = modifiers.has('ctrl')
       ? e.ctrlKey
       : e.ctrlKey === true
-      ? false
-      : true;
-    const hasMeta = modifiers.has("meta")
+        ? false
+        : true;
+    const hasMeta = modifiers.has('meta')
       ? e.metaKey
       : e.metaKey === true
-      ? false
-      : true;
-    const hasAlt = modifiers.has("alt")
+        ? false
+        : true;
+    const hasAlt = modifiers.has('alt')
       ? e.altKey
       : e.altKey === true
-      ? false
-      : true;
-    const hasShift = modifiers.has("shift")
+        ? false
+        : true;
+    const hasShift = modifiers.has('shift')
       ? e.shiftKey
       : e.shiftKey === true
-      ? false
-      : true;
+        ? false
+        : true;
 
     // Ensure that all the required modifiers are active, and ignore extra ones
     const isTriggerCallback = hasCtrl && hasMeta && hasAlt && hasShift;

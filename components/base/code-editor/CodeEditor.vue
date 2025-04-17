@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import { ref, watch, onMounted, onUnmounted } from "vue";
-import { PostgreSQL, type SQLConfig, sql } from "@codemirror/lang-sql";
-import { EditorState, type Extension } from "@codemirror/state";
-import { EditorView, basicSetup } from "codemirror";
-import { currentStatementLineGutter } from "./extensions";
-import { cn } from "@/lib/utils";
+import { ref, watch, onMounted, onUnmounted } from 'vue';
+import { PostgreSQL, type SQLConfig, sql } from '@codemirror/lang-sql';
+import { EditorState, type Extension } from '@codemirror/state';
+import { EditorView, basicSetup } from 'codemirror';
+import { cn } from '@/lib/utils';
+import { currentStatementLineGutter } from './extensions';
 
 // Define props
 interface Props {
@@ -16,16 +16,16 @@ interface Props {
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  modelValue: "",
+  modelValue: '',
   disabled: false,
   config: () => ({ dialect: PostgreSQL, upperCaseKeywords: true }),
   extensions: () => [],
-  class: "",
+  class: '',
 });
 
 // Define emits
 const emit = defineEmits<{
-  (e: "update:modelValue", value: string): void;
+  (e: 'update:modelValue', value: string): void;
 }>();
 
 // Reactive code state
@@ -36,7 +36,7 @@ let editorView: EditorView | null = null;
 // Watch for external changes to modelValue
 watch(
   () => props.modelValue,
-  (newValue) => {
+  newValue => {
     if (newValue !== code.value && editorView) {
       code.value = newValue;
       editorView.dispatch({
@@ -59,11 +59,11 @@ onMounted(() => {
         ...(props.extensions || []),
         basicSetup,
         sql(props.config),
-        EditorView.updateListener.of((update) => {
+        EditorView.updateListener.of(update => {
           if (update.docChanged) {
             const newCode = update.state.doc.toString();
             code.value = newCode;
-            emit("update:modelValue", newCode);
+            emit('update:modelValue', newCode);
           }
         }),
         currentStatementLineGutter,
@@ -101,7 +101,7 @@ defineExpose({
         },
       });
       code.value = content;
-      emit("update:modelValue", content);
+      emit('update:modelValue', content);
     }
   },
 });
@@ -115,5 +115,5 @@ defineExpose({
 </template>
 
 <style>
-@import url("./extensions/extentions.css");
+@import url('./extensions/extentions.css');
 </style>
