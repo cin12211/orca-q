@@ -10,7 +10,8 @@
     "tauri": "tauri",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "prepare": "husky"
+    "prepare": "husky",
+    "format:husky": "prettier $(git diff --cached --name-only --diff-filter=ACMR | sed 's| |\\ |g') --write --ignore-unknown && git update-index --again"
   },
   "dependencies": {
     "@codemirror/autocomplete": "^6.18.6",

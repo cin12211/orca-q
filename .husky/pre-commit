@@ -9,7 +9,7 @@ echo "Checking commit type..."
 
 # Step 2: Lint
 echo "Running lint + prettier..."
-npm run format
+npm run format:husky
 
 # Step 3: Remove unused files
 echo "Removing unused files..."
