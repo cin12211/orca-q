@@ -8,13 +8,14 @@ echo "Checking commit type..."
 # npm run check-type
 
 # Step 2: Lint
-echo "Running lint..."
-# npm run lint
+echo "Running lint + prettier..."
+npm run format
 
 # Step 3: Remove unused files
 echo "Removing unused files..."
 # npm run remove-unused
 
+git add .
 # ... (rest of the script remains the same)
 END_TIME=$(date +%s)
 EXECUTION_TIME=$((END_TIME - START_TIME))

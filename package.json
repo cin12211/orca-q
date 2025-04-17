@@ -9,7 +9,8 @@
     "generate": "nuxt generate",
     "tauri": "tauri",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "prepare": "husky"
   },
   "dependencies": {
     "@codemirror/autocomplete": "^6.18.6",
