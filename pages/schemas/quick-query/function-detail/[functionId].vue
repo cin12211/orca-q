@@ -8,9 +8,7 @@ definePageMeta({
   keepalive: true,
 });
 
-const route = useRoute(
-  'activity-schemas-quick-query-function-detail-functionId'
-);
+const route = useRoute('schemas-quick-query-function-detail-functionId');
 
 const code = ref('');
 

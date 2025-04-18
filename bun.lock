@@ -11,6 +11,7 @@
         "@codemirror/state": "^6.5.2",
         "@codemirror/view": "^6.36.5",
         "@nuxt/icon": "1.11.0",
+        "@pinia-orm/nuxt": "^1.10.2",
         "@pinia/nuxt": "^0.10.1",
         "@sqltools/formatter": "^1.2.5",
         "@tailwindcss/vite": "^4.1.2",
@@ -29,6 +30,7 @@
         "nuxt-typed-router": "3.8.0",
         "pg": "^8.14.1",
         "pinia": "^3.0.1",
+        "pinia-orm": "^1.10.2",
         "pinia-plugin-persistedstate": "^4.2.0",
         "prettier": "3.5.3",
         "reka-ui": "^2.2.0",
@@ -344,6 +346,10 @@
     "@parcel/watcher-win32-ia32": ["@parcel/watcher-win32-ia32@2.5.1", "", { "os": "win32", "cpu": "ia32" }, "sha512-c2KkcVN+NJmuA7CGlaGD1qJh1cLfDnQsHjE89E60vUEMlqduHGCdCLJCID5geFVM0dOtA3ZiIO8BoEQmzQVfpQ=="],
 
     "@parcel/watcher-win32-x64": ["@parcel/watcher-win32-x64@2.5.1", "", { "os": "win32", "cpu": "x64" }, "sha512-9lHBdJITeNR++EvSQVUcaZoWupyHfXe1jZvGZ06O/5MflPcuPLtEphScIBL+AiCWBO46tDSHzWyD0uDmmZqsgA=="],
+
+    "@pinia-orm/normalizr": ["@pinia-orm/normalizr@1.10.2", "", {}, "sha512-lgcCb7ST/leYXJwUT/y7RvTn+5U6OOmvSUuNGs/Mpqrx99IG3R9DSWA3w7n/wl7yDt5+35J0ERK3bebQW1STsQ=="],
+
+    "@pinia-orm/nuxt": ["@pinia-orm/nuxt@1.10.2", "", { "dependencies": { "@nuxt/kit": "^3.12.3", "pinia-orm": "1.10.2" }, "peerDependencies": { "@pinia/nuxt": "<=0.9.0" } }, "sha512-I/dNHuFR2V8K9X6oi5P+EKCbiSRSenbMfMXySmxQOqaMU81f2XVaPVTaq9dgomo9i5mE7x/QqRK49ne8av51ag=="],
 
     "@pinia/nuxt": ["@pinia/nuxt@0.10.1", "", { "dependencies": { "@nuxt/kit": "^3.9.0" }, "peerDependencies": { "pinia": "^3.0.1" } }, "sha512-xrpkKZHSmshPK6kQzboJ+TZiZ5zj73gBCI5SfiUaJkKKS9gx4B1hLEzJIjxZl0/HS5jRWrIvQ+u9ulvIRlNiow=="],
 
@@ -1340,6 +1346,8 @@
     "pify": ["pify@2.3.0", "", {}, "sha512-udgsAY+fTnvv7kI7aaxbqwWNb0AHiB0qBO89PZKPkoTmGOgdbrHDKD+0B2X4uTfJ/FT1R09r9gTsjUjNJotuog=="],
 
     "pinia": ["pinia@3.0.1", "", { "dependencies": { "@vue/devtools-api": "^7.7.2" }, "peerDependencies": { "typescript": ">=4.4.4", "vue": "^2.7.0 || ^3.5.11" }, "optionalPeers": ["typescript"] }, "sha512-WXglsDzztOTH6IfcJ99ltYZin2mY8XZCXujkYWVIJlBjqsP6ST7zw+Aarh63E1cDVYeyUcPCxPHzJpEOmzB6Wg=="],
+
+    "pinia-orm": ["pinia-orm@1.10.2", "", { "dependencies": { "@pinia-orm/normalizr": "1.10.2", "vue-demi": "^0.14.10" }, "peerDependencies": { "pinia": "^2.1.7" } }, "sha512-Q8QwFFdAmhc347QY6ndXtLZX4kE+46dUQbyy0ha6URmdIaz1jf8FbZEJ8BhHMLGPx+PeO/QJraxvvETx62lMQA=="],
 
     "pinia-plugin-persistedstate": ["pinia-plugin-persistedstate@4.2.0", "", { "dependencies": { "@nuxt/kit": "^3.14.1592", "deep-pick-omit": "^1.2.1", "defu": "^6.1.4", "destr": "^2.0.3" }, "peerDependencies": { "@pinia/nuxt": ">=0.9.0", "pinia": ">=2.3.0" }, "optionalPeers": ["@pinia/nuxt", "pinia"] }, "sha512-3buhA7ac+ssbOIx3VRCC8oHkoFwhDM9oHRCjo7nj+O8WUqnW+jRqh7eYT5eS/DNa3H28zp3dYf/nd/Vc8zj8eQ=="],
 

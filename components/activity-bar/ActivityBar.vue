@@ -13,14 +13,12 @@ const activity = computed(() => [
     id: ActivityBarItemType.Explorer,
     title: 'Files',
     icon: 'hugeicons:files-02',
-    path: 'activity-code-editor',
     isActive: activityStore.activityActive === ActivityBarItemType.Explorer,
   },
   {
     id: ActivityBarItemType.Schemas,
     title: 'Schemas',
     icon: 'hugeicons:chart-relationship',
-    path: 'activity-schemas',
     isActive: activityStore.activityActive === ActivityBarItemType.Schemas,
   },
 ]);
@@ -40,19 +38,13 @@ const user = {
         <div class="flex flex-col items-center space-y-2">
           <Tooltip v-for="item in activity">
             <TooltipTrigger as-child>
-              <NuxtLink
-                :to="{
-                  name: item.path,
-                }"
+              <Button
+                size="icon"
+                :variant="item.isActive ? 'default' : 'ghost'"
+                @click="activityStore.setActivityActive(item.id)"
               >
-                <Button
-                  size="icon"
-                  :variant="item.isActive ? 'default' : 'ghost'"
-                  @click="activityStore.setActivityActive(item.id)"
-                >
-                  <Icon :name="item.icon" class="size-6!" />
-                </Button>
-              </NuxtLink>
+                <Icon :name="item.icon" class="size-6!" />
+              </Button>
             </TooltipTrigger>
             <TooltipContent side="right">
               <p>{{ item.title }}</p>
@@ -89,28 +81,28 @@ const user = {
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
               <DropdownMenuItem>
-                <Sparkles />
+                <!-- <Sparkles /> -->
                 Upgrade to Pro
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
               <DropdownMenuItem>
-                <BadgeCheck />
+                <!-- <BadgeCheck /> -->
                 Account
               </DropdownMenuItem>
               <DropdownMenuItem>
-                <CreditCard />
+                <!-- <CreditCard /> -->
                 Billing
               </DropdownMenuItem>
               <DropdownMenuItem>
-                <Bell />
+                <!-- <Bell /> -->
                 Notifications
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuItem>
-              <LogOut />
+              <!-- <LogOut /> -->
               Log out
             </DropdownMenuItem>
           </DropdownMenuContent>

@@ -3,7 +3,7 @@ definePageMeta({
   keepalive: true,
 });
 
-const route = useRoute('activity-schemas-quick-query-table-detail-tableId');
+const route = useRoute('schemas-quick-query-table-detail-tableId');
 
 const { data } = await useFetch('/api/execute', {
   method: 'POST',

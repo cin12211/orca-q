@@ -26,6 +26,7 @@ export default defineNuxtConfig({
     '@pinia/nuxt', // required
     'pinia-plugin-persistedstate/nuxt',
     'nuxt-typed-router',
+    '@pinia-orm/nuxt',
   ],
   css: ['~/assets/css/tailwind.css'],
   vite: {
@@ -43,4 +44,7 @@ export default defineNuxtConfig({
 
     '~/components',
   ],
+  piniaPluginPersistedstate: {
+    storage: 'localStorage', // áp dụng toàn cục
+  },
 });

@@ -1,5 +1,5 @@
 import { executeQuery } from '~/server/utils/db-connection';
-import { RoutineQueryResult } from './get-over-view-tables';
+import type { RoutineQueryResult } from './get-over-view-tables';
 
 export default defineEventHandler(
   async (event): Promise<RoutineQueryResult> => {

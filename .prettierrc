@@ -24,6 +24,8 @@
   "importOrderSeparation": false,
   "importOrderSortSpecifiers": false,
 
+  "importOrderParserPlugins": ["typescript", "decorators-legacy"],
+
   "overrides": [
     {
       "files": "*.vue",

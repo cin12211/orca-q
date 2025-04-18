@@ -117,16 +117,15 @@ const tabsStore = useManagementViewContainerStore();
           let routeParams;
 
           if (tabViewType === TabViewType.FunctionsOverview) {
-            routeName = 'activity-schemas-quick-query-over-view-functions';
+            routeName = 'schemas-quick-query-over-view-functions';
           }
 
           if (tabViewType === TabViewType.TableOverview) {
-            routeName = 'activity-schemas-quick-query-over-view-tables';
+            routeName = 'schemas-quick-query-over-view-tables';
           }
 
           if (tabViewType === TabViewType.FunctionsDetail) {
-            routeName =
-              'activity-schemas-quick-query-function-detail-functionId';
+            routeName = 'schemas-quick-query-function-detail-functionId';
 
             routeParams = {
               functionId: item.value.title,
@@ -134,7 +133,7 @@ const tabsStore = useManagementViewContainerStore();
           }
 
           if (tabViewType === TabViewType.TableDetail) {
-            routeName = 'activity-schemas-quick-query-table-detail-tableId';
+            routeName = 'schemas-quick-query-table-detail-tableId';
 
             routeParams = {
               tableId: item.value.title,
