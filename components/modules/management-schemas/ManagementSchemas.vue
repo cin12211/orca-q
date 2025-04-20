@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { RouteNameFromPath, RoutePathSchema } from '@typed-router/__paths';
+import { useCurrentWorkspaceId } from '~/shared/contexts/useGetWorkspaceId';
 import {
   TabViewType,
   useManagementViewContainerStore,
@@ -74,6 +75,8 @@ const items = computed(() => [
 ]);
 
 const tabsStore = useManagementViewContainerStore();
+
+// const workspaceId = useCurrentWorkspaceId();
 </script>
 
 <template>
@@ -117,15 +120,16 @@ const tabsStore = useManagementViewContainerStore();
           let routeParams;
 
           if (tabViewType === TabViewType.FunctionsOverview) {
-            routeName = 'schemas-quick-query-over-view-functions';
+            routeName = 'workspaceId-schemas-quick-query-over-view-functions';
           }
 
           if (tabViewType === TabViewType.TableOverview) {
-            routeName = 'schemas-quick-query-over-view-tables';
+            routeName = 'workspaceId-schemas-quick-query-over-view-tables';
           }
 
           if (tabViewType === TabViewType.FunctionsDetail) {
-            routeName = 'schemas-quick-query-function-detail-functionId';
+            routeName =
+              'workspaceId-schemas-quick-query-function-detail-functionId';
 
             routeParams = {
               functionId: item.value.title,
@@ -133,7 +137,7 @@ const tabsStore = useManagementViewContainerStore();
           }
 
           if (tabViewType === TabViewType.TableDetail) {
-            routeName = 'schemas-quick-query-table-detail-tableId';
+            routeName = 'workspaceId-schemas-quick-query-table-detail-tableId';
 
             routeParams = {
               tableId: item.value.title,

@@ -1,14 +1,18 @@
 <script setup lang="ts">
+import { format } from 'sql-formatter';
 import {
   type SyntaxTreeNodeData,
-  shortCutCurrentStatementExecute,
+  shortCutExecuteCurrentStatement,
+  shortCutFormatOnSave,
 } from '~/components/base/code-editor/extensions';
 
 definePageMeta({
   keepalive: true,
 });
 
-const route = useRoute('schemas-quick-query-function-detail-functionId');
+const route = useRoute(
+  'workspaceId-schemas-quick-query-function-detail-functionId'
+);
 
 const code = ref('');
 
@@ -25,11 +29,18 @@ await useFetch('/api/execute', {
 });
 
 const extensions = [
-  shortCutCurrentStatementExecute((currentStatement: SyntaxTreeNodeData) => {
+  shortCutExecuteCurrentStatement((currentStatement: SyntaxTreeNodeData) => {
     console.log(
       '🚀 ~ shortCutCurrentStatementExecute ~ currentStatement:',
       currentStatement
     );
+  }),
+  shortCutFormatOnSave((fileContent: string) => {
+    const formatted = format(fileContent, {
+      language: 'mysql',
+    });
+
+    return formatted;
   }),
 ];
 </script>

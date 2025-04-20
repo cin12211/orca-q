@@ -42,6 +42,7 @@ const tabsStore = useManagementViewContainerStore();
       <div
         class="w-full flex items-center h-full space-x-2 overflow-x-auto custom-x-scrollbar"
         data-tauri-drag-region
+        v-auto-animate
       >
         <div v-for="tab in tabsStore.tabs">
           <Button

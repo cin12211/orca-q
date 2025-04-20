@@ -5,6 +5,7 @@ export default defineNuxtPlugin(() => {
   const projectRepo = useRepo(Project);
   const connectionDBRepo = useRepo(ConnectionDB);
 
+  projectRepo.with('connections').withAllRecursive();
   // Inject vào context Nuxt
   return {
     provide: {

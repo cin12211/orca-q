@@ -13,7 +13,7 @@ import type { SyntaxTreeNodeData } from './currentStatementLineGutter';
  * should take the current statement as an argument.
  * @returns A keymap extension that can be added to an editor.
  */
-export const shortCutCurrentStatementExecute = (
+export const shortCutExecuteCurrentStatement = (
   callback: (currentStatement: SyntaxTreeNodeData) => void
 ) =>
   keymap.of([

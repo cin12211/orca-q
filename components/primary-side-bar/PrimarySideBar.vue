@@ -10,11 +10,15 @@ const activityStore = useActivityBarStore();
 <template>
   <div class="w-full h-full overflow-y-auto bg-sidebar">
     <!-- <KeepAlive>
-      <ModulesManagementExplorer v-if="isFileRoute" />
+      <ModulesManagementExplorer
+        v-if="activityStore.activityActive === ActivityBarItemType.Explorer"
+      />
     </KeepAlive>
 
     <KeepAlive>
-      <ModulesManagementSchemas v-if="isSchemaRoute" />
+      <ModulesManagementSchemas
+        v-if="activityStore.activityActive === ActivityBarItemType.Schemas"
+      />
     </KeepAlive> -->
 
     <ModulesManagementExplorer

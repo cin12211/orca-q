@@ -1,7 +1,6 @@
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
 import type { RouteNameFromPath, RoutePathSchema } from '@typed-router/__paths';
-import type { RouteRecordName } from 'vue-router';
 
 // export enum TabViewType {
 //   SmartView = "SmartView",
@@ -67,7 +66,7 @@ export const useManagementViewContainerStore = defineStore(
         console.error(`Tab with ID ${tabId} does not exist.`);
 
         await navigateTo({
-          name: 'schemas',
+          name: 'workspaceId-schemas',
           replace: true,
         });
       }
@@ -90,7 +89,7 @@ export const useManagementViewContainerStore = defineStore(
         console.error(`Tab with ID ${tabId} does not exist.`);
 
         await navigateTo({
-          name: 'schemas',
+          name: 'workspaceId-schemas',
           replace: true,
         });
       }

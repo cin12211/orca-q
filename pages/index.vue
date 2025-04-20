@@ -1,8 +1,11 @@
 <script setup lang="ts">
-import ManagementConnection from '~/components/modules/managment-connection/ManagementConnection.vue';
+import Workspaces from '~/components/modules/workspace/Workspaces.vue';
+
+definePageMeta({
+  layout: 'home',
+});
 </script>
 
 <template>
-  <!-- <Editor /> -->
-  <!-- <ManagementConnection open /> -->
+  <Workspaces />
 </template>

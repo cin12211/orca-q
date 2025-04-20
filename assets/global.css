@@ -5,3 +5,11 @@ body {
   overflow: hidden; /* Disable scrolling */
   border-radius: 0.5rem;
 }
+
+::placeholder {
+  opacity: 0.5;
+}
+
+.dark ::placeholder {
+  opacity: 0.8;
+}

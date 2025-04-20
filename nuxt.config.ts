@@ -21,12 +21,14 @@ export default defineNuxtConfig({
   ssr: false,
   modules: [
     'shadcn-nuxt',
-    '@nuxt/icon',
+    '@nuxt/icon', // required
     '@nuxtjs/color-mode',
-    '@pinia/nuxt', // required
+    '@pinia/nuxt',
     'pinia-plugin-persistedstate/nuxt',
     'nuxt-typed-router',
     '@pinia-orm/nuxt',
+    '@nuxt/image',
+    '@formkit/auto-animate',
   ],
   css: ['~/assets/css/tailwind.css'],
   vite: {

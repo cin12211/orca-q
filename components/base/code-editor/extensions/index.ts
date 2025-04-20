@@ -1,2 +1,3 @@
 export * from './currentStatementLineGutter';
-export * from './shortCutCurrentExecute';
+export * from './shortCutExecuteCurrentStatement';
+export * from './shortCutFormatOnSave';

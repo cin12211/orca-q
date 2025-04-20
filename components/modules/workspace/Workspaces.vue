@@ -1,0 +1,49 @@
+<script setup lang="ts">
+import { refDebounced } from '@vueuse/core';
+import dayjs from 'dayjs';
+import relativeTime from 'dayjs/plugin/relativeTime';
+import { Search } from 'lucide-vue-next';
+import { Button } from '@/components/ui/button';
+import { useWorkspacesStore } from '~/shared/stores';
+import WorkspaceCard from './WorkspaceCard.vue';
+import WorkspaceHeader from './WorkspaceHeader.vue';
+
+dayjs.extend(relativeTime);
+
+const workspaceStore = useWorkspacesStore();
+
+//TODO: create useDebouncedInputRef
+const search = shallowRef('');
+const debouncedSearch = refDebounced(search, 250);
+
+const mappedWorkspaces = computed(() => {
+  return workspaceStore.workspaces.filter(workspace => {
+    return workspace.name
+      .toLowerCase()
+      .includes(debouncedSearch.value.toLowerCase());
+  });
+});
+</script>
+
+<template>
+  <div class="flex flex-col h-full overflow-y-auto p-4 space-y-4">
+    <WorkspaceHeader />
+
+    <div class="relative w-full">
+      <Search class="absolute left-2.5 top-2 size-6 text-muted-foreground" />
+      <Input
+        type="text"
+        v-model="search"
+        placeholder="Search workspaces..."
+        class="pl-10 w-full h-10"
+      />
+    </div>
+
+    <div class="grid grid-cols-3 gap-4 overflow-y-auto">
+      <WorkspaceCard
+        v-for="workspace in mappedWorkspaces"
+        :workspace="workspace"
+      />
+    </div>
+  </div>
+</template>

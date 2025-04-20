@@ -1,5 +1,10 @@
 <script setup lang="ts">
 import { Icon } from '@iconify/vue';
+import { useCurrentWorkspaceId } from '~/shared/contexts/useGetWorkspaceId';
+import {
+  TabViewType,
+  useManagementViewContainerStore,
+} from '~/shared/stores/useManagementViewContainerStore';
 import { useManagementExplorerStore } from '../../../shared/stores/managementExplorerStore';
 import InputEditInline from './InputEditInline.vue';
 import TreeFolder from './TreeFolder.vue';
@@ -127,6 +132,8 @@ const onDelayedCallback = (callBack: () => void) => {
     callBack();
   }, 100);
 };
+
+const tabsStore = useManagementViewContainerStore();
 </script>
 
 <template>
@@ -186,6 +193,26 @@ const onDelayedCallback = (callBack: () => void) => {
             v-model:expandedState="expandedState"
             is-show-arrow
             :onRightClickItem="onRightClickItem"
+            v-on:clickTreeItem="
+              (_, item) => {
+                if (item.hasChildren) {
+                  return;
+                }
+
+                tabsStore.openTab({
+                  icon: item.value.icon,
+                  id: item.value.id,
+                  name: item.value.title,
+                  type: TabViewType.CodeQuery,
+                  routeName: 'workspaceId-explorer-fileId',
+                  routeParams: {
+                    fileId: item.value.id,
+                  },
+                });
+
+                tabsStore.selectTab(item.value.id);
+              }
+            "
           >
             <template #edit-inline="{ item }">
               <InputEditInline

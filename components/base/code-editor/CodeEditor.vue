@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, watch, onMounted, onUnmounted } from 'vue';
 import { PostgreSQL, type SQLConfig, sql } from '@codemirror/lang-sql';
-import { EditorState, type Extension } from '@codemirror/state';
+import { Compartment, EditorState, type Extension } from '@codemirror/state';
 import { EditorView, basicSetup } from 'codemirror';
 import { cn } from '@/lib/utils';
 import { currentStatementLineGutter } from './extensions';
@@ -53,6 +53,16 @@ watch(
 // Initialize editor on mount
 onMounted(() => {
   if (editorRef.value) {
+    // setting line wrapping
+    const compartment = new Compartment();
+    const isLineWrapping = true;
+    const compartmentOfLineWrapping = compartment.of(
+      isLineWrapping ? [EditorView.lineWrapping] : []
+    );
+
+    // setting read-only mode
+    const readOnlyState = props.disabled ? EditorState.readOnly.of(true) : [];
+
     const state = EditorState.create({
       doc: code.value,
       extensions: [
@@ -67,7 +77,8 @@ onMounted(() => {
           }
         }),
         currentStatementLineGutter,
-        props.disabled ? EditorState.readOnly.of(true) : [],
+        readOnlyState,
+        compartmentOfLineWrapping,
       ],
     });
 
