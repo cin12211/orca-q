@@ -54,7 +54,9 @@ provideDefaultLayoutContext({
     auto-save-id="default-layout-bar"
     id="default-layout-group-1"
   >
-    <div class="h-screen flex flex-col flex-1 max-h-screen overflow-y-auto">
+    <div
+      class="h-screen w-screen flex flex-col flex-1 max-h-screen overflow-y-auto"
+    >
       <TabViewContainer />
       <div class="h-full flex overflow-y-auto">
         <ActivityBar />

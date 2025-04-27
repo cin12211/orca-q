@@ -1,364 +1,149 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue';
+import { ref, computed, watch, render, createVNode } from 'vue';
+import { Icon } from '#components';
 import {
-  ArrowDown,
-  ArrowUp,
-  ArrowUpDown,
-  ChevronLeft,
-  ChevronRight,
-  ChevronsLeft,
-  ChevronsRight,
-  Search,
-} from 'lucide-vue-next';
-import type { AcceptableValue } from 'reka-ui';
+  checkboxStyleDefault,
+  iconOverrides,
+  themeBalham,
+} from 'ag-grid-community';
+import type {
+  GridApi,
+  GridReadyEvent,
+  ColDef,
+  SizeColumnsToFitGridStrategy,
+  GridOptions,
+  RowClassParams,
+} from 'ag-grid-community';
+import { AgGridVue } from 'ag-grid-vue3';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
 
-type SortDirection = 'asc' | 'desc' | null;
+// Define interfaces for better type safety
+interface RowData {
+  [key: string]: unknown;
+}
 
-// Define props
+/* props ------------------------------------------------------------- */
 const props = defineProps<{
-  data?: Record<string, any>[];
+  data?: RowData[];
   caption?: string;
   defaultPageSize?: number;
 }>();
 
-// Make tableData reactive to prop changes using computed
-const tableData = computed(() => props.data || []);
-const tableCaption = computed(() => props.caption || 'Dynamic Data Table');
+/* reactive state ---------------------------------------------------- */
+const rowData = computed<RowData[]>(() => props.data ?? []);
+const quickFilter = ref<string>(''); // Explicit string type
+const pageSize = ref<number>(props.defaultPageSize ?? 10);
 
-// Search state
-const searchQuery = ref('');
+const gridApi = ref<GridApi | null>(null);
 
-// Sorting state
-const sortConfig = ref<{
-  key: string | null;
-  direction: SortDirection;
-}>({
-  key: null,
-  direction: null,
-});
+/* derive columns on the fly ---------------------------------------- */
+const columnDefs = computed<ColDef[]>(() =>
+  rowData.value.length
+    ? Object.keys(rowData.value[0]).map((key: string) => ({
+        field: key,
+        sortable: true,
+        filter: false,
+        resizable: true,
+        flex: 1,
+        editable: true,
+      }))
+    : []
+);
 
-// Pagination state
-const currentPage = ref(1);
-const pageSize = ref(props?.defaultPageSize || 10);
+/* grid ready callback ---------------------------------------------- */
+const onGridReady = (e: GridReadyEvent) => {
+  gridApi.value = e.api;
+  //Do something
+};
 
-// Reset pagination and sorting when data changes
-watch(
-  () => props.data,
-  () => {
-    currentPage.value = 1;
-    sortConfig.value = { key: null, direction: null };
+const mySvgIcons = iconOverrides({
+  type: 'image', // Use 'image' to allow SVG rendering
+  mask: true,
+  icons: {
+    filter: {
+      svg: `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><!-- Icon from Huge Icons by Hugeicons - undefined --><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8.857 12.506C6.37 10.646 4.596 8.6 3.627 7.45c-.3-.356-.398-.617-.457-1.076c-.202-1.572-.303-2.358.158-2.866S4.604 3 6.234 3h11.532c1.63 0 2.445 0 2.906.507c.461.508.36 1.294.158 2.866c-.06.459-.158.72-.457 1.076c-.97 1.152-2.747 3.202-5.24 5.065a1.05 1.05 0 0 0-.402.747c-.247 2.731-.475 4.227-.617 4.983c-.229 1.222-1.96 1.957-2.888 2.612c-.552.39-1.222-.074-1.293-.678a196 196 0 0 1-.674-6.917a1.05 1.05 0 0 0-.402-.755" color="currentColor"/></svg>`,
+    },
   },
-  { deep: true }
-);
-
-// Reset pagination when search query changes
-watch(searchQuery, () => {
-  currentPage.value = 1;
 });
 
-// Extract column names from the first object's keys
-const columnNames = computed(() => {
-  if (tableData.value.length === 0) return [];
-  return Object.keys(tableData.value[0]);
-});
+const customizedTheme = themeBalham
+  .withParams({
+    accentColor: 'var(--color-gray-900)',
+    wrapperBorderRadius: 'var(--radius)',
+    borderRadius: 'var(--radius-sm)',
+    borderColor: 'var(--input)',
+  })
+  .withPart(mySvgIcons);
 
-// Filter data based on search query
-const filteredData = computed(() => {
-  if (!searchQuery.value.trim()) {
-    return tableData.value;
-  }
+const autoSizeStrategy: SizeColumnsToFitGridStrategy = {
+  type: 'fitGridWidth',
+  defaultMinWidth: 150,
+};
 
-  const query = searchQuery.value.toLowerCase().trim();
-
-  return tableData.value.filter(row => {
-    // Check if any field in the row contains the search query
-    return Object.values(row).some(value => {
-      // Convert the value to a string for comparison
-      const stringValue = formatCellValue(value).toLowerCase();
-      return stringValue.includes(query);
-    });
-  });
-});
-
-// Sort the filtered data
-const sortedData = computed(() => {
-  const shouldSort = sortConfig.value.key && sortConfig.value.direction;
-
-  if (!shouldSort) {
-    return filteredData.value;
-  }
-
-  return [...filteredData.value].sort((a, b) => {
-    const aValue = a[sortConfig.value.key!];
-    const bValue = b[sortConfig.value.key!];
-
-    // Handle different data types
-    if (aValue === null) return sortConfig.value.direction === 'asc' ? -1 : 1;
-    if (bValue === null) return sortConfig.value.direction === 'asc' ? 1 : -1;
-
-    if (typeof aValue === 'string' && typeof bValue === 'string') {
-      return sortConfig.value.direction === 'asc'
-        ? aValue.localeCompare(bValue)
-        : bValue.localeCompare(aValue);
+const gridOptions: GridOptions = {
+  rowClass: 'class-row-border-none',
+  getRowClass: params => {
+    if ((params.node.rowIndex || 0) % 2 === 0) {
+      return 'class-row-even';
     }
-
-    return sortConfig.value.direction === 'asc'
-      ? aValue > bValue
-        ? 1
-        : -1
-      : aValue < bValue
-        ? 1
-        : -1;
-  });
-});
-
-// Pagination logic
-const totalPages = computed(() =>
-  Math.ceil(sortedData.value.length / pageSize.value)
-);
-const paginatedData = computed(() => {
-  const startIndex = (currentPage.value - 1) * pageSize.value;
-  return sortedData.value.slice(startIndex, startIndex + pageSize.value);
-});
-
-// Handle sorting
-const requestSort = (key: string) => {
-  let direction: SortDirection = 'asc';
-
-  if (sortConfig.value.key === key) {
-    if (sortConfig.value.direction === 'asc') {
-      direction = 'desc';
-    } else if (sortConfig.value.direction === 'desc') {
-      direction = null;
-    }
-  }
-
-  sortConfig.value = { key, direction };
-};
-
-// Get sort icon
-const getSortIcon = (key: string) => {
-  if (sortConfig.value.key !== key) {
-    return ArrowUpDown;
-  }
-
-  if (sortConfig.value.direction === 'asc') {
-    return ArrowUp;
-  }
-
-  if (sortConfig.value.direction === 'desc') {
-    return ArrowDown;
-  }
-
-  return ArrowUpDown;
-};
-
-// Pagination controls
-const goToPage = (page: number) => {
-  currentPage.value = Math.max(1, Math.min(page, totalPages.value));
-};
-
-// Helper function to format cell values
-const formatCellValue = (value: any): string => {
-  if (value === null || value === undefined) {
-    return '-';
-  }
-
-  if (typeof value === 'object') {
-    return JSON.stringify(value);
-  }
-
-  return String(value);
-};
-
-// Handle page size change
-const handlePageSizeChange = (value: AcceptableValue) => {
-  pageSize.value = Number(value);
-  currentPage.value = 1; // Reset to first page when changing page size
-};
-
-// Clear search
-const clearSearch = () => {
-  searchQuery.value = '';
+  },
 };
 </script>
 
 <template>
-  <div class="p-2 h-full">
-    <div v-if="tableData.length === 0" class="space-y-4">
-      <div class="p-8 text-center border rounded-lg">
-        <p class="text-muted-foreground">No data available</p>
+  <div class="p-2 h-full flex flex-col space-y-2">
+    <div class="flex items-center gap-2">
+      <div class="relative w-full">
+        <Icon
+          name="lucide:search"
+          class="absolute left-2.5 top-2 h-4 w-4 text-muted-foreground"
+        />
+        <Input
+          v-model="quickFilter"
+          type="text"
+          placeholder="Search in all fields..."
+          class="pl-8 w-full h-8"
+        />
       </div>
+
+      <Button
+        :variant="quickFilter ? 'default' : 'secondary'"
+        @click="quickFilter = ''"
+        size="sm"
+      >
+        Clear
+      </Button>
     </div>
-    <div v-else class="space-y-2 h-full flex flex-col">
-      <!-- Search Input -->
 
-      <div class="flex items-center gap-2">
-        <div class="relative w-full">
-          <Search
-            class="absolute left-2.5 top-2 h-4 w-4 text-muted-foreground"
-          />
-          <Input
-            v-model="searchQuery"
-            type="text"
-            placeholder="Search in all fields..."
-            class="pl-8 w-full h-8"
-          />
-        </div>
+    <!-- The grid itself ------------------------------------------- -->
+    <AgGridVue
+      class="flex-1"
+      :grid-options="gridOptions"
+      :autoSizeStrategy="autoSizeStrategy"
+      :theme="customizedTheme"
+      :columnDefs="columnDefs"
+      :rowData="rowData"
+      :quickFilterText="quickFilter"
+      :pagination="true"
+      :paginationPageSize="pageSize"
+      :rowSelection="'single'"
+      :pagination-page-size-selector="[10, 20, 30, 50, 100]"
+      enableCellTextSelection
+      cell-ed
+      @grid-ready="onGridReady"
+    />
 
-        <Button
-          :variant="searchQuery ? 'default' : 'secondary'"
-          @click="clearSearch"
-          size="sm"
-        >
-          Clear
-        </Button>
-      </div>
-
-      <!-- Search Results Summary -->
-      <!-- <div v-if="searchQuery" class="text-sm">
-      Found {{ filteredData.length }} results for "{{ searchQuery }}"
-       </div> -->
-      <div class="border rounded-md overflow-y-auto">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead
-                v-for="column in columnNames"
-                :key="column"
-                class="h-8 px-0"
-              >
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  @click="requestSort(column)"
-                  class="flex items-center px-1! font-medium"
-                >
-                  {{ column }}
-                  <component :is="getSortIcon(column)" class="ml-2 h-4 w-4" />
-                </Button>
-              </TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            <TableRow
-              v-for="(row, rowIndex) in paginatedData"
-              :key="rowIndex"
-              :class="{ 'bg-muted/50': rowIndex % 2 === 0 }"
-            >
-              <TableCell
-                v-for="column in columnNames"
-                :key="`${rowIndex}-${column}`"
-                class="p-1"
-              >
-                {{ formatCellValue(row[column]) }}
-              </TableCell>
-            </TableRow>
-
-            <!-- No Results Message -->
-            <TableRow v-if="filteredData.length === 0">
-              <TableCell :colspan="columnNames.length" class="h-24 text-center">
-                No results found for "{{ searchQuery }}"
-              </TableCell>
-            </TableRow>
-          </TableBody>
-        </Table>
-      </div>
-
-      <!-- Pagination Controls -->
-      <div class="flex items-center justify-between">
-        <div class="text-sm text-muted-foreground">
-          Showing
-          {{
-            sortedData.length
-              ? Math.min(sortedData.length, (currentPage - 1) * pageSize + 1)
-              : 0
-          }}
-          to {{ Math.min(sortedData.length, currentPage * pageSize) }} of
-          {{ sortedData.length }} entries
-        </div>
-        <div class="flex items-center space-x-6">
-          <div class="flex items-center space-x-2">
-            <p class="text-sm font-medium">Rows per page</p>
-            <Select
-              :model-value="String(pageSize)"
-              @update:model-value="handlePageSizeChange"
-            >
-              <SelectTrigger class="h-6! w-[70px]">
-                <SelectValue :placeholder="pageSize.toString()" />
-              </SelectTrigger>
-              <SelectContent side="top">
-                <SelectItem
-                  v-for="size in [5, 10, 20, 30, 50]"
-                  :key="size"
-                  :value="String(size)"
-                >
-                  {{ size }}
-                </SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <div class="flex items-center space-x-2">
-            <Button
-              variant="outline"
-              size="iconSm"
-              @click="goToPage(1)"
-              :disabled="currentPage === 1 || sortedData.length === 0"
-            >
-              <span class="sr-only">Go to first page</span>
-              <ChevronsLeft class="h-4 w-4" />
-            </Button>
-            <Button
-              variant="outline"
-              size="iconSm"
-              @click="goToPage(currentPage - 1)"
-              :disabled="currentPage === 1 || sortedData.length === 0"
-            >
-              <span class="sr-only">Go to previous page</span>
-              <ChevronLeft class="h-4 w-4" />
-            </Button>
-            <span class="text-sm font-medium">
-              Page {{ sortedData.length ? currentPage : 0 }} of
-              {{ totalPages || 1 }}
-            </span>
-            <Button
-              variant="outline"
-              size="iconSm"
-              @click="goToPage(currentPage + 1)"
-              :disabled="currentPage === totalPages || sortedData.length === 0"
-            >
-              <span class="sr-only">Go to next page</span>
-              <ChevronRight class="h-4 w-4" />
-            </Button>
-            <Button
-              variant="outline"
-              size="iconSm"
-              @click="goToPage(totalPages)"
-              :disabled="currentPage === totalPages || sortedData.length === 0"
-            >
-              <span class="sr-only">Go to last page</span>
-              <ChevronsRight class="h-4 w-4" />
-            </Button>
-          </div>
-        </div>
-      </div>
-    </div>
+    <!-- Footer: page info & page-size selector -------------------- -->
   </div>
 </template>
+
+<style>
+.class-row-border-none {
+  border: 0px;
+}
+
+.class-row-even {
+  background-color: var(--muted);
+}
+</style>

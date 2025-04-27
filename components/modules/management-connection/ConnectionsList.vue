@@ -1,3 +1,61 @@
+<script setup lang="ts">
+import { ref } from 'vue';
+import dayjs from 'dayjs';
+import {
+  DatabaseIcon,
+  EditIcon,
+  Trash2Icon,
+  ExternalLinkIcon,
+} from 'lucide-vue-next';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import { Button } from '@/components/ui/button';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import type { Connection } from '~/shared/stores/appState/interface';
+import { getDatabaseSupportByType } from './constants';
+
+const props = defineProps<{
+  connections: Connection[];
+}>();
+
+const emit = defineEmits<{
+  (e: 'edit', connection: Connection): void;
+  (e: 'delete', id: string): void;
+}>();
+
+const deleteId = ref<string | null>(null);
+
+const formatDate = (date: Date) => {
+  return dayjs(date).format('DD/MM/YYYY HH:mm');
+};
+
+const openDeleteDialog = (id: string) => {
+  deleteId.value = id;
+};
+
+const confirmDelete = () => {
+  if (deleteId.value) {
+    emit('delete', deleteId.value);
+    deleteId.value = null;
+  }
+};
+</script>
+
 <template>
   <div
     v-if="connections.length === 0"
@@ -87,7 +145,7 @@
       </TableBody>
     </Table>
 
-    <AlertDialog :open="!!deleteId" @update:open="!$event && (deleteId = null)">
+    <AlertDialog :open="!!deleteId" @update:open="!$event">
       <AlertDialogContent class="border">
         <AlertDialogHeader>
           <AlertDialogTitle>Are you sure?</AlertDialogTitle>
@@ -111,64 +169,3 @@
     </AlertDialog>
   </div>
 </template>
-
-<script setup lang="ts">
-import { ref } from 'vue';
-import {
-  DatabaseIcon,
-  EditIcon,
-  Trash2Icon,
-  ExternalLinkIcon,
-} from 'lucide-vue-next';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
-import { Button } from '@/components/ui/button';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-import { getDatabaseSupportByType } from './constants';
-import { EDatabaseType, type DatabaseConnection } from './type';
-
-const props = defineProps<{
-  connections: DatabaseConnection[];
-}>();
-
-const emit = defineEmits<{
-  (e: 'edit', connection: DatabaseConnection): void;
-  (e: 'delete', id: string): void;
-}>();
-
-const deleteId = ref<string | null>(null);
-
-const formatDate = (date: Date) => {
-  return new Intl.DateTimeFormat('en-US', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-  }).format(date instanceof Date ? date : new Date(date));
-};
-
-const openDeleteDialog = (id: string) => {
-  deleteId.value = id;
-};
-
-const confirmDelete = () => {
-  if (deleteId.value) {
-    emit('delete', deleteId.value);
-    deleteId.value = null;
-  }
-};
-</script>

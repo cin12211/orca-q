@@ -1,24 +1,21 @@
 <script setup lang="ts">
+import { templateRef } from '@vueuse/core';
 import type { RouteNameFromPath, RoutePathSchema } from '@typed-router/__paths';
-import { useCurrentWorkspaceId } from '~/shared/contexts/useGetWorkspaceId';
+import { useAppContext } from '~/shared/contexts/useAppContext';
+import { useActivityBarStore } from '~/shared/stores';
 import {
   TabViewType,
   useManagementViewContainerStore,
 } from '~/shared/stores/useManagementViewContainerStore';
 import TreeFolder from '../management-explorer/TreeFolder.vue';
 
-const expandedState = ref<string[]>(['Tables']);
+const appContext = useAppContext();
 
-// const dataBaseNames = await useFetch("/api/get-database-names");
-// const schemas = await useFetch("/api/get-schemas");
-const tables = await useFetch('/api/get-tables');
-const functions = await useFetch('/api/get-functions');
+const tables = appContext.schemaStore.currentSchema?.tables || [];
+const functions = appContext.schemaStore.currentSchema?.functions || [];
+const views = appContext.schemaStore.currentSchema?.views || [];
 
-const mappedTables = tables.data.value?.result?.[0]?.metadata?.tables || [];
-const mappedViews = tables.data.value?.result?.[0]?.metadata?.views || [];
-
-const mappedFunctions =
-  functions.data.value?.result?.[0]?.functions_metadata || [];
+const treeFolderRef = templateRef('treeFolderRef');
 
 const items = computed(() => [
   {
@@ -29,11 +26,11 @@ const items = computed(() => [
     tabViewType: TabViewType.FunctionsOverview,
     id: 'Functions',
     children: [
-      ...mappedFunctions.map(e => ({
-        title: e.function_name,
-        id: e.function_name,
+      ...functions.map(functionName => ({
+        title: functionName,
+        id: functionName,
         icon: 'vscode-icons:file-type-haskell',
-        paths: ['Functions', e.function_name],
+        paths: ['Functions', functionName],
         tabViewType: TabViewType.FunctionsDetail,
       })),
     ],
@@ -46,11 +43,11 @@ const items = computed(() => [
     paths: ['Tables'],
     tabViewType: TabViewType.TableOverview,
     children: [
-      ...mappedTables.map(e => ({
-        title: e.table,
-        id: e.table,
+      ...tables.map(tableName => ({
+        title: tableName,
+        id: tableName,
         icon: 'vscode-icons:file-type-sql',
-        paths: ['Tables', e.table],
+        paths: ['Tables', tableName],
         tabViewType: TabViewType.TableDetail,
       })),
     ],
@@ -63,11 +60,11 @@ const items = computed(() => [
     paths: ['Views'],
     tabViewType: TabViewType.ViewOverview,
     children: [
-      ...mappedViews.map(e => ({
-        title: e.view_name,
-        id: e.view_name,
+      ...views.map(viewName => ({
+        title: viewName,
+        id: viewName,
         icon: 'vscode-icons:file-type-sql',
-        paths: ['Vies', e.view_name],
+        paths: ['Vies', viewName],
         tabViewType: TabViewType.ViewDetail,
       })),
     ],
@@ -76,12 +73,45 @@ const items = computed(() => [
 
 const tabsStore = useManagementViewContainerStore();
 
-// const workspaceId = useCurrentWorkspaceId();
+const activityBarStore = useActivityBarStore();
+const { schemasExpandedState, schemaCurrentScrollTop } =
+  toRefs(activityBarStore);
+
+onBeforeUnmount(() => {
+  console.log('treeFolderRef', treeFolderRef.value?.$el?.scrollTop);
+  schemaCurrentScrollTop.value = treeFolderRef.value?.$el?.scrollTop || 0;
+});
+
+onMounted(() => {
+  nextTick(() => {
+    treeFolderRef.value?.$el?.scrollTo({
+      top: schemaCurrentScrollTop.value,
+    });
+  });
+});
 </script>
 
 <template>
   <div class="flex flex-col h-full w-full">
-    <div class="relative w-full items-center px-3 pt-2">
+    <div class="relative w-full items-center px-2 pt-1 space-y-1">
+      <div>
+        <p
+          class="text-sm font-medium text-muted-foreground leading-none block pb-1"
+        >
+          Connections
+        </p>
+        <ModulesSelectorsConnectionSelector class="w-full!" />
+      </div>
+
+      <div>
+        <p
+          class="text-sm font-medium text-muted-foreground leading-none block pb-1"
+        >
+          Schemas
+        </p>
+        <ModulesSelectorsSchemaSelector class="w-full!" />
+      </div>
+
       <div class="relative w-full">
         <!-- <Search class="absolute left-2.5 top-2 h-4 w-4 text-muted-foreground" /> -->
         <Input
@@ -92,7 +122,7 @@ const tabsStore = useManagementViewContainerStore();
       </div>
     </div>
 
-    <div class="px-3 pt-2 flex items-center justify-between">
+    <div class="px-2 pt-2 flex items-center justify-between">
       <p class="text-sm font-medium text-muted-foreground leading-none">
         Schemas
       </p>
@@ -108,8 +138,9 @@ const tabsStore = useManagementViewContainerStore();
     </div>
 
     <TreeFolder
+      ref="treeFolderRef"
       v-model:explorerFiles="items"
-      v-model:expandedState="expandedState"
+      v-model:expandedState="schemasExpandedState"
       :isShowArrow="false"
       :isExpandedByArrow="false"
       v-on:clickTreeItem="

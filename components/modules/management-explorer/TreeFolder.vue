@@ -28,6 +28,12 @@ const onUpdateExpanded = (value: string[]) => {
 };
 
 const defaultCloseIcon = 'lucide:folder';
+
+const treeRootRef = ref<HTMLElement | null>(null);
+
+defineExpose({
+  treeRootRef,
+});
 </script>
 
 <template>
@@ -38,6 +44,7 @@ const defaultCloseIcon = 'lucide:folder';
     :expanded="expandedState"
     v-slot="{ flattenItems }"
     v-on:update:expanded="onUpdateExpanded"
+    ref="treeRootRef"
   >
     <TreeItem
       v-for="item in flattenItems"

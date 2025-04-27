@@ -1,9 +1,17 @@
+@import url('./fonts/satoshi/satoshi.css');
+@import url('./fonts/alpino/alpino.css');
+@import url('./fonts/generalSans/general-sans.css');
+
 html,
 body {
   height: 100vh;
   margin: 0; /* Remove default margins */
   overflow: hidden; /* Disable scrolling */
   border-radius: 0.5rem;
+
+  /* font-family: 'Alpino-Variable', sans-serif; */
+
+  /* font-family: 'Open Sans', sans-serif; */
 }
 
 ::placeholder {

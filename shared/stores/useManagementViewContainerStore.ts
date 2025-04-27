@@ -66,7 +66,7 @@ export const useManagementViewContainerStore = defineStore(
         console.error(`Tab with ID ${tabId} does not exist.`);
 
         await navigateTo({
-          name: 'workspaceId-schemas',
+          name: 'workspaceId',
           replace: true,
         });
       }
@@ -89,7 +89,7 @@ export const useManagementViewContainerStore = defineStore(
         console.error(`Tab with ID ${tabId} does not exist.`);
 
         await navigateTo({
-          name: 'workspaceId-schemas',
+          name: 'workspaceId',
           replace: true,
         });
       }

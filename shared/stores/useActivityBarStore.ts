@@ -1,6 +1,5 @@
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
-import type { TreeFileSystem } from '../../components/modules/management-explorer/treeUtils';
 
 export enum ActivityBarItemType {
   Explorer = 'Explorer',
@@ -18,9 +17,19 @@ export const useActivityBarStore = defineStore(
       activityActive.value = type;
     };
 
+    const schemasExpandedState = ref<string[]>(['Tables']);
+    const schemaCurrentScrollTop = ref(0);
+
+    const explorerExpandedState = ref<string[]>([]);
+    const explorerCurrentScrollTop = ref(0);
+
     return {
       activityActive,
       setActivityActive,
+      schemasExpandedState,
+      schemaCurrentScrollTop,
+      explorerExpandedState,
+      explorerCurrentScrollTop,
     };
   },
   {

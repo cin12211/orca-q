@@ -14,7 +14,8 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { uuidv4 } from '~/lib/utils';
-import { useWorkspacesStore, type Workspace } from '~/shared/stores';
+import { useAppContext } from '~/shared/contexts/useAppContext';
+import { type Workspace } from '~/shared/stores';
 
 const props = defineProps<{
   open: Boolean;
@@ -23,7 +24,7 @@ const props = defineProps<{
 
 const emit = defineEmits(['update:open']);
 
-const workspaceStore = useWorkspacesStore();
+const appContext = useAppContext();
 
 const schema = z.object({
   name: z.string().nonempty('Workspace name is required.'),
@@ -44,7 +45,7 @@ function onSubmit(values: z.infer<typeof schema>) {
   const isUpdate = !!props.workspace;
 
   if (isUpdate) {
-    workspaceStore.updateWorkspace({
+    appContext.workspaceStore.updateWorkspace({
       ...props.workspace,
       desc: values.desc,
       name: values.name,
@@ -55,7 +56,7 @@ function onSubmit(values: z.infer<typeof schema>) {
       description: dayjs().toString(),
     });
   } else {
-    workspaceStore.createWorkspace({
+    appContext.workspaceStore.createWorkspace({
       desc: values.desc,
       id: uuidv4(),
       name: values.name,

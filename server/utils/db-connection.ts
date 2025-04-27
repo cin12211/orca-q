@@ -1,4 +1,7 @@
-import { DataSource } from 'typeorm';
+import { DatabaseType, DataSource } from 'typeorm';
+
+let currentConnectionUrl = '';
+let databaseSource: DataSource | null = null;
 
 const AppDataSource = new DataSource({
   type: 'postgres',
@@ -7,15 +10,43 @@ const AppDataSource = new DataSource({
   logging: true, // Logs SQL queries for debugging,
 });
 
-export async function healthCheckConnection() {
-  try {
-    if (AppDataSource.isInitialized) {
-      return true;
-    }
+//TODO: only support postgres
+export const getDatabaseSource = async ({
+  connectionUrl,
+  type,
+}: {
+  connectionUrl: string;
+  type: DatabaseType;
+}) => {
+  if (connectionUrl !== connectionUrl || !databaseSource) {
+    databaseSource = new DataSource({
+      type: 'postgres', // Ensure the type is explicitly set to 'postgres'
+      url: connectionUrl, // Your connection string
+      synchronize: false, // Set to true if you want TypeORM to auto-create tables (use with caution in production)
+      logging: true, // Logs SQL queries for debugging
+    });
 
-    await AppDataSource.initialize();
-    console.log('Database connection successful!');
-    return true;
+    await databaseSource.initialize();
+
+    return databaseSource;
+  }
+
+  return databaseSource;
+};
+
+export async function healthCheckConnection({ url }: { url: string }) {
+  try {
+    const connection = new DataSource({
+      type: 'postgres', // Ensure the type is explicitly set to 'postgres'
+      url, // Your connection string
+      synchronize: false, // Set to true if you want TypeORM to auto-create tables (use with caution in production)
+      logging: true, // Logs SQL queries for debugging
+      entities: [], // Add entities if required
+    });
+
+    await connection.initialize();
+
+    return connection.isConnected;
   } catch (error) {
     console.error('Database connection failed:', error);
     return false;

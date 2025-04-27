@@ -1,6 +1,6 @@
 <script setup lang="ts">
 definePageMeta({
-  keepalive: true,
+  keepalive: false,
 });
 
 const route = useRoute('workspaceId-schemas-quick-query-table-detail-tableId');
@@ -11,6 +11,7 @@ const { data } = await useFetch('/api/execute', {
     query: `select * from ${route.params.tableId}`,
   },
   key: route.params.tableId,
+  cache: 'default',
 });
 </script>
 

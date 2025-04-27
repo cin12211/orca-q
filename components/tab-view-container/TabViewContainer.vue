@@ -44,6 +44,7 @@ const tabsStore = useManagementViewContainerStore();
         data-tauri-drag-region
         v-auto-animate
       >
+        <!-- <TransitionGroup name="tab"> -->
         <div v-for="tab in tabsStore.tabs">
           <Button
             variant="secondary"
@@ -69,6 +70,7 @@ const tabsStore = useManagementViewContainerStore();
 
           <div class="border-l w-0 h-6 inline ml-2"></div>
         </div>
+        <!-- </TransitionGroup> -->
       </div>
 
       <Button

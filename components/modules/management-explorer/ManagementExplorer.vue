@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { Icon } from '@iconify/vue';
-import { useCurrentWorkspaceId } from '~/shared/contexts/useGetWorkspaceId';
 import {
   TabViewType,
   useManagementViewContainerStore,

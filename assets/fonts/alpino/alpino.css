@@ -1,0 +1,35 @@
+/**
+* @license
+*
+* Font Family: Alpino
+* Designed by: Alisa Nowak, Jérémie Hornus
+* URL: https://www.fontshare.com/fonts/alpino
+* © 2025 Indian Type Foundry
+*
+* Alpino Thin 
+* Alpino Light 
+* Alpino Regular 
+* Alpino Medium 
+* Alpino Bold 
+* Alpino Black 
+* Alpino Variable (Variable font)
+
+ 
+/**
+* This is a variable font
+* You can control variable axes as shown below:
+* font-variation-settings: wght 900.0;
+*
+* available axes:
+'wght' (range from 100.0 to 900.0
+*/
+@font-face {
+  font-family: 'Alpino-Variable';
+  src:
+    url('./Alpino-Variable.woff2') format('woff2'),
+    url('./Alpino-Variable.woff') format('woff'),
+    url('./Alpino-Variable.ttf') format('truetype');
+  font-weight: 100 900;
+  font-display: swap;
+  font-style: normal;
+}

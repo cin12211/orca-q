@@ -11,7 +11,8 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { useWorkspacesStore, type Workspace } from '~/shared/stores';
+import { useAppContext } from '~/shared/contexts/useAppContext';
+import { type Workspace } from '~/shared/stores';
 import CreateWorkspaceModal from './CreateWorkspaceModal.vue';
 import DeleteWorkspaceModal from './DeleteWorkspaceModal.vue';
 
@@ -22,7 +23,7 @@ const props = defineProps<{
   onOpenWorkspace?: () => void;
 }>();
 
-const workspaceStore = useWorkspacesStore();
+const appContext = useAppContext();
 const router = useRouter();
 
 const isOpenEditModal = ref(false);
@@ -30,11 +31,11 @@ const isOpenDeleteModal = ref(false);
 
 const onConfirmDelete = () => {
   isOpenDeleteModal.value = false;
-  workspaceStore.deleteWorkspace(props.workspace.id);
+  appContext.workspaceStore.deleteWorkspace(props.workspace.id);
 };
 
 const onOpenWorkspace = (workspaceId: string) => {
-  workspaceStore.setSelectedWorkspaceId(workspaceId);
+  appContext.onSelectWorkspaceById(workspaceId);
 
   navigateTo({ name: 'workspaceId', params: { workspaceId } });
 };

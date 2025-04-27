@@ -9,19 +9,19 @@ const activityStore = useActivityBarStore();
 
 <template>
   <div class="w-full h-full overflow-y-auto bg-sidebar">
-    <!-- <KeepAlive>
-      <ModulesManagementExplorer
-        v-if="activityStore.activityActive === ActivityBarItemType.Explorer"
-      />
-    </KeepAlive>
-
-    <KeepAlive>
-      <ModulesManagementSchemas
-        v-if="activityStore.activityActive === ActivityBarItemType.Schemas"
-      />
-    </KeepAlive> -->
-
+    <!-- <KeepAlive> -->
     <ModulesManagementExplorer
+      v-if="activityStore.activityActive === ActivityBarItemType.Explorer"
+    />
+    <!-- </KeepAlive> -->
+
+    <!-- <KeepAlive> -->
+    <ModulesManagementSchemas
+      v-if="activityStore.activityActive === ActivityBarItemType.Schemas"
+    />
+    <!-- </KeepAlive> -->
+
+    <!-- <ModulesManagementExplorer
       :class="[
         activityStore.activityActive === ActivityBarItemType.Explorer
           ? ''
@@ -35,6 +35,6 @@ const activityStore = useActivityBarStore();
           ? ''
           : 'hidden',
       ]"
-    />
+    /> -->
   </div>
 </template>

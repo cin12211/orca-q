@@ -1,7 +1,5 @@
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
-import dayjs from 'dayjs';
-import { uuidv4 } from '~/lib/utils';
 
 export interface Workspace {
   id: string;
@@ -21,6 +19,12 @@ export const useWorkspacesStore = defineStore(
     const setSelectedWorkspaceId = (workspaceId: string) => {
       selectedWorkspaceId.value = workspaceId;
     };
+
+    const selectedWorkspace = computed(() => {
+      return workspaces.value.find(
+        workspace => workspace.id === selectedWorkspaceId.value
+      );
+    });
 
     const createWorkspace = (workspace: Workspace) => {
       workspaces.value.push(workspace);
@@ -48,6 +52,7 @@ export const useWorkspacesStore = defineStore(
       createWorkspace,
       deleteWorkspace,
       updateWorkspace,
+      selectedWorkspace,
     };
   },
   {

@@ -72,7 +72,10 @@
                     for="connection-string"
                     class="flex items-center gap-2"
                   >
-                    <FileTextIcon class="h-3.5 w-3.5 text-muted-foreground" />
+                    <Icon
+                      name="hugeicons:connect"
+                      class="h-3.5 w-3.5 text-muted-foreground"
+                    />
                     Connection String
                   </Label>
                   <Input
@@ -155,6 +158,15 @@
           </div>
 
           <div
+            v-if="testStatus === 'testing'"
+            class="flex items-center gap-2 rounded-md border-2 border-green-200 bg-green-50 p-3 text-sm text-orange-600 dark:border-orange-900 dark:bg-orange-950/50 dark:text-orange-400"
+          >
+            <Icon name="hugeicons:loading-03" class="animate-spin" />
+            <CheckIcon class="shrink-0" />
+            <span>Testing connection...</span>
+          </div>
+
+          <div
             v-if="testStatus === 'success'"
             class="flex items-center gap-2 rounded-md border-2 border-green-200 bg-green-50 p-3 text-sm text-green-600 dark:border-green-900 dark:bg-green-950/50 dark:text-green-400"
           >
@@ -234,20 +246,25 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { uuidv4 } from '~/lib/utils';
+import { useAppContext } from '~/shared/contexts/useAppContext';
+import type { Connection } from '~/shared/stores/appState/interface';
 import DatabaseTypeCard from './DatabaseTypeCard.vue';
 import { databaseSupports, EDatabaseType } from './constants';
-import type { DatabaseConnection } from './type/index';
 import { EConnectionMethod } from './type/index';
 
 const props = defineProps<{
   open: boolean;
-  editingConnection: DatabaseConnection | null;
+  editingConnection: Connection | null;
 }>();
 
 const emit = defineEmits<{
   (e: 'update:open', value: boolean): void;
-  (e: 'save', connection: DatabaseConnection): void;
+  (e: 'addNew', connection: Connection): void;
+  (e: 'update', connection: Connection): void;
 }>();
+
+const appContext = useAppContext();
 
 const step = ref<1 | 2>(1);
 const dbType = ref<EDatabaseType | null>(null);
@@ -295,19 +312,29 @@ const handleClose = () => {
   setTimeout(resetForm, 300);
 };
 
-const handleTestConnection = () => {
+const handleTestConnection = async () => {
   testStatus.value = 'testing';
-  // Simulate testing connection
-  setTimeout(() => {
+
+  const result = await $fetch('/api/managment-connection/health-check', {
+    method: 'POST',
+    body: {
+      stringConnection: connectionString.value,
+    },
+  });
+
+  if (result.isConnectedSuccess) {
     testStatus.value = 'success';
-    // For demo purposes, we'll just set success
-    // In a real app, you would make an API call to test the connection
-  }, 1500);
+  } else {
+    testStatus.value = 'error';
+  }
 };
 
 const handleCreateConnection = () => {
-  const newConnection: DatabaseConnection = {
-    id: props.editingConnection?.id || crypto.randomUUID(),
+  const workspaceId = appContext.workspaceStore.selectedWorkspaceId || '';
+
+  const connection: Connection = {
+    workspaceId,
+    id: props.editingConnection?.id || uuidv4(),
     name: connectionName.value,
     type: dbType.value as EDatabaseType,
     method: connectionMethod.value,
@@ -315,22 +342,27 @@ const handleCreateConnection = () => {
   };
 
   if (connectionMethod.value === 'string') {
-    newConnection.connectionString = connectionString.value;
+    connection.connectionString = connectionString.value;
   } else {
-    newConnection.host = formData.host;
-    newConnection.port = formData.port;
-    newConnection.username = formData.username;
-    newConnection.password = formData.password;
-    newConnection.database = formData.database;
+    connection.host = formData.host;
+    connection.port = formData.port;
+    connection.username = formData.username;
+    connection.password = formData.password;
+    connection.database = formData.database;
   }
 
-  emit('save', newConnection);
+  if (props.editingConnection) {
+    emit('update', connection);
+  } else {
+    emit('addNew', connection);
+  }
+
   handleClose();
 };
 
 const getDefaultPort = () => {
   switch (dbType.value) {
-    case 'postgresql':
+    case 'postgres':
       return '5432';
     case 'mysql':
       return '3306';
@@ -343,7 +375,7 @@ const getDefaultPort = () => {
 
 const getConnectionPlaceholder = () => {
   switch (dbType.value) {
-    case 'postgresql':
+    case 'postgres':
       return 'postgresql://username:password@localhost:5432/database';
     case 'mysql':
       return 'mysql://username:password@localhost:3306/database';

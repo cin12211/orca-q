@@ -3,21 +3,20 @@ import { refDebounced } from '@vueuse/core';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 import { Search } from 'lucide-vue-next';
-import { Button } from '@/components/ui/button';
-import { useWorkspacesStore } from '~/shared/stores';
+import { useAppContext } from '~/shared/contexts/useAppContext';
 import WorkspaceCard from './WorkspaceCard.vue';
 import WorkspaceHeader from './WorkspaceHeader.vue';
 
 dayjs.extend(relativeTime);
 
-const workspaceStore = useWorkspacesStore();
+const appContext = useAppContext();
 
 //TODO: create useDebouncedInputRef
 const search = shallowRef('');
 const debouncedSearch = refDebounced(search, 250);
 
 const mappedWorkspaces = computed(() => {
-  return workspaceStore.workspaces.filter(workspace => {
+  return (appContext.workspaceStore.workspaces || []).filter(workspace => {
     return workspace.name
       .toLowerCase()
       .includes(debouncedSearch.value.toLowerCase());

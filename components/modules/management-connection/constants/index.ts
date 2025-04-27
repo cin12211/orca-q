@@ -1,8 +1,9 @@
 import type { RendererElement, RendererNode } from 'vue';
 import { Icon } from '#components';
+import type { DatabaseType } from 'typeorm';
 
 export enum EDatabaseType {
-  PG = 'postgresql',
+  PG = `postgres`,
   MYSQL = 'mysql',
   REDIS = 'redis',
 }

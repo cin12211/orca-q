@@ -20,8 +20,9 @@ export default defineNuxtConfig({
   devtools: { enabled: true },
   ssr: false,
   modules: [
+    // required
     'shadcn-nuxt',
-    '@nuxt/icon', // required
+    '@nuxt/icon',
     '@nuxtjs/color-mode',
     '@pinia/nuxt',
     'pinia-plugin-persistedstate/nuxt',
@@ -29,8 +30,21 @@ export default defineNuxtConfig({
     '@pinia-orm/nuxt',
     '@nuxt/image',
     '@formkit/auto-animate',
+    '@nuxtjs/i18n',
+    // '@nuxt/fonts',
   ],
   css: ['~/assets/css/tailwind.css'],
+  // fonts: {
+  //   families: [
+  //     {
+  //       name: 'Chillax',
+  //       provider: 'local',
+  //     },
+  //   ],
+  // },
+  colorMode: {
+    classSuffix: '',
+  },
   vite: {
     plugins: [tailwindcss()],
   },

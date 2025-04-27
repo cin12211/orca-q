@@ -1,15 +1,31 @@
-import { executeQuery } from '~/server/utils/db-connection';
+import { getDatabaseSource } from '~/server/utils/db-connection';
 
 export default defineEventHandler(async event => {
-  //   const body: { query: string } = await readBody(event);
+  const body: { connectionUrl: string } = await readBody(event);
 
-  const result = await executeQuery(`
+  const resource = await getDatabaseSource({
+    connectionUrl: body.connectionUrl,
+    type: 'postgres',
+  });
+
+  const result = await resource.query(`
     SELECT
         datname
     FROM
         pg_database;
     `);
-  return {
-    result,
-  };
+
+  console.log('Query result:', result);
+
+  return result;
+
+  // const result = await executeQuery(`
+  //   SELECT
+  //       datname
+  //   FROM
+  //       pg_database;
+  //   `);
+  // return {
+  //   result,
+  // };
 });
