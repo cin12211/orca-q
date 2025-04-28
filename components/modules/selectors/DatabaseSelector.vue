@@ -1,21 +1,22 @@
 <script setup lang="ts">
 import { Select, SelectGroup, SelectItem, SelectTrigger } from '#components';
-import { useManagementConnectionStore } from '~/shared/stores/managementConnectionStore';
+import { useAppContext } from '~/shared/contexts/useAppContext';
 import { getDatabaseSupportByType } from '../management-connection/constants';
 
-const connectionStore = useManagementConnectionStore();
+const { connectionStore, onSelectConnectionById } = useAppContext();
+
 const { connections, selectedConnection } = toRefs(connectionStore);
 </script>
 <template>
   <Select
     @update:model-value="
       e => {
-        connectionStore.setSelectedConnection(e as string);
+        onSelectConnectionById(e as string);
       }
     "
     :model-value="selectedConnection?.id"
   >
-    <SelectTrigger class="w-48 h-8!">
+    <SelectTrigger class="w-48 h-8">
       <div
         class="flex items-center gap-2 w-44 truncate"
         v-if="selectedConnection"

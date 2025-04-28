@@ -9,67 +9,69 @@ import {
 } from '~/shared/stores/useManagementViewContainerStore';
 import TreeFolder from '../management-explorer/TreeFolder.vue';
 
-const appContext = useAppContext();
-
-const tables = appContext.schemaStore.currentSchema?.tables || [];
-const functions = appContext.schemaStore.currentSchema?.functions || [];
-const views = appContext.schemaStore.currentSchema?.views || [];
+const { schemaStore } = useAppContext();
 
 const treeFolderRef = templateRef('treeFolderRef');
 
-const items = computed(() => [
-  {
-    title: 'Functions',
-    icon: 'material-icon-theme:folder-functions-open',
-    closeIcon: 'material-icon-theme:folder-functions',
-    paths: ['Functions'],
-    tabViewType: TabViewType.FunctionsOverview,
-    id: 'Functions',
-    children: [
-      ...functions.map(functionName => ({
-        title: functionName,
-        id: functionName,
-        icon: 'vscode-icons:file-type-haskell',
-        paths: ['Functions', functionName],
-        tabViewType: TabViewType.FunctionsDetail,
-      })),
-    ],
-  },
-  {
-    title: 'Tables',
-    id: 'Tables',
-    icon: 'material-icon-theme:folder-database-open',
-    closeIcon: 'material-icon-theme:folder-database',
-    paths: ['Tables'],
-    tabViewType: TabViewType.TableOverview,
-    children: [
-      ...tables.map(tableName => ({
-        title: tableName,
-        id: tableName,
-        icon: 'vscode-icons:file-type-sql',
-        paths: ['Tables', tableName],
-        tabViewType: TabViewType.TableDetail,
-      })),
-    ],
-  },
-  {
-    title: 'Views',
-    id: 'Views',
-    icon: 'material-icon-theme:folder-database-open',
-    closeIcon: 'material-icon-theme:folder-database',
-    paths: ['Views'],
-    tabViewType: TabViewType.ViewOverview,
-    children: [
-      ...views.map(viewName => ({
-        title: viewName,
-        id: viewName,
-        icon: 'vscode-icons:file-type-sql',
-        paths: ['Vies', viewName],
-        tabViewType: TabViewType.ViewDetail,
-      })),
-    ],
-  },
-]);
+const items = computed(() => {
+  const tables = schemaStore.currentSchema?.tables || [];
+  const functions = schemaStore.currentSchema?.functions || [];
+  const views = schemaStore.currentSchema?.views || [];
+
+  return [
+    {
+      title: 'Functions',
+      icon: 'material-icon-theme:folder-functions-open',
+      closeIcon: 'material-icon-theme:folder-functions',
+      paths: ['Functions'],
+      tabViewType: TabViewType.FunctionsOverview,
+      id: 'Functions',
+      children: [
+        ...functions.map(functionName => ({
+          title: functionName,
+          id: functionName,
+          icon: 'vscode-icons:file-type-haskell',
+          paths: ['Functions', functionName],
+          tabViewType: TabViewType.FunctionsDetail,
+        })),
+      ],
+    },
+    {
+      title: 'Tables',
+      id: 'Tables',
+      icon: 'material-icon-theme:folder-database-open',
+      closeIcon: 'material-icon-theme:folder-database',
+      paths: ['Tables'],
+      tabViewType: TabViewType.TableOverview,
+      children: [
+        ...tables.map(tableName => ({
+          title: tableName,
+          id: tableName,
+          icon: 'vscode-icons:file-type-sql',
+          paths: ['Tables', tableName],
+          tabViewType: TabViewType.TableDetail,
+        })),
+      ],
+    },
+    {
+      title: 'Views',
+      id: 'Views',
+      icon: 'material-icon-theme:folder-database-open',
+      closeIcon: 'material-icon-theme:folder-database',
+      paths: ['Views'],
+      tabViewType: TabViewType.ViewOverview,
+      children: [
+        ...views.map(viewName => ({
+          title: viewName,
+          id: viewName,
+          icon: 'vscode-icons:file-type-sql',
+          paths: ['Vies', viewName],
+          tabViewType: TabViewType.ViewDetail,
+        })),
+      ],
+    },
+  ];
+});
 
 const tabsStore = useManagementViewContainerStore();
 
@@ -92,7 +94,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="flex flex-col h-full w-full">
+  <div class="flex flex-col h-full w-full overflow-y-auto">
     <div class="relative w-full items-center px-2 pt-1 space-y-1">
       <div>
         <p

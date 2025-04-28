@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { useMagicKeys } from '@vueuse/core';
 import { type SplitterPanel } from 'reka-ui';
+import { useAppLayoutStore } from '~/shared/stores/appLayoutStore';
 import { provideDefaultLayoutContext } from '../shared/contexts/defaultLayoutContext';
 
 const primarySideBarPanelRef = useTemplateRef<
@@ -39,6 +40,10 @@ const isSecondarySideBarPanelCollapsed = computed(
   () => !!secondarySideBarPanelRef.value?.isCollapsed
 );
 
+const appLayoutStore = useAppLayoutStore();
+
+const { layoutSize, isActivityBarPanelCollapsed } = toRefs(appLayoutStore);
+
 provideDefaultLayoutContext({
   isPrimarySideBarPanelCollapsed,
   isSecondarySideBarPanelCollapsed,
@@ -51,20 +56,20 @@ provideDefaultLayoutContext({
 <template>
   <ResizablePanelGroup
     direction="horizontal"
-    auto-save-id="default-layout-bar"
     id="default-layout-group-1"
+    @layout="layoutSize = $event"
   >
     <div
       class="h-screen w-screen flex flex-col flex-1 max-h-screen overflow-y-auto"
     >
       <TabViewContainer />
-      <div class="h-full flex overflow-y-auto">
-        <ActivityBar />
+      <div class="h-full flex overflow-y-auto" v-auto-animate>
+        <ActivityBar v-if="isActivityBarPanelCollapsed" />
 
         <ResizablePanel
-          :min-size="5"
+          :min-size="10"
           :max-size="40"
-          :default-size="25"
+          :default-size="layoutSize[0]"
           :collapsed-size="0"
           collapsible
           id="default-layout-group-1-panel-1"
@@ -89,7 +94,7 @@ provideDefaultLayoutContext({
           id="default-layout-group-1-panel-3"
           :min-size="5"
           :max-size="50"
-          :default-size="25"
+          :default-size="layoutSize[2]"
           :collapsed-size="0"
           collapsible
           ref="secondarySideBarPanelRef"

@@ -5,19 +5,19 @@ import { useAppContext } from '~/shared/contexts/useAppContext';
 
 const props = defineProps<{ class: string }>();
 
-const appContext = useAppContext();
-const { schemas, currentSchema } = toRefs(appContext.schemaStore);
+const { schemaStore } = useAppContext();
+const { schemasByCurrentConnection, currentSchema } = toRefs(schemaStore);
 </script>
 <template>
   <Select
     @update:model-value="
       e => {
-        appContext.schemaStore.setSelectedSchemaId(e as string);
+        schemaStore.setSelectedSchemaId(e as string);
       }
     "
     :model-value="currentSchema?.name"
   >
-    <SelectTrigger :class="cn(props.class, 'w-48 h-8! cursor-pointer')">
+    <SelectTrigger :class="cn(props.class, 'w-48 h-8 cursor-pointer')">
       <div class="flex items-center gap-2 w-44 truncate" v-if="currentSchema">
         {{ currentSchema?.name }}
       </div>
@@ -25,7 +25,10 @@ const { schemas, currentSchema } = toRefs(appContext.schemaStore);
     </SelectTrigger>
     <SelectContent>
       <SelectGroup>
-        <SelectItem :value="schema.name" v-for="schema in schemas">
+        <SelectItem
+          :value="schema.name"
+          v-for="schema in schemasByCurrentConnection"
+        >
           {{ schema.name }}
         </SelectItem>
       </SelectGroup>

@@ -1,4 +1,4 @@
-import { DatabaseType, DataSource } from 'typeorm';
+import { type DatabaseType, DataSource } from 'typeorm';
 
 let currentConnectionUrl = '';
 let databaseSource: DataSource | null = null;
@@ -18,7 +18,7 @@ export const getDatabaseSource = async ({
   connectionUrl: string;
   type: DatabaseType;
 }) => {
-  if (connectionUrl !== connectionUrl || !databaseSource) {
+  if (connectionUrl !== currentConnectionUrl || !databaseSource) {
     databaseSource = new DataSource({
       type: 'postgres', // Ensure the type is explicitly set to 'postgres'
       url: connectionUrl, // Your connection string
@@ -27,6 +27,8 @@ export const getDatabaseSource = async ({
     });
 
     await databaseSource.initialize();
+
+    currentConnectionUrl = connectionUrl;
 
     return databaseSource;
   }

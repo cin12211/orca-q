@@ -264,7 +264,7 @@ const emit = defineEmits<{
   (e: 'update', connection: Connection): void;
 }>();
 
-const appContext = useAppContext();
+const { workspaceStore } = useAppContext();
 
 const step = ref<1 | 2>(1);
 const dbType = ref<EDatabaseType | null>(null);
@@ -330,7 +330,7 @@ const handleTestConnection = async () => {
 };
 
 const handleCreateConnection = () => {
-  const workspaceId = appContext.workspaceStore.selectedWorkspaceId || '';
+  const workspaceId = workspaceStore.selectedWorkspaceId || '';
 
   const connection: Connection = {
     workspaceId,

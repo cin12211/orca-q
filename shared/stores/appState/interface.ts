@@ -9,11 +9,21 @@ export enum EDatabaseType {
   REDIS = 'redis',
 }
 
+interface Column {
+  label: string;
+  type: 'field';
+  info: string;
+}
+
+export interface TableDetails {
+  [tableName: string]: Column[];
+}
+
 export interface Schema {
   connectionId: string;
   workspaceId: string;
   name: string;
-  entities: string[];
+  tableDetails?: TableDetails | null;
   tables: string[];
   views: string[];
   functions: string[];

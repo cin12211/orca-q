@@ -24,7 +24,7 @@ const props = defineProps<{
 
 const emit = defineEmits(['update:open']);
 
-const appContext = useAppContext();
+const { workspaceStore } = useAppContext();
 
 const schema = z.object({
   name: z.string().nonempty('Workspace name is required.'),
@@ -45,7 +45,7 @@ function onSubmit(values: z.infer<typeof schema>) {
   const isUpdate = !!props.workspace;
 
   if (isUpdate) {
-    appContext.workspaceStore.updateWorkspace({
+    workspaceStore.updateWorkspace({
       ...props.workspace,
       desc: values.desc,
       name: values.name,
@@ -56,7 +56,7 @@ function onSubmit(values: z.infer<typeof schema>) {
       description: dayjs().toString(),
     });
   } else {
-    appContext.workspaceStore.createWorkspace({
+    workspaceStore.createWorkspace({
       desc: values.desc,
       id: uuidv4(),
       name: values.name,

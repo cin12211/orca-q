@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
 import type { Schema } from './appState/interface';
-import { useWorkspacesStore } from './useWorkspacesStore';
+import { useManagementConnectionStore } from './managementConnectionStore';
 
 export const PUBLIC_SCHEMA_ID = 'public';
 
@@ -10,11 +10,21 @@ export const useSchemaStore = defineStore(
   () => {
     const schemas = ref<Schema[]>([]);
 
+    const connectionStore = useManagementConnectionStore();
+
     const selectedSchemaId = ref<string>();
+
+    const schemasByCurrentConnection = computed(() => {
+      return schemas.value.filter(
+        schema => schema.connectionId === connectionStore.selectedConnectionId
+      );
+    });
 
     const currentSchema = computed(() => {
       return schemas.value.find(
-        schema => schema.name === selectedSchemaId.value
+        schema =>
+          schema.name === selectedSchemaId.value &&
+          schema.connectionId === connectionStore.selectedConnectionId
       );
     });
 
@@ -38,24 +48,36 @@ export const useSchemaStore = defineStore(
       }
     };
 
-    const updateSchemas = (newSchemas: Schema[]) => {
-      schemas.value = newSchemas;
+    const updateSchemasForWorkspace = ({
+      connectionId,
+      newSchemas,
+    }: {
+      connectionId: string;
+      newSchemas: Schema[];
+    }) => {
+      // remove all schemas for this workspace
+      let tmpSchema = schemas.value.filter(
+        schema => schema.connectionId !== connectionId
+      );
+
+      tmpSchema = [...tmpSchema, ...newSchemas];
+
+      schemas.value = tmpSchema;
 
       if (!newSchemas.length) {
         selectedSchemaId.value = undefined;
         return;
       }
-
-      setInitialSchema();
     };
 
     return {
       schemas,
       selectedSchemaId,
       currentSchema,
-      updateSchemas,
+      updateSchemasForWorkspace,
       setSelectedSchemaId,
       setInitialSchema,
+      schemasByCurrentConnection,
     };
   },
   {

@@ -8,7 +8,7 @@ const activityStore = useActivityBarStore();
 </script>
 
 <template>
-  <div class="w-full h-full overflow-y-auto bg-sidebar">
+  <div class="w-full h-full flex flex-col bg-sidebar">
     <!-- <KeepAlive> -->
     <ModulesManagementExplorer
       v-if="activityStore.activityActive === ActivityBarItemType.Explorer"
@@ -36,5 +36,9 @@ const activityStore = useActivityBarStore();
           : 'hidden',
       ]"
     /> -->
+
+    <div class="h-10 border-t w-full">
+      <ActivityBarHorizontalBottom />
+    </div>
   </div>
 </template>

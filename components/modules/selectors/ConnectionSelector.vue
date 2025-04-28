@@ -2,38 +2,22 @@
 import { Select, SelectGroup, SelectItem, SelectTrigger } from '#components';
 import type { AcceptableValue } from 'reka-ui';
 import { cn } from '@/lib/utils';
-import { useManagementConnectionStore } from '~/shared/stores/managementConnectionStore';
+import { useAppContext } from '~/shared/contexts/useAppContext';
 import { getDatabaseSupportByType } from '../management-connection/constants';
 
-const connectionStore = useManagementConnectionStore();
+const { connectionStore, onSelectConnectionById } = useAppContext();
+
 const { connections, selectedConnection } = toRefs(connectionStore);
 
 const props = defineProps<{ class: string }>();
 
 const onChangeConnection = async (connectionId: AcceptableValue) => {
-  if (typeof connectionId === 'string') {
-    connectionStore.setSelectedConnection(connectionId);
+  if (
+    typeof connectionId === 'string' &&
+    connectionId !== selectedConnection?.value?.id
+  ) {
+    onSelectConnectionById(connectionId);
   }
-
-  const url = connectionStore.selectedConnection?.connectionString;
-
-  if (!url) return;
-
-  const schemas = await $fetch('/api/get-schemas', {
-    method: 'POST',
-    body: {
-      connectionUrl: url,
-    },
-  });
-  const databases = await $fetch('/api/get-database-names', {
-    method: 'POST',
-    body: {
-      connectionUrl: url,
-    },
-  });
-
-  console.log('schemas', schemas);
-  console.log('databases', databases);
 };
 </script>
 <template>
@@ -41,7 +25,7 @@ const onChangeConnection = async (connectionId: AcceptableValue) => {
     @update:model-value="onChangeConnection"
     :model-value="selectedConnection?.id"
   >
-    <SelectTrigger :class="cn(props.class, 'w-48 h-8! cursor-pointer')">
+    <SelectTrigger :class="cn(props.class, 'w-48 h-8 cursor-pointer')">
       <div
         class="flex items-center gap-2 w-44 truncate"
         v-if="selectedConnection"

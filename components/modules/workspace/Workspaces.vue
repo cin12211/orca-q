@@ -9,14 +9,14 @@ import WorkspaceHeader from './WorkspaceHeader.vue';
 
 dayjs.extend(relativeTime);
 
-const appContext = useAppContext();
+const { workspaceStore } = useAppContext();
 
 //TODO: create useDebouncedInputRef
 const search = shallowRef('');
 const debouncedSearch = refDebounced(search, 250);
 
 const mappedWorkspaces = computed(() => {
-  return (appContext.workspaceStore.workspaces || []).filter(workspace => {
+  return (workspaceStore.workspaces || []).filter(workspace => {
     return workspace.name
       .toLowerCase()
       .includes(debouncedSearch.value.toLowerCase());

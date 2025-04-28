@@ -1,13 +1,9 @@
 <script setup lang="ts">
-import {
-  PanelLeftClose,
-  PanelLeftOpen,
-  PanelRightClose,
-  PanelRightOpen,
-  X,
-} from 'lucide-vue-next';
+import { X } from 'lucide-vue-next';
 import { useDefaultLayout } from '~/shared/contexts/defaultLayoutContext';
+import { useAppLayoutStore } from '~/shared/stores/appLayoutStore';
 import { useManagementViewContainerStore } from '~/shared/stores/useManagementViewContainerStore';
+import ActivityBarHorizontal from '../activity-bar/ActivityBarHorizontal.vue';
 
 const {
   isPrimarySideBarPanelCollapsed,
@@ -19,30 +15,68 @@ const {
 const isAppVersion = computed(() => '__TAURI_INTERNALS__' in window);
 
 const tabsStore = useManagementViewContainerStore();
+
+const appLayoutStore = useAppLayoutStore();
+
+const minWidth = computed(() => {
+  const widthPercentage = appLayoutStore.layoutSize[0];
+  if (!widthPercentage) {
+    return '2.25rem';
+  }
+
+  if (isAppVersion.value) {
+    return `calc( ${widthPercentage}% + 1px) `;
+  }
+
+  return `calc( ${widthPercentage}% + 1px) `;
+});
 </script>
 
 <template>
   <div
     :class="[
-      'w-full h-9 select-none border-b pr-2 bg-sidebar-accent',
-      isAppVersion ? 'pl-[4.5rem]' : 'pl-2',
+      'w-screen h-9 select-none border-b pr-2 bg-sidebar-accent',
+      isAppVersion && !appLayoutStore.layoutSize[0] ? 'pl-[4.5rem]' : '',
     ]"
     data-tauri-drag-region
   >
     <div class="flex justify-between items-center h-full">
-      <Button
-        variant="ghost"
-        size="iconSm"
-        @click="togglePrimarySideBarPanel()"
+      <div
+        class="flex items-center gap-1 h-full px-1"
+        :style="{
+          minWidth,
+          justifyContent: appLayoutStore.layoutSize[0]
+            ? 'space-between'
+            : 'center',
+        }"
       >
-        <PanelLeftOpen class="size-4" v-if="isPrimarySideBarPanelCollapsed" />
-        <PanelLeftClose class="size-4" v-else />
-      </Button>
+        <div
+          :class="[isAppVersion ? 'pl-[4.5rem]' : '']"
+          v-if="!appLayoutStore.isActivityBarPanelCollapsed"
+        >
+          <ActivityBarHorizontal />
+        </div>
+
+        <Button
+          variant="ghost"
+          size="iconSm"
+          @click="togglePrimarySideBarPanel()"
+        >
+          <Icon
+            name="hugeicons:sidebar-left"
+            class="size-5!"
+            v-if="isPrimarySideBarPanelCollapsed"
+          />
+          <Icon name="hugeicons:sidebar-left-01" class="size-5!" v-else />
+
+          <!-- <PanelLeftOpen class="size-4" v-if="isPrimarySideBarPanelCollapsed" />
+          <PanelLeftClose class="size-4" v-else /> -->
+        </Button>
+      </div>
 
       <div
-        class="w-full flex items-center h-full space-x-2 overflow-x-auto custom-x-scrollbar"
+        class="w-full flex items-center h-full space-x-2 px-1 overflow-x-auto custom-x-scrollbar"
         data-tauri-drag-region
-        v-auto-animate
       >
         <!-- <TransitionGroup name="tab"> -->
         <div v-for="tab in tabsStore.tabs">
@@ -78,11 +112,18 @@ const tabsStore = useManagementViewContainerStore();
         size="iconSm"
         @click="toggleSecondarySideBarPanel()"
       >
-        <PanelRightOpen
+        <Icon
+          name="hugeicons:sidebar-right"
+          class="size-5!"
+          v-if="isSecondarySideBarPanelCollapsed"
+        />
+        <Icon name="hugeicons:sidebar-right-01" class="size-5!" v-else />
+
+        <!-- <PanelRightOpen
           class="size-4"
           v-if="isSecondarySideBarPanelCollapsed"
         />
-        <PanelRightClose class="size-4" v-else />
+        <PanelRightClose class="size-4" v-else /> -->
       </Button>
     </div>
   </div>

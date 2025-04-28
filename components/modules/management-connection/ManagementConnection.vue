@@ -3,13 +3,12 @@ import { ref } from 'vue';
 import { Button } from '@/components/ui/button';
 import { useAppContext } from '~/shared/contexts/useAppContext';
 import type { Connection } from '~/shared/stores/appState/interface';
-import { useManagementConnectionStore } from '~/shared/stores/managementConnectionStore';
 import ConnectionsList from './ConnectionsList.vue';
 import CreateConnectionModal from './CreateConnectionModal.vue';
 
 const isModalOpen = ref(false);
 
-const appContext = useAppContext();
+const { onCreateNewConnection, connectionStore } = useAppContext();
 
 const editingConnection = ref<Connection | null>(null);
 
@@ -19,11 +18,11 @@ const onOpenAddConnectionModal = () => {
 };
 
 const handleAddConnection = (connection: Connection) => {
-  appContext.onCreateNewConnection(connection);
+  onCreateNewConnection(connection);
 };
 
 const handleUpdateConnection = (connection: Connection) => {
-  appContext.connectionStore.updateConnection(connection);
+  connectionStore.updateConnection(connection);
 };
 
 const onOpenUpdateConnectionModal = (connection: Connection) => {
@@ -34,7 +33,7 @@ const onOpenUpdateConnectionModal = (connection: Connection) => {
 const handleDeleteConnection = (id: string) => {
   console.log('🚀 ~ handleDeleteConnection ~ id:', id);
 
-  appContext.connectionStore.onDeleteConnection(id);
+  connectionStore.onDeleteConnection(id);
 };
 </script>
 
@@ -55,7 +54,7 @@ const handleDeleteConnection = (id: string) => {
       </div>
 
       <ConnectionsList
-        :connections="appContext.connectionStore.connections"
+        :connections="connectionStore.connections"
         @edit="onOpenUpdateConnectionModal"
         @delete="handleDeleteConnection"
       />

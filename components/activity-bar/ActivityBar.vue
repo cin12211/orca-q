@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { NuxtLink } from '#components';
+import { useDefaultLayout } from '~/shared/contexts/defaultLayoutContext';
 import {
   ActivityBarItemType,
   useActivityBarStore,
@@ -23,6 +23,17 @@ const activity = computed(() => [
   },
 ]);
 
+const { togglePrimarySideBarPanel, isPrimarySideBarPanelCollapsed } =
+  useDefaultLayout();
+
+const onChangeActivity = (type: ActivityBarItemType) => {
+  activityStore.setActivityActive(type);
+
+  if (isPrimarySideBarPanelCollapsed.value) {
+    togglePrimarySideBarPanel();
+  }
+};
+
 // TODO: update
 const user = {
   name: 'shadcn',
@@ -35,20 +46,17 @@ const colorMode = useColorMode();
 
 <template>
   <TooltipProvider :delay-duration="250">
-    <div
-      class="max-w-12 min-w-12 border-r py-2 bg-sidebar-accent"
-      v-auto-animate
-    >
+    <div class="max-w-9 min-w-9 border-r py-2 bg-sidebar-accent" v-auto-animate>
       <div class="flex flex-col justify-between h-full space-y-2">
-        <div class="flex flex-col items-center space-y-2">
+        <div class="flex flex-col items-center gap-1">
           <Tooltip v-for="item in activity">
             <TooltipTrigger as-child>
               <Button
-                size="icon"
+                size="iconMd"
                 :variant="item.isActive ? 'default' : 'ghost'"
-                @click="activityStore.setActivityActive(item.id)"
+                @click="onChangeActivity(item.id)"
               >
-                <Icon :name="item.icon" class="size-6!" />
+                <Icon :name="item.icon" class="size-5!" />
               </Button>
             </TooltipTrigger>
             <TooltipContent side="right">
@@ -57,17 +65,17 @@ const colorMode = useColorMode();
           </Tooltip>
         </div>
 
-        <div class="flex flex-col gap-2">
+        <div class="flex flex-col gap-1">
           <DropdownMenu>
             <DropdownMenuTrigger>
-              <Button size="icon" variant="ghost">
+              <Button size="iconMd" variant="ghost">
                 <Icon
                   name="hugeicons:moon-02"
-                  class="size-6! rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0"
+                  class="size-5! rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0"
                 />
                 <Icon
                   name="hugeicons:sun-03"
-                  class="size-6! absolute rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100"
+                  class="size-5! absolute rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100"
                 />
               </Button>
             </DropdownMenuTrigger>
@@ -105,8 +113,8 @@ const colorMode = useColorMode();
 
           <DropdownMenu>
             <DropdownMenuTrigger>
-              <Button size="icon" variant="ghost">
-                <Icon name="hugeicons:settings-01" class="size-6!" />
+              <Button size="iconMd" variant="ghost">
+                <Icon name="hugeicons:settings-01" class="size-5!" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent

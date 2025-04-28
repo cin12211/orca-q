@@ -68,7 +68,7 @@ onMounted(() => {
       extensions: [
         ...(props.extensions || []),
         basicSetup,
-        sql(props.config),
+        // sql(props.config),
         EditorView.updateListener.of(update => {
           if (update.docChanged) {
             const newCode = update.state.doc.toString();

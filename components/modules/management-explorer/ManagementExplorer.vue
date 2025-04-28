@@ -136,7 +136,7 @@ const tabsStore = useManagementViewContainerStore();
 </script>
 
 <template>
-  <div class="flex flex-col h-full w-full">
+  <div class="flex flex-col h-full w-full overflow-y-auto">
     <div class="relative w-full items-center px-3 pt-2">
       <div class="relative w-full">
         <Input

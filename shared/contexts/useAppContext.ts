@@ -47,30 +47,39 @@ export const useAppContext = () => {
 
     const connectionUrl = connection.connectionString;
 
-    const schemas = await $fetch('/api/get-schemas', {
+    const databaseSource = await $fetch('/api/get-database-source', {
       method: 'POST',
       body: {
         connectionUrl,
       },
     });
 
-    const mappedSchemas: Schema[] = schemas.map((schema: Schema) => {
+    const mappedSchemas: Schema[] = databaseSource.map(schema => {
       return {
         connectionId: connection.id,
         workspaceId: connection.workspaceId,
         name: schema.name,
-        entities: schema?.entities || [],
+        tableDetails: schema?.table_details || null,
         tables: schema?.tables || [],
         views: schema?.views || [],
         functions: schema?.functions || [],
       };
     });
 
-    schemaStore.updateSchemas(mappedSchemas);
+    schemaStore.updateSchemasForWorkspace({
+      newSchemas: mappedSchemas,
+      connectionId: connection.id,
+    });
+  };
+
+  const onSelectConnectionById = (connectionId: string) => {
+    connectionStore.setSelectedConnection(connectionId);
+    schemaStore.setInitialSchema();
   };
 
   return {
     onSelectWorkspaceById,
+    onSelectConnectionById,
     workspaceStore,
     connectionStore,
     schemaStore,

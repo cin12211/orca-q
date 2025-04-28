@@ -4,8 +4,6 @@ import ManagementConnection from '~/components/modules/management-connection/Man
 definePageMeta({
   layout: 'default',
 });
-
-const colorMode = useColorMode();
 </script>
 
 <template>

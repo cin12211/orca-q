@@ -15,17 +15,5 @@ export default defineEventHandler(async event => {
         pg_database;
     `);
 
-  console.log('Query result:', result);
-
   return result;
-
-  // const result = await executeQuery(`
-  //   SELECT
-  //       datname
-  //   FROM
-  //       pg_database;
-  //   `);
-  // return {
-  //   result,
-  // };
 });
