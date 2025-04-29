@@ -20,6 +20,8 @@ import {
   shortCutExecuteCurrentStatement,
   shortCutFormatOnSave,
 } from '~/components/base/code-editor/extensions';
+import { currentStatementHighlighter } from '~/components/base/code-editor/extensions/currentStatementHighlighter';
+import { sqlAutoCompletion } from '~/components/base/code-editor/extensions/customAutoCompleteUi';
 import { useAppContext } from '~/shared/contexts/useAppContext';
 
 definePageMeta({
@@ -156,9 +158,17 @@ const extensions = [
       schema: dummySchema,
     })
   ),
+  currentStatementHighlighter,
+  ...sqlAutoCompletion(),
 ];
 </script>
 
 <template>
   <CodeEditor v-model="code" :extensions="extensions" :disabled="false" />
 </template>
+
+<style>
+.cm-current-statement-line {
+  background-color: rgba(100, 149, 237, 0.2); /* màu xanh nhạt */
+}
+</style>
