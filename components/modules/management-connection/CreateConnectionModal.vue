@@ -20,7 +20,7 @@
             :icon="option.icon"
             :selected="option.isActive"
             @click="option.onClick"
-            iconClass="size-20"
+            iconClass="size-14!"
           />
         </div>
 
@@ -159,7 +159,7 @@
 
           <div
             v-if="testStatus === 'testing'"
-            class="flex items-center gap-2 rounded-md border-2 border-green-200 bg-green-50 p-3 text-sm text-orange-600 dark:border-orange-900 dark:bg-orange-950/50 dark:text-orange-400"
+            class="flex items-center gap-2 rounded-md border-2 p-3 text-sm"
           >
             <Icon name="hugeicons:loading-03" class="animate-spin" />
             <CheckIcon class="shrink-0" />

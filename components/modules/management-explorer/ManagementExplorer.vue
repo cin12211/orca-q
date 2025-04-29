@@ -115,14 +115,16 @@ const onSetAllowEditFileName = async (
 
   await nextTick();
 
-  editFileNameInlineRef.value?.$el?.focus();
-
   if (editFileNameInlineRef.value) {
     editFileNameInlineRef.value.inputValue = fileInfo.value.title;
+    editFileNameInlineRef.value?.$el?.focus();
   }
 };
 
 const onRightClickItem = (_: MouseEvent, item: FlattenedTreeFileSystemItem) => {
+  // _.preventDefault();
+  // _.stopImmediatePropagation();
+  // _.stopPropagation();
   rightClickSelectedItem.value = item;
 };
 
