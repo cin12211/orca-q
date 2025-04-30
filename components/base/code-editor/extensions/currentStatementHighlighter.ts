@@ -17,6 +17,7 @@ const currentStatementLineHighlight = Decoration.line({
   },
 });
 
+//TODO: fix this , this plugin is prevent select because this always update dom
 // 2. Plugin để highlight
 export const currentStatementHighlighter = ViewPlugin.fromClass(
   class {

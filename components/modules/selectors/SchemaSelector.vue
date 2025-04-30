@@ -28,6 +28,7 @@ const { schemasByCurrentConnection, currentSchema } = toRefs(schemaStore);
         <SelectItem
           :value="schema.name"
           v-for="schema in schemasByCurrentConnection"
+          class="cursor-pointer"
         >
           {{ schema.name }}
         </SelectItem>

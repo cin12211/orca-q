@@ -15,6 +15,7 @@
     "format:husky": "prettier $(git diff --cached --name-only --diff-filter=ACMR | sed 's| |\\ |g') --write --ignore-unknown && git update-index --again"
   },
   "dependencies": {
+    "@atlaskit/pragmatic-drag-and-drop": "^1.6.0",
     "@codemirror/autocomplete": "^6.18.6",
     "@codemirror/commands": "^6.8.1",
     "@codemirror/lang-sql": "^6.8.0",

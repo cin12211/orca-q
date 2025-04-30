@@ -49,14 +49,8 @@ export default defineNuxtConfig({
   },
   shadcn: shadcnConfig,
   icon: {
-    // clientBundle: {
-    //   icons: ['hugeicons', 'logos', 'lucide'],
-    // },
-    collections: ['material-icon-theme', 'hugeicons', 'logos', 'lucide'],
+    // collections: ['material-icon-theme', 'hugeicons', 'logos', 'lucide'],
     provider: 'server',
-    // serverBundle: {
-    //   collections: ['hugeicons', 'logos', 'lucide'],
-    // },
   },
   imports: {
     autoImport: true,

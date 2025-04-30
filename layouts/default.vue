@@ -65,7 +65,7 @@ provideDefaultLayoutContext({
       <TabViewContainer />
       <div
         class="h-full flex overflow-y-auto w-screen max-w-screen overflow-x-hidden"
-        v-auto-animate
+        v-auto-animate="{ duration: 250 }"
       >
         <ActivityBar v-if="isActivityBarPanelCollapsed" />
 
