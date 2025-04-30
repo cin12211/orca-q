@@ -3,8 +3,9 @@ import { useAppContext } from '~/shared/contexts/useAppContext';
 
 const { connectionStore } = useAppContext();
 
-const overViewTables = await useFetch('/api/get-over-view-tables', {
+const { data } = await useFetch('/api/get-over-view-tables', {
   cache: 'force-cache',
+  method: 'POST',
   body: {
     connectionUrl: connectionStore.selectedConnection?.connectionString,
   },
@@ -13,9 +14,5 @@ const overViewTables = await useFetch('/api/get-over-view-tables', {
 </script>
 
 <template>
-  <DynamicTable
-    :data="overViewTables.data.value?.result"
-    class="h-full"
-    :defaultPageSize="30"
-  />
+  <DynamicTable :data="data || []" class="h-full" :defaultPageSize="30" />
 </template>

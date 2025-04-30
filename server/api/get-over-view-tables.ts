@@ -1,6 +1,4 @@
-import { executeQuery } from '~/server/utils/db-connection';
-
-interface RoutineMetadata {
+export interface RoutineMetadata {
   name: string;
   schema: string;
   kind: string;
@@ -8,13 +6,15 @@ interface RoutineMetadata {
   comment: string | null;
 }
 
-export interface RoutineQueryResult {
-  result: RoutineMetadata[];
-}
+export default defineEventHandler(async (event): Promise<RoutineMetadata[]> => {
+  const body: { connectionUrl: string } = await readBody(event);
 
-export default defineEventHandler(
-  async (event): Promise<RoutineQueryResult> => {
-    const result = await executeQuery(`
+  const resource = await getDatabaseSource({
+    connectionUrl: body.connectionUrl,
+    type: 'postgres',
+  });
+
+  const result = await resource.query(`
         SELECT 
             c.relname AS name,
             n.nspname AS schema,
@@ -42,8 +42,6 @@ export default defineEventHandler(
         ORDER BY 
             c.relname;
     `);
-    return {
-      result,
-    };
-  }
-);
+
+  return result;
+});

@@ -5,6 +5,7 @@ const { connectionStore } = useAppContext();
 
 const { data } = await useFetch('/api/get-over-view-function', {
   cache: 'force-cache',
+  method: 'POST',
   body: {
     connectionUrl: connectionStore.selectedConnection?.connectionString,
   },
@@ -13,5 +14,5 @@ const { data } = await useFetch('/api/get-over-view-function', {
 </script>
 
 <template>
-  <DynamicTable :data="data?.result" class="h-full" :defaultPageSize="30" />
+  <DynamicTable :data="data || []" class="h-full" :defaultPageSize="30" />
 </template>

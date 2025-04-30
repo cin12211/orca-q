@@ -51,7 +51,10 @@ const minWidth = computed(() => {
         }"
       >
         <div
-          :class="[isAppVersion ? 'pl-[4.5rem]' : '']"
+          :class="[
+            isAppVersion ? 'pl-[4.5rem]' : '',
+            'flex justify-center w-full',
+          ]"
           v-if="!appLayoutStore.isActivityBarPanelCollapsed"
         >
           <ActivityBarHorizontal />

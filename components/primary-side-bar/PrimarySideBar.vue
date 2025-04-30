@@ -1,14 +1,21 @@
 <script setup lang="ts">
+import { useAppLayoutStore } from '~/shared/stores/appLayoutStore';
 import {
   ActivityBarItemType,
   useActivityBarStore,
 } from '~/shared/stores/useActivityBarStore';
 
 const activityStore = useActivityBarStore();
+
+//TODO: fix v-if="layout.layoutSize[0]"
+const layout = useAppLayoutStore();
 </script>
 
 <template>
-  <div class="w-full h-full flex flex-col bg-sidebar">
+  <div
+    class="w-full h-full flex flex-col bg-sidebar"
+    v-if="layout.layoutSize[0]"
+  >
     <!-- <KeepAlive> -->
     <ModulesManagementExplorer
       v-if="activityStore.activityActive === ActivityBarItemType.Explorer"

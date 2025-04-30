@@ -19,6 +19,7 @@ const { connectionStore } = useAppContext();
 
 const code = ref('');
 
+//TODO: must create specific function for get function definition
 await useFetch('/api/execute', {
   method: 'POST',
   body: {
@@ -27,9 +28,9 @@ await useFetch('/api/execute', {
   },
   key: route.params.functionId,
   onResponse: response => {
-    console.log('🚀 ~ response:', response);
-
-    code.value = response.response._data?.result?.[0]?.def;
+    if (response.response._data?.[0]?.def) {
+      code.value = response.response._data?.[0]?.def;
+    }
   },
   cache: 'force-cache',
 });
@@ -43,7 +44,7 @@ const extensions = [
   }),
   shortCutFormatOnSave((fileContent: string) => {
     const formatted = format(fileContent, {
-      language: 'mysql',
+      language: 'postgresql',
     });
 
     return formatted;
