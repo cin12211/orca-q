@@ -3,3 +3,27 @@
   height: 100%;
   background-color: var(--color-amber-400);
 }
+
+.cm-current-statement-line {
+  background-color: var(--color-gray-50) !important; /* màu xanh nhạt */
+}
+
+.cm-activeLine {
+  outline-style: solid;
+  outline-color: var(--border);
+}
+
+.cm-activeLineGutter {
+  /* outline-style: solid; */
+  /* outline-color: var(--border); */
+  background-color: unset !important;
+}
+
+.cm-gutters {
+  background-color: unset !important;
+  border: none !important;
+}
+
+.cm-line {
+  padding-left: 4px !important;
+}

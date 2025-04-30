@@ -63,7 +63,10 @@ provideDefaultLayoutContext({
       class="h-screen w-screen flex flex-col flex-1 max-h-screen overflow-y-auto"
     >
       <TabViewContainer />
-      <div class="h-full flex overflow-y-auto" v-auto-animate>
+      <div
+        class="h-full flex overflow-y-auto w-screen max-w-screen overflow-x-hidden"
+        v-auto-animate
+      >
         <ActivityBar v-if="isActivityBarPanelCollapsed" />
 
         <ResizablePanel

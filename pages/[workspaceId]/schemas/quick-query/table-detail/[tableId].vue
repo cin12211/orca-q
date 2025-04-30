@@ -21,5 +21,5 @@ const { data } = await useFetch('/api/execute', {
 </script>
 
 <template>
-  <DynamicTable :data="data?.result" class="h-full" :defaultPageSize="30" />
+  <DynamicTable :data="data || []" class="h-full" :defaultPageSize="30" />
 </template>

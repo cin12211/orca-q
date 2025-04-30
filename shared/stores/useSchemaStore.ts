@@ -33,6 +33,7 @@ export const useSchemaStore = defineStore(
     };
 
     const setInitialSchema = () => {
+      console.log('schemas.value', schemas.value);
       if (!schemas.value.length) {
         return;
       }

@@ -20,7 +20,6 @@ export default defineNuxtConfig({
   devtools: { enabled: true },
   ssr: false,
   modules: [
-    // required
     'shadcn-nuxt',
     '@nuxt/icon',
     '@nuxtjs/color-mode',
@@ -50,7 +49,14 @@ export default defineNuxtConfig({
   },
   shadcn: shadcnConfig,
   icon: {
-    collections: ['hugeicons', 'logos'],
+    // clientBundle: {
+    //   icons: ['hugeicons', 'logos', 'lucide'],
+    // },
+    collections: ['material-icon-theme', 'hugeicons', 'logos', 'lucide'],
+    provider: 'server',
+    // serverBundle: {
+    //   collections: ['hugeicons', 'logos', 'lucide'],
+    // },
   },
   imports: {
     autoImport: true,

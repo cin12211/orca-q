@@ -10,6 +10,8 @@ import { getCurrentStatement } from '../utils';
 
 // 1. Tạo Decoration line
 const currentStatementLineHighlight = Decoration.line({
+  //TODO: need to move to css
+
   attributes: {
     class: 'cm-current-statement-line',
   },

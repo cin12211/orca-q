@@ -27,6 +27,8 @@ await useFetch('/api/execute', {
   },
   key: route.params.functionId,
   onResponse: response => {
+    console.log('🚀 ~ response:', response);
+
     code.value = response.response._data?.result?.[0]?.def;
   },
   cache: 'force-cache',

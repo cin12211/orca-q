@@ -30,6 +30,7 @@
         "codemirror": "^6.0.1",
         "connection-string": "^4.4.0",
         "dayjs": "^1.11.13",
+        "gsap": "^3.12.7",
         "lucide-vue-next": "^0.487.0",
         "nuxt": "^3.16.2",
         "nuxt-icon": "^1.0.0-beta.7",
@@ -55,6 +56,8 @@
         "@formkit/auto-animate": "^0.8.2",
         "@iconify-json/hugeicons": "^1.2.4",
         "@iconify-json/logos": "^1.2.4",
+        "@iconify-json/lucide": "^1.2.39",
+        "@iconify-json/material-icon-theme": "^1.2.7",
         "@nuxt/fonts": "^0.11.2",
         "@nuxtjs/color-mode": "^3.5.2",
         "@nuxtjs/i18n": "^9.5.3",
@@ -260,6 +263,10 @@
     "@iconify-json/hugeicons": ["@iconify-json/hugeicons@1.2.4", "", { "dependencies": { "@iconify/types": "*" } }, "sha512-Rx1I42/wwqNiWx7rdQxtFWWOF1/DT1IMPrNReBVJiZe7NIdGT6Zv6Jw5gayqUtv7lDmE8eRmgd6MYRoVJrbuoA=="],
 
     "@iconify-json/logos": ["@iconify-json/logos@1.2.4", "", { "dependencies": { "@iconify/types": "*" } }, "sha512-XC4If5D/hbaZvUkTV8iaZuGlQCyG6CNOlaAaJaGa13V5QMYwYjgtKk3vPP8wz3wtTVNVEVk3LRx1fOJz+YnSMw=="],
+
+    "@iconify-json/lucide": ["@iconify-json/lucide@1.2.39", "", { "dependencies": { "@iconify/types": "*" } }, "sha512-1BKCamEZRvArR7PErYCP4SZo9pAANJy6iQWpynI3GM8QKSQtWQgvw6usqGIFCQeJwFZHPOn2OcbDR4P56DyEaQ=="],
+
+    "@iconify-json/material-icon-theme": ["@iconify-json/material-icon-theme@1.2.7", "", { "dependencies": { "@iconify/types": "*" } }, "sha512-DRheMAhm4mj91wbeVaMGB/Bn6e7d2Xa8V3DlKK5d3GkJn/5vkAk3mRAObCJQWPATnN1yfdxu0+JnokBgdFkWXg=="],
 
     "@iconify/collections": ["@iconify/collections@1.0.534", "", { "dependencies": { "@iconify/types": "*" } }, "sha512-c50uAmXmiRSYEP6vXyfQG5uQtJVL0Vm6S2KFcbfw/7fByDM2SBnWQNH+/smXq/bZXVT0CdJr2Nsct+FDdqqKuA=="],
 
@@ -1150,6 +1157,8 @@
     "gopd": ["gopd@1.2.0", "", {}, "sha512-ZUKRh6/kUFoAiTAtTYPZJ3hw9wNxx+BIBOijnlG9PnrJsCcSjs1wyyD6vJpaYtgnzDrKYRSqf3OO6Rfa93xsRg=="],
 
     "graceful-fs": ["graceful-fs@4.2.11", "", {}, "sha512-RbJ5/jmFcNNCcDV5o9eTnBLJ/HszWV0P73bc+Ff4nS/rJj+YaS6IGyiOL0VoBYX+l1Wrl3k63h/KrH+nhJ0XvQ=="],
+
+    "gsap": ["gsap@3.12.7", "", {}, "sha512-V4GsyVamhmKefvcAKaoy0h6si0xX7ogwBoBSs2CTJwt7luW0oZzC0LhdkyuKV8PJAXr7Yaj8pMjCKD4GJ+eEMg=="],
 
     "gzip-size": ["gzip-size@7.0.0", "", { "dependencies": { "duplexer": "^0.1.2" } }, "sha512-O1Ld7Dr+nqPnmGpdhzLmMTQ4vAsD+rHwMm1NLUmoUFFymBOMKxCCrtDxqdBRYXdeEPEi3SyoR4TizJLQrnKBNA=="],
 

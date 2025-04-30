@@ -70,12 +70,21 @@ export const useAppContext = () => {
       newSchemas: mappedSchemas,
       connectionId: connection.id,
     });
+
+    // auto select when user have empty schema or connection
+    if (!schemaStore.currentSchema || !connectionStore.selectedConnectionId) {
+      onSelectConnectionById(connection.id);
+    }
   };
 
   const onSelectConnectionById = (connectionId: string) => {
     connectionStore.setSelectedConnection(connectionId);
     schemaStore.setInitialSchema();
   };
+
+  const currentConnectionString = computed(
+    () => connectionStore.selectedConnection?.connectionString
+  );
 
   return {
     onSelectWorkspaceById,
@@ -84,5 +93,6 @@ export const useAppContext = () => {
     connectionStore,
     schemaStore,
     onCreateNewConnection,
+    currentConnectionString,
   };
 };

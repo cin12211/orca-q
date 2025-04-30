@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Icon } from '@iconify/vue';
+import { Icon } from '#components';
 import {
   TabViewType,
   useManagementViewContainerStore,
@@ -100,8 +100,6 @@ const onCollapsedExplorer = () => {
 const onSetAllowEditFileName = async (
   fileInfo: FlattenedTreeFileSystemItem
 ) => {
-  await nextTick();
-
   explorerFiles.value = tree.updateByPath({
     items: explorerFiles.value,
     paths: fileInfo.value.paths,
@@ -122,16 +120,13 @@ const onSetAllowEditFileName = async (
 };
 
 const onRightClickItem = (_: MouseEvent, item: FlattenedTreeFileSystemItem) => {
-  // _.preventDefault();
-  // _.stopImmediatePropagation();
-  // _.stopPropagation();
   rightClickSelectedItem.value = item;
 };
 
 const onDelayedCallback = (callBack: () => void) => {
   setTimeout(async () => {
     callBack();
-  }, 100);
+  }, 200);
 };
 
 const tabsStore = useManagementViewContainerStore();
@@ -161,7 +156,7 @@ const tabsStore = useManagementViewContainerStore();
           @click="() => onAddNewItem({ isFolder: false })"
         >
           <Icon
-            icon="lucide:file-plus-2"
+            name="lucide:file-plus-2"
             class="size-4! min-w-4 text-muted-foreground"
           />
         </Button>
@@ -172,14 +167,14 @@ const tabsStore = useManagementViewContainerStore();
           @click="() => onAddNewItem({ isFolder: true })"
         >
           <Icon
-            icon="lucide:folder-plus"
+            name="lucide:folder-plus"
             class="size-4! min-w-4 text-muted-foreground"
           />
         </Button>
 
         <Button size="iconSm" variant="ghost" @click="onCollapsedExplorer">
           <Icon
-            icon="lucide:copy-minus"
+            name="lucide:copy-minus"
             class="size-4! min-w-4 text-muted-foreground"
           />
         </Button>
@@ -261,7 +256,7 @@ const tabsStore = useManagementViewContainerStore();
                 v-if="item.hasChildren"
               >
                 <Icon
-                  icon="lucide:file-plus-2"
+                  name="lucide:file-plus-2"
                   class="size-4! min-w-4 text-muted-foreground"
                 />
               </Button>
@@ -281,7 +276,7 @@ const tabsStore = useManagementViewContainerStore();
                 v-if="item.hasChildren"
               >
                 <Icon
-                  icon="lucide:folder-plus"
+                  name="lucide:folder-plus"
                   class="size-4! min-w-4 text-muted-foreground"
                 />
               </Button>
@@ -296,7 +291,7 @@ const tabsStore = useManagementViewContainerStore();
                 "
               >
                 <Icon
-                  icon="lucide:pencil"
+                  name="lucide:pencil"
                   class="size-4! min-w-4 text-muted-foreground"
                 />
               </Button>
@@ -307,7 +302,7 @@ const tabsStore = useManagementViewContainerStore();
                 @click.stop="() => onRemoveFile(item)"
               >
                 <Icon
-                  icon="lucide:trash"
+                  name="lucide:trash"
                   class="size-4! min-w-4 text-muted-foreground"
                 />
               </Button>
@@ -332,7 +327,7 @@ const tabsStore = useManagementViewContainerStore();
             v-if="rightClickSelectedItem?.hasChildren"
           >
             <Icon
-              icon="lucide:file-plus-2"
+              name="lucide:file-plus-2"
               class="size-4! min-w-4 text-muted-foreground"
             />
             Add new file
@@ -352,7 +347,7 @@ const tabsStore = useManagementViewContainerStore();
             "
           >
             <Icon
-              icon="lucide:folder-plus"
+              name="lucide:folder-plus"
               class="size-4! min-w-4 text-muted-foreground"
             />
             Add new folder
@@ -369,7 +364,7 @@ const tabsStore = useManagementViewContainerStore();
             "
           >
             <Icon
-              icon="lucide:pencil"
+              name="lucide:pencil"
               class="size-4! min-w-4 text-muted-foreground"
             />
             Rename...
@@ -383,7 +378,7 @@ const tabsStore = useManagementViewContainerStore();
             "
           >
             <Icon
-              icon="lucide:trash"
+              name="lucide:trash"
               class="size-4! min-w-4 text-muted-foreground"
             />Delete
           </ContextMenuItem>

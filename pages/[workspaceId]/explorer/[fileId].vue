@@ -30,7 +30,6 @@ definePageMeta({
 
 const { schemaStore } = useAppContext();
 
-// 1) Metadata cho Postgres keywords với boost chuyên nghiệp
 const pgKeywordMeta: Record<string, { info: string; boost: number }> = {
   // Core DML/DQL (mức cao nhất)
   SELECT: { info: 'Chọn dữ liệu từ bảng', boost: 105 },
@@ -113,11 +112,15 @@ const pgKeywordMeta: Record<string, { info: string; boost: number }> = {
   JSONB_AGG: { info: 'Gộp JSONB', boost: 70 },
 };
 
-const dummySchema: SQLNamespace = schemaStore.currentSchema?.tableDetails ?? {};
+const schema: SQLNamespace = schemaStore.currentSchema?.tableDetails ?? {};
 
 const code = ref('');
 
+const tableData = ref<Record<string, unknown>[]>([]);
+
 const sqlCompartment = new Compartment();
+
+const { currentConnectionString } = useAppContext();
 
 function myKeywordCompletion(label: string, type: string): Completion {
   const up = label.toUpperCase();
@@ -130,12 +133,29 @@ function myKeywordCompletion(label: string, type: string): Completion {
 }
 
 const extensions = [
-  shortCutExecuteCurrentStatement((currentStatement: SyntaxTreeNodeData) => {
-    console.log(
-      '🚀 ~ shortCutCurrentStatementExecute ~ currentStatement:',
-      currentStatement
-    );
-  }),
+  shortCutExecuteCurrentStatement(
+    async (currentStatement: SyntaxTreeNodeData) => {
+      console.log(
+        '🚀 ~ shortCutCurrentStatementExecute ~ currentStatement:',
+        currentStatement,
+
+        currentConnectionString.value,
+        currentStatement.text
+      );
+
+      const result = await $fetch('/api/execute', {
+        method: 'POST',
+        body: {
+          connectionUrl: currentConnectionString.value,
+          query: currentStatement.text,
+        },
+      });
+
+      console.log('result', result);
+
+      tableData.value = result;
+    }
+  ),
   shortCutFormatOnSave((fileContent: string) => {
     const formatted = format(fileContent, {
       language: 'postgresql',
@@ -153,9 +173,9 @@ const extensions = [
   sqlCompartment.of(
     sql({
       dialect: PostgreSQL,
-      upperCaseKeywords: true, // từ khóa in hoa
+      upperCaseKeywords: true,
       keywordCompletion: myKeywordCompletion,
-      schema: dummySchema,
+      schema: schema,
     })
   ),
   currentStatementHighlighter,
@@ -164,11 +184,13 @@ const extensions = [
 </script>
 
 <template>
-  <CodeEditor v-model="code" :extensions="extensions" :disabled="false" />
-</template>
+  <div class="flex flex-col gap-2 h-full">
+    <div class="h-full">
+      <CodeEditor v-model="code" :extensions="extensions" :disabled="false" />
+    </div>
 
-<style>
-.cm-current-statement-line {
-  background-color: rgba(100, 149, 237, 0.2); /* màu xanh nhạt */
-}
-</style>
+    <div class="h-[40rem] w-full">
+      <DynamicTable :data="tableData" />
+    </div>
+  </div>
+</template>

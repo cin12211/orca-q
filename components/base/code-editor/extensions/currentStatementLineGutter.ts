@@ -11,6 +11,7 @@ export interface SyntaxTreeNodeData {
 const currentStatementMarker = new (class extends GutterMarker {
   override toDOM() {
     const newDiv = document.createElement('div');
+    //TODO: need to move to css
     newDiv.classList.add('line-gutter-statement-line');
 
     return newDiv;
