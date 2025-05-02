@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
-import type { TreeFileSystem } from '../../components/modules/management-explorer/treeUtils';
+import type { TreeFileSystem } from '../../components/base/Tree/treeUtils';
 
 export const useManagementExplorerStore = defineStore(
   'management-explorer',

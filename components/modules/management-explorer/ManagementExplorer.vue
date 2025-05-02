@@ -1,26 +1,31 @@
 <script setup lang="ts">
+import { refDebounced } from '@vueuse/core';
 import { Icon } from '#components';
-import {
-  TabViewType,
-  useManagementViewContainerStore,
-} from '~/shared/stores/useManagementViewContainerStore';
-import { useManagementExplorerStore } from '../../../shared/stores/managementExplorerStore';
-import InputEditInline from './InputEditInline.vue';
-import TreeFolder from './TreeFolder.vue';
 import {
   ETreeFileSystemStatus,
   getTreeItemPath,
   tree,
   type FlattenedTreeFileSystemItem,
-} from './treeUtils';
+} from '~/components/base/Tree';
+import type TreeItemInputEditInline from '~/components/base/Tree/TreeItemInputEditInline.vue';
+import {
+  TabViewType,
+  useManagementViewContainerStore,
+} from '~/shared/stores/useManagementViewContainerStore';
+import { useManagementExplorerStore } from '../../../shared/stores/managementExplorerStore';
+import TreeFolder from '../../base/Tree/TreeFolder.vue';
 
 const explorerStore = useManagementExplorerStore();
+
+const searchInput = shallowRef('');
+const debouncedSearch = refDebounced(searchInput, 250);
+
 const { expandedState, explorerFiles } = toRefs(explorerStore);
 
 const rightClickSelectedItem = ref<FlattenedTreeFileSystemItem | null>(null);
 
 const editFileNameInlineRef = useTemplateRef<InstanceType<
-  typeof InputEditInline
+  typeof TreeItemInputEditInline
 > | null>('editFileNameInline');
 
 const onUpdateExpandedState = (paths: string[], oldPaths?: string[]) => {
@@ -130,54 +135,74 @@ const onDelayedCallback = (callBack: () => void) => {
 };
 
 const tabsStore = useManagementViewContainerStore();
+
+const mappedExplorerFiles = computed(() => {
+  if (!debouncedSearch.value) {
+    return explorerFiles.value;
+  }
+
+  return tree.filterByTitle({
+    data: explorerFiles.value,
+    title: debouncedSearch.value,
+  });
+});
 </script>
 
 <template>
   <div class="flex flex-col h-full w-full overflow-y-auto">
-    <div class="relative w-full items-center px-3 pt-2">
-      <div class="relative w-full">
+    <div class="px-3">
+      <div class="relative w-full pt-2">
         <Input
           type="text"
           placeholder="Search in all tables or functions"
-          class="pl-2 w-full h-8"
+          class="pr-6 w-full h-8"
+          v-model="searchInput"
         />
+
+        <div
+          v-if="searchInput"
+          class="absolute right-2 top-3.5 w-4 cursor-pointer hover:bg-accent"
+          @click="searchInput = ''"
+        >
+          <Icon name="lucide:x" class="stroke-3! text-muted-foreground" />
+        </div>
       </div>
-    </div>
 
-    <div class="px-3 pr-2 pt-2 flex items-center justify-between">
-      <p class="text-sm font-medium text-muted-foreground leading-none">
-        Explorer
-      </p>
+      <div class="pt-2 flex items-center justify-between">
+        <p class="text-sm font-medium text-muted-foreground leading-none">
+          Explorer
+        </p>
 
-      <div class="flex items-center">
-        <Button
-          size="iconSm"
-          variant="ghost"
-          @click="() => onAddNewItem({ isFolder: false })"
-        >
-          <Icon
-            name="lucide:file-plus-2"
-            class="size-4! min-w-4 text-muted-foreground"
-          />
-        </Button>
+        <div class="flex items-center">
+          <Button
+            size="iconSm"
+            variant="ghost"
+            @click="() => onAddNewItem({ isFolder: false })"
+          >
+            <Icon
+              name="lucide:file-plus-2"
+              class="size-4! min-w-4 text-muted-foreground"
+            />
+          </Button>
 
-        <Button
-          size="iconSm"
-          variant="ghost"
-          @click="() => onAddNewItem({ isFolder: true })"
-        >
-          <Icon
-            name="lucide:folder-plus"
-            class="size-4! min-w-4 text-muted-foreground"
-          />
-        </Button>
+          <Button
+            size="iconSm"
+            variant="ghost"
+            @click="() => onAddNewItem({ isFolder: true })"
+          >
+            <Icon
+              name="lucide:folder-plus"
+              class="size-4! min-w-4 text-muted-foreground"
+            />
+          </Button>
 
-        <Button size="iconSm" variant="ghost" @click="onCollapsedExplorer">
-          <Icon
-            name="lucide:copy-minus"
-            class="size-4! min-w-4 text-muted-foreground"
-          />
-        </Button>
+          <Button size="iconSm" variant="ghost" @click="onCollapsedExplorer">
+            <Icon
+              name="lucide:copy-minus"
+              class="size-4! min-w-4 text-muted-foreground"
+            />
+          </Button>
+        </div>
       </div>
     </div>
 
@@ -185,7 +210,7 @@ const tabsStore = useManagementViewContainerStore();
       <ContextMenu>
         <ContextMenuTrigger>
           <TreeFolder
-            v-model:explorerFiles="explorerFiles"
+            v-model:explorerFiles="mappedExplorerFiles"
             v-model:expandedState="expandedState"
             is-show-arrow
             :onRightClickItem="onRightClickItem"
@@ -211,7 +236,7 @@ const tabsStore = useManagementViewContainerStore();
             "
           >
             <template #edit-inline="{ item }">
-              <InputEditInline
+              <TreeItemInputEditInline
                 ref="editFileNameInline"
                 @rename="
                   name => {

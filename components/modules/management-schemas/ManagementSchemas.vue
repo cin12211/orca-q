@@ -1,15 +1,19 @@
 <script setup lang="ts">
-import { templateRef } from '@vueuse/core';
+import { refDebounced, templateRef } from '@vueuse/core';
 import type { RouteNameFromPath, RoutePathSchema } from '@typed-router/__paths';
+import { tree } from '~/components/base/Tree';
+import TreeFolder from '~/components/base/Tree/TreeFolder.vue';
 import { useAppContext } from '~/shared/contexts/useAppContext';
 import { useActivityBarStore } from '~/shared/stores';
 import {
   TabViewType,
   useManagementViewContainerStore,
 } from '~/shared/stores/useManagementViewContainerStore';
-import TreeFolder from '../management-explorer/TreeFolder.vue';
 
 const { schemaStore } = useAppContext();
+
+const searchInput = shallowRef('');
+const debouncedSearch = refDebounced(searchInput, 250);
 
 const treeFolderRef = templateRef('treeFolderRef');
 
@@ -18,7 +22,7 @@ const items = computed(() => {
   const functions = schemaStore.currentSchema?.functions || [];
   const views = schemaStore.currentSchema?.views || [];
 
-  return [
+  const treeItems = [
     {
       title: 'Functions',
       icon: 'material-icon-theme:folder-functions-open',
@@ -71,6 +75,15 @@ const items = computed(() => {
       ],
     },
   ];
+
+  if (!debouncedSearch.value) {
+    return treeItems;
+  }
+
+  return tree.filterByTitle({
+    data: treeItems,
+    title: debouncedSearch.value,
+  });
 });
 
 const tabsStore = useManagementViewContainerStore();
@@ -114,13 +127,21 @@ onMounted(() => {
         <ModulesSelectorsSchemaSelector class="w-full!" />
       </div>
 
-      <div class="relative w-full">
-        <!-- <Search class="absolute left-2.5 top-2 h-4 w-4 text-muted-foreground" /> -->
+      <div class="relative w-full pt-2">
         <Input
           type="text"
           placeholder="Search in all tables or functions"
-          class="pl-2 w-full h-8"
+          class="pr-6 w-full h-8"
+          v-model="searchInput"
         />
+
+        <div
+          v-if="searchInput"
+          class="absolute right-2 top-3.5 w-4 cursor-pointer hover:bg-accent"
+          @click="searchInput = ''"
+        >
+          <Icon name="lucide:x" class="stroke-3! text-muted-foreground" />
+        </div>
       </div>
     </div>
 
