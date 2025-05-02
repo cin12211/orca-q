@@ -12,7 +12,7 @@ import { X } from 'lucide-vue-next';
 import type { TabView } from '~/shared/stores';
 
 //TODO: check list
-// - dragable tab view container
+// - dragable tab view container [done]
 // - management explored ( maybe move to use json file in backend to store)
 // - management control history query
 // - quick query view need to update
@@ -26,6 +26,7 @@ const props = defineProps<{
   isActive: boolean;
   selectTab: (tabId: string) => void;
   closeTab: (tabId: string) => void;
+  onRightClickItem: (tab: TabView) => void;
 }>();
 
 const elementRef = shallowRef<HTMLElement | null>();
@@ -90,9 +91,9 @@ watchEffect(onCleanup => {
         //   }
       },
       onDragEnter: ({ self, source }) => {
-        const isDifferentTab = self.data?.id !== source.data.id;
+        // const isDifferentTab = self.data?.id !== source.data.id;
 
-        if (props.tab.id === self.data?.id && isDifferentTab) {
+        if (props.tab.id === self.data?.id) {
           instruction.value = true;
         }
       },
@@ -114,29 +115,41 @@ watchEffect(onCleanup => {
 </script>
 
 <template>
-  <Button
-    ref="elementRef"
-    variant="secondary"
-    size="sm"
-    :class="[
-      'h-7! max-w-44 justify-start! hover:bg-background font-normal p-2!  hover:[&>div]:opacity-100 transition-all duration-200',
-      isActive ? 'bg-background border' : 'border-transparent border',
-      isDragging ? 'bg-primary/5' : '',
-    ]"
-    @mousedown="selectTab(tab.id)"
-    :id="tab.id"
-  >
-    <Icon :name="tab.icon" class="size-4" />
-    <div class="truncate">{{ tab.name }}</div>
-    <div
-      class="hover:bg-card p-0.5 rounded-full opacity-0"
-      @click="() => closeTab(tab.id)"
-    >
-      <X class="size-3 stroke-[2.5]!" />
-    </div>
-  </Button>
   <div
-    v-if="instruction"
-    class="absolute h-7 w-0.5 top-0 rounded-md bg-accent-foreground"
-  />
+    class="relative"
+    @click.right="
+      () => {
+        onRightClickItem(tab);
+      }
+    "
+  >
+    <Button
+      ref="elementRef"
+      variant="secondary"
+      size="sm"
+      :class="[
+        'h-7! max-w-44 justify-start! hover:bg-background font-normal p-2!  hover:[&>div]:opacity-100 transition-all duration-200',
+        isActive ? 'bg-background border' : 'border-transparent border',
+        isDragging ? 'bg-primary/5' : '',
+      ]"
+      @click.left="selectTab(tab.id)"
+      :id="tab.id"
+    >
+      <Icon :name="tab.icon" class="size-4" />
+      <div class="truncate">{{ tab.name }}</div>
+      <div
+        class="hover:bg-accent p-0.5 rounded-full opacity-0"
+        @click.stop="() => closeTab(tab.id)"
+      >
+        <X class="size-3 stroke-[2.5]!" />
+      </div>
+    </Button>
+
+    <div
+      v-if="instruction"
+      class="absolute h-7 w-0.5 top-0 rounded-md bg-accent-foreground"
+    />
+  </div>
+
+  <div class="border-l w-0 h-6 block"></div>
 </template>

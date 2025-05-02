@@ -77,6 +77,7 @@ export const useManagementViewContainerStore = defineStore(
       if (index !== -1) {
         const wasActive = activeTab.value?.id === tabId;
         tabs.value.splice(index, 1);
+
         if (wasActive && tabs.value.length > 0 && activeTab.value) {
           // Select the next tab, or the previous tab if no next tab exists
           const nextIndex = index < tabs.value.length ? index : index - 1;
@@ -100,9 +101,24 @@ export const useManagementViewContainerStore = defineStore(
 
       const tabSourceIdex = tabs.value.findIndex(t => t.id === tabSourceId);
 
-      const tabTarget = tabs.value[tabTargetIndex];
-      tabs.value.splice(tabTargetIndex, 1);
-      tabs.value.splice(tabSourceIdex, 0, tabTarget);
+      const tabSource = tabs.value[tabSourceIdex];
+      // remove tabSource
+      tabs.value.splice(tabSourceIdex, 1);
+      // insert tabSource
+      tabs.value.splice(tabTargetIndex, 0, tabSource);
+    };
+
+    const closeOtherTab = (tabId: string) => {
+      tabs.value = tabs.value.filter(t => t.id === tabId);
+      selectTab(tabId);
+    };
+
+    const closeToTheRight = (tabId: string) => {
+      const currentTabIndex = tabs.value.findIndex(t => t.id === tabId);
+
+      tabs.value.splice(currentTabIndex + 1);
+
+      selectTab(tabId);
     };
 
     return {
@@ -113,6 +129,8 @@ export const useManagementViewContainerStore = defineStore(
       closeTab,
       selectTab,
       moveTabTo,
+      closeOtherTab,
+      closeToTheRight,
     };
   },
   {
