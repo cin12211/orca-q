@@ -8,7 +8,7 @@ import {
   type SyntaxTreeNodeData,
   shortCutExecuteCurrentStatement,
   shortCutFormatOnSave,
-  currentStatementHighlighter,
+  // currentStatementHighlighter,
   sqlAutoCompletion,
 } from '~/components/base/code-editor/extensions';
 import { pgKeywordCompletion } from '~/components/base/code-editor/utils/pgKeywordCompletion';
@@ -83,7 +83,8 @@ const extensions = [
       schema: schema,
     })
   ),
-  currentStatementHighlighter,
+  //TODO: turn on when fix done bugs
+  // currentStatementHighlighter,
   ...sqlAutoCompletion(),
 ];
 </script>

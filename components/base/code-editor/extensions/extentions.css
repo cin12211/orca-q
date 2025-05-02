@@ -8,16 +8,16 @@
   background-color: var(--color-gray-50) !important; /* màu xanh nhạt */
 }
 
-.cm-activeLine {
-  outline-style: solid;
-  outline-color: var(--border);
-}
+/* .cm-activeLine { */
+/* outline-style: solid; */
+/* outline-color: var(--border); */
+/* } */
 
-.cm-activeLineGutter {
-  /* outline-style: solid; */
-  /* outline-color: var(--border); */
-  background-color: unset !important;
-}
+/* .cm-activeLineGutter { */
+/* outline-style: solid; */
+/* outline-color: var(--border); */
+/* background-color: unset !important; */
+/* } */
 
 .cm-gutters {
   background-color: unset !important;

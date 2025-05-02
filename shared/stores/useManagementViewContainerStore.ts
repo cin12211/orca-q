@@ -20,7 +20,7 @@ export enum TabViewType {
   CodeQuery = 'CodeQuery',
 }
 
-type TabView = {
+export type TabView = {
   name: string;
   id: string;
   projectId?: string;
@@ -95,6 +95,16 @@ export const useManagementViewContainerStore = defineStore(
       }
     };
 
+    const moveTabTo = (tabTargetId: string, tabSourceId: string) => {
+      const tabTargetIndex = tabs.value.findIndex(t => t.id === tabTargetId);
+
+      const tabSourceIdex = tabs.value.findIndex(t => t.id === tabSourceId);
+
+      const tabTarget = tabs.value[tabTargetIndex];
+      tabs.value.splice(tabTargetIndex, 1);
+      tabs.value.splice(tabSourceIdex, 0, tabTarget);
+    };
+
     return {
       tabs,
       activeTab,
@@ -102,6 +112,7 @@ export const useManagementViewContainerStore = defineStore(
       openTab,
       closeTab,
       selectTab,
+      moveTabTo,
     };
   },
   {

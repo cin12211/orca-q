@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import { ref, watch, onMounted, onUnmounted } from 'vue';
 import { PostgreSQL, type SQLConfig, sql } from '@codemirror/lang-sql';
+import { search } from '@codemirror/search';
 import { Compartment, EditorState, type Extension } from '@codemirror/state';
 import { EditorView, basicSetup } from 'codemirror';
+import { smoothy } from 'thememirror';
 import { cn } from '@/lib/utils';
 import { currentStatementLineGutter } from './extensions';
 
@@ -68,6 +70,9 @@ onMounted(() => {
       extensions: [
         ...(props.extensions || []),
         basicSetup,
+        search({
+          top: true,
+        }),
         // sql(props.config),
         EditorView.updateListener.of(update => {
           if (update.docChanged) {
@@ -79,6 +84,7 @@ onMounted(() => {
         currentStatementLineGutter,
         readOnlyState,
         compartmentOfLineWrapping,
+        smoothy,
       ],
     });
 

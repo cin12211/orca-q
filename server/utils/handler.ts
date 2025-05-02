@@ -1,6 +1,6 @@
 import type { EventHandler, EventHandlerRequest } from 'h3';
 
-//TODO: need to check
+//TODO: need to check , use in api file , to want Wrapped
 export const defineWrappedResponseHandler = <T extends EventHandlerRequest, D>(
   handler: EventHandler<T, D>
 ): EventHandler<T, D> =>

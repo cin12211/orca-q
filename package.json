@@ -16,6 +16,8 @@
   },
   "dependencies": {
     "@atlaskit/pragmatic-drag-and-drop": "^1.6.0",
+    "@atlaskit/pragmatic-drag-and-drop-auto-scroll": "^2.1.0",
+    "@atlaskit/pragmatic-drag-and-drop-hitbox": "^1.0.3",
     "@codemirror/autocomplete": "^6.18.6",
     "@codemirror/commands": "^6.8.1",
     "@codemirror/lang-sql": "^6.8.0",
@@ -55,6 +57,7 @@
     "reka-ui": "^2.2.0",
     "shadcn-nuxt": "2.0.0",
     "sql-formatter": "^15.5.2",
+    "thememirror": "^2.0.1",
     "tw-animate-css": "^1.2.5",
     "typed-router": "^0.2.0",
     "typeorm": "^0.3.22",

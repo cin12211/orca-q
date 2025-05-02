@@ -234,10 +234,10 @@ const baseTheme = EditorView.baseTheme({
     },
   },
 
-  // TODO: must be refactored
-  '.cm-activeLine': {
-    backgroundColor: 'transparent',
-  },
+  // // TODO: must be refactored
+  // '.cm-activeLine': {
+  //   backgroundColor: 'transparent',
+  // },
 });
 
 const customAutoCompletion = (config: AutoCompletionConfig) => {

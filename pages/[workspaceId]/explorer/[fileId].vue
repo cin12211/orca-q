@@ -75,7 +75,7 @@ const extensions = [
       schema: schema,
     })
   ),
-  currentStatementHighlighter,
+  // currentStatementHighlighter,
   ...sqlAutoCompletion(),
 ];
 </script>
