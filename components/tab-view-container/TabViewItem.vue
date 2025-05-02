@@ -11,16 +11,6 @@ import { setCustomNativeDragPreview } from '@atlaskit/pragmatic-drag-and-drop/el
 import { X } from 'lucide-vue-next';
 import type { TabView } from '~/shared/stores';
 
-//TODO: check list
-// - dragable tab view container [done]
-// - management explored ( maybe move to use json file in backend to store)
-// - management control history query
-// - quick query view need to update
-// - code editor cần update để show full thông tin của filed ( nâng cao : kiểu dữ liệu , icon cho field )
-// - need to review UI/UX
-// - refactor source code
-// - luồng data flow đi đang có vấn đề , chưa support cho nhiều schema
-
 const props = defineProps<{
   tab: TabView;
   isActive: boolean;
@@ -50,6 +40,7 @@ watchEffect(onCleanup => {
       },
       onDrop: () => {
         isDragging.value = false;
+        props.selectTab(props.tab.id);
       },
 
       onGenerateDragPreview({ nativeSetDragImage }) {

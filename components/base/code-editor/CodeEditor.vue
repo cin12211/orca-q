@@ -4,7 +4,7 @@ import { PostgreSQL, type SQLConfig, sql } from '@codemirror/lang-sql';
 import { search } from '@codemirror/search';
 import { Compartment, EditorState, type Extension } from '@codemirror/state';
 import { EditorView, basicSetup } from 'codemirror';
-import { smoothy } from 'thememirror';
+import { ayuLight } from 'thememirror';
 import { cn } from '@/lib/utils';
 import { currentStatementLineGutter } from './extensions';
 
@@ -84,7 +84,7 @@ onMounted(() => {
         currentStatementLineGutter,
         readOnlyState,
         compartmentOfLineWrapping,
-        smoothy,
+        ayuLight,
       ],
     });
 

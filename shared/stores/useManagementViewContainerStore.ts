@@ -46,6 +46,7 @@ export const useManagementViewContainerStore = defineStore(
 
     const selectTab = async (tabId: string) => {
       const tab = tabs.value?.find(t => t.id === tabId);
+      console.log('🚀 ~ selectTab ~ tab:', tab);
 
       if (tab) {
         await navigateTo({
@@ -78,13 +79,20 @@ export const useManagementViewContainerStore = defineStore(
         const wasActive = activeTab.value?.id === tabId;
         tabs.value.splice(index, 1);
 
-        if (wasActive && tabs.value.length > 0 && activeTab.value) {
+        if (tabs.value.length <= 0) {
+          activeTab.value = null;
+          await navigateTo({
+            name: 'workspaceId',
+            replace: true,
+          });
+          return;
+        }
+
+        if (wasActive) {
           // Select the next tab, or the previous tab if no next tab exists
           const nextIndex = index < tabs.value.length ? index : index - 1;
 
           await selectTab(tabs.value[nextIndex].id);
-        } else if (wasActive) {
-          activeTab.value = null;
         }
       } else {
         console.error(`Tab with ID ${tabId} does not exist.`);
