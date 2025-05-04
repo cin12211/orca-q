@@ -17,6 +17,12 @@ const debouncedSearch = refDebounced(searchInput, 250);
 
 const treeFolderRef = templateRef('treeFolderRef');
 
+enum SchemaFolderType {
+  Tables = 'Tables',
+  Functions = 'Functions',
+  Views = 'Views',
+}
+
 const items = computed(() => {
   const tables = schemaStore.currentSchema?.tables || [];
   const functions = schemaStore.currentSchema?.functions || [];
@@ -27,49 +33,49 @@ const items = computed(() => {
       title: 'Functions',
       icon: 'material-icon-theme:folder-functions-open',
       closeIcon: 'material-icon-theme:folder-functions',
-      paths: ['Functions'],
+      paths: [SchemaFolderType.Functions],
       tabViewType: TabViewType.FunctionsOverview,
-      id: 'Functions',
+      id: SchemaFolderType.Functions,
       children: [
         ...functions.map(functionName => ({
           title: functionName,
           id: functionName,
           icon: 'vscode-icons:file-type-haskell',
-          paths: ['Functions', functionName],
+          paths: [SchemaFolderType.Functions, functionName],
           tabViewType: TabViewType.FunctionsDetail,
         })),
       ],
     },
     {
       title: 'Tables',
-      id: 'Tables',
+      id: SchemaFolderType.Tables,
       icon: 'material-icon-theme:folder-database-open',
       closeIcon: 'material-icon-theme:folder-database',
-      paths: ['Tables'],
+      paths: [SchemaFolderType.Tables],
       tabViewType: TabViewType.TableOverview,
       children: [
         ...tables.map(tableName => ({
           title: tableName,
           id: tableName,
           icon: 'vscode-icons:file-type-sql',
-          paths: ['Tables', tableName],
+          paths: [SchemaFolderType.Tables, tableName],
           tabViewType: TabViewType.TableDetail,
         })),
       ],
     },
     {
       title: 'Views',
-      id: 'Views',
+      id: SchemaFolderType.Views,
       icon: 'material-icon-theme:folder-database-open',
       closeIcon: 'material-icon-theme:folder-database',
-      paths: ['Views'],
+      paths: [SchemaFolderType.Views],
       tabViewType: TabViewType.ViewOverview,
       children: [
         ...views.map(viewName => ({
           title: viewName,
           id: viewName,
           icon: 'vscode-icons:file-type-sql',
-          paths: ['Vies', viewName],
+          paths: [SchemaFolderType.Views, viewName],
           tabViewType: TabViewType.ViewDetail,
         })),
       ],
@@ -159,6 +165,9 @@ onMounted(() => {
         </Button>
       </div>
     </div>
+
+    <!-- TODO: check flow when change connection  -->
+    <!-- TODO: check flow when change schema  -->
 
     <TreeFolder
       ref="treeFolderRef"

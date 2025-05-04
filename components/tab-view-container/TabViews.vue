@@ -7,6 +7,11 @@ import {
   ContextMenuTrigger,
 } from '#components';
 import { autoScrollForElements } from '@atlaskit/pragmatic-drag-and-drop-auto-scroll/element';
+import {
+  type Edge,
+  extractClosestEdge,
+} from '@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge';
+import { getReorderDestinationIndex } from '@atlaskit/pragmatic-drag-and-drop-hitbox/util/get-reorder-destination-index';
 import { combine } from '@atlaskit/pragmatic-drag-and-drop/combine';
 import { monitorForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import { useManagementViewContainerStore, type TabView } from '~/shared/stores';
@@ -44,18 +49,37 @@ watchEffect(onCleanup => {
       onDragStart(args) {
         isDragging.value = true;
       },
-
       onDrop(args) {
         isDragging.value = false;
         const { location, source } = args;
-        // didn't drop on anything
-        if (!location.current.dropTargets.length) return;
+        if (!location.current.dropTargets.length) {
+          return;
+        }
 
         const sourceId = source.data.id as string;
         const target = location.current.dropTargets[0];
         const targetId = target.data.id as string;
 
-        tabsStore.moveTabTo(targetId, sourceId);
+        const closestEdgeOfTarget: Edge | null = extractClosestEdge(
+          target.data
+        );
+
+        if (!closestEdgeOfTarget) {
+          return;
+        }
+
+        const startIndex = tabsStore.tabs.findIndex(t => t.id === sourceId);
+
+        const indexOfTarget = tabsStore.tabs.findIndex(t => t.id === targetId);
+
+        const finishIndex = getReorderDestinationIndex({
+          startIndex,
+          indexOfTarget,
+          closestEdgeOfTarget,
+          axis: 'horizontal',
+        });
+
+        tabsStore.moveTabTo(startIndex, finishIndex);
       },
     }),
     autoScrollForElements({
@@ -79,19 +103,16 @@ watchEffect(onCleanup => {
   >
     <ContextMenu>
       <ContextMenuTrigger>
-        <div
-          v-auto-animate="{ duration: 150 }"
-          class="flex items-center relative gap-2"
-        >
+        <div v-auto-animate="{ duration: 120 }" class="flex items-center">
           <TabViewItem
             v-for="tab in tabsStore.tabs"
+            :key="tab.id"
             :tab="tab"
             :isActive="tab.id === tabsStore.activeTab?.id"
             :selectTab="tabsStore.selectTab"
             :closeTab="tabsStore.closeTab"
             :onRightClickItem="
               () => {
-                console.log('tab::', tab);
                 currentTabMenuContext = tab;
               }
             "

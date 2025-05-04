@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
+import { reorder } from '@atlaskit/pragmatic-drag-and-drop/reorder';
 import type { RouteNameFromPath, RoutePathSchema } from '@typed-router/__paths';
 
 // export enum TabViewType {
@@ -46,7 +47,6 @@ export const useManagementViewContainerStore = defineStore(
 
     const selectTab = async (tabId: string) => {
       const tab = tabs.value?.find(t => t.id === tabId);
-      console.log('🚀 ~ selectTab ~ tab:', tab);
 
       if (tab) {
         await navigateTo({
@@ -104,16 +104,12 @@ export const useManagementViewContainerStore = defineStore(
       }
     };
 
-    const moveTabTo = (tabTargetId: string, tabSourceId: string) => {
-      const tabTargetIndex = tabs.value.findIndex(t => t.id === tabTargetId);
-
-      const tabSourceIdex = tabs.value.findIndex(t => t.id === tabSourceId);
-
-      const tabSource = tabs.value[tabSourceIdex];
-      // remove tabSource
-      tabs.value.splice(tabSourceIdex, 1);
-      // insert tabSource
-      tabs.value.splice(tabTargetIndex, 0, tabSource);
+    const moveTabTo = (startIndex: number, finishIndex: number) => {
+      tabs.value = reorder({
+        list: tabs.value,
+        startIndex,
+        finishIndex,
+      });
     };
 
     const closeOtherTab = (tabId: string) => {

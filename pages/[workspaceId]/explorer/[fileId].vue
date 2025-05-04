@@ -13,6 +13,11 @@ import {
 } from '~/components/base/code-editor/extensions';
 import { pgKeywordCompletion } from '~/components/base/code-editor/utils';
 import { useAppContext } from '~/shared/contexts/useAppContext';
+import { useManagementViewContainerStore } from '~/shared/stores';
+
+//TODO: create lint check error for sql
+// https://www.npmjs.com/package/node-sql-parser?activeTab=readme
+// https://codemirror.net/examples/lint/
 
 definePageMeta({
   keepalive: true,
@@ -78,10 +83,33 @@ const extensions = [
   // currentStatementHighlighter,
   ...sqlAutoCompletion(),
 ];
+
+const viewContainerStore = useManagementViewContainerStore();
 </script>
 
 <template>
-  <div class="flex flex-col gap-2 h-full">
+  <div class="flex flex-col h-full">
+    <div class="flex items-center justify-between m-1">
+      <Breadcrumb>
+        <BreadcrumbList class="gap-0!">
+          <BreadcrumbItem>
+            <BreadcrumbLink> File </BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator />
+          <BreadcrumbItem>
+            <BreadcrumbLink class="flex items-center gap-0.5">
+              <Icon :name="viewContainerStore.activeTab?.icon" />
+              {{ viewContainerStore.activeTab?.name }}
+            </BreadcrumbLink>
+          </BreadcrumbItem>
+          <!-- <BreadcrumbSeparator /> -->
+          <!-- <BreadcrumbItem>
+          <BreadcrumbPage>Breadcrumb</BreadcrumbPage>
+        </BreadcrumbItem> -->
+        </BreadcrumbList>
+      </Breadcrumb>
+    </div>
+
     <div class="h-full">
       <CodeEditor v-model="code" :extensions="extensions" :disabled="false" />
     </div>

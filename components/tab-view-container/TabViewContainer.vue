@@ -32,7 +32,7 @@ const minWidth = computed(() => {
 <template>
   <div
     :class="[
-      'w-screen h-9 select-none border-b pr-2 bg-sidebar-accent',
+      'w-screen h-9 select-none border-b pr-2',
       isAppVersion && !appLayoutStore.layoutSize[0] ? 'pl-[4.5rem]' : '',
     ]"
     data-tauri-drag-region

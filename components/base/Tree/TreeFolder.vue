@@ -11,6 +11,7 @@ import {
 defineProps<{
   explorerFiles: TreeFileSystem;
   expandedState?: string[];
+  selectedItems?: FlattenedTreeFileSystemItem[];
   isShowArrow?: boolean;
   isExpandedByArrow?: boolean;
   onRightClickItem?: (e: MouseEvent, item: FlattenedTreeFileSystemItem) => void;
@@ -21,10 +22,14 @@ defineProps<{
 const emits = defineEmits<{
   (e: 'update:explorerFiles', value: TreeFileSystem): void;
   (e: 'update:expandedState', value: string[]): void;
+  (e: 'update:selectedItems', value: FlattenedTreeFileSystemItem[]): void;
 }>();
 
 const onUpdateExpanded = (value: string[]) => {
   emits('update:expandedState', value);
+};
+const onUpdateSelectedItems = (value: FlattenedTreeFileSystemItem[]) => {
+  emits('update:selectedItems', value);
 };
 
 const defaultCloseIcon = 'lucide:folder';
@@ -34,98 +39,131 @@ const treeRootRef = ref<HTMLElement | null>(null);
 defineExpose({
   treeRootRef,
 });
+
+const selectedValue = ref<FlattenedTreeFileSystemItem[]>();
 </script>
 
 <template>
   <TreeRoot
+    :model-value="selectedItems"
+    v-on:update:model-value="
+      event =>
+        onUpdateSelectedItems(event as unknown as FlattenedTreeFileSystemItem[])
+    "
     class="list-none h-full overflow-y-auto select-none px-1 text-sm font-medium"
     :items="explorerFiles"
     :get-key="item => getTreeItemPath(item.paths || [])"
     :expanded="expandedState"
     v-on:update:expanded="onUpdateExpanded"
     ref="treeRootRef"
+    multiple
   >
-    <TreeVirtualizer v-slot="{ item }" :estimate-size="28" :overscan="2">
+    <TreeVirtualizer v-slot="{ item }" :estimate-size="28" :overscan="5">
       <TreeItem
-        v-slot="{ isExpanded, handleToggle }"
+        v-slot="{ isExpanded, handleToggle, handleSelect, isSelected }"
         :key="item._id"
         :style="{
           'padding-left': `${item.level - 0.5}rem`,
         }"
         v-bind="item.bind"
-        class="flex items-center justify-between w-full h-7 px-1 my-0.5 cursor-pointer rounded outline-none data-[selected]:bg-accent hover:bg-accent"
-        @click="
-          (e: MouseEvent) => {
-            onClickTreeItem?.(e, item as FlattenedTreeFileSystemItem);
-
-            if (isExpandedByArrow) {
-              e.stopImmediatePropagation();
-            }
-
-            if (item.value.status === ETreeFileSystemStatus.edit) {
-              e.stopImmediatePropagation();
-            }
-          }
-        "
         @click.right="
           (e: MouseEvent) => {
-            console.log('onRightClickItem', item);
-
             onRightClickItem?.(e, item as FlattenedTreeFileSystemItem);
           }
         "
+        @select="
+          event => {
+            if (event.detail.originalEvent.type === 'click') {
+              event.preventDefault();
+            }
+          }
+        "
+        class="w-full h-7! data-[selected]:bg-accent cursor-pointer rounded outline-none hover:bg-accent/60"
       >
-        <div class="flex items-center w-full">
-          <div
-            class="pr-1"
-            v-if="isShowArrow"
-            @click="
-              () => {
-                if (isExpandedByArrow) {
-                  handleToggle();
-                }
+        <div
+          class="flex items-center justify-between w-full h-7"
+          @click.shift="
+            (e: MouseEvent) => {
+              e.stopImmediatePropagation();
+
+              handleSelect();
+            }
+          "
+          @click="
+            async (e: MouseEvent) => {
+              selectedValue = [];
+
+              await nextTick();
+
+              handleSelect();
+
+              if (item.value.status === ETreeFileSystemStatus.edit) {
+                e.stopImmediatePropagation();
+                e.stopPropagation();
+                e.preventDefault();
+                return;
               }
-            "
-          >
-            <template
-              v-if="item.hasChildren"
-              :class="{
-                'hover:bg-background rounded-sm': isExpandedByArrow,
-              }"
+
+              onClickTreeItem?.(e, item as FlattenedTreeFileSystemItem);
+
+              if (isExpandedByArrow) {
+                e.stopImmediatePropagation();
+              }
+            }
+          "
+        >
+          <div class="flex items-center w-full">
+            <div
+              class="pr-1"
+              v-if="isShowArrow"
+              @click="
+                () => {
+                  if (isExpandedByArrow) {
+                    handleToggle();
+                  }
+                }
+              "
             >
-              <Icon
-                icon="lucide:chevron-right"
+              <template
+                v-if="item.hasChildren"
                 :class="{
-                  'rotate-90': isExpanded,
-                  'size-4 min-w-4 transition-all': true,
+                  'hover:bg-background rounded-sm': isExpandedByArrow,
                 }"
+              >
+                <Icon
+                  icon="lucide:chevron-right"
+                  :class="{
+                    'rotate-90': isExpanded,
+                    'size-4 min-w-4 transition-all': true,
+                  }"
+                />
+              </template>
+              <template v-else>
+                <div class="size-4"></div>
+              </template>
+            </div>
+
+            <template v-if="item.hasChildren">
+              <Icon
+                v-if="!isExpanded"
+                :icon="item.value.closeIcon || defaultCloseIcon"
+                class="size-4 min-w-4"
               />
+              <Icon v-else :icon="item.value.icon" class="size-4 min-w-4" />
             </template>
-            <template v-else>
-              <div class="size-4"></div>
-            </template>
-          </div>
-
-          <template v-if="item.hasChildren">
-            <Icon
-              v-if="!isExpanded"
-              :icon="item.value.closeIcon || defaultCloseIcon"
-              class="size-4 min-w-4"
-            />
             <Icon v-else :icon="item.value.icon" class="size-4 min-w-4" />
-          </template>
-          <Icon v-else :icon="item.value.icon" class="size-4 min-w-4" />
 
-          <template v-if="item.value.status !== ETreeFileSystemStatus.edit">
-            <div class="pl-1 truncate">{{ item.value.title }}</div>
-          </template>
-          <div v-else class="pl-1 w-full">
-            <slot name="edit-inline" :item></slot>
+            <template v-if="item.value.status !== ETreeFileSystemStatus.edit">
+              <div class="pl-1 truncate">{{ item.value.title }}</div>
+            </template>
+            <div v-else class="pl-1 w-full">
+              <slot name="edit-inline" :item></slot>
+            </div>
           </div>
-        </div>
 
-        <div v-if="item.value.status !== ETreeFileSystemStatus.edit">
-          <slot name="extra-actions" :item> </slot>
+          <div v-if="item.value.status !== ETreeFileSystemStatus.edit">
+            <slot name="extra-actions" :item> </slot>
+          </div>
         </div>
       </TreeItem>
     </TreeVirtualizer>

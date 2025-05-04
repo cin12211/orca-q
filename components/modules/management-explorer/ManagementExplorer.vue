@@ -7,7 +7,7 @@ import {
   tree,
   type FlattenedTreeFileSystemItem,
 } from '~/components/base/Tree';
-import type TreeItemInputEditInline from '~/components/base/Tree/TreeItemInputEditInline.vue';
+import TreeItemInputEditInline from '~/components/base/Tree/TreeItemInputEditInline.vue';
 import {
   TabViewType,
   useManagementViewContainerStore,
@@ -21,6 +21,8 @@ const searchInput = shallowRef('');
 const debouncedSearch = refDebounced(searchInput, 250);
 
 const { expandedState, explorerFiles } = toRefs(explorerStore);
+
+const selectedItems = ref<FlattenedTreeFileSystemItem[]>([]);
 
 const rightClickSelectedItem = ref<FlattenedTreeFileSystemItem | null>(null);
 
@@ -92,6 +94,7 @@ const onReNameFile = (
 };
 
 const onRemoveItemByPaths = (fileInfo: FlattenedTreeFileSystemItem) => {
+  console.log('🚀 ~ onRemoveItemByPaths ~ fileInfo:', fileInfo);
   explorerFiles.value = tree.removeItemByPaths(
     explorerFiles.value,
     fileInfo.value.paths
@@ -207,11 +210,23 @@ const mappedExplorerFiles = computed(() => {
     </div>
 
     <div class="w-full h-full overflow-y-auto">
-      <ContextMenu>
+      <!-- TODO: add move able file/ folder ,  -->
+      <!-- TODO: check function of menu context for 3 case : [file, folder, root]  -->
+      <!-- TODO: control file content / persist / restore  -->
+      <!-- TODO: save state search / expanded state  -->
+      <ContextMenu
+        @update:open="
+          isOpen => {
+            if (!isOpen) {
+            }
+          }
+        "
+      >
         <ContextMenuTrigger>
           <TreeFolder
             v-model:explorerFiles="mappedExplorerFiles"
             v-model:expandedState="expandedState"
+            v-model:selectedItems="selectedItems"
             is-show-arrow
             :onRightClickItem="onRightClickItem"
             v-on:clickTreeItem="
@@ -349,7 +364,9 @@ const mappedExplorerFiles = computed(() => {
                 });
               }
             "
-            v-if="rightClickSelectedItem?.hasChildren"
+            v-if="
+              rightClickSelectedItem?.hasChildren || !rightClickSelectedItem
+            "
           >
             <Icon
               name="lucide:file-plus-2"
@@ -358,7 +375,9 @@ const mappedExplorerFiles = computed(() => {
             Add new file
           </ContextMenuItem>
           <ContextMenuItem
-            v-if="rightClickSelectedItem?.hasChildren"
+            v-if="
+              rightClickSelectedItem?.hasChildren || !rightClickSelectedItem
+            "
             @select="
               () => {
                 onDelayedCallback(() => {
@@ -379,6 +398,7 @@ const mappedExplorerFiles = computed(() => {
           </ContextMenuItem>
 
           <ContextMenuItem
+            v-if="rightClickSelectedItem"
             @select="
               () => {
                 onDelayedCallback(() => {
@@ -395,6 +415,7 @@ const mappedExplorerFiles = computed(() => {
             Rename...
           </ContextMenuItem>
           <ContextMenuItem
+            v-if="rightClickSelectedItem"
             variant="destructive"
             @click.stop="
               () =>

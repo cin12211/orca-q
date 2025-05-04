@@ -1,8 +1,11 @@
 <script setup lang="ts">
 import { ref, watch, onMounted, onUnmounted } from 'vue';
 import { PostgreSQL, type SQLConfig, sql } from '@codemirror/lang-sql';
+import { syntaxTree } from '@codemirror/language';
+import { linter, type Diagnostic } from '@codemirror/lint';
 import { search } from '@codemirror/search';
 import { Compartment, EditorState, type Extension } from '@codemirror/state';
+// import { indentationMarkers } from '@replit/codemirror-indentation-markers';
 import { EditorView, basicSetup } from 'codemirror';
 import { ayuLight } from 'thememirror';
 import { cn } from '@/lib/utils';
@@ -65,6 +68,32 @@ onMounted(() => {
     // setting read-only mode
     const readOnlyState = props.disabled ? EditorState.readOnly.of(true) : [];
 
+    //TODO: make lint for sql
+    // const regexpLinter = linter(view => {
+    //   let diagnostics: Diagnostic[] = [];
+    //   syntaxTree(view.state)
+    //     .cursor()
+    //     .iterate(node => {
+    //       console.log('🚀 ~ onMounted ~ node:', node.name);
+    //       if (node.name == 'Identifier')
+    //         diagnostics.push({
+    //           from: node.from,
+    //           to: node.to,
+    //           severity: 'error',
+    //           message: 'Regular expressions are FORBIDDEN',
+    //           actions: [
+    //             {
+    //               name: 'Remove',
+    //               apply(view, from, to) {
+    //                 view.dispatch({ changes: { from, to } });
+    //               },
+    //             },
+    //           ],
+    //         });
+    //     });
+    //   return diagnostics;
+    // });
+
     const state = EditorState.create({
       doc: code.value,
       extensions: [
@@ -85,6 +114,8 @@ onMounted(() => {
         readOnlyState,
         compartmentOfLineWrapping,
         ayuLight,
+        // indentationMarkers(),
+        // regexpLinter,
       ],
     });
 

@@ -1,6 +1,11 @@
 <script setup lang="ts">
 import { unrefElement } from '@vueuse/core';
 import { h, ref, render, watchEffect } from 'vue';
+import {
+  type Edge,
+  attachClosestEdge,
+  extractClosestEdge,
+} from '@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge';
 import { combine } from '@atlaskit/pragmatic-drag-and-drop/combine';
 import {
   draggable,
@@ -19,20 +24,23 @@ const props = defineProps<{
   onRightClickItem: (tab: TabView) => void;
 }>();
 
-const elementRef = shallowRef<HTMLElement | null>();
+const innerElementRef = shallowRef<HTMLElement | null>();
+const outerElementRef = shallowRef<HTMLElement | null>();
 const isDragging = ref(false);
 const isDraggedOver = ref(false);
+const closestEdgeRef = ref<Edge>();
 
 const instruction = ref(false);
 
 watchEffect(onCleanup => {
-  const currentElement = unrefElement(elementRef);
+  const innerElement = unrefElement(innerElementRef);
+  const outerElement = unrefElement(outerElementRef);
 
-  if (!currentElement) return;
+  if (!innerElement || !outerElement) return;
 
   const dndFunction = combine(
     draggable({
-      element: currentElement,
+      element: innerElement,
       getInitialData: () => props.tab,
 
       onDragStart: args => {
@@ -42,6 +50,22 @@ watchEffect(onCleanup => {
         isDragging.value = false;
         props.selectTab(props.tab.id);
       },
+
+      // onGenerateDragPreview: ({ location, source, nativeSetDragImage }) => {
+      // 		const rect = source.element.getBoundingClientRect();
+
+      // 		setCustomNativeDragPreview({
+      // 			nativeSetDragImage,
+      // 			getOffset: preserveOffsetOnSource({
+      // 				element,
+      // 				input: location.current.input,
+      // 			}),
+      // 			render({ container }) {
+      // 				setState({ type: 'preview', container, rect });
+      // 				return () => setState(draggingState);
+      // 			},
+      // 		});
+      // 	},
 
       onGenerateDragPreview({ nativeSetDragImage }) {
         setCustomNativeDragPreview({
@@ -65,26 +89,32 @@ watchEffect(onCleanup => {
     }),
 
     dropTargetForElements({
-      element: currentElement,
+      element: outerElement,
       getData: ({ input, element }) => {
         const data = { id: props.tab.id };
 
-        return data;
+        return attachClosestEdge(data, {
+          element,
+          input,
+          allowedEdges: ['left', 'right'],
+        });
       },
       canDrop: ({ source }) => {
         return true;
       },
       onDrag: ({ self, source, location }) => {
-        //   console.log('🚀 ~ self:', self);
-        //   const isDifferentTab = self.data?.id !== source.data.id;
-        //   if (props.tab.id === self.data?.id && isDifferentTab) {
-        //     instruction.value = true;
-        //   }
+        const closestEdge = extractClosestEdge(self.data);
+
+        if (!closestEdge) {
+          return;
+        }
+
+        closestEdgeRef.value = closestEdge;
       },
       onDragEnter: ({ self, source }) => {
-        // const isDifferentTab = self.data?.id !== source.data.id;
+        const isDifferentTab = self.data?.id !== source.data.id;
 
-        if (props.tab.id === self.data?.id) {
+        if (props.tab.id === self.data?.id && isDifferentTab) {
           instruction.value = true;
         }
       },
@@ -113,20 +143,21 @@ watchEffect(onCleanup => {
         onRightClickItem(tab);
       }
     "
+    ref="outerElementRef"
   >
     <Button
-      ref="elementRef"
-      variant="secondary"
+      ref="innerElementRef"
+      variant="ghost"
       size="sm"
       :class="[
-        'h-7! max-w-44 justify-start! hover:bg-background font-normal p-2!  hover:[&>div]:opacity-100 transition-all duration-200',
-        isActive ? 'bg-background border' : 'border-transparent border',
+        'h-7! max-w-44 justify-start! hover:bg-accent font-normal p-2!  hover:[&>div]:opacity-100 transition-all duration-200 border-transparent border',
+        isActive ? 'bg-accent' : '',
         isDragging ? 'bg-primary/5' : '',
       ]"
       @click.left="selectTab(tab.id)"
       :id="tab.id"
     >
-      <Icon :name="tab.icon" class="size-4" />
+      <Icon :name="tab.icon" class="size-4 min-w-4" />
       <div class="truncate">{{ tab.name }}</div>
       <div
         class="hover:bg-accent p-0.5 rounded-full opacity-0"
@@ -139,8 +170,11 @@ watchEffect(onCleanup => {
     <div
       v-if="instruction"
       class="absolute h-7 w-0.5 top-0 rounded-md bg-accent-foreground"
+      :style="{
+        [closestEdgeRef === 'left' ? 'left' : 'right']: '0px',
+      }"
     />
   </div>
 
-  <div class="border-l w-0 h-6 block"></div>
+  <!-- <div class="border-l w-0 h-6 block"></div> -->
 </template>

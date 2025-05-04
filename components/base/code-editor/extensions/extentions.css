@@ -27,3 +27,7 @@
 .cm-line {
   padding-left: 4px !important;
 }
+
+.cm-focused {
+  outline: unset !important;
+}

@@ -12,10 +12,7 @@ const layout = useAppLayoutStore();
 </script>
 
 <template>
-  <div
-    class="w-full h-full flex flex-col bg-sidebar"
-    v-if="layout.layoutSize[0]"
-  >
+  <div class="w-full h-full flex flex-col" v-if="layout.layoutSize[0]">
     <!-- <KeepAlive> -->
     <ModulesManagementExplorer
       v-if="activityStore.activityActive === ActivityBarItemType.Explorer"
