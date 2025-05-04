@@ -30,17 +30,8 @@ export default defineNuxtConfig({
     '@nuxt/image',
     '@formkit/auto-animate',
     '@nuxtjs/i18n',
-    // '@nuxt/fonts',
   ],
   css: ['~/assets/css/tailwind.css'],
-  // fonts: {
-  //   families: [
-  //     {
-  //       name: 'Chillax',
-  //       provider: 'local',
-  //     },
-  //   ],
-  // },
   colorMode: {
     classSuffix: '',
   },
@@ -61,6 +52,6 @@ export default defineNuxtConfig({
     '~/components',
   ],
   piniaPluginPersistedstate: {
-    storage: 'localStorage', // áp dụng toàn cục
+    storage: 'localStorage',
   },
 });

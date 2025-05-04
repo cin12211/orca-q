@@ -12,9 +12,11 @@ import {
   dropTargetForElements,
 } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import { pointerOutsideOfPreview } from '@atlaskit/pragmatic-drag-and-drop/element/pointer-outside-of-preview';
+import { preserveOffsetOnSource } from '@atlaskit/pragmatic-drag-and-drop/element/preserve-offset-on-source';
 import { setCustomNativeDragPreview } from '@atlaskit/pragmatic-drag-and-drop/element/set-custom-native-drag-preview';
 import { X } from 'lucide-vue-next';
 import type { TabView } from '~/shared/stores';
+import TabViewItemPreview from './TabViewItemPreview.vue';
 
 const props = defineProps<{
   tab: TabView;
@@ -51,39 +53,30 @@ watchEffect(onCleanup => {
         props.selectTab(props.tab.id);
       },
 
-      // onGenerateDragPreview: ({ location, source, nativeSetDragImage }) => {
-      // 		const rect = source.element.getBoundingClientRect();
-
-      // 		setCustomNativeDragPreview({
-      // 			nativeSetDragImage,
-      // 			getOffset: preserveOffsetOnSource({
-      // 				element,
-      // 				input: location.current.input,
-      // 			}),
-      // 			render({ container }) {
-      // 				setState({ type: 'preview', container, rect });
-      // 				return () => setState(draggingState);
-      // 			},
-      // 		});
-      // 	},
-
-      onGenerateDragPreview({ nativeSetDragImage }) {
+      onGenerateDragPreview: ({ location, nativeSetDragImage }) => {
         setCustomNativeDragPreview({
-          getOffset: pointerOutsideOfPreview({ x: '0px', y: '0px' }),
-          render: ({ container }) => {
-            return render(
+          nativeSetDragImage,
+          getOffset: preserveOffsetOnSource({
+            element: innerElement,
+            input: location.current.input,
+          }),
+          render({ container }) {
+            render(
               h(
-                'div',
+                TabViewItemPreview,
                 {
-                  class:
-                    'bg-white text-blackA11 rounded-md text-sm font-medium px-3 py-1.5',
+                  icon: props.tab.icon,
+                  name: props.tab.name,
                 },
                 props.tab.name
               ),
               container
             );
+
+            return () => {
+              render(null, container);
+            };
           },
-          nativeSetDragImage,
         });
       },
     }),
