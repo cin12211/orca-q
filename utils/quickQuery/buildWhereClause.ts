@@ -82,8 +82,9 @@ const likeHandler: Handler = ({ col, op, search, db, nextPlaceholder }) => {
   else if (op.endsWith('%VALUE')) value = `%${search}`;
   else if (op.endsWith('VALUE%')) value = `${search}%`;
 
+  // TODO: fix this for all database
   return {
-    where: `${col}${includeNegative ? ' NOT ' : ' '}${syntax} ${nextPlaceholder()}`,
+    where: `${col}::TEXT ${includeNegative ? ' NOT ' : ' '}${syntax} ${nextPlaceholder()}`,
     params: [value],
   };
 };
@@ -208,33 +209,38 @@ export function buildWhereClause<
     if (!raw?.isSelect) return;
     const f = filterSchema.parse(raw); // bảo đảm đúng shape
 
-    /* Normal column */
-    const col = wrapCol(f.fieldName);
-    const rawOp = (
-      f.operator ?? OperatorSet.LIKE_CONTAINS
-    ).toUpperCase() as OperatorSet;
-    const op = allowedOps.has(rawOp) ? rawOp : OperatorSet.LIKE_CONTAINS;
-
     /* Any field → OR qua mọi cột */
-    if (f.fieldName === EExtendedField.AnyField && f.search) {
+    if (f.fieldName === EExtendedField.AnyField) {
       const result = buildAnyFieldClause({
-        search: f.search,
+        search: f.search || '',
         columns,
         db,
-        op,
+        op: f.operator as OperatorSet,
         nextPlaceholder,
       });
       if (result.where) {
         pieces.push(result.where);
         params.push(...result.params);
       }
+      return;
     }
 
     /* Row query → raw fragment */
-    if (f.fieldName === EExtendedField.RowQuery && !!f.search) {
+    if (f.fieldName === EExtendedField.RowQuery) {
+      if (!f.search) {
+        return;
+      }
+
       pieces.push(`(${f.search})`);
       return;
     }
+
+    /* Normal column */
+    const col = wrapCol(f.fieldName);
+    const rawOp = (
+      f.operator ?? OperatorSet.LIKE_CONTAINS
+    ).toUpperCase() as OperatorSet;
+    const op = allowedOps.has(rawOp) ? rawOp : OperatorSet.LIKE_CONTAINS;
 
     push(
       handlerMap[op]({
@@ -271,6 +277,8 @@ export function formatWhereClause<F extends readonly FilterSchema[]>({
   columns: readonly string[];
 }): string {
   const { where, params } = buildWhereClause({ filters, db, columns });
+  console.log('🚀 ~ where:', where);
+
   if (!where) return '';
 
   // simple literal‑encoder – good enough for logs

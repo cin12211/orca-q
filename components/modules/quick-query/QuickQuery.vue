@@ -38,6 +38,7 @@ const columnNames = computed(() => {
   return tableSchema.value?.columns.map(c => c.name) || [];
 });
 
+const { value } = useError();
 const { data, status } = await useFetch('/api/execute', {
   method: 'POST',
   body: {
@@ -47,13 +48,19 @@ const { data, status } = await useFetch('/api/execute', {
   key: props.tableId,
   cache: 'default',
   onResponseError: error => {
-    toast(error.response?.statusText);
+    const errorData = error.response?._data?.data;
+
+    toast(error.response?.statusText, {
+      important: true,
+      description: JSON.stringify(errorData),
+    });
   },
 });
 </script>
 
 <template>
   <div class="flex flex-col h-full p-2 relative">
+    {{ value }}
     <LoadingOverlay :visible="status === 'pending'" />
 
     <TableSkeleton v-if="tableSchemaStatus === 'pending'" />

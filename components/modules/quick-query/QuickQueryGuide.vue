@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { format } from 'sql-formatter';
+
 defineProps<{ currentFilter: string; allFilter: string }>();
 
 const composeOperator = ref('AND');
@@ -28,7 +30,7 @@ const composeOperator = ref('AND');
         </SelectContent>
       </Select>
     </div>
-    <div class="text-xs text-muted-foreground/60 flex items-center gap-4">
+    <div class="text-xs flex items-center gap-4">
       <div><ContextMenuShortcut>⌘F</ContextMenuShortcut>: Show</div>
       <div><ContextMenuShortcut>⌘I</ContextMenuShortcut>: Insert</div>
       <div><ContextMenuShortcut>⌘⌫</ContextMenuShortcut>: Delete</div>
@@ -43,20 +45,30 @@ const composeOperator = ref('AND');
           </Button>
         </PopoverTrigger>
         <PopoverContent class="w-[40rem] p-2 space-y-2">
-          <div class="text-xs">
+          <div class="text-xs font-medium">
             Curren filter
             <Textarea
-              class="text-xs! mt-1 h-full"
-              :model-value="currentFilter"
+              class="text-xs! mt-1 h-full max-h-[15rem] font-normal"
+              :model-value="
+                format(currentFilter, {
+                  language: 'postgresql',
+                  keywordCase: 'upper',
+                })
+              "
               readonly
             />
           </div>
 
-          <div class="text-xs">
+          <div class="text-xs font-medium">
             Apply all filter
             <Textarea
-              class="text-xs! mt-1 h-full"
-              :model-value="allFilter"
+              class="text-xs! mt-1 h-full max-h-[15rem] font-normal"
+              :model-value="
+                format(allFilter, {
+                  language: 'postgresql',
+                  keywordCase: 'upper',
+                })
+              "
               readonly
             />
           </div>
