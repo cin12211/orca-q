@@ -366,8 +366,8 @@ const getDefaultPort = () => {
       return '5432';
     case 'mysql':
       return '3306';
-    case 'redis':
-      return '6379';
+    // case 'redis':
+    //   return '6379';
     default:
       return '';
   }
@@ -379,8 +379,8 @@ const getConnectionPlaceholder = () => {
       return 'postgresql://username:password@localhost:5432/database';
     case 'mysql':
       return 'mysql://username:password@localhost:3306/database';
-    case 'redis':
-      return 'redis://username:password@localhost:6379';
+    // case 'redis':
+    //   return 'redis://username:password@localhost:6379';
     default:
       return '';
   }

@@ -1,4 +1,4 @@
-import { TableMetadata } from './get-tables';
+import { type TableMetadata } from './get-tables';
 
 export default defineEventHandler(async (event): Promise<TableMetadata> => {
   const {
