@@ -16,9 +16,9 @@ body {
 }
 
 ::placeholder {
-  opacity: 0.5;
+  opacity: 0.3;
 }
 
 .dark ::placeholder {
-  opacity: 0.8;
+  opacity: 0.6;
 }

@@ -43,9 +43,7 @@ const extensions = [
 </script>
 
 <template>
-  <div class="w-full h-full">
-    <div class="h-full">
-      <CodeEditor v-model="code" :extensions="extensions" :disabled="false" />
-    </div>
+  <div class="w-full h-full flex flex-col">
+    <CodeEditor v-model="code" :extensions="extensions" :disabled="false" />
   </div>
 </template>

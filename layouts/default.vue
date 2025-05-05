@@ -77,6 +77,7 @@ provideDefaultLayoutContext({
           collapsible
           id="default-layout-group-1-panel-1"
           ref="primarySideBarPanelRef"
+          key="primarySideBarPanel"
         >
           <PrimarySideBar />
         </ResizablePanel>
@@ -84,7 +85,7 @@ provideDefaultLayoutContext({
           class="[&[data-state=hover]]:bg-primary/30! [&[data-state=drag]]:bg-primary/20!"
           id="default-layout-group-1-resize-1"
         />
-        <ResizablePanel id="default-layout-group-1-panel-2">
+        <ResizablePanel id="default-layout-group-1-panel-2" key="contentPanel">
           <div class="overflow-y-auto w-full h-full">
             <slot />
           </div>
@@ -101,9 +102,10 @@ provideDefaultLayoutContext({
           :collapsed-size="0"
           collapsible
           ref="secondarySideBarPanelRef"
+          key="secondarySideBarPanel"
         >
-          <SecondarySideBar
-        /></ResizablePanel>
+          <SecondarySideBar />
+        </ResizablePanel>
       </div>
       <!-- <StatusBar /> -->
     </div>

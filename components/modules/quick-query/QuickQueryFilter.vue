@@ -1,0 +1,303 @@
+<script setup lang="ts">
+import { useMagicKeys, whenever } from '@vueuse/core';
+import { Icon } from '#components';
+import { toTypedSchema } from '@vee-validate/zod';
+import { useFieldArray, useForm } from 'vee-validate';
+import { z } from 'zod';
+import type { Input } from '~/components/ui/input';
+import { EExtendedField, OperatorSet } from '~/utils/constants';
+import {
+  filterSchema,
+  formatWhereClause,
+  getPlaceholderSearchByOperator,
+  type FilterSchema,
+} from '~/utils/quickQuery';
+import { EDatabaseType } from '../management-connection/constants';
+import ColumnSelector from '../selectors/ColumnSelector.vue';
+import OperatorSelector from '../selectors/OperatorSelector.vue';
+import QuickQueryGuide from './QuickQueryGuide.vue';
+
+const props = defineProps<{
+  columns: string[];
+  dbType: EDatabaseType;
+  baseQuery: string;
+}>();
+
+const emit = defineEmits<{
+  (e: 'onSearch', whereClauses: string): void;
+}>();
+
+const filterSearchRefs =
+  useTemplateRef<InstanceType<typeof Input>[]>('filterSearchRefs');
+
+const formFiltersSchema = z.object({
+  filters: filterSchema.array(),
+});
+
+type FormFiltersSchema = {
+  filters: FilterSchema[];
+};
+
+const { handleSubmit } = useForm<FormFiltersSchema>({
+  validationSchema: toTypedSchema(formFiltersSchema),
+  initialValues: {
+    filters: [],
+  },
+  keepValuesOnUnmount: false,
+});
+
+const { remove, fields, insert, update } =
+  useFieldArray<FilterSchema>('filters');
+
+const onAddFilter = (index: number) => {
+  insert(index + 1, {
+    isSelect: true,
+    fieldName: EExtendedField.RowQuery,
+  });
+};
+
+const updateFieldName = (index: number, newFieldName: string) => {
+  const row = fields.value?.[index]?.value;
+  const isRowQuery = row?.fieldName === EExtendedField.RowQuery;
+  const isEmptyOperator = !row?.operator;
+
+  if (isRowQuery && isEmptyOperator) {
+    update(index, {
+      ...row,
+      fieldName: newFieldName,
+      operator: OperatorSet.LIKE_CONTAINS,
+    });
+  } else {
+    update(index, {
+      ...row,
+      fieldName: newFieldName,
+    });
+  }
+};
+
+const whereClauses = computed(() => {
+  return `${props.baseQuery} ${formatWhereClause({
+    columns: props.columns,
+    db: props.dbType,
+    filters: fields.value.map(f => f.value) || [],
+  })};`;
+});
+
+const onSubmit = handleSubmit(formData => {
+  console.log('whereClauses', whereClauses);
+  emit('onSearch', whereClauses.value);
+});
+
+const onApplyFilter = (index: number) => {
+  const row = fields.value?.[index]?.value;
+  if (!row?.isSelect) {
+    update(index, {
+      ...row,
+      isSelect: true,
+    });
+  }
+
+  onSubmit();
+};
+
+const onApplyAllFilter = () => {
+  fields.value.forEach((row, index) => {
+    update(index, {
+      ...row.value,
+      isSelect: true,
+    });
+  });
+
+  onSubmit();
+};
+
+const onRemoveFilter = (index: number) => {
+  remove(index);
+
+  if (index === 0) {
+    emit('onSearch', props.baseQuery);
+  }
+};
+
+const { meta_f, meta_backspace, meta_i, meta_enter } = useMagicKeys({
+  passive: false,
+  onEventFired(e) {
+    if (e.metaKey && e.key === 'f' && e.type === 'keydown') e.preventDefault();
+  },
+});
+
+const focusSearchByIndex = (index: number) => {
+  if (filterSearchRefs.value) {
+    filterSearchRefs.value?.[index]?.$el.focus();
+  }
+};
+
+// trigger show search
+whenever(meta_f, async () => {
+  if (!fields.value.length) {
+    onAddFilter(-1);
+  }
+
+  await nextTick();
+
+  const lastIndex = fields.value.length - 1 || 0;
+
+  focusSearchByIndex(lastIndex);
+});
+
+// insert new filter, in focus input
+whenever(meta_i, async () => {
+  if (!filterSearchRefs.value) {
+    return;
+  }
+
+  const currenFocusIndex = filterSearchRefs.value.findIndex(
+    input => input.$el === document.activeElement
+  );
+
+  onAddFilter(currenFocusIndex);
+
+  await nextTick();
+
+  focusSearchByIndex(currenFocusIndex + 1);
+});
+
+// delete filter in focus
+whenever(meta_backspace, async () => {
+  if (!filterSearchRefs.value) {
+    return;
+  }
+
+  const currenFocusIndex = filterSearchRefs.value.findIndex(
+    input => input.$el === document.activeElement
+  );
+
+  remove(currenFocusIndex);
+
+  await nextTick();
+
+  focusSearchByIndex(currenFocusIndex - 1);
+});
+
+// apply all filters
+whenever(meta_enter, async () => {
+  if (!filterSearchRefs.value) {
+    return;
+  }
+
+  const currenFocusIndex = filterSearchRefs.value.findIndex(
+    input => input.$el === document.activeElement
+  );
+
+  if (currenFocusIndex >= 0) {
+    onApplyAllFilter();
+  }
+});
+</script>
+
+<template>
+  <div
+    :class="['h-fit space-y-1', fields.length && 'pb-2']"
+    @keyup.enter="onSubmit"
+  >
+    <!-- <TransitionGroup name="fade"> -->
+    <div
+      class="flex gap-1 items-center"
+      v-for="({ key, value }, index) in fields"
+      :key="key"
+    >
+      <Checkbox v-model:model-value="value.isSelect" />
+
+      <ColumnSelector
+        :columns="columns"
+        :value="value.fieldName"
+        @update:value="
+          newColumns => {
+            updateFieldName(index, newColumns as string);
+          }
+        "
+        @update:open="
+          isOpen => {
+            if (!isOpen) {
+              nextTick(() => focusSearchByIndex(index));
+            }
+          }
+        "
+      />
+
+      <OperatorSelector
+        v-if="value.fieldName !== EExtendedField.RowQuery"
+        :db-type="dbType"
+        v-model:value="value.operator"
+        @update:open="
+          isOpen => {
+            if (!isOpen) {
+              nextTick(() => focusSearchByIndex(index));
+            }
+          }
+        "
+      />
+
+      <Input
+        v-model:model-value="value.search"
+        type="text"
+        :placeholder="getPlaceholderSearchByOperator(value.operator || '')"
+        class="w-full h-6 px-2"
+        ref="filterSearchRefs"
+      />
+      <Button
+        class="h-6 px-1.5"
+        variant="secondary"
+        @click="onApplyFilter(index)"
+      >
+        Apply
+      </Button>
+      <Button
+        size="iconSm"
+        class="size-5!"
+        variant="secondary"
+        @click="onRemoveFilter(index)"
+      >
+        <Icon name="hugeicons:minus-sign" />
+      </Button>
+      <Button
+        size="iconSm"
+        class="size-5!"
+        variant="secondary"
+        @click="() => onAddFilter(index)"
+      >
+        <Icon name="hugeicons:plus-sign" />
+      </Button>
+    </div>
+
+    <QuickQueryGuide
+      v-if="fields.length"
+      :current-filter="whereClauses"
+      :all-filter="whereClauses"
+    />
+
+    <!-- </TransitionGroup> -->
+  </div>
+</template>
+
+<style>
+/* 1. declare transition */
+.fade-move,
+.fade-enter-active,
+.fade-leave-active {
+  transition: all 0.25s ease;
+}
+
+/* 2. declare enter from and leave to state */
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+  transform: scaleY(0.01) translate(1.5rem, 0);
+}
+
+/* 3. ensure leaving items are taken out of layout flow so that moving
+      animations can be calculated correctly. */
+.fade-leave-active {
+  position: absolute;
+}
+</style>

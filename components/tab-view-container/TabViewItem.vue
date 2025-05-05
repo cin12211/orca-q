@@ -32,7 +32,7 @@ const isDragging = ref(false);
 const isDraggedOver = ref(false);
 const closestEdgeRef = ref<Edge>();
 
-const instruction = ref(false);
+const showDropIndicator = ref(false);
 
 watchEffect(onCleanup => {
   const innerElement = unrefElement(innerElementRef);
@@ -108,16 +108,16 @@ watchEffect(onCleanup => {
         const isDifferentTab = self.data?.id !== source.data.id;
 
         if (props.tab.id === self.data?.id && isDifferentTab) {
-          instruction.value = true;
+          showDropIndicator.value = true;
         }
       },
       onDragLeave: () => {
         isDraggedOver.value = false;
-        instruction.value = false;
+        showDropIndicator.value = false;
       },
       onDrop: ({ location }) => {
         isDraggedOver.value = false;
-        instruction.value = false;
+        showDropIndicator.value = false;
       },
 
       getIsSticky: () => false,
@@ -161,11 +161,9 @@ watchEffect(onCleanup => {
     </Button>
 
     <div
-      v-if="instruction"
+      v-if="showDropIndicator && closestEdgeRef"
       class="absolute h-7 w-0.5 top-0 rounded-md bg-accent-foreground"
-      :style="{
-        [closestEdgeRef === 'left' ? 'left' : 'right']: '0px',
-      }"
+      :style="{ [closestEdgeRef === 'left' ? 'left' : 'right']: '0px' }"
     />
   </div>
 

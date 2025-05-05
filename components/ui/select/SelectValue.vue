@@ -9,3 +9,11 @@ const props = defineProps<SelectValueProps>();
     <slot />
   </SelectValue>
 </template>
+
+<style>
+[data-placeholder] {
+  span {
+    opacity: 0.3;
+  }
+}
+</style>

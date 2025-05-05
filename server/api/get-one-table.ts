@@ -1,83 +1,17 @@
-import { executeQuery } from '~/server/utils/db-connection';
+import { TableMetadata } from './get-tables';
 
-export interface ColumnMetadata {
-  name: string;
-  ordinal_position: number;
-  type: string;
-  character_maximum_length: number | null;
-  precision: { precision: number; scale: number } | null;
-  nullable: boolean;
-  default: string | null;
-  collation: string | null;
-  comment: string | null;
-}
+export default defineEventHandler(async (event): Promise<TableMetadata> => {
+  const {
+    connectionUrl,
+    tableName,
+  }: { connectionUrl: string; tableName: string } = await readBody(event);
 
-export interface ForeignKeyMetadata {
-  foreign_key_name: string;
-  column: string;
-  reference_schema: string;
-  reference_table: string;
-  reference_column: string;
-  fk_def: string;
-}
+  const resource = await getDatabaseSource({
+    connectionUrl,
+    type: 'postgres',
+  });
 
-export interface PrimaryKeyMetadata {
-  column: string;
-  pk_def: string;
-}
-
-export interface IndexMetadata {
-  index_name: string;
-  column: string;
-  index_type: string;
-  index_size: number;
-  is_unique: boolean;
-  cardinality: number;
-  column_position: number;
-  direction: 'ASC' | 'DESC';
-}
-
-export interface TableMetadata {
-  schema: string;
-  table: string;
-  rows: number;
-  type: string;
-  comment: string | null;
-  columns: ColumnMetadata[];
-  foreign_keys: ForeignKeyMetadata[];
-  primary_keys: PrimaryKeyMetadata[];
-  indexes: IndexMetadata[];
-}
-
-export interface ViewMetadata {
-  schema: string;
-  view_name: string;
-  view_definition: string; // Base64-encoded
-}
-
-export interface ConfigMetadata {
-  name: string;
-  value: string;
-}
-
-export interface DatabaseMetadata {
-  tables: TableMetadata[];
-  views: ViewMetadata[];
-  databaseName: string;
-  version: string;
-  config: ConfigMetadata[];
-}
-
-export interface QueryResult {
-  result: {
-    metadata: DatabaseMetadata;
-  }[];
-}
-
-export default defineEventHandler(async (event): Promise<QueryResult> => {
-  //   const body: { query: string } = await readBody(event);
-
-  const result = await executeQuery(`
+  const result = (await resource.query(`
         -- select nspname
         -- from pg_catalog.pg_namespace;
         -- show all table detail in schema (2)
@@ -291,53 +225,20 @@ export default defineEventHandler(async (event): Promise<QueryResult> => {
                     LEFT JOIN indexes_cols ON indexes_cols.schema_name = tbls.table_schema
                     AND indexes_cols.table_name = tbls.table_name
                 WHERE
-                    tbls.table_schema NOT IN ('information_schema', 'pg_catalog')
-            ),
-            views AS (
-                SELECT
-                    json_agg(
-                        json_build_object(
-                            'schema',
-                            views.schemaname,
-                            'view_name',
-                            views.viewname,
-                            'view_definition',
-                            encode(convert_to(views.definition, 'UTF8'), 'base64')
-                        )
-                    ) AS views_metadata
-                FROM
-                    pg_views views
-                WHERE
-                    views.schemaname NOT IN ('information_schema', 'pg_catalog')
-            ),
-            config AS (
-                SELECT
-                    json_agg(
-                        json_build_object('name', conf.name, 'value', conf.setting)
-                    ) AS config_metadata
-                FROM
-                    pg_settings conf
+                    tbls.table_schema NOT IN ('information_schema', 'pg_catalog') and tbls.table_name = '${tableName}'
             )
         SELECT
-            json_build_object(
-                'tables',
-                COALESCE(tbls.tbls_metadata, '[]'),
-                'views',
-                COALESCE(views.views_metadata, '[]'),
-                'databaseName',
-                current_database(),
-                'version',
-                version(),
-                'config',
-                COALESCE(config.config_metadata, '[]')
-            ) AS metadata
+            tbls.tbls_metadata as table_detail
         FROM
-            tbls,
-            views,
-            config;
-    `);
+            tbls;;
+    `)) as { table_detail: TableMetadata[] }[];
 
-  return {
-    result,
-  };
+  if (!result?.[0]?.table_detail?.[0]) {
+    throw createError({
+      statusCode: 404,
+      statusMessage: 'Table not found',
+    });
+  }
+
+  return result?.[0]?.table_detail?.[0];
 });

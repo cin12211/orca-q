@@ -1,13 +1,5 @@
-export enum EConnectionMethod {
-  STRING = 'string',
-  FORM = 'form',
-}
-
-export enum EDatabaseType {
-  PG = `postgres`,
-  MYSQL = 'mysql',
-  REDIS = 'redis',
-}
+import type { EDatabaseType } from '~/components/modules/management-connection/constants';
+import type { EConnectionMethod } from '~/components/modules/management-connection/type';
 
 interface Column {
   label: string;

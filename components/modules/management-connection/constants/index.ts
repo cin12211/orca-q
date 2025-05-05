@@ -1,11 +1,10 @@
 import type { RendererElement, RendererNode } from 'vue';
 import { Icon } from '#components';
-import type { DatabaseType } from 'typeorm';
 
 export enum EDatabaseType {
   PG = `postgres`,
   MYSQL = 'mysql',
-  REDIS = 'redis',
+  // REDIS = 'redis',
 }
 
 export interface IDBSupport {
@@ -34,12 +33,12 @@ export const databaseSupports: IDBSupport[] = [
     icon: h(Icon, { name: 'logos:mysql' }),
     isSupport: false,
   },
-  {
-    type: EDatabaseType.REDIS,
-    name: 'Redis',
-    icon: h(Icon, { name: 'logos:redis' }),
-    isSupport: false,
-  },
+  // {
+  //   type: EDatabaseType.REDIS,
+  //   name: 'Redis',
+  //   icon: h(Icon, { name: 'logos:redis' }),
+  //   isSupport: false,
+  // },
 ];
 
 export const getDatabaseSupportByType = (type: EDatabaseType) => {
