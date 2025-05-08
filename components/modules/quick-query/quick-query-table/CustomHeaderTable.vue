@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { Icon } from '#components';
-import type { ColumnMetadata } from '~/server/api/get-tables';
 
 //TODO: refactor, rename for custom header table
 

@@ -10,7 +10,7 @@ import type {
 } from 'ag-grid-community';
 import { iconOverrides, themeBalham } from 'ag-grid-community';
 import { AgGridVue } from 'ag-grid-vue3';
-import CustomHeader from './CustomHeader.vue';
+import CustomHeaderTable from './CustomHeaderTable.vue';
 
 //TODO: refactor, and move reuseable
 // Define interfaces for better type safety
@@ -117,17 +117,17 @@ const columnDefs = computed<ColDef[]>(() =>
           fieldId,
           isPrimaryKey: props.primaryKeys.includes(fieldId),
           isForeignKey: props.foreignKeys.includes(fieldId),
-          dataType:
-            fieldId !== '#'
-              ? `(${props.columnTypes.find(c => c.name === fieldId)?.type || ''})`
-              : '',
+          // dataType:
+          //   fieldId !== '#'
+          //     ? `(${props.columnTypes.find(c => c.name === fieldId)?.type || ''})`
+          //     : '',
         },
       }))
     : []
 );
 
 const defaultColDef = ref<ColDef>({
-  headerComponent: CustomHeader,
+  headerComponent: CustomHeaderTable,
 });
 </script>
 
