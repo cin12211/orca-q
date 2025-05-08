@@ -22,9 +22,19 @@ const emit = defineEmits<{
 
 <template>
   <div
-    class="w-full h-9 border flex items-center justify-between px-2 rounded-b-md"
+    class="w-full select-none h-9 border flex items-center justify-between px-2 rounded-b-md"
   >
+    <!-- TODO: review to sort button position for each function-->
     <div class="flex items-center gap-1">
+      <!-- TODO: show only when need to save sata -->
+      <Button variant="outline" size="iconSm" class="h-6">
+        <Icon name="lucide:refresh-ccw" class="text-green-600"> </Icon>
+      </Button>
+      <!-- TODO: show only when have selected data -->
+      <Button variant="outline" size="iconSm" class="h-6">
+        <Icon name="lucide:trash" class="text-red-600"> </Icon>
+      </Button>
+
       <Button
         variant="outline"
         size="sm"
@@ -33,6 +43,7 @@ const emit = defineEmits<{
       >
         Filter
       </Button>
+
       <Button
         variant="outline"
         size="iconSm"
@@ -41,6 +52,17 @@ const emit = defineEmits<{
       >
         <Icon name="hugeicons:refresh"> </Icon>
       </Button>
+
+      <Button
+        variant="outline"
+        size="sm"
+        class="h-6 px-1"
+        @click="emit('onShowFilter')"
+      >
+        <Icon name="lucide:plus"> </Icon>
+        Row
+      </Button>
+
       <Button variant="outline" size="iconSm" class="h-6">
         <Icon name="hugeicons:file-download"> </Icon>
       </Button>

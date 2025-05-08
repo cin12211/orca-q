@@ -53,13 +53,13 @@ const { remove, fields, insert, update } =
 const onAddFilter = (index: number) => {
   insert(index + 1, {
     isSelect: true,
-    fieldName: EExtendedField.RowQuery,
+    fieldName: EExtendedField.RawQuery,
   });
 };
 
 const updateFieldName = (index: number, newFieldName: string) => {
   const row = fields.value?.[index]?.value;
-  const isRowQuery = row?.fieldName === EExtendedField.RowQuery;
+  const isRowQuery = row?.fieldName === EExtendedField.RawQuery;
   const isEmptyOperator = !row?.operator;
 
   if (isRowQuery && isEmptyOperator) {
@@ -254,7 +254,7 @@ defineExpose({
       />
 
       <OperatorSelector
-        v-if="value.fieldName !== EExtendedField.RowQuery"
+        v-if="value.fieldName !== EExtendedField.RawQuery"
         :db-type="dbType"
         v-model:value="value.operator"
         @update:open="

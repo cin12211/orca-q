@@ -3,6 +3,7 @@ import { toast } from 'vue-sonner';
 import { useTableQueryBuilder } from '~/composables/useTableQueryBuilder';
 import { useAppContext } from '~/shared/contexts/useAppContext';
 import { EDatabaseType } from '../management-connection/constants';
+import PreviewSelectedRow from './PreviewSelectedRow.vue';
 import QuickQueryErrorPopup from './QuickQueryErrorPopup.vue';
 import QuickQueryControlBar from './quick-query-control-bar/QuickQueryControlBar.vue';
 import QuickQueryFilter from './quick-query-filter/QuickQueryFilter.vue';
@@ -82,6 +83,12 @@ const columnTypes = computed(() => {
 </script>
 
 <template>
+  <!-- TODO: sync data when edit to row table -->
+  <!-- TODO: allow save data in control bar -> sync button -> trigger call api -->
+  <Teleport defer to="#preview-select-row">
+    <PreviewSelectedRow :columnTypes="columnTypes"
+  /></Teleport>
+
   <QuickQueryErrorPopup
     v-model:open="openErrorModal"
     :message="error?.statusMessage || ''"

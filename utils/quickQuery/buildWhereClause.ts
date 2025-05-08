@@ -226,7 +226,7 @@ export function buildWhereClause<
     }
 
     /* Row query → raw fragment */
-    if (f.fieldName === EExtendedField.RowQuery) {
+    if (f.fieldName === EExtendedField.RawQuery) {
       if (!f.search) {
         return;
       }

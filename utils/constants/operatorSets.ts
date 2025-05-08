@@ -2,7 +2,7 @@ import type { EDatabaseType } from '~/components/modules/management-connection/c
 
 export enum EExtendedField {
   AnyField = 'Any field',
-  RowQuery = 'Row query',
+  RawQuery = 'Raw query',
 }
 
 export enum OperatorSet {
@@ -134,7 +134,7 @@ export const extendedFields = [
     value: EExtendedField.AnyField,
   },
   {
-    label: 'Row SQL',
-    value: EExtendedField.RowQuery,
+    label: 'Raw SQL',
+    value: EExtendedField.RawQuery,
   },
 ];
