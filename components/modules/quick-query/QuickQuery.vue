@@ -1,22 +1,45 @@
 <script setup lang="ts">
-import { useMagicKeys, whenever } from '@vueuse/core';
 import { toast } from 'vue-sonner';
+import { useTableQueryBuilder } from '~/composables/useTableQueryBuilder';
 import { useAppContext } from '~/shared/contexts/useAppContext';
 import { EDatabaseType } from '../management-connection/constants';
-import QuickQueryFilter from './QuickQueryFilter.vue';
+import QuickQueryErrorPopup from './QuickQueryErrorPopup.vue';
 import QuickQueryTable from './QuickQueryTable.vue';
+import QuickQueryControlBar from './quick-query-control-bar/QuickQueryControlBar.vue';
+import QuickQueryFilter from './quick-query-filter/QuickQueryFilter.vue';
 
 definePageMeta({
   keepalive: false,
 });
 
+const quickQueryFilterRef = ref<InstanceType<typeof QuickQueryFilter>>();
+
 const props = defineProps<{ tableId: string }>();
 
 const { connectionStore } = useAppContext();
 
-const baseQuery = `SELECT * FROM ${props.tableId}`;
-
-const query = ref(baseQuery);
+const {
+  status,
+  onApplyNewFilter,
+  data,
+  baseQueryString,
+  refreshTableData,
+  refreshCount,
+  isAllowNextPage,
+  isAllowPreviousPage,
+  onNextPage,
+  onPreviousPage,
+  onUpdatePagination,
+  totalRows,
+  pagination,
+  error,
+  openErrorModal,
+  orderBy,
+  onUpdateOrderBy,
+} = await useTableQueryBuilder({
+  connectionString: connectionStore.selectedConnection?.connectionString || '',
+  tableName: props.tableId,
+});
 
 const {
   data: tableSchema,
@@ -29,52 +52,76 @@ const {
     connectionUrl: connectionStore.selectedConnection?.connectionString,
   },
   key: `schema-${props.tableId}`,
-  onResponseError: error => {
-    toast(error.response?.statusText);
+  onRequestError({ request, options, error }) {
+    // Handle the request errors
+  },
+  onResponse({ request, response, options }) {
+    // Process the response data
+    // localStorage.setItem('token', response._data.token);
+  },
+  onResponseError({ request, response, options }) {
+    toast(response?.statusText);
   },
 });
 
 const columnNames = computed(() => {
-  return tableSchema.value?.columns.map(c => c.name) || [];
+  return tableSchema.value?.columns?.map(c => c.name) || [];
 });
 
-const { value } = useError();
-const { data, status } = await useFetch('/api/execute', {
-  method: 'POST',
-  body: {
-    query: query,
-    connectionUrl: connectionStore.selectedConnection?.connectionString,
-  },
-  key: props.tableId,
-  cache: 'default',
-  onResponseError: error => {
-    const errorData = error.response?._data?.data;
-
-    toast(error.response?.statusText, {
-      important: true,
-      description: JSON.stringify(errorData),
-    });
-  },
+onMounted(() => {
+  refreshCount();
+  refreshTableData();
 });
 </script>
 
 <template>
-  <div class="flex flex-col h-full p-2 relative">
-    {{ value }}
-    <LoadingOverlay :visible="status === 'pending'" />
+  <QuickQueryErrorPopup
+    v-model:open="openErrorModal"
+    :message="error?.statusMessage || ''"
+  />
 
+  <div class="flex flex-col h-full w-full relative p-2">
+    <!-- <LoadingOverlay :visible="status === 'pending'" /> -->
+    <LoadingOverlay :visible="tableSchemaStatus === 'pending'" />
     <TableSkeleton v-if="tableSchemaStatus === 'pending'" />
 
     <QuickQueryFilter
+      ref="quickQueryFilterRef"
       @onSearch="
-        newQuery => {
-          query = newQuery;
+        whereClause => {
+          console.log('🚀 ~ whereClause:', whereClause);
+
+          onApplyNewFilter(whereClause);
         }
       "
-      :baseQuery="baseQuery"
+      :baseQuery="baseQueryString"
       :columns="columnNames"
       :dbType="EDatabaseType.PG"
     />
-    <QuickQueryTable :data="data || []" class="h-full" :defaultPageSize="30" />
+    <QuickQueryTable
+      :data="data || []"
+      :orderBy="orderBy"
+      @update:order-by="onUpdateOrderBy"
+      class="h-fit max-h-full"
+      :defaultPageSize="DEFAULT_QUERY_SIZE"
+    />
+
+    <QuickQueryControlBar
+      :isAllowNextPage="isAllowNextPage"
+      :isAllowPreviousPage="isAllowPreviousPage"
+      :totalRows="totalRows"
+      :limit="pagination.limit"
+      :currentTotalRows="data?.length || 0"
+      :offset="pagination.offset"
+      @onPaginate="onUpdatePagination"
+      @onNextPage="onNextPage"
+      @onPreviousPage="onPreviousPage"
+      @onRefresh="refreshTableData"
+      @on-show-filter="
+        async () => {
+          await quickQueryFilterRef?.onShowSearch();
+        }
+      "
+    />
   </div>
 </template>

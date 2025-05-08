@@ -5,11 +5,14 @@ import type {
   GridApi,
   GridOptions,
   GridReadyEvent,
+  RowSelectionOptions,
   SizeColumnsToFitGridStrategy,
 } from 'ag-grid-community';
 import { iconOverrides, themeBalham } from 'ag-grid-community';
 import { AgGridVue } from 'ag-grid-vue3';
+import CustomHeader from './CustomHeader.vue';
 
+//TODO: refactor, and move reuseable
 // Define interfaces for better type safety
 interface RowData {
   [key: string]: unknown;
@@ -18,36 +21,13 @@ interface RowData {
 /* props ------------------------------------------------------------- */
 const props = defineProps<{
   data?: RowData[];
-  caption?: string;
   defaultPageSize?: number;
+  orderBy: OrderBy;
 }>();
 
-/* reactive state ---------------------------------------------------- */
-const rowData = computed<RowData[]>(() => props.data ?? []);
-const quickFilter = ref<string>(''); // Explicit string type
-const pageSize = ref<number>(props.defaultPageSize ?? 10);
-
-const gridApi = ref<GridApi | null>(null);
-
-/* derive columns on the fly ---------------------------------------- */
-const columnDefs = computed<ColDef[]>(() =>
-  rowData.value.length
-    ? Object.keys(rowData.value[0]).map((key: string) => ({
-        field: key,
-        sortable: true,
-        filter: false,
-        resizable: true,
-        flex: 1,
-        editable: true,
-      }))
-    : []
-);
-
-/* grid ready callback ---------------------------------------------- */
-const onGridReady = (e: GridReadyEvent) => {
-  gridApi.value = e.api;
-  //Do something
-};
+const emit = defineEmits<{
+  (e: 'update:orderBy', value: OrderBy): void;
+}>();
 
 const mySvgIcons = iconOverrides({
   type: 'image', // Use 'image' to allow SVG rendering
@@ -61,17 +41,12 @@ const mySvgIcons = iconOverrides({
 
 const customizedTheme = themeBalham
   .withParams({
-    accentColor: 'var(--color-gray-900)',
-    wrapperBorderRadius: 'var(--radius)',
+    // accentColor: 'var(--color-gray-900)',
+    wrapperBorderRadius: 0,
     borderRadius: 'var(--radius-sm)',
     borderColor: 'var(--input)',
   })
   .withPart(mySvgIcons);
-
-const autoSizeStrategy: SizeColumnsToFitGridStrategy = {
-  type: 'fitGridWidth',
-  defaultMinWidth: 150,
-};
 
 const gridOptions: GridOptions = {
   rowClass: 'class-row-border-none',
@@ -81,21 +56,84 @@ const gridOptions: GridOptions = {
     }
   },
 };
+
+/* reactive state ---------------------------------------------------- */
+const rowData = computed<RowData[]>(() =>
+  (props.data ?? []).map((e, index) => {
+    return {
+      '#': index,
+      ...e,
+    };
+  })
+);
+const quickFilter = ref<string>(''); // Explicit string type
+const pageSize = ref<number>(props.defaultPageSize ?? 10);
+
+const gridApi = ref<GridApi | null>(null);
+
+/* grid ready callback ---------------------------------------------- */
+const onGridReady = (e: GridReadyEvent) => {
+  gridApi.value = e.api;
+  //Do something
+};
+
+const autoSizeStrategy: SizeColumnsToFitGridStrategy = {
+  type: 'fitGridWidth',
+  defaultMinWidth: 150,
+};
+
+const rowSelection: RowSelectionOptions = {
+  mode: 'multiRow',
+  checkboxes: false,
+  headerCheckbox: false,
+  enableSelectionWithoutKeys: false,
+  enableClickSelection: 'enableSelection',
+  copySelectedRows: true,
+};
+
+/* derive columns on the fly ---------------------------------------- */
+const columnDefs = computed<ColDef[]>(() =>
+  rowData.value.length
+    ? Object.keys(rowData.value[0]).map((fieldId: string) => ({
+        headerName: fieldId,
+        field: fieldId,
+        filter: false,
+        resizable: true,
+        flex: 1,
+        editable: true,
+        sortable: false,
+        headerComponentParams: {
+          allowSorting: fieldId !== '#',
+          sort:
+            props.orderBy.columnName === fieldId
+              ? props.orderBy.order
+              : undefined,
+          onUpdateSort: (value: OrderBy) => {
+            emit('update:orderBy', value);
+          },
+          fieldId,
+        },
+      }))
+    : []
+);
+
+const defaultColDef = ref<ColDef>({
+  headerComponent: CustomHeader,
+});
 </script>
 
 <template>
   <AgGridVue
     class="flex-1"
+    :defaultColDef="defaultColDef"
+    :rowSelection="rowSelection"
     :grid-options="gridOptions"
-    :autoSizeStrategy="autoSizeStrategy"
     :theme="customizedTheme"
     :columnDefs="columnDefs"
     :rowData="rowData"
     :quickFilterText="quickFilter"
-    :pagination="true"
+    :pagination="false"
     :paginationPageSize="pageSize"
-    :rowSelection="'single'"
-    :pagination-page-size-selector="[10, 20, 30, 50, 100]"
     enableCellTextSelection
     cell-ed
     @grid-ready="onGridReady"
@@ -110,4 +148,18 @@ const gridOptions: GridOptions = {
 .class-row-even {
   background-color: var(--muted);
 }
+
+.ag-cell-value {
+  user-select: none;
+}
+
+.ag-root-wrapper {
+  border-bottom-left-radius: 0px;
+  border-bottom-right-radius: 0px;
+  border: none;
+}
+
+/* .ag-row-selected:before {
+  background-color: var(--color-slate-200);
+} */
 </style>

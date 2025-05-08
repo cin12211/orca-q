@@ -12,10 +12,10 @@ import {
   getPlaceholderSearchByOperator,
   type FilterSchema,
 } from '~/utils/quickQuery';
-import { EDatabaseType } from '../management-connection/constants';
-import ColumnSelector from '../selectors/ColumnSelector.vue';
-import OperatorSelector from '../selectors/OperatorSelector.vue';
-import QuickQueryGuide from './QuickQueryGuide.vue';
+import { EDatabaseType } from '../../management-connection/constants';
+import ColumnSelector from '../../selectors/ColumnSelector.vue';
+import OperatorSelector from '../../selectors/OperatorSelector.vue';
+import QuickQueryFilterGuide from './QuickQueryFilterGuide.vue';
 
 const props = defineProps<{
   columns: string[];
@@ -83,10 +83,17 @@ const whereClauses = computed(() => {
   })};`;
 });
 
-const onSubmit = handleSubmit(formData => {
+const onExecuteSearch = () => {
   console.log('whereClauses', whereClauses);
-  emit('onSearch', whereClauses.value);
-});
+  emit(
+    'onSearch',
+    formatWhereClause({
+      columns: props.columns,
+      db: props.dbType,
+      filters: fields.value.map(f => f.value) || [],
+    })
+  );
+};
 
 const onApplyFilter = (index: number) => {
   const row = fields.value?.[index]?.value;
@@ -97,7 +104,7 @@ const onApplyFilter = (index: number) => {
     });
   }
 
-  onSubmit();
+  onExecuteSearch();
 };
 
 const onApplyAllFilter = () => {
@@ -108,14 +115,14 @@ const onApplyAllFilter = () => {
     });
   });
 
-  onSubmit();
+  onExecuteSearch();
 };
 
 const onRemoveFilter = (index: number) => {
   remove(index);
 
   if (index === 0) {
-    emit('onSearch', props.baseQuery);
+    onExecuteSearch();
   }
 };
 
@@ -132,8 +139,7 @@ const focusSearchByIndex = (index: number) => {
   }
 };
 
-// trigger show search
-whenever(meta_f, async () => {
+const onShowSearch = async () => {
   if (!fields.value.length) {
     onAddFilter(-1);
   }
@@ -143,6 +149,11 @@ whenever(meta_f, async () => {
   const lastIndex = fields.value.length - 1 || 0;
 
   focusSearchByIndex(lastIndex);
+};
+
+// trigger show search
+whenever(meta_f, async () => {
+  await onShowSearch();
 });
 
 // insert new filter, in focus input
@@ -193,12 +204,16 @@ whenever(meta_enter, async () => {
     onApplyAllFilter();
   }
 });
+
+defineExpose({
+  onShowSearch,
+});
 </script>
 
 <template>
   <div
     :class="['h-fit space-y-1', fields.length && 'pb-2']"
-    @keyup.enter="onSubmit"
+    @keyup.enter="onExecuteSearch"
   >
     <!-- <TransitionGroup name="fade"> -->
     <div
@@ -247,7 +262,7 @@ whenever(meta_enter, async () => {
       />
       <Button
         class="h-6 px-1.5"
-        variant="secondary"
+        variant="outline"
         @click="onApplyFilter(index)"
       >
         Apply
@@ -255,7 +270,7 @@ whenever(meta_enter, async () => {
       <Button
         size="iconSm"
         class="size-5!"
-        variant="secondary"
+        variant="outline"
         @click="onRemoveFilter(index)"
       >
         <Icon name="hugeicons:minus-sign" />
@@ -263,14 +278,14 @@ whenever(meta_enter, async () => {
       <Button
         size="iconSm"
         class="size-5!"
-        variant="secondary"
+        variant="outline"
         @click="() => onAddFilter(index)"
       >
         <Icon name="hugeicons:plus-sign" />
       </Button>
     </div>
 
-    <QuickQueryGuide
+    <QuickQueryFilterGuide
       v-if="fields.length"
       :current-filter="whereClauses"
       :all-filter="whereClauses"

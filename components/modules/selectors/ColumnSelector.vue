@@ -19,7 +19,7 @@ defineEmits<{
     <SelectTrigger class="w-36 min-w-36 h-6! text-sm cursor-pointer px-2">
       <SelectValue placeholder="Select field" />
     </SelectTrigger>
-    <SelectContent class="h-96!">
+    <SelectContent>
       <SelectGroup>
         <!-- <SelectLabel>Fruits</SelectLabel> -->
 

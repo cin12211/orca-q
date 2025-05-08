@@ -40,9 +40,7 @@ const composeOperator = ref('AND');
     <div>
       <Popover>
         <PopoverTrigger>
-          <Button size="sm" class="h-6 text-xs" variant="secondary">
-            SQL
-          </Button>
+          <Button size="sm" class="h-6 text-xs" variant="outline"> SQL </Button>
         </PopoverTrigger>
         <PopoverContent class="w-[40rem] p-2 space-y-2">
           <div class="text-xs font-medium">
