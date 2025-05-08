@@ -72,6 +72,22 @@ onMounted(() => {
   refreshCount();
   refreshTableData();
 });
+
+const foreignKeys = computed(() =>
+  (tableSchema.value?.foreign_keys || []).map(fk => fk.column)
+);
+const primaryKeys = computed(() =>
+  (tableSchema.value?.primary_keys || []).map(fk => fk.column)
+);
+
+const columnTypes = computed(() => {
+  return (
+    tableSchema.value?.columns?.map(c => ({
+      name: c.name,
+      type: c.short_type_name,
+    })) || []
+  );
+});
 </script>
 
 <template>
@@ -98,11 +114,15 @@ onMounted(() => {
       :columns="columnNames"
       :dbType="EDatabaseType.PG"
     />
+
     <QuickQueryTable
       :data="data || []"
       :orderBy="orderBy"
       @update:order-by="onUpdateOrderBy"
       class="h-fit max-h-full"
+      :foreignKeys="foreignKeys"
+      :primaryKeys="primaryKeys"
+      :columnTypes="columnTypes"
       :defaultPageSize="DEFAULT_QUERY_SIZE"
     />
 

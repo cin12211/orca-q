@@ -23,6 +23,9 @@ const props = defineProps<{
   data?: RowData[];
   defaultPageSize?: number;
   orderBy: OrderBy;
+  foreignKeys: string[];
+  primaryKeys: string[];
+  columnTypes: { name: string; type: string }[];
 }>();
 
 const emit = defineEmits<{
@@ -112,6 +115,12 @@ const columnDefs = computed<ColDef[]>(() =>
             emit('update:orderBy', value);
           },
           fieldId,
+          isPrimaryKey: props.primaryKeys.includes(fieldId),
+          isForeignKey: props.foreignKeys.includes(fieldId),
+          dataType:
+            fieldId !== '#'
+              ? `(${props.columnTypes.find(c => c.name === fieldId)?.type || ''})`
+              : '',
         },
       }))
     : []
@@ -126,6 +135,7 @@ const defaultColDef = ref<ColDef>({
   <AgGridVue
     class="flex-1"
     :defaultColDef="defaultColDef"
+    :autoSizeStrategy="autoSizeStrategy"
     :rowSelection="rowSelection"
     :grid-options="gridOptions"
     :theme="customizedTheme"

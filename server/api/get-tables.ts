@@ -3,6 +3,7 @@ import { executeQuery } from '~/server/utils/db-connection';
 export interface ColumnMetadata {
   name: string;
   ordinal_position: number;
+  short_type_name: string;
   type: string;
   character_maximum_length: number | null;
   precision: { precision: number; scale: number } | null;

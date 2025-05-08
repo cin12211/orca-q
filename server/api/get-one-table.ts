@@ -137,6 +137,8 @@ export default defineEventHandler(async (event): Promise<TableMetadata> => {
                             cols.column_name,
                             'ordinal_position',
                             cols.ordinal_position,
+                            'short_type_name',
+                            cols.udt_name,
                             'type',
                             LOWER(cols.data_type),
                             'character_maximum_length',

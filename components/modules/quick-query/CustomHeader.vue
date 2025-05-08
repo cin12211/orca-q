@@ -1,14 +1,19 @@
 <script setup lang="ts">
+import { Icon } from '#components';
+import type { ColumnMetadata } from '~/server/api/get-tables';
+
 //TODO: refactor, rename for custom header table
 
 // Define props interface
 interface Params {
   displayName: string;
-
   fieldId: string;
   allowSorting: boolean;
   sort?: OrderBy['order'];
   onUpdateSort: (value: OrderBy) => void;
+  isForeignKey: boolean;
+  isPrimaryKey: boolean;
+  dataType: string;
 }
 
 const props = defineProps<{
@@ -46,9 +51,29 @@ const onSortChanged = () => {
     role="presentation"
     @click="onSortChanged"
   >
-    <span class="ag-header-cell-text" data-ref="eText">{{
-      props.params.displayName
-    }}</span>
+    <span
+      class="ag-header-cell-text items-center flex gap-0.5"
+      data-ref="eText"
+    >
+      <Icon
+        v-if="!!props.params.isPrimaryKey"
+        name="lucide:key-round"
+        class="min-w-3! text-yellow-500"
+      >
+      </Icon>
+
+      <Icon
+        v-if="!!props.params.isForeignKey"
+        name="lucide:key-round"
+        class="min-w-3!"
+      >
+      </Icon>
+      {{ props.params.displayName }}
+
+      <p class="text-[10px]!">
+        {{ props.params.dataType }}
+      </p>
+    </span>
     <!--AG-SORT-INDICATOR-->
     <span
       class="ag-sort-indicator-container"
