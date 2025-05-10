@@ -2,9 +2,10 @@
 import { toast } from 'vue-sonner';
 import { useTableQueryBuilder } from '~/composables/useTableQueryBuilder';
 import { useAppContext } from '~/shared/contexts/useAppContext';
+import { buildUpdateQuery, findDifferentChange } from '~/utils/quickQuery';
 import { EDatabaseType } from '../management-connection/constants';
-import PreviewSelectedRow from './PreviewSelectedRow.vue';
 import QuickQueryErrorPopup from './QuickQueryErrorPopup.vue';
+import PreviewSelectedRow from './preview/PreviewSelectedRow.vue';
 import QuickQueryControlBar from './quick-query-control-bar/QuickQueryControlBar.vue';
 import QuickQueryFilter from './quick-query-filter/QuickQueryFilter.vue';
 import QuickQueryTable from './quick-query-table/QuickQueryTable.vue';
@@ -56,6 +57,8 @@ const { data: tableSchema, status: tableSchemaStatus } = await useFetch(
   }
 );
 
+const selectedRows = ref<Record<string, any>[]>([]);
+
 const columnNames = computed(() => {
   return tableSchema.value?.columns?.map(c => c.name) || [];
 });
@@ -80,13 +83,58 @@ const columnTypes = computed(() => {
     })) || []
   );
 });
+
+const onSelectedRowsChange = (rows: Record<string, any>[]) => {
+  selectedRows.value = rows;
+};
+
+const onSaveData = async () => {
+  if (!data.value) {
+    return;
+  }
+
+  const tableName = props.tableId;
+
+  const differentChange = findDifferentChange(
+    data.value[0],
+    selectedRows.value[0]
+  );
+
+  const queryUpdateString = buildUpdateQuery({
+    tableName: tableName,
+    pKeys: primaryKeys.value,
+    update: differentChange,
+    pKeyValue: selectedRows.value[0],
+  });
+
+  console.log('onSaveData::', queryUpdateString);
+
+  await $fetch('/api/execute', {
+    method: 'POST',
+    body: {
+      query: queryUpdateString,
+      connectionUrl: connectionStore.selectedConnection?.connectionString,
+    },
+    onResponseError({ response }) {
+      toast(response?.statusText);
+    },
+  });
+
+  refreshTableData();
+};
 </script>
 
 <template>
+  <!-- TODO: add menu context for table -->
+  <!-- TODO: Allow delete , delete many -->
+  <!-- TODO: Allow add row  -->
+  <!-- TODO: Allow edit row  -->
   <!-- TODO: sync data when edit to row table -->
   <!-- TODO: allow save data in control bar -> sync button -> trigger call api -->
   <Teleport defer to="#preview-select-row">
-    <PreviewSelectedRow :columnTypes="columnTypes"
+    <PreviewSelectedRow
+      :columnTypes="columnTypes"
+      :selectedRow="selectedRows?.length ? selectedRows[0] : null"
   /></Teleport>
 
   <QuickQueryErrorPopup
@@ -116,15 +164,18 @@ const columnTypes = computed(() => {
     <QuickQueryTable
       :data="data || []"
       :orderBy="orderBy"
+      @on-selected-rows="onSelectedRowsChange"
       @update:order-by="onUpdateOrderBy"
       class="h-fit max-h-full"
       :foreignKeys="foreignKeys"
       :primaryKeys="primaryKeys"
       :columnTypes="columnTypes"
       :defaultPageSize="DEFAULT_QUERY_SIZE"
+      :offset="pagination.offset"
     />
 
     <QuickQueryControlBar
+      :total-selected-rows="selectedRows?.length"
       :isAllowNextPage="isAllowNextPage"
       :isAllowPreviousPage="isAllowPreviousPage"
       :totalRows="totalRows"
@@ -135,6 +186,7 @@ const columnTypes = computed(() => {
       @onNextPage="onNextPage"
       @onPreviousPage="onPreviousPage"
       @onRefresh="refreshTableData"
+      @onSaveData="onSaveData"
       @on-show-filter="
         async () => {
           await quickQueryFilterRef?.onShowSearch();

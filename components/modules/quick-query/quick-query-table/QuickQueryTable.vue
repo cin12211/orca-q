@@ -1,12 +1,16 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
 import type {
+  CellClassParams,
+  CellValueChangedEvent,
   ColDef,
+  ColTypeDef,
   GridApi,
   GridOptions,
   GridReadyEvent,
   RowSelectionOptions,
   SizeColumnsToFitGridStrategy,
+  SuppressKeyboardEventParams,
 } from 'ag-grid-community';
 import { iconOverrides, themeBalham } from 'ag-grid-community';
 import { AgGridVue } from 'ag-grid-vue3';
@@ -26,10 +30,12 @@ const props = defineProps<{
   foreignKeys: string[];
   primaryKeys: string[];
   columnTypes: { name: string; type: string }[];
+  offset: number;
 }>();
 
 const emit = defineEmits<{
   (e: 'update:orderBy', value: OrderBy): void;
+  (e: 'onSelectedRows', value: RowData[]): void;
 }>();
 
 const mySvgIcons = iconOverrides({
@@ -64,7 +70,7 @@ const gridOptions: GridOptions = {
 const rowData = computed<RowData[]>(() =>
   (props.data ?? []).map((e, index) => {
     return {
-      '#': index,
+      '#': index + props.offset + 1,
       ...e,
     };
   })
@@ -80,9 +86,29 @@ const onGridReady = (e: GridReadyEvent) => {
   //Do something
 };
 
+/* Handle cell value changed --------------------------------------- */
+const onCellValueChanged = (event: CellValueChangedEvent) => {
+  const { node, colDef } = event;
+  const rowId = node.id ?? node.rowIndex; // Use row ID or index
+  const field = colDef.field;
+
+  if (rowId !== null && field) {
+    // Add to edited cells if not already present
+
+    console.log('::', rowId !== null, field);
+    // if (
+    //   !editedCells.value.some(
+    //     cell => cell.rowId === rowId && cell.field === field
+    //   )
+    // ) {
+    //   editedCells.value.push({ rowId, field });
+    // }
+  }
+};
+
 const autoSizeStrategy: SizeColumnsToFitGridStrategy = {
   type: 'fitGridWidth',
-  defaultMinWidth: 150,
+  defaultMinWidth: 100,
 };
 
 const rowSelection: RowSelectionOptions = {
@@ -97,56 +123,135 @@ const rowSelection: RowSelectionOptions = {
 /* derive columns on the fly ---------------------------------------- */
 const columnDefs = computed<ColDef[]>(() =>
   rowData.value.length
-    ? Object.keys(rowData.value[0]).map((fieldId: string) => ({
-        headerName: fieldId,
-        field: fieldId,
-        filter: false,
-        resizable: true,
-        flex: 1,
-        editable: true,
-        sortable: false,
-        headerComponentParams: {
-          allowSorting: fieldId !== '#',
-          sort:
-            props.orderBy.columnName === fieldId
-              ? props.orderBy.order
-              : undefined,
-          onUpdateSort: (value: OrderBy) => {
-            emit('update:orderBy', value);
+    ? Object.keys(rowData.value[0]).map((fieldId: string) => {
+        const isIndexColumn = fieldId === '#';
+
+        if (isIndexColumn) {
+          const col: ColDef = {
+            headerName: '#',
+            field: fieldId,
+            filter: false,
+            resizable: true,
+            flex: 1,
+            editable: false,
+            sortable: false,
+            minWidth: 30,
+            headerComponentParams: {
+              allowSorting: false,
+            },
+          };
+          return col;
+        }
+
+        const sort =
+          props.orderBy.columnName === fieldId
+            ? props.orderBy.order
+            : undefined;
+
+        return {
+          headerName: fieldId,
+          field: fieldId,
+          filter: false,
+          resizable: true,
+          flex: 1,
+          editable: true,
+          sortable: false,
+          type: 'editableColumn',
+          headerComponentParams: {
+            allowSorting: true,
+            sort,
+            onUpdateSort: (value: OrderBy) => {
+              emit('update:orderBy', value);
+            },
+            fieldId,
+            isPrimaryKey: props.primaryKeys.includes(fieldId),
+            isForeignKey: props.foreignKeys.includes(fieldId),
+            // dataType:
+            //   fieldId !== '#'
+            //     ? `(${props.columnTypes.find(c => c.name === fieldId)?.type || ''})`
+            //     : '',
           },
-          fieldId,
-          isPrimaryKey: props.primaryKeys.includes(fieldId),
-          isForeignKey: props.foreignKeys.includes(fieldId),
-          // dataType:
-          //   fieldId !== '#'
-          //     ? `(${props.columnTypes.find(c => c.name === fieldId)?.type || ''})`
-          //     : '',
-        },
-      }))
+        };
+      })
     : []
 );
 
+//
+function suppressDeleteKeyboardEvent(params: SuppressKeyboardEventParams) {
+  const event = params.event;
+  const key = event.key;
+
+  const KEY_BACKSPACE = 'Backspace';
+
+  const KEY_DELETE = 'Delete';
+  const deleteKeys = [KEY_BACKSPACE, KEY_DELETE];
+
+  const suppress = deleteKeys.some(function (suppressedKey) {
+    return suppressedKey === key || key.toUpperCase() === suppressedKey;
+  });
+
+  return suppress;
+}
+
 const defaultColDef = ref<ColDef>({
   headerComponent: CustomHeaderTable,
+  suppressKeyboardEvent: suppressDeleteKeyboardEvent,
 });
+
+const columnTypes = ref<{
+  [key: string]: ColTypeDef;
+}>({
+  editableColumn: {
+    cellStyle: (params: CellClassParams) => {
+      const rowId = Number(params.node.id ?? params.node.rowIndex);
+
+      const field = params.colDef.field ?? '';
+
+      const oldValue = props?.data?.[rowId]?.[field];
+
+      const haveDifferent = oldValue !== params.value;
+
+      if (haveDifferent) {
+        return { backgroundColor: 'var(--color-orange-200)' };
+      }
+
+      return null;
+    },
+  },
+});
+
+/* handle selection changes ----------------------------------------- */
+const onSelectionChanged = () => {
+  if (gridApi.value) {
+    const selectedRows = gridApi.value.getSelectedRows();
+    handleSelection(selectedRows);
+  }
+};
+
+const handleSelection = (selectedRows: RowData[]) => {
+  emit('onSelectedRows', selectedRows);
+};
+
+defineExpose({ gridApi });
 </script>
 
 <template>
   <AgGridVue
     class="flex-1"
+    @selection-changed="onSelectionChanged"
+    @cell-value-changed="onCellValueChanged"
+    @grid-ready="onGridReady"
     :defaultColDef="defaultColDef"
     :autoSizeStrategy="autoSizeStrategy"
     :rowSelection="rowSelection"
     :grid-options="gridOptions"
     :theme="customizedTheme"
+    :columnTypes="columnTypes"
     :columnDefs="columnDefs"
     :rowData="rowData"
     :quickFilterText="quickFilter"
     :pagination="false"
     :paginationPageSize="pageSize"
-    enableCellTextSelection
-    cell-ed
-    @grid-ready="onGridReady"
   />
 </template>
 

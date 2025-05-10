@@ -96,8 +96,8 @@ provideDefaultLayoutContext({
         />
         <ResizablePanel
           id="default-layout-group-1-panel-3"
-          :min-size="5"
-          :max-size="50"
+          :min-size="15"
+          :max-size="40"
           :default-size="layoutSize[2]"
           :collapsed-size="0"
           collapsible

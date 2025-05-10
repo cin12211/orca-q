@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Icon } from '#components';
 import QueryPaginationConfig from './QueryPaginationConfig.vue';
+import RefreshButton from './RefreshButton.vue';
 
 defineProps<{
   isAllowNextPage: boolean;
@@ -9,6 +10,7 @@ defineProps<{
   limit: number;
   offset: number;
   currentTotalRows: number;
+  totalSelectedRows: number;
 }>();
 
 const emit = defineEmits<{
@@ -17,6 +19,7 @@ const emit = defineEmits<{
   (e: 'onNextPage'): void;
   (e: 'onPreviousPage'): void;
   (e: 'onShowFilter'): void;
+  (e: 'onSaveData'): void;
 }>();
 </script>
 
@@ -27,12 +30,32 @@ const emit = defineEmits<{
     <!-- TODO: review to sort button position for each function-->
     <div class="flex items-center gap-1">
       <!-- TODO: show only when need to save sata -->
-      <Button variant="outline" size="iconSm" class="h-6">
+
+      <p class="font-normal text-sm text-primary/60" v-if="totalSelectedRows">
+        Selected
+      </p>
+      <p class="font-normal text-sm text-primary" v-if="totalSelectedRows">
+        {{ totalSelectedRows }}
+      </p>
+
+      <Button
+        variant="outline"
+        size="sm"
+        class="h-6 px-1"
+        v-if="totalSelectedRows"
+        @click="emit('onSaveData')"
+      >
         <Icon name="lucide:refresh-ccw" class="text-green-600"> </Icon>
+        Save
       </Button>
       <!-- TODO: show only when have selected data -->
-      <Button variant="outline" size="iconSm" class="h-6">
-        <Icon name="lucide:trash" class="text-red-600"> </Icon>
+      <Button
+        variant="outline"
+        size="sm"
+        class="h-6 px-1"
+        v-if="totalSelectedRows"
+      >
+        <Icon name="lucide:trash" class="text-red-600"> </Icon>Delete
       </Button>
 
       <Button
@@ -44,14 +67,7 @@ const emit = defineEmits<{
         Filter
       </Button>
 
-      <Button
-        variant="outline"
-        size="iconSm"
-        class="h-6"
-        @click="emit('onRefresh')"
-      >
-        <Icon name="hugeicons:refresh"> </Icon>
-      </Button>
+      <RefreshButton @click="emit('onRefresh')" />
 
       <Button
         variant="outline"
