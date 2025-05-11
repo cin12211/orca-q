@@ -12,6 +12,7 @@ defineProps<{
   currentTotalRows: number;
   totalSelectedRows: number;
   hasEditedRows: boolean;
+  isShowHistoryPanel: boolean;
 }>();
 
 const emit = defineEmits<{
@@ -23,6 +24,7 @@ const emit = defineEmits<{
   (e: 'onSaveData'): void;
   (e: 'onAddEmptyRow'): void;
   (e: 'onDeleteRows'): void;
+  (e: 'onToggleHistoryPanel'): void;
 }>();
 
 useHotkeys([
@@ -36,12 +38,21 @@ useHotkeys([
       emit('onDeleteRows');
     },
   },
+  {
+    key: 'meta+j',
+    callback: () => {
+      emit('onToggleHistoryPanel');
+    },
+  },
 ]);
 </script>
 
 <template>
   <div
-    class="w-full select-none h-9 border flex items-center justify-between px-2 rounded-b-md"
+    :class="[
+      'w-full select-none h-9 border flex items-center justify-between px-2',
+      isShowHistoryPanel ? '' : 'rounded-b-md',
+    ]"
   >
     <!-- TODO: review to sort button position for each function-->
     <div class="flex items-center gap-1" v-auto-animate>
@@ -97,6 +108,16 @@ useHotkeys([
       >
         <Icon name="lucide:plus"> </Icon>
         Row
+      </Button>
+
+      <Button
+        variant="outline"
+        size="sm"
+        class="h-6 px-1 gap-1"
+        @click="emit('onToggleHistoryPanel')"
+      >
+        <Icon name="lucide:terminal"> </Icon>
+        <ContextMenuShortcut>⌘j</ContextMenuShortcut>
       </Button>
 
       <!-- TODO: Config export to excel or csv -->

@@ -1,3 +1,4 @@
+import dayjs from 'dayjs';
 import { toast } from 'vue-sonner';
 
 export const DEFAULT_QUERY = 'SELECT * from';
@@ -13,10 +14,13 @@ export const useTableQueryBuilder = async ({
   tableName,
   connectionString,
   primaryKeys,
+  addHistoryLog,
 }: {
   connectionString: string;
   tableName: string;
   primaryKeys: string[];
+  addHistoryLog: (log: string) => void;
+
   //TODO: allow persist data of this table
   //   isPersist?: boolean;
 }) => {
@@ -83,6 +87,11 @@ export const useTableQueryBuilder = async ({
         description: JSON.stringify(errorData),
       });
     },
+    onResponse: ({ response }) => {
+      if (response.ok) {
+        addHistoryLog(queryString.value);
+      }
+    },
   });
 
   const { refresh: refreshCount } = await useFetch('/api/execute', {
@@ -97,6 +106,10 @@ export const useTableQueryBuilder = async ({
     cache: 'default',
     onResponse: response => {
       console.log('response.response._data', response.response._data);
+
+      if (response.response.ok) {
+        addHistoryLog(queryCountString.value);
+      }
 
       totalRows.value = Number(response.response._data?.[0]?.count || 0);
     },

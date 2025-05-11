@@ -256,7 +256,7 @@ defineExpose({
   <div
     ref="quickQueryFilterRef"
     v-if="isDisplayFilters"
-    :class="['h-fit space-y-1', fields.length && 'pb-2']"
+    :class="['h-fit space-y-1', fields.length && 'pb-2 pt-1']"
     @keyup.enter="() => onExecuteSearch()"
   >
     <!-- <TransitionGroup name="fade"> -->

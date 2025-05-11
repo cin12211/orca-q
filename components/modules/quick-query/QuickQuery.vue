@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { ResizablePanelGroup } from '#components';
+import dayjs from 'dayjs';
 import { toast } from 'vue-sonner';
 import { useTableQueryBuilder } from '~/composables/useTableQueryBuilder';
 import { useAppContext } from '~/shared/contexts/useAppContext';
@@ -8,6 +10,7 @@ import { buildDeleteStatements } from '~/utils/quickQuery/buildDeleteStatements'
 import { buildInsertStatements } from '~/utils/quickQuery/buildInsertStatements';
 import { EDatabaseType } from '../management-connection/constants';
 import QuickQueryErrorPopup from './QuickQueryErrorPopup.vue';
+import QuickQueryHistoryLogsPanel from './QuickQueryHistoryLogsPanel.vue';
 import PreviewSelectedRow from './preview/PreviewSelectedRow.vue';
 import QuickQueryControlBar from './quick-query-control-bar/QuickQueryControlBar.vue';
 import QuickQueryFilter from './quick-query-filter/QuickQueryFilter.vue';
@@ -26,6 +29,19 @@ const quickQueryFilterRef = ref<InstanceType<typeof QuickQueryFilter>>();
 const quickQueryTableRef = ref<InstanceType<typeof QuickQueryTable>>();
 const isMutating = ref(false);
 const selectedRows = ref<Record<string, any>[]>([]);
+
+const historyLogs = ref<{ createdAt: string; logs: string }[]>([]);
+const quickQueryLayoutSize = ref<number[]>([80, 20]);
+
+const addHistoryLog = (log: string) => {
+  const createdAt = dayjs().toISOString();
+  const logs = `\n${log}`;
+
+  historyLogs.value.push({
+    createdAt,
+    logs,
+  });
+};
 
 const { data: tableSchema, status: tableSchemaStatus } = await useFetch(
   '/api/get-one-table',
@@ -75,6 +91,7 @@ const {
   connectionString: connectionStore.selectedConnection?.connectionString || '',
   tableName: props.tableId,
   primaryKeys: primaryKeys.value,
+  addHistoryLog,
 });
 
 watch(
@@ -192,6 +209,8 @@ const onSaveData = async () => {
           quickQueryTableRef.value.editedCells = [];
         }
 
+        addHistoryLog(sqlBulkInsertOrUpdateStatements.join('\n'));
+
         onRefresh();
       }
     },
@@ -237,6 +256,8 @@ const onDeleteRows = async () => {
 
           pagination.offset = newOffset > 0 ? newOffset : 0;
         }
+
+        addHistoryLog(sqlDeleteStatements.join('\n'));
 
         onRefresh();
       }
@@ -320,96 +341,133 @@ const onPasteRows = async () => {
     clipboardData
   );
 };
+
+const onToggleHistoryPanel = () => {
+  if (quickQueryLayoutSize.value[1] === 0) {
+    quickQueryLayoutSize.value[1] = 20;
+    quickQueryLayoutSize.value[0] = 80;
+  } else {
+    quickQueryLayoutSize.value[1] = 0;
+    quickQueryLayoutSize.value[0] = 100;
+  }
+};
 </script>
 
 <template>
-  <Teleport defer to="#preview-select-row">
-    <PreviewSelectedRow
-      :columnTypes="columnTypes"
-      :selectedRow="selectedRows?.length ? selectedRows[0] : null"
-  /></Teleport>
-
-  <QuickQueryErrorPopup
-    v-model:open="openErrorModal"
-    :message="errorMessage || ''"
-  />
-
-  <div class="flex flex-col h-full w-full relative p-2">
-    <!-- <LoadingOverlay :visible="status === 'pending'" /> -->
-    <LoadingOverlay :visible="tableSchemaStatus === 'pending' || isMutating" />
-
-    <TableSkeleton v-if="tableSchemaStatus === 'pending'" />
-
-    <QuickQueryFilter
-      ref="quickQueryFilterRef"
-      @onSearch="
-        whereClause => {
-          console.log('🚀 ~ whereClause:', whereClause);
-
-          onApplyNewFilter(whereClause);
-        }
-      "
-      :baseQuery="baseQueryString"
-      :columns="columnNames"
-      :dbType="EDatabaseType.PG"
-    />
-
-    <div class="flex-1 overflow-hidden">
-      <QuickQueryContextMenu
-        :total-selected-rows="selectedRows.length"
-        :has-edited-rows="hasEditedRows"
-        @onPaginate="onUpdatePagination"
-        @onNextPage="onNextPage"
-        @onPreviousPage="onPreviousPage"
-        @onRefresh="onRefresh"
-        @onSaveData="onSaveData"
-        @onDeleteRows="onDeleteRows"
-        @onAddEmptyRow="onAddEmptyRow"
-        @onShowFilter="
-          async () => {
-            await quickQueryFilterRef?.onShowSearch();
-          }
-        "
-        @onCopyRows="onCopyRows"
-        @on-paste-rows="onPasteRows"
-      >
-        <QuickQueryTable
-          class="h-full"
-          ref="quickQueryTableRef"
-          :data="data || []"
-          :orderBy="orderBy"
-          @on-selected-rows="onSelectedRowsChange"
-          @update:order-by="onUpdateOrderBy"
-          :foreignKeys="foreignKeys"
-          :primaryKeys="primaryKeys"
+  <ResizablePanelGroup
+    @layout="quickQueryLayoutSize = $event"
+    direction="vertical"
+    class="p-2"
+  >
+    <ResizablePanel :default-size="quickQueryLayoutSize[0]">
+      <Teleport defer to="#preview-select-row">
+        <PreviewSelectedRow
           :columnTypes="columnTypes"
-          :defaultPageSize="DEFAULT_QUERY_SIZE"
-          :offset="pagination.offset"
-        />
-      </QuickQueryContextMenu>
-    </div>
+          :selectedRow="selectedRows?.length ? selectedRows[0] : null"
+      /></Teleport>
 
-    <QuickQueryControlBar
-      :total-selected-rows="selectedRows?.length"
-      :isAllowNextPage="isAllowNextPage"
-      :isAllowPreviousPage="isAllowPreviousPage"
-      :totalRows="totalRows"
-      :limit="pagination.limit"
-      :currentTotalRows="data?.length || 0"
-      :offset="pagination.offset"
-      :has-edited-rows="hasEditedRows"
-      @onPaginate="onUpdatePagination"
-      @onNextPage="onNextPage"
-      @onPreviousPage="onPreviousPage"
-      @onRefresh="onRefresh"
-      @onSaveData="onSaveData"
-      @onDeleteRows="onDeleteRows"
-      @onAddEmptyRow="onAddEmptyRow"
-      @onShowFilter="
-        async () => {
-          await quickQueryFilterRef?.onShowSearch();
-        }
-      "
-    />
-  </div>
+      <QuickQueryErrorPopup
+        v-model:open="openErrorModal"
+        :message="errorMessage || ''"
+      />
+
+      <div class="flex flex-col h-full w-full relative">
+        <!-- <LoadingOverlay :visible="status === 'pending'" /> -->
+        <LoadingOverlay
+          :visible="tableSchemaStatus === 'pending' || isMutating"
+        />
+
+        <TableSkeleton v-if="tableSchemaStatus === 'pending'" />
+
+        <QuickQueryFilter
+          ref="quickQueryFilterRef"
+          @onSearch="
+            whereClause => {
+              console.log('🚀 ~ whereClause:', whereClause);
+
+              onApplyNewFilter(whereClause);
+            }
+          "
+          :baseQuery="baseQueryString"
+          :columns="columnNames"
+          :dbType="EDatabaseType.PG"
+        />
+
+        <div class="flex-1 overflow-hidden">
+          <QuickQueryContextMenu
+            :total-selected-rows="selectedRows.length"
+            :has-edited-rows="hasEditedRows"
+            @onPaginate="onUpdatePagination"
+            @onNextPage="onNextPage"
+            @onPreviousPage="onPreviousPage"
+            @onRefresh="onRefresh"
+            @onSaveData="onSaveData"
+            @onDeleteRows="onDeleteRows"
+            @onAddEmptyRow="onAddEmptyRow"
+            @onShowFilter="
+              async () => {
+                await quickQueryFilterRef?.onShowSearch();
+              }
+            "
+            @onCopyRows="onCopyRows"
+            @on-paste-rows="onPasteRows"
+          >
+            <QuickQueryTable
+              class="h-full"
+              ref="quickQueryTableRef"
+              :data="data || []"
+              :orderBy="orderBy"
+              @on-selected-rows="onSelectedRowsChange"
+              @update:order-by="onUpdateOrderBy"
+              :foreignKeys="foreignKeys"
+              :primaryKeys="primaryKeys"
+              :columnTypes="columnTypes"
+              :defaultPageSize="DEFAULT_QUERY_SIZE"
+              :offset="pagination.offset"
+            />
+          </QuickQueryContextMenu>
+        </div>
+
+        <QuickQueryControlBar
+          :total-selected-rows="selectedRows?.length"
+          :isAllowNextPage="isAllowNextPage"
+          :isAllowPreviousPage="isAllowPreviousPage"
+          :totalRows="totalRows"
+          :limit="pagination.limit"
+          :currentTotalRows="data?.length || 0"
+          :offset="pagination.offset"
+          :has-edited-rows="hasEditedRows"
+          :isShowHistoryPanel="quickQueryLayoutSize[1] > 0"
+          @onPaginate="onUpdatePagination"
+          @onNextPage="onNextPage"
+          @onPreviousPage="onPreviousPage"
+          @onRefresh="onRefresh"
+          @onSaveData="onSaveData"
+          @onDeleteRows="onDeleteRows"
+          @onAddEmptyRow="onAddEmptyRow"
+          @onShowFilter="
+            async () => {
+              await quickQueryFilterRef?.onShowSearch();
+            }
+          "
+          @onToggleHistoryPanel="onToggleHistoryPanel"
+        />
+      </div>
+    </ResizablePanel>
+    <ResizableHandle />
+    <ResizablePanel
+      :min-size="5"
+      :max-size="40"
+      :default-size="quickQueryLayoutSize[1]"
+      :collapsed-size="0"
+      collapsible
+    >
+      <div class="flex-1 h-full px-0">
+        <QuickQueryHistoryLogsPanel
+          :logs="historyLogs"
+          v-if="quickQueryLayoutSize[1] > 0"
+        />
+      </div>
+    </ResizablePanel>
+  </ResizablePanelGroup>
 </template>
