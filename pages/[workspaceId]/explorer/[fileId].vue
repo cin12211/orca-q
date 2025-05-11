@@ -49,7 +49,7 @@ const extensions = [
       const result = await $fetch('/api/execute', {
         method: 'POST',
         body: {
-          connectionUrl: currentConnectionString.value,
+          dbConnectionString: currentConnectionString.value,
           query: currentStatement.text,
         },
       });

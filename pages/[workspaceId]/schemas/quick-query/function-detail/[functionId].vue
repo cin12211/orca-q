@@ -39,7 +39,7 @@ await useFetch('/api/execute', {
   method: 'POST',
   body: {
     query: `SELECT pg_get_functiondef('${route.params.functionId}'::regproc) as def;`,
-    connectionUrl: connectionStore.selectedConnection?.connectionString,
+    dbConnectionString: connectionStore.selectedConnection?.connectionString,
   },
   key: route.params.functionId,
   onResponse: response => {

@@ -45,12 +45,12 @@ export const useAppContext = () => {
   const onCreateNewConnection = async (connection: Connection) => {
     connectionStore.createNewConnection(connection);
 
-    const connectionUrl = connection.connectionString;
+    const dbConnectionString = connection.connectionString;
 
     const databaseSource = await $fetch('/api/get-database-source', {
       method: 'POST',
       body: {
-        connectionUrl,
+        dbConnectionString,
       },
     });
 

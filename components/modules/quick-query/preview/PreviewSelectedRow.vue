@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { Textarea } from '#components';
 import * as z from 'zod';
-import Input from '~/components/ui/input/Input.vue';
 import { mapPgTypeToTsType } from '~/utils/quickQuery/mapPgTypeToTsType';
 import DynamicForm, { type ConfigFieldItem } from './DynamicForm.vue';
 
@@ -42,7 +41,7 @@ props.columnTypes.forEach(column => {
     type: column.type,
     as: Textarea,
     name: column.name,
-    class: 'px-1 py-0.5 h-fit min-h-[20px]!',
+    class: 'px-1 py-0.5 h-fit min-h-6! font-normal!',
   });
 });
 

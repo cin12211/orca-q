@@ -54,6 +54,7 @@ const customizedTheme = themeBalham
     wrapperBorderRadius: 0,
     borderRadius: 'var(--radius-sm)',
     borderColor: 'var(--input)',
+    columnBorder: true,
   })
   .withPart(mySvgIcons);
 
@@ -86,23 +87,65 @@ const onGridReady = (e: GridReadyEvent) => {
   //Do something
 };
 
+const editedCells = ref<
+  { rowId: number; changedData: { [key: string]: unknown } }[]
+>([]);
+
 /* Handle cell value changed --------------------------------------- */
 const onCellValueChanged = (event: CellValueChangedEvent) => {
-  const { node, colDef } = event;
-  const rowId = node.id ?? node.rowIndex; // Use row ID or index
+  const { colDef, newValue, rowIndex } = event;
+  const rowId = Number(rowIndex); // Use row ID or index
   const field = colDef.field;
 
   if (rowId !== null && field) {
     // Add to edited cells if not already present
 
-    console.log('::', rowId !== null, field);
-    // if (
-    //   !editedCells.value.some(
-    //     cell => cell.rowId === rowId && cell.field === field
-    //   )
-    // ) {
-    //   editedCells.value.push({ rowId, field });
-    // }
+    const oldFieldValue = props?.data?.[rowId]?.[field];
+
+    const haveDifferent = oldFieldValue !== newValue;
+
+    const haveEditedCellRecord = editedCells.value.some(
+      cell => cell.rowId === rowId
+    );
+
+    if (haveDifferent && !haveEditedCellRecord) {
+      editedCells.value.push({
+        rowId,
+        changedData: {
+          [field]: newValue,
+        },
+      });
+      return;
+    }
+
+    if (haveDifferent) {
+      editedCells.value = editedCells.value.map(cell => {
+        if (cell.rowId === rowId) {
+          return {
+            ...cell,
+            changedData: {
+              ...cell.changedData,
+              [field]: newValue,
+            },
+          };
+        }
+        return cell;
+      });
+    } else {
+      editedCells.value = editedCells.value.map(cell => {
+        if (cell.rowId === rowId) {
+          const newChangedData = cell.changedData;
+
+          delete newChangedData[field];
+
+          return {
+            ...cell,
+            changedData: newChangedData,
+          };
+        }
+        return cell;
+      });
+    }
   }
 };
 
@@ -205,6 +248,10 @@ const columnTypes = ref<{
     cellStyle: (params: CellClassParams) => {
       const rowId = Number(params.node.id ?? params.node.rowIndex);
 
+      if (props.data?.[rowId] === undefined) {
+        return { backgroundColor: 'var(--color-green-200)' };
+      }
+
       const field = params.colDef.field ?? '';
 
       const oldValue = props?.data?.[rowId]?.[field];
@@ -215,7 +262,7 @@ const columnTypes = ref<{
         return { backgroundColor: 'var(--color-orange-200)' };
       }
 
-      return null;
+      return { backgroundColor: 'unset' };
     },
   },
 });
@@ -232,7 +279,7 @@ const handleSelection = (selectedRows: RowData[]) => {
   emit('onSelectedRows', selectedRows);
 };
 
-defineExpose({ gridApi });
+defineExpose({ gridApi, editedCells });
 </script>
 
 <template>
@@ -252,6 +299,8 @@ defineExpose({ gridApi });
     :quickFilterText="quickFilter"
     :pagination="false"
     :paginationPageSize="pageSize"
+    :undoRedoCellEditing="true"
+    :undo-redo-cell-editing-limit="25"
   />
 </template>
 

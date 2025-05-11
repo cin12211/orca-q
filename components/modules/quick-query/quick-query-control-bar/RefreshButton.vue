@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue';
-import { Button, Icon } from '#components';
+import { Button, ContextMenuShortcut, Icon } from '#components';
 
 const emit = defineEmits<{
   (e: 'onRefresh'): void;
@@ -13,13 +13,22 @@ const handleRefreshClick = () => {
   rotation.value += 360; // Increment by 360 degrees for each click
   emit('onRefresh');
 };
+
+useHotkeys([
+  {
+    key: 'meta+r',
+    callback: () => {
+      handleRefreshClick();
+    },
+  },
+]);
 </script>
 
 <template>
   <Button
     variant="outline"
-    size="iconSm"
-    class="h-6"
+    size="sm"
+    class="h-6 px-1 gap-1"
     @click="handleRefreshClick"
     aria-label="Refresh table"
   >
@@ -28,6 +37,8 @@ const handleRefreshClick = () => {
       :style="{ transform: `rotate(${rotation}deg)` }"
       class="icon-transition"
     />
+
+    <ContextMenuShortcut>⌘R</ContextMenuShortcut>
   </Button>
 </template>
 

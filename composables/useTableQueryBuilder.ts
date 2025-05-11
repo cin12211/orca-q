@@ -12,9 +12,11 @@ export interface OrderBy {
 export const useTableQueryBuilder = async ({
   tableName,
   connectionString,
+  primaryKeys,
 }: {
   connectionString: string;
   tableName: string;
+  primaryKeys: string[];
   //TODO: allow persist data of this table
   //   isPersist?: boolean;
 }) => {
@@ -23,6 +25,8 @@ export const useTableQueryBuilder = async ({
   const totalRows = ref(0);
 
   const openErrorModal = ref(false);
+
+  const errorMessage = ref('');
 
   const pagination = reactive({
     limit: DEFAULT_QUERY_SIZE,
@@ -39,28 +43,29 @@ export const useTableQueryBuilder = async ({
     let orderClauses = '';
     if (orderBy?.columnName && orderBy?.order) {
       orderClauses = `ORDER BY ${orderBy.columnName} ${orderBy.order}`;
+    } else {
+      orderClauses = `ORDER BY ${primaryKeys[0]} ASC`;
     }
 
     const limitClause = `LIMIT ${pagination.limit}`;
     const offsetClause = `OFFSET ${pagination.offset}`;
 
-    return `${DEFAULT_QUERY} ${tableName} ${whereClauses.value} ${orderClauses} ${limitClause} ${offsetClause}`;
+    return `${DEFAULT_QUERY} ${tableName} ${whereClauses.value || ''} ${orderClauses} ${limitClause} ${offsetClause}`;
   });
 
   const queryCountString = computed(() => {
-    return `${DEFAULT_QUERY_COUNT} ${tableName} ${whereClauses.value}`;
+    return `${DEFAULT_QUERY_COUNT} ${tableName} ${whereClauses.value || ''}`;
   });
 
   const {
     data,
     status,
     refresh: refreshTableData,
-    error,
   } = await useFetch('/api/execute', {
     method: 'POST',
     body: {
       query: queryString,
-      connectionUrl: connectionString,
+      dbConnectionString: connectionString,
     },
     watch: false,
     immediate: false,
@@ -70,6 +75,8 @@ export const useTableQueryBuilder = async ({
       const errorData = error.response?._data?.data;
 
       openErrorModal.value = true;
+
+      errorMessage.value = error.response?._data?.message || '';
 
       toast(error.response?.statusText, {
         important: true,
@@ -82,7 +89,7 @@ export const useTableQueryBuilder = async ({
     method: 'POST',
     body: {
       query: queryCountString,
-      connectionUrl: connectionString,
+      dbConnectionString: connectionString,
     },
     watch: false,
     immediate: false,
@@ -169,12 +176,12 @@ export const useTableQueryBuilder = async ({
     status,
     refreshTableData,
     refreshCount,
-    error,
     totalRows,
     onApplyNewFilter,
     baseQueryString,
     openErrorModal,
     onUpdateOrderBy,
     orderBy,
+    errorMessage,
   };
 };

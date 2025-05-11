@@ -36,11 +36,11 @@ defineExpose({
   <div :class="props.class">
     <div v-for="field in fields" :key="field.name">
       <div :class="['flex justify-between pb-0.5', field.titleClass]">
-        <label class="text-xs font-medium text-right" :for="field.name">{{
+        <label class="text-xs text-right" :for="field.name">{{
           field.label
         }}</label>
 
-        <label class="text-xs text-right" :for="field.name">{{
+        <label class="text-xs text-right text-primary/80" :for="field.name">{{
           field.type
         }}</label>
       </div>

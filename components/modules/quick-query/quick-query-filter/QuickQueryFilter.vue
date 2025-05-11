@@ -153,7 +153,7 @@ useHotkeys([
       await onShowSearch();
     },
   },
-
+  //TODO: when escape trigger un apply all filter
   {
     key: 'escape',
     callback: () => {

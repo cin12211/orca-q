@@ -1,5 +1,3 @@
-import { executeQuery } from '~/server/utils/db-connection';
-
 interface FunctionMetadata {
   schema: string;
   function_name: string;
@@ -19,8 +17,14 @@ interface QueryResult {
 }
 
 export default defineEventHandler(async (event): Promise<QueryResult> => {
-  //   const body: { query: string } = await readBody(event);
-  const result = await executeQuery(`
+  const body: { dbConnectionString: string } = await readBody(event);
+
+  const resource = await getDatabaseSource({
+    dbConnectionString: body.dbConnectionString,
+    type: 'postgres',
+  });
+
+  const result = await resource.query(`
         -- select nspname
         -- from pg_catalog.pg_namespace;
         -- show all table detail in schema (2)

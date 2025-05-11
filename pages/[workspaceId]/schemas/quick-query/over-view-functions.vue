@@ -7,7 +7,7 @@ const { data } = await useFetch('/api/get-over-view-function', {
   cache: 'force-cache',
   method: 'POST',
   body: {
-    connectionUrl: connectionStore.selectedConnection?.connectionString,
+    dbConnectionString: connectionStore.selectedConnection?.connectionString,
   },
   keepalive: true,
 });

@@ -1,6 +1,6 @@
 import { type DatabaseType, DataSource } from 'typeorm';
 
-let currentConnectionUrl = '';
+let currentDBConnectionString = '';
 let databaseSource: DataSource | null = null;
 
 const AppDataSource = new DataSource({
@@ -12,23 +12,23 @@ const AppDataSource = new DataSource({
 
 //TODO: only support postgres
 export const getDatabaseSource = async ({
-  connectionUrl,
+  dbConnectionString,
   type,
 }: {
-  connectionUrl: string;
+  dbConnectionString: string;
   type: DatabaseType;
 }) => {
-  if (connectionUrl !== currentConnectionUrl || !databaseSource) {
+  if (dbConnectionString !== currentDBConnectionString || !databaseSource) {
     databaseSource = new DataSource({
       type: 'postgres', // Ensure the type is explicitly set to 'postgres'
-      url: connectionUrl, // Your connection string
+      url: dbConnectionString, // Your connection string
       synchronize: false, // Set to true if you want TypeORM to auto-create tables (use with caution in production)
       logging: true, // Logs SQL queries for debugging
     });
 
     await databaseSource.initialize();
 
-    currentConnectionUrl = connectionUrl;
+    currentDBConnectionString = dbConnectionString;
 
     return databaseSource;
   }
@@ -52,21 +52,5 @@ export async function healthCheckConnection({ url }: { url: string }) {
   } catch (error) {
     console.error('Database connection failed:', error);
     return false;
-  }
-}
-
-// Function to run a simple query
-export async function executeQuery(query: string) {
-  try {
-    if (!AppDataSource.isInitialized) {
-      await AppDataSource.initialize();
-    }
-
-    const result = await AppDataSource.query(query);
-    console.log('Query result:', result);
-    return result;
-  } catch (error) {
-    console.error('Query failed:', error);
-    return error;
   }
 }

@@ -10,14 +10,14 @@ interface Schema {
 }
 
 interface RequestBody {
-  connectionUrl: string;
+  dbConnectionString: string;
 }
 
 export default defineEventHandler(async (event): Promise<Schema[]> => {
   const body: RequestBody = await readBody(event);
 
   const resource = await getDatabaseSource({
-    connectionUrl: body.connectionUrl,
+    dbConnectionString: body.dbConnectionString,
     type: 'postgres',
   });
 

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Icon } from '#components';
+import { Icon, Separator } from '#components';
 import QueryPaginationConfig from './QueryPaginationConfig.vue';
 import RefreshButton from './RefreshButton.vue';
 
@@ -11,6 +11,7 @@ defineProps<{
   offset: number;
   currentTotalRows: number;
   totalSelectedRows: number;
+  hasEditedRows: boolean;
 }>();
 
 const emit = defineEmits<{
@@ -20,7 +21,15 @@ const emit = defineEmits<{
   (e: 'onPreviousPage'): void;
   (e: 'onShowFilter'): void;
   (e: 'onSaveData'): void;
+  (e: 'onAddEmptyRow'): void;
 }>();
+
+useHotkeys([
+  {
+    key: 'meta+s',
+    callback: () => emit('onSaveData'),
+  },
+]);
 </script>
 
 <template>
@@ -28,10 +37,10 @@ const emit = defineEmits<{
     class="w-full select-none h-9 border flex items-center justify-between px-2 rounded-b-md"
   >
     <!-- TODO: review to sort button position for each function-->
-    <div class="flex items-center gap-1">
+    <div class="flex items-center gap-1" v-auto-animate>
       <!-- TODO: show only when need to save sata -->
 
-      <p class="font-normal text-sm text-primary/60" v-if="totalSelectedRows">
+      <p class="font-normal text-xs text-primary/60" v-if="totalSelectedRows">
         Selected
       </p>
       <p class="font-normal text-sm text-primary" v-if="totalSelectedRows">
@@ -41,39 +50,44 @@ const emit = defineEmits<{
       <Button
         variant="outline"
         size="sm"
-        class="h-6 px-1"
-        v-if="totalSelectedRows"
+        class="h-6 px-1 gap-1"
+        v-if="totalSelectedRows && hasEditedRows"
         @click="emit('onSaveData')"
       >
-        <Icon name="lucide:refresh-ccw" class="text-green-600"> </Icon>
-        Save
+        <Icon name="lucide:save"> </Icon>
+        <ContextMenuShortcut>⌘S</ContextMenuShortcut>
+        <!-- Save -->
       </Button>
       <!-- TODO: show only when have selected data -->
       <Button
         variant="outline"
         size="sm"
-        class="h-6 px-1"
+        class="h-6 px-1 gap-1 mr-1"
         v-if="totalSelectedRows"
       >
-        <Icon name="lucide:trash" class="text-red-600"> </Icon>Delete
+        <Icon name="lucide:trash"> </Icon>
+        <ContextMenuShortcut>⌘⌫</ContextMenuShortcut>
+        <!-- Delete -->
       </Button>
 
       <Button
         variant="outline"
         size="sm"
-        class="h-6"
+        class="h-6 px-1 gap-1"
         @click="emit('onShowFilter')"
       >
-        Filter
+        <Icon name="lucide:filter"> </Icon>
+        <ContextMenuShortcut>⌘F</ContextMenuShortcut>
+        <!-- Filter -->
       </Button>
 
-      <RefreshButton @click="emit('onRefresh')" />
+      <RefreshButton @on-refresh="emit('onRefresh')" />
 
       <Button
         variant="outline"
         size="sm"
-        class="h-6 px-1"
-        @click="emit('onShowFilter')"
+        class="h-6 px-1 gap-1"
+        @click="emit('onAddEmptyRow')"
       >
         <Icon name="lucide:plus"> </Icon>
         Row
@@ -95,9 +109,12 @@ const emit = defineEmits<{
         <Icon name="lucide:chevron-left"> </Icon>
       </Button>
 
-      <p class="font-normal text-sm text-primary/80">
-        {{ offset + 1 }}-{{ offset + currentTotalRows }} of {{ totalRows }} rows
-      </p>
+      <div class="font-normal text-sm text-primary/80">
+        {{ offset + 1 }}-{{ offset + currentTotalRows }}
+        <p class="font-normal text-xs text-primary/60 inline">of</p>
+        {{ totalRows }}
+        <p class="font-normal text-xs text-primary/60 inline">rows</p>
+      </div>
 
       <Button
         variant="outline"
@@ -116,7 +133,7 @@ const emit = defineEmits<{
       />
     </div>
 
-    <div>
+    <div class="flex items-center gap-2">
       <Tabs :model-value="'data'">
         <TabsList class="grid w-full grid-cols-3 h-6!">
           <TabsTrigger
@@ -139,6 +156,10 @@ const emit = defineEmits<{
           </TabsTrigger>
         </TabsList>
       </Tabs>
+
+      <Button variant="outline" size="iconSm" class="h-6">
+        <Icon name="lucide:settings-2" class="inline"> </Icon>
+      </Button>
     </div>
   </div>
 </template>

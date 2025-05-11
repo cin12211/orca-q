@@ -7,10 +7,10 @@ export interface RoutineMetadata {
 }
 
 export default defineEventHandler(async (event): Promise<RoutineMetadata[]> => {
-  const body: { connectionUrl: string } = await readBody(event);
+  const body: { dbConnectionString: string } = await readBody(event);
 
   const resource = await getDatabaseSource({
-    connectionUrl: body.connectionUrl,
+    dbConnectionString: body.dbConnectionString,
     type: 'postgres',
   });
 

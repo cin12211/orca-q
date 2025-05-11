@@ -10,15 +10,47 @@ import QuickQueryControlBar from './quick-query-control-bar/QuickQueryControlBar
 import QuickQueryFilter from './quick-query-filter/QuickQueryFilter.vue';
 import QuickQueryTable from './quick-query-table/QuickQueryTable.vue';
 
+//TODO: note for Nhat : when view detail ERD of once table , in related table have option show this table's related
+// ví dụ , xem user -> link tới position , profile , comment,
+// thì khi click vào bảng position có option xem related của position -> add thêm table for ERD
+
 definePageMeta({
   keepalive: false,
 });
 
-const quickQueryFilterRef = ref<InstanceType<typeof QuickQueryFilter>>();
-
 const props = defineProps<{ tableId: string }>();
 
 const { connectionStore } = useAppContext();
+
+const quickQueryFilterRef = ref<InstanceType<typeof QuickQueryFilter>>();
+const quickQueryTableRef = ref<InstanceType<typeof QuickQueryTable>>();
+
+const { data: tableSchema, status: tableSchemaStatus } = await useFetch(
+  '/api/get-one-table',
+  {
+    method: 'POST',
+    body: {
+      tableName: props.tableId,
+      dbConnectionString: connectionStore.selectedConnection?.connectionString,
+    },
+    key: `schema-${props.tableId}`,
+    onResponseError({ response }) {
+      toast(response?.statusText);
+    },
+  }
+);
+
+const columnNames = computed(() => {
+  return tableSchema.value?.columns?.map(c => c.name) || [];
+});
+
+const foreignKeys = computed(() =>
+  (tableSchema.value?.foreign_keys || []).map(fk => fk.column)
+);
+
+const primaryKeys = computed(() =>
+  (tableSchema.value?.primary_keys || []).map(fk => fk.column)
+);
 
 const {
   onApplyNewFilter,
@@ -33,46 +65,27 @@ const {
   onUpdatePagination,
   totalRows,
   pagination,
-  error,
+  errorMessage,
   openErrorModal,
   orderBy,
   onUpdateOrderBy,
 } = await useTableQueryBuilder({
   connectionString: connectionStore.selectedConnection?.connectionString || '',
   tableName: props.tableId,
+  primaryKeys: primaryKeys.value,
 });
-
-const { data: tableSchema, status: tableSchemaStatus } = await useFetch(
-  '/api/get-one-table',
-  {
-    method: 'POST',
-    body: {
-      tableName: props.tableId,
-      connectionUrl: connectionStore.selectedConnection?.connectionString,
-    },
-    key: `schema-${props.tableId}`,
-    onResponseError({ response }) {
-      toast(response?.statusText);
-    },
-  }
-);
 
 const selectedRows = ref<Record<string, any>[]>([]);
 
-const columnNames = computed(() => {
-  return tableSchema.value?.columns?.map(c => c.name) || [];
-});
-
-onMounted(() => {
-  refreshCount();
-  refreshTableData();
-});
-
-const foreignKeys = computed(() =>
-  (tableSchema.value?.foreign_keys || []).map(fk => fk.column)
-);
-const primaryKeys = computed(() =>
-  (tableSchema.value?.primary_keys || []).map(fk => fk.column)
+watch(
+  tableSchema,
+  newSchema => {
+    if (newSchema) {
+      refreshCount();
+      refreshTableData();
+    }
+  },
+  { deep: 1, immediate: true, once: true }
 );
 
 const columnTypes = computed(() => {
@@ -89,39 +102,105 @@ const onSelectedRowsChange = (rows: Record<string, any>[]) => {
 };
 
 const onSaveData = async () => {
-  if (!data.value) {
+  console.log('selectedRows.value', quickQueryTableRef.value?.editedCells);
+
+  const editedCells = quickQueryTableRef.value?.editedCells;
+  if (!editedCells?.length || !data.value) {
     return;
   }
 
   const tableName = props.tableId;
 
-  const differentChange = findDifferentChange(
-    data.value[0],
-    selectedRows.value[0]
-  );
+  const sqlBulkUpdateStatements: string[] = [];
 
-  const queryUpdateString = buildUpdateQuery({
-    tableName: tableName,
-    pKeys: primaryKeys.value,
-    update: differentChange,
-    pKeyValue: selectedRows.value[0],
+  editedCells.forEach(cell => {
+    const haveDifferent = !!Object.keys(cell.changedData).length;
+
+    const rowData = data.value?.[cell.rowId];
+
+    if (haveDifferent && rowData) {
+      const sqlUpdateStatement = buildUpdateQuery({
+        tableName: tableName,
+        update: cell.changedData,
+        pKeys: primaryKeys.value,
+        pKeyValue: rowData,
+      });
+
+      sqlBulkUpdateStatements.push(sqlUpdateStatement);
+    }
   });
 
-  console.log('onSaveData::', queryUpdateString);
+  if (!sqlBulkUpdateStatements.length) {
+    return;
+  }
 
-  await $fetch('/api/execute', {
+  await $fetch('/api/execute-bulk-update', {
     method: 'POST',
     body: {
-      query: queryUpdateString,
-      connectionUrl: connectionStore.selectedConnection?.connectionString,
+      sqlUpdateStatements: sqlBulkUpdateStatements,
+      dbConnectionString: connectionStore.selectedConnection?.connectionString,
     },
     onResponseError({ response }) {
+      openErrorModal.value = true;
+
+      errorMessage.value = response?._data?.message;
+
       toast(response?.statusText);
     },
   });
 
   refreshTableData();
 };
+
+const onDeleteRows = async () => {
+  console.log('onDeleteRows');
+};
+
+const onAddEmptyRow = () => {
+  const gridApi = quickQueryTableRef.value?.gridApi;
+
+  if (!gridApi) {
+    return;
+  }
+
+  let totalRows = 0;
+  gridApi.forEachNode(() => totalRows++);
+
+  const addIndex = totalRows;
+
+  const node = {
+    '#': addIndex + 1,
+    ...Object.fromEntries(columnNames.value.map(name => [name, undefined])),
+  };
+
+  gridApi!.applyTransaction({
+    add: [node],
+    addIndex,
+  })!;
+
+  gridApi.setFocusedCell(addIndex, columnNames.value[0]);
+
+  const currentAddedRow = gridApi.getRowNode(addIndex.toString());
+
+  if (currentAddedRow) {
+    gridApi.deselectAll();
+    currentAddedRow.setSelected(true);
+  }
+
+  console.log('addEmptyRow', currentAddedRow);
+};
+
+const hasEditedRows = computed(() => {
+  let totalEditedRows = 0;
+
+  quickQueryTableRef.value?.editedCells.forEach(cell => {
+    if (Object.keys(cell.changedData).length) {
+      totalEditedRows++;
+    }
+  });
+
+  return !!totalEditedRows;
+});
 </script>
 
 <template>
@@ -139,7 +218,7 @@ const onSaveData = async () => {
 
   <QuickQueryErrorPopup
     v-model:open="openErrorModal"
-    :message="error?.statusMessage || ''"
+    :message="errorMessage || ''"
   />
 
   <div class="flex flex-col h-full w-full relative p-2">
@@ -162,6 +241,7 @@ const onSaveData = async () => {
     />
 
     <QuickQueryTable
+      ref="quickQueryTableRef"
       :data="data || []"
       :orderBy="orderBy"
       @on-selected-rows="onSelectedRowsChange"
@@ -182,11 +262,14 @@ const onSaveData = async () => {
       :limit="pagination.limit"
       :currentTotalRows="data?.length || 0"
       :offset="pagination.offset"
+      :has-edited-rows="hasEditedRows"
       @onPaginate="onUpdatePagination"
       @onNextPage="onNextPage"
       @onPreviousPage="onPreviousPage"
       @onRefresh="refreshTableData"
       @onSaveData="onSaveData"
+      @onDeleteRows="onDeleteRows"
+      @onAddEmptyRow="onAddEmptyRow"
       @on-show-filter="
         async () => {
           await quickQueryFilterRef?.onShowSearch();

@@ -1,0 +1,138 @@
+import { defineEventHandler, readBody, createError } from 'h3';
+import { type QueryFailedError } from 'typeorm';
+
+interface BulkUpdateRequest {
+  sqlUpdateStatements: string[];
+  // dbConnectionString: string; TODO: convert to this name for clear
+  dbConnectionString: string;
+}
+
+interface BulkUpdateResponse {
+  success: boolean;
+  data?: {
+    query: string;
+    affectedRows: number;
+    results: Record<string, unknown>[];
+  }[];
+  error?: string;
+}
+
+export default defineEventHandler(
+  async (event): Promise<BulkUpdateResponse> => {
+    try {
+      const { sqlUpdateStatements, dbConnectionString } =
+        await readBody<BulkUpdateRequest>(event);
+
+      // Input validation
+      if (!sqlUpdateStatements?.length || !Array.isArray(sqlUpdateStatements)) {
+        throw createError({
+          statusCode: 400,
+          message: 'No valid UPDATE statements provided',
+        });
+      }
+
+      if (!dbConnectionString || typeof dbConnectionString !== 'string') {
+        throw createError({
+          statusCode: 400,
+          message: 'Invalid or missing database connection string',
+        });
+      }
+
+      // Validate that queries are UPDATE statements
+      for (const statement of sqlUpdateStatements) {
+        if (
+          typeof statement !== 'string' ||
+          !statement.trim().toUpperCase().startsWith('UPDATE')
+        ) {
+          throw createError({
+            statusCode: 400,
+            message: 'All statements must be valid UPDATE statements',
+          });
+        }
+      }
+
+      console.log('Initiating bulk UPDATE operation:', {
+        statementCount: sqlUpdateStatements.length,
+        connection: dbConnectionString,
+      });
+
+      const dbConnection = await getDatabaseSource({
+        dbConnectionString: dbConnectionString,
+        type: 'postgres',
+      });
+
+      try {
+        // Execute transaction
+        const queryResults = await dbConnection.transaction(async txManager => {
+          const results: {
+            query: string;
+            affectedRows: number;
+            results: Record<string, unknown>[];
+          }[] = [];
+
+          for (const statement of sqlUpdateStatements) {
+            const queryResult = await txManager.query(statement);
+            // For PostgreSQL, queryResult[1] contains the row count for UPDATE queries
+            const affectedRows = Array.isArray(queryResult)
+              ? queryResult[1] || 0
+              : 0;
+
+            results.push({
+              query: statement,
+              affectedRows,
+              results: queryResult,
+            });
+
+            console.debug('Executed UPDATE statement:', {
+              statement,
+              affectedRows,
+            });
+          }
+
+          return results;
+        });
+
+        return {
+          success: true,
+          data: queryResults,
+        };
+      } finally {
+      }
+    } catch (error) {
+      if (error instanceof Error) {
+        // Handle TypeORM-specific errors
+        if ((error as QueryFailedError).driverError) {
+          const queryError = error as QueryFailedError;
+          throw createError({
+            statusCode: 500,
+            statusMessage: queryError.message,
+            data: {
+              driverError: queryError.driverError,
+              query: queryError.query,
+            },
+            message: `Database UPDATE operation failed: ${queryError.message}`,
+          });
+        }
+
+        // Handle validation or known errors
+        if ('statusCode' in error) {
+          throw error; // Re-throw validation errors
+        }
+
+        // Handle unexpected errors
+        console.error('Unexpected error during bulk UPDATE:', error);
+        throw createError({
+          statusCode: 500,
+          message: 'Internal server error during UPDATE operation',
+          data: { error: error.message },
+        });
+      }
+
+      // Fallback for non-Error objects
+      throw createError({
+        statusCode: 500,
+        message: 'Unknown error during UPDATE operation',
+      });
+    }
+  }
+);

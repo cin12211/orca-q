@@ -4,21 +4,19 @@ import { type QueryFailedError } from 'typeorm';
 export default defineEventHandler(
   async (event): Promise<Record<string, unknown>[]> => {
     try {
-      const body: { query: string; connectionUrl: string } =
+      const body: { query: string; dbConnectionString: string } =
         await readBody(event);
 
       console.log('🚀 ~ body:', body);
 
       const resource = await getDatabaseSource({
-        connectionUrl: body.connectionUrl,
+        dbConnectionString: body.dbConnectionString,
         type: 'postgres',
       });
 
       const result: Record<string, unknown>[] = await resource.query(
         body.query
       );
-
-      console.log('Query result:', result);
 
       return result;
     } catch (error) {

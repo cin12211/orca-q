@@ -2,12 +2,12 @@ import { type TableMetadata } from './get-tables';
 
 export default defineEventHandler(async (event): Promise<TableMetadata> => {
   const {
-    connectionUrl,
+    dbConnectionString,
     tableName,
-  }: { connectionUrl: string; tableName: string } = await readBody(event);
+  }: { dbConnectionString: string; tableName: string } = await readBody(event);
 
   const resource = await getDatabaseSource({
-    connectionUrl,
+    dbConnectionString: dbConnectionString,
     type: 'postgres',
   });
 
