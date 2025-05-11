@@ -12,24 +12,40 @@ import {
 const props = defineProps<{
   limit: number;
   offset: number;
+  totalRows: number;
 }>();
 
 const emit = defineEmits<{
   (e: 'onPaginate', value: { limit: number; offset: number }): void;
 }>();
 
-const localLimit = ref(props.limit);
-const localOffset = ref(props.offset);
+const localLimit = ref(0);
+const localOffset = ref(0);
 const popoverOpen = ref(false);
+
+const onInitData = () => {
+  localLimit.value = props.limit;
+  localOffset.value = props.offset;
+};
 
 // Handle offset validation on blur
 const handleOffsetBlur = () => {
+  if (localOffset.value > props.totalRows) {
+    localOffset.value = props.totalRows - 1;
+    return;
+  }
+
   if (localOffset.value < 0) {
     localOffset.value = props.offset;
   }
 };
 
 const handleLimitBlur = () => {
+  if (localLimit.value > props.totalRows) {
+    localLimit.value = props.totalRows;
+    return;
+  }
+
   if (localLimit.value < 0) {
     localLimit.value = props.limit;
   }
@@ -51,9 +67,13 @@ const handleGo = () => {
 <template>
   <Popover v-model:open="popoverOpen">
     <PopoverTrigger as-child>
-      <Button variant="outline" size="sm" class="h-6 font-normal">{{
-        limit
-      }}</Button>
+      <Button
+        @click="onInitData"
+        variant="outline"
+        size="sm"
+        class="h-6 font-normal"
+        >{{ limit }}</Button
+      >
     </PopoverTrigger>
     <PopoverContent class="w-64">
       <div class="grid gap-3">

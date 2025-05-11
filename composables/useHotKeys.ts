@@ -96,7 +96,16 @@ const matchHotkey = (e: KeyboardEvent, template: string): boolean => {
 
 export function useHotkeys(
   hotkeys: ReadonlyArray<Hotkey> | Ref<ReadonlyArray<Hotkey>>,
-  target: Window | HTMLElement | Ref<HTMLElement | undefined> = window
+  {
+    target = window,
+    isPreventDefault = false,
+  }: {
+    target?: Window | HTMLElement | Ref<HTMLElement | undefined>;
+    isPreventDefault?: boolean;
+  } = {
+    target: window,
+    isPreventDefault: true,
+  }
 ): void {
   const hotkeysRef: Ref<ReadonlyArray<Hotkey>> = isRef(hotkeys)
     ? hotkeys
@@ -108,7 +117,9 @@ export function useHotkeys(
   const handler = (e: KeyboardEvent) => {
     for (const hk of hotkeysRef.value) {
       if (matchHotkey(e, hk.key)) {
-        e.preventDefault();
+        if (isPreventDefault) {
+          e.preventDefault();
+        }
         hk.callback(e);
         break;
       }

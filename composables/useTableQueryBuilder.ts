@@ -152,7 +152,13 @@ export const useTableQueryBuilder = async ({
       return;
     }
 
-    pagination.offset -= pagination.limit;
+    const newOffset = pagination.offset - pagination.limit;
+
+    if (newOffset < 0) {
+      pagination.offset = 0;
+    } else {
+      pagination.offset = newOffset;
+    }
 
     refreshTableData();
   };

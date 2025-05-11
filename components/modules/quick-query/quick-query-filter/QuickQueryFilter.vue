@@ -242,7 +242,9 @@ useHotkeys(
       },
     },
   ],
-  quickQueryFilterRef
+  {
+    target: quickQueryFilterRef,
+  }
 );
 
 defineExpose({

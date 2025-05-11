@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Icon } from '#components';
-import QueryPaginationConfig from './QueryPaginationConfig.vue';
+import QuickPagination from './QuickPagination.vue';
 import RefreshButton from './RefreshButton.vue';
 
 defineProps<{
@@ -45,8 +45,6 @@ useHotkeys([
   >
     <!-- TODO: review to sort button position for each function-->
     <div class="flex items-center gap-1" v-auto-animate>
-      <!-- TODO: show only when need to save sata -->
-
       <p class="font-normal text-xs text-primary/60" v-if="totalSelectedRows">
         Selected
       </p>
@@ -65,7 +63,7 @@ useHotkeys([
         <ContextMenuShortcut>⌘S</ContextMenuShortcut>
         <!-- Save -->
       </Button>
-      <!-- TODO: show only when have selected data -->
+
       <Button
         variant="outline"
         size="sm"
@@ -101,9 +99,10 @@ useHotkeys([
         Row
       </Button>
 
-      <Button variant="outline" size="iconSm" class="h-6">
+      <!-- TODO: Config export to excel or csv -->
+      <!-- <Button variant="outline" size="iconSm" class="h-6">
         <Icon name="hugeicons:file-download"> </Icon>
-      </Button>
+      </Button> -->
     </div>
 
     <div class="flex items-center gap-2">
@@ -134,9 +133,10 @@ useHotkeys([
         <Icon name="lucide:chevron-right"> </Icon>
       </Button>
 
-      <QueryPaginationConfig
+      <QuickPagination
         :limit="limit"
         :offset="offset"
+        :totalRows="totalRows"
         @onPaginate="value => emit('onPaginate', value)"
       />
     </div>
@@ -165,9 +165,10 @@ useHotkeys([
         </TabsList>
       </Tabs>
 
-      <Button variant="outline" size="iconSm" class="h-6">
+      <!-- TODO: add config for query control bar -->
+      <!-- <Button variant="outline" size="iconSm" class="h-6">
         <Icon name="lucide:settings-2" class="inline"> </Icon>
-      </Button>
+      </Button> -->
     </div>
   </div>
 </template>

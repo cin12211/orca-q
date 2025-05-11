@@ -14,16 +14,21 @@ const emit = defineEmits<{
   (e: 'onPasteRows'): void;
 }>();
 
-useHotkeys([
+useHotkeys(
+  [
+    {
+      key: 'meta+c',
+      callback: () => emit('onCopyRows'),
+    },
+    {
+      key: 'meta+v',
+      callback: () => emit('onPasteRows'),
+    },
+  ],
   {
-    key: 'meta+c',
-    callback: () => emit('onCopyRows'),
-  },
-  {
-    key: 'meta+v',
-    callback: () => emit('onPasteRows'),
-  },
-]);
+    isPreventDefault: false,
+  }
+);
 </script>
 
 <template>
@@ -85,9 +90,9 @@ useHotkeys([
         <ContextMenuShortcut>⌥⌘⌫</ContextMenuShortcut>
       </ContextMenuItem>
 
-      <ContextMenuSeparator />
-
       <!-- TODO: support export -->
+
+      <!-- <ContextMenuSeparator />
       <ContextMenuSub>
         <ContextMenuSubTrigger class="cursor-pointer">
           <Icon
@@ -103,7 +108,7 @@ useHotkeys([
           >
           <ContextMenuItem>All records</ContextMenuItem>
         </ContextMenuSubContent>
-      </ContextMenuSub>
+      </ContextMenuSub> -->
     </ContextMenuContent>
   </ContextMenu>
 </template>
