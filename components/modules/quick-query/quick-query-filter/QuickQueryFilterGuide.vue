@@ -1,7 +1,12 @@
 <script setup lang="ts">
+import { Separator } from '#components';
 import { format } from 'sql-formatter';
+import ViewParserFilterApply from './ViewParserFilterApply.vue';
 
-defineProps<{ currentFilter: string; allFilter: string }>();
+defineProps<{
+  getParserApplyFilter: () => string;
+  getParserAllFilter: () => string;
+}>();
 
 const composeOperator = ref('AND');
 
@@ -30,48 +35,19 @@ const composeOperator = ref('AND');
         </SelectContent>
       </Select>
     </div>
-    <div class="text-xs flex items-center gap-4">
+    <div class="text-xs flex items-center gap-2">
       <div><ContextMenuShortcut>⌘F</ContextMenuShortcut>: Show</div>
+      <div><ContextMenuShortcut>Esc</ContextMenuShortcut>: Exit</div>
+      <Separator orientation="vertical" class="h-3/4!" />
       <div><ContextMenuShortcut>⌘I</ContextMenuShortcut>: Insert</div>
       <div><ContextMenuShortcut>⌘⌫</ContextMenuShortcut>: Delete</div>
       <div><ContextMenuShortcut>⌘↵</ContextMenuShortcut>: Apply all</div>
-      <div><ContextMenuShortcut>Esc</ContextMenuShortcut>: Exit</div>
     </div>
     <div>
-      <Popover>
-        <PopoverTrigger>
-          <Button size="sm" class="h-6 text-xs" variant="outline"> SQL </Button>
-        </PopoverTrigger>
-        <PopoverContent class="w-[40rem] p-2 space-y-2">
-          <div class="text-xs font-medium">
-            Curren filter
-            <Textarea
-              class="text-xs! mt-1 h-full max-h-[15rem] font-normal"
-              :model-value="
-                format(currentFilter, {
-                  language: 'postgresql',
-                  keywordCase: 'upper',
-                })
-              "
-              readonly
-            />
-          </div>
-
-          <div class="text-xs font-medium">
-            Apply all filter
-            <Textarea
-              class="text-xs! mt-1 h-full max-h-[15rem] font-normal"
-              :model-value="
-                format(allFilter, {
-                  language: 'postgresql',
-                  keywordCase: 'upper',
-                })
-              "
-              readonly
-            />
-          </div>
-        </PopoverContent>
-      </Popover>
+      <ViewParserFilterApply
+        :getParserApplyFilter="getParserApplyFilter"
+        :getParserAllFilter="getParserAllFilter"
+      />
     </div>
   </div>
 </template>

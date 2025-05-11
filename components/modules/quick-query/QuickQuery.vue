@@ -2,6 +2,7 @@
 import { toast } from 'vue-sonner';
 import { useTableQueryBuilder } from '~/composables/useTableQueryBuilder';
 import { useAppContext } from '~/shared/contexts/useAppContext';
+import { copyRowsToClipboard } from '~/utils/common';
 import { buildUpdateStatements } from '~/utils/quickQuery';
 import { buildDeleteStatements } from '~/utils/quickQuery/buildDeleteStatements';
 import { buildInsertStatements } from '~/utils/quickQuery/buildInsertStatements';
@@ -10,6 +11,7 @@ import QuickQueryErrorPopup from './QuickQueryErrorPopup.vue';
 import PreviewSelectedRow from './preview/PreviewSelectedRow.vue';
 import QuickQueryControlBar from './quick-query-control-bar/QuickQueryControlBar.vue';
 import QuickQueryFilter from './quick-query-filter/QuickQueryFilter.vue';
+import QuickQueryContextMenu from './quick-query-table/QuickQueryContextMenu.vue';
 import QuickQueryTable from './quick-query-table/QuickQueryTable.vue';
 
 definePageMeta({
@@ -22,6 +24,8 @@ const { connectionStore } = useAppContext();
 
 const quickQueryFilterRef = ref<InstanceType<typeof QuickQueryFilter>>();
 const quickQueryTableRef = ref<InstanceType<typeof QuickQueryTable>>();
+const isMutating = ref(false);
+const selectedRows = ref<Record<string, any>[]>([]);
 
 const { data: tableSchema, status: tableSchemaStatus } = await useFetch(
   '/api/get-one-table',
@@ -50,8 +54,6 @@ const primaryKeys = computed(() =>
   (tableSchema.value?.primary_keys || []).map(fk => fk.column)
 );
 
-const isMutating = ref(false);
-
 const {
   onApplyNewFilter,
   data,
@@ -75,8 +77,6 @@ const {
   primaryKeys: primaryKeys.value,
 });
 
-const selectedRows = ref<Record<string, any>[]>([]);
-
 watch(
   tableSchema,
   newSchema => {
@@ -97,11 +97,28 @@ const columnTypes = computed(() => {
   );
 });
 
-const onRefresh = () => {
+const hasEditedRows = computed(() => {
+  let totalEditedRows = 0;
+
+  quickQueryTableRef.value?.editedCells.forEach(cell => {
+    if (Object.keys(cell.changedData).length) {
+      totalEditedRows++;
+    }
+  });
+
+  return !!totalEditedRows;
+});
+
+const onRefresh = async () => {
   const gridApi = quickQueryTableRef.value?.gridApi;
+
+  if (!gridApi) {
+    return;
+  }
 
   gridApi?.deselectAll();
   gridApi?.clearFocusedCell();
+
   refreshCount();
   refreshTableData();
 };
@@ -153,11 +170,6 @@ const onSaveData = async () => {
   if (!sqlBulkInsertOrUpdateStatements.length) {
     return;
   }
-
-  console.log(
-    'sqlBulkInsertOrUpdateStatements',
-    sqlBulkInsertOrUpdateStatements
-  );
 
   isMutating.value = true;
 
@@ -264,30 +276,53 @@ const onAddEmptyRow = () => {
     gridApi.deselectAll();
     currentAddedRow.setSelected(true);
   }
-
-  console.log('addEmptyRow', currentAddedRow);
 };
 
-const hasEditedRows = computed(() => {
-  let totalEditedRows = 0;
+const onCopyRows = () => {
+  const rows = selectedRows.value;
 
-  quickQueryTableRef.value?.editedCells.forEach(cell => {
-    if (Object.keys(cell.changedData).length) {
-      totalEditedRows++;
-    }
-  });
+  if (!rows) {
+    return;
+  }
 
-  return !!totalEditedRows;
-});
+  const mappedRows = rows.map(row => {
+    const index = (row?.['#'] || 1) - 1;
+
+    return data.value?.[index];
+  }) as Record<string, any>[];
+
+  copyRowsToClipboard(mappedRows);
+};
+
+//TODO: make paste rows , in current cellIndex
+const onPasteRows = async () => {
+  const gridApi = quickQueryTableRef.value?.gridApi;
+
+  if (!gridApi) {
+    return;
+  }
+
+  const currentCell = gridApi.getFocusedCell();
+
+  if (!currentCell) {
+    return;
+  }
+
+  const rowIndex = currentCell?.rowIndex;
+  const columnName = currentCell?.column?.getColId();
+
+  const clipboardData = await navigator.clipboard.readText();
+
+  console.log(
+    '🚀 ~ onPasteRows ~ currentCell:',
+    columnName,
+    rowIndex,
+    clipboardData
+  );
+};
 </script>
 
 <template>
-  <!-- TODO: add menu context for table -->
-  <!-- TODO: Allow delete , delete many -->
-  <!-- TODO: Allow add row  -->
-  <!-- TODO: Allow edit row  -->
-  <!-- TODO: sync data when edit to row table -->
-  <!-- TODO: allow save data in control bar -> sync button -> trigger call api -->
   <Teleport defer to="#preview-select-row">
     <PreviewSelectedRow
       :columnTypes="columnTypes"
@@ -319,19 +354,40 @@ const hasEditedRows = computed(() => {
       :dbType="EDatabaseType.PG"
     />
 
-    <QuickQueryTable
-      ref="quickQueryTableRef"
-      :data="data || []"
-      :orderBy="orderBy"
-      @on-selected-rows="onSelectedRowsChange"
-      @update:order-by="onUpdateOrderBy"
-      class="h-fit max-h-full"
-      :foreignKeys="foreignKeys"
-      :primaryKeys="primaryKeys"
-      :columnTypes="columnTypes"
-      :defaultPageSize="DEFAULT_QUERY_SIZE"
-      :offset="pagination.offset"
-    />
+    <div class="flex-1 overflow-hidden">
+      <QuickQueryContextMenu
+        :total-selected-rows="selectedRows.length"
+        :has-edited-rows="hasEditedRows"
+        @onPaginate="onUpdatePagination"
+        @onNextPage="onNextPage"
+        @onPreviousPage="onPreviousPage"
+        @onRefresh="onRefresh"
+        @onSaveData="onSaveData"
+        @onDeleteRows="onDeleteRows"
+        @onAddEmptyRow="onAddEmptyRow"
+        @onShowFilter="
+          async () => {
+            await quickQueryFilterRef?.onShowSearch();
+          }
+        "
+        @onCopyRows="onCopyRows"
+        @on-paste-rows="onPasteRows"
+      >
+        <QuickQueryTable
+          class="h-full"
+          ref="quickQueryTableRef"
+          :data="data || []"
+          :orderBy="orderBy"
+          @on-selected-rows="onSelectedRowsChange"
+          @update:order-by="onUpdateOrderBy"
+          :foreignKeys="foreignKeys"
+          :primaryKeys="primaryKeys"
+          :columnTypes="columnTypes"
+          :defaultPageSize="DEFAULT_QUERY_SIZE"
+          :offset="pagination.offset"
+        />
+      </QuickQueryContextMenu>
+    </div>
 
     <QuickQueryControlBar
       :total-selected-rows="selectedRows?.length"
@@ -349,7 +405,7 @@ const hasEditedRows = computed(() => {
       @onSaveData="onSaveData"
       @onDeleteRows="onDeleteRows"
       @onAddEmptyRow="onAddEmptyRow"
-      @on-show-filter="
+      @onShowFilter="
         async () => {
           await quickQueryFilterRef?.onShowSearch();
         }

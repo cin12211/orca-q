@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
+import type { HTMLAttributes } from 'vue';
 import type {
   CellClassParams,
   CellValueChangedEvent,
@@ -31,6 +32,7 @@ const props = defineProps<{
   primaryKeys: string[];
   columnTypes: { name: string; type: string }[];
   offset: number;
+  class?: HTMLAttributes['class'];
 }>();
 
 const emit = defineEmits<{
@@ -286,10 +288,10 @@ defineExpose({ gridApi, editedCells });
 
 <template>
   <AgGridVue
-    class="flex-1"
     @selection-changed="onSelectionChanged"
     @cell-value-changed="onCellValueChanged"
     @grid-ready="onGridReady"
+    :class="props.class"
     :defaultColDef="defaultColDef"
     :autoSizeStrategy="autoSizeStrategy"
     :rowSelection="rowSelection"

@@ -11,3 +11,9 @@
 - [ ] //TODO: note for Nhat : when view detail ERD of once table , in related table have option show this table's related
       // ví dụ , xem user -> link tới position , profile , comment,
       // thì khi click vào bảng position có option xem related của position -> add thêm table for ERD
+- [x] TODO: add menu context for table
+- [x] TODO: Allow delete , delete many
+- [x] TODO: Allow add row
+- [x] TODO: Allow edit row
+- [x] TODO: sync data when edit to row table
+- [x] TODO: allow save data in control bar -> sync button -> trigger call api

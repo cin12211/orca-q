@@ -26,6 +26,8 @@ const emit = defineEmits<{
   (e: 'onSearch', whereClauses: string): void;
 }>();
 
+const quickQueryFilterRef = ref<HTMLElement>();
+
 const filterSearchRefs =
   useTemplateRef<InstanceType<typeof Input>[]>('filterSearchRefs');
 
@@ -39,7 +41,7 @@ type FormFiltersSchema = {
   filters: FilterSchema[];
 };
 
-const { handleSubmit } = useForm<FormFiltersSchema>({
+useForm<FormFiltersSchema>({
   validationSchema: toTypedSchema(formFiltersSchema),
   initialValues: {
     filters: [],
@@ -76,16 +78,36 @@ const updateFieldName = (index: number, newFieldName: string) => {
   }
 };
 
-const whereClauses = computed(() => {
+const getParserApplyFilter = () => {
   return `${props.baseQuery} ${formatWhereClause({
     columns: props.columns,
     db: props.dbType,
     filters: fields.value.map(f => f.value) || [],
   })};`;
-});
+};
 
-const onExecuteSearch = () => {
-  console.log('whereClauses', whereClauses);
+const getParserAllFilter = () => {
+  return `${props.baseQuery} ${formatWhereClause({
+    columns: props.columns,
+    db: props.dbType,
+    filters: fields.value.map(f => ({ ...f.value, isSelect: true })) || [],
+  })};`;
+};
+
+const onExecuteSearch = (isWithoutQuery: boolean = false) => {
+  if (isWithoutQuery) {
+    emit(
+      'onSearch',
+      formatWhereClause({
+        columns: props.columns,
+        db: props.dbType,
+        filters: [],
+      })
+    );
+
+    return;
+  }
+
   emit(
     'onSearch',
     formatWhereClause({
@@ -119,11 +141,15 @@ const onApplyAllFilter = () => {
   onExecuteSearch();
 };
 
-const onRemoveFilter = (index: number) => {
+const onRemoveFilter = async (index: number) => {
   remove(index);
+
+  await nextTick();
 
   if (index === 0) {
     onExecuteSearch();
+  } else {
+    focusSearchByIndex(index - 1);
   }
 };
 
@@ -153,69 +179,71 @@ useHotkeys([
       await onShowSearch();
     },
   },
-  //TODO: when escape trigger un apply all filter
   {
     key: 'escape',
     callback: () => {
       isDisplayFilters.value = false;
-    },
-  },
-  //TODO: only listens event in this input focus
-  {
-    key: 'meta+backspace',
-    callback: async () => {
-      if (!filterSearchRefs.value) {
-        return;
-      }
-
-      const currenFocusIndex = filterSearchRefs.value.findIndex(
-        input => input.$el === document.activeElement
-      );
-
-      remove(currenFocusIndex);
-
-      await nextTick();
-
-      focusSearchByIndex(currenFocusIndex - 1);
-    },
-  },
-  //TODO: only listens event in this input focus
-  {
-    key: 'meta+enter',
-    callback: () => {
-      if (!filterSearchRefs.value) {
-        return;
-      }
-
-      const currenFocusIndex = filterSearchRefs.value.findIndex(
-        input => input.$el === document.activeElement
-      );
-
-      if (currenFocusIndex >= 0) {
-        onApplyAllFilter();
-      }
-    },
-  },
-  //TODO: only listens event in this input focus
-  {
-    key: 'meta+i',
-    callback: async () => {
-      if (!filterSearchRefs.value) {
-        return;
-      }
-
-      const currenFocusIndex = filterSearchRefs.value.findIndex(
-        input => input.$el === document.activeElement
-      );
-
-      onAddFilter(currenFocusIndex);
-
-      await nextTick();
-
-      focusSearchByIndex(currenFocusIndex + 1);
+      onExecuteSearch(true);
     },
   },
 ]);
+
+useHotkeys(
+  [
+    //TODO: only listens event in this input focus
+    {
+      key: 'meta+backspace',
+      callback: async () => {
+        if (!filterSearchRefs.value) {
+          return;
+        }
+
+        const currenFocusIndex = filterSearchRefs.value.findIndex(
+          input => input.$el === document.activeElement
+        );
+
+        onRemoveFilter(currenFocusIndex);
+      },
+    },
+    //TODO: only listens event in this input focus
+    {
+      key: 'meta+enter',
+      callback: () => {
+        if (!filterSearchRefs.value) {
+          return;
+        }
+
+        const currenFocusIndex = filterSearchRefs.value.findIndex(
+          input => input.$el === document.activeElement
+        );
+
+        if (currenFocusIndex >= 0) {
+          onApplyAllFilter();
+        }
+      },
+    },
+    //TODO: only listens event in this input focus
+    {
+      key: 'meta+i',
+      callback: async () => {
+        if (!filterSearchRefs.value) {
+          return;
+        }
+
+        const currenFocusIndex = filterSearchRefs.value.findIndex(
+          input => input.$el === document.activeElement
+        );
+
+        onAddFilter(currenFocusIndex);
+
+        await nextTick();
+
+        focusSearchByIndex(currenFocusIndex + 1);
+      },
+    },
+  ],
+  quickQueryFilterRef
+);
 
 defineExpose({
   onShowSearch,
@@ -224,9 +252,10 @@ defineExpose({
 
 <template>
   <div
+    ref="quickQueryFilterRef"
     v-if="isDisplayFilters"
     :class="['h-fit space-y-1', fields.length && 'pb-2']"
-    @keyup.enter="onExecuteSearch"
+    @keyup.enter="() => onExecuteSearch()"
   >
     <!-- <TransitionGroup name="fade"> -->
     <div
@@ -300,8 +329,8 @@ defineExpose({
 
     <QuickQueryFilterGuide
       v-if="fields.length"
-      :current-filter="whereClauses"
-      :all-filter="whereClauses"
+      :getParserApplyFilter="getParserApplyFilter"
+      :getParserAllFilter="getParserAllFilter"
     />
 
     <!-- </TransitionGroup> -->

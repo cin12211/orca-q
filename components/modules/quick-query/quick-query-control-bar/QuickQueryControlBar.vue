@@ -58,7 +58,7 @@ useHotkeys([
         variant="outline"
         size="sm"
         class="h-6 px-1 gap-1"
-        v-if="totalSelectedRows && hasEditedRows"
+        v-if="hasEditedRows"
         @click="emit('onSaveData')"
       >
         <Icon name="lucide:save"> </Icon>
