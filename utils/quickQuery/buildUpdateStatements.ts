@@ -1,4 +1,4 @@
-export const findDifferentChange = (
+export const differentObject = (
   oldValue: Record<string, any>,
   newValue: Record<string, any>
 ) => {
@@ -16,7 +16,7 @@ export const findDifferentChange = (
   return diff;
 };
 
-export function buildUpdateQuery({
+export function buildUpdateStatements({
   tableName,
   pKeys,
   update,

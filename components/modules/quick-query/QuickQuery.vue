@@ -2,7 +2,8 @@
 import { toast } from 'vue-sonner';
 import { useTableQueryBuilder } from '~/composables/useTableQueryBuilder';
 import { useAppContext } from '~/shared/contexts/useAppContext';
-import { buildUpdateQuery, findDifferentChange } from '~/utils/quickQuery';
+import { buildUpdateStatements } from '~/utils/quickQuery';
+import { buildDeleteStatements } from '~/utils/quickQuery/buildDeleteStatements';
 import { EDatabaseType } from '../management-connection/constants';
 import QuickQueryErrorPopup from './QuickQueryErrorPopup.vue';
 import PreviewSelectedRow from './preview/PreviewSelectedRow.vue';
@@ -52,6 +53,8 @@ const primaryKeys = computed(() =>
   (tableSchema.value?.primary_keys || []).map(fk => fk.column)
 );
 
+const isMutating = ref(false);
+
 const {
   onApplyNewFilter,
   data,
@@ -97,17 +100,25 @@ const columnTypes = computed(() => {
   );
 });
 
+const onRefresh = () => {
+  const gridApi = quickQueryTableRef.value?.gridApi;
+
+  gridApi?.deselectAll();
+  gridApi?.clearFocusedCell();
+  refreshCount();
+  refreshTableData();
+};
+
 const onSelectedRowsChange = (rows: Record<string, any>[]) => {
   selectedRows.value = rows;
 };
 
 const onSaveData = async () => {
-  console.log('selectedRows.value', quickQueryTableRef.value?.editedCells);
-
-  const editedCells = quickQueryTableRef.value?.editedCells;
-  if (!editedCells?.length || !data.value) {
+  if (!data.value || !quickQueryTableRef.value?.editedCells?.length) {
     return;
   }
+
+  const editedCells = quickQueryTableRef.value?.editedCells;
 
   const tableName = props.tableId;
 
@@ -119,7 +130,7 @@ const onSaveData = async () => {
     const rowData = data.value?.[cell.rowId];
 
     if (haveDifferent && rowData) {
-      const sqlUpdateStatement = buildUpdateQuery({
+      const sqlUpdateStatement = buildUpdateStatements({
         tableName: tableName,
         update: cell.changedData,
         pKeys: primaryKeys.value,
@@ -134,6 +145,10 @@ const onSaveData = async () => {
     return;
   }
 
+  console.log('sqlBulkUpdateStatements', sqlBulkUpdateStatements);
+
+  isMutating.value = true;
+
   await $fetch('/api/execute-bulk-update', {
     method: 'POST',
     body: {
@@ -143,17 +158,59 @@ const onSaveData = async () => {
     onResponseError({ response }) {
       openErrorModal.value = true;
 
-      errorMessage.value = response?._data?.message;
+      console.log('response?._data', response?._data);
 
-      toast(response?.statusText);
+      errorMessage.value = response?._data?.message;
     },
+    onResponse: ({ response }) => {
+      if (response.ok) {
+        if (quickQueryTableRef.value?.editedCells) {
+          quickQueryTableRef.value.editedCells = [];
+        }
+
+        onRefresh();
+      }
+    },
+  }).finally(() => {
+    isMutating.value = false;
   });
 
-  refreshTableData();
+  isMutating.value = false;
 };
 
 const onDeleteRows = async () => {
-  console.log('onDeleteRows');
+  const sqlDeleteStatements: string[] = [];
+
+  selectedRows.value.forEach(row => {
+    const sqlDeleteStatement = buildDeleteStatements({
+      tableName: props.tableId,
+      pKeys: primaryKeys.value,
+      pKeyValue: row,
+    });
+
+    sqlDeleteStatements.push(sqlDeleteStatement);
+  });
+
+  isMutating.value = true;
+
+  await $fetch('/api/execute-bulk-delete', {
+    method: 'POST',
+    body: {
+      sqlDeleteStatements,
+      dbConnectionString: connectionStore.selectedConnection?.connectionString,
+    },
+    onResponseError({ response }) {
+      openErrorModal.value = true;
+      errorMessage.value = response?._data?.message;
+    },
+    onResponse: ({ response }) => {
+      if (response.ok) {
+        onRefresh();
+      }
+    },
+  }).finally(() => {
+    isMutating.value = false;
+  });
 };
 
 const onAddEmptyRow = () => {
@@ -223,7 +280,8 @@ const hasEditedRows = computed(() => {
 
   <div class="flex flex-col h-full w-full relative p-2">
     <!-- <LoadingOverlay :visible="status === 'pending'" /> -->
-    <LoadingOverlay :visible="tableSchemaStatus === 'pending'" />
+    <LoadingOverlay :visible="tableSchemaStatus === 'pending' || isMutating" />
+
     <TableSkeleton v-if="tableSchemaStatus === 'pending'" />
 
     <QuickQueryFilter
@@ -266,7 +324,7 @@ const hasEditedRows = computed(() => {
       @onPaginate="onUpdatePagination"
       @onNextPage="onNextPage"
       @onPreviousPage="onPreviousPage"
-      @onRefresh="refreshTableData"
+      @onRefresh="onRefresh"
       @onSaveData="onSaveData"
       @onDeleteRows="onDeleteRows"
       @onAddEmptyRow="onAddEmptyRow"

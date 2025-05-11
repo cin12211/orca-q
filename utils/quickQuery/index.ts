@@ -1,2 +1,2 @@
 export * from './buildWhereClause';
-export * from './buildUpdateQuery';
+export * from './buildUpdateStatements';

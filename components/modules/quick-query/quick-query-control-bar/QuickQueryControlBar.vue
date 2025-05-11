@@ -22,12 +22,19 @@ const emit = defineEmits<{
   (e: 'onShowFilter'): void;
   (e: 'onSaveData'): void;
   (e: 'onAddEmptyRow'): void;
+  (e: 'onDeleteRows'): void;
 }>();
 
 useHotkeys([
   {
     key: 'meta+s',
     callback: () => emit('onSaveData'),
+  },
+  {
+    key: 'meta+alt+backspace',
+    callback: () => {
+      emit('onDeleteRows');
+    },
   },
 ]);
 </script>
@@ -64,6 +71,7 @@ useHotkeys([
         size="sm"
         class="h-6 px-1 gap-1 mr-1"
         v-if="totalSelectedRows"
+        @click="emit('onDeleteRows')"
       >
         <Icon name="lucide:trash"> </Icon>
         <ContextMenuShortcut>⌘⌫</ContextMenuShortcut>
