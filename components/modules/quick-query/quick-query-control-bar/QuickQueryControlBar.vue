@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Icon, Separator } from '#components';
+import { Icon } from '#components';
 import QueryPaginationConfig from './QueryPaginationConfig.vue';
 import RefreshButton from './RefreshButton.vue';
 
@@ -74,7 +74,7 @@ useHotkeys([
         @click="emit('onDeleteRows')"
       >
         <Icon name="lucide:trash"> </Icon>
-        <ContextMenuShortcut>⌘⌫</ContextMenuShortcut>
+        <ContextMenuShortcut>⌥⌘⌫</ContextMenuShortcut>
         <!-- Delete -->
       </Button>
 

@@ -4,16 +4,13 @@ import { useTableQueryBuilder } from '~/composables/useTableQueryBuilder';
 import { useAppContext } from '~/shared/contexts/useAppContext';
 import { buildUpdateStatements } from '~/utils/quickQuery';
 import { buildDeleteStatements } from '~/utils/quickQuery/buildDeleteStatements';
+import { buildInsertStatements } from '~/utils/quickQuery/buildInsertStatements';
 import { EDatabaseType } from '../management-connection/constants';
 import QuickQueryErrorPopup from './QuickQueryErrorPopup.vue';
 import PreviewSelectedRow from './preview/PreviewSelectedRow.vue';
 import QuickQueryControlBar from './quick-query-control-bar/QuickQueryControlBar.vue';
 import QuickQueryFilter from './quick-query-filter/QuickQueryFilter.vue';
 import QuickQueryTable from './quick-query-table/QuickQueryTable.vue';
-
-//TODO: note for Nhat : when view detail ERD of once table , in related table have option show this table's related
-// ví dụ , xem user -> link tới position , profile , comment,
-// thì khi click vào bảng position có option xem related của position -> add thêm table for ERD
 
 definePageMeta({
   keepalive: false,
@@ -122,14 +119,17 @@ const onSaveData = async () => {
 
   const tableName = props.tableId;
 
-  const sqlBulkUpdateStatements: string[] = [];
+  const sqlBulkInsertOrUpdateStatements: string[] = [];
 
   editedCells.forEach(cell => {
     const haveDifferent = !!Object.keys(cell.changedData).length;
 
     const rowData = data.value?.[cell.rowId];
 
-    if (haveDifferent && rowData) {
+    const isUpdateStatement = haveDifferent && rowData;
+    const isInsertStatement = haveDifferent && !rowData;
+
+    if (isUpdateStatement) {
       const sqlUpdateStatement = buildUpdateStatements({
         tableName: tableName,
         update: cell.changedData,
@@ -137,22 +137,34 @@ const onSaveData = async () => {
         pKeyValue: rowData,
       });
 
-      sqlBulkUpdateStatements.push(sqlUpdateStatement);
+      sqlBulkInsertOrUpdateStatements.push(sqlUpdateStatement);
+    }
+
+    if (isInsertStatement) {
+      const sqlInsertStatement = buildInsertStatements({
+        tableName: tableName,
+        insertData: cell.changedData,
+      });
+
+      sqlBulkInsertOrUpdateStatements.push(sqlInsertStatement);
     }
   });
 
-  if (!sqlBulkUpdateStatements.length) {
+  if (!sqlBulkInsertOrUpdateStatements.length) {
     return;
   }
 
-  console.log('sqlBulkUpdateStatements', sqlBulkUpdateStatements);
+  console.log(
+    'sqlBulkInsertOrUpdateStatements',
+    sqlBulkInsertOrUpdateStatements
+  );
 
   isMutating.value = true;
 
   await $fetch('/api/execute-bulk-update', {
     method: 'POST',
     body: {
-      sqlUpdateStatements: sqlBulkUpdateStatements,
+      sqlUpdateStatements: sqlBulkInsertOrUpdateStatements,
       dbConnectionString: connectionStore.selectedConnection?.connectionString,
     },
     onResponseError({ response }) {
@@ -205,6 +217,15 @@ const onDeleteRows = async () => {
     },
     onResponse: ({ response }) => {
       if (response.ok) {
+        const isDeleteAllRowsInPage =
+          selectedRows.value?.length === data.value?.length;
+
+        if (isDeleteAllRowsInPage && pagination.offset > 0) {
+          const newOffset = pagination.offset - pagination.limit;
+
+          pagination.offset = newOffset > 0 ? newOffset : 0;
+        }
+
         onRefresh();
       }
     },

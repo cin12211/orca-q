@@ -179,6 +179,7 @@ const columnDefs = computed<ColDef[]>(() =>
             editable: false,
             sortable: false,
             minWidth: 30,
+            type: 'indexColumn',
             headerComponentParams: {
               allowSorting: false,
             },
@@ -244,6 +245,7 @@ const defaultColDef = ref<ColDef>({
 const columnTypes = ref<{
   [key: string]: ColTypeDef;
 }>({
+  indexColumn: {},
   editableColumn: {
     cellStyle: (params: CellClassParams) => {
       const rowId = Number(params.node.id ?? params.node.rowIndex);

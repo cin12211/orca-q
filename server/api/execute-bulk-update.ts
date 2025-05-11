@@ -27,7 +27,7 @@ export default defineEventHandler(
       if (!sqlUpdateStatements?.length || !Array.isArray(sqlUpdateStatements)) {
         throw createError({
           statusCode: 400,
-          message: 'No valid UPDATE statements provided',
+          message: 'No valid UPDATE or INSERT statements provided',
         });
       }
 
@@ -40,18 +40,19 @@ export default defineEventHandler(
 
       // Validate that queries are UPDATE statements
       for (const statement of sqlUpdateStatements) {
-        if (
-          typeof statement !== 'string' ||
-          !statement.trim().toUpperCase().startsWith('UPDATE')
-        ) {
+        const isInsertOrUpdate =
+          statement.trim().toUpperCase().startsWith('UPDATE') ||
+          statement.trim().toUpperCase().startsWith('INSERT');
+
+        if (typeof statement !== 'string' || !isInsertOrUpdate) {
           throw createError({
             statusCode: 400,
-            message: 'All statements must be valid UPDATE statements',
+            message: 'All statements must be valid UPDATE or INSERT statements',
           });
         }
       }
 
-      console.log('Initiating bulk UPDATE operation:', {
+      console.log('Initiating bulk UPDATE or INSERT operation:', {
         statementCount: sqlUpdateStatements.length,
         connection: dbConnectionString,
       });
@@ -83,7 +84,7 @@ export default defineEventHandler(
               results: queryResult,
             });
 
-            console.debug('Executed UPDATE statement:', {
+            console.debug('Executed UPDATE,INSERT statement:', {
               statement,
               affectedRows,
             });
@@ -110,7 +111,7 @@ export default defineEventHandler(
               driverError: queryError.driverError,
               query: queryError.query,
             },
-            message: `Database UPDATE operation failed: ${queryError.message}`,
+            message: `Database UPDATE ,INSERT operation failed: ${queryError.message}`,
           });
         }
 
@@ -120,10 +121,10 @@ export default defineEventHandler(
         }
 
         // Handle unexpected errors
-        console.error('Unexpected error during bulk UPDATE:', error);
+        console.error('Unexpected error during bulk UPDATE,INSERT:', error);
         throw createError({
           statusCode: 500,
-          message: 'Internal server error during UPDATE operation',
+          message: 'Internal server error during UPDATE,INSERT operation',
           data: { error: error.message },
         });
       }
@@ -131,7 +132,7 @@ export default defineEventHandler(
       // Fallback for non-Error objects
       throw createError({
         statusCode: 500,
-        message: 'Unknown error during UPDATE operation',
+        message: 'Unknown error during UPDATE,INSERT operation',
       });
     }
   }
