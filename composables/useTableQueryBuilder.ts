@@ -1,9 +1,9 @@
-import dayjs from 'dayjs';
 import { toast } from 'vue-sonner';
-
-export const DEFAULT_QUERY = 'SELECT * from';
-export const DEFAULT_QUERY_COUNT = 'SELECT COUNT(*) as count from';
-export const DEFAULT_QUERY_SIZE = 30;
+import {
+  DEFAULT_QUERY,
+  DEFAULT_QUERY_COUNT,
+  DEFAULT_QUERY_SIZE,
+} from '~/utils/constants';
 
 export interface OrderBy {
   columnName?: string;
@@ -36,6 +36,9 @@ export const useTableQueryBuilder = async ({
     limit: DEFAULT_QUERY_SIZE,
     offset: 0,
   });
+
+  //TODO: need to keep filter in here, and pass props to QuickQueryFilter
+  const filters = reactive({});
 
   const orderBy = reactive<OrderBy>({});
 

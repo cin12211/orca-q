@@ -5,6 +5,7 @@ import { toast } from 'vue-sonner';
 import { useTableQueryBuilder } from '~/composables/useTableQueryBuilder';
 import { useAppContext } from '~/shared/contexts/useAppContext';
 import { copyRowsToClipboard } from '~/utils/common';
+import { DEFAULT_QUERY_SIZE } from '~/utils/constants';
 import { buildUpdateStatements } from '~/utils/quickQuery';
 import { buildDeleteStatements } from '~/utils/quickQuery/buildDeleteStatements';
 import { buildInsertStatements } from '~/utils/quickQuery/buildInsertStatements';
@@ -17,6 +18,7 @@ import QuickQueryFilter from './quick-query-filter/QuickQueryFilter.vue';
 import QuickQueryContextMenu from './quick-query-table/QuickQueryContextMenu.vue';
 import QuickQueryTable from './quick-query-table/QuickQueryTable.vue';
 
+// TODO: refactor code
 definePageMeta({
   keepalive: false,
 });
@@ -29,7 +31,6 @@ const quickQueryFilterRef = ref<InstanceType<typeof QuickQueryFilter>>();
 const quickQueryTableRef = ref<InstanceType<typeof QuickQueryTable>>();
 const isMutating = ref(false);
 const selectedRows = ref<Record<string, any>[]>([]);
-
 const historyLogs = ref<{ createdAt: string; logs: string }[]>([]);
 const quickQueryLayoutSize = ref<number[]>([80, 20]);
 

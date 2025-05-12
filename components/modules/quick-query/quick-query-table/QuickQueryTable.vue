@@ -284,6 +284,8 @@ const handleSelection = (selectedRows: RowData[]) => {
 };
 
 defineExpose({ gridApi, editedCells });
+
+// TODO: alow user can select by good UX : keel mouseDown and move to another row, will be selected like ( user keep shift key and select row by mouse )
 </script>
 
 <template>
