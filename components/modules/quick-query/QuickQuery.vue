@@ -31,6 +31,8 @@ const quickQueryFilterRef = ref<InstanceType<typeof QuickQueryFilter>>();
 const quickQueryTableRef = ref<InstanceType<typeof QuickQueryTable>>();
 const isMutating = ref(false);
 const selectedRows = ref<Record<string, any>[]>([]);
+
+//TODO: need to reuseable and can persistent
 const historyLogs = ref<{ createdAt: string; logs: string }[]>([]);
 const quickQueryLayoutSize = ref<number[]>([80, 20]);
 
