@@ -9,12 +9,11 @@ import type {
   GridApi,
   GridOptions,
   GridReadyEvent,
-  RowSelectionOptions,
-  SizeColumnsToFitGridStrategy,
   SuppressKeyboardEventParams,
 } from 'ag-grid-community';
-import { iconOverrides, themeBalham } from 'ag-grid-community';
+import { _debounce, iconOverrides, themeBalham } from 'ag-grid-community';
 import { AgGridVue } from 'ag-grid-vue3';
+import { DEFAULT_QUERY_SIZE } from '~/utils/constants';
 import CustomHeaderTable from './CustomHeaderTable.vue';
 
 //TODO: refactor, and move reuseable
@@ -40,6 +39,11 @@ const emit = defineEmits<{
   (e: 'onSelectedRows', value: RowData[]): void;
 }>();
 
+const DEFAULT_DEBOUNCE_RANGE_SELECTION = 20;
+const EDGE_ZONE_HEIGHT = 50; // Pixels from top/bottom to trigger auto-scroll
+const SCROLL_STEP = 1; // Number of rows to scroll per interval
+const SCROLL_INTERVAL = 100; // Milliseconds between scroll steps
+
 const mySvgIcons = iconOverrides({
   type: 'image', // Use 'image' to allow SVG rendering
   mask: true,
@@ -60,15 +64,6 @@ const customizedTheme = themeBalham
   })
   .withPart(mySvgIcons);
 
-const gridOptions: GridOptions = {
-  rowClass: 'class-row-border-none',
-  getRowClass: params => {
-    if ((params.node.rowIndex || 0) % 2 === 0) {
-      return 'class-row-even';
-    }
-  },
-};
-
 /* reactive state ---------------------------------------------------- */
 const rowData = computed<RowData[]>(() =>
   (props.data ?? []).map((e, index) => {
@@ -78,8 +73,7 @@ const rowData = computed<RowData[]>(() =>
     };
   })
 );
-const quickFilter = ref<string>(''); // Explicit string type
-const pageSize = ref<number>(props.defaultPageSize ?? 10);
+const pageSize = ref<number>(props.defaultPageSize ?? DEFAULT_QUERY_SIZE);
 
 const gridApi = ref<GridApi | null>(null);
 
@@ -151,18 +145,82 @@ const onCellValueChanged = (event: CellValueChangedEvent) => {
   }
 };
 
-const autoSizeStrategy: SizeColumnsToFitGridStrategy = {
-  type: 'fitGridWidth',
-  defaultMinWidth: 100,
-};
+const isStartRangeSelection = ref(false);
+const startRangeSelectedRowIndex = ref<number>(-1);
 
-const rowSelection: RowSelectionOptions = {
-  mode: 'multiRow',
-  checkboxes: false,
-  headerCheckbox: false,
-  enableSelectionWithoutKeys: false,
-  enableClickSelection: 'enableSelection',
-  copySelectedRows: true,
+const gridOptions: GridOptions = {
+  rowClass: 'class-row-border-none',
+  getRowClass: params => {
+    if ((params.node.rowIndex || 0) % 2 === 0) {
+      return 'class-row-even';
+    }
+  },
+  rowSelection: {
+    mode: 'multiRow',
+    checkboxes: false,
+    headerCheckbox: false,
+    enableSelectionWithoutKeys: false,
+    enableClickSelection: 'enableSelection',
+    copySelectedRows: true,
+  },
+  autoSizeStrategy: {
+    type: 'fitGridWidth',
+    defaultMinWidth: 100,
+  },
+  theme: customizedTheme,
+  pagination: false,
+  undoRedoCellEditing: true,
+  undoRedoCellEditingLimit: 25,
+
+  animateRows: true,
+
+  onCellMouseDown: params => {
+    const event = params.event as MouseEvent;
+
+    const isLeftClick = event?.button === 0;
+    const isPressShift = event?.shiftKey;
+
+    if (!isLeftClick || isPressShift) {
+      return;
+    }
+
+    isStartRangeSelection.value = true;
+    if (!params.rowIndex) return;
+
+    startRangeSelectedRowIndex.value = params.rowIndex;
+
+    gridApi.value?.deselectAll();
+    params.node.setSelected(true);
+  },
+
+  onCellMouseOver: _debounce(
+    { isAlive: () => true },
+    params => {
+      if (!params.rowIndex || !isStartRangeSelection.value || !gridApi.value)
+        return;
+
+      const rowIndex = params.rowIndex;
+      // TODO: when user range select and mouse in the end -> auto scroll list
+      // const mouseEvent = params.event as MouseEvent;
+
+      gridApi.value.deselectAll();
+      gridApi.value.forEachNode(node => {
+        if (node.rowIndex === null) {
+          return;
+        }
+
+        if (
+          (node.rowIndex >= startRangeSelectedRowIndex.value &&
+            node.rowIndex <= rowIndex) ||
+          (node.rowIndex <= startRangeSelectedRowIndex.value &&
+            node.rowIndex >= rowIndex)
+        ) {
+          node.setSelected(true);
+        }
+      });
+    },
+    DEFAULT_DEBOUNCE_RANGE_SELECTION
+  ),
 };
 
 /* derive columns on the fly ---------------------------------------- */
@@ -283,30 +341,28 @@ const handleSelection = (selectedRows: RowData[]) => {
   emit('onSelectedRows', selectedRows);
 };
 
-defineExpose({ gridApi, editedCells });
+const onStopRangeSelection = () => {
+  isStartRangeSelection.value = false;
+  startRangeSelectedRowIndex.value = -1;
+};
 
-// TODO: alow user can select by good UX : keel mouseDown and move to another row, will be selected like ( user keep shift key and select row by mouse )
+defineExpose({ gridApi, editedCells });
 </script>
 
 <template>
   <AgGridVue
+    @mouseup="onStopRangeSelection"
+    @mouseleave="onStopRangeSelection"
     @selection-changed="onSelectionChanged"
     @cell-value-changed="onCellValueChanged"
     @grid-ready="onGridReady"
     :class="props.class"
     :defaultColDef="defaultColDef"
-    :autoSizeStrategy="autoSizeStrategy"
-    :rowSelection="rowSelection"
     :grid-options="gridOptions"
-    :theme="customizedTheme"
     :columnTypes="columnTypes"
     :columnDefs="columnDefs"
     :rowData="rowData"
-    :quickFilterText="quickFilter"
-    :pagination="false"
     :paginationPageSize="pageSize"
-    :undoRedoCellEditing="true"
-    :undo-redo-cell-editing-limit="25"
   />
 </template>
 
