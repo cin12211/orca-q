@@ -11,10 +11,10 @@ import { buildDeleteStatements } from '~/utils/quickQuery/buildDeleteStatements'
 import { buildInsertStatements } from '~/utils/quickQuery/buildInsertStatements';
 import { EDatabaseType } from '../management-connection/constants';
 import QuickQueryErrorPopup from './QuickQueryErrorPopup.vue';
-import QuickQueryHistoryLogsPanel from './QuickQueryHistoryLogsPanel.vue';
 import PreviewSelectedRow from './preview/PreviewSelectedRow.vue';
 import QuickQueryControlBar from './quick-query-control-bar/QuickQueryControlBar.vue';
 import QuickQueryFilter from './quick-query-filter/QuickQueryFilter.vue';
+import QuickQueryHistoryLogsPanel from './quick-query-history-log-panel/QuickQueryHistoryLogsPanel.vue';
 import QuickQueryContextMenu from './quick-query-table/QuickQueryContextMenu.vue';
 import QuickQueryTable from './quick-query-table/QuickQueryTable.vue';
 

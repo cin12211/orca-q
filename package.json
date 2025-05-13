@@ -90,6 +90,7 @@
     "postcss": "^8.5.3",
     "prettier-plugin-tailwindcss": "0.6.11",
     "sass-embedded": "^1.87.0",
+    "shiki": "^3.4.0",
     "tailwind-merge": "^3.2.0",
     "tailwind-scrollbar": "^4.0.2",
     "tailwindcss": "^4.1.2",

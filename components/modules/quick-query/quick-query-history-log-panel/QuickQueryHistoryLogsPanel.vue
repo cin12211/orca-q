@@ -18,7 +18,8 @@
               <span class="text-emerald-400"
                 >[{{ formatDate(log.createdAt) }}]</span
               >
-              <span class="whitespace-pre-wrap"> {{ log.logs }}</span>
+
+              <QuickQueryHistoryLogItem :log="log.logs" />
             </div>
           </template>
           <div ref="scrollRef"></div>
@@ -29,6 +30,8 @@
 </template>
 
 <script setup lang="ts">
+import QuickQueryHistoryLogItem from './QuickQueryHistoryLogItem.vue';
+
 // TODO: refactor , and add TanStack Virtual scroll for optimize
 interface Log {
   createdAt: string;

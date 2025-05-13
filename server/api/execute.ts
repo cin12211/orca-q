@@ -1,4 +1,3 @@
-import { json } from 'stream/consumers';
 import { type QueryFailedError } from 'typeorm';
 
 export default defineEventHandler(

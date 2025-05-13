@@ -167,19 +167,19 @@ useHotkeys([
         <TabsList class="grid w-full grid-cols-3 h-6!">
           <TabsTrigger
             value="data"
-            class="h-5! font-normal text-sm cursor-pointer text-primary/80"
+            class="h-5! px-1 font-medium text-xs cursor-pointer text-primary/80"
           >
             Data
           </TabsTrigger>
           <TabsTrigger
             value="structure"
-            class="h-5! font-normal text-sm cursor-pointer text-primary/80"
+            class="h-5! px-1 font-medium text-xs cursor-pointer text-primary/80"
           >
             Structure
           </TabsTrigger>
           <TabsTrigger
             value="erd"
-            class="h-5! font-normal text-sm cursor-pointer text-primary/80"
+            class="h-5! px-1 font-medium text-xs cursor-pointer text-primary/80"
           >
             ERD
           </TabsTrigger>
