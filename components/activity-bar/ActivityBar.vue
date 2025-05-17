@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import { useDefaultLayout } from '~/shared/contexts/defaultLayoutContext';
+import { useAppLayoutStore } from '~/shared/stores/appLayoutStore';
 import {
   ActivityBarItemType,
   useActivityBarStore,
 } from '~/shared/stores/useActivityBarStore';
 
 const activityStore = useActivityBarStore();
+const appLayoutStore = useAppLayoutStore();
 
 // This is sample data
 const activity = computed(() => [
@@ -23,15 +24,10 @@ const activity = computed(() => [
   },
 ]);
 
-const { togglePrimarySideBarPanel, isPrimarySideBarPanelCollapsed } =
-  useDefaultLayout();
-
 const onChangeActivity = (type: ActivityBarItemType) => {
   activityStore.setActivityActive(type);
 
-  if (isPrimarySideBarPanelCollapsed.value) {
-    togglePrimarySideBarPanel();
-  }
+  appLayoutStore.onToggleActivityBarPanel();
 };
 
 // TODO: update

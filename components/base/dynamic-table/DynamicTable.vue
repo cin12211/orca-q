@@ -1,18 +1,13 @@
 <script setup lang="ts">
-import { ref, computed, watch, render, createVNode } from 'vue';
+import { ref, computed } from 'vue';
 import { Icon } from '#components';
-import {
-  checkboxStyleDefault,
-  iconOverrides,
-  themeBalham,
-} from 'ag-grid-community';
+import { iconOverrides, themeBalham } from 'ag-grid-community';
 import type {
   GridApi,
   GridReadyEvent,
   ColDef,
   SizeColumnsToFitGridStrategy,
   GridOptions,
-  RowClassParams,
 } from 'ag-grid-community';
 import { AgGridVue } from 'ag-grid-vue3';
 import { Button } from '@/components/ui/button';

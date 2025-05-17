@@ -15,6 +15,7 @@ import { EDatabaseType } from '../../management-connection/constants';
 import ColumnSelector from '../../selectors/ColumnSelector.vue';
 import OperatorSelector from '../../selectors/OperatorSelector.vue';
 import QuickQueryFilterGuide from './QuickQueryFilterGuide.vue';
+import RowFilterAutoComplete from './RowFilterAutoComplete.vue';
 
 const props = defineProps<{
   columns: string[];
@@ -188,51 +189,54 @@ useHotkeys([
   },
 ]);
 
+const getCurrentFocusInput = (): number | undefined => {
+  if (!filterSearchRefs.value) {
+    return;
+  }
+
+  const currenFocusIndex = filterSearchRefs.value.findIndex(
+    input => input.$el === document.activeElement
+  );
+
+  return currenFocusIndex;
+};
+
 useHotkeys(
   [
-    //TODO: only listens event in this input focus
     {
       key: 'meta+backspace',
       callback: async () => {
-        if (!filterSearchRefs.value) {
+        const currenFocusIndex = getCurrentFocusInput();
+
+        if (currenFocusIndex === undefined) {
           return;
         }
-
-        const currenFocusIndex = filterSearchRefs.value.findIndex(
-          input => input.$el === document.activeElement
-        );
 
         onRemoveFilter(currenFocusIndex);
       },
     },
-    //TODO: only listens event in this input focus
     {
       key: 'meta+enter',
       callback: () => {
-        if (!filterSearchRefs.value) {
+        const currenFocusIndex = getCurrentFocusInput();
+
+        if (currenFocusIndex === undefined) {
           return;
         }
-
-        const currenFocusIndex = filterSearchRefs.value.findIndex(
-          input => input.$el === document.activeElement
-        );
 
         if (currenFocusIndex >= 0) {
           onApplyAllFilter();
         }
       },
     },
-    //TODO: only listens event in this input focus
     {
       key: 'meta+i',
       callback: async () => {
-        if (!filterSearchRefs.value) {
+        const currenFocusIndex = getCurrentFocusInput();
+
+        if (currenFocusIndex === undefined) {
           return;
         }
-
-        const currenFocusIndex = filterSearchRefs.value.findIndex(
-          input => input.$el === document.activeElement
-        );
 
         onAddFilter(currenFocusIndex);
 
@@ -297,6 +301,8 @@ defineExpose({
         "
       />
 
+      <!-- https://www.shadcn-vue.com/docs/components/combobox -->
+      <!-- TODO: need to apply auto suggesions for row query, this help user show columns name, only trigger show in the first or near 'and' or 'or' key word -->
       <Input
         v-model:model-value="value.search"
         type="text"
@@ -304,6 +310,7 @@ defineExpose({
         class="w-full h-6 px-2"
         ref="filterSearchRefs"
       />
+
       <Button
         class="h-6 px-1.5"
         variant="outline"

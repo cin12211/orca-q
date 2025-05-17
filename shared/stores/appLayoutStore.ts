@@ -1,18 +1,60 @@
 import { defineStore } from 'pinia';
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 
 export const useAppLayoutStore = defineStore(
   'app-layout-store',
   () => {
-    const layoutSize = ref<number[]>([25, 50, 0]);
+    const layoutSize = ref<number[]>([25, 50, 25]);
+    const historyLayoutSize = ref<number[]>([25, 50, 25]);
 
-    const isActivityBarPanelCollapsed = computed(
-      () => layoutSize.value[0] === 0
-    );
+    const isPrimarySidebarCollapsed = computed(() => layoutSize.value[0] === 0);
+
+    const isSecondSidebarCollapsed = computed(() => layoutSize.value[2] === 0);
+
+    const onToggleActivityBarPanel = () => {
+      const [left, main] = layoutSize.value;
+
+      if (left === 0) {
+        const restoreLeft = historyLayoutSize.value[0] || 25;
+        layoutSize.value[0] = restoreLeft;
+        layoutSize.value[1] = Math.max(main - restoreLeft, 0);
+      } else {
+        historyLayoutSize.value[0] = left;
+        layoutSize.value[0] = 0;
+        layoutSize.value[1] = main + left;
+      }
+    };
+
+    const onToggleSecondSidebar = () => {
+      const [_, main, right] = layoutSize.value;
+
+      if (right === 0) {
+        const restoreRight = historyLayoutSize.value[2] || 25;
+        layoutSize.value[2] = restoreRight;
+        layoutSize.value[1] = Math.max(main - restoreRight, 0);
+      } else {
+        historyLayoutSize.value[2] = right;
+        layoutSize.value[2] = 0;
+        layoutSize.value[1] = main + right;
+      }
+    };
+
+    const onResizeLayout = (resizedLayout: number[]) => {
+      const [left, _, right] = resizedLayout;
+      layoutSize.value = resizedLayout;
+
+      if (left !== 0) historyLayoutSize.value[0] = left;
+      if (right !== 0) historyLayoutSize.value[2] = right;
+    };
 
     return {
       layoutSize,
-      isActivityBarPanelCollapsed,
+      historyLayoutSize,
+      isPrimarySidebarCollapsed,
+      isSecondSidebarCollapsed,
+      onToggleActivityBarPanel,
+      onToggleSecondSidebar,
+      onResizeLayout,
     };
   },
   {

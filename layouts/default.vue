@@ -1,63 +1,30 @@
 <script setup lang="ts">
-import { type SplitterPanel } from 'reka-ui';
 import { useAppLayoutStore } from '~/shared/stores/appLayoutStore';
-import { provideDefaultLayoutContext } from '../shared/contexts/defaultLayoutContext';
 
-const primarySideBarPanelRef = useTemplateRef<
-  InstanceType<typeof SplitterPanel>
->('primarySideBarPanelRef');
-
-const secondarySideBarPanelRef = useTemplateRef<
-  InstanceType<typeof SplitterPanel>
->('secondarySideBarPanelRef');
-
-const togglePanel = (
-  panel: InstanceType<typeof SplitterPanel> | null | undefined
-) => {
-  if (!panel) return;
-  panel.isCollapsed ? panel.expand() : panel.collapse();
-};
+const appLayoutStore = useAppLayoutStore();
+const { layoutSize, isPrimarySidebarCollapsed } = toRefs(appLayoutStore);
 
 useHotkeys([
   {
     key: 'meta+shift+b',
     callback: () => {
-      togglePanel(secondarySideBarPanelRef.value);
+      appLayoutStore.onToggleSecondSidebar();
     },
   },
   {
     key: 'meta+b',
     callback: () => {
-      togglePanel(primarySideBarPanelRef.value);
+      appLayoutStore.onToggleActivityBarPanel();
     },
   },
 ]);
-
-const isPrimarySideBarPanelCollapsed = computed(
-  () => !!primarySideBarPanelRef.value?.isCollapsed
-);
-const isSecondarySideBarPanelCollapsed = computed(
-  () => !!secondarySideBarPanelRef.value?.isCollapsed
-);
-
-const appLayoutStore = useAppLayoutStore();
-
-const { layoutSize, isActivityBarPanelCollapsed } = toRefs(appLayoutStore);
-
-provideDefaultLayoutContext({
-  isPrimarySideBarPanelCollapsed,
-  isSecondarySideBarPanelCollapsed,
-  togglePrimarySideBarPanel: () => togglePanel(primarySideBarPanelRef.value),
-  toggleSecondarySideBarPanel: () =>
-    togglePanel(secondarySideBarPanelRef.value),
-});
 </script>
 
 <template>
   <ResizablePanelGroup
     direction="horizontal"
     id="default-layout-group-1"
-    @layout="layoutSize = $event"
+    @layout="appLayoutStore.onResizeLayout($event)"
   >
     <div
       class="h-screen w-screen flex flex-col flex-1 max-h-screen overflow-y-auto"
@@ -67,7 +34,7 @@ provideDefaultLayoutContext({
         class="h-full flex overflow-y-auto w-screen max-w-screen overflow-x-hidden"
         v-auto-animate="{ duration: 250 }"
       >
-        <ActivityBar v-if="isActivityBarPanelCollapsed" />
+        <ActivityBar v-if="isPrimarySidebarCollapsed" />
 
         <ResizablePanel
           :min-size="10"
@@ -76,7 +43,6 @@ provideDefaultLayoutContext({
           :collapsed-size="0"
           collapsible
           id="default-layout-group-1-panel-1"
-          ref="primarySideBarPanelRef"
           key="primarySideBarPanel"
         >
           <PrimarySideBar />
@@ -101,7 +67,6 @@ provideDefaultLayoutContext({
           :default-size="layoutSize[2]"
           :collapsed-size="0"
           collapsible
-          ref="secondarySideBarPanelRef"
           key="secondarySideBarPanel"
         >
           <SecondarySideBar />

@@ -1,22 +1,18 @@
 <script setup lang="ts">
-import { useDefaultLayout } from '~/shared/contexts/defaultLayoutContext';
 import { useAppLayoutStore } from '~/shared/stores/appLayoutStore';
 import ActivityBarHorizontal from '../activity-bar/ActivityBarHorizontal.vue';
 import TabViews from './TabViews.vue';
 
-const {
-  isPrimarySideBarPanelCollapsed,
-  isSecondarySideBarPanelCollapsed,
-  togglePrimarySideBarPanel,
-  toggleSecondarySideBarPanel,
-} = useDefaultLayout();
+const appLayoutStore = useAppLayoutStore();
+
+const { isPrimarySidebarCollapsed, isSecondSidebarCollapsed } =
+  toRefs(appLayoutStore);
 
 const isAppVersion = computed(() => '__TAURI_INTERNALS__' in window);
 
-const appLayoutStore = useAppLayoutStore();
-
 const minWidth = computed(() => {
   const widthPercentage = appLayoutStore.layoutSize[0];
+
   if (!widthPercentage) {
     return '2.25rem';
   }
@@ -33,7 +29,7 @@ const minWidth = computed(() => {
   <div
     :class="[
       'w-screen h-9 select-none border-b pr-2',
-      isAppVersion && !appLayoutStore.layoutSize[0] ? 'pl-[4.5rem]' : '',
+      isAppVersion && !isPrimarySidebarCollapsed ? 'pl-[4.5rem]' : '',
     ]"
     data-tauri-drag-region
   >
@@ -42,7 +38,7 @@ const minWidth = computed(() => {
         class="flex items-center gap-1 h-full px-1"
         :style="{
           minWidth,
-          justifyContent: appLayoutStore.layoutSize[0]
+          justifyContent: !isPrimarySidebarCollapsed
             ? 'space-between'
             : 'center',
         }"
@@ -52,7 +48,7 @@ const minWidth = computed(() => {
             isAppVersion ? 'pl-[4.5rem]' : '',
             'flex justify-center w-full',
           ]"
-          v-if="!appLayoutStore.isActivityBarPanelCollapsed"
+          v-if="!isPrimarySidebarCollapsed"
         >
           <ActivityBarHorizontal />
         </div>
@@ -60,12 +56,12 @@ const minWidth = computed(() => {
         <Button
           variant="ghost"
           size="iconSm"
-          @click="togglePrimarySideBarPanel()"
+          @click="appLayoutStore.onToggleActivityBarPanel()"
         >
           <Icon
             name="hugeicons:sidebar-left"
             class="size-5!"
-            v-if="isPrimarySideBarPanelCollapsed"
+            v-if="isPrimarySidebarCollapsed"
           />
           <Icon name="hugeicons:sidebar-left-01" class="size-5!" v-else />
 
@@ -79,12 +75,12 @@ const minWidth = computed(() => {
       <Button
         variant="ghost"
         size="iconSm"
-        @click="toggleSecondarySideBarPanel()"
+        @click="appLayoutStore.onToggleSecondSidebar()"
       >
         <Icon
           name="hugeicons:sidebar-right"
           class="size-5!"
-          v-if="isSecondarySideBarPanelCollapsed"
+          v-if="isSecondSidebarCollapsed"
         />
         <Icon name="hugeicons:sidebar-right-01" class="size-5!" v-else />
 

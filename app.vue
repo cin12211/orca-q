@@ -14,7 +14,7 @@ ModuleRegistry.registerModules([AllCommunityModule]);
   </NuxtLayout>
 
   <ClientOnly>
-    <Toaster />
+    <Toaster position="top-right" />
   </ClientOnly>
 </template>
 

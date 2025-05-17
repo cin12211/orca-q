@@ -19,9 +19,6 @@ import QuickQueryContextMenu from './quick-query-table/QuickQueryContextMenu.vue
 import QuickQueryTable from './quick-query-table/QuickQueryTable.vue';
 
 // TODO: refactor code
-definePageMeta({
-  keepalive: false,
-});
 
 const props = defineProps<{ tableId: string }>();
 

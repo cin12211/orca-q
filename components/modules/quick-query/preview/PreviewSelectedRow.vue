@@ -41,7 +41,7 @@ props.columnTypes.forEach(column => {
     type: column.type,
     as: Textarea,
     name: column.name,
-    class: 'px-1 py-0.5 h-fit min-h-6! font-normal!',
+    class: 'px-1 py-0.5 h-fit min-h-6! text-primary/80 font-normal!',
   });
 });
 
