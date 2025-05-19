@@ -29,7 +29,7 @@ const minWidth = computed(() => {
   <div
     :class="[
       'w-screen h-9 select-none border-b pr-2',
-      isAppVersion && !isPrimarySidebarCollapsed ? 'pl-[4.5rem]' : '',
+      isAppVersion && isPrimarySidebarCollapsed ? 'pl-[4.5rem]' : '',
     ]"
     data-tauri-drag-region
   >
