@@ -31,6 +31,7 @@ dist-ssr
 .nuxt
 .nitro
 .cache
+.vite
 dist
 
 # Node dependencies
