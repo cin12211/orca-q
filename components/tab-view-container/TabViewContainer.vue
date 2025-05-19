@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { isElectron } from '~/lib/utils';
 import { useAppLayoutStore } from '~/shared/stores/appLayoutStore';
 import ActivityBarHorizontal from '../activity-bar/ActivityBarHorizontal.vue';
 import TabViews from './TabViews.vue';
@@ -8,7 +9,7 @@ const appLayoutStore = useAppLayoutStore();
 const { isPrimarySidebarCollapsed, isSecondSidebarCollapsed } =
   toRefs(appLayoutStore);
 
-const isAppVersion = computed(() => '__TAURI_INTERNALS__' in window);
+const isAppVersion = computed(() => isElectron());
 
 const minWidth = computed(() => {
   const widthPercentage = appLayoutStore.layoutSize[0];
@@ -28,10 +29,9 @@ const minWidth = computed(() => {
 <template>
   <div
     :class="[
-      'w-screen h-9 select-none border-b pr-2',
+      'w-screen h-9 select-none border-b pr-2 electron-drag-region',
       isAppVersion && isPrimarySidebarCollapsed ? 'pl-[4.5rem]' : '',
     ]"
-    data-tauri-drag-region
   >
     <div class="flex justify-between items-center h-full">
       <div

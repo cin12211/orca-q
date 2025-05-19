@@ -22,3 +22,14 @@ body {
 .dark ::placeholder {
   opacity: 0.6;
 }
+
+/* config allow drag app */
+.electron-drag-region {
+  -webkit-app-region: drag;
+  app-region: drag;
+}
+
+button {
+  -webkit-app-region: no-drag;
+  app-region: no-drag;
+}
