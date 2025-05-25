@@ -50,3 +50,9 @@ logs
 !.env.example
 
 tsconfig.tsbuildinfo
+
+
+# when build , copy all file in nuxt gen + electron-app 
+# copy to build-electron folder , then excuttion cd build-electron && run build then remove build file build-electron
+.electron-build
+.electron-out

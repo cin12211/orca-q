@@ -18,6 +18,44 @@ const shadcnConfig: Parameters<DefineNuxtConfig>[number]['shadcn'] = {
 export default defineNuxtConfig({
   compatibilityDate: '2024-11-01',
 
+  ssr: false,
+
+  router: {
+    options: {
+      hashMode: true,
+    },
+  },
+  app: {
+    baseURL: './',
+    // buildAssetsDir: '/',
+  },
+  hooks: {
+    'prerender:routes'({ routes }) {
+      routes.clear(); // Do not generate any routes (except the defaults)
+    },
+  },
+  experimental: {
+    appManifest: false,
+  },
+  nitro: {
+    preset: 'node',
+  },
+
+  // experimental: {
+  //   configSchema: false,
+  //   noVueServer: true,
+  // },
+
+  // ssr: false,
+  // app: {
+  //   baseURL: './', // Use relative paths for all assets
+  // },
+  // router: {
+  //   options: {
+  //     hashMode: true,
+  //   },
+  // },
+
   devtools: {
     enabled: true,
 
@@ -25,7 +63,6 @@ export default defineNuxtConfig({
       enabled: true,
     },
   },
-  ssr: false,
   modules: [
     'shadcn-nuxt',
     '@nuxt/icon',
@@ -33,10 +70,7 @@ export default defineNuxtConfig({
     '@pinia/nuxt',
     'pinia-plugin-persistedstate/nuxt',
     'nuxt-typed-router',
-    '@pinia-orm/nuxt',
-    '@nuxt/image',
     '@formkit/auto-animate',
-    '@nuxtjs/i18n',
   ],
   css: ['~/assets/css/tailwind.css'],
   colorMode: {

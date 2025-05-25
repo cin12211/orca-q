@@ -5,6 +5,23 @@ import { Toaster } from './components/ui/sonner';
 
 // Register all Community features
 ModuleRegistry.registerModules([AllCommunityModule]);
+
+onMounted(async () => {
+  const config = {
+    dbConnectionString: 'postgres://admin:admin@localhost:5432/postgres',
+  };
+
+  try {
+    const result = await ((window as any)?.api as any)?.connectDB(config);
+    if (result.success) {
+      console.log('Kết nối DB thành công!');
+    } else {
+      console.error('Kết nối thất bại:', result.error);
+    }
+  } catch (err) {
+    console.error('Có lỗi khi gọi IPC:', err);
+  }
+});
 </script>
 
 <template>
