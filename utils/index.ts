@@ -1,4 +1,4 @@
-const c = {
+export const dbSchema:DBSchema = {
   tables: [
     {
       schema: 'public',
@@ -29441,7 +29441,7 @@ export interface Table {
   table: string;
   rows: number;
   type: string;
-  comment: string;
+  comment: string | null;
   columns: Column[];
   foreign_keys: ForeignKey[];
   primary_keys: PrimaryKey[];
@@ -29452,10 +29452,10 @@ export interface Column {
   name: string;
   ordinal_position: number;
   type: string;
-  character_maximum_length?: number;
+  character_maximum_length?: number | null;
   precision: any;
   nullable: boolean;
-  default?: string;
+  default?: string | null;
   collation: any;
   comment: any;
 }
