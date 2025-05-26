@@ -3,39 +3,53 @@ import { electronAPI } from '@electron-toolkit/preload'
 // See the Electron documentation for details on how to use preload scripts:
 // https://www.electronjs.org/docs/latest/tutorial/process-model#preload-scripts
 import { contextBridge, ipcRenderer } from 'electron'
+import type {
+  DBBulkDeleteRequest,
+  DBBulkDeleteResponse,
+  DBBulkUpdateRequest,
+  DBBulkUpdateResponse,
+  DBExecuteRequest,
+  DBExecuteResponse,
+  DBGetFunctions,
+  DBGetOneTableResponse,
+  DbGetOverviewFunctionsResponse,
+  DBGetOverviewTablesResponse,
+  DbGetSourceResponse,
+  DBGetTablesRequest,
+  GetOneTableRequest
+} from '../main/ipc'
+import type { IpcBaseRequest, IpcBaseResponse } from '../main/ipc/interface'
 
-// Custom APIs for renderer
-const api = {
-  connectDB: (config: { dbConnectionString: string }) => ipcRenderer.invoke('db:connect', config),
+export const electronBridgeApi = {
+  connectDB: (config: IpcBaseRequest): Promise<IpcBaseResponse> =>
+    ipcRenderer.invoke('db:connect', config),
 
-  bulkDelete: (payload: { dbConnectionString: string; sql: string }) =>
+  bulkDelete: (payload: DBBulkDeleteRequest): Promise<DBBulkDeleteResponse> =>
     ipcRenderer.invoke('db:bulk-delete', payload),
 
-  bulkUpdate: (payload: { dbConnectionString: string; sql: string }) =>
+  bulkUpdate: (payload: DBBulkUpdateRequest): Promise<DBBulkUpdateResponse> =>
     ipcRenderer.invoke('db:bulk-update', payload),
 
-  execute: (payload: { dbConnectionString: string; sql: string }) =>
+  execute: (payload: DBExecuteRequest): Promise<DBExecuteResponse> =>
     ipcRenderer.invoke('db:execute', payload),
 
-  getDatabaseNames: (config: { dbConnectionString: string }) =>
-    ipcRenderer.invoke('db:get-names', config),
-
-  getDatabaseSource: (config: { dbConnectionString: string }) =>
+  getDatabaseSource: (config: IpcBaseRequest): Promise<DbGetSourceResponse> =>
     ipcRenderer.invoke('db:get-source', config),
 
-  getFunctions: (config: { dbConnectionString: string }) =>
+  getFunctions: (config: IpcBaseRequest): Promise<DBGetFunctions> =>
     ipcRenderer.invoke('db:get-functions', config),
 
-  getOneTable: (config: { dbConnectionString: string; tableName: string }) =>
+  getOneTable: (config: GetOneTableRequest): Promise<DBGetOneTableResponse> =>
     ipcRenderer.invoke('db:get-one-table', config),
 
-  getOverviewFunctions: (config: { dbConnectionString: string }) =>
+  getOverviewFunctions: (config: IpcBaseRequest): Promise<DbGetOverviewFunctionsResponse> =>
     ipcRenderer.invoke('db:get-overview-functions', config),
 
-  getOverviewTables: (config: { dbConnectionString: string }) =>
+  getOverviewTables: (config: IpcBaseRequest): Promise<DBGetOverviewTablesResponse> =>
     ipcRenderer.invoke('db:get-overview-tables', config),
 
-  getTables: (config: { dbConnectionString: string }) => ipcRenderer.invoke('db:get-tables', config)
+  getTables: (config: IpcBaseRequest): Promise<DBGetTablesRequest> =>
+    ipcRenderer.invoke('db:get-tables', config)
 }
 
 // Use `contextBridge` APIs to expose Electron APIs to
@@ -44,7 +58,7 @@ const api = {
 if (process.contextIsolated) {
   try {
     contextBridge.exposeInMainWorld('electron', electronAPI)
-    contextBridge.exposeInMainWorld('api', api)
+    contextBridge.exposeInMainWorld('api', electronBridgeApi)
   } catch (error) {
     console.error(error)
   }
@@ -52,5 +66,5 @@ if (process.contextIsolated) {
   // @ts-ignore (define in dts)
   window.electron = electronAPI
   // @ts-ignore (define in dts)
-  window.api = api
+  window.api = electronBridgeApi
 }

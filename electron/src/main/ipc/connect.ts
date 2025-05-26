@@ -1,18 +1,20 @@
-import { ipcMain } from 'electron';
-import { getDatabaseSource } from '../utils/dbConnector';
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { ipcMain } from 'electron'
+import { getDatabaseSource } from '../utils/dbConnector'
+import type { IpcBaseRequest, IpcBaseResponse } from './interface'
 
 ipcMain.handle(
   'db:connect',
-  async (_, config: { dbConnectionString: string }) => {
+  async (_, { dbConnectionString }: IpcBaseRequest): Promise<IpcBaseResponse> => {
     try {
       await getDatabaseSource({
-        dbConnectionString: config.dbConnectionString,
-        type: 'postgres',
-      });
+        dbConnectionString,
+        type: 'postgres'
+      })
 
-      return { success: true };
+      return { success: true }
     } catch (e: any) {
-      return { success: false, error: e.message };
+      return { success: false, error: e.message }
     }
   }
-);
+)

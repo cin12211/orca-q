@@ -1,83 +1,121 @@
-import { ipcMain } from 'electron';
-import { getDatabaseSource } from '../utils/dbConnector';
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { ipcMain } from 'electron'
+import { getDatabaseSource } from '../utils/dbConnector'
+import type { IpcBaseRequest, IpcBaseResponse } from './interface'
+import type { QueryFailedError } from 'typeorm'
 
-interface BulkDeleteArgs {
-  sqlDeleteStatements: string[];
-  dbConnectionString: string;
+export interface DBBulkDeleteRequest extends IpcBaseRequest {
+  sqlDeleteStatements: string[]
 }
 
-interface BulkDeleteResult {
-  success: boolean;
-  data?: {
-    query: string;
-    affectedRows: number;
-    results: Record<string, unknown>[];
-  }[];
-  error?: string;
-}
+export type DBBulkDeleteResponse = IpcBaseResponse<
+  {
+    query: string
+    affectedRows: number
+    results: Record<string, unknown>[]
+  }[]
+>
 
 ipcMain.handle(
   'db:bulk-delete',
-  async (_, args: BulkDeleteArgs): Promise<BulkDeleteResult> => {
+  async (
+    _,
+    { dbConnectionString, sqlDeleteStatements }: DBBulkDeleteRequest
+  ): Promise<DBBulkDeleteResponse> => {
     try {
-      const { sqlDeleteStatements, dbConnectionString } = args;
-
-      // Validate inputs
-      if (
-        !Array.isArray(sqlDeleteStatements) ||
-        sqlDeleteStatements.length === 0
-      ) {
-        throw new Error('No valid DELETE statements provided');
+      // Input validation
+      if (!sqlDeleteStatements?.length || !Array.isArray(sqlDeleteStatements)) {
+        return {
+          success: false,
+          error: 'No valid DELETE statements provided'
+        }
       }
 
       if (!dbConnectionString || typeof dbConnectionString !== 'string') {
-        throw new Error('Invalid or missing database connection string');
-      }
-
-      for (const statement of sqlDeleteStatements) {
-        if (
-          typeof statement !== 'string' ||
-          !statement.trim().toUpperCase().startsWith('DELETE')
-        ) {
-          throw new Error('All statements must be valid DELETE statements');
+        return {
+          success: false,
+          error: 'Invalid or missing database connection string'
         }
       }
 
-      const db = await getDatabaseSource({
-        dbConnectionString,
-        type: 'postgres',
-      });
+      // Validate that queries are DELETE statements
+      for (const statement of sqlDeleteStatements) {
+        if (typeof statement !== 'string' || !statement.trim().toUpperCase().startsWith('DELETE')) {
+          return {
+            success: false,
+            error: 'All statements must be valid DELETE statements'
+          }
+        }
+      }
 
-      const result = await db.transaction(async tx => {
-        const operations: BulkDeleteResult['data'] = [];
+      console.log('Initiating bulk DELETE operation:', {
+        statementCount: sqlDeleteStatements.length,
+        connection: dbConnectionString
+      })
+
+      const dbConnection = await getDatabaseSource({
+        dbConnectionString: dbConnectionString,
+        type: 'postgres'
+      })
+
+      // Execute transaction
+      const queryResults = await dbConnection.transaction(async (txManager) => {
+        const results: {
+          query: string
+          affectedRows: number
+          results: Record<string, unknown>[]
+        }[] = []
 
         for (const statement of sqlDeleteStatements) {
-          const queryResult = await tx.query(statement);
-          const affectedRows = Array.isArray(queryResult)
-            ? queryResult[1] || 0
-            : 0;
+          const queryResult = await txManager.query(statement)
+          // For PostgreSQL, queryResult[1] contains the row count for DELETE queries
+          const affectedRows = Array.isArray(queryResult) ? queryResult[1] || 0 : 0
 
-          operations.push({
+          results.push({
             query: statement,
             affectedRows,
-            results: queryResult,
-          });
+            results: queryResult
+          })
+
+          console.debug('Executed DELETE statement:', {
+            statement,
+            affectedRows
+          })
         }
 
-        return operations;
-      });
+        return results
+      })
 
-      return { success: true, data: result };
-    } catch (e: any) {
-      const isTypeORMError = typeof e === 'object' && e?.driverError;
-      console.error('[bulk-delete]', e);
+      return {
+        success: true,
+        data: queryResults
+      }
+    } catch (error) {
+      if (error instanceof Error) {
+        // Handle TypeORM-specific errors
+        if ((error as QueryFailedError).driverError) {
+          const queryError = error as QueryFailedError
+
+          return {
+            success: false,
+            error: `Database DELETE operation failed: ${queryError.message}`
+            // data: {
+            //   driverError: queryError.driverError,
+            //   query: queryError.query
+            // }
+          }
+        }
+
+        return {
+          success: false,
+          error: 'Internal server error during DELETE operation'
+        }
+      }
 
       return {
         success: false,
-        error: isTypeORMError
-          ? `DB error: ${e.message}`
-          : e.message || 'Unknown error',
-      };
+        error: 'Unknown error during DELETE operation'
+      }
     }
   }
-);
+)
