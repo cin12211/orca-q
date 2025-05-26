@@ -315,18 +315,36 @@ const handleClose = () => {
 const handleTestConnection = async () => {
   testStatus.value = 'testing';
 
-  const result = await $fetch('/api/managment-connection/health-check', {
-    method: 'POST',
-    body: {
-      stringConnection: connectionString.value,
-    },
-  });
+  const config = {
+    dbConnectionString: connectionString.value,
+  };
 
-  if (result.isConnectedSuccess) {
-    testStatus.value = 'success';
-  } else {
+  try {
+    const result = await window?.api?.connectDB(config);
+    if (result.success) {
+      testStatus.value = 'success';
+      console.log('Kết nối DB thành công!');
+    } else {
+      testStatus.value = 'error';
+      console.error('Kết nối thất bại:', result.error);
+    }
+  } catch (err) {
     testStatus.value = 'error';
+    console.error('Có lỗi khi gọi IPC:', err);
   }
+
+  // const result = await $fetch('/api/managment-connection/health-check', {
+  //   method: 'POST',
+  //   body: {
+  //     stringConnection: connectionString.value,
+  //   },
+  // });
+
+  // if (result.isConnectedSuccess) {
+  //   testStatus.value = 'success';
+  // } else {
+  //   testStatus.value = 'error';
+  // }
 };
 
 const handleCreateConnection = () => {

@@ -23,8 +23,8 @@ cp -r electron/* .electron-build/
 
 # Step 5: Copy Nuxt dist files
 echo  "${PURPLE}Step 5:${NC} ${GREEN}Copying Nuxt dist files...${NC}"
-cp -r .output/public/_nuxt .electron-build/src/renderer/public
-cp -r .output/public/index.html .electron-build/src/renderer
+cp -r .output/public/_nuxt .electron-build/src/renderer/public/
+cp -r .output/public/index.html .electron-build/src/renderer/
 
 # Step 6: Navigate to build directory and install dependencies
 echo  "${PURPLE}Step 6:${NC} ${GREEN}Installing dependencies in .electron-build...${NC}"
