@@ -2,14 +2,33 @@ import { app, shell, BrowserWindow, ipcMain } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png'
-import './ipc'
+import { startServer } from './createServer'
 
-function createWindow(): void {
+import MenuBuilder from './menu'
+import { findAvailablePort } from './utils'
+
+const DEFAULT_PORT = 29091
+export let currentPort = DEFAULT_PORT
+
+export function createWindow(port: number): void {
+  const currentWindow = BrowserWindow.getFocusedWindow()
+
+  let x, y
+
+  if (currentWindow) {
+    const [currentWindowX, currentWindowY] = currentWindow.getPosition()
+    x = currentWindowX + 24
+    y = currentWindowY + 24
+  }
+
   // Create the browser window.
   const mainWindow = new BrowserWindow({
+    title: 'ElectronReact' + x,
     width: 900,
     height: 670,
     show: false,
+    x,
+    y,
     autoHideMenuBar: true,
     titleBarStyle: 'hidden',
     trafficLightPosition: { x: 10, y: 10 },
@@ -29,20 +48,29 @@ function createWindow(): void {
     return { action: 'deny' }
   })
 
+  const menuBuilder = new MenuBuilder(mainWindow)
+  menuBuilder.buildMenu()
+
   // HMR for renderer base on electron-vite cli.
   // Load the remote URL for development or the local html file for production.
   if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
     // mainWindow.loadURL(process.env['ELECTRON_RENDERER_URL'])
-    mainWindow.loadURL('http://localhost:3000/')
+    mainWindow.loadURL(`http://localhost:3000`)
   } else {
-    mainWindow.loadFile(join(__dirname, '../renderer/index.html'))
+    // mainWindow.loadFile(join(__dirname, '../renderer/index.html'))
+    mainWindow.loadURL(`http://localhost:${port}`)
   }
 }
 
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
-app.whenReady().then(() => {
+app.whenReady().then(async () => {
+  const port = await findAvailablePort(DEFAULT_PORT)
+
+  currentPort = port
+
+  await startServer(port)
   // Set app user model id for windows
   electronApp.setAppUserModelId('com.electron')
 
@@ -58,12 +86,12 @@ app.whenReady().then(() => {
     console.log('pong')
   })
 
-  createWindow()
+  createWindow(port)
 
   app.on('activate', function () {
     // On macOS it's common to re-create a window in the app when the
     // dock icon is clicked and there are no other windows open.
-    if (BrowserWindow.getAllWindows().length === 0) createWindow()
+    if (BrowserWindow.getAllWindows().length === 0) createWindow(port)
   })
 })
 

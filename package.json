@@ -10,7 +10,7 @@
     "nuxt:dev": "nuxt dev",
     "nuxt:build": "nuxt build",
     "nuxt:generate": "nuxt generate",
-    "app:make": "sh scripts/build-app.sh",
+    "app:build": "sh scripts/build-app.sh",
     "typecheck": "nuxt typecheck",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
