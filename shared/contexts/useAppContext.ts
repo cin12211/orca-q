@@ -47,73 +47,34 @@ export const useAppContext = () => {
 
     const dbConnectionString = connection.connectionString;
 
-    if (!dbConnectionString) {
-      return;
-    }
-
-    const result = await window?.api?.getDatabaseSource({
-      dbConnectionString,
+    const databaseSource = await $fetch('/api/get-database-source', {
+      method: 'POST',
+      body: {
+        dbConnectionString,
+      },
     });
 
-    if (result.success && result.data) {
-      console.log('result', result);
-
-      const mappedSchemas: Schema[] = result.data.map(schema => {
-        const mappedSchema: Schema = {
-          connectionId: connection.id,
-          workspaceId: connection.workspaceId,
-          name: schema.name,
-          tableDetails: schema?.table_details || null,
-          tables: schema?.tables || [],
-          views: schema?.views || [],
-          functions: schema?.functions || [],
-        };
-
-        return mappedSchema;
-      });
-
-      schemaStore.updateSchemasForWorkspace({
-        newSchemas: mappedSchemas,
+    const mappedSchemas: Schema[] = databaseSource.map(schema => {
+      return {
         connectionId: connection.id,
-      });
+        workspaceId: connection.workspaceId,
+        name: schema.name,
+        tableDetails: schema?.table_details || null,
+        tables: schema?.tables || [],
+        views: schema?.views || [],
+        functions: schema?.functions || [],
+      };
+    });
 
-      // auto select when user have empty schema or connection
-      if (!schemaStore.currentSchema || !connectionStore.selectedConnectionId) {
-        onSelectConnectionById(connection.id);
-      }
-    } else {
-      console.log('result', result);
+    schemaStore.updateSchemasForWorkspace({
+      newSchemas: mappedSchemas,
+      connectionId: connection.id,
+    });
+
+    // auto select when user have empty schema or connection
+    if (!schemaStore.currentSchema || !connectionStore.selectedConnectionId) {
+      onSelectConnectionById(connection.id);
     }
-
-    //TODO: use hook to can implement for web + app
-    // const databaseSource = await $fetch('/api/get-database-source', {
-    //   method: 'POST',
-    //   body: {
-    //     dbConnectionString,
-    //   },
-    // });
-
-    // const mappedSchemas: Schema[] = databaseSource.map(schema => {
-    //   return {
-    //     connectionId: connection.id,
-    //     workspaceId: connection.workspaceId,
-    //     name: schema.name,
-    //     tableDetails: schema?.table_details || null,
-    //     tables: schema?.tables || [],
-    //     views: schema?.views || [],
-    //     functions: schema?.functions || [],
-    //   };
-    // });
-
-    // schemaStore.updateSchemasForWorkspace({
-    //   newSchemas: mappedSchemas,
-    //   connectionId: connection.id,
-    // });
-
-    // // auto select when user have empty schema or connection
-    // if (!schemaStore.currentSchema || !connectionStore.selectedConnectionId) {
-    //   onSelectConnectionById(connection.id);
-    // }
   };
 
   const onSelectConnectionById = (connectionId: string) => {

@@ -10,7 +10,7 @@ echo  "${PURPLE}Step 1:${NC} ${GREEN}Starting build process...${NC}"
 
 # Step 2: Build Nuxt application
 echo  "${PURPLE}Step 2:${NC} ${GREEN}Building Nuxt application...${NC}"
-npm run nuxt:generate
+npm run nuxt:build
 
 # Step 3: Create buildlectron directory
 echo  "${PURPLE}Step 3:${NC} ${GREEN}Creating buildlectron directory...${NC}"
@@ -23,9 +23,10 @@ cp -r electron/* .electron-build/
 
 # Step 5: Copy Nuxt dist files
 echo  "${PURPLE}Step 5:${NC} ${GREEN}Copying Nuxt dist files...${NC}"
-cp -r .output/public/_nuxt .electron-build/src/renderer/public/
-cp -r .output/public/index.html .electron-build/src/renderer/
+cp -r .output/ .electron-build/src/renderer/public/
+# cp -r .output/public/index.html .electron-build/src/renderer/
 
+# exit 0
 # Step 6: Navigate to build directory and install dependencies
 echo  "${PURPLE}Step 6:${NC} ${GREEN}Installing dependencies in .electron-build...${NC}"
 cd .electron-build
