@@ -148,7 +148,7 @@ export const filterTable = (tableNames: string[], tablesData: TableData[]) => {
 
 // Initialize with default table
 export const { filteredEdges, filteredNodes } = filterTable(
-  ['achievement_badges'],
+  ['achievement_badges', 'achievement_criteria'],
   dbSchema['tables']
 );
 
