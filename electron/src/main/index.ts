@@ -67,10 +67,12 @@ export function createWindow(port: number): void {
 // Some APIs can only be used after this event occurs.
 app.whenReady().then(async () => {
   const port = await findAvailablePort(DEFAULT_PORT)
-
   currentPort = port
 
-  await startServer(port)
+  if (!is.dev) {
+    await startServer(port)
+  }
+
   // Set app user model id for windows
   electronApp.setAppUserModelId('com.electron')
 
