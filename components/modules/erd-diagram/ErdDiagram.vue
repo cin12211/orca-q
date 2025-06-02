@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { ref } from 'vue';
+import { ref, watch, onMounted } from 'vue';
 import { Background } from '@vue-flow/background';
 import '@vue-flow/controls/dist/style.css';
 import { VueFlow } from '@vue-flow/core';
@@ -8,24 +8,41 @@ import '@vue-flow/core/dist/theme-default.css';
 import '@vue-flow/minimap/dist/style.css';
 import '@vue-flow/node-resizer/dist/style.css';
 import ValueNode from '~/components/modules/erd-diagram/ValueNode.vue';
-import { initialNodes, initialEdges } from '~/utils/erd/erd-utils';
 
-definePageMeta({
-  layout: 'home',
-});
+interface Props {
+  nodes?: any[];
+  edges?: any[][];
+}
 
-const tableNodes = ref(initialNodes);
+const props = defineProps<Props>();
 
-const edges = ref();
-// const routesParams = useRoute().params;
-// const tableId = routesParams.tableId as string;
+const tableNodes = ref(props.nodes || []);
+const edges = ref<any[]>([]);
+
+watch(
+  () => props.nodes,
+  newNodes => {
+    if (newNodes) {
+      tableNodes.value = newNodes;
+    }
+  },
+  { deep: true }
+);
+
+watch(
+  () => props.edges,
+  newEdges => {
+    if (newEdges) {
+      edges.value = newEdges.flat();
+    }
+  },
+  { deep: true }
+);
+
 onMounted(() => {
-  // console.log('routesParams: ', routesParams, tableId);
-  edges.value = initialEdges.flat();
-  console.log(initialEdges);
-  console.log('initialEdges: ', initialEdges);
-  console.log('initialNodes: ', initialNodes);
-  // edges.value = initialEdges.flat();
+  if (props.edges) {
+    edges.value = props.edges.flat();
+  }
 });
 </script>
 

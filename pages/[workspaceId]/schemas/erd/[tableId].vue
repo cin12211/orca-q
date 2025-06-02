@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import { Background } from '@vue-flow/background';
 import '@vue-flow/controls/dist/style.css';
 import { VueFlow } from '@vue-flow/core';
@@ -8,36 +8,20 @@ import '@vue-flow/core/dist/theme-default.css';
 import '@vue-flow/minimap/dist/style.css';
 import '@vue-flow/node-resizer/dist/style.css';
 import ErdDiagram from '~/components/modules/erd-diagram/ErdDiagram.vue';
-import { initialNodes, initialEdges } from '~/utils/erd/erd-utils';
+import { filterTable } from '~/utils/erd/erd-utils';
+import { dbSchema } from '~/utils/index';
 
-// import { initialNodes, initialEdges } from '~/utils/erd/initial-elements';
-// import ValueNode from './ValueNode.vue';
+const route = useRoute('workspaceId-schemas-erd-tableId');
+const tableId = computed(() => route.params.tableId as string);
 
-const tableNodes = ref(initialNodes);
-
-const edges = ref();
-
-onMounted(() => {
-  edges.value = initialEdges.flat();
+const erdData = computed(() => {
+  if (!tableId.value) return { filteredNodes: [], filteredEdges: [] };
+  return filterTable([tableId.value], dbSchema['tables']);
 });
 </script>
 
 <template>
-  <!-- <VueFlow
-    class="math-flow"
-    :nodes="tableNodes"
-    :edges="edges"
-    :default-viewport="{ zoom: 1 }"
-    :min-zoom="0.1"
-    :max-zoom="4"
-  >
-    <template #node-value="props">
-      <ValueNode :id="props.id" :data="props.data" />
-    </template>
-    <Background />
-  </VueFlow> -->
-  <!-- <ErdDiagram /> -->
-  ddd
+  <ErdDiagram :nodes="erdData.filteredNodes" :edges="erdData.filteredEdges" />
 </template>
 
 <style>

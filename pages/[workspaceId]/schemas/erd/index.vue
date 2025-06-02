@@ -9,34 +9,10 @@ import '@vue-flow/minimap/dist/style.css';
 import '@vue-flow/node-resizer/dist/style.css';
 import ErdDiagram from '~/components/modules/erd-diagram/ErdDiagram.vue';
 import { initialNodes, initialEdges } from '~/utils/erd/erd-utils';
-
-// import { initialNodes, initialEdges } from '~/utils/erd/initial-elements';
-// import ValueNode from './ValueNode.vue';
-
-// const tableNodes = ref(initialNodes);
-
-// const edges = ref();
-
-// onMounted(() => {
-//   edges.value = initialEdges.flat();
-// });
 </script>
 
 <template>
-  <!-- <VueFlow
-    class="math-flow"
-    :nodes="tableNodes"
-    :edges="edges"
-    :default-viewport="{ zoom: 1 }"
-    :min-zoom="0.1"
-    :max-zoom="4"
-  >
-    <template #node-value="props">
-      <ValueNode :id="props.id" :data="props.data" />
-    </template>
-    <Background />
-  </VueFlow> -->
-  <ErdDiagram />
+  <ErdDiagram :nodes="initialNodes" :edges="initialEdges" />
 </template>
 
 <style>
