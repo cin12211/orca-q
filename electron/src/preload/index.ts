@@ -1,10 +1,21 @@
-import { electronAPI } from '@electron-toolkit/preload'
-
 // See the Electron documentation for details on how to use preload scripts:
 // https://www.electronjs.org/docs/latest/tutorial/process-model#preload-scripts
-import { contextBridge } from 'electron'
+import { electronAPI } from '@electron-toolkit/preload'
+import { contextBridge, ipcRenderer } from 'electron'
+import { type Workspace } from '../../../shared/stores'
+import { WorkspaceIpcChannels } from '../constants'
 
 export const electronBridgeApi = {}
+
+export const workspaceApi = {
+  getAll: (): Promise<Workspace[]> => ipcRenderer.invoke(WorkspaceIpcChannels.Gets),
+  getOne: (id: string): Promise<Workspace> => ipcRenderer.invoke(WorkspaceIpcChannels.GetOne, id),
+  create: (workspace: Workspace): Promise<Workspace> =>
+    ipcRenderer.invoke(WorkspaceIpcChannels.Create, workspace),
+  update: (id: string, workspace: Workspace): Promise<Workspace> =>
+    ipcRenderer.invoke(WorkspaceIpcChannels.Update, id, workspace),
+  delete: (id: string): Promise<Workspace> => ipcRenderer.invoke(WorkspaceIpcChannels.Delete, id)
+}
 
 // Use `contextBridge` APIs to expose Electron APIs to
 // renderer only if context isolation is enabled, otherwise
@@ -13,6 +24,7 @@ if (process.contextIsolated) {
   try {
     contextBridge.exposeInMainWorld('electron', electronAPI)
     contextBridge.exposeInMainWorld('api', electronBridgeApi)
+    contextBridge.exposeInMainWorld('workspaceApi', workspaceApi)
   } catch (error) {
     console.error(error)
   }
@@ -21,4 +33,6 @@ if (process.contextIsolated) {
   window.electron = electronAPI
   // @ts-ignore (define in dts)
   window.api = electronBridgeApi
+  // @ts-ignore (define in dts)
+  window.workspaceApi = workspaceApi
 }

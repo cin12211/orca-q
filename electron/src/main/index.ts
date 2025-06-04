@@ -1,11 +1,11 @@
-import { app, shell, BrowserWindow, ipcMain } from 'electron'
+import { app, shell, BrowserWindow, Menu, ipcMain } from 'electron'
 import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png'
 import { startServer } from './createServer'
-
 import MenuBuilder from './menu'
-import { findAvailablePort } from './utils'
+import { findAvailablePort, initDBWorkspace } from './utils'
+import './ipcs'
 
 const DEFAULT_PORT = 29091
 export let currentPort = DEFAULT_PORT
@@ -23,7 +23,7 @@ export function createWindow(port: number): void {
 
   // Create the browser window.
   const mainWindow = new BrowserWindow({
-    title: 'ElectronReact' + x,
+    title: 'ElectronReact' + x, //TODO: update title base on use interface in UI :  `open tab name ◦ workspace name`
     width: 900,
     height: 670,
     show: false,
@@ -35,7 +35,9 @@ export function createWindow(port: number): void {
     ...(process.platform === 'linux' ? { icon } : {}),
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
-      sandbox: false
+      sandbox: false,
+      contextIsolation: true,
+      nodeIntegration: false
     }
   })
 
@@ -62,16 +64,42 @@ export function createWindow(port: number): void {
   }
 }
 
+//TODO make it dynamic and update on change
+const getDockMenu = async () => {
+  const DBWorkspace = await initDBWorkspace()
+
+  const workspaces = await DBWorkspace.findAsync({}).limit(5)
+
+  const dockMenu = Menu.buildFromTemplate([
+    ...workspaces.map((workspace) => ({
+      label: workspace.name,
+      click() {
+        createWindow(currentPort)
+      }
+    })),
+    {
+      label: 'New Window',
+      click() {
+        createWindow(currentPort)
+      }
+    }
+  ])
+
+  return dockMenu
+}
+
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
 app.whenReady().then(async () => {
   const port = await findAvailablePort(DEFAULT_PORT)
   currentPort = port
-
   if (!is.dev) {
     await startServer(port)
   }
+
+  const userPath = app.getPath('userData')
+  console.log('🚀 ~ app.whenReady ~ userPath:', userPath)
 
   // Set app user model id for windows
   electronApp.setAppUserModelId('com.electron')
@@ -83,10 +111,14 @@ app.whenReady().then(async () => {
     optimizer.watchWindowShortcuts(window)
   })
 
-  // IPC test
-  ipcMain.on('ping', async () => {
-    console.log('pong')
-  })
+  // // IPC change title then > check window , in windows -> change title of this match window
+  // ipcMain.on('ping', async () => {
+  //   console.log('pong')
+  // })
+
+  const dockMenu = await getDockMenu()
+
+  app.dock?.setMenu(dockMenu)
 
   createWindow(port)
 
