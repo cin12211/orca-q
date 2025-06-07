@@ -72,6 +72,7 @@ export default defineNuxtConfig({
     'nuxt-typed-router',
     '@formkit/auto-animate',
   ],
+
   css: ['~/assets/css/tailwind.css'],
   colorMode: {
     classSuffix: '',

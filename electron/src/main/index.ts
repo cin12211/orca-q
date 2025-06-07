@@ -1,11 +1,14 @@
-import { app, shell, BrowserWindow, ipcMain } from 'electron'
+import { electronApp, is, optimizer } from '@electron-toolkit/utils'
+import { app, BrowserWindow, shell } from 'electron'
 import { join } from 'path'
-import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png'
 import { startServer } from './createServer'
-
+import { setDockMenu } from './dockMenu'
+import './ipcs'
 import MenuBuilder from './menu'
 import { findAvailablePort } from './utils'
+
+export let windows: Map<number, BrowserWindow> = new Map()
 
 const DEFAULT_PORT = 29091
 export let currentPort = DEFAULT_PORT
@@ -23,7 +26,7 @@ export function createWindow(port: number): void {
 
   // Create the browser window.
   const mainWindow = new BrowserWindow({
-    title: 'ElectronReact' + x,
+    title: 'HeraQ' + x,
     width: 900,
     height: 670,
     show: false,
@@ -35,7 +38,9 @@ export function createWindow(port: number): void {
     ...(process.platform === 'linux' ? { icon } : {}),
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
-      sandbox: false
+      sandbox: false,
+      contextIsolation: true,
+      nodeIntegration: false
     }
   })
 
@@ -60,6 +65,12 @@ export function createWindow(port: number): void {
     // mainWindow.loadFile(join(__dirname, '../renderer/index.html'))
     mainWindow.loadURL(`http://localhost:${port}`)
   }
+
+  mainWindow.on('closed', () => {
+    windows.delete(mainWindow.id)
+  })
+
+  windows.set(mainWindow.id, mainWindow)
 }
 
 // This method will be called when Electron has finished
@@ -68,14 +79,12 @@ export function createWindow(port: number): void {
 app.whenReady().then(async () => {
   const port = await findAvailablePort(DEFAULT_PORT)
   currentPort = port
-
   if (!is.dev) {
     await startServer(port)
   }
 
   // Set app user model id for windows
   electronApp.setAppUserModelId('com.electron')
-
   // Default open or close DevTools by F12 in development
   // and ignore CommandOrControl + R in production.
   // see https://github.com/alex8088/electron-toolkit/tree/master/packages/utils
@@ -83,10 +92,7 @@ app.whenReady().then(async () => {
     optimizer.watchWindowShortcuts(window)
   })
 
-  // IPC test
-  ipcMain.on('ping', async () => {
-    console.log('pong')
-  })
+  await setDockMenu()
 
   createWindow(port)
 

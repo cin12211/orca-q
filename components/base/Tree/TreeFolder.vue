@@ -44,8 +44,9 @@ const selectedValue = ref<FlattenedTreeFileSystemItem[]>();
 </script>
 
 <template>
+  <!-- :model-value="selectedItems" -->
+  <!-- :multiple="true" -->
   <TreeRoot
-    :model-value="selectedItems"
     v-on:update:model-value="
       event =>
         onUpdateSelectedItems(event as unknown as FlattenedTreeFileSystemItem[])
@@ -56,7 +57,6 @@ const selectedValue = ref<FlattenedTreeFileSystemItem[]>();
     :expanded="expandedState"
     v-on:update:expanded="onUpdateExpanded"
     ref="treeRootRef"
-    multiple
   >
     <TreeVirtualizer v-slot="{ item }" :estimate-size="28" :overscan="5">
       <TreeItem

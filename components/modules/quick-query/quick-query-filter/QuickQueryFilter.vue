@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Icon } from '#components';
 import { toTypedSchema } from '@vee-validate/zod';
+import { _debounce } from 'ag-grid-community';
 import { useFieldArray, useForm } from 'vee-validate';
 import { z } from 'zod';
 import type { Input } from '~/components/ui/input';
@@ -15,16 +16,17 @@ import { EDatabaseType } from '../../management-connection/constants';
 import ColumnSelector from '../../selectors/ColumnSelector.vue';
 import OperatorSelector from '../../selectors/OperatorSelector.vue';
 import QuickQueryFilterGuide from './QuickQueryFilterGuide.vue';
-import RowFilterAutoComplete from './RowFilterAutoComplete.vue';
 
 const props = defineProps<{
   columns: string[];
   dbType: EDatabaseType;
   baseQuery: string;
+  initFilters: FilterSchema[];
 }>();
 
 const emit = defineEmits<{
-  (e: 'onSearch', whereClauses: string): void;
+  (e: 'onSearch'): void;
+  (e: 'onUpdateFilters', filters: FilterSchema[]): void;
 }>();
 
 const quickQueryFilterRef = ref<HTMLElement>();
@@ -32,7 +34,7 @@ const quickQueryFilterRef = ref<HTMLElement>();
 const filterSearchRefs =
   useTemplateRef<InstanceType<typeof Input>[]>('filterSearchRefs');
 
-const isDisplayFilters = ref(false);
+const isDisplayFilters = ref(!!props.initFilters?.length);
 
 const formFiltersSchema = z.object({
   filters: filterSchema.array(),
@@ -45,13 +47,29 @@ type FormFiltersSchema = {
 useForm<FormFiltersSchema>({
   validationSchema: toTypedSchema(formFiltersSchema),
   initialValues: {
-    filters: [],
+    filters: props.initFilters || [],
   },
   keepValuesOnUnmount: false,
 });
 
 const { remove, fields, insert, update } =
   useFieldArray<FilterSchema>('filters');
+
+watch(
+  fields,
+  _debounce(
+    {
+      isAlive: () => true,
+    },
+    () => {
+      emit('onUpdateFilters', fields.value.map(f => f.value) || []);
+    },
+    250
+  ),
+  {
+    deep: true,
+  }
+);
 
 const onAddFilter = (index: number) => {
   insert(index + 1, {
@@ -97,26 +115,12 @@ const getParserAllFilter = () => {
 
 const onExecuteSearch = (isWithoutQuery: boolean = false) => {
   if (isWithoutQuery) {
-    emit(
-      'onSearch',
-      formatWhereClause({
-        columns: props.columns,
-        db: props.dbType,
-        filters: [],
-      })
-    );
+    emit('onSearch');
 
     return;
   }
 
-  emit(
-    'onSearch',
-    formatWhereClause({
-      columns: props.columns,
-      db: props.dbType,
-      filters: fields.value.map(f => f.value) || [],
-    })
-  );
+  emit('onSearch');
 };
 
 const onApplyFilter = (index: number) => {

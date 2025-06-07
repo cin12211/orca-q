@@ -4,6 +4,7 @@
   // "extends": "../.nuxt/tsconfig.server.json",
   "compilerOptions": {
     "useDefineForClassFields": true, // Default true if target is "ES2022" or "ESNext"
-    "experimentalDecorators": true
+    "experimentalDecorators": true,
+    "types": ["./electron/src/preload/index.d.ts"]
   }
 }

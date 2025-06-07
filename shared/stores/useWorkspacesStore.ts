@@ -26,24 +26,30 @@ export const useWorkspacesStore = defineStore(
       );
     });
 
-    const createWorkspace = (workspace: Workspace) => {
+    const createWorkspace = async (workspace: Workspace) => {
+      await window.workspaceApi.create(workspace);
+
       workspaces.value.push(workspace);
     };
 
-    const deleteWorkspace = (workspaceId: string) => {
-      workspaces.value = workspaces.value.filter(
-        workspace => workspace.id !== workspaceId
-      );
+    const deleteWorkspace = async (workspaceId: string) => {
+      await window.workspaceApi.delete(workspaceId);
+      await loadWorkspaces();
     };
 
-    const updateWorkspace = (workspace: Workspace) => {
-      workspaces.value = workspaces.value.map(w => {
-        if (w.id === workspace.id) {
-          return workspace;
-        }
-        return w;
-      });
+    const updateWorkspace = async (workspace: Workspace) => {
+      await window.workspaceApi.update(workspace.id, workspace);
+      await loadWorkspaces();
     };
+
+    const loadWorkspaces = async () => {
+      console.time('loadWorkspaces');
+      const load = await window.workspaceApi.getAll();
+      workspaces.value = load;
+      console.timeEnd('loadWorkspaces');
+    };
+
+    loadWorkspaces();
 
     return {
       workspaces,
@@ -56,6 +62,6 @@ export const useWorkspacesStore = defineStore(
     };
   },
   {
-    persist: true,
+    persist: false,
   }
 );
