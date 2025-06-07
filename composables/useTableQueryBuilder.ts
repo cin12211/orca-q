@@ -1,9 +1,13 @@
+import { _debounce } from 'ag-grid-community';
+import dayjs from 'dayjs';
 import { toast } from 'vue-sonner';
+import { EDatabaseType } from '~/components/modules/management-connection/constants';
 import {
   DEFAULT_QUERY,
   DEFAULT_QUERY_COUNT,
   DEFAULT_QUERY_SIZE,
 } from '~/utils/constants';
+import { formatWhereClause, type FilterSchema } from '~/utils/quickQuery';
 
 export interface OrderBy {
   columnName?: string;
@@ -14,20 +18,21 @@ export const useTableQueryBuilder = async ({
   tableName,
   connectionString,
   primaryKeys,
-  addHistoryLog,
+  columns,
+  isPersist = true,
+  schemaName,
+  workspaceId,
+  connectionId,
 }: {
   connectionString: string;
   tableName: string;
   primaryKeys: string[];
-  addHistoryLog: (log: string) => void;
-
-  //TODO: allow persist data of this table
-  //   isPersist?: boolean;
+  columns: string[];
+  isPersist?: boolean;
+  schemaName?: string;
+  workspaceId?: string;
+  connectionId?: string;
 }) => {
-  const whereClauses = ref<string>();
-
-  const totalRows = ref(0);
-
   const openErrorModal = ref(false);
 
   const errorMessage = ref('');
@@ -37,13 +42,22 @@ export const useTableQueryBuilder = async ({
     offset: 0,
   });
 
-  //TODO: need to keep filter in here, and pass props to QuickQueryFilter
-  const filters = reactive({});
+  const filters = ref<FilterSchema[]>([]);
 
   const orderBy = reactive<OrderBy>({});
 
+  const historyLogs = ref<{ createdAt: string; logs: string }[]>([]);
+
   const baseQueryString = computed(() => {
     return `${DEFAULT_QUERY} ${tableName}`;
+  });
+
+  const whereClauses = computed(() => {
+    return formatWhereClause({
+      columns: columns,
+      db: EDatabaseType.PG,
+      filters: filters.value,
+    });
   });
 
   const queryString = computed(() => {
@@ -63,6 +77,16 @@ export const useTableQueryBuilder = async ({
   const queryCountString = computed(() => {
     return `${DEFAULT_QUERY_COUNT} ${tableName} ${whereClauses.value || ''}`;
   });
+
+  const addHistoryLog = (log: string) => {
+    const createdAt = dayjs().toISOString();
+    const logs = `\n${log}`;
+
+    historyLogs.value.push({
+      createdAt,
+      logs,
+    });
+  };
 
   const {
     data,
@@ -97,25 +121,29 @@ export const useTableQueryBuilder = async ({
     },
   });
 
-  const { refresh: refreshCount } = await useFetch('/api/execute', {
-    method: 'POST',
-    body: {
-      query: queryCountString,
-      dbConnectionString: connectionString,
-    },
-    watch: false,
-    immediate: false,
-    key: `${tableName}-count`,
-    cache: 'default',
-    onResponse: response => {
-      console.log('response.response._data', response.response._data);
+  const { refresh: refreshCount, data: dataCount } = await useFetch(
+    '/api/execute',
+    {
+      method: 'POST',
+      body: {
+        query: queryCountString,
+        dbConnectionString: connectionString,
+      },
+      watch: false,
+      immediate: false,
+      key: `${tableName}-count`,
+      cache: 'default',
+      onResponse: response => {
+        console.log('response.response._data');
+        if (response.response.ok) {
+          addHistoryLog(queryCountString.value);
+        }
+      },
+    }
+  );
 
-      if (response.response.ok) {
-        addHistoryLog(queryCountString.value);
-      }
-
-      totalRows.value = Number(response.response._data?.[0]?.count || 0);
-    },
+  const totalRows = computed(() => {
+    return dataCount.value?.[0]?.count || 0;
   });
 
   const isAllowNextPage = computed(() => {
@@ -179,10 +207,78 @@ export const useTableQueryBuilder = async ({
     refreshTableData();
   };
 
-  const onApplyNewFilter = (whereClause: string) => {
-    whereClauses.value = whereClause;
+  const onApplyNewFilter = () => {
     refreshTableData();
   };
+
+  const getPersistedKey = () => {
+    return `${workspaceId}-${connectionId}-${schemaName}-${tableName}`;
+  };
+
+  watch(
+    [filters, pagination, orderBy, historyLogs],
+    _debounce(
+      { isAlive: () => true },
+      () => {
+        if (!isPersist) {
+          return;
+        }
+
+        const persistedKey = getPersistedKey();
+
+        localStorage.setItem(
+          persistedKey,
+          JSON.stringify({
+            filters: filters.value,
+            pagination,
+            orderBy,
+            historyLogs: historyLogs.value,
+          })
+        );
+      },
+      500
+    ),
+    { deep: true }
+  );
+
+  const onLoadPersistedState = () => {
+    if (!isPersist) {
+      return;
+    }
+
+    const persistedKey = getPersistedKey();
+
+    const persistedState = localStorage.getItem(persistedKey);
+
+    if (persistedState) {
+      const {
+        filters: _filters,
+        pagination: _pagination,
+        orderBy: _orderBy,
+        historyLogs: _historyLogs,
+      } = JSON.parse(persistedState);
+
+      if (_orderBy) {
+        orderBy.columnName = _orderBy.columnName;
+        orderBy.order = _orderBy.order;
+      }
+
+      if (_pagination) {
+        pagination.limit = _pagination.limit;
+        pagination.offset = _pagination.offset;
+      }
+
+      if (_filters) {
+        filters.value = _filters;
+      }
+
+      if (_historyLogs) {
+        historyLogs.value = _historyLogs;
+      }
+    }
+  };
+
+  onLoadPersistedState();
 
   return {
     whereClauses,
@@ -205,5 +301,8 @@ export const useTableQueryBuilder = async ({
     onUpdateOrderBy,
     orderBy,
     errorMessage,
+    filters,
+    addHistoryLog,
+    historyLogs,
   };
 };

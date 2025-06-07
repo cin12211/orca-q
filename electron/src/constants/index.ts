@@ -5,3 +5,7 @@ export enum WorkspaceIpcChannels {
   Update = 'workspaces:update',
   Delete = 'workspaces:delete'
 }
+
+export enum WindowIpcChannels {
+  UpdateTitle = 'window:update-window-title'
+}

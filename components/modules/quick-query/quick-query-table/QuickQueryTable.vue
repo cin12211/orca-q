@@ -59,6 +59,7 @@ const { onStopRangeSelection, onCellMouseOverDebounced, onCellMouseDown } =
 
 const customizedTheme = themeBalham.withParams({
   // accentColor: 'var(--color-gray-900)',
+  backgroundColor: 'var(--background)',
   wrapperBorderRadius: 0,
   borderRadius: 'var(--radius-sm)',
   borderColor: 'var(--input)',

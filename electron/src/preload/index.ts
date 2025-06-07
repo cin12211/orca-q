@@ -3,9 +3,13 @@
 import { electronAPI } from '@electron-toolkit/preload'
 import { contextBridge, ipcRenderer } from 'electron'
 import { type Workspace } from '../../../shared/stores'
-import { WorkspaceIpcChannels } from '../constants'
+import { WindowIpcChannels, WorkspaceIpcChannels } from '../constants'
+import { type UpdateWindowTitleProps } from '../main/ipcs/updateWindowTitle'
 
-export const electronBridgeApi = {}
+export const electronBridgeApi = {
+  updateWindowTitle: (props: UpdateWindowTitleProps) =>
+    ipcRenderer.invoke(WindowIpcChannels.UpdateTitle, props)
+}
 
 export const workspaceApi = {
   getAll: (): Promise<Workspace[]> => ipcRenderer.invoke(WorkspaceIpcChannels.Gets),

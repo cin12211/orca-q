@@ -19,10 +19,9 @@ import QuickQueryContextMenu from './quick-query-table/QuickQueryContextMenu.vue
 import QuickQueryTable from './quick-query-table/QuickQueryTable.vue';
 
 // TODO: refactor code
-
 const props = defineProps<{ tableId: string }>();
 
-const { connectionStore } = useAppContext();
+const { connectionStore, workspaceStore } = useAppContext();
 
 const quickQueryFilterRef = ref<InstanceType<typeof QuickQueryFilter>>();
 const quickQueryTableRef = ref<InstanceType<typeof QuickQueryTable>>();
@@ -30,18 +29,7 @@ const isMutating = ref(false);
 const selectedRows = ref<Record<string, any>[]>([]);
 
 //TODO: need to reuseable and can persistent
-const historyLogs = ref<{ createdAt: string; logs: string }[]>([]);
 const quickQueryLayoutSize = ref<number[]>([80, 20]);
-
-const addHistoryLog = (log: string) => {
-  const createdAt = dayjs().toISOString();
-  const logs = `\n${log}`;
-
-  historyLogs.value.push({
-    createdAt,
-    logs,
-  });
-};
 
 const { data: tableSchema, status: tableSchemaStatus } = await useFetch(
   '/api/get-one-table',
@@ -87,11 +75,17 @@ const {
   openErrorModal,
   orderBy,
   onUpdateOrderBy,
+  addHistoryLog,
+  filters,
+  historyLogs,
 } = await useTableQueryBuilder({
   connectionString: connectionStore.selectedConnection?.connectionString || '',
   tableName: props.tableId,
   primaryKeys: primaryKeys.value,
-  addHistoryLog,
+  columns: columnNames.value,
+  connectionId: connectionStore.selectedConnectionId,
+  schemaName: tableSchema.value?.schema,
+  workspaceId: workspaceStore.selectedWorkspaceId,
 });
 
 watch(
@@ -382,12 +376,16 @@ const onToggleHistoryPanel = () => {
         <QuickQueryFilter
           ref="quickQueryFilterRef"
           @onSearch="
-            whereClause => {
-              console.log('🚀 ~ whereClause:', whereClause);
-
-              onApplyNewFilter(whereClause);
+            () => {
+              onApplyNewFilter();
             }
           "
+          @on-update-filters="
+            newFilters => {
+              filters = newFilters;
+            }
+          "
+          :initFilters="filters"
           :baseQuery="baseQueryString"
           :columns="columnNames"
           :dbType="EDatabaseType.PG"

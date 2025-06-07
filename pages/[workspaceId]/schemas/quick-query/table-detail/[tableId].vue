@@ -2,7 +2,9 @@
 import QuickQuery from '~/components/modules/quick-query/QuickQuery.vue';
 
 definePageMeta({
-  keepalive: false,
+  keepalive: {
+    max: 6,
+  },
 });
 
 const route = useRoute('workspaceId-schemas-quick-query-table-detail-tableId');
