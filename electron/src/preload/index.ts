@@ -4,7 +4,7 @@ import { electronAPI } from '@electron-toolkit/preload'
 import { contextBridge, ipcRenderer } from 'electron'
 import { type Workspace } from '../../../shared/stores'
 import { WindowIpcChannels, WorkspaceIpcChannels } from '../constants'
-import { type UpdateWindowTitleProps } from '../main/ipcs/updateWindowTitle'
+import { type UpdateWindowTitleProps } from '../main/ipc/updateWindowTitle'
 
 export const electronBridgeApi = {
   updateWindowTitle: (props: UpdateWindowTitleProps) =>

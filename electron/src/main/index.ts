@@ -4,13 +4,13 @@ import { join } from 'path'
 import icon from '../../resources/icon.png'
 import { startServer } from './createServer'
 import { setDockMenu } from './dockMenu'
-import './ipcs'
+import './ipc'
 import MenuBuilder from './menu'
 import { findAvailablePort } from './utils'
+import { DEFAULT_PORT } from '../constants'
 
 export let windows: Map<number, BrowserWindow> = new Map()
 
-const DEFAULT_PORT = 29091
 export let currentPort = DEFAULT_PORT
 
 export function createWindow(port: number): void {

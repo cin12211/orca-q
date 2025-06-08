@@ -24,6 +24,8 @@ const props = defineProps<{
   initFilters: FilterSchema[];
 }>();
 
+const isShowFilters = defineModel('isShowFilters');
+
 const emit = defineEmits<{
   (e: 'onSearch'): void;
   (e: 'onUpdateFilters', filters: FilterSchema[]): void;
@@ -33,8 +35,6 @@ const quickQueryFilterRef = ref<HTMLElement>();
 
 const filterSearchRefs =
   useTemplateRef<InstanceType<typeof Input>[]>('filterSearchRefs');
-
-const isDisplayFilters = ref(!!props.initFilters?.length);
 
 const formFiltersSchema = z.object({
   filters: filterSchema.array(),
@@ -168,7 +168,8 @@ const onShowSearch = async () => {
   if (!fields.value.length) {
     onAddFilter(-1);
   }
-  isDisplayFilters.value = true;
+
+  isShowFilters.value = true;
 
   await nextTick();
 
@@ -187,7 +188,7 @@ useHotkeys([
   {
     key: 'escape',
     callback: () => {
-      isDisplayFilters.value = false;
+      isShowFilters.value = false;
       onExecuteSearch(true);
     },
   },
@@ -263,7 +264,7 @@ defineExpose({
 <template>
   <div
     ref="quickQueryFilterRef"
-    v-if="isDisplayFilters"
+    v-if="isShowFilters"
     :class="['h-fit space-y-1', fields.length && 'pb-2 pt-1']"
     @keyup.enter="() => onExecuteSearch()"
   >

@@ -48,11 +48,19 @@ export const useTableQueryBuilder = async ({
 
   const historyLogs = ref<{ createdAt: string; logs: string }[]>([]);
 
+  const isShowFilters = ref(false);
+
   const baseQueryString = computed(() => {
     return `${DEFAULT_QUERY} ${tableName}`;
   });
 
   const whereClauses = computed(() => {
+    console.log('isShowFilters.value', isShowFilters.value);
+    //if don't apply filter
+    if (!isShowFilters.value) {
+      return '';
+    }
+
     return formatWhereClause({
       columns: columns,
       db: EDatabaseType.PG,
@@ -62,6 +70,7 @@ export const useTableQueryBuilder = async ({
 
   const queryString = computed(() => {
     let orderClauses = '';
+
     if (orderBy?.columnName && orderBy?.order) {
       orderClauses = `ORDER BY ${orderBy.columnName} ${orderBy.order}`;
     } else {
@@ -216,7 +225,7 @@ export const useTableQueryBuilder = async ({
   };
 
   watch(
-    [filters, pagination, orderBy, historyLogs],
+    [filters, pagination, orderBy, historyLogs, isShowFilters],
     _debounce(
       { isAlive: () => true },
       () => {
@@ -233,6 +242,7 @@ export const useTableQueryBuilder = async ({
             pagination,
             orderBy,
             historyLogs: historyLogs.value,
+            isShowFilters: isShowFilters.value,
           })
         );
       },
@@ -256,6 +266,7 @@ export const useTableQueryBuilder = async ({
         pagination: _pagination,
         orderBy: _orderBy,
         historyLogs: _historyLogs,
+        isShowFilters: _isShowFilters,
       } = JSON.parse(persistedState);
 
       if (_orderBy) {
@@ -275,6 +286,8 @@ export const useTableQueryBuilder = async ({
       if (_historyLogs) {
         historyLogs.value = _historyLogs;
       }
+
+      isShowFilters.value = !!_isShowFilters;
     }
   };
 
@@ -304,5 +317,6 @@ export const useTableQueryBuilder = async ({
     filters,
     addHistoryLog,
     historyLogs,
+    isShowFilters,
   };
 };

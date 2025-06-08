@@ -103,10 +103,10 @@ useHotkeys([
       <Button
         variant="outline"
         size="sm"
-        class="h-6 px-1 gap-1"
+        class="h-6 px-1 gap-1 text-xs"
         @click="emit('onAddEmptyRow')"
       >
-        <Icon name="lucide:plus"> </Icon>
+        <Icon name="lucide:plus" class="text-sm"> </Icon>
         Row
       </Button>
 

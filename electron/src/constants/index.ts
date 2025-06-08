@@ -9,3 +9,5 @@ export enum WorkspaceIpcChannels {
 export enum WindowIpcChannels {
   UpdateTitle = 'window:update-window-title'
 }
+
+export const DEFAULT_PORT = 29091
