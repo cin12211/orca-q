@@ -1,16 +1,15 @@
 <script setup lang="ts">
 import { ResizablePanelGroup } from '#components';
-import dayjs from 'dayjs';
-import { toast } from 'vue-sonner';
 import { useTableQueryBuilder } from '~/composables/useTableQueryBuilder';
-import { useAppContext } from '~/shared/contexts/useAppContext';
-import { copyRowsToClipboard } from '~/utils/common';
+import { useQuickQueryLayout } from '~/shared/stores/useQuickQueryLayout';
 import { DEFAULT_QUERY_SIZE } from '~/utils/constants';
-import { buildUpdateStatements } from '~/utils/quickQuery';
-import { buildDeleteStatements } from '~/utils/quickQuery/buildDeleteStatements';
-import { buildInsertStatements } from '~/utils/quickQuery/buildInsertStatements';
 import { EDatabaseType } from '../management-connection/constants';
 import QuickQueryErrorPopup from './QuickQueryErrorPopup.vue';
+import {
+  useQuickQuery,
+  useQuickQueryMutation,
+  useQuickQueryTableInfo,
+} from './hooks';
 import PreviewSelectedRow from './preview/PreviewSelectedRow.vue';
 import QuickQueryControlBar from './quick-query-control-bar/QuickQueryControlBar.vue';
 import QuickQueryFilter from './quick-query-filter/QuickQueryFilter.vue';
@@ -18,45 +17,27 @@ import QuickQueryHistoryLogsPanel from './quick-query-history-log-panel/QuickQue
 import QuickQueryContextMenu from './quick-query-table/QuickQueryContextMenu.vue';
 import QuickQueryTable from './quick-query-table/QuickQueryTable.vue';
 
-// TODO: refactor code
 const props = defineProps<{ tableId: string }>();
 
-const { connectionStore, workspaceStore } = useAppContext();
+const {
+  quickQueryFilterRef,
+  quickQueryTableRef,
+  selectedRows,
+  connectionString,
+  connectionId,
+  workspaceId,
+} = useQuickQuery();
 
-const quickQueryFilterRef = ref<InstanceType<typeof QuickQueryFilter>>();
-const quickQueryTableRef = ref<InstanceType<typeof QuickQueryTable>>();
-const isMutating = ref(false);
-const selectedRows = ref<Record<string, any>[]>([]);
-
-//TODO: need to reuseable and can persistent
-const quickQueryLayoutSize = ref<number[]>([80, 20]);
-
-const { data: tableSchema, status: tableSchemaStatus } = await useFetch(
-  '/api/get-one-table',
-  {
-    method: 'POST',
-    body: {
-      tableName: props.tableId,
-      dbConnectionString: connectionStore.selectedConnection?.connectionString,
-    },
-    key: `schema-${props.tableId}`,
-    onResponseError({ response }) {
-      toast(response?.statusText);
-    },
-  }
-);
-
-const columnNames = computed(() => {
-  return tableSchema.value?.columns?.map(c => c.name) || [];
+const {
+  columnNames,
+  foreignKeys,
+  primaryKeys,
+  tableSchemaStatus,
+  tableSchema,
+  columnTypes,
+} = await useQuickQueryTableInfo({
+  tableId: props.tableId,
 });
-
-const foreignKeys = computed(() =>
-  (tableSchema.value?.foreign_keys || []).map(fk => fk.column)
-);
-
-const primaryKeys = computed(() =>
-  (tableSchema.value?.primary_keys || []).map(fk => fk.column)
-);
 
 const {
   onApplyNewFilter,
@@ -78,14 +59,15 @@ const {
   addHistoryLog,
   filters,
   historyLogs,
+  isShowFilters,
 } = await useTableQueryBuilder({
-  connectionString: connectionStore.selectedConnection?.connectionString || '',
+  connectionString: connectionString.value,
   tableName: props.tableId,
   primaryKeys: primaryKeys.value,
   columns: columnNames.value,
-  connectionId: connectionStore.selectedConnectionId,
+  connectionId: connectionId.value,
   schemaName: tableSchema.value?.schema,
-  workspaceId: workspaceStore.selectedWorkspaceId,
+  workspaceId: workspaceId.value,
 });
 
 watch(
@@ -99,261 +81,42 @@ watch(
   { deep: 1, immediate: true, once: true }
 );
 
-const columnTypes = computed(() => {
-  return (
-    tableSchema.value?.columns?.map(c => ({
-      name: c.name,
-      type: c.short_type_name,
-    })) || []
-  );
+const {
+  isMutating,
+  onAddEmptyRow,
+  onDeleteRows,
+  onSaveData,
+  hasEditedRows,
+  onCopyRows,
+  onPasteRows,
+  onRefresh,
+  onSelectedRowsChange,
+} = useQuickQueryMutation({
+  tableId: props.tableId,
+  primaryKeys,
+  refreshTableData,
+  columnNames,
+  data,
+  addHistoryLog,
+  errorMessage,
+  openErrorModal,
+  selectedRows,
+  pagination,
+  quickQueryTableRef,
+  refreshCount,
 });
 
-const hasEditedRows = computed(() => {
-  let totalEditedRows = 0;
-
-  quickQueryTableRef.value?.editedCells.forEach(cell => {
-    if (Object.keys(cell.changedData).length) {
-      totalEditedRows++;
-    }
-  });
-
-  return !!totalEditedRows;
-});
-
-const onRefresh = async () => {
-  const gridApi = quickQueryTableRef.value?.gridApi;
-
-  if (!gridApi) {
-    return;
-  }
-
-  gridApi?.deselectAll();
-  gridApi?.clearFocusedCell();
-
-  refreshCount();
-  refreshTableData();
-};
-
-const onSelectedRowsChange = (rows: Record<string, any>[]) => {
-  selectedRows.value = rows;
-};
-
-const onSaveData = async () => {
-  if (!data.value || !quickQueryTableRef.value?.editedCells?.length) {
-    return;
-  }
-
-  const editedCells = quickQueryTableRef.value?.editedCells;
-
-  const tableName = props.tableId;
-
-  const sqlBulkInsertOrUpdateStatements: string[] = [];
-
-  editedCells.forEach(cell => {
-    const haveDifferent = !!Object.keys(cell.changedData).length;
-
-    const rowData = data.value?.[cell.rowId];
-
-    const isUpdateStatement = haveDifferent && rowData;
-    const isInsertStatement = haveDifferent && !rowData;
-
-    if (isUpdateStatement) {
-      const sqlUpdateStatement = buildUpdateStatements({
-        tableName: tableName,
-        update: cell.changedData,
-        pKeys: primaryKeys.value,
-        pKeyValue: rowData,
-      });
-
-      sqlBulkInsertOrUpdateStatements.push(sqlUpdateStatement);
-    }
-
-    if (isInsertStatement) {
-      const sqlInsertStatement = buildInsertStatements({
-        tableName: tableName,
-        insertData: cell.changedData,
-      });
-
-      sqlBulkInsertOrUpdateStatements.push(sqlInsertStatement);
-    }
-  });
-
-  if (!sqlBulkInsertOrUpdateStatements.length) {
-    return;
-  }
-
-  isMutating.value = true;
-
-  await $fetch('/api/execute-bulk-update', {
-    method: 'POST',
-    body: {
-      sqlUpdateStatements: sqlBulkInsertOrUpdateStatements,
-      dbConnectionString: connectionStore.selectedConnection?.connectionString,
-    },
-    onResponseError({ response }) {
-      openErrorModal.value = true;
-
-      console.log('response?._data', response?._data);
-
-      errorMessage.value = response?._data?.message;
-    },
-    onResponse: ({ response }) => {
-      if (response.ok) {
-        if (quickQueryTableRef.value?.editedCells) {
-          quickQueryTableRef.value.editedCells = [];
-        }
-
-        addHistoryLog(sqlBulkInsertOrUpdateStatements.join('\n'));
-
-        onRefresh();
-      }
-    },
-  }).finally(() => {
-    isMutating.value = false;
-  });
-
-  isMutating.value = false;
-};
-
-const onDeleteRows = async () => {
-  const sqlDeleteStatements: string[] = [];
-
-  selectedRows.value.forEach(row => {
-    const sqlDeleteStatement = buildDeleteStatements({
-      tableName: props.tableId,
-      pKeys: primaryKeys.value,
-      pKeyValue: row,
-    });
-
-    sqlDeleteStatements.push(sqlDeleteStatement);
-  });
-
-  isMutating.value = true;
-
-  await $fetch('/api/execute-bulk-delete', {
-    method: 'POST',
-    body: {
-      sqlDeleteStatements,
-      dbConnectionString: connectionStore.selectedConnection?.connectionString,
-    },
-    onResponseError({ response }) {
-      openErrorModal.value = true;
-      errorMessage.value = response?._data?.message;
-    },
-    onResponse: ({ response }) => {
-      if (response.ok) {
-        const isDeleteAllRowsInPage =
-          selectedRows.value?.length === data.value?.length;
-
-        if (isDeleteAllRowsInPage && pagination.offset > 0) {
-          const newOffset = pagination.offset - pagination.limit;
-
-          pagination.offset = newOffset > 0 ? newOffset : 0;
-        }
-
-        addHistoryLog(sqlDeleteStatements.join('\n'));
-
-        onRefresh();
-      }
-    },
-  }).finally(() => {
-    isMutating.value = false;
-  });
-};
-
-const onAddEmptyRow = () => {
-  const gridApi = quickQueryTableRef.value?.gridApi;
-
-  if (!gridApi) {
-    return;
-  }
-
-  let totalRows = 0;
-  gridApi.forEachNode(() => totalRows++);
-
-  const addIndex = totalRows;
-
-  const node = {
-    '#': addIndex + 1,
-    ...Object.fromEntries(columnNames.value.map(name => [name, undefined])),
-  };
-
-  gridApi!.applyTransaction({
-    add: [node],
-    addIndex,
-  })!;
-
-  gridApi.setFocusedCell(addIndex, columnNames.value[0]);
-
-  const currentAddedRow = gridApi.getRowNode(addIndex.toString());
-
-  if (currentAddedRow) {
-    gridApi.deselectAll();
-    currentAddedRow.setSelected(true);
-  }
-};
-
-const onCopyRows = () => {
-  const rows = selectedRows.value;
-
-  if (!rows) {
-    return;
-  }
-
-  const mappedRows = rows.map(row => {
-    const index = (row?.['#'] || 1) - 1;
-
-    return data.value?.[index];
-  }) as Record<string, any>[];
-
-  copyRowsToClipboard(mappedRows);
-};
-
-//TODO: make paste rows , in current cellIndex
-const onPasteRows = async () => {
-  const gridApi = quickQueryTableRef.value?.gridApi;
-
-  if (!gridApi) {
-    return;
-  }
-
-  const currentCell = gridApi.getFocusedCell();
-
-  if (!currentCell) {
-    return;
-  }
-
-  const rowIndex = currentCell?.rowIndex;
-  const columnName = currentCell?.column?.getColId();
-
-  const clipboardData = await navigator.clipboard.readText();
-
-  console.log(
-    '🚀 ~ onPasteRows ~ currentCell:',
-    columnName,
-    rowIndex,
-    clipboardData
-  );
-};
-
-const onToggleHistoryPanel = () => {
-  if (quickQueryLayoutSize.value[1] === 0) {
-    quickQueryLayoutSize.value[1] = 20;
-    quickQueryLayoutSize.value[0] = 80;
-  } else {
-    quickQueryLayoutSize.value[1] = 0;
-    quickQueryLayoutSize.value[0] = 100;
-  }
-};
+const quickQueryLayoutStore = useQuickQueryLayout();
+const { layoutSize, toggleHistoryPanel } = toRefs(quickQueryLayoutStore);
 </script>
 
 <template>
   <ResizablePanelGroup
-    @layout="quickQueryLayoutSize = $event"
+    @layout="layoutSize = $event"
     direction="vertical"
     class="p-2"
   >
-    <ResizablePanel :default-size="quickQueryLayoutSize[0]">
+    <ResizablePanel :default-size="layoutSize[0]">
       <Teleport defer to="#preview-select-row">
         <PreviewSelectedRow
           :columnTypes="columnTypes"
@@ -385,6 +148,7 @@ const onToggleHistoryPanel = () => {
               filters = newFilters;
             }
           "
+          v-model:isShowFilters="isShowFilters"
           :initFilters="filters"
           :baseQuery="baseQueryString"
           :columns="columnNames"
@@ -435,7 +199,7 @@ const onToggleHistoryPanel = () => {
           :currentTotalRows="data?.length || 0"
           :offset="pagination.offset"
           :has-edited-rows="hasEditedRows"
-          :isShowHistoryPanel="quickQueryLayoutSize[1] > 0"
+          :isShowHistoryPanel="layoutSize[1] > 0"
           @onPaginate="onUpdatePagination"
           @onNextPage="onNextPage"
           @onPreviousPage="onPreviousPage"
@@ -448,23 +212,22 @@ const onToggleHistoryPanel = () => {
               await quickQueryFilterRef?.onShowSearch();
             }
           "
-          @onToggleHistoryPanel="onToggleHistoryPanel"
+          @onToggleHistoryPanel="toggleHistoryPanel"
         />
       </div>
     </ResizablePanel>
-    <ResizableHandle />
+    <ResizableHandle
+      class="[&[data-state=hover]]:bg-primary! [&[data-state=drag]]:bg-primary!"
+    />
     <ResizablePanel
       :min-size="5"
       :max-size="40"
-      :default-size="quickQueryLayoutSize[1]"
+      :default-size="layoutSize[1]"
       :collapsed-size="0"
       collapsible
     >
-      <div class="flex-1 h-full px-0">
-        <QuickQueryHistoryLogsPanel
-          :logs="historyLogs"
-          v-if="quickQueryLayoutSize[1] > 0"
-        />
+      <div class="flex-1 h-full px-0" v-if="layoutSize[1] > 0">
+        <QuickQueryHistoryLogsPanel :logs="historyLogs" />
       </div>
     </ResizablePanel>
   </ResizablePanelGroup>

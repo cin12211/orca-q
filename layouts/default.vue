@@ -48,7 +48,7 @@ useHotkeys([
           <PrimarySideBar />
         </ResizablePanel>
         <ResizableHandle
-          class="[&[data-state=hover]]:bg-primary/30! [&[data-state=drag]]:bg-primary/20!"
+          class="[&[data-state=hover]]:bg-primary! [&[data-state=drag]]:bg-primary!"
           id="default-layout-group-1-resize-1"
         />
         <ResizablePanel id="default-layout-group-1-panel-2" key="contentPanel">
