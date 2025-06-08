@@ -23,8 +23,11 @@ const props = defineProps<{
   onOpenWorkspace?: () => void;
 }>();
 
+const emits = defineEmits<{
+  (e: 'onSelectWorkspace', workspaceId: string): void;
+}>();
+
 const { workspaceStore, onSelectWorkspaceById } = useAppContext();
-const router = useRouter();
 
 const isOpenEditModal = ref(false);
 const isOpenDeleteModal = ref(false);
@@ -36,8 +39,9 @@ const onConfirmDelete = () => {
 
 const onOpenWorkspace = (workspaceId: string) => {
   onSelectWorkspaceById(workspaceId);
+  emits('onSelectWorkspace', workspaceId);
 
-  navigateTo({ name: 'workspaceId', params: { workspaceId } });
+  // navigateTo({ name: 'workspaceId', params: { workspaceId } });
 };
 </script>
 

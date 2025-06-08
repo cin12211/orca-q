@@ -5,6 +5,7 @@ import relativeTime from 'dayjs/plugin/relativeTime';
 import { Search } from 'lucide-vue-next';
 import { useAppContext } from '~/shared/contexts/useAppContext';
 import { DEFAULT_DEBOUNCE_INPUT } from '~/utils/constants';
+import ManagementConnectionModal from '../management-connection/ManagementConnectionModal.vue';
 import WorkspaceCard from './WorkspaceCard.vue';
 import WorkspaceHeader from './WorkspaceHeader.vue';
 
@@ -22,9 +23,12 @@ const mappedWorkspaces = computed(() => {
       .includes(debouncedSearch.value.toLowerCase());
   });
 });
+
+const isOpenSelectConnectionModal = ref(false);
 </script>
 
 <template>
+  <ManagementConnectionModal v-model:open="isOpenSelectConnectionModal" />
   <div class="flex flex-col h-full overflow-y-auto p-4 space-y-4">
     <WorkspaceHeader />
 
@@ -42,6 +46,7 @@ const mappedWorkspaces = computed(() => {
       <WorkspaceCard
         v-for="workspace in mappedWorkspaces"
         :workspace="workspace"
+        @on-select-workspace="isOpenSelectConnectionModal = true"
       />
     </div>
   </div>

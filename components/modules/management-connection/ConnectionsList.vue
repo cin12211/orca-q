@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue';
+import { Tooltip, TooltipContent, TooltipTrigger } from '#components';
 import dayjs from 'dayjs';
 import {
   DatabaseIcon,
@@ -26,10 +27,13 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { useAppContext } from '~/shared/contexts/useAppContext';
 import type { Connection } from '~/shared/stores/appState/interface';
 import { getDatabaseSupportByType } from './constants';
 
-const props = defineProps<{
+const { connectionStore } = useAppContext();
+
+defineProps<{
   connections: Connection[];
 }>();
 
@@ -54,6 +58,11 @@ const confirmDelete = () => {
     deleteId.value = null;
   }
 };
+
+const onConnectConnection = (connection: Connection) => {
+  connectionStore.setSelectedConnection(connection.id);
+  navigateTo('/:workspaceId');
+};
 </script>
 
 <template>
@@ -68,11 +77,11 @@ const confirmDelete = () => {
     </p>
   </div>
 
-  <div v-else class="rounded-md border border-border">
+  <div v-else class="rounded-md border border-border w-full">
     <Table>
       <TableHeader>
         <TableRow class="hover:bg-transparent">
-          <TableHead class="w-[250px]">Name</TableHead>
+          <TableHead>Name</TableHead>
           <TableHead>Type</TableHead>
           <TableHead>Connection Details</TableHead>
           <TableHead>Created</TableHead>
@@ -83,10 +92,10 @@ const confirmDelete = () => {
         <TableRow
           v-for="connection in connections"
           :key="connection.id"
-          class="hover:bg-muted/30"
+          class="hover:bg-muted/30 w-full"
         >
           <TableCell class="font-medium">
-            <div class="flex items-center gap-2">
+            <div class="flex items-center gap-2 truncate">
               <component
                 :is="getDatabaseSupportByType(connection.type)?.icon"
                 class="size-5!"
@@ -100,17 +109,33 @@ const confirmDelete = () => {
             }}
           </TableCell>
           <TableCell>
-            <span
-              v-if="connection.method === 'string'"
-              class="text-muted-foreground"
-            >
-              {{ connection.connectionString }}
-              <!-- String connection string -->
-            </span>
-            <span v-else class="text-muted-foreground">
-              {{ connection.host }}:{{ connection.port }}
-              {{ connection.database ? `/${connection.database}` : '' }}
-            </span>
+            <Tooltip>
+              <TooltipTrigger as-child>
+                <div class="w-40">
+                  <div
+                    v-if="connection.method === 'string'"
+                    class="text-muted-foreground truncate"
+                  >
+                    {{ connection.connectionString }}
+                    <!-- String connection string -->
+                  </div>
+                  <div v-else class="text-muted-foreground">
+                    {{ connection.host }}:{{ connection.port }}
+                    {{ connection.database ? `/${connection.database}` : '' }}
+                  </div>
+                </div>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p v-if="connection.method === 'string'">
+                  {{ connection.connectionString }}
+                  <!-- String connection string -->
+                </p>
+                <p v-else>
+                  {{ connection.host }}:{{ connection.port }}
+                  {{ connection.database ? `/${connection.database}` : '' }}
+                </p>
+              </TooltipContent>
+            </Tooltip>
           </TableCell>
           <TableCell>{{ formatDate(connection.createdAt) }}</TableCell>
           <TableCell class="text-right">
@@ -119,6 +144,7 @@ const confirmDelete = () => {
                 variant="outline"
                 size="sm"
                 class="h-8 gap-1 border px-2 text-xs hover:bg-primary/5 hover:text-primary"
+                @click="onConnectConnection(connection)"
               >
                 <ExternalLinkIcon class="h-3.5 w-3.5" />
                 Connect

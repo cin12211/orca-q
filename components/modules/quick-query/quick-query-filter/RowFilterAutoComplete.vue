@@ -22,6 +22,7 @@ const onUpdateInput = (value: string) => {
   emits('update:value', value);
 };
 
+// refactor need expose with {} format
 defineExpose(inputRef);
 </script>
 

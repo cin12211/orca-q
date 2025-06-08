@@ -3,11 +3,13 @@ import { ref, computed } from 'vue';
 
 const DEFAULT_APP_LAYOUT_SIZE = [25, 50, 25];
 
+const intiAppLayout = [30, 70, 0];
+
 export const useAppLayoutStore = defineStore(
   'app-layout-store',
   () => {
-    const layoutSize = ref<number[]>(DEFAULT_APP_LAYOUT_SIZE);
-    const historyLayoutSize = ref<number[]>(DEFAULT_APP_LAYOUT_SIZE);
+    const layoutSize = ref<number[]>(intiAppLayout);
+    const historyLayoutSize = ref<number[]>(intiAppLayout);
 
     const isPrimarySidebarCollapsed = computed(() => layoutSize.value[0] === 0);
 

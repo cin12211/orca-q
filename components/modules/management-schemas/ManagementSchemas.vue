@@ -99,14 +99,25 @@ const activityBarStore = useActivityBarStore();
 const { schemasExpandedState, schemaCurrentScrollTop } =
   toRefs(activityBarStore);
 
-onBeforeUnmount(() => {
-  console.log('hello');
+onMounted(() => {
+  nextTick(() => {
+    const el = treeFolderRef.value?.$el as HTMLElement | undefined;
 
-  console.log('treeFolderRef', treeFolderRef.value?.$el?.scrollTop);
-  schemaCurrentScrollTop.value = treeFolderRef.value?.$el?.scrollTop || 0;
+    if (!el) {
+      return;
+    }
+
+    el.scrollTo({
+      top: schemaCurrentScrollTop.value,
+    });
+
+    el.onscroll = () => {
+      schemaCurrentScrollTop.value = el.scrollTop || 0;
+    };
+  });
 });
 
-onMounted(() => {
+onActivated(() => {
   nextTick(() => {
     treeFolderRef.value?.$el?.scrollTo({
       top: schemaCurrentScrollTop.value,

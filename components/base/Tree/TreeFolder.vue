@@ -25,6 +25,8 @@ const emits = defineEmits<{
   (e: 'update:selectedItems', value: FlattenedTreeFileSystemItem[]): void;
 }>();
 
+const treeRootRef = ref<HTMLElement | null>(null);
+
 const onUpdateExpanded = (value: string[]) => {
   emits('update:expandedState', value);
 };
@@ -34,8 +36,6 @@ const onUpdateSelectedItems = (value: FlattenedTreeFileSystemItem[]) => {
 
 const defaultCloseIcon = 'lucide:folder';
 
-const treeRootRef = ref<HTMLElement | null>(null);
-
 defineExpose({
   treeRootRef,
 });
@@ -44,8 +44,6 @@ const selectedValue = ref<FlattenedTreeFileSystemItem[]>();
 </script>
 
 <template>
-  <!-- :model-value="selectedItems" -->
-  <!-- :multiple="true" -->
   <TreeRoot
     v-on:update:model-value="
       event =>
@@ -58,6 +56,8 @@ const selectedValue = ref<FlattenedTreeFileSystemItem[]>();
     v-on:update:expanded="onUpdateExpanded"
     ref="treeRootRef"
   >
+    <!-- :model-value="selectedItems" -->
+    <!-- :multiple="true" -->
     <TreeVirtualizer v-slot="{ item }" :estimate-size="28" :overscan="5">
       <TreeItem
         v-slot="{ isExpanded, handleToggle, handleSelect, isSelected }"

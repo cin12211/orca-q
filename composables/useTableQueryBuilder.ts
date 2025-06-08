@@ -152,7 +152,7 @@ export const useTableQueryBuilder = async ({
   );
 
   const totalRows = computed(() => {
-    return dataCount.value?.[0]?.count || 0;
+    return Number(dataCount.value?.[0]?.count || 0);
   });
 
   const isAllowNextPage = computed(() => {

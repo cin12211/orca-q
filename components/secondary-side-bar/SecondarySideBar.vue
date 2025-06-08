@@ -2,10 +2,6 @@
 // TODO: json editor
 // https://www.npmjs.com/package/immutable-json-patch
 // https://www.npmjs.com/package/json-beautify
-
-definePageMeta({
-  keepalive: true,
-});
 </script>
 
 <template>

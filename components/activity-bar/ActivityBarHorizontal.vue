@@ -25,22 +25,20 @@ const activity = computed(() => [
 </script>
 
 <template>
-  <TooltipProvider :delay-duration="DEFAULT_DEBOUNCE_INPUT">
-    <div class="flex items-center gap-1">
-      <Tooltip v-for="item in activity">
-        <TooltipTrigger as-child>
-          <Button
-            size="iconMd"
-            :variant="item.isActive ? 'default' : 'ghost'"
-            @click="activityStore.setActivityActive(item.id)"
-          >
-            <Icon :name="item.icon" class="size-5!" />
-          </Button>
-        </TooltipTrigger>
-        <TooltipContent side="bottom">
-          <p>{{ item.title }}</p>
-        </TooltipContent>
-      </Tooltip>
-    </div>
-  </TooltipProvider>
+  <div class="flex items-center gap-1">
+    <Tooltip v-for="item in activity">
+      <TooltipTrigger as-child>
+        <Button
+          size="iconMd"
+          :variant="item.isActive ? 'default' : 'ghost'"
+          @click="activityStore.setActivityActive(item.id)"
+        >
+          <Icon :name="item.icon" class="size-5!" />
+        </Button>
+      </TooltipTrigger>
+      <TooltipContent side="bottom">
+        <p>{{ item.title }}</p>
+      </TooltipContent>
+    </Tooltip>
+  </div>
 </template>

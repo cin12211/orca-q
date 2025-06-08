@@ -13,17 +13,13 @@ const layout = useAppLayoutStore();
 
 <template>
   <div class="w-full h-full flex flex-col" v-if="layout.layoutSize[0]">
-    <!-- <KeepAlive> -->
     <ModulesManagementExplorer
       v-if="activityStore.activityActive === ActivityBarItemType.Explorer"
     />
-    <!-- </KeepAlive> -->
 
-    <!-- <KeepAlive> -->
     <ModulesManagementSchemas
       v-if="activityStore.activityActive === ActivityBarItemType.Schemas"
     />
-    <!-- </KeepAlive> -->
 
     <!-- <ModulesManagementExplorer
       :class="[

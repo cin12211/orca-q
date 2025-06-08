@@ -65,12 +65,12 @@ const onOpenAddConnectionModal = () => {
     <SelectContent>
       <SelectGroup>
         <div
-          class="flex px-2 py-0.5 h-8 hover:bg-muted rounded-md font-normal text-sm items-center justify-between cursor-pointer"
+          class="flex px-2 py-0.5 h-8 hover:bg-muted rounded-md font-normal text-sm items-center gap-1 cursor-pointer"
           @click="onOpenAddConnectionModal"
         >
-          Add new connection
-
           <Icon name="lucide:plus" />
+
+          Add new connection
         </div>
 
         <SelectSeparator />

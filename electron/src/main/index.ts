@@ -1,5 +1,5 @@
 import { electronApp, is, optimizer } from '@electron-toolkit/utils'
-import { app, BrowserWindow, shell } from 'electron'
+import { app, BrowserWindow, screen, shell } from 'electron'
 import { join } from 'path'
 import icon from '../../resources/icon.png'
 import { startServer } from './createServer'
@@ -24,11 +24,15 @@ export function createWindow(port: number): void {
     y = currentWindowY + 24
   }
 
+  const { width: displayWidth, height: displayHeight } = screen.getPrimaryDisplay().workAreaSize
+  const width = Math.floor(displayWidth * 0.8)
+  const height = Math.floor(displayHeight * 0.8)
+
   // Create the browser window.
   const mainWindow = new BrowserWindow({
-    title: 'HeraQ' + x,
-    width: 900,
-    height: 670,
+    title: 'HeraQ',
+    width,
+    height,
     show: false,
     x,
     y,

@@ -19,6 +19,10 @@ const onChangeConnection = async (connectionId: AcceptableValue) => {
     selectedWorkspaceId.value = connectionId;
   }
 };
+
+const onBackToWorkspaces = () => {
+  navigateTo('/');
+};
 </script>
 <template>
   <Select
@@ -45,6 +49,17 @@ const onChangeConnection = async (connectionId: AcceptableValue) => {
             {{ workspace.name }}
           </div>
         </SelectItem>
+
+        <SelectSeparator />
+
+        <div
+          class="flex px-2 py-0.5 h-8 hover:bg-muted rounded-md font-normal text-sm items-center gap-1 cursor-pointer"
+          @click="onBackToWorkspaces"
+        >
+          <Icon name="hugeicons:arrow-turn-backward" />
+
+          Back to workspaces
+        </div>
       </SelectGroup>
     </SelectContent>
   </Select>
