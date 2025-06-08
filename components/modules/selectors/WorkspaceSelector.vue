@@ -25,7 +25,7 @@ const onChangeConnection = async (connectionId: AcceptableValue) => {
     @update:model-value="onChangeConnection"
     :model-value="selectedWorkspaceId"
   >
-    <SelectTrigger :class="cn(props.class, 'h-8 cursor-pointer')">
+    <SelectTrigger :class="cn(props.class, 'cursor-pointer')" size="sm">
       <div class="flex items-center gap-2 truncate" v-if="selectedWorkspace">
         <Icon :name="selectedWorkspace.icon" />
         {{ selectedWorkspace.name }}

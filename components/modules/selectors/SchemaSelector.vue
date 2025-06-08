@@ -17,7 +17,7 @@ const { schemasByCurrentConnection, currentSchema } = toRefs(schemaStore);
     "
     :model-value="currentSchema?.name"
   >
-    <SelectTrigger :class="cn(props.class, 'w-48 h-8 cursor-pointer')">
+    <SelectTrigger :class="cn(props.class, 'w-48 cursor-pointer')" size="sm">
       <div class="flex items-center gap-2 w-44 truncate" v-if="currentSchema">
         {{ currentSchema?.name }}
       </div>

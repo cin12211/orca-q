@@ -41,7 +41,7 @@ const layout = useAppLayoutStore();
       ]"
     /> -->
 
-    <div class="h-10 border-t w-full">
+    <div class="h-11 border-t w-full">
       <ActivityBarHorizontalBottom />
     </div>
   </div>

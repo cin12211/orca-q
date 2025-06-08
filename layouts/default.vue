@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { useAppLayoutStore } from '~/shared/stores/appLayoutStore';
+import { DEFAULT_DEBOUNCE_INPUT } from '~/utils/constants';
 
 const appLayoutStore = useAppLayoutStore();
 const { layoutSize, isPrimarySidebarCollapsed } = toRefs(appLayoutStore);
@@ -32,7 +33,7 @@ useHotkeys([
       <TabViewContainer />
       <div
         class="h-full flex overflow-y-auto w-screen max-w-screen overflow-x-hidden"
-        v-auto-animate="{ duration: 250 }"
+        v-auto-animate="{ duration: DEFAULT_DEBOUNCE_INPUT }"
       >
         <ActivityBar v-if="isPrimarySidebarCollapsed" />
 

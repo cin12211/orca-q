@@ -9,11 +9,12 @@ import {
   TabViewType,
   useManagementViewContainerStore,
 } from '~/shared/stores/useManagementViewContainerStore';
+import { DEFAULT_DEBOUNCE_INPUT } from '~/utils/constants';
 
 const { schemaStore } = useAppContext();
 
 const searchInput = shallowRef('');
-const debouncedSearch = refDebounced(searchInput, 250);
+const debouncedSearch = refDebounced(searchInput, DEFAULT_DEBOUNCE_INPUT);
 
 const treeFolderRef = templateRef('treeFolderRef');
 
@@ -99,6 +100,8 @@ const { schemasExpandedState, schemaCurrentScrollTop } =
   toRefs(activityBarStore);
 
 onBeforeUnmount(() => {
+  console.log('hello');
+
   console.log('treeFolderRef', treeFolderRef.value?.$el?.scrollTop);
   schemaCurrentScrollTop.value = treeFolderRef.value?.$el?.scrollTop || 0;
 });
@@ -132,23 +135,6 @@ onMounted(() => {
         </p>
         <ModulesSelectorsSchemaSelector class="w-full!" />
       </div>
-
-      <div class="relative w-full pt-2">
-        <Input
-          type="text"
-          placeholder="Search in all tables or functions"
-          class="pr-6 w-full h-8"
-          v-model="searchInput"
-        />
-
-        <div
-          v-if="searchInput"
-          class="absolute right-2 top-3.5 w-4 cursor-pointer hover:bg-accent"
-          @click="searchInput = ''"
-        >
-          <Icon name="lucide:x" class="stroke-3! text-muted-foreground" />
-        </div>
-      </div>
     </div>
 
     <div class="px-2 pt-2 flex items-center justify-between">
@@ -166,8 +152,34 @@ onMounted(() => {
       </div>
     </div>
 
+    <div class="px-2">
+      <div class="relative w-full">
+        <Input
+          type="text"
+          placeholder="Search in all tables or functions"
+          class="pr-6 w-full h-8"
+          v-model="searchInput"
+        />
+
+        <div
+          v-if="searchInput"
+          class="absolute right-2 top-1.5 w-4 cursor-pointer hover:bg-accent"
+          @click="searchInput = ''"
+        >
+          <Icon name="lucide:x" class="stroke-3! text-muted-foreground" />
+        </div>
+      </div>
+    </div>
+
     <!-- TODO: check flow when change connection  -->
     <!-- TODO: check flow when change schema  -->
+
+    <div
+      v-if="!items.length"
+      class="flex flex-col items-center h-full justify-center"
+    >
+      No data!
+    </div>
 
     <TreeFolder
       ref="treeFolderRef"

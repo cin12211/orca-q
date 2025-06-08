@@ -12,13 +12,14 @@ import {
   TabViewType,
   useManagementViewContainerStore,
 } from '~/shared/stores/useManagementViewContainerStore';
+import { DEFAULT_DEBOUNCE_INPUT } from '~/utils/constants';
 import { useManagementExplorerStore } from '../../../shared/stores/managementExplorerStore';
 import TreeFolder from '../../base/Tree/TreeFolder.vue';
 
 const explorerStore = useManagementExplorerStore();
 
 const searchInput = shallowRef('');
-const debouncedSearch = refDebounced(searchInput, 250);
+const debouncedSearch = refDebounced(searchInput, DEFAULT_DEBOUNCE_INPUT);
 
 const { expandedState, explorerFiles } = toRefs(explorerStore);
 

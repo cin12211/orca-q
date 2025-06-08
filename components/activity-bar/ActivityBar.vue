@@ -4,6 +4,7 @@ import {
   ActivityBarItemType,
   useActivityBarStore,
 } from '~/shared/stores/useActivityBarStore';
+import { DEFAULT_DEBOUNCE_INPUT } from '~/utils/constants';
 
 const activityStore = useActivityBarStore();
 const appLayoutStore = useAppLayoutStore();
@@ -41,7 +42,7 @@ const colorMode = useColorMode();
 </script>
 
 <template>
-  <TooltipProvider :delay-duration="250">
+  <TooltipProvider :delay-duration="DEFAULT_DEBOUNCE_INPUT">
     <div class="max-w-9 min-w-9 border-r py-2 bg-sidebar-accent" v-auto-animate>
       <div class="flex flex-col justify-between h-full space-y-2">
         <div class="flex flex-col items-center gap-1">

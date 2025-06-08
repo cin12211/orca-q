@@ -3,6 +3,7 @@ import {
   ActivityBarItemType,
   useActivityBarStore,
 } from '~/shared/stores/useActivityBarStore';
+import { DEFAULT_DEBOUNCE_INPUT } from '~/utils/constants';
 
 const activityStore = useActivityBarStore();
 
@@ -24,7 +25,7 @@ const activity = computed(() => [
 </script>
 
 <template>
-  <TooltipProvider :delay-duration="250">
+  <TooltipProvider :delay-duration="DEFAULT_DEBOUNCE_INPUT">
     <div class="flex items-center gap-1">
       <Tooltip v-for="item in activity">
         <TooltipTrigger as-child>

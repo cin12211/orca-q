@@ -13,7 +13,7 @@ const colorMode = useColorMode();
 
 <template>
   <div class="w-full h-full flex items-center justify-between px-2 gap-1">
-    <WorkspaceSelector class="h-7! p-1 w-full" />
+    <WorkspaceSelector class="p-1 w-full" />
 
     <div class="flex items-center gap-1">
       <DropdownMenu>

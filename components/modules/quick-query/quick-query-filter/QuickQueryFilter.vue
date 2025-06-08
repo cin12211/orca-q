@@ -5,7 +5,11 @@ import { _debounce } from 'ag-grid-community';
 import { useFieldArray, useForm } from 'vee-validate';
 import { z } from 'zod';
 import type { Input } from '~/components/ui/input';
-import { EExtendedField, OperatorSet } from '~/utils/constants';
+import {
+  DEFAULT_DEBOUNCE_INPUT,
+  EExtendedField,
+  OperatorSet,
+} from '~/utils/constants';
 import {
   filterSchema,
   formatWhereClause,
@@ -64,7 +68,7 @@ watch(
     () => {
       emit('onUpdateFilters', fields.value.map(f => f.value) || []);
     },
-    250
+    DEFAULT_DEBOUNCE_INPUT
   ),
   {
     deep: true,
