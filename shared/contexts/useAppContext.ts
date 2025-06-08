@@ -1,6 +1,9 @@
 import { useSchemaStore, useWorkspacesStore } from '../stores';
-import type { Connection, Schema } from '../stores/appState/interface';
-import { useManagementConnectionStore } from '../stores/managementConnectionStore';
+import type { Schema } from '../stores';
+import {
+  useManagementConnectionStore,
+  type Connection,
+} from '../stores/managementConnectionStore';
 
 export const useAppContext = () => {
   const workspaceStore = useWorkspacesStore();

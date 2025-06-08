@@ -1,5 +1,5 @@
 import { getDatabaseSource } from '~/server/utils/db-connection';
-import { type TableDetails } from '~/shared/stores/appState/interface';
+import { type TableDetails } from '~/shared/stores';
 
 interface Schema {
   name: string;

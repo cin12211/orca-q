@@ -3,7 +3,7 @@ import { Select, SelectGroup, SelectItem, SelectTrigger } from '#components';
 import type { AcceptableValue } from 'reka-ui';
 import { cn } from '@/lib/utils';
 import { useAppContext } from '~/shared/contexts/useAppContext';
-import type { Connection } from '~/shared/stores/appState/interface';
+import type { Connection } from '~/shared/stores';
 import CreateConnectionModal from '../management-connection/CreateConnectionModal.vue';
 import { getDatabaseSupportByType } from '../management-connection/constants';
 

@@ -32,24 +32,26 @@ export const useWorkspacesStore = defineStore(
       workspaces.value.push(workspace);
     };
 
+    const updateWorkspace = async (workspace: Workspace) => {
+      console.log('🚀 ~ updateWorkspace ~ workspace:', workspace);
+
+      await window.workspaceApi.update(workspace);
+      await loadPersistData();
+    };
+
     const deleteWorkspace = async (workspaceId: string) => {
       await window.workspaceApi.delete(workspaceId);
-      await loadWorkspaces();
+      await loadPersistData();
     };
 
-    const updateWorkspace = async (workspace: Workspace) => {
-      await window.workspaceApi.update(workspace.id, workspace);
-      await loadWorkspaces();
-    };
-
-    const loadWorkspaces = async () => {
-      console.time('loadWorkspaces');
+    const loadPersistData = async () => {
+      console.time('loadPersistData');
       const load = await window.workspaceApi.getAll();
       workspaces.value = load;
-      console.timeEnd('loadWorkspaces');
+      console.timeEnd('loadPersistData');
     };
 
-    loadWorkspaces();
+    loadPersistData();
 
     return {
       workspaces,

@@ -3,6 +3,7 @@ import { initDBWorkspace } from '../utils'
 import { type Workspace } from '~/../../../shared/stores'
 import { WorkspaceIpcChannels } from '../../constants'
 import { updateDockMenus } from '../dockMenu'
+import { deleteAllConnectionByWorkspaceId } from './connections'
 
 ipcMain.handle(WorkspaceIpcChannels.Gets, async () => {
   const db = await initDBWorkspace()
@@ -35,7 +36,10 @@ ipcMain.handle(WorkspaceIpcChannels.Delete, async (_event, id: string) => {
   await updateDockMenus()
 
   const db = await initDBWorkspace()
-  return await db.removeAsync({ id: id }, { multi: true }).finally(() => {
+  return await db.removeAsync({ id: id }, { multi: true }).finally(async () => {
+    // delete all connections
+    await deleteAllConnectionByWorkspaceId(id)
+
     updateDockMenus()
   })
 })

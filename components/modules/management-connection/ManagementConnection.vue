@@ -2,7 +2,7 @@
 import { ref } from 'vue';
 import { Button } from '@/components/ui/button';
 import { useAppContext } from '~/shared/contexts/useAppContext';
-import type { Connection } from '~/shared/stores/appState/interface';
+import type { Connection } from '~/shared/stores';
 import ConnectionsList from './ConnectionsList.vue';
 import CreateConnectionModal from './CreateConnectionModal.vue';
 

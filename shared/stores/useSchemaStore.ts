@@ -1,7 +1,26 @@
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
-import type { Schema } from './appState/interface';
 import { useManagementConnectionStore } from './managementConnectionStore';
+
+interface Column {
+  label: string;
+  type: 'field';
+  info: string;
+}
+
+export interface TableDetails {
+  [tableName: string]: Column[];
+}
+
+export interface Schema {
+  connectionId: string;
+  workspaceId: string;
+  name: string;
+  tableDetails?: TableDetails | null;
+  tables: string[];
+  views: string[];
+  functions: string[];
+}
 
 export const PUBLIC_SCHEMA_ID = 'public';
 

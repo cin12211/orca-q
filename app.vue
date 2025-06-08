@@ -3,10 +3,21 @@
 import { TooltipProvider } from '#components';
 import { AllCommunityModule, ModuleRegistry } from 'ag-grid-community';
 import { Toaster } from './components/ui/sonner';
+import { useWorkspacesStore } from './shared/stores';
 import { DEFAULT_DEBOUNCE_INPUT } from './utils/constants';
 
 // Register all Community features
 ModuleRegistry.registerModules([AllCommunityModule]);
+
+const workspaceStore = useWorkspacesStore();
+
+const route = useRoute('workspaceId');
+
+onMounted(() => {
+  const workspaceId = route.params.workspaceId;
+
+  workspaceStore.setSelectedWorkspaceId(workspaceId);
+});
 </script>
 
 <template>

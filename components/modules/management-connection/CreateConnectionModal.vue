@@ -248,7 +248,7 @@ import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { uuidv4 } from '~/lib/utils';
 import { useAppContext } from '~/shared/contexts/useAppContext';
-import type { Connection } from '~/shared/stores/appState/interface';
+import type { Connection } from '~/shared/stores';
 import DatabaseTypeCard from './DatabaseTypeCard.vue';
 import { databaseSupports, EDatabaseType } from './constants';
 import { EConnectionMethod } from './type/index';

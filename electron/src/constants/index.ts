@@ -11,3 +11,12 @@ export enum WindowIpcChannels {
 }
 
 export const DEFAULT_PORT = 29091
+
+export enum ConnectionIpcChannels {
+  GetByWorkspaceId = 'connection:get-by-workspace-id',
+  Gets = 'connection:gets',
+  GetOne = 'connection:get-one',
+  Create = 'connection:create',
+  Update = 'connection:update',
+  Delete = 'connection:delete'
+}

@@ -28,7 +28,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { useAppContext } from '~/shared/contexts/useAppContext';
-import type { Connection } from '~/shared/stores/appState/interface';
+import type { Connection } from '~/shared/stores';
 import { getDatabaseSupportByType } from './constants';
 
 const { connectionStore } = useAppContext();
@@ -61,7 +61,11 @@ const confirmDelete = () => {
 
 const onConnectConnection = (connection: Connection) => {
   connectionStore.setSelectedConnection(connection.id);
-  navigateTo('/:workspaceId');
+
+  navigateTo({
+    name: 'workspaceId',
+    params: { workspaceId: connection.workspaceId },
+  });
 };
 </script>
 
