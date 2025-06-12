@@ -134,6 +134,10 @@ export function useHotkeys(
   onMounted(attach);
   onUnmounted(detach);
 
+  // ✨ Dùng lifecycle cho keep-alive component
+  onActivated(attach);
+  onDeactivated(detach);
+
   watch(
     [hotkeysRef, () => (isRef(target) ? target.value : target)],
     () => {

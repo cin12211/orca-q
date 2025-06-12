@@ -26,6 +26,8 @@ export const useQuickQueryLayout = defineStore(
      * or a default of 20%. If it's visible, it collapses it.
      */
     const toggleHistoryPanel = () => {
+      console.log('hello');
+
       const [mainQuerySize, historySize] = layoutSize.value;
 
       if (historySize === 0) {

@@ -27,6 +27,8 @@ const emit = defineEmits<{
   (e: 'onToggleHistoryPanel'): void;
 }>();
 
+const quickQueryControlBarRef = ref<HTMLElement>();
+
 useHotkeys([
   {
     key: 'meta+s',
@@ -41,6 +43,11 @@ useHotkeys([
   {
     key: 'meta+j',
     callback: () => {
+      console.log(
+        '🚀 ~ file: QuickQueryControlBar.vue:87 ~ callback ~ quickQueryControlBarRef:',
+        quickQueryControlBarRef
+      );
+
       emit('onToggleHistoryPanel');
     },
   },
@@ -49,6 +56,7 @@ useHotkeys([
 
 <template>
   <div
+    ref="quickQueryControlBarRef"
     :class="[
       'w-full select-none h-9 border flex items-center justify-between px-2',
       isShowHistoryPanel ? '' : 'rounded-b-md',
@@ -100,7 +108,9 @@ useHotkeys([
 
       <RefreshButton @on-refresh="emit('onRefresh')" />
 
+      <!-- TODO: Open when doing good ux -->
       <Button
+        v-if="false"
         variant="outline"
         size="sm"
         class="h-6 px-1 gap-1 text-xs"

@@ -47,7 +47,7 @@ const handleDeleteConnection = (id: string) => {
             Manage your database connections in one place
           </p>
         </div>
-        <Button @click="onOpenAddConnectionModal">
+        <Button variant="outline" @click="onOpenAddConnectionModal">
           <Icon name="lucide:plus" class="size-4!" />
           Add Connection
         </Button>
@@ -57,6 +57,7 @@ const handleDeleteConnection = (id: string) => {
         :connections="connectionStore.connections"
         @edit="onOpenUpdateConnectionModal"
         @delete="handleDeleteConnection"
+        @create="onOpenAddConnectionModal"
       />
 
       <CreateConnectionModal

@@ -154,7 +154,11 @@ const onOpenWorkspace = (workspaceId: string) => {
       </div>
     </CardContent>
     <CardFooter>
-      <Button class="w-full" @click="onOpenWorkspace(workspace.id)">
+      <Button
+        variant="default"
+        class="w-full"
+        @click="onOpenWorkspace(workspace.id)"
+      >
         <ExternalLink class="h-4 w-4" /> Open workspace
       </Button>
     </CardFooter>

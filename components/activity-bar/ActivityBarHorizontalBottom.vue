@@ -15,11 +15,12 @@ const colorMode = useColorMode();
   <div class="w-full h-full flex items-center justify-between px-2 gap-1">
     <WorkspaceSelector class="p-1 w-full" />
 
-    <div class="flex items-center gap-1">
+    <!-- TODO: OPEN when Implement theme -->
+    <!-- TODO: OPEN when do setting feature -->
+    <div class="flex items-center gap-1" v-if="false">
       <DropdownMenu>
         <DropdownMenuTrigger>
-          <!-- TODO: Implement theme -->
-          <Button size="iconSm" variant="ghost" class="hidden">
+          <Button size="iconSm" variant="ghost">
             <Icon
               name="hugeicons:moon-02"
               class="size-4! rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0"

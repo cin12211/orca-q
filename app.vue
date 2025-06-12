@@ -29,7 +29,7 @@ onMounted(() => {
   </TooltipProvider>
 
   <ClientOnly>
-    <Toaster position="top-right" />
+    <Toaster position="top-right" :close-button="true" />
   </ClientOnly>
 </template>
 

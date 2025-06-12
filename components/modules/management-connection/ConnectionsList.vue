@@ -2,12 +2,7 @@
 import { ref } from 'vue';
 import { Tooltip, TooltipContent, TooltipTrigger } from '#components';
 import dayjs from 'dayjs';
-import {
-  DatabaseIcon,
-  EditIcon,
-  Trash2Icon,
-  ExternalLinkIcon,
-} from 'lucide-vue-next';
+import { EditIcon, Trash2Icon, ExternalLinkIcon } from 'lucide-vue-next';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -40,6 +35,7 @@ defineProps<{
 const emit = defineEmits<{
   (e: 'edit', connection: Connection): void;
   (e: 'delete', id: string): void;
+  (e: 'create'): void;
 }>();
 
 const deleteId = ref<string | null>(null);
@@ -74,11 +70,19 @@ const onConnectConnection = (connection: Connection) => {
     v-if="connections.length === 0"
     class="rounded-md border p-10 text-center"
   >
-    <DatabaseIcon class="mx-auto mb-4 h-12 w-12 text-muted-foreground/60" />
-    <h3 class="mb-2 text-lg font-medium">No connections yet</h3>
+    <Icon
+      class="mx-auto mb-2 size-20! text-muted-foreground"
+      name="lucide:database"
+    />
+    <h3 class="text-lg font-medium">No connections yet</h3>
     <p class="text-muted-foreground">
       Click "Add Connection" to create your first database connection.
     </p>
+
+    <Button variant="outline" class="mt-4" @click="emit('create')">
+      <Icon name="lucide:plus" class="size-4!" />
+      Add Connection
+    </Button>
   </div>
 
   <div v-else class="rounded-md border border-border w-full">
@@ -145,9 +149,8 @@ const onConnectConnection = (connection: Connection) => {
           <TableCell class="text-right">
             <div class="flex items-center justify-end gap-2">
               <Button
-                variant="outline"
+                variant="default"
                 size="sm"
-                class="h-8 gap-1 border px-2 text-xs hover:bg-primary/5 hover:text-primary"
                 @click="onConnectConnection(connection)"
               >
                 <ExternalLinkIcon class="h-3.5 w-3.5" />
@@ -156,7 +159,6 @@ const onConnectConnection = (connection: Connection) => {
               <Button
                 variant="outline"
                 size="sm"
-                class="h-8 border px-2 hover:bg-primary/5 hover:text-primary"
                 @click="$emit('edit', connection)"
               >
                 <EditIcon class="h-3.5 w-3.5" />
@@ -164,7 +166,6 @@ const onConnectConnection = (connection: Connection) => {
               <Button
                 variant="outline"
                 size="sm"
-                class="h-8 border px-2 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950/50"
                 @click="openDeleteDialog(connection.id)"
               >
                 <Trash2Icon class="h-3.5 w-3.5" />

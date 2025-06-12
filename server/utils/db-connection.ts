@@ -3,13 +3,6 @@ import { type DatabaseType, DataSource } from 'typeorm';
 let currentDBConnectionString = '';
 let databaseSource: DataSource | null = null;
 
-const AppDataSource = new DataSource({
-  type: 'postgres',
-  url: 'postgres://admin:admin@localhost:5432/postgres', // Your connection string
-  synchronize: false, // Set to true if you want TypeORM to auto-create tables (use with caution in production)
-  logging: true, // Logs SQL queries for debugging,
-});
-
 //TODO: only support postgres
 export const getDatabaseSource = async ({
   dbConnectionString,
@@ -18,7 +11,11 @@ export const getDatabaseSource = async ({
   dbConnectionString: string;
   type: DatabaseType;
 }) => {
-  if (dbConnectionString !== currentDBConnectionString || !databaseSource) {
+  if (
+    dbConnectionString !== currentDBConnectionString ||
+    !databaseSource ||
+    !databaseSource.isInitialized
+  ) {
     databaseSource = new DataSource({
       type: 'postgres', // Ensure the type is explicitly set to 'postgres'
       url: dbConnectionString, // Your connection string

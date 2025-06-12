@@ -23,7 +23,8 @@ definePageMeta({
       />
     </div>
 
-    <div class="flex items-center pt-3 text-muted-foreground gap-0.5 text-sm">
+    <!-- TODO: OPEN when do setting feature -->
+    <!-- <div class="flex items-center pt-3 text-muted-foreground gap-0.5 text-sm">
       <Icon name="hugeicons:settings-01"> </Icon> Open setting
 
       <ContextMenuShortcut class="pl-2">(⌘,)</ContextMenuShortcut>
@@ -33,16 +34,16 @@ definePageMeta({
       <Icon name="hugeicons:command" /> Command Palette
 
       <ContextMenuShortcut class="pl-2">(⌘K)</ContextMenuShortcut>
-    </div>
+    </div> -->
 
     <div class="flex items-center pt-1 text-muted-foreground gap-0.5 text-sm">
-      <Icon name="hugeicons:sidebar-left" /> Toggle right sidebar
+      <Icon name="hugeicons:sidebar-left" /> Toggle left sidebar
 
       <ContextMenuShortcut class="pl-2">(⌘B)</ContextMenuShortcut>
     </div>
 
     <div class="flex items-center pt-1 text-muted-foreground gap-0.5 text-sm">
-      <Icon name="hugeicons:sidebar-right" /> Open setting
+      <Icon name="hugeicons:sidebar-right" /> Toggle right sidebar
 
       <ContextMenuShortcut class="pl-2">(⇧⌘B)</ContextMenuShortcut>
     </div>

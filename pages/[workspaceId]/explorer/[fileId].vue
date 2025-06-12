@@ -20,7 +20,7 @@ import { useManagementViewContainerStore } from '~/shared/stores';
 // https://codemirror.net/examples/lint/
 
 definePageMeta({
-  keepalive: true,
+  keepalive: false,
 });
 
 const { schemaStore } = useAppContext();

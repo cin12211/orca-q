@@ -58,15 +58,16 @@
               @update:value="connectionMethod = $event"
               class="w-full"
             >
-              <TabsList class="w-full">
+              <!-- <TabsList class="w-full">
                 <TabsTrigger value="string" class="cursor-pointer"
                   >Connection String</TabsTrigger
                 >
                 <TabsTrigger class="cursor-pointer" value="form"
                   >Connection Form</TabsTrigger
                 >
-              </TabsList>
-              <TabsContent value="string" class="space-y-4 pt-4">
+              </TabsList> -->
+              <!-- TODO: open this when support form -->
+              <TabsContent value="string" class="space-y-4 pt-0">
                 <div class="space-y-2">
                   <Label
                     for="connection-string"
@@ -89,7 +90,7 @@
                   </p>
                 </div>
               </TabsContent>
-              <TabsContent value="form" class="space-y-5 pt-4">
+              <TabsContent value="form" class="space-y-5 pt-0">
                 <div class="grid grid-cols-2 gap-4">
                   <div class="space-y-2">
                     <Label for="host" class="flex items-center gap-2">
@@ -161,8 +162,7 @@
             v-if="testStatus === 'testing'"
             class="flex items-center gap-2 rounded-md border-2 p-3 text-sm"
           >
-            <Icon name="hugeicons:loading-03" class="animate-spin" />
-            <CheckIcon class="shrink-0" />
+            <Icon name="hugeicons:loading-03" class="animate-spin size-5!" />
             <span>Testing connection...</span>
           </div>
 
@@ -194,7 +194,7 @@
               <Button variant="outline" @click="handleClose"> Cancel </Button>
             </div>
             <div class="flex space-x-2">
-              <Button
+              <!-- <Button
                 variant="secondary"
                 @click="handleTestConnection"
                 :disabled="testStatus === 'testing' || !isFormValid()"
@@ -204,12 +204,21 @@
                   Testing...
                 </template>
                 <template v-else> Test Connection </template>
-              </Button>
+              </Button> -->
               <Button
                 @click="handleCreateConnection"
-                :disabled="testStatus !== 'success'"
+                :disabled="testStatus === 'testing'"
               >
-                {{ editingConnection ? 'Update' : 'Create' }} Connection
+                <template v-if="testStatus === 'testing'">
+                  <Icon
+                    name="hugeicons:loading-03"
+                    class="animate-spin size-4!"
+                  />
+                  Connecting ...
+                </template>
+                <template v-else>
+                  {{ editingConnection ? 'Update' : 'Create' }} Connection
+                </template>
               </Button>
             </div>
           </DialogFooter>
@@ -245,7 +254,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tabs, TabsContent } from '@/components/ui/tabs';
 import { uuidv4 } from '~/lib/utils';
 import { useAppContext } from '~/shared/contexts/useAppContext';
 import type { Connection } from '~/shared/stores';
@@ -324,12 +333,27 @@ const handleTestConnection = async () => {
 
   if (result.isConnectedSuccess) {
     testStatus.value = 'success';
+
+    return true;
   } else {
     testStatus.value = 'error';
+
+    return false;
   }
 };
 
-const handleCreateConnection = () => {
+const handleCreateConnection = async () => {
+  const isEdit = props.editingConnection;
+  const isCreate = !isEdit;
+
+  if (isCreate) {
+    const isConnectedSuccess = await handleTestConnection();
+
+    if (!isConnectedSuccess) {
+      return;
+    }
+  }
+
   const workspaceId = workspaceStore.selectedWorkspaceId || '';
 
   const connection: Connection = {
@@ -351,10 +375,10 @@ const handleCreateConnection = () => {
     connection.database = formData.database;
   }
 
-  if (props.editingConnection) {
-    emit('update', connection);
-  } else {
+  if (isCreate) {
     emit('addNew', connection);
+  } else {
+    emit('update', connection);
   }
 
   handleClose();

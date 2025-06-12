@@ -28,7 +28,7 @@ const emit = defineEmits(['update:open']);
       </DialogHeader>
 
       <DialogFooter>
-        <Button type="submit" @click="onConfirm" variant="destructive">
+        <Button type="submit" @click="onConfirm" variant="default">
           Delete
         </Button>
       </DialogFooter>

@@ -27,12 +27,12 @@ export const databaseSupports: IDBSupport[] = [
     icon: h(Icon, { name: 'logos:postgresql' }),
     isSupport: true,
   },
-  {
-    type: EDatabaseType.MYSQL,
-    name: 'MySQL',
-    icon: h(Icon, { name: 'logos:mysql' }),
-    isSupport: false,
-  },
+  // {
+  //   type: EDatabaseType.MYSQL,
+  //   name: 'MySQL',
+  //   icon: h(Icon, { name: 'logos:mysql' }),
+  //   isSupport: false,
+  // },
   // {
   //   type: EDatabaseType.REDIS,
   //   name: 'Redis',

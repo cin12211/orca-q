@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import { useVirtualList } from '@vueuse/core';
-import { computed, shallowRef } from 'vue';
 import plsql from '@shikijs/langs/plsql';
 import githubLightDefault from '@shikijs/themes/github-light-default';
 import { createJavaScriptRegexEngine, type HighlighterCore } from 'shiki';
@@ -54,7 +52,7 @@ watch(
 );
 
 onBeforeMount(async () => {
-  console.time('highlighter');
+  console.time('createHighlighterCore');
   const highlighterPromise = createHighlighterCore({
     themes: [githubLightDefault],
     langs: [plsql],
@@ -63,7 +61,7 @@ onBeforeMount(async () => {
 
   highlighter.value = await highlighterPromise;
 
-  console.timeEnd('highlighter');
+  console.timeEnd('createHighlighterCore');
 });
 
 // Scroll to bottom on initial mount

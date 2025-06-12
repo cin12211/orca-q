@@ -241,7 +241,7 @@ export function useQuickQueryMutation(options: UseQuickQueryMutationOptions) {
     if (currentAddedRow) {
       gridApi.deselectAll();
       currentAddedRow.setSelected(true);
-      toast.info('Empty row added. Please fill in data and save.');
+      toast.message('Empty row added. Please fill in data and save.');
     }
   };
 

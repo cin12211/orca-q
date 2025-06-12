@@ -107,12 +107,12 @@ const {
 });
 
 const quickQueryLayoutStore = useQuickQueryLayout();
-const { layoutSize, toggleHistoryPanel } = toRefs(quickQueryLayoutStore);
+const { layoutSize } = toRefs(quickQueryLayoutStore);
 </script>
 
 <template>
   <ResizablePanelGroup
-    @layout="layoutSize = $event"
+    v-model:size="layoutSize"
     direction="vertical"
     class="p-2"
   >
@@ -212,13 +212,14 @@ const { layoutSize, toggleHistoryPanel } = toRefs(quickQueryLayoutStore);
               await quickQueryFilterRef?.onShowSearch();
             }
           "
-          @onToggleHistoryPanel="toggleHistoryPanel"
+          @onToggleHistoryPanel="quickQueryLayoutStore.toggleHistoryPanel"
         />
       </div>
     </ResizablePanel>
     <ResizableHandle
-      class="[&[data-state=hover]]:bg-primary! [&[data-state=drag]]:bg-primary!"
+      class="[&[data-state=hover]]:bg-primary/30! [&[data-state=drag]]:bg-primary/20!"
     />
+
     <ResizablePanel
       :min-size="5"
       :max-size="40"
@@ -226,7 +227,7 @@ const { layoutSize, toggleHistoryPanel } = toRefs(quickQueryLayoutStore);
       :collapsed-size="0"
       collapsible
     >
-      <div class="flex-1 h-full px-0" v-if="layoutSize[1] > 0">
+      <div class="flex-1 h-full px-0">
         <QuickQueryHistoryLogsPanel :logs="historyLogs" />
       </div>
     </ResizablePanel>

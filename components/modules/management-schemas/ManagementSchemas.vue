@@ -163,7 +163,7 @@ onActivated(() => {
       </div>
     </div>
 
-    <div class="px-2">
+    <div class="px-2 pb-1">
       <div class="relative w-full">
         <Input
           type="text"
