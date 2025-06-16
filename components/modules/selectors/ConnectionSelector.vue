@@ -10,7 +10,7 @@ import { getDatabaseSupportByType } from '../management-connection/constants';
 const { connectionStore, onSelectConnectionById, onCreateNewConnection } =
   useAppContext();
 
-const { connections, selectedConnection } = toRefs(connectionStore);
+const { connectionsByWsID, selectedConnection } = toRefs(connectionStore);
 
 const props = defineProps<{ class: string }>();
 
@@ -73,12 +73,12 @@ const onOpenAddConnectionModal = () => {
           Add new connection
         </div>
 
-        <SelectSeparator />
+        <SelectSeparator v-if="connectionsByWsID.length" />
 
         <SelectItem
           class="cursor-pointer"
           :value="connection.id"
-          v-for="connection in connections"
+          v-for="connection in connectionsByWsID"
         >
           <div class="flex items-center gap-2">
             <component

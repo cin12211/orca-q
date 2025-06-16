@@ -38,7 +38,7 @@ useHotkeys([
         <ActivityBar v-if="isPrimarySidebarCollapsed" />
 
         <ResizablePanel
-          :min-size="10"
+          :min-size="15"
           :max-size="40"
           :default-size="layoutSize[0]"
           :collapsed-size="0"
@@ -73,7 +73,7 @@ useHotkeys([
           <SecondarySideBar />
         </ResizablePanel>
       </div>
-      <!-- <StatusBar /> -->
+      <StatusBar />
     </div>
   </ResizablePanelGroup>
 </template>

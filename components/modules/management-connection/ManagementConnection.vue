@@ -31,8 +31,6 @@ const onOpenUpdateConnectionModal = (connection: Connection) => {
 };
 
 const handleDeleteConnection = (id: string) => {
-  console.log('🚀 ~ handleDeleteConnection ~ id:', id);
-
   connectionStore.onDeleteConnection(id);
 };
 </script>
@@ -47,14 +45,14 @@ const handleDeleteConnection = (id: string) => {
             Manage your database connections in one place
           </p>
         </div>
-        <Button variant="outline" @click="onOpenAddConnectionModal">
+        <Button size="sm" variant="outline" @click="onOpenAddConnectionModal">
           <Icon name="lucide:plus" class="size-4!" />
           Add Connection
         </Button>
       </div>
 
       <ConnectionsList
-        :connections="connectionStore.connections"
+        :connections="connectionStore.connectionsByWsID"
         @edit="onOpenUpdateConnectionModal"
         @delete="handleDeleteConnection"
         @create="onOpenAddConnectionModal"

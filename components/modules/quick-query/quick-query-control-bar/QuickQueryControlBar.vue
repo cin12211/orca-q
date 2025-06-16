@@ -58,8 +58,8 @@ useHotkeys([
   <div
     ref="quickQueryControlBarRef"
     :class="[
-      'w-full select-none h-9 border flex items-center justify-between px-2',
-      isShowHistoryPanel ? '' : 'rounded-b-md',
+      'w-full select-none h-9 flex items-center justify-between',
+      isShowHistoryPanel ? '' : '',
     ]"
   >
     <!-- TODO: review to sort button position for each function-->

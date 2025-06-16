@@ -65,30 +65,22 @@ export const useManagementConnectionStore = defineStore(
       );
     };
 
-    const loadPersistData = async () => {
-      if (!workspaceStore.selectedWorkspaceId) {
-        return;
-      }
-
-      console.time('loadPersistData');
-      const load = await window.connectionApi.getByWorkspaceId(
-        workspaceStore.selectedWorkspaceId
+    const connectionsByWsID = computed(() => {
+      return getConnectionsByWorkspaceId(
+        workspaceStore.selectedWorkspaceId || ''
       );
+    });
+
+    const loadPersistData = async () => {
+      console.time('loadPersistData');
+      const load = await window.connectionApi.getAll();
       connections.value = load;
       console.timeEnd('loadPersistData');
     };
 
     loadPersistData();
 
-    watch(
-      () => workspaceStore.selectedWorkspaceId,
-      () => {
-        loadPersistData();
-      }
-    );
-
     return {
-      connections,
       updateConnection,
       createNewConnection,
       onDeleteConnection,
@@ -96,6 +88,7 @@ export const useManagementConnectionStore = defineStore(
       setSelectedConnection,
       selectedConnectionId,
       getConnectionsByWorkspaceId,
+      connectionsByWsID,
     };
   },
   {

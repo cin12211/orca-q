@@ -44,11 +44,20 @@ export const useQuickQueryLayout = defineStore(
       }
     };
 
+    const onResizeLayout = (resizedLayout: number[]) => {
+      const [top, bottom] = resizedLayout;
+      layoutSize.value = resizedLayout;
+
+      if (top !== 0) historyLayoutSize.value[0] = top;
+      if (bottom !== 0) historyLayoutSize.value[1] = bottom;
+    };
+
     return {
       layoutSize,
       historyLayoutSize,
       isHistoryPanelCollapsed,
       toggleHistoryPanel,
+      onResizeLayout,
     };
   },
   {

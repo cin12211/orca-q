@@ -5,7 +5,7 @@ import { getDatabaseSupportByType } from '../management-connection/constants';
 
 const { connectionStore, onSelectConnectionById } = useAppContext();
 
-const { connections, selectedConnection } = toRefs(connectionStore);
+const { connectionsByWsID, selectedConnection } = toRefs(connectionStore);
 </script>
 <template>
   <Select
@@ -31,7 +31,10 @@ const { connections, selectedConnection } = toRefs(connectionStore);
     </SelectTrigger>
     <SelectContent>
       <SelectGroup>
-        <SelectItem :value="connection.id" v-for="connection in connections">
+        <SelectItem
+          :value="connection.id"
+          v-for="connection in connectionsByWsID"
+        >
           <div class="flex items-center gap-2">
             <component
               :is="getDatabaseSupportByType(connection.type)?.icon"

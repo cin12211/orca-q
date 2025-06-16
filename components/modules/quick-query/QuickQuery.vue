@@ -112,11 +112,15 @@ const { layoutSize } = toRefs(quickQueryLayoutStore);
 
 <template>
   <ResizablePanelGroup
-    v-model:size="layoutSize"
+    @layout="quickQueryLayoutStore.onResizeLayout($event)"
     direction="vertical"
-    class="p-2"
+    id="quick-query-layout-group-1"
   >
-    <ResizablePanel :default-size="layoutSize[0]">
+    <ResizablePanel
+      :default-size="layoutSize[0]"
+      id="quick-query-layout-group-1-panel-1"
+      key="quick-query-layout-group-1-panel-1"
+    >
       <Teleport defer to="#preview-select-row">
         <PreviewSelectedRow
           :columnTypes="columnTypes"
@@ -136,26 +140,55 @@ const { layoutSize } = toRefs(quickQueryLayoutStore);
 
         <TableSkeleton v-if="tableSchemaStatus === 'pending'" />
 
-        <QuickQueryFilter
-          ref="quickQueryFilterRef"
-          @onSearch="
-            () => {
-              onApplyNewFilter();
-            }
-          "
-          @on-update-filters="
-            newFilters => {
-              filters = newFilters;
-            }
-          "
-          v-model:isShowFilters="isShowFilters"
-          :initFilters="filters"
-          :baseQuery="baseQueryString"
-          :columns="columnNames"
-          :dbType="EDatabaseType.PG"
-        />
+        <div class="px-2 mb-2 border-b">
+          <QuickQueryControlBar
+            :total-selected-rows="selectedRows?.length"
+            :isAllowNextPage="isAllowNextPage"
+            :isAllowPreviousPage="isAllowPreviousPage"
+            :totalRows="totalRows"
+            :limit="pagination.limit"
+            :currentTotalRows="data?.length || 0"
+            :offset="pagination.offset"
+            :has-edited-rows="hasEditedRows"
+            :isShowHistoryPanel="layoutSize[1] > 0"
+            @onPaginate="onUpdatePagination"
+            @onNextPage="onNextPage"
+            @onPreviousPage="onPreviousPage"
+            @onRefresh="onRefresh"
+            @onSaveData="onSaveData"
+            @onDeleteRows="onDeleteRows"
+            @onAddEmptyRow="onAddEmptyRow"
+            @onShowFilter="
+              async () => {
+                await quickQueryFilterRef?.onShowSearch();
+              }
+            "
+            @onToggleHistoryPanel="quickQueryLayoutStore.toggleHistoryPanel"
+          />
+        </div>
 
-        <div class="flex-1 overflow-hidden">
+        <div class="px-2">
+          <QuickQueryFilter
+            ref="quickQueryFilterRef"
+            @onSearch="
+              () => {
+                onApplyNewFilter();
+              }
+            "
+            @on-update-filters="
+              newFilters => {
+                filters = newFilters;
+              }
+            "
+            v-model:isShowFilters="isShowFilters"
+            :initFilters="filters"
+            :baseQuery="baseQueryString"
+            :columns="columnNames"
+            :dbType="EDatabaseType.PG"
+          />
+        </div>
+
+        <div class="flex-1 overflow-hidden px-2">
           <QuickQueryContextMenu
             :total-selected-rows="selectedRows.length"
             :has-edited-rows="hasEditedRows"
@@ -189,31 +222,6 @@ const { layoutSize } = toRefs(quickQueryLayoutStore);
             />
           </QuickQueryContextMenu>
         </div>
-
-        <QuickQueryControlBar
-          :total-selected-rows="selectedRows?.length"
-          :isAllowNextPage="isAllowNextPage"
-          :isAllowPreviousPage="isAllowPreviousPage"
-          :totalRows="totalRows"
-          :limit="pagination.limit"
-          :currentTotalRows="data?.length || 0"
-          :offset="pagination.offset"
-          :has-edited-rows="hasEditedRows"
-          :isShowHistoryPanel="layoutSize[1] > 0"
-          @onPaginate="onUpdatePagination"
-          @onNextPage="onNextPage"
-          @onPreviousPage="onPreviousPage"
-          @onRefresh="onRefresh"
-          @onSaveData="onSaveData"
-          @onDeleteRows="onDeleteRows"
-          @onAddEmptyRow="onAddEmptyRow"
-          @onShowFilter="
-            async () => {
-              await quickQueryFilterRef?.onShowSearch();
-            }
-          "
-          @onToggleHistoryPanel="quickQueryLayoutStore.toggleHistoryPanel"
-        />
       </div>
     </ResizablePanel>
     <ResizableHandle
@@ -226,8 +234,10 @@ const { layoutSize } = toRefs(quickQueryLayoutStore);
       :default-size="layoutSize[1]"
       :collapsed-size="0"
       collapsible
+      id="quick-query-layout-group-1-panel-2"
+      key="quick-query-layout-group-1-panel-2"
     >
-      <div class="flex-1 h-full px-0">
+      <div class="flex flex-col flex-1 h-full px-2">
         <QuickQueryHistoryLogsPanel :logs="historyLogs" />
       </div>
     </ResizablePanel>

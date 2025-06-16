@@ -77,9 +77,9 @@ onMounted(() => {
 </script>
 
 <template>
-  <Card class="py-2 border-t-0 h-full rounded-t-none! rounded-md">
+  <Card class="py-2 h-full rounded-md border-none shadow-none">
     <CardContent :class="['p-0 overflow-y-auto']">
-      <ScrollArea class="h-full px-2 font-mono text-sm" @scroll="handleScroll">
+      <ScrollArea class="h-full px-0 font-mono text-sm" @scroll="handleScroll">
         <div
           v-if="logs.length === 0"
           class="flex h-full items-center justify-center text-zinc-500"
@@ -92,7 +92,7 @@ onMounted(() => {
             :key="index"
             class="mb-2.5 leading-relaxed text-xs"
           >
-            <span class="text-emerald-400"
+            <span class="text-emerald-600"
               >[{{ formatDate(log.createdAt) }}]</span
             >
 

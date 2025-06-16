@@ -25,7 +25,7 @@ const emit = defineEmits(['create']);
       <Button
         v-if="isShowButtonCreate"
         variant="outline"
-        size="lg"
+        size="sm"
         @click="emit('create')"
       >
         <Icon name="lucide:plus" />

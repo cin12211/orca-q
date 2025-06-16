@@ -6,12 +6,10 @@ const isAppVersion = computed(() => isElectron());
 
 <template>
   <div
-    class="w-full h-9 select-none border-b pr-2 bg-sidebar-accent flex justify-center electron-drag-region"
+    class="w-full h-9 select-none pr-2 flex justify-center electron-drag-region"
     v-if="isAppVersion"
   >
-    <div
-      class="flex items-center justify-between border-b border-border py-2 px-2"
-    >
+    <div class="flex items-center justify-between py-2 px-2">
       <div class="flex items-center space-x-2">
         <Avatar class="rounded-2xl">
           <AvatarImage src="/logo.png" alt="@unovue" />

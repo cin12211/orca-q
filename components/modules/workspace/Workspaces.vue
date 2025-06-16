@@ -71,7 +71,7 @@ const isOpenCreateWSModal = ref(false);
       <div class="mb-4 text-muted-foreground">
         There is nothing here to show, Let's create one
       </div>
-      <Button variant="default" size="lg" @click="isOpenCreateWSModal = true">
+      <Button variant="default" size="sm" @click="isOpenCreateWSModal = true">
         <Icon name="lucide:plus" />
 
         New Workspace</Button

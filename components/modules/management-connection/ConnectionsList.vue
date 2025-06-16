@@ -79,7 +79,7 @@ const onConnectConnection = (connection: Connection) => {
       Click "Add Connection" to create your first database connection.
     </p>
 
-    <Button variant="outline" class="mt-4" @click="emit('create')">
+    <Button size="sm" variant="outline" class="mt-4" @click="emit('create')">
       <Icon name="lucide:plus" class="size-4!" />
       Add Connection
     </Button>
@@ -90,9 +90,9 @@ const onConnectConnection = (connection: Connection) => {
       <TableHeader>
         <TableRow class="hover:bg-transparent">
           <TableHead>Name</TableHead>
-          <TableHead>Type</TableHead>
+          <!-- <TableHead>Type</TableHead> -->
           <TableHead>Connection Details</TableHead>
-          <TableHead>Created</TableHead>
+          <!-- <TableHead>Created</TableHead> -->
           <TableHead class="text-right">Actions</TableHead>
         </TableRow>
       </TableHeader>
@@ -102,7 +102,7 @@ const onConnectConnection = (connection: Connection) => {
           :key="connection.id"
           class="hover:bg-muted/30 w-full"
         >
-          <TableCell class="font-medium">
+          <TableCell>
             <div class="flex items-center gap-2 truncate">
               <component
                 :is="getDatabaseSupportByType(connection.type)?.icon"
@@ -111,15 +111,15 @@ const onConnectConnection = (connection: Connection) => {
               {{ connection.name }}
             </div>
           </TableCell>
-          <TableCell>
+          <!-- <TableCell>
             {{
               connection.type.charAt(0).toUpperCase() + connection.type.slice(1)
             }}
-          </TableCell>
+          </TableCell> -->
           <TableCell>
             <Tooltip>
               <TooltipTrigger as-child>
-                <div class="w-40">
+                <div class="w-80">
                   <div
                     v-if="connection.method === 'string'"
                     class="text-muted-foreground truncate"
@@ -145,9 +145,24 @@ const onConnectConnection = (connection: Connection) => {
               </TooltipContent>
             </Tooltip>
           </TableCell>
-          <TableCell>{{ formatDate(connection.createdAt) }}</TableCell>
+          <!-- <TableCell>{{ formatDate(connection.createdAt) }}</TableCell> -->
           <TableCell class="text-right">
-            <div class="flex items-center justify-end gap-2">
+            <div class="flex items-center justify-end gap-1">
+              <Button
+                variant="secondary"
+                size="iconMd"
+                @click="$emit('edit', connection)"
+              >
+                <EditIcon class="h-3.5 w-3.5" />
+              </Button>
+              <Button
+                variant="secondary"
+                size="iconMd"
+                @click="openDeleteDialog(connection.id)"
+              >
+                <Trash2Icon class="h-3.5 w-3.5" />
+              </Button>
+
               <Button
                 variant="default"
                 size="sm"
@@ -155,20 +170,6 @@ const onConnectConnection = (connection: Connection) => {
               >
                 <ExternalLinkIcon class="h-3.5 w-3.5" />
                 Connect
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                @click="$emit('edit', connection)"
-              >
-                <EditIcon class="h-3.5 w-3.5" />
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                @click="openDeleteDialog(connection.id)"
-              >
-                <Trash2Icon class="h-3.5 w-3.5" />
               </Button>
             </div>
           </TableCell>
