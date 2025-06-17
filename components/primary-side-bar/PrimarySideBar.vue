@@ -37,8 +37,9 @@ const layout = useAppLayoutStore();
       ]"
     /> -->
 
-    <div class="h-11 border-t w-full">
+    <!-- TODO: open later -->
+    <!-- <div class="h-11 border-t w-full">
       <ActivityBarHorizontalBottom />
-    </div>
+    </div> -->
   </div>
 </template>

@@ -188,7 +188,7 @@ const { layoutSize } = toRefs(quickQueryLayoutStore);
           />
         </div>
 
-        <div class="flex-1 overflow-hidden px-2">
+        <div class="flex-1 overflow-hidden px-2 mb-0.5">
           <QuickQueryContextMenu
             :total-selected-rows="selectedRows.length"
             :has-edited-rows="hasEditedRows"

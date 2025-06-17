@@ -9,3 +9,5 @@ export const DEFAULT_EDGE_ZONE_HEIGHT = 60;
 export const DEFAULT_SCROLL_STEP = 1;
 
 export const DEFAULT_DEBOUNCE_INPUT = 250;
+
+export const ONE_SECOND = 1000;

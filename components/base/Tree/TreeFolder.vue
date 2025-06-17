@@ -41,6 +41,8 @@ defineExpose({
 });
 
 const selectedValue = ref<FlattenedTreeFileSystemItem[]>();
+
+const heightItem = 24;
 </script>
 
 <template>
@@ -58,12 +60,17 @@ const selectedValue = ref<FlattenedTreeFileSystemItem[]>();
   >
     <!-- :model-value="selectedItems" -->
     <!-- :multiple="true" -->
-    <TreeVirtualizer v-slot="{ item }" :estimate-size="28" :overscan="5">
+    <TreeVirtualizer
+      v-slot="{ item }"
+      :estimate-size="heightItem"
+      :overscan="5"
+    >
       <TreeItem
         v-slot="{ isExpanded, handleToggle, handleSelect, isSelected }"
         :key="item._id"
         :style="{
           'padding-left': `${item.level - 0.5}rem`,
+          height: `${heightItem}px !important`,
         }"
         v-bind="item.bind"
         @click.right="
@@ -78,10 +85,13 @@ const selectedValue = ref<FlattenedTreeFileSystemItem[]>();
             }
           }
         "
-        class="w-full h-7! data-[selected]:bg-accent cursor-pointer rounded outline-none hover:bg-accent/60"
+        class="w-full data-[selected]:bg-accent cursor-pointer rounded outline-none hover:bg-accent/60"
       >
         <div
-          class="flex items-center justify-between w-full h-7"
+          class="flex items-center justify-between w-full"
+          :style="{
+            height: `${heightItem}px`,
+          }"
           @click.shift="
             (e: MouseEvent) => {
               e.stopImmediatePropagation();
@@ -117,8 +127,9 @@ const selectedValue = ref<FlattenedTreeFileSystemItem[]>();
               class="pr-1"
               v-if="isShowArrow"
               @click="
-                () => {
+                e => {
                   if (isExpandedByArrow) {
+                    e.stopImmediatePropagation();
                     handleToggle();
                   }
                 }
@@ -135,6 +146,7 @@ const selectedValue = ref<FlattenedTreeFileSystemItem[]>();
                   :class="{
                     'rotate-90': isExpanded,
                     'size-4 min-w-4 transition-all': true,
+                    'hover:bg-background hover:shadow hover:rounded': true,
                   }"
                 />
               </template>
@@ -154,7 +166,9 @@ const selectedValue = ref<FlattenedTreeFileSystemItem[]>();
             <Icon v-else :icon="item.value.icon" class="size-4 min-w-4" />
 
             <template v-if="item.value.status !== ETreeFileSystemStatus.edit">
-              <div class="pl-1 truncate">{{ item.value.title }}</div>
+              <div class="pl-1 truncate font-normal">
+                {{ item.value.title }}
+              </div>
             </template>
             <div v-else class="pl-1 w-full">
               <slot name="edit-inline" :item></slot>
