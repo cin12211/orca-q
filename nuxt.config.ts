@@ -72,10 +72,16 @@ export default defineNuxtConfig({
     'nuxt-typed-router',
     '@formkit/auto-animate',
   ],
-
   css: ['~/assets/css/tailwind.css'],
   colorMode: {
+    preference: 'no-preference',
+    fallback: 'light',
+    globalName: '__NUXT_COLOR_MODE__',
+    componentName: 'ColorScheme',
+    classPrefix: '',
     classSuffix: '',
+    storage: 'localStorage',
+    storageKey: 'nuxt-color-mode',
   },
   vite: {
     plugins: [tailwindcss()],
