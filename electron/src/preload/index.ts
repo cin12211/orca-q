@@ -3,12 +3,28 @@
 import { electronAPI } from '@electron-toolkit/preload'
 import { contextBridge, ipcRenderer } from 'electron'
 import type { Connection, Workspace } from '../../../shared/stores'
-import { ConnectionIpcChannels, WindowIpcChannels, WorkspaceIpcChannels } from '../constants'
+import {
+  ConnectionIpcChannels,
+  WindowIpcChannels,
+  WorkspaceIpcChannels,
+  WorkspaceStateIpcChannels
+} from '../constants'
 import { type UpdateWindowTitleProps } from '../main/ipc/updateWindowTitle'
+import { type WorkspaceState } from '../../../shared/stores/useWSStateStore'
 
 export const electronBridgeApi = {
   updateWindowTitle: (props: UpdateWindowTitleProps) =>
     ipcRenderer.invoke(WindowIpcChannels.UpdateTitle, props)
+}
+
+export const workspaceStateApi = {
+  getAll: (): Promise<WorkspaceState[]> => ipcRenderer.invoke(WorkspaceStateIpcChannels.Gets),
+  create: (wsState: WorkspaceState): Promise<WorkspaceState> =>
+    ipcRenderer.invoke(WorkspaceStateIpcChannels.Create, wsState),
+  update: (wsState: WorkspaceState): Promise<WorkspaceState> =>
+    ipcRenderer.invoke(WorkspaceStateIpcChannels.Update, wsState),
+  delete: (id: string): Promise<WorkspaceState> =>
+    ipcRenderer.invoke(WorkspaceStateIpcChannels.Delete, id)
 }
 
 export const workspaceApi = {
@@ -41,6 +57,7 @@ if (process.contextIsolated) {
     contextBridge.exposeInMainWorld('electron', electronAPI)
     contextBridge.exposeInMainWorld('api', electronBridgeApi)
     contextBridge.exposeInMainWorld('workspaceApi', workspaceApi)
+    contextBridge.exposeInMainWorld('workspaceStateApi', workspaceStateApi)
     contextBridge.exposeInMainWorld('connectionApi', connectionApi)
   } catch (error) {
     console.error(error)
@@ -54,4 +71,6 @@ if (process.contextIsolated) {
   window.workspaceApi = workspaceApi
   // @ts-ignore (define in dts)
   window.connectionApi = connectionApi
+  // @ts-ignore (define in dts)
+  window.workspaceStateApi = workspaceStateApi
 }

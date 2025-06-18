@@ -32,9 +32,10 @@ const emits = defineEmits<{
 
 const {
   workspaceStore,
-  onSelectWorkspaceById,
   connectionStore,
   onCreateNewConnection,
+  setConnectionId,
+  setActiveWSId,
 } = useAppContext();
 
 const isOpenEditModal = ref(false);
@@ -53,22 +54,23 @@ const connections = computed(() => {
 });
 
 const onOpenWorkspace = (workspaceId: string) => {
-  onSelectWorkspaceById(workspaceId);
+  setActiveWSId(workspaceId);
   emits('onSelectWorkspace', workspaceId);
 
   // navigateTo({ name: 'workspaceId', params: { workspaceId } });
 };
 
 const onOpenConnectionSelector = (workspaceId: string) => {
+  setActiveWSId(workspaceId);
+
   isOpenConnectionSelector.value = true;
-  onSelectWorkspaceById(workspaceId);
 };
 
 const onOpenWorkspaceWithConnection = (
   workspaceId: string,
   connectionId: string
 ) => {
-  connectionStore.setSelectedConnection(connectionId);
+  setConnectionId(connectionId);
 
   navigateTo({
     name: 'workspaceId',
@@ -79,6 +81,7 @@ const onOpenWorkspaceWithConnection = (
 };
 
 const handleAddConnection = (connection: Connection) => {
+  console.log('🚀 ~ handleAddConnection ~ connection:', connection);
   onCreateNewConnection(connection);
 };
 </script>

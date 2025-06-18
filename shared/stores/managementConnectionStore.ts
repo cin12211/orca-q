@@ -2,7 +2,7 @@ import { defineStore } from 'pinia';
 import { ref } from 'vue';
 import type { EDatabaseType } from '~/components/modules/management-connection/constants';
 import type { EConnectionMethod } from '~/components/modules/management-connection/type';
-import { useWorkspacesStore } from './useWorkspacesStore';
+import { useWSStateStore } from './useWSStateStore';
 
 export interface Connection {
   workspaceId: string;
@@ -22,10 +22,10 @@ export interface Connection {
 export const useManagementConnectionStore = defineStore(
   'management-connection',
   () => {
-    const workspaceStore = useWorkspacesStore();
+    const wsStateStore = useWSStateStore();
+    const { workSpaceId, wsState } = toRefs(wsStateStore);
 
     const connections = ref<Connection[]>([]);
-    const selectedConnectionId = ref<string>();
 
     const createNewConnection = async (connection: Connection) => {
       await window.connectionApi.create(connection);
@@ -49,16 +49,6 @@ export const useManagementConnectionStore = defineStore(
       // connections.value = connections.value.filter(c => c.id !== id);
     };
 
-    const setSelectedConnection = (id: string) => {
-      selectedConnectionId.value = id;
-    };
-
-    const selectedConnection = computed(() => {
-      return connections.value.find(
-        connection => connection.id === selectedConnectionId.value
-      );
-    });
-
     const getConnectionsByWorkspaceId = (workspaceId: string) => {
       return connections.value.filter(
         connection => connection.workspaceId === workspaceId
@@ -66,8 +56,12 @@ export const useManagementConnectionStore = defineStore(
     };
 
     const connectionsByWsID = computed(() => {
-      return getConnectionsByWorkspaceId(
-        workspaceStore.selectedWorkspaceId || ''
+      return getConnectionsByWorkspaceId(workSpaceId.value || '');
+    });
+
+    const selectedConnection = computed(() => {
+      return connections.value.find(
+        connection => connection.id === wsState.value?.connectionId
       );
     });
 
@@ -84,11 +78,9 @@ export const useManagementConnectionStore = defineStore(
       updateConnection,
       createNewConnection,
       onDeleteConnection,
-      selectedConnection,
-      setSelectedConnection,
-      selectedConnectionId,
       getConnectionsByWorkspaceId,
       connectionsByWsID,
+      selectedConnection,
     };
   },
   {

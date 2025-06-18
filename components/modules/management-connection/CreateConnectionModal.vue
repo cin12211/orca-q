@@ -1,3 +1,234 @@
+<script setup lang="ts">
+import { reactive, ref, watch } from 'vue';
+import { Icon } from '#components';
+import {
+  ArrowLeftIcon,
+  CheckIcon,
+  DatabaseIcon,
+  FileTextIcon,
+  GlobeIcon,
+  HashIcon,
+  KeyIcon,
+  UserIcon,
+  XIcon,
+} from 'lucide-vue-next';
+import { Button } from '@/components/ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Tabs, TabsContent } from '@/components/ui/tabs';
+import { uuidv4 } from '~/lib/utils';
+import { useAppContext } from '~/shared/contexts/useAppContext';
+import type { Connection } from '~/shared/stores';
+import DatabaseTypeCard from './DatabaseTypeCard.vue';
+import { databaseSupports, EDatabaseType } from './constants';
+import { EConnectionMethod } from './type/index';
+
+const props = defineProps<{
+  open: boolean;
+  editingConnection: Connection | null;
+}>();
+
+const emit = defineEmits<{
+  (e: 'update:open', value: boolean): void;
+  (e: 'addNew', connection: Connection): void;
+  (e: 'update', connection: Connection): void;
+}>();
+
+const { workspaceId } = useAppContext();
+
+const step = ref<1 | 2>(1);
+const dbType = ref<EDatabaseType | null>(null);
+const connectionName = ref('');
+const connectionMethod = ref<EConnectionMethod>(EConnectionMethod.STRING);
+const connectionString = ref('');
+const formData = reactive({
+  host: '',
+  port: '',
+  username: '',
+  password: '',
+  database: '',
+});
+const testStatus = ref<'idle' | 'testing' | 'success' | 'error'>('idle');
+
+const resetForm = () => {
+  step.value = 1;
+  dbType.value = null;
+  connectionName.value = '';
+  connectionMethod.value = EConnectionMethod.STRING;
+  connectionString.value = '';
+
+  formData.host = '';
+  formData.port = '';
+  formData.username = '';
+  formData.password = '';
+  formData.database = '';
+
+  testStatus.value = 'idle';
+};
+
+const handleNext = () => {
+  if (step.value === 1 && dbType.value) {
+    step.value = 2;
+  }
+};
+
+const handleBack = () => {
+  step.value = 1;
+  testStatus.value = 'idle';
+};
+
+const handleClose = () => {
+  emit('update:open', false);
+  setTimeout(resetForm, 300);
+};
+
+const handleTestConnection = async () => {
+  testStatus.value = 'testing';
+
+  const result = await $fetch('/api/managment-connection/health-check', {
+    method: 'POST',
+    body: {
+      stringConnection: connectionString.value,
+    },
+  });
+
+  if (result.isConnectedSuccess) {
+    testStatus.value = 'success';
+
+    return true;
+  } else {
+    testStatus.value = 'error';
+
+    return false;
+  }
+};
+
+const handleCreateConnection = async () => {
+  const isEdit = props.editingConnection;
+  const isCreate = !isEdit;
+
+  if (isCreate) {
+    const isConnectedSuccess = await handleTestConnection();
+
+    if (!isConnectedSuccess) {
+      return;
+    }
+  }
+
+  if (!workspaceId.value) {
+    throw new Error('No workspace selected');
+    return;
+  }
+
+  const connection: Connection = {
+    workspaceId: workspaceId.value,
+    id: props.editingConnection?.id || uuidv4(),
+    name: connectionName.value,
+    type: dbType.value as EDatabaseType,
+    method: connectionMethod.value,
+    createdAt: props.editingConnection?.createdAt || new Date(),
+  };
+
+  if (connectionMethod.value === 'string') {
+    connection.connectionString = connectionString.value;
+  } else {
+    connection.host = formData.host;
+    connection.port = formData.port;
+    connection.username = formData.username;
+    connection.password = formData.password;
+    connection.database = formData.database;
+  }
+
+  console.log('connection', connection);
+
+  if (isCreate) {
+    emit('addNew', connection);
+  } else {
+    emit('update', connection);
+  }
+
+  handleClose();
+};
+
+const getDefaultPort = () => {
+  switch (dbType.value) {
+    case 'postgres':
+      return '5432';
+    case 'mysql':
+      return '3306';
+    // case 'redis':
+    //   return '6379';
+    default:
+      return '';
+  }
+};
+
+const getConnectionPlaceholder = () => {
+  switch (dbType.value) {
+    case 'postgres':
+      return 'postgresql://username:password@localhost:5432/database';
+    case 'mysql':
+      return 'mysql://username:password@localhost:3306/database';
+    // case 'redis':
+    //   return 'redis://username:password@localhost:6379';
+    default:
+      return '';
+  }
+};
+
+const isFormValid = () => {
+  if (!connectionName.value) return false;
+
+  if (connectionMethod.value === 'string') {
+    return !!connectionString.value;
+  } else {
+    return !!(formData.host && formData.port);
+  }
+};
+
+// Reset form when modal opens or editing connection changes
+watch(
+  () => [props.open, props.editingConnection],
+  () => {
+    if (props.open) {
+      if (props.editingConnection) {
+        connectionName.value = props.editingConnection.name;
+        dbType.value = props.editingConnection.type;
+        connectionMethod.value = props.editingConnection.method;
+        connectionString.value = props.editingConnection.connectionString || '';
+
+        formData.host = props.editingConnection.host || '';
+        formData.port = props.editingConnection.port || '';
+        formData.username = props.editingConnection.username || '';
+        formData.password = props.editingConnection.password || '';
+        formData.database = props.editingConnection.database || '';
+
+        step.value = 2;
+      } else {
+        resetForm();
+      }
+    }
+  },
+  { immediate: true }
+);
+
+const databaseOptions = computed(() =>
+  databaseSupports.map(e => ({
+    ...e,
+    isActive: dbType.value === e.type,
+    onClick: () => (dbType.value = e.type),
+  }))
+);
+</script>
+
 <template>
   <Dialog :open="open" @update:open="$emit('update:open', $event)">
     <DialogContent
@@ -227,230 +458,3 @@
     </DialogContent>
   </Dialog>
 </template>
-
-<script setup lang="ts">
-import { reactive, ref, watch } from 'vue';
-import { Icon } from '#components';
-import {
-  ArrowLeftIcon,
-  CheckIcon,
-  DatabaseIcon,
-  FileTextIcon,
-  GlobeIcon,
-  HashIcon,
-  KeyIcon,
-  Loader2Icon,
-  UserIcon,
-  XIcon,
-} from 'lucide-vue-next';
-import { Button } from '@/components/ui/button';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Tabs, TabsContent } from '@/components/ui/tabs';
-import { uuidv4 } from '~/lib/utils';
-import { useAppContext } from '~/shared/contexts/useAppContext';
-import type { Connection } from '~/shared/stores';
-import DatabaseTypeCard from './DatabaseTypeCard.vue';
-import { databaseSupports, EDatabaseType } from './constants';
-import { EConnectionMethod } from './type/index';
-
-const props = defineProps<{
-  open: boolean;
-  editingConnection: Connection | null;
-}>();
-
-const emit = defineEmits<{
-  (e: 'update:open', value: boolean): void;
-  (e: 'addNew', connection: Connection): void;
-  (e: 'update', connection: Connection): void;
-}>();
-
-const { workspaceStore } = useAppContext();
-
-const step = ref<1 | 2>(1);
-const dbType = ref<EDatabaseType | null>(null);
-const connectionName = ref('');
-const connectionMethod = ref<EConnectionMethod>(EConnectionMethod.STRING);
-const connectionString = ref('');
-const formData = reactive({
-  host: '',
-  port: '',
-  username: '',
-  password: '',
-  database: '',
-});
-const testStatus = ref<'idle' | 'testing' | 'success' | 'error'>('idle');
-
-const resetForm = () => {
-  step.value = 1;
-  dbType.value = null;
-  connectionName.value = '';
-  connectionMethod.value = EConnectionMethod.STRING;
-  connectionString.value = '';
-
-  formData.host = '';
-  formData.port = '';
-  formData.username = '';
-  formData.password = '';
-  formData.database = '';
-
-  testStatus.value = 'idle';
-};
-
-const handleNext = () => {
-  if (step.value === 1 && dbType.value) {
-    step.value = 2;
-  }
-};
-
-const handleBack = () => {
-  step.value = 1;
-  testStatus.value = 'idle';
-};
-
-const handleClose = () => {
-  emit('update:open', false);
-  setTimeout(resetForm, 300);
-};
-
-const handleTestConnection = async () => {
-  testStatus.value = 'testing';
-
-  const result = await $fetch('/api/managment-connection/health-check', {
-    method: 'POST',
-    body: {
-      stringConnection: connectionString.value,
-    },
-  });
-
-  if (result.isConnectedSuccess) {
-    testStatus.value = 'success';
-
-    return true;
-  } else {
-    testStatus.value = 'error';
-
-    return false;
-  }
-};
-
-const handleCreateConnection = async () => {
-  const isEdit = props.editingConnection;
-  const isCreate = !isEdit;
-
-  if (isCreate) {
-    const isConnectedSuccess = await handleTestConnection();
-
-    if (!isConnectedSuccess) {
-      return;
-    }
-  }
-
-  const workspaceId = workspaceStore.selectedWorkspaceId || '';
-
-  const connection: Connection = {
-    workspaceId,
-    id: props.editingConnection?.id || uuidv4(),
-    name: connectionName.value,
-    type: dbType.value as EDatabaseType,
-    method: connectionMethod.value,
-    createdAt: props.editingConnection?.createdAt || new Date(),
-  };
-
-  if (connectionMethod.value === 'string') {
-    connection.connectionString = connectionString.value;
-  } else {
-    connection.host = formData.host;
-    connection.port = formData.port;
-    connection.username = formData.username;
-    connection.password = formData.password;
-    connection.database = formData.database;
-  }
-
-  if (isCreate) {
-    emit('addNew', connection);
-  } else {
-    emit('update', connection);
-  }
-
-  handleClose();
-};
-
-const getDefaultPort = () => {
-  switch (dbType.value) {
-    case 'postgres':
-      return '5432';
-    case 'mysql':
-      return '3306';
-    // case 'redis':
-    //   return '6379';
-    default:
-      return '';
-  }
-};
-
-const getConnectionPlaceholder = () => {
-  switch (dbType.value) {
-    case 'postgres':
-      return 'postgresql://username:password@localhost:5432/database';
-    case 'mysql':
-      return 'mysql://username:password@localhost:3306/database';
-    // case 'redis':
-    //   return 'redis://username:password@localhost:6379';
-    default:
-      return '';
-  }
-};
-
-const isFormValid = () => {
-  if (!connectionName.value) return false;
-
-  if (connectionMethod.value === 'string') {
-    return !!connectionString.value;
-  } else {
-    return !!(formData.host && formData.port);
-  }
-};
-
-// Reset form when modal opens or editing connection changes
-watch(
-  () => [props.open, props.editingConnection],
-  () => {
-    if (props.open) {
-      if (props.editingConnection) {
-        connectionName.value = props.editingConnection.name;
-        dbType.value = props.editingConnection.type;
-        connectionMethod.value = props.editingConnection.method;
-        connectionString.value = props.editingConnection.connectionString || '';
-
-        formData.host = props.editingConnection.host || '';
-        formData.port = props.editingConnection.port || '';
-        formData.username = props.editingConnection.username || '';
-        formData.password = props.editingConnection.password || '';
-        formData.database = props.editingConnection.database || '';
-
-        step.value = 2;
-      } else {
-        resetForm();
-      }
-    }
-  },
-  { immediate: true }
-);
-
-const databaseOptions = computed(() =>
-  databaseSupports.map(e => ({
-    ...e,
-    isActive: dbType.value === e.type,
-    onClick: () => (dbType.value = e.type),
-  }))
-);
-</script>

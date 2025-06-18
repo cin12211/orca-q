@@ -3,7 +3,7 @@ import type QuickQueryFilter from '../quick-query-filter/QuickQueryFilter.vue';
 import type QuickQueryTable from '../quick-query-table/QuickQueryTable.vue';
 
 export const useQuickQuery = () => {
-  const { connectionStore, workspaceStore } = useAppContext();
+  const { connectionStore, workspaceId, connectionId } = useAppContext();
 
   const quickQueryFilterRef = ref<InstanceType<typeof QuickQueryFilter>>();
   const quickQueryTableRef = ref<InstanceType<typeof QuickQueryTable>>();
@@ -13,9 +13,6 @@ export const useQuickQuery = () => {
   const connectionString = computed(
     () => connectionStore.selectedConnection?.connectionString || ''
   );
-
-  const connectionId = computed(() => connectionStore.selectedConnectionId);
-  const workspaceId = computed(() => workspaceStore.selectedWorkspaceId);
 
   return {
     quickQueryFilterRef,

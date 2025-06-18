@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
 import { useManagementConnectionStore } from './managementConnectionStore';
+import { useWSStateStore } from './useWSStateStore';
 
 interface Column {
   label: string;
@@ -27,31 +28,30 @@ export const PUBLIC_SCHEMA_ID = 'public';
 export const useSchemaStore = defineStore(
   'schema-store',
   () => {
+    const wsStateStore = useWSStateStore();
+    const { wsState, schemaId } = toRefs(wsStateStore);
+
     const schemas = ref<Schema[]>([]);
-
-    const connectionStore = useManagementConnectionStore();
-
-    const selectedSchemaId = ref<string>();
 
     const schemasByCurrentConnection = computed(() => {
       return schemas.value.filter(
-        schema => schema.connectionId === connectionStore.selectedConnectionId
+        schema => schema.connectionId === wsState.value?.connectionId
       );
     });
 
     const currentSchema = computed(() => {
       return schemas.value.find(
         schema =>
-          schema.name === selectedSchemaId.value &&
-          schema.connectionId === connectionStore.selectedConnectionId
+          schema.name === schemaId.value &&
+          schema.connectionId === wsState.value?.connectionId
       );
     });
 
-    const setSelectedSchemaId = (schemaId: string) => {
-      selectedSchemaId.value = schemaId;
-    };
-
     const setInitialSchema = () => {
+      if (!wsState.value?.id || !wsState.value?.connectionId) {
+        return;
+      }
+
       console.log('schemas.value', schemas.value);
       if (!schemas.value.length) {
         return;
@@ -61,11 +61,15 @@ export const useSchemaStore = defineStore(
         schema => schema.name === PUBLIC_SCHEMA_ID
       );
 
-      if (havePublicSchemas) {
-        selectedSchemaId.value = PUBLIC_SCHEMA_ID;
-      } else {
-        selectedSchemaId.value = schemas.value[0].name;
-      }
+      let schemaIdTmp = havePublicSchemas
+        ? PUBLIC_SCHEMA_ID
+        : schemas.value[0].name;
+
+      wsStateStore.setSchemaId({
+        schemaId: schemaIdTmp,
+        workspaceId: wsState.value?.id,
+        connectionId: wsState.value?.connectionId,
+      });
     };
 
     const updateSchemasForWorkspace = ({
@@ -85,17 +89,16 @@ export const useSchemaStore = defineStore(
       schemas.value = tmpSchema;
 
       if (!newSchemas.length) {
-        selectedSchemaId.value = undefined;
+        //TODO: need refactor
+        // selectedSchemaId.value = undefined;
         return;
       }
     };
 
     return {
       schemas,
-      selectedSchemaId,
       currentSchema,
       updateSchemasForWorkspace,
-      setSelectedSchemaId,
       setInitialSchema,
       schemasByCurrentConnection,
     };

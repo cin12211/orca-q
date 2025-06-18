@@ -26,7 +26,7 @@ import { useAppContext } from '~/shared/contexts/useAppContext';
 import type { Connection } from '~/shared/stores';
 import { getDatabaseSupportByType } from './constants';
 
-const { connectionStore } = useAppContext();
+const { connectionStore, setConnectionId } = useAppContext();
 
 defineProps<{
   connections: Connection[];
@@ -56,7 +56,7 @@ const confirmDelete = () => {
 };
 
 const onConnectConnection = (connection: Connection) => {
-  connectionStore.setSelectedConnection(connection.id);
+  setConnectionId(connection.id);
 
   navigateTo({
     name: 'workspaceId',

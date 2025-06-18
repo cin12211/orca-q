@@ -1,4 +1,4 @@
-import { useSchemaStore, useWorkspacesStore } from '../stores';
+import { useSchemaStore, useWorkspacesStore, useWSStateStore } from '../stores';
 import type { Schema } from '../stores';
 import {
   useManagementConnectionStore,
@@ -12,9 +12,16 @@ export const useAppContext = () => {
 
   const schemaStore = useSchemaStore();
 
+  const wsStateStore = useWSStateStore();
+  const { wsState, schemaId: _schemaId } = toRefs(wsStateStore);
+
+  const workspaceId = computed(() => wsState.value?.id);
+  const connectionId = computed(() => wsState.value?.connectionId);
+  const schemaId = computed(() => _schemaId);
+
   const onSelectWorkspaceById = (workspaceId: string) => {
     //select workspace
-    workspaceStore.setSelectedWorkspaceId(workspaceId);
+    wsStateStore.setActiveWSId(workspaceId);
     const currentWorkspace = workspaceStore.selectedWorkspace;
 
     if (!currentWorkspace) {
@@ -29,12 +36,16 @@ export const useAppContext = () => {
       return;
     }
 
-    const currentConnectionId = connectionStore.selectedConnectionId;
+    const currentConnectionId = wsState.value?.connectionId;
     const currentConnection = connectionStore.selectedConnection;
 
     if (!currentConnectionId) {
       // set first connection as selected
-      connectionStore.setSelectedConnection(connections[0].id);
+
+      wsStateStore.setConnectionId({
+        connectionId: connections[0].id,
+        workspaceId,
+      });
     }
 
     // select public or first schema
@@ -46,7 +57,11 @@ export const useAppContext = () => {
   };
 
   const onCreateNewConnection = async (connection: Connection) => {
-    connectionStore.createNewConnection(connection);
+    console.log('🚀 ~ onCreateNewConnection ~ connection:', connection);
+
+    await connectionStore.createNewConnection(connection);
+
+    console.log('hello');
 
     const dbConnectionString = connection.connectionString;
 
@@ -74,14 +89,40 @@ export const useAppContext = () => {
       connectionId: connection.id,
     });
 
+    console.log('cin');
     // auto select when user have empty schema or connection
-    if (!schemaStore.currentSchema || !connectionStore.selectedConnectionId) {
+    if (!schemaStore.currentSchema || !wsState.value?.connectionId) {
       onSelectConnectionById(connection.id);
     }
   };
 
+  const setConnectionId = (connectionId: string) => {
+    if (!workspaceId.value) {
+      throw new Error('No workspace selected');
+      return;
+    }
+
+    wsStateStore.setConnectionId({
+      connectionId,
+      workspaceId: workspaceId.value,
+    });
+  };
+
+  const setSchemaId = (schemaId: string) => {
+    if (!workspaceId.value || !connectionId.value) {
+      throw new Error('No workspace or connection selected');
+      return;
+    }
+
+    wsStateStore.setSchemaId({
+      schemaId,
+      connectionId: connectionId.value,
+      workspaceId: workspaceId.value,
+    });
+  };
+
   const onSelectConnectionById = (connectionId: string) => {
-    connectionStore.setSelectedConnection(connectionId);
+    setConnectionId(connectionId);
     schemaStore.setInitialSchema();
   };
 
@@ -97,5 +138,12 @@ export const useAppContext = () => {
     schemaStore,
     onCreateNewConnection,
     currentConnectionString,
+    wsState,
+    workspaceId,
+    connectionId,
+    schemaId,
+    setActiveWSId: wsStateStore.setActiveWSId,
+    setConnectionId,
+    setSchemaId,
   };
 };

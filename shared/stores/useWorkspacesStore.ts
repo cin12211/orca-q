@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
+import { useWSStateStore } from './useWSStateStore';
 
 export interface Workspace {
   id: string;
@@ -13,28 +14,28 @@ export interface Workspace {
 export const useWorkspacesStore = defineStore(
   'workspaces',
   () => {
-    const workspaces = ref<Workspace[]>([]);
-    const selectedWorkspaceId = ref<string>();
+    const wsStateStore = useWSStateStore();
+    const { workSpaceId } = toRefs(wsStateStore);
 
-    const setSelectedWorkspaceId = (workspaceId: string) => {
-      selectedWorkspaceId.value = workspaceId;
-    };
+    const workspaces = ref<Workspace[]>([]);
 
     const selectedWorkspace = computed(() => {
       return workspaces.value.find(
-        workspace => workspace.id === selectedWorkspaceId.value
+        workspace => workspace.id === workSpaceId.value
       );
     });
 
     const createWorkspace = async (workspace: Workspace) => {
       await window.workspaceApi.create(workspace);
 
+      await wsStateStore.onCreateNewWSState({
+        id: workspace.id,
+      });
+
       workspaces.value.push(workspace);
     };
 
     const updateWorkspace = async (workspace: Workspace) => {
-      console.log('🚀 ~ updateWorkspace ~ workspace:', workspace);
-
       await window.workspaceApi.update(workspace);
       await loadPersistData();
     };
@@ -55,8 +56,6 @@ export const useWorkspacesStore = defineStore(
 
     return {
       workspaces,
-      selectedWorkspaceId,
-      setSelectedWorkspaceId,
       createWorkspace,
       deleteWorkspace,
       updateWorkspace,

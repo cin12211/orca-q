@@ -29,6 +29,12 @@ const onBackToHome = () => {
 
       <Breadcrumb>
         <BreadcrumbList class="gap-0.5!">
+          <!-- <BreadcrumbItem class="text-xs">
+            <WorkspaceSelector
+              class="h-4! px-1 rounded-sm! text-xs border-none shadow"
+            />
+          </BreadcrumbItem> -->
+
           <BreadcrumbItem class="text-xs">
             <Icon
               v-if="workspaceStore?.selectedWorkspace?.icon"

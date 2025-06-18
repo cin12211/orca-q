@@ -4,19 +4,15 @@ import type { AcceptableValue } from 'reka-ui';
 import { cn } from '@/lib/utils';
 import { useAppContext } from '~/shared/contexts/useAppContext';
 
-const { workspaceStore } = useAppContext();
+const { workspaceStore, workspaceId, setActiveWSId } = useAppContext();
 
-const { workspaces, selectedWorkspaceId, selectedWorkspace } =
-  toRefs(workspaceStore);
+const { workspaces, selectedWorkspace } = toRefs(workspaceStore);
 
 const props = defineProps<{ class?: string }>();
 
-const onChangeConnection = async (connectionId: AcceptableValue) => {
-  if (
-    typeof connectionId === 'string' &&
-    connectionId !== selectedWorkspaceId.value
-  ) {
-    selectedWorkspaceId.value = connectionId;
+const onChangeWorkspace = async (wsId: AcceptableValue) => {
+  if (typeof wsId === 'string' && wsId !== workspaceId.value) {
+    setActiveWSId(wsId);
   }
 };
 
@@ -25,10 +21,7 @@ const onBackToWorkspaces = () => {
 };
 </script>
 <template>
-  <Select
-    @update:model-value="onChangeConnection"
-    :model-value="selectedWorkspaceId"
-  >
+  <Select @update:model-value="onChangeWorkspace" :model-value="workspaceId">
     <SelectTrigger :class="cn(props.class, 'cursor-pointer')" size="sm">
       <div class="flex items-center gap-2 truncate" v-if="selectedWorkspace">
         <Icon :name="selectedWorkspace.icon" />

@@ -20,3 +20,10 @@ export enum ConnectionIpcChannels {
   Update = 'connection:update',
   Delete = 'connection:delete'
 }
+
+export enum WorkspaceStateIpcChannels {
+  Gets = 'workspacesState:gets',
+  Create = 'workspacesState:create',
+  Update = 'workspacesState:update',
+  Delete = 'workspacesState:delete'
+}

@@ -4,3 +4,4 @@ export * from './useManagementViewContainerStore';
 export * from './managementConnectionStore';
 export * from './useWorkspacesStore';
 export * from './useSchemaStore';
+export * from './useWSStateStore';
