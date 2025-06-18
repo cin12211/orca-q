@@ -1,28 +1,13 @@
 <script setup lang="ts">
 import { computed } from 'vue';
-import { ref } from 'vue';
 import { Handle, Position, useVueFlow } from '@vue-flow/core';
+import type { DBSchemaProps } from '~/components/modules/erd-diagram/type';
 
-const rowHeight = 44;
+// Constants
+const ROW_HEIGHT = 44;
+const HANDLE_HEIGHT = '20px';
 
-const props = defineProps<{
-  id: string;
-  data: {
-    value: {
-      table: string;
-      columns: Array<{
-        name: string;
-        type: string;
-      }>;
-      primary_keys: Array<{
-        column: string;
-      }>;
-      foreign_keys: Array<{
-        column: string;
-      }>;
-    };
-  };
-}>();
+const props = defineProps<DBSchemaProps>();
 
 const { updateNodeData } = useVueFlow();
 
@@ -30,6 +15,11 @@ const value = computed({
   get: () => props.data,
   set: value => updateNodeData(props.id, { value }),
 });
+
+const calculateHandleTop = (column: string) => {
+  const index = value.value.value.columns.findIndex(e => e.name === column);
+  return (index + 1) * ROW_HEIGHT - ROW_HEIGHT / 2 + ROW_HEIGHT;
+};
 
 const checkPrimaryKey = (key: string) => {
   const primaryKey = value.value.value.primary_keys.map(item => item.column);
@@ -49,7 +39,7 @@ const checkForeignKey = (key: string) => {
       <div
         class="col-span-full rounded-t-md box-border p-2 p-x-auto bg-indigo-400 flex items-center justify-center"
         :style="{
-          height: rowHeight + 'px',
+          height: ROW_HEIGHT + 'px',
         }"
       >
         <p
@@ -59,11 +49,11 @@ const checkForeignKey = (key: string) => {
         </p>
       </div>
       <div
-        v-for="(r, index) in value.value.columns"
+        v-for="(column, index) in value.value.columns"
         :key="index + '-' + index"
         class="grid grid-cols-3 nodrag cursor-default"
         :style="{
-          height: rowHeight + 'px',
+          height: ROW_HEIGHT + 'px',
         }"
       >
         <div
@@ -74,12 +64,12 @@ const checkForeignKey = (key: string) => {
         >
           <div class="w-6 box-border flex items-center justify-center">
             <Icon
-              v-if="checkPrimaryKey(r.name)"
+              v-if="checkPrimaryKey(column.name)"
               name="hugeicons:key-01"
               class="min-w-4 text-yellow-400"
             />
             <Icon
-              v-if="checkForeignKey(r.name)"
+              v-if="checkForeignKey(column.name)"
               name="hugeicons:key-01"
               class="min-w-4 text-blue-400"
             />
@@ -87,7 +77,7 @@ const checkForeignKey = (key: string) => {
           <p
             class="select-text cursor-text w-fit text-center nodrag box-border px-2 truncate"
           >
-            {{ r.name }}
+            {{ column.name }}
           </p>
         </div>
         <div
@@ -99,7 +89,7 @@ const checkForeignKey = (key: string) => {
           <p
             class="select-text cursor-text text-center nodrag box-border px-2 truncate"
           >
-            {{ r.type }}
+            {{ column.type }}
           </p>
         </div>
       </div>
@@ -107,28 +97,21 @@ const checkForeignKey = (key: string) => {
   </div>
 
   <Handle
-    v-for="(r, index) in value.value.foreign_keys"
+    v-for="(column, index) in value.value.foreign_keys"
     type="source"
-    :id="r.column"
+    :id="column.column"
     :position="Position.Right"
     :connectable="false"
     :style="{
-      top:
-        (value.value.columns.findIndex(e => e.name === r.column) + 1) * 44 -
-        44 / 2 -
-        1 +
-        44 +
-        'px',
-      height: '20px',
+      top: calculateHandleTop(column.column),
+      height: HANDLE_HEIGHT,
     }"
   />
   <Handle
-    v-for="(r, index) in value.value.primary_keys"
-    :id="r.column"
+    v-for="(column, index) in value.value.primary_keys"
+    :id="column.column"
     type="target"
     :position="Position.Left"
     :connectable="false"
   />
 </template>
-
-<style></style>
