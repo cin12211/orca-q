@@ -278,12 +278,12 @@ const onRefreshSchema = async () => {
             />
           </Button>
 
-          <!-- <Button size="iconSm" class="hover:bg-background/80!" variant="ghost">
+          <Button size="iconSm" class="hover:bg-background/80!" variant="ghost">
             <Icon
               name="lucide:table"
               class="size-4! min-w-4 text-muted-foreground"
             />
-          </Button> -->
+          </Button>
         </div>
       </template>
     </TreeFolder>

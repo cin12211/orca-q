@@ -1,36 +1,12 @@
 import { uuidv4 } from '~/lib/utils';
+import type {
+  Position,
+  Edge,
+  TableData,
+  ForeignKey,
+  TableNode,
+} from '~/utils/erd/type/index';
 import { dbSchema } from '~/utils/index';
-
-interface Position {
-  x: number;
-  y: number;
-}
-
-interface TableData {
-  table: string;
-  foreign_keys: ForeignKey[];
-  [key: string]: any;
-}
-
-interface ForeignKey {
-  column: string;
-  reference_table: string;
-}
-
-interface TableNode {
-  id: string;
-  type: string;
-  position: Position;
-  data: { value: TableData };
-}
-
-interface Edge {
-  id: string;
-  type: string;
-  source: string;
-  target: string;
-  sourceHandle: string;
-}
 
 const LAYOUT_CONFIG = {
   BASE_X: -192,
