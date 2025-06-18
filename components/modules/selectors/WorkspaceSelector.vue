@@ -4,9 +4,10 @@ import type { AcceptableValue } from 'reka-ui';
 import { cn } from '@/lib/utils';
 import { useAppContext } from '~/shared/contexts/useAppContext';
 
-const { workspaceStore, workspaceId, setActiveWSId } = useAppContext();
+const { workspaceStore, setActiveWSId, wsStateStore } = useAppContext();
 
 const { workspaces, selectedWorkspace } = toRefs(workspaceStore);
+const { workspaceId } = toRefs(wsStateStore);
 
 const props = defineProps<{ class?: string }>();
 

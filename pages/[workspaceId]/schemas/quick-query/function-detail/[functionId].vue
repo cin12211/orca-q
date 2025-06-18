@@ -22,15 +22,13 @@ const route = useRoute(
   'workspaceId-schemas-quick-query-function-detail-functionId'
 );
 
-const { connectionStore } = useAppContext();
+const { connectionStore, schemaStore } = useAppContext();
+const { activeSchema } = toRefs(schemaStore);
+const { currentConnectionString } = toRefs(connectionStore);
 
 const code = ref('');
 
-const { currentConnectionString } = useAppContext();
-
-const { schemaStore } = useAppContext();
-
-const schema: SQLNamespace = schemaStore.currentSchema?.tableDetails ?? {};
+const schema: SQLNamespace = activeSchema.value?.tableDetails ?? {};
 
 const sqlCompartment = new Compartment();
 

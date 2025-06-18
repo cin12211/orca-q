@@ -15,13 +15,13 @@ export const useWorkspacesStore = defineStore(
   'workspaces',
   () => {
     const wsStateStore = useWSStateStore();
-    const { workSpaceId } = toRefs(wsStateStore);
+    const { workspaceId } = toRefs(wsStateStore);
 
     const workspaces = ref<Workspace[]>([]);
 
     const selectedWorkspace = computed(() => {
       return workspaces.value.find(
-        workspace => workspace.id === workSpaceId.value
+        workspace => workspace.id === workspaceId.value
       );
     });
 

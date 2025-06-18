@@ -42,7 +42,8 @@ const emit = defineEmits<{
   (e: 'update', connection: Connection): void;
 }>();
 
-const { workspaceId } = useAppContext();
+const { wsStateStore } = useAppContext();
+const { workspaceId } = toRefs(wsStateStore);
 
 const step = ref<1 | 2>(1);
 const dbType = ref<EDatabaseType | null>(null);

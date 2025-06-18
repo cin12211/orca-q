@@ -25,7 +25,9 @@ definePageMeta({
 
 const { schemaStore } = useAppContext();
 
-const schema: SQLNamespace = schemaStore.currentSchema?.tableDetails ?? {};
+const { activeSchema } = toRefs(schemaStore);
+
+const schema: SQLNamespace = activeSchema.value?.tableDetails ?? {};
 
 const code = ref('');
 
@@ -33,7 +35,8 @@ const tableData = ref<Record<string, unknown>[]>([]);
 
 const sqlCompartment = new Compartment();
 
-const { currentConnectionString } = useAppContext();
+const { connectionStore } = useAppContext();
+const { currentConnectionString } = toRefs(connectionStore);
 
 const extensions = [
   shortCutExecuteCurrentStatement(

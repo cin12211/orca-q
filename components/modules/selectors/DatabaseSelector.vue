@@ -3,15 +3,15 @@ import { Select, SelectGroup, SelectItem, SelectTrigger } from '#components';
 import { useAppContext } from '~/shared/contexts/useAppContext';
 import { getDatabaseSupportByType } from '../management-connection/constants';
 
-const { connectionStore, onSelectConnectionById } = useAppContext();
+const { connectionStore, setConnectionId } = useAppContext();
 
-const { connectionsByWsID, selectedConnection } = toRefs(connectionStore);
+const { connectionsByWsId, selectedConnection } = toRefs(connectionStore);
 </script>
 <template>
   <Select
     @update:model-value="
       e => {
-        onSelectConnectionById(e as string);
+        setConnectionId(e as string);
       }
     "
     :model-value="selectedConnection?.id"
@@ -33,7 +33,7 @@ const { connectionsByWsID, selectedConnection } = toRefs(connectionStore);
       <SelectGroup>
         <SelectItem
           :value="connection.id"
-          v-for="connection in connectionsByWsID"
+          v-for="connection in connectionsByWsId"
         >
           <div class="flex items-center gap-2">
             <component

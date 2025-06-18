@@ -29,81 +29,82 @@ export const useSchemaStore = defineStore(
   'schema-store',
   () => {
     const wsStateStore = useWSStateStore();
-    const { wsState, schemaId } = toRefs(wsStateStore);
+    const { wsState, connectionId, schemaId } = toRefs(wsStateStore);
 
     const schemas = ref<Schema[]>([]);
 
-    const schemasByCurrentConnection = computed(() => {
-      return schemas.value.filter(
-        schema => schema.connectionId === wsState.value?.connectionId
-      );
-    });
-
-    const currentSchema = computed(() => {
+    const activeSchema = computed(() => {
       return schemas.value.find(
         schema =>
-          schema.name === schemaId.value &&
-          schema.connectionId === wsState.value?.connectionId
+          schema.connectionId === connectionId.value &&
+          schema.workspaceId === wsState.value?.id &&
+          schema.name === schemaId.value
       );
     });
 
-    const setInitialSchema = () => {
-      if (!wsState.value?.id || !wsState.value?.connectionId) {
-        return;
-      }
-
-      console.log('schemas.value', schemas.value);
-      if (!schemas.value.length) {
-        return;
-      }
-
-      const havePublicSchemas = schemas.value.some(
-        schema => schema.name === PUBLIC_SCHEMA_ID
+    const schemasByContext = computed(() => {
+      return schemas.value.filter(
+        schema =>
+          schema.connectionId === connectionId.value &&
+          schema.workspaceId === wsState.value?.id
       );
+    });
 
-      let schemaIdTmp = havePublicSchemas
-        ? PUBLIC_SCHEMA_ID
-        : schemas.value[0].name;
+    // const setInitialSchema = () => {
+    //   if (!wsState.value?.id || !wsState.value?.connectionId) {
+    //     return;
+    //   }
 
-      wsStateStore.setSchemaId({
-        schemaId: schemaIdTmp,
-        workspaceId: wsState.value?.id,
-        connectionId: wsState.value?.connectionId,
-      });
-    };
+    //   console.log('schemas.value', schemas.value);
+    //   if (!schemas.value.length) {
+    //     return;
+    //   }
 
-    const updateSchemasForWorkspace = ({
-      connectionId,
-      newSchemas,
-    }: {
-      connectionId: string;
-      newSchemas: Schema[];
-    }) => {
-      // remove all schemas for this workspace
-      let tmpSchema = schemas.value.filter(
-        schema => schema.connectionId !== connectionId
-      );
+    //   const havePublicSchemas = schemas.value.some(
+    //     schema => schema.name === PUBLIC_SCHEMA_ID
+    //   );
 
-      tmpSchema = [...tmpSchema, ...newSchemas];
+    //   let schemaIdTmp = havePublicSchemas
+    //     ? PUBLIC_SCHEMA_ID
+    //     : schemas.value[0].name;
 
-      schemas.value = tmpSchema;
+    //   wsStateStore.setSchemaId({
+    //     schemaId: schemaIdTmp,
+    //     workspaceId: wsState.value?.id,
+    //     connectionId: wsState.value?.connectionId,
+    //   });
+    // };
 
-      if (!newSchemas.length) {
-        //TODO: need refactor
-        // selectedSchemaId.value = undefined;
-        return;
-      }
-    };
+    // const updateSchemasForWorkspace = ({
+    //   connectionId,
+    //   newSchemas,
+    // }: {
+    //   connectionId: string;
+    //   newSchemas: Schema[];
+    // }) => {
+    //   // remove all schemas for this workspace
+    //   let tmpSchema = schemas.value.filter(
+    //     schema => schema.connectionId !== connectionId
+    //   );
+
+    //   tmpSchema = [...tmpSchema, ...newSchemas];
+
+    //   schemas.value = tmpSchema;
+
+    //   if (!newSchemas.length) {
+    //     //TODO: need refactor
+    //     // selectedSchemaId.value = undefined;
+    //     return;
+    //   }
+    // };
 
     return {
       schemas,
-      currentSchema,
-      updateSchemasForWorkspace,
-      setInitialSchema,
-      schemasByCurrentConnection,
+      activeSchema,
+      schemasByContext,
     };
   },
   {
-    persist: true,
+    persist: false,
   }
 );

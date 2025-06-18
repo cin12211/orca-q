@@ -11,7 +11,11 @@ import {
 } from '~/shared/stores/useManagementViewContainerStore';
 import { DEFAULT_DEBOUNCE_INPUT } from '~/utils/constants';
 
-const { schemaStore } = useAppContext();
+const { schemaStore, onConnectToConnection, wsStateStore } = useAppContext();
+const { activeSchema } = toRefs(schemaStore);
+const { connectionId } = toRefs(wsStateStore);
+
+const isRefreshing = ref(false);
 
 const searchInput = shallowRef('');
 const debouncedSearch = refDebounced(searchInput, DEFAULT_DEBOUNCE_INPUT);
@@ -25,9 +29,9 @@ enum SchemaFolderType {
 }
 
 const items = computed(() => {
-  const tables = schemaStore.currentSchema?.tables || [];
-  const functions = schemaStore.currentSchema?.functions || [];
-  const views = schemaStore.currentSchema?.views || [];
+  const tables = activeSchema?.value?.tables || [];
+  const functions = activeSchema?.value?.functions || [];
+  const views = activeSchema?.value?.views || [];
 
   const treeItems = [
     {
@@ -124,6 +128,18 @@ onActivated(() => {
     });
   });
 });
+
+const onRefreshSchema = async () => {
+  if (!connectionId.value) {
+    throw new Error('No connection selected');
+    return;
+  }
+
+  isRefreshing.value = true;
+  await onConnectToConnection(connectionId.value);
+
+  isRefreshing.value = false;
+};
 </script>
 
 <template>
@@ -154,10 +170,13 @@ onActivated(() => {
       </p>
 
       <div class="flex items-center">
-        <Button size="iconSm" variant="ghost">
+        <Button size="iconSm" variant="ghost" @click="onRefreshSchema">
           <Icon
             name="lucide:refresh-ccw"
-            class="size-4! min-w-4 text-muted-foreground"
+            :class="[
+              'size-4! min-w-4 text-muted-foreground',
+              isRefreshing && 'animate-spin',
+            ]"
           />
         </Button>
       </div>

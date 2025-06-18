@@ -9,6 +9,7 @@ import CreateConnectionModal from './CreateConnectionModal.vue';
 const isModalOpen = ref(false);
 
 const { onCreateNewConnection, connectionStore } = useAppContext();
+const { connectionsByWsId } = toRefs(connectionStore);
 
 const editingConnection = ref<Connection | null>(null);
 
@@ -52,7 +53,7 @@ const handleDeleteConnection = (id: string) => {
       </div>
 
       <ConnectionsList
-        :connections="connectionStore.connectionsByWsID"
+        :connections="connectionsByWsId"
         @edit="onOpenUpdateConnectionModal"
         @delete="handleDeleteConnection"
         @create="onOpenAddConnectionModal"

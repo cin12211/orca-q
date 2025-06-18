@@ -18,10 +18,10 @@ export const useWSStateStore = defineStore(
   () => {
     const wsStates = ref<WorkspaceState[]>([]);
 
-    const workSpaceId = ref<string>();
+    const workspaceId = ref<string>();
 
     const wsState = computed(() =>
-      wsStates.value.find(ws => ws.id === workSpaceId.value)
+      wsStates.value.find(ws => ws.id === workspaceId.value)
     );
 
     const onCreateNewWSState = async (wsState: WorkspaceState) => {
@@ -38,33 +38,46 @@ export const useWSStateStore = defineStore(
     loadPersistData();
 
     const updateWSState = async (wsState: WorkspaceState) => {
-      console.log('🚀 ~ updateWSState ~ wsState:', wsState);
-
-      await window.workspaceStateApi.update(wsState);
+      const mappedState = {
+        ...wsState,
+        connectionStates: wsState?.connectionStates?.map(connectionState => {
+          return {
+            ...connectionState,
+            sideBarExplorer: null,
+            sideBarSchemas: null,
+          };
+        }),
+      };
+      await window.workspaceStateApi.update(mappedState);
       await loadPersistData();
     };
 
-    const setActiveWSId = (workspaceId: string) => {
-      workSpaceId.value = workspaceId;
+    const setActiveWSId = (wsId: string) => {
+      workspaceId.value = wsId;
     };
 
-    const setConnectionId = ({
+    const setConnectionId = async ({
       connectionId,
       workspaceId,
     }: {
       workspaceId: string;
       connectionId: string;
     }) => {
-      const wsState = wsStates.value.find(ws => ws.id === workspaceId);
-      if (wsState) {
-        updateWSState({
-          ...wsState,
+      const wsStateUpdated = wsStates.value.find(ws => ws.id === workspaceId);
+
+      if (!wsStateUpdated) {
+        throw new Error('No workspace state found');
+      }
+
+      if (wsStateUpdated) {
+        await updateWSState({
+          ...wsStateUpdated,
           connectionId,
         });
       }
     };
 
-    const setSchemaId = ({
+    const setSchemaId = async ({
       connectionId,
       workspaceId,
       schemaId,
@@ -78,14 +91,19 @@ export const useWSStateStore = defineStore(
       if (wsState) {
         const connectionStatesTmp = wsState?.connectionStates || [];
 
-        if (!connectionStatesTmp?.length) {
+        const isEmpty = !connectionStatesTmp?.length;
+        const isNotExist = !connectionStatesTmp.find(
+          connectionState => connectionState.id === connectionId
+        );
+
+        if (isEmpty || isNotExist) {
           connectionStatesTmp?.push({
             id: connectionId,
             schemaId,
           });
         }
 
-        updateWSState({
+        await updateWSState({
           ...wsState,
           connectionStates: connectionStatesTmp.map(connectionState => {
             if (connectionState.id === connectionId) {
@@ -110,8 +128,20 @@ export const useWSStateStore = defineStore(
       )?.schemaId;
     });
 
+    const getStateById = ({
+      workspaceId,
+      connectionId,
+    }: {
+      workspaceId: string;
+      connectionId: string;
+    }) => {
+      return wsStates.value.find(
+        ws => ws.id === workspaceId && ws.connectionId === connectionId
+      );
+    };
+
     return {
-      workSpaceId,
+      workspaceId,
       wsState,
       updateWSState,
       setActiveWSId,
@@ -120,6 +150,7 @@ export const useWSStateStore = defineStore(
       schemaId,
       connectionId,
       onCreateNewWSState,
+      getStateById,
     };
   },
   {

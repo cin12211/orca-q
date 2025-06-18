@@ -23,9 +23,23 @@ export const useManagementConnectionStore = defineStore(
   'management-connection',
   () => {
     const wsStateStore = useWSStateStore();
-    const { workSpaceId, wsState } = toRefs(wsStateStore);
+    const { workspaceId, connectionId } = toRefs(wsStateStore);
 
     const connections = ref<Connection[]>([]);
+
+    const connectionsByWsId = computed(() => {
+      return getConnectionsByWorkspaceId(workspaceId.value || '');
+    });
+
+    const selectedConnection = computed(() => {
+      return connections.value.find(
+        connection => connection.id === connectionId.value
+      );
+    });
+
+    const currentConnectionString = computed(
+      () => selectedConnection?.value?.connectionString
+    );
 
     const createNewConnection = async (connection: Connection) => {
       await window.connectionApi.create(connection);
@@ -55,16 +69,6 @@ export const useManagementConnectionStore = defineStore(
       );
     };
 
-    const connectionsByWsID = computed(() => {
-      return getConnectionsByWorkspaceId(workSpaceId.value || '');
-    });
-
-    const selectedConnection = computed(() => {
-      return connections.value.find(
-        connection => connection.id === wsState.value?.connectionId
-      );
-    });
-
     const loadPersistData = async () => {
       console.time('loadPersistData');
       const load = await window.connectionApi.getAll();
@@ -79,8 +83,9 @@ export const useManagementConnectionStore = defineStore(
       createNewConnection,
       onDeleteConnection,
       getConnectionsByWorkspaceId,
-      connectionsByWsID,
+      connectionsByWsId,
       selectedConnection,
+      currentConnectionString,
     };
   },
   {

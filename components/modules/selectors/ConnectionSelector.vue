@@ -7,10 +7,17 @@ import type { Connection } from '~/shared/stores';
 import CreateConnectionModal from '../management-connection/CreateConnectionModal.vue';
 import { getDatabaseSupportByType } from '../management-connection/constants';
 
-const { connectionStore, onSelectConnectionById, onCreateNewConnection } =
-  useAppContext();
+const {
+  connectionStore,
+  setConnectionId,
+  onCreateNewConnection,
+  onConnectToConnection,
+  wsStateStore,
+} = useAppContext();
 
-const { connectionsByWsID, selectedConnection } = toRefs(connectionStore);
+const { connectionId: activeConnectionId } = toRefs(wsStateStore);
+
+const { connectionsByWsId, selectedConnection } = toRefs(connectionStore);
 
 const props = defineProps<{ class: string }>();
 
@@ -19,9 +26,9 @@ const open = ref(false);
 const onChangeConnection = async (connectionId: AcceptableValue) => {
   if (
     typeof connectionId === 'string' &&
-    connectionId !== selectedConnection?.value?.id
+    connectionId !== activeConnectionId.value
   ) {
-    onSelectConnectionById(connectionId);
+    await setConnectionId(connectionId);
   }
 };
 
@@ -46,7 +53,7 @@ const onOpenAddConnectionModal = () => {
 
   <Select
     @update:model-value="onChangeConnection"
-    :model-value="selectedConnection?.id"
+    :model-value="activeConnectionId"
     v-model:open="open"
   >
     <SelectTrigger :class="cn(props.class, 'w-48 cursor-pointer')" size="sm">
@@ -73,12 +80,12 @@ const onOpenAddConnectionModal = () => {
           Add new connection
         </div>
 
-        <SelectSeparator v-if="connectionsByWsID.length" />
+        <SelectSeparator v-if="connectionsByWsId.length" />
 
         <SelectItem
           class="cursor-pointer"
           :value="connection.id"
-          v-for="connection in connectionsByWsID"
+          v-for="connection in connectionsByWsId"
         >
           <div class="flex items-center gap-2">
             <component

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 // main.ts (or the entry that mounts Vue)
-import { TooltipProvider } from '#components';
+import { LoadingOverlay, TooltipProvider } from '#components';
 import { AllCommunityModule, ModuleRegistry } from 'ag-grid-community';
 import { Toaster } from './components/ui/sonner';
 import { useWSStateStore } from './shared/stores';
@@ -21,6 +21,7 @@ onMounted(() => {
 </script>
 
 <template>
+  <!-- <LoadingOverlay :visible="true" /> -->
   <NuxtLoadingIndicator />
   <TooltipProvider :delay-duration="DEFAULT_DEBOUNCE_INPUT">
     <NuxtLayout>
