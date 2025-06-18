@@ -118,7 +118,13 @@ export const useAppContext = () => {
     }
   };
 
-  const setConnectionId = async (connectionId: string) => {
+  const setConnectionId = async ({
+    connectionId,
+    onSuccess,
+  }: {
+    connectionId: string;
+    onSuccess?: () => void;
+  }) => {
     if (!workspaceId.value) {
       throw new Error('No workspace selected');
       return;
@@ -130,6 +136,8 @@ export const useAppContext = () => {
     });
 
     await onConnectToConnection(connectionId);
+
+    onSuccess?.();
   };
 
   return {

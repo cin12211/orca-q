@@ -2,15 +2,17 @@
 // https://www.electronjs.org/docs/latest/tutorial/process-model#preload-scripts
 import { electronAPI } from '@electron-toolkit/preload'
 import { contextBridge, ipcRenderer } from 'electron'
-import type { Connection, Workspace } from '../../../shared/stores'
+import type { Connection, TabView, Workspace } from '../../../shared/stores'
 import {
   ConnectionIpcChannels,
+  TabViewsIpcChannels,
   WindowIpcChannels,
   WorkspaceIpcChannels,
   WorkspaceStateIpcChannels
 } from '../constants'
 import { type UpdateWindowTitleProps } from '../main/ipc/updateWindowTitle'
 import { type WorkspaceState } from '../../../shared/stores/useWSStateStore'
+import { type GetTabViewsByContextProps } from '../main/ipc/tabViews'
 
 export const electronBridgeApi = {
   updateWindowTitle: (props: UpdateWindowTitleProps) =>
@@ -49,6 +51,17 @@ export const connectionApi = {
   delete: (id: string): Promise<Connection> => ipcRenderer.invoke(ConnectionIpcChannels.Delete, id)
 }
 
+export const tabViewsApi = {
+  getAll: (): Promise<TabView[]> => ipcRenderer.invoke(TabViewsIpcChannels.Gets),
+  getByContext: (props: GetTabViewsByContextProps): Promise<TabView[]> =>
+    ipcRenderer.invoke(TabViewsIpcChannels.GetByContext, props),
+  create: (tabView: TabView): Promise<TabView> =>
+    ipcRenderer.invoke(TabViewsIpcChannels.Create, tabView),
+  update: (tabView: TabView): Promise<TabView> =>
+    ipcRenderer.invoke(TabViewsIpcChannels.Update, tabView),
+  delete: (id: string): Promise<TabView> => ipcRenderer.invoke(TabViewsIpcChannels.Delete, id)
+}
+
 // Use `contextBridge` APIs to expose Electron APIs to
 // renderer only if context isolation is enabled, otherwise
 // just add to the DOM global.
@@ -73,4 +86,6 @@ if (process.contextIsolated) {
   window.connectionApi = connectionApi
   // @ts-ignore (define in dts)
   window.workspaceStateApi = workspaceStateApi
+  // @ts-ignore (define in dts)
+  window.tabViewsApi = tabViewsApi
 }

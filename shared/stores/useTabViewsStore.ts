@@ -22,17 +22,20 @@ export enum TabViewType {
 }
 
 export type TabView = {
-  name: string;
+  workspaceId: string;
+  connectionId: string;
+  schemaId: string;
   id: string;
-  projectId?: string;
+  index: number;
+  name: string;
   icon: string;
   type: TabViewType;
   routeName: RouteNameFromPath<RoutePathSchema>;
   routeParams?: Record<string, string | number>;
 };
 
-export const useManagementViewContainerStore = defineStore(
-  'management-view-container',
+export const useTabViewsStore = defineStore(
+  'tab-views',
   () => {
     const tabs = ref<TabView[]>([]);
     const activeTab = ref<TabView | null>(null);

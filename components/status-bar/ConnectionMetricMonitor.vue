@@ -30,7 +30,8 @@ onMounted(() => {
     tps.value = result.tps;
     blksRead.value = result.block_io.blks_read;
     blksHit.value = result.block_io.blks_hit;
-  }, 5 * ONE_SECOND);
+    //TODO : make to 5
+  }, 10000 * ONE_SECOND);
 });
 
 onBeforeUnmount(() => {
@@ -38,10 +39,10 @@ onBeforeUnmount(() => {
 });
 </script>
 <template>
-  <div class="flex items-center gap-3 text-xs text-muted-foreground">
+  <div class="flex items-center h-full gap-3 text-xs text-muted-foreground">
     <Tooltip>
       <TooltipTrigger as-child>
-        <div>
+        <div class="h-full hover:bg-muted flex items-center px-1 rounded">
           Sessions:
           <p class="text-black inline">
             {{ sessions ?? 0 }}
@@ -54,7 +55,7 @@ onBeforeUnmount(() => {
     </Tooltip>
     <Tooltip>
       <TooltipTrigger as-child>
-        <div>
+        <div class="h-full hover:bg-muted flex items-center px-1 rounded">
           Block IO:
           <p class="text-black inline">
             {{ blksRead ?? 0 }}/{{ blksHit ?? 0 }}
@@ -67,7 +68,7 @@ onBeforeUnmount(() => {
     </Tooltip>
     <Tooltip>
       <TooltipTrigger as-child>
-        <div>
+        <div class="h-full hover:bg-muted flex items-center px-1 rounded">
           TPS:
           <p class="text-black inline">{{ tps ?? 0 }}</p>
         </div>

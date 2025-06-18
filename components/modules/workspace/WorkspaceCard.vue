@@ -70,11 +70,14 @@ const onOpenWorkspaceWithConnection = (
   workspaceId: string,
   connectionId: string
 ) => {
-  setConnectionId(connectionId);
-
-  navigateTo({
-    name: 'workspaceId',
-    params: { workspaceId: workspaceId },
+  setConnectionId({
+    connectionId,
+    onSuccess() {
+      navigateTo({
+        name: 'workspaceId',
+        params: { workspaceId: workspaceId },
+      });
+    },
   });
 
   isOpenConnectionSelector.value = false;

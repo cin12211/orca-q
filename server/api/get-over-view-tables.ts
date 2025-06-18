@@ -7,7 +7,8 @@ export interface RoutineMetadata {
 }
 
 export default defineEventHandler(async (event): Promise<RoutineMetadata[]> => {
-  const body: { dbConnectionString: string } = await readBody(event);
+  const body: { dbConnectionString: string; schema: string } =
+    await readBody(event);
 
   const resource = await getDatabaseSource({
     dbConnectionString: body.dbConnectionString,
@@ -37,7 +38,7 @@ export default defineEventHandler(async (event): Promise<RoutineMetadata[]> => {
         LEFT JOIN 
             pg_description d ON c.oid = d.objoid
         WHERE 
-            n.nspname = 'public'
+            n.nspname = '${body.schema}'
             AND c.relkind = 'r'
         ORDER BY 
             c.relname;

@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { useManagementViewContainerStore } from '~/shared/stores/useManagementViewContainerStore';
+import { useTabViewsStore } from '~/shared/stores/useTabViewsStore';
 
-const viewContainer = useManagementViewContainerStore();
+const viewContainer = useTabViewsStore();
 </script>
 
 <template>

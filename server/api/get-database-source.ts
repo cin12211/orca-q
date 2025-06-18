@@ -68,7 +68,9 @@ export default defineEventHandler(async (event): Promise<Schema[]> => {
             ) AS table_details
         FROM pg_namespace nsp
         WHERE
-            has_schema_privilege(current_user, nsp.nspname, 'USAGE');
+            has_schema_privilege(current_user, nsp.nspname, 'USAGE')
+            AND nsp.nspname NOT LIKE 'pg_%'
+            AND nsp.nspname <> 'information_schema';
     `);
   // -- loại bỏ schema hệ thống
   // -- AND nsp.nspname NOT LIKE 'pg_%'

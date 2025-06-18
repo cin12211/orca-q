@@ -10,6 +10,7 @@ export const getDatabaseSource = async ({
 }: {
   dbConnectionString: string;
   type: DatabaseType;
+  schema?: string;
 }) => {
   if (
     dbConnectionString !== currentDBConnectionString ||
@@ -20,7 +21,7 @@ export const getDatabaseSource = async ({
       type: 'postgres', // Ensure the type is explicitly set to 'postgres'
       url: dbConnectionString, // Your connection string
       synchronize: false, // Set to true if you want TypeORM to auto-create tables (use with caution in production)
-      logging: true, // Logs SQL queries for debugging
+      logging: true, // Logs SQL queries for debugging,
     });
 
     await databaseSource.initialize();

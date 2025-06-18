@@ -10,8 +10,8 @@ import {
 import TreeItemInputEditInline from '~/components/base/Tree/TreeItemInputEditInline.vue';
 import {
   TabViewType,
-  useManagementViewContainerStore,
-} from '~/shared/stores/useManagementViewContainerStore';
+  useTabViewsStore,
+} from '~/shared/stores/useTabViewsStore';
 import { DEFAULT_DEBOUNCE_INPUT } from '~/utils/constants';
 import { useManagementExplorerStore } from '../../../shared/stores/managementExplorerStore';
 import TreeFolder from '../../base/Tree/TreeFolder.vue';
@@ -138,7 +138,7 @@ const onDelayedCallback = (callBack: () => void) => {
   }, 200);
 };
 
-const tabsStore = useManagementViewContainerStore();
+const tabsStore = useTabViewsStore();
 
 const mappedExplorerFiles = computed(() => {
   if (!debouncedSearch.value) {
@@ -245,6 +245,10 @@ const mappedExplorerFiles = computed(() => {
                   routeParams: {
                     fileId: item.value.id,
                   },
+                  connectionId: '',
+                  workspaceId: '',
+                  index: 0,
+                  schemaId: '',
                 });
 
                 tabsStore.selectTab(item.value.id);

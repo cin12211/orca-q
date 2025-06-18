@@ -18,9 +18,9 @@ const onBackToHome = () => {
   <div
     class="w-full h-6 min-h-6 border-t px-2 flex items-center justify-between"
   >
-    <div class="flex items-center gap-3">
+    <div class="flex items-center gap-3 h-full">
       <div
-        class="flex items-center gap-0.5 hover:bg-muted px-1 rounded cursor-pointer"
+        class="flex items-center h-full gap-0.5 hover:bg-muted px-1 rounded cursor-pointer"
         @click="onBackToHome"
       >
         <Icon name="hugeicons:home-06" class="size-4!" />

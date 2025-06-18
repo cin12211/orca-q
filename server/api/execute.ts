@@ -3,8 +3,10 @@ import { type QueryFailedError } from 'typeorm';
 export default defineEventHandler(
   async (event): Promise<Record<string, unknown>[]> => {
     try {
-      const body: { query: string; dbConnectionString: string } =
-        await readBody(event);
+      const body: {
+        query: string;
+        dbConnectionString: string;
+      } = await readBody(event);
 
       console.log('🚀 ~ body:', body);
 

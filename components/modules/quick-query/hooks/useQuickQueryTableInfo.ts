@@ -3,8 +3,10 @@ import { useAppContext } from '~/shared/contexts/useAppContext';
 
 export const useQuickQueryTableInfo = async ({
   tableId,
+  schemaName,
 }: {
   tableId: string;
+  schemaName?: string;
 }) => {
   const { connectionStore } = useAppContext();
 
@@ -16,6 +18,7 @@ export const useQuickQueryTableInfo = async ({
         tableName: tableId,
         dbConnectionString:
           connectionStore.selectedConnection?.connectionString,
+        schema: schemaName,
       },
       key: `schema-${tableId}`,
       onResponseError({ response }) {

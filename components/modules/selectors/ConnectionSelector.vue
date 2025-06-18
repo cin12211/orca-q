@@ -28,7 +28,9 @@ const onChangeConnection = async (connectionId: AcceptableValue) => {
     typeof connectionId === 'string' &&
     connectionId !== activeConnectionId.value
   ) {
-    await setConnectionId(connectionId);
+    await setConnectionId({
+      connectionId,
+    });
   }
 };
 

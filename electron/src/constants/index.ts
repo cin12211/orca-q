@@ -27,3 +27,11 @@ export enum WorkspaceStateIpcChannels {
   Update = 'workspacesState:update',
   Delete = 'workspacesState:delete'
 }
+
+export enum TabViewsIpcChannels {
+  Gets = 'tabViews:gets',
+  GetByContext = 'tabViews:get-by-context',
+  Create = 'tabViews:create',
+  Update = 'tabViews:update',
+  Delete = 'tabViews:delete'
+}

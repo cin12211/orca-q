@@ -13,7 +13,7 @@ import {
 } from '~/components/base/code-editor/extensions';
 import { pgKeywordCompletion } from '~/components/base/code-editor/utils';
 import { useAppContext } from '~/shared/contexts/useAppContext';
-import { useManagementViewContainerStore } from '~/shared/stores';
+import { useTabViewsStore } from '~/shared/stores';
 
 //TODO: create lint check error for sql
 // https://www.npmjs.com/package/node-sql-parser?activeTab=readme
@@ -87,7 +87,7 @@ const extensions = [
   ...sqlAutoCompletion(),
 ];
 
-const viewContainerStore = useManagementViewContainerStore();
+const viewContainerStore = useTabViewsStore();
 </script>
 
 <template>

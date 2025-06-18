@@ -2,6 +2,7 @@ import { _debounce } from 'ag-grid-community';
 import dayjs from 'dayjs';
 import { toast } from 'vue-sonner';
 import { EDatabaseType } from '~/components/modules/management-connection/constants';
+import { useAppContext } from '~/shared/contexts';
 import {
   DEFAULT_QUERY,
   DEFAULT_QUERY_COUNT,
@@ -51,7 +52,7 @@ export const useTableQueryBuilder = async ({
   const isShowFilters = ref(false);
 
   const baseQueryString = computed(() => {
-    return `${DEFAULT_QUERY} ${tableName}`;
+    return `${DEFAULT_QUERY} "${schemaName}"."${tableName}"`;
   });
 
   const whereClauses = computed(() => {
@@ -72,19 +73,23 @@ export const useTableQueryBuilder = async ({
     let orderClauses = '';
 
     if (orderBy?.columnName && orderBy?.order) {
-      orderClauses = `ORDER BY ${orderBy.columnName} ${orderBy.order}`;
+      orderClauses = `ORDER BY "${orderBy.columnName}" ${orderBy.order}`;
     } else {
-      orderClauses = `ORDER BY ${primaryKeys[0]} ASC`;
+      if (primaryKeys[0]) {
+        orderClauses = `ORDER BY "${primaryKeys[0]}" ASC`;
+      } else {
+        orderClauses = `ORDER BY "${columns[0]}" ASC`;
+      }
     }
 
     const limitClause = `LIMIT ${pagination.limit}`;
     const offsetClause = `OFFSET ${pagination.offset}`;
 
-    return `${DEFAULT_QUERY} ${tableName} ${whereClauses.value || ''} ${orderClauses} ${limitClause} ${offsetClause}`;
+    return `${DEFAULT_QUERY} "${schemaName}"."${tableName}" ${whereClauses.value || ''} ${orderClauses} ${limitClause} ${offsetClause}`;
   });
 
   const queryCountString = computed(() => {
-    return `${DEFAULT_QUERY_COUNT} ${tableName} ${whereClauses.value || ''}`;
+    return `${DEFAULT_QUERY_COUNT} "${schemaName}"."${tableName}" ${whereClauses.value || ''}`;
   });
 
   const addHistoryLog = (log: string) => {
@@ -106,6 +111,7 @@ export const useTableQueryBuilder = async ({
     body: {
       query: queryString,
       dbConnectionString: connectionString,
+      schema: schemaName,
     },
     watch: false,
     immediate: false,
@@ -137,6 +143,7 @@ export const useTableQueryBuilder = async ({
       body: {
         query: queryCountString,
         dbConnectionString: connectionString,
+        schema: schemaName,
       },
       watch: false,
       immediate: false,

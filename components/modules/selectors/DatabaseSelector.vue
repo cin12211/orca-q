@@ -11,7 +11,9 @@ const { connectionsByWsId, selectedConnection } = toRefs(connectionStore);
   <Select
     @update:model-value="
       e => {
-        setConnectionId(e as string);
+        setConnectionId({
+          connectionId: e as string,
+        });
       }
     "
     :model-value="selectedConnection?.id"

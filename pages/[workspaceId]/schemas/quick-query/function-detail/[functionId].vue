@@ -22,9 +22,10 @@ const route = useRoute(
   'workspaceId-schemas-quick-query-function-detail-functionId'
 );
 
-const { connectionStore, schemaStore } = useAppContext();
+const { connectionStore, schemaStore, wsStateStore } = useAppContext();
 const { activeSchema } = toRefs(schemaStore);
 const { currentConnectionString } = toRefs(connectionStore);
+const { schemaId } = toRefs(wsStateStore);
 
 const code = ref('');
 
@@ -32,18 +33,16 @@ const schema: SQLNamespace = activeSchema.value?.tableDetails ?? {};
 
 const sqlCompartment = new Compartment();
 
-//TODO: must create specific function for get function definition
-await useFetch('/api/execute', {
+await useFetch('/api/get-one-function', {
   method: 'POST',
   body: {
-    query: `SELECT pg_get_functiondef('${route.params.functionId}'::regproc) as def;`,
+    functionId: route.params.functionId,
     dbConnectionString: connectionStore.selectedConnection?.connectionString,
+    schema: schemaId.value,
   },
   key: route.params.functionId,
   onResponse: response => {
-    if (response.response._data?.[0]?.def) {
-      code.value = response.response._data?.[0]?.def;
-    }
+    code.value = response.response._data || '';
   },
   cache: 'force-cache',
 });

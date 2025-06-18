@@ -1,7 +1,8 @@
 import type { RoutineMetadata } from './get-over-view-tables';
 
 export default defineEventHandler(async (event): Promise<RoutineMetadata[]> => {
-  const body: { dbConnectionString: string } = await readBody(event);
+  const body: { dbConnectionString: string; schema: string } =
+    await readBody(event);
 
   const resource = await getDatabaseSource({
     dbConnectionString: body.dbConnectionString,
@@ -22,7 +23,7 @@ export default defineEventHandler(async (event): Promise<RoutineMetadata[]> => {
         LEFT JOIN 
             pg_description d ON d.objoid = p.oid
         WHERE 
-            r.routine_schema = 'public';
+            r.routine_schema = '${body.schema}';
       `);
 
   return result;

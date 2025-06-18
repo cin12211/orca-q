@@ -26,6 +26,7 @@ const {
   connectionString,
   connectionId,
   workspaceId,
+  schemaId,
 } = useQuickQuery();
 
 const {
@@ -37,6 +38,7 @@ const {
   columnTypes,
 } = await useQuickQueryTableInfo({
   tableId: props.tableId,
+  schemaName: schemaId.value,
 });
 
 const {
@@ -66,7 +68,7 @@ const {
   primaryKeys: primaryKeys.value,
   columns: columnNames.value,
   connectionId: connectionId.value,
-  schemaName: tableSchema.value?.schema,
+  schemaName: schemaId.value,
   workspaceId: workspaceId.value,
 });
 

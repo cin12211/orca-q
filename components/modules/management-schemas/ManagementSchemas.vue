@@ -7,8 +7,8 @@ import { useAppContext } from '~/shared/contexts/useAppContext';
 import { useActivityBarStore } from '~/shared/stores';
 import {
   TabViewType,
-  useManagementViewContainerStore,
-} from '~/shared/stores/useManagementViewContainerStore';
+  useTabViewsStore,
+} from '~/shared/stores/useTabViewsStore';
 import { DEFAULT_DEBOUNCE_INPUT } from '~/utils/constants';
 
 const { schemaStore, onConnectToConnection, wsStateStore } = useAppContext();
@@ -97,7 +97,7 @@ const items = computed(() => {
   });
 });
 
-const tabsStore = useManagementViewContainerStore();
+const tabsStore = useTabViewsStore();
 
 const activityBarStore = useActivityBarStore();
 const { schemasExpandedState, schemaCurrentScrollTop } =
@@ -257,6 +257,10 @@ const onRefreshSchema = async () => {
               type: (item.value as any).tabViewType,
               routeName: routeName,
               routeParams,
+              connectionId: '',
+              workspaceId: '',
+              index: 0,
+              schemaId: '',
             });
 
             tabsStore.selectTab(item.value.title);

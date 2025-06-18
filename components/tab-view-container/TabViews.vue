@@ -14,10 +14,10 @@ import {
 import { getReorderDestinationIndex } from '@atlaskit/pragmatic-drag-and-drop-hitbox/util/get-reorder-destination-index';
 import { combine } from '@atlaskit/pragmatic-drag-and-drop/combine';
 import { monitorForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
-import { useManagementViewContainerStore, type TabView } from '~/shared/stores';
+import { useTabViewsStore, type TabView } from '~/shared/stores';
 import TabViewItem from './TabViewItem.vue';
 
-const tabsStore = useManagementViewContainerStore();
+const tabsStore = useTabViewsStore();
 
 const elementRef = shallowRef<HTMLElement | null>();
 
