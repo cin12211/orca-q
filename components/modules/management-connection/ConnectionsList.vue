@@ -23,10 +23,12 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { useAppContext } from '~/shared/contexts/useAppContext';
-import type { Connection } from '~/shared/stores';
+import { useTabViewsStore, type Connection } from '~/shared/stores';
 import { getDatabaseSupportByType } from './constants';
 
 const { setConnectionId } = useAppContext();
+
+const tabViewStore = useTabViewsStore();
 
 defineProps<{
   connections: Connection[];
@@ -59,10 +61,7 @@ const onConnectConnection = (connection: Connection) => {
   setConnectionId({
     connectionId: connection.id,
     async onSuccess() {
-      await navigateTo({
-        name: 'workspaceId',
-        params: { workspaceId: connection.workspaceId },
-      });
+      await tabViewStore.onActiveCurrentTab();
     },
   });
 };
