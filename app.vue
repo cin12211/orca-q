@@ -9,6 +9,8 @@ import { DEFAULT_DEBOUNCE_INPUT } from './utils/constants';
 // Register all Community features
 ModuleRegistry.registerModules([AllCommunityModule]);
 
+const { isLoading } = useLoadingIndicator();
+
 const wsStateStore = useWSStateStore();
 
 const route = useRoute('workspaceId');
@@ -22,8 +24,10 @@ onMounted(() => {
 </script>
 
 <template>
-  <!-- <LoadingOverlay :visible="true" /> -->
-  <NuxtLoadingIndicator />
+  <LoadingOverlay :visible="isLoading" />
+  <NuxtLoadingIndicator
+    :color="'repeating-linear-gradient(to right, #ffffff 0%, #000000 100%)'"
+  />
   <TooltipProvider :delay-duration="DEFAULT_DEBOUNCE_INPUT">
     <NuxtLayout>
       <NuxtPage />

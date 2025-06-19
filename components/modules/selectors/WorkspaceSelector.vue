@@ -17,8 +17,9 @@ const onChangeWorkspace = async (wsId: AcceptableValue) => {
   }
 };
 
-const onBackToWorkspaces = () => {
-  navigateTo('/');
+const onBackToWorkspaces = async () => {
+  await navigateTo('/');
+  setActiveWSId(undefined);
 };
 </script>
 <template>

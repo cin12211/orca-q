@@ -7,8 +7,8 @@ const { setActiveWSId, tabViewStore } = useAppContext();
 
 const { activeTab } = toRefs(tabViewStore);
 
-const onBackToHome = () => {
-  navigateTo('/');
+const onBackToHome = async () => {
+  await navigateTo('/');
   setActiveWSId(undefined);
 };
 </script>

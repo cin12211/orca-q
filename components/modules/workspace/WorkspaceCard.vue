@@ -108,7 +108,7 @@ const handleAddConnection = (connection: Connection) => {
   />
 
   <Card class="gap-4 justify-between!">
-    <CardHeader class="flex justify-between">
+    <CardHeader class="flex justify-between px-4">
       <div class="flex items-center space-x-2">
         <Avatar>
           <AvatarFallback>
@@ -209,7 +209,7 @@ const handleAddConnection = (connection: Connection) => {
         </div>
       </div>
     </CardContent>
-    <CardFooter>
+    <CardFooter class="px-4">
       <Select v-model:open="isOpenConnectionSelector">
         <Button
           ref="dropdownTriggerRef"

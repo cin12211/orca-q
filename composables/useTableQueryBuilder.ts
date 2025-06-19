@@ -111,7 +111,6 @@ export const useTableQueryBuilder = async ({
     body: {
       query: queryString,
       dbConnectionString: connectionString,
-      schema: schemaName,
     },
     watch: false,
     immediate: false,
@@ -143,7 +142,6 @@ export const useTableQueryBuilder = async ({
       body: {
         query: queryCountString,
         dbConnectionString: connectionString,
-        schema: schemaName,
       },
       watch: false,
       immediate: false,

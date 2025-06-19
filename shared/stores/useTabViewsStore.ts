@@ -102,7 +102,7 @@ export const useTabViewsStore = defineStore(
       console.log('🚀 ~ selectTab ~ tab:', tab);
 
       if (tab) {
-        await navigateTo({
+        navigateTo({
           name: tab.routeName,
           params: {
             ...tab.routeParams,
@@ -122,7 +122,7 @@ export const useTabViewsStore = defineStore(
       } else {
         console.error(`Tab with ID ${tabId} does not exist.`);
 
-        await navigateTo({
+        navigateTo({
           name: 'workspaceId',
           replace: true,
         });
@@ -149,7 +149,7 @@ export const useTabViewsStore = defineStore(
         if (tabViews.value.length <= 0) {
           await onSetTabId(undefined);
 
-          await navigateTo({
+          navigateTo({
             name: 'workspaceId',
             replace: true,
           });
@@ -165,7 +165,7 @@ export const useTabViewsStore = defineStore(
       } else {
         console.error(`Tab with ID ${tabId} does not exist.`);
 
-        await navigateTo({
+        navigateTo({
           name: 'workspaceId',
           replace: true,
         });
@@ -242,7 +242,7 @@ export const useTabViewsStore = defineStore(
 
     const onActiveCurrentTab = async () => {
       if (!tabViewId.value) {
-        await navigateTo({
+        navigateTo({
           name: 'workspaceId',
           params: {
             workspaceId: workspaceId.value || '',
