@@ -153,9 +153,9 @@ const handleAddConnection = (connection: Connection) => {
         </DropdownMenuContent>
       </DropdownMenu>
     </CardHeader>
-    <CardContent class="grid gap-4">
+    <CardContent class="grid gap-4 overflow-hidden px-4">
       <div class="space-y-1">
-        <p class="text-sm line-clamp-2">
+        <p class="text-sm line-clamp-2 break-words break-all text-left">
           {{ workspace.desc }}
         </p>
 
