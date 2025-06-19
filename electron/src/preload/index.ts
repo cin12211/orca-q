@@ -72,6 +72,7 @@ if (process.contextIsolated) {
     contextBridge.exposeInMainWorld('workspaceApi', workspaceApi)
     contextBridge.exposeInMainWorld('workspaceStateApi', workspaceStateApi)
     contextBridge.exposeInMainWorld('connectionApi', connectionApi)
+    contextBridge.exposeInMainWorld('tabViewsApi', tabViewsApi)
   } catch (error) {
     console.error(error)
   }

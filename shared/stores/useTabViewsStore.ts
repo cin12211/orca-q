@@ -2,6 +2,7 @@ import { defineStore } from 'pinia';
 import { ref } from 'vue';
 import { reorder } from '@atlaskit/pragmatic-drag-and-drop/reorder';
 import type { RouteNameFromPath, RoutePathSchema } from '@typed-router/__paths';
+import { useWSStateStore } from './useWSStateStore';
 
 // export enum TabViewType {
 //   SmartView = "SmartView",
@@ -37,19 +38,57 @@ export type TabView = {
 export const useTabViewsStore = defineStore(
   'tab-views',
   () => {
-    const tabs = ref<TabView[]>([]);
-    const activeTab = ref<TabView | null>(null);
+    const wsStateStore = useWSStateStore();
+    const { workspaceId, connectionId, tabViewId } = toRefs(wsStateStore);
+
+    const tabViews = ref<TabView[]>([]);
+
+    const activeTab = computed(() =>
+      tabViews.value.find(t => t.id === tabViewId.value)
+    );
+
     const isLoading = ref(false);
 
-    const openTab = (tab: TabView) => {
-      if (!tabs.value.some(t => t.id === tab.id)) {
-        tabs.value.push(tab);
-        activeTab.value = tab;
+    const onSetTabId = async (tabId?: string) => {
+      if (!workspaceId.value || !connectionId.value) {
+        throw new Error(
+          'No workspace or connection selected or schema selected'
+        );
+      }
+
+      await wsStateStore.setTabViewId({
+        connectionId: connectionId.value,
+        workspaceId: workspaceId.value,
+        tabViewId: tabId,
+      });
+    };
+
+    const openTab = async (
+      tab: Omit<TabView, 'workspaceId' | 'connectionId' | 'schemaId'>
+    ) => {
+      if (!workspaceId.value || !connectionId.value || !wsStateStore.schemaId) {
+        throw new Error(
+          'No workspace or connection selected or schema selected'
+        );
+      }
+
+      const tabTmp: TabView = {
+        ...tab,
+        workspaceId: workspaceId.value,
+        connectionId: connectionId.value,
+        schemaId: wsStateStore.schemaId,
+      };
+
+      if (!tabViews.value.some(t => t.id === tab.id)) {
+        await window.tabViewsApi.create(tabTmp);
+
+        await onSetTabId(tab.id);
+        await loadPersistData();
       }
     };
 
     const selectTab = async (tabId: string) => {
-      const tab = tabs.value?.find(t => t.id === tabId);
+      const tab = tabViews.value?.find(t => t.id === tabId);
 
       if (tab) {
         await navigateTo({
@@ -57,7 +96,7 @@ export const useTabViewsStore = defineStore(
           params: tab.routeParams as any,
         });
 
-        activeTab.value = tab;
+        await onSetTabId(tab.id);
         // Wait for the next DOM update cycle to ensure the tab is rendered
         await nextTick();
         const tabElement = document.getElementById(tabId);
@@ -77,13 +116,17 @@ export const useTabViewsStore = defineStore(
     };
 
     const closeTab = async (tabId: string) => {
-      const index = tabs.value.findIndex(t => t.id === tabId);
+      const index = tabViews.value.findIndex(t => t.id === tabId);
+
+      await window.tabViewsApi.delete(tabId);
+
       if (index !== -1) {
         const wasActive = activeTab.value?.id === tabId;
-        tabs.value.splice(index, 1);
+        tabViews.value.splice(index, 1);
 
-        if (tabs.value.length <= 0) {
-          activeTab.value = null;
+        if (tabViews.value.length <= 0) {
+          await onSetTabId(undefined);
+
           await navigateTo({
             name: 'workspaceId',
             replace: true,
@@ -93,9 +136,9 @@ export const useTabViewsStore = defineStore(
 
         if (wasActive) {
           // Select the next tab, or the previous tab if no next tab exists
-          const nextIndex = index < tabs.value.length ? index : index - 1;
+          const nextIndex = index < tabViews.value.length ? index : index - 1;
 
-          await selectTab(tabs.value[nextIndex].id);
+          await selectTab(tabViews.value[nextIndex].id);
         }
       } else {
         console.error(`Tab with ID ${tabId} does not exist.`);
@@ -108,28 +151,43 @@ export const useTabViewsStore = defineStore(
     };
 
     const moveTabTo = (startIndex: number, finishIndex: number) => {
-      tabs.value = reorder({
-        list: tabs.value,
+      tabViews.value = reorder({
+        list: tabViews.value,
         startIndex,
         finishIndex,
       });
     };
 
     const closeOtherTab = (tabId: string) => {
-      tabs.value = tabs.value.filter(t => t.id === tabId);
+      tabViews.value = tabViews.value.filter(t => t.id === tabId);
       selectTab(tabId);
     };
 
     const closeToTheRight = (tabId: string) => {
-      const currentTabIndex = tabs.value.findIndex(t => t.id === tabId);
+      const currentTabIndex = tabViews.value.findIndex(t => t.id === tabId);
 
-      tabs.value.splice(currentTabIndex + 1);
+      tabViews.value.splice(currentTabIndex + 1);
 
       selectTab(tabId);
     };
 
+    const loadPersistData = async () => {
+      if (!connectionId.value || !workspaceId.value) {
+        throw new Error('connectionId or workspaceId not found');
+        return;
+      }
+
+      const load = await window.tabViewsApi.getByContext({
+        connectionId: connectionId.value,
+        workspaceId: workspaceId.value,
+      });
+      tabViews.value = load;
+    };
+
+    loadPersistData();
+
     return {
-      tabs,
+      tabViews,
       activeTab,
       isLoading,
       openTab,
@@ -141,6 +199,6 @@ export const useTabViewsStore = defineStore(
     };
   },
   {
-    persist: true,
+    persist: false,
   }
 );

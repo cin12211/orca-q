@@ -19,6 +19,8 @@ import TabViewItem from './TabViewItem.vue';
 
 const tabsStore = useTabViewsStore();
 
+const { tabViews } = toRefs(tabsStore);
+
 const elementRef = shallowRef<HTMLElement | null>();
 
 const isDragging = ref(false);
@@ -30,9 +32,9 @@ const isHaveRightItem = computed(() => {
     return false;
   }
 
-  const totalTabs = tabsStore.tabs.length;
+  const totalTabs = tabViews.value.length;
 
-  const currentTabMenuContextIndex = tabsStore.tabs.findIndex(
+  const currentTabMenuContextIndex = tabViews.value.findIndex(
     t => t.id === currentTabMenuContext.value?.id
   );
 
@@ -68,9 +70,9 @@ watchEffect(onCleanup => {
           return;
         }
 
-        const startIndex = tabsStore.tabs.findIndex(t => t.id === sourceId);
+        const startIndex = tabViews.value.findIndex(t => t.id === sourceId);
 
-        const indexOfTarget = tabsStore.tabs.findIndex(t => t.id === targetId);
+        const indexOfTarget = tabViews.value.findIndex(t => t.id === targetId);
 
         const finishIndex = getReorderDestinationIndex({
           startIndex,
@@ -104,7 +106,7 @@ watchEffect(onCleanup => {
       <ContextMenuTrigger>
         <div v-auto-animate="{ duration: 120 }" class="flex items-center">
           <TabViewItem
-            v-for="tab in tabsStore.tabs"
+            v-for="tab in tabViews"
             :key="tab.id"
             :tab="tab"
             :isActive="tab.id === tabsStore.activeTab?.id"

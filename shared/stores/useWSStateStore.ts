@@ -118,6 +118,35 @@ export const useWSStateStore = defineStore(
       }
     };
 
+    const setTabViewId = async ({
+      connectionId,
+      workspaceId,
+      tabViewId,
+    }: {
+      workspaceId: string;
+      tabViewId?: string;
+      connectionId: string;
+    }) => {
+      const wsState = wsStates.value?.find(ws => ws.id === workspaceId);
+
+      if (wsState) {
+        const connectionStatesTmp = wsState?.connectionStates || [];
+
+        await updateWSState({
+          ...wsState,
+          connectionStates: connectionStatesTmp.map(connectionState => {
+            if (connectionState.id === connectionId) {
+              return {
+                ...connectionState,
+                tabViewId,
+              };
+            }
+            return connectionState;
+          }),
+        });
+      }
+    };
+
     const connectionId = computed(() => {
       return wsState.value?.connectionId;
     });
@@ -126,6 +155,12 @@ export const useWSStateStore = defineStore(
       return wsState.value?.connectionStates?.find(
         connectionState => connectionState.id === connectionId.value
       )?.schemaId;
+    });
+
+    const tabViewId = computed(() => {
+      return wsState.value?.connectionStates?.find(
+        connectionState => connectionState.id === connectionId.value
+      )?.tabViewId;
     });
 
     const getStateById = ({
@@ -151,6 +186,8 @@ export const useWSStateStore = defineStore(
       connectionId,
       onCreateNewWSState,
       getStateById,
+      setTabViewId,
+      tabViewId,
     };
   },
   {

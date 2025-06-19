@@ -245,10 +245,7 @@ const mappedExplorerFiles = computed(() => {
                   routeParams: {
                     fileId: item.value.id,
                   },
-                  connectionId: '',
-                  workspaceId: '',
                   index: 0,
-                  schemaId: '',
                 });
 
                 tabsStore.selectTab(item.value.id);

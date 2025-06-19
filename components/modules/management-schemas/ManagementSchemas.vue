@@ -218,7 +218,7 @@ const onRefreshSchema = async () => {
       :isShowArrow="true"
       :isExpandedByArrow="true"
       v-on:clickTreeItem="
-        (_, item) => {
+        async (_, item) => {
           const tabViewType: TabViewType = (item.value as any).tabViewType;
 
           let routeName: RouteNameFromPath<RoutePathSchema> | null = null;
@@ -250,20 +250,17 @@ const onRefreshSchema = async () => {
           }
 
           if (routeName) {
-            tabsStore.openTab({
+            await tabsStore.openTab({
               icon: item.value.icon,
               id: item.value.title,
               name: item.value.title,
               type: (item.value as any).tabViewType,
               routeName: routeName,
               routeParams,
-              connectionId: '',
-              workspaceId: '',
               index: 0,
-              schemaId: '',
             });
 
-            tabsStore.selectTab(item.value.title);
+            await tabsStore.selectTab(item.value.title);
           }
         }
       "
