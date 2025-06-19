@@ -1,6 +1,7 @@
 import {
   PUBLIC_SCHEMA_ID,
   useSchemaStore,
+  useTabViewsStore,
   useWorkspacesStore,
   useWSStateStore,
 } from '../stores';
@@ -123,7 +124,7 @@ export const useAppContext = () => {
     onSuccess,
   }: {
     connectionId: string;
-    onSuccess?: () => void;
+    onSuccess?: () => Promise<void>;
   }) => {
     if (!workspaceId.value) {
       throw new Error('No workspace selected');
@@ -137,7 +138,7 @@ export const useAppContext = () => {
 
     await onConnectToConnection(connectionId);
 
-    onSuccess?.();
+    await onSuccess?.();
   };
 
   return {

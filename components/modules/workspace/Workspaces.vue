@@ -44,12 +44,12 @@ const isOpenCreateWSModal = ref(false);
     />
 
     <div class="relative w-full">
-      <Search class="absolute left-2.5 top-2 size-6 text-muted-foreground" />
+      <Search class="absolute left-2.5 top-1.5 size-6 text-muted-foreground" />
       <Input
         type="text"
         v-model="search"
         placeholder="Search workspaces..."
-        class="pl-10 w-full h-10"
+        class="pl-10 w-full"
       />
     </div>
 

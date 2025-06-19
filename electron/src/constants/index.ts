@@ -33,5 +33,6 @@ export enum TabViewsIpcChannels {
   GetByContext = 'tabViews:get-by-context',
   Create = 'tabViews:create',
   Update = 'tabViews:update',
-  Delete = 'tabViews:delete'
+  Delete = 'tabViews:delete',
+  BulkDelete = 'tabViews:bulk-delete'
 }

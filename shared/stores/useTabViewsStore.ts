@@ -64,7 +64,7 @@ export const useTabViewsStore = defineStore(
     };
 
     const openTab = async (
-      tab: Omit<TabView, 'workspaceId' | 'connectionId' | 'schemaId'>
+      tab: Omit<TabView, 'workspaceId' | 'connectionId' | 'schemaId' | 'index'>
     ) => {
       if (!workspaceId.value || !connectionId.value || !wsStateStore.schemaId) {
         throw new Error(
@@ -77,23 +77,37 @@ export const useTabViewsStore = defineStore(
         workspaceId: workspaceId.value,
         connectionId: connectionId.value,
         schemaId: wsStateStore.schemaId,
+        index: tabViews.value.length,
       };
 
-      if (!tabViews.value.some(t => t.id === tab.id)) {
+      //TODO: check this with when open file editor
+      const isExitTab = tabViews.value.some(
+        t =>
+          t.id === tab.id &&
+          t.schemaId === wsStateStore.schemaId &&
+          t.connectionId === connectionId.value
+      );
+
+      if (!isExitTab) {
         await window.tabViewsApi.create(tabTmp);
 
+        tabViews.value.push(tabTmp);
+
         await onSetTabId(tab.id);
-        await loadPersistData();
       }
     };
 
     const selectTab = async (tabId: string) => {
       const tab = tabViews.value?.find(t => t.id === tabId);
+      console.log('🚀 ~ selectTab ~ tab:', tab);
 
       if (tab) {
         await navigateTo({
           name: tab.routeName,
-          params: tab.routeParams as any,
+          params: {
+            ...tab.routeParams,
+            workspaceId: workspaceId.value,
+          } as any,
         });
 
         await onSetTabId(tab.id);
@@ -116,9 +130,17 @@ export const useTabViewsStore = defineStore(
     };
 
     const closeTab = async (tabId: string) => {
+      if (!wsStateStore.schemaId || !connectionId.value) {
+        throw new Error('No schema or connection selected or schema selected');
+      }
+
       const index = tabViews.value.findIndex(t => t.id === tabId);
 
-      await window.tabViewsApi.delete(tabId);
+      await window.tabViewsApi.delete({
+        connectionId: connectionId.value,
+        schemaId: wsStateStore.schemaId,
+        id: tabId,
+      });
 
       if (index !== -1) {
         const wasActive = activeTab.value?.id === tabId;
@@ -158,23 +180,48 @@ export const useTabViewsStore = defineStore(
       });
     };
 
-    const closeOtherTab = (tabId: string) => {
+    const closeOtherTab = async (tabId: string) => {
+      const removeTabIds = [...tabViews.value]
+        .filter(t => t.id !== tabId)
+        .map(t => {
+          return {
+            connectionId: t.connectionId,
+            schemaId: t.schemaId,
+            id: t.id,
+          };
+        });
+
+      await window.tabViewsApi.bulkDelete(removeTabIds);
+
       tabViews.value = tabViews.value.filter(t => t.id === tabId);
-      selectTab(tabId);
+
+      await selectTab(tabId);
     };
 
-    const closeToTheRight = (tabId: string) => {
+    const closeToTheRight = async (tabId: string) => {
       const currentTabIndex = tabViews.value.findIndex(t => t.id === tabId);
+
+      const removeTabIds = [...tabViews.value]
+        .slice(currentTabIndex + 1)
+        .map(t => {
+          return {
+            connectionId: t.connectionId,
+            schemaId: t.schemaId,
+            id: t.id,
+          };
+        });
+
+      await window.tabViewsApi.bulkDelete(removeTabIds);
 
       tabViews.value.splice(currentTabIndex + 1);
 
-      selectTab(tabId);
+      await selectTab(tabId);
     };
 
     const loadPersistData = async () => {
+      console.log('🚀 ~ loadPersistData ~ connectionId.value:');
       if (!connectionId.value || !workspaceId.value) {
         throw new Error('connectionId or workspaceId not found');
-        return;
       }
 
       const load = await window.tabViewsApi.getByContext({
@@ -186,6 +233,20 @@ export const useTabViewsStore = defineStore(
 
     loadPersistData();
 
+    watch(
+      () => [connectionId.value, workspaceId.value],
+      async () => {
+        await loadPersistData();
+      }
+    );
+
+    const onActiveCurrentTab = async () => {
+      if (!tabViewId.value) {
+        throw new Error('tabViewId not found');
+      }
+      await selectTab(tabViewId.value);
+    };
+
     return {
       tabViews,
       activeTab,
@@ -196,6 +257,7 @@ export const useTabViewsStore = defineStore(
       moveTabTo,
       closeOtherTab,
       closeToTheRight,
+      onActiveCurrentTab,
     };
   },
   {

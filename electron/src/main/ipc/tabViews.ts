@@ -8,6 +8,12 @@ export interface GetTabViewsByContextProps {
   connectionId: string
 }
 
+export interface DeleteTabViewProps {
+  id: string
+  connectionId: string
+  schemaId: string
+}
+
 ipcMain.handle(TabViewsIpcChannels.Gets, async () => {
   const db = await initDBTabViews()
   return await db.findAsync({})
@@ -34,7 +40,16 @@ ipcMain.handle(TabViewsIpcChannels.Update, async (_event, tabView: TabView) => {
   return await db.updateAsync({ id: currentWorkspace.id }, tabView)
 })
 
-ipcMain.handle(TabViewsIpcChannels.Delete, async (_event, id: string) => {
+ipcMain.handle(TabViewsIpcChannels.Delete, async (_event, props: DeleteTabViewProps) => {
   const db = await initDBTabViews()
-  return await db.removeAsync({ id: id }, { multi: true })
+  return await db.removeAsync(props, { multi: true })
+})
+
+ipcMain.handle(TabViewsIpcChannels.BulkDelete, async (_event, inputs: DeleteTabViewProps[]) => {
+  const db = await initDBTabViews()
+
+  const bulkDelete = inputs.map((input) => db.removeAsync(input, { multi: true }))
+  await Promise.all(bulkDelete)
+
+  return await Promise.all(bulkDelete)
 })

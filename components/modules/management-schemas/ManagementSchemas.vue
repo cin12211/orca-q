@@ -3,6 +3,7 @@ import { refDebounced, templateRef } from '@vueuse/core';
 import type { RouteNameFromPath, RoutePathSchema } from '@typed-router/__paths';
 import { tree } from '~/components/base/Tree';
 import TreeFolder from '~/components/base/Tree/TreeFolder.vue';
+import { uuidv4 } from '~/lib/utils';
 import { useAppContext } from '~/shared/contexts/useAppContext';
 import { useActivityBarStore } from '~/shared/stores';
 import {
@@ -257,7 +258,6 @@ const onRefreshSchema = async () => {
               type: (item.value as any).tabViewType,
               routeName: routeName,
               routeParams,
-              index: 0,
             });
 
             await tabsStore.selectTab(item.value.title);

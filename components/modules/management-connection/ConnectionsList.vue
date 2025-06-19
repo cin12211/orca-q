@@ -58,8 +58,8 @@ const confirmDelete = () => {
 const onConnectConnection = (connection: Connection) => {
   setConnectionId({
     connectionId: connection.id,
-    onSuccess() {
-      navigateTo({
+    async onSuccess() {
+      await navigateTo({
         name: 'workspaceId',
         params: { workspaceId: connection.workspaceId },
       });

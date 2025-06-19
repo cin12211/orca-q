@@ -9,9 +9,10 @@ import { useAppContext } from '~/shared/contexts/useAppContext';
 import { getDatabaseSupportByType } from '../modules/management-connection/constants';
 import ConnectionMetricMonitor from './ConnectionMetricMonitor.vue';
 
-const { workspaceStore, connectionStore } = useAppContext();
+const { workspaceStore, connectionStore, setActiveWSId } = useAppContext();
 const onBackToHome = () => {
   navigateTo('/');
+  setActiveWSId(undefined);
 };
 </script>
 <template>

@@ -52,7 +52,9 @@ export const useWSStateStore = defineStore(
       await loadPersistData();
     };
 
-    const setActiveWSId = (wsId: string) => {
+    const setActiveWSId = (wsId?: string) => {
+      console.log('🚀 ~ setActiveWSId ~ wsId:', wsId);
+
       workspaceId.value = wsId;
     };
 

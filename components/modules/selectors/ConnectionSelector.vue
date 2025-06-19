@@ -3,7 +3,7 @@ import { Select, SelectGroup, SelectItem, SelectTrigger } from '#components';
 import type { AcceptableValue } from 'reka-ui';
 import { cn } from '@/lib/utils';
 import { useAppContext } from '~/shared/contexts/useAppContext';
-import type { Connection } from '~/shared/stores';
+import { useTabViewsStore, type Connection } from '~/shared/stores';
 import CreateConnectionModal from '../management-connection/CreateConnectionModal.vue';
 import { getDatabaseSupportByType } from '../management-connection/constants';
 
@@ -11,9 +11,10 @@ const {
   connectionStore,
   setConnectionId,
   onCreateNewConnection,
-  onConnectToConnection,
   wsStateStore,
 } = useAppContext();
+
+const tabViewStore = useTabViewsStore();
 
 const { connectionId: activeConnectionId } = toRefs(wsStateStore);
 
@@ -30,6 +31,9 @@ const onChangeConnection = async (connectionId: AcceptableValue) => {
   ) {
     await setConnectionId({
       connectionId,
+      async onSuccess() {
+        await tabViewStore.onActiveCurrentTab();
+      },
     });
   }
 };

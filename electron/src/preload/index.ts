@@ -12,7 +12,7 @@ import {
 } from '../constants'
 import { type UpdateWindowTitleProps } from '../main/ipc/updateWindowTitle'
 import { type WorkspaceState } from '../../../shared/stores/useWSStateStore'
-import { type GetTabViewsByContextProps } from '../main/ipc/tabViews'
+import { type DeleteTabViewProps, type GetTabViewsByContextProps } from '../main/ipc/tabViews'
 
 export const electronBridgeApi = {
   updateWindowTitle: (props: UpdateWindowTitleProps) =>
@@ -59,7 +59,10 @@ export const tabViewsApi = {
     ipcRenderer.invoke(TabViewsIpcChannels.Create, tabView),
   update: (tabView: TabView): Promise<TabView> =>
     ipcRenderer.invoke(TabViewsIpcChannels.Update, tabView),
-  delete: (id: string): Promise<TabView> => ipcRenderer.invoke(TabViewsIpcChannels.Delete, id)
+  delete: (props: DeleteTabViewProps): Promise<TabView> =>
+    ipcRenderer.invoke(TabViewsIpcChannels.Delete, props),
+  bulkDelete: (props: DeleteTabViewProps[]): Promise<TabView[]> =>
+    ipcRenderer.invoke(TabViewsIpcChannels.BulkDelete, props)
 }
 
 // Use `contextBridge` APIs to expose Electron APIs to

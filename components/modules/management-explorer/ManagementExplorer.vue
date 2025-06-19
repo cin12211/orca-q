@@ -8,6 +8,7 @@ import {
   type FlattenedTreeFileSystemItem,
 } from '~/components/base/Tree';
 import TreeItemInputEditInline from '~/components/base/Tree/TreeItemInputEditInline.vue';
+import { uuidv4 } from '~/lib/utils';
 import {
   TabViewType,
   useTabViewsStore,
@@ -238,14 +239,13 @@ const mappedExplorerFiles = computed(() => {
 
                 tabsStore.openTab({
                   icon: item.value.icon,
-                  id: item.value.id,
+                  id: item.value.title,
                   name: item.value.title,
                   type: TabViewType.CodeQuery,
                   routeName: 'workspaceId-explorer-fileId',
                   routeParams: {
                     fileId: item.value.id,
                   },
-                  index: 0,
                 });
 
                 tabsStore.selectTab(item.value.id);

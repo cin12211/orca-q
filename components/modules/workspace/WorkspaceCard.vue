@@ -13,7 +13,11 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { useAppContext } from '~/shared/contexts/useAppContext';
-import { type Connection, type Workspace } from '~/shared/stores';
+import {
+  useTabViewsStore,
+  type Connection,
+  type Workspace,
+} from '~/shared/stores';
 import CreateConnectionModal from '../management-connection/CreateConnectionModal.vue';
 import { getDatabaseSupportByType } from '../management-connection/constants';
 import CreateWorkspaceModal from './CreateWorkspaceModal.vue';
@@ -38,6 +42,8 @@ const {
   setActiveWSId,
 } = useAppContext();
 
+const tabViewStore = useTabViewsStore();
+
 const isOpenEditModal = ref(false);
 const isOpenDeleteModal = ref(false);
 const isOpenConnectionSelector = ref(false);
@@ -56,31 +62,23 @@ const connections = computed(() => {
 const onOpenWorkspace = (workspaceId: string) => {
   setActiveWSId(workspaceId);
   emits('onSelectWorkspace', workspaceId);
-
-  // navigateTo({ name: 'workspaceId', params: { workspaceId } });
 };
 
 const onOpenConnectionSelector = (workspaceId: string) => {
-  setActiveWSId(workspaceId);
-
   isOpenConnectionSelector.value = true;
+
+  setActiveWSId(workspaceId);
 };
 
-const onOpenWorkspaceWithConnection = (
-  workspaceId: string,
-  connectionId: string
-) => {
-  setConnectionId({
+const onOpenWorkspaceWithConnection = async (connectionId: string) => {
+  isOpenConnectionSelector.value = false;
+
+  await setConnectionId({
     connectionId,
-    onSuccess() {
-      navigateTo({
-        name: 'workspaceId',
-        params: { workspaceId: workspaceId },
-      });
+    async onSuccess() {
+      await tabViewStore.onActiveCurrentTab();
     },
   });
-
-  isOpenConnectionSelector.value = false;
 };
 
 const handleAddConnection = (connection: Connection) => {
@@ -251,9 +249,7 @@ const handleAddConnection = (connection: Connection) => {
               class="cursor-pointer"
               :value="connection.id"
               v-for="connection in connections"
-              @select="
-                onOpenWorkspaceWithConnection(workspace.id, connection.id)
-              "
+              @select="onOpenWorkspaceWithConnection(connection.id)"
             >
               <div class="flex items-center gap-2">
                 <component

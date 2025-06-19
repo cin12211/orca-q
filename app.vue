@@ -15,6 +15,7 @@ const route = useRoute('workspaceId');
 
 onMounted(() => {
   const workspaceId = route.params.workspaceId;
+  console.log('🚀 ~ onMounted ~ workspaceId:', workspaceId);
 
   wsStateStore.setActiveWSId(workspaceId);
 });
