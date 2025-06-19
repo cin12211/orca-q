@@ -30,7 +30,7 @@ export function createWindow(port: number): void {
 
   // Create the browser window.
   const mainWindow = new BrowserWindow({
-    title: 'HeraQ',
+    title: 'OrcaQ',
     width,
     height,
     show: false,

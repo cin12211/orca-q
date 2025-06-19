@@ -242,6 +242,13 @@ export const useTabViewsStore = defineStore(
 
     const onActiveCurrentTab = async () => {
       if (!tabViewId.value) {
+        await navigateTo({
+          name: 'workspaceId',
+          params: {
+            workspaceId: workspaceId.value || '',
+          },
+        });
+
         throw new Error('tabViewId not found');
       }
       await selectTab(tabViewId.value);

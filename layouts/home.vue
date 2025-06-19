@@ -15,7 +15,7 @@ const isAppVersion = computed(() => isElectron());
           <AvatarImage src="/logo.png" alt="@unovue" />
         </Avatar>
 
-        <p class="text-2xl font-medium">HeraQ</p>
+        <p class="text-2xl font-medium">OrcaQ</p>
       </div>
 
       <!-- <Avatar>
@@ -35,7 +35,7 @@ const isAppVersion = computed(() => isElectron());
           <AvatarImage src="/logo.png" alt="@unovue" />
         </Avatar>
 
-        <p class="text-2xl font-medium">HeraQ</p>
+        <p class="text-2xl font-medium">OrcaQ</p>
       </div>
 
       <!-- <Avatar>

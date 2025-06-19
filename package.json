@@ -1,6 +1,6 @@
 {
-  "name": "HeraQ",
-  "productName": "HeraQ",
+  "name": "orcaq",
+  "productName": "OrcaQ",
   "private": true,
   "version": "0.1.0",
   "main": ".vite/build/main.js",
