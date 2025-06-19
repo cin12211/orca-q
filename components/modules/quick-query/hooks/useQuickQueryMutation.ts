@@ -57,7 +57,6 @@ export function useQuickQueryMutation(options: UseQuickQueryMutationOptions) {
   } = options;
 
   const { connectionStore, wsStateStore } = useAppContext();
-  const { schemaId } = toRefs(wsStateStore);
   const isMutating = ref(false); // Reactive state for mutation loading indicator
 
   const onRefresh = async () => {

@@ -26,9 +26,7 @@ import { useAppContext } from '~/shared/contexts/useAppContext';
 import { useTabViewsStore, type Connection } from '~/shared/stores';
 import { getDatabaseSupportByType } from './constants';
 
-const { setConnectionId } = useAppContext();
-
-const tabViewStore = useTabViewsStore();
+const { setConnectionId, tabViewStore } = useAppContext();
 
 defineProps<{
   connections: Connection[];

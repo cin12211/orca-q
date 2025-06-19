@@ -12,9 +12,8 @@ const {
   setConnectionId,
   onCreateNewConnection,
   wsStateStore,
+  tabViewStore,
 } = useAppContext();
-
-const tabViewStore = useTabViewsStore();
 
 const { connectionId: activeConnectionId } = toRefs(wsStateStore);
 

@@ -23,7 +23,7 @@ definePageMeta({
   keepalive: false,
 });
 
-const { schemaStore } = useAppContext();
+const { schemaStore, tabViewStore } = useAppContext();
 
 const { activeSchema } = toRefs(schemaStore);
 
@@ -86,8 +86,6 @@ const extensions = [
   // currentStatementHighlighter,
   ...sqlAutoCompletion(),
 ];
-
-const viewContainerStore = useTabViewsStore();
 </script>
 
 <template>
@@ -101,8 +99,8 @@ const viewContainerStore = useTabViewsStore();
           <BreadcrumbSeparator />
           <BreadcrumbItem>
             <BreadcrumbLink class="flex items-center gap-0.5">
-              <Icon :name="viewContainerStore.activeTab?.icon" />
-              {{ viewContainerStore.activeTab?.name }}
+              <Icon :name="tabViewStore.activeTab?.icon" />
+              {{ tabViewStore.activeTab?.name }}
             </BreadcrumbLink>
           </BreadcrumbItem>
           <!-- <BreadcrumbSeparator /> -->

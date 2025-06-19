@@ -40,9 +40,8 @@ const {
   onCreateNewConnection,
   setConnectionId,
   setActiveWSId,
+  tabViewStore,
 } = useAppContext();
-
-const tabViewStore = useTabViewsStore();
 
 const isOpenEditModal = ref(false);
 const isOpenDeleteModal = ref(false);

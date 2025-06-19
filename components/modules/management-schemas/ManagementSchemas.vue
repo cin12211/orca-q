@@ -3,16 +3,13 @@ import { refDebounced, templateRef } from '@vueuse/core';
 import type { RouteNameFromPath, RoutePathSchema } from '@typed-router/__paths';
 import { tree } from '~/components/base/Tree';
 import TreeFolder from '~/components/base/Tree/TreeFolder.vue';
-import { uuidv4 } from '~/lib/utils';
 import { useAppContext } from '~/shared/contexts/useAppContext';
 import { useActivityBarStore } from '~/shared/stores';
-import {
-  TabViewType,
-  useTabViewsStore,
-} from '~/shared/stores/useTabViewsStore';
+import { TabViewType } from '~/shared/stores/useTabViewsStore';
 import { DEFAULT_DEBOUNCE_INPUT } from '~/utils/constants';
 
-const { schemaStore, onConnectToConnection, wsStateStore } = useAppContext();
+const { schemaStore, onConnectToConnection, wsStateStore, tabViewStore } =
+  useAppContext();
 const { activeSchema } = toRefs(schemaStore);
 const { connectionId } = toRefs(wsStateStore);
 
@@ -97,8 +94,6 @@ const items = computed(() => {
     title: debouncedSearch.value,
   });
 });
-
-const tabsStore = useTabViewsStore();
 
 const activityBarStore = useActivityBarStore();
 const { schemasExpandedState, schemaCurrentScrollTop } =
@@ -251,7 +246,7 @@ const onRefreshSchema = async () => {
           }
 
           if (routeName) {
-            await tabsStore.openTab({
+            await tabViewStore.openTab({
               icon: item.value.icon,
               id: item.value.title,
               name: item.value.title,
@@ -260,7 +255,7 @@ const onRefreshSchema = async () => {
               routeParams,
             });
 
-            await tabsStore.selectTab(item.value.title);
+            await tabViewStore.selectTab(item.value.title);
           }
         }
       "

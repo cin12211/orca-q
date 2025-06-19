@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { useTabViewsStore } from '~/shared/stores/useTabViewsStore';
 
-const viewContainer = useTabViewsStore();
+const tabViewStore = useTabViewsStore();
 </script>
 
 <template>
-  {{ viewContainer.activeTab }}
+  {{ tabViewStore.activeTab }}
 </template>

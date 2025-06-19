@@ -110,6 +110,16 @@ const {
 
 const quickQueryLayoutStore = useQuickQueryLayout();
 const { layoutSize } = toRefs(quickQueryLayoutStore);
+
+const showRightPanel = ref(true);
+
+onActivated(() => {
+  showRightPanel.value = true;
+});
+
+onDeactivated(() => {
+  showRightPanel.value = false;
+});
 </script>
 
 <template>
@@ -123,7 +133,7 @@ const { layoutSize } = toRefs(quickQueryLayoutStore);
       id="quick-query-layout-group-1-panel-1"
       key="quick-query-layout-group-1-panel-1"
     >
-      <Teleport defer to="#preview-select-row">
+      <Teleport defer to="#preview-select-row" v-if="showRightPanel">
         <PreviewSelectedRow
           :columnTypes="columnTypes"
           :selectedRow="selectedRows?.length ? selectedRows[0] : null"

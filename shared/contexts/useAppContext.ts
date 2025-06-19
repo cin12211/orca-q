@@ -22,6 +22,7 @@ export const useAppContext = () => {
   const workspaceStore = useWorkspacesStore();
   const connectionStore = useManagementConnectionStore();
   const schemaStore = useSchemaStore();
+  const tabViewStore = useTabViewsStore();
   const { wsState, workspaceId, connectionId } = toRefs(wsStateStore);
   const { connectionsByWsId } = toRefs(connectionStore);
   const { schemas } = toRefs(schemaStore);
@@ -152,5 +153,6 @@ export const useAppContext = () => {
     onConnectToConnection,
     schemaStore,
     wsStateStore,
+    tabViewStore,
   };
 };

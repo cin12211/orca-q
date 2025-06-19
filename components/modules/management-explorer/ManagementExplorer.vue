@@ -139,7 +139,7 @@ const onDelayedCallback = (callBack: () => void) => {
   }, 200);
 };
 
-const tabsStore = useTabViewsStore();
+const tabViewStore = useTabViewsStore();
 
 const mappedExplorerFiles = computed(() => {
   if (!debouncedSearch.value) {
@@ -237,7 +237,7 @@ const mappedExplorerFiles = computed(() => {
                   return;
                 }
 
-                tabsStore.openTab({
+                tabViewStore.openTab({
                   icon: item.value.icon,
                   id: item.value.title,
                   name: item.value.title,
@@ -248,7 +248,7 @@ const mappedExplorerFiles = computed(() => {
                   },
                 });
 
-                tabsStore.selectTab(item.value.id);
+                tabViewStore.selectTab(item.value.id);
               }
             "
           >
