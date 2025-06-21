@@ -27,7 +27,7 @@ const props = defineProps<{
 }>();
 
 const emits = defineEmits<{
-  (e: 'onSelectWorkspace', workspaceId: string): void;
+  (e: 'onSelectWorkspace'): void;
 }>();
 
 const {
@@ -37,6 +37,7 @@ const {
   setConnectionId,
   setActiveWSId,
   tabViewStore,
+  wsStateStore,
 } = useAppContext();
 
 const isOpenEditModal = ref(false);
@@ -55,18 +56,31 @@ const connections = computed(() => {
 });
 
 const onOpenWorkspace = (workspaceId: string) => {
-  setActiveWSId(workspaceId);
-  emits('onSelectWorkspace', workspaceId);
+  setActiveWSId({
+    connId: undefined,
+    wsId: workspaceId,
+  });
+  emits('onSelectWorkspace');
 };
 
 const onOpenConnectionSelector = (workspaceId: string) => {
   isOpenConnectionSelector.value = true;
 
-  setActiveWSId(workspaceId);
+  setActiveWSId({
+    connId: undefined,
+    wsId: workspaceId,
+  });
 };
 
 const onOpenWorkspaceWithConnection = async (connectionId: string) => {
   isOpenConnectionSelector.value = false;
+
+  setActiveWSId({
+    connId: connectionId,
+    wsId: wsStateStore.workspaceId,
+  });
+
+  await nextTick();
 
   await setConnectionId({
     connectionId,

@@ -8,12 +8,20 @@ import './ipc'
 import MenuBuilder from './menu'
 import { findAvailablePort } from './utils'
 import { DEFAULT_PORT } from '../constants'
+import { DEFAULT_WINDOW_NAME } from '../../../utils/constants'
 
 export let windows: Map<number, BrowserWindow> = new Map()
 
 export let currentPort = DEFAULT_PORT
 
-export function createWindow(port: number, workspaceId?: string): void {
+export function createWindow(
+  port: number,
+  wsInfo?: {
+    wsId: string
+    connectionId: string
+    windowName: string
+  }
+): void {
   const currentWindow = BrowserWindow.getFocusedWindow()
 
   let x, y
@@ -30,7 +38,7 @@ export function createWindow(port: number, workspaceId?: string): void {
 
   // Create the browser window.
   const mainWindow = new BrowserWindow({
-    title: 'OrcaQ',
+    title: wsInfo?.windowName || DEFAULT_WINDOW_NAME,
     width,
     height,
     show: false,
@@ -63,16 +71,16 @@ export function createWindow(port: number, workspaceId?: string): void {
   // HMR for renderer base on electron-vite cli.
   // Load the remote URL for development or the local html file for production.
   if (is.dev) {
-    if (workspaceId) {
-      mainWindow.loadURL(`http://localhost:3000/#/${workspaceId}`)
+    if (wsInfo) {
+      mainWindow.loadURL(`http://localhost:3000/#/${wsInfo.wsId}/${wsInfo.connectionId}`)
       return
     }
 
     // mainWindow.loadURL(process.env['ELECTRON_RENDERER_URL'])
     mainWindow.loadURL(`http://localhost:3000`)
   } else {
-    if (workspaceId) {
-      mainWindow.loadURL(`http://localhost:3000/#/${workspaceId}`)
+    if (wsInfo) {
+      mainWindow.loadURL(`http://localhost:${port}/#/${wsInfo.wsId}/${wsInfo.connectionId}`)
       return
     }
     // mainWindow.loadFile(join(__dirname, '../renderer/index.html'))

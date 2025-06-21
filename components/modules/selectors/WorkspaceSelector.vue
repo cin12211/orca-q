@@ -13,13 +13,18 @@ const props = defineProps<{ class?: string }>();
 
 const onChangeWorkspace = async (wsId: AcceptableValue) => {
   if (typeof wsId === 'string' && wsId !== workspaceId.value) {
-    setActiveWSId(wsId);
+    // TODO: fix this bugs when usage workspace selector
+    // setActiveWSId(wsId);
   }
 };
 
 const onBackToWorkspaces = async () => {
   await navigateTo('/');
-  setActiveWSId(undefined);
+
+  setActiveWSId({
+    connId: undefined,
+    wsId: undefined,
+  });
 };
 </script>
 <template>

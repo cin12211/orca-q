@@ -30,10 +30,6 @@ export const useWorkspacesStore = defineStore(
     const createWorkspace = async (workspace: Workspace) => {
       await window.workspaceApi.create(workspace);
 
-      await wsStateStore.onCreateNewWSState({
-        id: workspace.id,
-      });
-
       workspaces.value.push(workspace);
     };
 

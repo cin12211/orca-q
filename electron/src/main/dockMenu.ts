@@ -4,49 +4,73 @@ import { initDBConnection, initDBWorkspace, initDBWorkspaceState } from './utils
 import type { Connection, WorkspaceState, Workspace } from '../../../shared/stores'
 
 const workspaceItemTemplateId = 'workspace'
-export const getWorkspaceItems = async () => {
-  const dbWsState = await initDBWorkspaceState()
-  const dbWorkspace = await initDBWorkspace()
-  const dbConnection = await initDBConnection()
+const MAX_RECENT_WORKSPACES = 5
 
-  const wsStates = (await dbWsState
-    .find({})
-    .sort({ openedAt: -1 })
-    .limit(5)) as unknown as WorkspaceState[]
+interface DockWorkspaceItem {
+  label: string
+  click: () => void
+  id: string
+}
 
-  const workspaces = (await dbWorkspace.findAsync({
-    id: {
-      $in: wsStates.map((ws) => ws.id)
-    }
-  })) as Workspace[]
+export const getWorkspaceItems = async (): Promise<DockWorkspaceItem[]> => {
+  try {
+    // Initialize databases
+    const [dbWsState, dbWorkspace, dbConnection] = await Promise.all([
+      initDBWorkspaceState(),
+      initDBWorkspace(),
+      initDBConnection()
+    ])
 
-  const connections = (await dbConnection.findAsync({
-    id: {
-      $in: wsStates.map((ws) => ws.connectionId)
-    }
-  })) as Connection[]
+    // Fetch recent workspace states
+    const wsStates = (await dbWsState
+      .find({})
+      .sort({ openedAt: -1 })
+      .limit(MAX_RECENT_WORKSPACES)
+      .execAsync()) as unknown as WorkspaceState[]
 
-  return workspaces
-    .filter((workspace) => {
-      const connectionId = wsStates?.find((ws) => ws.id === workspace.id)?.connectionId
-      const connectionName = connections.find((c) => c.id === connectionId)?.name
+    if (!wsStates.length) return []
 
-      return connectionName
-    })
-    .map((workspace, index) => {
-      const connectionId = wsStates?.[index]?.connectionId
-      const connectionName = connections.find((c) => c.id === connectionId)?.name
+    // Fetch related workspaces and connections in parallel
+    const [workspaces, connections] = await Promise.all([
+      dbWorkspace.findAsync({
+        id: { $in: wsStates.map((ws) => ws.id) }
+      }) as Promise<Workspace[]>,
+      dbConnection.findAsync({
+        id: { $in: wsStates.map((ws) => ws.connectionId) }
+      }) as Promise<Connection[]>
+    ])
 
-      const label = `${workspace.name} ◦ ${connectionName}`
+    // Create lookup maps for efficient access
+    const workspaceMap = new Map(workspaces.map((ws) => [ws.id, ws]))
+    const connectionMap = new Map(connections.map((conn) => [conn.id, conn]))
 
-      return {
-        label,
-        click() {
-          createWindow(currentPort, workspace.id)
-        },
-        id: `${workspaceItemTemplateId} ${workspace.id}`
-      }
-    })
+    // Build workspace items
+    return wsStates
+      .filter((ws) => {
+        const connection = connectionMap.get(ws.connectionId || '')
+        return !!connection?.name
+      })
+      .map((ws) => {
+        const workspace = workspaceMap.get(ws.id)
+        const connection = connectionMap.get(ws.connectionId || '')
+
+        const label = `${workspace?.name ?? 'Unnamed'} ◦ ${connection?.name ?? 'Unknown'}`
+
+        return {
+          label,
+          click: () =>
+            createWindow(currentPort, {
+              connectionId: ws.connectionId || '',
+              wsId: ws.id,
+              windowName: label
+            }),
+          id: `${workspaceItemTemplateId}-${ws.id}`
+        }
+      })
+  } catch (error) {
+    console.error('Error fetching workspace items:', error)
+    return []
+  }
 }
 
 export const getDockMenu = async () => {

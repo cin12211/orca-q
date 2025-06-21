@@ -23,13 +23,25 @@ export const useWSStateStore = defineStore(
 
     const workspaceId = ref<string>();
 
+    const connId = ref<string>();
+
     const wsState = computed(() =>
-      wsStates.value.find(ws => ws.id === workspaceId.value)
+      wsStates.value.find(
+        ws => ws.id === workspaceId.value && ws.connectionId === connId.value
+      )
     );
 
     const onCreateNewWSState = async (wsState: WorkspaceState) => {
-      await window.workspaceStateApi.create(wsState);
+      const wsStateTmp: WorkspaceState = {
+        ...wsState,
+        openedAt: dayjs().toISOString(),
+        updatedAt: dayjs().toISOString(),
+      };
+
+      await window.workspaceStateApi.create(wsStateTmp);
       await loadPersistData();
+
+      return wsStateTmp;
     };
 
     const loadPersistData = async () => {
@@ -55,10 +67,17 @@ export const useWSStateStore = defineStore(
       await loadPersistData();
     };
 
-    const setActiveWSId = (wsId?: string) => {
-      console.log('🚀 ~ setActiveWSId ~ wsId:', wsId);
+    const setActiveWSId = ({
+      wsId,
+      connId: _connId,
+    }: {
+      wsId?: string;
+      connId?: string;
+    }) => {
+      console.log('🚀 ~ setActiveWSId ~ wsId:', wsId, _connId);
 
       workspaceId.value = wsId;
+      connId.value = _connId;
     };
 
     const setConnectionId = async ({
@@ -68,21 +87,20 @@ export const useWSStateStore = defineStore(
       workspaceId: string;
       connectionId: string;
     }) => {
-      const wsStateUpdated = wsStates.value.find(ws => ws.id === workspaceId);
+      let wsStateUpdated = wsStates.value.find(
+        ws => ws.id === workspaceId && ws.connectionId === connectionId
+      );
+
+      console.log('wsStateUpdated', wsStateUpdated);
 
       if (!wsStateUpdated) {
-        throw new Error('No workspace state found');
-        return;
-      }
-
-      if (wsStateUpdated) {
-        await updateWSState({
-          ...wsStateUpdated,
+        wsStateUpdated = await onCreateNewWSState({
+          id: workspaceId,
           connectionId,
-          updatedAt: dayjs().toISOString(),
-          openedAt: dayjs().toISOString(),
         });
       }
+
+      connId.value = connectionId;
     };
 
     const setSchemaId = async ({
@@ -94,7 +112,9 @@ export const useWSStateStore = defineStore(
       schemaId: string;
       connectionId: string;
     }) => {
-      const wsState = wsStates.value?.find(ws => ws.id === workspaceId);
+      const wsState = wsStates.value.find(
+        ws => ws.id === workspaceId && ws.connectionId === connectionId
+      );
 
       if (wsState) {
         const connectionStatesTmp = wsState?.connectionStates || [];
@@ -137,7 +157,9 @@ export const useWSStateStore = defineStore(
       tabViewId?: string;
       connectionId: string;
     }) => {
-      const wsState = wsStates.value?.find(ws => ws.id === workspaceId);
+      const wsState = wsStates.value.find(
+        ws => ws.id === workspaceId && ws.connectionId === connectionId
+      );
 
       if (wsState) {
         const connectionStatesTmp = wsState?.connectionStates || [];
@@ -196,7 +218,6 @@ export const useWSStateStore = defineStore(
       setSchemaId,
       schemaId,
       connectionId,
-      onCreateNewWSState,
       getStateById,
       setTabViewId,
       tabViewId,

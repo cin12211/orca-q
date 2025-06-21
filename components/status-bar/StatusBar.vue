@@ -9,7 +9,10 @@ const { activeTab } = toRefs(tabViewStore);
 
 const onBackToHome = async () => {
   await navigateTo('/');
-  setActiveWSId(undefined);
+  setActiveWSId({
+    connId: undefined,
+    wsId: undefined,
+  });
 };
 </script>
 <template>

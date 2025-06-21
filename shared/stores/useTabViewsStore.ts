@@ -224,7 +224,7 @@ export const useTabViewsStore = defineStore(
     const loadPersistData = async () => {
       console.log('🚀 ~ loadPersistData ~ connectionId.value:');
       if (!connectionId.value || !workspaceId.value) {
-        throw new Error('connectionId or workspaceId not found');
+        console.error('connectionId or workspaceId not found');
         return;
       }
 
@@ -253,7 +253,7 @@ export const useTabViewsStore = defineStore(
           },
         });
 
-        throw new Error('tabViewId not found');
+        console.error('tabViewId not found');
         return;
       }
       await selectTab(tabViewId.value);
