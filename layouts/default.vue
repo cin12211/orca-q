@@ -3,7 +3,8 @@ import { useAppLayoutStore } from '~/shared/stores/appLayoutStore';
 import { DEFAULT_DEBOUNCE_INPUT } from '~/utils/constants';
 
 const appLayoutStore = useAppLayoutStore();
-const { layoutSize, isPrimarySidebarCollapsed } = toRefs(appLayoutStore);
+const { layoutSize, isPrimarySidebarCollapsed, bodySize } =
+  toRefs(appLayoutStore);
 
 useHotkeys([
   {
@@ -16,6 +17,12 @@ useHotkeys([
     key: 'meta+b',
     callback: () => {
       appLayoutStore.onToggleActivityBarPanel();
+    },
+  },
+  {
+    key: 'meta+j',
+    callback: () => {
+      appLayoutStore.onToggleBottomPanel();
     },
   },
 ]);
@@ -54,7 +61,39 @@ useHotkeys([
         />
         <ResizablePanel id="default-layout-group-1-panel-2" key="contentPanel">
           <div class="overflow-y-auto w-full h-full">
-            <slot />
+            <ResizablePanelGroup
+              id="default-layout-body-group"
+              direction="vertical"
+              v-model="bodySize"
+              @layout="appLayoutStore.onResizeBody"
+            >
+              <ResizablePanel
+                id="default-layout-body-group-panel-1"
+                key="default-layout-body-group-panel-1"
+              >
+                <div class="flex flex-col overflow-y-auto w-full h-full">
+                  <slot />
+                </div>
+              </ResizablePanel>
+              <ResizableHandle
+                class="[&[data-state=hover]]:bg-primary/30! [&[data-state=drag]]:bg-primary/20!"
+              />
+
+              <ResizablePanel
+                :min-size="10"
+                :max-size="40"
+                :default-size="bodySize[1]"
+                :collapsed-size="0"
+                collapsible
+                id="default-layout-body-group-panel-2"
+                key="default-layout-body-group-panel-2"
+              >
+                <div
+                  class="flex flex-col flex-1 h-full px-2"
+                  id="bottom-panel"
+                ></div>
+              </ResizablePanel>
+            </ResizablePanelGroup>
           </div>
         </ResizablePanel>
         <ResizableHandle

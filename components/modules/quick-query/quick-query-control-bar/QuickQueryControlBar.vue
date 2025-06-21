@@ -12,7 +12,6 @@ defineProps<{
   currentTotalRows: number;
   totalSelectedRows: number;
   hasEditedRows: boolean;
-  isShowHistoryPanel: boolean;
 }>();
 
 const emit = defineEmits<{
@@ -40,27 +39,13 @@ useHotkeys([
       emit('onDeleteRows');
     },
   },
-  {
-    key: 'meta+j',
-    callback: () => {
-      console.log(
-        '🚀 ~ file: QuickQueryControlBar.vue:87 ~ callback ~ quickQueryControlBarRef:',
-        quickQueryControlBarRef
-      );
-
-      emit('onToggleHistoryPanel');
-    },
-  },
 ]);
 </script>
 
 <template>
   <div
     ref="quickQueryControlBarRef"
-    :class="[
-      'w-full select-none h-9 flex items-center justify-between',
-      isShowHistoryPanel ? '' : '',
-    ]"
+    :class="['w-full select-none h-9 flex items-center justify-between']"
   >
     <!-- TODO: review to sort button position for each function-->
     <div class="flex items-center gap-1" v-auto-animate>

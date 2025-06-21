@@ -5,11 +5,18 @@ const DEFAULT_APP_LAYOUT_SIZE = [25, 50, 25];
 
 const intiAppLayout = [30, 70, 0];
 
+const initBodyLayout = [100, 0];
+
+const DEFAULT_BODY_LAYOUT_SIZE = [100, 25];
+
 export const useAppLayoutStore = defineStore(
   'app-layout-store',
   () => {
     const layoutSize = ref<number[]>(intiAppLayout);
     const historyLayoutSize = ref<number[]>(intiAppLayout);
+
+    const bodySize = ref<number[]>(initBodyLayout);
+    const historyBodySize = ref<number[]>(initBodyLayout);
 
     const isPrimarySidebarCollapsed = computed(() => layoutSize.value[0] === 0);
 
@@ -53,6 +60,29 @@ export const useAppLayoutStore = defineStore(
       if (right !== 0) historyLayoutSize.value[2] = right;
     };
 
+    const onResizeBody = (resizedLayout: number[]) => {
+      const [left, right] = resizedLayout;
+      bodySize.value = resizedLayout;
+
+      if (left !== 0) historyBodySize.value[0] = left;
+      if (right !== 0) historyBodySize.value[1] = right;
+    };
+
+    const onToggleBottomPanel = () => {
+      const [top, bottom] = bodySize.value;
+
+      if (bottom === 0) {
+        const restoreBottom =
+          historyBodySize.value[1] || DEFAULT_BODY_LAYOUT_SIZE[1];
+        bodySize.value[1] = restoreBottom;
+        bodySize.value[0] = Math.max(top - restoreBottom, 0);
+      } else {
+        historyBodySize.value[1] = bottom;
+        bodySize.value[1] = 0;
+        bodySize.value[0] = top + bottom;
+      }
+    };
+
     return {
       layoutSize,
       historyLayoutSize,
@@ -61,6 +91,9 @@ export const useAppLayoutStore = defineStore(
       onToggleActivityBarPanel,
       onToggleSecondSidebar,
       onResizeLayout,
+      bodySize,
+      onResizeBody,
+      onToggleBottomPanel,
     };
   },
   {

@@ -8,7 +8,7 @@ import { deleteWorkspaceStateById } from './workspaceState'
 
 ipcMain.handle(WorkspaceIpcChannels.Gets, async () => {
   const db = await initDBWorkspace()
-  return await db.findAsync({})
+  return await db.find({}).sort({ createdAt: 1 }).execAsync()
 })
 
 ipcMain.handle(WorkspaceIpcChannels.GetOne, async (_, id: string) => {

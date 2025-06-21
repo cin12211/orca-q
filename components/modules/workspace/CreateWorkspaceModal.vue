@@ -49,7 +49,6 @@ function onSubmit(values: z.infer<typeof schema>) {
       ...props.workspace,
       desc: values.desc,
       name: values.name,
-      createdAt: '',
     });
 
     toast('Workspace has been updated', {

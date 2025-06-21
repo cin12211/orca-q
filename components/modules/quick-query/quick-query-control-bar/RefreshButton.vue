@@ -14,14 +14,19 @@ const handleRefreshClick = () => {
   emit('onRefresh');
 };
 
-useHotkeys([
-  {
-    key: 'meta+r',
-    callback: () => {
-      handleRefreshClick();
+useHotkeys(
+  [
+    {
+      key: 'meta+r',
+      callback: () => {
+        handleRefreshClick();
+      },
     },
-  },
-]);
+  ],
+  {
+    isPreventDefault: true,
+  }
+);
 </script>
 
 <template>
