@@ -18,6 +18,11 @@ const search = shallowRef('');
 const debouncedSearch = refDebounced(search, DEFAULT_DEBOUNCE_INPUT);
 
 const mappedWorkspaces = computed(() => {
+  console.log(
+    '🚀 ~ mappedWorkspaces ~ workspaceStore.workspaces:',
+    workspaceStore.workspaces
+  );
+
   return (workspaceStore.workspaces || []).filter(workspace => {
     return workspace.name
       .toLowerCase()

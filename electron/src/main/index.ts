@@ -13,7 +13,7 @@ export let windows: Map<number, BrowserWindow> = new Map()
 
 export let currentPort = DEFAULT_PORT
 
-export function createWindow(port: number): void {
+export function createWindow(port: number, workspaceId?: string): void {
   const currentWindow = BrowserWindow.getFocusedWindow()
 
   let x, y
@@ -62,10 +62,19 @@ export function createWindow(port: number): void {
 
   // HMR for renderer base on electron-vite cli.
   // Load the remote URL for development or the local html file for production.
-  if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
+  if (is.dev) {
+    if (workspaceId) {
+      mainWindow.loadURL(`http://localhost:3000/#/${workspaceId}`)
+      return
+    }
+
     // mainWindow.loadURL(process.env['ELECTRON_RENDERER_URL'])
     mainWindow.loadURL(`http://localhost:3000`)
   } else {
+    if (workspaceId) {
+      mainWindow.loadURL(`http://localhost:3000/#/${workspaceId}`)
+      return
+    }
     // mainWindow.loadFile(join(__dirname, '../renderer/index.html'))
     mainWindow.loadURL(`http://localhost:${port}`)
   }

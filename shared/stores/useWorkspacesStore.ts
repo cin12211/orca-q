@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
+import dayjs from 'dayjs';
 import { useWSStateStore } from './useWSStateStore';
 
 export interface Workspace {
@@ -9,6 +10,7 @@ export interface Workspace {
   desc?: string;
   lastOpened?: string;
   createdAt: string;
+  updatedAt?: string;
 }
 
 export const useWorkspacesStore = defineStore(
@@ -40,6 +42,20 @@ export const useWorkspacesStore = defineStore(
       await loadPersistData();
     };
 
+    const updateLastOpened = async (workspaceId: string) => {
+      const workspace = workspaces.value.find(ws => ws.id === workspaceId);
+
+      if (!workspace) {
+        throw new Error('No workspace found');
+        return;
+      }
+
+      await updateWorkspace({
+        ...workspace,
+        lastOpened: dayjs().toISOString(),
+      });
+    };
+
     const deleteWorkspace = async (workspaceId: string) => {
       await window.workspaceApi.delete(workspaceId);
       await loadPersistData();
@@ -48,6 +64,9 @@ export const useWorkspacesStore = defineStore(
     const loadPersistData = async () => {
       console.time('loadPersistData');
       const load = await window.workspaceApi.getAll();
+
+      console.log('🚀 ~ loadPersistData ~ load:', load);
+
       workspaces.value = load;
       console.timeEnd('loadPersistData');
     };
@@ -60,6 +79,7 @@ export const useWorkspacesStore = defineStore(
       deleteWorkspace,
       updateWorkspace,
       selectedWorkspace,
+      updateLastOpened,
     };
   },
   {

@@ -16,7 +16,8 @@ export interface Connection {
   username?: string;
   password?: string;
   database?: string;
-  createdAt: Date;
+  createdAt: string;
+  updatedAt?: string;
 }
 
 export const useManagementConnectionStore = defineStore(

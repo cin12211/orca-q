@@ -54,6 +54,7 @@ export const useTabViewsStore = defineStore(
         throw new Error(
           'No workspace or connection selected or schema selected'
         );
+        return;
       }
 
       await wsStateStore.setTabViewId({
@@ -70,6 +71,7 @@ export const useTabViewsStore = defineStore(
         throw new Error(
           'No workspace or connection selected or schema selected'
         );
+        return;
       }
 
       const tabTmp: TabView = {
@@ -120,7 +122,7 @@ export const useTabViewsStore = defineStore(
           console.warn(`Tab element with ID ${tabId} not found in the DOM.`);
         }
       } else {
-        console.error(`Tab with ID ${tabId} does not exist.`);
+        throw new Error(`Tab with ID ${tabId} does not exist.`);
 
         navigateTo({
           name: 'workspaceId',
@@ -132,6 +134,7 @@ export const useTabViewsStore = defineStore(
     const closeTab = async (tabId: string) => {
       if (!wsStateStore.schemaId || !connectionId.value) {
         throw new Error('No schema or connection selected or schema selected');
+        return;
       }
 
       const index = tabViews.value.findIndex(t => t.id === tabId);
@@ -163,7 +166,7 @@ export const useTabViewsStore = defineStore(
           await selectTab(tabViews.value[nextIndex].id);
         }
       } else {
-        console.error(`Tab with ID ${tabId} does not exist.`);
+        throw new Error(`Tab with ID ${tabId} does not exist.`);
 
         navigateTo({
           name: 'workspaceId',
@@ -222,6 +225,7 @@ export const useTabViewsStore = defineStore(
       console.log('🚀 ~ loadPersistData ~ connectionId.value:');
       if (!connectionId.value || !workspaceId.value) {
         throw new Error('connectionId or workspaceId not found');
+        return;
       }
 
       const load = await window.tabViewsApi.getByContext({
@@ -250,6 +254,7 @@ export const useTabViewsStore = defineStore(
         });
 
         throw new Error('tabViewId not found');
+        return;
       }
       await selectTab(tabViewId.value);
     };

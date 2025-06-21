@@ -3,6 +3,7 @@
 import { LoadingOverlay, TooltipProvider } from '#components';
 import { AllCommunityModule, ModuleRegistry } from 'ag-grid-community';
 import { Toaster } from './components/ui/sonner';
+import { useAppContext } from './shared/contexts';
 import { useWSStateStore } from './shared/stores';
 import { DEFAULT_DEBOUNCE_INPUT } from './utils/constants';
 
@@ -11,15 +12,23 @@ ModuleRegistry.registerModules([AllCommunityModule]);
 
 const { isLoading } = useLoadingIndicator();
 
-const wsStateStore = useWSStateStore();
+const { setConnectionId, wsStateStore, tabViewStore } = useAppContext();
 
 const route = useRoute('workspaceId');
 
-onMounted(() => {
+onMounted(async () => {
   const workspaceId = route.params.workspaceId;
   console.log('🚀 ~ onMounted ~ workspaceId:', workspaceId);
 
   wsStateStore.setActiveWSId(workspaceId);
+
+  if (!wsStateStore.connectionId) {
+    return;
+  }
+
+  await setConnectionId({ connectionId: wsStateStore.connectionId });
+
+  await tabViewStore.onActiveCurrentTab();
 });
 </script>
 

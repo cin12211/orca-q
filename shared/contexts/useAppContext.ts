@@ -68,6 +68,7 @@ export const useAppContext = () => {
 
     if (!connection) {
       throw new Error('No connection found');
+      return;
     }
 
     const dbConnectionString: string = connection.connectionString || '';
@@ -136,6 +137,8 @@ export const useAppContext = () => {
       connectionId,
       workspaceId: workspaceId.value,
     });
+
+    await workspaceStore.updateLastOpened(workspaceId.value);
 
     await onConnectToConnection(connectionId);
 

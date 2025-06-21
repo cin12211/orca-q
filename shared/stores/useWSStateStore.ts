@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
+import dayjs from 'dayjs';
 
 export interface WorkspaceState {
   id: string;
@@ -11,6 +12,8 @@ export interface WorkspaceState {
     sideBarExplorer?: unknown;
     sideBarSchemas?: unknown;
   }[];
+  openedAt?: string;
+  updatedAt?: string;
 }
 
 export const useWSStateStore = defineStore(
@@ -69,12 +72,15 @@ export const useWSStateStore = defineStore(
 
       if (!wsStateUpdated) {
         throw new Error('No workspace state found');
+        return;
       }
 
       if (wsStateUpdated) {
         await updateWSState({
           ...wsStateUpdated,
           connectionId,
+          updatedAt: dayjs().toISOString(),
+          openedAt: dayjs().toISOString(),
         });
       }
     };
@@ -107,6 +113,8 @@ export const useWSStateStore = defineStore(
 
         await updateWSState({
           ...wsState,
+          updatedAt: dayjs().toISOString(),
+          openedAt: dayjs().toISOString(),
           connectionStates: connectionStatesTmp.map(connectionState => {
             if (connectionState.id === connectionId) {
               return {
@@ -136,6 +144,8 @@ export const useWSStateStore = defineStore(
 
         await updateWSState({
           ...wsState,
+          updatedAt: dayjs().toISOString(),
+          openedAt: dayjs().toISOString(),
           connectionStates: connectionStatesTmp.map(connectionState => {
             if (connectionState.id === connectionId) {
               return {

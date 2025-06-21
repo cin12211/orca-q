@@ -5,6 +5,7 @@ import { WorkspaceIpcChannels } from '../../constants'
 import { updateDockMenus } from '../dockMenu'
 import { deleteAllConnectionByWorkspaceId } from './connections'
 import { deleteWorkspaceStateById } from './workspaceState'
+import dayjs from 'dayjs'
 
 ipcMain.handle(WorkspaceIpcChannels.Gets, async () => {
   const db = await initDBWorkspace()
@@ -19,7 +20,13 @@ ipcMain.handle(WorkspaceIpcChannels.GetOne, async (_, id: string) => {
 ipcMain.handle(WorkspaceIpcChannels.Create, async (_event, workspace: Workspace) => {
   const db = await initDBWorkspace()
 
-  return await db.insertAsync(workspace).finally(() => {
+  const workspaceTmp = {
+    ...workspace,
+    createdAt: dayjs().toISOString(),
+    updatedAt: dayjs().toISOString()
+  }
+
+  return await db.insertAsync(workspaceTmp).finally(() => {
     updateDockMenus()
   })
 })
@@ -28,7 +35,15 @@ ipcMain.handle(WorkspaceIpcChannels.Update, async (_event, workspace: Workspace)
   const db = await initDBWorkspace()
   const currentWorkspace = await db.findOneAsync({ id: workspace.id })
   if (!currentWorkspace) return
-  return await db.updateAsync({ id: currentWorkspace.id }, workspace).finally(() => {
+
+  const workspaceTmp = {
+    ...workspace,
+    updatedAt: dayjs().toISOString()
+  }
+
+  console.log('hello', workspaceTmp)
+
+  return await db.updateAsync({ id: currentWorkspace.id }, workspaceTmp).finally(() => {
     updateDockMenus()
   })
 })

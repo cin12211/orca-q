@@ -13,11 +13,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { useAppContext } from '~/shared/contexts/useAppContext';
-import {
-  useTabViewsStore,
-  type Connection,
-  type Workspace,
-} from '~/shared/stores';
+import { type Connection, type Workspace } from '~/shared/stores';
 import CreateConnectionModal from '../management-connection/CreateConnectionModal.vue';
 import { getDatabaseSupportByType } from '../management-connection/constants';
 import CreateWorkspaceModal from './CreateWorkspaceModal.vue';
@@ -159,7 +155,8 @@ const handleAddConnection = (connection: Connection) => {
           {{ workspace.desc }}
         </p>
 
-        <div class="flex items-center pt-2">
+        <!-- TODO: open collaborator -->
+        <div class="flex items-center pt-2" hidden>
           <Icon name="lucide:users" class="mr-2 h-4 w-4 opacity-70" />
           <span class="text-xs text-muted-foreground"> You and ... </span>
           <!-- <div class="flex">
@@ -194,17 +191,23 @@ const handleAddConnection = (connection: Connection) => {
             Connection : {{ connections.length }}
           </span>
         </div>
-        <div class="flex items-center pt-2" v-if="workspace.lastOpened">
+        <div class="flex items-center pt-2">
           <ClockFading class="mr-2 h-4 w-4 opacity-70" />
-          <span class="text-xs text-muted-foreground">
-            Last opened {{ dayjs(workspace.lastOpened).fromNow() }}
+          <span
+            class="text-xs text-muted-foreground"
+            v-if="workspace.lastOpened"
+          >
+            Last opened : {{ dayjs(workspace.lastOpened).fromNow() }}
+          </span>
+          <span class="text-xs text-muted-foreground" v-else>
+            Last opened : -/-
           </span>
         </div>
-        <div class="flex items-center pt-2" v-else>
+        <div class="flex items-center pt-2">
           <Icon name="lucide:clock" class="mr-2 h-4 w-4 opacity-70" />
 
           <span class="text-xs text-muted-foreground">
-            Created {{ dayjs(workspace.lastOpened).fromNow() }}
+            Created : {{ dayjs(workspace.createdAt).fromNow() }}
           </span>
         </div>
       </div>

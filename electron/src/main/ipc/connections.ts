@@ -3,6 +3,7 @@ import { initDBConnection } from '../utils'
 import { ConnectionIpcChannels } from '../../constants'
 import { updateDockMenus } from '../dockMenu'
 import type { Connection } from '../../../../shared/stores'
+import dayjs from 'dayjs'
 
 ipcMain.handle(ConnectionIpcChannels.GetByWorkspaceId, async (_, workspaceId: string) => {
   const db = await initDBConnection()
@@ -13,7 +14,8 @@ ipcMain.handle(ConnectionIpcChannels.GetByWorkspaceId, async (_, workspaceId: st
 
 ipcMain.handle(ConnectionIpcChannels.Gets, async () => {
   const db = await initDBConnection()
-  return await db.findAsync({})
+
+  return await db.find({}).sort({ createdAt: 1 }).execAsync()
 })
 
 ipcMain.handle(ConnectionIpcChannels.GetOne, async (_, id: string) => {
@@ -24,7 +26,13 @@ ipcMain.handle(ConnectionIpcChannels.GetOne, async (_, id: string) => {
 ipcMain.handle(ConnectionIpcChannels.Create, async (_event, connection: Connection) => {
   const db = await initDBConnection()
 
-  return await db.insertAsync(connection).finally(() => {
+  const connectionTmp = {
+    ...connection,
+    createdAt: dayjs().toISOString(),
+    updatedAt: dayjs().toISOString()
+  }
+
+  return await db.insertAsync(connectionTmp).finally(() => {
     updateDockMenus()
   })
 })
@@ -33,7 +41,13 @@ ipcMain.handle(ConnectionIpcChannels.Update, async (_event, connection: Connecti
   const db = await initDBConnection()
   const currentWorkspace = await db.findOneAsync({ id: connection.id })
   if (!currentWorkspace) return
-  return await db.updateAsync({ id: currentWorkspace.id }, connection).finally(() => {
+
+  const connectionTmp = {
+    ...connection,
+    updatedAt: dayjs().toISOString()
+  }
+
+  return await db.updateAsync({ id: currentWorkspace.id }, connectionTmp).finally(() => {
     updateDockMenus()
   })
 })

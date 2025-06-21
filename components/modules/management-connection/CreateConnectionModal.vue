@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { reactive, ref, watch } from 'vue';
 import { Icon } from '#components';
+import dayjs from 'dayjs';
 import {
   ArrowLeftIcon,
   CheckIcon,
@@ -135,7 +136,7 @@ const handleCreateConnection = async () => {
     name: connectionName.value,
     type: dbType.value as EDatabaseType,
     method: connectionMethod.value,
-    createdAt: props.editingConnection?.createdAt || new Date(),
+    createdAt: props.editingConnection?.createdAt || dayjs().toISOString(),
   };
 
   if (connectionMethod.value === 'string') {

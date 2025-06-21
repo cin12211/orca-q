@@ -1,20 +1,52 @@
-import { app, BrowserWindow, Menu } from 'electron'
-import { initDBWorkspace } from './utils'
-import { createWindow, currentPort, windows } from '.'
+import { app, Menu } from 'electron'
+import { createWindow, currentPort } from '.'
+import { initDBConnection, initDBWorkspace, initDBWorkspaceState } from './utils'
+import type { Connection, WorkspaceState, Workspace } from '../../../shared/stores'
 
 const workspaceItemTemplateId = 'workspace'
 export const getWorkspaceItems = async () => {
-  const DBWorkspace = await initDBWorkspace()
+  const dbWsState = await initDBWorkspaceState()
+  const dbWorkspace = await initDBWorkspace()
+  const dbConnection = await initDBConnection()
 
-  const workspaces = await DBWorkspace.findAsync({}).limit(5)
+  const wsStates = (await dbWsState
+    .find({})
+    .sort({ openedAt: -1 })
+    .limit(5)) as unknown as WorkspaceState[]
 
-  return workspaces.map((workspace) => ({
-    label: workspace.name,
-    click() {
-      createWindow(currentPort)
-    },
-    id: `${workspaceItemTemplateId} ${workspace.id}`
-  }))
+  const workspaces = (await dbWorkspace.findAsync({
+    id: {
+      $in: wsStates.map((ws) => ws.id)
+    }
+  })) as Workspace[]
+
+  const connections = (await dbConnection.findAsync({
+    id: {
+      $in: wsStates.map((ws) => ws.connectionId)
+    }
+  })) as Connection[]
+
+  return workspaces
+    .filter((workspace) => {
+      const connectionId = wsStates?.find((ws) => ws.id === workspace.id)?.connectionId
+      const connectionName = connections.find((c) => c.id === connectionId)?.name
+
+      return connectionName
+    })
+    .map((workspace, index) => {
+      const connectionId = wsStates?.[index]?.connectionId
+      const connectionName = connections.find((c) => c.id === connectionId)?.name
+
+      const label = `${workspace.name} ◦ ${connectionName}`
+
+      return {
+        label,
+        click() {
+          createWindow(currentPort, workspace.id)
+        },
+        id: `${workspaceItemTemplateId} ${workspace.id}`
+      }
+    })
 }
 
 export const getDockMenu = async () => {
