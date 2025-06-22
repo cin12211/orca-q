@@ -6,6 +6,7 @@ import { updateDockMenus } from '../dockMenu'
 import { deleteAllConnectionByWorkspaceId } from './connections'
 import { deleteWorkspaceStateById } from './workspaceState'
 import dayjs from 'dayjs'
+import { deleteQuickQueryLogs } from './quickQueryLogs'
 
 ipcMain.handle(WorkspaceIpcChannels.Gets, async () => {
   const db = await initDBWorkspace()
@@ -55,6 +56,8 @@ ipcMain.handle(WorkspaceIpcChannels.Delete, async (_event, id: string) => {
     await deleteAllConnectionByWorkspaceId(id)
 
     await deleteWorkspaceStateById(id)
+
+    await deleteQuickQueryLogs({ workspaceId: id })
 
     await updateDockMenus()
   })

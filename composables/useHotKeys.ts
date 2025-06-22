@@ -119,6 +119,8 @@ export function useHotkeys(
       if (matchHotkey(e, hk.key)) {
         if (isPreventDefault) {
           e.preventDefault();
+          e.stopImmediatePropagation();
+          e.stopPropagation();
         }
         hk.callback(e);
         break;

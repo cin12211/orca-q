@@ -20,7 +20,7 @@ interface PaginationInfo {
  * Options interface for the useQuickQueryMutation hook.
  */
 interface UseQuickQueryMutationOptions {
-  tableId: string;
+  tableName: string;
   primaryKeys: Ref<string[]>;
   columnNames: Ref<string[]>;
   data: Ref<Record<string, any>[] | undefined | null>;
@@ -42,7 +42,7 @@ interface UseQuickQueryMutationOptions {
  */
 export function useQuickQueryMutation(options: UseQuickQueryMutationOptions) {
   const {
-    tableId,
+    tableName,
     primaryKeys,
     columnNames,
     data,
@@ -56,7 +56,7 @@ export function useQuickQueryMutation(options: UseQuickQueryMutationOptions) {
     quickQueryTableRef,
   } = options;
 
-  const { connectionStore, wsStateStore } = useAppContext();
+  const { connectionStore } = useAppContext();
   const isMutating = ref(false); // Reactive state for mutation loading indicator
 
   const onRefresh = async () => {
@@ -87,7 +87,6 @@ export function useQuickQueryMutation(options: UseQuickQueryMutationOptions) {
     }
 
     const editedCells = quickQueryTableRef.value?.editedCells;
-    const tableName = tableId;
     const sqlBulkInsertOrUpdateStatements: string[] = [];
 
     editedCells.forEach(cell => {
@@ -165,7 +164,7 @@ export function useQuickQueryMutation(options: UseQuickQueryMutationOptions) {
     const sqlDeleteStatements: string[] = [];
     selectedRows.value.forEach(row => {
       const sqlDeleteStatement = buildDeleteStatements({
-        tableName: tableId,
+        tableName: tableName,
         pKeys: primaryKeys.value,
         pKeyValue: row,
       });

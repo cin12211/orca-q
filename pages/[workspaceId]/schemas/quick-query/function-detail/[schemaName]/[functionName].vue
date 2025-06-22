@@ -19,13 +19,12 @@ definePageMeta({
 });
 
 const route = useRoute(
-  'workspaceId-schemas-quick-query-function-detail-functionId'
+  'workspaceId-schemas-quick-query-function-detail-schemaName-functionName'
 );
 
 const { connectionStore, schemaStore, wsStateStore } = useAppContext();
 const { activeSchema } = toRefs(schemaStore);
 const { currentConnectionString } = toRefs(connectionStore);
-const { schemaId } = toRefs(wsStateStore);
 
 const code = ref('');
 
@@ -36,11 +35,11 @@ const sqlCompartment = new Compartment();
 await useFetch('/api/get-one-function', {
   method: 'POST',
   body: {
-    functionId: route.params.functionId,
+    functionId: route.params.functionName,
     dbConnectionString: connectionStore.selectedConnection?.connectionString,
-    schema: schemaId.value,
+    schema: route.params.schemaName,
   },
-  key: route.params.functionId,
+  key: `${route.params.schemaName}-${route.params.functionName}`,
   onResponse: response => {
     code.value = response.response._data || '';
   },

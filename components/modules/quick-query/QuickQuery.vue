@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { useTableQueryBuilder } from '~/composables/useTableQueryBuilder';
+import { useTabViewsStore } from '~/shared/stores';
 import { useAppLayoutStore } from '~/shared/stores/appLayoutStore';
 import { DEFAULT_QUERY_SIZE } from '~/utils/constants';
 import { EDatabaseType } from '../management-connection/constants';
@@ -16,7 +17,10 @@ import QuickQueryHistoryLogsPanel from './quick-query-history-log-panel/QuickQue
 import QuickQueryContextMenu from './quick-query-table/QuickQueryContextMenu.vue';
 import QuickQueryTable from './quick-query-table/QuickQueryTable.vue';
 
-const props = defineProps<{ tableId: string }>();
+const props = defineProps<{ tableName: string; schemaName: string }>();
+
+const tabViewStore = useTabViewsStore();
+const { activeTab } = toRefs(tabViewStore);
 
 const {
   quickQueryFilterRef,
@@ -25,7 +29,6 @@ const {
   connectionString,
   connectionId,
   workspaceId,
-  schemaId,
 } = useQuickQuery();
 
 const {
@@ -36,8 +39,8 @@ const {
   tableSchema,
   columnTypes,
 } = await useQuickQueryTableInfo({
-  tableId: props.tableId,
-  schemaName: schemaId.value,
+  tableName: props.tableName,
+  schemaName: props.schemaName,
 });
 
 const {
@@ -59,16 +62,15 @@ const {
   onUpdateOrderBy,
   addHistoryLog,
   filters,
-  historyLogs,
   isShowFilters,
 } = await useTableQueryBuilder({
-  connectionString: connectionString.value,
-  tableName: props.tableId,
-  primaryKeys: primaryKeys.value,
-  columns: columnNames.value,
-  connectionId: connectionId.value,
-  schemaName: schemaId.value,
-  workspaceId: workspaceId.value,
+  connectionString,
+  primaryKeys: primaryKeys,
+  columns: columnNames,
+  connectionId,
+  workspaceId,
+  tableName: props.tableName,
+  schemaName: props.schemaName,
 });
 
 watch(
@@ -93,7 +95,7 @@ const {
   onRefresh,
   onSelectedRowsChange,
 } = useQuickQueryMutation({
-  tableId: props.tableId,
+  tableName: props.tableName,
   primaryKeys,
   refreshTableData,
   columnNames,
@@ -129,7 +131,10 @@ onDeactivated(() => {
   </Teleport>
 
   <Teleport defer to="#bottom-panel" v-if="isActiveTeleport">
-    <QuickQueryHistoryLogsPanel :logs="historyLogs" />
+    <QuickQueryHistoryLogsPanel
+      :tableName="props.tableName"
+      :schema-name="props.schemaName"
+    />
   </Teleport>
 
   <QuickQueryErrorPopup
@@ -141,7 +146,7 @@ onDeactivated(() => {
     <!-- <LoadingOverlay :visible="status === 'pending'" /> -->
     <LoadingOverlay :visible="tableSchemaStatus === 'pending' || isMutating" />
 
-    <TableSkeleton v-if="tableSchemaStatus === 'pending'" />
+    <!-- <TableSkeleton v-if="tableSchemaStatus === 'pending'" /> -->
 
     <div class="px-2 mb-2 border-b">
       <QuickQueryControlBar
