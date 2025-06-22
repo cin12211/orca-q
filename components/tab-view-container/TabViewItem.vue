@@ -143,8 +143,8 @@ watchEffect(onCleanup => {
       variant="ghost"
       size="sm"
       :class="[
-        'h-7! max-w-44 justify-start! hover:bg-accent font-normal p-2!  hover:[&>div]:opacity-100 transition-all duration-200 border-transparent border',
-        isActive ? 'bg-accent' : '',
+        'h-7! max-w-44 justify-start! hover:bg-muted-foreground/10 font-normal p-2!  hover:[&>div]:opacity-100 transition-all duration-200 border-transparent border',
+        isActive ? 'bg-muted' : '',
         isDragging ? 'bg-primary/5' : '',
       ]"
       @click.left="selectTab(tab.id)"

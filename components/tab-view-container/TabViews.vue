@@ -109,7 +109,10 @@ watchEffect(onCleanup => {
             v-for="tab in tabViews"
             :key="tab.id"
             :tab="tab"
-            :isActive="tab.id === tabsStore.activeTab?.id"
+            :isActive="
+              tab.id === tabsStore.activeTab?.id &&
+              tab.schemaId === tabsStore.activeTab?.schemaId
+            "
             :selectTab="tabsStore.selectTab"
             :closeTab="tabsStore.closeTab"
             :onRightClickItem="

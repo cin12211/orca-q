@@ -6,7 +6,7 @@ export const useQuickQueryTableInfo = async ({
   schemaName,
 }: {
   tableId: string;
-  schemaName?: string;
+  schemaName?: Ref<string | undefined, string | undefined>;
 }) => {
   const { connectionStore } = useAppContext();
 
@@ -18,7 +18,7 @@ export const useQuickQueryTableInfo = async ({
         tableName: tableId,
         dbConnectionString:
           connectionStore.selectedConnection?.connectionString,
-        schema: schemaName,
+        schema: schemaName?.value,
       },
       key: `schema-${tableId}`,
       onResponseError({ response }) {

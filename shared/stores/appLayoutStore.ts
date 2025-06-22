@@ -52,6 +52,17 @@ export const useAppLayoutStore = defineStore(
       }
     };
 
+    const onShowSecondSidebar = () => {
+      const [_, main, right] = layoutSize.value;
+
+      if (right === 0) {
+        const restoreRight =
+          historyLayoutSize.value[2] || DEFAULT_APP_LAYOUT_SIZE[2];
+        layoutSize.value[2] = restoreRight;
+        layoutSize.value[1] = Math.max(main - restoreRight, 0);
+      }
+    };
+
     const onResizeLayout = (resizedLayout: number[]) => {
       const [left, _, right] = resizedLayout;
       layoutSize.value = resizedLayout;
@@ -94,6 +105,7 @@ export const useAppLayoutStore = defineStore(
       bodySize,
       onResizeBody,
       onToggleBottomPanel,
+      onShowSecondSidebar,
     };
   },
   {

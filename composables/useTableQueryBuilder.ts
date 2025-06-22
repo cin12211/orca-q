@@ -1,8 +1,7 @@
 import { _debounce } from 'ag-grid-community';
-import dayjs from 'dayjs';
 import { toast } from 'vue-sonner';
 import { EDatabaseType } from '~/components/modules/management-connection/constants';
-import { useAppContext } from '~/shared/contexts';
+import { useQuickQueryLogs } from '~/shared/stores';
 import {
   DEFAULT_QUERY,
   DEFAULT_QUERY_COUNT,
@@ -25,15 +24,17 @@ export const useTableQueryBuilder = async ({
   workspaceId,
   connectionId,
 }: {
-  connectionString: string;
+  connectionString: Ref<string>;
   tableName: string;
-  primaryKeys: string[];
-  columns: string[];
+  primaryKeys: Ref<string[]>;
+  columns: Ref<string[]>;
   isPersist?: boolean;
-  schemaName?: string;
-  workspaceId?: string;
-  connectionId?: string;
+  schemaName: Ref<string | undefined, string | undefined>;
+  workspaceId: Ref<string | undefined, string | undefined>;
+  connectionId: Ref<string | undefined, string | undefined>;
 }) => {
+  const qqLogStore = useQuickQueryLogs();
+
   const openErrorModal = ref(false);
 
   const errorMessage = ref('');
@@ -47,12 +48,10 @@ export const useTableQueryBuilder = async ({
 
   const orderBy = reactive<OrderBy>({});
 
-  const historyLogs = ref<{ createdAt: string; logs: string }[]>([]);
-
   const isShowFilters = ref(false);
 
   const baseQueryString = computed(() => {
-    return `${DEFAULT_QUERY} "${schemaName}"."${tableName}"`;
+    return `${DEFAULT_QUERY} "${schemaName?.value}"."${tableName}"`;
   });
 
   const whereClauses = computed(() => {
@@ -63,7 +62,7 @@ export const useTableQueryBuilder = async ({
     }
 
     return formatWhereClause({
-      columns: columns,
+      columns: columns.value,
       db: EDatabaseType.PG,
       filters: filters.value,
     });
@@ -75,30 +74,30 @@ export const useTableQueryBuilder = async ({
     if (orderBy?.columnName && orderBy?.order) {
       orderClauses = `ORDER BY "${orderBy.columnName}" ${orderBy.order}`;
     } else {
-      if (primaryKeys[0]) {
-        orderClauses = `ORDER BY "${primaryKeys[0]}" ASC`;
+      if (primaryKeys.value[0]) {
+        orderClauses = `ORDER BY "${primaryKeys.value[0]}" ASC`;
       } else {
-        orderClauses = `ORDER BY "${columns[0]}" ASC`;
+        orderClauses = `ORDER BY "${columns.value[0]}" ASC`;
       }
     }
 
     const limitClause = `LIMIT ${pagination.limit}`;
     const offsetClause = `OFFSET ${pagination.offset}`;
 
-    return `${DEFAULT_QUERY} "${schemaName}"."${tableName}" ${whereClauses.value || ''} ${orderClauses} ${limitClause} ${offsetClause}`;
+    return `${DEFAULT_QUERY} "${schemaName?.value}"."${tableName}" ${whereClauses.value || ''} ${orderClauses} ${limitClause} ${offsetClause}`;
   });
 
   const queryCountString = computed(() => {
-    return `${DEFAULT_QUERY_COUNT} "${schemaName}"."${tableName}" ${whereClauses.value || ''}`;
+    return `${DEFAULT_QUERY_COUNT} "${schemaName?.value}"."${tableName}" ${whereClauses.value || ''}`;
   });
 
   const addHistoryLog = (log: string) => {
-    const createdAt = dayjs().toISOString();
     const logs = `\n${log}`;
 
-    historyLogs.value.push({
-      createdAt,
+    qqLogStore.createLog({
+      tableId: tableName,
       logs,
+      timeQuery: Date.now(),
     });
   };
 
@@ -226,11 +225,11 @@ export const useTableQueryBuilder = async ({
   };
 
   const getPersistedKey = () => {
-    return `${workspaceId}-${connectionId}-${schemaName}-${tableName}`;
+    return `${workspaceId?.value}-${connectionId?.value}-${schemaName?.value}-${tableName}`;
   };
 
   watch(
-    [filters, pagination, orderBy, historyLogs, isShowFilters],
+    [filters, pagination, orderBy, isShowFilters],
     _debounce(
       { isAlive: () => true },
       () => {
@@ -246,7 +245,6 @@ export const useTableQueryBuilder = async ({
             filters: filters.value,
             pagination,
             orderBy,
-            historyLogs: historyLogs.value,
             isShowFilters: isShowFilters.value,
           })
         );
@@ -270,7 +268,6 @@ export const useTableQueryBuilder = async ({
         filters: _filters,
         pagination: _pagination,
         orderBy: _orderBy,
-        historyLogs: _historyLogs,
         isShowFilters: _isShowFilters,
       } = JSON.parse(persistedState);
 
@@ -286,10 +283,6 @@ export const useTableQueryBuilder = async ({
 
       if (_filters) {
         filters.value = _filters;
-      }
-
-      if (_historyLogs) {
-        historyLogs.value = _historyLogs;
       }
 
       isShowFilters.value = !!_isShowFilters;
@@ -321,7 +314,6 @@ export const useTableQueryBuilder = async ({
     errorMessage,
     filters,
     addHistoryLog,
-    historyLogs,
     isShowFilters,
   };
 };

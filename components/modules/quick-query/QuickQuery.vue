@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { useTableQueryBuilder } from '~/composables/useTableQueryBuilder';
+import { useTabViewsStore } from '~/shared/stores';
 import { useAppLayoutStore } from '~/shared/stores/appLayoutStore';
 import { DEFAULT_QUERY_SIZE } from '~/utils/constants';
 import { EDatabaseType } from '../management-connection/constants';
@@ -18,6 +19,13 @@ import QuickQueryTable from './quick-query-table/QuickQueryTable.vue';
 
 const props = defineProps<{ tableId: string }>();
 
+const tabViewStore = useTabViewsStore();
+const { activeTab } = toRefs(tabViewStore);
+
+const schemaId = computed(() => {
+  return activeTab.value?.schemaId;
+});
+
 const {
   quickQueryFilterRef,
   quickQueryTableRef,
@@ -25,7 +33,6 @@ const {
   connectionString,
   connectionId,
   workspaceId,
-  schemaId,
 } = useQuickQuery();
 
 const {
@@ -37,7 +44,7 @@ const {
   columnTypes,
 } = await useQuickQueryTableInfo({
   tableId: props.tableId,
-  schemaName: schemaId.value,
+  schemaName: schemaId,
 });
 
 const {
@@ -59,16 +66,15 @@ const {
   onUpdateOrderBy,
   addHistoryLog,
   filters,
-  historyLogs,
   isShowFilters,
 } = await useTableQueryBuilder({
-  connectionString: connectionString.value,
+  connectionString,
   tableName: props.tableId,
-  primaryKeys: primaryKeys.value,
-  columns: columnNames.value,
-  connectionId: connectionId.value,
-  schemaName: schemaId.value,
-  workspaceId: workspaceId.value,
+  primaryKeys: primaryKeys,
+  columns: columnNames,
+  connectionId: connectionId,
+  schemaName: schemaId,
+  workspaceId,
 });
 
 watch(
@@ -121,6 +127,7 @@ onDeactivated(() => {
 </script>
 
 <template>
+  {{ activeTab }}
   <Teleport defer to="#preview-select-row" v-if="isActiveTeleport">
     <PreviewSelectedRow
       :columnTypes="columnTypes"
@@ -129,7 +136,7 @@ onDeactivated(() => {
   </Teleport>
 
   <Teleport defer to="#bottom-panel" v-if="isActiveTeleport">
-    <QuickQueryHistoryLogsPanel :logs="historyLogs" />
+    <QuickQueryHistoryLogsPanel :tableId="props.tableId" />
   </Teleport>
 
   <QuickQueryErrorPopup

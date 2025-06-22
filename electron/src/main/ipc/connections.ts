@@ -4,6 +4,7 @@ import { ConnectionIpcChannels } from '../../constants'
 import { updateDockMenus } from '../dockMenu'
 import type { Connection } from '../../../../shared/stores'
 import dayjs from 'dayjs'
+import { deleteQuickQueryLogs } from './quickQueryLogs'
 
 ipcMain.handle(ConnectionIpcChannels.GetByWorkspaceId, async (_, workspaceId: string) => {
   const db = await initDBConnection()
@@ -56,7 +57,8 @@ ipcMain.handle(ConnectionIpcChannels.Delete, async (_event, id: string) => {
   await updateDockMenus()
 
   const db = await initDBConnection()
-  return await db.removeAsync({ id: id }, { multi: true }).finally(() => {
+  return await db.removeAsync({ id: id }, { multi: true }).finally(async () => {
+    await deleteQuickQueryLogs({ connectionId: id })
     updateDockMenus()
   })
 })

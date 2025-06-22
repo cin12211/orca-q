@@ -4,7 +4,8 @@ import {
   workspaceApi,
   connectionApi,
   workspaceStateApi,
-  tabViewsApi
+  tabViewsApi,
+  quickQueryLogsApi
 } from './index'
 
 declare global {
@@ -15,5 +16,6 @@ declare global {
     workspaceStateApi: typeof workspaceStateApi
     connectionApi: typeof connectionApi
     tabViewsApi: typeof tabViewsApi
+    quickQueryLogsApi: typeof quickQueryLogsApi
   }
 }

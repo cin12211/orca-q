@@ -4,18 +4,30 @@ import githubLightDefault from '@shikijs/themes/github-light-default';
 import { createJavaScriptRegexEngine, type HighlighterCore } from 'shiki';
 import { createHighlighterCore } from 'shiki/core';
 import { ScrollArea } from '~/components/ui/scroll-area';
+import { useQuickQueryLogs } from '~/shared/stores';
 import QuickQueryHistoryLogItem from './QuickQueryHistoryLogItem.vue';
 
-// TODO: refactor , and add TanStack Virtual scroll for optimize
-interface Log {
-  createdAt: string;
-  logs: string;
+enum HistoryLogTabs {
+  All = 'all',
+  OneTable = 'one-table',
 }
 
 const props = defineProps<{
-  logs: Log[];
-  height?: string;
+  tableId: string;
 }>();
+
+const qqLogStore = useQuickQueryLogs();
+const { getLogsByTableId, qqLogs } = toRefs(qqLogStore);
+
+const logs = computed(() => {
+  if (tab.value === HistoryLogTabs.All) {
+    return qqLogs.value;
+  }
+
+  return getLogsByTableId.value(props.tableId);
+});
+
+const tab = ref<HistoryLogTabs>(HistoryLogTabs.All);
 
 const scrollRef = ref<HTMLDivElement | null>(null);
 const autoScroll = ref(true);
@@ -40,7 +52,7 @@ const handleScroll = (event: Event) => {
 
 // Scroll to bottom when logs update if autoScroll is enabled
 watch(
-  () => props.logs,
+  () => logs,
   () => {
     if (autoScroll.value && scrollRef.value) {
       nextTick(() => {
@@ -52,7 +64,6 @@ watch(
 );
 
 onBeforeMount(async () => {
-  console.time('createHighlighterCore');
   const highlighterPromise = createHighlighterCore({
     themes: [githubLightDefault],
     langs: [plsql],
@@ -60,8 +71,6 @@ onBeforeMount(async () => {
   });
 
   highlighter.value = await highlighterPromise;
-
-  console.timeEnd('createHighlighterCore');
 });
 
 // Scroll to bottom on initial mount
@@ -77,16 +86,76 @@ onMounted(() => {
 </script>
 
 <template>
-  <Card class="py-2 h-full rounded-md border-none shadow-none">
-    <CardContent :class="['p-0 overflow-y-auto']">
-      <ScrollArea class="h-full px-0 font-mono text-sm" @scroll="handleScroll">
-        <div
-          v-if="logs.length === 0"
-          class="flex h-full items-center justify-center text-zinc-500"
+  <div class="flex flex-1 flex-col h-full">
+    <div class="flex flex-1 h-full items-center justify-between">
+      <Tabs v-model="tab" class="pt-1">
+        <TabsList class="grid grid-cols-2 h-[1.625rem]!">
+          <TabsTrigger
+            :value="HistoryLogTabs.All"
+            class="h-5! px-1 font-medium text-xs cursor-pointer text-primary/80"
+          >
+            All logs
+          </TabsTrigger>
+          <TabsTrigger
+            :value="HistoryLogTabs.OneTable"
+            class="h-5! px-1 font-medium text-xs cursor-pointer text-primary/80"
+          >
+            Only this table
+          </TabsTrigger>
+        </TabsList>
+      </Tabs>
+
+      <div>
+        <p class="font-medium text-xs">Logs history</p>
+      </div>
+
+      <div class="flex items-center gap-1">
+        <Button
+          v-if="tab === HistoryLogTabs.All"
+          variant="outline"
+          size="sm"
+          class="h-6 px-1 gap-1 text-xs"
+          @click="qqLogStore.deleteAllLogs"
         >
-          No logs to display
-        </div>
-        <template v-else>
+          <Icon name="lucide:trash" />
+          <p class="font-normal">Delete all logs</p>
+        </Button>
+        <Button
+          v-else
+          variant="outline"
+          size="sm"
+          class="h-6 px-1 gap-1 text-xs"
+          @click="qqLogStore.deleteLogsOfTable(props.tableId)"
+        >
+          <Icon name="lucide:trash" />
+          <p class="font-normal">Delete logs</p>
+        </Button>
+
+        <!-- TODO: open when to this feature -->
+        <!-- <Button  variant="outline" size="sm" class="h-6 px-1 gap-1 text-xs">
+          <Icon name="hugeicons:file-download"> </Icon>
+          <p class="font-normal">Download logs</p>
+        </Button> -->
+      </div>
+    </div>
+
+    <div
+      v-if="!logs.length"
+      class="flex h-full items-center justify-center text-zinc-500"
+    >
+      No logs to display
+    </div>
+
+    <Card
+      v-else
+      class="py-2 mt-1 h-full rounded-none shadow-none border-none overflow-auto"
+    >
+      <CardContent class="p-0">
+        <ScrollArea
+          class="h-full px-0 font-mono text-sm"
+          @scroll="handleScroll"
+        >
+          <!-- // TODO: refactor , and add TanStack Virtual scroll for optimize -->
           <div
             v-for="(log, index) in logs"
             :key="index"
@@ -101,9 +170,9 @@ onMounted(() => {
               :log="log.logs"
             />
           </div>
-        </template>
-        <div ref="scrollRef"></div>
-      </ScrollArea>
-    </CardContent>
-  </Card>
+          <div ref="scrollRef"></div>
+        </ScrollArea>
+      </CardContent>
+    </Card>
+  </div>
 </template>

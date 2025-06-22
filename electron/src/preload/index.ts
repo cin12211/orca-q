@@ -8,11 +8,14 @@ import {
   TabViewsIpcChannels,
   WindowIpcChannels,
   WorkspaceIpcChannels,
-  WorkspaceStateIpcChannels
+  WorkspaceStateIpcChannels,
+  QQueryLogsIpcChannels
 } from '../constants'
 import { type UpdateWindowTitleProps } from '../main/ipc/updateWindowTitle'
 import { type WorkspaceState } from '../../../shared/stores/useWSStateStore'
 import { type DeleteTabViewProps, type GetTabViewsByContextProps } from '../main/ipc/tabViews'
+import { QuickQueryLog } from '../../../shared/stores/useQuickQueryLogs'
+import { DeleteQQueryLogsProps, GetQQueryLogsProps } from '../main/ipc/quickQueryLogs'
 
 export const electronBridgeApi = {
   updateWindowTitle: (props: UpdateWindowTitleProps) =>
@@ -65,6 +68,18 @@ export const tabViewsApi = {
     ipcRenderer.invoke(TabViewsIpcChannels.BulkDelete, props)
 }
 
+export const quickQueryLogsApi = {
+  getAll: (): Promise<QuickQueryLog[]> => ipcRenderer.invoke(QQueryLogsIpcChannels.Gets),
+  getByContext: (props: GetQQueryLogsProps): Promise<QuickQueryLog[]> =>
+    ipcRenderer.invoke(QQueryLogsIpcChannels.GetByContext, props),
+  create: (qqLog: QuickQueryLog): Promise<QuickQueryLog> =>
+    ipcRenderer.invoke(QQueryLogsIpcChannels.Create, qqLog),
+  update: (qqLog: QuickQueryLog): Promise<QuickQueryLog> =>
+    ipcRenderer.invoke(QQueryLogsIpcChannels.Update, qqLog),
+  delete: (props: DeleteQQueryLogsProps): Promise<void> =>
+    ipcRenderer.invoke(QQueryLogsIpcChannels.Delete, props)
+}
+
 // Use `contextBridge` APIs to expose Electron APIs to
 // renderer only if context isolation is enabled, otherwise
 // just add to the DOM global.
@@ -76,6 +91,7 @@ if (process.contextIsolated) {
     contextBridge.exposeInMainWorld('workspaceStateApi', workspaceStateApi)
     contextBridge.exposeInMainWorld('connectionApi', connectionApi)
     contextBridge.exposeInMainWorld('tabViewsApi', tabViewsApi)
+    contextBridge.exposeInMainWorld('quickQueryLogsApi', quickQueryLogsApi)
   } catch (error) {
     console.error(error)
   }
@@ -92,4 +108,6 @@ if (process.contextIsolated) {
   window.workspaceStateApi = workspaceStateApi
   // @ts-ignore (define in dts)
   window.tabViewsApi = tabViewsApi
+  // @ts-ignore (define in dts)
+  window.quickQueryLogsApi = quickQueryLogsApi
 }

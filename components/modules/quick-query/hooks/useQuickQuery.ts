@@ -4,7 +4,7 @@ import type QuickQueryTable from '../quick-query-table/QuickQueryTable.vue';
 
 export const useQuickQuery = () => {
   const { connectionStore, wsStateStore } = useAppContext();
-  const { connectionId, workspaceId, schemaId } = toRefs(wsStateStore);
+  const { connectionId, workspaceId } = toRefs(wsStateStore);
 
   const quickQueryFilterRef = ref<InstanceType<typeof QuickQueryFilter>>();
   const quickQueryTableRef = ref<InstanceType<typeof QuickQueryTable>>();
@@ -23,6 +23,5 @@ export const useQuickQuery = () => {
     connectionString,
     connectionId,
     workspaceId,
-    schemaId,
   };
 };

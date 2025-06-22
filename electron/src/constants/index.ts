@@ -36,3 +36,11 @@ export enum TabViewsIpcChannels {
   Delete = 'tabViews:delete',
   BulkDelete = 'tabViews:bulk-delete'
 }
+
+export enum QQueryLogsIpcChannels {
+  Gets = 'quickQueryLogs:gets',
+  GetByContext = 'quickQueryLogs:get-by-context',
+  Create = 'quickQueryLogs:create',
+  Update = 'quickQueryLogs:update',
+  Delete = 'quickQueryLogs:delete'
+}

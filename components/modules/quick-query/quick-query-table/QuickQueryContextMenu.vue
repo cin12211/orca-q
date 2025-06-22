@@ -1,4 +1,8 @@
 <script setup lang="ts">
+import { useAppLayoutStore } from '~/shared/stores/appLayoutStore';
+
+const { onShowSecondSidebar } = useAppLayoutStore();
+
 defineProps<{
   totalSelectedRows: number;
   hasEditedRows: boolean;
@@ -45,6 +49,13 @@ useHotkeys(
     </ContextMenuTrigger>
 
     <ContextMenuContent class="min-w-56">
+      <ContextMenuItem @select="onShowSecondSidebar">
+        <Icon
+          name="hugeicons:view"
+          class="size-4! min-w-4 text-muted-foreground"
+        />
+        View row detail
+      </ContextMenuItem>
       <ContextMenuItem @select="emit('onShowFilter')">
         <Icon
           name="lucide:filter"

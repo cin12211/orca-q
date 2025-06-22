@@ -49,37 +49,6 @@ useHotkeys([
   >
     <!-- TODO: review to sort button position for each function-->
     <div class="flex items-center gap-1" v-auto-animate>
-      <p class="font-normal text-xs text-primary/60" v-if="totalSelectedRows">
-        Selected
-      </p>
-      <p class="font-normal text-sm text-primary" v-if="totalSelectedRows">
-        {{ totalSelectedRows }}
-      </p>
-
-      <Button
-        variant="outline"
-        size="sm"
-        class="h-6 px-1 gap-1"
-        v-if="hasEditedRows"
-        @click="emit('onSaveData')"
-      >
-        <Icon name="lucide:save"> </Icon>
-        <ContextMenuShortcut>⌘S</ContextMenuShortcut>
-        <!-- Save -->
-      </Button>
-
-      <Button
-        variant="outline"
-        size="sm"
-        class="h-6 px-1 gap-1 mr-1"
-        v-if="totalSelectedRows"
-        @click="emit('onDeleteRows')"
-      >
-        <Icon name="lucide:trash"> </Icon>
-        <ContextMenuShortcut>⌥⌘⌫</ContextMenuShortcut>
-        <!-- Delete -->
-      </Button>
-
       <Button
         variant="outline"
         size="sm"
@@ -113,6 +82,37 @@ useHotkeys([
       >
         <Icon name="lucide:terminal"> </Icon>
         <ContextMenuShortcut>⌘j</ContextMenuShortcut>
+      </Button>
+
+      <p class="font-normal text-xs text-primary/60" v-if="totalSelectedRows">
+        Selected
+      </p>
+      <p class="font-normal text-sm text-primary" v-if="totalSelectedRows">
+        {{ totalSelectedRows }}
+      </p>
+
+      <Button
+        variant="outline"
+        size="sm"
+        class="h-6 px-1 gap-1"
+        v-if="hasEditedRows"
+        @click="emit('onSaveData')"
+      >
+        <Icon name="lucide:save"> </Icon>
+        <ContextMenuShortcut>⌘S</ContextMenuShortcut>
+        <!-- Save -->
+      </Button>
+
+      <Button
+        variant="outline"
+        size="sm"
+        class="h-6 px-1 gap-1 mr-1"
+        v-if="totalSelectedRows"
+        @click="emit('onDeleteRows')"
+      >
+        <Icon name="lucide:trash"> </Icon>
+        <ContextMenuShortcut>⌥⌘⌫</ContextMenuShortcut>
+        <!-- Delete -->
       </Button>
 
       <!-- TODO: Config export to excel or csv -->
@@ -159,7 +159,7 @@ useHotkeys([
 
     <div class="flex items-center gap-2">
       <Tabs :model-value="'data'">
-        <TabsList class="grid w-full grid-cols-3 h-6!">
+        <TabsList class="grid w-full grid-cols-3 h-[1.625rem]!">
           <TabsTrigger
             value="data"
             class="h-5! px-1 font-medium text-xs cursor-pointer text-primary/80"
