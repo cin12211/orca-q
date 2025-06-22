@@ -7,8 +7,8 @@ import { useWSStateStore } from './useWSStateStore';
 export interface QuickQueryLog {
   connectionId: string;
   workspaceId: string;
-  schemaId: string;
-  tableId: string;
+  schemaName: string;
+  tableName: string;
   id: string;
   logs: string;
   timeQuery: number; // in milliseconds
@@ -24,23 +24,28 @@ export const useQuickQueryLogs = defineStore(
 
     const qqLogs = ref<QuickQueryLog[]>([]);
 
-    const getLogsByTableId = (tableId: string) => {
+    const getLogsByTableId = ({
+      tableName,
+      schemaName,
+    }: {
+      tableName: string;
+      schemaName: string;
+    }) => {
       return qqLogs.value.filter(
         log =>
-          log.tableId === tableId &&
-          log.schemaId === wsStateStore.schemaId &&
+          log.tableName === tableName &&
+          log.schemaName === schemaName &&
           log.connectionId === connectionId.value
       );
     };
 
     const createLog = async (
-      log: Pick<QuickQueryLog, 'logs' | 'tableId' | 'timeQuery'>
+      log: Pick<
+        QuickQueryLog,
+        'logs' | 'tableName' | 'timeQuery' | 'schemaName'
+      >
     ) => {
-      if (
-        !connectionId.value ||
-        !wsStateStore.schemaId ||
-        !wsStateStore.workspaceId
-      ) {
+      if (!connectionId.value || !wsStateStore.workspaceId) {
         console.error('connectionId or schemaId not found');
         return;
       }
@@ -49,7 +54,6 @@ export const useQuickQueryLogs = defineStore(
         ...log,
         connectionId: connectionId.value,
         workspaceId: wsStateStore.workspaceId,
-        schemaId: wsStateStore.schemaId,
         createdAt: dayjs().toISOString(),
         id: uuidv4(),
       };
@@ -57,16 +61,22 @@ export const useQuickQueryLogs = defineStore(
       qqLogs.value.push(logTmp);
     };
 
-    const deleteLogsOfTable = async (tableId: string) => {
-      if (!connectionId.value || !wsStateStore.schemaId) {
+    const deleteLogsOfTable = async ({
+      tableName,
+      schemaName,
+    }: {
+      tableName: string;
+      schemaName: string;
+    }) => {
+      if (!connectionId.value) {
         console.error('connectionId or schemaId not found');
         return;
       }
 
       await window.quickQueryLogsApi.delete({
         connectionId: connectionId.value,
-        schemaId: wsStateStore.schemaId,
-        tableId,
+        tableName,
+        schemaName,
       });
 
       await loadPersistData(connectionId.value);

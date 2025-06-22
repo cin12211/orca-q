@@ -26,7 +26,7 @@ export type TabView = {
   workspaceId: string;
   connectionId: string;
   schemaId: string;
-  id: string;
+  id: string; // tabviewID = tableName + schemaId
   index: number;
   name: string;
   icon: string;
@@ -101,7 +101,6 @@ export const useTabViewsStore = defineStore(
 
     const selectTab = async (tabId: string) => {
       const tab = tabViews.value?.find(t => t.id === tabId);
-      console.log('🚀 ~ selectTab ~ tab:', tab);
 
       if (tab) {
         navigateTo({

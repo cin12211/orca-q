@@ -13,7 +13,8 @@ enum HistoryLogTabs {
 }
 
 const props = defineProps<{
-  tableId: string;
+  tableName: string;
+  schemaName: string;
 }>();
 
 const qqLogStore = useQuickQueryLogs();
@@ -24,7 +25,7 @@ const logs = computed(() => {
     return qqLogs.value;
   }
 
-  return getLogsByTableId.value(props.tableId);
+  return getLogsByTableId.value(props);
 });
 
 const tab = ref<HistoryLogTabs>(HistoryLogTabs.All);
@@ -125,7 +126,7 @@ onMounted(() => {
           variant="outline"
           size="sm"
           class="h-6 px-1 gap-1 text-xs"
-          @click="qqLogStore.deleteLogsOfTable(props.tableId)"
+          @click="qqLogStore.deleteLogsOfTable(props)"
         >
           <Icon name="lucide:trash" />
           <p class="font-normal">Delete logs</p>

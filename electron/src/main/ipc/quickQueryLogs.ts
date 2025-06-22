@@ -16,8 +16,8 @@ export type DeleteQQueryLogsProps =
     }
   | {
       connectionId: string
-      schemaId: string
-      tableId: string
+      schemaName: string
+      tableName: string
     }
 
 export const deleteQuickQueryLogs = async (props: DeleteQQueryLogsProps) => {

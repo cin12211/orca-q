@@ -1,12 +1,13 @@
+import type { StringLiteral } from 'typescript';
 import { toast } from 'vue-sonner';
 import { useAppContext } from '~/shared/contexts/useAppContext';
 
 export const useQuickQueryTableInfo = async ({
-  tableId,
+  tableName,
   schemaName,
 }: {
-  tableId: string;
-  schemaName?: Ref<string | undefined, string | undefined>;
+  tableName: string;
+  schemaName: string;
 }) => {
   const { connectionStore } = useAppContext();
 
@@ -15,12 +16,12 @@ export const useQuickQueryTableInfo = async ({
     {
       method: 'POST',
       body: {
-        tableName: tableId,
+        tableName: tableName,
         dbConnectionString:
           connectionStore.selectedConnection?.connectionString,
-        schema: schemaName?.value,
+        schema: schemaName,
       },
-      key: `schema-${tableId}`,
+      key: `schema-${tableName}-${schemaName}`,
       onResponseError({ response }) {
         toast(response?.statusText);
       },

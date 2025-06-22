@@ -29,7 +29,7 @@ export const useTableQueryBuilder = async ({
   primaryKeys: Ref<string[]>;
   columns: Ref<string[]>;
   isPersist?: boolean;
-  schemaName: Ref<string | undefined, string | undefined>;
+  schemaName: string;
   workspaceId: Ref<string | undefined, string | undefined>;
   connectionId: Ref<string | undefined, string | undefined>;
 }) => {
@@ -51,7 +51,7 @@ export const useTableQueryBuilder = async ({
   const isShowFilters = ref(false);
 
   const baseQueryString = computed(() => {
-    return `${DEFAULT_QUERY} "${schemaName?.value}"."${tableName}"`;
+    return `${DEFAULT_QUERY} "${schemaName}"."${tableName}"`;
   });
 
   const whereClauses = computed(() => {
@@ -84,18 +84,19 @@ export const useTableQueryBuilder = async ({
     const limitClause = `LIMIT ${pagination.limit}`;
     const offsetClause = `OFFSET ${pagination.offset}`;
 
-    return `${DEFAULT_QUERY} "${schemaName?.value}"."${tableName}" ${whereClauses.value || ''} ${orderClauses} ${limitClause} ${offsetClause}`;
+    return `${DEFAULT_QUERY} "${schemaName}"."${tableName}" ${whereClauses.value || ''} ${orderClauses} ${limitClause} ${offsetClause}`;
   });
 
   const queryCountString = computed(() => {
-    return `${DEFAULT_QUERY_COUNT} "${schemaName?.value}"."${tableName}" ${whereClauses.value || ''}`;
+    return `${DEFAULT_QUERY_COUNT} "${schemaName}"."${tableName}" ${whereClauses.value || ''}`;
   });
 
   const addHistoryLog = (log: string) => {
     const logs = `\n${log}`;
 
     qqLogStore.createLog({
-      tableId: tableName,
+      tableName,
+      schemaName,
       logs,
       timeQuery: Date.now(),
     });
@@ -225,7 +226,7 @@ export const useTableQueryBuilder = async ({
   };
 
   const getPersistedKey = () => {
-    return `${workspaceId?.value}-${connectionId?.value}-${schemaName?.value}-${tableName}`;
+    return `${workspaceId?.value}-${connectionId?.value}-${schemaName}-${tableName}`;
   };
 
   watch(

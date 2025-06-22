@@ -11,7 +11,7 @@ import { DEFAULT_DEBOUNCE_INPUT } from '~/utils/constants';
 const { schemaStore, onConnectToConnection, wsStateStore, tabViewStore } =
   useAppContext();
 const { activeSchema } = toRefs(schemaStore);
-const { connectionId } = toRefs(wsStateStore);
+const { connectionId, schemaId } = toRefs(wsStateStore);
 
 const isRefreshing = ref(false);
 
@@ -230,32 +230,38 @@ const onRefreshSchema = async () => {
 
           if (tabViewType === TabViewType.FunctionsDetail) {
             routeName =
-              'workspaceId-schemas-quick-query-function-detail-functionId';
+              'workspaceId-schemas-quick-query-function-detail-schemaName-functionName';
 
             routeParams = {
-              functionId: item.value.title,
+              functionName: item.value.title,
+              schemaName: schemaId || '',
             };
           }
 
+          const tabId = `${item.value.title}-${schemaId}`;
+
+          //TODO: refactor route to tabId
           if (tabViewType === TabViewType.TableDetail) {
-            routeName = 'workspaceId-schemas-quick-query-table-detail-tableId';
+            routeName =
+              'workspaceId-schemas-quick-query-table-detail-schemaName-tableName';
 
             routeParams = {
-              tableId: item.value.title,
+              tableName: item.value.title,
+              schemaName: schemaId || '',
             };
           }
 
           if (routeName) {
             await tabViewStore.openTab({
               icon: item.value.icon,
-              id: item.value.title,
+              id: tabId,
               name: item.value.title,
               type: (item.value as any).tabViewType,
-              routeName: routeName,
+              routeName,
               routeParams,
             });
 
-            await tabViewStore.selectTab(item.value.title);
+            await tabViewStore.selectTab(tabId);
           }
         }
       "

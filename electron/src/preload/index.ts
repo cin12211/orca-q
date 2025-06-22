@@ -14,8 +14,8 @@ import {
 import { type UpdateWindowTitleProps } from '../main/ipc/updateWindowTitle'
 import { type WorkspaceState } from '../../../shared/stores/useWSStateStore'
 import { type DeleteTabViewProps, type GetTabViewsByContextProps } from '../main/ipc/tabViews'
-import { QuickQueryLog } from '../../../shared/stores/useQuickQueryLogs'
-import { DeleteQQueryLogsProps, GetQQueryLogsProps } from '../main/ipc/quickQueryLogs'
+import type { QuickQueryLog } from '../../../shared/stores/useQuickQueryLogs'
+import type { DeleteQQueryLogsProps, GetQQueryLogsProps } from '../main/ipc/quickQueryLogs'
 
 export const electronBridgeApi = {
   updateWindowTitle: (props: UpdateWindowTitleProps) =>

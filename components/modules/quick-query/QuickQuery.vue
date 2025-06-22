@@ -17,14 +17,10 @@ import QuickQueryHistoryLogsPanel from './quick-query-history-log-panel/QuickQue
 import QuickQueryContextMenu from './quick-query-table/QuickQueryContextMenu.vue';
 import QuickQueryTable from './quick-query-table/QuickQueryTable.vue';
 
-const props = defineProps<{ tableId: string }>();
+const props = defineProps<{ tableName: string; schemaName: string }>();
 
 const tabViewStore = useTabViewsStore();
 const { activeTab } = toRefs(tabViewStore);
-
-const schemaId = computed(() => {
-  return activeTab.value?.schemaId;
-});
 
 const {
   quickQueryFilterRef,
@@ -43,8 +39,8 @@ const {
   tableSchema,
   columnTypes,
 } = await useQuickQueryTableInfo({
-  tableId: props.tableId,
-  schemaName: schemaId,
+  tableName: props.tableName,
+  schemaName: props.schemaName,
 });
 
 const {
@@ -69,12 +65,12 @@ const {
   isShowFilters,
 } = await useTableQueryBuilder({
   connectionString,
-  tableName: props.tableId,
   primaryKeys: primaryKeys,
   columns: columnNames,
-  connectionId: connectionId,
-  schemaName: schemaId,
+  connectionId,
   workspaceId,
+  tableName: props.tableName,
+  schemaName: props.schemaName,
 });
 
 watch(
@@ -99,7 +95,7 @@ const {
   onRefresh,
   onSelectedRowsChange,
 } = useQuickQueryMutation({
-  tableId: props.tableId,
+  tableName: props.tableName,
   primaryKeys,
   refreshTableData,
   columnNames,
@@ -127,7 +123,6 @@ onDeactivated(() => {
 </script>
 
 <template>
-  {{ activeTab }}
   <Teleport defer to="#preview-select-row" v-if="isActiveTeleport">
     <PreviewSelectedRow
       :columnTypes="columnTypes"
@@ -136,7 +131,10 @@ onDeactivated(() => {
   </Teleport>
 
   <Teleport defer to="#bottom-panel" v-if="isActiveTeleport">
-    <QuickQueryHistoryLogsPanel :tableId="props.tableId" />
+    <QuickQueryHistoryLogsPanel
+      :tableName="props.tableName"
+      :schema-name="props.schemaName"
+    />
   </Teleport>
 
   <QuickQueryErrorPopup
@@ -148,7 +146,7 @@ onDeactivated(() => {
     <!-- <LoadingOverlay :visible="status === 'pending'" /> -->
     <LoadingOverlay :visible="tableSchemaStatus === 'pending' || isMutating" />
 
-    <TableSkeleton v-if="tableSchemaStatus === 'pending'" />
+    <!-- <TableSkeleton v-if="tableSchemaStatus === 'pending'" /> -->
 
     <div class="px-2 mb-2 border-b">
       <QuickQueryControlBar
