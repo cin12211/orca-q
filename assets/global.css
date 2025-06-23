@@ -33,3 +33,18 @@ button {
   -webkit-app-region: no-drag;
   app-region: no-drag;
 }
+
+.custom-scrollbar::-webkit-scrollbar {
+  height: 4px;
+  width: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: var(--ring);
+  border-radius: 4px;
+  width: 2px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}

@@ -51,7 +51,7 @@ const heightItem = 24;
       event =>
         onUpdateSelectedItems(event as unknown as FlattenedTreeFileSystemItem[])
     "
-    class="list-none h-full overflow-y-auto select-none px-1 text-sm font-medium"
+    class="list-none h-full overflow-y-auto select-none px-1 text-sm font-medium custom-scrollbar mr-1"
     :items="explorerFiles"
     :get-key="item => getTreeItemPath(item.paths || [])"
     :expanded="expandedState"
