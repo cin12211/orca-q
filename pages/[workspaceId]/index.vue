@@ -22,14 +22,14 @@ definePageMeta({
       />
     </div>
 
-    <!-- TODO: OPEN when do setting feature -->
-    <!-- <div class="flex items-center pt-3 text-muted-foreground gap-0.5 text-sm">
+    <div class="flex items-center pt-3 text-muted-foreground gap-0.5 text-sm">
       <Icon name="hugeicons:settings-01"> </Icon> Open setting
 
       <ContextMenuShortcut class="pl-2">(⌘,)</ContextMenuShortcut>
     </div>
 
-    <div class="flex items-center pt-1 text-muted-foreground gap-0.5 text-sm">
+    <!-- TODO: OPEN when do setting feature -->
+    <!-- <div class="flex items-center pt-1 text-muted-foreground gap-0.5 text-sm">
       <Icon name="hugeicons:command" /> Command Palette
 
       <ContextMenuShortcut class="pl-2">(⌘K)</ContextMenuShortcut>
