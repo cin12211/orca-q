@@ -113,7 +113,6 @@ const gridOptions: GridOptions = {
 
     <!-- The grid itself ------------------------------------------- -->
     <AgGridVue
-      class="flex-1"
       :grid-options="gridOptions"
       :autoSizeStrategy="autoSizeStrategy"
       :theme="customizedTheme"
