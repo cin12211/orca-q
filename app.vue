@@ -2,6 +2,7 @@
 // main.ts (or the entry that mounts Vue)
 import { LoadingOverlay, TooltipProvider } from '#components';
 import { AllCommunityModule, ModuleRegistry } from 'ag-grid-community';
+import Settings from './components/modules/settings/Settings.vue';
 import { Toaster } from './components/ui/sonner';
 import { useAppContext } from './shared/contexts';
 import { DEFAULT_DEBOUNCE_INPUT } from './utils/constants';
@@ -47,6 +48,7 @@ onMounted(async () => {
     </NuxtLayout>
   </TooltipProvider>
 
+  <Settings />
   <ClientOnly>
     <Toaster position="top-right" :close-button="true" />
   </ClientOnly>
