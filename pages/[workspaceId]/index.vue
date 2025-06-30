@@ -7,13 +7,12 @@ definePageMeta({
 </script>
 
 <template>
-  <div class="p-2 flex flex-col items-center justify-center h-full">
+  <div class="p-2 flex flex-col items-center justify-center h-full gap-2">
     <Avatar class="rounded-2xl size-40">
       <AvatarImage src="/logo.png" alt="@unovue" />
     </Avatar>
 
-    <div class="font-medium text-2xl pt-2">No table is open</div>
-    <div class="text-muted-foreground">
+    <div class="text-muted-foreground mt-4">
       Click on a database table from the sidebar to begin
 
       <Icon
