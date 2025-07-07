@@ -26,20 +26,22 @@ export const workspaceStateApi = {
   getAll: (): Promise<WorkspaceState[]> => ipcRenderer.invoke(WorkspaceStateIpcChannels.Gets),
   create: (wsState: WorkspaceState): Promise<WorkspaceState> =>
     ipcRenderer.invoke(WorkspaceStateIpcChannels.Create, wsState),
-  update: (wsState: WorkspaceState): Promise<WorkspaceState> =>
+  update: (wsState: WorkspaceState): Promise<WorkspaceState | null> =>
     ipcRenderer.invoke(WorkspaceStateIpcChannels.Update, wsState),
-  delete: (id: string): Promise<WorkspaceState> =>
+  delete: (id: string): Promise<WorkspaceState | null> =>
     ipcRenderer.invoke(WorkspaceStateIpcChannels.Delete, id)
 }
 
 export const workspaceApi = {
   getAll: (): Promise<Workspace[]> => ipcRenderer.invoke(WorkspaceIpcChannels.Gets),
-  getOne: (id: string): Promise<Workspace> => ipcRenderer.invoke(WorkspaceIpcChannels.GetOne, id),
+  getOne: (id: string): Promise<Workspace | null> =>
+    ipcRenderer.invoke(WorkspaceIpcChannels.GetOne, id),
   create: (workspace: Workspace): Promise<Workspace> =>
     ipcRenderer.invoke(WorkspaceIpcChannels.Create, workspace),
-  update: (workspace: Workspace): Promise<Workspace> =>
+  update: (workspace: Workspace): Promise<Workspace | null> =>
     ipcRenderer.invoke(WorkspaceIpcChannels.Update, workspace),
-  delete: (id: string): Promise<Workspace> => ipcRenderer.invoke(WorkspaceIpcChannels.Delete, id)
+  delete: (id: string): Promise<Workspace | null> =>
+    ipcRenderer.invoke(WorkspaceIpcChannels.Delete, id)
 }
 
 export const connectionApi = {

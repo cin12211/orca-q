@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { DynamicTable } from '#components';
 import { useAppContext } from '~/shared/contexts/useAppContext';
 
 const { connectionStore, wsStateStore } = useAppContext();
@@ -16,6 +17,5 @@ const { data } = await useFetch('/api/get-over-view-function', {
 </script>
 
 <template>
-  {{ schemaId }}
   <DynamicTable :data="data || []" class="h-full" :defaultPageSize="30" />
 </template>

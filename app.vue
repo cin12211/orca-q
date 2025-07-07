@@ -5,7 +5,10 @@ import { AllCommunityModule, ModuleRegistry } from 'ag-grid-community';
 import Settings from './components/modules/settings/Settings.vue';
 import { Toaster } from './components/ui/sonner';
 import { useAppContext } from './shared/contexts';
+import { initIDB } from './shared/persist';
 import { DEFAULT_DEBOUNCE_INPUT } from './utils/constants';
+
+initIDB();
 
 // Register all Community features
 ModuleRegistry.registerModules([AllCommunityModule]);
