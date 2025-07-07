@@ -27,32 +27,31 @@ import {
   Video,
 } from 'lucide-vue-next';
 
-const data = {
-  nav: [
-    { name: 'Notifications', icon: Bell },
-    { name: 'Navigation', icon: Menu },
-    { name: 'Home', icon: Home },
-    { name: 'Appearance', icon: Paintbrush },
-    { name: 'Messages & media', icon: MessageCircle },
-    { name: 'Language & region', icon: Globe },
-    { name: 'Accessibility', icon: Keyboard },
-    { name: 'Mark as read', icon: Check },
-    { name: 'Audio & video', icon: Video },
-    { name: 'Connected accounts', icon: Link },
-    { name: 'Privacy & visibility', icon: Lock },
-    { name: 'Advanced', icon: Settings },
-  ],
-};
+const settingNavs = [
+  { name: 'Notifications', icon: Bell },
+  { name: 'Navigation', icon: Menu },
+  { name: 'Home', icon: Home },
+  { name: 'Appearance', icon: Paintbrush },
+  { name: 'Messages & media', icon: MessageCircle },
+  { name: 'Language & region', icon: Globe },
+  { name: 'Accessibility', icon: Keyboard },
+  { name: 'Mark as read', icon: Check },
+  { name: 'Audio & video', icon: Video },
+  { name: 'Connected accounts', icon: Link },
+  { name: 'Privacy & visibility', icon: Lock },
+  { name: 'Advanced', icon: Settings },
+];
 
 const isOpenSettingModal = ref(false);
 const activeNav = ref('Messages & media');
 
-useHotkeys([
-  {
-    callback: () => (isOpenSettingModal.value = !isOpenSettingModal.value),
-    key: 'meta+,',
-  },
-]);
+//TODO: open setting modal
+// useHotkeys([
+//   {
+//     callback: () => (isOpenSettingModal.value = !isOpenSettingModal.value),
+//     key: 'meta+,',
+//   },
+// ]);
 
 // Scroll to active sidebar item on mount
 onMounted(async () => {
@@ -98,7 +97,11 @@ const handleNavClick = async (navName: string) => {
             <SidebarGroup>
               <SidebarGroupContent>
                 <SidebarMenu>
-                  <SidebarMenuItem v-for="item in data.nav" :key="item.name">
+                  <SidebarMenuItem
+                    class="cursor-pointer"
+                    v-for="item in settingNavs"
+                    :key="item.name"
+                  >
                     <SidebarMenuButton
                       as-child
                       :is-active="item.name === activeNav"
@@ -135,13 +138,10 @@ const handleNavClick = async (navName: string) => {
           </header>
           <div class="flex flex-1 flex-col gap-4 overflow-y-auto p-4 pt-0">
             <div
-              v-for="nav in data.nav"
-              :key="nav.name"
-              :id="nav.name"
-              class="aspect-video w-full rounded-xl bg-muted/50"
+              class="aspect-video w-full h-full rounded-xl bg-muted/50"
               tabindex="-1"
             >
-              {{ nav.name }}
+              {{ activeNav }}
             </div>
           </div>
         </main>
