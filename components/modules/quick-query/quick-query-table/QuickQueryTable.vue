@@ -65,6 +65,10 @@ const customizedTheme = themeBalham.withParams({
   borderColor: 'var(--input)',
   columnBorder: true,
   wrapperBorderRadius: 'var(--radius)',
+  checkboxBorderRadius: 5,
+  checkboxCheckedBackgroundColor: 'var(--foreground)',
+  checkboxCheckedShapeColor: 'var(--background)',
+  checkboxCheckedBorderColor: 'transparent',
 });
 
 /* grid ready callback ---------------------------------------------- */
