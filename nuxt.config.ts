@@ -39,6 +39,9 @@ export default defineNuxtConfig({
   },
   nitro: {
     preset: 'node',
+    prerender: {
+      autoSubfolderIndex: false,
+    },
   },
 
   // experimental: {
