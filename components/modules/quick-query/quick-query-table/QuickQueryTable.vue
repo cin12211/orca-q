@@ -65,6 +65,10 @@ const customizedTheme = themeBalham.withParams({
   borderColor: 'var(--input)',
   columnBorder: true,
   wrapperBorderRadius: 'var(--radius)',
+  checkboxBorderRadius: 5,
+  checkboxCheckedBackgroundColor: 'var(--foreground)',
+  checkboxCheckedShapeColor: 'var(--background)',
+  checkboxCheckedBorderColor: 'transparent',
 });
 
 /* grid ready callback ---------------------------------------------- */
@@ -192,6 +196,7 @@ const columnDefs = computed<ColDef[]>(() => {
       resizable: true,
       editable: true,
       sortable: false,
+      cellClass: 'cellCenter',
       type: 'editableColumn',
       headerComponentParams: {
         allowSorting: true,
@@ -257,8 +262,6 @@ const columnTypes = ref<{
       if (haveDifferent) {
         return { backgroundColor: 'var(--color-orange-200)' };
       }
-
-      return { backgroundColor: 'unset' };
     },
   },
 });
@@ -317,4 +320,8 @@ defineExpose({ gridApi, editedCells });
 /* .ag-row-selected:before {
   background-color: var(--color-slate-200);
 } */
+
+.cellCenter .ag-cell-wrapper {
+  justify-content: center;
+}
 </style>

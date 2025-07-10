@@ -97,7 +97,7 @@ watchEffect(onCleanup => {
 <template>
   <div
     :class="[
-      'w-full flex items-center h-full space-x-2 mx-1 overflow-x-auto custom-x-scrollbar relative',
+      'w-full flex items-center h-full space-x-2 mx-1 overflow-x-auto custom-scrollbar relative',
       isDragging ? 'bg-purple-50' : '',
     ]"
     ref="elementRef"
