@@ -3,6 +3,7 @@ import { toast } from 'vue-sonner';
 import { EDatabaseType } from '~/components/modules/management-connection/constants';
 import { useQuickQueryLogs } from '~/shared/stores';
 import {
+  ComposeOperator,
   DEFAULT_QUERY,
   DEFAULT_QUERY_COUNT,
   DEFAULT_QUERY_SIZE,
@@ -23,6 +24,8 @@ export const useTableQueryBuilder = async ({
   schemaName,
   workspaceId,
   connectionId,
+  initFilters,
+  initComposeWith,
 }: {
   connectionString: Ref<string>;
   tableName: string;
@@ -32,6 +35,8 @@ export const useTableQueryBuilder = async ({
   schemaName: string;
   workspaceId: Ref<string | undefined, string | undefined>;
   connectionId: Ref<string | undefined, string | undefined>;
+  initFilters?: FilterSchema[];
+  initComposeWith?: ComposeOperator;
 }) => {
   const qqLogStore = useQuickQueryLogs();
 
@@ -50,6 +55,8 @@ export const useTableQueryBuilder = async ({
 
   const isShowFilters = ref(false);
 
+  const composeWith = ref<ComposeOperator>(ComposeOperator.AND);
+
   const baseQueryString = computed(() => {
     return `${DEFAULT_QUERY} "${schemaName}"."${tableName}"`;
   });
@@ -65,6 +72,7 @@ export const useTableQueryBuilder = async ({
       columns: columns.value,
       db: EDatabaseType.PG,
       filters: filters.value,
+      composeWith: composeWith.value,
     });
   });
 
@@ -221,8 +229,17 @@ export const useTableQueryBuilder = async ({
     refreshTableData();
   };
 
-  const onApplyNewFilter = () => {
+  const onChangeComposeWith = (value: ComposeOperator) => {
+    composeWith.value = value;
     refreshTableData();
+    refreshCount();
+  };
+
+  const onApplyNewFilter = () => {
+    console.log('onApplyNewFilter');
+
+    refreshTableData();
+    refreshCount();
   };
 
   const getPersistedKey = () => {
@@ -247,6 +264,7 @@ export const useTableQueryBuilder = async ({
             pagination,
             orderBy,
             isShowFilters: isShowFilters.value,
+            composeWith: composeWith.value,
           })
         );
       },
@@ -257,6 +275,15 @@ export const useTableQueryBuilder = async ({
 
   const onLoadPersistedState = () => {
     if (!isPersist) {
+      if (initFilters) {
+        filters.value = initFilters;
+        isShowFilters.value = true;
+      }
+
+      if (initComposeWith) {
+        composeWith.value = initComposeWith;
+      }
+
       return;
     }
 
@@ -270,6 +297,7 @@ export const useTableQueryBuilder = async ({
         pagination: _pagination,
         orderBy: _orderBy,
         isShowFilters: _isShowFilters,
+        composeWith: _composeWith,
       } = JSON.parse(persistedState);
 
       if (_orderBy) {
@@ -284,6 +312,10 @@ export const useTableQueryBuilder = async ({
 
       if (_filters) {
         filters.value = _filters;
+      }
+
+      if (_composeWith) {
+        composeWith.value = _composeWith;
       }
 
       isShowFilters.value = !!_isShowFilters;
@@ -316,5 +348,7 @@ export const useTableQueryBuilder = async ({
     filters,
     addHistoryLog,
     isShowFilters,
+    onChangeComposeWith,
+    composeWith,
   };
 };

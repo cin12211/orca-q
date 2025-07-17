@@ -121,7 +121,8 @@ export const useTabViewsStore = defineStore(
           console.warn(`Tab element with ID ${tabId} not found in the DOM.`);
         }
       } else {
-        throw new Error(`Tab with ID ${tabId} does not exist.`);
+        console.error(`Tab with ID ${tabId} does not exist.`);
+        // throw new Error(`Tab with ID ${tabId} does not exist.`);
 
         navigateTo({
           name: 'workspaceId',
@@ -165,7 +166,8 @@ export const useTabViewsStore = defineStore(
           await selectTab(tabViews.value[nextIndex].id);
         }
       } else {
-        throw new Error(`Tab with ID ${tabId} does not exist.`);
+        console.error(`Tab with ID ${tabId} does not exist.`);
+        // throw new Error(`Tab with ID ${tabId} does not exist.`);
 
         navigateTo({
           name: 'workspaceId',

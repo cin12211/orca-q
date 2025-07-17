@@ -46,6 +46,17 @@ export const useAppContext = () => {
     });
   };
 
+  const fetchReservedTableSchemas = async (dbConnectionString: string) => {
+    const reservedSchemas = await $fetch('/api/get-reverse-table-schemas', {
+      method: 'POST',
+      body: {
+        dbConnectionString,
+      },
+    });
+
+    schemaStore.reservedSchemas = reservedSchemas.result;
+  };
+
   const fetchCurrentSchema = async (dbConnectionString: string) => {
     start({ force: true });
 
@@ -74,7 +85,6 @@ export const useAppContext = () => {
     const dbConnectionString: string = connection.connectionString || '';
 
     const databaseSource = await fetchCurrentSchema(dbConnectionString);
-    console.log('🚀 ~ onConnectToConnection ~ databaseSource:', databaseSource);
 
     let includedPublic = false;
 
@@ -119,6 +129,8 @@ export const useAppContext = () => {
         schemaId: includedPublic ? PUBLIC_SCHEMA_ID : databaseSource[0].name,
       });
     }
+
+    fetchReservedTableSchemas(dbConnectionString);
   };
 
   const setConnectionId = async ({

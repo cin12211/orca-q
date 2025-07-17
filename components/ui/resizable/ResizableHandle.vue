@@ -35,10 +35,8 @@ const forwarded = useForwardPropsEmits(delegatedProps, emits);
   >
     <template v-if="props.withHandle">
       <div
-        class="bg-border z-10 flex h-4 w-3 items-center justify-center rounded-xs border"
-      >
-        <GripVertical class="size-2.5" />
-      </div>
+        class="bg-border z-10 flex h-7 w-1 min-w-1 items-center justify-center rounded-md border"
+      ></div>
     </template>
   </SplitterResizeHandle>
 </template>

@@ -1,24 +1,30 @@
 <script setup lang="ts">
+import { LoadingOverlay } from '#components';
 import { useTableQueryBuilder } from '~/composables/useTableQueryBuilder';
 import { useAppLayoutStore } from '~/shared/stores/appLayoutStore';
-import { DEFAULT_QUERY_SIZE } from '~/utils/constants';
-import { EDatabaseType } from '../management-connection/constants';
-import QuickQueryErrorPopup from './QuickQueryErrorPopup.vue';
+import { ComposeOperator, DEFAULT_QUERY_SIZE } from '~/utils/constants';
+import type { FilterSchema } from '~/utils/quickQuery';
+import { EDatabaseType } from '../../management-connection/constants';
 import {
   useQuickQuery,
   useQuickQueryMutation,
   useQuickQueryTableInfo,
   useReverseTables,
-} from './hooks';
-import PreviewReverseTable from './preview-reverse-table/PreviewReverseTable.vue';
-import PreviewSelectedRow from './preview/PreviewSelectedRow.vue';
-import QuickQueryControlBar from './quick-query-control-bar/QuickQueryControlBar.vue';
-import QuickQueryFilter from './quick-query-filter/QuickQueryFilter.vue';
-import QuickQueryHistoryLogsPanel from './quick-query-history-log-panel/QuickQueryHistoryLogsPanel.vue';
-import QuickQueryContextMenu from './quick-query-table/QuickQueryContextMenu.vue';
-import QuickQueryTable from './quick-query-table/QuickQueryTable.vue';
+} from '../hooks';
+import QuickQueryControlBar from '../quick-query-control-bar/QuickQueryControlBar.vue';
+import QuickQueryFilter from '../quick-query-filter/QuickQueryFilter.vue';
+import QuickQueryContextMenu from '../quick-query-table/QuickQueryContextMenu.vue';
+import QuickQueryTable from '../quick-query-table/QuickQueryTable.vue';
+import PreviewReverseTable from './PreviewReverseTable.vue';
 
-const props = defineProps<{ tableName: string; schemaName: string }>();
+const props = defineProps<{
+  tableName: string;
+  schemaName: string;
+  // recordId: string;
+  // fkColumn?: string;
+  initFilters?: FilterSchema[];
+  breadcrumbs?: string[];
+}>();
 
 const previewReverseTableModal = reactive({
   open: false,
@@ -69,8 +75,8 @@ const {
   addHistoryLog,
   filters,
   isShowFilters,
-  onChangeComposeWith,
   composeWith,
+  onChangeComposeWith,
 } = await useTableQueryBuilder({
   connectionString,
   primaryKeys: primaryKeys,
@@ -79,6 +85,9 @@ const {
   workspaceId,
   tableName: props.tableName,
   schemaName: props.schemaName,
+  isPersist: false,
+  initFilters: props?.initFilters || [],
+  initComposeWith: ComposeOperator.OR,
 });
 
 watch(
@@ -155,7 +164,7 @@ const { isHaveRelationByFieldName } = useReverseTables({
     :recordId="previewReverseTableModal.recordId"
     :columnName="previewReverseTableModal.columnName"
     v-if="previewReverseTableModal.open"
-    :breadcrumbs="[props.tableName]"
+    :breadcrumbs="breadcrumbs"
   />
 
   <Teleport defer to="#preview-select-row" v-if="isActiveTeleport">

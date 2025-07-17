@@ -1,7 +1,12 @@
 // ~/utils/query-generator.ts
 import { z } from 'zod';
 import type { EDatabaseType } from '~/components/modules/management-connection/constants';
-import { EExtendedField, OperatorSet, operatorSets } from '~/utils/constants';
+import {
+  ComposeOperator,
+  EExtendedField,
+  OperatorSet,
+  operatorSets,
+} from '~/utils/constants';
 
 /* -------------------------------------------------------------------------- */
 /*                                   Types                                    */
@@ -177,10 +182,12 @@ export function buildWhereClause<
   filters,
   db,
   columns = [],
+  composeWith = ComposeOperator.AND,
 }: {
   filters: F;
   db: EDatabaseType;
   columns: readonly string[];
+  composeWith?: ComposeOperator;
 }): WhereResult {
   const pieces: string[] = [];
   const params: (string | number | null)[] = [];
@@ -254,7 +261,7 @@ export function buildWhereClause<
   });
 
   return {
-    where: pieces.length ? `WHERE ${pieces.join(' AND ')}` : '',
+    where: pieces.length ? `WHERE ${pieces.join(` ${composeWith} `)}` : '',
     params,
   };
 }
@@ -271,12 +278,19 @@ export function formatWhereClause<F extends readonly FilterSchema[]>({
   filters,
   db,
   columns = [],
+  composeWith,
 }: {
   filters: F;
   db: EDatabaseType;
   columns: readonly string[];
+  composeWith?: ComposeOperator;
 }): string {
-  const { where, params } = buildWhereClause({ filters, db, columns });
+  const { where, params } = buildWhereClause({
+    filters,
+    db,
+    columns,
+    composeWith,
+  });
   console.log('🚀 ~ where:', where);
 
   if (!where) return '';

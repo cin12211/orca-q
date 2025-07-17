@@ -1,5 +1,10 @@
 import type { EDatabaseType } from '~/components/modules/management-connection/constants';
 
+export enum ComposeOperator {
+  AND = 'AND',
+  OR = 'OR',
+}
+
 export enum EExtendedField {
   AnyField = 'Any field',
   RawQuery = 'Raw query',

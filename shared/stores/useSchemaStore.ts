@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
+import type { ReservedTableSchemas } from '~/server/api/get-reverse-table-schemas';
 import { useManagementConnectionStore } from './managementConnectionStore';
 import { useWSStateStore } from './useWSStateStore';
 
@@ -32,6 +33,7 @@ export const useSchemaStore = defineStore(
     const { wsState, connectionId, schemaId } = toRefs(wsStateStore);
 
     const schemas = ref<Schema[]>([]);
+    const reservedSchemas = ref<ReservedTableSchemas[]>([]);
 
     const activeSchema = computed(() => {
       return schemas.value.find(
@@ -99,6 +101,7 @@ export const useSchemaStore = defineStore(
     // };
 
     return {
+      reservedSchemas,
       schemas,
       activeSchema,
       schemasByContext,

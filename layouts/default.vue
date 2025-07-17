@@ -58,6 +58,7 @@ useHotkeys([
         <ResizableHandle
           class="[&[data-state=hover]]:bg-primary/30! [&[data-state=drag]]:bg-primary/20!"
           id="default-layout-group-1-resize-1"
+          with-handle
         />
         <ResizablePanel id="default-layout-group-1-panel-2" key="contentPanel">
           <div class="overflow-y-auto w-full h-full">
@@ -77,6 +78,7 @@ useHotkeys([
               </ResizablePanel>
               <ResizableHandle
                 class="[&[data-state=hover]]:bg-primary/30! [&[data-state=drag]]:bg-primary/20!"
+                with-handle
               />
 
               <ResizablePanel
@@ -99,6 +101,7 @@ useHotkeys([
         <ResizableHandle
           class="[&[data-state=hover]]:bg-primary/30! [&[data-state=drag]]:bg-primary/20!"
           id="default-layout-group-1-resize-2"
+          with-handle
         />
         <ResizablePanel
           id="default-layout-group-1-panel-3"

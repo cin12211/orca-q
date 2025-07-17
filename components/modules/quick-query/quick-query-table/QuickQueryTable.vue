@@ -10,9 +10,10 @@ import type {
   GridReadyEvent,
   SuppressKeyboardEventParams,
 } from 'ag-grid-community';
-import { _debounce, themeBalham } from 'ag-grid-community';
+import { themeBalham } from 'ag-grid-community';
 import { AgGridVue } from 'ag-grid-vue3';
 import { DEFAULT_QUERY_SIZE } from '~/utils/constants';
+import CustomCellUuid from './CustomCellUuid.vue';
 import CustomHeaderTable from './CustomHeaderTable.vue';
 
 //TODO: refactor, and move reuseable
@@ -31,11 +32,16 @@ const props = defineProps<{
   columnTypes: { name: string; type: string }[];
   offset: number;
   class?: HTMLAttributes['class'];
+  isHaveRelationByFieldName: (columnName: string) => boolean | undefined;
 }>();
 
 const emit = defineEmits<{
   (e: 'update:orderBy', value: OrderBy): void;
   (e: 'onSelectedRows', value: RowData[]): void;
+  (
+    e: 'onOpenPreviewReverseTableModal',
+    value: { id: string; columnName: string }
+  ): void;
 }>();
 
 const pageSize = ref<number>(props.defaultPageSize ?? DEFAULT_QUERY_SIZE);
@@ -153,7 +159,6 @@ const gridOptions = computed(() => {
     },
     autoSizeStrategy: {
       type: 'fitCellContents',
-      // defaultMinWidth: 100,
     },
     theme: customizedTheme,
     pagination: false,
@@ -183,13 +188,17 @@ const columnDefs = computed<ColDef[]>(() => {
     },
   });
 
-  props.columnTypes.forEach(({ name }) => {
+  props.columnTypes.forEach(({ name, type }) => {
     const fieldId = name;
 
     const sort =
       props.orderBy.columnName === fieldId ? props.orderBy.order : undefined;
 
-    const column = {
+    const isPrimaryKey = props.primaryKeys.includes(fieldId);
+
+    const haveRelationByFieldName = props.isHaveRelationByFieldName(fieldId);
+
+    const column: ColDef = {
       headerName: fieldId,
       field: fieldId,
       filter: false,
@@ -205,12 +214,17 @@ const columnDefs = computed<ColDef[]>(() => {
           emit('update:orderBy', value);
         },
         fieldId,
-        isPrimaryKey: props.primaryKeys.includes(fieldId),
+        isPrimaryKey,
         isForeignKey: props.foreignKeys.includes(fieldId),
-        // dataType:
-        //   fieldId !== '#'
-        //     ? `(${props.columnTypes.find(c => c.name === fieldId)?.type || ''})`
-        //     : '',
+      },
+      cellRenderer: isPrimaryKey ? CustomCellUuid : undefined,
+      cellRendererParams: {
+        isPrimaryKey: isPrimaryKey && haveRelationByFieldName,
+        onOpenPreviewReverseTableModal: (id: string) =>
+          emit('onOpenPreviewReverseTableModal', {
+            id,
+            columnName: fieldId,
+          }),
       },
     };
     columns.push(column);

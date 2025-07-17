@@ -6,6 +6,7 @@ import { useFieldArray, useForm } from 'vee-validate';
 import { z } from 'zod';
 import type { Input } from '~/components/ui/input';
 import {
+  ComposeOperator,
   DEFAULT_DEBOUNCE_INPUT,
   EExtendedField,
   OperatorSet,
@@ -26,6 +27,7 @@ const props = defineProps<{
   dbType: EDatabaseType;
   baseQuery: string;
   initFilters: FilterSchema[];
+  composeWith: ComposeOperator;
 }>();
 
 const isShowFilters = defineModel('isShowFilters');
@@ -33,6 +35,7 @@ const isShowFilters = defineModel('isShowFilters');
 const emit = defineEmits<{
   (e: 'onSearch'): void;
   (e: 'onUpdateFilters', filters: FilterSchema[]): void;
+  (e: 'onChangeComposeWith', composeWith: ComposeOperator): void;
 }>();
 
 const quickQueryFilterRef = ref<HTMLElement>();
@@ -155,11 +158,12 @@ const onRemoveFilter = async (index: number) => {
 
   await nextTick();
 
-  if (index === 0) {
-    onExecuteSearch();
-  } else {
+  if (index !== 0) {
     focusSearchByIndex(index - 1);
   }
+
+  emit('onUpdateFilters', fields.value.map(f => f.value) || []);
+  onExecuteSearch();
 };
 
 const focusSearchByIndex = (index: number) => {
@@ -349,6 +353,8 @@ defineExpose({
       v-if="fields.length"
       :getParserApplyFilter="getParserApplyFilter"
       :getParserAllFilter="getParserAllFilter"
+      :compose-with="composeWith"
+      @on-change-compose-with="emit('onChangeComposeWith', $event)"
     />
 
     <!-- </TransitionGroup> -->

@@ -10,12 +10,12 @@ const activityStore = useActivityBarStore();
 
 // This is sample data
 const activity = computed(() => [
-  // {
-  //   id: ActivityBarItemType.Explorer,
-  //   title: 'Files',
-  //   icon: 'hugeicons:files-02',
-  //   isActive: activityStore.activityActive === ActivityBarItemType.Explorer,
-  // },
+  {
+    id: ActivityBarItemType.Explorer,
+    title: 'Files',
+    icon: 'hugeicons:files-02',
+    isActive: activityStore.activityActive === ActivityBarItemType.Explorer,
+  },
   {
     id: ActivityBarItemType.Schemas,
     title: 'Schemas',

@@ -1,14 +1,18 @@
 <script setup lang="ts">
 import { Separator } from '#components';
 import { format } from 'sql-formatter';
+import { ComposeOperator } from '~/utils/constants';
 import ViewParserFilterApply from './ViewParserFilterApply.vue';
 
 defineProps<{
   getParserApplyFilter: () => string;
   getParserAllFilter: () => string;
+  composeWith: ComposeOperator;
 }>();
 
-const composeOperator = ref('AND');
+const emit = defineEmits<{
+  (e: 'onChangeComposeWith', composeWith: ComposeOperator): void;
+}>();
 
 //TODO: make configurable
 </script>
@@ -16,7 +20,12 @@ const composeOperator = ref('AND');
   <div class="flex justify-between">
     <div class="flex items-center gap-0.5 text-xs">
       Compose with:
-      <Select v-model:model-value="composeOperator">
+      <Select
+        :modelValue="composeWith"
+        @update:model-value="
+          emit('onChangeComposeWith', $event as ComposeOperator)
+        "
+      >
         <SelectTrigger
           class="w-14 h-5! text-xs cursor-pointer px-1 border-none gap-1 shadow-none"
         >
@@ -24,11 +33,17 @@ const composeOperator = ref('AND');
         </SelectTrigger>
         <SelectContent>
           <SelectGroup>
-            <SelectItem class="h-5 text-xs cursor-pointer" value="AND">
+            <SelectItem
+              class="h-5 text-xs cursor-pointer"
+              :value="ComposeOperator.AND"
+            >
               AND
             </SelectItem>
 
-            <SelectItem class="h-5 text-xs cursor-pointer" value="OR" disabled>
+            <SelectItem
+              class="h-5 text-xs cursor-pointer"
+              :value="ComposeOperator.OR"
+            >
               OR
             </SelectItem>
           </SelectGroup>
