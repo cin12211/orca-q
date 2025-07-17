@@ -1,3 +1,4 @@
+import { ref } from 'vue';
 import { toast } from 'vue-sonner';
 import { useAppContext } from '~/shared/contexts/useAppContext';
 import { copyRowsToClipboard } from '~/utils/common';
@@ -32,6 +33,7 @@ interface UseQuickQueryMutationOptions {
   openErrorModal: Ref<boolean>;
   errorMessage: Ref<string | undefined>;
   quickQueryTableRef: Ref<InstanceType<typeof QuickQueryTable> | undefined>;
+  focusedCell?: Ref<unknown | undefined>;
 }
 
 /**
@@ -54,6 +56,7 @@ export function useQuickQueryMutation(options: UseQuickQueryMutationOptions) {
     openErrorModal,
     errorMessage,
     quickQueryTableRef,
+    focusedCell,
   } = options;
 
   const { connectionStore } = useAppContext();
@@ -75,6 +78,12 @@ export function useQuickQueryMutation(options: UseQuickQueryMutationOptions) {
 
   const onSelectedRowsChange = (rows: Record<string, any>[]) => {
     selectedRows.value = rows;
+  };
+
+  const onFocusedCellChange = (cellValue: unknown | undefined) => {
+    if (focusedCell) {
+      focusedCell.value = cellValue;
+    }
   };
 
   /**
@@ -272,6 +281,12 @@ export function useQuickQueryMutation(options: UseQuickQueryMutationOptions) {
     copyRowsToClipboard(mappedRows);
   };
 
+  const onCopySelectedCell = async () => {
+    if (focusedCell) {
+      await navigator.clipboard.writeText(String(focusedCell.value));
+    }
+  };
+
   //TODO: make paste rows , in current cellIndex
   const onPasteRows = async () => {
     const gridApi = quickQueryTableRef.value?.gridApi;
@@ -309,5 +324,7 @@ export function useQuickQueryMutation(options: UseQuickQueryMutationOptions) {
     onPasteRows,
     onRefresh,
     onSelectedRowsChange,
+    onCopySelectedCell,
+    onFocusedCellChange,
   };
 }

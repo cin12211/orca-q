@@ -16,13 +16,14 @@ const emit = defineEmits<{
   (e: 'onDeleteRows'): void;
   (e: 'onCopyRows'): void;
   (e: 'onPasteRows'): void;
+  (e: 'onCopySelectedCell'): void;
 }>();
 
 useHotkeys(
   [
     {
       key: 'meta+c',
-      callback: () => emit('onCopyRows'),
+      callback: () => emit('onCopySelectedCell'),
     },
     {
       key: 'meta+v',
@@ -74,13 +75,21 @@ useHotkeys(
         <ContextMenuShortcut>⌘R</ContextMenuShortcut>
       </ContextMenuItem>
 
+      <ContextMenuItem @select="emit('onCopySelectedCell')">
+        <Icon
+          name="hugeicons:copy-02"
+          class="size-4! min-w-4 text-muted-foreground"
+        />
+        Copy current cell
+        <ContextMenuShortcut>⌘C</ContextMenuShortcut>
+      </ContextMenuItem>
+
       <ContextMenuItem v-if="totalSelectedRows" @select="emit('onCopyRows')">
         <Icon
           name="lucide:copy"
           class="size-4! min-w-4 text-muted-foreground"
         />
         Copy {{ totalSelectedRows }} rows
-        <ContextMenuShortcut>⌘C</ContextMenuShortcut>
       </ContextMenuItem>
 
       <ContextMenuItem v-if="hasEditedRows" @select="emit('onSaveData')">

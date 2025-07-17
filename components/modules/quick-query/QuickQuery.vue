@@ -35,6 +35,7 @@ const {
   connectionString,
   connectionId,
   workspaceId,
+  focusedCell,
 } = useQuickQuery();
 
 const {
@@ -102,6 +103,8 @@ const {
   onPasteRows,
   onRefresh,
   onSelectedRowsChange,
+  onCopySelectedCell,
+  onFocusedCellChange,
 } = useQuickQueryMutation({
   tableName: props.tableName,
   primaryKeys,
@@ -115,6 +118,7 @@ const {
   pagination,
   quickQueryTableRef,
   refreshCount,
+  focusedCell,
 });
 
 const appLayoutStore = useAppLayoutStore();
@@ -250,6 +254,7 @@ const { isHaveRelationByFieldName } = useReverseTables({
         "
         @onCopyRows="onCopyRows"
         @on-paste-rows="onPasteRows"
+        @on-copy-selected-cell="onCopySelectedCell"
       >
         <QuickQueryTable
           class="h-full"
@@ -265,6 +270,7 @@ const { isHaveRelationByFieldName } = useReverseTables({
           :columnTypes="columnTypes"
           :defaultPageSize="DEFAULT_QUERY_SIZE"
           :offset="pagination.offset"
+          @on-focus-cell="onFocusedCellChange"
         />
       </QuickQueryContextMenu>
     </div>
