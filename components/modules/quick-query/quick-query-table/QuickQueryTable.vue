@@ -42,6 +42,7 @@ const emit = defineEmits<{
     e: 'onOpenPreviewReverseTableModal',
     value: { id: string; columnName: string }
   ): void;
+  (e: 'onFocusCell', value: unknown | undefined): void;
 }>();
 
 const pageSize = ref<number>(props.defaultPageSize ?? DEFAULT_QUERY_SIZE);
@@ -155,7 +156,7 @@ const gridOptions = computed(() => {
       headerCheckbox: false,
       enableSelectionWithoutKeys: false,
       enableClickSelection: 'enableSelection',
-      copySelectedRows: true,
+      copySelectedRows: false,
     },
     autoSizeStrategy: {
       type: 'fitCellContents',
@@ -292,6 +293,19 @@ const handleSelection = (selectedRows: RowData[]) => {
   emit('onSelectedRows', selectedRows);
 };
 
+const onCellFocus = () => {
+  const selectedCell = gridApi.value?.getFocusedCell();
+
+  if (selectedCell) {
+    const rowNode = gridApi.value?.getDisplayedRowAtIndex(
+      selectedCell.rowIndex
+    );
+    const colId = selectedCell.column.getColId();
+    const cellValue = rowNode?.data?.[colId];
+    emit('onFocusCell', cellValue ?? undefined);
+  }
+};
+
 defineExpose({ gridApi, editedCells });
 </script>
 
@@ -302,6 +316,7 @@ defineExpose({ gridApi, editedCells });
     @selection-changed="onSelectionChanged"
     @cell-value-changed="onCellValueChanged"
     @grid-ready="onGridReady"
+    @cell-focused="onCellFocus"
     :class="props.class"
     :grid-options="gridOptions"
     :defaultColDef="defaultColDef"

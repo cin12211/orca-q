@@ -9,6 +9,7 @@ export const useQuickQuery = () => {
   const quickQueryFilterRef = ref<InstanceType<typeof QuickQueryFilter>>();
   const quickQueryTableRef = ref<InstanceType<typeof QuickQueryTable>>();
   const selectedRows = ref<Record<string, any>[]>([]);
+  const focusedCell = ref<unknown | undefined>(undefined);
   const isMutating = ref(false);
 
   const connectionString = computed(
@@ -23,5 +24,6 @@ export const useQuickQuery = () => {
     connectionString,
     connectionId,
     workspaceId,
+    focusedCell,
   };
 };
