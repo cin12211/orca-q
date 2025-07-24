@@ -1,24 +1,15 @@
+import type { TableMetadata } from '~/server/api/get-tables';
+
 export interface Position {
   x: number;
   y: number;
-}
-
-export interface TableData {
-  table: string;
-  foreign_keys: ForeignKey[];
-  [key: string]: any;
-}
-
-export interface ForeignKey {
-  column: string;
-  reference_table: string;
 }
 
 export interface TableNode {
   id: string;
   type: string;
   position: Position;
-  data: { value: TableData };
+  data: { value: TableMetadata };
 }
 
 export interface Edge {

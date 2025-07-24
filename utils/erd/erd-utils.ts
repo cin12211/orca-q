@@ -1,12 +1,11 @@
 import { uuidv4 } from '~/lib/utils';
+import type { TableMetadata } from '~/server/api/get-tables';
 import type {
   Position,
   Edge,
-  TableData,
-  ForeignKey,
+  // TableData,
   TableNode,
 } from '~/utils/erd/type/index';
-import { dbSchema } from '~/utils/index';
 
 const LAYOUT_CONFIG = {
   BASE_X: -192,
@@ -74,7 +73,7 @@ function generateGridPositions(nodeCount: number): Position[] {
   return positions;
 }
 
-export const createNodes = (tablesData: TableData[]): TableNode[] => {
+export const createNodes = (tablesData: TableMetadata[]): TableNode[] => {
   const positions = generateGridPositions(tablesData.length);
 
   return tablesData.map((table, index) => ({
@@ -85,7 +84,7 @@ export const createNodes = (tablesData: TableData[]): TableNode[] => {
   }));
 };
 
-export const createEdges = (tablesData: TableData[]): Edge[][] => {
+export const createEdges = (tablesData: TableMetadata[]): Edge[][] => {
   return tablesData.map(table =>
     table.foreign_keys.map(foreignKey => ({
       id: uuidv4(),
@@ -97,7 +96,10 @@ export const createEdges = (tablesData: TableData[]): Edge[][] => {
   );
 };
 
-export const filterTable = (tableNames: string[], tablesData: TableData[]) => {
+export const filterTable = (
+  tableNames: string[],
+  tablesData: TableMetadata[]
+) => {
   // Find initial tables and their direct relationships
   const selectedTables = tablesData.filter(table =>
     tableNames.includes(table.table)
@@ -121,12 +123,3 @@ export const filterTable = (tableNames: string[], tablesData: TableData[]) => {
     filteredNodes: createNodes(filteredTables),
   };
 };
-
-// Initialize with default table
-export const { filteredEdges, filteredNodes } = filterTable(
-  ['achievement_badges', 'achievement_criteria'],
-  dbSchema['tables']
-);
-
-export const initialEdges = filteredEdges;
-export const initialNodes = filteredNodes;

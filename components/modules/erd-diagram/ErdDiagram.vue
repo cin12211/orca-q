@@ -8,55 +8,44 @@ import '@vue-flow/core/dist/theme-default.css';
 import '@vue-flow/minimap/dist/style.css';
 import '@vue-flow/node-resizer/dist/style.css';
 import ValueNode from '~/components/modules/erd-diagram/ValueNode.vue';
+import {
+  MIN_ZOOM,
+  MAX_ZOOM,
+} from '~/components/modules/erd-diagram/constants/index';
 import '~/components/modules/erd-diagram/style/vue-flow.css';
 import type {
+  DBSchemaProps,
   ErdDiagramProps,
-  Edge,
 } from '~/components/modules/erd-diagram/type';
+import type { TableMetadata } from '~/server/api/get-tables';
 
 const props = defineProps<ErdDiagramProps>();
-
-const tableNodes = ref(props.nodes || []);
-const edges = ref<Edge[]>([]);
-
-watch(
-  () => props.nodes,
-  newNodes => {
-    if (newNodes) {
-      tableNodes.value = newNodes;
-    }
-  },
-  { deep: true }
-);
-
-watch(
-  () => props.edges,
-  newEdges => {
-    if (newEdges) {
-      edges.value = newEdges.flat();
-    }
-  },
-  { deep: true }
-);
-
-onMounted(() => {
-  if (props.edges) {
-    edges.value = props.edges.flat();
-  }
-});
+console.log('this is props', props);
 </script>
 
 <template>
   <VueFlow
-    class="math-flow"
-    :nodes="tableNodes"
-    :edges="edges"
+    class="erd-flow"
+    :nodes="props.nodes"
+    :edges="props.edges?.flat()"
     :default-viewport="{ zoom: 1 }"
-    :min-zoom="0.1"
-    :max-zoom="4"
+    :min-zoom="MIN_ZOOM"
+    :max-zoom="MAX_ZOOM"
   >
-    <template #node-value="props">
-      <ValueNode :id="props.id" :data="props.data" />
+    <template #node-value="nodeProps">
+      {{ console.log('nodeProps', nodeProps) }}
+      <ValueNode
+        :id="nodeProps.id"
+        :columns="(nodeProps.data.value as TableMetadata).columns"
+        :table="(nodeProps.data.value as TableMetadata).table"
+        :primary_keys="(nodeProps.data.value as TableMetadata).primary_keys"
+        :foreign_keys="(nodeProps.data.value as TableMetadata).foreign_keys"
+        :comment="(nodeProps.data.value as TableMetadata).comment"
+        :indexes="(nodeProps.data.value as TableMetadata).indexes"
+        :rows="(nodeProps.data.value as TableMetadata).rows"
+        :schema="(nodeProps.data.value as TableMetadata).schema"
+        :type="(nodeProps.data.value as TableMetadata).type"
+      />
     </template>
     <Background />
   </VueFlow>
