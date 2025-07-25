@@ -22,6 +22,12 @@ const activity = computed(() => [
     icon: 'hugeicons:chart-relationship',
     isActive: activityStore.activityActive === ActivityBarItemType.Schemas,
   },
+  {
+    id: ActivityBarItemType.ErdDiagram,
+    title: 'ErdDiagram',
+    icon: 'hugeicons:hierarchy-square-02',
+    isActive: activityStore.activityActive === ActivityBarItemType.ErdDiagram,
+  },
 ]);
 </script>
 

@@ -4,6 +4,7 @@ import { ref } from 'vue';
 export enum ActivityBarItemType {
   Explorer = 'Explorer',
   Schemas = 'Schemas',
+  ErdDiagram = 'ERDiagram',
 }
 
 export const useActivityBarStore = defineStore(

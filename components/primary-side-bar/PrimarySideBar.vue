@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { ModulesManagementErdDiagram } from '#components';
 import { useAppLayoutStore } from '~/shared/stores/appLayoutStore';
 import {
   ActivityBarItemType,
@@ -19,6 +20,9 @@ const layout = useAppLayoutStore();
 
     <ModulesManagementSchemas
       v-if="activityStore.activityActive === ActivityBarItemType.Schemas"
+    />
+    <ModulesManagementErdDiagram
+      v-if="activityStore.activityActive === ActivityBarItemType.ErdDiagram"
     />
 
     <!-- <ModulesManagementExplorer

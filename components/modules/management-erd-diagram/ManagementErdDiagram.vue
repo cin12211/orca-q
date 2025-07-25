@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { refDebounced, templateRef } from '@vueuse/core';
 import type { RouteNameFromPath, RoutePathSchema } from '@typed-router/__paths';
+import { on } from 'events';
 import { tree } from '~/components/base/Tree';
 import TreeFolder from '~/components/base/Tree/TreeFolder.vue';
 import { useAppContext } from '~/shared/contexts/useAppContext';
@@ -11,7 +12,7 @@ import { DEFAULT_DEBOUNCE_INPUT } from '~/utils/constants';
 const { schemaStore, onConnectToConnection, wsStateStore, tabViewStore } =
   useAppContext();
 const { activeSchema } = toRefs(schemaStore);
-const { connectionId, schemaId } = toRefs(wsStateStore);
+const { connectionId, workspaceId } = toRefs(wsStateStore);
 
 const isRefreshing = ref(false);
 
@@ -33,23 +34,6 @@ const items = computed(() => {
 
   const treeItems = [
     {
-      title: 'Functions',
-      icon: 'material-icon-theme:folder-functions-open',
-      closeIcon: 'material-icon-theme:folder-functions',
-      paths: [SchemaFolderType.Functions],
-      tabViewType: TabViewType.FunctionsOverview,
-      id: SchemaFolderType.Functions,
-      children: [
-        ...functions.map(functionName => ({
-          title: functionName,
-          id: functionName,
-          icon: 'vscode-icons:file-type-haskell',
-          paths: [SchemaFolderType.Functions, functionName],
-          tabViewType: TabViewType.FunctionsDetail,
-        })),
-      ],
-    },
-    {
       title: 'Tables',
       id: SchemaFolderType.Tables,
       icon: 'material-icon-theme:folder-database-open',
@@ -60,26 +44,9 @@ const items = computed(() => {
         ...tables.map(tableName => ({
           title: tableName,
           id: tableName,
-          icon: 'vscode-icons:file-type-sql',
+          icon: 'hugeicons:hierarchy-square-02',
           paths: [SchemaFolderType.Tables, tableName],
           tabViewType: TabViewType.TableDetail,
-        })),
-      ],
-    },
-    {
-      title: 'Views',
-      id: SchemaFolderType.Views,
-      icon: 'material-icon-theme:folder-database-open',
-      closeIcon: 'material-icon-theme:folder-database',
-      paths: [SchemaFolderType.Views],
-      tabViewType: TabViewType.ViewOverview,
-      children: [
-        ...views.map(viewName => ({
-          title: viewName,
-          id: viewName,
-          icon: 'vscode-icons:file-type-sql',
-          paths: [SchemaFolderType.Views, viewName],
-          tabViewType: TabViewType.ViewDetail,
         })),
       ],
     },
@@ -135,6 +102,28 @@ const onRefreshSchema = async () => {
   await onConnectToConnection(connectionId.value);
 
   isRefreshing.value = false;
+};
+
+// Navigation functions
+const onNavigateToErdDiagram = async (tableId: string) => {
+  if (!workspaceId.value) {
+    throw new Error('No workspace selected');
+    return;
+  }
+  navigateTo({
+    name: 'workspaceId-schemas-erd-tableId',
+    params: { tableId, workspaceId: workspaceId.value },
+  });
+};
+const onNavigateToOverviewErdDiagram = async (tableId: string) => {
+  if (!workspaceId.value) {
+    throw new Error('No workspace selected');
+    return;
+  }
+  navigateTo({
+    name: 'workspaceId-schemas-erd',
+    params: { workspaceId: workspaceId.value },
+  });
 };
 </script>
 
@@ -215,9 +204,17 @@ const onRefreshSchema = async () => {
       :isExpandedByArrow="true"
       v-on:clickTreeItem="
         async (_, item) => {
-          const tabViewType: TabViewType = (item.value as any).tabViewType;
-
           let routeName: RouteNameFromPath<RoutePathSchema> | null = null;
+          const tabViewType: TabViewType = (item.value as any).tabViewType;
+          if (tabViewType === TabViewType.TableOverview) {
+            onNavigateToOverviewErdDiagram(item.value.title);
+            return;
+            routeName = 'workspaceId-schemas-quick-query-over-view-tables';
+          }
+          onNavigateToErdDiagram(item.value.title);
+          return;
+          // const tabViewType: TabViewType = (item.value as any).tabViewType;
+
           let routeParams;
 
           if (tabViewType === TabViewType.FunctionsOverview) {
@@ -230,42 +227,54 @@ const onRefreshSchema = async () => {
 
           if (tabViewType === TabViewType.FunctionsDetail) {
             routeName =
-              'workspaceId-schemas-quick-query-function-detail-schemaName-functionName';
+              'workspaceId-schemas-quick-query-function-detail-functionId';
 
             routeParams = {
-              functionName: item.value.title,
-              schemaName: schemaId || '',
+              functionId: item.value.title,
             };
           }
 
-          const tabId = `${item.value.title}-${schemaId}`;
-
-          //TODO: refactor route to tabId
           if (tabViewType === TabViewType.TableDetail) {
-            routeName =
-              'workspaceId-schemas-quick-query-table-detail-schemaName-tableName';
+            routeName = 'workspaceId-schemas-quick-query-table-detail-tableId';
 
             routeParams = {
-              tableName: item.value.title,
-              schemaName: schemaId || '',
+              tableId: item.value.title,
             };
           }
 
           if (routeName) {
             await tabViewStore.openTab({
               icon: item.value.icon,
-              id: tabId,
+              id: item.value.title,
               name: item.value.title,
               type: (item.value as any).tabViewType,
-              routeName,
+              routeName: routeName,
               routeParams,
             });
 
-            await tabViewStore.selectTab(tabId);
+            await tabViewStore.selectTab(item.value.title);
           }
         }
       "
     >
+      <!-- <template #extra-actions="{ item }">
+        <div
+          class="flex items-center"
+          v-if="item.value.paths.includes('Tables')"
+        >
+          <Button
+            size="iconSm"
+            class="hover:bg-background/80!"
+            variant="ghost"
+            @click.stop="onNavigateToErdDiagram(item.value.title)"
+          >
+            <Icon
+              name="raphael:diagram"
+              class="size-4! min-w-4 text-muted-foreground"
+            />
+          </Button>
+        </div>
+      </template> -->
     </TreeFolder>
   </div>
 </template>
