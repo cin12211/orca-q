@@ -7,11 +7,13 @@ import { useAppContext } from '~/shared/contexts/useAppContext';
 import { useActivityBarStore } from '~/shared/stores';
 import { TabViewType } from '~/shared/stores/useTabViewsStore';
 import { DEFAULT_DEBOUNCE_INPUT } from '~/utils/constants';
+import ConnectionSelector from '../selectors/ConnectionSelector.vue';
+import SchemaSelector from '../selectors/SchemaSelector.vue';
 
-const { schemaStore, onConnectToConnection, wsStateStore, tabViewStore } =
+const { schemaStore, connectToConnection, wsStateStore, tabViewStore } =
   useAppContext();
 const { activeSchema } = toRefs(schemaStore);
-const { connectionId, schemaId } = toRefs(wsStateStore);
+const { connectionId, schemaId, workspaceId } = toRefs(wsStateStore);
 
 const isRefreshing = ref(false);
 
@@ -132,7 +134,11 @@ const onRefreshSchema = async () => {
   }
 
   isRefreshing.value = true;
-  await onConnectToConnection(connectionId.value);
+  await connectToConnection({
+    wsId: workspaceId.value,
+    connId: connectionId.value,
+    isRefresh: true,
+  });
 
   isRefreshing.value = false;
 };
@@ -147,7 +153,7 @@ const onRefreshSchema = async () => {
         >
           Connections
         </p>
-        <ModulesSelectorsConnectionSelector class="w-full!" />
+        <ConnectionSelector class="w-full!" :workspaceId="workspaceId" />
       </div>
 
       <div>
@@ -156,7 +162,7 @@ const onRefreshSchema = async () => {
         >
           Schemas
         </p>
-        <ModulesSelectorsSchemaSelector class="w-full!" />
+        <SchemaSelector class="w-full!" />
       </div>
     </div>
 
@@ -221,16 +227,17 @@ const onRefreshSchema = async () => {
           let routeParams;
 
           if (tabViewType === TabViewType.FunctionsOverview) {
-            routeName = 'workspaceId-schemas-quick-query-over-view-functions';
+            routeName =
+              'workspaceId-connectionId-quick-query-over-view-functions';
           }
 
           if (tabViewType === TabViewType.TableOverview) {
-            routeName = 'workspaceId-schemas-quick-query-over-view-tables';
+            routeName = 'workspaceId-connectionId-quick-query-over-view-tables';
           }
 
           if (tabViewType === TabViewType.FunctionsDetail) {
             routeName =
-              'workspaceId-schemas-quick-query-function-detail-schemaName-functionName';
+              'workspaceId-connectionId-quick-query-function-detail-schemaName-functionName';
 
             routeParams = {
               functionName: item.value.title,
@@ -243,7 +250,7 @@ const onRefreshSchema = async () => {
           //TODO: refactor route to tabId
           if (tabViewType === TabViewType.TableDetail) {
             routeName =
-              'workspaceId-schemas-quick-query-table-detail-schemaName-tableName';
+              'workspaceId-connectionId-quick-query-table-detail-schemaName-tableName';
 
             routeParams = {
               tableName: item.value.title,

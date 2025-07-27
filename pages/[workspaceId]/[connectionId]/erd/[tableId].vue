@@ -11,7 +11,7 @@ import { filterTable } from '~/utils/erd/erd-utils';
 
 const { tableSchema } = await useErdQueryTables();
 
-const route = useRoute('workspaceId-schemas-erd-tableId');
+const route = useRoute('workspaceId-connectionId-erd-tableId');
 const tableId = computed(() => route.params.tableId as string);
 
 const erdData = computed(() => {

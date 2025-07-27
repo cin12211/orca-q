@@ -6,10 +6,14 @@ import type { Connection } from '~/shared/stores';
 import ConnectionsList from './ConnectionsList.vue';
 import CreateConnectionModal from './CreateConnectionModal.vue';
 
+defineProps<{
+  connections: Connection[];
+  workspaceId: string;
+}>();
+
 const isModalOpen = ref(false);
 
-const { onCreateNewConnection, connectionStore } = useAppContext();
-const { connectionsByWsId } = toRefs(connectionStore);
+const { createConnection, connectionStore } = useAppContext();
 
 const editingConnection = ref<Connection | null>(null);
 
@@ -19,7 +23,7 @@ const onOpenAddConnectionModal = () => {
 };
 
 const handleAddConnection = (connection: Connection) => {
-  onCreateNewConnection(connection);
+  createConnection(connection);
 };
 
 const handleUpdateConnection = (connection: Connection) => {
@@ -53,7 +57,7 @@ const handleDeleteConnection = (id: string) => {
       </div>
 
       <ConnectionsList
-        :connections="connectionsByWsId"
+        :connections="connections"
         @edit="onOpenUpdateConnectionModal"
         @delete="handleDeleteConnection"
         @create="onOpenAddConnectionModal"
@@ -65,6 +69,7 @@ const handleDeleteConnection = (id: string) => {
         @update:open="isModalOpen = $event"
         @addNew="handleAddConnection"
         @update="handleUpdateConnection"
+        :workspaceId="workspaceId"
       />
     </div>
   </div>

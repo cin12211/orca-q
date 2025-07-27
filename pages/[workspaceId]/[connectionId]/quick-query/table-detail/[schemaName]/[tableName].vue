@@ -8,7 +8,7 @@ definePageMeta({
 });
 
 const route = useRoute(
-  'workspaceId-schemas-quick-query-table-detail-schemaName-tableName'
+  'workspaceId-connectionId-quick-query-table-detail-schemaName-tableName'
 );
 </script>
 

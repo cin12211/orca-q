@@ -20,6 +20,30 @@ export default defineNuxtConfig({
 
   ssr: false,
 
+  router: {
+    options: {
+      hashMode: true,
+    },
+  },
+  app: {
+    baseURL: './',
+    // buildAssetsDir: '/',
+  },
+  hooks: {
+    'prerender:routes'({ routes }) {
+      routes.clear(); // Do not generate any routes (except the defaults)
+    },
+  },
+  experimental: {
+    appManifest: false,
+  },
+  nitro: {
+    preset: 'node',
+    prerender: {
+      autoSubfolderIndex: false,
+    },
+  },
+
   devtools: {
     enabled: true,
 

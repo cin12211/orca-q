@@ -23,13 +23,11 @@ export const useAppContext = () => {
   const connectionStore = useManagementConnectionStore();
   const schemaStore = useSchemaStore();
   const tabViewStore = useTabViewsStore();
-  const { wsState, workspaceId, connectionId } = toRefs(wsStateStore);
-  const { connectionsByWsId } = toRefs(connectionStore);
+  const { wsState, workspaceId, connectionId, allWsStates } =
+    toRefs(wsStateStore);
   const { schemas } = toRefs(schemaStore);
 
-  const onCreateNewConnection = async (connection: Connection) => {
-    console.log('🚀 ~ onCreateNewConnection ~ connection:', connection);
-
+  const createConnection = async (connection: Connection) => {
     await connectionStore.createNewConnection(connection);
   };
 
@@ -46,13 +44,35 @@ export const useAppContext = () => {
     });
   };
 
-  const fetchReservedTableSchemas = async (dbConnectionString: string) => {
+  const fetchReservedTableSchemas = async ({
+    wsId,
+    connId,
+    includeLoading,
+  }: {
+    wsId: string;
+    connId: string;
+    includeLoading?: boolean;
+  }) => {
+    const connectionsByWsId = connectionStore.getConnectionsByWorkspaceId(wsId);
+
+    const connection = connectionsByWsId.find(
+      connection => connection.id === connId
+    );
+
+    if (!connection) {
+      throw new Error('No connection found');
+    }
+
+    includeLoading && start({ force: true });
+
     const reservedSchemas = await $fetch('/api/get-reverse-table-schemas', {
       method: 'POST',
       body: {
-        dbConnectionString,
+        dbConnectionString: connection.connectionString,
       },
     });
+
+    includeLoading && finish();
 
     schemaStore.reservedSchemas = reservedSchemas.result;
   };
@@ -72,9 +92,19 @@ export const useAppContext = () => {
     return databaseSource;
   };
 
-  const onConnectToConnection = async (connectionId: string) => {
-    const connection = connectionsByWsId.value.find(
-      connection => connection.id === connectionId
+  const connectToConnection = async ({
+    connId,
+    isRefresh,
+    wsId,
+  }: {
+    wsId: string;
+    connId: string;
+    isRefresh?: boolean;
+  }) => {
+    const connectionsByWsId = connectionStore.getConnectionsByWorkspaceId(wsId);
+
+    const connection = connectionsByWsId.find(
+      connection => connection.id === connId
     );
 
     if (!connection) {
@@ -88,13 +118,16 @@ export const useAppContext = () => {
 
     let includedPublic = false;
 
-    databaseSource.forEach(schema => {
-      const isExitSchema = schemas.value.find(
-        e =>
-          e.connectionId === connectionId &&
-          e.workspaceId === wsState.value?.id &&
-          e.name === schema.name
+    if (isRefresh) {
+      schemas.value = [...schemas.value].filter(
+        schema => schema.connectionId !== connId
       );
+    }
+
+    databaseSource.forEach(schema => {
+      const schemaId = `${wsId}-${connId}-${schema.name}`;
+
+      const isExitSchema = schemas.value.find(e => e.id === schemaId);
 
       if (schema.name === PUBLIC_SCHEMA_ID) {
         includedPublic = true;
@@ -102,8 +135,9 @@ export const useAppContext = () => {
 
       if (!isExitSchema) {
         schemas.value.push({
+          id: schemaId,
           workspaceId: wsState.value?.id || '',
-          connectionId: connectionId,
+          connectionId: connId,
           name: schema.name,
           functions: schema.functions || [],
           tables: schema.tables || [],
@@ -114,60 +148,83 @@ export const useAppContext = () => {
     });
 
     const currentState = wsStateStore.getStateById({
-      workspaceId: wsState.value?.id || '',
-      connectionId,
+      workspaceId: wsId,
+      connectionId: connId,
     });
 
     const currentSchema = currentState?.connectionStates?.find(
-      connectionState => connectionState.id === connectionId
+      connectionState => connectionState.id === connId
     );
 
     if (!currentSchema?.schemaId) {
       await wsStateStore.setSchemaId({
-        connectionId,
+        connectionId: connId,
         workspaceId: workspaceId.value || '',
         schemaId: includedPublic ? PUBLIC_SCHEMA_ID : databaseSource[0].name,
       });
     }
 
-    fetchReservedTableSchemas(dbConnectionString);
+    fetchReservedTableSchemas({
+      connId: connId,
+      wsId: wsId,
+      includeLoading: false,
+    });
   };
 
-  const setConnectionId = async ({
-    connectionId,
+  const openWorkspaceWithConnection = async ({
+    connId,
+    wsId,
     onSuccess,
   }: {
-    connectionId: string;
+    connId: string;
+    wsId: string;
     onSuccess?: () => Promise<void>;
   }) => {
-    if (!workspaceId.value) {
-      throw new Error('No workspace selected');
-      return;
-    }
-
-    await wsStateStore.setConnectionId({
-      connectionId,
-      workspaceId: workspaceId.value,
+    await navigateTo({
+      name: 'workspaceId-connectionId',
+      params: {
+        workspaceId: wsId,
+        connectionId: connId,
+      },
     });
 
-    await workspaceStore.updateLastOpened(workspaceId.value);
+    await workspaceStore.updateLastOpened(wsId);
 
-    await onConnectToConnection(connectionId);
+    let wsStateUpdated = allWsStates.value.find(
+      ws => ws.id === wsId && ws.connectionId === connId
+    );
+
+    if (!wsStateUpdated) {
+      wsStateUpdated = await wsStateStore.onCreateNewWSState({
+        id: wsId,
+        connectionId: connId,
+      });
+    }
+
+    await connectToConnection({
+      connId: connId,
+      wsId: wsId,
+    });
 
     await onSuccess?.();
   };
 
   return {
-    setConnectionId,
+    // Stores
     workspaceStore,
     connectionStore,
-    onCreateNewConnection,
-    wsState,
-    setActiveWSId: wsStateStore.setActiveWSId,
-    setSchemaId,
-    onConnectToConnection,
     schemaStore,
-    wsStateStore,
     tabViewStore,
+    wsStateStore,
+
+    // State
+    wsState,
+
+    // Actions
+    createConnection,
+    setSchemaId,
+    connectToConnection,
+    openWorkspaceWithConnection,
+    fetchReservedTableSchemas,
   };
 };

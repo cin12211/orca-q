@@ -27,17 +27,14 @@ const props = defineProps<{
 }>();
 
 const emits = defineEmits<{
-  (e: 'onSelectWorkspace'): void;
+  (e: 'onSelectWorkspace', wsId: string): void;
 }>();
 
 const {
   workspaceStore,
   connectionStore,
-  onCreateNewConnection,
-  setConnectionId,
-  setActiveWSId,
-  tabViewStore,
-  wsStateStore,
+  createConnection,
+  openWorkspaceWithConnection,
 } = useAppContext();
 
 const isOpenEditModal = ref(false);
@@ -56,43 +53,39 @@ const connections = computed(() => {
 });
 
 const onOpenWorkspace = (workspaceId: string) => {
-  setActiveWSId({
-    connId: undefined,
-    wsId: workspaceId,
-  });
-  emits('onSelectWorkspace');
+  emits('onSelectWorkspace', workspaceId);
 };
 
-const onOpenConnectionSelector = (workspaceId: string) => {
+const onOpenConnectionSelector = () => {
   isOpenConnectionSelector.value = true;
-
-  setActiveWSId({
-    connId: undefined,
-    wsId: workspaceId,
-  });
 };
 
 const onOpenWorkspaceWithConnection = async (connectionId: string) => {
   isOpenConnectionSelector.value = false;
 
-  setActiveWSId({
+  // setActiveWSId({
+  //   connId: connectionId,
+  //   wsId: wsStateStore.workspaceId,
+  // });
+
+  // await nextTick();
+
+  await openWorkspaceWithConnection({
     connId: connectionId,
-    wsId: wsStateStore.workspaceId,
+    wsId: props.workspace.id,
   });
 
-  await nextTick();
-
-  await setConnectionId({
-    connectionId,
-    async onSuccess() {
-      await tabViewStore.onActiveCurrentTab();
-    },
-  });
+  // await setConnectionId({
+  //   connectionId,
+  //   async onSuccess() {
+  //     await tabViewStore.onActiveCurrentTab(connectionId);
+  //   },
+  // });
 };
 
 const handleAddConnection = (connection: Connection) => {
   console.log('🚀 ~ handleAddConnection ~ connection:', connection);
-  onCreateNewConnection(connection);
+  createConnection(connection);
 };
 </script>
 
@@ -103,6 +96,7 @@ const handleAddConnection = (connection: Connection) => {
     @update:open="isModalCreateConnectionOpen = $event"
     @addNew="handleAddConnection"
     v-if="isModalCreateConnectionOpen"
+    :workspaceId="workspace.id"
   />
 
   <CreateWorkspaceModal
@@ -242,7 +236,7 @@ const handleAddConnection = (connection: Connection) => {
           <Button
             size="iconSm"
             variant="ghost"
-            @click.stop="onOpenConnectionSelector(workspace.id)"
+            @click.stop="onOpenConnectionSelector()"
           >
             <Icon name="lucide:chevron-down" class="size-5!" />
           </Button>

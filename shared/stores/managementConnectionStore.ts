@@ -28,10 +28,6 @@ export const useManagementConnectionStore = defineStore(
 
     const connections = ref<Connection[]>([]);
 
-    const connectionsByWsId = computed(() => {
-      return getConnectionsByWorkspaceId(workspaceId.value || '');
-    });
-
     const selectedConnection = computed(() => {
       return connections.value.find(
         connection => connection.id === connectionId.value
@@ -84,7 +80,6 @@ export const useManagementConnectionStore = defineStore(
       createNewConnection,
       onDeleteConnection,
       getConnectionsByWorkspaceId,
-      connectionsByWsId,
       selectedConnection,
       currentConnectionString,
     };

@@ -125,7 +125,7 @@ export const useTabViewsStore = defineStore(
         // throw new Error(`Tab with ID ${tabId} does not exist.`);
 
         navigateTo({
-          name: 'workspaceId',
+          name: 'workspaceId-connectionId',
           replace: true,
         });
       }
@@ -153,7 +153,7 @@ export const useTabViewsStore = defineStore(
           await onSetTabId(undefined);
 
           navigateTo({
-            name: 'workspaceId',
+            name: 'workspaceId-connectionId',
             replace: true,
           });
           return;
@@ -170,7 +170,7 @@ export const useTabViewsStore = defineStore(
         // throw new Error(`Tab with ID ${tabId} does not exist.`);
 
         navigateTo({
-          name: 'workspaceId',
+          name: 'workspaceId-connectionId',
           replace: true,
         });
       }
@@ -245,12 +245,13 @@ export const useTabViewsStore = defineStore(
       }
     );
 
-    const onActiveCurrentTab = async () => {
+    const onActiveCurrentTab = async (connectionId: string) => {
       if (!tabViewId.value) {
         navigateTo({
-          name: 'workspaceId',
+          name: 'workspaceId-connectionId',
           params: {
             workspaceId: workspaceId.value || '',
+            connectionId: connectionId,
           },
         });
 
