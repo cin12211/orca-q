@@ -1,9 +1,12 @@
 <script setup lang="ts">
 import { Dialog, DialogContent } from '@/components/ui/dialog';
+import type { Connection } from '~/shared/stores';
 import ManagementConnection from './ManagementConnection.vue';
 
 defineProps<{
   open: Boolean;
+  connections: Connection[];
+  workspaceId: string;
 }>();
 
 const emit = defineEmits(['update:open']);
@@ -16,7 +19,10 @@ const emit = defineEmits(['update:open']);
         <DialogTitle> hello </DialogTitle>
       </DialogHeader> -->
       <div class="w-full overflow-x-auto">
-        <ManagementConnection />
+        <ManagementConnection
+          :connections="connections"
+          :workspace-id="workspaceId"
+        />
       </div>
     </DialogContent>
   </Dialog>

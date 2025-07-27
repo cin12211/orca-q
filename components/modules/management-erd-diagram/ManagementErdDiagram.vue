@@ -1,16 +1,15 @@
 <script setup lang="ts">
 import { refDebounced, templateRef } from '@vueuse/core';
-import type { RouteNameFromPath, RoutePathSchema } from '@typed-router/__paths';
-import { on } from 'events';
 import { tree } from '~/components/base/Tree';
 import TreeFolder from '~/components/base/Tree/TreeFolder.vue';
 import { useAppContext } from '~/shared/contexts/useAppContext';
 import { useActivityBarStore } from '~/shared/stores';
 import { TabViewType } from '~/shared/stores/useTabViewsStore';
 import { DEFAULT_DEBOUNCE_INPUT } from '~/utils/constants';
+import ConnectionSelector from '../selectors/ConnectionSelector.vue';
+import SchemaSelector from '../selectors/SchemaSelector.vue';
 
-const { schemaStore, onConnectToConnection, wsStateStore, tabViewStore } =
-  useAppContext();
+const { schemaStore, connectToConnection, wsStateStore } = useAppContext();
 const { activeSchema } = toRefs(schemaStore);
 const { connectionId, workspaceId } = toRefs(wsStateStore);
 
@@ -99,7 +98,11 @@ const onRefreshSchema = async () => {
   }
 
   isRefreshing.value = true;
-  await onConnectToConnection(connectionId.value);
+  await connectToConnection({
+    wsId: workspaceId.value,
+    connId: connectionId.value,
+    isRefresh: true,
+  });
 
   isRefreshing.value = false;
 };
@@ -110,19 +113,27 @@ const onNavigateToErdDiagram = async (tableId: string) => {
     throw new Error('No workspace selected');
     return;
   }
+
   navigateTo({
-    name: 'workspaceId-schemas-erd-tableId',
-    params: { tableId, workspaceId: workspaceId.value },
+    name: 'workspaceId-connectionId-erd-tableId',
+    params: {
+      workspaceId: workspaceId.value || '',
+      connectionId: connectionId.value || '',
+      tableId,
+    },
   });
 };
-const onNavigateToOverviewErdDiagram = async (tableId: string) => {
+const onNavigateToOverviewErdDiagram = async () => {
   if (!workspaceId.value) {
     throw new Error('No workspace selected');
-    return;
   }
+
   navigateTo({
-    name: 'workspaceId-schemas-erd',
-    params: { workspaceId: workspaceId.value },
+    name: 'workspaceId-connectionId-erd',
+    params: {
+      workspaceId: workspaceId.value || '',
+      connectionId: connectionId.value || '',
+    },
   });
 };
 </script>
@@ -136,7 +147,7 @@ const onNavigateToOverviewErdDiagram = async (tableId: string) => {
         >
           Connections
         </p>
-        <ModulesSelectorsConnectionSelector class="w-full!" />
+        <ConnectionSelector class="w-full!" :workspaceId="workspaceId" />
       </div>
 
       <div>
@@ -145,7 +156,7 @@ const onNavigateToOverviewErdDiagram = async (tableId: string) => {
         >
           Schemas
         </p>
-        <ModulesSelectorsSchemaSelector class="w-full!" />
+        <SchemaSelector class="w-full!" />
       </div>
     </div>
 
@@ -204,60 +215,17 @@ const onNavigateToOverviewErdDiagram = async (tableId: string) => {
       :isExpandedByArrow="true"
       v-on:clickTreeItem="
         async (_, item) => {
-          let routeName: RouteNameFromPath<RoutePathSchema> | null = null;
           const tabViewType: TabViewType = (item.value as any).tabViewType;
+
           if (tabViewType === TabViewType.TableOverview) {
-            onNavigateToOverviewErdDiagram(item.value.title);
+            onNavigateToOverviewErdDiagram();
             return;
-            routeName = 'workspaceId-schemas-quick-query-over-view-tables';
           }
           onNavigateToErdDiagram(item.value.title);
-          return;
-          // const tabViewType: TabViewType = (item.value as any).tabViewType;
-
-          let routeParams;
-
-          if (tabViewType === TabViewType.FunctionsOverview) {
-            routeName = 'workspaceId-schemas-quick-query-over-view-functions';
-          }
-
-          if (tabViewType === TabViewType.TableOverview) {
-            routeName = 'workspaceId-schemas-quick-query-over-view-tables';
-          }
-
-          if (tabViewType === TabViewType.FunctionsDetail) {
-            routeName =
-              'workspaceId-schemas-quick-query-function-detail-functionId';
-
-            routeParams = {
-              functionId: item.value.title,
-            };
-          }
-
-          if (tabViewType === TabViewType.TableDetail) {
-            routeName = 'workspaceId-schemas-quick-query-table-detail-tableId';
-
-            routeParams = {
-              tableId: item.value.title,
-            };
-          }
-
-          if (routeName) {
-            await tabViewStore.openTab({
-              icon: item.value.icon,
-              id: item.value.title,
-              name: item.value.title,
-              type: (item.value as any).tabViewType,
-              routeName: routeName,
-              routeParams,
-            });
-
-            await tabViewStore.selectTab(item.value.title);
-          }
         }
       "
-    >
-      <!-- <template #extra-actions="{ item }">
+    />
+    <!-- <template #extra-actions="{ item }">
         <div
           class="flex items-center"
           v-if="item.value.paths.includes('Tables')"
@@ -275,6 +243,6 @@ const onNavigateToOverviewErdDiagram = async (tableId: string) => {
           </Button>
         </div>
       </template> -->
-    </TreeFolder>
+    <!-- </TreeFolder> -->
   </div>
 </template>

@@ -19,15 +19,18 @@ export interface WorkspaceState {
 export const useWSStateStore = defineStore(
   'workspaces-state',
   () => {
+    const route = useRoute('workspaceId-connectionId');
+
+    const workspaceId = computed(() => route.params.workspaceId);
+
+    const connectionId = computed(() => route.params.connectionId);
+
     const wsStates = ref<WorkspaceState[]>([]);
-
-    const workspaceId = ref<string>();
-
-    const connId = ref<string>();
 
     const wsState = computed(() =>
       wsStates.value.find(
-        ws => ws.id === workspaceId.value && ws.connectionId === connId.value
+        ws =>
+          ws.id === workspaceId.value && ws.connectionId === connectionId.value
       )
     );
 
@@ -67,41 +70,41 @@ export const useWSStateStore = defineStore(
       await loadPersistData();
     };
 
-    const setActiveWSId = ({
-      wsId,
-      connId: _connId,
-    }: {
-      wsId?: string;
-      connId?: string;
-    }) => {
-      console.log('🚀 ~ setActiveWSId ~ wsId:', wsId, _connId);
+    // const setActiveWSId = ({
+    //   wsId,
+    //   connId: _connId,
+    // }: {
+    //   wsId?: string;
+    //   connId?: string;
+    // }) => {
+    //   console.log('🚀 ~ setActiveWSId ~ wsId:', wsId, _connId);
 
-      workspaceId.value = wsId;
-      connId.value = _connId;
-    };
+    //   workspaceId.value = wsId;
+    //   connId.value = _connId;
+    // };
 
-    const setConnectionId = async ({
-      connectionId,
-      workspaceId,
-    }: {
-      workspaceId: string;
-      connectionId: string;
-    }) => {
-      let wsStateUpdated = wsStates.value.find(
-        ws => ws.id === workspaceId && ws.connectionId === connectionId
-      );
+    // const setConnectionId = async ({
+    //   connectionId,
+    //   workspaceId,
+    // }: {
+    //   workspaceId: string;
+    //   connectionId: string;
+    // }) => {
+    //   let wsStateUpdated = wsStates.value.find(
+    //     ws => ws.id === workspaceId && ws.connectionId === connectionId
+    //   );
 
-      console.log('wsStateUpdated', wsStateUpdated);
+    //   console.log('wsStateUpdated', wsStateUpdated);
 
-      if (!wsStateUpdated) {
-        wsStateUpdated = await onCreateNewWSState({
-          id: workspaceId,
-          connectionId,
-        });
-      }
+    //   if (!wsStateUpdated) {
+    //     wsStateUpdated = await onCreateNewWSState({
+    //       id: workspaceId,
+    //       connectionId,
+    //     });
+    //   }
 
-      connId.value = connectionId;
-    };
+    //   // connId.value = connectionId;
+    // };
 
     const setSchemaId = async ({
       connectionId,
@@ -181,10 +184,6 @@ export const useWSStateStore = defineStore(
       }
     };
 
-    const connectionId = computed(() => {
-      return wsState.value?.connectionId;
-    });
-
     const schemaId = computed(() => {
       return wsState.value?.connectionStates?.find(
         connectionState => connectionState.id === connectionId.value
@@ -211,16 +210,16 @@ export const useWSStateStore = defineStore(
 
     return {
       workspaceId,
+      allWsStates: wsStates,
       wsState,
       updateWSState,
-      setActiveWSId,
-      setConnectionId,
       setSchemaId,
       schemaId,
       connectionId,
       getStateById,
       setTabViewId,
       tabViewId,
+      onCreateNewWSState,
     };
   },
   {

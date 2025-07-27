@@ -19,7 +19,7 @@ definePageMeta({
 });
 
 const route = useRoute(
-  'workspaceId-schemas-quick-query-function-detail-schemaName-functionName'
+  'workspaceId-connectionId-quick-query-function-detail-schemaName-functionName'
 );
 
 const { connectionStore, schemaStore, wsStateStore } = useAppContext();

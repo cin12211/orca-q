@@ -4,7 +4,11 @@ import type { AcceptableValue } from 'reka-ui';
 import { cn } from '@/lib/utils';
 import { useAppContext } from '~/shared/contexts/useAppContext';
 
-const { workspaceStore, setActiveWSId, wsStateStore } = useAppContext();
+const {
+  workspaceStore,
+  //setActiveWSId,
+  wsStateStore,
+} = useAppContext();
 
 const { workspaces, selectedWorkspace } = toRefs(workspaceStore);
 const { workspaceId } = toRefs(wsStateStore);
@@ -21,10 +25,10 @@ const onChangeWorkspace = async (wsId: AcceptableValue) => {
 const onBackToWorkspaces = async () => {
   await navigateTo('/');
 
-  setActiveWSId({
-    connId: undefined,
-    wsId: undefined,
-  });
+  // setActiveWSId({
+  //   connId: undefined,
+  //   wsId: undefined,
+  // });
 };
 </script>
 <template>

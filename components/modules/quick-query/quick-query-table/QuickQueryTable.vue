@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { isObject, onClickOutside } from '@vueuse/core';
 import type { HTMLAttributes } from 'vue';
 import type {
   CellClassParams,
@@ -9,6 +10,7 @@ import type {
   GridOptions,
   GridReadyEvent,
   SuppressKeyboardEventParams,
+  ValueFormatterParams,
 } from 'ag-grid-community';
 import { themeBalham } from 'ag-grid-community';
 import { AgGridVue } from 'ag-grid-vue3';
@@ -47,6 +49,14 @@ const emit = defineEmits<{
 
 const pageSize = ref<number>(props.defaultPageSize ?? DEFAULT_QUERY_SIZE);
 const gridApi = ref<GridApi | null>(null);
+
+const agGridRef = useTemplateRef<HTMLElement>('agGridRef');
+
+onClickOutside(agGridRef, () => {
+  // emit('onFocusCell', undefined);
+  // gridApi.value?.deselectAll();
+});
+
 const editedCells = ref<
   { rowId: number; changedData: { [key: string]: unknown } }[]
 >([]);
@@ -227,6 +237,14 @@ const columnDefs = computed<ColDef[]>(() => {
             columnName: fieldId,
           }),
       },
+
+      valueFormatter: (params: ValueFormatterParams) => {
+        if (type === 'jsonb' || type === 'json') {
+          return params.value ? JSON.stringify(params.value, null, 2) : '';
+        }
+
+        return params.value;
+      },
     };
     columns.push(column);
   });
@@ -312,6 +330,7 @@ defineExpose({ gridApi, editedCells });
 <template>
   <AgGridVue
     @mouseup="onStopRangeSelection"
+    @click.keyup="onStopRangeSelection"
     @mouseleave="onStopRangeSelection"
     @selection-changed="onSelectionChanged"
     @cell-value-changed="onCellValueChanged"
@@ -324,6 +343,7 @@ defineExpose({ gridApi, editedCells });
     :columnDefs="columnDefs"
     :rowData="rowData"
     :paginationPageSize="pageSize"
+    ref="agGridRef"
   />
 </template>
 

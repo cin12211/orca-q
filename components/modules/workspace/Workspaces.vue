@@ -12,17 +12,13 @@ import WorkspaceHeader from './WorkspaceHeader.vue';
 
 dayjs.extend(relativeTime);
 
-const { workspaceStore } = useAppContext();
+const { workspaceStore, connectionStore } = useAppContext();
 
 const search = shallowRef('');
+const workspaceId = ref('');
 const debouncedSearch = refDebounced(search, DEFAULT_DEBOUNCE_INPUT);
 
 const mappedWorkspaces = computed(() => {
-  console.log(
-    '🚀 ~ mappedWorkspaces ~ workspaceStore.workspaces:',
-    workspaceStore.workspaces
-  );
-
   return (workspaceStore.workspaces || []).filter(workspace => {
     return workspace.name
       .toLowerCase()
@@ -33,6 +29,11 @@ const mappedWorkspaces = computed(() => {
 const isOpenSelectConnectionModal = ref(false);
 
 const isOpenCreateWSModal = ref(false);
+
+const onSelectWorkspace = (id: string) => {
+  isOpenSelectConnectionModal.value = true;
+  workspaceId.value = id;
+};
 </script>
 
 <template>
@@ -41,7 +42,11 @@ const isOpenCreateWSModal = ref(false);
     v-if="isOpenCreateWSModal"
   />
 
-  <ManagementConnectionModal v-model:open="isOpenSelectConnectionModal" />
+  <ManagementConnectionModal
+    v-model:open="isOpenSelectConnectionModal"
+    :connections="connectionStore.getConnectionsByWorkspaceId(workspaceId)"
+    :workspace-id="workspaceId"
+  />
   <div class="flex flex-col h-full overflow-y-auto p-4 pt-0 space-y-4">
     <WorkspaceHeader
       @create="isOpenCreateWSModal = true"
@@ -65,7 +70,7 @@ const isOpenCreateWSModal = ref(false);
       <WorkspaceCard
         v-for="workspace in mappedWorkspaces"
         :workspace="workspace"
-        @on-select-workspace="isOpenSelectConnectionModal = true"
+        @on-select-workspace="onSelectWorkspace"
       />
     </div>
     <div

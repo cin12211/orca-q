@@ -3,23 +3,22 @@ import { Select, SelectGroup, SelectItem, SelectTrigger } from '#components';
 import type { AcceptableValue } from 'reka-ui';
 import { cn } from '@/lib/utils';
 import { useAppContext } from '~/shared/contexts/useAppContext';
-import { useTabViewsStore, type Connection } from '~/shared/stores';
+import { type Connection } from '~/shared/stores';
 import CreateConnectionModal from '../management-connection/CreateConnectionModal.vue';
 import { getDatabaseSupportByType } from '../management-connection/constants';
 
 const {
   connectionStore,
-  setConnectionId,
-  onCreateNewConnection,
+  createConnection,
   wsStateStore,
-  tabViewStore,
+  openWorkspaceWithConnection,
 } = useAppContext();
 
 const { connectionId: activeConnectionId } = toRefs(wsStateStore);
 
-const { connectionsByWsId, selectedConnection } = toRefs(connectionStore);
+const { selectedConnection } = toRefs(connectionStore);
 
-const props = defineProps<{ class: string }>();
+const props = defineProps<{ class: string; workspaceId: string }>();
 
 const open = ref(false);
 
@@ -28,25 +27,34 @@ const onChangeConnection = async (connectionId: AcceptableValue) => {
     typeof connectionId === 'string' &&
     connectionId !== activeConnectionId.value
   ) {
-    await setConnectionId({
-      connectionId,
-      async onSuccess() {
-        await tabViewStore.onActiveCurrentTab();
-      },
+    await openWorkspaceWithConnection({
+      connId: connectionId,
+      wsId: props.workspaceId,
     });
+
+    // await setConnectionId({
+    //   connectionId,
+    //   async onSuccess() {
+    //     await tabViewStore.onActiveCurrentTab(connectionId);
+    //   },
+    // });
   }
 };
 
 const isModalCreateConnectionOpen = ref(false);
 
 const handleAddConnection = (connection: Connection) => {
-  onCreateNewConnection(connection);
+  createConnection(connection);
 };
 
 const onOpenAddConnectionModal = () => {
   isModalCreateConnectionOpen.value = true;
   open.value = false;
 };
+
+const connectionsByWsId = computed(() => {
+  return connectionStore.getConnectionsByWorkspaceId(props.workspaceId);
+});
 </script>
 <template>
   <CreateConnectionModal
@@ -54,6 +62,7 @@ const onOpenAddConnectionModal = () => {
     :editing-connection="null"
     @update:open="isModalCreateConnectionOpen = $event"
     @addNew="handleAddConnection"
+    :workspaceId="workspaceId"
   />
 
   <Select

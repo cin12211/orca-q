@@ -35,6 +35,7 @@ import { EConnectionMethod } from './type/index';
 const props = defineProps<{
   open: boolean;
   editingConnection: Connection | null;
+  workspaceId: string;
 }>();
 
 const emit = defineEmits<{
@@ -42,9 +43,6 @@ const emit = defineEmits<{
   (e: 'addNew', connection: Connection): void;
   (e: 'update', connection: Connection): void;
 }>();
-
-const { wsStateStore } = useAppContext();
-const { workspaceId } = toRefs(wsStateStore);
 
 const step = ref<1 | 2>(1);
 const dbType = ref<EDatabaseType | null>(null);
@@ -125,13 +123,8 @@ const handleCreateConnection = async () => {
     }
   }
 
-  if (!workspaceId.value) {
-    throw new Error('No workspace selected');
-    return;
-  }
-
   const connection: Connection = {
-    workspaceId: workspaceId.value,
+    workspaceId: props.workspaceId,
     id: props.editingConnection?.id || uuidv4(),
     name: connectionName.value,
     type: dbType.value as EDatabaseType,

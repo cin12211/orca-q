@@ -26,7 +26,7 @@ import { useAppContext } from '~/shared/contexts/useAppContext';
 import { useTabViewsStore, type Connection } from '~/shared/stores';
 import { getDatabaseSupportByType } from './constants';
 
-const { setConnectionId, tabViewStore } = useAppContext();
+const { tabViewStore, openWorkspaceWithConnection } = useAppContext();
 
 defineProps<{
   connections: Connection[];
@@ -56,12 +56,17 @@ const confirmDelete = () => {
 };
 
 const onConnectConnection = (connection: Connection) => {
-  setConnectionId({
-    connectionId: connection.id,
-    async onSuccess() {
-      await tabViewStore.onActiveCurrentTab();
-    },
+  openWorkspaceWithConnection({
+    connId: connection.id,
+    wsId: connection.workspaceId,
   });
+
+  // setConnectionId({
+  //   connectionId: connection.id,
+  //   async onSuccess() {
+  //     await tabViewStore.onActiveCurrentTab(connection.id);
+  //   },
+  // });
 };
 </script>
 

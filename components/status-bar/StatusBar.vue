@@ -3,16 +3,16 @@ import { useAppContext } from '~/shared/contexts/useAppContext';
 import ConnectionMetricMonitor from './ConnectionMetricMonitor.vue';
 import CurrentPositionPath from './CurrentPositionPath.vue';
 
-const { setActiveWSId, tabViewStore } = useAppContext();
+const { tabViewStore } = useAppContext();
 
 const { activeTab } = toRefs(tabViewStore);
 
 const onBackToHome = async () => {
   await navigateTo('/');
-  setActiveWSId({
-    connId: undefined,
-    wsId: undefined,
-  });
+  // setActiveWSId({
+  //   connId: undefined,
+  //   wsId: undefined,
+  // });
 };
 </script>
 <template>

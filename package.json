@@ -8,8 +8,8 @@
   "scripts": {
     "dev": "concurrently --names \"NUXT,ELECTRON\" --prefix-colors \"cyan,magenta\" \"npm run nuxt:dev\" \"cd electron && npm run dev\"",
     "nuxt:dev": "nuxt dev",
-    "nuxt:build": "nuxt build",
-    "nuxt:build-cf": "nuxt build --preset=cloudflare_pages",
+    "nuxt:build": "nuxt build --config-file nuxt.config.electron.ts",
+    "nuxt:build-web": "nuxt build",
     "nuxt:generate": "nuxt generate",
     "app:build": "sh scripts/build-app.sh",
     "typecheck": "nuxt typecheck",

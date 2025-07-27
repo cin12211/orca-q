@@ -67,7 +67,14 @@ const getInitFilters = (tabName: string) => {
 </script>
 
 <template>
-  <Dialog :open="!!open" @update:open="$emit('update:open', $event)">
+  <Dialog
+    :open="open"
+    @update:open="
+      isOpen => {
+        $emit('update:open', isOpen);
+      }
+    "
+  >
     <DialogContent
       class="w-[95dvw]! max-w-[95dvw]! max-h-[90dvh] h-[90dvh] gap-3 p-3 flex flex-col flex-1 flex-wrap overflow-hidden"
     >

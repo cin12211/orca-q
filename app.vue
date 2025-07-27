@@ -15,7 +15,8 @@ ModuleRegistry.registerModules([AllCommunityModule]);
 
 const { isLoading } = useLoadingIndicator();
 
-const { setConnectionId, wsStateStore, tabViewStore } = useAppContext();
+const { schemaStore, connectToConnection, fetchReservedTableSchemas } =
+  useAppContext();
 
 const route = useRoute('workspaceId-connectionId');
 
@@ -23,20 +24,28 @@ onMounted(async () => {
   const workspaceId = route.params.workspaceId;
   const connectionId = route.params.connectionId;
 
-  console.log('🚀 ~ onMounted ~ workspaceId:', workspaceId);
-
-  wsStateStore.setActiveWSId({
-    connId: connectionId,
-    wsId: workspaceId,
-  });
-
-  if (!wsStateStore.connectionId) {
+  if (!workspaceId || !connectionId) {
     return;
   }
 
-  await setConnectionId({ connectionId: wsStateStore.connectionId });
+  const isHaveSchemasCaches = schemaStore.schemas.find(
+    schema =>
+      schema.connectionId === connectionId && schema.workspaceId === workspaceId
+  );
 
-  await tabViewStore.onActiveCurrentTab();
+  if (!isHaveSchemasCaches) {
+    await connectToConnection({
+      connId: connectionId,
+      wsId: workspaceId,
+      isRefresh: true,
+    });
+    return;
+  }
+
+  await fetchReservedTableSchemas({
+    connId: connectionId,
+    wsId: workspaceId,
+  });
 });
 </script>
 
