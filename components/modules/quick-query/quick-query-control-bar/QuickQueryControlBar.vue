@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { Icon } from '#components';
+import { QuickQueryTabView } from '../constants';
 import QuickPagination from './QuickPagination.vue';
 import RefreshButton from './RefreshButton.vue';
 
@@ -12,6 +13,7 @@ defineProps<{
   currentTotalRows: number;
   totalSelectedRows: number;
   hasEditedRows: boolean;
+  tabView: QuickQueryTabView;
 }>();
 
 const emit = defineEmits<{
@@ -24,6 +26,7 @@ const emit = defineEmits<{
   (e: 'onAddEmptyRow'): void;
   (e: 'onDeleteRows'): void;
   (e: 'onToggleHistoryPanel'): void;
+  (e: 'update:tabView', value: QuickQueryTabView): void;
 }>();
 
 const quickQueryControlBarRef = ref<HTMLElement>();
@@ -158,22 +161,26 @@ useHotkeys([
     </div>
 
     <div class="flex items-center gap-2">
-      <Tabs :model-value="'data'">
+      <Tabs
+        :model-value="tabView"
+        @update:model-value="$emit('update:tabView', $event)"
+      >
         <TabsList class="grid w-full grid-cols-3 h-[1.625rem]!">
           <TabsTrigger
-            value="data"
+            :value="QuickQueryTabView.Data"
             class="h-5! px-1 font-medium text-xs cursor-pointer text-primary/80"
           >
             Data
           </TabsTrigger>
           <TabsTrigger
-            value="structure"
+            :value="QuickQueryTabView.Structure"
             class="h-5! px-1 font-medium text-xs cursor-pointer text-primary/80"
+            disabled
           >
             Structure
           </TabsTrigger>
           <TabsTrigger
-            value="erd"
+            :value="QuickQueryTabView.Erd"
             class="h-5! px-1 font-medium text-xs cursor-pointer text-primary/80"
           >
             ERD

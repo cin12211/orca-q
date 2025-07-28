@@ -5,6 +5,7 @@ import { useAppLayoutStore } from '~/shared/stores/appLayoutStore';
 import { ComposeOperator, DEFAULT_QUERY_SIZE } from '~/utils/constants';
 import type { FilterSchema } from '~/utils/quickQuery';
 import { EDatabaseType } from '../../management-connection/constants';
+import { QuickQueryTabView } from '../constants';
 import {
   useQuickQuery,
   useQuickQueryMutation,
@@ -128,6 +129,8 @@ const {
 
 const appLayoutStore = useAppLayoutStore();
 
+const tabView = ref<QuickQueryTabView>(QuickQueryTabView.Data);
+
 const isActiveTeleport = ref(true);
 
 onActivated(() => {
@@ -215,6 +218,7 @@ const { isHaveRelationByFieldName } = useReverseTables({
           }
         "
         @onToggleHistoryPanel="appLayoutStore.onToggleBottomPanel"
+        v-model:tabView="tabView"
       />
     </div>
 
