@@ -8,7 +8,7 @@ import {
   type FlattenedTreeFileSystemItem,
 } from '~/components/base/Tree';
 import TreeItemInputEditInline from '~/components/base/Tree/TreeItemInputEditInline.vue';
-import { uuidv4 } from '~/lib/utils';
+import { useAppContext } from '~/shared/contexts';
 import {
   TabViewType,
   useTabViewsStore,
@@ -16,6 +16,9 @@ import {
 import { DEFAULT_DEBOUNCE_INPUT } from '~/utils/constants';
 import { useManagementExplorerStore } from '../../../shared/stores/managementExplorerStore';
 import TreeFolder from '../../base/Tree/TreeFolder.vue';
+
+const { wsStateStore } = useAppContext();
+const { connectionId, schemaId, workspaceId } = toRefs(wsStateStore);
 
 const explorerStore = useManagementExplorerStore();
 
@@ -246,6 +249,10 @@ const mappedExplorerFiles = computed(() => {
                   routeParams: {
                     fileId: item.value.id,
                   },
+                  connectionId: connectionId,
+                  schemaId: schemaId || '',
+                  workspaceId: workspaceId,
+                  tableName: item.value.title,
                 });
 
                 tabViewStore.selectTab(item.value.id);

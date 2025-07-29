@@ -1,31 +1,43 @@
 <script setup lang="ts">
-import { useTableQueryBuilder } from '~/composables/useTableQueryBuilder';
-import { useAppLayoutStore } from '~/shared/stores/appLayoutStore';
-import { DEFAULT_QUERY_SIZE } from '~/utils/constants';
-import WrapperErdDiagram from '../erd-diagram/WrapperErdDiagram.vue';
-import { EDatabaseType } from '../management-connection/constants';
-import QuickQueryErrorPopup from './QuickQueryErrorPopup.vue';
-import { QuickQueryTabView } from './constants';
+import { useTableQueryBuilder } from "~/composables/useTableQueryBuilder";
+import { useAppContext } from "~/shared/contexts";
+import { useAppLayoutStore } from "~/shared/stores/appLayoutStore";
+import { DEFAULT_QUERY_SIZE } from "~/utils/constants";
+import WrapperErdDiagram from "../erd-diagram/WrapperErdDiagram.vue";
+import { EDatabaseType } from "../management-connection/constants";
+import QuickQueryErrorPopup from "./QuickQueryErrorPopup.vue";
+import { QuickQueryTabView } from "./constants";
 import {
   useQuickQuery,
   useQuickQueryMutation,
   useQuickQueryTableInfo,
   useReverseTables,
-} from './hooks';
-import PreviewReverseTable from './preview-reverse-table/PreviewReverseTable.vue';
-import PreviewSelectedRow from './preview/PreviewSelectedRow.vue';
-import QuickQueryControlBar from './quick-query-control-bar/QuickQueryControlBar.vue';
-import QuickQueryFilter from './quick-query-filter/QuickQueryFilter.vue';
-import QuickQueryHistoryLogsPanel from './quick-query-history-log-panel/QuickQueryHistoryLogsPanel.vue';
-import QuickQueryContextMenu from './quick-query-table/QuickQueryContextMenu.vue';
-import QuickQueryTable from './quick-query-table/QuickQueryTable.vue';
+} from "./hooks";
+import PreviewReverseTable from "./preview-reverse-table/PreviewReverseTable.vue";
+import PreviewSelectedRow from "./preview/PreviewSelectedRow.vue";
+import QuickQueryControlBar from "./quick-query-control-bar/QuickQueryControlBar.vue";
+import QuickQueryFilter from "./quick-query-filter/QuickQueryFilter.vue";
+import QuickQueryHistoryLogsPanel from "./quick-query-history-log-panel/QuickQueryHistoryLogsPanel.vue";
+import QuickQueryContextMenu from "./quick-query-table/QuickQueryContextMenu.vue";
+import QuickQueryTable from "./quick-query-table/QuickQueryTable.vue";
 
-const props = defineProps<{ tableName: string; schemaName: string }>();
+// const props = defineProps<{ tableName: string; schemaName: string }>();
+const props = defineProps<{ tabViewId: string }>();
+
+const { tabViewStore } = useAppContext();
+const { tabViews } = toRefs(tabViewStore);
+
+const tableName = computed(
+  () => tabViews.value.find((t) => t.id === props.tabViewId)?.tableName || ""
+);
+const schemaName = computed(
+  () => tabViews.value.find((t) => t.id === props.tabViewId)?.schemaId || ""
+);
 
 const previewReverseTableModal = reactive({
   open: false,
-  recordId: '',
-  columnName: '',
+  recordId: "",
+  columnName: "",
 });
 
 const containerRef = ref<InstanceType<typeof HTMLElement>>();
@@ -48,8 +60,8 @@ const {
   tableSchema,
   columnTypes,
 } = await useQuickQueryTableInfo({
-  tableName: props.tableName,
-  schemaName: props.schemaName,
+  tableName: tableName.value,
+  schemaName: schemaName.value,
 });
 
 const {
@@ -80,13 +92,13 @@ const {
   columns: columnNames,
   connectionId,
   workspaceId,
-  tableName: props.tableName,
-  schemaName: props.schemaName,
+  tableName: tableName.value,
+  schemaName: schemaName.value,
 });
 
 watch(
   tableSchema,
-  newSchema => {
+  (newSchema) => {
     if (newSchema) {
       refreshCount();
       refreshTableData();
@@ -108,7 +120,7 @@ const {
   onCopySelectedCell,
   onFocusedCellChange,
 } = useQuickQueryMutation({
-  tableName: props.tableName,
+  tableName: tableName.value,
   primaryKeys,
   refreshTableData,
   columnNames,
@@ -149,22 +161,22 @@ const onOpenPreviewReverseTableModal = ({
   previewReverseTableModal.columnName = columnName;
 };
 
-const { isHaveRelationByFieldName } = useReverseTables({
-  schemaName: props.schemaName,
-  tableName: props.tableName,
-});
+// const { isHaveRelationByFieldName } = useReverseTables({
+//   schemaName: schemaName.value,
+//   tableName: tableName.value,
+// });
 </script>
 
 <template>
-  <PreviewReverseTable
+  <!-- <PreviewReverseTable
     v-if="previewReverseTableModal.open"
     v-model:open="previewReverseTableModal.open"
-    :schemaName="props.schemaName"
-    :tableName="props.tableName"
+    :schemaName="schemaName"
+    :tableName="tableName"
     :recordId="previewReverseTableModal.recordId"
     :columnName="previewReverseTableModal.columnName"
-    :breadcrumbs="[props.tableName]"
-  />
+    :breadcrumbs="[tableName]"
+  /> -->
 
   <Teleport defer to="#preview-select-row" v-if="isActiveTeleport">
     <PreviewSelectedRow
@@ -174,16 +186,10 @@ const { isHaveRelationByFieldName } = useReverseTables({
   </Teleport>
 
   <Teleport defer to="#bottom-panel" v-if="isActiveTeleport">
-    <QuickQueryHistoryLogsPanel
-      :tableName="props.tableName"
-      :schema-name="props.schemaName"
-    />
+    <QuickQueryHistoryLogsPanel :tableName="tableName" :schema-name="schemaName" />
   </Teleport>
 
-  <QuickQueryErrorPopup
-    v-model:open="openErrorModal"
-    :message="errorMessage || ''"
-  />
+  <QuickQueryErrorPopup v-model:open="openErrorModal" :message="errorMessage || ''" />
 
   <div ref="containerRef" class="flex flex-col h-full w-full relative">
     <!-- <LoadingOverlay :visible="status === 'pending'" /> -->
@@ -227,7 +233,7 @@ const { isHaveRelationByFieldName } = useReverseTables({
           }
         "
         @on-update-filters="
-          newFilters => {
+          (newFilters) => {
             filters = newFilters;
           }
         "
@@ -245,7 +251,7 @@ const { isHaveRelationByFieldName } = useReverseTables({
       <WrapperErdDiagram
         v-if="tabView === QuickQueryTabView.Erd"
         v-show="tabView === QuickQueryTabView.Erd"
-        :tableId="props.tableName"
+        :tableId="tableName"
       />
 
       <QuickQueryContextMenu
@@ -276,7 +282,7 @@ const { isHaveRelationByFieldName } = useReverseTables({
           @on-selected-rows="onSelectedRowsChange"
           @update:order-by="onUpdateOrderBy"
           @onOpenPreviewReverseTableModal="onOpenPreviewReverseTableModal"
-          :isHaveRelationByFieldName="isHaveRelationByFieldName"
+          :isHaveRelationByFieldName="() => false"
           :foreignKeys="foreignKeys"
           :primaryKeys="primaryKeys"
           :columnTypes="columnTypes"

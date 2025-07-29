@@ -53,7 +53,7 @@ export default defineNuxtConfig({
   shadcn: shadcnConfig,
   icon: {
     // collections: ['material-icon-theme', 'hugeicons', 'logos', 'lucide'],
-    provider: 'server',
+    provider: 'iconify',
   },
   imports: {
     autoImport: true,

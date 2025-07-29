@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { refDebounced, templateRef } from '@vueuse/core';
 import type { RouteNameFromPath, RoutePathSchema } from '@typed-router/__paths';
-import { tree } from '~/components/base/Tree';
+import { tree, type FlattenedTreeFileSystemItem } from '~/components/base/Tree';
 import TreeFolder from '~/components/base/Tree/TreeFolder.vue';
 import { useAppContext } from '~/shared/contexts/useAppContext';
 import { useActivityBarStore } from '~/shared/stores';
@@ -142,6 +142,66 @@ const onRefreshSchema = async () => {
 
   isRefreshing.value = false;
 };
+
+const onHandleOpenTab = async (
+  _: MouseEvent,
+  item: FlattenedTreeFileSystemItem
+) => {
+  const tabViewType: TabViewType = (item.value as any).tabViewType;
+
+  let routeName: RouteNameFromPath<RoutePathSchema> | null = null;
+  let routeParams;
+
+  if (tabViewType === TabViewType.FunctionsOverview) {
+    routeName = 'workspaceId-connectionId-quick-query-over-view-functions';
+  }
+
+  if (tabViewType === TabViewType.TableOverview) {
+    routeName = 'workspaceId-connectionId-quick-query-over-view-tables';
+  }
+
+  if (tabViewType === TabViewType.FunctionsDetail) {
+    routeName =
+      'workspaceId-connectionId-quick-query-function-detail-schemaName-functionName';
+
+    routeParams = {
+      functionName: item.value.title,
+      schemaName: schemaId.value || '',
+    };
+  }
+
+  if (!schemaId) {
+    return;
+  }
+
+  const tabId = `${item.value.title}-${schemaId}`;
+
+  //TODO: refactor route to tabId
+  if (tabViewType === TabViewType.TableDetail) {
+    routeName = 'workspaceId-connectionId-quick-query-tabViewId';
+
+    routeParams = {
+      tabViewId: tabId,
+    };
+  }
+
+  if (routeName) {
+    await tabViewStore.openTab({
+      icon: item.value.icon,
+      id: tabId,
+      name: item.value.title,
+      type: (item.value as any).tabViewType,
+      routeName,
+      routeParams,
+      connectionId: connectionId.value,
+      schemaId: schemaId.value || '',
+      workspaceId: workspaceId.value || '',
+      tableName: item.value.title,
+    });
+
+    await tabViewStore.selectTab(tabId);
+  }
+};
 </script>
 
 <template>
@@ -219,60 +279,7 @@ const onRefreshSchema = async () => {
       v-model:expandedState="schemasExpandedState"
       :isShowArrow="true"
       :isExpandedByArrow="true"
-      v-on:clickTreeItem="
-        async (_, item) => {
-          const tabViewType: TabViewType = (item.value as any).tabViewType;
-
-          let routeName: RouteNameFromPath<RoutePathSchema> | null = null;
-          let routeParams;
-
-          if (tabViewType === TabViewType.FunctionsOverview) {
-            routeName =
-              'workspaceId-connectionId-quick-query-over-view-functions';
-          }
-
-          if (tabViewType === TabViewType.TableOverview) {
-            routeName = 'workspaceId-connectionId-quick-query-over-view-tables';
-          }
-
-          if (tabViewType === TabViewType.FunctionsDetail) {
-            routeName =
-              'workspaceId-connectionId-quick-query-function-detail-schemaName-functionName';
-
-            routeParams = {
-              functionName: item.value.title,
-              schemaName: schemaId || '',
-            };
-          }
-
-          const tabId = `${item.value.title}-${schemaId}`;
-
-          //TODO: refactor route to tabId
-          if (tabViewType === TabViewType.TableDetail) {
-            routeName =
-              'workspaceId-connectionId-quick-query-table-detail-schemaName-tableName';
-
-            routeParams = {
-              tableName: item.value.title,
-              schemaName: schemaId || '',
-            };
-          }
-
-          if (routeName) {
-            await tabViewStore.openTab({
-              icon: item.value.icon,
-              id: tabId,
-              name: item.value.title,
-              type: (item.value as any).tabViewType,
-              routeName,
-              routeParams,
-            });
-
-            await tabViewStore.selectTab(tabId);
-          }
-        }
-      "
-    >
-    </TreeFolder>
+      v-on:clickTreeItem="onHandleOpenTab"
+    />
   </div>
 </template>
