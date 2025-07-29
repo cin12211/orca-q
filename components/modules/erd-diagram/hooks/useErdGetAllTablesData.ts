@@ -1,13 +1,26 @@
 import { toast } from 'vue-sonner';
 import { useAppContext } from '~/shared/contexts';
-import { createEdges, createNodes, filterTable } from '~/utils/erd/erd-utils';
+import { useErdStore } from '~/shared/stores/erdStore';
 
 export const useErdQueryTables = async () => {
   const { connectionStore } = useAppContext();
+  const erdStore = useErdStore();
 
-  const { data: tableSchema, status: tableSchemaStatus } = await useFetch(
-    '/api/get-tables',
-    {
+  // Nếu store đã có dữ liệu & đúng connectionId, không gọi API nữa
+  if (
+    erdStore.tables.length > 0 &&
+    connectionStore.selectedConnection?.id === erdStore.currentConnectionId
+  ) {
+    console.log('Store đã có dữ liệu.');
+    return {
+      tableSchemaStatus: 'success',
+      tableSchema: erdStore.tables,
+    };
+  }
+
+  // Nếu chưa có dữ liệu hoặc connectionId khác -> gọi API
+  const { data: tableSchemaResponse, status: tableSchemaStatus } =
+    await useFetch('/api/get-tables', {
       method: 'POST',
       body: {
         dbConnectionString:
@@ -16,11 +29,15 @@ export const useErdQueryTables = async () => {
       onResponseError({ response }) {
         toast(response?.statusText);
       },
-    }
-  );
+    });
+  const tables = tableSchemaResponse.value?.result?.[0]?.metadata?.tables || [];
+
+  // Lưu lại vào store
+  erdStore.setTables(tables);
+  erdStore.setCurrentConnectionId(connectionStore.selectedConnection?.id || '');
 
   return {
     tableSchemaStatus,
-    tableSchema,
+    tableSchema: tables,
   };
 };

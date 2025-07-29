@@ -18,11 +18,9 @@ const { tableSchema } = await useErdQueryTables();
 const erdData = computed(() => {
   if (!props.tableId) return { filteredNodes: [], filteredEdges: [] };
 
-  return filterTable(
-    [props.tableId],
-    tableSchema.value?.result?.[0]?.metadata['tables'] || []
-  );
+  return filterTable([props.tableId], tableSchema || []);
 });
+// TODO: [Nhat] sử dụng wrapperErd ở everywhere.
 </script>
 
 <template>

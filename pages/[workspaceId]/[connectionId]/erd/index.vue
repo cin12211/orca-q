@@ -10,12 +10,8 @@ import { createEdges, createNodes } from '~/utils/erd/erd-utils';
 
 const { tableSchema } = await useErdQueryTables();
 
-const initialEdges = createEdges(
-  tableSchema.value?.result[0]?.metadata?.tables || []
-);
-const initialNodes = createNodes(
-  tableSchema.value?.result[0]?.metadata?.tables || []
-);
+const initialEdges = createEdges(tableSchema || []);
+const initialNodes = createNodes(tableSchema || []);
 </script>
 
 <template>
