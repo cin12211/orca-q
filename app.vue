@@ -50,18 +50,18 @@ onMounted(async () => {
 </script>
 
 <template>
-  <LoadingOverlay :visible="isLoading" />
-  <NuxtLoadingIndicator
-    :color="'repeating-linear-gradient(to right, #ffffff 0%, #000000 100%)'"
-  />
-  <TooltipProvider :delay-duration="DEFAULT_DEBOUNCE_INPUT">
-    <NuxtLayout>
-      <NuxtPage />
-    </NuxtLayout>
-  </TooltipProvider>
-
-  <Settings />
   <ClientOnly>
+    <LoadingOverlay :visible="isLoading" />
+    <NuxtLoadingIndicator
+      :color="'repeating-linear-gradient(to right, #ffffff 0%, #000000 100%)'"
+    />
+    <TooltipProvider :delay-duration="DEFAULT_DEBOUNCE_INPUT">
+      <NuxtLayout>
+        <NuxtPage />
+      </NuxtLayout>
+    </TooltipProvider>
+
+    <Settings />
     <Toaster position="top-right" :close-button="true" />
   </ClientOnly>
 </template>

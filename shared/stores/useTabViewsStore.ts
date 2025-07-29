@@ -31,6 +31,7 @@ export type TabView = {
   name: string;
   icon: string;
   type: TabViewType;
+  tableName?: string;
   routeName: RouteNameFromPath<RoutePathSchema>;
   routeParams?: Record<string, string | number>;
 };
@@ -64,21 +65,16 @@ export const useTabViewsStore = defineStore(
       });
     };
 
-    const openTab = async (
-      tab: Omit<TabView, 'workspaceId' | 'connectionId' | 'schemaId' | 'index'>
-    ) => {
-      if (!workspaceId.value || !connectionId.value || !wsStateStore.schemaId) {
-        throw new Error(
-          'No workspace or connection selected or schema selected'
-        );
-        return;
-      }
+    const openTab = async (tab: Omit<TabView, 'index'>) => {
+      // if (!workspaceId.value || !connectionId.value || !wsStateStore.schemaId) {
+      //   throw new Error(
+      //     'No workspace or connection selected or schema selected'
+      //   );
+      //   return;
+      // }
 
       const tabTmp: TabView = {
         ...tab,
-        workspaceId: workspaceId.value,
-        connectionId: connectionId.value,
-        schemaId: wsStateStore.schemaId,
         index: tabViews.value.length,
       };
 
@@ -91,10 +87,9 @@ export const useTabViewsStore = defineStore(
       );
 
       if (!isExitTab) {
-        await window.tabViewsApi.create(tabTmp);
-
         tabViews.value.push(tabTmp);
 
+        await window.tabViewsApi.create(tabTmp);
         await onSetTabId(tab.id);
       }
     };
