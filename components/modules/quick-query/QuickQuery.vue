@@ -2,8 +2,10 @@
 import { useTableQueryBuilder } from '~/composables/useTableQueryBuilder';
 import { useAppLayoutStore } from '~/shared/stores/appLayoutStore';
 import { DEFAULT_QUERY_SIZE } from '~/utils/constants';
+import WrapperErdDiagram from '../erd-diagram/WrapperErdDiagram.vue';
 import { EDatabaseType } from '../management-connection/constants';
 import QuickQueryErrorPopup from './QuickQueryErrorPopup.vue';
+import { QuickQueryTabView } from './constants';
 import {
   useQuickQuery,
   useQuickQueryMutation,
@@ -123,6 +125,8 @@ const {
 
 const appLayoutStore = useAppLayoutStore();
 
+const tabView = ref<QuickQueryTabView>(QuickQueryTabView.Data);
+
 const isActiveTeleport = ref(true);
 
 onActivated(() => {
@@ -153,12 +157,12 @@ const { isHaveRelationByFieldName } = useReverseTables({
 
 <template>
   <PreviewReverseTable
+    v-if="previewReverseTableModal.open"
     v-model:open="previewReverseTableModal.open"
     :schemaName="props.schemaName"
     :tableName="props.tableName"
     :recordId="previewReverseTableModal.recordId"
     :columnName="previewReverseTableModal.columnName"
-    v-if="previewReverseTableModal.open"
     :breadcrumbs="[props.tableName]"
   />
 
@@ -210,6 +214,7 @@ const { isHaveRelationByFieldName } = useReverseTables({
           }
         "
         @onToggleHistoryPanel="appLayoutStore.onToggleBottomPanel"
+        v-model:tabView="tabView"
       />
     </div>
 
@@ -237,7 +242,14 @@ const { isHaveRelationByFieldName } = useReverseTables({
     </div>
 
     <div class="flex-1 overflow-hidden px-2 mb-0.5">
+      <WrapperErdDiagram
+        v-if="tabView === QuickQueryTabView.Erd"
+        v-show="tabView === QuickQueryTabView.Erd"
+        :tableId="props.tableName"
+      />
+
       <QuickQueryContextMenu
+        v-show="tabView === QuickQueryTabView.Data"
         :total-selected-rows="selectedRows.length"
         :has-edited-rows="hasEditedRows"
         @onPaginate="onUpdatePagination"

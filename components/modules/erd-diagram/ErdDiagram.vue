@@ -33,7 +33,6 @@ console.log('this is props', props);
     :max-zoom="MAX_ZOOM"
   >
     <template #node-value="nodeProps">
-      {{ console.log('nodeProps', nodeProps) }}
       <ValueNode
         :id="nodeProps.id"
         :columns="(nodeProps.data.value as TableMetadata).columns"

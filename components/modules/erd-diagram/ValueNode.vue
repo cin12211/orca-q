@@ -4,6 +4,7 @@ import { ref } from 'vue';
 import { Handle, Position, useVueFlow } from '@vue-flow/core';
 import type { TableMetadata } from '~/server/api/get-tables';
 import { ROW_HEIGHT } from './constants';
+import { HANDLE_HEIGHT } from './constants';
 
 const props = defineProps<
   {
@@ -24,7 +25,10 @@ const checkForeignKey = (key: string) => {
 
 const calculateTop = (column: string) => {
   return (
-    (props.columns.findIndex(e => e.name === column) + 1) * 44 - 44 / 2 - 1 + 44
+    (props.columns.findIndex(e => e.name === column) + 1) * ROW_HEIGHT -
+    ROW_HEIGHT / 2 -
+    1 +
+    ROW_HEIGHT
   );
 };
 </script>
@@ -100,7 +104,7 @@ const calculateTop = (column: string) => {
     :connectable="false"
     :style="{
       top: calculateTop(column) + 'px',
-      height: '20px',
+      height: HANDLE_HEIGHT,
     }"
   />
   <Handle
@@ -111,7 +115,7 @@ const calculateTop = (column: string) => {
     :connectable="false"
     :style="{
       top: calculateTop(column) + 'px',
-      height: '20px',
+      height: HANDLE_HEIGHT,
     }"
   />
 </template>

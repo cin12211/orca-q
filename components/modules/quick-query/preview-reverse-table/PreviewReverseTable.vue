@@ -23,31 +23,38 @@ const { reverseTables } = useReverseTables({
 });
 
 const searchInput = ref('');
+const selectedTab = ref<string>();
 
 const tabTables = computed(() => {
-  const used_by = new Set(
-    (reverseTables.value?.used_by || [])
+  const usedByTables = new Set(
+    (toRaw(reverseTables.value?.used_by) || [])
       .filter(item => item.referenced_column === props.columnName)
       .map(item => item.referencing_table)
   );
 
-  const tabs = [...used_by].sort().map(refTable => ({
-    value: refTable,
-    label: refTable,
-  }));
+  let tableList = [...usedByTables].sort();
 
   if (searchInput.value) {
-    return tabs.filter(item =>
-      item.label.toLowerCase().includes(searchInput.value.toLowerCase())
+    const lowerSearch = searchInput.value.toLowerCase();
+    tableList = tableList.filter(table =>
+      table.toLowerCase().includes(lowerSearch)
     );
   }
 
-  return tabs;
+  return tableList;
 });
 
-const selectedTab = ref(tabTables.value[0].value);
+watchEffect(() => {
+  if (!selectedTab.value && tabTables.value.length > 0) {
+    selectedTab.value = tabTables.value[0];
+  }
+});
 
-const getInitFilters = (tabName: string) => {
+const getInitFilters = (tabName?: string) => {
+  if (!tabName) {
+    return [];
+  }
+
   const reverseTableInfos =
     reverseTables.value?.used_by?.filter(
       item => item.referencing_table === tabName
@@ -60,7 +67,6 @@ const getInitFilters = (tabName: string) => {
       search: props.recordId,
       isSelect: true,
     };
-
     return filterSchema;
   });
 };
@@ -106,9 +112,10 @@ const getInitFilters = (tabName: string) => {
             <TabsTrigger
               class="cursor-pointer font-normal! flex-none!"
               v-for="tab in tabTables"
-              :value="tab.value"
+              :value="tab"
+              :key="tab"
             >
-              {{ tab.label }}
+              {{ tab }}
             </TabsTrigger>
           </TabsList>
           <div>
@@ -132,16 +139,16 @@ const getInitFilters = (tabName: string) => {
         </div>
 
         <div class="flex flex-1">
-          <KeepAlive>
-            <component
-              :is="ReverseTable"
-              :key="selectedTab"
-              :tableName="selectedTab"
-              :schema-name="schemaName"
-              :init-filters="getInitFilters(selectedTab)"
-              :breadcrumbs="[...breadcrumbs, selectedTab]"
-            />
-          </KeepAlive>
+          <ReverseTable
+            v-if="selectedTab"
+            :key="selectedTab"
+            :tableName="selectedTab"
+            :schema-name="schemaName"
+            :init-filters="getInitFilters(selectedTab)"
+            :breadcrumbs="[...breadcrumbs, selectedTab]"
+          />
+          <!-- <KeepAlive :max="6"> -->
+          <!-- </KeepAlive> -->
         </div>
       </Tabs>
     </DialogContent>
