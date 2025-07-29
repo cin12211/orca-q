@@ -19,7 +19,7 @@ definePageMeta({
 });
 
 const route = useRoute(
-  'workspaceId-connectionId-quick-query-function-detail-schemaName-functionName'
+  'workspaceId-connectionId-quick-query-function-over-view-functionName'
 );
 
 const { connectionStore, schemaStore, wsStateStore } = useAppContext();
@@ -37,9 +37,8 @@ await useFetch('/api/get-one-function', {
   body: {
     functionId: route.params.functionName,
     dbConnectionString: connectionStore.selectedConnection?.connectionString,
-    schema: route.params.schemaName,
   },
-  key: `${route.params.schemaName}-${route.params.functionName}`,
+  key: `${route.params.functionName}`,
   onResponse: response => {
     code.value = response.response._data || '';
   },
