@@ -20,6 +20,10 @@ const { schemaStore, connectToConnection, fetchReservedTableSchemas } =
 
 const route = useRoute('workspaceId-connectionId');
 
+useHead({
+  title: 'Orca Query',
+});
+
 onMounted(async () => {
   const workspaceId = route.params.workspaceId;
   const connectionId = route.params.connectionId;

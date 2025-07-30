@@ -105,7 +105,7 @@ onMounted(() => {
         // sql(props.config),
         EditorView.updateListener.of(update => {
           if (update.docChanged) {
-            const newCode = update.state.doc.toString();
+            const newCode = update.state?.doc?.toString?.() || '';
             code.value = newCode;
             emit('update:modelValue', newCode);
           }
