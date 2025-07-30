@@ -34,14 +34,14 @@
 }
 
 .vue-flow__node-value.selected {
-  box-shadow: 0 0 0 2px #ec4899;
+  box-shadow: 0 0 0 2px var(--muted-foreground);
 }
 
-.vue-flow__node-value input:focus {
+/* .vue-flow__node-value input:focus {
   outline: none;
   box-shadow: 0 0 0 2px #ec4899;
   transition: box-shadow 0.2s;
-}
+} */
 
 .vue-flow__node-value .vue-flow__handle {
   background-color: #ec4899;

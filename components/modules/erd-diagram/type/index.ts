@@ -1,4 +1,5 @@
-import type { TableNode, Edge } from '~/utils/erd/type/index';
+import type { Edge } from '@vue-flow/core';
+import type { TableNode } from '~/utils/erd/type';
 
 export interface DBSchemaProps {
   id: string;

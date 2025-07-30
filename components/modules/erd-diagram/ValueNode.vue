@@ -37,28 +37,26 @@ const calculateTop = (column: string) => {
   <div>
     <div class="flex flex-col w-96 rounded-md border box-border">
       <div
-        class="col-span-full rounded-t-md box-border p-2 p-x-auto bg-indigo-400 flex items-center justify-center"
+        class="col-span-full rounded-t-md box-border p-2 p-x-auto bg-primary flex items-center justify-center"
         :style="{
           height: ROW_HEIGHT + 'px',
         }"
       >
-        <p
-          class="select-text cursor-text w-fit text-center nodrag px-2 box-border"
-        >
+        <p class="w-fit text-center px-2 box-border text-white">
           {{ table }}
         </p>
       </div>
       <div
         v-for="({ name, type }, index) in columns"
         :key="name"
-        class="grid grid-cols-3 nodrag cursor-default"
+        class="grid grid-cols-3"
         :style="{
           height: ROW_HEIGHT + 'px',
         }"
       >
         <div
           :class="[
-            'col-span-2 box-border border py-2 pl-2 nodrag truncate flex items-center gap-1.5',
+            'col-span-2 box-border border py-2 pl-2 truncate flex items-center gap-1.5',
             index === columns.length - 1 ? 'rounded-bl-md' : '',
           ]"
         >
@@ -74,21 +72,17 @@ const calculateTop = (column: string) => {
               class="min-w-4 text-blue-400"
             />
           </div>
-          <p
-            class="select-text cursor-text w-fit text-center nodrag box-border px-2 truncate"
-          >
+          <p class="w-fit text-center box-border px-2 truncate">
             {{ name }}
           </p>
         </div>
         <div
           :class="[
-            'col-span-1 box-border py-2 border nodrag truncate',
+            'col-span-1 box-border py-2 border truncate',
             index === columns.length - 1 ? 'rounded-br-md' : '',
           ]"
         >
-          <p
-            class="select-text cursor-text text-center nodrag box-border px-2 truncate"
-          >
+          <p class="text-center box-border px-2 truncate">
             {{ type }}
           </p>
         </div>
