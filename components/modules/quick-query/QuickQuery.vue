@@ -56,7 +56,7 @@ const {
   columnNames,
   foreignKeys,
   primaryKeys,
-  tableSchemaStatus,
+  isLoadingTableSchema,
   tableSchema,
   columnTypes,
 } = await useQuickQueryTableInfo({
@@ -86,6 +86,7 @@ const {
   isShowFilters,
   onChangeComposeWith,
   composeWith,
+  isFetchingTableData,
 } = await useTableQueryBuilder({
   connectionString,
   primaryKeys: primaryKeys,
@@ -208,10 +209,9 @@ watch(quickQueryTabView, newQuickQueryTabView => {
   />
 
   <div ref="containerRef" class="flex flex-col h-full w-full relative">
-    <!-- <LoadingOverlay :visible="status === 'pending'" /> -->
-    <LoadingOverlay :visible="tableSchemaStatus === 'pending' || isMutating" />
-
-    <!-- <TableSkeleton v-if="tableSchemaStatus === 'pending'" /> -->
+    <LoadingOverlay
+      :visible="isLoadingTableSchema || isMutating || isFetchingTableData"
+    />
 
     <div class="px-2 mb-2 border-b">
       <QuickQueryControlBar

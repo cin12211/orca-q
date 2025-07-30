@@ -49,11 +49,15 @@ export const useQuickQueryTableInfo = async ({
     );
   });
 
+  const isLoadingTableSchema = computed(() => {
+    return tableSchemaStatus.value === 'pending';
+  });
+
   return {
     primaryKeys,
     foreignKeys,
     columnNames,
-    tableSchemaStatus,
+    isLoadingTableSchema,
     tableSchema,
     columnTypes,
   };

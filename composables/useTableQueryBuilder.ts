@@ -112,9 +112,9 @@ export const useTableQueryBuilder = async ({
 
   const {
     data,
-    status,
+    status: fetchingTableStatus,
     refresh: refreshTableData,
-  } = await useFetch('/api/execute', {
+  } = useFetch('/api/execute', {
     method: 'POST',
     body: {
       query: queryString,
@@ -143,26 +143,27 @@ export const useTableQueryBuilder = async ({
     },
   });
 
-  const { refresh: refreshCount, data: dataCount } = await useFetch(
-    '/api/execute',
-    {
-      method: 'POST',
-      body: {
-        query: queryCountString,
-        dbConnectionString: connectionString,
-      },
-      watch: false,
-      immediate: false,
-      key: `${tableName}-count`,
-      cache: 'default',
-      onResponse: response => {
-        console.log('response.response._data');
-        if (response.response.ok) {
-          addHistoryLog(queryCountString.value);
-        }
-      },
-    }
-  );
+  const {
+    refresh: refreshCount,
+    data: dataCount,
+    status: fetchCountStatus,
+  } = useFetch('/api/execute', {
+    method: 'POST',
+    body: {
+      query: queryCountString,
+      dbConnectionString: connectionString,
+    },
+    watch: false,
+    immediate: false,
+    key: `${tableName}-count`,
+    cache: 'default',
+    onResponse: response => {
+      console.log('response.response._data');
+      if (response.response.ok) {
+        addHistoryLog(queryCountString.value);
+      }
+    },
+  });
 
   const totalRows = computed(() => {
     return Number(dataCount.value?.[0]?.count || 0);
@@ -324,6 +325,13 @@ export const useTableQueryBuilder = async ({
 
   onLoadPersistedState();
 
+  const isFetchingTableData = computed(() => {
+    return (
+      fetchCountStatus.value === 'pending' ||
+      fetchingTableStatus.value === 'pending'
+    );
+  });
+
   return {
     whereClauses,
     pagination,
@@ -335,7 +343,7 @@ export const useTableQueryBuilder = async ({
     onPreviousPage,
     queryCountString,
     data,
-    status,
+    isFetchingTableData,
     refreshTableData,
     refreshCount,
     totalRows,

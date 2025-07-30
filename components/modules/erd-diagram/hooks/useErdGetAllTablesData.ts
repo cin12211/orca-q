@@ -1,4 +1,5 @@
 import { toast } from 'vue-sonner';
+import type { TableMetadata } from '~/server/api/get-tables';
 import { useAppContext } from '~/shared/contexts';
 import { useErdStore } from '~/shared/stores/erdStore';
 
@@ -11,13 +12,14 @@ export const useErdQueryTables = async () => {
     connectionStore.selectedConnection?.id === erdStore.currentConnectionId
   ) {
     return {
-      tableSchemaStatus: 'success',
-      tableSchema: erdStore.tables,
+      isFetching: false,
+      tableSchema: toRef(erdStore.tables || []),
     };
   }
 
-  const { data: tableSchemaResponse, status: tableSchemaStatus } =
-    await useFetch('/api/get-tables', {
+  const { data: tableSchemaResponse, status: tableSchemaStatus } = useFetch(
+    '/api/get-tables',
+    {
       method: 'POST',
       body: {
         dbConnectionString:
@@ -26,15 +28,22 @@ export const useErdQueryTables = async () => {
       onResponseError({ response }) {
         toast(response?.statusText);
       },
-    });
+      onResponse: ({ response }) => {
+        const tables = response._data.tables || ([] as TableMetadata[]);
 
-  const tables = tableSchemaResponse.value?.tables || [];
+        erdStore.setTables(tables);
+        erdStore.setCurrentConnectionId(
+          connectionStore.selectedConnection?.id || ''
+        );
+      },
+    }
+  );
 
-  erdStore.setTables(tables);
-  erdStore.setCurrentConnectionId(connectionStore.selectedConnection?.id || '');
+  const isFetching = computed(() => tableSchemaStatus.value === 'pending');
+  const tableSchema = computed(() => tableSchemaResponse.value?.tables || []);
 
   return {
-    tableSchemaStatus,
-    tableSchema: tables,
+    isFetching,
+    tableSchema,
   };
 };
