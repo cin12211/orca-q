@@ -45,6 +45,7 @@ onMounted(async () => {
   await fetchReservedTableSchemas({
     connId: connectionId,
     wsId: workspaceId,
+    includeLoading: true,
   });
 });
 </script>

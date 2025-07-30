@@ -153,11 +153,13 @@ const onHandleOpenTab = async (
   let routeParams;
 
   if (tabViewType === TabViewType.FunctionsOverview) {
-    routeName = 'workspaceId-connectionId-quick-query-function-over-view';
+    routeName =
+      'workspaceId-connectionId-quick-query-function-over-view' as unknown as any;
   }
 
   if (tabViewType === TabViewType.TableOverview) {
-    routeName = 'workspaceId-connectionId-quick-query-table-over-view';
+    routeName =
+      'workspaceId-connectionId-quick-query-table-over-view' as unknown as any;
   }
 
   if (tabViewType === TabViewType.FunctionsDetail) {

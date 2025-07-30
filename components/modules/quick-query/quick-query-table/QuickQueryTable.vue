@@ -152,6 +152,15 @@ const onCellValueChanged = (event: CellValueChangedEvent) => {
   }
 };
 
+// const fitCellContentColIds = [];
+
+// const fixColumnTypes = new Set(['timestamp', 'uuid', 'bool']);
+// props.columnTypes.forEach(columnType => {
+//   if (fixColumnTypes.has(columnType.type)) {
+//     fitCellContentColIds.push(columnType.name);
+//   }
+// });
+
 const gridOptions = computed(() => {
   const options: GridOptions = {
     rowClass: 'class-row-border-none',
