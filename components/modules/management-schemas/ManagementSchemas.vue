@@ -170,11 +170,11 @@ const onHandleOpenTab = async (
     };
   }
 
-  if (!schemaId) {
+  if (!schemaId.value) {
     return;
   }
 
-  const tabId = `${item.value.title}-${schemaId}`;
+  const tabId = `${item.value.title}-${schemaId.value}`;
 
   //TODO: refactor route to tabId
   if (tabViewType === TabViewType.TableDetail) {

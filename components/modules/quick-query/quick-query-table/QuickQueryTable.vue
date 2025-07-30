@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { isObject, onClickOutside } from '@vueuse/core';
+import { onClickOutside } from '@vueuse/core';
 import type { HTMLAttributes } from 'vue';
 import type {
   CellClassParams,
@@ -197,6 +197,7 @@ const columnDefs = computed<ColDef[]>(() => {
     headerComponentParams: {
       allowSorting: false,
     },
+    pinned: 'left',
   });
 
   props.columnTypes.forEach(({ name, type }) => {
