@@ -1,3 +1,4 @@
+import type { Node } from '@vue-flow/core';
 import type { TableMetadata } from '~/server/api/get-tables';
 
 export interface Position {
@@ -5,17 +6,4 @@ export interface Position {
   y: number;
 }
 
-export interface TableNode {
-  id: string;
-  type: string;
-  position: Position;
-  data: { value: TableMetadata };
-}
-
-export interface Edge {
-  id: string;
-  type: string;
-  source: string;
-  target: string;
-  sourceHandle: string;
-}
+export type TableNode = Node<TableMetadata>;

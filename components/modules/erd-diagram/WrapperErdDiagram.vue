@@ -7,20 +7,23 @@ import '@vue-flow/minimap/dist/style.css';
 import '@vue-flow/node-resizer/dist/style.css';
 import ErdDiagram from '~/components/modules/erd-diagram/ErdDiagram.vue';
 import { useErdQueryTables } from '~/components/modules/erd-diagram/hooks/useErdGetAllTablesData';
-import { filterTable } from '~/utils/erd/erd-utils';
+import { createEdges, createNodes, filterTable } from '~/utils/erd/erd-utils';
 
 const props = defineProps<{
-  tableId: string;
+  tableId: string | undefined;
 }>();
 
 const { tableSchema } = await useErdQueryTables();
 
 const erdData = computed(() => {
-  if (!props.tableId) return { filteredNodes: [], filteredEdges: [] };
+  if (!props.tableId) {
+    let initialEdges = createEdges(tableSchema || []);
+    let initialNodes = createNodes(tableSchema || []);
+    return { filteredNodes: initialNodes, filteredEdges: initialEdges };
+  }
 
   return filterTable([props.tableId], tableSchema || []);
 });
-// TODO: [Nhat] sử dụng wrapperErd ở everywhere.
 </script>
 
 <template>

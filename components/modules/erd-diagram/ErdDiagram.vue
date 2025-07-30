@@ -28,22 +28,22 @@ console.log('this is props', props);
     class="erd-flow"
     :nodes="props.nodes"
     :edges="props.edges?.flat()"
-    :default-viewport="{ zoom: 1 }"
+    :default-viewport="{ zoom: 0.65 }"
     :min-zoom="MIN_ZOOM"
     :max-zoom="MAX_ZOOM"
   >
     <template #node-value="nodeProps">
       <ValueNode
         :id="nodeProps.id"
-        :columns="(nodeProps.data.value as TableMetadata).columns"
-        :table="(nodeProps.data.value as TableMetadata).table"
-        :primary_keys="(nodeProps.data.value as TableMetadata).primary_keys"
-        :foreign_keys="(nodeProps.data.value as TableMetadata).foreign_keys"
-        :comment="(nodeProps.data.value as TableMetadata).comment"
-        :indexes="(nodeProps.data.value as TableMetadata).indexes"
-        :rows="(nodeProps.data.value as TableMetadata).rows"
-        :schema="(nodeProps.data.value as TableMetadata).schema"
-        :type="(nodeProps.data.value as TableMetadata).type"
+        :columns="(nodeProps.data as TableMetadata).columns"
+        :table="(nodeProps.data as TableMetadata).table"
+        :primary_keys="(nodeProps.data as TableMetadata).primary_keys"
+        :foreign_keys="(nodeProps.data as TableMetadata).foreign_keys"
+        :comment="(nodeProps.data as TableMetadata).comment"
+        :indexes="(nodeProps.data as TableMetadata).indexes"
+        :rows="(nodeProps.data as TableMetadata).rows"
+        :schema="(nodeProps.data as TableMetadata).schema"
+        :type="(nodeProps.data as TableMetadata).type"
       />
     </template>
     <Background />

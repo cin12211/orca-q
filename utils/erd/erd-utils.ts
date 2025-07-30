@@ -1,15 +1,11 @@
+import type { Edge } from '@vue-flow/core';
 import { uuidv4 } from '~/lib/utils';
 import type { TableMetadata } from '~/server/api/get-tables';
-import type {
-  Position,
-  Edge,
-  // TableData,
-  TableNode,
-} from '~/utils/erd/type/index';
+import type { Position, TableNode } from '~/utils/erd/type/index';
 
 const LAYOUT_CONFIG = {
-  BASE_X: -192,
-  BASE_Y: -400,
+  BASE_X: 600,
+  BASE_Y: 200,
   HORIZONTAL_STEP: 484, // 384 + 100 (width + spacing)
   VERTICAL_STEP: 900, // 800 + 100 (height + spacing)
   NODE_TYPE: 'value',
@@ -76,23 +72,29 @@ function generateGridPositions(nodeCount: number): Position[] {
 export const createNodes = (tablesData: TableMetadata[]): TableNode[] => {
   const positions = generateGridPositions(tablesData.length);
 
-  return tablesData.map((table, index) => ({
-    id: table.table,
-    type: LAYOUT_CONFIG.NODE_TYPE,
-    position: positions[index],
-    data: { value: table },
-  }));
+  return tablesData.map((table, index) => {
+    const node: TableNode = {
+      id: table.table,
+      type: LAYOUT_CONFIG.NODE_TYPE,
+      position: positions[index],
+      data: table,
+    };
+    return node;
+  });
 };
 
 export const createEdges = (tablesData: TableMetadata[]): Edge[][] => {
   return tablesData.map(table =>
-    table.foreign_keys.map(foreignKey => ({
-      id: uuidv4(),
-      type: LAYOUT_CONFIG.EDGE_TYPE,
-      source: table.table,
-      target: foreignKey.reference_table,
-      sourceHandle: foreignKey.column,
-    }))
+    table.foreign_keys.map(foreignKey => {
+      const edge: Edge = {
+        id: uuidv4(),
+        type: LAYOUT_CONFIG.EDGE_TYPE,
+        source: table.table,
+        target: foreignKey.reference_table,
+        sourceHandle: foreignKey.column,
+      };
+      return edge;
+    })
   );
 };
 
