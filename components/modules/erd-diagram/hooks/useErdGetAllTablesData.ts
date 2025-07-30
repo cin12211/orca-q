@@ -6,19 +6,16 @@ export const useErdQueryTables = async () => {
   const { connectionStore } = useAppContext();
   const erdStore = useErdStore();
 
-  // Nếu store đã có dữ liệu & đúng connectionId, không gọi API nữa
   if (
     erdStore.tables.length > 0 &&
     connectionStore.selectedConnection?.id === erdStore.currentConnectionId
   ) {
-    console.log('Store đã có dữ liệu.');
     return {
       tableSchemaStatus: 'success',
       tableSchema: erdStore.tables,
     };
   }
 
-  // Nếu chưa có dữ liệu hoặc connectionId khác -> gọi API
   const { data: tableSchemaResponse, status: tableSchemaStatus } =
     await useFetch('/api/get-tables', {
       method: 'POST',
@@ -30,9 +27,9 @@ export const useErdQueryTables = async () => {
         toast(response?.statusText);
       },
     });
-  const tables = tableSchemaResponse.value?.result?.[0]?.metadata?.tables || [];
 
-  // Lưu lại vào store
+  const tables = tableSchemaResponse.value?.tables || [];
+
   erdStore.setTables(tables);
   erdStore.setCurrentConnectionId(connectionStore.selectedConnection?.id || '');
 

@@ -67,13 +67,7 @@ export interface DatabaseMetadata {
   config: ConfigMetadata[];
 }
 
-export interface QueryResult {
-  result: {
-    metadata: DatabaseMetadata;
-  }[];
-}
-
-export default defineEventHandler(async (event): Promise<QueryResult> => {
+export default defineEventHandler(async (event): Promise<DatabaseMetadata> => {
   const body: { dbConnectionString: string } = await readBody(event);
 
   const resource = await getDatabaseSource({
@@ -341,7 +335,5 @@ export default defineEventHandler(async (event): Promise<QueryResult> => {
             config;
     `);
 
-  return {
-    result,
-  };
+  return result[0]?.metadata || [];
 });
