@@ -20,7 +20,7 @@ ENV BUN_INSTALL="/root/.bun"
 ENV PATH="$BUN_INSTALL/bin:$PATH"
 
 # Copy and install dependencies with Bun
-COPY bun.lock package.json ./
+COPY bun.lock package.json ecosystem.config.js ./
 RUN bun install --frozen-lockfile
 
 # Copy app code and build
@@ -35,7 +35,12 @@ COPY --from=builder /app/.output .output
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/package.json .
 
+# Install pm2 globally
+RUN npm install -g pm2
+
 ENV NODE_ENV=production
 EXPOSE 3000
 
-CMD ["node", ".output/server/index.mjs"]
+
+CMD ["pm2-runtime", "ecosystem.config.js"]
+# CMD ["node", ".output/server/index.mjs"]

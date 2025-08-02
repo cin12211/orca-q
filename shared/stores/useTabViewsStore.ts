@@ -79,12 +79,7 @@ export const useTabViewsStore = defineStore(
       };
 
       //TODO: check this with when open file editor
-      const isExitTab = tabViews.value.some(
-        t =>
-          t.id === tab.id &&
-          t.schemaId === wsStateStore.schemaId &&
-          t.connectionId === connectionId.value
-      );
+      const isExitTab = tabViews.value.some(t => t.id === tab.id);
 
       if (!isExitTab) {
         tabViews.value.push(tabTmp);

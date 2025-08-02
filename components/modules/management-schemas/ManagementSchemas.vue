@@ -48,8 +48,10 @@ const items = computed(() => {
           icon: 'vscode-icons:file-type-haskell',
           paths: [SchemaFolderType.Functions, functionName],
           tabViewType: TabViewType.FunctionsDetail,
+          isFolder: false,
         })),
       ],
+      isFolder: true,
     },
     {
       title: 'Tables',
@@ -65,8 +67,10 @@ const items = computed(() => {
           icon: 'vscode-icons:file-type-sql',
           paths: [SchemaFolderType.Tables, tableName],
           tabViewType: TabViewType.TableDetail,
+          isFolder: false,
         })),
       ],
+      isFolder: true,
     },
     {
       title: 'Views',
@@ -82,8 +86,10 @@ const items = computed(() => {
           icon: 'vscode-icons:file-type-sql',
           paths: [SchemaFolderType.Views, viewName],
           tabViewType: TabViewType.ViewDetail,
+          isFolder: false,
         })),
       ],
+      isFolder: true,
     },
   ];
 

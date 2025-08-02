@@ -5,9 +5,10 @@ import { syntaxTree } from '@codemirror/language';
 import { linter, type Diagnostic } from '@codemirror/lint';
 import { search } from '@codemirror/search';
 import { Compartment, EditorState, type Extension } from '@codemirror/state';
+import { showMinimap } from '@replit/codemirror-minimap';
 // import { indentationMarkers } from '@replit/codemirror-indentation-markers';
 import { EditorView, basicSetup } from 'codemirror';
-import { ayuLight } from 'thememirror';
+import { tomorrow } from 'thememirror';
 import { cn } from '@/lib/utils';
 import { currentStatementLineGutter } from './extensions';
 
@@ -94,6 +95,11 @@ onMounted(() => {
     //   return diagnostics;
     // });
 
+    let create = (v: EditorView) => {
+      const dom = document.createElement('div');
+      return { dom };
+    };
+
     const state = EditorState.create({
       doc: code.value,
       extensions: [
@@ -105,7 +111,7 @@ onMounted(() => {
         // sql(props.config),
         EditorView.updateListener.of(update => {
           if (update.docChanged) {
-            const newCode = update.state?.doc?.toString?.() || '';
+            const newCode = update.state.doc.toString();
             code.value = newCode;
             emit('update:modelValue', newCode);
           }
@@ -113,7 +119,17 @@ onMounted(() => {
         currentStatementLineGutter,
         readOnlyState,
         compartmentOfLineWrapping,
-        ayuLight,
+        tomorrow,
+
+        showMinimap.compute(['doc'], (_state: EditorState) => {
+          return {
+            create,
+            /* optional */
+            displayText: 'blocks',
+            showOverlay: 'always',
+            gutters: [{ 1: '#00FF00', 2: 'green', 3: 'rgb(0, 100, 50)' }],
+          };
+        }),
         // indentationMarkers(),
         // regexpLinter,
       ],

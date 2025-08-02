@@ -232,12 +232,14 @@ export const useTableQueryBuilder = async ({
 
   const onChangeComposeWith = (value: ComposeOperator) => {
     composeWith.value = value;
+    pagination.offset = 0;
+
     refreshTableData();
     refreshCount();
   };
 
   const onApplyNewFilter = () => {
-    console.log('onApplyNewFilter');
+    pagination.offset = 0;
 
     refreshTableData();
     refreshCount();
