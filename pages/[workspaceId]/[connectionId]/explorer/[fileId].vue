@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { Button } from '#components';
 import { acceptCompletion, startCompletion } from '@codemirror/autocomplete';
 import { PostgreSQL, type SQLNamespace, sql } from '@codemirror/lang-sql';
 import { Compartment } from '@codemirror/state';
@@ -37,13 +38,14 @@ const currentFile = computed(() =>
 );
 
 const schema: SQLNamespace = activeSchema.value?.tableDetails ?? {};
-console.log('🚀 ~ schema:', activeSchema.value?.tableDetails);
 
 const fileContents = ref('');
 
 const tableData = ref<Record<string, unknown>[]>([]);
 
 const sqlCompartment = new Compartment();
+
+const isHaveOneExecute = ref(false);
 
 const connectionsByWsId = computed(() => {
   return connectionStore.getConnectionsByWorkspaceId(
@@ -84,6 +86,7 @@ const updateFileContent = async (fileContentsValue: string) => {
 const extensions = [
   shortCutExecuteCurrentStatement(
     async (currentStatement: SyntaxTreeNodeData) => {
+      isHaveOneExecute.value = true;
       console.log('currentStatement', connection.value?.connectionString);
 
       const startTime = Date.now();
@@ -104,6 +107,7 @@ const extensions = [
 
       const endTime = Date.now();
       queryTime.value = endTime - startTime;
+      executeLoading.value = false;
     }
   ),
   shortCutFormatOnSave((fileContent: string) => {
@@ -174,7 +178,7 @@ onMounted(async () => {
       />
     </div>
 
-    <div class="h-full">
+    <div class="h-full flex flex-col overflow-y-auto">
       <CodeEditor
         @update:modelValue="updateFileContent"
         :modelValue="fileContents"
@@ -182,9 +186,43 @@ onMounted(async () => {
         :disabled="false"
       />
     </div>
-    <!-- {{ executeLoading }}-{{ queryTime }} -->
-    <div class="h-[40rem] w-full">
-      <DynamicTable :data="tableData" />
+
+    <div class="h-8 flex items-center justify-between px-2">
+      <div class="font-normal text-xs text-muted-foreground">Ln 188, Col 1</div>
+
+      <div
+        v-if="isHaveOneExecute"
+        class="font-normal text-xs text-muted-foreground"
+      >
+        <span v-if="executeLoading" class="flex items-center gap-1"
+          >Processing
+
+          <Icon name="hugeicons:loading-03" class="size-4! animate-spin">
+          </Icon>
+        </span>
+        <span v-else>Query time: {{ queryTime }} ms</span>
+      </div>
+
+      <div class="flex gap-1">
+        <Button variant="outline" size="sm" class="h-6 px-2 gap-1 font-normal">
+          <Icon name="hugeicons:magic-wand-01"> </Icon>
+          Format code
+        </Button>
+
+        <Button variant="outline" size="sm" class="h-6 px-2 gap-1 font-normal">
+          <Icon name="hugeicons:play"> </Icon>
+          Execute current
+        </Button>
+      </div>
     </div>
+
+    <Teleport defer to="#bottom-panel">
+      <DynamicTable :data="tableData" />
+    </Teleport>
+
+    <!-- {{ executeLoading }}-{{ queryTime }} -->
+    <!-- <div class="h-[40rem] w-full">
+      <DynamicTable :data="tableData" />
+    </div> -->
   </div>
 </template>

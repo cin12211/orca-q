@@ -12,10 +12,10 @@
 /* background-color: rgba(240, 200, 200, 0.5) !important;  */
 /* } */
 
-.cm-minimap-overlay-container {
-  border: 1px solid var(--border);
-  box-shadow: 10px 5 8px 5px rgba(0, 0, 0, 0.2); /* shadow to the left */
-}
+/* .cm-minimap-overlay-container { */
+/* border: 1px solid var(--border); */
+/* border-bottom: none; */
+/* } */
 
 .cm-selectionLayer {
   z-index: -1 !important;
