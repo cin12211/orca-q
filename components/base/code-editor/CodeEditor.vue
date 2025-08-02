@@ -32,23 +32,31 @@ const props = withDefaults(defineProps<Props>(), {
 // Define emits
 const emit = defineEmits<{
   (e: 'update:modelValue', value: string): void;
+  (
+    e: 'update:cursorInfo',
+    value: {
+      line: number;
+      column: number;
+    }
+  ): void;
 }>();
 
 // Reactive code state
 const code = ref(props.modelValue);
 const editorRef = ref<HTMLElement | null>(null);
-let editorView: EditorView | null = null;
+
+let editorView = ref<EditorView | null>(null);
 
 // Watch for external changes to modelValue
 watch(
   () => props.modelValue,
   newValue => {
-    if (newValue !== code.value && editorView) {
+    if (newValue !== code.value && editorView.value) {
       code.value = newValue;
-      editorView.dispatch({
+      editorView.value.dispatch({
         changes: {
           from: 0,
-          to: editorView.state.doc.length,
+          to: editorView.value.state.doc.length,
           insert: newValue,
         },
       });
@@ -115,6 +123,16 @@ onMounted(() => {
             code.value = newCode;
             emit('update:modelValue', newCode);
           }
+
+          if (update.selectionSet || update.focusChanged) {
+            const pos = update.state.selection.main.head;
+            const line = update.state.doc.lineAt(pos);
+
+            emit('update:cursorInfo', {
+              line: line.number,
+              column: pos - line.from + 1,
+            });
+          }
         }),
         currentStatementLineGutter,
         readOnlyState,
@@ -135,7 +153,7 @@ onMounted(() => {
       ],
     });
 
-    editorView = new EditorView({
+    editorView.value = new EditorView({
       state,
       parent: editorRef.value,
     });
@@ -144,9 +162,9 @@ onMounted(() => {
 
 // Clean up on unmount
 onUnmounted(() => {
-  if (editorView) {
-    editorView.destroy();
-    editorView = null;
+  if (editorView.value) {
+    editorView.value.destroy();
+    editorView.value = null;
   }
 });
 
@@ -154,13 +172,13 @@ onUnmounted(() => {
 defineExpose({
   code,
   editorView,
-  focus: () => editorView?.focus(),
+  focus: () => editorView.value?.focus(),
   setContent: (content: string) => {
-    if (editorView) {
-      editorView.dispatch({
+    if (editorView.value) {
+      editorView.value.dispatch({
         changes: {
           from: 0,
-          to: editorView.state.doc.length,
+          to: editorView.value.state.doc.length,
           insert: content,
         },
       });
