@@ -20,6 +20,7 @@ import {
 import PureConnectionSelector from '~/components/modules/selectors/PureConnectionSelector.vue';
 import { useAppContext } from '~/shared/contexts/useAppContext';
 import { useExplorerFileStoreStore } from '~/shared/stores';
+import { useAppLayoutStore } from '~/shared/stores/appLayoutStore';
 
 //TODO: create lint check error for sql
 // https://www.npmjs.com/package/node-sql-parser?activeTab=readme
@@ -30,33 +31,34 @@ definePageMeta({
 });
 
 const route = useRoute('workspaceId-connectionId-explorer-fileId');
-
+const appLayoutStore = useAppLayoutStore();
+const explorerFileStore = useExplorerFileStoreStore();
 const { schemaStore, tabViewStore, connectionStore } = useAppContext();
 const { activeSchema } = toRefs(schemaStore);
 
-const explorerFileStore = useExplorerFileStoreStore();
+const codeEditorRef = ref<InstanceType<typeof CodeEditor> | null>(null);
+const fileContents = ref('');
+const tableData = ref<Record<string, unknown>[]>([]);
+const isHaveOneExecute = ref(false);
+const cursorInfo = ref({ line: 1, column: 1 });
+const executeLoading = ref(false);
+const queryTime = ref(0); // ms
+const executeErrors = ref<{
+  message: string;
+  data: Record<string, unknown>;
+}>();
+const currentStatementQuery = ref('');
+
+const schema: SQLNamespace = activeSchema.value?.tableDetails ?? {};
+const sqlCompartment = new Compartment();
 
 const currentFile = computed(() =>
   explorerFileStore.getFileById(route.params.fileId as string)
 );
 
-const codeEditorRef = ref<InstanceType<typeof CodeEditor> | null>(null);
-
-const schema: SQLNamespace = activeSchema.value?.tableDetails ?? {};
-
-const fileContents = ref('');
-
-const tableData = ref<Record<string, unknown>[]>([]);
-
-const sqlCompartment = new Compartment();
-
-const isHaveOneExecute = ref(false);
-
-const cursorInfo = ref({ line: 1, column: 1 });
-
 const connectionsByWsId = computed(() => {
   return connectionStore.getConnectionsByWorkspaceId(
-    currentFile.value?.workspaceId || ''
+    route.params.workspaceId || ''
   );
 });
 
@@ -65,9 +67,6 @@ const connection = computed(() => {
     connection => connection.id === currentFile.value?.connectionId
   );
 });
-
-const executeLoading = ref(false);
-const queryTime = ref(0); // ms
 
 const updateFileConnection = async (connectionId: string) => {
   if (!currentFile.value?.id) return;
@@ -89,12 +88,18 @@ const updateFileContent = async (fileContentsValue: string) => {
   });
 };
 
+const openBottomPanelIfNeed = () => {
+  if (appLayoutStore.bodySize[1] === 0) {
+    appLayoutStore.onToggleBottomPanel();
+  }
+};
+
 const executeCurrentStatement = async (
   currentStatement: SyntaxTreeNodeData
 ) => {
   isHaveOneExecute.value = true;
-  console.log('currentStatement', connection.value?.connectionString);
 
+  currentStatementQuery.value = currentStatement.text;
   const startTime = Date.now();
   executeLoading.value = true;
   try {
@@ -106,14 +111,17 @@ const executeCurrentStatement = async (
       },
     });
 
-    console.log('result', result);
-
     tableData.value = result;
-  } catch {}
+    executeErrors.value = undefined;
+  } catch (e: any) {
+    executeErrors.value = e.data;
+  }
 
   const endTime = Date.now();
   queryTime.value = endTime - startTime;
   executeLoading.value = false;
+
+  openBottomPanelIfNeed();
 };
 
 const extensions = [
@@ -150,6 +158,17 @@ onMounted(async () => {
 
   fileContents.value = contents;
 });
+
+// watch(
+//   () => route.params.fileId,
+//   async fileId => {
+//     const contents = await explorerFileStore.getFileContentById(
+//       fileId as string
+//     );
+
+//     fileContents.value = contents;
+//   }
+// );
 
 const onExecuteCurrent = () => {
   if (!codeEditorRef.value?.editorView) {
@@ -251,7 +270,9 @@ const onFormatCode = () => {
           <Icon name="hugeicons:loading-03" class="size-4! animate-spin">
           </Icon>
         </span>
-        <span v-else>Query time: {{ queryTime }} ms</span>
+        <span v-else
+          >Query: {{ tableData.length }} rows in {{ queryTime }} ms</span
+        >
       </div>
 
       <div class="flex gap-1">
@@ -277,10 +298,31 @@ const onFormatCode = () => {
       </div>
     </div>
 
-    <!-- TODO: need to show popup errors when call api -->
     <!-- TODO: can support execute result for many table -->
     <Teleport defer to="#bottom-panel">
-      <DynamicTable :data="tableData" />
+      <div v-if="executeErrors">
+        <span class="font-normal text-xs text-muted-foreground block">
+          Execute query:
+          <span class="italic"> {{ currentStatementQuery }} </span>
+        </span>
+
+        <span class="font-normal text-xs text-muted-foreground block">
+          Error message:
+          <span class="decoration-wavy underline decoration-red-600">
+            {{ executeErrors.message }}
+          </span>
+        </span>
+        <span class="font-normal text-xs text-muted-foreground block">
+          Errors detail: {{ executeErrors.data }}
+        </span>
+      </div>
+      <div
+        v-else-if="!tableData.length"
+        class="text-center font-normal text-xs text-muted-foreground mt-4"
+      >
+        No row found
+      </div>
+      <DynamicTable v-else :data="tableData" />
     </Teleport>
   </div>
 </template>

@@ -35,12 +35,20 @@ export const useExplorerFileStoreStore = defineStore(
 
       const treeFiles = tree.flattenTree(treeFilesValue);
 
-      await Promise.all(
-        treeFiles.map(async file => {
-          const { children, ...rest } = file;
-          return await window.rowQueryFilesApi.createFiles(toRaw(rest));
-        })
-      );
+      try {
+        await Promise.all(
+          treeFiles.map(async file => {
+            const { children, ...rest } = file;
+            return await window.rowQueryFilesApi.createFiles(toRaw(rest));
+          })
+        );
+      } catch {}
+
+      const filesValue = await window.rowQueryFilesApi.getFilesByContext({
+        workspaceId: route.params.workspaceId,
+      });
+
+      files.value = filesValue;
     };
 
     const updateFileContent = async (fileContent: RowQueryFileContent) => {

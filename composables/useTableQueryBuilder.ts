@@ -329,7 +329,8 @@ export const useTableQueryBuilder = async ({
 
   const isFetchingTableData = computed(() => {
     return (
-      fetchCountStatus.value === 'pending' ||
+      //TODO: open when then disable pagination
+      // fetchCountStatus.value === 'pending' ||
       fetchingTableStatus.value === 'pending'
     );
   });

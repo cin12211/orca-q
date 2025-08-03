@@ -1,7 +1,27 @@
 import { type DatabaseType, DataSource } from 'typeorm';
 
-let currentDBConnectionString = '';
-let databaseSource: DataSource | null = null;
+type CachedConnection = {
+  source: DataSource;
+  lastUsed: number;
+};
+
+const connectionCache = new Map<string, CachedConnection>();
+const LRU_TIMEOUT = 5 * 60 * 1000; // 5 minutes
+
+// Cleanup every 1 minute
+setInterval(() => {
+  const now = Date.now();
+
+  for (const [connStr, conn] of connectionCache.entries()) {
+    const idleTime = now - conn.lastUsed;
+
+    if (idleTime > LRU_TIMEOUT) {
+      conn.source.destroy().catch(console.error);
+      connectionCache.delete(connStr);
+      console.log(`[Connection Cache] Destroyed idle connection: ${connStr}`);
+    }
+  }
+}, 60 * 1000); // Every 1 min
 
 //TODO: only support postgres
 export const getDatabaseSource = async ({
@@ -12,26 +32,27 @@ export const getDatabaseSource = async ({
   type: DatabaseType;
   schema?: string;
 }) => {
-  if (
-    dbConnectionString !== currentDBConnectionString ||
-    !databaseSource ||
-    !databaseSource.isInitialized
-  ) {
-    databaseSource = new DataSource({
-      type: 'postgres', // Ensure the type is explicitly set to 'postgres'
-      url: dbConnectionString, // Your connection string
-      synchronize: false, // Set to true if you want TypeORM to auto-create tables (use with caution in production)
-      logging: true, // Logs SQL queries for debugging,
-    });
-
-    await databaseSource.initialize();
-
-    currentDBConnectionString = dbConnectionString;
-
-    return databaseSource;
+  const cached = connectionCache.get(dbConnectionString);
+  if (cached && cached.source.isInitialized) {
+    cached.lastUsed = Date.now();
+    return cached.source;
   }
 
-  return databaseSource;
+  const newSource = new DataSource({
+    type: 'postgres', // Ensure the type is explicitly set to 'postgres'
+    url: dbConnectionString, // Your connection string
+    synchronize: false, // Set to true if you want TypeORM to auto-create tables (use with caution in production)
+    logging: true, // Logs SQL queries for debugging,
+  });
+
+  await newSource.initialize();
+
+  connectionCache.set(dbConnectionString, {
+    source: newSource,
+    lastUsed: Date.now(),
+  });
+
+  return newSource;
 };
 
 export async function healthCheckConnection({ url }: { url: string }) {
