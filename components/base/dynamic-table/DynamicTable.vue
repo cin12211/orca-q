@@ -1,14 +1,13 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { computed, ref } from 'vue';
 import { Icon } from '#components';
-import { iconOverrides, themeBalham } from 'ag-grid-community';
 import type {
-  GridApi,
-  GridReadyEvent,
   ColDef,
-  SizeColumnsToFitGridStrategy,
+  GridApi,
   GridOptions,
+  GridReadyEvent,
 } from 'ag-grid-community';
+import { iconOverrides, themeBalham } from 'ag-grid-community';
 import { AgGridVue } from 'ag-grid-vue3';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -40,7 +39,6 @@ const columnDefs = computed<ColDef[]>(() =>
         sortable: true,
         filter: false,
         resizable: true,
-        flex: 1,
         editable: true,
       }))
     : []
@@ -65,16 +63,11 @@ const mySvgIcons = iconOverrides({
 const customizedTheme = themeBalham
   .withParams({
     accentColor: 'var(--color-gray-900)',
-    wrapperBorderRadius: 'var(--radius)',
+    // wrapperBorderRadius: "var(--radius)",
     borderRadius: 'var(--radius-sm)',
     borderColor: 'var(--input)',
   })
   .withPart(mySvgIcons);
-
-const autoSizeStrategy: SizeColumnsToFitGridStrategy = {
-  type: 'fitGridWidth',
-  defaultMinWidth: 150,
-};
 
 const gridOptions: GridOptions = {
   rowClass: 'class-row-border-none',
@@ -87,8 +80,8 @@ const gridOptions: GridOptions = {
 </script>
 
 <template>
-  <div class="p-2 h-full flex flex-col space-y-2">
-    <div class="flex items-center gap-2">
+  <div class="py-2 h-full flex flex-col space-y-2">
+    <!-- <div class="flex items-center gap-2">
       <div class="relative w-full">
         <Icon
           name="lucide:search"
@@ -109,18 +102,20 @@ const gridOptions: GridOptions = {
       >
         Clear
       </Button>
-    </div>
+    </div> -->
 
     <!-- The grid itself ------------------------------------------- -->
     <AgGridVue
       class="flex-1"
       :grid-options="gridOptions"
-      :autoSizeStrategy="autoSizeStrategy"
+      :autoSizeStrategy="{
+        type: 'fitCellContents',
+      }"
       :theme="customizedTheme"
       :columnDefs="columnDefs"
       :rowData="rowData"
       :quickFilterText="quickFilter"
-      :pagination="true"
+      :pagination="false"
       :paginationPageSize="pageSize"
       :rowSelection="'single'"
       :pagination-page-size-selector="[10, 20, 30, 50, 100]"

@@ -54,6 +54,10 @@ export const useAppContext = () => {
     includeLoading?: boolean;
   }) => {
     const connectionsByWsId = connectionStore.getConnectionsByWorkspaceId(wsId);
+    console.log(
+      '🚀 ~ fetchReservedTableSchemas ~ connectionsByWsId:',
+      connectionsByWsId
+    );
 
     const connection = connectionsByWsId.find(
       connection => connection.id === connId

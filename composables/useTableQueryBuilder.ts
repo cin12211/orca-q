@@ -232,12 +232,14 @@ export const useTableQueryBuilder = async ({
 
   const onChangeComposeWith = (value: ComposeOperator) => {
     composeWith.value = value;
+    pagination.offset = 0;
+
     refreshTableData();
     refreshCount();
   };
 
   const onApplyNewFilter = () => {
-    console.log('onApplyNewFilter');
+    pagination.offset = 0;
 
     refreshTableData();
     refreshCount();
@@ -327,7 +329,8 @@ export const useTableQueryBuilder = async ({
 
   const isFetchingTableData = computed(() => {
     return (
-      fetchCountStatus.value === 'pending' ||
+      //TODO: open when then disable pagination
+      // fetchCountStatus.value === 'pending' ||
       fetchingTableStatus.value === 'pending'
     );
   });

@@ -8,7 +8,7 @@ import {
   type FlattenedTreeFileSystemItem,
 } from '~/components/base/Tree';
 import TreeItemInputEditInline from '~/components/base/Tree/TreeItemInputEditInline.vue';
-import { useAppContext } from '~/shared/contexts';
+import { useExplorerFileStoreStore } from '~/shared/stores';
 import {
   TabViewType,
   useTabViewsStore,
@@ -17,15 +17,16 @@ import { DEFAULT_DEBOUNCE_INPUT } from '~/utils/constants';
 import { useManagementExplorerStore } from '../../../shared/stores/managementExplorerStore';
 import TreeFolder from '../../base/Tree/TreeFolder.vue';
 
-const { wsStateStore } = useAppContext();
-const { connectionId, schemaId, workspaceId } = toRefs(wsStateStore);
+const route = useRoute('workspaceId-connectionId-explorer-fileId');
 
+const explorerFileStore = useExplorerFileStoreStore();
 const explorerStore = useManagementExplorerStore();
 
 const searchInput = shallowRef('');
 const debouncedSearch = refDebounced(searchInput, DEFAULT_DEBOUNCE_INPUT);
 
-const { expandedState, explorerFiles } = toRefs(explorerStore);
+const { expandedState } = toRefs(explorerStore);
+const { explorerFileTree } = toRefs(explorerFileStore);
 
 const selectedItems = ref<FlattenedTreeFileSystemItem[]>([]);
 
@@ -44,7 +45,7 @@ const onUpdateExpandedState = (paths: string[], oldPaths?: string[]) => {
     const oldStringPath = getTreeItemPath(oldPaths);
 
     expandedState.value = [...uniquePaths].map(e => {
-      if (e.startsWith(oldStringPath)) {
+      if (e?.startsWith(oldStringPath)) {
         return e.replace(oldStringPath, newStringPath);
       }
 
@@ -66,11 +67,15 @@ const onAddNewItem = async ({
     onUpdateExpandedState(paths);
   }
 
-  explorerFiles.value = tree.onAddNewItemByPath({
-    data: explorerFiles.value,
+  const newTree = tree.onAddNewItemByPath({
+    data: explorerFileTree.value,
     paths,
     isFolder,
+    connectionId: route.params.connectionId,
+    workspaceId: route.params.workspaceId,
   });
+
+  explorerFileStore.batchUpdateTreeFiles(newTree);
 
   await nextTick();
   editFileNameInlineRef.value?.$el?.focus();
@@ -87,11 +92,13 @@ const onReNameFile = (
   const newPaths = [...fileInfo.value.paths.slice(0, -1), newName];
   const paths = fileInfo.value.paths;
 
-  explorerFiles.value = tree.renameByPath({
-    items: explorerFiles.value,
+  const newTree = tree.renameByPath({
+    items: explorerFileTree.value,
     paths: fileInfo.value.paths,
     newName,
   });
+
+  explorerFileStore.batchUpdateTreeFiles(newTree);
 
   if (isExpanded) {
     onUpdateExpandedState(newPaths, paths);
@@ -99,11 +106,17 @@ const onReNameFile = (
 };
 
 const onRemoveItemByPaths = (fileInfo: FlattenedTreeFileSystemItem) => {
-  console.log('🚀 ~ onRemoveItemByPaths ~ fileInfo:', fileInfo);
-  explorerFiles.value = tree.removeItemByPaths(
-    explorerFiles.value,
+  const newTree = tree.removeItemByPaths(
+    explorerFileTree.value,
     fileInfo.value.paths
   );
+
+  explorerFileStore.batchUpdateTreeFiles(newTree);
+
+  // get all folder , subfolder nested , file nested
+  const fileIds = tree.flattenTree([fileInfo.value]).map(item => item.id);
+
+  explorerFileStore.deleteFiles(fileIds);
 };
 
 const onCollapsedExplorer = () => {
@@ -113,8 +126,8 @@ const onCollapsedExplorer = () => {
 const onSetAllowEditFileName = async (
   fileInfo: FlattenedTreeFileSystemItem
 ) => {
-  explorerFiles.value = tree.updateByPath({
-    items: explorerFiles.value,
+  const newTree = tree.updateByPath({
+    items: explorerFileTree.value,
     paths: fileInfo.value.paths,
     newItem: item => {
       return {
@@ -123,6 +136,8 @@ const onSetAllowEditFileName = async (
       };
     },
   });
+
+  explorerFileStore.batchUpdateTreeFiles(newTree);
 
   await nextTick();
 
@@ -146,11 +161,11 @@ const tabViewStore = useTabViewsStore();
 
 const mappedExplorerFiles = computed(() => {
   if (!debouncedSearch.value) {
-    return explorerFiles.value;
+    return explorerFileTree.value;
   }
 
   return tree.filterByTitle({
-    data: explorerFiles.value,
+    data: explorerFileTree.value,
     title: debouncedSearch.value,
   });
 });
@@ -229,29 +244,30 @@ const mappedExplorerFiles = computed(() => {
       >
         <ContextMenuTrigger>
           <TreeFolder
-            v-model:explorerFiles="mappedExplorerFiles"
+            class="pt-1"
+            :explorerFiles="mappedExplorerFiles"
             v-model:expandedState="expandedState"
             v-model:selectedItems="selectedItems"
             is-show-arrow
             :onRightClickItem="onRightClickItem"
             v-on:clickTreeItem="
               (_, item) => {
-                if (item.hasChildren) {
+                if (item?.hasChildren) {
                   return;
                 }
 
                 tabViewStore.openTab({
                   icon: item.value.icon,
-                  id: item.value.title,
+                  id: item.value.id,
                   name: item.value.title,
                   type: TabViewType.CodeQuery,
-                  routeName: 'workspaceId-explorer-fileId',
+                  routeName: 'workspaceId-connectionId-explorer-fileId',
                   routeParams: {
                     fileId: item.value.id,
                   },
-                  connectionId: connectionId,
-                  schemaId: schemaId || '',
-                  workspaceId: workspaceId,
+                  connectionId: route.params.connectionId,
+                  schemaId: '',
+                  workspaceId: route.params.workspaceId,
                   tableName: item.value.title,
                 });
 
@@ -277,7 +293,7 @@ const mappedExplorerFiles = computed(() => {
                     const flattenedFileNames = (
                       (
                         (item as FlattenedTreeFileSystemItem).parentItem
-                          ?.children || explorerFiles
+                          ?.children || explorerFileTree
                       )?.map(e => e.title) ?? []
                     ).filter(e => e !== item.value.title);
 

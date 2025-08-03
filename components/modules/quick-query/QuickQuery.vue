@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { on } from 'events';
 import { useTableQueryBuilder } from '~/composables/useTableQueryBuilder';
 import { useAppContext } from '~/shared/contexts';
 import { useAppLayoutStore } from '~/shared/stores/appLayoutStore';
@@ -176,6 +177,27 @@ const { isHaveRelationByFieldName } = useReverseTables({
 watch(quickQueryTabView, newQuickQueryTabView => {
   openedQuickQueryTab.value[newQuickQueryTabView] = true;
 });
+
+useHotkeys(
+  [
+    {
+      key: 'meta+a',
+      callback: () => {
+        quickQueryTableRef.value?.gridApi?.selectAll();
+      },
+    },
+  ],
+  {
+    target: containerRef,
+    isPreventDefault: true,
+  }
+);
+
+onMounted(() => {
+  if (containerRef.value) {
+    containerRef.value.focus();
+  }
+});
 </script>
 
 <template>
@@ -208,7 +230,11 @@ watch(quickQueryTabView, newQuickQueryTabView => {
     :message="errorMessage || ''"
   />
 
-  <div ref="containerRef" class="flex flex-col h-full w-full relative">
+  <div
+    ref="containerRef"
+    class="flex flex-col h-full w-full relative"
+    tabindex="0"
+  >
     <LoadingOverlay
       :visible="isLoadingTableSchema || isMutating || isFetchingTableData"
     />

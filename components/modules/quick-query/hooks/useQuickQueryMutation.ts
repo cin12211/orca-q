@@ -3,7 +3,10 @@ import { toast } from 'vue-sonner';
 import { useAppContext } from '~/shared/contexts/useAppContext';
 import { copyRowsToClipboard } from '~/utils/common';
 import { buildUpdateStatements } from '~/utils/quickQuery';
-import { buildDeleteStatements } from '~/utils/quickQuery/buildDeleteStatements';
+import {
+  buildBulkDeleteStatement,
+  buildDeleteStatements,
+} from '~/utils/quickQuery/buildDeleteStatements';
 import { buildInsertStatements } from '~/utils/quickQuery/buildInsertStatements';
 import type QuickQueryTable from '../quick-query-table/QuickQueryTable.vue';
 
@@ -179,6 +182,15 @@ export function useQuickQueryMutation(options: UseQuickQueryMutationOptions) {
       });
       sqlDeleteStatements.push(sqlDeleteStatement);
     });
+
+    // TODO:improve for bulk delete and for case table don't have pkey
+    // const sqlDeleteStatement: string = buildBulkDeleteStatement({
+    //   tableName: tableName,
+    //   pKeys: primaryKeys.value,
+    //   pKeyValues: selectedRows.value,
+    // });
+
+    // console.log('sqlDeleteStatement:', sqlDeleteStatement);
 
     isMutating.value = true;
 

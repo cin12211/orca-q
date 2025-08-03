@@ -34,6 +34,7 @@
     "@nuxt/image": "1.10.0",
     "@pinia/nuxt": "^0.10.1",
     "@replit/codemirror-indentation-markers": "^6.5.3",
+    "@replit/codemirror-minimap": "^0.5.2",
     "@seald-io/nedb": "^4.1.1",
     "@sqltools/formatter": "^1.2.5",
     "@tailwindcss/vite": "^4.1.2",

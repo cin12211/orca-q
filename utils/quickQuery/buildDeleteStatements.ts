@@ -22,3 +22,34 @@ export function buildDeleteStatements({
 
   return query;
 }
+
+export function buildBulkDeleteStatement({
+  tableName,
+  pKeys,
+  pKeyValues,
+}: {
+  tableName: string;
+  pKeys: string[];
+  pKeyValues: Record<string, string>[];
+}): string {
+  if (!tableName || !pKeys?.length || !pKeyValues?.length) {
+    throw new Error(
+      'Invalid input: tableName, pKeys, and pKeyValues are required'
+    );
+  }
+
+  const valueTuples = pKeyValues.map((row, index) => {
+    const tuple = pKeys.map(key => {
+      const value = row[key];
+      if (value === undefined) {
+        throw new Error(`Missing primary key "${key}" in row ${index}`);
+      }
+      return `'${value.replace(/'/g, "''")}'`; // escape single quotes
+    });
+    return `(${tuple.join(', ')})`;
+  });
+
+  const keysClause = pKeys.length === 1 ? pKeys[0] : `(${pKeys.join(', ')})`;
+
+  return `DELETE FROM ${tableName} WHERE ${keysClause} IN (${valueTuples.join(', ')});`;
+}

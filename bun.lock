@@ -19,6 +19,7 @@
         "@nuxt/image": "1.10.0",
         "@pinia/nuxt": "^0.10.1",
         "@replit/codemirror-indentation-markers": "^6.5.3",
+        "@replit/codemirror-minimap": "^0.5.2",
         "@seald-io/nedb": "^4.1.1",
         "@sqltools/formatter": "^1.2.5",
         "@tailwindcss/vite": "^4.1.2",
@@ -483,6 +484,8 @@
     "@poppinss/exception": ["@poppinss/exception@1.2.1", "", {}, "sha512-aQypoot0HPSJa6gDPEPTntc1GT6QINrSbgRlRhadGW2WaYqUK3tK4Bw9SBMZXhmxd3GeAlZjVcODHgiu+THY7A=="],
 
     "@replit/codemirror-indentation-markers": ["@replit/codemirror-indentation-markers@6.5.3", "", { "peerDependencies": { "@codemirror/language": "^6.0.0", "@codemirror/state": "^6.0.0", "@codemirror/view": "^6.0.0" } }, "sha512-hL5Sfvw3C1vgg7GolLe/uxX5T3tmgOA3ZzqlMv47zjU1ON51pzNWiVbS22oh6crYhtVhv8b3gdXwoYp++2ilHw=="],
+
+    "@replit/codemirror-minimap": ["@replit/codemirror-minimap@0.5.2", "", { "dependencies": { "crelt": "^1.0.5" }, "peerDependencies": { "@codemirror/language": "^6.9.1", "@codemirror/lint": "^6.4.2", "@codemirror/state": "^6.3.1", "@codemirror/view": "^6.21.3", "@lezer/common": "^1.1.0", "@lezer/highlight": "^1.1.6" } }, "sha512-eNAtpr0hOG09/5zqAQ5PkgZEb3V/MHi30zentCxiR73r+utR2m9yVMCpBmfsWbb8mWxUWhMGPiHxM5hFtnscQA=="],
 
     "@rollup/plugin-alias": ["@rollup/plugin-alias@5.1.1", "", { "peerDependencies": { "rollup": "^1.20.0||^2.0.0||^3.0.0||^4.0.0" }, "optionalPeers": ["rollup"] }, "sha512-PR9zDb+rOzkRb2VD+EuKB7UC41vU5DIwZ5qqCpk0KJudcWAyi8rvYOhS7+L5aZCspw1stTViLgN5v6FF1p5cgQ=="],
 

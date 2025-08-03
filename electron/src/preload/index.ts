@@ -9,13 +9,18 @@ import {
   WindowIpcChannels,
   WorkspaceIpcChannels,
   WorkspaceStateIpcChannels,
-  QQueryLogsIpcChannels
+  QQueryLogsIpcChannels,
+  RowQueryFilesIpcChannels
 } from '../constants'
 import { type UpdateWindowTitleProps } from '../main/ipc/updateWindowTitle'
 import { type WorkspaceState } from '../../../shared/stores/useWSStateStore'
 import { type DeleteTabViewProps, type GetTabViewsByContextProps } from '../main/ipc/tabViews'
 import type { QuickQueryLog } from '../../../shared/stores/useQuickQueryLogs'
 import type { DeleteQQueryLogsProps, GetQQueryLogsProps } from '../main/ipc/quickQueryLogs'
+import type {
+  RowQueryFile,
+  RowQueryFileContent
+} from '../../../shared/stores/useExplorerFileStoreStore'
 
 export const electronBridgeApi = {
   updateWindowTitle: (props: UpdateWindowTitleProps) =>
@@ -82,6 +87,30 @@ export const quickQueryLogsApi = {
     ipcRenderer.invoke(QQueryLogsIpcChannels.Delete, props)
 }
 
+export const rowQueryFilesApi = {
+  getAllFiles: (): Promise<RowQueryFile[]> => ipcRenderer.invoke(RowQueryFilesIpcChannels.Gets),
+
+  getFilesByContext: (props: { workspaceId: string }): Promise<RowQueryFile[]> =>
+    ipcRenderer.invoke(RowQueryFilesIpcChannels.GetByContext, props),
+
+  createFiles: (file: RowQueryFile): Promise<RowQueryFile> =>
+    ipcRenderer.invoke(RowQueryFilesIpcChannels.Create, file),
+
+  updateFile: (file: Partial<RowQueryFile> & { id: string }): Promise<RowQueryFile | null> =>
+    ipcRenderer.invoke(RowQueryFilesIpcChannels.Update, file),
+
+  updateFileContent: (fileContent: RowQueryFileContent): Promise<RowQueryFileContent | null> =>
+    ipcRenderer.invoke(RowQueryFilesIpcChannels.UpdateContent, fileContent),
+
+  deleteFile: (props: { id: string }): Promise<void> =>
+    ipcRenderer.invoke(RowQueryFilesIpcChannels.Delete, props),
+
+  deleteFileByWorkspaceId: (props: { wsId: string }): Promise<void> =>
+    ipcRenderer.invoke(RowQueryFilesIpcChannels.DeleteByWorkspaceId, props),
+  getFileContentById: (id: string): Promise<RowQueryFileContent | null> =>
+    ipcRenderer.invoke(RowQueryFilesIpcChannels.GetFileContentById, id)
+}
+
 // Use `contextBridge` APIs to expose Electron APIs to
 // renderer only if context isolation is enabled, otherwise
 // just add to the DOM global.
@@ -94,6 +123,7 @@ if (process.contextIsolated) {
     contextBridge.exposeInMainWorld('connectionApi', connectionApi)
     contextBridge.exposeInMainWorld('tabViewsApi', tabViewsApi)
     contextBridge.exposeInMainWorld('quickQueryLogsApi', quickQueryLogsApi)
+    contextBridge.exposeInMainWorld('rowQueryFilesApi', rowQueryFilesApi)
   } catch (error) {
     console.error(error)
   }
@@ -112,4 +142,6 @@ if (process.contextIsolated) {
   window.tabViewsApi = tabViewsApi
   // @ts-ignore (define in dts)
   window.quickQueryLogsApi = quickQueryLogsApi
+  // @ts-ignore (define in dts)
+  window.rowQueryFilesApi = rowQueryFilesApi
 }

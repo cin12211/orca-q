@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { refDebounced, templateRef } from '@vueuse/core';
-import { tree } from '~/components/base/Tree';
+import { tree, type TreeFileSystemItem } from '~/components/base/Tree';
 import TreeFolder from '~/components/base/Tree/TreeFolder.vue';
 import { useAppContext } from '~/shared/contexts/useAppContext';
 import { useActivityBarStore } from '~/shared/stores';
@@ -46,8 +46,10 @@ const items = computed(() => {
           icon: 'hugeicons:hierarchy-square-02',
           paths: [SchemaFolderType.Tables, tableName],
           tabViewType: TabViewType.TableDetail,
+          isFolder: false,
         })),
       ],
+      isFolder: true,
     },
   ];
 
