@@ -51,18 +51,12 @@ const schema = z.object({
 
 const dynamicForm = ref<InstanceType<typeof DynamicForm>>();
 
-watch(
-  () => props.selectedRow,
-  () => {
+watchEffect(() => {
+  if (props.selectedRow) {
     dynamicForm.value?.form.resetForm();
-
-    if (!props.selectedRow) {
-      return;
-    }
-
     dynamicForm.value?.form.setValues(props.selectedRow);
   }
-);
+});
 </script>
 
 <template>

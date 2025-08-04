@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { on } from 'events';
+import QuickQueryTableSummary from '~/components/modules/quick-query/quick-query-table-summary/QuickQueryTableSummary.vue';
 import { useTableQueryBuilder } from '~/composables/useTableQueryBuilder';
 import { useAppContext } from '~/shared/contexts';
 import { useAppLayoutStore } from '~/shared/stores/appLayoutStore';
@@ -60,6 +61,9 @@ const {
   isLoadingTableSchema,
   tableSchema,
   columnTypes,
+  dataSize,
+  indexSize,
+  tableSize,
 } = await useQuickQueryTableInfo({
   tableName: tableName.value,
   schemaName: schemaName.value,
@@ -212,7 +216,12 @@ onMounted(() => {
   />
 
   <Teleport defer to="#preview-select-row" v-if="isActiveTeleport">
+    <QuickQueryTableSummary
+      v-if="!selectedRows?.length"
+      :summary="{ tableSize, dataSize, indexSize }"
+    />
     <PreviewSelectedRow
+      v-else
       :columnTypes="columnTypes"
       :selectedRow="selectedRows?.length ? selectedRows[0] : null"
     />

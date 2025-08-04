@@ -53,6 +53,18 @@ export const useQuickQueryTableInfo = async ({
     return tableSchemaStatus.value === 'pending';
   });
 
+  const tableSize = computed(() => {
+    return tableSchema.value?.table_size || '0 bytes';
+  });
+
+  const dataSize = computed(() => {
+    return tableSchema.value?.data_size || '0 bytes';
+  });
+
+  const indexSize = computed(() => {
+    return tableSchema.value?.index_size || '0 bytes';
+  });
+
   return {
     primaryKeys,
     foreignKeys,
@@ -60,5 +72,8 @@ export const useQuickQueryTableInfo = async ({
     isLoadingTableSchema,
     tableSchema,
     columnTypes,
+    tableSize,
+    dataSize,
+    indexSize,
   };
 };
