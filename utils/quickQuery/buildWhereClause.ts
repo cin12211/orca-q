@@ -64,7 +64,6 @@ const inHandler: Handler = ({ col, op, search, nextPlaceholder }) => {
     .filter(Boolean);
   if (!list.length) return { where: '', params: [] };
   const place = list.map(() => nextPlaceholder()).join(', ');
-  console.log('🚀 ~ place:', place);
 
   return { where: `${col} ${op} (${place})`, params: list };
 };
@@ -291,7 +290,6 @@ export function formatWhereClause<F extends readonly FilterSchema[]>({
     columns,
     composeWith,
   });
-  console.log('🚀 ~ where:', where);
 
   if (!where) return '';
 

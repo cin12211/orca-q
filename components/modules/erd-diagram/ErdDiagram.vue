@@ -20,7 +20,6 @@ import type {
 import type { TableMetadata } from '~/server/api/get-tables';
 
 const props = defineProps<ErdDiagramProps>();
-console.log('this is props', props);
 </script>
 
 <template>

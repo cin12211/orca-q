@@ -84,7 +84,6 @@ const onOpenWorkspaceWithConnection = async (connectionId: string) => {
 };
 
 const handleAddConnection = (connection: Connection) => {
-  console.log('🚀 ~ handleAddConnection ~ connection:', connection);
   createConnection(connection);
 };
 </script>

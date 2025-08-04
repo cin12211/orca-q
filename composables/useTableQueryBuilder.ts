@@ -62,7 +62,6 @@ export const useTableQueryBuilder = async ({
   });
 
   const whereClauses = computed(() => {
-    console.log('isShowFilters.value', isShowFilters.value);
     //if don't apply filter
     if (!isShowFilters.value) {
       return '';
@@ -158,7 +157,6 @@ export const useTableQueryBuilder = async ({
     key: `${tableName}-count`,
     cache: 'default',
     onResponse: response => {
-      console.log('response.response._data');
       if (response.response.ok) {
         addHistoryLog(queryCountString.value);
       }
@@ -196,8 +194,6 @@ export const useTableQueryBuilder = async ({
   };
 
   const onUpdateOrderBy = ({ columnName, order }: OrderBy) => {
-    console.log('columnName, order', columnName, order);
-
     orderBy.columnName = columnName;
     orderBy.order = order;
 

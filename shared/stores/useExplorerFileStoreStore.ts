@@ -96,7 +96,6 @@ export const useExplorerFileStoreStore = defineStore(
     watch(
       () => route.params.workspaceId,
       async workspaceId => {
-        console.log('workspaceId', workspaceId);
         if (!workspaceId) {
           return;
         }

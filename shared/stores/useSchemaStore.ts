@@ -52,8 +52,6 @@ export const useSchemaStore = defineStore(
       );
     });
 
-    console.log('schemas', schemas);
-
     // const setInitialSchema = () => {
     //   if (!wsState.value?.id || !wsState.value?.connectionId) {
     //     return;

@@ -4,8 +4,6 @@ import { ContextMenuShortcut } from '#components';
 definePageMeta({
   layout: 'default',
 });
-
-console.log('hello');
 </script>
 
 <template>
