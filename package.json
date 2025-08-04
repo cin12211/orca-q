@@ -19,6 +19,7 @@
     "format:husky": "prettier $(git diff --cached --name-only --diff-filter=ACMR | sed 's| |\\ |g') --write --ignore-unknown && git update-index --again"
   },
   "dependencies": {
+    "@amplitude/analytics-browser": "^2.21.1",
     "@atlaskit/pragmatic-drag-and-drop": "^1.6.0",
     "@atlaskit/pragmatic-drag-and-drop-auto-scroll": "^2.1.0",
     "@atlaskit/pragmatic-drag-and-drop-hitbox": "^1.0.3",

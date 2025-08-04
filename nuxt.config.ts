@@ -20,6 +20,12 @@ export default defineNuxtConfig({
 
   ssr: false,
 
+  runtimeConfig: {
+    public: {
+      amplitudeApiKey: process.env.AMPLITUDE_API_KEY,
+    },
+  },
+
   devtools: {
     enabled: true,
 

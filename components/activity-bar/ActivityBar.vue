@@ -4,10 +4,11 @@ import {
   ActivityBarItemType,
   useActivityBarStore,
 } from '~/shared/stores/useActivityBarStore';
-import { DEFAULT_DEBOUNCE_INPUT } from '~/utils/constants';
 
 const activityStore = useActivityBarStore();
 const appLayoutStore = useAppLayoutStore();
+
+const { trackEvent } = useAmplitude();
 
 // This is sample data
 const activity = computed(() => [
@@ -35,6 +36,9 @@ const onChangeActivity = (type: ActivityBarItemType) => {
   activityStore.setActivityActive(type);
 
   appLayoutStore.onToggleActivityBarPanel();
+  trackEvent('activity_bar', {
+    activity: type,
+  });
 };
 
 // TODO: update

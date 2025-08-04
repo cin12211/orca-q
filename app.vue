@@ -13,6 +13,7 @@ initIDB();
 // Register all Community features
 ModuleRegistry.registerModules([AllCommunityModule]);
 
+const { initialize } = useAmplitude();
 const { isLoading } = useLoadingIndicator();
 
 const { schemaStore, connectToConnection, fetchReservedTableSchemas } =
@@ -22,6 +23,10 @@ const route = useRoute('workspaceId-connectionId');
 
 useHead({
   title: 'Orca Query',
+});
+
+onBeforeMount(() => {
+  initialize();
 });
 
 onMounted(async () => {
