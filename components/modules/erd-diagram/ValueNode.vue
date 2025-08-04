@@ -1,10 +1,7 @@
 <script setup lang="ts">
-import { computed } from 'vue';
-import { ref } from 'vue';
-import { Handle, Position, useVueFlow } from '@vue-flow/core';
+import { Handle, Position } from '@vue-flow/core';
 import type { TableMetadata } from '~/server/api/get-tables';
-import { ROW_HEIGHT } from './constants';
-import { HANDLE_HEIGHT } from './constants';
+import { HANDLE_HEIGHT, ROW_HEIGHT } from './constants';
 
 const props = defineProps<
   {

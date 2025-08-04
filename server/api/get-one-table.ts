@@ -1,6 +1,12 @@
 import { type TableMetadata } from './get-tables';
 
-export default defineEventHandler(async (event): Promise<TableMetadata> => {
+interface OneTableMetadata extends TableMetadata {
+  table_size: string;
+  data_size: string;
+  index_size: string;
+}
+
+export default defineEventHandler(async (event): Promise<OneTableMetadata> => {
   const {
     dbConnectionString,
     tableName,
@@ -157,7 +163,7 @@ export default defineEventHandler(async (event): Promise<TableMetadata> => {
   const [{ table_detail }] = (await resource.query(query, [
     schema,
     tableName,
-  ])) as { table_detail: TableMetadata[] }[];
+  ])) as { table_detail: OneTableMetadata[] }[];
 
   const tableMetadata = table_detail?.[0];
 

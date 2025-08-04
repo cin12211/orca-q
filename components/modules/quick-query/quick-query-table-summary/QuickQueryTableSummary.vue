@@ -1,6 +1,4 @@
 <script lang="ts" setup>
-import { Field, useForm } from 'vee-validate';
-
 type Props = {
   summary: {
     tableSize?: string;

@@ -42,9 +42,6 @@ export interface TableMetadata {
   rows: number;
   type: string;
   comment: string | null;
-  table_size: string;
-  data_size: string;
-  index_size: string;
   columns: ColumnMetadata[];
   foreign_keys: ForeignKeyMetadata[];
   primary_keys: PrimaryKeyMetadata[];
