@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
-import { Icon } from '#components';
 import type {
   ColDef,
   GridApi,
   GridOptions,
   GridReadyEvent,
+  ValueFormatterParams,
 } from 'ag-grid-community';
 import { iconOverrides, themeBalham } from 'ag-grid-community';
 import { AgGridVue } from 'ag-grid-vue3';
@@ -40,6 +40,21 @@ const columnDefs = computed<ColDef[]>(() =>
         filter: false,
         resizable: true,
         editable: true,
+        valueFormatter: (params: ValueFormatterParams) => {
+          // check type value is object
+
+          const value = params.value;
+
+          if (
+            typeof value === 'object' &&
+            value !== null &&
+            Object.prototype.toString.call(value) === '[object Object]'
+          ) {
+            return value ? JSON.stringify(params.value, null, 2) : '';
+          }
+
+          return value;
+        },
       }))
     : []
 );

@@ -27,7 +27,9 @@ import { useAppLayoutStore } from '~/shared/stores/appLayoutStore';
 // https://codemirror.net/examples/lint/
 
 definePageMeta({
-  keepalive: false,
+  keepalive: {
+    max: 6,
+  },
 });
 
 const route = useRoute('workspaceId-connectionId-explorer-fileId');
@@ -208,6 +210,16 @@ const onFormatCode = () => {
     });
   }
 };
+
+const isActiveTeleport = ref(true);
+
+onActivated(() => {
+  isActiveTeleport.value = true;
+});
+
+onDeactivated(() => {
+  isActiveTeleport.value = false;
+});
 </script>
 
 <template>
@@ -299,7 +311,7 @@ const onFormatCode = () => {
     </div>
 
     <!-- TODO: can support execute result for many table -->
-    <Teleport defer to="#bottom-panel">
+    <Teleport defer to="#bottom-panel" v-if="isActiveTeleport">
       <div v-if="executeErrors">
         <span class="font-normal text-xs text-muted-foreground block">
           Execute query:
