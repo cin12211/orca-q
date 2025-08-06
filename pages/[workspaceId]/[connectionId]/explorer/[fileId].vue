@@ -334,7 +334,14 @@ onDeactivated(() => {
       >
         No row found
       </div>
-      <DynamicTable v-else :data="tableData" />
+
+      <DynamicTable
+        v-else
+        :data="tableData || []"
+        :foreign-keys="[]"
+        :primary-keys="[]"
+        class="h-full py-2"
+      />
     </Teleport>
   </div>
 </template>

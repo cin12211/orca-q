@@ -16,5 +16,10 @@ const { data } = await useFetch('/api/get-over-view-tables', {
 </script>
 
 <template>
-  <DynamicTable :data="data || []" class="h-full" :defaultPageSize="30" />
+  <DynamicTable
+    :data="data || []"
+    :foreign-keys="[]"
+    :primary-keys="[]"
+    class="h-full p-2"
+  />
 </template>

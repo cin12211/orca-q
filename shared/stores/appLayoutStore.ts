@@ -94,7 +94,15 @@ export const useAppLayoutStore = defineStore(
       }
     };
 
+    const onCloseBottomPanel = () => {
+      const [top, bottom] = bodySize.value;
+      historyBodySize.value[1] = bottom;
+      bodySize.value[1] = 0;
+      bodySize.value[0] = top + bottom;
+    };
+
     return {
+      historyBodySize,
       layoutSize,
       historyLayoutSize,
       isPrimarySidebarCollapsed,
@@ -106,6 +114,7 @@ export const useAppLayoutStore = defineStore(
       onResizeBody,
       onToggleBottomPanel,
       onShowSecondSidebar,
+      onCloseBottomPanel,
     };
   },
   {

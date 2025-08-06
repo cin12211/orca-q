@@ -22,10 +22,12 @@ import QuickQueryFilter from './quick-query-filter/QuickQueryFilter.vue';
 import QuickQueryHistoryLogsPanel from './quick-query-history-log-panel/QuickQueryHistoryLogsPanel.vue';
 import QuickQueryContextMenu from './quick-query-table/QuickQueryContextMenu.vue';
 import QuickQueryTable from './quick-query-table/QuickQueryTable.vue';
+import StructureTable from './structure/StructureTable.vue';
 
 // const props = defineProps<{ tableName: string; schemaName: string }>();
 const props = defineProps<{ tabViewId: string }>();
 
+const appLayoutStore = useAppLayoutStore();
 const { tabViewStore } = useAppContext();
 const { tabViews } = toRefs(tabViewStore);
 
@@ -141,8 +143,6 @@ const {
   focusedCell,
 });
 
-const appLayoutStore = useAppLayoutStore();
-
 const quickQueryTabView = ref<QuickQueryTabView>(QuickQueryTabView.Data);
 
 const openedQuickQueryTab = ref({
@@ -180,6 +180,10 @@ const { isHaveRelationByFieldName } = useReverseTables({
 
 watch(quickQueryTabView, newQuickQueryTabView => {
   openedQuickQueryTab.value[newQuickQueryTabView] = true;
+
+  if (newQuickQueryTabView !== QuickQueryTabView.Data) {
+    appLayoutStore.onCloseBottomPanel();
+  }
 });
 
 useHotkeys(
@@ -193,7 +197,6 @@ useHotkeys(
   ],
   {
     target: containerRef,
-    isPreventDefault: true,
   }
 );
 
@@ -304,6 +307,18 @@ onMounted(() => {
         v-show="quickQueryTabView === QuickQueryTabView.Erd"
         :tableId="tableName"
       />
+
+      <div
+        v-if="openedQuickQueryTab[QuickQueryTabView.Structure]"
+        v-show="quickQueryTabView === QuickQueryTabView.Structure"
+        class="h-full"
+      >
+        <StructureTable
+          :schema="schemaName"
+          :tableName="tableName"
+          :connectionString="connectionString"
+        />
+      </div>
 
       <QuickQueryContextMenu
         v-show="quickQueryTabView === QuickQueryTabView.Data"
