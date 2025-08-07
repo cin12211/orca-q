@@ -15,7 +15,7 @@ export interface OrderBy {
   order?: 'ASC' | 'DESC';
 }
 
-export const useTableQueryBuilder = async ({
+export const useTableQueryBuilder = ({
   tableName,
   connectionString,
   primaryKeys,

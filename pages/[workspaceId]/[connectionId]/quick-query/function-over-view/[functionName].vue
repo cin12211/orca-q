@@ -32,17 +32,17 @@ const schema: SQLNamespace = activeSchema.value?.tableDetails ?? {};
 
 const sqlCompartment = new Compartment();
 
-await useFetch('/api/get-one-function', {
+const { status } = useFetch('/api/get-one-function', {
   method: 'POST',
   body: {
     functionId: route.params.functionName,
     dbConnectionString: connectionStore.selectedConnection?.connectionString,
   },
-  key: `${route.params.functionName}`,
   onResponse: response => {
-    code.value = response.response._data || '';
+    if (typeof response.response._data === 'string') {
+      code.value = response.response._data || '';
+    }
   },
-  cache: 'force-cache',
 });
 
 const extensions = [
@@ -85,5 +85,8 @@ const extensions = [
 </script>
 
 <template>
-  <CodeEditor v-model="code" :extensions="extensions" :disabled="false" />
+  <div class="h-full relative">
+    <LoadingOverlay :visible="status === 'pending'" />
+    <CodeEditor v-model="code" :extensions="extensions" :disabled="false" />
+  </div>
 </template>

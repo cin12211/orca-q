@@ -94,7 +94,7 @@ const {
   onChangeComposeWith,
   composeWith,
   isFetchingTableData,
-} = await useTableQueryBuilder({
+} = useTableQueryBuilder({
   connectionString,
   primaryKeys: primaryKeys,
   columns: columnNames,

@@ -13,7 +13,7 @@ const props = defineProps<{
   tableId: string | undefined;
 }>();
 
-const { tableSchema, isFetching } = await useErdQueryTables();
+const { tableSchema, isFetching } = useErdQueryTables();
 
 const erdData = computed(() => {
   if (!props.tableId) {
