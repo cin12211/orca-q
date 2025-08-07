@@ -1,8 +1,7 @@
-import type { StringLiteral } from 'typescript';
 import { toast } from 'vue-sonner';
 import { useAppContext } from '~/shared/contexts/useAppContext';
 
-export const useQuickQueryTableInfo = async ({
+export const useQuickQueryTableInfo = ({
   tableName,
   schemaName,
 }: {
@@ -11,7 +10,7 @@ export const useQuickQueryTableInfo = async ({
 }) => {
   const { connectionStore } = useAppContext();
 
-  const { data: tableSchema, status: tableSchemaStatus } = await useFetch(
+  const { data: tableSchema, status: tableSchemaStatus } = useFetch(
     '/api/get-one-table',
     {
       method: 'POST',

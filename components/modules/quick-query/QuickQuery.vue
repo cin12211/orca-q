@@ -66,7 +66,7 @@ const {
   dataSize,
   indexSize,
   tableSize,
-} = await useQuickQueryTableInfo({
+} = useQuickQueryTableInfo({
   tableName: tableName.value,
   schemaName: schemaName.value,
 });
@@ -107,12 +107,12 @@ const {
 watch(
   tableSchema,
   newSchema => {
-    if (newSchema) {
+    if (newSchema?.primary_keys.length) {
       refreshCount();
       refreshTableData();
     }
   },
-  { deep: 1, immediate: true, once: true }
+  { deep: true, immediate: true }
 );
 
 const {
