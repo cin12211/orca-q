@@ -55,7 +55,7 @@ const isDataView = computed(() => {
     :class="['w-full select-none h-9 flex items-center justify-between']"
   >
     <!-- TODO: review to sort button position for each function-->
-    <div class="flex items-center gap-1" v-auto-animate v-show="isDataView">
+    <div class="flex items-center gap-1" v-auto-animate v-if="isDataView">
       <Button
         variant="outline"
         size="sm"
@@ -127,8 +127,9 @@ const isDataView = computed(() => {
         <Icon name="hugeicons:file-download"> </Icon>
       </Button> -->
     </div>
+    <div v-else></div>
 
-    <div class="flex items-center gap-2" v-show="isDataView">
+    <div class="flex items-center gap-2" v-if="isDataView">
       <Button
         variant="outline"
         size="iconSm"
@@ -163,6 +164,7 @@ const isDataView = computed(() => {
         @onPaginate="value => emit('onPaginate', value)"
       />
     </div>
+    <div v-else></div>
 
     <div class="flex items-center gap-2">
       <Tabs
