@@ -23,9 +23,9 @@
   gap: 8px;
 
   border-radius: var(--radius);
-  box-shadow: 0 0 10px #0003;
+  box-shadow: var(--shadow-xl);
 }
 
 .vue-flow__node-value.selected {
-  box-shadow: 0 0 0 2px var(--muted-foreground);
+  box-shadow: 0 0 0 6px var(--color-gray-300);
 }
