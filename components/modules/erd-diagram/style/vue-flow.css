@@ -1,6 +1,6 @@
 .vue-flow__minimap {
   transform: scale(75%);
-  transform-origin: bottom right;
+  transform-origin: top right;
 }
 
 .erd-flow {
@@ -9,15 +9,8 @@
   width: 100%;
 }
 
-.vue-flow__handle {
-  height: 24px;
-  width: 10px;
-  background: #aaa;
-  border-radius: 4px;
-}
-
-.vue-flow__edges path {
-  stroke-width: 3;
+.vue-flow__edge-path {
+  stroke-width: 1.5;
 }
 
 .vue-flow__node {
@@ -35,26 +28,4 @@
 
 .vue-flow__node-value.selected {
   box-shadow: 0 0 0 2px var(--muted-foreground);
-}
-
-/* .vue-flow__node-value input:focus {
-  outline: none;
-  box-shadow: 0 0 0 2px #ec4899;
-  transition: box-shadow 0.2s;
-} */
-
-.vue-flow__node-value .vue-flow__handle {
-  background-color: #ec4899;
-}
-
-.vue-flow__node-operator .vue-flow__handle[data-handleid='target-a'] {
-  top: 25%;
-}
-
-.vue-flow__node-operator .vue-flow__handle[data-handleid='target-b'] {
-  top: 75%;
-}
-
-.vue-flow__node-operator .vue-flow__handle {
-  background-color: #2563eb;
 }

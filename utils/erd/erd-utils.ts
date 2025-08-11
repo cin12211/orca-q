@@ -1,4 +1,4 @@
-import type { Edge } from '@vue-flow/core';
+import { MarkerType, type Edge } from '@vue-flow/core';
 import { uuidv4 } from '~/lib/utils';
 import type { TableMetadata } from '~/server/api/get-tables';
 import type { Position, TableNode } from '~/utils/erd/type/index';
@@ -9,7 +9,7 @@ const LAYOUT_CONFIG = {
   HORIZONTAL_STEP: 484, // 384 + 100 (width + spacing)
   VERTICAL_STEP: 900, // 800 + 100 (height + spacing)
   NODE_TYPE: 'value',
-  EDGE_TYPE: 'smoothstep',
+  EDGE_TYPE: 'custom',
 } as const;
 
 function generateGridPositions(nodeCount: number): Position[] {
@@ -84,6 +84,7 @@ export const createNodes = (tablesData: TableMetadata[]): TableNode[] => {
 };
 
 export const createEdges = (tablesData: TableMetadata[]): Edge[][] => {
+  console.log('tablesData-----------------\n:', tablesData);
   return tablesData.map(table =>
     table.foreign_keys.map(foreignKey => {
       const edge: Edge = {
@@ -92,6 +93,8 @@ export const createEdges = (tablesData: TableMetadata[]): Edge[][] => {
         source: table.table,
         target: foreignKey.reference_table,
         sourceHandle: foreignKey.column,
+        // markerEnd: MarkerType.ArrowClosed,
+        // markerStart: MarkerType.Arrow,
       };
       return edge;
     })

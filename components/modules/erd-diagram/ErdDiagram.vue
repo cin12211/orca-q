@@ -1,23 +1,22 @@
 <script lang="ts" setup>
-import { ref, watch, onMounted } from 'vue';
 import { Background } from '@vue-flow/background';
+import { Controls } from '@vue-flow/controls';
 import '@vue-flow/controls/dist/style.css';
 import { VueFlow } from '@vue-flow/core';
 import '@vue-flow/core/dist/style.css';
 import '@vue-flow/core/dist/theme-default.css';
+import { MiniMap } from '@vue-flow/minimap';
 import '@vue-flow/minimap/dist/style.css';
 import '@vue-flow/node-resizer/dist/style.css';
 import ValueNode from '~/components/modules/erd-diagram/ValueNode.vue';
 import {
-  MIN_ZOOM,
   MAX_ZOOM,
+  MIN_ZOOM,
 } from '~/components/modules/erd-diagram/constants/index';
 import '~/components/modules/erd-diagram/style/vue-flow.css';
-import type {
-  DBSchemaProps,
-  ErdDiagramProps,
-} from '~/components/modules/erd-diagram/type';
+import type { ErdDiagramProps } from '~/components/modules/erd-diagram/type';
 import type { TableMetadata } from '~/server/api/get-tables';
+import CustomEdge from './components/CustomEdge.vue';
 
 const props = defineProps<ErdDiagramProps>();
 </script>
@@ -25,12 +24,18 @@ const props = defineProps<ErdDiagramProps>();
 <template>
   <VueFlow
     class="erd-flow"
+    :pan-on-drag="false"
+    :pan-on-scroll="true"
+    :pan-on-scroll-speed="1.2"
     :nodes="props.nodes"
     :edges="props.edges?.flat()"
     :default-viewport="{ zoom: 0.65 }"
     :min-zoom="MIN_ZOOM"
     :max-zoom="MAX_ZOOM"
   >
+    <template #edge-custom="edgeProps">
+      <CustomEdge v-bind="edgeProps" />
+    </template>
     <template #node-value="nodeProps">
       <ValueNode
         :id="nodeProps.id"
@@ -45,6 +50,9 @@ const props = defineProps<ErdDiagramProps>();
         :type="(nodeProps.data as TableMetadata).type"
       />
     </template>
+
     <Background />
+    <Controls />
+    <MiniMap pannable zoomable position="top-right" />
   </VueFlow>
 </template>
