@@ -49,11 +49,12 @@ const {
   foreignKeys,
   primaryKeys,
   isLoadingTableSchema,
-  tableSchema,
+  tableMetaData,
   columnTypes,
 } = useQuickQueryTableInfo({
   tableName: props.tableName,
   schemaName: props.schemaName,
+  connectionId: connectionId.value,
 });
 
 const {
@@ -93,7 +94,7 @@ const {
 });
 
 watch(
-  tableSchema,
+  tableMetaData,
   newSchema => {
     if (newSchema) {
       refreshCount();

@@ -61,7 +61,7 @@ const {
   foreignKeys,
   primaryKeys,
   isLoadingTableSchema,
-  tableSchema,
+  tableMetaData,
   columnTypes,
   dataSize,
   indexSize,
@@ -69,6 +69,7 @@ const {
 } = useQuickQueryTableInfo({
   tableName: tableName.value,
   schemaName: schemaName.value,
+  connectionId: connectionId.value,
 });
 
 const {
@@ -105,9 +106,9 @@ const {
 });
 
 watch(
-  tableSchema,
+  tableMetaData,
   newSchema => {
-    if (newSchema?.primary_keys.length) {
+    if (newSchema?.columns?.length > 0) {
       refreshCount();
       refreshTableData();
     }

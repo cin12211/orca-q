@@ -1,5 +1,9 @@
 <script setup lang="ts">
-import { acceptCompletion, startCompletion } from '@codemirror/autocomplete';
+import {
+  acceptCompletion,
+  startCompletion,
+  type Completion,
+} from '@codemirror/autocomplete';
 import { PostgreSQL, sql, type SQLNamespace } from '@codemirror/lang-sql';
 import { Compartment } from '@codemirror/state';
 import { keymap } from '@codemirror/view';
@@ -28,7 +32,28 @@ const { currentConnectionString } = toRefs(connectionStore);
 
 const code = ref('');
 
-const schema: SQLNamespace = activeSchema.value?.tableDetails ?? {};
+const mappedSchema = computed(() => {
+  const tableDetails = activeSchema.value?.tableDetails;
+
+  const schema: SQLNamespace = {};
+
+  for (const key in tableDetails) {
+    const columns = tableDetails[key]?.columns;
+
+    schema[key] = columns.map(col => {
+      const sqlNamespace: Completion = {
+        label: col.name,
+        type: 'field',
+        info: col.short_type_name || '',
+        boost: -col.ordinal_position,
+      };
+
+      return sqlNamespace;
+    });
+  }
+
+  return schema;
+});
 
 const sqlCompartment = new Compartment();
 
@@ -75,7 +100,7 @@ const extensions = [
       dialect: PostgreSQL,
       upperCaseKeywords: true,
       keywordCompletion: pgKeywordCompletion,
-      schema: schema,
+      schema: mappedSchema.value,
     })
   ),
   //TODO: turn on when fix done bugs

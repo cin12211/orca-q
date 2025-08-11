@@ -74,12 +74,14 @@ export const useManagementConnectionStore = defineStore(
     loadPersistData();
 
     return {
+      loadPersistData,
       updateConnection,
       createNewConnection,
       onDeleteConnection,
       getConnectionsByWorkspaceId,
       selectedConnection,
       currentConnectionString,
+      connections,
     };
   },
   {

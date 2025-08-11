@@ -1,6 +1,10 @@
 <script setup lang="ts">
 import { Button } from '#components';
-import { acceptCompletion, startCompletion } from '@codemirror/autocomplete';
+import {
+  acceptCompletion,
+  startCompletion,
+  type Completion,
+} from '@codemirror/autocomplete';
 import { PostgreSQL, type SQLNamespace, sql } from '@codemirror/lang-sql';
 import { Compartment } from '@codemirror/state';
 import { EditorView, keymap } from '@codemirror/view';
@@ -51,7 +55,30 @@ const executeErrors = ref<{
 }>();
 const currentStatementQuery = ref('');
 
-const schema: SQLNamespace = activeSchema.value?.tableDetails ?? {};
+const mappedSchema = computed(() => {
+  const tableDetails = activeSchema.value?.tableDetails;
+
+  const schema: SQLNamespace = {};
+
+  for (const key in tableDetails) {
+    const columns = tableDetails[key]?.columns;
+
+    schema[key] = columns.map(col => {
+      const sqlNamespace: Completion = {
+        label: col.name,
+        type: 'field',
+        info: col.short_type_name || '',
+        boost: -col.ordinal_position,
+      };
+
+      return sqlNamespace;
+    });
+  }
+
+  return schema;
+});
+
+// const schema: SQLNamespace = activeSchema.value?.tableDetails ?? {};
 const sqlCompartment = new Compartment();
 
 const currentFile = computed(() =>
@@ -146,7 +173,7 @@ const extensions = [
       dialect: PostgreSQL,
       upperCaseKeywords: true,
       keywordCompletion: pgKeywordCompletion,
-      schema: schema,
+      schema: mappedSchema.value,
     })
   ),
   currentStatementHighlighter,
@@ -313,10 +340,10 @@ onDeactivated(() => {
     <!-- TODO: can support execute result for many table -->
     <Teleport defer to="#bottom-panel" v-if="isActiveTeleport">
       <div v-if="executeErrors">
-        <span class="font-normal text-xs text-muted-foreground block">
+        <!-- <span class="font-normal text-xs text-muted-foreground block">
           Execute query:
           <span class="italic"> {{ currentStatementQuery }} </span>
-        </span>
+        </span> -->
 
         <span class="font-normal text-xs text-muted-foreground block">
           Error message:

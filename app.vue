@@ -14,10 +14,11 @@ initIDB();
 ModuleRegistry.registerModules([AllCommunityModule]);
 
 const { initialize } = useAmplitude();
+
+const appLoading = useAppLoading();
 const { isLoading } = useLoadingIndicator();
 
-const { schemaStore, connectToConnection, fetchReservedTableSchemas } =
-  useAppContext();
+const { connectToConnection } = useAppContext();
 
 const route = useRoute('workspaceId-connectionId');
 
@@ -37,31 +38,17 @@ onMounted(async () => {
     return;
   }
 
-  const isHaveSchemasCaches = schemaStore.schemas.find(
-    schema =>
-      schema.connectionId === connectionId && schema.workspaceId === workspaceId
-  );
-
-  if (!isHaveSchemasCaches) {
-    await connectToConnection({
-      connId: connectionId,
-      wsId: workspaceId,
-      isRefresh: true,
-    });
-    return;
-  }
-
-  await fetchReservedTableSchemas({
+  await connectToConnection({
     connId: connectionId,
     wsId: workspaceId,
-    includeLoading: true,
+    isRefresh: true,
   });
 });
 </script>
 
 <template>
   <ClientOnly>
-    <LoadingOverlay :visible="isLoading" />
+    <LoadingOverlay :visible="isLoading || appLoading.isLoading.value" />
     <NuxtLoadingIndicator
       :color="'repeating-linear-gradient(to right, #ffffff 0%, #000000 100%)'"
     />
