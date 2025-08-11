@@ -15,7 +15,7 @@ export interface OrderBy {
   order?: 'ASC' | 'DESC';
 }
 
-export const useTableQueryBuilder = async ({
+export const useTableQueryBuilder = ({
   tableName,
   connectionString,
   primaryKeys,
@@ -62,7 +62,6 @@ export const useTableQueryBuilder = async ({
   });
 
   const whereClauses = computed(() => {
-    console.log('isShowFilters.value', isShowFilters.value);
     //if don't apply filter
     if (!isShowFilters.value) {
       return '';
@@ -158,7 +157,6 @@ export const useTableQueryBuilder = async ({
     key: `${tableName}-count`,
     cache: 'default',
     onResponse: response => {
-      console.log('response.response._data');
       if (response.response.ok) {
         addHistoryLog(queryCountString.value);
       }
@@ -196,8 +194,6 @@ export const useTableQueryBuilder = async ({
   };
 
   const onUpdateOrderBy = ({ columnName, order }: OrderBy) => {
-    console.log('columnName, order', columnName, order);
-
     orderBy.columnName = columnName;
     orderBy.order = order;
 
@@ -232,12 +228,14 @@ export const useTableQueryBuilder = async ({
 
   const onChangeComposeWith = (value: ComposeOperator) => {
     composeWith.value = value;
+    pagination.offset = 0;
+
     refreshTableData();
     refreshCount();
   };
 
   const onApplyNewFilter = () => {
-    console.log('onApplyNewFilter');
+    pagination.offset = 0;
 
     refreshTableData();
     refreshCount();
@@ -327,7 +325,8 @@ export const useTableQueryBuilder = async ({
 
   const isFetchingTableData = computed(() => {
     return (
-      fetchCountStatus.value === 'pending' ||
+      //TODO: open when then disable pagination
+      // fetchCountStatus.value === 'pending' ||
       fetchingTableStatus.value === 'pending'
     );
   });

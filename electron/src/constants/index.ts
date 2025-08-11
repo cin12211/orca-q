@@ -44,3 +44,14 @@ export enum QQueryLogsIpcChannels {
   Update = 'quickQueryLogs:update',
   Delete = 'quickQueryLogs:delete'
 }
+
+export const RowQueryFilesIpcChannels = {
+  Gets: 'rowQueryFiles:getAll',
+  GetByContext: 'rowQueryFiles:getByContext',
+  Create: 'rowQueryFiles:create',
+  Update: 'rowQueryFiles:update',
+  UpdateContent: 'rowQueryFiles:updateContent',
+  Delete: 'rowQueryFiles:delete',
+  DeleteByWorkspaceId: 'rowQueryFiles:deleteByWorkspaceId',
+  GetFileContentById: 'rowQueryFiles:getFileContentById'
+}

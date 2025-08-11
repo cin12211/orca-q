@@ -79,12 +79,7 @@ export const useTabViewsStore = defineStore(
       };
 
       //TODO: check this with when open file editor
-      const isExitTab = tabViews.value.some(
-        t =>
-          t.id === tab.id &&
-          t.schemaId === wsStateStore.schemaId &&
-          t.connectionId === connectionId.value
-      );
+      const isExitTab = tabViews.value.some(t => t.id === tab.id);
 
       if (!isExitTab) {
         tabViews.value.push(tabTmp);
@@ -218,7 +213,6 @@ export const useTabViewsStore = defineStore(
     };
 
     const loadPersistData = async () => {
-      console.log('🚀 ~ loadPersistData ~ connectionId.value:');
       if (!connectionId.value || !workspaceId.value) {
         console.error('connectionId or workspaceId not found');
         return;

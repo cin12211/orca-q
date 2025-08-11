@@ -83,7 +83,7 @@ useHotkeys([
 
               <ResizablePanel
                 :min-size="10"
-                :max-size="40"
+                :max-size="70"
                 :default-size="bodySize[1]"
                 :collapsed-size="0"
                 collapsible

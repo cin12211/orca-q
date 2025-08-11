@@ -1,48 +1,64 @@
-import type { StringLiteral } from 'typescript';
 import { toast } from 'vue-sonner';
 import { useAppContext } from '~/shared/contexts/useAppContext';
 
-export const useQuickQueryTableInfo = async ({
+export const useQuickQueryTableInfo = ({
   tableName,
   schemaName,
+  connectionId,
 }: {
   tableName: string;
   schemaName: string;
+  connectionId: string;
 }) => {
-  const { connectionStore } = useAppContext();
+  const { connectionStore, schemaStore } = useAppContext();
 
-  const { data: tableSchema, status: tableSchemaStatus } = await useFetch(
-    '/api/get-one-table',
-    {
-      method: 'POST',
-      body: {
-        tableName: tableName,
-        dbConnectionString:
-          connectionStore.selectedConnection?.connectionString,
-        schema: schemaName,
-      },
-      key: `schema-${tableName}-${schemaName}`,
-      onResponseError({ response }) {
-        toast(response?.statusText);
-      },
-    }
-  );
+  const { schemas } = toRefs(schemaStore);
+
+  const activeSchema = computed(() => {
+    return schemas.value.find(
+      s => s.name === schemaName && s.connectionId === connectionId
+    );
+  });
+
+  // const { data: tableSchema, status: tableSchemaStatus } = useFetch(
+  //   '/api/get-one-table',
+  //   {
+  //     method: 'POST',
+  //     body: {
+  //       tableName: tableName,
+  //       dbConnectionString:
+  //         connectionStore.selectedConnection?.connectionString,
+  //       schema: schemaName,
+  //     },
+  //     key: `schema-${tableName}-${schemaName}`,
+  //     onResponseError({ response }) {
+  //       toast(response?.statusText);
+  //     },
+  //   }
+  // );
+
+  const tableMetaData = computed(() => {
+    const table = activeSchema.value?.tableDetails?.[tableName]!;
+    return table;
+  });
+
+  console.log('tableMetaData', tableMetaData);
 
   const columnNames = computed(() => {
-    return tableSchema.value?.columns?.map(c => c.name) || [];
+    return tableMetaData.value?.columns?.map(c => c.name) || [];
   });
 
   const foreignKeys = computed(() =>
-    (tableSchema.value?.foreign_keys || []).map(fk => fk.column)
+    (tableMetaData.value?.foreign_keys || []).map(fk => fk.column)
   );
 
   const primaryKeys = computed(() =>
-    (tableSchema.value?.primary_keys || []).map(fk => fk.column)
+    (tableMetaData.value?.primary_keys || []).map(fk => fk.column)
   );
 
   const columnTypes = computed(() => {
     return (
-      tableSchema.value?.columns?.map(c => ({
+      tableMetaData.value?.columns?.map(c => ({
         name: c.name,
         type: c.short_type_name,
       })) || []
@@ -50,7 +66,23 @@ export const useQuickQueryTableInfo = async ({
   });
 
   const isLoadingTableSchema = computed(() => {
-    return tableSchemaStatus.value === 'pending';
+    return false;
+    // return tableSchemaStatus.value === 'pending';
+  });
+
+  const tableSize = computed(() => {
+    return '0 bytes';
+    // return tableSchema.value?.table_size || '0 bytes';
+  });
+
+  const dataSize = computed(() => {
+    return '0 bytes';
+    // return tableSchema.value?.data_size || '0 bytes';
+  });
+
+  const indexSize = computed(() => {
+    return '0 bytes';
+    // return tableSchema.value?.index_size || '0 bytes';
   });
 
   return {
@@ -58,7 +90,10 @@ export const useQuickQueryTableInfo = async ({
     foreignKeys,
     columnNames,
     isLoadingTableSchema,
-    tableSchema,
+    tableMetaData,
     columnTypes,
+    tableSize,
+    dataSize,
+    indexSize,
   };
 };

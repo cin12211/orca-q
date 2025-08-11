@@ -20,6 +20,13 @@ export default defineNuxtConfig({
 
   ssr: false,
 
+  runtimeConfig: {
+    public: {
+      //TODO: move this to env
+      amplitudeApiKey: 'f6ca565b6cac8b973b4df623e04a7968',
+    },
+  },
+
   devtools: {
     enabled: true,
 

@@ -1,50 +1,83 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue';
-import { Icon } from '#components';
-import { iconOverrides, themeBalham } from 'ag-grid-community';
+import { onClickOutside } from '@vueuse/core';
+import type { HTMLAttributes } from 'vue';
 import type {
-  GridApi,
-  GridReadyEvent,
   ColDef,
-  SizeColumnsToFitGridStrategy,
+  GridApi,
   GridOptions,
+  GridReadyEvent,
+  ValueFormatterParams,
 } from 'ag-grid-community';
+import { themeBalham } from 'ag-grid-community';
 import { AgGridVue } from 'ag-grid-vue3';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 
-// Define interfaces for better type safety
 interface RowData {
   [key: string]: unknown;
 }
 
 /* props ------------------------------------------------------------- */
 const props = defineProps<{
-  data?: RowData[];
-  caption?: string;
-  defaultPageSize?: number;
+  data: RowData[];
+  foreignKeys: string[];
+  primaryKeys: string[];
+  class?: HTMLAttributes['class'];
 }>();
 
-/* reactive state ---------------------------------------------------- */
-const rowData = computed<RowData[]>(() => props.data ?? []);
-const quickFilter = ref<string>(''); // Explicit string type
-const pageSize = ref<number>(props.defaultPageSize ?? 10);
+const mappedColumns = computed(() => {
+  const record = props.data?.[0] as Record<string, any>;
+
+  const columns = [];
+
+  for (const key in record) {
+    columns.push({
+      name: key,
+      type: '',
+    });
+  }
+
+  return columns;
+});
+
+const emit = defineEmits<{
+  (e: 'onSelectedRows', value: RowData[]): void;
+  (e: 'onFocusCell', value: unknown | undefined): void;
+}>();
 
 const gridApi = ref<GridApi | null>(null);
 
-/* derive columns on the fly ---------------------------------------- */
-const columnDefs = computed<ColDef[]>(() =>
-  rowData.value.length
-    ? Object.keys(rowData.value[0]).map((key: string) => ({
-        field: key,
-        sortable: true,
-        filter: false,
-        resizable: true,
-        flex: 1,
-        editable: true,
-      }))
-    : []
+const agGridRef = useTemplateRef<HTMLElement>('agGridRef');
+
+onClickOutside(agGridRef, () => {
+  // emit('onFocusCell', undefined);
+  // gridApi.value?.deselectAll();
+});
+
+/* reactive state ---------------------------------------------------- */
+const rowData = computed<RowData[]>(() =>
+  (props.data ?? []).map((e, index) => {
+    return {
+      '#': index + 1,
+      ...e,
+    };
+  })
 );
+
+// const { onStopRangeSelection, onCellMouseOverDebounced, onCellMouseDown } =
+//   useRangeSelectionTable({});
+
+const customizedTheme = themeBalham.withParams({
+  // accentColor: 'var(--color-gray-900)',
+  backgroundColor: 'var(--background)',
+  // wrapperBorderRadius: 0,
+  borderRadius: 'var(--radius-sm)',
+  borderColor: 'var(--input)',
+  columnBorder: true,
+  wrapperBorderRadius: 'var(--radius)',
+  checkboxBorderRadius: 5,
+  checkboxCheckedBackgroundColor: 'var(--foreground)',
+  checkboxCheckedShapeColor: 'var(--background)',
+  checkboxCheckedBorderColor: 'transparent',
+});
 
 /* grid ready callback ---------------------------------------------- */
 const onGridReady = (e: GridReadyEvent) => {
@@ -52,93 +85,118 @@ const onGridReady = (e: GridReadyEvent) => {
   //Do something
 };
 
-const mySvgIcons = iconOverrides({
-  type: 'image', // Use 'image' to allow SVG rendering
-  mask: true,
-  icons: {
-    filter: {
-      svg: `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"><!-- Icon from Huge Icons by Hugeicons - undefined --><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8.857 12.506C6.37 10.646 4.596 8.6 3.627 7.45c-.3-.356-.398-.617-.457-1.076c-.202-1.572-.303-2.358.158-2.866S4.604 3 6.234 3h11.532c1.63 0 2.445 0 2.906.507c.461.508.36 1.294.158 2.866c-.06.459-.158.72-.457 1.076c-.97 1.152-2.747 3.202-5.24 5.065a1.05 1.05 0 0 0-.402.747c-.247 2.731-.475 4.227-.617 4.983c-.229 1.222-1.96 1.957-2.888 2.612c-.552.39-1.222-.074-1.293-.678a196 196 0 0 1-.674-6.917a1.05 1.05 0 0 0-.402-.755" color="currentColor"/></svg>`,
+const gridOptions = computed(() => {
+  const options: GridOptions = {
+    rowClass: 'class-row-border-none',
+    getRowClass: params => {
+      if ((params.node.rowIndex || 0) % 2 === 0) {
+        return 'class-row-even';
+      }
     },
-  },
+    rowSelection: {
+      mode: 'multiRow',
+      checkboxes: false,
+      headerCheckbox: false,
+      enableSelectionWithoutKeys: false,
+      enableClickSelection: 'enableSelection',
+      copySelectedRows: false,
+    },
+    autoSizeStrategy: {
+      type: 'fitCellContents',
+    },
+    theme: customizedTheme,
+    pagination: false,
+    undoRedoCellEditing: true,
+    undoRedoCellEditingLimit: 25,
+    animateRows: true,
+    // onCellMouseDown,
+    // onCellMouseOver: onCellMouseOverDebounced,
+  };
+  return options;
 });
 
-const customizedTheme = themeBalham
-  .withParams({
-    accentColor: 'var(--color-gray-900)',
-    wrapperBorderRadius: 'var(--radius)',
-    borderRadius: 'var(--radius-sm)',
-    borderColor: 'var(--input)',
-  })
-  .withPart(mySvgIcons);
+/* derive columns on the fly ---------------------------------------- */
+const columnDefs = computed<ColDef[]>(() => {
+  const columns: ColDef[] = [];
+  columns.push({
+    headerName: '#',
+    field: '#',
+    filter: false,
+    resizable: false,
+    editable: false,
+    sortable: true,
+    pinned: 'left',
+  });
 
-const autoSizeStrategy: SizeColumnsToFitGridStrategy = {
-  type: 'fitGridWidth',
-  defaultMinWidth: 150,
+  mappedColumns.value.forEach(({ name }) => {
+    const fieldId = name;
+
+    const column: ColDef = {
+      headerName: fieldId,
+      field: fieldId,
+      filter: true,
+      resizable: true,
+      editable: false,
+      sortable: true,
+      cellClass: 'cellCenter',
+
+      valueFormatter: (params: ValueFormatterParams) => {
+        // check object value
+        const value = params.value;
+        if (
+          typeof value === 'object' &&
+          value !== null &&
+          Object.prototype.toString.call(value) === '[object Object]'
+        ) {
+          return value ? JSON.stringify(params.value, null, 2) : '';
+        }
+
+        return params.value;
+      },
+    };
+    columns.push(column);
+  });
+
+  return columns;
+});
+
+/* handle selection changes ----------------------------------------- */
+const onSelectionChanged = () => {
+  if (gridApi.value) {
+    const selectedRows = gridApi.value.getSelectedRows();
+    handleSelection(selectedRows);
+  }
 };
 
-const gridOptions: GridOptions = {
-  rowClass: 'class-row-border-none',
-  getRowClass: params => {
-    if ((params.node.rowIndex || 0) % 2 === 0) {
-      return 'class-row-even';
-    }
-  },
+const handleSelection = (selectedRows: RowData[]) => {
+  emit('onSelectedRows', selectedRows);
 };
+
+const onCellFocus = () => {
+  const selectedCell = gridApi.value?.getFocusedCell();
+
+  if (selectedCell) {
+    const rowNode = gridApi.value?.getDisplayedRowAtIndex(
+      selectedCell.rowIndex
+    );
+    const colId = selectedCell.column.getColId();
+    const cellValue = rowNode?.data?.[colId];
+    emit('onFocusCell', cellValue ?? undefined);
+  }
+};
+
+defineExpose({ gridApi });
 </script>
 
 <template>
-  <div class="p-2 h-full flex flex-col space-y-2">
-    <div class="flex items-center gap-2">
-      <div class="relative w-full">
-        <Icon
-          name="lucide:search"
-          class="absolute left-2.5 top-2 h-4 w-4 text-muted-foreground"
-        />
-        <Input
-          v-model="quickFilter"
-          type="text"
-          placeholder="Search in all fields..."
-          class="pl-8 w-full h-8"
-        />
-      </div>
-
-      <Button
-        :variant="quickFilter ? 'default' : 'secondary'"
-        @click="quickFilter = ''"
-        size="sm"
-      >
-        Clear
-      </Button>
-    </div>
-
-    <!-- The grid itself ------------------------------------------- -->
-    <AgGridVue
-      class="flex-1"
-      :grid-options="gridOptions"
-      :autoSizeStrategy="autoSizeStrategy"
-      :theme="customizedTheme"
-      :columnDefs="columnDefs"
-      :rowData="rowData"
-      :quickFilterText="quickFilter"
-      :pagination="true"
-      :paginationPageSize="pageSize"
-      :rowSelection="'single'"
-      :pagination-page-size-selector="[10, 20, 30, 50, 100]"
-      enableCellTextSelection
-      cell-ed
-      @grid-ready="onGridReady"
-    />
-
-    <!-- Footer: page info & page-size selector -------------------- -->
-  </div>
+  <AgGridVue
+    @selection-changed="onSelectionChanged"
+    @grid-ready="onGridReady"
+    @cell-focused="onCellFocus"
+    :class="props.class"
+    :grid-options="gridOptions"
+    :columnDefs="columnDefs"
+    :rowData="rowData"
+    ref="agGridRef"
+  />
 </template>
-
-<style>
-.class-row-border-none {
-  border: 0px;
-}
-
-.class-row-even {
-  background-color: var(--muted);
-}
-</style>

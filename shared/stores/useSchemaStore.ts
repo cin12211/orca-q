@@ -1,17 +1,8 @@
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
 import type { ReservedTableSchemas } from '~/server/api/get-reverse-table-schemas';
+import type { TableDetails } from '~/server/api/get-schema-meta-data';
 import { useWSStateStore } from './useWSStateStore';
-
-interface Column {
-  label: string;
-  type: 'field';
-  info: string;
-}
-
-export interface TableDetails {
-  [tableName: string]: Column[];
-}
 
 export interface Schema {
   id: string;
@@ -51,8 +42,6 @@ export const useSchemaStore = defineStore(
           schema.workspaceId === wsState.value?.id
       );
     });
-
-    console.log('schemas', schemas);
 
     // const setInitialSchema = () => {
     //   if (!wsState.value?.id || !wsState.value?.connectionId) {
@@ -110,6 +99,6 @@ export const useSchemaStore = defineStore(
     };
   },
   {
-    persist: true,
+    persist: false,
   }
 );

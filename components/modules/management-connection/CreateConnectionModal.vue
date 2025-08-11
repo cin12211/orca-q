@@ -142,8 +142,6 @@ const handleCreateConnection = async () => {
     connection.database = formData.database;
   }
 
-  console.log('connection', connection);
-
   if (isCreate) {
     emit('addNew', connection);
   } else {

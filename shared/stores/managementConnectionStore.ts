@@ -39,9 +39,9 @@ export const useManagementConnectionStore = defineStore(
     );
 
     const createNewConnection = async (connection: Connection) => {
-      await window.connectionApi.create(connection);
-
       connections.value.push(connection);
+
+      await window.connectionApi.create(connection);
     };
 
     const updateConnection = async (connection: Connection) => {
@@ -67,21 +67,21 @@ export const useManagementConnectionStore = defineStore(
     };
 
     const loadPersistData = async () => {
-      console.time('loadPersistData');
       const load = await window.connectionApi.getAll();
       connections.value = load;
-      console.timeEnd('loadPersistData');
     };
 
     loadPersistData();
 
     return {
+      loadPersistData,
       updateConnection,
       createNewConnection,
       onDeleteConnection,
       getConnectionsByWorkspaceId,
       selectedConnection,
       currentConnectionString,
+      connections,
     };
   },
   {

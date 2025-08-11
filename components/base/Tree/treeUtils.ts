@@ -1,4 +1,5 @@
 // import type { Instruction } from "@atlaskit/pragmatic-drag-and-drop-hitbox/tree-item";
+import dayjs from 'dayjs';
 import type { FlattenedItem } from 'reka-ui';
 import { uuidv4 } from '~/lib/utils';
 
@@ -15,6 +16,12 @@ export interface TreeFileSystemItem {
   children?: TreeFileSystemItem[]; // Recursive, optional array of FileSystemItem
   status?: ETreeFileSystemStatus; // Optional, only present in some items
   paths: string[];
+  workspaceId?: string;
+  connectionId?: string;
+  createdAt?: string;
+  updateAt?: string;
+  parentId?: string;
+  isFolder: boolean;
 }
 
 export type TreeFileSystem = TreeFileSystemItem[];
@@ -103,10 +110,14 @@ export const tree = {
     data,
     paths,
     isFolder,
+    workspaceId,
+    connectionId,
   }: {
     data: TreeFileSystemItem[];
     paths?: string[];
     isFolder: boolean;
+    connectionId: string;
+    workspaceId: string;
   }): TreeFileSystemItem[] {
     const title = uuidv4();
 
@@ -118,14 +129,21 @@ export const tree = {
       children: [],
       paths: [...(paths || []), title],
       status: ETreeFileSystemStatus.edit,
+      connectionId,
+      workspaceId,
+      createdAt: dayjs().toISOString(),
+      isFolder: true,
     };
 
-    const defaultFile = {
+    const defaultFile: TreeFileSystemItem = {
       title,
       id: title,
       icon: 'lucide:file',
       paths: [...(paths || []), title],
       status: ETreeFileSystemStatus.edit,
+      connectionId,
+      workspaceId,
+      isFolder: false,
     };
 
     const item = isFolder ? defaultFolder : defaultFile;
@@ -142,6 +160,7 @@ export const tree = {
         const children = [
           {
             ...item,
+            parentId: parent.id,
             paths: [...parent.paths, item.title],
           },
           ...(parent.children || []),
@@ -303,6 +322,58 @@ export const tree = {
 
       return result;
     }, []);
+  },
+
+  flattenTree(items: TreeFileSystemItem[]): TreeFileSystemItem[] {
+    return items.reduce<TreeFileSystemItem[]>(
+      (result, { children, ...item }) => {
+        result.push(item);
+        if (children) {
+          result.push(...tree.flattenTree(children));
+        }
+        return result;
+      },
+      []
+    );
+  },
+
+  buildTree(items: TreeFileSystemItem[]): TreeFileSystemItem[] {
+    const itemMap = new Map<string, TreeFileSystemItem>();
+    const rootItems: TreeFileSystemItem[] = [];
+
+    // Initialize map
+    items.forEach(item => {
+      itemMap.set(item.id, {
+        ...item,
+        children: item.isFolder ? [] : undefined,
+      });
+    });
+
+    // Build tree
+    items.forEach(item => {
+      const mappedItem = itemMap.get(item.id)!;
+
+      if (mappedItem.parentId) {
+        const parent = itemMap.get(mappedItem.parentId)!;
+
+        if (parent) {
+          parent.children?.push(mappedItem);
+          itemMap.set(mappedItem.parentId, parent);
+        }
+      }
+    });
+
+    items.forEach(item => {
+      const mappedItem = itemMap.get(item.id)!;
+
+      if (!mappedItem.parentId) {
+        rootItems.push({
+          ...mappedItem,
+        });
+      }
+    });
+
+    return rootItems;
   },
 
   // getPathToItem({

@@ -3,10 +3,9 @@ import {
   ActivityBarItemType,
   useActivityBarStore,
 } from '~/shared/stores/useActivityBarStore';
-import { DEFAULT_DEBOUNCE_INPUT } from '~/utils/constants';
-import WorkspaceSelector from '../modules/selectors/WorkspaceSelector.vue';
 
 const activityStore = useActivityBarStore();
+const { trackEvent } = useAmplitude();
 
 // This is sample data
 const activity = computed(() => [
@@ -29,6 +28,14 @@ const activity = computed(() => [
     isActive: activityStore.activityActive === ActivityBarItemType.ErdDiagram,
   },
 ]);
+
+const onChangeActivity = (type: ActivityBarItemType) => {
+  activityStore.setActivityActive(type);
+
+  trackEvent('activity_bar', {
+    activity: type,
+  });
+};
 </script>
 
 <template>
@@ -38,7 +45,7 @@ const activity = computed(() => [
         <Button
           size="iconMd"
           :variant="item.isActive ? 'default' : 'ghost'"
-          @click="activityStore.setActivityActive(item.id)"
+          @click="onChangeActivity(item.id)"
         >
           <Icon :name="item.icon" class="size-5!" />
         </Button>

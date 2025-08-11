@@ -1,6 +1,12 @@
 import { type TableMetadata } from './get-tables';
 
-export default defineEventHandler(async (event): Promise<TableMetadata> => {
+interface OneTableMetadata extends TableMetadata {
+  table_size: string;
+  data_size: string;
+  index_size: string;
+}
+
+export default defineEventHandler(async (event): Promise<OneTableMetadata> => {
   const {
     dbConnectionString,
     tableName,
@@ -127,6 +133,9 @@ export default defineEventHandler(async (event): Promise<TableMetadata> => {
                 ),
                 'type', tbls.table_type,
                 'comment', dsc.description,
+                'table_size', pg_size_pretty(pg_total_relation_size(c.oid)),
+                'data_size', pg_size_pretty(pg_relation_size(c.oid)),
+                'index_size', pg_size_pretty(pg_total_relation_size(c.oid) - pg_relation_size(c.oid)),
                 'columns', columns_info.columns_metadata,
                 'foreign_keys', COALESCE(fk_info.fk_metadata, '[]'),
                 'primary_keys', COALESCE(pk_info.pk_metadata, '[]'),
@@ -154,7 +163,7 @@ export default defineEventHandler(async (event): Promise<TableMetadata> => {
   const [{ table_detail }] = (await resource.query(query, [
     schema,
     tableName,
-  ])) as { table_detail: TableMetadata[] }[];
+  ])) as { table_detail: OneTableMetadata[] }[];
 
   const tableMetadata = table_detail?.[0];
 

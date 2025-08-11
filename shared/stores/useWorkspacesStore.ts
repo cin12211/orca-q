@@ -61,8 +61,6 @@ export const useWorkspacesStore = defineStore(
       console.time('loadPersistData');
       const load = await window.workspaceApi.getAll();
 
-      console.log('🚀 ~ loadPersistData ~ load:', load);
-
       workspaces.value = load;
       console.timeEnd('loadPersistData');
     };

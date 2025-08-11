@@ -49,11 +49,12 @@ const {
   foreignKeys,
   primaryKeys,
   isLoadingTableSchema,
-  tableSchema,
+  tableMetaData,
   columnTypes,
-} = await useQuickQueryTableInfo({
+} = useQuickQueryTableInfo({
   tableName: props.tableName,
   schemaName: props.schemaName,
+  connectionId: connectionId.value,
 });
 
 const {
@@ -79,7 +80,7 @@ const {
   composeWith,
   onChangeComposeWith,
   isFetchingTableData,
-} = await useTableQueryBuilder({
+} = useTableQueryBuilder({
   connectionString,
   primaryKeys: primaryKeys,
   columns: columnNames,
@@ -93,14 +94,14 @@ const {
 });
 
 watch(
-  tableSchema,
+  tableMetaData,
   newSchema => {
     if (newSchema) {
       refreshCount();
       refreshTableData();
     }
   },
-  { deep: 1, immediate: true, once: true }
+  { deep: true, immediate: true }
 );
 
 const {

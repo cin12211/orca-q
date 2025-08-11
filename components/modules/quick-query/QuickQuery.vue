@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { on } from 'events';
+import QuickQueryTableSummary from '~/components/modules/quick-query/quick-query-table-summary/QuickQueryTableSummary.vue';
 import { useTableQueryBuilder } from '~/composables/useTableQueryBuilder';
 import { useAppContext } from '~/shared/contexts';
 import { useAppLayoutStore } from '~/shared/stores/appLayoutStore';
@@ -20,10 +22,12 @@ import QuickQueryFilter from './quick-query-filter/QuickQueryFilter.vue';
 import QuickQueryHistoryLogsPanel from './quick-query-history-log-panel/QuickQueryHistoryLogsPanel.vue';
 import QuickQueryContextMenu from './quick-query-table/QuickQueryContextMenu.vue';
 import QuickQueryTable from './quick-query-table/QuickQueryTable.vue';
+import StructureTable from './structure/StructureTable.vue';
 
 // const props = defineProps<{ tableName: string; schemaName: string }>();
 const props = defineProps<{ tabViewId: string }>();
 
+const appLayoutStore = useAppLayoutStore();
 const { tabViewStore } = useAppContext();
 const { tabViews } = toRefs(tabViewStore);
 
@@ -57,11 +61,15 @@ const {
   foreignKeys,
   primaryKeys,
   isLoadingTableSchema,
-  tableSchema,
+  tableMetaData,
   columnTypes,
-} = await useQuickQueryTableInfo({
+  dataSize,
+  indexSize,
+  tableSize,
+} = useQuickQueryTableInfo({
   tableName: tableName.value,
   schemaName: schemaName.value,
+  connectionId: connectionId.value,
 });
 
 const {
@@ -87,7 +95,7 @@ const {
   onChangeComposeWith,
   composeWith,
   isFetchingTableData,
-} = await useTableQueryBuilder({
+} = useTableQueryBuilder({
   connectionString,
   primaryKeys: primaryKeys,
   columns: columnNames,
@@ -98,14 +106,14 @@ const {
 });
 
 watch(
-  tableSchema,
+  tableMetaData,
   newSchema => {
-    if (newSchema) {
+    if (newSchema?.columns?.length > 0) {
       refreshCount();
       refreshTableData();
     }
   },
-  { deep: 1, immediate: true, once: true }
+  { deep: true, immediate: true }
 );
 
 const {
@@ -135,8 +143,6 @@ const {
   refreshCount,
   focusedCell,
 });
-
-const appLayoutStore = useAppLayoutStore();
 
 const quickQueryTabView = ref<QuickQueryTabView>(QuickQueryTabView.Data);
 
@@ -175,6 +181,30 @@ const { isHaveRelationByFieldName } = useReverseTables({
 
 watch(quickQueryTabView, newQuickQueryTabView => {
   openedQuickQueryTab.value[newQuickQueryTabView] = true;
+
+  if (newQuickQueryTabView !== QuickQueryTabView.Data) {
+    appLayoutStore.onCloseBottomPanel();
+  }
+});
+
+useHotkeys(
+  [
+    {
+      key: 'meta+a',
+      callback: () => {
+        quickQueryTableRef.value?.gridApi?.selectAll();
+      },
+    },
+  ],
+  {
+    target: containerRef,
+  }
+);
+
+onMounted(() => {
+  if (containerRef.value) {
+    containerRef.value.focus();
+  }
 });
 </script>
 
@@ -190,7 +220,12 @@ watch(quickQueryTabView, newQuickQueryTabView => {
   />
 
   <Teleport defer to="#preview-select-row" v-if="isActiveTeleport">
+    <QuickQueryTableSummary
+      v-if="!selectedRows?.length"
+      :summary="{ tableSize, dataSize, indexSize }"
+    />
     <PreviewSelectedRow
+      v-else
       :columnTypes="columnTypes"
       :selectedRow="selectedRows?.length ? selectedRows[0] : null"
     />
@@ -208,7 +243,11 @@ watch(quickQueryTabView, newQuickQueryTabView => {
     :message="errorMessage || ''"
   />
 
-  <div ref="containerRef" class="flex flex-col h-full w-full relative">
+  <div
+    ref="containerRef"
+    class="flex flex-col h-full w-full relative"
+    tabindex="0"
+  >
     <LoadingOverlay
       :visible="isLoadingTableSchema || isMutating || isFetchingTableData"
     />
@@ -269,6 +308,18 @@ watch(quickQueryTabView, newQuickQueryTabView => {
         v-show="quickQueryTabView === QuickQueryTabView.Erd"
         :tableId="tableName"
       />
+
+      <div
+        v-if="openedQuickQueryTab[QuickQueryTabView.Structure]"
+        v-show="quickQueryTabView === QuickQueryTabView.Structure"
+        class="h-full"
+      >
+        <StructureTable
+          :schema="schemaName"
+          :tableName="tableName"
+          :connectionString="connectionString"
+        />
+      </div>
 
       <QuickQueryContextMenu
         v-show="quickQueryTabView === QuickQueryTabView.Data"

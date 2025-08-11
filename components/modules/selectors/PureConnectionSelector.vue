@@ -7,40 +7,21 @@ import { type Connection } from '~/shared/stores';
 import CreateConnectionModal from '../management-connection/CreateConnectionModal.vue';
 import { getDatabaseSupportByType } from '../management-connection/constants';
 
-const {
-  connectionStore,
-  createConnection,
-  wsStateStore,
-  openWorkspaceWithConnection,
-} = useAppContext();
+defineEmits<{
+  (e: 'update:connectionId', connectionId: string): void;
+}>();
 
-const { connectionId: activeConnectionId } = toRefs(wsStateStore);
-
-const { selectedConnection } = toRefs(connectionStore);
-
-const props = defineProps<{ class: string; workspaceId: string }>();
+const props = defineProps<{
+  class: string;
+  workspaceId: string;
+  connectionId: string;
+  connections: Connection[];
+  connection?: Connection;
+}>();
 
 const open = ref(false);
 
-const onChangeConnection = async (connectionId: AcceptableValue) => {
-  if (
-    typeof connectionId === 'string' &&
-    connectionId !== activeConnectionId.value
-  ) {
-    console.log('onChangeConnection', connectionId);
-    await openWorkspaceWithConnection({
-      connId: connectionId,
-      wsId: props.workspaceId,
-    });
-
-    // await setConnectionId({
-    //   connectionId,
-    //   async onSuccess() {
-    //     await tabViewStore.onActiveCurrentTab(connectionId);
-    //   },
-    // });
-  }
-};
+const { createConnection } = useAppContext();
 
 const isModalCreateConnectionOpen = ref(false);
 
@@ -52,10 +33,6 @@ const onOpenAddConnectionModal = () => {
   isModalCreateConnectionOpen.value = true;
   open.value = false;
 };
-
-const connectionsByWsId = computed(() => {
-  return connectionStore.getConnectionsByWorkspaceId(props.workspaceId);
-});
 </script>
 <template>
   <CreateConnectionModal
@@ -67,20 +44,17 @@ const connectionsByWsId = computed(() => {
   />
 
   <Select
-    @update:model-value="onChangeConnection"
-    :model-value="activeConnectionId"
+    @update:model-value="$emit('update:connectionId', $event as string)"
+    :model-value="connectionId"
     v-model:open="open"
   >
     <SelectTrigger :class="cn(props.class, 'w-48 cursor-pointer')" size="sm">
-      <div
-        class="flex items-center gap-2 w-44 truncate"
-        v-if="selectedConnection"
-      >
+      <div class="flex items-center gap-2 w-44 truncate" v-if="connection">
         <component
-          :is="getDatabaseSupportByType(selectedConnection.type)?.icon"
+          :is="getDatabaseSupportByType(connection.type)?.icon"
           class="size-4! min-w-4!"
         />
-        {{ selectedConnection?.name }}
+        {{ connection?.name }}
       </div>
       <div class="opacity-50" v-else>Select connection</div>
     </SelectTrigger>
@@ -95,12 +69,12 @@ const connectionsByWsId = computed(() => {
           Add new connection
         </div>
 
-        <SelectSeparator v-if="connectionsByWsId.length" />
+        <SelectSeparator v-if="connections.length" />
 
         <SelectItem
           class="cursor-pointer"
           :value="connection.id"
-          v-for="connection in connectionsByWsId"
+          v-for="connection in connections"
         >
           <div class="flex items-center gap-2">
             <component

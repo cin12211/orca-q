@@ -105,26 +105,44 @@ export const filterTable = (
   tableNames: string[],
   tablesData: TableMetadata[]
 ) => {
-  // Find initial tables and their direct relationships
-  const selectedTables = tablesData.filter(table =>
-    tableNames.includes(table.table)
-  );
+  const tableNameSet = new Set(tableNames);
+  // this only get table usage with selected fk field
+  const includesUsageTables: TableMetadata[] = [];
+  const relatedTableNames = new Set(tableNames);
 
-  // Get all related tables (including selected tables and their references)
-  const relatedTableNames = new Set([
-    ...tableNames,
-    ...selectedTables.flatMap(table =>
-      table.foreign_keys.map(key => key.reference_table)
-    ),
-  ]);
+  // Single pass to find usage tables and related tables
+  for (const table of tablesData) {
+    const isInTableNames = tableNameSet.has(table.table);
+
+    if (isInTableNames) {
+      // Add all referenced tables from selected tables
+      for (const fk of table.foreign_keys) {
+        relatedTableNames.add(fk.reference_table);
+      }
+    } else {
+      // Check if this table references any selected table
+      for (const fk of table.foreign_keys) {
+        if (tableNameSet.has(fk.reference_table)) {
+          includesUsageTables.push(table);
+          break;
+        }
+      }
+    }
+  }
 
   // Filter tables based on related table names
-  const filteredTables = tablesData.filter(table =>
-    relatedTableNames.has(table.table)
-  );
+  const filteredTables: TableMetadata[] = [];
+  for (const table of tablesData) {
+    if (relatedTableNames.has(table.table)) {
+      filteredTables.push(table);
+    }
+  }
+
+  // Merge tables
+  const tables = filteredTables.concat(includesUsageTables);
 
   return {
-    filteredEdges: createEdges(filteredTables),
-    filteredNodes: createNodes(filteredTables),
+    filteredEdges: createEdges(tables),
+    filteredNodes: createNodes(tables),
   };
 };

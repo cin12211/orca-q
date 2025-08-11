@@ -4,7 +4,7 @@ import { QuickQueryTabView } from '../constants';
 import QuickPagination from './QuickPagination.vue';
 import RefreshButton from './RefreshButton.vue';
 
-defineProps<{
+const props = defineProps<{
   isAllowNextPage: boolean;
   isAllowPreviousPage: boolean;
   totalRows: number;
@@ -43,6 +43,10 @@ useHotkeys([
     },
   },
 ]);
+
+const isDataView = computed(() => {
+  return props.tabView === QuickQueryTabView.Data;
+});
 </script>
 
 <template>
@@ -51,7 +55,7 @@ useHotkeys([
     :class="['w-full select-none h-9 flex items-center justify-between']"
   >
     <!-- TODO: review to sort button position for each function-->
-    <div class="flex items-center gap-1" v-auto-animate>
+    <div class="flex items-center gap-1" v-auto-animate v-if="isDataView">
       <Button
         variant="outline"
         size="sm"
@@ -123,8 +127,9 @@ useHotkeys([
         <Icon name="hugeicons:file-download"> </Icon>
       </Button> -->
     </div>
+    <div v-else></div>
 
-    <div class="flex items-center gap-2">
+    <div class="flex items-center gap-2" v-if="isDataView">
       <Button
         variant="outline"
         size="iconSm"
@@ -159,6 +164,7 @@ useHotkeys([
         @onPaginate="value => emit('onPaginate', value)"
       />
     </div>
+    <div v-else></div>
 
     <div class="flex items-center gap-2">
       <Tabs
@@ -175,7 +181,6 @@ useHotkeys([
           <TabsTrigger
             :value="QuickQueryTabView.Structure"
             class="h-5! px-1 font-medium text-xs cursor-pointer text-primary/80"
-            disabled
           >
             Structure
           </TabsTrigger>

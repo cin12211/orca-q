@@ -49,7 +49,6 @@ export const useWSStateStore = defineStore(
 
     const loadPersistData = async () => {
       const load = await window.workspaceStateApi.getAll();
-      console.log('🚀 ~ loadPersistData ~ load:', load);
       wsStates.value = load;
     };
 

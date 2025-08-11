@@ -19,7 +19,6 @@ import type { TableMetadata } from '~/server/api/get-tables';
 import CustomEdge from './components/CustomEdge.vue';
 
 const props = defineProps<ErdDiagramProps>();
-// console.log('this is props', 'node props:\n', props.nodes, props.edges?.flat());
 </script>
 
 <template>

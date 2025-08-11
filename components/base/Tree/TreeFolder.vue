@@ -20,7 +20,7 @@ defineProps<{
 
 // Define emits for updating explorerFiles
 const emits = defineEmits<{
-  (e: 'update:explorerFiles', value: TreeFileSystem): void;
+  // (e: 'update:explorerFiles', value: TreeFileSystem): void;
   (e: 'update:expandedState', value: string[]): void;
   (e: 'update:selectedItems', value: FlattenedTreeFileSystemItem[]): void;
 }>();
