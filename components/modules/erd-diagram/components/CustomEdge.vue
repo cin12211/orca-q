@@ -1,116 +1,39 @@
 <script setup lang="ts">
 import { computed } from 'vue';
-import {
-  BaseEdge,
-  getBezierPath,
-  SmoothStepEdge,
-  useVueFlow,
-} from '@vue-flow/core';
-import CustomMarker2 from './CustomMarker2.vue';
-import CustomMarker from './CustomMarker.vue';
+import { BaseEdge, getSmoothStepPath } from '@vue-flow/core';
+import type { GetBezierPathParams } from '../type';
+import MarkerMany from './MarkerMany.vue';
+import MarkerZeroOrOne from './MarkerZeroOrOne.vue';
 
-const props = defineProps({
-  id: {
-    type: String,
-    required: true,
-  },
-  sourceX: {
-    type: Number,
-    required: true,
-  },
-  sourceY: {
-    type: Number,
-    required: true,
-  },
-  targetX: {
-    type: Number,
-    required: true,
-  },
-  targetY: {
-    type: Number,
-    required: true,
-  },
-  sourcePosition: {
-    type: String,
-    required: true,
-  },
-  targetPosition: {
-    type: String,
-    required: true,
-  },
-  source: {
-    type: String,
-    required: true,
-  },
-  target: {
-    type: String,
-    required: true,
-  },
-  data: {
-    type: Object,
-    required: false,
-  },
-});
+const props = defineProps<GetBezierPathParams & { id: string }>();
 
-const path = computed(() => getBezierPath(props));
+// for this better performance use smoothstep
+// TODO : check getBezierPath when usage
+const path = computed(() => getSmoothStepPath(props));
 
-const markerId = computed(() => `${props.id}-marker`);
-
-console.log('props:', props);
-
-// const markerColor = computed(() => {
-//   const sourceNode = findNode(props.source);
-//   const targetNode = findNode(props.target);
-
-//   if (sourceNode.selected) {
-//     return '#ff0072';
-//   }
-
-//   if (targetNode.selected) {
-//     return '#2563eb';
-//   }
-
-//   return '#4a5568';
-// });
-
-const markerType = computed(() => {
-  return 'circle';
-});
-
-const edgePathParams = computed(() =>
-  getBezierPath({ ...props, curvature: 0.5 })
-);
-console.log('edgeedgePathParamsPath', edgePathParams[0]);
-console.log('path', path[0]);
+const markerZeroOrOneId = computed(() => `${props.id}-marker-zero-or-one`);
+const markerManyId = computed(() => `${props.id}-marker-many`);
 </script>
-
-<!-- <script>
-export default {
-  inheritAttrs: false,
-};
-</script> -->
 
 <template>
   <BaseEdge
     :id="id"
     :path="path[0]"
-    :marker-end="`url(#one)`"
-    :marker-start="`url(#many)`"
+    :marker-start="`url(#${markerManyId})`"
+    :marker-end="`url(#${markerZeroOrOneId})`"
     :style="{ stroke: 'var(--muted-foreground)' }"
   />
 
-  <CustomMarker
-    :id="'one'"
-    :type="markerType"
-    :stroke-width="2"
-    :width="11"
-    :height="11"
+  <MarkerZeroOrOne
+    maker-class="text-muted-foreground"
+    :id="markerZeroOrOneId"
+    :width="22"
+    :height="22"
   />
-  <CustomMarker2
-    :id="'many'"
-    :type="markerType"
-    :stroke-width="2"
-    :width="11"
-    :height="11"
+  <MarkerMany
+    maker-class="text-muted-foreground"
+    :id="markerManyId"
+    :width="21"
+    :height="21"
   />
 </template>

@@ -33,6 +33,11 @@ defineProps({
     required: false,
     default: 12.5,
   },
+  makerClass: {
+    type: String,
+    required: false,
+    default: '',
+  },
 });
 </script>
 
@@ -41,19 +46,17 @@ defineProps({
     class="vue-flow__marker vue-flow__container"
     xmlns="http://www.w3.org/2000/svg"
   >
-    <!-- Icon from Huge Icons by Hugeicons - undefined -->
     <marker
       :id="id"
-      class="vue-flow__arrowhead text-muted-foreground"
+      :class="[makerClass, 'vue-flow__arrowhead']"
       viewBox="0 0 24 24"
       refX="2.5"
       refY="8"
       :markerWidth="width"
       :markerHeight="height"
-      markerUnits="strokeWidth"
+      :markerUnits="strokeWidth"
       orient="0"
     >
-      <!-- Icon from Huge Icons by Hugeicons - undefined -->
       <path
         fillRule="evenodd"
         clipRule="evenodd"
@@ -72,56 +75,4 @@ defineProps({
       />
     </marker>
   </svg>
-  <!--   <svg class="vue-flow__marker vue-flow__container">
-    <defs>
-      <marker
-        :id="id"
-        class="vue-flow__arrowhead"
-        viewBox="-10 -10 20 20"
-        refX="0"
-        refY="0"
-        :markerWidth="width"
-        :markerHeight="height"
-        markerUnits="strokeWidth"
-        orient="auto-start-reverse"
-      >
-        <path
-          v-if="type === 'diamond'"
-          :style="{
-            stroke,
-            strokeWidth,
-          }"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          :fill="fill"
-          d="M 0,-5 L 5,0 L 0,5 L -5,0 Z"
-        />
-
-        <path
-          v-if="type === 'circle'"
-          :style="{
-            stroke,
-            strokeWidth,
-          }"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          :fill="fill"
-          d="M18 15s-4.419-6-6-6s-6 6-6 6" 
-        />
-
-        <path
-          v-if="type === 'square'"
-          :style="{
-            stroke,
-            strokeWidth,
-          }"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          :fill="fill"
-          d="M -4 -4 H 4 V 4 H -4 Z"
-        />
-
-      </marker>
-    </defs>
-  </svg> -->
 </template>

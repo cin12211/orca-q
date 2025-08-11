@@ -1,10 +1,5 @@
 <script lang="ts" setup>
 import { computed } from 'vue';
-import '@vue-flow/controls/dist/style.css';
-import '@vue-flow/core/dist/style.css';
-import '@vue-flow/core/dist/theme-default.css';
-import '@vue-flow/minimap/dist/style.css';
-import '@vue-flow/node-resizer/dist/style.css';
 import ErdDiagram from '~/components/modules/erd-diagram/ErdDiagram.vue';
 import { useErdQueryTables } from '~/components/modules/erd-diagram/hooks/useErdGetAllTablesData';
 import { createEdges, createNodes, filterTable } from '~/utils/erd/erd-utils';

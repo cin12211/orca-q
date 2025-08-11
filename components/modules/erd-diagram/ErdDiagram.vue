@@ -1,5 +1,4 @@
 <script lang="ts" setup>
-import { ref, watch, onMounted } from 'vue';
 import { Background } from '@vue-flow/background';
 import { Controls } from '@vue-flow/controls';
 import '@vue-flow/controls/dist/style.css';
@@ -11,14 +10,11 @@ import '@vue-flow/minimap/dist/style.css';
 import '@vue-flow/node-resizer/dist/style.css';
 import ValueNode from '~/components/modules/erd-diagram/ValueNode.vue';
 import {
-  MIN_ZOOM,
   MAX_ZOOM,
+  MIN_ZOOM,
 } from '~/components/modules/erd-diagram/constants/index';
 import '~/components/modules/erd-diagram/style/vue-flow.css';
-import type {
-  DBSchemaProps,
-  ErdDiagramProps,
-} from '~/components/modules/erd-diagram/type';
+import type { ErdDiagramProps } from '~/components/modules/erd-diagram/type';
 import type { TableMetadata } from '~/server/api/get-tables';
 import CustomEdge from './components/CustomEdge.vue';
 
@@ -38,21 +34,10 @@ const props = defineProps<ErdDiagramProps>();
     :min-zoom="MIN_ZOOM"
     :max-zoom="MAX_ZOOM"
   >
-    {{
-      console.log(
-        'this is props',
-        'node props:\n',
-        props.nodes,
-        props.edges?.flat()
-      )
-    }}
     <template #edge-custom="edgeProps">
-      {{ console.log('---------edgeProps props\n:') }}
-
       <CustomEdge v-bind="edgeProps" />
     </template>
     <template #node-value="nodeProps">
-      {{ console.log('---------node props\n:') }}
       <ValueNode
         :id="nodeProps.id"
         :columns="(nodeProps.data as TableMetadata).columns"
@@ -69,6 +54,6 @@ const props = defineProps<ErdDiagramProps>();
 
     <Background />
     <Controls />
-    <MiniMap />
+    <MiniMap pannable zoomable position="top-right" />
   </VueFlow>
 </template>

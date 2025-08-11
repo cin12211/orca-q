@@ -1,4 +1,4 @@
-import type { Edge } from '@vue-flow/core';
+import type { Edge, Position } from '@vue-flow/core';
 import type { TableNode } from '~/utils/erd/type';
 
 export interface DBSchemaProps {
@@ -20,5 +20,15 @@ export interface ErdDiagramProps {
   nodes?: TableNode[];
   edges?: Edge[][];
 }
+
+export type GetBezierPathParams = {
+  sourceX: number;
+  sourceY: number;
+  sourcePosition?: Position;
+  targetX: number;
+  targetY: number;
+  targetPosition?: Position;
+  curvature?: number;
+};
 
 export type { Edge };
