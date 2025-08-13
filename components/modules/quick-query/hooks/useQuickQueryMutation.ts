@@ -4,7 +4,7 @@ import { useAppContext } from '~/shared/contexts/useAppContext';
 import { copyRowsToClipboard } from '~/utils/common';
 import { buildUpdateStatements } from '~/utils/quickQuery';
 import {
-  buildBulkDeleteStatement,
+  // buildBulkDeleteStatement,
   buildDeleteStatements,
 } from '~/utils/quickQuery/buildDeleteStatements';
 import { buildInsertStatements } from '~/utils/quickQuery/buildInsertStatements';
@@ -30,7 +30,7 @@ interface UseQuickQueryMutationOptions {
   data: Ref<Record<string, any>[] | undefined | null>;
   selectedRows: Ref<Record<string, any>[]>;
   pagination: PaginationInfo;
-  addHistoryLog: (log: string) => void;
+  addHistoryLog: (log: string, queryTime: number) => void;
   refreshTableData: () => void;
   refreshCount: () => void;
   openErrorModal: Ref<boolean>;
@@ -133,7 +133,7 @@ export function useQuickQueryMutation(options: UseQuickQueryMutationOptions) {
     isMutating.value = true;
 
     try {
-      await $fetch('/api/execute-bulk-update', {
+      const { queryTime } = await $fetch('/api/execute-bulk-update', {
         method: 'POST',
         body: {
           sqlUpdateStatements: sqlBulkInsertOrUpdateStatements,
@@ -152,7 +152,7 @@ export function useQuickQueryMutation(options: UseQuickQueryMutationOptions) {
       if (quickQueryTableRef.value?.editedCells) {
         quickQueryTableRef.value.editedCells = []; // Clear edited cells after successful save
       }
-      addHistoryLog(sqlBulkInsertOrUpdateStatements.join('\n'));
+      addHistoryLog(sqlBulkInsertOrUpdateStatements.join('\n'), queryTime);
       refreshCount();
       refreshTableData();
       toast.success('Data saved successfully!');
@@ -195,7 +195,7 @@ export function useQuickQueryMutation(options: UseQuickQueryMutationOptions) {
     isMutating.value = true;
 
     try {
-      await $fetch('/api/execute-bulk-delete', {
+      const { queryTime } = await $fetch('/api/execute-bulk-delete', {
         method: 'POST',
         body: {
           sqlDeleteStatements,
@@ -219,7 +219,7 @@ export function useQuickQueryMutation(options: UseQuickQueryMutationOptions) {
         pagination.offset = newOffset > 0 ? newOffset : 0;
       }
 
-      addHistoryLog(sqlDeleteStatements.join('\n'));
+      addHistoryLog(sqlDeleteStatements.join('\n'), queryTime || 0);
       refreshCount();
       refreshTableData();
       toast.success('Rows deleted successfully!');
@@ -294,7 +294,7 @@ export function useQuickQueryMutation(options: UseQuickQueryMutationOptions) {
   };
 
   const onCopySelectedCell = async () => {
-    if (focusedCell) {
+    if (focusedCell?.value) {
       await navigator.clipboard.writeText(String(focusedCell.value));
     }
   };

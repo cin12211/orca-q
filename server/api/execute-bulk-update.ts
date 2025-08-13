@@ -15,6 +15,7 @@ interface BulkUpdateResponse {
     results: Record<string, unknown>[];
   }[];
   error?: string;
+  queryTime: number;
 }
 
 export default defineEventHandler(
@@ -52,11 +53,7 @@ export default defineEventHandler(
         }
       }
 
-      console.log('Initiating bulk UPDATE or INSERT operation:', {
-        statementCount: sqlUpdateStatements.length,
-        connection: dbConnectionString,
-      });
-
+      const startTime = Date.now();
       const dbConnection = await getDatabaseSource({
         dbConnectionString: dbConnectionString,
         type: 'postgres',
@@ -93,9 +90,13 @@ export default defineEventHandler(
           return results;
         });
 
+        const endTime = Date.now();
+        const queryTime = endTime - startTime;
+
         return {
           success: true,
           data: queryResults,
+          queryTime,
         };
       } finally {
       }

@@ -11,7 +11,6 @@ import {
   draggable,
   dropTargetForElements,
 } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
-import { pointerOutsideOfPreview } from '@atlaskit/pragmatic-drag-and-drop/element/pointer-outside-of-preview';
 import { preserveOffsetOnSource } from '@atlaskit/pragmatic-drag-and-drop/element/preserve-offset-on-source';
 import { setCustomNativeDragPreview } from '@atlaskit/pragmatic-drag-and-drop/element/set-custom-native-drag-preview';
 import { X } from 'lucide-vue-next';
@@ -151,7 +150,17 @@ watchEffect(onCleanup => {
       :id="tab.id"
     >
       <Icon :name="tab.icon" class="size-4 min-w-4" />
-      <div class="truncate">{{ tab.name }}</div>
+
+      <Tooltip :id="tab.id">
+        <TooltipTrigger as-child>
+          <div class="truncate">{{ tab.name }}</div>
+        </TooltipTrigger>
+
+        <TooltipContent side="bottom">
+          <p>{{ tab.name }}</p>
+        </TooltipContent>
+      </Tooltip>
+
       <div
         class="hover:bg-accent p-0.5 rounded-full opacity-0"
         @click.stop="() => closeTab(tab.id)"

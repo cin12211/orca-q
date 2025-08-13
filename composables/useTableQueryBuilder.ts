@@ -98,14 +98,14 @@ export const useTableQueryBuilder = ({
     return `${DEFAULT_QUERY_COUNT} "${schemaName}"."${tableName}" ${whereClauses.value || ''}`;
   });
 
-  const addHistoryLog = (log: string) => {
+  const addHistoryLog = (log: string, queryTime: number = 0) => {
     const logs = `\n${log}`;
 
     qqLogStore.createLog({
       tableName,
       schemaName,
       logs,
-      timeQuery: Date.now(),
+      queryTime,
     });
   };
 
@@ -137,7 +137,7 @@ export const useTableQueryBuilder = ({
     },
     onResponse: ({ response }) => {
       if (response.ok) {
-        addHistoryLog(queryString.value);
+        addHistoryLog(queryString.value, response._data?.queryTime);
       }
     },
   });
@@ -156,15 +156,15 @@ export const useTableQueryBuilder = ({
     immediate: false,
     key: `${tableName}-count`,
     cache: 'default',
-    onResponse: response => {
-      if (response.response.ok) {
-        addHistoryLog(queryCountString.value);
+    onResponse: ({ response }) => {
+      if (response.ok) {
+        addHistoryLog(queryCountString.value, response._data?.queryTime);
       }
     },
   });
 
   const totalRows = computed(() => {
-    return Number(dataCount.value?.[0]?.count || 0);
+    return Number(dataCount.value?.result?.[0]?.count || 0);
   });
 
   const isAllowNextPage = computed(() => {
@@ -331,6 +331,10 @@ export const useTableQueryBuilder = ({
     );
   });
 
+  const tableData = computed(() => {
+    return data.value?.result || [];
+  });
+
   return {
     whereClauses,
     pagination,
@@ -341,7 +345,7 @@ export const useTableQueryBuilder = ({
     onNextPage,
     onPreviousPage,
     queryCountString,
-    data,
+    data: tableData,
     isFetchingTableData,
     refreshTableData,
     refreshCount,

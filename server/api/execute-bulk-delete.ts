@@ -14,6 +14,7 @@ interface BulkUpdateResponse {
     results: Record<string, unknown>[];
   }[];
   error?: string;
+  queryTime: number;
 }
 
 export default defineEventHandler(
@@ -50,10 +51,7 @@ export default defineEventHandler(
         }
       }
 
-      console.log('Initiating bulk DELETE operation:', {
-        statementCount: sqlDeleteStatements.length,
-        connection: dbConnectionString,
-      });
+      const startTime = Date.now();
 
       const dbConnection = await getDatabaseSource({
         dbConnectionString: dbConnectionString,
@@ -81,19 +79,18 @@ export default defineEventHandler(
               affectedRows,
               results: queryResult,
             });
-
-            console.debug('Executed DELETE statement:', {
-              statement,
-              affectedRows,
-            });
           }
 
           return results;
         });
 
+        const endTime = Date.now();
+        const queryTime = endTime - startTime;
+
         return {
           success: true,
           data: queryResults,
+          queryTime,
         };
       } finally {
       }

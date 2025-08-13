@@ -53,7 +53,7 @@ const gridApi = ref<GridApi | null>(null);
 const agGridRef = useTemplateRef<HTMLElement>('agGridRef');
 
 onClickOutside(agGridRef, () => {
-  // emit('onFocusCell', undefined);
+  emit('onFocusCell', undefined);
   // gridApi.value?.deselectAll();
 });
 

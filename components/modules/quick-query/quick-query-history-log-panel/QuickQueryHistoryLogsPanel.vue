@@ -95,9 +95,14 @@
                 :ref="measureElement"
               >
                 <div class="pb-2 leading-relaxed text-xs">
-                  <span class="text-emerald-600"
-                    >[{{ formatDate(logs[virtualRow.index].createdAt) }}]</span
-                  >
+                  <span class="text-[10px]"
+                    >[{{ formatDate(logs[virtualRow.index].createdAt) }}]
+                  </span>
+
+                  <span class="text-[10px]">
+                    :
+                    {{ logs[virtualRow.index].queryTime || 0 }} ms
+                  </span>
 
                   <QuickQueryHistoryLogItem
                     :highlighter="highlighter"

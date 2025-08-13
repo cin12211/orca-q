@@ -129,7 +129,6 @@ const executeCurrentStatement = async (
   isHaveOneExecute.value = true;
 
   currentStatementQuery.value = currentStatement.text;
-  const startTime = Date.now();
   executeLoading.value = true;
   try {
     const result = await $fetch('/api/execute', {
@@ -140,14 +139,14 @@ const executeCurrentStatement = async (
       },
     });
 
-    tableData.value = result;
+    tableData.value = result.result;
     executeErrors.value = undefined;
+
+    queryTime.value = result.queryTime || 0;
   } catch (e: any) {
     executeErrors.value = e.data;
   }
 
-  const endTime = Date.now();
-  queryTime.value = endTime - startTime;
   executeLoading.value = false;
 
   openBottomPanelIfNeed();
@@ -309,9 +308,14 @@ onDeactivated(() => {
           <Icon name="hugeicons:loading-03" class="size-4! animate-spin">
           </Icon>
         </span>
-        <span v-else
-          >Query: {{ tableData.length }} rows in {{ queryTime }} ms</span
-        >
+        <span v-else>
+          <span v-if="executeErrors">
+            Query: 1 error in {{ queryTime }} ms
+          </span>
+          <span v-else>
+            Query: {{ tableData.length }} rows in {{ queryTime }} ms
+          </span>
+        </span>
       </div>
 
       <div class="flex gap-1">
@@ -339,19 +343,19 @@ onDeactivated(() => {
 
     <!-- TODO: can support execute result for many table -->
     <Teleport defer to="#bottom-panel" v-if="isActiveTeleport">
-      <div v-if="executeErrors">
+      <div v-if="executeErrors" class="pt-2">
         <!-- <span class="font-normal text-xs text-muted-foreground block">
           Execute query:
           <span class="italic"> {{ currentStatementQuery }} </span>
         </span> -->
 
-        <span class="font-normal text-xs text-muted-foreground block">
+        <span class="font-normal text-sm text-muted-foreground block leading-5">
           Error message:
           <span class="decoration-wavy underline decoration-red-600">
             {{ executeErrors.message }}
           </span>
         </span>
-        <span class="font-normal text-xs text-muted-foreground block">
+        <span class="font-normal text-sm text-muted-foreground block">
           Errors detail: {{ executeErrors.data }}
         </span>
       </div>
