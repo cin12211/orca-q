@@ -18,12 +18,13 @@ export default defineEventHandler(
         dbConnectionString: body.dbConnectionString,
         type: 'postgres',
       });
-      const endTime = performance.now();
-      const queryTime = Number((endTime - startTime).toFixed(2));
 
       const result: Record<string, unknown>[] = await resource.query(
         body.query
       );
+
+      const endTime = performance.now();
+      const queryTime = Number((endTime - startTime).toFixed(2));
 
       return {
         result,

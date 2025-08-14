@@ -101,7 +101,7 @@
 
                   <span class="text-[10px]">
                     :
-                    {{ logs[virtualRow.index].queryTime || 0 }} ms
+                    {{ formatQueryTime(logs[virtualRow.index].queryTime || 0) }}
                   </span>
 
                   <QuickQueryHistoryLogItem
@@ -130,6 +130,7 @@ import {
   type HighlighterCore,
 } from 'shiki';
 import { useQuickQueryLogs } from '~/shared/stores';
+import { formatQueryTime } from '~/utils/common/format';
 import QuickQueryHistoryLogItem from './QuickQueryHistoryLogItem.vue';
 
 enum HistoryLogTabs {

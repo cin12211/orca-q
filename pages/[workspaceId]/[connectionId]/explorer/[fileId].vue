@@ -25,6 +25,7 @@ import PureConnectionSelector from '~/components/modules/selectors/PureConnectio
 import { useAppContext } from '~/shared/contexts/useAppContext';
 import { useExplorerFileStoreStore } from '~/shared/stores';
 import { useAppLayoutStore } from '~/shared/stores/appLayoutStore';
+import { formatQueryTime } from '~/utils/common/format';
 
 //TODO: create lint check error for sql
 // https://www.npmjs.com/package/node-sql-parser?activeTab=readme
@@ -310,10 +311,11 @@ onDeactivated(() => {
         </span>
         <span v-else>
           <span v-if="executeErrors">
-            Query: 1 error in {{ queryTime }} ms
+            Query: 1 error in {{ formatQueryTime(queryTime) }}
           </span>
           <span v-else>
-            Query: {{ tableData.length }} rows in {{ queryTime }} ms
+            Query: {{ tableData.length }} rows in
+            {{ formatQueryTime(queryTime) }}
           </span>
         </span>
       </div>
