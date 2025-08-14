@@ -13,12 +13,12 @@ export default defineEventHandler(
         dbConnectionString: string;
       } = await readBody(event);
 
-      const startTime = Date.now();
+      const startTime = performance.now();
       const resource = await getDatabaseSource({
         dbConnectionString: body.dbConnectionString,
         type: 'postgres',
       });
-      const endTime = Date.now();
+      const endTime = performance.now();
 
       const queryTime = endTime - startTime;
 

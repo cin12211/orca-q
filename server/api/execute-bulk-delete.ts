@@ -51,7 +51,7 @@ export default defineEventHandler(
         }
       }
 
-      const startTime = Date.now();
+      const startTime = performance.now();
 
       const dbConnection = await getDatabaseSource({
         dbConnectionString: dbConnectionString,
@@ -84,7 +84,7 @@ export default defineEventHandler(
           return results;
         });
 
-        const endTime = Date.now();
+        const endTime = performance.now();
         const queryTime = endTime - startTime;
 
         return {
