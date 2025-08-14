@@ -85,7 +85,7 @@ export default defineEventHandler(
         });
 
         const endTime = performance.now();
-        const queryTime = endTime - startTime;
+        const queryTime = Number((endTime - startTime).toFixed(2));
 
         return {
           success: true,

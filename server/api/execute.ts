@@ -19,8 +19,7 @@ export default defineEventHandler(
         type: 'postgres',
       });
       const endTime = performance.now();
-
-      const queryTime = endTime - startTime;
+      const queryTime = Number((endTime - startTime).toFixed(2));
 
       const result: Record<string, unknown>[] = await resource.query(
         body.query
