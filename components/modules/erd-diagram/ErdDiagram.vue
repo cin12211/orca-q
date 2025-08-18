@@ -16,15 +16,23 @@ import {
 import '~/components/modules/erd-diagram/style/vue-flow.css';
 import type { ErdDiagramProps } from '~/components/modules/erd-diagram/type';
 import type { TableMetadata } from '~/server/api/get-tables';
+import ErdControls from './components/Controls/ErdControls.vue';
 import CustomEdge from './components/CustomEdge.vue';
 
 const props = defineProps<ErdDiagramProps>();
+
+const isHand = ref(false);
+
+const triggerHand = () => {
+  isHand.value = !isHand.value;
+  console.log('triggerHand called', isHand.value);
+};
 </script>
 
 <template>
   <VueFlow
     class="erd-flow"
-    :pan-on-drag="false"
+    :pan-on-drag="isHand"
     :pan-on-scroll="true"
     :pan-on-scroll-speed="1.2"
     :nodes="props.nodes"
@@ -52,7 +60,7 @@ const props = defineProps<ErdDiagramProps>();
     </template>
 
     <Background />
-    <Controls />
+    <ErdControls v-model:isHand="isHand" />
     <MiniMap pannable zoomable position="top-right" />
   </VueFlow>
 </template>
