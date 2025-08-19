@@ -8,7 +8,7 @@ import {
 import { PostgreSQL, type SQLNamespace, sql } from '@codemirror/lang-sql';
 import { Compartment } from '@codemirror/state';
 import { EditorView, keymap } from '@codemirror/view';
-import { format } from 'sql-formatter';
+import { format, type FormatOptions } from 'sql-formatter';
 import CodeEditor from '~/components/base/code-editor/CodeEditor.vue';
 import {
   type SyntaxTreeNodeData,
@@ -25,6 +25,10 @@ import PureConnectionSelector from '~/components/modules/selectors/PureConnectio
 import { useAppContext } from '~/shared/contexts/useAppContext';
 import { useExplorerFileStoreStore } from '~/shared/stores';
 import { useAppLayoutStore } from '~/shared/stores/appLayoutStore';
+import {
+  convertParameters,
+  type ParsedParametersResult,
+} from '~/utils/common/convertParameters';
 import { formatQueryTime } from '~/utils/common/format';
 
 //TODO: create lint check error for sql
@@ -124,19 +128,57 @@ const openBottomPanelIfNeed = () => {
   }
 };
 
-const executeCurrentStatement = async (
-  currentStatement: SyntaxTreeNodeData
-) => {
+const executeCurrentStatement = async ({
+  currentStatement,
+  treeNodes,
+}: {
+  currentStatement: SyntaxTreeNodeData;
+  treeNodes: SyntaxTreeNodeData[];
+}) => {
   isHaveOneExecute.value = true;
-
   currentStatementQuery.value = currentStatement.text;
+
+  let executeQuery = currentStatement.text;
+
+  const currentStatementTrees: SyntaxTreeNodeData[] = [];
+
+  treeNodes.forEach(item => {
+    if (item.from >= currentStatement.from && item.to <= currentStatement.to) {
+      currentStatementTrees.push(item);
+    }
+  });
+
+  const reversedCurrentStatementTrees = currentStatementTrees.toReversed();
+
+  let parameters: ParsedParametersResult | null = null;
+
+  for (var statement of reversedCurrentStatementTrees) {
+    if (statement.type === 'LineComment') {
+      const convertResult = convertParameters(statement.text);
+
+      if (convertResult.values) {
+        parameters = convertResult;
+        break;
+      }
+    }
+  }
+
+  if (parameters) {
+    const fillQueryWithParameters = onFormatCode(
+      currentStatement.text,
+      parameters.values
+    );
+
+    executeQuery = fillQueryWithParameters;
+  }
+
   executeLoading.value = true;
   try {
     const result = await $fetch('/api/execute', {
       method: 'POST',
       body: {
         dbConnectionString: connection.value?.connectionString,
-        query: currentStatement.text,
+        query: executeQuery,
       },
     });
 
@@ -153,14 +195,33 @@ const executeCurrentStatement = async (
   openBottomPanelIfNeed();
 };
 
-const extensions = [
-  shortCutExecuteCurrentStatement(executeCurrentStatement),
-  shortCutFormatOnSave((fileContent: string) => {
+const onFormatCode = (
+  fileContent: string,
+  params?: FormatOptions['params']
+) => {
+  try {
     const formatted = format(fileContent, {
       language: 'postgresql',
       keywordCase: 'upper',
+      linesBetweenQueries: 1,
+      functionCase: 'upper',
+      newlineBeforeSemicolon: true,
+      paramTypes: {
+        named: [':', '$'],
+      },
+      params: params,
     });
     return formatted;
+  } catch (error) {
+    console.log('🚀 ~ onFormatCode ~ error:', error);
+    return fileContent;
+  }
+};
+
+const extensions = [
+  shortCutExecuteCurrentStatement(executeCurrentStatement),
+  shortCutFormatOnSave((fileContent: string) => {
+    return onFormatCode(fileContent);
   }),
 
   keymap.of([
@@ -188,32 +249,24 @@ onMounted(async () => {
   fileContents.value = contents;
 });
 
-// watch(
-//   () => route.params.fileId,
-//   async fileId => {
-//     const contents = await explorerFileStore.getFileContentById(
-//       fileId as string
-//     );
-
-//     fileContents.value = contents;
-//   }
-// );
-
 const onExecuteCurrent = () => {
   if (!codeEditorRef.value?.editorView) {
     return;
   }
 
-  const currentStatement = getCurrentStatement(
+  const { currentStatement, treeNodes } = getCurrentStatement(
     codeEditorRef.value?.editorView as EditorView
   );
 
   if (currentStatement) {
-    executeCurrentStatement(currentStatement);
+    executeCurrentStatement({
+      currentStatement,
+      treeNodes,
+    });
   }
 };
 
-const onFormatCode = () => {
+const onHandleFormatCode = () => {
   if (!codeEditorRef.value?.editorView) {
     return;
   }
@@ -223,10 +276,7 @@ const onFormatCode = () => {
   const code = view.state.doc.toString();
 
   if (code) {
-    const formattedCode = format(code, {
-      language: 'postgresql',
-      keywordCase: 'upper',
-    });
+    const formattedCode = onFormatCode(code);
 
     view.dispatch({
       changes: {
@@ -247,6 +297,17 @@ onActivated(() => {
 onDeactivated(() => {
   isActiveTeleport.value = false;
 });
+
+// watch(
+//   () => route.params.fileId,
+//   async fileId => {
+//     const contents = await explorerFileStore.getFileContentById(
+//       fileId as string
+//     );
+
+//     fileContents.value = contents;
+//   }
+// );
 </script>
 
 <template>
@@ -322,7 +383,7 @@ onDeactivated(() => {
 
       <div class="flex gap-1">
         <Button
-          @click="onFormatCode"
+          @click="onHandleFormatCode"
           variant="outline"
           size="sm"
           class="h-6 px-2 gap-1 font-normal"

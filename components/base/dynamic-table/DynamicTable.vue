@@ -47,6 +47,8 @@ const gridApi = ref<GridApi | null>(null);
 
 const agGridRef = useTemplateRef<HTMLElement>('agGridRef');
 
+const containerRef = ref<InstanceType<typeof HTMLElement>>();
+
 onClickOutside(agGridRef, () => {
   // emit('onFocusCell', undefined);
   // gridApi.value?.deselectAll();
@@ -185,18 +187,46 @@ const onCellFocus = () => {
   }
 };
 
+useHotkeys(
+  [
+    {
+      key: 'meta+c',
+      callback: async () => {
+        const selectedCell = gridApi.value?.getFocusedCell();
+
+        if (selectedCell) {
+          const rowNode = gridApi.value?.getDisplayedRowAtIndex(
+            selectedCell.rowIndex
+          );
+          const colId = selectedCell.column.getColId();
+          const cellValue = rowNode?.data?.[colId];
+
+          await navigator.clipboard.writeText(String(cellValue));
+        }
+      },
+    },
+  ],
+  {
+    isPreventDefault: false,
+    target: containerRef,
+  }
+);
+
 defineExpose({ gridApi });
 </script>
 
 <template>
-  <AgGridVue
-    @selection-changed="onSelectionChanged"
-    @grid-ready="onGridReady"
-    @cell-focused="onCellFocus"
-    :class="props.class"
-    :grid-options="gridOptions"
-    :columnDefs="columnDefs"
-    :rowData="rowData"
-    ref="agGridRef"
-  />
+  <div class="h-full" ref="containerRef">
+    <AgGridVue
+      @selection-changed="onSelectionChanged"
+      @grid-ready="onGridReady"
+      @cell-focused="onCellFocus"
+      :class="props.class"
+      :grid-options="gridOptions"
+      :columnDefs="columnDefs"
+      :rowData="rowData"
+      :copy-headers-to-clipboard="true"
+      ref="agGridRef"
+    />
+  </div>
 </template>

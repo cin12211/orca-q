@@ -71,17 +71,17 @@ const { status } = useFetch('/api/get-one-function', {
 });
 
 const extensions = [
-  shortCutExecuteCurrentStatement(
-    async (currentStatement: SyntaxTreeNodeData) => {
-      console.log(
-        '🚀 ~ shortCutCurrentStatementExecute ~ currentStatement:',
-        currentStatement,
+  // shortCutExecuteCurrentStatement(
+  //   async (currentStatement: SyntaxTreeNodeData) => {
+  //     console.log(
+  //       '🚀 ~ shortCutCurrentStatementExecute ~ currentStatement:',
+  //       currentStatement,
 
-        currentConnectionString.value,
-        currentStatement.text
-      );
-    }
-  ),
+  //       currentConnectionString.value,
+  //       currentStatement.text
+  //     );
+  //   }
+  // ),
   shortCutFormatOnSave((fileContent: string) => {
     const formatted = format(fileContent, {
       language: 'postgresql',

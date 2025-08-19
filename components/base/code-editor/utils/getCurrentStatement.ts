@@ -1,4 +1,4 @@
-import { syntaxTree } from '@codemirror/language';
+import { syntaxTree, getIndentation } from '@codemirror/language';
 import type { EditorView } from 'codemirror';
 import type { SyntaxTreeNodeData } from '../extensions';
 
@@ -10,13 +10,13 @@ import type { SyntaxTreeNodeData } from '../extensions';
  */
 export const getCurrentStatement = (view: EditorView) => {
   const tree = syntaxTree(view.state);
-  const output: SyntaxTreeNodeData[] = [];
+  const treeNodes: SyntaxTreeNodeData[] = [];
 
   tree.iterate({
     enter: node => {
       const nodeName = node.type.name;
       const nodeText = view.state.doc.sliceString(node.from, node.to);
-      output.push({
+      treeNodes.push({
         type: nodeName,
         from: node.from,
         to: node.to,
@@ -27,10 +27,13 @@ export const getCurrentStatement = (view: EditorView) => {
 
   const cursorPos = view.state.selection.main.head;
 
-  const currentStatement = output.find(
+  const currentStatement = treeNodes.find(
     item =>
       item.type == 'Statement' && cursorPos >= item.from && cursorPos <= item.to
   );
 
-  return currentStatement;
+  return {
+    currentStatement,
+    treeNodes,
+  };
 };

@@ -14,17 +14,20 @@ import type { SyntaxTreeNodeData } from './currentStatementLineGutter';
  * @returns A keymap extension that can be added to an editor.
  */
 export const shortCutExecuteCurrentStatement = (
-  callback: (currentStatement: SyntaxTreeNodeData) => void
+  callback: (value: {
+    currentStatement: SyntaxTreeNodeData;
+    treeNodes: SyntaxTreeNodeData[];
+  }) => void
 ) =>
   keymap.of([
     {
       key: 'Ctrl-Enter',
       mac: 'Cmd-Enter',
       run: (view: EditorView) => {
-        const currentStatement = getCurrentStatement(view);
+        const { currentStatement, treeNodes } = getCurrentStatement(view);
 
         if (currentStatement) {
-          callback(currentStatement);
+          callback({ currentStatement, treeNodes: treeNodes || [] });
         }
 
         return true;

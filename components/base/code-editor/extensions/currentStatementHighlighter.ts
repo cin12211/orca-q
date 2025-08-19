@@ -34,7 +34,7 @@ export const currentStatementHighlighter = ViewPlugin.fromClass(
     }
 
     getDecorations(view: EditorView): DecorationSet {
-      const currentStatement = getCurrentStatement(view);
+      const { currentStatement } = getCurrentStatement(view);
 
       if (!currentStatement) return Decoration.none;
 

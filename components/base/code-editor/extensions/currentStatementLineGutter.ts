@@ -20,7 +20,7 @@ const currentStatementMarker = new (class extends GutterMarker {
 
 export const currentStatementLineGutter = gutter({
   lineMarker(view, line) {
-    const currentStatement = getCurrentStatement(view);
+    const { currentStatement } = getCurrentStatement(view);
 
     if (
       currentStatement &&
