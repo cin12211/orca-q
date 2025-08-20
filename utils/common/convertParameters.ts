@@ -1,6 +1,6 @@
 export type ParsedParametersResult =
   | { type: 'object'; values: Record<string, string> }
-  | { type: 'array'; values: string[] }
+  // | { type: 'array'; values: string[] }
   | { type: undefined; values: undefined };
 
 // Recursive formatter
@@ -40,7 +40,14 @@ export function convertParameters(str: string): ParsedParametersResult {
     if (parsed.length === 0) {
       return { type: undefined, values: undefined };
     }
-    return { type: 'array', values: formatValueRecursive(parsed) as string[] };
+
+    const formattedArray = formatValueRecursive(parsed) as unknown[];
+    const objFromArray = Object.fromEntries(
+      formattedArray.map((v, idx) => [String(idx + 1), v])
+    ) as Record<string, string>;
+    return { type: 'object', values: objFromArray };
+
+    // return { type: 'array', values: formatValueRecursive(parsed) as string[] };
   }
 
   if (parsed && typeof parsed === 'object') {

@@ -53,6 +53,7 @@ export const rowQueryFileIDBApi: (typeof window)['rowQueryFilesApi'] = {
     const fileContent: RowQueryFileContent = {
       id: fileValue.id,
       contents: '',
+      variables: '',
     };
 
     const isExitFileContent =

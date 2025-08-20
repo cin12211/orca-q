@@ -8,6 +8,7 @@ export type RowQueryFile = TreeFileSystemItem;
 export interface RowQueryFileContent {
   id: string;
   contents: string;
+  variables: string;
 }
 
 export const useExplorerFileStoreStore = defineStore(
@@ -71,7 +72,10 @@ export const useExplorerFileStoreStore = defineStore(
 
     const getFileContentById = async (fileID: string) => {
       const contents = await window.rowQueryFilesApi.getFileContentById(fileID);
-      return contents?.contents || '';
+      return {
+        contents: contents?.contents || '',
+        variables: contents?.variables || '',
+      };
     };
 
     // const createNewFile = async (file: RowQueryFile) => {

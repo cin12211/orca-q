@@ -44,7 +44,7 @@ ipcMain.handle(RowQueryFilesIpcChannels.Create, async (_event, file: RowQueryFil
   const createdAt = file.createdAt || dayjs().toISOString()
 
   const newFile = { ...file, createdAt }
-  const fileContent: RowQueryFileContent = { id: file.id, contents: '' }
+  const fileContent: RowQueryFileContent = { id: file.id, contents: '', variables: '' }
 
   await Promise.all([dbFiles.insertAsync(newFile), dbContents.insertAsync(fileContent)])
 
