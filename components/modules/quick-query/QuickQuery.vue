@@ -222,7 +222,8 @@ onMounted(() => {
   <Teleport defer to="#preview-select-row" v-if="isActiveTeleport">
     <QuickQueryTableSummary
       v-if="!selectedRows?.length"
-      :summary="{ tableSize, dataSize, indexSize }"
+      :table-name="tableName"
+      :schema-name="schemaName"
     />
     <PreviewSelectedRow
       v-else
