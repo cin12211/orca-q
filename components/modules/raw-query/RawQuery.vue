@@ -5,24 +5,28 @@ import {
   startCompletion,
   type Completion,
 } from '@codemirror/autocomplete';
-import { PostgreSQL, type SQLNamespace, sql } from '@codemirror/lang-sql';
+import { PostgreSQL, sql, type SQLNamespace } from '@codemirror/lang-sql';
 import { Compartment } from '@codemirror/state';
 import { EditorView, keymap } from '@codemirror/view';
 import merge from 'lodash-es/merge';
-import { format, type FormatOptions } from 'sql-formatter';
+import type { FieldDef } from 'pg';
 import CodeEditor from '~/components/base/code-editor/CodeEditor.vue';
 import {
-  type SyntaxTreeNodeData,
   currentStatementHighlighter,
   shortCutExecuteCurrentStatement,
   shortCutFormatOnSave,
   sqlAutoCompletion,
+  type SyntaxTreeNodeData,
 } from '~/components/base/code-editor/extensions';
 import {
   getCurrentStatement,
   pgKeywordCompletion,
 } from '~/components/base/code-editor/utils';
 import PureConnectionSelector from '~/components/modules/selectors/PureConnectionSelector.vue';
+import type {
+  ColumnShortMetadata,
+  TableDetailMetadata,
+} from '~/server/api/get-schema-meta-data';
 import { useAppContext } from '~/shared/contexts/useAppContext';
 import { useExplorerFileStoreStore } from '~/shared/stores';
 import { useAppLayoutStore } from '~/shared/stores/appLayoutStore';
@@ -32,6 +36,8 @@ import {
 } from '~/utils/common/convertParameters';
 import { formatQueryTime } from '~/utils/common/format';
 import AddVariableModal from './components/AddVariableModal.vue';
+import type { MappedRawColumn } from './interfaces';
+import { formatStatementSql, formatColumnsInfo } from './utils';
 
 //TODO: create lint check error for sql
 // https://www.npmjs.com/package/node-sql-parser?activeTab=readme
@@ -46,7 +52,9 @@ const { activeSchema } = toRefs(schemaStore);
 const codeEditorRef = ref<InstanceType<typeof CodeEditor> | null>(null);
 const fileContents = ref('');
 const fileVariables = ref('');
-const tableData = ref<Record<string, unknown>[]>([]);
+const rawQueryResults = ref<unknown[][]>([]);
+const fieldDefs = ref<FieldDef[]>([]);
+
 const isHaveOneExecute = ref(false);
 const cursorInfo = ref({ line: 1, column: 1 });
 const executeLoading = ref(false);
@@ -158,6 +166,8 @@ const executeCurrentStatement = async ({
     }
   });
 
+  // console.log('currentStatementTrees:::', currentStatementTrees);
+
   const reversedCurrentStatementTrees = currentStatementTrees.toReversed();
 
   let parameters: ParsedParametersResult | null = null;
@@ -182,7 +192,7 @@ const executeCurrentStatement = async ({
     mergeParameters = merge(mergeParameters, parameters.values || {});
   }
 
-  const fillQueryWithParameters = onFormatCode(
+  const fillQueryWithParameters = formatStatementSql(
     currentStatement.text,
     mergeParameters
   );
@@ -191,7 +201,7 @@ const executeCurrentStatement = async ({
 
   executeLoading.value = true;
   try {
-    const result = await $fetch('/api/execute', {
+    const result = await $fetch('/api/raw-execute', {
       method: 'POST',
       body: {
         dbConnectionString: connection.value?.connectionString,
@@ -199,7 +209,9 @@ const executeCurrentStatement = async ({
       },
     });
 
-    tableData.value = result.result;
+    rawQueryResults.value = result.rows as unknown[][];
+    fieldDefs.value = result.fields;
+
     executeErrors.value = undefined;
 
     queryTime.value = result.queryTime || 0;
@@ -212,33 +224,10 @@ const executeCurrentStatement = async ({
   openBottomPanelIfNeed();
 };
 
-const onFormatCode = (
-  fileContent: string,
-  params?: FormatOptions['params']
-) => {
-  try {
-    const formatted = format(fileContent, {
-      language: 'postgresql',
-      keywordCase: 'upper',
-      linesBetweenQueries: 1,
-      functionCase: 'upper',
-      newlineBeforeSemicolon: true,
-      paramTypes: {
-        named: [':', '$'],
-      },
-      params: params,
-    });
-    return formatted;
-  } catch (error) {
-    console.log('🚀 ~ onFormatCode ~ error:', error);
-    return fileContent;
-  }
-};
-
 const extensions = [
   shortCutExecuteCurrentStatement(executeCurrentStatement),
   shortCutFormatOnSave((fileContent: string) => {
-    return onFormatCode(fileContent);
+    return formatStatementSql(fileContent);
   }),
 
   keymap.of([
@@ -294,7 +283,7 @@ const onHandleFormatCode = () => {
   const code = view.state.doc.toString();
 
   if (code) {
-    const formattedCode = onFormatCode(code);
+    const formattedCode = formatStatementSql(code);
 
     view.dispatch({
       changes: {
@@ -322,6 +311,14 @@ const isVariableError = ref(false);
 const openAddVariableModal = () => {
   isOpenAddVariableModal.value = true;
 };
+
+const mappedColumns = computed<MappedRawColumn[]>(() => {
+  return formatColumnsInfo({
+    activeSchema: activeSchema.value,
+    fieldDefs: fieldDefs.value,
+    getTableInfoById: schemaStore.getTableInfoById,
+  });
+});
 
 // watch(
 //   () => route.params.fileId,
@@ -420,7 +417,7 @@ const openAddVariableModal = () => {
             Query: 1 error in {{ formatQueryTime(queryTime) }}
           </span>
           <span v-else>
-            Query: {{ tableData.length }} rows in
+            Query: {{ rawQueryResults.length }} rows in
             {{ formatQueryTime(queryTime) }}
           </span>
         </span>
@@ -468,7 +465,7 @@ const openAddVariableModal = () => {
         </span>
       </div>
       <div
-        v-else-if="!tableData.length"
+        v-else-if="!rawQueryResults.length"
         class="text-center font-normal text-xs text-muted-foreground mt-4"
       >
         No row found
@@ -476,9 +473,8 @@ const openAddVariableModal = () => {
 
       <DynamicTable
         v-else
-        :data="tableData || []"
-        :foreign-keys="[]"
-        :primary-keys="[]"
+        :columns="mappedColumns"
+        :data="rawQueryResults || []"
         class="h-full py-2"
       />
     </Teleport>

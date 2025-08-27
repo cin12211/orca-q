@@ -2,7 +2,9 @@
 import { onClickOutside } from '@vueuse/core';
 import type { HTMLAttributes } from 'vue';
 import type {
+  CellClassParams,
   ColDef,
+  ColTypeDef,
   GridApi,
   GridOptions,
   GridReadyEvent,
@@ -10,36 +12,19 @@ import type {
 } from 'ag-grid-community';
 import { themeBalham } from 'ag-grid-community';
 import { AgGridVue } from 'ag-grid-vue3';
+import type { MappedRawColumn } from '~/components/modules/raw-query/interfaces';
+import DynamicPrimaryKeyHeader from './DynamicPrimaryKeyHeader.vue';
 
-interface RowData {
-  [key: string]: unknown;
-}
-
+// TODO: refactor this component to reuse in query table
 /* props ------------------------------------------------------------- */
 const props = defineProps<{
-  data: RowData[];
-  foreignKeys: string[];
-  primaryKeys: string[];
+  columns: MappedRawColumn[];
+  data: unknown[][];
   class?: HTMLAttributes['class'];
 }>();
 
-const mappedColumns = computed(() => {
-  const record = props.data?.[0] as Record<string, any>;
-
-  const columns = [];
-
-  for (const key in record) {
-    columns.push({
-      name: key,
-      type: '',
-    });
-  }
-
-  return columns;
-});
-
 const emit = defineEmits<{
-  (e: 'onSelectedRows', value: RowData[]): void;
+  (e: 'onSelectedRows', value: unknown[]): void;
   (e: 'onFocusCell', value: unknown | undefined): void;
 }>();
 
@@ -55,7 +40,7 @@ onClickOutside(agGridRef, () => {
 });
 
 /* reactive state ---------------------------------------------------- */
-const rowData = computed<RowData[]>(() =>
+const rowData = computed<unknown[]>(() =>
   (props.data ?? []).map((e, index) => {
     return {
       '#': index + 1,
@@ -117,10 +102,9 @@ const gridOptions = computed(() => {
   return options;
 });
 
-/* derive columns on the fly ---------------------------------------- */
 const columnDefs = computed<ColDef[]>(() => {
-  const columns: ColDef[] = [];
-  columns.push({
+  const colDefs: ColDef[] = [];
+  colDefs.push({
     headerName: '#',
     field: '#',
     filter: false,
@@ -130,39 +114,100 @@ const columnDefs = computed<ColDef[]>(() => {
     pinned: 'left',
   });
 
-  mappedColumns.value.forEach(({ name }) => {
-    const fieldId = name;
+  const setColumnName = new Set();
 
-    const column: ColDef = {
-      headerName: fieldId,
-      field: fieldId,
-      filter: true,
-      resizable: true,
-      editable: false,
-      sortable: true,
-      cellClass: 'cellCenter',
-
-      valueFormatter: (params: ValueFormatterParams) => {
-        // check object value
-        const value = params.value;
-        if (
-          typeof value === 'object' &&
-          value !== null &&
-          Object.prototype.toString.call(value) === '[object Object]'
-        ) {
-          return value ? JSON.stringify(params.value, null, 2) : '';
-        }
-
-        return params.value;
+  props.columns.forEach(
+    (
+      {
+        canMutate,
+        queryFieldName,
+        type,
+        tableName,
+        isPrimaryKey,
+        isForeignKey,
       },
-    };
-    columns.push(column);
-  });
+      index
+    ) => {
+      const fieldId = `${index}`;
 
-  return columns;
+      let fieldName = queryFieldName;
+
+      if (setColumnName.has(fieldName)) {
+        fieldName = `${tableName}.${queryFieldName}`;
+      } else {
+        setColumnName.add(fieldName);
+      }
+
+      const column: ColDef = {
+        headerName: fieldName,
+        field: fieldId,
+        filter: true,
+        resizable: true,
+        editable: canMutate,
+        sortable: true,
+        cellClass: 'cellCenter',
+        type: 'editableColumn',
+        headerComponentParams: {
+          innerHeaderComponent: DynamicPrimaryKeyHeader,
+          isPrimaryKey: isPrimaryKey,
+          isForeignKey: isForeignKey,
+        },
+        valueFormatter: (params: ValueFormatterParams) => {
+          const value = params.value;
+
+          //TODO: reuse function format json -> string
+          if (type === 'jsonb' || type === 'json') {
+            return value ? JSON.stringify(params.value, null, 2) : '';
+          }
+
+          if (
+            typeof value === 'object' &&
+            value !== null &&
+            Object.prototype.toString.call(value) === '[object Object]'
+          ) {
+            return value ? JSON.stringify(value, null, 2) : '';
+          }
+
+          return value;
+        },
+      };
+
+      colDefs.push(column);
+    }
+  );
+
+  return colDefs;
 });
 
-/* handle selection changes ----------------------------------------- */
+const columnTypes = ref<{
+  [key: string]: ColTypeDef;
+}>({
+  indexColumn: {},
+  editableColumn: {
+    cellStyle: (params: CellClassParams) => {
+      const rowId = Number(params.node.id ?? params.node.rowIndex);
+
+      if (props.data?.[rowId] === undefined) {
+        return { backgroundColor: 'var(--color-green-200)' };
+      }
+
+      const field = params.colDef.field ?? '';
+
+      if (!field) {
+        return;
+      }
+
+      const oldValue = props?.data?.[rowId]?.[Number(field)];
+
+      const haveDifferent = oldValue !== params.value;
+
+      if (haveDifferent) {
+        return { backgroundColor: 'var(--color-orange-200)' };
+      }
+    },
+  },
+});
+
 const onSelectionChanged = () => {
   if (gridApi.value) {
     const selectedRows = gridApi.value.getSelectedRows();
@@ -170,7 +215,7 @@ const onSelectionChanged = () => {
   }
 };
 
-const handleSelection = (selectedRows: RowData[]) => {
+const handleSelection = (selectedRows: unknown[]) => {
   emit('onSelectedRows', selectedRows);
 };
 
@@ -225,6 +270,7 @@ defineExpose({ gridApi });
       :grid-options="gridOptions"
       :columnDefs="columnDefs"
       :rowData="rowData"
+      :columnTypes="columnTypes"
       :copy-headers-to-clipboard="true"
       ref="agGridRef"
     />

@@ -27,6 +27,10 @@ export default defineNuxtConfig({
     },
   },
 
+  nitro: {
+    preset: 'node',
+  },
+
   devtools: {
     enabled: true,
 
