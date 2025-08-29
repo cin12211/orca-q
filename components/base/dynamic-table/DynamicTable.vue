@@ -72,36 +72,6 @@ const onGridReady = (e: GridReadyEvent) => {
   //Do something
 };
 
-const gridOptions = computed(() => {
-  const options: GridOptions = {
-    rowClass: 'class-row-border-none',
-    getRowClass: params => {
-      if ((params.node.rowIndex || 0) % 2 === 0) {
-        return 'class-row-even';
-      }
-    },
-    rowSelection: {
-      mode: 'multiRow',
-      checkboxes: false,
-      headerCheckbox: false,
-      enableSelectionWithoutKeys: false,
-      enableClickSelection: 'enableSelection',
-      copySelectedRows: false,
-    },
-    autoSizeStrategy: {
-      type: 'fitCellContents',
-    },
-    theme: customizedTheme,
-    pagination: false,
-    undoRedoCellEditing: true,
-    undoRedoCellEditingLimit: 25,
-    animateRows: true,
-    // onCellMouseDown,
-    // onCellMouseOver: onCellMouseOverDebounced,
-  };
-  return options;
-});
-
 const columnDefs = computed<ColDef[]>(() => {
   const colDefs: ColDef[] = [];
   colDefs.push({
@@ -178,6 +148,52 @@ const columnDefs = computed<ColDef[]>(() => {
 
   return colDefs;
 });
+
+const gridOptions = computed(() => {
+  const options: GridOptions = {
+    rowClass: 'class-row-border-none',
+    getRowClass: params => {
+      if ((params.node.rowIndex || 0) % 2 === 0) {
+        return 'class-row-even';
+      }
+    },
+    rowSelection: {
+      mode: 'multiRow',
+      checkboxes: false,
+      headerCheckbox: false,
+      enableSelectionWithoutKeys: false,
+      enableClickSelection: 'enableSelection',
+      copySelectedRows: false,
+    },
+    autoSizeStrategy: {
+      type: 'fitCellContents',
+    },
+    theme: customizedTheme,
+    pagination: false,
+    undoRedoCellEditing: true,
+    undoRedoCellEditingLimit: 25,
+    animateRows: true,
+    onStateUpdated(event) {
+      //TODO: check condition for best performance
+      event.api.refreshHeader();
+      event.api.refreshCells();
+    },
+    // onCellMouseDown,
+    // onCellMouseOver: onCellMouseOverDebounced,
+  };
+  return options;
+});
+
+//TODO: check condition for best performance
+// watch(
+//   () => columnDefs,
+//   newColumnDefs => {
+//     console.log('newColumns');
+//     gridApi.value!.setGridOption('columnDefs', toRaw(newColumnDefs.value));
+//     gridApi.value!.refreshHeader();
+//   },
+//   { deep: true } // since it's an array of objects
+// );
 
 const columnTypes = ref<{
   [key: string]: ColTypeDef;

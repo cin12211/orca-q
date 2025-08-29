@@ -20,74 +20,64 @@ export default defineEventHandler(async (event): Promise<TableStructure[]> => {
   });
 
   const result = await resource.query(
-    `
-        SELECT
-            c.column_name,
-            c.data_type,
-            (c.is_nullable = 'YES') AS is_nullable,
-            -- Aggregate constraints (Primary Key, Unique, etc.) into a single field
-            -- COALESCE(
-            --     STRING_AGG(DISTINCT tc.constraint_type, ', '),
-            --     'None'
-            -- ) AS constraint_types,
-            -- Default value
-            c.column_default AS default_value,
-            -- Format foreign keys as column_name -> referenced_table(referenced_column) ON DELETE action ON UPDATE action
-            COALESCE(
-                STRING_AGG(
-                ' -> ' || fkc.referenced_table_name || '(' || fkc.referenced_column_name || ')',
-                ', '
-                ),
-                ''
-            ) AS foreign_keys,
-            -- Column comment
-            COALESCE(
-                col_description(
-                (
-                    SELECT
-                    oid
-                    FROM
-                    pg_class
-                    WHERE
-                    relname = c.table_name
-                ),
-                c.ordinal_position
-                ),
-                ''
-            ) AS column_comment
-            FROM
-            information_schema.columns c
-            LEFT JOIN information_schema.constraint_column_usage ccu ON c.table_name = ccu.table_name
-            AND c.column_name = ccu.column_name
-            LEFT JOIN information_schema.table_constraints tc ON ccu.constraint_name = tc.constraint_name
-            LEFT JOIN (
-                SELECT
-                kcu.table_name,
-                kcu.column_name,
-                kcu.constraint_name,
-                ccu2.table_name AS referenced_table_name,
-                ccu2.column_name AS referenced_column_name,
-                rc.delete_rule,
-                rc.update_rule
-                FROM
-                information_schema.key_column_usage kcu
-                JOIN information_schema.constraint_table_usage ctu ON kcu.constraint_name = ctu.constraint_name
-                JOIN information_schema.referential_constraints rc ON kcu.constraint_name = rc.constraint_name
-                JOIN information_schema.constraint_column_usage ccu2 ON rc.unique_constraint_name = ccu2.constraint_name
-            ) fkc ON c.table_name = fkc.table_name
-            AND c.column_name = fkc.column_name
-            WHERE
-            c.table_name = $1
-            AND c.table_schema = $2
-            GROUP BY
-            c.column_name,
-            c.data_type,
-            c.is_nullable,
-            c.column_default,
-            c.table_name,
-            c.ordinal_position
-            ORDER BY
-            c.ordinal_position;
+    `SELECT
+        a.attname AS column_name,
+        t.typname AS data_type, -- short type name
+        NOT a.attnotnull AS is_nullable,
+        PG_GET_EXPR(d.adbin, d.adrelid) AS default_value,
+        COALESCE(fk_info.fk_text, '') AS foreign_keys,
+        fk_info.on_update,
+        fk_info.on_delete,
+        COALESCE(COL_DESCRIPTION(a.attrelid, a.attnum), '') AS column_comment
+      FROM
+        pg_attribute a
+        JOIN pg_class c ON a.attrelid = c.oid
+        JOIN pg_namespace n ON c.relnamespace = n.oid
+        JOIN pg_type t ON a.atttypid = t.oid
+        LEFT JOIN pg_attrdef d ON a.attrelid = d.adrelid
+        AND a.attnum = d.adnum
+        LEFT JOIN LATERAL (
+          SELECT
+            STRING_AGG(
+              '→ ' || confrel.relname || '.' || af.attname ,
+              '\n'
+            ) AS fk_text,
+            -- Trả về action cụ thể
+            MAX(
+              CASE rc.confdeltype
+                WHEN 'a' THEN 'NO ACTION'
+                WHEN 'r' THEN 'RESTRICT'
+                WHEN 'c' THEN 'CASCADE'
+                WHEN 'n' THEN 'SET NULL'
+                WHEN 'd' THEN 'SET DEFAULT'
+              END
+            ) AS on_delete,
+            MAX(
+              CASE rc.confupdtype
+                WHEN 'a' THEN 'NO ACTION'
+                WHEN 'r' THEN 'RESTRICT'
+                WHEN 'c' THEN 'CASCADE'
+                WHEN 'n' THEN 'SET NULL'
+                WHEN 'd' THEN 'SET DEFAULT'
+              END
+            ) AS on_update
+          FROM
+            pg_constraint rc
+            JOIN pg_class confrel ON rc.confrelid = confrel.oid
+            JOIN pg_attribute af ON af.attrelid = rc.confrelid
+            AND af.attnum = rc.confkey[1]
+          WHERE
+            rc.conrelid = a.attrelid
+            AND rc.contype = 'f'
+            AND a.attnum = ANY (rc.conkey)
+        ) fk_info ON TRUE
+      WHERE
+        c.relname = $1
+        AND n.nspname = $2
+        AND a.attnum > 0
+        AND NOT a.attisdropped
+      ORDER BY
+        a.attnum
     `,
     [body.tableName, body.schema]
   );

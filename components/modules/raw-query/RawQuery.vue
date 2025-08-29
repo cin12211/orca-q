@@ -339,14 +339,14 @@ const mappedColumns = computed<MappedRawColumn[]>(() => {
     v-model:open="isOpenAddVariableModal"
   />
   <div class="flex flex-col h-full">
-    <div class="flex items-center justify-between bg-gray-50 p-1">
+    <div class="flex items-center justify-between p-1 border-b shadow">
       <div>
         <Breadcrumb>
           <BreadcrumbList class="gap-0!">
-            <BreadcrumbItem>
+            <!-- <BreadcrumbItem>
               <BreadcrumbLink> File </BreadcrumbLink>
             </BreadcrumbItem>
-            <BreadcrumbSeparator />
+            <BreadcrumbSeparator /> -->
             <BreadcrumbItem>
               <BreadcrumbLink class="flex items-center gap-0.5">
                 <Icon :name="tabViewStore.activeTab?.icon" />
@@ -383,6 +383,10 @@ const mappedColumns = computed<MappedRawColumn[]>(() => {
           class="w-16 h-6! px-1.5"
           :workspaceId="route.params.workspaceId"
         />
+
+        <Button @click="openAddVariableModal" variant="outline" size="iconSm">
+          <Icon name="hugeicons:settings-01" />
+        </Button>
       </div>
     </div>
 

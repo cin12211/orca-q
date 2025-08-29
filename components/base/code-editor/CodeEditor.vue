@@ -139,15 +139,16 @@ onMounted(() => {
         compartmentOfLineWrapping,
         tomorrow,
 
-        showMinimap.compute(['doc'], (_state: EditorState) => {
-          return {
-            create,
-            /* optional */
-            displayText: 'blocks',
-            showOverlay: 'always',
-            gutters: [{ 1: '#00FF00', 2: 'green', 3: 'rgb(0, 100, 50)' }],
-          };
-        }),
+        //TODO: open in setting user can setting this
+        // showMinimap.compute(['doc'], (_state: EditorState) => {
+        //   return {
+        //     create,
+        //     /* optional */
+        //     displayText: 'blocks',
+        //     showOverlay: 'always',
+        //     gutters: [{ 1: '#00FF00', 2: 'green', 3: 'rgb(0, 100, 50)' }],
+        //   };
+        // }),
         // indentationMarkers(),
         // regexpLinter,
       ],
