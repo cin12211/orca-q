@@ -25,7 +25,6 @@ const isHand = ref(false);
 
 const triggerHand = () => {
   isHand.value = !isHand.value;
-  console.log('triggerHand called', isHand.value);
 };
 </script>
 

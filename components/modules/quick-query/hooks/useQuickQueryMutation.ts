@@ -317,13 +317,6 @@ export function useQuickQueryMutation(options: UseQuickQueryMutationOptions) {
     const columnName = currentCell?.column?.getColId();
 
     const clipboardData = await navigator.clipboard.readText();
-
-    console.log(
-      '🚀 ~ onPasteRows ~ currentCell:',
-      columnName,
-      rowIndex,
-      clipboardData
-    );
   };
 
   return {

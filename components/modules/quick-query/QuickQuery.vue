@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { on } from 'events';
+import { _debounce, type Column } from 'ag-grid-community';
 import QuickQueryTableSummary from '~/components/modules/quick-query/quick-query-table-summary/QuickQueryTableSummary.vue';
 import { useTableQueryBuilder } from '~/composables/useTableQueryBuilder';
 import { useAppContext } from '~/shared/contexts';
@@ -24,7 +24,6 @@ import QuickQueryContextMenu from './quick-query-table/QuickQueryContextMenu.vue
 import QuickQueryTable from './quick-query-table/QuickQueryTable.vue';
 import StructureTable from './structure/StructureTable.vue';
 
-// const props = defineProps<{ tableName: string; schemaName: string }>();
 const props = defineProps<{ tabViewId: string }>();
 
 const appLayoutStore = useAppLayoutStore();
@@ -45,6 +44,7 @@ const previewReverseTableModal = reactive({
 });
 
 const containerRef = ref<InstanceType<typeof HTMLElement>>();
+const summaryTableRef = ref();
 
 const {
   quickQueryFilterRef,
@@ -63,9 +63,6 @@ const {
   isLoadingTableSchema,
   tableMetaData,
   columnTypes,
-  dataSize,
-  indexSize,
-  tableSize,
 } = useQuickQueryTableInfo({
   tableName: tableName.value,
   schemaName: schemaName.value,
@@ -143,6 +140,11 @@ const {
   refreshCount,
   focusedCell,
 });
+
+const { handleSelectColumn, selectedColumnFieldId, resetGridState } =
+  useTableActions({
+    quickQueryTableRef,
+  });
 
 const quickQueryTabView = ref<QuickQueryTabView>(QuickQueryTabView.Data);
 
@@ -224,6 +226,12 @@ onMounted(() => {
       v-if="!selectedRows?.length"
       :table-name="tableName"
       :schema-name="schemaName"
+      ref="summaryTableRef"
+      :columns="quickQueryTableRef?.columnDefs"
+      :columnTypes="columnTypes"
+      :selectedColumnFieldId="selectedColumnFieldId"
+      :handleSelectColumn="handleSelectColumn"
+      @reset-selected-col="resetGridState"
     />
     <PreviewSelectedRow
       v-else
@@ -357,6 +365,7 @@ onMounted(() => {
           :defaultPageSize="DEFAULT_QUERY_SIZE"
           :offset="pagination.offset"
           @on-focus-cell="onFocusedCellChange"
+          :selectedColumnFieldId="selectedColumnFieldId"
         />
       </QuickQueryContextMenu>
     </div>

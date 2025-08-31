@@ -165,18 +165,9 @@ export const useAppContext = () => {
       connectionId: connId,
     });
 
-    console.log(
-      '🚀 ~ connectToConnection ~ currentState:',
-      currentState,
-      currentState?.connectionStates,
-      connId
-    );
-
     const currentSchema = currentState?.connectionStates?.find(
       connectionState => connectionState.id === connId
     );
-
-    console.log('databaseSource', currentSchema);
 
     if (!currentSchema?.schemaId) {
       await wsStateStore.setSchemaId({

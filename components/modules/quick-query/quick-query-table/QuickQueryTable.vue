@@ -6,6 +6,7 @@ import type {
   CellValueChangedEvent,
   ColDef,
   ColTypeDef,
+  Column,
   GridApi,
   GridOptions,
   GridReadyEvent,
@@ -35,6 +36,7 @@ const props = defineProps<{
   offset: number;
   class?: HTMLAttributes['class'];
   isHaveRelationByFieldName: (columnName: string) => boolean | undefined;
+  selectedColumnFieldId?: string | undefined;
 }>();
 
 const emit = defineEmits<{
@@ -152,15 +154,6 @@ const onCellValueChanged = (event: CellValueChangedEvent) => {
   }
 };
 
-// const fitCellContentColIds = [];
-
-// const fixColumnTypes = new Set(['timestamp', 'uuid', 'bool']);
-// props.columnTypes.forEach(columnType => {
-//   if (fixColumnTypes.has(columnType.type)) {
-//     fitCellContentColIds.push(columnType.name);
-//   }
-// });
-
 const gridOptions = computed(() => {
   const options: GridOptions = {
     rowClass: 'class-row-border-none',
@@ -184,7 +177,6 @@ const gridOptions = computed(() => {
     pagination: false,
     undoRedoCellEditing: true,
     undoRedoCellEditingLimit: 25,
-
     animateRows: true,
     onCellMouseDown,
     onCellMouseOver: onCellMouseOverDebounced,
@@ -226,7 +218,12 @@ const columnDefs = computed<ColDef[]>(() => {
       resizable: true,
       editable: true,
       sortable: false,
-      cellClass: 'cellCenter',
+      cellClass: (p: CellClassParams) => {
+        const isSelectedCol =
+          p.column.getColId() === props.selectedColumnFieldId;
+        return isSelectedCol ? 'col-highlight-cell cellCenter' : 'cellCenter';
+      },
+
       type: 'editableColumn',
       headerComponentParams: {
         allowSorting: true,
@@ -334,7 +331,17 @@ const onCellFocus = () => {
   }
 };
 
-defineExpose({ gridApi, editedCells });
+watch(
+  () => props.selectedColumnFieldId,
+  async () => {
+    await nextTick();
+    gridApi.value?.refreshCells({ force: true });
+    gridApi.value?.refreshHeader();
+  },
+  { flush: 'post' }
+);
+
+defineExpose({ gridApi, editedCells, columnDefs });
 </script>
 
 <template>
@@ -382,5 +389,10 @@ defineExpose({ gridApi, editedCells });
 
 .cellCenter .ag-cell-wrapper {
   justify-content: center;
+}
+
+.col-highlight-cell {
+  background: rgba(165, 165, 165, 0.15);
+  box-shadow: inset 0 0 0 9999px rgba(160, 160, 160, 0.08);
 }
 </style>

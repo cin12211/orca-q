@@ -27,7 +27,6 @@ const onChangeConnection = async (connectionId: AcceptableValue) => {
     typeof connectionId === 'string' &&
     connectionId !== activeConnectionId.value
   ) {
-    console.log('onChangeConnection', connectionId);
     await openWorkspaceWithConnection({
       connId: connectionId,
       wsId: props.workspaceId,
