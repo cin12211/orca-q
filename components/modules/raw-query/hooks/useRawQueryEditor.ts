@@ -108,8 +108,6 @@ export function useRawQueryEditor({
       schema[key] = mappedColumns;
     }
 
-    console.log('mappedSchema', schema);
-
     return schema;
   });
 
@@ -122,28 +120,39 @@ export function useRawQueryEditor({
       tables.push({
         label: tableName,
         type: CompletionIcon.Table,
-        displayLabel: `Table ${tableName}`,
         // info: `Table ${tableName}`,
       });
     }
 
-    // tables.push({
-    //   label: ':test-variable',
-    //   type: CompletionIcon.Variable,
-    //   boost: 200,
-    // });
+    // file variables
+    try {
+      const fileVariablesJson = JSON.parse(fileVariables.value);
+      for (const key in fileVariablesJson) {
+        tables.push({
+          label: `:${key}`,
+          type: CompletionIcon.Variable,
+          boost: 120,
+          detail: 'variable',
+          apply(view, completion, _from, to) {
+            const matched = view.state.doc.sliceString(_from - 1, to);
 
-    // try {
-    //   const fileVariablesJson = JSON.parse(fileVariables.value);
-    //   for (const key in fileVariablesJson) {
-    //     console.log('🚀 ~ useRawQueryEditor ~ key:', key);
-    //     tables.push({
-    //       label: `:${key}`,
-    //       type: CompletionIcon.Variable,
-    //       boost: 200,
-    //     });
-    //   }
-    // } catch {}
+            let from = _from;
+
+            if (matched.startsWith(':')) {
+              from = _from - 1;
+            }
+
+            view.dispatch({
+              changes: {
+                from,
+                to,
+                insert: completion.label,
+              },
+            });
+          },
+        });
+      }
+    } catch {}
 
     return tables;
   });
