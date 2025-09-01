@@ -33,12 +33,13 @@ export default defineEventHandler(
 
       return { rows, queryTime, fields };
     } catch (error) {
+      console.log('🚀 ~ error:', JSON.stringify(error));
       const queryError: QueryFailedError = error as any;
       throw createError({
         statusCode: 500,
         statusMessage: queryError.message,
         cause: queryError.cause,
-        data: queryError.driverError,
+        data: JSON.stringify(error, null, 2),
         message: queryError.message,
       });
     }

@@ -1,8 +1,6 @@
 <script setup lang="ts">
 import { ref, watch, onMounted, onUnmounted } from 'vue';
-import { PostgreSQL, type SQLConfig, sql } from '@codemirror/lang-sql';
-import { syntaxTree } from '@codemirror/language';
-import { linter, type Diagnostic } from '@codemirror/lint';
+import { PostgreSQL, type SQLConfig } from '@codemirror/lang-sql';
 import { search } from '@codemirror/search';
 import {
   Compartment,
@@ -11,8 +9,10 @@ import {
   Transaction,
   type Extension,
 } from '@codemirror/state';
+import { indentationMarkers } from '@replit/codemirror-indentation-markers';
 import { showMinimap } from '@replit/codemirror-minimap';
-// import { indentationMarkers } from '@replit/codemirror-indentation-markers';
+// import { syntaxTree } from '@codemirror/language';
+// import { linter, type Diagnostic } from '@codemirror/lint';
 import { EditorView, basicSetup } from 'codemirror';
 import { cn } from '@/lib/utils';
 import { useAppLayoutStore } from '~/shared/stores/appLayoutStore';
@@ -76,28 +76,6 @@ watch(
 );
 
 const getExtensions = () => {
-  const compartment = new Compartment();
-  const isLineWrapping = true;
-  const compartmentOfLineWrapping = compartment.of(
-    isLineWrapping ? [EditorView.lineWrapping] : []
-  );
-  // setting read-only mode
-  const readOnlyState = props.disabled ? EditorState.readOnly.of(true) : [];
-
-  let create = (v: EditorView) => {
-    const dom = document.createElement('div');
-    return { dom };
-  };
-
-  const fontSizeTheme = (size: string) =>
-    EditorView.theme({
-      '.cm-content, .cm-gutters, .cm-scroller': {
-        fontSize: size,
-      },
-    });
-
-  const theme = EditorThemeMap[appLayoutStore.codeEditorConfigs.theme];
-
   //TODO: make lint for sql
   // const regexpLinter = linter(view => {
   //   let diagnostics: Diagnostic[] = [];
@@ -124,13 +102,34 @@ const getExtensions = () => {
   //   return diagnostics;
   // });
 
+  const compartment = new Compartment();
+  const isLineWrapping = true;
+  const compartmentOfLineWrapping = compartment.of(
+    isLineWrapping ? [EditorView.lineWrapping] : []
+  );
+  // setting read-only mode
+  const readOnlyState = props.disabled ? EditorState.readOnly.of(true) : [];
+
+  const create = () => {
+    const dom = document.createElement('div');
+    return { dom };
+  };
+
+  const fontSizeTheme = (size: string) =>
+    EditorView.theme({
+      '.cm-content, .cm-gutters, .cm-scroller': {
+        fontSize: size,
+      },
+    });
+
+  const theme = EditorThemeMap[appLayoutStore.codeEditorConfigs.theme];
+
   const extensions = [
     ...(props.extensions || []),
     basicSetup,
     search({
       top: true,
     }),
-    // sql(props.config),
     EditorView.updateListener.of(update => {
       if (update.docChanged) {
         const newCode = update.state.doc.toString();
@@ -152,20 +151,17 @@ const getExtensions = () => {
     readOnlyState,
     compartmentOfLineWrapping,
     theme,
-    // indentationMarkers(),
-    // regexpLinter,
+    indentationMarkers(),
     appLayoutStore.codeEditorConfigs.showMiniMap
       ? showMinimap.compute(['doc'], (_state: EditorState) => {
           return {
             create,
-            /* optional */
             displayText: 'blocks',
             showOverlay: 'always',
             gutters: [{ 1: '#00FF00', 2: 'green', 3: 'rgb(0, 100, 50)' }],
           };
         })
       : [],
-
     fontSizeTheme(appLayoutStore.codeEditorConfigs.fontSize + 'pt'),
   ];
   return extensions;
