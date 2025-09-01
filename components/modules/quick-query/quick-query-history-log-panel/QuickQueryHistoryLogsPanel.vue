@@ -61,7 +61,7 @@
 
     <Card
       v-else
-      class="py-2 mt-1 h-full rounded-none shadow-none border-none overflow-auto"
+      class="py-0 mt-1 h-full rounded-none shadow-none border-none overflow-auto"
       ref="wrapperRef"
     >
       <CardContent class="p-0">

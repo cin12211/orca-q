@@ -9,3 +9,8 @@ export interface MappedRawColumn {
   short_type_name?: string | undefined;
   tableName: string;
 }
+
+export interface EditorCursor {
+  line: number;
+  column: number;
+}

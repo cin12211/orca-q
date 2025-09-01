@@ -2,9 +2,16 @@
 import { useAppLayoutStore } from '~/shared/stores/appLayoutStore';
 import { DEFAULT_DEBOUNCE_INPUT } from '~/utils/constants';
 
+const route = useRoute();
+
 const appLayoutStore = useAppLayoutStore();
 const { layoutSize, isPrimarySidebarCollapsed, bodySize } =
   toRefs(appLayoutStore);
+
+const isAccessBottomPanel = computed(() => {
+  if (route.meta.notAllowBottomPanel) return false;
+  return true;
+});
 
 useHotkeys([
   {
@@ -22,7 +29,9 @@ useHotkeys([
   {
     key: 'meta+j',
     callback: () => {
-      appLayoutStore.onToggleBottomPanel();
+      if (isAccessBottomPanel.value) {
+        appLayoutStore.onToggleBottomPanel();
+      }
     },
   },
 ]);
@@ -79,6 +88,7 @@ useHotkeys([
               <ResizableHandle
                 class="[&[data-state=hover]]:bg-primary/30! [&[data-state=drag]]:bg-primary/20!"
                 with-handle
+                v-if="isAccessBottomPanel"
               />
 
               <ResizablePanel
@@ -89,9 +99,10 @@ useHotkeys([
                 collapsible
                 id="default-layout-body-group-panel-2"
                 key="default-layout-body-group-panel-2"
+                v-if="isAccessBottomPanel"
               >
                 <div
-                  class="flex flex-col flex-1 h-full px-2"
+                  class="flex flex-col flex-1 h-full p-1"
                   id="bottom-panel"
                 ></div>
               </ResizablePanel>

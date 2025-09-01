@@ -15,14 +15,14 @@ const layout = useAppLayoutStore();
 <template>
   <div class="w-full h-full flex flex-col" v-if="layout.layoutSize[0]">
     <ModulesManagementExplorer
-      v-if="activityStore.activityActive === ActivityBarItemType.Explorer"
+      v-show="activityStore.activityActive === ActivityBarItemType.Explorer"
     />
 
     <ModulesManagementSchemas
-      v-if="activityStore.activityActive === ActivityBarItemType.Schemas"
+      v-show="activityStore.activityActive === ActivityBarItemType.Schemas"
     />
     <ModulesManagementErdDiagram
-      v-if="activityStore.activityActive === ActivityBarItemType.ErdDiagram"
+      v-show="activityStore.activityActive === ActivityBarItemType.ErdDiagram"
     />
 
     <!-- <ModulesManagementExplorer

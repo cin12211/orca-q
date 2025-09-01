@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { Button } from '#components';
 import {
   acceptCompletion,
   startCompletion,
@@ -10,7 +9,8 @@ import { Compartment } from '@codemirror/state';
 import { EditorView, keymap } from '@codemirror/view';
 import merge from 'lodash-es/merge';
 import type { FieldDef } from 'pg';
-import CodeEditor from '~/components/base/code-editor/CodeEditor.vue';
+import CodeEditor from '~/components/base/code-editor/BaseCodeEditor.vue';
+import BaseCodeEditor from '~/components/base/code-editor/BaseCodeEditor.vue';
 import {
   currentStatementHighlighter,
   shortCutExecuteCurrentStatement,
@@ -22,11 +22,6 @@ import {
   getCurrentStatement,
   pgKeywordCompletion,
 } from '~/components/base/code-editor/utils';
-import PureConnectionSelector from '~/components/modules/selectors/PureConnectionSelector.vue';
-import type {
-  ColumnShortMetadata,
-  TableDetailMetadata,
-} from '~/server/api/get-schema-meta-data';
 import { useAppContext } from '~/shared/contexts/useAppContext';
 import { useExplorerFileStoreStore } from '~/shared/stores';
 import { useAppLayoutStore } from '~/shared/stores/appLayoutStore';
@@ -34,10 +29,12 @@ import {
   convertParameters,
   type ParsedParametersResult,
 } from '~/utils/common/convertParameters';
-import { formatQueryTime } from '~/utils/common/format';
-import AddVariableModal from './components/AddVariableModal.vue';
-import type { MappedRawColumn } from './interfaces';
-import { formatStatementSql, formatColumnsInfo } from './utils';
+import RawQueryEditorFooter from './components/RawQueryEditorFooter.vue';
+import RawQueryEditorHeader from './components/RawQueryEditorHeader.vue';
+import RawQueryLayout from './components/RawQueryLayout.vue';
+import VariableEditor from './components/VariableEditor.vue';
+import type { EditorCursor, MappedRawColumn } from './interfaces';
+import { formatColumnsInfo, formatStatementSql } from './utils';
 
 //TODO: create lint check error for sql
 // https://www.npmjs.com/package/node-sql-parser?activeTab=readme
@@ -56,7 +53,7 @@ const rawQueryResults = ref<unknown[][]>([]);
 const fieldDefs = ref<FieldDef[]>([]);
 
 const isHaveOneExecute = ref(false);
-const cursorInfo = ref({ line: 1, column: 1 });
+const cursorInfo = ref<EditorCursor>({ line: 1, column: 1 });
 const executeLoading = ref(false);
 const queryTime = ref(0); // ms
 const executeErrors = ref<{
@@ -140,12 +137,6 @@ const updateFileVariables = async (fileVariablesValue: string) => {
   });
 };
 
-const openBottomPanelIfNeed = () => {
-  if (appLayoutStore.bodySize[1] === 0) {
-    appLayoutStore.onToggleBottomPanel();
-  }
-};
-
 const executeCurrentStatement = async ({
   currentStatement,
   treeNodes,
@@ -220,8 +211,6 @@ const executeCurrentStatement = async ({
   }
 
   executeLoading.value = false;
-
-  openBottomPanelIfNeed();
 };
 
 const extensions = [
@@ -295,23 +284,6 @@ const onHandleFormatCode = () => {
   }
 };
 
-const isActiveTeleport = ref(true);
-
-onActivated(() => {
-  isActiveTeleport.value = true;
-});
-
-onDeactivated(() => {
-  isActiveTeleport.value = false;
-});
-
-const isOpenAddVariableModal = ref(false);
-const isVariableError = ref(false);
-
-const openAddVariableModal = () => {
-  isOpenAddVariableModal.value = true;
-};
-
 const mappedColumns = computed<MappedRawColumn[]>(() => {
   return formatColumnsInfo({
     activeSchema: activeSchema.value,
@@ -333,125 +305,62 @@ const mappedColumns = computed<MappedRawColumn[]>(() => {
 </script>
 
 <template>
-  <AddVariableModal
-    @updateVariables="updateFileVariables"
-    :file-variables="fileVariables"
-    v-model:open="isOpenAddVariableModal"
-  />
-  <div class="flex flex-col h-full">
-    <div class="flex items-center justify-between p-1 border-b shadow">
-      <div>
-        <Breadcrumb>
-          <BreadcrumbList class="gap-0!">
-            <!-- <BreadcrumbItem>
-              <BreadcrumbLink> File </BreadcrumbLink>
-            </BreadcrumbItem>
-            <BreadcrumbSeparator /> -->
-            <BreadcrumbItem>
-              <BreadcrumbLink class="flex items-center gap-0.5">
-                <Icon :name="tabViewStore.activeTab?.icon" />
-                {{ tabViewStore.activeTab?.name }}
-              </BreadcrumbLink>
-            </BreadcrumbItem>
-            <!-- <BreadcrumbSeparator /> -->
-            <!-- <BreadcrumbItem>
-          <BreadcrumbPage>Breadcrumb</BreadcrumbPage>
-        </BreadcrumbItem> -->
-          </BreadcrumbList>
-        </Breadcrumb>
-      </div>
-
-      <div class="flex gap-2 items-center">
-        <Button
-          @click="openAddVariableModal"
-          variant="outline"
-          size="sm"
-          class="h-6 px-2 gap-1 font-normal relative"
-        >
-          <Icon
-            name="lucide:triangle-alert"
-            class="absolute -top-1 -right-1 text-red-400"
-            v-if="isVariableError"
+  <RawQueryLayout :layout="appLayoutStore.codeEditorLayout">
+    <template #content>
+      <div class="flex flex-col h-full p-1">
+        <div class="flex flex-col h-full border rounded-md">
+          <RawQueryEditorHeader
+            @update:connectionId="updateFileConnection"
+            :connections="connectionsByWsId"
+            :connection="connection"
+            :workspaceId="route.params.workspaceId"
+            :connectionId="currentFile?.connectionId || ''"
+            :file-variables="fileVariables"
+            :code-editor-layout="appLayoutStore.codeEditorLayout"
+            @update:update-file-variables="updateFileVariables"
           />
-          <Icon name="hugeicons:absolute" /> Add variables
-        </Button>
-        <PureConnectionSelector
-          :connectionId="currentFile?.connectionId || ''"
-          @update:connectionId="updateFileConnection"
-          :connections="connectionsByWsId"
-          :connection="connection"
-          class="w-16 h-6! px-1.5"
-          :workspaceId="route.params.workspaceId"
-        />
+          <div class="h-full flex flex-col overflow-y-auto">
+            <BaseCodeEditor
+              @update:modelValue="updateFileContent"
+              @update:cursorInfo="cursorInfo = $event"
+              :modelValue="fileContents"
+              :extensions="extensions"
+              :disabled="false"
+              ref="codeEditorRef"
+            />
+          </div>
 
-        <Button @click="openAddVariableModal" variant="outline" size="iconSm">
-          <Icon name="hugeicons:settings-01" />
-        </Button>
+          <RawQueryEditorFooter
+            :cursor-info="cursorInfo"
+            :execute-loading="executeLoading"
+            :execute-errors="!!executeErrors"
+            :is-have-one-execute="isHaveOneExecute"
+            :queryTime="queryTime"
+            :raw-query-results-length="rawQueryResults.length"
+            @onFormatCode="onHandleFormatCode"
+            @on-execute-current="onExecuteCurrent"
+          />
+        </div>
       </div>
-    </div>
+    </template>
 
-    <div class="h-full flex flex-col overflow-y-auto">
-      <CodeEditor
-        @update:modelValue="updateFileContent"
-        @update:cursorInfo="cursorInfo = $event"
-        :modelValue="fileContents"
-        :extensions="extensions"
-        :disabled="false"
-        ref="codeEditorRef"
-      />
-    </div>
+    <template #variables>
+      <div class="flex flex-col h-full border rounded-md bg-gray-50">
+        <div class="flex items-center gap-1 font-normal text-sm px-2 py-1">
+          <Icon name="hugeicons:absolute" />
+          Variables
+        </div>
 
-    <div class="h-9 flex items-center justify-between px-2">
-      <div class="font-normal text-xs text-muted-foreground">
-        Ln {{ cursorInfo.line }}, Col {{ cursorInfo.column }}
+        <div class="h-full flex flex-col overflow-y-auto">
+          <VariableEditor
+            @updateVariables="updateFileVariables"
+            :file-variables="fileVariables"
+          />
+        </div>
       </div>
+    </template>
 
-      <div
-        v-if="isHaveOneExecute"
-        class="font-normal text-xs text-muted-foreground"
-      >
-        <span v-if="executeLoading" class="flex items-center gap-1"
-          >Processing
-
-          <Icon name="hugeicons:loading-03" class="size-4! animate-spin">
-          </Icon>
-        </span>
-        <span v-else>
-          <span v-if="executeErrors">
-            Query: 1 error in {{ formatQueryTime(queryTime) }}
-          </span>
-          <span v-else>
-            Query: {{ rawQueryResults.length }} rows in
-            {{ formatQueryTime(queryTime) }}
-          </span>
-        </span>
-      </div>
-
-      <div class="flex gap-1">
-        <Button
-          @click="onHandleFormatCode"
-          variant="outline"
-          size="sm"
-          class="h-6 px-2 gap-1 font-normal"
-        >
-          <Icon name="hugeicons:magic-wand-01"> </Icon>
-          Format code
-        </Button>
-
-        <Button
-          @click="onExecuteCurrent"
-          variant="outline"
-          size="sm"
-          class="h-6 px-2 gap-1 font-normal"
-        >
-          <Icon name="hugeicons:play"> </Icon>
-          Execute current
-        </Button>
-      </div>
-    </div>
-
-    <!-- TODO: can support execute result for many table -->
-    <Teleport defer to="#bottom-panel" v-if="isActiveTeleport">
+    <template #result>
       <div v-if="executeErrors" class="pt-2">
         <!-- <span class="font-normal text-xs text-muted-foreground block">
           Execute query:
@@ -479,8 +388,8 @@ const mappedColumns = computed<MappedRawColumn[]>(() => {
         v-else
         :columns="mappedColumns"
         :data="rawQueryResults || []"
-        class="h-full py-2"
+        class="h-full"
       />
-    </Teleport>
-  </div>
+    </template>
+  </RawQueryLayout>
 </template>
