@@ -40,7 +40,34 @@ const {
   rawQueryResults,
   queryProcessState,
   // sqlCompartment,
+  reloadSqlCompartment,
 } = toRefs(rawQueryEditor);
+
+watch(
+  activeSchema,
+  () => {
+    if (!activeSchema.value?.tableDetails) return;
+
+    rawQueryEditor.reloadSqlCompartment();
+
+    // console.log('🚀 ~ tableDetails:', activeSchema.value);
+    // if (activeSchema.value?.tableDetails) {
+    //   nextTick(() => {
+    //     codeEditorRef.value?.reloadExtensions();
+    //   });
+    // }
+    // console.log(
+    //   'codeEditorRef.value?.reloadExtensions',
+    //   codeEditorRef.value?.reloadExtensions
+    // );
+    // const fileParameters = convertParameters(fileVariables.value || '');
+    // console.log('fileVariables.value', fileVariables.value);
+  },
+  {
+    deep: true,
+    immediate: true,
+  }
+);
 </script>
 
 <template>

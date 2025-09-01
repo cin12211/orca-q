@@ -82,11 +82,21 @@ export default defineEventHandler(async (event): Promise<SchemaMetaData[]> => {
                       'name', c.column_name,
                       'ordinal_position', c.ordinal_position,
                       'type', c.data_type,
-                      'short_type_name', CASE
-                        WHEN c.data_type = 'character varying' THEN 'varchar'
-                        WHEN c.data_type = 'character' THEN 'char'
-                        ELSE c.data_type
-                      END
+                       'short_type_name', CASE
+                          WHEN c.data_type = 'character varying' THEN 'varchar'
+                          WHEN c.data_type = 'character' THEN 'char'
+                          WHEN c.data_type = 'timestamp without time zone' THEN 'timestamp'
+                          WHEN c.data_type = 'timestamp with time zone' THEN 'timestamptz'
+                          WHEN c.data_type = 'time without time zone' THEN 'time'
+                          WHEN c.data_type = 'time with time zone' THEN 'timetz'
+                          WHEN c.data_type = 'double precision' THEN 'float8'
+                          WHEN c.data_type = 'real' THEN 'float4'
+                          WHEN c.data_type = 'integer' THEN 'int4'
+                          WHEN c.data_type = 'bigint' THEN 'int8'
+                          WHEN c.data_type = 'smallint' THEN 'int2'
+                          WHEN c.data_type = 'boolean' THEN 'bool'
+                          ELSE c.data_type
+                        END
                     )
                   )
                   FROM information_schema.columns c

@@ -88,7 +88,7 @@ useHotkeys([
               <ResizableHandle
                 class="[&[data-state=hover]]:bg-primary/30! [&[data-state=drag]]:bg-primary/20!"
                 with-handle
-                v-if="isAccessBottomPanel"
+                v-show="isAccessBottomPanel"
               />
 
               <ResizablePanel
@@ -99,7 +99,7 @@ useHotkeys([
                 collapsible
                 id="default-layout-body-group-panel-2"
                 key="default-layout-body-group-panel-2"
-                v-if="isAccessBottomPanel"
+                v-show="isAccessBottomPanel"
               >
                 <div
                   class="flex flex-col flex-1 h-full p-1"

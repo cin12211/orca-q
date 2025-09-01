@@ -8,6 +8,12 @@ import {
 } from '@codemirror/view';
 import { getCurrentStatement } from '../utils';
 
+const currentStatementLineHighlightBaseTheme = EditorView.baseTheme({
+  '.cm-current-statement-line': {
+    backgroundColor: `rgb(59, 56, 160, 0.05) !important`,
+  },
+});
+
 // 1. Tạo Decoration line
 const currentStatementLineHighlight = Decoration.line({
   //TODO: need to move to css
@@ -19,7 +25,7 @@ const currentStatementLineHighlight = Decoration.line({
 
 //TODO: fix this , this plugin is prevent select because this always update dom
 // 2. Plugin để highlight
-export const currentStatementHighlighter = ViewPlugin.fromClass(
+const currentStatementHighlighter = ViewPlugin.fromClass(
   class {
     decorations: DecorationSet;
 
@@ -56,3 +62,8 @@ export const currentStatementHighlighter = ViewPlugin.fromClass(
     decorations: v => v.decorations,
   }
 );
+
+export const currentStatementLineHighlightExtension = [
+  currentStatementHighlighter,
+  currentStatementLineHighlightBaseTheme,
+];

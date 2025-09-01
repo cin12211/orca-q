@@ -1,12 +1,14 @@
 <script setup lang="ts">
-import { BaseCodeEditor } from '#components';
 import { json, jsonParseLinter } from '@codemirror/lang-json';
 import { linter, lintGutter } from '@codemirror/lint';
 import { placeholder } from '@codemirror/view';
+import { _debounce } from 'ag-grid-community';
+import BaseCodeEditor from '~/components/base/code-editor/BaseCodeEditor.vue';
 import { shortCutFormatOnSave } from '~/components/base/code-editor/extensions';
 import { jsonFormat } from '~/utils/common';
+import { DEFAULT_DEBOUNCE_INPUT } from '~/utils/constants';
 
-defineProps<{
+const props = defineProps<{
   fileVariables: string;
 }>();
 
@@ -39,9 +41,15 @@ const extensions = [
   linter(jsonParseLinter()), // attach JSON linter
 ];
 
-const updateFileContent = async (fileContentsValue: string) => {
-  emit('updateVariables', fileContentsValue);
-};
+const updateFileContent = _debounce(
+  {
+    isAlive: () => true,
+  },
+  (fileContentsValue: string) => {
+    emit('updateVariables', fileContentsValue);
+  },
+  DEFAULT_DEBOUNCE_INPUT
+);
 </script>
 
 <template>

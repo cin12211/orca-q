@@ -10,7 +10,9 @@ import merge from 'lodash-es/merge';
 import type { FieldDef } from 'pg';
 import type BaseCodeEditor from '~/components/base/code-editor/BaseCodeEditor.vue';
 import {
-  currentStatementHighlighter,
+  CompletionIcon,
+  currentStatementLineHighlightExtension,
+  handleFormatCode,
   shortCutExecuteCurrentStatement,
   shortCutFormatOnSave,
   sqlAutoCompletion,
@@ -71,23 +73,84 @@ export function useRawQueryEditor({
     for (const key in tableDetails) {
       const columns = tableDetails[key]?.columns;
 
-      schema[key] = columns.map(col => {
+      const foreignKeys = tableDetails[key]?.foreign_keys;
+      const primaryKeys = tableDetails[key]?.primary_keys;
+
+      const mappedColumns = columns.map(col => {
+        let type = '';
+
+        if (primaryKeys?.find(pk => pk.column === col.name)) {
+          type = CompletionIcon.Keyword;
+        } else if (foreignKeys?.find(fk => fk.column === col.name)) {
+          type = CompletionIcon.ForeignKey;
+        } else {
+          type = CompletionIcon.Field;
+        }
+
         const sqlNamespace: Completion = {
           label: col.name,
-          type: 'field',
-          info: col.short_type_name || '',
+          type,
           boost: -col.ordinal_position,
+          detail: col.short_type_name, // show in last suggestion
+          // info: col.short_type_name || '', // show tooltip
         };
 
         return sqlNamespace;
       });
+
+      mappedColumns.push({
+        label: '*',
+        type: CompletionIcon.Function,
+        boost: 50,
+        detail: `All ${key}'s columns`,
+      });
+
+      schema[key] = mappedColumns;
     }
+
+    console.log('mappedSchema', schema);
 
     return schema;
   });
 
+  const mappedTablesSchema = computed(() => {
+    const tableDetails = activeSchema.value?.tableDetails;
+
+    const tables: Completion[] = [];
+
+    for (const tableName in tableDetails) {
+      tables.push({
+        label: tableName,
+        type: CompletionIcon.Table,
+        displayLabel: `Table ${tableName}`,
+        // info: `Table ${tableName}`,
+      });
+    }
+
+    // tables.push({
+    //   label: ':test-variable',
+    //   type: CompletionIcon.Variable,
+    //   boost: 200,
+    // });
+
+    // try {
+    //   const fileVariablesJson = JSON.parse(fileVariables.value);
+    //   for (const key in fileVariablesJson) {
+    //     console.log('🚀 ~ useRawQueryEditor ~ key:', key);
+    //     tables.push({
+    //       label: `:${key}`,
+    //       type: CompletionIcon.Variable,
+    //       boost: 200,
+    //     });
+    //   }
+    // } catch {}
+
+    return tables;
+  });
+
   // const schema: SQLNamespace = activeSchema.value?.tableDetails ?? {};
   const sqlCompartment = new Compartment();
+
   const executeCurrentStatement = async ({
     currentStatement,
     treeNodes,
@@ -166,28 +229,7 @@ export function useRawQueryEditor({
 
     queryProcessState.executeLoading = false;
   };
-  const extensions = [
-    shortCutExecuteCurrentStatement(executeCurrentStatement),
-    shortCutFormatOnSave((fileContent: string) => {
-      return formatStatementSql(fileContent);
-    }),
 
-    keymap.of([
-      { key: 'Mod-i', run: startCompletion },
-      { key: 'Tab', run: acceptCompletion },
-    ]),
-
-    sqlCompartment.of(
-      sql({
-        dialect: PostgreSQL,
-        upperCaseKeywords: true,
-        keywordCompletion: pgKeywordCompletion,
-        schema: mappedSchema.value,
-      })
-    ),
-    currentStatementHighlighter,
-    ...sqlAutoCompletion(),
-  ];
   const onExecuteCurrent = () => {
     if (!codeEditorRef.value?.editorView) {
       return;
@@ -205,38 +247,58 @@ export function useRawQueryEditor({
     }
   };
 
+  const extensions = [
+    shortCutExecuteCurrentStatement(executeCurrentStatement),
+    shortCutFormatOnSave((fileContent: string) => {
+      return formatStatementSql(fileContent);
+    }),
+
+    keymap.of([
+      { key: 'Mod-i', run: startCompletion },
+      { key: 'Tab', run: acceptCompletion },
+    ]),
+
+    sqlCompartment.of(
+      sql({
+        dialect: PostgreSQL,
+        upperCaseKeywords: true,
+        keywordCompletion: pgKeywordCompletion,
+        tables: mappedTablesSchema.value,
+        schema: mappedSchema.value,
+      })
+    ),
+    currentStatementLineHighlightExtension,
+    ...sqlAutoCompletion(),
+  ];
+
+  const reloadSqlCompartment = () => {
+    if (!codeEditorRef.value?.editorView) {
+      return;
+    }
+
+    codeEditorRef.value?.editorView.dispatch({
+      effects: sqlCompartment.reconfigure(
+        sql({
+          dialect: PostgreSQL,
+          upperCaseKeywords: true,
+          keywordCompletion: pgKeywordCompletion,
+          tables: mappedTablesSchema.value,
+          schema: mappedSchema.value,
+        })
+      ),
+    });
+  };
+
   const onHandleFormatCode = () => {
     if (!codeEditorRef.value?.editorView) {
       return;
     }
 
-    const view = codeEditorRef.value?.editorView as EditorView;
-
-    const code = view.state.doc.toString();
-
-    if (code) {
-      const formattedCode = formatStatementSql(code);
-
-      view.dispatch({
-        changes: {
-          from: 0,
-          to: view.state.doc.length,
-          insert: formattedCode,
-        },
-      });
-    }
+    handleFormatCode(
+      codeEditorRef.value?.editorView as EditorView,
+      formatStatementSql
+    );
   };
-
-  // watch(
-  //   () => route.params.fileId,
-  //   async fileId => {
-  //     const contents = await explorerFileStore.getFileContentById(
-  //       fileId as string
-  //     );
-
-  //     fileContents.value = contents;
-  //   }
-  // );
 
   return {
     codeEditorRef,
@@ -247,5 +309,6 @@ export function useRawQueryEditor({
     sqlCompartment,
     cursorInfo,
     onHandleFormatCode,
+    reloadSqlCompartment,
   };
 }

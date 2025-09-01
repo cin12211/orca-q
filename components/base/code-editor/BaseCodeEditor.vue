@@ -1,6 +1,5 @@
 <script setup lang="ts">
-import { ref, watch, onMounted, onUnmounted } from 'vue';
-import { PostgreSQL, type SQLConfig } from '@codemirror/lang-sql';
+import { onMounted, onUnmounted, ref, watch } from 'vue';
 import { search } from '@codemirror/search';
 import {
   Compartment,
@@ -11,28 +10,29 @@ import {
 } from '@codemirror/state';
 import { indentationMarkers } from '@replit/codemirror-indentation-markers';
 import { showMinimap } from '@replit/codemirror-minimap';
+import { EditorView, basicSetup } from 'codemirror';
 // import { syntaxTree } from '@codemirror/language';
 // import { linter, type Diagnostic } from '@codemirror/lint';
-import { EditorView, basicSetup } from 'codemirror';
 import { cn } from '@/lib/utils';
 import { useAppLayoutStore } from '~/shared/stores/appLayoutStore';
 import { EditorThemeMap } from './constants';
-import { currentStatementLineGutter } from './extensions';
+import {
+  currentStatementLineGutterExtension,
+  selectionBaseTheme,
+} from './extensions';
 
 // Define props
 interface Props {
   modelValue?: string; // For v-model binding
-  disabled?: boolean; // Read-only mode
-  config?: Partial<SQLConfig>; // SQL dialect and config
+  readonly?: boolean; // Read-only mode
   extensions?: Extension[]; // Additional CodeMirror extensions
   class?: string;
 }
 
 const props = withDefaults(defineProps<Props>(), {
   modelValue: '',
-  disabled: false,
-  config: () => ({ dialect: PostgreSQL, upperCaseKeywords: true }),
-  extensions: () => [],
+  readonly: false,
+  extensions: undefined,
   class: '',
 });
 
@@ -108,7 +108,7 @@ const getExtensions = () => {
     isLineWrapping ? [EditorView.lineWrapping] : []
   );
   // setting read-only mode
-  const readOnlyState = props.disabled ? EditorState.readOnly.of(true) : [];
+  const readOnlyState = props.readonly ? EditorState.readOnly.of(true) : [];
 
   const create = () => {
     const dom = document.createElement('div');
@@ -125,7 +125,7 @@ const getExtensions = () => {
   const theme = EditorThemeMap[appLayoutStore.codeEditorConfigs.theme];
 
   const extensions = [
-    ...(props.extensions || []),
+    ...(props?.extensions || []),
     basicSetup,
     search({
       top: true,
@@ -147,10 +147,11 @@ const getExtensions = () => {
         });
       }
     }),
-    currentStatementLineGutter,
+    currentStatementLineGutterExtension,
     readOnlyState,
     compartmentOfLineWrapping,
     theme,
+    selectionBaseTheme,
     indentationMarkers(),
     appLayoutStore.codeEditorConfigs.showMiniMap
       ? showMinimap.compute(['doc'], (_state: EditorState) => {
@@ -182,14 +183,19 @@ onMounted(() => {
   }
 });
 
+const reloadExtensions = () => {
+  if (editorView.value) {
+    console.log('🚀 ~ reloadExtensions ~ getExtensions:', getExtensions());
+    editorView.value.dispatch({
+      effects: StateEffect.reconfigure.of(getExtensions()),
+    });
+  }
+};
+
 watch(
   () => appLayoutStore.codeEditorConfigs,
   () => {
-    if (editorView.value) {
-      editorView.value.dispatch({
-        effects: StateEffect.reconfigure.of(getExtensions()),
-      });
-    }
+    reloadExtensions();
   },
   { deep: true }
 );
@@ -220,6 +226,7 @@ defineExpose({
       emit('update:modelValue', content);
     }
   },
+  reloadExtensions,
 });
 </script>
 
