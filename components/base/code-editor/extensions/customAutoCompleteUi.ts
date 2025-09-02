@@ -9,15 +9,52 @@ import {
   Brackets,
   Calendar,
   Database,
+  FieldIcon,
   Functions,
   Keyword,
   Numberic,
   String,
   Table,
   Types,
-  Variable,
   Vector,
+  Variable,
+  ForeignKey,
 } from './icons-svg';
+
+export enum CompletionIcon {
+  Keyword = 'KEYWORD',
+  Variable = 'VARIABLE',
+  Type = 'TYPE',
+  Function = 'FUNCTION',
+  Method = 'METHOD',
+  Table = 'TABLE',
+  Database = 'DATABASE',
+  Numberic = 'NUMBERIC',
+  String = 'STRING',
+  Calendar = 'CALENDAR',
+  Brackets = 'BRACKETS',
+  Vector = 'VECTOR',
+  Field = 'FIELD',
+  ForeignKey = 'FOREIGNKEY',
+}
+
+// Mapping from enum → SVG
+export const CompletionIconMap: Record<CompletionIcon, string> = {
+  [CompletionIcon.Keyword]: Keyword,
+  [CompletionIcon.Variable]: Variable,
+  [CompletionIcon.Type]: Types,
+  [CompletionIcon.Function]: Functions,
+  [CompletionIcon.Method]: Functions,
+  [CompletionIcon.Table]: Table,
+  [CompletionIcon.Database]: Database,
+  [CompletionIcon.Numberic]: Numberic,
+  [CompletionIcon.String]: String,
+  [CompletionIcon.Calendar]: Calendar,
+  [CompletionIcon.Brackets]: Brackets,
+  [CompletionIcon.Vector]: Vector,
+  [CompletionIcon.Field]: FieldIcon,
+  [CompletionIcon.ForeignKey]: ForeignKey,
+};
 
 /**
  * The configs of Codemirror Autocomplete
@@ -181,9 +218,58 @@ export interface AutoCompletionConfig extends DefaultCompletionConfig {
   renderIconMap?: Record<string, string>;
 }
 
-const baseTheme = EditorView.baseTheme({
+// Groups of types → icon
+// const numberTypes = new Set([
+//   'BIT',
+//   'BOOLEAN',
+//   'TINYINT',
+//   'SMALLINT',
+//   'MEDIUMINT',
+//   'INTEGER',
+//   'INT',
+//   'BIGINT',
+//   'FLOAT',
+//   'DOUBLE',
+//   'DECIMAL',
+//   'NUMERIC',
+// ]);
+
+// const stringTypes = new Set([
+//   'CHAR',
+//   'VARCHAR',
+//   'TEXT',
+//   'TINYTEXT',
+//   'MEDIUMTEXT',
+//   'LONGTEXT',
+//   'BINARY',
+//   'VARBINARY',
+//   'BLOB',
+//   'TINYBLOB',
+//   'MEDIUMBLOB',
+//   'LONGBLOB',
+//   'ENUM',
+//   'SET',
+// ]);
+
+// const dateTypes = new Set(['DATE', 'TIME', 'DATETIME', 'TIMESTAMP', 'YEAR']);
+
+// Function to resolve icon
+function getCompletionIcon(type?: string): string | undefined {
+  if (!type) return;
+
+  const upper = type.toUpperCase() as keyof typeof CompletionIconMap;
+
+  const icon = CompletionIconMap[upper];
+  if (icon) {
+    return icon;
+  }
+
+  return '';
+}
+
+const autoCompleteBaseTheme = EditorView.baseTheme({
   '.cm-tooltip-autocomplete.cm-tooltip': {
-    boxShadow: '0px 2px 16px rgba(0, 0, 0, 0.1)',
+    boxShadow: '0 0.5rem 4rem rgba(0, 0, 0, 0.1)',
     border: 'none',
     borderRadius: 'var(--radius)',
   },
@@ -191,8 +277,8 @@ const baseTheme = EditorView.baseTheme({
     borderRadius: 'var(--radius)',
   },
   '.cm-tooltip.cm-tooltip-autocomplete .cm-autocomplete-item': {
-    lineHeight: '28px',
-    padding: '0 8px',
+    lineHeight: '1.625rem',
+    padding: '0 0.5rem',
     '&:hover': {
       backgroundColor: `rgba(12, 166, 242, .05)`,
     },
@@ -206,13 +292,14 @@ const baseTheme = EditorView.baseTheme({
     alignItems: 'center',
   },
   '.cm-autocomplete-item > div.icon': {
-    marginRight: '8px',
+    color: `var(--color-gray-400)`,
+    marginRight: '0.25rem',
   },
   '.cm-autocomplete-item > div.icon svg': {
     verticalAlign: 'middle',
   },
   '.cm-autocomplete-item .cm-completionIcon-keyword': {
-    paddingRight: '24px',
+    paddingRight: '1.5rem',
   },
   '&light .cm-tooltip-autocomplete.cm-tooltip': {
     backgroundColor: '#fff',
@@ -233,11 +320,13 @@ const baseTheme = EditorView.baseTheme({
       color: '#e8e8e8',
     },
   },
-
-  // // TODO: must be refactored
-  // '.cm-activeLine': {
-  //   backgroundColor: 'transparent',
-  // },
+  '.cm-completionDetail': {
+    color: `var(--muted-foreground)`,
+    fontSize: 'var(--text-xs)',
+  },
+  '.cm-tooltip.cm-tooltip-autocomplete > ul': {
+    maxHeight: '35vh',
+  },
 });
 
 const customAutoCompletion = (config: AutoCompletionConfig) => {
@@ -247,7 +336,7 @@ const customAutoCompletion = (config: AutoCompletionConfig) => {
     activateOnTyping: true,
     closeOnBlur: false,
     optionClass: () =>
-      `cm-autocomplete-item ${config.autocompleteItemClassName || ''}`,
+      `cm-autocomplete-item relative ${config.autocompleteItemClassName || ''}`,
     icons: false,
     maxRenderedOptions: config.maxRenderedOptions || 500,
     addToOptions: [
@@ -258,71 +347,75 @@ const customAutoCompletion = (config: AutoCompletionConfig) => {
           _view: EditorView
         ) => {
           let src = '';
-          switch ((completion.type || '').toUpperCase()) {
-            case 'KEYWORD':
-              src = Keyword;
-              break;
-            case 'VARIABLE':
-              src = Variable;
-              break;
-            case 'TYPE':
-              src = Types;
-              break;
-            case 'FUNCTION':
-            case 'METHOD':
-              src = Functions;
-              break;
-            case 'TABLE':
-              src = Table;
-              break;
-            case 'DATABASE':
-              src = Database;
-              break;
-            case 'BIT':
-            case 'BOOLEAN':
-            case 'TINYINT':
-            case 'SMALLINT':
-            case 'MEDIUMINT':
-            case 'INTEGER':
-            case 'INT':
-            case 'BIGINT':
-            case 'FLOAT':
-            case 'DOUBLE':
-            case 'DECIMAL':
-            case 'NUMERIC':
-              src = Numberic;
-              break;
-            case 'CHAR':
-            case 'VARCHAR':
-            case 'TEXT':
-            case 'TINYTEXT':
-            case 'MEDIUMTEXT':
-            case 'LONGTEXT':
-            case 'BINARY':
-            case 'VARBINARY':
-            case 'BLOB':
-            case 'TINYBLOB':
-            case 'MEDIUMBLOB':
-            case 'LONGBLOB':
-            case 'ENUM':
-            case 'SET':
-              src = String;
-              break;
-            case 'DATE':
-            case 'TIME':
-            case 'DATETIME':
-            case 'TIMESTAMP':
-            case 'YEAR':
-              src = Calendar;
-              break;
-            case 'JSON':
-              src = Brackets;
-              break;
-            case 'VECTOR<FLOAT>':
-            case 'VECTOR<FLOAT16>':
-            case 'VECTOR':
-              src = Vector;
-              break;
+          // switch ((completion.type || '').toUpperCase()) {
+          //   case 'KEYWORD':
+          //     src = Keyword;
+          //     break;
+          //   case 'VARIABLE':
+          //     src = Variable;
+          //     break;
+          //   case 'TYPE':
+          //     src = Types;
+          //     break;
+          //   case 'FUNCTION':
+          //   case 'METHOD':
+          //     src = Functions;
+          //     break;
+          //   case 'TABLE':
+          //     src = Table;
+          //     break;
+          //   case 'DATABASE':
+          //     src = Database;
+          //     break;
+          //   case 'BIT':
+          //   case 'BOOLEAN':
+          //   case 'TINYINT':
+          //   case 'SMALLINT':
+          //   case 'MEDIUMINT':
+          //   case 'INTEGER':
+          //   case 'INT':
+          //   case 'BIGINT':
+          //   case 'FLOAT':
+          //   case 'DOUBLE':
+          //   case 'DECIMAL':
+          //   case 'NUMERIC':
+          //     src = Numberic;
+          //     break;
+          //   case 'CHAR':
+          //   case 'VARCHAR':
+          //   case 'TEXT':
+          //   case 'TINYTEXT':
+          //   case 'MEDIUMTEXT':
+          //   case 'LONGTEXT':
+          //   case 'BINARY':
+          //   case 'VARBINARY':
+          //   case 'BLOB':
+          //   case 'TINYBLOB':
+          //   case 'MEDIUMBLOB':
+          //   case 'LONGBLOB':
+          //   case 'ENUM':
+          //   case 'SET':
+          //     src = String;
+          //     break;
+          //   case 'DATE':
+          //   case 'TIME':
+          //   case 'DATETIME':
+          //   case 'TIMESTAMP':
+          //   case 'YEAR':
+          //     src = Calendar;
+          //     break;
+          //   case 'JSON':
+          //     src = Brackets;
+          //     break;
+          //   case 'VECTOR<FLOAT>':
+          //   case 'VECTOR<FLOAT16>':
+          //   case 'VECTOR':
+          //     src = Vector;
+          //     break;
+          // }
+
+          if (completion.type) {
+            src = getCompletionIcon(completion.type) || '';
           }
 
           if (
@@ -336,6 +429,7 @@ const customAutoCompletion = (config: AutoCompletionConfig) => {
           if (src) {
             const element = document.createElement('div');
             element.className = 'icon';
+
             element.innerHTML = src;
             return element;
           } else {
@@ -344,7 +438,18 @@ const customAutoCompletion = (config: AutoCompletionConfig) => {
         },
         position: 0,
       },
+      {
+        render: () => {
+          const element = document.createElement('div');
+          element.className = 'w-full flex justify-end pl-2';
+
+          element.innerHTML = '';
+          return element;
+        },
+        position: 80,
+      },
     ],
+
     ...rest,
   });
 };
@@ -352,5 +457,5 @@ const customAutoCompletion = (config: AutoCompletionConfig) => {
 export function sqlAutoCompletion(
   config: AutoCompletionConfig = {}
 ): Extension[] {
-  return [baseTheme, customAutoCompletion(config)];
+  return [autoCompleteBaseTheme, customAutoCompletion(config)];
 }

@@ -6,6 +6,6 @@
 
 <template>
   <div class="w-full h-full flex flex-col" id="preview-select-row">
-    <!-- <CodeEditor v-model="code" :extensions="extensions" :disabled="false" /> -->
+    <!-- <BaseCodeEditor v-model="code" :extensions="extensions" :disabled="false" /> -->
   </div>
 </template>

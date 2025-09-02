@@ -179,12 +179,12 @@ const { isHaveRelationByFieldName } = useReverseTables({
     />
   </Teleport>
 
-  <Teleport defer to="#bottom-panel" v-if="isActiveTeleport">
+  <!-- <Teleport defer to="#bottom-panel" v-if="isActiveTeleport">
     <QuickQueryHistoryLogsPanel
       :tableName="props.tableName"
       :schema-name="props.schemaName"
     />
-  </Teleport>
+  </Teleport> -->
 
   <QuickQueryErrorPopup
     v-model:open="openErrorModal"

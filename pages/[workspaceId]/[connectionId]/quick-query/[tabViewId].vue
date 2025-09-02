@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import QuickQuery from '~/components/modules/quick-query/QuickQuery.vue';
+import { DEFAULT_MAX_KEEP_ALIVE } from '~/utils/constants';
 
 definePageMeta({
   keepalive: {
-    max: 6,
+    max: DEFAULT_MAX_KEEP_ALIVE,
   },
 });
 

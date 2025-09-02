@@ -4,3 +4,5 @@ export * from './shortCutFormatOnSave';
 export * from './customAutoCompleteUi';
 export * from './currentStatementHighlighter';
 export * from './shortCutFormatOnSave';
+export * from './selectionBaseTheme';
+export * from './sqlLinter';

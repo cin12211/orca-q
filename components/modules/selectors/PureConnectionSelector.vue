@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { Select, SelectGroup, SelectItem, SelectTrigger } from '#components';
-import type { AcceptableValue } from 'reka-ui';
 import { cn } from '@/lib/utils';
 import { useAppContext } from '~/shared/contexts/useAppContext';
 import { type Connection } from '~/shared/stores';
@@ -48,8 +47,11 @@ const onOpenAddConnectionModal = () => {
     :model-value="connectionId"
     v-model:open="open"
   >
-    <SelectTrigger :class="cn(props.class, 'w-48 cursor-pointer')" size="sm">
-      <div class="flex items-center gap-2 w-44 truncate" v-if="connection">
+    <SelectTrigger
+      :class="cn(props.class, ' w-fit max-w-[12rem] cursor-pointer')"
+      size="sm"
+    >
+      <div class="flex items-center gap-2 truncate" v-if="connection">
         <component
           :is="getDatabaseSupportByType(connection.type)?.icon"
           class="size-4! min-w-4!"

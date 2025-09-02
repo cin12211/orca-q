@@ -249,11 +249,21 @@ const columnDefs = computed<ColDef[]>(() => {
       },
 
       valueFormatter: (params: ValueFormatterParams) => {
+        const value = params.value;
+
         if (type === 'jsonb' || type === 'json') {
-          return params.value ? JSON.stringify(params.value, null, 2) : '';
+          return value ? JSON.stringify(value, null, 2) : '';
         }
 
-        return params.value;
+        if (
+          typeof value === 'object' &&
+          value !== null &&
+          Object.prototype.toString.call(value) === '[object Object]'
+        ) {
+          return value ? JSON.stringify(value, null, 2) : '';
+        }
+
+        return value;
       },
     };
     columns.push(column);

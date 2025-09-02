@@ -1,55 +1,3 @@
-.line-gutter-statement-line {
-  width: 2px;
-  height: 100%;
-  background-color: var(--color-amber-400);
-}
-
-.cm-current-statement-line {
-  background-color: rgb(59, 56, 160, 0.05) !important;
-}
-
-/* .cm-selectionBackground { */
-/* background-color: rgba(240, 200, 200, 0.5) !important;  */
-/* } */
-
-/* .cm-minimap-overlay-container { */
-/* border: 1px solid var(--border); */
-/* border-bottom: none; */
-/* } */
-
-.cm-selectionLayer {
-  z-index: -1 !important;
-}
-
-.cm-selectionBackground {
-  /* background-color: rgb(240, 228, 211, 0.4) !important; */
-  background-color: rgb(26, 42, 128, 0.3) !important;
-}
-
-/* .cm-activeLine { */
-/* outline-style: solid; */
-/* outline-color: var(--border); */
-/* } */
-
-/* .cm-activeLineGutter { */
-/* outline-style: solid; */
-/* outline-color: var(--border); */
-/* background-color: unset !important; */
-/* } */
-
-.cm-gutters {
-  background-color: unset !important;
-  border: none !important;
-}
-
-.cm-line {
-  padding-left: 4px !important;
-}
-
-.cm-focused {
-  outline: unset !important;
-}
-
 .ͼ2 .cm-button {
   background-image: none;
 
@@ -137,4 +85,14 @@
   label {
     height: calc(var(--spacing) * 7);
   }
+}
+
+.ͼ1 .cm-panels {
+  position: absolute;
+  right: 0 !important;
+  top: 0 !important;
+  left: unset;
+  border-style: var(--tw-border-style);
+  border-width: 1px;
+  border-radius: calc(var(--radius) /* 0.25rem = 4px */ - 2px);
 }

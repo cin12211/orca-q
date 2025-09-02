@@ -22,7 +22,7 @@ const { data, status } = useFetch('/api/get-over-view-function', {
   <div class="h-full relative">
     <LoadingOverlay :visible="status === 'pending'" />
 
-    <DynamicTable
+    <DynamicTableOld
       :data="data || []"
       :foreign-keys="[]"
       :primary-keys="[]"

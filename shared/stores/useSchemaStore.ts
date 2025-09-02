@@ -1,7 +1,11 @@
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
+import { key } from 'localforage';
 import type { ReservedTableSchemas } from '~/server/api/get-reverse-table-schemas';
-import type { TableDetails } from '~/server/api/get-schema-meta-data';
+import type {
+  TableDetailMetadata,
+  TableDetails,
+} from '~/server/api/get-schema-meta-data';
 import { useWSStateStore } from './useWSStateStore';
 
 export interface Schema {
@@ -91,11 +95,39 @@ export const useSchemaStore = defineStore(
     //   }
     // };
 
+    const getTableInfoById = (
+      tableId: string,
+      schema: Schema
+    ):
+      | {
+          tableName: string;
+          tableInfo: TableDetailMetadata;
+        }
+      | undefined => {
+      if (!schema) {
+        return undefined;
+      }
+
+      const tableDetails = schema.tableDetails as TableDetails;
+      for (const key of Object.keys(tableDetails)) {
+        const table = tableDetails[key];
+
+        if (table.table_id === tableId) {
+          return {
+            tableName: key,
+            tableInfo: table,
+          };
+        }
+      }
+      return undefined;
+    };
+
     return {
       reservedSchemas,
       schemas,
       activeSchema,
       schemasByContext,
+      getTableInfoById,
     };
   },
   {

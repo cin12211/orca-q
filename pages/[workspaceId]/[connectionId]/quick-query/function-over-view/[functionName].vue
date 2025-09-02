@@ -112,6 +112,6 @@ const extensions = [
 <template>
   <div class="h-full relative">
     <LoadingOverlay :visible="status === 'pending'" />
-    <CodeEditor v-model="code" :extensions="extensions" :disabled="false" />
+    <BaseCodeEditor v-model="code" :extensions="extensions" :disabled="false" />
   </div>
 </template>

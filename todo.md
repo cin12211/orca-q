@@ -17,3 +17,4 @@
 - [x] TODO: Allow edit row
 - [x] TODO: sync data when edit to row table
 - [x] TODO: allow save data in control bar -> sync button -> trigger call api
+- [] TODO: use https://github.com/taozhi8833998/node-sql-parser to parse query and get column name

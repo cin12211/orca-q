@@ -1,5 +1,13 @@
 import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
+import {
+  DEFAULT_EDITOR_CONFIG,
+  type EditorTheme,
+} from '~/components/base/code-editor/constants';
+import {
+  RawQueryEditorDefaultSize,
+  RawQueryEditorLayout,
+} from '~/components/modules/raw-query/constants';
 
 const DEFAULT_APP_LAYOUT_SIZE = [25, 50, 25];
 
@@ -9,6 +17,7 @@ const initBodyLayout = [100, 0];
 
 const DEFAULT_BODY_LAYOUT_SIZE = [100, 25];
 
+// need to refactor code to useAppConfigStore
 export const useAppLayoutStore = defineStore(
   'app-layout-store',
   () => {
@@ -101,6 +110,34 @@ export const useAppLayoutStore = defineStore(
       bodySize.value[0] = top + bottom;
     };
 
+    const codeEditorLayout = ref<RawQueryEditorLayout>(
+      RawQueryEditorLayout.horizontalWithVariables
+    );
+
+    const setCodeEditorLayout = (layout: RawQueryEditorLayout) => {
+      codeEditorLayout.value = layout;
+    };
+
+    const editorLayoutSizes = ref<[number, number]>([
+      RawQueryEditorDefaultSize.content,
+      RawQueryEditorDefaultSize.result,
+    ]);
+
+    const editorLayoutInnerVariableSizes = ref<[number, number]>([
+      RawQueryEditorDefaultSize.content,
+      RawQueryEditorDefaultSize.variables,
+    ]);
+
+    const codeEditorConfigs = reactive<{
+      fontSize: number;
+      theme: EditorTheme;
+      showMiniMap: boolean;
+    }>({
+      fontSize: DEFAULT_EDITOR_CONFIG.fontSize,
+      showMiniMap: DEFAULT_EDITOR_CONFIG.showMiniMap,
+      theme: DEFAULT_EDITOR_CONFIG.theme,
+    });
+
     return {
       historyBodySize,
       layoutSize,
@@ -115,6 +152,11 @@ export const useAppLayoutStore = defineStore(
       onToggleBottomPanel,
       onShowSecondSidebar,
       onCloseBottomPanel,
+      codeEditorLayout,
+      setCodeEditorLayout,
+      editorLayoutSizes,
+      editorLayoutInnerVariableSizes,
+      codeEditorConfigs,
     };
   },
   {

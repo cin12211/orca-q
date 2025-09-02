@@ -21,7 +21,7 @@ const { data, status } = useFetch('/api/get-table-structure', {
 <template>
   <LoadingOverlay :visible="status === 'pending'" />
 
-  <DynamicTable
+  <DynamicTableOld
     :data="data || []"
     :foreign-keys="[]"
     :primary-keys="[]"

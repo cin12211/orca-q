@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import RowQuery from '~/components/modules/row-query/RowQuery.vue';
+import RawQuery from '~/components/modules/raw-query/RawQuery.vue';
 
 //TODO: create lint check error for sql
 // https://www.npmjs.com/package/node-sql-parser?activeTab=readme
@@ -7,9 +7,10 @@ import RowQuery from '~/components/modules/row-query/RowQuery.vue';
 
 definePageMeta({
   keepalive: true,
+  notAllowBottomPanel: true,
 });
 </script>
 
 <template>
-  <RowQuery />
+  <RawQuery />
 </template>

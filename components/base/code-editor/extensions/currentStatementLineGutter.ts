@@ -1,4 +1,4 @@
-import { GutterMarker, gutter } from '@codemirror/view';
+import { EditorView, GutterMarker, gutter } from '@codemirror/view';
 import { getCurrentStatement } from '../utils';
 
 export interface SyntaxTreeNodeData {
@@ -18,15 +18,16 @@ const currentStatementMarker = new (class extends GutterMarker {
   }
 })();
 
-export const currentStatementLineGutter = gutter({
+const currentStatementLineGutter = gutter({
   lineMarker(view, line) {
-    const { currentStatement } = getCurrentStatement(view);
+    const { currentStatements } = getCurrentStatement(view);
 
-    if (
-      currentStatement &&
-      line.from >= currentStatement.from &&
-      currentStatement.to >= line.to
-    ) {
+    if (!currentStatements.length) return null;
+
+    const from = currentStatements[0].from;
+    const to = currentStatements[currentStatements.length - 1].to;
+
+    if (line.from >= from && to >= line.to) {
       return currentStatementMarker;
     }
 
@@ -34,3 +35,26 @@ export const currentStatementLineGutter = gutter({
   },
   initialSpacer: () => currentStatementMarker,
 });
+
+const currentStatementBaseTheme = EditorView.baseTheme({
+  '.line-gutter-statement-line': {
+    width: '2px',
+    height: '100%',
+    backgroundColor: `var(--color-amber-400)`,
+  },
+  '.cm-gutters': {
+    backgroundColor: `unset !important`,
+    border: `none !important`,
+  },
+  '.cm-line': {
+    paddingLeft: `4px !important`,
+  },
+  '.cm-focused': {
+    outline: `unset !important`,
+  },
+});
+
+export const currentStatementLineGutterExtension = [
+  currentStatementBaseTheme,
+  currentStatementLineGutter,
+];

@@ -34,15 +34,15 @@ WORKDIR /app
 COPY --from=builder /app/.output .output
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/package.json .
-COPY --from=builder /app/ecosystem.config.js .
+# COPY --from=builder /app/ecosystem.config.js .
 
 # Install pm2 globally
-RUN npm install -g pm2
+# RUN npm install -g pm2
 
 ENV NODE_ENV=production
 EXPOSE 3000
 
 
+CMD ["node", ".output/server/index.mjs"]
 # CMD ["pm2-runtime","ecosystem.config.js"]
-# CMD ["node", ".output/server/index.mjs"]
-CMD ["pm2-runtime", "ecosystem.config.js"]
+# CMD ["pm2-runtime", "ecosystem.config.js"]
