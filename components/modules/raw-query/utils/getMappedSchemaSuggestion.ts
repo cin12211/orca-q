@@ -1,6 +1,6 @@
 import type { Completion } from '@codemirror/autocomplete';
 import type { SQLNamespace } from '@codemirror/lang-sql';
-import { CompletionIcon } from '~/components/base/code-editor/extensions';
+import { CompletionIcon } from '~/components/base/code-editor/constants';
 import type { TableDetails } from '~/server/api/get-schema-meta-data';
 
 export const getMappedSchemaSuggestion = ({

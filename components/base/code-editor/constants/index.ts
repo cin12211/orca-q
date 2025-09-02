@@ -86,3 +86,20 @@ export const EditorThemeMap: Record<EditorTheme, any> = {
   [EditorTheme.RosePineDawn]: rosePineDawn,
   [EditorTheme.SolarizedLight]: solarizedLight,
 };
+
+export enum CompletionIcon {
+  Keyword = 'KEYWORD',
+  Variable = 'VARIABLE',
+  Type = 'TYPE',
+  Function = 'FUNCTION',
+  Method = 'METHOD',
+  Table = 'TABLE',
+  Database = 'DATABASE',
+  Numberic = 'NUMBERIC',
+  String = 'STRING',
+  Calendar = 'CALENDAR',
+  Brackets = 'BRACKETS',
+  Vector = 'VECTOR',
+  Field = 'FIELD',
+  ForeignKey = 'FOREIGNKEY',
+}

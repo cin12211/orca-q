@@ -1,5 +1,5 @@
 import type { Completion } from '@codemirror/autocomplete';
-import { CompletionIcon } from '../extensions';
+import { CompletionIcon } from '../constants';
 
 const pgKeywordMeta: Record<
   string,
@@ -41,7 +41,6 @@ const pgKeywordMeta: Record<
     boost: 95,
     type: CompletionIcon.Keyword,
   },
-
   // INSERT/UPDATE/DELETE
   INSERT: {
     info: "Insert new rows into a table.\nExample: INSERT INTO users (name, age) VALUES ('Alice', 25);",
@@ -58,7 +57,6 @@ const pgKeywordMeta: Record<
     boost: 90,
     type: CompletionIcon.Keyword,
   },
-
   // ========================
   // Clauses
   // ========================
@@ -112,7 +110,6 @@ const pgKeywordMeta: Record<
     boost: 70,
     type: CompletionIcon.Keyword,
   },
-
   // ========================
   // Operators / Boolean
   // ========================
@@ -166,7 +163,6 @@ const pgKeywordMeta: Record<
     boost: 80,
     type: CompletionIcon.Keyword,
   },
-
   // ========================
   // DDL
   // ========================
@@ -220,7 +216,6 @@ const pgKeywordMeta: Record<
     boost: 65,
     type: CompletionIcon.Keyword,
   },
-
   // ========================
   // DCL
   // ========================
@@ -234,7 +229,6 @@ const pgKeywordMeta: Record<
     boost: 70,
     type: CompletionIcon.Keyword,
   },
-
   // ========================
   // Transaction
   // ========================
@@ -268,7 +262,6 @@ const pgKeywordMeta: Record<
     boost: 60,
     type: CompletionIcon.Keyword,
   },
-
   // ========================
   // CTE & Set Ops
   // ========================
@@ -297,7 +290,6 @@ const pgKeywordMeta: Record<
     boost: 70,
     type: CompletionIcon.Keyword,
   },
-
   // ========================
   // CASE expression
   // ========================
@@ -326,7 +318,6 @@ const pgKeywordMeta: Record<
     boost: 80,
     type: CompletionIcon.Keyword,
   },
-
   // Aggregate Functions
   COUNT: {
     info: 'Count number of rows.\nExample: SELECT COUNT(*) FROM users;',
@@ -363,7 +354,6 @@ const pgKeywordMeta: Record<
     boost: 80,
     type: CompletionIcon.Function,
   },
-
   // System / Date-Time
   NOW: {
     info: 'Return the current date and time.\nExample: SELECT NOW();',
@@ -405,7 +395,6 @@ const pgKeywordMeta: Record<
     boost: 70,
     type: CompletionIcon.Function,
   },
-
   // JSON & Type-casting
   CAST: {
     info: "Convert a value from one type to another.\nExample: SELECT CAST('123' AS INT);",
@@ -427,7 +416,6 @@ const pgKeywordMeta: Record<
     boost: 70,
     type: CompletionIcon.Function,
   },
-
   // ========================
   // Window Functions
   // ========================
@@ -461,7 +449,6 @@ const pgKeywordMeta: Record<
     boost: 70,
     type: CompletionIcon.Keyword,
   },
-
   // ========================
   // Join Types
   // ========================
@@ -490,7 +477,6 @@ const pgKeywordMeta: Record<
     boost: 95,
     type: CompletionIcon.Keyword,
   },
-
   // ========================
   // Additional Operators
   // ========================
@@ -524,7 +510,6 @@ const pgKeywordMeta: Record<
     boost: 75,
     type: CompletionIcon.Keyword,
   },
-
   // ========================
   // Additional Aggregate Functions
   // ========================
@@ -543,7 +528,6 @@ const pgKeywordMeta: Record<
     boost: 80,
     type: CompletionIcon.Function,
   },
-
   // ========================
   // String Functions
   // ========================
@@ -572,7 +556,6 @@ const pgKeywordMeta: Record<
     boost: 80,
     type: CompletionIcon.Function,
   },
-
   // ========================
   // Additional JSON/JSONB Functions
   // ========================
@@ -586,7 +569,6 @@ const pgKeywordMeta: Record<
     boost: 70,
     type: CompletionIcon.Function,
   },
-
   // ========================
   // Array Functions
   // ========================
@@ -610,7 +592,6 @@ const pgKeywordMeta: Record<
     boost: 75,
     type: CompletionIcon.Function,
   },
-
   // ========================
   // Additional Date/Time Functions
   // ========================
@@ -629,7 +610,6 @@ const pgKeywordMeta: Record<
     boost: 75,
     type: CompletionIcon.Function,
   },
-
   // ========================
   // Conditional Functions
   // ========================
@@ -648,7 +628,6 @@ const pgKeywordMeta: Record<
     boost: 75,
     type: CompletionIcon.Function,
   },
-
   // ========================
   // Table Inheritance and Partitioning
   // ========================
@@ -662,7 +641,6 @@ const pgKeywordMeta: Record<
     boost: 65,
     type: CompletionIcon.Keyword,
   },
-
   // ========================
   // Full-Text Search
   // ========================
@@ -681,7 +659,6 @@ const pgKeywordMeta: Record<
     boost: 75,
     type: CompletionIcon.Function,
   },
-
   // ========================
   // Constraints
   // ========================
@@ -710,7 +687,6 @@ const pgKeywordMeta: Record<
     boost: 80,
     type: CompletionIcon.Keyword,
   },
-
   // ========================
   // Additional Window Functions
   // ========================
@@ -739,7 +715,6 @@ const pgKeywordMeta: Record<
     boost: 70,
     type: CompletionIcon.Function,
   },
-
   // ========================
   // Database Maintenance
   // ========================
@@ -763,7 +738,6 @@ const pgKeywordMeta: Record<
     boost: 60,
     type: CompletionIcon.Keyword,
   },
-
   // ========================
   // Triggers and Functions
   // ========================
@@ -787,7 +761,6 @@ const pgKeywordMeta: Record<
     boost: 65,
     type: CompletionIcon.Keyword,
   },
-
   // ========================
   // Concurrency Control
   // ========================

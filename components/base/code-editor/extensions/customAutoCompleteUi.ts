@@ -5,6 +5,7 @@ import {
 } from '@codemirror/autocomplete';
 import { EditorState, type Extension } from '@codemirror/state';
 import { EditorView, type Rect } from '@codemirror/view';
+import { CompletionIcon } from '../constants';
 import {
   Brackets,
   Calendar,
@@ -20,23 +21,6 @@ import {
   Variable,
   ForeignKey,
 } from './icons-svg';
-
-export enum CompletionIcon {
-  Keyword = 'KEYWORD',
-  Variable = 'VARIABLE',
-  Type = 'TYPE',
-  Function = 'FUNCTION',
-  Method = 'METHOD',
-  Table = 'TABLE',
-  Database = 'DATABASE',
-  Numberic = 'NUMBERIC',
-  String = 'STRING',
-  Calendar = 'CALENDAR',
-  Brackets = 'BRACKETS',
-  Vector = 'VECTOR',
-  Field = 'FIELD',
-  ForeignKey = 'FOREIGNKEY',
-}
 
 // Mapping from enum → SVG
 export const CompletionIconMap: Record<CompletionIcon, string> = {
@@ -218,41 +202,6 @@ export interface AutoCompletionConfig extends DefaultCompletionConfig {
   renderIconMap?: Record<string, string>;
 }
 
-// Groups of types → icon
-// const numberTypes = new Set([
-//   'BIT',
-//   'BOOLEAN',
-//   'TINYINT',
-//   'SMALLINT',
-//   'MEDIUMINT',
-//   'INTEGER',
-//   'INT',
-//   'BIGINT',
-//   'FLOAT',
-//   'DOUBLE',
-//   'DECIMAL',
-//   'NUMERIC',
-// ]);
-
-// const stringTypes = new Set([
-//   'CHAR',
-//   'VARCHAR',
-//   'TEXT',
-//   'TINYTEXT',
-//   'MEDIUMTEXT',
-//   'LONGTEXT',
-//   'BINARY',
-//   'VARBINARY',
-//   'BLOB',
-//   'TINYBLOB',
-//   'MEDIUMBLOB',
-//   'LONGBLOB',
-//   'ENUM',
-//   'SET',
-// ]);
-
-// const dateTypes = new Set(['DATE', 'TIME', 'DATETIME', 'TIMESTAMP', 'YEAR']);
-
 // Function to resolve icon
 function getCompletionIcon(type?: string): string | undefined {
   if (!type) return;
@@ -326,6 +275,12 @@ const autoCompleteBaseTheme = EditorView.baseTheme({
   },
   '.cm-tooltip.cm-tooltip-autocomplete > ul': {
     maxHeight: '35vh',
+  },
+  '.cm-completionInfo': {
+    backgroundColor: 'var(--background)',
+    borderRadius: `calc(var(--radius) /* 0.25rem = 4px */ - 2px)`,
+    borderStyle: `var(--tw-border-style)`,
+    borderWidth: `1px`,
   },
 });
 
