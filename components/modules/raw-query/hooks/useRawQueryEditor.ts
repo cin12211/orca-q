@@ -3,7 +3,8 @@ import {
   startCompletion,
   type Completion,
 } from '@codemirror/autocomplete';
-import { PostgreSQL, sql, type SQLNamespace } from '@codemirror/lang-sql';
+import { PostgreSQL, sql } from '@codemirror/lang-sql';
+import { lintGutter, setDiagnostics, type Diagnostic } from '@codemirror/lint';
 import { Compartment } from '@codemirror/state';
 import { EditorView, keymap } from '@codemirror/view';
 import merge from 'lodash-es/merge';
@@ -16,6 +17,7 @@ import {
   shortCutExecuteCurrentStatement,
   shortCutFormatOnSave,
   sqlAutoCompletion,
+  sqlLinter,
   type SyntaxTreeNodeData,
 } from '~/components/base/code-editor/extensions';
 import {
@@ -28,7 +30,7 @@ import {
   type ParsedParametersResult,
 } from '~/utils/common/convertParameters';
 import type { EditorCursor } from '../interfaces';
-import { formatStatementSql } from '../utils';
+import { formatStatementSql, getMappedSchemaSuggestion } from '../utils';
 
 export function useRawQueryEditor({
   activeSchema,
@@ -68,47 +70,9 @@ export function useRawQueryEditor({
   const mappedSchema = computed(() => {
     const tableDetails = activeSchema.value?.tableDetails;
 
-    const schema: SQLNamespace = {};
-
-    for (const key in tableDetails) {
-      const columns = tableDetails[key]?.columns;
-
-      const foreignKeys = tableDetails[key]?.foreign_keys;
-      const primaryKeys = tableDetails[key]?.primary_keys;
-
-      const mappedColumns = columns.map(col => {
-        let type = '';
-
-        if (primaryKeys?.find(pk => pk.column === col.name)) {
-          type = CompletionIcon.Keyword;
-        } else if (foreignKeys?.find(fk => fk.column === col.name)) {
-          type = CompletionIcon.ForeignKey;
-        } else {
-          type = CompletionIcon.Field;
-        }
-
-        const sqlNamespace: Completion = {
-          label: col.name,
-          type,
-          boost: -col.ordinal_position,
-          detail: col.short_type_name, // show in last suggestion
-          // info: col.short_type_name || '', // show tooltip
-        };
-
-        return sqlNamespace;
-      });
-
-      mappedColumns.push({
-        label: '*',
-        type: CompletionIcon.Function,
-        boost: 50,
-        detail: `All ${key}'s columns`,
-      });
-
-      schema[key] = mappedColumns;
-    }
-
-    return schema;
+    return getMappedSchemaSuggestion({
+      tableDetails,
+    });
   });
 
   const mappedTablesSchema = computed(() => {
@@ -120,7 +84,7 @@ export function useRawQueryEditor({
       tables.push({
         label: tableName,
         type: CompletionIcon.Table,
-        // info: `Table ${tableName}`,
+        detail: `Schema: ${activeSchema.value?.name}`,
       });
     }
 
@@ -184,7 +148,6 @@ export function useRawQueryEditor({
     });
 
     // console.log('currentStatementTrees:::', currentStatementTrees);
-
     const reversedCurrentStatementTrees = currentStatementTrees.toReversed();
 
     let parameters: ParsedParametersResult | null = null;
@@ -278,6 +241,8 @@ export function useRawQueryEditor({
     ),
     currentStatementLineHighlightExtension,
     ...sqlAutoCompletion(),
+    lintGutter(),
+    sqlLinter(),
   ];
 
   const reloadSqlCompartment = () => {
@@ -309,6 +274,20 @@ export function useRawQueryEditor({
     );
   };
 
+  //TODO:push error when execution error
+  function pushSqlError(view: EditorView) {
+    const diagnostics: Diagnostic[] = [
+      {
+        from: 0,
+        to: 5,
+        severity: 'error',
+        message: 'Example error at the beginning',
+      },
+    ];
+
+    view.dispatch(setDiagnostics(view.state, diagnostics));
+  }
+
   return {
     codeEditorRef,
     rawQueryResults,
@@ -319,5 +298,6 @@ export function useRawQueryEditor({
     cursorInfo,
     onHandleFormatCode,
     reloadSqlCompartment,
+    pushSqlError,
   };
 }
