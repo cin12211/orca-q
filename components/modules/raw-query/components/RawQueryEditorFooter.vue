@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { formatQueryTime } from '~/utils/common/format';
+import { formatNumber, formatQueryTime } from '~/utils/common/format';
 import type { EditorCursor } from '../interfaces';
 
 defineProps<{
@@ -36,7 +36,7 @@ defineEmits<{
           Query: 1 error in {{ formatQueryTime(queryTime) }}
         </span>
         <span v-else>
-          Query: {{ rawQueryResultsLength }} rows in
+          Query success: {{ formatNumber(rawQueryResultsLength) }} rows in
           {{ formatQueryTime(queryTime) }}
         </span>
       </span>
@@ -55,7 +55,7 @@ defineEmits<{
 
       <Button
         @click="$emit('onExecuteCurrent')"
-        variant="outline"
+        variant="default"
         size="sm"
         class="h-6 px-2 gap-1 font-normal"
       >

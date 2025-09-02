@@ -90,7 +90,7 @@ const gridOptions: GridOptions = {
 </script>
 
 <template>
-  <div class="py-2 h-full flex flex-col space-y-2">
+  <div class="h-full flex flex-col space-y-2">
     <!-- <div class="flex items-center gap-2">
       <div class="relative w-full">
         <Icon

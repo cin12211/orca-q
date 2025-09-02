@@ -5,7 +5,7 @@ import 'splitpanes/dist/splitpanes.css';
 import { useAppLayoutStore } from '~/shared/stores/appLayoutStore';
 import { RawQueryEditorLayout } from '../constants';
 
-defineProps<{
+const props = defineProps<{
   layout: RawQueryEditorLayout;
 }>();
 
@@ -50,55 +50,48 @@ const innerVariablesSize = computed(() => {
 const resultSize = computed(() => {
   return editorLayoutSizes.value[1];
 });
+
+const isWithVariablesLayout = computed(() => {
+  return props.layout === RawQueryEditorLayout.horizontalWithVariables;
+});
 </script>
 
 <template>
-  <div
-    v-if="layout === RawQueryEditorLayout.horizontalWithVariables"
-    class="w-full h-full"
-  >
+  <div class="w-full h-full">
     <splitpanes
       @resize="onUpdateEditorLayoutSizes($event.panes)"
       class="default-theme"
+      :horizontal="layout === RawQueryEditorLayout.vertical"
     >
       <pane :size="contentSize">
         <splitpanes
           horizontal
-          @resize="onUpdateEditorLayoutInnerVariableSizes($event.panes)"
+          @resize="
+            isWithVariablesLayout
+              ? onUpdateEditorLayoutInnerVariableSizes($event.panes)
+              : null
+          "
         >
-          <pane :size="innerContentSize" min-size="30">
+          <pane
+            :size="isWithVariablesLayout ? innerContentSize : 100"
+            min-size="30"
+          >
             <div class="flex flex-col w-full h-full overflow-y-auto">
               <slot name="content" />
             </div>
           </pane>
 
-          <pane :size="innerVariablesSize" min-size="3" max-size="70">
+          <pane
+            v-if="isWithVariablesLayout"
+            :size="innerVariablesSize"
+            min-size="3"
+            max-size="70"
+          >
             <div class="flex flex-col flex-1 h-full p-1">
               <slot name="variables" />
             </div>
           </pane>
         </splitpanes>
-      </pane>
-
-      <pane :size="resultSize" min-size="10" max-size="80">
-        <div class="flex flex-col flex-1 h-full p-1">
-          <slot name="result" />
-        </div>
-      </pane>
-    </splitpanes>
-  </div>
-
-  <!-- Vertical/Horizontal layout -->
-  <div v-else class="w-full h-full">
-    <splitpanes
-      :horizontal="layout !== RawQueryEditorLayout.horizontal"
-      @resize="onUpdateEditorLayoutSizes($event.panes)"
-      class="default-theme"
-    >
-      <pane :size="contentSize">
-        <div class="flex flex-col w-full h-full overflow-y-auto">
-          <slot name="content" />
-        </div>
       </pane>
 
       <pane :size="resultSize" min-size="10" max-size="80">
@@ -130,20 +123,20 @@ const resultSize = computed(() => {
 }
 
 .splitpanes--vertical > .splitpanes__splitter:after {
-  margin-left: -2px !important;
+  margin-left: -3px !important;
 
-  width: calc(var(--spacing) * 1) !important;
-  height: calc(var(--spacing) * 7) !important;
+  width: calc(var(--spacing) * 1.5) !important;
+  height: calc(var(--spacing) * 10) !important;
 
   background-color: var(--border) !important;
   border-radius: calc(var(--radius));
 }
 
 .splitpanes--horizontal > .splitpanes__splitter:after {
-  margin-top: -2px !important;
+  margin-top: -3px !important;
 
-  width: calc(var(--spacing) * 7) !important;
-  height: calc(var(--spacing) * 1) !important;
+  width: calc(var(--spacing) * 10) !important;
+  height: calc(var(--spacing) * 1.5) !important;
 
   background-color: var(--border) !important;
   border-radius: calc(var(--radius));

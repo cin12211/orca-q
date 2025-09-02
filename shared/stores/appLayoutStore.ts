@@ -17,6 +17,7 @@ const initBodyLayout = [100, 0];
 
 const DEFAULT_BODY_LAYOUT_SIZE = [100, 25];
 
+// need to refactor code to useAppConfigStore
 export const useAppLayoutStore = defineStore(
   'app-layout-store',
   () => {

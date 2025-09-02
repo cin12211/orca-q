@@ -20,13 +20,14 @@ const currentStatementMarker = new (class extends GutterMarker {
 
 const currentStatementLineGutter = gutter({
   lineMarker(view, line) {
-    const { currentStatement } = getCurrentStatement(view);
+    const { currentStatements } = getCurrentStatement(view);
 
-    if (
-      currentStatement &&
-      line.from >= currentStatement.from &&
-      currentStatement.to >= line.to
-    ) {
+    if (!currentStatements.length) return null;
+
+    const from = currentStatements[0].from;
+    const to = currentStatements[currentStatements.length - 1].to;
+
+    if (line.from >= from && to >= line.to) {
       return currentStatementMarker;
     }
 

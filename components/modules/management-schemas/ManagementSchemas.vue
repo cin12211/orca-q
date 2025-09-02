@@ -240,15 +240,21 @@ const onHandleOpenTab = async (
       </p>
 
       <div class="flex items-center">
-        <Button size="iconSm" variant="ghost" @click="onRefreshSchema">
-          <Icon
-            name="lucide:refresh-ccw"
-            :class="[
-              'size-4! min-w-4 text-muted-foreground',
-              isRefreshing && 'animate-spin',
-            ]"
-          />
-        </Button>
+        <Tooltip>
+          <TooltipTrigger as-child>
+            <Button size="iconSm" variant="ghost" @click="onRefreshSchema">
+              <Icon
+                name="lucide:refresh-ccw"
+                :class="[
+                  'size-4! min-w-4 text-muted-foreground',
+                  isRefreshing && 'animate-spin',
+                ]"
+              />
+            </Button>
+          </TooltipTrigger>
+
+          <TooltipContent> Refresh Schema </TooltipContent>
+        </Tooltip>
       </div>
     </div>
 

@@ -58,6 +58,10 @@ export const EditorThemeLight: EditorTheme[] = [
   EditorTheme.Tomorrow,
 ];
 
+export const EDITOR_FONT_SIZES = [
+  8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
+];
+
 export const DEFAULT_EDITOR_CONFIG = {
   fontSize: 10,
   showMiniMap: false,

@@ -8,6 +8,7 @@ import {
 } from '@/components/ui/dialog';
 import {
   DEFAULT_EDITOR_CONFIG,
+  EDITOR_FONT_SIZES,
   EditorTheme,
   EditorThemeDark,
   EditorThemeLight,
@@ -156,9 +157,7 @@ const appLayoutStore = useAppLayoutStore();
                   <SelectGroup>
                     <SelectItem
                       class="cursor-pointer h-6!"
-                      v-for="value in [
-                        10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
-                      ]"
+                      v-for="value in EDITOR_FONT_SIZES"
                       :value="value"
                     >
                       {{ value }} pt

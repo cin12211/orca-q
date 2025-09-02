@@ -1,5 +1,5 @@
 import { EditorView, keymap } from '@codemirror/view';
-import { getCurrentStatement } from '../utils';
+import { getCurrentStatement, getTreeNodes } from '../utils';
 
 function findNearestNodeIndexes(
   nodes: { from: number; to: number; type: string }[],
@@ -51,7 +51,7 @@ export const handleFormatCode = (
   }
 
   const cursorPos = view.state.selection.main.head;
-  const { treeNodes: nodesBefore } = getCurrentStatement(view);
+  const nodesBefore = getTreeNodes(view);
 
   // find closest nodes before and after cursor
   const nearestNodeIndexes = findNearestNodeIndexes(nodesBefore, cursorPos);
@@ -76,7 +76,8 @@ export const handleFormatCode = (
   });
 
   // get new tree and find mapped nearest node
-  const { treeNodes: nodesAfter } = getCurrentStatement(view);
+
+  const nodesAfter = getTreeNodes(view);
   const nearestNode = nodesAfter[nearestNodeIndex];
 
   // restore cursor position

@@ -8,6 +8,6 @@ export const selectionBaseTheme = EditorView.baseTheme({
     backgroundColor: 'rgba(255, 255, 255, 0.5) !important;',
   },
   '.cm-selectionLayer': {
-    zIndex: '0 !important',
+    zIndex: '-1 !important',
   },
 });

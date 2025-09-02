@@ -15,7 +15,7 @@ import type { SyntaxTreeNodeData } from './currentStatementLineGutter';
  */
 export const shortCutExecuteCurrentStatement = (
   callback: (value: {
-    currentStatement: SyntaxTreeNodeData;
+    currentStatements: SyntaxTreeNodeData[];
     treeNodes: SyntaxTreeNodeData[];
   }) => void
 ) =>
@@ -24,10 +24,10 @@ export const shortCutExecuteCurrentStatement = (
       key: 'Ctrl-Enter',
       mac: 'Cmd-Enter',
       run: (view: EditorView) => {
-        const { currentStatement, treeNodes } = getCurrentStatement(view);
+        const { currentStatements, treeNodes } = getCurrentStatement(view);
 
-        if (currentStatement) {
-          callback({ currentStatement, treeNodes: treeNodes || [] });
+        if (currentStatements.length) {
+          callback({ currentStatements, treeNodes: treeNodes || [] });
         }
 
         return true;

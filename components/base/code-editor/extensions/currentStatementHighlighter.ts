@@ -40,15 +40,18 @@ const currentStatementHighlighter = ViewPlugin.fromClass(
     }
 
     getDecorations(view: EditorView): DecorationSet {
-      const { currentStatement } = getCurrentStatement(view);
+      const { currentStatements } = getCurrentStatement(view);
 
-      if (!currentStatement) return Decoration.none;
+      if (!currentStatements.length) return Decoration.none;
+
+      const from = currentStatements[0].from;
+      const to = currentStatements[currentStatements.length - 1].to;
 
       const builder: Range<Decoration>[] = []; // 🔥 Sửa đúng TypeScript ở đây
 
       // Lấy dòng bắt đầu và dòng kết thúc của statement
-      const startLine = view.state.doc.lineAt(currentStatement.from);
-      const endLine = view.state.doc.lineAt(currentStatement.to);
+      const startLine = view.state.doc.lineAt(from);
+      const endLine = view.state.doc.lineAt(to);
 
       for (let lineNo = startLine.number; lineNo <= endLine.number; lineNo++) {
         const line = view.state.doc.line(lineNo);

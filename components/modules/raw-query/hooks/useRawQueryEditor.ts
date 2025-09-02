@@ -85,6 +85,7 @@ export function useRawQueryEditor({
         label: tableName,
         type: CompletionIcon.Table,
         detail: `Schema: ${activeSchema.value?.name}`,
+        boost: 100,
       });
     }
 
@@ -125,12 +126,15 @@ export function useRawQueryEditor({
   const sqlCompartment = new Compartment();
 
   const executeCurrentStatement = async ({
-    currentStatement,
+    currentStatements,
     treeNodes,
   }: {
-    currentStatement: SyntaxTreeNodeData;
+    currentStatements: SyntaxTreeNodeData[];
     treeNodes: SyntaxTreeNodeData[];
   }) => {
+    // TODO: support multiple statements
+    const currentStatement = currentStatements[0];
+
     queryProcessState.isHaveOneExecute = true;
     queryProcessState.currentStatementQuery = currentStatement.text;
 
@@ -212,16 +216,14 @@ export function useRawQueryEditor({
       return;
     }
 
-    const { currentStatement, treeNodes } = getCurrentStatement(
+    const { currentStatements, treeNodes } = getCurrentStatement(
       codeEditorRef.value?.editorView as EditorView
     );
 
-    if (currentStatement) {
-      executeCurrentStatement({
-        currentStatement,
-        treeNodes,
-      });
-    }
+    executeCurrentStatement({
+      currentStatements,
+      treeNodes,
+    });
   };
 
   const extensions = [
