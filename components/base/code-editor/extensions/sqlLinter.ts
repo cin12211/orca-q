@@ -55,9 +55,9 @@ export function sqlLinter() {
         enter: node => {
           if (node.type.name !== 'Statement') return;
 
-          let nodeText = view.state.doc
-            .sliceString(node.from, node.to)
-            .replaceAll('\n', ' ');
+          const rawNodeText = view.state.doc.sliceString(node.from, node.to);
+
+          let nodeText = rawNodeText.replaceAll('\n', ' ');
 
           // TODO: refection with schema to validation table
           //   const entities = pgParser.getAllEntities(nodeText);

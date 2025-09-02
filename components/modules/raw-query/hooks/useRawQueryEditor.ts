@@ -179,6 +179,11 @@ export function useRawQueryEditor({
 
     executeQuery = fillQueryWithParameters;
 
+    //TODO: parse AST to get columns
+    //      import { parse, type Statement } from 'pgsql-ast-parser';
+    //     const ast: Statement[] = parse(rawNodeText);
+    //     console.log('🚀 ~ applyASTRules ~ ast:', ast);
+
     queryProcessState.executeLoading = true;
     try {
       const result = await $fetch('/api/raw-execute', {
