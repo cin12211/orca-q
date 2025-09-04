@@ -122,7 +122,7 @@
 import { useElementSize } from '@vueuse/core';
 import { computed, ref, useTemplateRef } from 'vue';
 import plsql from '@shikijs/langs/plsql';
-import githubLightDefault from '@shikijs/themes/github-light-default';
+import catppuccinLatte from '@shikijs/themes/catppuccin-latte';
 import { useVirtualizer } from '@tanstack/vue-virtual';
 import {
   createHighlighterCore,
@@ -192,7 +192,7 @@ const highlighter = ref<HighlighterCore>();
 
 onBeforeMount(async () => {
   const highlighterPromise = createHighlighterCore({
-    themes: [githubLightDefault],
+    themes: [catppuccinLatte],
     langs: [plsql],
     engine: createJavaScriptRegexEngine(),
   });

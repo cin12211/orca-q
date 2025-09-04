@@ -88,10 +88,10 @@
 }
 
 .ͼ1 .cm-panels {
-  position: absolute;
+  /* position: absolute;
   right: 0 !important;
   top: 0 !important;
-  left: unset;
+  left: unset; */
   border-style: var(--tw-border-style);
   border-width: 1px;
   border-radius: calc(var(--radius) /* 0.25rem = 4px */ - 2px);

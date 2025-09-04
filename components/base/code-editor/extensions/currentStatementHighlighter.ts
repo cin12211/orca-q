@@ -10,7 +10,20 @@ import { getCurrentStatement } from '../utils';
 
 const currentStatementLineHighlightBaseTheme = EditorView.baseTheme({
   '.cm-current-statement-line': {
-    backgroundColor: `rgb(59, 56, 160, 0.05) !important`,
+    position: 'relative',
+  },
+
+  '.cm-current-statement-line::after': {
+    content: '""',
+    position: 'absolute',
+    inset: 0, // top:0; right:0; bottom:0; left:0;
+    backgroundColor: 'rgb(59, 56, 160, 0.05)',
+    pointerEvents: 'none', // không chặn tương tác
+    zIndex: -4,
+  },
+
+  '&dark .cm-current-statement-line::after': {
+    backgroundColor: 'rgba(255, 255, 255, 0.06)',
   },
 });
 

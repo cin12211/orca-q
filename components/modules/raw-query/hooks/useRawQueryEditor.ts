@@ -10,8 +10,8 @@ import { EditorView, keymap } from '@codemirror/view';
 import merge from 'lodash-es/merge';
 import type { FieldDef } from 'pg';
 import type BaseCodeEditor from '~/components/base/code-editor/BaseCodeEditor.vue';
+import { CompletionIcon } from '~/components/base/code-editor/constants';
 import {
-  CompletionIcon,
   currentStatementLineHighlightExtension,
   handleFormatCode,
   shortCutExecuteCurrentStatement,

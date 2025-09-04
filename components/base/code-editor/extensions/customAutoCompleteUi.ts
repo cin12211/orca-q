@@ -5,6 +5,7 @@ import {
 } from '@codemirror/autocomplete';
 import { EditorState, type Extension } from '@codemirror/state';
 import { EditorView, type Rect } from '@codemirror/view';
+import { CompletionIcon } from '../constants';
 import {
   Brackets,
   Calendar,
@@ -20,23 +21,6 @@ import {
   Variable,
   ForeignKey,
 } from './icons-svg';
-
-export enum CompletionIcon {
-  Keyword = 'KEYWORD',
-  Variable = 'VARIABLE',
-  Type = 'TYPE',
-  Function = 'FUNCTION',
-  Method = 'METHOD',
-  Table = 'TABLE',
-  Database = 'DATABASE',
-  Numberic = 'NUMBERIC',
-  String = 'STRING',
-  Calendar = 'CALENDAR',
-  Brackets = 'BRACKETS',
-  Vector = 'VECTOR',
-  Field = 'FIELD',
-  ForeignKey = 'FOREIGNKEY',
-}
 
 // Mapping from enum → SVG
 export const CompletionIconMap: Record<CompletionIcon, string> = {
@@ -218,41 +202,6 @@ export interface AutoCompletionConfig extends DefaultCompletionConfig {
   renderIconMap?: Record<string, string>;
 }
 
-// Groups of types → icon
-// const numberTypes = new Set([
-//   'BIT',
-//   'BOOLEAN',
-//   'TINYINT',
-//   'SMALLINT',
-//   'MEDIUMINT',
-//   'INTEGER',
-//   'INT',
-//   'BIGINT',
-//   'FLOAT',
-//   'DOUBLE',
-//   'DECIMAL',
-//   'NUMERIC',
-// ]);
-
-// const stringTypes = new Set([
-//   'CHAR',
-//   'VARCHAR',
-//   'TEXT',
-//   'TINYTEXT',
-//   'MEDIUMTEXT',
-//   'LONGTEXT',
-//   'BINARY',
-//   'VARBINARY',
-//   'BLOB',
-//   'TINYBLOB',
-//   'MEDIUMBLOB',
-//   'LONGBLOB',
-//   'ENUM',
-//   'SET',
-// ]);
-
-// const dateTypes = new Set(['DATE', 'TIME', 'DATETIME', 'TIMESTAMP', 'YEAR']);
-
 // Function to resolve icon
 function getCompletionIcon(type?: string): string | undefined {
   if (!type) return;
@@ -327,6 +276,12 @@ const autoCompleteBaseTheme = EditorView.baseTheme({
   '.cm-tooltip.cm-tooltip-autocomplete > ul': {
     maxHeight: '35vh',
   },
+  '.cm-completionInfo': {
+    backgroundColor: 'var(--background)',
+    borderRadius: `calc(var(--radius) /* 0.25rem = 4px */ - 2px)`,
+    borderStyle: `var(--tw-border-style)`,
+    borderWidth: `1px`,
+  },
 });
 
 const customAutoCompletion = (config: AutoCompletionConfig) => {
@@ -347,72 +302,6 @@ const customAutoCompletion = (config: AutoCompletionConfig) => {
           _view: EditorView
         ) => {
           let src = '';
-          // switch ((completion.type || '').toUpperCase()) {
-          //   case 'KEYWORD':
-          //     src = Keyword;
-          //     break;
-          //   case 'VARIABLE':
-          //     src = Variable;
-          //     break;
-          //   case 'TYPE':
-          //     src = Types;
-          //     break;
-          //   case 'FUNCTION':
-          //   case 'METHOD':
-          //     src = Functions;
-          //     break;
-          //   case 'TABLE':
-          //     src = Table;
-          //     break;
-          //   case 'DATABASE':
-          //     src = Database;
-          //     break;
-          //   case 'BIT':
-          //   case 'BOOLEAN':
-          //   case 'TINYINT':
-          //   case 'SMALLINT':
-          //   case 'MEDIUMINT':
-          //   case 'INTEGER':
-          //   case 'INT':
-          //   case 'BIGINT':
-          //   case 'FLOAT':
-          //   case 'DOUBLE':
-          //   case 'DECIMAL':
-          //   case 'NUMERIC':
-          //     src = Numberic;
-          //     break;
-          //   case 'CHAR':
-          //   case 'VARCHAR':
-          //   case 'TEXT':
-          //   case 'TINYTEXT':
-          //   case 'MEDIUMTEXT':
-          //   case 'LONGTEXT':
-          //   case 'BINARY':
-          //   case 'VARBINARY':
-          //   case 'BLOB':
-          //   case 'TINYBLOB':
-          //   case 'MEDIUMBLOB':
-          //   case 'LONGBLOB':
-          //   case 'ENUM':
-          //   case 'SET':
-          //     src = String;
-          //     break;
-          //   case 'DATE':
-          //   case 'TIME':
-          //   case 'DATETIME':
-          //   case 'TIMESTAMP':
-          //   case 'YEAR':
-          //     src = Calendar;
-          //     break;
-          //   case 'JSON':
-          //     src = Brackets;
-          //     break;
-          //   case 'VECTOR<FLOAT>':
-          //   case 'VECTOR<FLOAT16>':
-          //   case 'VECTOR':
-          //     src = Vector;
-          //     break;
-          // }
 
           if (completion.type) {
             src = getCompletionIcon(completion.type) || '';
