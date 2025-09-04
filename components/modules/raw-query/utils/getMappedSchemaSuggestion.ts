@@ -19,9 +19,12 @@ export const getMappedSchemaSuggestion = ({
     const mappedColumns = columns.map(col => {
       let type = '';
 
-      if (primaryKeys?.find(pk => pk.column === col.name)) {
+      const isPrimaryKey = primaryKeys?.find(pk => pk.column === col.name);
+      const isForeignKey = foreignKeys?.find(fk => fk.column === col.name);
+
+      if (isPrimaryKey) {
         type = CompletionIcon.Keyword;
-      } else if (foreignKeys?.find(fk => fk.column === col.name)) {
+      } else if (isForeignKey) {
         type = CompletionIcon.ForeignKey;
       } else {
         type = CompletionIcon.Field;
@@ -31,8 +34,22 @@ export const getMappedSchemaSuggestion = ({
         label: col.name,
         type,
         boost: -col.ordinal_position,
-        detail: col.short_type_name, // show in last suggestion
-        // info: col.short_type_name || '', // show tooltip
+        detail: col.short_type_name, // show in last suggestion,
+
+        info: () => {
+          const container = document.createElement('div');
+          container.className = 'gap-1 flex flex-col text-sm min-w-[10rem]';
+
+          container.innerHTML = `
+            <div class="font-medium text-md mt-1">${col.name}</div>
+            <p class="text-xs">Type: ${col.short_type_name}</p>
+            <p class="text-xs">Ordinal: ${col.ordinal_position}</p>
+            <p class="text-xs">Primary Key:  ${isPrimaryKey ? 'yes' : '-'}</p> 
+            <p class="text-xs">Foreign Key:  ${isForeignKey ? 'yes' : '-'}</p> 
+          `;
+
+          return container;
+        },
       };
 
       return sqlNamespace;

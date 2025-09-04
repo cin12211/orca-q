@@ -45,10 +45,6 @@ export const getCurrentStatement = (view: EditorView) => {
 
     return isStatement && isOverLapping;
   });
-  console.log(
-    '🚀 ~ getCurrentStatement ~ currentStatements:',
-    currentStatements
-  );
 
   return {
     currentStatements,

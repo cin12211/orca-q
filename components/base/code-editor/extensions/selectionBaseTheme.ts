@@ -5,9 +5,6 @@ export const selectionBaseTheme = EditorView.baseTheme({
     backgroundColor: 'rgba(26, 42, 128, 0.3) !important',
   },
   '&dark .cm-selectionBackground': {
-    backgroundColor: 'rgba(255, 255, 255, 0.5) !important;',
-  },
-  '.cm-selectionLayer': {
-    zIndex: '-1 !important',
+    backgroundColor: 'rgba(255, 255, 255, 0.3) !important;',
   },
 });

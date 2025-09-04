@@ -34,7 +34,6 @@ const {
   cursorInfo,
   extensions,
   codeEditorRef,
-  // currentStatementQuery,
   onExecuteCurrent,
   onHandleFormatCode,
   rawQueryResults,
@@ -117,11 +116,6 @@ watch(fileVariables, () => {
 
     <template #result>
       <div v-if="queryProcessState.executeErrors" class="pt-2">
-        <!-- <span class="font-normal text-xs text-muted-foreground block">
-          Execute query:
-          <span class="italic"> {{ currentStatementQuery }} </span>
-        </span> -->
-
         <span class="font-normal text-sm text-muted-foreground block leading-5">
           Error message:
           <span class="decoration-wavy underline decoration-red-600">
@@ -131,6 +125,22 @@ watch(fileVariables, () => {
         <span class="font-normal text-sm text-muted-foreground block">
           Errors detail: {{ queryProcessState.executeErrors.data }}
         </span>
+
+        <Collapsible>
+          <CollapsibleTrigger>
+            <span
+              class="font-normal text-sm text-muted-foreground block flex items-center gap-1 cursor-pointer"
+            >
+              Execute query
+              <Icon name="hugeicons:arrow-down-01" class="size-4!" />
+            </span>
+          </CollapsibleTrigger>
+          <CollapsibleContent>
+            <span class="font-normal text-sm text-muted-foreground block">
+              {{ queryProcessState.currentStatementQuery }}
+            </span>
+          </CollapsibleContent>
+        </Collapsible>
       </div>
       <div
         v-else-if="!rawQueryResults.length"

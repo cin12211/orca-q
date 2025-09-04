@@ -52,6 +52,9 @@ const currentStatementBaseTheme = EditorView.baseTheme({
   '.cm-focused': {
     outline: `unset !important`,
   },
+  '.cm-activeLine': {
+    zIndex: -3,
+  },
 });
 
 export const currentStatementLineGutterExtension = [

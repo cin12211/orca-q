@@ -20,7 +20,7 @@ watch(
 
     highlightedCode.value = props.highlighter.codeToHtml(log, {
       lang: 'plsql',
-      theme: 'github-light-default',
+      theme: 'catppuccin-latte',
     });
   },
   { immediate: true }
@@ -28,5 +28,8 @@ watch(
 </script>
 
 <template>
-  <div class="[&_code]:text-wrap w-full" v-html="highlightedCode"></div>
+  <div
+    class="[&_code]:text-wrap w-full [&>.catppuccin-latte]:bg-background!"
+    v-html="highlightedCode"
+  ></div>
 </template>
