@@ -93,6 +93,13 @@ export const createEdges = (tablesData: TableMetadata[]): Edge[][] => {
         source: table.table,
         target: foreignKey.reference_table,
         sourceHandle: foreignKey.column,
+        style: edge => {
+          // console.log('edge-----------------\n:', edge);
+          if (!edge.sourceNode.selected && !edge.targetNode.selected) {
+            return;
+          }
+          return { stroke: '#10b981 !important' };
+        },
         // markerEnd: MarkerType.ArrowClosed,
         // markerStart: MarkerType.Arrow,
       };

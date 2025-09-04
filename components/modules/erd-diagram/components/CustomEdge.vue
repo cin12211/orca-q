@@ -5,7 +5,16 @@ import type { GetBezierPathParams } from '../type';
 import MarkerMany from './MarkerMany.vue';
 import MarkerZeroOrOne from './MarkerZeroOrOne.vue';
 
-const props = defineProps<GetBezierPathParams & { id: string }>();
+interface EdgeStyle {
+  stroke?: string;
+}
+
+interface CustomEdgeProps extends GetBezierPathParams {
+  id: string;
+  style?: EdgeStyle;
+}
+
+const props = defineProps<CustomEdgeProps>();
 
 // for this better performance use smoothstep
 // TODO : check getBezierPath when usage
@@ -21,19 +30,19 @@ const markerManyId = computed(() => `${props.id}-marker-many`);
     :path="path[0]"
     :marker-start="`url(#${markerManyId})`"
     :marker-end="`url(#${markerZeroOrOneId})`"
-    :style="{ stroke: 'var(--muted-foreground)' }"
+    :style="{ stroke: style?.stroke || 'var(--muted-foreground)' }"
   />
 
   <MarkerZeroOrOne
-    maker-class="text-muted-foreground"
     :id="markerZeroOrOneId"
     :width="22"
     :height="22"
+    :style="{ color: style?.stroke || 'var(--muted-foreground)' }"
   />
   <MarkerMany
-    maker-class="text-muted-foreground"
     :id="markerManyId"
     :width="21"
     :height="21"
+    :style="{ color: style?.stroke || 'var(--muted-foreground)' }"
   />
 </template>
