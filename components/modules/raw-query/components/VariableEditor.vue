@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { json, jsonParseLinter } from '@codemirror/lang-json';
-import { linter, lintGutter } from '@codemirror/lint';
+import { linter } from '@codemirror/lint';
 import { placeholder } from '@codemirror/view';
 import { _debounce } from 'ag-grid-community';
 import BaseCodeEditor from '~/components/base/code-editor/BaseCodeEditor.vue';
@@ -37,7 +37,7 @@ const extensions = [
     }
   }),
   json(),
-  lintGutter(), // show gutter for linter warnings
+  // lintGutter(), // show gutter for linter warnings
   linter(jsonParseLinter()), // attach JSON linter
 ];
 
