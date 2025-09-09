@@ -48,7 +48,7 @@ const appLayoutStore = useAppLayoutStore();
             <div class="w-1/3">
               <p class="text-xs mb-0.5 text-accent-foreground">Vertical</p>
               <div
-                class="grid grid-cols-6 grid-rows-7 cursor-pointer gap-2 h-36 border p-2 rounded-md"
+                class="grid grid-cols-5 grid-rows-5 cursor-pointer gap-2 h-36 border p-2 rounded-md"
                 :class="{
                   'ring ring-primary':
                     appLayoutStore.codeEditorLayout ===
@@ -64,11 +64,21 @@ const appLayoutStore = useAppLayoutStore();
                 "
               >
                 <div
+                  className="col-span-4 row-span-3 border rounded-md bg-accent"
+                ></div>
+                <div
+                  className="col-span-5 row-span-2 col-start-1 row-start-4 border rounded-md bg-accent"
+                ></div>
+                <div
+                  className="row-span-3 col-start-5 row-start-1 border rounded-md bg-accent"
+                ></div>
+
+                <!-- <div
                   class="col-span-6 row-span-4 border rounded-md bg-accent"
                 ></div>
                 <div
                   class="col-span-6 row-span-3 border rounded-md bg-accent"
-                ></div>
+                ></div> -->
               </div>
             </div>
 

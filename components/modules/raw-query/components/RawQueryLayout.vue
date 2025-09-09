@@ -52,6 +52,13 @@ const resultSize = computed(() => {
 });
 
 const isWithVariablesLayout = computed(() => {
+  return (
+    props.layout === RawQueryEditorLayout.horizontalWithVariables ||
+    props.layout === RawQueryEditorLayout.vertical
+  );
+});
+
+const horizontalWithVariables = computed(() => {
   return props.layout === RawQueryEditorLayout.horizontalWithVariables;
 });
 </script>
@@ -65,7 +72,7 @@ const isWithVariablesLayout = computed(() => {
     >
       <pane :size="contentSize">
         <splitpanes
-          horizontal
+          :horizontal="horizontalWithVariables"
           @resize="
             isWithVariablesLayout
               ? onUpdateEditorLayoutInnerVariableSizes($event.panes)
