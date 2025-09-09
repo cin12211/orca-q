@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { on } from 'events';
+import { _debounce, type Column } from 'ag-grid-community';
 import QuickQueryTableSummary from '~/components/modules/quick-query/quick-query-table-summary/QuickQueryTableSummary.vue';
 import { useTableQueryBuilder } from '~/composables/useTableQueryBuilder';
 import { useAppContext } from '~/shared/contexts';
@@ -24,7 +24,6 @@ import QuickQueryContextMenu from './quick-query-table/QuickQueryContextMenu.vue
 import QuickQueryTable from './quick-query-table/QuickQueryTable.vue';
 import StructureTable from './structure/StructureTable.vue';
 
-// const props = defineProps<{ tableName: string; schemaName: string }>();
 const props = defineProps<{ tabViewId: string }>();
 
 const appLayoutStore = useAppLayoutStore();
@@ -63,9 +62,6 @@ const {
   isLoadingTableSchema,
   tableMetaData,
   columnTypes,
-  dataSize,
-  indexSize,
-  tableSize,
 } = useQuickQueryTableInfo({
   tableName: tableName.value,
   schemaName: schemaName.value,
@@ -144,6 +140,11 @@ const {
   focusedCell,
 });
 
+const { handleSelectColumn, selectedColumnFieldId, resetGridState } =
+  useTableActions({
+    quickQueryTableRef,
+  });
+
 const quickQueryTabView = ref<QuickQueryTabView>(QuickQueryTabView.Data);
 
 const openedQuickQueryTab = ref({
@@ -201,11 +202,17 @@ useHotkeys(
   }
 );
 
-onMounted(() => {
-  if (containerRef.value) {
-    containerRef.value.focus();
-  }
-});
+const columns = ref();
+
+watch(
+  () => quickQueryTableRef.value?.columnDefs,
+  () => {
+    if (quickQueryTableRef.value?.columnDefs) {
+      columns.value = quickQueryTableRef.value?.columnDefs;
+    }
+  },
+  { immediate: true, deep: true }
+);
 </script>
 
 <template>
@@ -222,7 +229,13 @@ onMounted(() => {
   <Teleport defer to="#preview-select-row" v-if="isActiveTeleport">
     <QuickQueryTableSummary
       v-if="!selectedRows?.length"
-      :summary="{ tableSize, dataSize, indexSize }"
+      :table-name="tableName"
+      :schema-name="schemaName"
+      :columns="columns"
+      :columnTypes="columnTypes"
+      :selectedColumnFieldId="selectedColumnFieldId"
+      :handleSelectColumn="handleSelectColumn"
+      @reset-selected-col="resetGridState"
     />
     <PreviewSelectedRow
       v-else
@@ -356,6 +369,7 @@ onMounted(() => {
           :defaultPageSize="DEFAULT_QUERY_SIZE"
           :offset="pagination.offset"
           @on-focus-cell="onFocusedCellChange"
+          :selectedColumnFieldId="selectedColumnFieldId"
         />
       </QuickQueryContextMenu>
     </div>
