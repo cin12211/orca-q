@@ -1,14 +1,21 @@
 import { defineEventHandler, readBody } from 'h3';
 
-export default defineEventHandler(async event => {
-  const { dbConnectionString, tableName, schema } = await readBody(event);
+export default defineEventHandler(
+  async (
+    event
+  ): Promise<{
+    tableSize: string;
+    dataSize: string;
+    indexSize: string;
+  }> => {
+    const { dbConnectionString, tableName, schema } = await readBody(event);
 
-  const resource = await getDatabaseSource({
-    dbConnectionString,
-    type: 'postgres',
-  });
+    const resource = await getDatabaseSource({
+      dbConnectionString,
+      type: 'postgres',
+    });
 
-  const query = `
+    const query = `
     SELECT
       pg_size_pretty(pg_total_relation_size(c.oid)) AS table_size,
       pg_size_pretty(pg_table_size(c.oid)) AS data_size,
@@ -20,18 +27,19 @@ export default defineEventHandler(async event => {
     LIMIT 1;
   `;
 
-  const [result] = await resource.query(query, [schema, tableName]);
+    const [result] = await resource.query(query, [schema, tableName]);
 
-  if (!result) {
-    throw createError({
-      statusCode: 404,
-      statusMessage: 'Table not found',
-    });
+    if (!result) {
+      throw createError({
+        statusCode: 404,
+        statusMessage: 'Table not found',
+      });
+    }
+
+    return {
+      tableSize: result.table_size,
+      dataSize: result.data_size,
+      indexSize: result.index_size,
+    };
   }
-
-  return {
-    tableSize: result.table_size,
-    dataSize: result.data_size,
-    indexSize: result.index_size,
-  };
-});
+);

@@ -42,8 +42,6 @@ export const useQuickQueryTableInfo = ({
     return table;
   });
 
-  console.log('tableMetaData', tableMetaData);
-
   const columnNames = computed(() => {
     return tableMetaData.value?.columns?.map(c => c.name) || [];
   });
@@ -70,21 +68,6 @@ export const useQuickQueryTableInfo = ({
     // return tableSchemaStatus.value === 'pending';
   });
 
-  const tableSize = computed(() => {
-    return '0 bytes';
-    // return tableSchema.value?.table_size || '0 bytes';
-  });
-
-  const dataSize = computed(() => {
-    return '0 bytes';
-    // return tableSchema.value?.data_size || '0 bytes';
-  });
-
-  const indexSize = computed(() => {
-    return '0 bytes';
-    // return tableSchema.value?.index_size || '0 bytes';
-  });
-
   return {
     primaryKeys,
     foreignKeys,
@@ -92,8 +75,5 @@ export const useQuickQueryTableInfo = ({
     isLoadingTableSchema,
     tableMetaData,
     columnTypes,
-    tableSize,
-    dataSize,
-    indexSize,
   };
 };

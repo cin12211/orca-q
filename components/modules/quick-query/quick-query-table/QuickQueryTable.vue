@@ -218,12 +218,6 @@ const columnDefs = computed<ColDef[]>(() => {
       resizable: true,
       editable: true,
       sortable: false,
-      cellClass: (p: CellClassParams) => {
-        const isSelectedCol =
-          p.column.getColId() === props.selectedColumnFieldId;
-        return isSelectedCol ? 'col-highlight-cell cellCenter' : 'cellCenter';
-      },
-
       type: 'editableColumn',
       headerComponentParams: {
         allowSorting: true,
@@ -302,6 +296,10 @@ const columnTypes = ref<{
       if (haveDifferent) {
         return { backgroundColor: 'var(--color-orange-200)' };
       }
+    },
+    cellClass: (p: CellClassParams) => {
+      const isSelectedCol = p.column.getColId() === props.selectedColumnFieldId;
+      return isSelectedCol ? 'col-highlight-cell cellCenter' : 'cellCenter';
     },
   },
 });

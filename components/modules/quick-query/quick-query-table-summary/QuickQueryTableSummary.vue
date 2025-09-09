@@ -9,7 +9,7 @@ type Props = {
   schemaName: string;
   columns: ColDef<any, any>[] | undefined;
   selectedColumnFieldId?: string | undefined;
-  handleSelectColumn: (column: Column) => void;
+  handleSelectColumn: (fieldId: string | undefined) => void;
   columnTypes: {
     name: string;
     type: string;
@@ -29,32 +29,27 @@ const emit = defineEmits<{
   (e: 'resetSelectedCol'): void;
 }>();
 
-const tableSizeSummary = ref<{
-  tableSize?: string;
-  dataSize?: string;
-  indexSize?: string;
-}>({});
+const { tableSize } = useTableSize({
+  tableName: tableName,
+  schemaName,
+});
 
-if (tableName && schemaName) {
-  const { data } = await useTableSize({
-    tableName: tableName,
-    schemaName: schemaName,
-  });
-
-  tableSizeSummary.value = data.value || {};
-}
-
-const mappedColumns = (
-  columns?.map(col => {
-    const typeInfo = columnTypes?.find(ct => ct.name === col.field && ct.name);
-    if (typeInfo) {
-      return {
-        ...col,
-        type: typeInfo?.type || '',
-      };
-    }
-  }) || []
-).slice(1);
+const mappedColumns = computed(() => {
+  return (
+    columns?.map(col => {
+      const typeInfo = columnTypes?.find(
+        ct => ct.name === col.field && ct.name
+      );
+      if (typeInfo) {
+        return {
+          ...col,
+          type: typeInfo?.type || '',
+        };
+      }
+      return col;
+    }) || []
+  ).slice(1);
+});
 
 const formatColumnType = (columnType: string | undefined) => {
   if (columnType === 'timestamp without time zone') {
@@ -74,27 +69,21 @@ watchEffect(onCleanup => {
 </script>
 
 <template>
-  <div>
-    <Card class="m-1 py-2 px-1">
+  <div class="gap-1 flex flex-col h-full w-full p-2">
+    <Card>
       <CardContent class="px-2">
         <div class="flex flex-col gap-y-1">
           <div class="flex items-center justify-between w-full">
             <span class="text-xs">Table Size:</span>
-            <span class="text-xs opacity-75">{{
-              tableSizeSummary.tableSize
-            }}</span>
+            <span class="text-xs opacity-75">{{ tableSize.tableSize }}</span>
           </div>
           <div class="flex items-center justify-between gap-4">
             <span class="text-xs">Data Size:</span>
-            <span class="text-xs opacity-75">{{
-              tableSizeSummary.dataSize
-            }}</span>
+            <span class="text-xs opacity-75">{{ tableSize.dataSize }}</span>
           </div>
           <div class="flex items-center justify-between gap-4">
             <span class="text-xs">Index Size:</span>
-            <span class="text-xs opacity-75">{{
-              tableSizeSummary.indexSize
-            }}</span>
+            <span class="text-xs opacity-75">{{ tableSize.indexSize }}</span>
           </div>
         </div>
       </CardContent>
@@ -117,7 +106,7 @@ watchEffect(onCleanup => {
         >
           <div
             class="flex items-center gap-2 justify-start p-1"
-            @click="handleSelectColumn(column?.field as unknown as Column<any>)"
+            @click="handleSelectColumn(column?.field)"
           >
             <Icon name="lucide:columns-3" class="size-4 min-w-3" />
             <div class="flex justify-between text-xs w-full overflow-hidden">
@@ -128,7 +117,13 @@ watchEffect(onCleanup => {
                 {{ column?.headerName || '' }}
               </span>
               <span class="opacity-50 w-1/4 min-w-[100px] text-right">
-                {{ formatColumnType(column?.type) }}
+                {{
+                  formatColumnType(
+                    Array.isArray(column?.type)
+                      ? column?.type.join(', ')
+                      : column?.type
+                  )
+                }}
               </span>
             </div>
           </div>

@@ -1,6 +1,6 @@
 import { useAppContext } from '~/shared/contexts/useAppContext';
 
-export const useTableSize = async ({
+export const useTableSize = ({
   tableName,
   schemaName,
 }: {
@@ -9,7 +9,7 @@ export const useTableSize = async ({
 }) => {
   const { connectionStore } = useAppContext();
 
-  const { data, status } = await useFetch('/api/get-table-size', {
+  const { data, status } = useFetch('/api/get-table-size', {
     method: 'POST',
     body: {
       tableName,
@@ -19,5 +19,11 @@ export const useTableSize = async ({
     key: `table-size-${tableName}-${schemaName}`,
   });
 
-  return { data, status };
+  const tableSize: ComputedRef<{
+    tableSize?: string;
+    dataSize?: string;
+    indexSize?: string;
+  }> = computed(() => data.value || {});
+
+  return { tableSize, status };
 };

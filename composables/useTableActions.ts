@@ -10,30 +10,24 @@ export const useTableActions = ({ quickQueryTableRef }: TableActionsProps) => {
 
   const resetGridState = () => {
     selectedColumnFieldId.value = undefined;
-    quickQueryTableRef.value?.gridApi?.stopEditing(true);
-    quickQueryTableRef.value?.gridApi?.clearFocusedCell?.();
-    quickQueryTableRef.value?.gridApi?.deselectAll?.();
-    quickQueryTableRef.value?.gridApi?.setFilterModel(null);
-    quickQueryTableRef.value?.gridApi?.resetColumnState();
+
     quickQueryTableRef.value?.gridApi?.ensureIndexVisible?.(0, 'top');
     quickQueryTableRef.value?.gridApi?.refreshHeader();
     quickQueryTableRef.value?.gridApi?.refreshCells({ force: true });
   };
 
   const onJumpToSelectedColumn = (fieldId: string | undefined) => {
-    quickQueryTableRef.value?.gridApi?.ensureColumnVisible(fieldId!, 'middle');
+    if (!fieldId) return;
+
+    quickQueryTableRef.value?.gridApi?.ensureColumnVisible(fieldId, 'middle');
     quickQueryTableRef.value?.gridApi?.refreshCells({ force: true });
     quickQueryTableRef.value?.gridApi?.refreshHeader();
   };
 
-  const handleSelectColumn = _debounce(
-    { isAlive: () => true },
-    (fieldId: string | undefined) => {
-      selectedColumnFieldId.value = fieldId;
-      onJumpToSelectedColumn(fieldId);
-    },
-    200
-  );
+  const handleSelectColumn = (fieldId: string | undefined) => {
+    selectedColumnFieldId.value = fieldId;
+    onJumpToSelectedColumn(fieldId);
+  };
 
   return {
     resetGridState,

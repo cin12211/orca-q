@@ -44,7 +44,6 @@ const previewReverseTableModal = reactive({
 });
 
 const containerRef = ref<InstanceType<typeof HTMLElement>>();
-const summaryTableRef = ref();
 
 const {
   quickQueryFilterRef,
@@ -203,11 +202,17 @@ useHotkeys(
   }
 );
 
-onMounted(() => {
-  if (containerRef.value) {
-    containerRef.value.focus();
-  }
-});
+const columns = ref();
+
+watch(
+  () => quickQueryTableRef.value?.columnDefs,
+  () => {
+    if (quickQueryTableRef.value?.columnDefs) {
+      columns.value = quickQueryTableRef.value?.columnDefs;
+    }
+  },
+  { immediate: true, deep: true }
+);
 </script>
 
 <template>
@@ -226,8 +231,7 @@ onMounted(() => {
       v-if="!selectedRows?.length"
       :table-name="tableName"
       :schema-name="schemaName"
-      ref="summaryTableRef"
-      :columns="quickQueryTableRef?.columnDefs"
+      :columns="columns"
       :columnTypes="columnTypes"
       :selectedColumnFieldId="selectedColumnFieldId"
       :handleSelectColumn="handleSelectColumn"
