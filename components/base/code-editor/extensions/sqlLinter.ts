@@ -23,6 +23,7 @@ const customRules: CustomRule[] = [
   },
 ];
 
+//TODO: close to slow to usage
 export function sqlLinter() {
   return linter(view => {
     const tree = syntaxTree(view.state);

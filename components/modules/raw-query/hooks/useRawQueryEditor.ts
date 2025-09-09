@@ -44,7 +44,7 @@ export function useRawQueryEditor({
   fieldDefs: Ref<FieldDef[]>;
 }) {
   const codeEditorRef = ref<InstanceType<typeof BaseCodeEditor> | null>(null);
-  const rawQueryResults = ref<unknown[][]>([]);
+  const rawQueryResults = shallowRef<unknown[][]>([]);
 
   const queryProcessState = reactive<{
     isHaveOneExecute: boolean;
@@ -249,7 +249,8 @@ export function useRawQueryEditor({
     currentStatementLineHighlightExtension,
     ...sqlAutoCompletion(),
     lintGutter(),
-    sqlLinter(),
+    //TODO: close to slow to usage
+    // sqlLinter(),
   ];
 
   const reloadSqlCompartment = () => {
