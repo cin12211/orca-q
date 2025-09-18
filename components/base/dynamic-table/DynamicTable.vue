@@ -10,10 +10,10 @@ import type {
   GridReadyEvent,
   ValueFormatterParams,
 } from 'ag-grid-community';
-import { themeBalham } from 'ag-grid-community';
 import { AgGridVue } from 'ag-grid-vue3';
 import type { MappedRawColumn } from '~/components/modules/raw-query/interfaces';
 import DynamicPrimaryKeyHeader from './DynamicPrimaryKeyHeader.vue';
+import { baseTableTheme } from './constants';
 
 // TODO: refactor this component to reuse in query table
 /* props ------------------------------------------------------------- */
@@ -52,20 +52,6 @@ const rowData = computed<unknown[]>(() =>
 // const { onStopRangeSelection, onCellMouseOverDebounced, onCellMouseDown } =
 //   useRangeSelectionTable({});
 
-const customizedTheme = themeBalham.withParams({
-  // accentColor: 'var(--color-gray-900)',
-  backgroundColor: 'var(--background)',
-  // wrapperBorderRadius: 0,
-  borderRadius: 'var(--radius-sm)',
-  borderColor: 'var(--input)',
-  columnBorder: true,
-  wrapperBorderRadius: 'var(--radius)',
-  checkboxBorderRadius: 5,
-  checkboxCheckedBackgroundColor: 'var(--foreground)',
-  checkboxCheckedShapeColor: 'var(--background)',
-  checkboxCheckedBorderColor: 'transparent',
-});
-
 /* grid ready callback ---------------------------------------------- */
 const onGridReady = (e: GridReadyEvent) => {
   gridApi.value = e.api;
@@ -73,6 +59,10 @@ const onGridReady = (e: GridReadyEvent) => {
 };
 
 const columnDefs = computed<ColDef[]>(() => {
+  if (!props.columns?.length || !props.data?.length) {
+    return [];
+  }
+
   const colDefs: ColDef[] = [];
   colDefs.push({
     headerName: '#',
@@ -125,6 +115,10 @@ const columnDefs = computed<ColDef[]>(() => {
         valueFormatter: (params: ValueFormatterParams) => {
           const value = params.value;
 
+          if (value === null) {
+            return 'NULL';
+          }
+
           //TODO: reuse function format json -> string
           if (type === 'jsonb' || type === 'json') {
             return value ? JSON.stringify(params.value, null, 2) : '';
@@ -152,9 +146,9 @@ const columnDefs = computed<ColDef[]>(() => {
 const gridOptions = computed(() => {
   const options: GridOptions = {
     rowClass: 'class-row-border-none',
-    getRowClass: params => {
+    getRowStyle: params => {
       if ((params.node.rowIndex || 0) % 2 === 0) {
-        return 'class-row-even';
+        return { background: 'var(--color-neutral-100)' };
       }
     },
     rowSelection: {
@@ -168,7 +162,7 @@ const gridOptions = computed(() => {
     autoSizeStrategy: {
       type: 'fitCellContents',
     },
-    theme: customizedTheme,
+    theme: baseTableTheme,
     pagination: false,
     undoRedoCellEditing: true,
     undoRedoCellEditingLimit: 25,
@@ -209,17 +203,28 @@ const columnTypes = ref<{
 
       const field = params.colDef.field ?? '';
 
+      const style: { backgroundColor?: string; color?: string } = {};
+
       if (!field) {
         return;
       }
 
       const oldValue = props?.data?.[rowId]?.[Number(field)];
 
+      if (oldValue === null) {
+        style.color = 'var(--muted-foreground)';
+      }
+
       const haveDifferent = oldValue !== params.value;
 
       if (haveDifferent) {
-        return { backgroundColor: 'var(--color-orange-200)' };
+        style.backgroundColor = 'var(--color-orange-200)';
+        delete style.color;
       }
+      return style;
+    },
+    cellClass: () => {
+      return 'cellCenter';
     },
   },
 });
@@ -292,3 +297,12 @@ defineExpose({ gridApi });
     />
   </div>
 </template>
+<style>
+.cellCenter .ag-cell-wrapper {
+  justify-content: center;
+}
+
+.ag-cell {
+  color: var(--color-black);
+}
+</style>

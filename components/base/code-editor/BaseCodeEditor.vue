@@ -197,7 +197,7 @@ watch(
   () => {
     reloadExtensions();
   },
-  { deep: true }
+  { deep: true, immediate: true, flush: 'post' }
 );
 
 // Clean up on unmount

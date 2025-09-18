@@ -6,15 +6,15 @@ import type {
   CellValueChangedEvent,
   ColDef,
   ColTypeDef,
-  Column,
   GridApi,
   GridOptions,
   GridReadyEvent,
+  SizeColumnsToFitGridStrategy,
   SuppressKeyboardEventParams,
   ValueFormatterParams,
 } from 'ag-grid-community';
-import { themeBalham } from 'ag-grid-community';
 import { AgGridVue } from 'ag-grid-vue3';
+import { baseTableTheme } from '~/components/base/dynamic-table/constants';
 import { DEFAULT_QUERY_SIZE } from '~/utils/constants';
 import CustomCellUuid from './CustomCellUuid.vue';
 import CustomHeaderTable from './CustomHeaderTable.vue';
@@ -75,20 +75,6 @@ const rowData = computed<RowData[]>(() =>
 
 const { onStopRangeSelection, onCellMouseOverDebounced, onCellMouseDown } =
   useRangeSelectionTable({});
-
-const customizedTheme = themeBalham.withParams({
-  // accentColor: 'var(--color-gray-900)',
-  backgroundColor: 'var(--background)',
-  // wrapperBorderRadius: 0,
-  borderRadius: 'var(--radius-sm)',
-  borderColor: 'var(--input)',
-  columnBorder: true,
-  wrapperBorderRadius: 'var(--radius)',
-  checkboxBorderRadius: 5,
-  checkboxCheckedBackgroundColor: 'var(--foreground)',
-  checkboxCheckedShapeColor: 'var(--background)',
-  checkboxCheckedBorderColor: 'transparent',
-});
 
 /* grid ready callback ---------------------------------------------- */
 const onGridReady = (e: GridReadyEvent) => {
@@ -154,40 +140,15 @@ const onCellValueChanged = (event: CellValueChangedEvent) => {
   }
 };
 
-const gridOptions = computed(() => {
-  const options: GridOptions = {
-    rowClass: 'class-row-border-none',
-    getRowClass: params => {
-      if ((params.node.rowIndex || 0) % 2 === 0) {
-        return 'class-row-even';
-      }
-    },
-    rowSelection: {
-      mode: 'multiRow',
-      checkboxes: false,
-      headerCheckbox: false,
-      enableSelectionWithoutKeys: false,
-      enableClickSelection: 'enableSelection',
-      copySelectedRows: false,
-    },
-    autoSizeStrategy: {
-      type: 'fitCellContents',
-    },
-    theme: customizedTheme,
-    pagination: false,
-    undoRedoCellEditing: true,
-    undoRedoCellEditingLimit: 25,
-    animateRows: true,
-    onCellMouseDown,
-    onCellMouseOver: onCellMouseOverDebounced,
-  };
-  return options;
-});
-
 /* derive columns on the fly ---------------------------------------- */
 const columnDefs = computed<ColDef[]>(() => {
+  if (!props.columnTypes?.length || !props.data?.length) {
+    return [];
+  }
+
   const columns: ColDef[] = [];
   columns.push({
+    colId: '#',
     headerName: '#',
     field: '#',
     filter: false,
@@ -214,6 +175,7 @@ const columnDefs = computed<ColDef[]>(() => {
     const column: ColDef = {
       headerName: fieldId,
       field: fieldId,
+      colId: fieldId,
       filter: false,
       resizable: true,
       editable: true,
@@ -238,9 +200,12 @@ const columnDefs = computed<ColDef[]>(() => {
             columnName: fieldId,
           }),
       },
-
       valueFormatter: (params: ValueFormatterParams) => {
         const value = params.value;
+
+        if (value === null) {
+          return 'NULL';
+        }
 
         if (type === 'jsonb' || type === 'json') {
           return value ? JSON.stringify(value, null, 2) : '';
@@ -261,6 +226,38 @@ const columnDefs = computed<ColDef[]>(() => {
   });
 
   return columns;
+});
+
+const gridOptions = computed(() => {
+  const options: GridOptions = {
+    rowClass: 'class-row-border-none',
+    // getRowClass: params => {
+    //   if ((params.node.rowIndex || 0) % 2 === 0) {
+    //     return 'class-row-even';
+    //   }
+    // },
+    getRowStyle: params => {
+      if ((params.node.rowIndex || 0) % 2 === 0) {
+        return { background: 'var(--color-neutral-100)' };
+      }
+    },
+    rowSelection: {
+      mode: 'multiRow',
+      checkboxes: false,
+      headerCheckbox: false,
+      enableSelectionWithoutKeys: false,
+      enableClickSelection: 'enableSelection',
+      copySelectedRows: false,
+    },
+    theme: baseTableTheme,
+    pagination: false,
+    undoRedoCellEditing: true,
+    undoRedoCellEditingLimit: 25,
+    animateRows: true,
+    onCellMouseDown,
+    onCellMouseOver: onCellMouseOverDebounced,
+  };
+  return options;
 });
 
 //
@@ -288,7 +285,6 @@ const defaultColDef = ref<ColDef>({
 const columnTypes = ref<{
   [key: string]: ColTypeDef;
 }>({
-  indexColumn: {},
   editableColumn: {
     cellStyle: (params: CellClassParams) => {
       const rowId = Number(params.node.id ?? params.node.rowIndex);
@@ -299,13 +295,22 @@ const columnTypes = ref<{
 
       const field = params.colDef.field ?? '';
 
+      const style: { backgroundColor?: string; color?: string } = {};
+
       const oldValue = props?.data?.[rowId]?.[field];
+
+      if (oldValue === null) {
+        style.color = 'var(--muted-foreground)';
+      }
 
       const haveDifferent = oldValue !== params.value;
 
       if (haveDifferent) {
-        return { backgroundColor: 'var(--color-orange-200)' };
+        style.backgroundColor = 'var(--color-orange-200)';
+        delete style.color;
       }
+
+      return style;
     },
     cellClass: (p: CellClassParams) => {
       const isSelectedCol = p.column.getColId() === props.selectedColumnFieldId;
@@ -349,6 +354,45 @@ watch(
   { flush: 'post' }
 );
 
+const forceRefreshTable = () => {
+  // const columnIds: string[] = [];
+  // props.columnTypes?.forEach(column => {
+  //   if (column.type === 'uuid') {
+  //     columnIds.push(column.name);
+  //   }
+  // });
+  // gridApi.value?.sizeColumnsToFit({
+  //   defaultMaxWidth: 360,
+  //   defaultMinWidth: 120,
+  //   columnLimits: [
+  //     { key: '#', minWidth: 35 },
+  //     ...columnIds.map(e => {
+  //       return {
+  //         key: e,
+  //         minWidth: 200,
+  //       };
+  //     }),
+  //   ],
+  // });
+  // gridApi.value?.autoSizeColumns(columnIds, false);
+  // gridApi.value?.autoSizeAllColumns();
+};
+
+// watch(
+//   () => [props.columnTypes, rowData, gridApi.value],
+//   () => {
+//     if (props.columnTypes.length && rowData.value.length) {
+//       setTimeout(() => {
+//         // forceRefreshTable();
+//       }, 150);
+//     }
+//   },
+//   {
+//     deep: true,
+//     immediate: true,
+//   }
+// );
+
 defineExpose({ gridApi, editedCells, columnDefs });
 </script>
 
@@ -368,21 +412,35 @@ defineExpose({ gridApi, editedCells, columnDefs });
     :columnDefs="columnDefs"
     :rowData="rowData"
     :paginationPageSize="pageSize"
+    :auto-size-strategy="{
+      type: 'fitCellContents',
+      skipHeader: false,
+    }"
+    :suppress-auto-size="true"
     ref="agGridRef"
+    :row-buffer="5"
   />
 </template>
 
 <style>
-.class-row-border-none {
+/* .class-row-border-none {
   border: 0px;
-}
+} */
 
-.class-row-even {
-  background-color: var(--muted);
-}
+/* .class-row-even {
+  background-color: var(--color-gray-100);
+} */
 
 .ag-cell-value {
   user-select: none;
+}
+
+.ag-cell {
+  color: var(--color-black);
+}
+
+.dark .ag-cell {
+  color: var(--color-white);
 }
 
 .ag-root-wrapper {
