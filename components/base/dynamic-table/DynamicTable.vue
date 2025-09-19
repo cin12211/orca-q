@@ -161,19 +161,13 @@ const gridOptions = computed(() => {
     },
     autoSizeStrategy: {
       type: 'fitCellContents',
+      skipHeader: false,
     },
     theme: baseTableTheme,
     pagination: false,
     undoRedoCellEditing: true,
     undoRedoCellEditingLimit: 25,
     animateRows: true,
-    onStateUpdated(event) {
-      //TODO: check condition for best performance
-      event.api.refreshHeader();
-      event.api.refreshCells();
-    },
-    // onCellMouseDown,
-    // onCellMouseOver: onCellMouseOverDebounced,
   };
   return options;
 });
@@ -278,6 +272,35 @@ useHotkeys(
   }
 );
 
+const onRowDataUpdated = async () => {
+  // gridApi.value?.refreshCells({ force: true });
+  gridApi.value?.resetColumnState();
+  // gridApi.value?.refreshHeader();
+
+  // await nextTick();
+
+  gridApi.value?.autoSizeAllColumns(false);
+
+  const columns = gridApi.value?.getAllGridColumns();
+
+  const columnsNeedResize = (columns || []).filter(column => {
+    return column.getActualWidth() >= 300;
+  });
+
+  nextTick(() =>
+    setTimeout(() => {
+      gridApi.value?.setColumnWidths(
+        columnsNeedResize.map(column => {
+          return {
+            key: column,
+            newWidth: 300,
+          };
+        })
+      );
+    }, 100)
+  );
+};
+
 defineExpose({ gridApi });
 </script>
 
@@ -287,12 +310,14 @@ defineExpose({ gridApi });
       @selection-changed="onSelectionChanged"
       @grid-ready="onGridReady"
       @cell-focused="onCellFocus"
+      @row-data-updated="onRowDataUpdated"
       :class="props.class"
       :grid-options="gridOptions"
       :columnDefs="columnDefs"
       :rowData="rowData"
       :columnTypes="columnTypes"
       :copy-headers-to-clipboard="true"
+      :suppressColumnVirtualisation="true"
       ref="agGridRef"
     />
   </div>

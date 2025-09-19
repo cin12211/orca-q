@@ -76,12 +76,6 @@ const rowData = computed<RowData[]>(() =>
 const { onStopRangeSelection, onCellMouseOverDebounced, onCellMouseDown } =
   useRangeSelectionTable({});
 
-/* grid ready callback ---------------------------------------------- */
-const onGridReady = (e: GridReadyEvent) => {
-  gridApi.value = e.api;
-  //Do something
-};
-
 /* Handle cell value changed --------------------------------------- */
 const onCellValueChanged = (event: CellValueChangedEvent) => {
   const { colDef, newValue, rowIndex } = event;
@@ -257,6 +251,7 @@ const gridOptions = computed(() => {
     onCellMouseDown,
     onCellMouseOver: onCellMouseOverDebounced,
   };
+
   return options;
 });
 
@@ -354,44 +349,33 @@ watch(
   { flush: 'post' }
 );
 
-const forceRefreshTable = () => {
-  // const columnIds: string[] = [];
-  // props.columnTypes?.forEach(column => {
-  //   if (column.type === 'uuid') {
-  //     columnIds.push(column.name);
-  //   }
-  // });
-  // gridApi.value?.sizeColumnsToFit({
-  //   defaultMaxWidth: 360,
-  //   defaultMinWidth: 120,
-  //   columnLimits: [
-  //     { key: '#', minWidth: 35 },
-  //     ...columnIds.map(e => {
-  //       return {
-  //         key: e,
-  //         minWidth: 200,
-  //       };
-  //     }),
-  //   ],
-  // });
-  // gridApi.value?.autoSizeColumns(columnIds, false);
-  // gridApi.value?.autoSizeAllColumns();
+/* grid ready callback ---------------------------------------------- */
+const onGridReady = (e: GridReadyEvent) => {
+  gridApi.value = e.api;
+  //Do something
 };
 
-// watch(
-//   () => [props.columnTypes, rowData, gridApi.value],
-//   () => {
-//     if (props.columnTypes.length && rowData.value.length) {
-//       setTimeout(() => {
-//         // forceRefreshTable();
-//       }, 150);
-//     }
-//   },
-//   {
-//     deep: true,
-//     immediate: true,
-//   }
-// );
+const onRowDataUpdated = () => {
+  gridApi.value?.autoSizeAllColumns(false);
+  const columns = gridApi.value?.getAllGridColumns();
+
+  const columnsNeedResize = (columns || []).filter(column => {
+    return column.getActualWidth() >= 300;
+  });
+
+  nextTick(() =>
+    setTimeout(() => {
+      gridApi.value?.setColumnWidths(
+        columnsNeedResize.map(column => {
+          return {
+            key: column,
+            newWidth: 300,
+          };
+        })
+      );
+    }, 100)
+  );
+};
 
 defineExpose({ gridApi, editedCells, columnDefs });
 </script>
@@ -405,6 +389,7 @@ defineExpose({ gridApi, editedCells, columnDefs });
     @cell-value-changed="onCellValueChanged"
     @grid-ready="onGridReady"
     @cell-focused="onCellFocus"
+    @row-data-updated="onRowDataUpdated"
     :class="props.class"
     :grid-options="gridOptions"
     :defaultColDef="defaultColDef"
@@ -416,13 +401,26 @@ defineExpose({ gridApi, editedCells, columnDefs });
       type: 'fitCellContents',
       skipHeader: false,
     }"
-    :suppress-auto-size="true"
+    :suppressColumnVirtualisation="true"
     ref="agGridRef"
     :row-buffer="5"
   />
 </template>
 
 <style>
+/* :auto-size-strategy="{
+      type: 'fitGridWidth',
+      defaultMaxWidth: 250,
+      defaultMinWidth: 100,
+      columnLimits: [
+        {
+          colId: '#',
+          minWidth: 35,
+          maxWidth: 40,
+        },
+      ],
+    }" */
+
 /* .class-row-border-none {
   border: 0px;
 } */

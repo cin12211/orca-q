@@ -22,7 +22,7 @@ export default defineEventHandler(async (event): Promise<TableStructure[]> => {
   const result = await resource.query(
     `SELECT
         a.attname AS column_name,
-        t.typname AS data_type, -- short type name
+        REPLACE(format_type(a.atttypid, a.atttypmod), 'character varying', 'varchar') AS data_type, -- short type with length, user-friendly
         NOT a.attnotnull AS is_nullable,
         PG_GET_EXPR(d.adbin, d.adrelid) AS default_value,
         COALESCE(fk_info.fk_text, '') AS foreign_keys,

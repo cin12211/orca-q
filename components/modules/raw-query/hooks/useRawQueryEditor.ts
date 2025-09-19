@@ -188,6 +188,8 @@ export function useRawQueryEditor({
     //     const ast: Statement[] = parse(rawNodeText);
     //     console.log('🚀 ~ applyASTRules ~ ast:', ast);
 
+    fieldDefs.value = [];
+    rawQueryResults.value = [];
     queryProcessState.executeLoading = true;
     try {
       const result = await $fetch('/api/raw-execute', {
@@ -198,8 +200,9 @@ export function useRawQueryEditor({
         },
       });
 
-      rawQueryResults.value = result.rows as unknown[][];
       fieldDefs.value = result.fields;
+
+      rawQueryResults.value = result.rows as unknown[][];
 
       queryProcessState.executeErrors = undefined;
 

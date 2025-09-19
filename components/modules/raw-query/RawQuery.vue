@@ -142,12 +142,12 @@ watch(fileVariables, () => {
           </CollapsibleContent>
         </Collapsible>
       </div>
-      <div
-        v-else-if="!rawQueryResults.length"
+      <!-- <div
+        v-else-if="!mappedColumns.length"
         class="text-center font-normal text-xs text-muted-foreground mt-4"
       >
         No row found
-      </div>
+      </div> -->
 
       <DynamicTable
         v-else
