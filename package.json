@@ -2,7 +2,7 @@
   "name": "orcaq",
   "productName": "OrcaQ",
   "private": false,
-  "version": "1.0.2",
+  "version": "1.0.4",
   "main": ".vite/build/main.js",
   "license": "MIT",
   "scripts": {

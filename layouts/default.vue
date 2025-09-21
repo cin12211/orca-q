@@ -13,11 +13,18 @@ const isAccessBottomPanel = computed(() => {
   return true;
 });
 
+const isAccessRightPanel = computed(() => {
+  if (route.meta.notAllowRightPanel) return false;
+  return true;
+});
+
 useHotkeys([
   {
     key: 'meta+shift+b',
     callback: () => {
-      appLayoutStore.onToggleSecondSidebar();
+      if (isAccessRightPanel.value) {
+        appLayoutStore.onToggleSecondSidebar();
+      }
     },
   },
   {
@@ -113,6 +120,7 @@ useHotkeys([
           class="[&[data-state=hover]]:bg-primary/30! [&[data-state=drag]]:bg-primary/20!"
           id="default-layout-group-1-resize-2"
           with-handle
+          v-show="isAccessRightPanel"
         />
         <ResizablePanel
           id="default-layout-group-1-panel-3"
@@ -122,6 +130,7 @@ useHotkeys([
           :collapsed-size="0"
           collapsible
           key="secondarySideBarPanel"
+          v-show="isAccessRightPanel"
         >
           <SecondarySideBar />
         </ResizablePanel>

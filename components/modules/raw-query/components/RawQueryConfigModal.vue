@@ -46,7 +46,9 @@ const appLayoutStore = useAppLayoutStore();
           <div class="flex items-center gap-4 px-1">
             <!-- Vertical -->
             <div class="w-1/3">
-              <p class="text-xs mb-0.5 text-accent-foreground">Vertical</p>
+              <p class="text-xs mb-0.5 text-accent-foreground">
+                Vertical (Default)
+              </p>
               <div
                 class="grid grid-cols-5 grid-rows-5 cursor-pointer gap-2 h-36 border p-2 rounded-md"
                 :class="{
@@ -84,7 +86,9 @@ const appLayoutStore = useAppLayoutStore();
 
             <!-- Horizontal with Variables -->
             <div class="w-1/3">
-              <p class="text-xs mb-0.5 text-accent-foreground">Default</p>
+              <p class="text-xs mb-0.5 text-accent-foreground">
+                Horizontal with variables
+              </p>
               <div
                 class="grid grid-cols-5 grid-rows-6 cursor-pointer gap-2 h-36 border p-2 rounded-md"
                 :class="{

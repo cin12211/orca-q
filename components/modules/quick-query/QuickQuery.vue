@@ -294,6 +294,7 @@ watch(
 
     <div class="px-2">
       <QuickQueryFilter
+        v-if="quickQueryTabView === QuickQueryTabView.Data"
         ref="quickQueryFilterRef"
         @onSearch="
           () => {

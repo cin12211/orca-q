@@ -111,7 +111,7 @@ export const useAppLayoutStore = defineStore(
     };
 
     const codeEditorLayout = ref<RawQueryEditorLayout>(
-      RawQueryEditorLayout.horizontalWithVariables
+      RawQueryEditorLayout.vertical
     );
 
     const setCodeEditorLayout = (layout: RawQueryEditorLayout) => {

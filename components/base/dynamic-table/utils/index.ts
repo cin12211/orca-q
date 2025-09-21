@@ -11,9 +11,9 @@ export const cellValueFormatter = (content: unknown, type?: string): string => {
 
   const isJsonType = type === 'jsonb' || type === 'json';
   const isObjectType =
-    typeof content === 'object' &&
-    content !== null &&
-    Object.prototype.toString.call(content) === '[object Object]';
+    (typeof content === 'object' ||
+      Object.prototype.toString.call(content) === '[object Object]') &&
+    content !== null;
 
   if (isJsonType || isObjectType) {
     return content ? JSON.stringify(content, null, 2) : '';
