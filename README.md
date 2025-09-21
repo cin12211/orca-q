@@ -48,25 +48,19 @@
 2. **Install dependencies:**
 
    ```sh
-   npm install
-   # or
-   yarn install
+   bun install
    ```
 
 3. **Run in development mode:**
 
    ```sh
-   npm run dev
-   # or
-   yarn dev
+   npm run nuxt:dev
    ```
 
 4. **Build for production:**
 
    ```sh
-   npm run build
-   # or
-   yarn build
+   npm run nuxt:build
    ```
 
 > **Note**: Ensure you have the correct Node.js version and necessary dependencies installed to run Electron. See more at [Electron Docs](https://www.electronjs.org/docs/latest/tutorial/quick-start).
@@ -98,11 +92,11 @@ yarn dev
 
 ## Configuration
 
-- **Environment Variables**:  
-  TODO: List required environment variables (e.g., DB_HOST, DB_PORT, etc.).
+- **Environment Variables**:
+  <!-- TODO: List required environment variables (e.g., DB_HOST, DB_PORT, etc.). -->
 
-- **Config File**:  
-  TODO: Describe the configuration file (if applicable), e.g., `orcaq.config.json`, `.env`, etc.
+- **Config File**:
+  <!-- TODO: Describe the configuration file (if applicable), e.g., `orcaq.config.json`, `.env`, etc. -->
 
 - **Interface Customization**:
   - Change editor layout: Vertical/Horizontal in settings.
@@ -120,9 +114,6 @@ yarn dev
   - [Electron Documentation](https://www.electronjs.org/docs/latest)
   - [Vue 3 Docs](https://vuejs.org/guide/introduction.html)
   - [Vite Docs](https://vitejs.dev/guide/)
-
-- **Component API**:  
-  TODO: Auto-generate documentation for Vue components (if applicable).
 
 ---
 
@@ -150,7 +141,7 @@ We welcome all contributions!
 4. **Review & Merge**:  
    The core team will review and provide feedback promptly.
 
-**See more**: [CONTRIBUTING.md](CONTRIBUTING.md) (TODO: add this file)
+**See more**: [CONTRIBUTING.md](CONTRIBUTING.md)
 
 ---
 
@@ -170,7 +161,7 @@ We welcome all contributions!
 
 ## Changelog
 
-See details at [CHANGELOG.md](CHANGELOG.md) (TODO: add this file)
+See details at [CHANGELOG.md](CHANGELOG.md)
 
 - **1.0.4**: Updated UI, fixed layout bugs, optimized user experience.
 - **1.0.2**: First public release.
@@ -180,9 +171,8 @@ See details at [CHANGELOG.md](CHANGELOG.md) (TODO: add this file)
 ## Community / Contact
 
 - **Issues**: [GitHub Issues](https://github.com/your-org/orcaq/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/your-org/orcaq/discussions) (TODO)
-- **Email**: TODO: your@email.com
-- **Chat**: TODO: Discord/Slack link
+- **Discussions**: [GitHub Discussions](https://github.com/your-org/orcaq/discussions)
+- **Email**: taccin03@gmail.com
 
 ---
 
