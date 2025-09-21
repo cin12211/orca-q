@@ -13,6 +13,7 @@ import type {
 import { AgGridVue } from 'ag-grid-vue3';
 import {
   baseTableTheme,
+  DEFAULT_COLUMN_ADDITIONAL_GAP_WIDTH,
   DEFAULT_HASH_INDEX_WIDTH,
   HASH_INDEX_HEADER,
   HASH_INDEX_ID,
@@ -20,7 +21,7 @@ import {
 import { useAgGridApi } from '~/components/base/dynamic-table/hooks';
 import {
   calculateColumnWidths,
-  valueFormatter,
+  cellValueFormatter,
   type RowData,
 } from '~/components/base/dynamic-table/utils';
 import { DEFAULT_QUERY_SIZE } from '~/utils/constants';
@@ -139,7 +140,7 @@ const onCellValueChanged = (event: CellValueChangedEvent) => {
 
 /* derive columns on the fly ---------------------------------------- */
 const columnDefs = computed<ColDef[]>(() => {
-  if (!props.columnTypes?.length || !props.data?.length) {
+  if (!props.columnTypes?.length) {
     return [];
   }
 
@@ -160,13 +161,17 @@ const columnDefs = computed<ColDef[]>(() => {
     width: DEFAULT_HASH_INDEX_WIDTH,
   });
 
+  const setPrimaryKeys = new Set(props.primaryKeys);
+  const setForeignKey = new Set(props.foreignKeys);
+
   props.columnTypes.forEach(({ name, type }) => {
     const fieldId = name;
 
     const sort =
       props.orderBy.columnName === fieldId ? props.orderBy.order : undefined;
 
-    const isPrimaryKey = props.primaryKeys.includes(fieldId);
+    const isPrimaryKey = setPrimaryKeys.has(fieldId);
+    const isForeignKey = setForeignKey.has(fieldId);
 
     const haveRelationByFieldName = props.isHaveRelationByFieldName(fieldId);
 
@@ -187,7 +192,7 @@ const columnDefs = computed<ColDef[]>(() => {
         },
         fieldId,
         isPrimaryKey,
-        isForeignKey: props.foreignKeys.includes(fieldId),
+        isForeignKey,
       },
       cellRenderer: isPrimaryKey ? CustomCellUuid : undefined,
       cellRendererParams: {
@@ -199,7 +204,7 @@ const columnDefs = computed<ColDef[]>(() => {
           }),
       },
       valueFormatter: (params: ValueFormatterParams) => {
-        return valueFormatter(params, type);
+        return cellValueFormatter(params.value, type);
       },
     };
     columns.push(column);
@@ -344,27 +349,31 @@ const onRowDataUpdated = () => {
   if (!gridApi.value) {
     return;
   }
-  const columns = gridApi.value?.getAllGridColumns() || [];
 
-  const ids = columns?.map(column => column.getColId());
-
-  gridApi.value?.autoSizeColumns(ids, false);
+  const columns = gridApi.value.getAllGridColumns() || [];
 
   const columnWidths = calculateColumnWidths({
-    charWidth: 8,
-    maxWidth: 300,
-    minWidth: 35,
     columns,
     data: props.data || [],
-    gapWidth: 8,
   });
+
+  const setPrimaryKeys = new Set(props.primaryKeys);
+  const setForeignKey = new Set(props.foreignKeys);
 
   gridApi.value.updateGridOptions({
     columnDefs: columns.map(column => {
-      const field = column.getColDef().field!;
+      const fieldId = column.getColDef().field!;
+
+      const isPrimaryKey = setPrimaryKeys.has(fieldId);
+      const isForeignKey = setForeignKey.has(fieldId);
+
+      const isKey = isPrimaryKey || isForeignKey;
+
+      const additionalGap = isKey ? DEFAULT_COLUMN_ADDITIONAL_GAP_WIDTH : 0;
+
       return {
         ...column.getColDef(),
-        width: columnWidths[field],
+        width: columnWidths[fieldId] + additionalGap,
       };
     }),
   });

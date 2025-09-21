@@ -12,6 +12,7 @@ export interface ConfigFieldItem {
   class?: HTMLAttributes['class'];
   titleClass?: HTMLAttributes['class'];
   as: Component;
+  placeholder?: string;
 }
 
 export interface DynamicFormProps {
@@ -50,6 +51,7 @@ defineExpose({
         :id="field.name"
         :name="field.name"
         :class="field.class"
+        :placeholder="field.placeholder"
       />
     </div>
   </div>

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Textarea } from '#components';
 import * as z from 'zod';
+import { cellValueFormatter } from '~/components/base/dynamic-table/utils';
 import { mapPgTypeToTsType } from '~/utils/quickQuery/mapPgTypeToTsType';
 import DynamicForm, { type ConfigFieldItem } from './DynamicForm.vue';
 
@@ -42,6 +43,7 @@ props.columnTypes.forEach(column => {
     as: Textarea,
     name: column.name,
     class: 'px-1 py-0.5 h-fit min-h-6! text-primary/80 font-normal!',
+    placeholder: 'NULL',
   });
 });
 
@@ -53,8 +55,15 @@ const dynamicForm = ref<InstanceType<typeof DynamicForm>>();
 
 watchEffect(() => {
   if (props.selectedRow) {
+    const mappedSelectedRow: Record<string, unknown> = Object.entries(
+      props.selectedRow
+    ).reduce((acc: Record<string, unknown>, [key, value]) => {
+      acc[key] = cellValueFormatter(value || '');
+      return acc;
+    }, {});
+
     dynamicForm.value?.form.resetForm();
-    dynamicForm.value?.form.setValues(props.selectedRow);
+    dynamicForm.value?.form.setValues(mappedSelectedRow);
   }
 });
 </script>

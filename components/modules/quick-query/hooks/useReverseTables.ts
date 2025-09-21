@@ -18,10 +18,18 @@ export const useReverseTables = ({
     );
   });
 
+  const mapReferencedColumn = computed(() => {
+    const referencedColumn = new Map<string, boolean>();
+
+    reverseTables.value?.used_by?.forEach(usedBy => {
+      referencedColumn.set(usedBy.referenced_column, true);
+    });
+
+    return referencedColumn;
+  });
+
   const isHaveRelationByFieldName = (columnName: string): boolean => {
-    return !!reverseTables.value?.used_by?.some(
-      item => item.referenced_column === columnName
-    );
+    return mapReferencedColumn.value.has(columnName);
   };
 
   return { reservedSchemas, reverseTables, isHaveRelationByFieldName };

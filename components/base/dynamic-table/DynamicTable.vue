@@ -13,12 +13,17 @@ import type { MappedRawColumn } from '~/components/modules/raw-query/interfaces'
 import DynamicPrimaryKeyHeader from './DynamicPrimaryKeyHeader.vue';
 import {
   baseTableTheme,
+  DEFAULT_COLUMN_ADDITIONAL_GAP_WIDTH,
   DEFAULT_HASH_INDEX_WIDTH,
   HASH_INDEX_HEADER,
   HASH_INDEX_ID,
 } from './constants';
 import { useAgGridApi } from './hooks';
-import { calculateColumnWidths, type RowData, valueFormatter } from './utils';
+import {
+  calculateColumnWidths,
+  type RowData,
+  cellValueFormatter,
+} from './utils';
 
 // TODO: refactor this component to reuse in query table
 /* props ------------------------------------------------------------- */
@@ -57,7 +62,7 @@ const rowData = computed<unknown[]>(() =>
 //   useRangeSelectionTable({});
 
 const columnDefs = computed<ColDef[]>(() => {
-  if (!props.columns?.length || !props.data?.length) {
+  if (!props.columns?.length) {
     return [];
   }
 
@@ -113,7 +118,7 @@ const columnDefs = computed<ColDef[]>(() => {
           isForeignKey: isForeignKey,
         },
         valueFormatter: (params: ValueFormatterParams) => {
-          return valueFormatter(params, type);
+          return cellValueFormatter(params.value, type);
         },
       };
       colDefs.push(column);
@@ -147,17 +152,6 @@ const gridOptions = computed(() => {
   };
   return options;
 });
-
-//TODO: check condition for best performance
-// watch(
-//   () => columnDefs,
-//   newColumnDefs => {
-//     console.log('newColumns');
-//     gridApi.value!.setGridOption('columnDefs', toRaw(newColumnDefs.value));
-//     gridApi.value!.refreshHeader();
-//   },
-//   { deep: true } // since it's an array of objects
-// );
 
 const columnTypes = ref<{
   [key: string]: ColTypeDef;
@@ -253,33 +247,31 @@ const onRowDataUpdated = async () => {
     return;
   }
 
-  // gridApi.value?.refreshCells({ force: true });
-  // gridApi.value.resetColumnState();
-  // gridApi.value.refreshHeader();
-
   const columns = gridApi.value?.getAllGridColumns() || [];
+  const mapColumns = new Map();
 
-  const ids = columns?.map(column => column.getColId());
-
-  gridApi.value.autoSizeColumns(ids, false);
-
-  const columnWidths = calculateColumnWidths({
-    charWidth: 8,
-    maxWidth: 300,
-    minWidth: 35,
-    columns,
-    data: props.data || [],
-    gapWidth: 15,
+  props.columns.forEach((column, index) => {
+    if (column.isPrimaryKey || column.isForeignKey) {
+      mapColumns.set(index.toString(), true);
+    }
   });
 
-  console.log('🚀 ~ onRowDataUpdated ~ columnWidths:', columnWidths);
+  const columnWidths = calculateColumnWidths({
+    columns,
+    data: props.data || [],
+  });
 
   gridApi.value.updateGridOptions({
     columnDefs: columns.map(column => {
       const field = column.getColDef().field!;
+
+      const isKey = mapColumns.get(field);
+
+      const additionalGap = isKey ? DEFAULT_COLUMN_ADDITIONAL_GAP_WIDTH : 0;
+
       return {
         ...column.getColDef(),
-        width: columnWidths[field],
+        width: columnWidths[field] + additionalGap,
       };
     }),
   });
