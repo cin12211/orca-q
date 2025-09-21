@@ -1,5 +1,6 @@
 import { ref } from 'vue';
 import { toast } from 'vue-sonner';
+import { HASH_INDEX_ID } from '~/components/base/dynamic-table/constants';
 import { useAppContext } from '~/shared/contexts/useAppContext';
 import { copyRowsToClipboard } from '~/utils/common';
 import { buildUpdateStatements } from '~/utils/quickQuery';
@@ -246,7 +247,7 @@ export function useQuickQueryMutation(options: UseQuickQueryMutationOptions) {
 
     const addIndex = totalRowsInGrid; // Add the new row at the end of the current grid view
     const newNode = {
-      '#': addIndex + 1, // Assign an artificial row number for display
+      [HASH_INDEX_ID]: addIndex + 1, // Assign an artificial row number for display
       ...Object.fromEntries(columnNames.value.map(name => [name, undefined])), // Initialize all columns with undefined
     };
 
@@ -285,7 +286,7 @@ export function useQuickQueryMutation(options: UseQuickQueryMutationOptions) {
     }
 
     const mappedRows = rows.map(row => {
-      const index = (row?.['#'] || 1) - 1;
+      const index = (row?.[HASH_INDEX_ID] || 1) - 1;
 
       return data.value?.[index];
     }) as Record<string, any>[];

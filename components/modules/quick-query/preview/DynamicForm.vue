@@ -12,6 +12,8 @@ export interface ConfigFieldItem {
   class?: HTMLAttributes['class'];
   titleClass?: HTMLAttributes['class'];
   as: Component;
+  placeholder?: string;
+  isShow?: boolean;
 }
 
 export interface DynamicFormProps {
@@ -34,7 +36,7 @@ defineExpose({
 
 <template>
   <div :class="props.class">
-    <div v-for="field in fields" :key="field.name">
+    <div v-for="field in fields" :key="field.name" v-show="field.isShow">
       <div :class="['flex justify-between pb-0.5', field.titleClass]">
         <label class="text-xs text-right" :for="field.name">{{
           field.label
@@ -50,6 +52,7 @@ defineExpose({
         :id="field.name"
         :name="field.name"
         :class="field.class"
+        :placeholder="field.placeholder"
       />
     </div>
   </div>

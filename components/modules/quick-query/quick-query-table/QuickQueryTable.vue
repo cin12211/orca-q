@@ -6,24 +6,27 @@ import type {
   CellValueChangedEvent,
   ColDef,
   ColTypeDef,
-  Column,
-  GridApi,
   GridOptions,
-  GridReadyEvent,
   SuppressKeyboardEventParams,
   ValueFormatterParams,
 } from 'ag-grid-community';
-import { themeBalham } from 'ag-grid-community';
 import { AgGridVue } from 'ag-grid-vue3';
+import {
+  baseTableTheme,
+  DEFAULT_COLUMN_ADDITIONAL_GAP_WIDTH,
+  DEFAULT_HASH_INDEX_WIDTH,
+  HASH_INDEX_HEADER,
+  HASH_INDEX_ID,
+} from '~/components/base/dynamic-table/constants';
+import { useAgGridApi } from '~/components/base/dynamic-table/hooks';
+import {
+  calculateColumnWidths,
+  cellValueFormatter,
+  type RowData,
+} from '~/components/base/dynamic-table/utils';
 import { DEFAULT_QUERY_SIZE } from '~/utils/constants';
 import CustomCellUuid from './CustomCellUuid.vue';
 import CustomHeaderTable from './CustomHeaderTable.vue';
-
-//TODO: refactor, and move reuseable
-// Define interfaces for better type safety
-interface RowData {
-  [key: string]: unknown;
-}
 
 /* props ------------------------------------------------------------- */
 const props = defineProps<{
@@ -50,7 +53,8 @@ const emit = defineEmits<{
 }>();
 
 const pageSize = ref<number>(props.defaultPageSize ?? DEFAULT_QUERY_SIZE);
-const gridApi = ref<GridApi | null>(null);
+
+const { gridApi, onGridReady } = useAgGridApi();
 
 const agGridRef = useTemplateRef<HTMLElement>('agGridRef');
 
@@ -67,7 +71,7 @@ const editedCells = ref<
 const rowData = computed<RowData[]>(() =>
   (props.data ?? []).map((e, index) => {
     return {
-      '#': index + props.offset + 1,
+      [HASH_INDEX_ID]: index + props.offset + 1,
       ...e,
     };
   })
@@ -75,26 +79,6 @@ const rowData = computed<RowData[]>(() =>
 
 const { onStopRangeSelection, onCellMouseOverDebounced, onCellMouseDown } =
   useRangeSelectionTable({});
-
-const customizedTheme = themeBalham.withParams({
-  // accentColor: 'var(--color-gray-900)',
-  backgroundColor: 'var(--background)',
-  // wrapperBorderRadius: 0,
-  borderRadius: 'var(--radius-sm)',
-  borderColor: 'var(--input)',
-  columnBorder: true,
-  wrapperBorderRadius: 'var(--radius)',
-  checkboxBorderRadius: 5,
-  checkboxCheckedBackgroundColor: 'var(--foreground)',
-  checkboxCheckedShapeColor: 'var(--background)',
-  checkboxCheckedBorderColor: 'transparent',
-});
-
-/* grid ready callback ---------------------------------------------- */
-const onGridReady = (e: GridReadyEvent) => {
-  gridApi.value = e.api;
-  //Do something
-};
 
 /* Handle cell value changed --------------------------------------- */
 const onCellValueChanged = (event: CellValueChangedEvent) => {
@@ -154,42 +138,17 @@ const onCellValueChanged = (event: CellValueChangedEvent) => {
   }
 };
 
-const gridOptions = computed(() => {
-  const options: GridOptions = {
-    rowClass: 'class-row-border-none',
-    getRowClass: params => {
-      if ((params.node.rowIndex || 0) % 2 === 0) {
-        return 'class-row-even';
-      }
-    },
-    rowSelection: {
-      mode: 'multiRow',
-      checkboxes: false,
-      headerCheckbox: false,
-      enableSelectionWithoutKeys: false,
-      enableClickSelection: 'enableSelection',
-      copySelectedRows: false,
-    },
-    autoSizeStrategy: {
-      type: 'fitCellContents',
-    },
-    theme: customizedTheme,
-    pagination: false,
-    undoRedoCellEditing: true,
-    undoRedoCellEditingLimit: 25,
-    animateRows: true,
-    onCellMouseDown,
-    onCellMouseOver: onCellMouseOverDebounced,
-  };
-  return options;
-});
-
 /* derive columns on the fly ---------------------------------------- */
 const columnDefs = computed<ColDef[]>(() => {
+  if (!props.columnTypes?.length) {
+    return [];
+  }
+
   const columns: ColDef[] = [];
   columns.push({
-    headerName: '#',
-    field: '#',
+    colId: HASH_INDEX_ID,
+    headerName: HASH_INDEX_HEADER,
+    field: HASH_INDEX_ID,
     filter: false,
     resizable: true,
     editable: false,
@@ -199,7 +158,11 @@ const columnDefs = computed<ColDef[]>(() => {
       allowSorting: false,
     },
     pinned: 'left',
+    width: DEFAULT_HASH_INDEX_WIDTH,
   });
+
+  const setPrimaryKeys = new Set(props.primaryKeys);
+  const setForeignKey = new Set(props.foreignKeys);
 
   props.columnTypes.forEach(({ name, type }) => {
     const fieldId = name;
@@ -207,13 +170,15 @@ const columnDefs = computed<ColDef[]>(() => {
     const sort =
       props.orderBy.columnName === fieldId ? props.orderBy.order : undefined;
 
-    const isPrimaryKey = props.primaryKeys.includes(fieldId);
+    const isPrimaryKey = setPrimaryKeys.has(fieldId);
+    const isForeignKey = setForeignKey.has(fieldId);
 
     const haveRelationByFieldName = props.isHaveRelationByFieldName(fieldId);
 
     const column: ColDef = {
       headerName: fieldId,
       field: fieldId,
+      colId: fieldId,
       filter: false,
       resizable: true,
       editable: true,
@@ -227,7 +192,7 @@ const columnDefs = computed<ColDef[]>(() => {
         },
         fieldId,
         isPrimaryKey,
-        isForeignKey: props.foreignKeys.includes(fieldId),
+        isForeignKey,
       },
       cellRenderer: isPrimaryKey ? CustomCellUuid : undefined,
       cellRendererParams: {
@@ -238,23 +203,8 @@ const columnDefs = computed<ColDef[]>(() => {
             columnName: fieldId,
           }),
       },
-
       valueFormatter: (params: ValueFormatterParams) => {
-        const value = params.value;
-
-        if (type === 'jsonb' || type === 'json') {
-          return value ? JSON.stringify(value, null, 2) : '';
-        }
-
-        if (
-          typeof value === 'object' &&
-          value !== null &&
-          Object.prototype.toString.call(value) === '[object Object]'
-        ) {
-          return value ? JSON.stringify(value, null, 2) : '';
-        }
-
-        return value;
+        return cellValueFormatter(params.value, type);
       },
     };
     columns.push(column);
@@ -288,7 +238,6 @@ const defaultColDef = ref<ColDef>({
 const columnTypes = ref<{
   [key: string]: ColTypeDef;
 }>({
-  indexColumn: {},
   editableColumn: {
     cellStyle: (params: CellClassParams) => {
       const rowId = Number(params.node.id ?? params.node.rowIndex);
@@ -299,19 +248,66 @@ const columnTypes = ref<{
 
       const field = params.colDef.field ?? '';
 
+      const style: { backgroundColor?: string; color?: string } = {};
+
       const oldValue = props?.data?.[rowId]?.[field];
+
+      if (oldValue === null) {
+        style.color = 'var(--muted-foreground)';
+      }
 
       const haveDifferent = oldValue !== params.value;
 
       if (haveDifferent) {
-        return { backgroundColor: 'var(--color-orange-200)' };
+        style.backgroundColor = 'var(--color-orange-200)';
+        delete style.color;
       }
+
+      return style;
     },
     cellClass: (p: CellClassParams) => {
       const isSelectedCol = p.column.getColId() === props.selectedColumnFieldId;
       return isSelectedCol ? 'col-highlight-cell cellCenter' : 'cellCenter';
     },
   },
+});
+
+const gridOptions = computed(() => {
+  const options: GridOptions = {
+    paginationPageSize: pageSize.value,
+    autoSizeStrategy: { type: 'fitGridWidth' },
+    rowBuffer: 5,
+    rowClass: 'class-row-border-none',
+    // getRowClass: params => {
+    //   if ((params.node.rowIndex || 0) % 2 === 0) {
+    //     return 'class-row-even';
+    //   }
+    // },
+    getRowStyle: params => {
+      if ((params.node.rowIndex || 0) % 2 === 0) {
+        return { background: 'var(--color-neutral-100)' };
+      }
+    },
+    rowSelection: {
+      mode: 'multiRow',
+      checkboxes: false,
+      headerCheckbox: false,
+      enableSelectionWithoutKeys: false,
+      enableClickSelection: 'enableSelection',
+      copySelectedRows: false,
+    },
+    theme: baseTableTheme,
+    pagination: false,
+    undoRedoCellEditing: true,
+    undoRedoCellEditingLimit: 25,
+    animateRows: true,
+    onCellMouseDown,
+    onCellMouseOver: onCellMouseOverDebounced,
+    defaultColDef: defaultColDef.value,
+    columnTypes: columnTypes.value,
+  };
+
+  return options;
 });
 
 /* handle selection changes ----------------------------------------- */
@@ -349,6 +345,40 @@ watch(
   { flush: 'post' }
 );
 
+const onRowDataUpdated = () => {
+  if (!gridApi.value) {
+    return;
+  }
+
+  const columns = gridApi.value.getAllGridColumns() || [];
+
+  const columnWidths = calculateColumnWidths({
+    columns,
+    data: props.data || [],
+  });
+
+  const setPrimaryKeys = new Set(props.primaryKeys);
+  const setForeignKey = new Set(props.foreignKeys);
+
+  gridApi.value.updateGridOptions({
+    columnDefs: columns.map(column => {
+      const fieldId = column.getColDef().field!;
+
+      const isPrimaryKey = setPrimaryKeys.has(fieldId);
+      const isForeignKey = setForeignKey.has(fieldId);
+
+      const isKey = isPrimaryKey || isForeignKey;
+
+      const additionalGap = isKey ? DEFAULT_COLUMN_ADDITIONAL_GAP_WIDTH : 0;
+
+      return {
+        ...column.getColDef(),
+        width: columnWidths[fieldId] + additionalGap,
+      };
+    }),
+  });
+};
+
 defineExpose({ gridApi, editedCells, columnDefs });
 </script>
 
@@ -361,28 +391,34 @@ defineExpose({ gridApi, editedCells, columnDefs });
     @cell-value-changed="onCellValueChanged"
     @grid-ready="onGridReady"
     @cell-focused="onCellFocus"
+    @row-data-updated="onRowDataUpdated"
     :class="props.class"
     :grid-options="gridOptions"
-    :defaultColDef="defaultColDef"
-    :columnTypes="columnTypes"
     :columnDefs="columnDefs"
     :rowData="rowData"
-    :paginationPageSize="pageSize"
     ref="agGridRef"
   />
 </template>
 
 <style>
-.class-row-border-none {
+/* .class-row-border-none {
   border: 0px;
-}
+} */
 
-.class-row-even {
-  background-color: var(--muted);
-}
+/* .class-row-even {
+  background-color: var(--color-gray-100);
+} */
 
 .ag-cell-value {
   user-select: none;
+}
+
+.ag-cell {
+  color: var(--color-black);
+}
+
+.dark .ag-cell {
+  color: var(--color-white);
 }
 
 .ag-root-wrapper {

@@ -5,21 +5,31 @@ import type {
   CellClassParams,
   ColDef,
   ColTypeDef,
-  GridApi,
   GridOptions,
-  GridReadyEvent,
   ValueFormatterParams,
 } from 'ag-grid-community';
-import { themeBalham } from 'ag-grid-community';
 import { AgGridVue } from 'ag-grid-vue3';
 import type { MappedRawColumn } from '~/components/modules/raw-query/interfaces';
 import DynamicPrimaryKeyHeader from './DynamicPrimaryKeyHeader.vue';
+import {
+  baseTableTheme,
+  DEFAULT_COLUMN_ADDITIONAL_GAP_WIDTH,
+  DEFAULT_HASH_INDEX_WIDTH,
+  HASH_INDEX_HEADER,
+  HASH_INDEX_ID,
+} from './constants';
+import { useAgGridApi } from './hooks';
+import {
+  calculateColumnWidths,
+  type RowData,
+  cellValueFormatter,
+} from './utils';
 
 // TODO: refactor this component to reuse in query table
 /* props ------------------------------------------------------------- */
 const props = defineProps<{
   columns: MappedRawColumn[];
-  data: unknown[][];
+  data: RowData[];
   class?: HTMLAttributes['class'];
 }>();
 
@@ -28,7 +38,7 @@ const emit = defineEmits<{
   (e: 'onFocusCell', value: unknown | undefined): void;
 }>();
 
-const gridApi = ref<GridApi | null>(null);
+const { gridApi, onGridReady } = useAgGridApi();
 
 const agGridRef = useTemplateRef<HTMLElement>('agGridRef');
 
@@ -39,11 +49,10 @@ onClickOutside(agGridRef, () => {
   // gridApi.value?.deselectAll();
 });
 
-/* reactive state ---------------------------------------------------- */
 const rowData = computed<unknown[]>(() =>
   (props.data ?? []).map((e, index) => {
     return {
-      '#': index + 1,
+      [HASH_INDEX_ID]: index + 1,
       ...e,
     };
   })
@@ -52,36 +61,22 @@ const rowData = computed<unknown[]>(() =>
 // const { onStopRangeSelection, onCellMouseOverDebounced, onCellMouseDown } =
 //   useRangeSelectionTable({});
 
-const customizedTheme = themeBalham.withParams({
-  // accentColor: 'var(--color-gray-900)',
-  backgroundColor: 'var(--background)',
-  // wrapperBorderRadius: 0,
-  borderRadius: 'var(--radius-sm)',
-  borderColor: 'var(--input)',
-  columnBorder: true,
-  wrapperBorderRadius: 'var(--radius)',
-  checkboxBorderRadius: 5,
-  checkboxCheckedBackgroundColor: 'var(--foreground)',
-  checkboxCheckedShapeColor: 'var(--background)',
-  checkboxCheckedBorderColor: 'transparent',
-});
-
-/* grid ready callback ---------------------------------------------- */
-const onGridReady = (e: GridReadyEvent) => {
-  gridApi.value = e.api;
-  //Do something
-};
-
 const columnDefs = computed<ColDef[]>(() => {
+  if (!props.columns?.length) {
+    return [];
+  }
+
   const colDefs: ColDef[] = [];
   colDefs.push({
-    headerName: '#',
-    field: '#',
+    colId: HASH_INDEX_ID,
+    headerName: HASH_INDEX_HEADER,
+    field: HASH_INDEX_ID,
     filter: false,
     resizable: false,
     editable: false,
     sortable: true,
     pinned: 'left',
+    width: DEFAULT_HASH_INDEX_WIDTH,
   });
 
   const setColumnName = new Set();
@@ -123,25 +118,9 @@ const columnDefs = computed<ColDef[]>(() => {
           isForeignKey: isForeignKey,
         },
         valueFormatter: (params: ValueFormatterParams) => {
-          const value = params.value;
-
-          //TODO: reuse function format json -> string
-          if (type === 'jsonb' || type === 'json') {
-            return value ? JSON.stringify(params.value, null, 2) : '';
-          }
-
-          if (
-            typeof value === 'object' &&
-            value !== null &&
-            Object.prototype.toString.call(value) === '[object Object]'
-          ) {
-            return value ? JSON.stringify(value, null, 2) : '';
-          }
-
-          return value;
+          return cellValueFormatter(params.value, type);
         },
       };
-
       colDefs.push(column);
     }
   );
@@ -152,9 +131,9 @@ const columnDefs = computed<ColDef[]>(() => {
 const gridOptions = computed(() => {
   const options: GridOptions = {
     rowClass: 'class-row-border-none',
-    getRowClass: params => {
+    getRowStyle: params => {
       if ((params.node.rowIndex || 0) % 2 === 0) {
-        return 'class-row-even';
+        return { background: 'var(--color-neutral-100)' };
       }
     },
     rowSelection: {
@@ -165,35 +144,14 @@ const gridOptions = computed(() => {
       enableClickSelection: 'enableSelection',
       copySelectedRows: false,
     },
-    autoSizeStrategy: {
-      type: 'fitCellContents',
-    },
-    theme: customizedTheme,
+    theme: baseTableTheme,
     pagination: false,
     undoRedoCellEditing: true,
     undoRedoCellEditingLimit: 25,
     animateRows: true,
-    onStateUpdated(event) {
-      //TODO: check condition for best performance
-      event.api.refreshHeader();
-      event.api.refreshCells();
-    },
-    // onCellMouseDown,
-    // onCellMouseOver: onCellMouseOverDebounced,
   };
   return options;
 });
-
-//TODO: check condition for best performance
-// watch(
-//   () => columnDefs,
-//   newColumnDefs => {
-//     console.log('newColumns');
-//     gridApi.value!.setGridOption('columnDefs', toRaw(newColumnDefs.value));
-//     gridApi.value!.refreshHeader();
-//   },
-//   { deep: true } // since it's an array of objects
-// );
 
 const columnTypes = ref<{
   [key: string]: ColTypeDef;
@@ -209,17 +167,28 @@ const columnTypes = ref<{
 
       const field = params.colDef.field ?? '';
 
+      const style: { backgroundColor?: string; color?: string } = {};
+
       if (!field) {
         return;
       }
 
       const oldValue = props?.data?.[rowId]?.[Number(field)];
 
+      if (oldValue === null) {
+        style.color = 'var(--muted-foreground)';
+      }
+
       const haveDifferent = oldValue !== params.value;
 
       if (haveDifferent) {
-        return { backgroundColor: 'var(--color-orange-200)' };
+        style.backgroundColor = 'var(--color-orange-200)';
+        delete style.color;
       }
+      return style;
+    },
+    cellClass: () => {
+      return 'cellCenter';
     },
   },
 });
@@ -273,6 +242,41 @@ useHotkeys(
   }
 );
 
+const onRowDataUpdated = async () => {
+  if (!gridApi.value) {
+    return;
+  }
+
+  const columns = gridApi.value?.getAllGridColumns() || [];
+  const mapColumns = new Map();
+
+  props.columns.forEach((column, index) => {
+    if (column.isPrimaryKey || column.isForeignKey) {
+      mapColumns.set(index.toString(), true);
+    }
+  });
+
+  const columnWidths = calculateColumnWidths({
+    columns,
+    data: props.data || [],
+  });
+
+  gridApi.value.updateGridOptions({
+    columnDefs: columns.map(column => {
+      const field = column.getColDef().field!;
+
+      const isKey = mapColumns.get(field);
+
+      const additionalGap = isKey ? DEFAULT_COLUMN_ADDITIONAL_GAP_WIDTH : 0;
+
+      return {
+        ...column.getColDef(),
+        width: columnWidths[field] + additionalGap,
+      };
+    }),
+  });
+};
+
 defineExpose({ gridApi });
 </script>
 
@@ -282,13 +286,26 @@ defineExpose({ gridApi });
       @selection-changed="onSelectionChanged"
       @grid-ready="onGridReady"
       @cell-focused="onCellFocus"
+      @row-data-updated="onRowDataUpdated"
       :class="props.class"
       :grid-options="gridOptions"
       :columnDefs="columnDefs"
       :rowData="rowData"
       :columnTypes="columnTypes"
       :copy-headers-to-clipboard="true"
+      :auto-size-strategy="{
+        type: 'fitGridWidth',
+      }"
       ref="agGridRef"
     />
   </div>
 </template>
+<style>
+.cellCenter .ag-cell-wrapper {
+  justify-content: center;
+}
+
+.ag-cell {
+  color: var(--color-black);
+}
+</style>

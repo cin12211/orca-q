@@ -24,6 +24,7 @@ import {
   getCurrentStatement,
   pgKeywordCompletion,
 } from '~/components/base/code-editor/utils';
+import type { RowData } from '~/components/base/dynamic-table/utils';
 import type { Connection, Schema } from '~/shared/stores';
 import {
   convertParameters,
@@ -44,7 +45,7 @@ export function useRawQueryEditor({
   fieldDefs: Ref<FieldDef[]>;
 }) {
   const codeEditorRef = ref<InstanceType<typeof BaseCodeEditor> | null>(null);
-  const rawQueryResults = shallowRef<unknown[][]>([]);
+  const rawQueryResults = shallowRef<RowData[]>([]);
 
   const queryProcessState = reactive<{
     isHaveOneExecute: boolean;
@@ -188,6 +189,8 @@ export function useRawQueryEditor({
     //     const ast: Statement[] = parse(rawNodeText);
     //     console.log('🚀 ~ applyASTRules ~ ast:', ast);
 
+    fieldDefs.value = [];
+    rawQueryResults.value = [];
     queryProcessState.executeLoading = true;
     try {
       const result = await $fetch('/api/raw-execute', {
@@ -198,8 +201,9 @@ export function useRawQueryEditor({
         },
       });
 
-      rawQueryResults.value = result.rows as unknown[][];
       fieldDefs.value = result.fields;
+
+      rawQueryResults.value = result.rows as RowData[];
 
       queryProcessState.executeErrors = undefined;
 
@@ -248,7 +252,7 @@ export function useRawQueryEditor({
     ),
     currentStatementLineHighlightExtension,
     ...sqlAutoCompletion(),
-    lintGutter(),
+    // lintGutter(),
     //TODO: close to slow to usage
     // sqlLinter(),
   ];

@@ -8,6 +8,7 @@ import RawQuery from '~/components/modules/raw-query/RawQuery.vue';
 definePageMeta({
   keepalive: true,
   notAllowBottomPanel: true,
+  notAllowRightPanel: true,
 });
 </script>
 

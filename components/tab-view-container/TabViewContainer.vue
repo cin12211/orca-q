@@ -4,6 +4,8 @@ import { useAppLayoutStore } from '~/shared/stores/appLayoutStore';
 import ActivityBarHorizontal from '../activity-bar/ActivityBarHorizontal.vue';
 import TabViews from './TabViews.vue';
 
+const route = useRoute();
+
 const appLayoutStore = useAppLayoutStore();
 
 const { isPrimarySidebarCollapsed, isSecondSidebarCollapsed } =
@@ -23,6 +25,11 @@ const minWidth = computed(() => {
   }
 
   return `calc( ${widthPercentage}% + 1px) `;
+});
+
+const isAccessRightPanel = computed(() => {
+  if (route.meta.notAllowRightPanel) return false;
+  return true;
 });
 </script>
 
@@ -73,6 +80,7 @@ const minWidth = computed(() => {
       <TabViews />
 
       <Button
+        v-if="isAccessRightPanel"
         variant="ghost"
         size="iconSm"
         @click="appLayoutStore.onToggleSecondSidebar()"

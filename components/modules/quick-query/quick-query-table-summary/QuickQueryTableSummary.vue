@@ -70,7 +70,7 @@ watchEffect(onCleanup => {
 
 <template>
   <div class="gap-1 flex flex-col h-full w-full p-2">
-    <Card>
+    <Card class="py-2 rounded-md">
       <CardContent class="px-2">
         <div class="flex flex-col gap-y-1">
           <div class="flex items-center justify-between w-full">
@@ -92,7 +92,7 @@ watchEffect(onCleanup => {
     <Card
       :class="
         cn(
-          'mx-1 mt-3 py-2 px-1 h-[calc(100vh-10em)] overflow-y-auto custom-scrollbar',
+          'mt-1 py-2 px-1 h-[calc(100vh-10em)] overflow-y-auto custom-scrollbar rounded-md',
           columns?.length === 0 && 'hidden'
         )
       "

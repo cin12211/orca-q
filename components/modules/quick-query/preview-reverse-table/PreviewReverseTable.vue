@@ -1,6 +1,5 @@
 <script setup lang="ts">
-import { KeepAlive } from 'vue';
-import { Dialog, DialogContent, Input, LoadingOverlay } from '#components';
+import { Dialog, DialogContent, Input } from '#components';
 import { OperatorSet } from '~/utils/constants';
 import type { FilterSchema } from '~/utils/quickQuery';
 import { useReverseTables } from '../hooks';
@@ -26,11 +25,15 @@ const searchInput = ref('');
 const selectedTab = ref<string>();
 
 const tabTables = computed(() => {
-  const usedByTables = new Set(
-    (toRaw(reverseTables.value?.used_by) || [])
-      .filter(item => item.referenced_column === props.columnName)
-      .map(item => item.referencing_table)
-  );
+  const usedByTables = new Set<string>();
+
+  const reverseTablesUsedBy = toRaw(reverseTables.value?.used_by) || [];
+
+  for (const table of reverseTablesUsedBy) {
+    if (table.referenced_column === props.columnName) {
+      usedByTables.add(table.referencing_table);
+    }
+  }
 
   let tableList = [...usedByTables].sort();
 
@@ -55,20 +58,23 @@ const getInitFilters = (tabName?: string) => {
     return [];
   }
 
-  const reverseTableInfos =
-    reverseTables.value?.used_by?.filter(
-      item => item.referencing_table === tabName
-    ) || [];
+  const filterSchemas: FilterSchema[] = [];
 
-  return reverseTableInfos.map(item => {
-    const filterSchema: FilterSchema = {
-      fieldName: item.fk_column,
-      operator: OperatorSet.EQUAL,
-      search: props.recordId,
-      isSelect: true,
-    };
-    return filterSchema;
-  });
+  const reverseTablesUsedBy = toRaw(reverseTables.value?.used_by) || [];
+
+  for (const table of reverseTablesUsedBy) {
+    if (table.referencing_table === tabName) {
+      const filterSchema: FilterSchema = {
+        fieldName: table.fk_column,
+        operator: OperatorSet.EQUAL,
+        search: props.recordId,
+        isSelect: true,
+      };
+      filterSchemas.push(filterSchema);
+    }
+  }
+
+  return filterSchemas;
 };
 </script>
 
