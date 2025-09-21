@@ -1,10 +1,12 @@
 {
   "name": "orcaq",
   "productName": "OrcaQ",
-  "private": false,
+  "description": "The open source | Generator database editor",
+  "homepage": "https://orca-q.com/",
+  "author": "Cinny",
+  "license": "MIT",
   "version": "1.0.4",
   "main": ".vite/build/main.js",
-  "license": "MIT",
   "scripts": {
     "dev": "concurrently --names \"NUXT,ELECTRON\" --prefix-colors \"cyan,magenta\" \"npm run nuxt:dev\" \"cd electron && npm run dev\"",
     "nuxt:dev": "nuxt dev",
@@ -124,5 +126,27 @@
     "vite": "^6.3.5",
     "vue-tsc": "^2.2.8"
   },
-  "packageManager": "pnpm@10.11.0+sha512.6540583f41cc5f628eb3d9773ecee802f4f9ef9923cc45b69890fb47991d4b092964694ec3a4f738a420c918a333062c8b925d312f42e4f0c263eb603551f977"
+  "packageManager": "pnpm@10.11.0+sha512.6540583f41cc5f628eb3d9773ecee802f4f9ef9923cc45b69890fb47991d4b092964694ec3a4f738a420c918a333062c8b925d312f42e4f0c263eb603551f977",
+  "engines": {
+    "bun": ">=1.2.0",
+    "node": ">=18.0.0"
+  },
+  "keywords": [
+    "database",
+    "query",
+    "sql",
+    "orm",
+    "postgresql",
+    "mysql",
+    "electron",
+    "desktop-app",
+    "orca-q"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/cin12211/orca-q.git"
+  },
+  "bugs": {
+    "url": "https://github.com/cin12211/orca-q/issues"
+  }
 }
