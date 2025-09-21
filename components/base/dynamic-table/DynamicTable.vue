@@ -5,21 +5,26 @@ import type {
   CellClassParams,
   ColDef,
   ColTypeDef,
-  GridApi,
   GridOptions,
-  GridReadyEvent,
   ValueFormatterParams,
 } from 'ag-grid-community';
 import { AgGridVue } from 'ag-grid-vue3';
 import type { MappedRawColumn } from '~/components/modules/raw-query/interfaces';
 import DynamicPrimaryKeyHeader from './DynamicPrimaryKeyHeader.vue';
-import { baseTableTheme } from './constants';
+import {
+  baseTableTheme,
+  DEFAULT_HASH_INDEX_WIDTH,
+  HASH_INDEX_HEADER,
+  HASH_INDEX_ID,
+} from './constants';
+import { useAgGridApi } from './hooks';
+import { calculateColumnWidths, type RowData, valueFormatter } from './utils';
 
 // TODO: refactor this component to reuse in query table
 /* props ------------------------------------------------------------- */
 const props = defineProps<{
   columns: MappedRawColumn[];
-  data: unknown[][];
+  data: RowData[];
   class?: HTMLAttributes['class'];
 }>();
 
@@ -28,7 +33,7 @@ const emit = defineEmits<{
   (e: 'onFocusCell', value: unknown | undefined): void;
 }>();
 
-const gridApi = ref<GridApi | null>(null);
+const { gridApi, onGridReady } = useAgGridApi();
 
 const agGridRef = useTemplateRef<HTMLElement>('agGridRef');
 
@@ -39,11 +44,10 @@ onClickOutside(agGridRef, () => {
   // gridApi.value?.deselectAll();
 });
 
-/* reactive state ---------------------------------------------------- */
 const rowData = computed<unknown[]>(() =>
   (props.data ?? []).map((e, index) => {
     return {
-      '#': index + 1,
+      [HASH_INDEX_ID]: index + 1,
       ...e,
     };
   })
@@ -52,12 +56,6 @@ const rowData = computed<unknown[]>(() =>
 // const { onStopRangeSelection, onCellMouseOverDebounced, onCellMouseDown } =
 //   useRangeSelectionTable({});
 
-/* grid ready callback ---------------------------------------------- */
-const onGridReady = (e: GridReadyEvent) => {
-  gridApi.value = e.api;
-  //Do something
-};
-
 const columnDefs = computed<ColDef[]>(() => {
   if (!props.columns?.length || !props.data?.length) {
     return [];
@@ -65,13 +63,15 @@ const columnDefs = computed<ColDef[]>(() => {
 
   const colDefs: ColDef[] = [];
   colDefs.push({
-    headerName: '#',
-    field: '#',
+    colId: HASH_INDEX_ID,
+    headerName: HASH_INDEX_HEADER,
+    field: HASH_INDEX_ID,
     filter: false,
     resizable: false,
     editable: false,
     sortable: true,
     pinned: 'left',
+    width: DEFAULT_HASH_INDEX_WIDTH,
   });
 
   const setColumnName = new Set();
@@ -113,29 +113,9 @@ const columnDefs = computed<ColDef[]>(() => {
           isForeignKey: isForeignKey,
         },
         valueFormatter: (params: ValueFormatterParams) => {
-          const value = params.value;
-
-          if (value === null) {
-            return 'NULL';
-          }
-
-          //TODO: reuse function format json -> string
-          if (type === 'jsonb' || type === 'json') {
-            return value ? JSON.stringify(params.value, null, 2) : '';
-          }
-
-          if (
-            typeof value === 'object' &&
-            value !== null &&
-            Object.prototype.toString.call(value) === '[object Object]'
-          ) {
-            return value ? JSON.stringify(value, null, 2) : '';
-          }
-
-          return value;
+          return valueFormatter(params, type);
         },
       };
-
       colDefs.push(column);
     }
   );
@@ -158,10 +138,6 @@ const gridOptions = computed(() => {
       enableSelectionWithoutKeys: false,
       enableClickSelection: 'enableSelection',
       copySelectedRows: false,
-    },
-    autoSizeStrategy: {
-      type: 'fitCellContents',
-      skipHeader: false,
     },
     theme: baseTableTheme,
     pagination: false,
@@ -273,32 +249,40 @@ useHotkeys(
 );
 
 const onRowDataUpdated = async () => {
+  if (!gridApi.value) {
+    return;
+  }
+
   // gridApi.value?.refreshCells({ force: true });
-  gridApi.value?.resetColumnState();
-  // gridApi.value?.refreshHeader();
+  // gridApi.value.resetColumnState();
+  // gridApi.value.refreshHeader();
 
-  // await nextTick();
+  const columns = gridApi.value?.getAllGridColumns() || [];
 
-  gridApi.value?.autoSizeAllColumns(false);
+  const ids = columns?.map(column => column.getColId());
 
-  const columns = gridApi.value?.getAllGridColumns();
+  gridApi.value.autoSizeColumns(ids, false);
 
-  const columnsNeedResize = (columns || []).filter(column => {
-    return column.getActualWidth() >= 300;
+  const columnWidths = calculateColumnWidths({
+    charWidth: 8,
+    maxWidth: 300,
+    minWidth: 35,
+    columns,
+    data: props.data || [],
+    gapWidth: 15,
   });
 
-  nextTick(() =>
-    setTimeout(() => {
-      gridApi.value?.setColumnWidths(
-        columnsNeedResize.map(column => {
-          return {
-            key: column,
-            newWidth: 300,
-          };
-        })
-      );
-    }, 100)
-  );
+  console.log('🚀 ~ onRowDataUpdated ~ columnWidths:', columnWidths);
+
+  gridApi.value.updateGridOptions({
+    columnDefs: columns.map(column => {
+      const field = column.getColDef().field!;
+      return {
+        ...column.getColDef(),
+        width: columnWidths[field],
+      };
+    }),
+  });
 };
 
 defineExpose({ gridApi });
@@ -317,7 +301,9 @@ defineExpose({ gridApi });
       :rowData="rowData"
       :columnTypes="columnTypes"
       :copy-headers-to-clipboard="true"
-      :suppressColumnVirtualisation="true"
+      :auto-size-strategy="{
+        type: 'fitGridWidth',
+      }"
       ref="agGridRef"
     />
   </div>

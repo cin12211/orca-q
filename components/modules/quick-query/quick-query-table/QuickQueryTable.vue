@@ -6,24 +6,26 @@ import type {
   CellValueChangedEvent,
   ColDef,
   ColTypeDef,
-  GridApi,
   GridOptions,
-  GridReadyEvent,
-  SizeColumnsToFitGridStrategy,
   SuppressKeyboardEventParams,
   ValueFormatterParams,
 } from 'ag-grid-community';
 import { AgGridVue } from 'ag-grid-vue3';
-import { baseTableTheme } from '~/components/base/dynamic-table/constants';
+import {
+  baseTableTheme,
+  DEFAULT_HASH_INDEX_WIDTH,
+  HASH_INDEX_HEADER,
+  HASH_INDEX_ID,
+} from '~/components/base/dynamic-table/constants';
+import { useAgGridApi } from '~/components/base/dynamic-table/hooks';
+import {
+  calculateColumnWidths,
+  valueFormatter,
+  type RowData,
+} from '~/components/base/dynamic-table/utils';
 import { DEFAULT_QUERY_SIZE } from '~/utils/constants';
 import CustomCellUuid from './CustomCellUuid.vue';
 import CustomHeaderTable from './CustomHeaderTable.vue';
-
-//TODO: refactor, and move reuseable
-// Define interfaces for better type safety
-interface RowData {
-  [key: string]: unknown;
-}
 
 /* props ------------------------------------------------------------- */
 const props = defineProps<{
@@ -50,7 +52,8 @@ const emit = defineEmits<{
 }>();
 
 const pageSize = ref<number>(props.defaultPageSize ?? DEFAULT_QUERY_SIZE);
-const gridApi = ref<GridApi | null>(null);
+
+const { gridApi, onGridReady } = useAgGridApi();
 
 const agGridRef = useTemplateRef<HTMLElement>('agGridRef');
 
@@ -67,7 +70,7 @@ const editedCells = ref<
 const rowData = computed<RowData[]>(() =>
   (props.data ?? []).map((e, index) => {
     return {
-      '#': index + props.offset + 1,
+      [HASH_INDEX_ID]: index + props.offset + 1,
       ...e,
     };
   })
@@ -142,9 +145,9 @@ const columnDefs = computed<ColDef[]>(() => {
 
   const columns: ColDef[] = [];
   columns.push({
-    colId: '#',
-    headerName: '#',
-    field: '#',
+    colId: HASH_INDEX_ID,
+    headerName: HASH_INDEX_HEADER,
+    field: HASH_INDEX_ID,
     filter: false,
     resizable: true,
     editable: false,
@@ -154,6 +157,7 @@ const columnDefs = computed<ColDef[]>(() => {
       allowSorting: false,
     },
     pinned: 'left',
+    width: DEFAULT_HASH_INDEX_WIDTH,
   });
 
   props.columnTypes.forEach(({ name, type }) => {
@@ -195,64 +199,13 @@ const columnDefs = computed<ColDef[]>(() => {
           }),
       },
       valueFormatter: (params: ValueFormatterParams) => {
-        const value = params.value;
-
-        if (value === null) {
-          return 'NULL';
-        }
-
-        if (type === 'jsonb' || type === 'json') {
-          return value ? JSON.stringify(value, null, 2) : '';
-        }
-
-        if (
-          typeof value === 'object' &&
-          value !== null &&
-          Object.prototype.toString.call(value) === '[object Object]'
-        ) {
-          return value ? JSON.stringify(value, null, 2) : '';
-        }
-
-        return value;
+        return valueFormatter(params, type);
       },
     };
     columns.push(column);
   });
 
   return columns;
-});
-
-const gridOptions = computed(() => {
-  const options: GridOptions = {
-    rowClass: 'class-row-border-none',
-    // getRowClass: params => {
-    //   if ((params.node.rowIndex || 0) % 2 === 0) {
-    //     return 'class-row-even';
-    //   }
-    // },
-    getRowStyle: params => {
-      if ((params.node.rowIndex || 0) % 2 === 0) {
-        return { background: 'var(--color-neutral-100)' };
-      }
-    },
-    rowSelection: {
-      mode: 'multiRow',
-      checkboxes: false,
-      headerCheckbox: false,
-      enableSelectionWithoutKeys: false,
-      enableClickSelection: 'enableSelection',
-      copySelectedRows: false,
-    },
-    theme: baseTableTheme,
-    pagination: false,
-    undoRedoCellEditing: true,
-    undoRedoCellEditingLimit: 25,
-    animateRows: true,
-    onCellMouseDown,
-    onCellMouseOver: onCellMouseOverDebounced,
-  };
-
-  return options;
 });
 
 //
@@ -314,6 +267,44 @@ const columnTypes = ref<{
   },
 });
 
+const gridOptions = computed(() => {
+  const options: GridOptions = {
+    paginationPageSize: pageSize.value,
+    autoSizeStrategy: { type: 'fitGridWidth' },
+    rowBuffer: 5,
+    rowClass: 'class-row-border-none',
+    // getRowClass: params => {
+    //   if ((params.node.rowIndex || 0) % 2 === 0) {
+    //     return 'class-row-even';
+    //   }
+    // },
+    getRowStyle: params => {
+      if ((params.node.rowIndex || 0) % 2 === 0) {
+        return { background: 'var(--color-neutral-100)' };
+      }
+    },
+    rowSelection: {
+      mode: 'multiRow',
+      checkboxes: false,
+      headerCheckbox: false,
+      enableSelectionWithoutKeys: false,
+      enableClickSelection: 'enableSelection',
+      copySelectedRows: false,
+    },
+    theme: baseTableTheme,
+    pagination: false,
+    undoRedoCellEditing: true,
+    undoRedoCellEditingLimit: 25,
+    animateRows: true,
+    onCellMouseDown,
+    onCellMouseOver: onCellMouseOverDebounced,
+    defaultColDef: defaultColDef.value,
+    columnTypes: columnTypes.value,
+  };
+
+  return options;
+});
+
 /* handle selection changes ----------------------------------------- */
 const onSelectionChanged = () => {
   if (gridApi.value) {
@@ -349,32 +340,34 @@ watch(
   { flush: 'post' }
 );
 
-/* grid ready callback ---------------------------------------------- */
-const onGridReady = (e: GridReadyEvent) => {
-  gridApi.value = e.api;
-  //Do something
-};
-
 const onRowDataUpdated = () => {
-  gridApi.value?.autoSizeAllColumns(false);
-  const columns = gridApi.value?.getAllGridColumns();
+  if (!gridApi.value) {
+    return;
+  }
+  const columns = gridApi.value?.getAllGridColumns() || [];
 
-  const columnsNeedResize = (columns || []).filter(column => {
-    return column.getActualWidth() >= 300;
+  const ids = columns?.map(column => column.getColId());
+
+  gridApi.value?.autoSizeColumns(ids, false);
+
+  const columnWidths = calculateColumnWidths({
+    charWidth: 8,
+    maxWidth: 300,
+    minWidth: 35,
+    columns,
+    data: props.data || [],
+    gapWidth: 8,
   });
 
-  nextTick(() =>
-    setTimeout(() => {
-      gridApi.value?.setColumnWidths(
-        columnsNeedResize.map(column => {
-          return {
-            key: column,
-            newWidth: 300,
-          };
-        })
-      );
-    }, 100)
-  );
+  gridApi.value.updateGridOptions({
+    columnDefs: columns.map(column => {
+      const field = column.getColDef().field!;
+      return {
+        ...column.getColDef(),
+        width: columnWidths[field],
+      };
+    }),
+  });
 };
 
 defineExpose({ gridApi, editedCells, columnDefs });
@@ -392,35 +385,13 @@ defineExpose({ gridApi, editedCells, columnDefs });
     @row-data-updated="onRowDataUpdated"
     :class="props.class"
     :grid-options="gridOptions"
-    :defaultColDef="defaultColDef"
-    :columnTypes="columnTypes"
     :columnDefs="columnDefs"
     :rowData="rowData"
-    :paginationPageSize="pageSize"
-    :auto-size-strategy="{
-      type: 'fitCellContents',
-      skipHeader: false,
-    }"
-    :suppressColumnVirtualisation="true"
     ref="agGridRef"
-    :row-buffer="5"
   />
 </template>
 
 <style>
-/* :auto-size-strategy="{
-      type: 'fitGridWidth',
-      defaultMaxWidth: 250,
-      defaultMinWidth: 100,
-      columnLimits: [
-        {
-          colId: '#',
-          minWidth: 35,
-          maxWidth: 40,
-        },
-      ],
-    }" */
-
 /* .class-row-border-none {
   border: 0px;
 } */

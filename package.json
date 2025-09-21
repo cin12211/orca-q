@@ -1,8 +1,8 @@
 {
   "name": "orcaq",
   "productName": "OrcaQ",
-  "private": true,
-  "version": "0.1.1",
+  "private": false,
+  "version": "1.0.2",
   "main": ".vite/build/main.js",
   "license": "MIT",
   "scripts": {
@@ -16,7 +16,10 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "prepare": "husky",
-    "format:husky": "prettier $(git diff --cached --name-only --diff-filter=ACMR | sed 's| |\\ |g') --write --ignore-unknown && git update-index --again"
+    "format:husky": "prettier $(git diff --cached --name-only --diff-filter=ACMR | sed 's| |\\ |g') --write --ignore-unknown && git update-index --again",
+    "version:patch": "npm version patch --no-git-tag-version",
+    "version:minor": "npm version minor --no-git-tag-version",
+    "version:major": "npm version major --no-git-tag-version"
   },
   "dependencies": {
     "@amplitude/analytics-browser": "^2.21.1",

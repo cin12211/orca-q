@@ -24,6 +24,7 @@ import {
   getCurrentStatement,
   pgKeywordCompletion,
 } from '~/components/base/code-editor/utils';
+import type { RowData } from '~/components/base/dynamic-table/utils';
 import type { Connection, Schema } from '~/shared/stores';
 import {
   convertParameters,
@@ -44,7 +45,7 @@ export function useRawQueryEditor({
   fieldDefs: Ref<FieldDef[]>;
 }) {
   const codeEditorRef = ref<InstanceType<typeof BaseCodeEditor> | null>(null);
-  const rawQueryResults = shallowRef<unknown[][]>([]);
+  const rawQueryResults = shallowRef<RowData[]>([]);
 
   const queryProcessState = reactive<{
     isHaveOneExecute: boolean;
@@ -202,7 +203,7 @@ export function useRawQueryEditor({
 
       fieldDefs.value = result.fields;
 
-      rawQueryResults.value = result.rows as unknown[][];
+      rawQueryResults.value = result.rows as RowData[];
 
       queryProcessState.executeErrors = undefined;
 
