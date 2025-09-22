@@ -6,7 +6,7 @@
 
 ## Orca Query
 
-<img src="https://orca-q.com/images/editor-preview.png" >
+<img src="https://orca-q.com/images/editor-preview.png" style="border: 1px solid #ccc; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.2);" >
 
 ## Overview
 
