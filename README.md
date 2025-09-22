@@ -1,8 +1,12 @@
-# OrcaQ <img src="https://orca-q.com/images/logo.png" width="48">
+# <img src="https://orca-q.com/images/logo.png" width="32"> OrcaQ - The open source | Next Generation database editor
 
 [![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Build Status](https://img.shields.io/badge/build-passing-brightgreen.svg)](TODO)
 [![Version](https://img.shields.io/badge/version-1.0.4-blue.svg)](package.json)
+
+## Orca Query
+
+<img src="https://orca-q.com/images/editor-preview.png" >
 
 ---
 
@@ -20,9 +24,7 @@
 - 📝 **Raw SQL Editor**: Write and execute SQL queries with multiple layout modes (vertical/horizontal).
 - 🗂️ **Explorer**: Browse database structures, tables, schemas, and files.
 - 🔒 **Workspace & Connection Management**: Manage multiple connections and independent workspaces.
-- 🧩 **Extensible**: Easily customizable via configuration.
 - 🛠️ **Hotkey Support**: Supports shortcuts for faster operations.
-- 🧪 **Type-safe**: Uses TypeScript and Zod for type safety.
 - ⚙️ **Electron Backend**: Leverages Node.js, native modules, and OS integration.
 
 ---
@@ -32,11 +34,10 @@
 ### Requirements
 
 - **Node.js** >= 18.x
-- **npm** >= 9.x or **yarn**
-- **pnpm** (optional)
+- **pnpm** or **bun**
 - **macOS, Windows, or Linux**
 
-### Steps
+### Steps (Web setup)
 
 1. **Clone the repository:**
 
@@ -63,6 +64,33 @@
    npm run nuxt:build
    ```
 
+### Steps (App setup)
+
+1. **Clone the repository:**
+
+   ```sh
+   git clone https://github.com/your-org/orcaq.git
+   cd orcaq
+   ```
+
+2. **Install dependencies:**
+
+   ```sh
+   bun install
+   ```
+
+3. **Run in development mode:**
+
+   ```sh
+   npm run dev
+   ```
+
+4. **Build for production:**
+
+   ```sh
+   npm run app:build
+   ```
+
 > **Note**: Ensure you have the correct Node.js version and necessary dependencies installed to run Electron. See more at [Electron Docs](https://www.electronjs.org/docs/latest/tutorial/quick-start).
 
 ---
@@ -79,41 +107,6 @@
   Switch to the Raw Query tab to write and execute custom SQL queries.
 - **Manage Layout**:  
   Use the sidebar and hotkeys (`Cmd+Shift+B` on Mac) to show/hide panels.
-
-### Example Commands
-
-```sh
-npm run dev
-# or
-yarn dev
-```
-
----
-
-## Configuration
-
-- **Environment Variables**:
-  <!-- TODO: List required environment variables (e.g., DB_HOST, DB_PORT, etc.). -->
-
-- **Config File**:
-  <!-- TODO: Describe the configuration file (if applicable), e.g., `orcaq.config.json`, `.env`, etc. -->
-
-- **Interface Customization**:
-  - Change editor layout: Vertical/Horizontal in settings.
-  - Customize workspace, sidebar, and theme (TODO: detailed guide).
-
----
-
-## API / Documentation
-
-- **User Guide**:  
-  TODO: Add link to detailed user documentation.
-
-- **Developer Docs**:
-
-  - [Electron Documentation](https://www.electronjs.org/docs/latest)
-  - [Vue 3 Docs](https://vuejs.org/guide/introduction.html)
-  - [Vite Docs](https://vitejs.dev/guide/)
 
 ---
 
@@ -155,7 +148,6 @@ We welcome all contributions!
 - [ ] Export/Import workspace
 - [ ] Multi-language support (i18n)
 - [ ] AI query assistant integration
-- [ ] Detailed user documentation
 
 ---
 
