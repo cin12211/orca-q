@@ -1,4 +1,4 @@
-# <img src="https://orca-q.com/images/logo.png" width="32"> OrcaQ - The open source | Next Generation database editor
+# <img src="https://orca-q.com/images/logo.png" width="32"> OrcaQ - Next Generation database editor
 
 [![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Build Status](https://img.shields.io/badge/build-passing-brightgreen.svg)](TODO)
