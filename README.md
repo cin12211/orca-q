@@ -8,8 +8,6 @@
 
 <img src="https://orca-q.com/images/editor-preview.png" >
 
----
-
 ## Overview
 
 **OrcaQ** is a modern desktop application designed for managing, querying, and manipulating data across various database management systems (DBMS) in an intuitive, fast, and secure manner. Built with [Electron](https://www.electronjs.org/), [Vue 3](https://vuejs.org/), [TypeScript](https://www.typescriptlang.org/), and [Vite](https://vitejs.dev/), it targets developers, data engineers, analysts, DBAs, or anyone who needs to work with SQL/PostgreSQL data on the desktop.
