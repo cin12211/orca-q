@@ -115,6 +115,8 @@ watch(fileVariables, () => {
     </template>
 
     <template #result>
+      <LoadingOverlay :visible="queryProcessState.executeLoading" />
+
       <div v-if="queryProcessState.executeErrors" class="pt-2">
         <span class="font-normal text-sm text-muted-foreground block leading-5">
           Error message:
@@ -150,10 +152,11 @@ watch(fileVariables, () => {
       </div> -->
 
       <DynamicTable
-        v-else
+        v-show="!queryProcessState.executeErrors"
         :columns="mappedColumns"
         :data="rawQueryResults || []"
         class="h-full"
+        skip-re-column-size
       />
     </template>
   </RawQueryLayout>

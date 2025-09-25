@@ -20,9 +20,10 @@ import {
 } from '~/components/base/dynamic-table/constants';
 import { useAgGridApi } from '~/components/base/dynamic-table/hooks';
 import {
-  calculateColumnWidths,
+  estimateColumnWidth,
   cellValueFormatter,
   type RowData,
+  estimateAllColumnWidths,
 } from '~/components/base/dynamic-table/utils';
 import { DEFAULT_QUERY_SIZE } from '~/utils/constants';
 import CustomCellUuid from './CustomCellUuid.vue';
@@ -275,7 +276,6 @@ const columnTypes = ref<{
 const gridOptions = computed(() => {
   const options: GridOptions = {
     paginationPageSize: pageSize.value,
-    autoSizeStrategy: { type: 'fitGridWidth' },
     rowBuffer: 5,
     rowClass: 'class-row-border-none',
     // getRowClass: params => {
@@ -345,16 +345,18 @@ watch(
   { flush: 'post' }
 );
 
-const onRowDataUpdated = () => {
+const onFirstRowDataRendered = () => {
   if (!gridApi.value) {
     return;
   }
 
   const columns = gridApi.value.getAllGridColumns() || [];
 
-  const columnWidths = calculateColumnWidths({
+  const rows = (props.data || []).slice(0, 10);
+
+  const columnWidths = estimateAllColumnWidths({
     columns,
-    data: props.data || [],
+    rows,
   });
 
   const setPrimaryKeys = new Set(props.primaryKeys);
@@ -391,7 +393,7 @@ defineExpose({ gridApi, editedCells, columnDefs });
     @cell-value-changed="onCellValueChanged"
     @grid-ready="onGridReady"
     @cell-focused="onCellFocus"
-    @row-data-updated="onRowDataUpdated"
+    @first-data-rendered="onFirstRowDataRendered"
     :class="props.class"
     :grid-options="gridOptions"
     :columnDefs="columnDefs"

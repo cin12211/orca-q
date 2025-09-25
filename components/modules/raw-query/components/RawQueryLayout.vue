@@ -102,7 +102,7 @@ const horizontalWithVariables = computed(() => {
       </pane>
 
       <pane :size="resultSize" min-size="10" max-size="80">
-        <div class="flex flex-col flex-1 h-full p-1">
+        <div class="flex flex-col flex-1 h-full p-1 relative">
           <slot name="result" />
         </div>
       </pane>

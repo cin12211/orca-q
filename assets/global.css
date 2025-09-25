@@ -9,6 +9,7 @@ body {
   margin: 0; /* Remove default margins */
   overflow: hidden; /* Disable scrolling */
   border-radius: 0.5rem;
+  overscroll-behavior-x: none; /* Disable overscroll behavior of chrome browser */
 
   /* font-family: 'Alpino-Variable', sans-serif; */
 
