@@ -14,15 +14,17 @@ import DynamicPrimaryKeyHeader from './DynamicPrimaryKeyHeader.vue';
 import {
   baseTableTheme,
   DEFAULT_COLUMN_ADDITIONAL_GAP_WIDTH,
+  DEFAULT_COLUMN_RAW_GAP_WIDTH,
   DEFAULT_HASH_INDEX_WIDTH,
   HASH_INDEX_HEADER,
   HASH_INDEX_ID,
 } from './constants';
 import { useAgGridApi } from './hooks';
 import {
-  calculateColumnWidths,
   type RowData,
   cellValueFormatter,
+  estimateColumnWidth,
+  estimateAllColumnWidths,
 } from './utils';
 
 // TODO: refactor this component to reuse in query table
@@ -31,6 +33,7 @@ const props = defineProps<{
   columns: MappedRawColumn[];
   data: RowData[];
   class?: HTMLAttributes['class'];
+  skipReColumnSize?: boolean;
 }>();
 
 const emit = defineEmits<{
@@ -81,6 +84,8 @@ const columnDefs = computed<ColDef[]>(() => {
 
   const setColumnName = new Set();
 
+  const tempRows = (props.data || []).slice(0, 10);
+
   props.columns.forEach(
     (
       {
@@ -103,8 +108,21 @@ const columnDefs = computed<ColDef[]>(() => {
         setColumnName.add(fieldName);
       }
 
+      const headerName = fieldName;
+
+      const additionalGap =
+        isPrimaryKey || isForeignKey ? DEFAULT_COLUMN_ADDITIONAL_GAP_WIDTH : 0;
+
+      const estimatedWidth =
+        estimateColumnWidth({
+          headerName,
+          rows: tempRows,
+          field: fieldId,
+          gapWidth: DEFAULT_COLUMN_RAW_GAP_WIDTH,
+        }) + additionalGap;
+
       const column: ColDef = {
-        headerName: fieldName,
+        headerName,
         field: fieldId,
         filter: true,
         resizable: true,
@@ -120,6 +138,7 @@ const columnDefs = computed<ColDef[]>(() => {
         valueFormatter: (params: ValueFormatterParams) => {
           return cellValueFormatter(params.value, type);
         },
+        width: estimatedWidth,
       };
       colDefs.push(column);
     }
@@ -243,7 +262,7 @@ useHotkeys(
 );
 
 const onRowDataUpdated = async () => {
-  if (!gridApi.value) {
+  if (!gridApi.value || props.skipReColumnSize) {
     return;
   }
 
@@ -256,9 +275,12 @@ const onRowDataUpdated = async () => {
     }
   });
 
-  const columnWidths = calculateColumnWidths({
+  const tempRows = (props.data || []).slice(0, 10);
+
+  const columnWidths = estimateAllColumnWidths({
     columns,
-    data: props.data || [],
+    rows: tempRows || [],
+    gapWidth: DEFAULT_COLUMN_RAW_GAP_WIDTH,
   });
 
   gridApi.value.updateGridOptions({
@@ -293,9 +315,6 @@ defineExpose({ gridApi });
       :rowData="rowData"
       :columnTypes="columnTypes"
       :copy-headers-to-clipboard="true"
-      :auto-size-strategy="{
-        type: 'fitGridWidth',
-      }"
       ref="agGridRef"
     />
   </div>
