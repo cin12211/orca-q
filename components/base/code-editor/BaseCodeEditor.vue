@@ -3,10 +3,12 @@ import { onMounted, onUnmounted, ref, watch } from 'vue';
 import { search } from '@codemirror/search';
 import {
   Compartment,
+  EditorSelection,
   EditorState,
   Transaction,
   type Extension,
 } from '@codemirror/state';
+import type { ViewUpdate } from '@codemirror/view';
 import { indentationMarkers } from '@replit/codemirror-indentation-markers';
 import { EditorView, basicSetup } from 'codemirror';
 import debounce from 'lodash/debounce';
@@ -15,10 +17,7 @@ import {
   useAppLayoutStore,
   type CodeEditorConfigs,
 } from '~/shared/stores/appLayoutStore';
-import {
-  DEFAULT_DEBOUNCE_INPUT,
-  DEFAULT_DEBOUNCE_INPUT_EDITOR,
-} from '~/utils/constants';
+import { DEFAULT_DEBOUNCE_INPUT } from '~/utils/constants';
 import { EditorThemeMap } from './constants';
 import {
   cursorSmooth,
@@ -33,6 +32,7 @@ interface Props {
   readonly?: boolean; // Read-only mode
   extensions?: Extension[]; // Additional CodeMirror extensions
   class?: string;
+  initPosition?: { from: number; to: number };
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -50,6 +50,8 @@ const emit = defineEmits<{
     value: {
       line: number;
       column: number;
+      from: number;
+      to: number;
     }
   ): void;
 }>();
@@ -59,6 +61,7 @@ const code = ref(props.modelValue);
 const editorRef = ref<HTMLElement | null>(null);
 const appLayoutStore = useAppLayoutStore();
 let editorView = ref<EditorView | null>(null);
+const isInit = ref(false);
 
 /* ---------------- Compartments ---------------- */
 const lineWrapComp = new Compartment();
@@ -77,25 +80,26 @@ const staticExtensions: Extension[] = [
   cursorSmooth,
   lineWrapComp.of(EditorView.lineWrapping),
   readOnlyComp.of(props.readonly ? EditorState.readOnly.of(true) : []),
-  EditorView.updateListener.of(
-    debounce(update => {
-      if (update.docChanged) {
-        const newCode = update.state.doc.toString();
-        code.value = newCode;
-        emit('update:modelValue', newCode);
-      }
+  EditorView.updateListener.of((update: ViewUpdate) => {
+    if (update.docChanged) {
+      const newCode = update.state.doc.toString();
+      code.value = newCode;
+      emit('update:modelValue', newCode);
+    }
 
-      if (update.selectionSet || update.focusChanged) {
-        const pos = update.state.selection.main.head;
-        const line = update.state.doc.lineAt(pos);
+    if ((update.selectionSet || update.focusChanged) && isInit.value) {
+      const selection = update.state.selection;
+      const pos = update.state.selection.main.head;
+      const line = update.state.doc.lineAt(pos);
 
-        emit('update:cursorInfo', {
-          line: line.number,
-          column: pos - line.from + 1,
-        });
-      }
-    }, DEFAULT_DEBOUNCE_INPUT_EDITOR)
-  ),
+      emit('update:cursorInfo', {
+        line: line.number,
+        column: pos - line.from + 1,
+        from: selection.main.from,
+        to: selection.main.to,
+      });
+    }
+  }),
 ];
 
 const dynamicExtensions = (cfg: CodeEditorConfigs) => {
@@ -163,12 +167,28 @@ watch(
   { deep: true, immediate: true, flush: 'post' }
 );
 
+const setInitPosition = () => {
+  if (props.initPosition && !isInit.value && editorView.value) {
+    editorView.value.focus();
+    editorView.value.dispatch({
+      selection: EditorSelection.range(
+        props.initPosition.from,
+        props.initPosition.to
+      ),
+      scrollIntoView: true,
+    });
+    isInit.value = true;
+  }
+};
+
 // Watch for external changes to modelValue
 watch(
   () => props.modelValue,
   debounce(newValue => {
     if (newValue !== code.value && editorView.value) {
       setContent(newValue, false);
+
+      setInitPosition();
     }
   }, DEFAULT_DEBOUNCE_INPUT)
 );

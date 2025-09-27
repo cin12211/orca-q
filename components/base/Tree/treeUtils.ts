@@ -22,6 +22,10 @@ export interface TreeFileSystemItem {
   updateAt?: string;
   parentId?: string;
   isFolder: boolean;
+  cursorPos?: {
+    from: number;
+    to: number;
+  };
 }
 
 export type TreeFileSystem = TreeFileSystemItem[];

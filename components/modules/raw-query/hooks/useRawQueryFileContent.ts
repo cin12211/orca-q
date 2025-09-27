@@ -44,6 +44,15 @@ export function useRawQueryFileContent() {
     });
   };
 
+  const updateFileCursorPos = (cursorPos: { from: number; to: number }) => {
+    if (!currentFile.value?.id) return;
+
+    explorerFileStore.updateFile({
+      id: currentFile.value.id,
+      cursorPos,
+    });
+  };
+
   const updateFileContent = async (fileContentsValue: string) => {
     if (!currentFile.value?.id) return;
 
@@ -97,5 +106,6 @@ export function useRawQueryFileContent() {
     connection,
     connectionsByWsId,
     activeSchema,
+    updateFileCursorPos,
   };
 }

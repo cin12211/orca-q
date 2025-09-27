@@ -8,7 +8,7 @@ export const cursorSmooth = EditorView.theme({
   '.cm-content': {
     'font-smoothing': 'antialiased !important',
     transition: 'all 50ms ease !important',
-    animation: 'fadeIn 80ms ease',
+    // animation: 'fadeIn 80ms ease',
   },
   '.cm-cursor': {
     'border-left': '2px solid',
