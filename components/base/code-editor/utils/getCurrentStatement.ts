@@ -1,5 +1,5 @@
 import { syntaxTree } from '@codemirror/language';
-import type { EditorView } from 'codemirror';
+import type { EditorView } from '@codemirror/view';
 import type { SyntaxTreeNodeData } from '../extensions';
 
 /**

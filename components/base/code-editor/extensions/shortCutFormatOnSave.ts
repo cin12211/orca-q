@@ -86,8 +86,12 @@ export const handleFormatCode = (
 
   view.dispatch({
     selection: { anchor: newCursor, head: newCursor },
+    effects: [
+      EditorView.scrollIntoView(newCursor, {
+        y: 'center',
+      }),
+    ],
   });
-
   view.focus();
   return true;
 };

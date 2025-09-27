@@ -81,30 +81,48 @@ const onUpdateCursorInfo = ({
   });
 };
 
+const isInitPos = ref(false);
+
+const onInitCursorPos = () => {
+  if (!currentFile.value?.cursorPos || !codeEditorRef.value?.editorView) {
+    return;
+  }
+
+  const from = currentFile?.value?.cursorPos?.from;
+  0;
+  const to = currentFile?.value?.cursorPos?.to || 0;
+
+  isInitPos.value = true;
+  codeEditorRef.value?.setCursorPosition({
+    from,
+    to,
+  });
+};
+
+watch(
+  [currentFile, codeEditorRef, isInitPos],
+  async () => {
+    if (isInitPos.value) return;
+
+    await nextTick();
+
+    setTimeout(() => {
+      onInitCursorPos();
+    }, 300);
+  },
+  {
+    deep: true,
+    immediate: true,
+    flush: 'post',
+  }
+);
+
 onActivated(async () => {
-  setTimeout(() => {
-    if (!codeEditorRef.value) {
-      return;
-    }
-
-    codeEditorRef.value.focus();
-
-    const selection = EditorSelection.range(
-      currentFile?.value?.cursorPos?.from || 0,
-      currentFile?.value?.cursorPos?.to || 0
-    );
-
-    try {
-      codeEditorRef.value.editorView?.dispatch({
-        selection,
-        effects: [
-          EditorView.scrollIntoView(selection, {
-            y: 'center',
-          }),
-        ],
-      });
-    } catch (error) {}
-  }, 100);
+  if (isInitPos.value) {
+    setTimeout(() => {
+      onInitCursorPos();
+    }, 50);
+  }
 });
 </script>
 
@@ -130,7 +148,6 @@ onActivated(async () => {
               :modelValue="fileContents"
               :extensions="extensions"
               :disabled="false"
-              :initPosition="currentFile?.cursorPos"
               ref="codeEditorRef"
             />
           </div>

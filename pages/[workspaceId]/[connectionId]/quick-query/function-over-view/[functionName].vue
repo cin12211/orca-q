@@ -9,8 +9,6 @@ import { Compartment } from '@codemirror/state';
 import { keymap } from '@codemirror/view';
 import { format } from 'sql-formatter';
 import {
-  type SyntaxTreeNodeData,
-  shortCutExecuteCurrentStatement,
   shortCutFormatOnSave,
   // currentStatementHighlighter,
   sqlAutoCompletion,
