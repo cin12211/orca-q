@@ -1,14 +1,11 @@
 <script setup lang="ts">
-import { json, jsonParseLinter } from '@codemirror/lang-json';
-import { linter } from '@codemirror/lint';
+import { json } from '@codemirror/lang-json';
 import { placeholder } from '@codemirror/view';
-import debounce from 'lodash-es/debounce';
 import BaseCodeEditor from '~/components/base/code-editor/BaseCodeEditor.vue';
 import { shortCutFormatOnSave } from '~/components/base/code-editor/extensions';
 import { jsonFormat } from '~/utils/common';
-import { DEFAULT_DEBOUNCE_INPUT } from '~/utils/constants';
 
-const props = defineProps<{
+defineProps<{
   fileVariables: string;
 }>();
 
@@ -38,12 +35,12 @@ const extensions = [
   }),
   json(),
   // lintGutter(), // show gutter for linter warnings
-  linter(jsonParseLinter()), // attach JSON linter
+  // linter(jsonParseLinter() as any), // attach JSON linter
 ];
 
-const updateFileContent = debounce((fileContentsValue: string) => {
+const updateFileContent = (fileContentsValue: string) => {
   emit('updateVariables', fileContentsValue);
-}, DEFAULT_DEBOUNCE_INPUT);
+};
 </script>
 
 <template>

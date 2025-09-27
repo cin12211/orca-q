@@ -4,7 +4,7 @@ import {
   type Completion,
 } from '@codemirror/autocomplete';
 import { PostgreSQL, sql } from '@codemirror/lang-sql';
-import { lintGutter, setDiagnostics, type Diagnostic } from '@codemirror/lint';
+import { setDiagnostics, type Diagnostic } from '@codemirror/lint';
 import { Compartment } from '@codemirror/state';
 import { EditorView, keymap } from '@codemirror/view';
 import merge from 'lodash-es/merge';
@@ -18,7 +18,6 @@ import {
   shortCutExecuteCurrentStatement,
   shortCutFormatOnSave,
   sqlAutoCompletion,
-  sqlLinter,
   type SyntaxTreeNodeData,
 } from '~/components/base/code-editor/extensions';
 import {

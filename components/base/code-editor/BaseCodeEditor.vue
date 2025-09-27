@@ -9,8 +9,9 @@ import {
   type Extension,
 } from '@codemirror/state';
 import type { ViewUpdate } from '@codemirror/view';
+import { EditorView } from '@codemirror/view';
 import { indentationMarkers } from '@replit/codemirror-indentation-markers';
-import { EditorView, basicSetup } from 'codemirror';
+import { basicSetup } from 'codemirror';
 import debounce from 'lodash/debounce';
 import { cn } from '@/lib/utils';
 import {
@@ -32,7 +33,6 @@ interface Props {
   readonly?: boolean; // Read-only mode
   extensions?: Extension[]; // Additional CodeMirror extensions
   class?: string;
-  initPosition?: { from: number; to: number };
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -61,7 +61,6 @@ const code = ref(props.modelValue);
 const editorRef = ref<HTMLElement | null>(null);
 const appLayoutStore = useAppLayoutStore();
 let editorView = ref<EditorView | null>(null);
-const isInit = ref(false);
 
 /* ---------------- Compartments ---------------- */
 const lineWrapComp = new Compartment();
@@ -87,7 +86,7 @@ const staticExtensions: Extension[] = [
       emit('update:modelValue', newCode);
     }
 
-    if ((update.selectionSet || update.focusChanged) && isInit.value) {
+    if (update.selectionSet) {
       const selection = update.state.selection;
       const pos = update.state.selection.main.head;
       const line = update.state.doc.lineAt(pos);
@@ -167,38 +166,36 @@ watch(
   { deep: true, immediate: true, flush: 'post' }
 );
 
-const setInitPosition = () => {
-  if (props.initPosition && !isInit.value && editorView.value) {
-    editorView.value.focus();
-
-    const selection = EditorSelection.range(
-      props.initPosition.from,
-      props.initPosition.to
-    );
-
-    editorView.value.dispatch({
-      selection,
-      effects: [
-        EditorView.scrollIntoView(selection, {
-          y: 'center',
-        }),
-      ],
-    });
-    isInit.value = true;
-  }
-};
-
 // Watch for external changes to modelValue
 watch(
   () => props.modelValue,
   debounce(newValue => {
     if (newValue !== code.value && editorView.value) {
       setContent(newValue, false);
-
-      setInitPosition();
     }
   }, DEFAULT_DEBOUNCE_INPUT)
 );
+
+const setCursorPosition = ({ from, to }: { from: number; to: number }) => {
+  if (editorView.value) {
+    try {
+      const selection = EditorSelection.range(from, to);
+
+      editorView.value.dispatch({
+        selection,
+        effects: [
+          EditorView.scrollIntoView(from, {
+            y: 'center',
+            x: 'nearest', // horizontally nearest
+          }),
+        ],
+      });
+      editorView.value.focus();
+    } catch (error) {
+      console.error('🚀 ~ setCursorPosition ~ error:', error, { from, to });
+    }
+  }
+};
 
 // Clean up
 onUnmounted(() => {
@@ -214,6 +211,7 @@ defineExpose({
   editorView,
   focus: () => editorView.value?.focus(),
   setContent,
+  setCursorPosition,
 });
 </script>
 
