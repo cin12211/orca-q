@@ -22,8 +22,8 @@ import { EditorThemeMap } from './constants';
 import {
   cursorSmooth,
   fontSizeTheme,
-  selectionBaseTheme,
   minimapFactory,
+  selectionBaseTheme,
 } from './extensions';
 
 // Define props
@@ -170,12 +170,19 @@ watch(
 const setInitPosition = () => {
   if (props.initPosition && !isInit.value && editorView.value) {
     editorView.value.focus();
+
+    const selection = EditorSelection.range(
+      props.initPosition.from,
+      props.initPosition.to
+    );
+
     editorView.value.dispatch({
-      selection: EditorSelection.range(
-        props.initPosition.from,
-        props.initPosition.to
-      ),
-      scrollIntoView: true,
+      selection,
+      effects: [
+        EditorView.scrollIntoView(selection, {
+          y: 'center',
+        }),
+      ],
     });
     isInit.value = true;
   }

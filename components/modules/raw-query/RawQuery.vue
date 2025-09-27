@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { EditorSelection, type SelectionRange } from '@codemirror/state';
+import { EditorSelection } from '@codemirror/state';
+import { EditorView } from 'codemirror';
 import BaseCodeEditor from '~/components/base/code-editor/BaseCodeEditor.vue';
 import { useAppLayoutStore } from '~/shared/stores/appLayoutStore';
 import RawQueryEditorFooter from './components/RawQueryEditorFooter.vue';
@@ -82,10 +83,27 @@ const onUpdateCursorInfo = ({
 
 onActivated(async () => {
   setTimeout(() => {
-    codeEditorRef.value?.editorView?.dispatch({
-      scrollIntoView: true,
-    });
-    codeEditorRef.value?.focus();
+    if (!codeEditorRef.value) {
+      return;
+    }
+
+    codeEditorRef.value.focus();
+
+    const selection = EditorSelection.range(
+      currentFile?.value?.cursorPos?.from || 0,
+      currentFile?.value?.cursorPos?.to || 0
+    );
+
+    try {
+      codeEditorRef.value.editorView?.dispatch({
+        selection,
+        effects: [
+          EditorView.scrollIntoView(selection, {
+            y: 'center',
+          }),
+        ],
+      });
+    } catch (error) {}
   }, 100);
 });
 </script>
