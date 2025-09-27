@@ -254,8 +254,8 @@ export function useRawQueryEditor({
     currentStatementLineHighlightExtension,
     currentStatementLineGutterExtension,
     ...sqlAutoCompletion(),
-    // lintGutter(),
     //TODO: close to slow to usage
+    // lintGutter(),
     // sqlLinter(),
   ];
 

@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { EditorSelection } from '@codemirror/state';
+import { EditorView } from 'codemirror';
 import BaseCodeEditor from '~/components/base/code-editor/BaseCodeEditor.vue';
 import { useAppLayoutStore } from '~/shared/stores/appLayoutStore';
 import RawQueryEditorFooter from './components/RawQueryEditorFooter.vue';
@@ -56,6 +58,54 @@ watch(
 watch(fileVariables, () => {
   rawQueryEditor.reloadSqlCompartment();
 });
+
+const onUpdateCursorInfo = ({
+  column,
+  from,
+  line,
+  to,
+}: {
+  line: number;
+  column: number;
+  from: number;
+  to: number;
+}) => {
+  cursorInfo.value = {
+    column,
+    line,
+  };
+
+  rawQueryFileContent.updateFileCursorPos({
+    from,
+    to,
+  });
+};
+
+onActivated(async () => {
+  setTimeout(() => {
+    if (!codeEditorRef.value) {
+      return;
+    }
+
+    codeEditorRef.value.focus();
+
+    const selection = EditorSelection.range(
+      currentFile?.value?.cursorPos?.from || 0,
+      currentFile?.value?.cursorPos?.to || 0
+    );
+
+    try {
+      codeEditorRef.value.editorView?.dispatch({
+        selection,
+        effects: [
+          EditorView.scrollIntoView(selection, {
+            y: 'center',
+          }),
+        ],
+      });
+    } catch (error) {}
+  }, 100);
+});
 </script>
 
 <template>
@@ -76,10 +126,11 @@ watch(fileVariables, () => {
           <div class="h-full flex flex-col overflow-y-auto">
             <BaseCodeEditor
               @update:modelValue="updateFileContent"
-              @update:cursorInfo="cursorInfo = $event"
+              @update:cursorInfo="onUpdateCursorInfo"
               :modelValue="fileContents"
               :extensions="extensions"
               :disabled="false"
+              :initPosition="currentFile?.cursorPos"
               ref="codeEditorRef"
             />
           </div>

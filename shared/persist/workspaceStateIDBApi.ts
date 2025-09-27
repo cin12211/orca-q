@@ -39,8 +39,6 @@ export const workspaceStateIDBApi = {
       updatedAt: dayjs().toISOString(),
     };
 
-    console.log('wsStateTmp', wsStateTmp);
-
     await workspaceStateIDBStore.setItem(wsState.id, wsStateTmp);
     return wsStateTmp;
   },
