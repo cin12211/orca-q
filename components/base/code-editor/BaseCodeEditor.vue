@@ -4,21 +4,27 @@ import { search } from '@codemirror/search';
 import {
   Compartment,
   EditorState,
-  StateEffect,
   Transaction,
   type Extension,
 } from '@codemirror/state';
 import { indentationMarkers } from '@replit/codemirror-indentation-markers';
-import { showMinimap } from '@replit/codemirror-minimap';
 import { EditorView, basicSetup } from 'codemirror';
-// import { syntaxTree } from '@codemirror/language';
-// import { linter, type Diagnostic } from '@codemirror/lint';
+import debounce from 'lodash/debounce';
 import { cn } from '@/lib/utils';
-import { useAppLayoutStore } from '~/shared/stores/appLayoutStore';
+import {
+  useAppLayoutStore,
+  type CodeEditorConfigs,
+} from '~/shared/stores/appLayoutStore';
+import {
+  DEFAULT_DEBOUNCE_INPUT,
+  DEFAULT_DEBOUNCE_INPUT_EDITOR,
+} from '~/utils/constants';
 import { EditorThemeMap } from './constants';
 import {
-  currentStatementLineGutterExtension,
+  cursorSmooth,
+  fontSizeTheme,
   selectionBaseTheme,
+  minimapFactory,
 } from './extensions';
 
 // Define props
@@ -51,86 +57,28 @@ const emit = defineEmits<{
 // Reactive code state
 const code = ref(props.modelValue);
 const editorRef = ref<HTMLElement | null>(null);
-
 const appLayoutStore = useAppLayoutStore();
-
 let editorView = ref<EditorView | null>(null);
 
-// Watch for external changes to modelValue
-watch(
-  () => props.modelValue,
-  newValue => {
-    if (newValue !== code.value && editorView.value) {
-      code.value = newValue;
+/* ---------------- Compartments ---------------- */
+const lineWrapComp = new Compartment();
+const readOnlyComp = new Compartment();
+const themeComp = new Compartment();
+const fontSizeComp = new Compartment();
+const minimapComp = new Compartment();
+const indentationComp = new Compartment();
 
-      editorView.value.dispatch({
-        changes: {
-          from: 0,
-          to: editorView.value.state.doc.length,
-          insert: newValue,
-        },
-        annotations: Transaction.addToHistory.of(false),
-      });
-    }
-  }
-);
-
-const getExtensions = () => {
-  //TODO: make lint for sql
-  // const regexpLinter = linter(view => {
-  //   let diagnostics: Diagnostic[] = [];
-  //   syntaxTree(view.state)
-  //     .cursor()
-  //     .iterate(node => {
-  //       console.log('🚀 ~ onMounted ~ node:', node.name);
-  //       if (node.name == 'Identifier')
-  //         diagnostics.push({
-  //           from: node.from,
-  //           to: node.to,
-  //           severity: 'error',
-  //           message: 'Regular expressions are FORBIDDEN',
-  //           actions: [
-  //             {
-  //               name: 'Remove',
-  //               apply(view, from, to) {
-  //                 view.dispatch({ changes: { from, to } });
-  //               },
-  //             },
-  //           ],
-  //         });
-  //     });
-  //   return diagnostics;
-  // });
-
-  const compartment = new Compartment();
-  const isLineWrapping = true;
-  const compartmentOfLineWrapping = compartment.of(
-    isLineWrapping ? [EditorView.lineWrapping] : []
-  );
-  // setting read-only mode
-  const readOnlyState = props.readonly ? EditorState.readOnly.of(true) : [];
-
-  const create = () => {
-    const dom = document.createElement('div');
-    return { dom };
-  };
-
-  const fontSizeTheme = (size: string) =>
-    EditorView.theme({
-      '.cm-content, .cm-gutters, .cm-scroller': {
-        fontSize: size,
-      },
-    });
-
-  const theme = EditorThemeMap[appLayoutStore.codeEditorConfigs.theme];
-
-  const extensions = [
-    ...(props?.extensions || []),
-    basicSetup,
-    search({
-      top: true,
-    }),
-    EditorView.updateListener.of(update => {
+/* ---------------- Static extensions ---------------- */
+const staticExtensions: Extension[] = [
+  ...(props?.extensions || []),
+  basicSetup,
+  search({ top: true }),
+  selectionBaseTheme,
+  cursorSmooth,
+  lineWrapComp.of(EditorView.lineWrapping),
+  readOnlyComp.of(props.readonly ? EditorState.readOnly.of(true) : []),
+  EditorView.updateListener.of(
+    debounce(update => {
       if (update.docChanged) {
         const newCode = update.state.doc.toString();
         code.value = newCode;
@@ -146,26 +94,38 @@ const getExtensions = () => {
           column: pos - line.from + 1,
         });
       }
-    }),
-    currentStatementLineGutterExtension,
-    readOnlyState,
-    compartmentOfLineWrapping,
-    theme,
-    selectionBaseTheme,
-    indentationMarkers(),
-    appLayoutStore.codeEditorConfigs.showMiniMap
-      ? showMinimap.compute(['doc'], (_state: EditorState) => {
-          return {
-            create,
-            displayText: 'blocks',
-            showOverlay: 'always',
-            gutters: [{ 1: '#00FF00', 2: 'green', 3: 'rgb(0, 100, 50)' }],
-          };
-        })
-      : [],
-    fontSizeTheme(appLayoutStore.codeEditorConfigs.fontSize + 'pt'),
+    }, DEFAULT_DEBOUNCE_INPUT_EDITOR)
+  ),
+];
+
+const dynamicExtensions = (cfg: CodeEditorConfigs) => {
+  return [
+    themeComp.of(EditorThemeMap[cfg.theme]),
+    fontSizeComp.of(fontSizeTheme(cfg.fontSize + 'pt')),
+    indentationComp.of(cfg.indentation ? indentationMarkers() : []),
+    minimapComp.of(cfg.showMiniMap ? minimapFactory() : []),
   ];
-  return extensions;
+};
+
+const getExtensions = () => {
+  return [
+    ...staticExtensions,
+    ...dynamicExtensions(appLayoutStore.codeEditorConfigs),
+  ];
+};
+
+const setContent = (content: string, writeHistory = true) => {
+  if (editorView.value) {
+    editorView.value.dispatch({
+      changes: {
+        from: 0,
+        to: editorView.value.state.doc.length,
+        insert: content,
+      },
+      annotations: Transaction.addToHistory.of(writeHistory),
+    });
+    code.value = content;
+  }
 };
 
 // Initialize editor on mount
@@ -183,24 +143,37 @@ onMounted(() => {
   }
 });
 
-const reloadExtensions = () => {
-  if (editorView.value) {
-    console.log('🚀 ~ reloadExtensions ~ getExtensions:', getExtensions());
-    editorView.value.dispatch({
-      effects: StateEffect.reconfigure.of(getExtensions()),
-    });
-  }
-};
-
+/* ---------------- Reactive reconfigure ---------------- */
 watch(
   () => appLayoutStore.codeEditorConfigs,
-  () => {
-    reloadExtensions();
+  cfg => {
+    if (!editorView.value) return;
+
+    editorView.value.dispatch({
+      effects: [
+        themeComp.reconfigure(EditorThemeMap[cfg.theme]),
+        fontSizeComp.reconfigure(fontSizeTheme(cfg.fontSize + 'pt')),
+        indentationComp.reconfigure(
+          cfg.indentation ? indentationMarkers() : []
+        ),
+        minimapComp.reconfigure(cfg.showMiniMap ? minimapFactory() : []),
+      ],
+    });
   },
   { deep: true, immediate: true, flush: 'post' }
 );
 
-// Clean up on unmount
+// Watch for external changes to modelValue
+watch(
+  () => props.modelValue,
+  debounce(newValue => {
+    if (newValue !== code.value && editorView.value) {
+      setContent(newValue, false);
+    }
+  }, DEFAULT_DEBOUNCE_INPUT)
+);
+
+// Clean up
 onUnmounted(() => {
   if (editorView.value) {
     editorView.value.destroy();
@@ -213,20 +186,7 @@ defineExpose({
   code,
   editorView,
   focus: () => editorView.value?.focus(),
-  setContent: (content: string) => {
-    if (editorView.value) {
-      editorView.value.dispatch({
-        changes: {
-          from: 0,
-          to: editorView.value.state.doc.length,
-          insert: content,
-        },
-      });
-      code.value = content;
-      emit('update:modelValue', content);
-    }
-  },
-  reloadExtensions,
+  setContent,
 });
 </script>
 

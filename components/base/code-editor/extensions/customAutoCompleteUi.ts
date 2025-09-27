@@ -290,10 +290,17 @@ const customAutoCompletion = (config: AutoCompletionConfig) => {
   return autocompletion({
     activateOnTyping: true,
     closeOnBlur: false,
+    icons: false,
+    maxRenderedOptions: config.maxRenderedOptions || 50,
+    // Performance improvement: Set a reasonable default for delay.
+    activateOnTypingDelay: config.activateOnTypingDelay ?? 75,
+    interactionDelay: config.interactionDelay ?? 75,
+    // Performance improvement: Set a reasonable default for update sync time.
+    updateSyncTime: config.updateSyncTime ?? 75,
+    // filterStrict: config.filterStrict ?? true, // Add to interface if needed
+    // aboveCursor: true,
     optionClass: () =>
       `cm-autocomplete-item relative ${config.autocompleteItemClassName || ''}`,
-    icons: false,
-    maxRenderedOptions: config.maxRenderedOptions || 500,
     addToOptions: [
       {
         render: (

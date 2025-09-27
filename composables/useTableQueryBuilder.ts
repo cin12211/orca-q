@@ -1,9 +1,10 @@
-import { _debounce } from 'ag-grid-community';
+import debounce from 'lodash-es/debounce';
 import { toast } from 'vue-sonner';
 import { EDatabaseType } from '~/components/modules/management-connection/constants';
 import { useQuickQueryLogs } from '~/shared/stores';
 import {
   ComposeOperator,
+  DEFAULT_DEBOUNCE_INPUT,
   DEFAULT_QUERY,
   DEFAULT_QUERY_COUNT,
   DEFAULT_QUERY_SIZE,
@@ -247,28 +248,24 @@ export const useTableQueryBuilder = ({
 
   watch(
     [filters, pagination, orderBy, isShowFilters],
-    _debounce(
-      { isAlive: () => true },
-      () => {
-        if (!isPersist) {
-          return;
-        }
+    debounce(() => {
+      if (!isPersist) {
+        return;
+      }
 
-        const persistedKey = getPersistedKey();
+      const persistedKey = getPersistedKey();
 
-        localStorage.setItem(
-          persistedKey,
-          JSON.stringify({
-            filters: filters.value,
-            pagination,
-            orderBy,
-            isShowFilters: isShowFilters.value,
-            composeWith: composeWith.value,
-          })
-        );
-      },
-      500
-    ),
+      localStorage.setItem(
+        persistedKey,
+        JSON.stringify({
+          filters: filters.value,
+          pagination,
+          orderBy,
+          isShowFilters: isShowFilters.value,
+          composeWith: composeWith.value,
+        })
+      );
+    }, DEFAULT_DEBOUNCE_INPUT),
     { deep: true }
   );
 

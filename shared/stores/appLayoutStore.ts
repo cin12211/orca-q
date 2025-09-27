@@ -9,6 +9,13 @@ import {
   RawQueryEditorLayout,
 } from '~/components/modules/raw-query/constants';
 
+export interface CodeEditorConfigs {
+  theme: EditorTheme;
+  fontSize: number;
+  showMiniMap: boolean;
+  indentation: boolean;
+}
+
 const DEFAULT_APP_LAYOUT_SIZE = [25, 50, 25];
 
 const intiAppLayout = [30, 70, 0];
@@ -128,14 +135,11 @@ export const useAppLayoutStore = defineStore(
       RawQueryEditorDefaultSize.variables,
     ]);
 
-    const codeEditorConfigs = reactive<{
-      fontSize: number;
-      theme: EditorTheme;
-      showMiniMap: boolean;
-    }>({
+    const codeEditorConfigs = reactive<CodeEditorConfigs>({
       fontSize: DEFAULT_EDITOR_CONFIG.fontSize,
       showMiniMap: DEFAULT_EDITOR_CONFIG.showMiniMap,
       theme: DEFAULT_EDITOR_CONFIG.theme,
+      indentation: DEFAULT_EDITOR_CONFIG.indentation,
     });
 
     return {

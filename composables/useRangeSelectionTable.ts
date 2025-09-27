@@ -1,8 +1,9 @@
 import {
-  _debounce,
   type CellMouseDownEvent,
+  type CellMouseOverEvent,
   type GridApi,
 } from 'ag-grid-community';
+import debounce from 'lodash-es/debounce';
 import {
   DEFAULT_DEBOUNCE_RANGE_SELECTION,
   DEFAULT_EDGE_ZONE_HEIGHT,
@@ -111,7 +112,7 @@ export const useRangeSelectionTable = ({
     params.node.setSelected(true);
   };
 
-  const onCellMouseOver = (params: CellMouseDownEvent, gridApi: GridApi) => {
+  const onCellMouseOver = (params: CellMouseOverEvent, gridApi: GridApi) => {
     if (!params.rowIndex || !isStartRangeSelection.value) return;
 
     const rowIndex = params.rowIndex;
@@ -129,15 +130,11 @@ export const useRangeSelectionTable = ({
     });
   };
 
-  const onCellMouseOverDebounced = _debounce(
-    { isAlive: () => true },
-    (params: CellMouseDownEvent) => {
-      const gridApi = params.api;
+  const onCellMouseOverDebounced = debounce((params: CellMouseOverEvent) => {
+    const gridApi = params.api;
 
-      onCellMouseOver(params, gridApi);
-    },
-    debounceRangeSelection
-  );
+    onCellMouseOver(params, gridApi);
+  }, debounceRangeSelection);
 
   return {
     onStopRangeSelection,

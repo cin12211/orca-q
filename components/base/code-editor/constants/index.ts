@@ -65,6 +65,7 @@ export const EDITOR_FONT_SIZES = [
 export const DEFAULT_EDITOR_CONFIG = {
   fontSize: 10,
   showMiniMap: false,
+  indentation: false,
   theme: EditorTheme.Tomorrow,
 };
 

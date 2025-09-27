@@ -117,6 +117,19 @@ watch(fileVariables, () => {
     <template #result>
       <LoadingOverlay :visible="queryProcessState.executeLoading" />
 
+      <!-- <Tabs class="flex-1 flex-wrap h-full w-full" default-value="Result">
+        <TabsList class="overflow-x-auto w-full justify-start!">
+          <TabsTrigger
+            class="cursor-pointer font-normal! flex-none!"
+            v-for="tab in ['Result', 'Variables', 'Errors', 'Query', 'Plan']"
+            :value="tab"
+            :key="tab"
+          >
+            {{ tab }}
+          </TabsTrigger>
+        </TabsList>
+      </Tabs> -->
+
       <div v-if="queryProcessState.executeErrors" class="pt-2">
         <span class="font-normal text-sm text-muted-foreground block leading-5">
           Error message:
