@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { _debounce, type Column } from 'ag-grid-community';
 import QuickQueryTableSummary from '~/components/modules/quick-query/quick-query-table-summary/QuickQueryTableSummary.vue';
 import { useTableQueryBuilder } from '~/composables/useTableQueryBuilder';
 import { useAppContext } from '~/shared/contexts';

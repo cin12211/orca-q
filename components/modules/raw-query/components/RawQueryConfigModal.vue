@@ -236,6 +236,19 @@ const appLayoutStore = useAppLayoutStore();
                 />
               </div>
             </div>
+            <div class="flex items-center justify-between">
+              <p class="text-sm">Indentation</p>
+              <div class="flex items-center space-x-2">
+                <Switch
+                  v-model="appLayoutStore.codeEditorConfigs.indentation"
+                  @update:modelValue="
+                    appLayoutStore.codeEditorConfigs.indentation = $event
+                  "
+                  id="airplane-mode"
+                  class="cursor-pointer"
+                />
+              </div>
+            </div>
           </div>
         </div>
       </div>

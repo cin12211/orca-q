@@ -96,3 +96,14 @@
   border-width: 1px;
   border-radius: calc(var(--radius) /* 0.25rem = 4px */ - 2px);
 }
+
+@keyframes fadeIn {
+  from {
+    opacity: 0.8;
+    transform: scale(0.99);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}

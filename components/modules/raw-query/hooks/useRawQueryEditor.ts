@@ -12,6 +12,7 @@ import type { FieldDef } from 'pg';
 import type BaseCodeEditor from '~/components/base/code-editor/BaseCodeEditor.vue';
 import { CompletionIcon } from '~/components/base/code-editor/constants';
 import {
+  currentStatementLineGutterExtension,
   currentStatementLineHighlightExtension,
   handleFormatCode,
   shortCutExecuteCurrentStatement,
@@ -251,6 +252,7 @@ export function useRawQueryEditor({
       })
     ),
     currentStatementLineHighlightExtension,
+    currentStatementLineGutterExtension,
     ...sqlAutoCompletion(),
     // lintGutter(),
     //TODO: close to slow to usage

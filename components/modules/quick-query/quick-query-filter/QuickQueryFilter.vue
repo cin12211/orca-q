@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Icon } from '#components';
 import { toTypedSchema } from '@vee-validate/zod';
-import { _debounce } from 'ag-grid-community';
+import debounce from 'lodash-es/debounce';
 import { useFieldArray, useForm } from 'vee-validate';
 import { z } from 'zod';
 import type { Input } from '~/components/ui/input';
@@ -64,15 +64,9 @@ const { remove, fields, insert, update } =
 
 watch(
   fields,
-  _debounce(
-    {
-      isAlive: () => true,
-    },
-    () => {
-      emit('onUpdateFilters', fields.value.map(f => f.value) || []);
-    },
-    DEFAULT_DEBOUNCE_INPUT
-  ),
+  debounce(() => {
+    emit('onUpdateFilters', fields.value.map(f => f.value) || []);
+  }, DEFAULT_DEBOUNCE_INPUT),
   {
     deep: true,
   }

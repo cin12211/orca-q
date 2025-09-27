@@ -59,5 +59,5 @@ const currentStatementBaseTheme = EditorView.baseTheme({
 
 export const currentStatementLineGutterExtension = [
   currentStatementBaseTheme,
-  currentStatementLineGutter,
+  // currentStatementLineGutter,
 ];
