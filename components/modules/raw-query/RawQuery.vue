@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import { EditorSelection } from '@codemirror/state';
-import { EditorView } from 'codemirror';
 import BaseCodeEditor from '~/components/base/code-editor/BaseCodeEditor.vue';
 import { useAppLayoutStore } from '~/shared/stores/appLayoutStore';
 import RawQueryEditorFooter from './components/RawQueryEditorFooter.vue';
@@ -82,8 +80,9 @@ const onUpdateCursorInfo = ({
 };
 
 const isInitPos = ref(false);
+const scrollTop = ref(0);
 
-const onInitCursorPos = () => {
+const onInitCursorPos = (allowScroll: boolean = true) => {
   if (!currentFile.value?.cursorPos || !codeEditorRef.value?.editorView) {
     return;
   }
@@ -96,6 +95,7 @@ const onInitCursorPos = () => {
   codeEditorRef.value?.setCursorPosition({
     from,
     to,
+    allowScroll,
   });
 };
 
@@ -120,7 +120,10 @@ watch(
 onActivated(async () => {
   if (isInitPos.value) {
     setTimeout(() => {
-      onInitCursorPos();
+      onInitCursorPos(false);
+      if (codeEditorRef.value && codeEditorRef.value.editorView) {
+        codeEditorRef.value.editorView.scrollDOM.scrollTop = scrollTop.value;
+      }
     }, 50);
   }
 });
@@ -145,6 +148,7 @@ onActivated(async () => {
             <BaseCodeEditor
               @update:modelValue="updateFileContent"
               @update:cursorInfo="onUpdateCursorInfo"
+              @update:onScrollTop="scrollTop = $event"
               :modelValue="fileContents"
               :extensions="extensions"
               :disabled="false"

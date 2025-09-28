@@ -12,13 +12,17 @@ import type { ViewUpdate } from '@codemirror/view';
 import { EditorView } from '@codemirror/view';
 import { indentationMarkers } from '@replit/codemirror-indentation-markers';
 import { basicSetup } from 'codemirror';
+import { throttle } from 'lodash';
 import debounce from 'lodash/debounce';
 import { cn } from '@/lib/utils';
 import {
   useAppLayoutStore,
   type CodeEditorConfigs,
 } from '~/shared/stores/appLayoutStore';
-import { DEFAULT_DEBOUNCE_INPUT } from '~/utils/constants';
+import {
+  DEFAULT_DEBOUNCE_INPUT,
+  DEFAULT_DEBOUNCE_SCROLL,
+} from '~/utils/constants';
 import { EditorThemeMap } from './constants';
 import {
   cursorSmooth,
@@ -54,6 +58,7 @@ const emit = defineEmits<{
       to: number;
     }
   ): void;
+  (e: 'update:onScrollTop', scrollTop: number): void;
 }>();
 
 // Reactive code state
@@ -143,6 +148,19 @@ onMounted(() => {
       state,
       parent: editorRef.value,
     });
+
+    editorView.value.scrollDOM.addEventListener(
+      'scroll',
+      throttle(() => {
+        if (!editorView.value?.viewport) {
+          return;
+        }
+
+        const scrollTop = editorView.value.scrollDOM.scrollTop || 0;
+
+        emit('update:onScrollTop', scrollTop);
+      }, DEFAULT_DEBOUNCE_SCROLL)
+    );
   }
 });
 
@@ -176,19 +194,29 @@ watch(
   }, DEFAULT_DEBOUNCE_INPUT)
 );
 
-const setCursorPosition = ({ from, to }: { from: number; to: number }) => {
+const setCursorPosition = ({
+  from,
+  to,
+  allowScroll = true,
+}: {
+  from: number;
+  to: number;
+  allowScroll?: boolean;
+}) => {
   if (editorView.value) {
     try {
       const selection = EditorSelection.range(from, to);
 
       editorView.value.dispatch({
         selection,
-        effects: [
-          EditorView.scrollIntoView(from, {
-            y: 'center',
-            x: 'nearest', // horizontally nearest
-          }),
-        ],
+        effects: allowScroll
+          ? [
+              EditorView.scrollIntoView(from, {
+                y: 'center',
+                x: 'nearest', // horizontally nearest
+              }),
+            ]
+          : [],
       });
       editorView.value.focus();
     } catch (error) {
@@ -200,6 +228,8 @@ const setCursorPosition = ({ from, to }: { from: number; to: number }) => {
 // Clean up
 onUnmounted(() => {
   if (editorView.value) {
+    editorView.value.scrollDOM.removeEventListener('scroll', () => {});
+
     editorView.value.destroy();
     editorView.value = null;
   }
