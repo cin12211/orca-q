@@ -46,11 +46,13 @@ export const useQuickQueryTableInfo = ({
     return tableMetaData.value?.columns?.map(c => c.name) || [];
   });
 
-  const foreignKeys = computed(() =>
+  const foreignKeyColumns = computed(() =>
     (tableMetaData.value?.foreign_keys || []).map(fk => fk.column)
   );
 
-  const primaryKeys = computed(() =>
+  const foreignKeys = computed(() => tableMetaData.value?.foreign_keys || []);
+
+  const primaryKeyColumns = computed(() =>
     (tableMetaData.value?.primary_keys || []).map(fk => fk.column)
   );
 
@@ -69,11 +71,12 @@ export const useQuickQueryTableInfo = ({
   });
 
   return {
-    primaryKeys,
+    primaryKeyColumns,
     foreignKeys,
     columnNames,
     isLoadingTableSchema,
     tableMetaData,
     columnTypes,
+    foreignKeyColumns,
   };
 };

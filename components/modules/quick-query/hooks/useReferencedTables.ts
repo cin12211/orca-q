@@ -1,6 +1,6 @@
 import { useAppContext } from '~/shared/contexts';
 
-export const useReverseTables = ({
+export const useReferencedTables = ({
   schemaName,
   tableName,
 }: {

@@ -7,8 +7,11 @@ export interface ColumnShortMetadata {
   short_type_name: string;
 }
 
-interface ForeignKey {
+export interface ForeignKeyMetadata {
   column: string;
+  referenced_column: string;
+  referenced_table: string;
+  referenced_table_schema: string;
 }
 
 interface PrimaryKey {
@@ -17,7 +20,7 @@ interface PrimaryKey {
 
 export interface TableDetailMetadata {
   columns: ColumnShortMetadata[];
-  foreign_keys: ForeignKey[];
+  foreign_keys: ForeignKeyMetadata[];
   primary_keys: PrimaryKey[];
   table_id: string;
 }
@@ -106,17 +109,24 @@ export default defineEventHandler(async (event): Promise<SchemaMetaData[]> => {
                 'foreign_keys', (
                   SELECT json_agg(
                     json_build_object(
-                      'column', kcu.column_name
+                      'column', att2.attname,
+                      'referenced_table_schema', ns.nspname,
+                      'referenced_table', cls.relname,
+                      'referenced_column', att.attname
                     )
                   )
-                  FROM information_schema.table_constraints tc
-                  JOIN information_schema.key_column_usage kcu
-                    ON tc.constraint_name = kcu.constraint_name
-                    AND tc.table_schema = kcu.table_schema
-                    AND tc.table_name = kcu.table_name
-                  WHERE tc.constraint_type = 'FOREIGN KEY'
-                    AND tc.table_schema = nsp.nspname
-                    AND tc.table_name = t.table_name
+                  FROM pg_constraint con
+                  JOIN pg_class c ON c.oid = con.conrelid
+                  JOIN pg_namespace nsp2 ON nsp2.oid = c.relnamespace
+                  JOIN pg_attribute att2 ON att2.attrelid = con.conrelid
+                                        AND att2.attnum = ANY (con.conkey)
+                  JOIN pg_class cls ON cls.oid = con.confrelid
+                  JOIN pg_namespace ns ON ns.oid = cls.relnamespace
+                  JOIN pg_attribute att ON att.attrelid = con.confrelid
+                                        AND att.attnum = ANY (con.confkey)
+                  WHERE con.contype = 'f'
+                    AND nsp2.nspname = nsp.nspname
+                    AND c.relname = t.table_name
                 ),
                 'primary_keys', (
                   SELECT json_agg(
