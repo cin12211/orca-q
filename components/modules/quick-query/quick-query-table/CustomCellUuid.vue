@@ -17,7 +17,7 @@ defineProps<{
     <span class="truncate"> {{ params.value }}</span>
 
     <Icon
-      v-if="params.isPrimaryKey"
+      v-if="params.isPrimaryKey && params.value"
       @click="
         () => {
           params.onOpenPreviewReverseTableModal(params.value);

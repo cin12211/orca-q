@@ -1,39 +1,50 @@
 <script setup lang="ts">
 import { LoadingOverlay } from '#components';
 import { useTableQueryBuilder } from '~/composables/useTableQueryBuilder';
-import { useAppLayoutStore } from '~/shared/stores/appLayoutStore';
 import { ComposeOperator, DEFAULT_QUERY_SIZE } from '~/utils/constants';
 import type { FilterSchema } from '~/utils/quickQuery';
+import WrapperErdDiagram from '../../erd-diagram/WrapperErdDiagram.vue';
 import { EDatabaseType } from '../../management-connection/constants';
+import QuickQueryErrorPopup from '../QuickQueryErrorPopup.vue';
 import { QuickQueryTabView } from '../constants';
 import {
   useQuickQuery,
   useQuickQueryMutation,
   useQuickQueryTableInfo,
-  useReverseTables,
+  useReferencedTables,
 } from '../hooks';
 import QuickQueryControlBar from '../quick-query-control-bar/QuickQueryControlBar.vue';
 import QuickQueryFilter from '../quick-query-filter/QuickQueryFilter.vue';
 import QuickQueryContextMenu from '../quick-query-table/QuickQueryContextMenu.vue';
 import QuickQueryTable from '../quick-query-table/QuickQueryTable.vue';
-import PreviewReverseTable from './PreviewReverseTable.vue';
+import StructureTable from '../structure/StructureTable.vue';
 
 const props = defineProps<{
   tableName: string;
   schemaName: string;
-  // recordId: string;
-  // fkColumn?: string;
   initFilters?: FilterSchema[];
-  breadcrumbs?: string[];
 }>();
 
-const previewReverseTableModal = reactive({
-  open: false,
-  recordId: '',
-  columnName: '',
-});
-
-const containerRef = ref<InstanceType<typeof HTMLElement>>();
+const emit = defineEmits<{
+  (
+    e: 'onOpenBackReferencedTableModal',
+    value: {
+      id: string;
+      tableName: string;
+      columnName: string;
+      schemaName: string;
+    }
+  ): void;
+  (
+    e: 'onOpenForwardReferencedTableModal',
+    value: {
+      id: string;
+      tableName: string;
+      columnName: string;
+      schemaName: string;
+    }
+  ): void;
+}>();
 
 const {
   quickQueryFilterRef,
@@ -47,10 +58,11 @@ const {
 const {
   columnNames,
   foreignKeys,
-  primaryKeys,
+  primaryKeyColumns,
   isLoadingTableSchema,
   tableMetaData,
   columnTypes,
+  foreignKeyColumns,
 } = useQuickQueryTableInfo({
   tableName: props.tableName,
   schemaName: props.schemaName,
@@ -82,7 +94,7 @@ const {
   isFetchingTableData,
 } = useTableQueryBuilder({
   connectionString,
-  primaryKeys: primaryKeys,
+  primaryKeys: primaryKeyColumns,
   columns: columnNames,
   connectionId,
   workspaceId,
@@ -97,6 +109,7 @@ watch(
   tableMetaData,
   newSchema => {
     if (newSchema) {
+      filters.value = props?.initFilters || [];
       refreshCount();
       refreshTableData();
     }
@@ -116,7 +129,7 @@ const {
   onSelectedRowsChange,
 } = useQuickQueryMutation({
   tableName: props.tableName,
-  primaryKeys,
+  primaryKeys: primaryKeyColumns,
   refreshTableData,
   columnNames,
   data,
@@ -129,69 +142,35 @@ const {
   refreshCount,
 });
 
-const appLayoutStore = useAppLayoutStore();
+const quickQueryTabView = ref<QuickQueryTabView>(QuickQueryTabView.Data);
 
-const tabView = ref<QuickQueryTabView>(QuickQueryTabView.Data);
-
-const isActiveTeleport = ref(true);
-
-onActivated(() => {
-  isActiveTeleport.value = true;
-});
-
-onDeactivated(() => {
-  isActiveTeleport.value = false;
-});
-
-const onOpenPreviewReverseTableModal = ({
-  id,
-  columnName,
-}: {
-  id: string;
-  columnName: string;
-}) => {
-  previewReverseTableModal.open = true;
-  previewReverseTableModal.recordId = id;
-  previewReverseTableModal.columnName = columnName;
-};
-
-const { isHaveRelationByFieldName } = useReverseTables({
+const { isHaveRelationByFieldName } = useReferencedTables({
   schemaName: props.schemaName,
   tableName: props.tableName,
+});
+
+const openedQuickQueryTab = ref({
+  [QuickQueryTabView.Data]: true,
+  [QuickQueryTabView.Structure]: false,
+  [QuickQueryTabView.Erd]: false,
+});
+
+watch(quickQueryTabView, newQuickQueryTabView => {
+  openedQuickQueryTab.value[newQuickQueryTabView] = true;
 });
 </script>
 
 <template>
-  <PreviewReverseTable
-    v-model:open="previewReverseTableModal.open"
-    :schemaName="props.schemaName"
-    :tableName="props.tableName"
-    :recordId="previewReverseTableModal.recordId"
-    :columnName="previewReverseTableModal.columnName"
-    v-if="previewReverseTableModal.open"
-    :breadcrumbs="breadcrumbs"
-  />
-
-  <Teleport defer to="#preview-select-row" v-if="isActiveTeleport">
-    <PreviewSelectedRow
-      :columnTypes="columnTypes"
-      :selectedRow="selectedRows?.length ? selectedRows[0] : null"
-    />
-  </Teleport>
-
-  <!-- <Teleport defer to="#bottom-panel" v-if="isActiveTeleport">
-    <QuickQueryHistoryLogsPanel
-      :tableName="props.tableName"
-      :schema-name="props.schemaName"
-    />
-  </Teleport> -->
-
   <QuickQueryErrorPopup
     v-model:open="openErrorModal"
     :message="errorMessage || ''"
   />
 
-  <div ref="containerRef" class="flex flex-col h-full w-full relative">
+  <div
+    ref="containerRef"
+    class="flex flex-col h-full w-full relative"
+    tabindex="0"
+  >
     <LoadingOverlay
       :visible="isLoadingTableSchema || isMutating || isFetchingTableData"
     />
@@ -218,13 +197,13 @@ const { isHaveRelationByFieldName } = useReverseTables({
             await quickQueryFilterRef?.onShowSearch();
           }
         "
-        @onToggleHistoryPanel="appLayoutStore.onToggleBottomPanel"
-        v-model:tabView="tabView"
+        v-model:tabView="quickQueryTabView"
       />
     </div>
 
     <div class="px-2">
       <QuickQueryFilter
+        v-if="quickQueryTabView === QuickQueryTabView.Data"
         ref="quickQueryFilterRef"
         @onSearch="
           () => {
@@ -247,7 +226,27 @@ const { isHaveRelationByFieldName } = useReverseTables({
     </div>
 
     <div class="flex-1 overflow-hidden px-2 mb-0.5">
+      <WrapperErdDiagram
+        v-if="openedQuickQueryTab[QuickQueryTabView.Erd]"
+        v-show="quickQueryTabView === QuickQueryTabView.Erd"
+        :tableId="tableName"
+      />
+
+      <div
+        v-if="openedQuickQueryTab[QuickQueryTabView.Structure]"
+        v-show="quickQueryTabView === QuickQueryTabView.Structure"
+        class="h-full"
+      >
+        <StructureTable
+          :schema="schemaName"
+          :tableName="tableName"
+          :connectionString="connectionString"
+        />
+      </div>
+
+      <!-- @on-copy-selected-cell="onCopySelectedCell" -->
       <QuickQueryContextMenu
+        v-show="quickQueryTabView === QuickQueryTabView.Data"
         :total-selected-rows="selectedRows.length"
         :has-edited-rows="hasEditedRows"
         @onPaginate="onUpdatePagination"
@@ -272,13 +271,21 @@ const { isHaveRelationByFieldName } = useReverseTables({
           :orderBy="orderBy"
           @on-selected-rows="onSelectedRowsChange"
           @update:order-by="onUpdateOrderBy"
-          @onOpenPreviewReverseTableModal="onOpenPreviewReverseTableModal"
+          @onOpenBackReferencedTableModal="
+            emit('onOpenBackReferencedTableModal', $event)
+          "
+          @onOpenForwardReferencedTableModal="
+            emit('onOpenForwardReferencedTableModal', $event)
+          "
           :isHaveRelationByFieldName="isHaveRelationByFieldName"
+          :foreignKeyColumns="foreignKeyColumns"
           :foreignKeys="foreignKeys"
-          :primaryKeys="primaryKeys"
+          :primaryKeyColumns="primaryKeyColumns"
           :columnTypes="columnTypes"
           :defaultPageSize="DEFAULT_QUERY_SIZE"
           :offset="pagination.offset"
+          :current-schema-name="schemaName"
+          :current-table-name="tableName"
         />
       </QuickQueryContextMenu>
     </div>

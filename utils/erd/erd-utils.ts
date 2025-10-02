@@ -1,4 +1,4 @@
-import { MarkerType, type Edge } from '@vue-flow/core';
+import { type Edge } from '@vue-flow/core';
 import { uuidv4 } from '~/lib/utils';
 import type { TableMetadata } from '~/server/api/get-tables';
 import type { Position, TableNode } from '~/utils/erd/type/index';
@@ -74,7 +74,7 @@ export const createNodes = (tablesData: TableMetadata[]): TableNode[] => {
 
   return tablesData.map((table, index) => {
     const node: TableNode = {
-      id: table.table,
+      id: uuidv4(),
       type: LAYOUT_CONFIG.NODE_TYPE,
       position: positions[index],
       data: table,
@@ -84,7 +84,6 @@ export const createNodes = (tablesData: TableMetadata[]): TableNode[] => {
 };
 
 export const createEdges = (tablesData: TableMetadata[]): Edge[][] => {
-  console.log('tablesData-----------------\n:', tablesData);
   return tablesData.map(table =>
     table.foreign_keys.map(foreignKey => {
       const edge: Edge = {
