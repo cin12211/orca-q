@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import QuickQueryTableSummary from '~/components/modules/quick-query/quick-query-table-summary/QuickQueryTableSummary.vue';
 import { useTableQueryBuilder } from '~/composables/useTableQueryBuilder';
+import { uuidv4 } from '~/lib/utils';
 import { useAppContext } from '~/shared/contexts';
 import { useAppLayoutStore } from '~/shared/stores/appLayoutStore';
 import { DEFAULT_QUERY_SIZE } from '~/utils/constants';
@@ -12,10 +13,12 @@ import {
   useQuickQuery,
   useQuickQueryMutation,
   useQuickQueryTableInfo,
-  useReverseTables,
+  useReferencedTables,
 } from './hooks';
-import PreviewReverseTable from './preview-reverse-table/PreviewReverseTable.vue';
 import PreviewSelectedRow from './preview/PreviewSelectedRow.vue';
+import PreviewRelationTable, {
+  type PreviewRelationBreadcrumb,
+} from './previewRelationTable/PreviewRelationTable.vue';
 import QuickQueryControlBar from './quick-query-control-bar/QuickQueryControlBar.vue';
 import QuickQueryFilter from './quick-query-filter/QuickQueryFilter.vue';
 import QuickQueryHistoryLogsPanel from './quick-query-history-log-panel/QuickQueryHistoryLogsPanel.vue';
@@ -36,11 +39,7 @@ const schemaName = computed(
   () => tabViews.value.find(t => t.id === props.tabViewId)?.schemaId || ''
 );
 
-const previewReverseTableModal = reactive({
-  open: false,
-  recordId: '',
-  columnName: '',
-});
+const previewRelationBreadcrumbs = ref<PreviewRelationBreadcrumb[]>([]);
 
 const containerRef = ref<InstanceType<typeof HTMLElement>>();
 
@@ -57,10 +56,11 @@ const {
 const {
   columnNames,
   foreignKeys,
-  primaryKeys,
+  primaryKeyColumns,
   isLoadingTableSchema,
   tableMetaData,
   columnTypes,
+  foreignKeyColumns,
 } = useQuickQueryTableInfo({
   tableName: tableName.value,
   schemaName: schemaName.value,
@@ -92,7 +92,7 @@ const {
   isFetchingTableData,
 } = useTableQueryBuilder({
   connectionString,
-  primaryKeys: primaryKeys,
+  primaryKeys: primaryKeyColumns,
   columns: columnNames,
   connectionId,
   workspaceId,
@@ -125,7 +125,7 @@ const {
   onFocusedCellChange,
 } = useQuickQueryMutation({
   tableName: tableName.value,
-  primaryKeys,
+  primaryKeys: primaryKeyColumns,
   refreshTableData,
   columnNames,
   data,
@@ -162,19 +162,49 @@ onDeactivated(() => {
   isActiveTeleport.value = false;
 });
 
-const onOpenPreviewReverseTableModal = ({
+const onOpenBackReferencedTableModal = ({
   id,
+  tableName,
   columnName,
+  schemaName,
 }: {
   id: string;
+  tableName: string;
   columnName: string;
+  schemaName: string;
 }) => {
-  previewReverseTableModal.open = true;
-  previewReverseTableModal.recordId = id;
-  previewReverseTableModal.columnName = columnName;
+  previewRelationBreadcrumbs.value.push({
+    id: uuidv4(),
+    type: 'backReferenced',
+    schemaName,
+    tableName,
+    columnName,
+    recordId: id,
+  });
 };
 
-const { isHaveRelationByFieldName } = useReverseTables({
+const onOpenForwardReferencedTableModal = ({
+  id,
+  tableName,
+  columnName,
+  schemaName,
+}: {
+  id: string;
+  tableName: string;
+  columnName: string;
+  schemaName: string;
+}) => {
+  previewRelationBreadcrumbs.value.push({
+    id: uuidv4(),
+    type: 'forwardReferenced',
+    schemaName,
+    tableName,
+    columnName,
+    recordId: id,
+  });
+};
+
+const { isHaveRelationByFieldName } = useReferencedTables({
   schemaName: schemaName.value,
   tableName: tableName.value,
 });
@@ -212,17 +242,45 @@ watch(
   },
   { immediate: true, deep: true }
 );
+
+const onUpdateSelectedTabInBreadcrumb = (
+  index: number,
+  selectedTab: string
+) => {
+  if (previewRelationBreadcrumbs.value[index]) {
+    previewRelationBreadcrumbs.value[index].selectedTab = selectedTab;
+  }
+};
+
+const onClearBreadcrumbs = () => {
+  previewRelationBreadcrumbs.value = [];
+};
+
+const onBackPreviousBreadcrumb = () => {
+  previewRelationBreadcrumbs.value.pop();
+};
+
+const onBackPreviousBreadcrumbByIndex = (index: number) => {
+  const newBreadcrumb = previewRelationBreadcrumbs.value.filter((_, i) => {
+    return i <= index;
+  });
+
+  previewRelationBreadcrumbs.value = newBreadcrumb;
+};
 </script>
 
 <template>
-  <PreviewReverseTable
-    v-if="previewReverseTableModal.open"
-    v-model:open="previewReverseTableModal.open"
-    :schemaName="schemaName"
-    :tableName="tableName"
-    :recordId="previewReverseTableModal.recordId"
-    :columnName="previewReverseTableModal.columnName"
-    :breadcrumbs="[tableName]"
+  <PreviewRelationTable
+    v-if="!!previewRelationBreadcrumbs.length"
+    :open="previewRelationBreadcrumbs.length > 0"
+    :breadcrumbs="previewRelationBreadcrumbs"
+    :currentTableName="tableName"
+    @clear-breadcrumb="onClearBreadcrumbs"
+    @onOpenBackReferencedTableModal="onOpenBackReferencedTableModal"
+    @onOpenForwardReferencedTableModal="onOpenForwardReferencedTableModal"
+    @onUpdateSelectedTabInBreadcrumb="onUpdateSelectedTabInBreadcrumb"
+    @onBackPreviousBreadcrumb="onBackPreviousBreadcrumb"
+    @onBackPreviousBreadcrumbByIndex="onBackPreviousBreadcrumbByIndex"
   />
 
   <Teleport defer to="#preview-select-row" v-if="isActiveTeleport">
@@ -361,15 +419,19 @@ watch(
           :orderBy="orderBy"
           @on-selected-rows="onSelectedRowsChange"
           @update:order-by="onUpdateOrderBy"
-          @onOpenPreviewReverseTableModal="onOpenPreviewReverseTableModal"
+          @onOpenBackReferencedTableModal="onOpenBackReferencedTableModal"
+          @onOpenForwardReferencedTableModal="onOpenForwardReferencedTableModal"
           :isHaveRelationByFieldName="isHaveRelationByFieldName"
+          :foreignKeyColumns="foreignKeyColumns"
           :foreignKeys="foreignKeys"
-          :primaryKeys="primaryKeys"
+          :primaryKeyColumns="primaryKeyColumns"
           :columnTypes="columnTypes"
           :defaultPageSize="DEFAULT_QUERY_SIZE"
           :offset="pagination.offset"
           @on-focus-cell="onFocusedCellChange"
           :selectedColumnFieldId="selectedColumnFieldId"
+          :current-schema-name="schemaName"
+          :current-table-name="tableName"
         />
       </QuickQueryContextMenu>
     </div>

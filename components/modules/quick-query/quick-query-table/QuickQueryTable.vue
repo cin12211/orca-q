@@ -20,37 +20,55 @@ import {
 } from '~/components/base/dynamic-table/constants';
 import { useAgGridApi } from '~/components/base/dynamic-table/hooks';
 import {
-  estimateColumnWidth,
   cellValueFormatter,
   type RowData,
   estimateAllColumnWidths,
 } from '~/components/base/dynamic-table/utils';
+import type { ForeignKeyMetadata } from '~/server/api/get-schema-meta-data';
 import { DEFAULT_QUERY_SIZE } from '~/utils/constants';
 import CustomCellUuid from './CustomCellUuid.vue';
 import CustomHeaderTable from './CustomHeaderTable.vue';
 
+// document.getElementsByClassName('ag-body-viewport')
 /* props ------------------------------------------------------------- */
 const props = defineProps<{
   data?: RowData[];
   defaultPageSize?: number;
   orderBy: OrderBy;
-  foreignKeys: string[];
-  primaryKeys: string[];
+  foreignKeys: ForeignKeyMetadata[];
+  foreignKeyColumns: string[];
+  primaryKeyColumns: string[];
   columnTypes: { name: string; type: string }[];
   offset: number;
   class?: HTMLAttributes['class'];
   isHaveRelationByFieldName: (columnName: string) => boolean | undefined;
   selectedColumnFieldId?: string | undefined;
+  currentTableName: string;
+  currentSchemaName: string;
 }>();
 
 const emit = defineEmits<{
   (e: 'update:orderBy', value: OrderBy): void;
   (e: 'onSelectedRows', value: RowData[]): void;
   (
-    e: 'onOpenPreviewReverseTableModal',
-    value: { id: string; columnName: string }
+    e: 'onOpenBackReferencedTableModal',
+    value: {
+      id: string;
+      tableName: string;
+      columnName: string;
+      schemaName: string;
+    }
   ): void;
   (e: 'onFocusCell', value: unknown | undefined): void;
+  (
+    e: 'onOpenForwardReferencedTableModal',
+    value: {
+      id: string;
+      tableName: string;
+      columnName: string;
+      schemaName: string;
+    }
+  ): void;
 }>();
 
 const pageSize = ref<number>(props.defaultPageSize ?? DEFAULT_QUERY_SIZE);
@@ -162,8 +180,12 @@ const columnDefs = computed<ColDef[]>(() => {
     width: DEFAULT_HASH_INDEX_WIDTH,
   });
 
-  const setPrimaryKeys = new Set(props.primaryKeys);
-  const setForeignKey = new Set(props.foreignKeys);
+  const setPrimaryKeys = new Set(props.primaryKeyColumns);
+  const setForeignKeyColumns = new Set(props.foreignKeyColumns);
+
+  const mapForeignKeys = new Map(
+    props.foreignKeys.map(foreignKey => [foreignKey.column, foreignKey])
+  );
 
   props.columnTypes.forEach(({ name, type }) => {
     const fieldId = name;
@@ -172,9 +194,14 @@ const columnDefs = computed<ColDef[]>(() => {
       props.orderBy.columnName === fieldId ? props.orderBy.order : undefined;
 
     const isPrimaryKey = setPrimaryKeys.has(fieldId);
-    const isForeignKey = setForeignKey.has(fieldId);
+    const isForeignKey = setForeignKeyColumns.has(fieldId);
+
+    const foreignKey = mapForeignKeys.get(fieldId);
 
     const haveRelationByFieldName = props.isHaveRelationByFieldName(fieldId);
+
+    const isShowCustomCellUuid =
+      (isPrimaryKey && haveRelationByFieldName) || (isForeignKey && foreignKey);
 
     const column: ColDef = {
       headerName: fieldId,
@@ -195,14 +222,26 @@ const columnDefs = computed<ColDef[]>(() => {
         isPrimaryKey,
         isForeignKey,
       },
-      cellRenderer: isPrimaryKey ? CustomCellUuid : undefined,
+      cellRenderer: isShowCustomCellUuid ? CustomCellUuid : undefined,
       cellRendererParams: {
-        isPrimaryKey: isPrimaryKey && haveRelationByFieldName,
-        onOpenPreviewReverseTableModal: (id: string) =>
-          emit('onOpenPreviewReverseTableModal', {
-            id,
-            columnName: fieldId,
-          }),
+        isPrimaryKey: isShowCustomCellUuid,
+        onOpenPreviewReverseTableModal: (id: string) => {
+          if (isForeignKey && foreignKey) {
+            emit('onOpenForwardReferencedTableModal', {
+              id,
+              tableName: foreignKey.referenced_table,
+              columnName: foreignKey.referenced_column,
+              schemaName: foreignKey.referenced_table_schema,
+            });
+          } else {
+            emit('onOpenBackReferencedTableModal', {
+              id,
+              columnName: fieldId,
+              tableName: props.currentTableName,
+              schemaName: props.currentSchemaName,
+            });
+          }
+        },
       },
       valueFormatter: (params: ValueFormatterParams) => {
         return cellValueFormatter(params.value, type);
@@ -359,8 +398,8 @@ const onFirstRowDataRendered = () => {
     rows,
   });
 
-  const setPrimaryKeys = new Set(props.primaryKeys);
-  const setForeignKey = new Set(props.foreignKeys);
+  const setPrimaryKeys = new Set(props.primaryKeyColumns);
+  const setForeignKey = new Set(props.foreignKeyColumns);
 
   gridApi.value.updateGridOptions({
     columnDefs: columns.map(column => {
