@@ -54,7 +54,7 @@ export function estimateColumnWidth({
   gapWidth?: number;
 }): number {
   const headerWidth = measureTextWidth(headerName, '700 14px system-ui');
-  const contentWidth = estimateCellContentWidth(field, rows);
+  const contentWidth = rows.length ? estimateCellContentWidth(field, rows) : 0;
 
   const finalWidth = Math.max(headerWidth, contentWidth) + gapWidth;
   return Math.min(maxWidth, Math.max(minWidth, finalWidth));

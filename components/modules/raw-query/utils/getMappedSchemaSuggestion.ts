@@ -3,6 +3,42 @@ import type { SQLNamespace } from '@codemirror/lang-sql';
 import { CompletionIcon } from '~/components/base/code-editor/constants';
 import type { TableDetails } from '~/server/api/get-schema-meta-data';
 
+export function generateTableAlias(tableName: string): string {
+  // convert to lowercase
+  let name = tableName.toLowerCase();
+
+  // remove prefix like 'tbl_', 'table_'
+  const prefixes = ['tbl_', 'table_'];
+  for (const prefix of prefixes) {
+    if (name.startsWith(prefix)) {
+      name = name.slice(prefix.length);
+    }
+  }
+
+  // remote extra suffix like '_v1', '_2023'
+  name = name.replace(/(_v\d+|_\d+)$/, '');
+
+  // split by _ or -
+  let words = name.split(/[_-]/);
+
+  // parser camelCase/PascalCase
+  if (words.length === 1) {
+    words = name.match(/[A-Z]?[a-z]+|[A-Z]+(?=[A-Z][a-z]|\b)/g) || [name];
+  }
+
+  // get the first letter of each word
+  let alias = words
+    .filter(word => word.length > 0)
+    .map(word => word[0])
+    .join('');
+
+  if (!alias && name) {
+    alias = name[0];
+  }
+
+  return alias;
+}
+
 export const getMappedSchemaSuggestion = ({
   tableDetails,
 }: {

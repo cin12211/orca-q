@@ -50,17 +50,19 @@ defineEmits<{
         class="h-6 px-2 gap-1 font-normal"
       >
         <Icon name="hugeicons:magic-wand-01"> </Icon>
-        Format code
+        Format
+        <ContextMenuShortcut>⌘S</ContextMenuShortcut>
       </Button>
 
       <Button
         @click="$emit('onExecuteCurrent')"
-        variant="default"
+        variant="outline"
         size="sm"
         class="h-6 px-2 gap-1 font-normal"
       >
         <Icon name="hugeicons:play"> </Icon>
         Execute current
+        <ContextMenuShortcut>⌘↵</ContextMenuShortcut>
       </Button>
     </div>
   </div>
