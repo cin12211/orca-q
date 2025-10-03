@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue';
-import { BaseEdge, getSmoothStepPath } from '@vue-flow/core';
+import { BaseEdge, getBezierPath } from '@vue-flow/core';
 import type { GetBezierPathParams } from '../type';
 import MarkerMany from './MarkerMany.vue';
 import MarkerZeroOrOne from './MarkerZeroOrOne.vue';
@@ -9,7 +9,7 @@ const props = defineProps<GetBezierPathParams & { id: string }>();
 
 // for this better performance use smoothstep
 // TODO : check getBezierPath when usage
-const path = computed(() => getSmoothStepPath(props));
+const path = computed(() => getBezierPath(props));
 
 const markerZeroOrOneId = computed(() => `${props.id}-marker-zero-or-one`);
 const markerManyId = computed(() => `${props.id}-marker-many`);

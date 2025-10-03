@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import QuickQueryTableSummary from '~/components/modules/quick-query/quick-query-table-summary/QuickQueryTableSummary.vue';
 import { useTableQueryBuilder } from '~/composables/useTableQueryBuilder';
+import { uuidv4 } from '~/lib/utils';
 import { useAppContext } from '~/shared/contexts';
 import { useAppLayoutStore } from '~/shared/stores/appLayoutStore';
 import { DEFAULT_QUERY_SIZE } from '~/utils/constants';
@@ -173,6 +174,7 @@ const onOpenBackReferencedTableModal = ({
   schemaName: string;
 }) => {
   previewRelationBreadcrumbs.value.push({
+    id: uuidv4(),
     type: 'backReferenced',
     schemaName,
     tableName,
@@ -193,6 +195,7 @@ const onOpenForwardReferencedTableModal = ({
   schemaName: string;
 }) => {
   previewRelationBreadcrumbs.value.push({
+    id: uuidv4(),
     type: 'forwardReferenced',
     schemaName,
     tableName,

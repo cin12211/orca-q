@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Input } from '#components';
-import { OperatorSet } from '~/utils/constants';
+import { DEFAULT_MAX_KEEP_ALIVE, OperatorSet } from '~/utils/constants';
 import type { FilterSchema } from '~/utils/quickQuery';
 import { useReferencedTables } from '../hooks';
 import ReferencedTable from './ReferencedTable.vue';
@@ -138,7 +138,7 @@ const onUpdateSelectedTab = (tab: string) => {
     </div>
 
     <div class="flex flex-1">
-      <KeepAlive>
+      <KeepAlive :max="DEFAULT_MAX_KEEP_ALIVE">
         <ReferencedTable
           :key="selectedTab"
           :tableName="selectedTab || ''"
