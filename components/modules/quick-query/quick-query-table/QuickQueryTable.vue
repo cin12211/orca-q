@@ -29,6 +29,7 @@ import { DEFAULT_QUERY_SIZE } from '~/utils/constants';
 import CustomCellUuid from './CustomCellUuid.vue';
 import CustomHeaderTable from './CustomHeaderTable.vue';
 
+// document.getElementsByClassName('ag-body-viewport')
 /* props ------------------------------------------------------------- */
 const props = defineProps<{
   data?: RowData[];

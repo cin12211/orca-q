@@ -74,7 +74,7 @@ export const createNodes = (tablesData: TableMetadata[]): TableNode[] => {
 
   return tablesData.map((table, index) => {
     const node: TableNode = {
-      id: uuidv4(),
+      id: table.table,
       type: LAYOUT_CONFIG.NODE_TYPE,
       position: positions[index],
       data: table,

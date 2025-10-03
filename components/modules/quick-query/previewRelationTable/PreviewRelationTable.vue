@@ -6,10 +6,12 @@ import {
   Dialog,
   DialogContent,
 } from '#components';
+import { DEFAULT_MAX_KEEP_ALIVE } from '~/utils/constants';
 import BackReferencedTable from './BackReferencedTable.vue';
 import ForwardReferencedTable from './ForwardReferencedTable.vue';
 
 export type PreviewRelationBreadcrumb = {
+  id: string;
   type: 'backReferenced' | 'forwardReferenced';
   schemaName: string;
   tableName: string;
@@ -54,7 +56,11 @@ const props = defineProps<{
   currentTableName: string;
 }>();
 
-const latestBreadcrumb = computed(() => props.breadcrumbs.at(-1));
+const latestBreadcrumb = computed(() =>
+  props.breadcrumbs.length
+    ? props.breadcrumbs[props.breadcrumbs.length - 1]
+    : null
+);
 
 const updateSelectedTabInBreadcrumb = (selectedTab: string) => {
   emit(
@@ -68,7 +74,7 @@ const updateSelectedTabInBreadcrumb = (selectedTab: string) => {
 <template>
   <Dialog :open="open" @update:open="$emit('clearBreadcrumb')">
     <DialogContent
-      class="w-[95dvw]! max-w-[95dvw]! max-h-[90dvh] h-[90dvh] gap-3 p-3 flex flex-col flex-1 flex-wrap overflow-hidden"
+      class="w-[98dvw]! max-w-[98dvw]! max-h-[95dvh] h-[95dvh] gap-3 p-3 flex flex-col flex-1 flex-wrap overflow-hidden"
     >
       <DialogHeader>
         <DialogDescription>
@@ -83,13 +89,20 @@ const updateSelectedTabInBreadcrumb = (selectedTab: string) => {
 
             <Breadcrumb>
               <BreadcrumbList class="gap-0.5!">
-                <BreadcrumbItem>
-                  {{ currentTableName }}
+                <BreadcrumbItem class="hover:cursor-pointer">
+                  <BreadcrumbLink @click="emit('clearBreadcrumb')">
+                    {{ currentTableName }}
+                  </BreadcrumbLink>
                 </BreadcrumbItem>
                 <BreadcrumbSeparator />
 
                 <template v-for="(item, index) in breadcrumbs">
-                  <BreadcrumbItem>
+                  <BreadcrumbItem
+                    :class="[
+                      index !== breadcrumbs.length - 1 &&
+                        'hover:cursor-pointer',
+                    ]"
+                  >
                     <BreadcrumbPage v-if="index === breadcrumbs.length - 1">
                       {{
                         item.type === 'backReferenced'
@@ -117,41 +130,31 @@ const updateSelectedTabInBreadcrumb = (selectedTab: string) => {
         </DialogDescription>
       </DialogHeader>
 
-      <BackReferencedTable
-        v-if="
-          latestBreadcrumb?.type === 'backReferenced' && breadcrumbs.length >= 1
-        "
-        :column-name="latestBreadcrumb.columnName"
-        :record-id="latestBreadcrumb.recordId"
-        :schema-name="latestBreadcrumb.schemaName"
-        :table-name="latestBreadcrumb.tableName"
-        @onOpenBackReferencedTableModal="
-          emit('onOpenBackReferencedTableModal', $event)
-        "
-        @onOpenForwardReferencedTableModal="
-          emit('onOpenForwardReferencedTableModal', $event)
-        "
-        :initSelectedTab="latestBreadcrumb.selectedTab"
-        :selected-tab="latestBreadcrumb.selectedTab"
-        @update:selected-tab="updateSelectedTabInBreadcrumb"
-      />
-
-      <ForwardReferencedTable
-        v-if="
-          latestBreadcrumb?.type === 'forwardReferenced' &&
-          breadcrumbs.length >= 1
-        "
-        :column-name="latestBreadcrumb.columnName"
-        :record-id="latestBreadcrumb.recordId"
-        :schema-name="latestBreadcrumb.schemaName"
-        :table-name="latestBreadcrumb.tableName"
-        @onOpenBackReferencedTableModal="
-          emit('onOpenBackReferencedTableModal', $event)
-        "
-        @onOpenForwardReferencedTableModal="
-          emit('onOpenForwardReferencedTableModal', $event)
-        "
-      />
+      <KeepAlive :max="DEFAULT_MAX_KEEP_ALIVE">
+        <component
+          :is="
+            latestBreadcrumb?.type === 'backReferenced'
+              ? BackReferencedTable
+              : ForwardReferencedTable
+          "
+          v-if="latestBreadcrumb"
+          :key="latestBreadcrumb.id"
+          v-bind="{
+            columnName: latestBreadcrumb.columnName,
+            recordId: latestBreadcrumb.recordId,
+            schemaName: latestBreadcrumb.schemaName,
+            tableName: latestBreadcrumb.tableName,
+            selectedTab: latestBreadcrumb.selectedTab,
+          }"
+          @onOpenBackReferencedTableModal="
+            emit('onOpenBackReferencedTableModal', $event)
+          "
+          @onOpenForwardReferencedTableModal="
+            emit('onOpenForwardReferencedTableModal', $event)
+          "
+          @update:selected-tab="updateSelectedTabInBreadcrumb"
+        />
+      </KeepAlive>
     </DialogContent>
   </Dialog>
 </template>
