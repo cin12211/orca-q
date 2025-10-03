@@ -91,7 +91,7 @@ const horizontalWithVariables = computed(() => {
           <pane
             v-if="isWithVariablesLayout"
             :size="innerVariablesSize"
-            min-size="3"
+            min-size="0"
             max-size="70"
           >
             <div class="flex flex-col flex-1 h-full p-1">
@@ -101,7 +101,7 @@ const horizontalWithVariables = computed(() => {
         </splitpanes>
       </pane>
 
-      <pane :size="resultSize" min-size="10" max-size="80">
+      <pane :size="resultSize" min-size="0" max-size="80">
         <div class="flex flex-col flex-1 h-full p-1 relative">
           <slot name="result" />
         </div>

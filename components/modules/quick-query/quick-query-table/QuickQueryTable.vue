@@ -25,7 +25,7 @@ import {
   estimateAllColumnWidths,
 } from '~/components/base/dynamic-table/utils';
 import type { ForeignKeyMetadata } from '~/server/api/get-schema-meta-data';
-import { DEFAULT_QUERY_SIZE } from '~/utils/constants';
+import { DEFAULT_BUFFER_ROWS, DEFAULT_QUERY_SIZE } from '~/utils/constants';
 import CustomCellUuid from './CustomCellUuid.vue';
 import CustomHeaderTable from './CustomHeaderTable.vue';
 
@@ -315,7 +315,7 @@ const columnTypes = ref<{
 const gridOptions = computed(() => {
   const options: GridOptions = {
     paginationPageSize: pageSize.value,
-    rowBuffer: 5,
+    rowBuffer: DEFAULT_BUFFER_ROWS,
     rowClass: 'class-row-border-none',
     // getRowClass: params => {
     //   if ((params.node.rowIndex || 0) % 2 === 0) {
@@ -384,7 +384,7 @@ watch(
   { flush: 'post' }
 );
 
-const onFirstRowDataRendered = () => {
+const onRowDataUpdated = () => {
   if (!gridApi.value) {
     return;
   }
@@ -432,7 +432,7 @@ defineExpose({ gridApi, editedCells, columnDefs });
     @cell-value-changed="onCellValueChanged"
     @grid-ready="onGridReady"
     @cell-focused="onCellFocus"
-    @first-data-rendered="onFirstRowDataRendered"
+    @rowDataUpdated="onRowDataUpdated"
     :class="props.class"
     :grid-options="gridOptions"
     :columnDefs="columnDefs"

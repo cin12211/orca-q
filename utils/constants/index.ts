@@ -13,3 +13,4 @@ export const DEFAULT_DEBOUNCE_INPUT = 200;
 export const DEFAULT_DEBOUNCE_SCROLL = 100;
 export const ONE_SECOND = 1000;
 export const DEFAULT_WINDOW_NAME = 'OrcaQ';
+export const DEFAULT_BUFFER_ROWS = 10;

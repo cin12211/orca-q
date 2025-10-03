@@ -10,6 +10,7 @@ import type {
 } from 'ag-grid-community';
 import { AgGridVue } from 'ag-grid-vue3';
 import type { MappedRawColumn } from '~/components/modules/raw-query/interfaces';
+import { DEFAULT_BUFFER_ROWS } from '~/utils/constants';
 import DynamicPrimaryKeyHeader from './DynamicPrimaryKeyHeader.vue';
 import {
   baseTableTheme,
@@ -150,6 +151,7 @@ const columnDefs = computed<ColDef[]>(() => {
 const gridOptions = computed(() => {
   const options: GridOptions = {
     rowClass: 'class-row-border-none',
+    rowBuffer: DEFAULT_BUFFER_ROWS,
     getRowStyle: params => {
       if ((params.node.rowIndex || 0) % 2 === 0) {
         return { background: 'var(--color-neutral-100)' };

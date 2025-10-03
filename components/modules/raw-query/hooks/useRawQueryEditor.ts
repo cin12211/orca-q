@@ -31,7 +31,28 @@ import {
   type ParsedParametersResult,
 } from '~/utils/common/convertParameters';
 import type { EditorCursor } from '../interfaces';
-import { formatStatementSql, getMappedSchemaSuggestion } from '../utils';
+import {
+  formatStatementSql,
+  generateTableAlias,
+  getMappedSchemaSuggestion,
+} from '../utils';
+
+// interface ExecutedResultItem {
+//   id: string;
+//   metadata: {
+//     queryTime: number;
+//     statementQuery: string;
+//     executeErrors:
+//       | {
+//           message: string;
+//           data: Record<string, unknown>;
+//         }
+//       | undefined;
+//     fieldDefs?: FieldDef[];
+//     connection?: Connection | undefined;
+//   };
+//   result: RowData[];
+// }
 
 export function useRawQueryEditor({
   activeSchema,
@@ -45,7 +66,10 @@ export function useRawQueryEditor({
   fieldDefs: Ref<FieldDef[]>;
 }) {
   const codeEditorRef = ref<InstanceType<typeof BaseCodeEditor> | null>(null);
-  const rawQueryResults = shallowRef<RowData[]>([]);
+  const currentRawQueryResult = shallowRef<RowData[]>([]);
+
+  //TODO: open when support multiple statements
+  // const executedResults = shallowRef<ExecutedResultItem[]>([]);
 
   const queryProcessState = reactive<{
     isHaveOneExecute: boolean;
@@ -82,11 +106,15 @@ export function useRawQueryEditor({
     const tables: Completion[] = [];
 
     for (const tableName in tableDetails) {
+      const label = `${tableName} as ${generateTableAlias(tableName)}`;
+      const apply = `${tableName} AS ${generateTableAlias(tableName)}`;
+
       tables.push({
-        label: tableName,
+        label,
         type: CompletionIcon.Table,
         detail: `Schema: ${activeSchema.value?.name}`,
         boost: 100,
+        apply,
       });
     }
 
@@ -190,8 +218,20 @@ export function useRawQueryEditor({
     //     console.log('🚀 ~ applyASTRules ~ ast:', ast);
 
     fieldDefs.value = [];
-    rawQueryResults.value = [];
+    currentRawQueryResult.value = [];
     queryProcessState.executeLoading = true;
+
+    // const executedResultItem: ExecutedResultItem = {
+    //   id: uuidv4(),
+    //   metadata: {
+    //     queryTime: 0,
+    //     statementQuery: executeQuery,
+    //     executeErrors: undefined,
+    //     fieldDefs: undefined,
+    //     connection: undefined,
+    //   },
+    //   result: [],
+    // };
     try {
       const result = await $fetch('/api/raw-execute', {
         method: 'POST',
@@ -203,16 +243,22 @@ export function useRawQueryEditor({
 
       fieldDefs.value = result.fields;
 
-      rawQueryResults.value = result.rows as RowData[];
+      // executedResultItem.metadata.fieldDefs = result.fields;
+      // executedResultItem.result = result.rows;
+      // executedResultItem.metadata.queryTime = result.queryTime || 0;
+      // executedResultItem.metadata.connection = connection.value;
 
+      currentRawQueryResult.value = result.rows as RowData[];
       queryProcessState.executeErrors = undefined;
-
       queryProcessState.queryTime = result.queryTime || 0;
     } catch (e: any) {
       queryProcessState.executeErrors = e.data;
+      // executedResultItem.metadata.executeErrors = e.data;
     }
 
     queryProcessState.executeLoading = false;
+
+    // executedResults.value.push(executedResultItem);
   };
 
   const onExecuteCurrent = () => {
@@ -303,7 +349,7 @@ export function useRawQueryEditor({
 
   return {
     codeEditorRef,
-    rawQueryResults,
+    currentRawQueryResult,
     queryProcessState,
     onExecuteCurrent,
     extensions,
@@ -312,5 +358,6 @@ export function useRawQueryEditor({
     onHandleFormatCode,
     reloadSqlCompartment,
     pushSqlError,
+    // executedResults,
   };
 }

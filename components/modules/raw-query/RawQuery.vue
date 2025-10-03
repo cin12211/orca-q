@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import BaseCodeEditor from '~/components/base/code-editor/BaseCodeEditor.vue';
 import { useAppLayoutStore } from '~/shared/stores/appLayoutStore';
+import IntroRawQuery from './components/IntroRawQuery.vue';
 import RawQueryEditorFooter from './components/RawQueryEditorFooter.vue';
 import RawQueryEditorHeader from './components/RawQueryEditorHeader.vue';
 import RawQueryLayout from './components/RawQueryLayout.vue';
@@ -36,9 +37,10 @@ const {
   codeEditorRef,
   onExecuteCurrent,
   onHandleFormatCode,
-  rawQueryResults,
+  currentRawQueryResult,
   queryProcessState,
   // sqlCompartment,
+  // executedResults,
 } = toRefs(rawQueryEditor);
 
 watch(
@@ -162,7 +164,7 @@ onActivated(async () => {
             :execute-errors="!!queryProcessState.executeErrors"
             :is-have-one-execute="queryProcessState.isHaveOneExecute"
             :queryTime="queryProcessState.queryTime"
-            :raw-query-results-length="rawQueryResults.length"
+            :raw-query-results-length="currentRawQueryResult.length"
             @onFormatCode="onHandleFormatCode"
             @on-execute-current="onExecuteCurrent"
           />
@@ -187,17 +189,22 @@ onActivated(async () => {
     </template>
 
     <template #result>
-      <LoadingOverlay :visible="queryProcessState.executeLoading" />
+      <LoadingOverlay v-if="queryProcessState.executeLoading" visible />
+      <IntroRawQuery v-if="!queryProcessState.isHaveOneExecute" />
 
-      <!-- <Tabs class="flex-1 flex-wrap h-full w-full" default-value="Result">
+      <!-- <Tabs class="flex-1 mb-1 flex-wrap h-fit! w-full">
         <TabsList class="overflow-x-auto w-full justify-start!">
           <TabsTrigger
             class="cursor-pointer font-normal! flex-none!"
-            v-for="tab in ['Result', 'Variables', 'Errors', 'Query', 'Plan']"
-            :value="tab"
-            :key="tab"
+            v-for="(tab, index) in executedResults"
+            :value="tab.id"
+            :key="tab.id"
           >
-            {{ tab }}
+            {{ tab.metadata.statementQuery.slice(0, 20) }} ({{ index }})
+
+            <div class="hover:bg-accent p-0.5 rounded-full">
+              <X class="size-3 stroke-[2.5]!" />
+            </div>
           </TabsTrigger>
         </TabsList>
       </Tabs> -->
@@ -229,17 +236,13 @@ onActivated(async () => {
           </CollapsibleContent>
         </Collapsible>
       </div>
-      <!-- <div
-        v-else-if="!mappedColumns.length"
-        class="text-center font-normal text-xs text-muted-foreground mt-4"
-      >
-        No row found
-      </div> -->
 
       <DynamicTable
-        v-show="!queryProcessState.executeErrors"
+        v-show="
+          !queryProcessState.executeErrors && queryProcessState.isHaveOneExecute
+        "
         :columns="mappedColumns"
-        :data="rawQueryResults || []"
+        :data="currentRawQueryResult || []"
         class="h-full"
         skip-re-column-size
       />
