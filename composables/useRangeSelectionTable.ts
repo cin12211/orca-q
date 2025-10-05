@@ -1,3 +1,5 @@
+import { useEventListener } from '@vueuse/core';
+import type { ShallowRef } from 'vue';
 import {
   type CellMouseDownEvent,
   type CellMouseOverEvent,
@@ -6,144 +8,259 @@ import {
 import debounce from 'lodash-es/debounce';
 import {
   DEFAULT_DEBOUNCE_RANGE_SELECTION,
-  DEFAULT_EDGE_ZONE_HEIGHT,
-  DEFAULT_SCROLL_STEP,
+  DEFAULT_ROW_HEIGHT,
 } from '~/utils/constants';
 
+/**
+ * Hook hỗ trợ:
+ * 1. Range selection cho AG Grid (drag chọn nhiều hàng)
+ * 2. Auto scroll mượt khi kéo gần mép viewport (theo cơ chế pointer + RAF)
+ */
 export const useRangeSelectionTable = ({
-  scrollStep = DEFAULT_SCROLL_STEP,
-  fallBackEdgeZoneHeight = DEFAULT_EDGE_ZONE_HEIGHT,
-  debounceRangeSelection = DEFAULT_DEBOUNCE_RANGE_SELECTION,
+  debounceDelay = DEFAULT_DEBOUNCE_RANGE_SELECTION,
+  gridApi,
+  rowHeight = DEFAULT_ROW_HEIGHT,
+  gridRef,
 }: {
-  scrollStep?: number;
-  fallBackEdgeZoneHeight?: number;
-  debounceRangeSelection?: number;
+  debounceDelay?: number;
+  gridApi?: globalThis.Ref<GridApi | null>;
+  rowHeight?: number;
+  gridRef: Readonly<ShallowRef<HTMLElement | null>>;
 }) => {
-  const isStartRangeSelection = ref(false);
-  const startRangeSelectedRowIndex = ref<number>(-1);
+  // ==== STATE: range selection tracking ====
+  const isSelectingRange = ref(false);
+  const startRowIndex = ref<number>(-1);
+  const prevRange = reactive({ min: -1, max: -1 });
 
-  // track the previous range – start & end can swap when dragging upwards
-  const prevMin = ref(-1);
-  const prevMax = ref(-1);
+  // ==== STATE: auto-scroll tracking ====
+  let gridViewportEl: HTMLElement | null = null;
+  let isDraggingPointer = false;
+  let pointerPos = { x: 0, y: 0 };
+  let scrollFrameId: number | null = null;
+  let currentSelectionIndex = -1;
+  let autoScrollAccumY = 0;
 
-  function updateRangeSelectRows({
+  const EDGE_MARGIN = 10; // px
+  const SCROLL_SPEED_MAX = 10; // px/frame
+
+  // ============================================================
+  // 📦 RANGE SELECTION LOGIC
+  // ============================================================
+
+  function updateRowSelectionRange({
     currentIndex,
     gridApi,
   }: {
     currentIndex: number;
     gridApi: GridApi;
   }) {
-    const start = startRangeSelectedRowIndex.value;
+    const start = startRowIndex.value;
     const min = Math.min(start, currentIndex);
     const max = Math.max(start, currentIndex);
 
-    // nothing changed → skip
-    if (min === prevMin.value && max === prevMax.value) return;
+    // skip nếu không thay đổi
+    if (min === prevRange.min && max === prevRange.max) return;
 
-    // 1. deselect rows that just left the range
-    if (prevMin.value !== -1) {
-      for (let i = prevMin.value; i <= prevMax.value; i++) {
+    // Bỏ chọn vùng cũ
+    if (prevRange.min !== -1) {
+      for (let i = prevRange.min; i <= prevRange.max; i++) {
         if (i < min || i > max) {
           gridApi.getDisplayedRowAtIndex(i)?.setSelected(false);
         }
       }
     }
 
-    // 2. select rows that just entered the range
+    // Chọn vùng mới
     for (let i = min; i <= max; i++) {
-      if (i < prevMin.value || i > prevMax.value) {
+      if (i < prevRange.min || i > prevRange.max) {
         gridApi.getDisplayedRowAtIndex(i)?.setSelected(true);
       }
     }
 
-    prevMin.value = min;
-    prevMax.value = max;
+    prevRange.min = min;
+    prevRange.max = max;
   }
 
-  const scrollMoreIfNeed = ({
-    mouseEvent,
-    rowIndex,
-    gridApi,
-  }: {
-    rowIndex: number;
-    mouseEvent: MouseEvent;
-    gridApi: GridApi;
-  }) => {
-    let edgeZoneHeight = fallBackEdgeZoneHeight;
-    if ((mouseEvent.target as HTMLElement)?.offsetHeight) {
-      edgeZoneHeight = (mouseEvent.target as HTMLElement).offsetHeight * 2;
-    }
+  function resetRangeSelection() {
+    isSelectingRange.value = false;
+    startRowIndex.value = -1;
+    prevRange.min = -1;
+    prevRange.max = -1;
+  }
 
-    const verticalPixelRange = gridApi.getVerticalPixelRange();
-
-    if (mouseEvent.layerY + edgeZoneHeight > verticalPixelRange.bottom) {
-      gridApi.ensureIndexVisible(rowIndex + scrollStep, 'bottom');
-    }
-
-    if (mouseEvent.layerY - edgeZoneHeight < verticalPixelRange.top) {
-      gridApi.ensureIndexVisible(rowIndex - scrollStep, 'top');
-    }
-  };
-
-  const onStopRangeSelection = () => {
-    isStartRangeSelection.value = false;
-    startRangeSelectedRowIndex.value = -1;
-    prevMin.value = -1;
-    prevMax.value = -1;
-  };
-
-  const onCellMouseDown = (params: CellMouseDownEvent) => {
+  function handleCellMouseDown(params: CellMouseDownEvent) {
     const gridApi = params.api;
     const event = params.event as MouseEvent;
 
     const isLeftClick = event?.button === 0;
-    const isPressShift = event?.shiftKey;
+    const isShiftHeld = event?.shiftKey;
 
-    if (!isLeftClick || isPressShift) {
-      return;
-    }
+    if (!isLeftClick || isShiftHeld) return;
+    if (params.rowIndex == null) return;
 
-    isStartRangeSelection.value = true;
-    if (!params.rowIndex) return;
-
-    startRangeSelectedRowIndex.value = params.rowIndex;
+    isSelectingRange.value = true;
+    startRowIndex.value = params.rowIndex;
 
     gridApi.deselectAll();
     params.node.setSelected(true);
-  };
+  }
 
-  const onCellMouseOver = (params: CellMouseOverEvent, gridApi: GridApi) => {
-    if (!params.rowIndex || !isStartRangeSelection.value) return;
+  function handleCellMouseOver(params: CellMouseOverEvent, gridApi: GridApi) {
+    if (!isSelectingRange.value || params.rowIndex == null) return;
 
-    const rowIndex = params.rowIndex;
-    const mouseEvent = params.event as MouseEvent;
+    currentSelectionIndex = params.rowIndex;
+    updateRowSelectionRange({ currentIndex: params.rowIndex, gridApi });
+  }
 
-    updateRangeSelectRows({
-      currentIndex: rowIndex,
-      gridApi,
+  const handleCellMouseOverDebounced = debounce(
+    (params: CellMouseOverEvent) => {
+      const gridApi = params.api;
+      handleCellMouseOver(params, gridApi);
+    },
+    debounceDelay,
+    { leading: true, trailing: true }
+  );
+
+  // ============================================================
+  // 🧭 AUTO SCROLL LOGIC (drag pointer + smooth scroll)
+  // ============================================================
+
+  function handlePointerDown(e: PointerEvent) {
+    if (!(e.target instanceof HTMLElement)) return;
+
+    isDraggingPointer = true;
+    pointerPos.x = e.clientX;
+    pointerPos.y = e.clientY;
+
+    document.addEventListener('pointermove', handlePointerMove, true);
+    document.addEventListener('pointerup', handlePointerUp, {
+      once: true,
+      capture: true,
     });
 
-    scrollMoreIfNeed({
-      rowIndex,
-      mouseEvent,
-      gridApi,
-    });
-  };
+    startAutoScrollLoop();
+  }
 
-  const onCellMouseOverDebounced = debounce((params: CellMouseOverEvent) => {
-    const gridApi = params.api;
+  function handlePointerMove(e: PointerEvent) {
+    pointerPos.x = e.clientX;
+    pointerPos.y = e.clientY;
+  }
 
-    onCellMouseOver(params, gridApi);
-  }, debounceRangeSelection);
+  function handlePointerUp() {
+    isDraggingPointer = false;
+    document.removeEventListener('pointermove', handlePointerMove, true);
+    stopAutoScrollLoop();
+  }
+
+  function startAutoScrollLoop() {
+    if (scrollFrameId) return;
+
+    const loop = () => {
+      if (!isDraggingPointer || !gridViewportEl) {
+        scrollFrameId = null;
+        return;
+      }
+
+      const rect = gridViewportEl.getBoundingClientRect();
+      let scrollDeltaY = 0;
+
+      const isSelectMore =
+        pointerPos.y < rect.top || pointerPos.y > rect.bottom;
+
+      // Scroll up
+      if (pointerPos.y < rect.top + EDGE_MARGIN) {
+        scrollDeltaY = -Math.ceil(
+          ((EDGE_MARGIN - (pointerPos.y - rect.top)) / EDGE_MARGIN) *
+            SCROLL_SPEED_MAX
+        );
+      }
+      // Scroll down
+      else if (pointerPos.y > rect.bottom - EDGE_MARGIN) {
+        scrollDeltaY = Math.ceil(
+          ((pointerPos.y - (rect.bottom - EDGE_MARGIN)) / EDGE_MARGIN) *
+            SCROLL_SPEED_MAX
+        );
+      }
+
+      if (scrollDeltaY !== 0 && isSelectMore) {
+        autoScrollAccumY += scrollDeltaY;
+
+        gridViewportEl.scrollTop += scrollDeltaY;
+
+        if (gridApi?.value) {
+          // compute how many "rows" worth of scroll we’ve accumulated
+          const rowOffset = Math.trunc(autoScrollAccumY / rowHeight);
+
+          if (rowOffset !== 0) {
+            // remove consumed scroll distance
+            autoScrollAccumY -= rowOffset * rowHeight;
+
+            // update selection index (handle both directions)
+            currentSelectionIndex += rowOffset;
+
+            if (currentSelectionIndex <= 0) {
+              currentSelectionIndex = 0;
+            }
+
+            updateRowSelectionRange({
+              currentIndex: currentSelectionIndex,
+              gridApi: gridApi?.value,
+            });
+          }
+        }
+      }
+
+      scrollFrameId = requestAnimationFrame(loop);
+    };
+
+    scrollFrameId = requestAnimationFrame(loop);
+  }
+
+  function stopAutoScrollLoop() {
+    if (scrollFrameId) cancelAnimationFrame(scrollFrameId);
+    scrollFrameId = null;
+    autoScrollAccumY = 0;
+  }
+
+  // ============================================================
+  // 🌱 LIFECYCLE & EVENT BINDING
+  // ============================================================
+
+  useEventListener('mouseup', () => {
+    if (isSelectingRange.value) {
+      stopAutoScrollLoop();
+      resetRangeSelection();
+    }
+  });
+
+  onMounted(async () => {
+    await nextTick();
+    // gridViewportEl = document.querySelector(
+    //   '.ag-body-viewport'
+    // ) as HTMLElement | null;
+    const agGridDom = gridRef?.value as unknown as { $el: HTMLElement };
+
+    gridViewportEl = agGridDom?.$el?.querySelector(
+      '.ag-body-viewport'
+    ) as HTMLElement | null;
+
+    if (gridViewportEl) {
+      gridViewportEl.addEventListener('pointerdown', handlePointerDown);
+    }
+  });
+
+  onUnmounted(() => {
+    stopAutoScrollLoop();
+    gridViewportEl?.removeEventListener('pointerdown', handlePointerDown);
+  });
+
+  // ============================================================
+  // 🎯 PUBLIC API
+  // ============================================================
 
   return {
-    onStopRangeSelection,
-    updateRangeSelectRows,
-    scrollMoreIfNeed,
-    onCellMouseDown,
-    onCellMouseOver,
-    isStartRangeSelection,
-    startRangeSelectedRowIndex,
-    onCellMouseOverDebounced,
+    // Range selection handlers
+    handleCellMouseDown,
+    handleCellMouseOverDebounced,
   };
 };

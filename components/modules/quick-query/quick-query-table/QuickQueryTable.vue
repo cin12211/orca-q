@@ -96,8 +96,11 @@ const rowData = computed<RowData[]>(() =>
   })
 );
 
-const { onStopRangeSelection, onCellMouseOverDebounced, onCellMouseDown } =
-  useRangeSelectionTable({});
+const { handleCellMouseOverDebounced, handleCellMouseDown } =
+  useRangeSelectionTable({
+    gridApi: gridApi,
+    gridRef: agGridRef,
+  });
 
 /* Handle cell value changed --------------------------------------- */
 const onCellValueChanged = (event: CellValueChangedEvent) => {
@@ -340,8 +343,8 @@ const gridOptions = computed(() => {
     undoRedoCellEditing: true,
     undoRedoCellEditingLimit: 25,
     animateRows: true,
-    onCellMouseDown,
-    onCellMouseOver: onCellMouseOverDebounced,
+    onCellMouseDown: handleCellMouseDown,
+    onCellMouseOver: handleCellMouseOverDebounced,
     defaultColDef: defaultColDef.value,
     columnTypes: columnTypes.value,
   };
@@ -421,13 +424,14 @@ const onRowDataUpdated = () => {
 };
 
 defineExpose({ gridApi, editedCells, columnDefs });
+
+//  @mouseup="onStopRangeSelection"
+//     @click.keyup="onStopRangeSelection"
+//     @mouseleave="onStopRangeSelection"
 </script>
 
 <template>
   <AgGridVue
-    @mouseup="onStopRangeSelection"
-    @click.keyup="onStopRangeSelection"
-    @mouseleave="onStopRangeSelection"
     @selection-changed="onSelectionChanged"
     @cell-value-changed="onCellValueChanged"
     @grid-ready="onGridReady"
