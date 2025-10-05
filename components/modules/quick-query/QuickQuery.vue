@@ -224,6 +224,8 @@ useHotkeys(
       callback: () => {
         quickQueryTableRef.value?.gridApi?.selectAll();
       },
+      excludeInput: true,
+      isPreventDefault: true,
     },
   ],
   {
@@ -285,7 +287,10 @@ const onBackPreviousBreadcrumbByIndex = (index: number) => {
 
   <Teleport defer to="#preview-select-row" v-if="isActiveTeleport">
     <QuickQueryTableSummary
-      v-if="!selectedRows?.length"
+      v-if="
+        selectedRows?.length !== 1 ||
+        quickQueryTabView !== QuickQueryTabView.Data
+      "
       :table-name="tableName"
       :schema-name="schemaName"
       :columns="columns"

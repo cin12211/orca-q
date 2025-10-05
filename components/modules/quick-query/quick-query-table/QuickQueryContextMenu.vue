@@ -24,10 +24,12 @@ useHotkeys(
     {
       key: 'meta+c',
       callback: () => emit('onCopySelectedCell'),
+      excludeInput: true,
     },
     {
       key: 'meta+v',
       callback: () => emit('onPasteRows'),
+      excludeInput: true,
     },
   ],
   {

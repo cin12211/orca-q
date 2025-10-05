@@ -131,7 +131,7 @@ watch(
   <DynamicForm
     v-else
     ref="dynamicForm"
-    class="space-y-1 p-2 overflow-y-auto"
+    class="space-y-1 p-1 overflow-y-auto"
     :fields="configFields"
     :validation-schema="schema"
   />

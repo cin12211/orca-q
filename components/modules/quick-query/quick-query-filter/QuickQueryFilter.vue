@@ -187,13 +187,6 @@ useHotkeys([
       await onShowSearch();
     },
   },
-  {
-    key: 'escape',
-    callback: () => {
-      isShowFilters.value = false;
-      onExecuteSearch(true);
-    },
-  },
 ]);
 
 const getCurrentFocusInput = (): number | undefined => {
@@ -250,6 +243,13 @@ useHotkeys(
         await nextTick();
 
         focusSearchByIndex(currenFocusIndex + 1);
+      },
+    },
+    {
+      key: 'escape',
+      callback: () => {
+        isShowFilters.value = false;
+        onExecuteSearch(true);
       },
     },
   ],

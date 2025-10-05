@@ -1,4 +1,5 @@
 // ---------------- Hook implementation (không đổi) ---------------- //
+import { useActiveElement } from '@vueuse/core';
 import { onMounted, onUnmounted, ref, watch, type Ref, isRef } from 'vue';
 
 // ---------------- Hotkey template types ---------------- //
@@ -33,7 +34,8 @@ type Letter =
   | 'x'
   | 'y'
   | 'z'
-  | ',';
+  | ','
+  | '.';
 /** Số 0-9 */
 type Digit = '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9';
 
@@ -70,6 +72,8 @@ type HotkeyTemplate =
 export interface Hotkey {
   key: HotkeyTemplate;
   callback: (e: KeyboardEvent) => void;
+  isPreventDefault?: boolean;
+  excludeInput?: boolean;
 }
 
 const MODIFIERS = ['ctrl', 'shift', 'alt', 'meta', 'cmd', 'mod'] as const;
@@ -107,6 +111,16 @@ export function useHotkeys(
     isPreventDefault: true,
   }
 ): void {
+  const activeElement = useActiveElement();
+  const isEventInsideInput = computed(() => {
+    console.log(activeElement.value?.tagName);
+
+    return (
+      activeElement.value?.tagName === 'INPUT' ||
+      activeElement.value?.tagName === 'TEXTAREA'
+    );
+  });
+
   const hotkeysRef: Ref<ReadonlyArray<Hotkey>> = isRef(hotkeys)
     ? hotkeys
     : ref(hotkeys);
@@ -117,7 +131,13 @@ export function useHotkeys(
   const handler = (e: KeyboardEvent) => {
     for (const hk of hotkeysRef.value) {
       if (matchHotkey(e, hk.key)) {
-        if (isPreventDefault) {
+        const isExcluded = hk.excludeInput && isEventInsideInput.value;
+
+        if (isExcluded) {
+          return;
+        }
+
+        if (isPreventDefault || hk.isPreventDefault) {
           e.preventDefault();
           e.stopImmediatePropagation();
           e.stopPropagation();

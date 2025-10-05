@@ -255,6 +255,7 @@ useHotkeys(
           await navigator.clipboard.writeText(String(cellValue));
         }
       },
+      excludeInput: true,
     },
   ],
   {

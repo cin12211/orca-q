@@ -169,7 +169,9 @@ const isDataView = computed(() => {
     <div class="flex items-center gap-2">
       <Tabs
         :model-value="tabView"
-        @update:model-value="$emit('update:tabView', $event)"
+        @update:model-value="
+          $emit('update:tabView', $event as QuickQueryTabView)
+        "
       >
         <TabsList class="grid w-full grid-cols-3 h-[1.625rem]!">
           <TabsTrigger
