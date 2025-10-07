@@ -265,7 +265,7 @@ watch(quickQueryTabView, newQuickQueryTabView => {
         @on-paste-rows="onPasteRows"
       >
         <QuickQueryTable
-          class="h-full"
+          class="h-full border rounded-md"
           ref="quickQueryTableRef"
           :data="data || []"
           :orderBy="orderBy"

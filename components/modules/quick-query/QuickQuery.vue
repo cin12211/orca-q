@@ -4,7 +4,8 @@ import { useTableQueryBuilder } from '~/composables/useTableQueryBuilder';
 import { uuidv4 } from '~/lib/utils';
 import { useAppContext } from '~/shared/contexts';
 import { useAppLayoutStore } from '~/shared/stores/appLayoutStore';
-import { DEFAULT_QUERY_SIZE } from '~/utils/constants';
+import { DEFAULT_QUERY_SIZE, OperatorSet } from '~/utils/constants';
+import type { FilterSchema } from '~/utils/quickQuery';
 import WrapperErdDiagram from '../erd-diagram/WrapperErdDiagram.vue';
 import { EDatabaseType } from '../management-connection/constants';
 import QuickQueryErrorPopup from './QuickQueryErrorPopup.vue';
@@ -204,6 +205,25 @@ const onOpenForwardReferencedTableModal = ({
   });
 };
 
+const onAddFilterByContextCell = async () => {
+  const cellContextMenu = quickQueryTableRef.value?.cellContextMenu;
+  if (cellContextMenu) {
+    const filter: FilterSchema = {
+      fieldName: cellContextMenu.columnName,
+      isSelect: true,
+      operator: OperatorSet.EQUAL,
+      search: cellContextMenu.cellValue as string,
+    };
+    quickQueryFilterRef.value?.insert(filters.value.length, filter);
+
+    quickQueryFilterRef?.value?.onShowSearch();
+
+    filters.value.push(filter);
+
+    onApplyNewFilter();
+  }
+};
+
 const { isHaveRelationByFieldName } = useReferencedTables({
   schemaName: schemaName.value,
   tableName: tableName.value,
@@ -327,7 +347,7 @@ const onBackPreviousBreadcrumbByIndex = (index: number) => {
       :visible="isLoadingTableSchema || isMutating || isFetchingTableData"
     />
 
-    <div class="px-2 mb-2 border-b">
+    <div class="px-2 mb-1 border-b">
       <QuickQueryControlBar
         :total-selected-rows="selectedRows?.length"
         :isAllowNextPage="isAllowNextPage"
@@ -345,8 +365,8 @@ const onBackPreviousBreadcrumbByIndex = (index: number) => {
         @onDeleteRows="onDeleteRows"
         @onAddEmptyRow="onAddEmptyRow"
         @onShowFilter="
-          async () => {
-            await quickQueryFilterRef?.onShowSearch();
+          () => {
+            quickQueryFilterRef?.onShowSearch();
           }
         "
         @onToggleHistoryPanel="appLayoutStore.onToggleBottomPanel"
@@ -378,7 +398,7 @@ const onBackPreviousBreadcrumbByIndex = (index: number) => {
       />
     </div>
 
-    <div class="flex-1 overflow-hidden px-2 mb-0.5">
+    <div class="flex-1 overflow-hidden px-1 mb-0.5">
       <WrapperErdDiagram
         v-if="openedQuickQueryTab[QuickQueryTabView.Erd]"
         v-show="quickQueryTabView === QuickQueryTabView.Erd"
@@ -408,17 +428,13 @@ const onBackPreviousBreadcrumbByIndex = (index: number) => {
         @onSaveData="onSaveData"
         @onDeleteRows="onDeleteRows"
         @onAddEmptyRow="onAddEmptyRow"
-        @onShowFilter="
-          async () => {
-            await quickQueryFilterRef?.onShowSearch();
-          }
-        "
+        @onFilterByValue="onAddFilterByContextCell"
         @onCopyRows="onCopyRows"
         @on-paste-rows="onPasteRows"
         @on-copy-selected-cell="onCopySelectedCell"
       >
         <QuickQueryTable
-          class="h-full"
+          class="h-full border rounded-md"
           ref="quickQueryTableRef"
           :data="data || []"
           :orderBy="orderBy"

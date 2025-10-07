@@ -243,8 +243,9 @@ onActivated(async () => {
         "
         :columns="mappedColumns"
         :data="currentRawQueryResult || []"
-        class="h-full"
+        class="h-full border rounded-md"
         skip-re-column-size
+        columnKeyBy="index"
       />
     </template>
   </RawQueryLayout>

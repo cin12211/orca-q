@@ -3,6 +3,7 @@ import { onClickOutside } from '@vueuse/core';
 import type { HTMLAttributes } from 'vue';
 import type {
   CellClassParams,
+  CellContextMenuEvent,
   CellValueChangedEvent,
   ColDef,
   ColTypeDef,
@@ -76,6 +77,14 @@ const pageSize = ref<number>(props.defaultPageSize ?? DEFAULT_QUERY_SIZE);
 const { gridApi, onGridReady } = useAgGridApi();
 
 const agGridRef = useTemplateRef<HTMLElement>('agGridRef');
+
+const cellContextMenu = ref<
+  | {
+      cellValue: unknown;
+      columnName: string;
+    }
+  | undefined
+>();
 
 onClickOutside(agGridRef, () => {
   emit('onFocusCell', undefined);
@@ -377,6 +386,18 @@ const onCellFocus = () => {
   }
 };
 
+const onCellContextMenu = (event: CellContextMenuEvent) => {
+  const columnName = event.colDef.field;
+  const cellValue = event.value;
+
+  if (columnName) {
+    cellContextMenu.value = {
+      cellValue,
+      columnName,
+    };
+  }
+};
+
 watch(
   () => props.selectedColumnFieldId,
   async () => {
@@ -423,7 +444,7 @@ const onRowDataUpdated = () => {
   });
 };
 
-defineExpose({ gridApi, editedCells, columnDefs });
+defineExpose({ gridApi, editedCells, columnDefs, cellContextMenu });
 
 //  @mouseup="onStopRangeSelection"
 //     @click.keyup="onStopRangeSelection"
@@ -437,6 +458,7 @@ defineExpose({ gridApi, editedCells, columnDefs });
     @grid-ready="onGridReady"
     @cell-focused="onCellFocus"
     @rowDataUpdated="onRowDataUpdated"
+    @cellContextMenu="onCellContextMenu"
     :class="props.class"
     :grid-options="gridOptions"
     :columnDefs="columnDefs"

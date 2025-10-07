@@ -166,18 +166,18 @@ const focusSearchByIndex = (index: number) => {
   }
 };
 
-const onShowSearch = async () => {
+const onShowSearch = () => {
   if (!fields.value.length) {
     onAddFilter(-1);
   }
 
   isShowFilters.value = true;
 
-  await nextTick();
+  nextTick(() => {
+    const lastIndex = fields.value.length - 1 || 0;
 
-  const lastIndex = fields.value.length - 1 || 0;
-
-  focusSearchByIndex(lastIndex);
+    focusSearchByIndex(lastIndex);
+  });
 };
 
 useHotkeys([
@@ -260,6 +260,7 @@ useHotkeys(
 
 defineExpose({
   onShowSearch,
+  insert,
 });
 </script>
 

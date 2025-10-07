@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { DynamicTable } from '#components';
+import type { MappedRawColumn } from '~/components/modules/raw-query/interfaces';
 import { useAppContext } from '~/shared/contexts/useAppContext';
 
 definePageMeta({
@@ -16,17 +17,37 @@ const { data, status } = useFetch('/api/get-over-view-function', {
     schema: schemaId.value,
   },
 });
+
+const mappedColumns = computed(() => {
+  if (!data.value?.[0]) {
+    return [];
+  }
+
+  const columns: MappedRawColumn[] = [];
+  for (const key of Object.keys(data.value?.[0])) {
+    columns.push({
+      isForeignKey: false,
+      isPrimaryKey: false,
+      originalName: key,
+      queryFieldName: key,
+      tableName: '',
+      canMutate: false,
+    });
+  }
+
+  return columns;
+});
 </script>
 
 <template>
-  <div class="h-full relative">
+  <div class="h-full relative p-1">
     <LoadingOverlay :visible="status === 'pending'" />
 
-    <DynamicTableOld
+    <DynamicTable
+      :columns="mappedColumns"
       :data="data || []"
-      :foreign-keys="[]"
-      :primary-keys="[]"
-      class="h-full p-2"
+      class="h-full border rounded-md"
+      columnKeyBy="field"
     />
   </div>
 </template>
