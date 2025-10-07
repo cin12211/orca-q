@@ -35,6 +35,7 @@ const props = defineProps<{
   data: RowData[];
   class?: HTMLAttributes['class'];
   skipReColumnSize?: boolean;
+  columnKeyBy: 'index' | 'field';
 }>();
 
 const emit = defineEmits<{
@@ -62,8 +63,11 @@ const rowData = computed<unknown[]>(() =>
   })
 );
 
-// const { onStopRangeSelection, onCellMouseOverDebounced, onCellMouseDown } =
-//   useRangeSelectionTable({});
+const { handleCellMouseOverDebounced, handleCellMouseDown } =
+  useRangeSelectionTable({
+    gridApi: gridApi,
+    gridRef: agGridRef,
+  });
 
 const columnDefs = computed<ColDef[]>(() => {
   if (!props.columns?.length) {
@@ -90,6 +94,7 @@ const columnDefs = computed<ColDef[]>(() => {
   props.columns.forEach(
     (
       {
+        originalName,
         canMutate,
         queryFieldName,
         type,
@@ -99,7 +104,13 @@ const columnDefs = computed<ColDef[]>(() => {
       },
       index
     ) => {
-      const fieldId = `${index}`;
+      let fieldId = '';
+
+      if (props.columnKeyBy === 'index') {
+        fieldId = `${index}`;
+      } else {
+        fieldId = originalName;
+      }
 
       let fieldName = queryFieldName;
 
@@ -170,6 +181,8 @@ const gridOptions = computed(() => {
     undoRedoCellEditing: true,
     undoRedoCellEditingLimit: 25,
     animateRows: true,
+    onCellMouseDown: handleCellMouseDown,
+    onCellMouseOver: handleCellMouseOverDebounced,
   };
   return options;
 });
@@ -194,7 +207,15 @@ const columnTypes = ref<{
         return;
       }
 
-      const oldValue = props?.data?.[rowId]?.[Number(field)];
+      let fieldId: string | number = '';
+
+      if (props.columnKeyBy === 'index') {
+        fieldId = Number(field);
+      } else {
+        fieldId = field;
+      }
+
+      const oldValue = props?.data?.[rowId]?.[fieldId];
 
       if (oldValue === null) {
         style.color = 'var(--muted-foreground)';
@@ -255,6 +276,7 @@ useHotkeys(
           await navigator.clipboard.writeText(String(cellValue));
         }
       },
+      excludeInput: true,
     },
   ],
   {

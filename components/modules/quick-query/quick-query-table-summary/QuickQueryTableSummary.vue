@@ -1,6 +1,5 @@
 <script lang="ts" setup>
-import { ref } from 'vue';
-import type { ColDef, Column } from 'ag-grid-community';
+import type { ColDef } from 'ag-grid-community';
 import { useTableSize } from '~/composables/useTableSize.js';
 import { cn } from '~/lib/utils.js';
 
@@ -69,20 +68,20 @@ watchEffect(onCleanup => {
 </script>
 
 <template>
-  <div class="gap-1 flex flex-col h-full w-full p-2">
-    <Card class="py-2 rounded-md">
+  <div class="gap-0 flex flex-col h-full w-full p-1">
+    <Card class="py-1 rounded-md">
       <CardContent class="px-2">
         <div class="flex flex-col gap-y-1">
           <div class="flex items-center justify-between w-full">
-            <span class="text-xs">Table Size:</span>
+            <span class="text-xs font-medium">Table Size:</span>
             <span class="text-xs opacity-75">{{ tableSize.tableSize }}</span>
           </div>
           <div class="flex items-center justify-between gap-4">
-            <span class="text-xs">Data Size:</span>
+            <span class="text-xs font-medium">Data Size:</span>
             <span class="text-xs opacity-75">{{ tableSize.dataSize }}</span>
           </div>
           <div class="flex items-center justify-between gap-4">
-            <span class="text-xs">Index Size:</span>
+            <span class="text-xs font-medium">Index Size:</span>
             <span class="text-xs opacity-75">{{ tableSize.indexSize }}</span>
           </div>
         </div>
@@ -92,7 +91,7 @@ watchEffect(onCleanup => {
     <Card
       :class="
         cn(
-          'mt-1 py-2 px-1 h-[calc(100vh-10em)] overflow-y-auto custom-scrollbar rounded-md',
+          'mt-1 py-2 px-1 h-full overflow-y-auto custom-scrollbar rounded-md',
           columns?.length === 0 && 'hidden'
         )
       "

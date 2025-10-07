@@ -10,13 +10,13 @@ defineProps<{
 
 const emit = defineEmits<{
   (e: 'onRefresh'): void;
-  (e: 'onShowFilter'): void;
   (e: 'onSaveData'): void;
   (e: 'onAddEmptyRow'): void;
   (e: 'onDeleteRows'): void;
   (e: 'onCopyRows'): void;
   (e: 'onPasteRows'): void;
   (e: 'onCopySelectedCell'): void;
+  (e: 'onFilterByValue'): void;
 }>();
 
 useHotkeys(
@@ -24,10 +24,12 @@ useHotkeys(
     {
       key: 'meta+c',
       callback: () => emit('onCopySelectedCell'),
+      excludeInput: true,
     },
     {
       key: 'meta+v',
       callback: () => emit('onPasteRows'),
+      excludeInput: true,
     },
   ],
   {
@@ -57,13 +59,13 @@ useHotkeys(
         />
         View row detail
       </ContextMenuItem>
-      <ContextMenuItem @select="emit('onShowFilter')">
+      <ContextMenuItem @select="emit('onFilterByValue')">
         <Icon
           name="lucide:filter"
           class="size-4! min-w-4 text-muted-foreground"
         />
-        Show filter
-        <ContextMenuShortcut>⌘F</ContextMenuShortcut>
+        Filter by value
+        <!-- <ContextMenuShortcut>⌘F</ContextMenuShortcut> -->
       </ContextMenuItem>
 
       <ContextMenuItem @select="emit('onRefresh')">

@@ -3,6 +3,7 @@ import { onClickOutside } from '@vueuse/core';
 import type { HTMLAttributes } from 'vue';
 import type {
   CellClassParams,
+  CellContextMenuEvent,
   CellValueChangedEvent,
   ColDef,
   ColTypeDef,
@@ -77,6 +78,14 @@ const { gridApi, onGridReady } = useAgGridApi();
 
 const agGridRef = useTemplateRef<HTMLElement>('agGridRef');
 
+const cellContextMenu = ref<
+  | {
+      cellValue: unknown;
+      columnName: string;
+    }
+  | undefined
+>();
+
 onClickOutside(agGridRef, () => {
   emit('onFocusCell', undefined);
   // gridApi.value?.deselectAll();
@@ -96,8 +105,11 @@ const rowData = computed<RowData[]>(() =>
   })
 );
 
-const { onStopRangeSelection, onCellMouseOverDebounced, onCellMouseDown } =
-  useRangeSelectionTable({});
+const { handleCellMouseOverDebounced, handleCellMouseDown } =
+  useRangeSelectionTable({
+    gridApi: gridApi,
+    gridRef: agGridRef,
+  });
 
 /* Handle cell value changed --------------------------------------- */
 const onCellValueChanged = (event: CellValueChangedEvent) => {
@@ -340,8 +352,8 @@ const gridOptions = computed(() => {
     undoRedoCellEditing: true,
     undoRedoCellEditingLimit: 25,
     animateRows: true,
-    onCellMouseDown,
-    onCellMouseOver: onCellMouseOverDebounced,
+    onCellMouseDown: handleCellMouseDown,
+    onCellMouseOver: handleCellMouseOverDebounced,
     defaultColDef: defaultColDef.value,
     columnTypes: columnTypes.value,
   };
@@ -371,6 +383,18 @@ const onCellFocus = () => {
     const colId = selectedCell.column.getColId();
     const cellValue = rowNode?.data?.[colId];
     emit('onFocusCell', cellValue ?? undefined);
+  }
+};
+
+const onCellContextMenu = (event: CellContextMenuEvent) => {
+  const columnName = event.colDef.field;
+  const cellValue = event.value;
+
+  if (columnName) {
+    cellContextMenu.value = {
+      cellValue,
+      columnName,
+    };
   }
 };
 
@@ -420,19 +444,21 @@ const onRowDataUpdated = () => {
   });
 };
 
-defineExpose({ gridApi, editedCells, columnDefs });
+defineExpose({ gridApi, editedCells, columnDefs, cellContextMenu });
+
+//  @mouseup="onStopRangeSelection"
+//     @click.keyup="onStopRangeSelection"
+//     @mouseleave="onStopRangeSelection"
 </script>
 
 <template>
   <AgGridVue
-    @mouseup="onStopRangeSelection"
-    @click.keyup="onStopRangeSelection"
-    @mouseleave="onStopRangeSelection"
     @selection-changed="onSelectionChanged"
     @cell-value-changed="onCellValueChanged"
     @grid-ready="onGridReady"
     @cell-focused="onCellFocus"
     @rowDataUpdated="onRowDataUpdated"
+    @cellContextMenu="onCellContextMenu"
     :class="props.class"
     :grid-options="gridOptions"
     :columnDefs="columnDefs"

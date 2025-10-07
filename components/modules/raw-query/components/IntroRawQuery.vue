@@ -9,8 +9,8 @@
 
     <!-- Instructions -->
     <div class="text-muted-foreground space-y-3">
-      <h2 class="text-lg font-normal text-foreground">Getting Started</h2>
-      <ol class="list-disc list-inside text-left space-y-2">
+      <h2 class="text-md font-normal text-foreground">Getting Started</h2>
+      <ol class="list-disc text-sm list-inside text-left space-y-2">
         <li>
           <span class="font-normal text-foreground">Write your query</span> in
           the editor.

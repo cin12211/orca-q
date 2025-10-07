@@ -22,7 +22,30 @@ export default defineEventHandler(async (event): Promise<TableStructure[]> => {
   const result = await resource.query(
     `SELECT
         a.attname AS column_name,
-        REPLACE(format_type(a.atttypid, a.atttypmod), 'character varying', 'varchar') AS data_type, -- short type with length, user-friendly
+        CASE
+          WHEN format_type(a.atttypid, a.atttypmod) LIKE 'character varying%' 
+              THEN REPLACE(format_type(a.atttypid, a.atttypmod), 'character varying', 'varchar')
+          WHEN format_type(a.atttypid, a.atttypmod) LIKE 'character%' 
+              THEN REPLACE(format_type(a.atttypid, a.atttypmod), 'character', 'char')
+          WHEN format_type(a.atttypid, a.atttypmod) = 'double precision' THEN 'float8'
+          WHEN format_type(a.atttypid, a.atttypmod) = 'integer' THEN 'int4'
+          WHEN format_type(a.atttypid, a.atttypmod) = 'smallint' THEN 'int2'
+          WHEN format_type(a.atttypid, a.atttypmod) = 'bigint' THEN 'int8'
+          WHEN format_type(a.atttypid, a.atttypmod) = 'real' THEN 'float4'
+          WHEN format_type(a.atttypid, a.atttypmod) = 'serial' THEN 'serial4'
+          WHEN format_type(a.atttypid, a.atttypmod) = 'smallserial' THEN 'serial2'
+          WHEN format_type(a.atttypid, a.atttypmod) = 'bigserial' THEN 'serial8'
+          WHEN format_type(a.atttypid, a.atttypmod) LIKE 'bit varying%' 
+              THEN REPLACE(format_type(a.atttypid, a.atttypmod), 'bit varying', 'varbit')
+          WHEN format_type(a.atttypid, a.atttypmod) = 'boolean' THEN 'bool'
+          WHEN format_type(a.atttypid, a.atttypmod) LIKE 'numeric%' 
+          THEN REPLACE(format_type(a.atttypid, a.atttypmod), 'numeric', 'decimal')
+          WHEN format_type(a.atttypid, a.atttypmod) = 'timestamp with time zone' THEN 'timestamptz'
+          WHEN format_type(a.atttypid, a.atttypmod) = 'timestamp without time zone' THEN 'timestamp'
+          WHEN format_type(a.atttypid, a.atttypmod) = 'time with time zone' THEN 'timetz'
+          ELSE format_type(a.atttypid, a.atttypmod)
+        END as data_type, -- short type with length, user-friendly     
+
         NOT a.attnotnull AS is_nullable,
         PG_GET_EXPR(d.adbin, d.adrelid) AS default_value,
         COALESCE(fk_info.fk_text, '') AS foreign_keys,

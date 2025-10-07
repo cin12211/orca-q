@@ -12,8 +12,8 @@ definePageMeta({
       <AvatarImage src="/logo.png" alt="@unovue" />
     </Avatar>
 
-    <div class="font-medium text-2xl pt-2">No table is open</div>
-    <div class="text-muted-foreground">
+    <div class="font-medium text-xl pt-2">No table is open</div>
+    <div class="text-muted-foreground text-sm">
       Click on a database table from the sidebar to begin
 
       <Icon

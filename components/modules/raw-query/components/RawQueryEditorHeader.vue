@@ -62,7 +62,7 @@ const openConfigModal = () => {
         variant="outline"
         size="sm"
         class="h-6 px-2 gap-1 font-normal relative"
-        v-if="codeEditorLayout !== RawQueryEditorLayout.horizontalWithVariables"
+        v-if="codeEditorLayout === RawQueryEditorLayout.horizontal"
       >
         <Icon
           name="lucide:triangle-alert"

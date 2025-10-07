@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { DynamicTable } from '#components';
+import type { MappedRawColumn } from '../../raw-query/interfaces';
 
 const props = defineProps<{
   schema: string;
@@ -16,15 +17,35 @@ const { data, status } = useFetch('/api/get-table-structure', {
   },
   key: `${props.schema}.${props.tableName}`,
 });
+
+const mappedColumns = computed(() => {
+  if (!data.value?.[0]) {
+    return [];
+  }
+
+  const columns: MappedRawColumn[] = [];
+  for (const key of Object.keys(data.value?.[0])) {
+    columns.push({
+      isForeignKey: false,
+      isPrimaryKey: false,
+      originalName: key,
+      queryFieldName: key,
+      tableName: '',
+      canMutate: false,
+    });
+  }
+
+  return columns;
+});
 </script>
 
 <template>
   <LoadingOverlay :visible="status === 'pending'" />
 
-  <DynamicTableOld
+  <DynamicTable
+    :columns="mappedColumns"
     :data="data || []"
-    :foreign-keys="[]"
-    :primary-keys="[]"
-    class="h-full"
+    class="h-full border rounded-md"
+    columnKeyBy="field"
   />
 </template>
