@@ -137,37 +137,49 @@ watchEffect(onCleanup => {
     "
     ref="outerElementRef"
   >
-    <Button
-      ref="innerElementRef"
-      variant="ghost"
-      size="sm"
+    <div
+      class="pb-[1px]"
       :class="[
-        'h-7! max-w-44 justify-start! hover:bg-muted-foreground/10 font-normal p-2!  hover:[&>div]:opacity-100 transition-all duration-200 border-transparent border',
-        isActive ? 'bg-muted' : '',
-        isDragging ? 'bg-primary/5' : '',
+        'border rounded-t-md',
+        isActive
+          ? 'bg-white shadow-xl border-b-0 rounded-b-none'
+          : 'border-transparent',
       ]"
-      @click.left="selectTab(tab.id)"
-      :id="tab.id"
     >
-      <Icon :name="tab.icon" class="size-4 min-w-4" />
-
-      <Tooltip :id="tab.id">
-        <TooltipTrigger as-child>
-          <div class="truncate">{{ tab.name }}</div>
-        </TooltipTrigger>
-
-        <TooltipContent side="bottom">
-          <p>{{ tab.name }}</p>
-        </TooltipContent>
-      </Tooltip>
-
-      <div
-        class="hover:bg-accent p-0.5 rounded-full opacity-0"
-        @click.stop="() => closeTab(tab.id)"
+      <Button
+        ref="innerElementRef"
+        variant="ghost"
+        size="sm"
+        :class="[
+          'h-7! max-w-44 justify-start! font-normal p-2! hover:[&>div]:opacity-100 transition-all duration-200 border border-transparent',
+          isActive
+            ? 'bg-white rounded-b-none hover:bg-transparent '
+            : 'hover:bg-primary/10 hover:border-border',
+          isDragging ? 'bg-primary/5' : '',
+        ]"
+        @click.left="selectTab(tab.id)"
+        :id="tab.id"
       >
-        <X class="size-3 stroke-[2.5]!" />
-      </div>
-    </Button>
+        <Icon :name="tab.icon" class="size-4 min-w-4" />
+
+        <Tooltip :id="tab.id">
+          <TooltipTrigger as-child>
+            <div class="truncate">{{ tab.name }}</div>
+          </TooltipTrigger>
+
+          <TooltipContent side="bottom">
+            <p>{{ tab.name }}</p>
+          </TooltipContent>
+        </Tooltip>
+
+        <div
+          class="hover:bg-accent p-0.5 rounded-full opacity-0"
+          @click.stop="() => closeTab(tab.id)"
+        >
+          <X class="size-3 stroke-[2.5]!" />
+        </div>
+      </Button>
+    </div>
 
     <div
       v-if="showDropIndicator && closestEdgeRef"

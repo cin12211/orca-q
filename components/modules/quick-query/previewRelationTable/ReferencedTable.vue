@@ -175,7 +175,7 @@ watch(quickQueryTabView, newQuickQueryTabView => {
       :visible="isLoadingTableSchema || isMutating || isFetchingTableData"
     />
 
-    <div class="px-2 mb-2 border-b">
+    <div class="px-2">
       <QuickQueryControlBar
         :total-selected-rows="selectedRows?.length"
         :isAllowNextPage="isAllowNextPage"

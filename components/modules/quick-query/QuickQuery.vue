@@ -347,7 +347,7 @@ const onBackPreviousBreadcrumbByIndex = (index: number) => {
       :visible="isLoadingTableSchema || isMutating || isFetchingTableData"
     />
 
-    <div class="px-2 mb-1 border-b">
+    <div class="px-1">
       <QuickQueryControlBar
         :total-selected-rows="selectedRows?.length"
         :isAllowNextPage="isAllowNextPage"
