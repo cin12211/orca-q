@@ -97,14 +97,14 @@ watchEffect(onCleanup => {
 <template>
   <div
     :class="[
-      'w-full flex items-center h-full space-x-2 mx-1 overflow-x-auto custom-scrollbar relative',
+      'w-full flex items-end h-full space-x-2 mx-1 -mb-0.5 overflow-x-auto hidden-scroll-container relative',
       isDragging ? 'bg-purple-50' : '',
     ]"
     ref="elementRef"
   >
     <ContextMenu>
       <ContextMenuTrigger>
-        <div v-auto-animate="{ duration: 120 }" class="flex items-center">
+        <div v-auto-animate="{ duration: 120 }" class="flex items-end">
           <TabViewItem
             v-for="tab in tabViews"
             :key="tab.id"
@@ -152,17 +152,13 @@ watchEffect(onCleanup => {
 </template>
 
 <style>
-/* In your CSS file */
-.custom-x-scrollbar {
-  scrollbar-width: thin; /* For Firefox */
+.hidden-scroll-container {
+  overflow: auto; /* enables scrolling */
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
 }
 
-/* Webkit (Chrome, Safari, Edge) scrollbar customization */
-.custom-x-scrollbar::-webkit-scrollbar {
-  height: 1px; /* Controls the horizontal scrollbar height */
-}
-
-.custom-x-scrollbar::-webkit-scrollbar-track {
-  border-radius: 1px;
+.hidden-scroll-container::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
 }
 </style>

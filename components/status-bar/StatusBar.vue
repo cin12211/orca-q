@@ -17,7 +17,7 @@ const onBackToHome = async () => {
 </script>
 <template>
   <div
-    class="w-full h-6 min-h-6 border-t px-2 flex items-center justify-between"
+    class="w-full h-6 min-h-6 shadow px-2 flex items-center justify-between bg-sidebar"
   >
     <div class="flex items-center gap-3 h-full">
       <div

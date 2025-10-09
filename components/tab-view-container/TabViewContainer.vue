@@ -36,7 +36,7 @@ const isAccessRightPanel = computed(() => {
 <template>
   <div
     :class="[
-      'w-screen h-9 select-none border-b pr-2 electron-drag-region',
+      'w-screen h-9 select-none border-b pr-2 electron-drag-region bg-sidebar!',
       isAppVersion && isPrimarySidebarCollapsed ? 'pl-[4.5rem]' : '',
     ]"
   >
