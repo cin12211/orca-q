@@ -1,11 +1,12 @@
 <script setup lang="ts">
 import { refDebounced, templateRef } from '@vueuse/core';
-import { tree, type TreeFileSystemItem } from '~/components/base/Tree';
+import { tree } from '~/components/base/Tree';
 import TreeFolder from '~/components/base/Tree/TreeFolder.vue';
 import { useAppContext } from '~/shared/contexts/useAppContext';
 import { useActivityBarStore } from '~/shared/stores';
 import { TabViewType } from '~/shared/stores/useTabViewsStore';
 import { DEFAULT_DEBOUNCE_INPUT } from '~/utils/constants';
+import { buildTableNodeId } from '../erd-diagram/utils';
 import ConnectionSelector from '../selectors/ConnectionSelector.vue';
 import SchemaSelector from '../selectors/SchemaSelector.vue';
 
@@ -28,26 +29,31 @@ enum SchemaFolderType {
 
 const items = computed(() => {
   const tables = activeSchema?.value?.tables || [];
-  const functions = activeSchema?.value?.functions || [];
-  const views = activeSchema?.value?.views || [];
 
   const treeItems = [
     {
-      title: 'Tables',
+      title: 'All Tables',
       id: SchemaFolderType.Tables,
-      icon: 'material-icon-theme:folder-database-open',
-      closeIcon: 'material-icon-theme:folder-database',
+      icon: 'hugeicons:hierarchy-circle-02',
+      closeIcon: 'hugeicons:hierarchy-circle-02',
       paths: [SchemaFolderType.Tables],
       tabViewType: TabViewType.TableOverview,
       children: [
-        ...tables.map(tableName => ({
-          title: tableName,
-          id: tableName,
-          icon: 'hugeicons:hierarchy-square-02',
-          paths: [SchemaFolderType.Tables, tableName],
-          tabViewType: TabViewType.TableDetail,
-          isFolder: false,
-        })),
+        ...tables.map(tableName => {
+          const refId = buildTableNodeId({
+            schemaName: activeSchema.value?.name || '',
+            tableName,
+          });
+
+          return {
+            title: tableName,
+            id: refId,
+            icon: 'hugeicons:hierarchy-circle-01',
+            paths: [SchemaFolderType.Tables, refId],
+            tabViewType: TabViewType.TableDetail,
+            isFolder: false,
+          };
+        }),
       ],
       isFolder: true,
     },
@@ -110,11 +116,16 @@ const onRefreshSchema = async () => {
 };
 
 // Navigation functions
-const onNavigateToErdDiagram = async (tableId: string) => {
+const onNavigateToErdDiagram = async (tableName: string) => {
   if (!workspaceId.value) {
     throw new Error('No workspace selected');
     return;
   }
+
+  const tableId = buildTableNodeId({
+    schemaName: activeSchema.value?.name || '',
+    tableName,
+  });
 
   navigateTo({
     name: 'workspaceId-connectionId-erd-tableId',
@@ -223,6 +234,7 @@ const onNavigateToOverviewErdDiagram = async () => {
             onNavigateToOverviewErdDiagram();
             return;
           }
+
           onNavigateToErdDiagram(item.value.title);
         }
       "

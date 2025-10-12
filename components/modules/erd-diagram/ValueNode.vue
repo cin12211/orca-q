@@ -1,13 +1,13 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import { Handle, Position, useVueFlow, type NodeProps } from '@vue-flow/core';
-import type { TableMetadata } from '~/server/api/get-tables';
+import type { ColumnMetadata, TableMetadata } from '~/server/api/get-tables';
 import { HANDLE_HEIGHT, HANDLE_LEFT, ROW_HEIGHT, ROW_WIDTH } from './constants';
-import { onFocusNode, onToggleEdgeAnimated } from './utils/active-edge';
+import { buildTableNodeId, focusNodeById, onToggleEdgeAnimated } from './utils';
 
 const props = defineProps<NodeProps<TableMetadata>>();
 
-const { getEdges } = useVueFlow();
+const { getEdges, findNode, fitView, getViewport } = useVueFlow();
 
 // --- 1️⃣ Precompute lookup maps (O(1) instead of array.includes)
 const primaryKeySet = computed(
@@ -18,7 +18,9 @@ const foreignKeySet = computed(
 );
 
 // --- 2️⃣ Precompute rows to render
-const rows = computed(() =>
+const rows = computed<
+  (ColumnMetadata & { isPrimary: boolean; isForeign: boolean })[]
+>(() =>
   props.data.columns.map(col => ({
     ...col,
     isPrimary: primaryKeySet.value.has(col.name),
@@ -72,6 +74,32 @@ const onHover = (isHover: boolean) => {
     edges,
   });
 };
+
+const onFocusNode = (
+  row: ColumnMetadata & { isPrimary: boolean; isForeign: boolean }
+) => {
+  if (!row.isForeign) {
+    return;
+  }
+
+  const fkTable = props.data.foreign_keys.find(fk => fk.column === row.name);
+
+  if (!fkTable) {
+    return;
+  }
+
+  const nodeIdToFind = buildTableNodeId({
+    schemaName: fkTable.reference_schema,
+    tableName: fkTable.reference_table,
+  });
+
+  focusNodeById({
+    nodeId: nodeIdToFind,
+    findNode,
+    fitView,
+    getViewport,
+  });
+};
 </script>
 
 <template>
@@ -87,6 +115,7 @@ const onHover = (isHover: boolean) => {
       >
         <p class="w-fit text-center px-2 box-border text-white text-xl">
           {{ data.table }}
+          {{ data.schema === 'public' ? '' : `(${data.schema})` }}
         </p>
       </div>
 
@@ -94,10 +123,14 @@ const onHover = (isHover: boolean) => {
       <div
         v-for="row in rows"
         :key="row.name"
-        class="grid grid-cols-3 px-2 border-t"
+        :class="[
+          'grid grid-cols-3 px-2 border-t ',
+          row.isForeign && 'cursor-pointer hover:bg-background',
+        ]"
         :style="{ height: ROW_HEIGHT + 'px' }"
+        @click="onFocusNode(row)"
       >
-        <div class="col-span-2 py-2 truncate flex items-center gap-1.5">
+        <div class="col-span-2 py-2 truncate flex items-center gap-1">
           <div class="w-6 flex items-center justify-center">
             <Icon
               v-if="row.isPrimary"
@@ -121,6 +154,12 @@ const onHover = (isHover: boolean) => {
             />
           </div>
           <p class="truncate">{{ row.name }}</p>
+
+          <Icon
+            v-if="row.isForeign"
+            name="hugeicons:link-04"
+            class="min-w-3 text-gray-400"
+          />
         </div>
         <div class="col-span-1 py-2 truncate text-center text-muted-foreground">
           {{ row.type }}

@@ -2,11 +2,7 @@
 import { computed } from 'vue';
 import ErdDiagram from '~/components/modules/erd-diagram/ErdDiagram.vue';
 import { useErdQueryTables } from '~/components/modules/erd-diagram/hooks/useErdGetAllTablesData';
-import {
-  buildERDWithPrimaryTables,
-  buildFullERDDiagram,
-  oldBuildFullERD,
-} from './utils';
+import { buildERDWithPrimaryTables, oldBuildFullERD } from './utils';
 
 const props = defineProps<{
   tableId: string | undefined;
@@ -19,7 +15,7 @@ const erdData = computed(() => {
     return oldBuildFullERD(tableSchema.value || []);
   }
 
-  return buildERDWithPrimaryTables([props.tableId], tableSchema.value || []);
+  return buildERDWithPrimaryTables(props.tableId, tableSchema.value || []);
 });
 </script>
 

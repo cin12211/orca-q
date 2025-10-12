@@ -7,6 +7,9 @@ export const MIN_ZOOM = 0.01;
 export const MAX_ZOOM = 4;
 export const DEFAULT_ZOOM = 0.5;
 
+export const DEFAULT_ZOOM_DURATION = 200;
+export const DEFAULT_FOCUS_DURATION = 350;
+
 export const DEFAULT_VUE_FLOW_LAYOUT_CONFIG = {
   HORIZONTAL_STEP: ROW_WIDTH + 200, // 384 + 100 (width + spacing)
   VERTICAL_STEP: 50, // 800 + 100 (height + spacing)

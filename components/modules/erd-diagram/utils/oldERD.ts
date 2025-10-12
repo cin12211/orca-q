@@ -1,27 +1,22 @@
-import { type Edge } from '@vue-flow/core';
-import { uuidv4 } from '~/lib/utils';
 import type { TableMetadata } from '~/server/api/get-tables';
+import { DEFAULT_VUE_FLOW_LAYOUT_CONFIG } from '../constants';
+import type { NodePosition } from '../type';
 import {
-  DEFAULT_VUE_FLOW_LAYOUT_CONFIG,
-  HEAD_ROW_HEIGHT,
-  ROW_HEIGHT,
-} from '../constants';
-import type { TableNode } from '../type';
-import type { Position } from './buildFullERDDiagram';
+  buildTableNodeId,
+  calcTableHeight,
+  createEdges,
+  createNodes,
+} from './buildERDWithPrimaryTables';
 
-const { HORIZONTAL_STEP, VERTICAL_STEP, NODE_TYPE, EDGE_TYPE } =
-  DEFAULT_VUE_FLOW_LAYOUT_CONFIG;
-
-const getTableHeight = (table: TableMetadata): number =>
-  (table.columns?.length || 0) * ROW_HEIGHT + HEAD_ROW_HEIGHT;
+const { HORIZONTAL_STEP, VERTICAL_STEP } = DEFAULT_VUE_FLOW_LAYOUT_CONFIG;
 
 /**
  * 🚀 Generate simple grid layout to display all tables nicely on screen
  */
 function generateGridLayout(
   tablesData: TableMetadata[]
-): Record<string, Position> {
-  const positions: Record<string, Position> = {};
+): Record<string, NodePosition> {
+  const positions: Record<string, NodePosition> = {};
   const n = tablesData.length;
   if (n === 0) return positions;
 
@@ -39,9 +34,14 @@ function generateGridLayout(
 
     for (let col = 0; col < cols && index < n; col++) {
       const table = tablesData[index];
-      const height = getTableHeight(table);
+      const height = calcTableHeight(table.columns.length);
 
-      positions[table.table] = {
+      const tableId = buildTableNodeId({
+        schemaName: table.schema,
+        tableName: table.table,
+      });
+
+      positions[tableId] = {
         x: currentX,
         y: currentY,
       };
@@ -57,37 +57,39 @@ function generateGridLayout(
   return positions;
 }
 
-/** Tạo nodes theo grid layout */
-const createNodes = (tablesData: TableMetadata[]): TableNode[] => {
-  const positions = generateGridLayout(tablesData);
-  return tablesData.map(table => ({
-    id: table.table,
-    type: NODE_TYPE,
-    position: positions[table.table],
-    data: table,
-  }));
-};
+/**
+ * 🧭 Dịch chuyển toàn bộ layout để tâm layout nằm ở (0, 0)
+ */
+function centerLayoutAtOrigin(positions: Record<string, NodePosition>) {
+  const xs = Object.values(positions).map(p => p.x);
+  const ys = Object.values(positions).map(p => p.y);
+  if (xs.length === 0 || ys.length === 0) return positions;
 
-/** Tạo edges cho foreign keys */
-const createEdges = (tablesData: TableMetadata[]): Edge[] => {
-  const edges: Edge[] = [];
-  for (const table of tablesData) {
-    for (const fk of table.foreign_keys) {
-      edges.push({
-        id: uuidv4(),
-        type: EDGE_TYPE,
-        source: table.table,
-        target: fk.reference_table,
-        sourceHandle: fk.column,
-      });
-    }
+  const minX = Math.min(...xs);
+  const maxX = Math.max(...xs);
+  const minY = Math.min(...ys);
+  const maxY = Math.max(...ys);
+
+  const centerX = (minX + maxX) / 2;
+  const centerY = (minY + maxY) / 2;
+
+  const centered: Record<string, NodePosition> = {};
+  for (const [id, pos] of Object.entries(positions)) {
+    centered[id] = {
+      x: pos.x - centerX,
+      y: pos.y - centerY,
+    };
   }
-  return edges;
-};
+
+  return centered;
+}
 
 /** 🚀 Build ERD đơn giản dạng spiral layout */
 export const oldBuildFullERD = (tablesData: TableMetadata[]) => {
-  const nodes = createNodes(tablesData);
+  let matrix = generateGridLayout(tablesData);
+  matrix = centerLayoutAtOrigin(matrix);
+
+  const nodes = createNodes(tablesData, matrix);
   const edges = createEdges(tablesData);
   return { nodes, edges };
 };

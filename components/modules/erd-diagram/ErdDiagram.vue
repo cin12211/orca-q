@@ -37,8 +37,6 @@ const isHand = ref(false);
 const { getEdges } = useVueFlow();
 
 const onInitVueFlow = (instance: VueFlowStore) => {
-  isHand.value = false;
-
   if (props.focusTableId) {
     const node = instance.findNode(props.focusTableId);
 

@@ -1,4 +1,5 @@
-import type { GraphEdge } from '@vue-flow/core';
+import type { FindNode, GraphEdge, FitView, GetViewport } from '@vue-flow/core';
+import { DEFAULT_FOCUS_DURATION } from '../constants';
 
 export const setAnimatedEdge = (edge: GraphEdge, animated: boolean) => {
   if (edge.sourceNode.selected || edge.targetNode.selected || edge.selected) {
@@ -37,10 +38,29 @@ export const onToggleEdgeAnimated = ({
   }
 };
 
-export const onFocusNode = (nodeId: string) => {
-  //TODO:
-  // const node = document.getElementById(nodeId);
-  // if (node) {
-  //   node.scrollIntoView({ behavior: 'smooth', block: 'center' });
-  // }
+export const focusNodeById = ({
+  findNode,
+  fitView,
+  getViewport,
+  nodeId,
+}: {
+  nodeId: string;
+  getViewport: GetViewport;
+  fitView: FitView;
+  findNode: FindNode;
+}) => {
+  const node = findNode(nodeId);
+
+  if (!node) {
+    return;
+  }
+
+  const currentZoom = getViewport().zoom;
+
+  fitView({
+    nodes: [nodeId],
+    maxZoom: currentZoom,
+    minZoom: currentZoom,
+    duration: DEFAULT_FOCUS_DURATION,
+  });
 };

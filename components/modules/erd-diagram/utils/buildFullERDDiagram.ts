@@ -5,15 +5,10 @@ import {
   HEAD_ROW_HEIGHT,
   ROW_HEIGHT,
 } from '../constants';
-import type { TableNode } from '../type';
+import type { NodePosition, TableNode } from '../type';
 import { createEdges, createNodes } from './buildERDWithPrimaryTables';
 
 const { HORIZONTAL_STEP, VERTICAL_STEP } = DEFAULT_VUE_FLOW_LAYOUT_CONFIG;
-
-export interface Position {
-  x: number;
-  y: number;
-}
 
 interface TableRelationGraph {
   [tableId: string]: {
@@ -82,8 +77,8 @@ const layoutGraph = (
   graph: TableRelationGraph,
   layers: Record<string, number>,
   tablesData: TableMetadata[]
-): Record<string, Position> => {
-  const matrix: Record<string, Position> = {};
+): Record<string, NodePosition> => {
+  const matrix: Record<string, NodePosition> = {};
   const mapTablesData = new Map(
     tablesData.map(table => [`${table.schema}.${table.table}`, table])
   );

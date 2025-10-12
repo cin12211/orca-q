@@ -26,3 +26,5 @@ export interface ErdDiagramProps {
 export type { Edge };
 
 export type TableNode = Node<TableMetadata>;
+
+export type NodePosition = Node['position'];

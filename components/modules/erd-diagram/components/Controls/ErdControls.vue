@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Icon, Button, Separator } from '#components';
 import { useVueFlow } from '@vue-flow/core';
+import { DEFAULT_ZOOM_DURATION } from '../../constants';
 
 const props = defineProps<{
   isHand: boolean;
@@ -25,7 +26,7 @@ const zoomPercent = computed(() => {
     <Button
       :variant="'ghost'"
       :size="'iconMd'"
-      @click="zoomOut({ duration: 150 })"
+      @click="zoomOut({ duration: DEFAULT_ZOOM_DURATION })"
     >
       <Icon name="hugeicons:minus-sign" class="size-4!" />
     </Button>
@@ -37,7 +38,7 @@ const zoomPercent = computed(() => {
     <Button
       :variant="'ghost'"
       :size="'iconMd'"
-      @click="zoomIn({ duration: 150 })"
+      @click="zoomIn({ duration: DEFAULT_ZOOM_DURATION })"
     >
       <Icon name="hugeicons:add-01" class="size-4!" />
     </Button>
@@ -46,7 +47,7 @@ const zoomPercent = computed(() => {
       <Icon
         name="hugeicons:full-screen"
         class="size-4!"
-        @click="fitView({ duration: 150 })"
+        @click="fitView({ duration: DEFAULT_ZOOM_DURATION })"
       />
     </Button>
     <Button
