@@ -12,7 +12,6 @@
 
 **OrcaQ** is a modern desktop application designed for managing, querying, and manipulating data across various database management systems (DBMS) in an intuitive, fast, and secure manner. Built with [Electron](https://www.electronjs.org/), [Vue 3](https://vuejs.org/), [TypeScript](https://www.typescriptlang.org/), and [Vite](https://vitejs.dev/), it targets developers, data engineers, analysts, DBAs, or anyone who needs to work with SQL/PostgreSQL data on the desktop.
 
----
 
 ## Features
 
@@ -25,7 +24,6 @@
 - 🛠️ **Hotkey Support**: Supports shortcuts for faster operations.
 - ⚙️ **Electron Backend**: Leverages Node.js, native modules, and OS integration.
 
----
 
 ## Installation
 
@@ -91,7 +89,6 @@
 
 > **Note**: Ensure you have the correct Node.js version and necessary dependencies installed to run Electron. See more at [Electron Docs](https://www.electronjs.org/docs/latest/tutorial/quick-start).
 
----
 
 ## Usage
 
@@ -106,7 +103,6 @@
 - **Manage Layout**:  
   Use the sidebar and hotkeys (`Cmd+Shift+B` on Mac) to show/hide panels.
 
----
 
 ## Contributing
 
@@ -134,7 +130,6 @@ We welcome all contributions!
 
 **See more**: [CONTRIBUTING.md](CONTRIBUTING.md)
 
----
 
 ## Roadmap
 
@@ -147,7 +142,7 @@ We welcome all contributions!
 - [ ] Multi-language support (i18n)
 - [ ] AI query assistant integration
 
----
+
 
 ## Changelog
 
@@ -156,7 +151,7 @@ See details at [CHANGELOG.md](CHANGELOG.md)
 - **1.0.4**: Updated UI, fixed layout bugs, optimized user experience.
 - **1.0.2**: First public release.
 
----
+
 
 ## Community / Contact
 
@@ -164,13 +159,13 @@ See details at [CHANGELOG.md](CHANGELOG.md)
 - **Discussions**: [GitHub Discussions](https://github.com/cin12211/orca-q/discussions)
 - **Email**: taccin03@gmail.com
 
----
+
 
 ## License
 
 This project is licensed under the [MIT License](LICENSE).
 
----
+
 
 ## Acknowledgements
 
@@ -183,7 +178,7 @@ This project is licensed under the [MIT License](LICENSE).
 - Icon design: [Figma Community](https://www.figma.com/design/wAm0jjPdhpKsEGXjtUw3tk/macOS-App-Icon-Template--Community-?node-id=102-4&t=B0v343GshmaCBMqU-0)
 - Contributions from the open-source community
 
----
+
 
 ## ⭐ Stargazers
 
@@ -192,6 +187,6 @@ Your support is much appreciated!
 
 [![Stargazers repo roster for @cin12211/orca-q](https://reporoster.com/stars/cin12211/orca-q)](https://github.com/cin12211/orca-q/stargazers)
 
---- 
+ 
 
 > _Made with ❤️ by the OrcaQ team and open-source contributors._
