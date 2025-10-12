@@ -1,26 +1,25 @@
 <script setup lang="ts">
 import { computed } from 'vue';
-import { Handle, Position, useVueFlow } from '@vue-flow/core';
+import { Handle, Position, useVueFlow, type NodeProps } from '@vue-flow/core';
 import type { TableMetadata } from '~/server/api/get-tables';
 import { HANDLE_HEIGHT, HANDLE_LEFT, ROW_HEIGHT, ROW_WIDTH } from './constants';
+import { onFocusNode, onToggleEdgeAnimated } from './utils/active-edge';
 
-const props = defineProps<
-  {
-    id: string;
-  } & TableMetadata
->();
+const props = defineProps<NodeProps<TableMetadata>>();
+
+const { getEdges } = useVueFlow();
 
 // --- 1️⃣ Precompute lookup maps (O(1) instead of array.includes)
 const primaryKeySet = computed(
-  () => new Set(props.primary_keys.map(item => item.column))
+  () => new Set(props.data.primary_keys.map(item => item.column))
 );
 const foreignKeySet = computed(
-  () => new Set(props.foreign_keys.map(item => item.column))
+  () => new Set(props.data.foreign_keys.map(item => item.column))
 );
 
 // --- 2️⃣ Precompute rows to render
 const rows = computed(() =>
-  props.columns.map(col => ({
+  props.data.columns.map(col => ({
     ...col,
     isPrimary: primaryKeySet.value.has(col.name),
     isForeign: foreignKeySet.value.has(col.name),
@@ -46,33 +45,33 @@ const getTopPosition = (column: string) => {
 
 // --- 3️⃣ Precompute Handle positions (top coordinates)
 const foreignHandles = computed(() =>
-  props.foreign_keys.map(({ column }) => ({
+  props.data.foreign_keys.map(({ column }) => ({
     id: column,
     top: getTopPosition(column),
   }))
 );
 
 const primaryHandles = computed(() =>
-  props.primary_keys.map(({ column }) => ({
+  props.data.primary_keys.map(({ column }) => ({
     id: column,
     top: getTopPosition(column),
   }))
 );
 
-const { getEdges } = useVueFlow();
-
 const onHover = (isHover: boolean) => {
+  if (props.selected) {
+    return;
+  }
+
   const edges = getEdges.value;
 
-  for (let i = 0; i < edges.length; i++) {
-    const edge = edges[i];
-    if (edge.source === props.id || edge.target === props.id) {
-      edge.animated = isHover;
-    }
-  }
-};
+  const mapNodeIds = new Map<string, boolean>([[props.id, isHover]]);
 
-//TODO: active node -> keep edge animated
+  onToggleEdgeAnimated({
+    mapNodeIds,
+    edges,
+  });
+};
 </script>
 
 <template>
@@ -87,7 +86,7 @@ const onHover = (isHover: boolean) => {
         :style="{ height: ROW_HEIGHT + 10 + 'px' }"
       >
         <p class="w-fit text-center px-2 box-border text-white text-xl">
-          {{ table }}
+          {{ data.table }}
         </p>
       </div>
 

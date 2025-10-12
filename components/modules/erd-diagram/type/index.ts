@@ -1,4 +1,4 @@
-import type { Edge, Node, Position } from '@vue-flow/core';
+import type { Edge, Node } from '@vue-flow/core';
 import type { TableMetadata } from '~/server/api/get-tables';
 
 export interface DBSchemaProps {
@@ -22,16 +22,6 @@ export interface ErdDiagramProps {
 
   focusTableId?: string;
 }
-
-export type GetBezierPathParams = {
-  sourceX: number;
-  sourceY: number;
-  sourcePosition?: Position;
-  targetX: number;
-  targetY: number;
-  targetPosition?: Position;
-  curvature?: number;
-};
 
 export type { Edge };
 

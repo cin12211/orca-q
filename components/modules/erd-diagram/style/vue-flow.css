@@ -9,10 +9,7 @@
   width: 100%;
 }
 
-.vue-flow__edge-path {
-  stroke-width: 1.5;
-}
-
+/* node */
 .vue-flow__node {
   background-color: #f3f4f6;
 }
@@ -35,6 +32,11 @@
   box-shadow: 0 0 0.75rem 0 var(--color-primary);
 }
 
+/* edge */
+.vue-flow__edge-path {
+  stroke-width: 1.5;
+}
+
 .vue-flow__edge-interaction {
-  stroke-width: 2.5px;
+  stroke-width: 3;
 }

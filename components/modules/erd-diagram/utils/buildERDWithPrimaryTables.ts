@@ -325,11 +325,27 @@ export const createNodes = (
   });
 };
 
+export const buildEdgeId = ({
+  tableName,
+  reference_table,
+  column,
+}: {
+  tableName: string;
+  reference_table: string;
+  column: string;
+}): string => {
+  return `${tableName}-${reference_table}-${column}`;
+};
+
 export const createEdges = (tablesData: TableMetadata[]): Edge[] => {
   return tablesData.flatMap(table =>
     table.foreign_keys.map(foreignKey => {
       const edge: Edge = {
-        id: `${table.table}-${foreignKey.reference_table}-${foreignKey.column}`,
+        id: buildEdgeId({
+          tableName: table.table,
+          reference_table: foreignKey.reference_table,
+          column: foreignKey.column,
+        }),
         type: EDGE_TYPE,
         source: table.table,
         target: foreignKey.reference_table,
