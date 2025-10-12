@@ -4,7 +4,7 @@
 }
 
 .erd-flow {
-  background-color: #edf2f7;
+  background-color: rgb(251, 251, 251);
   height: 100%;
   width: 100%;
 }
@@ -18,14 +18,23 @@
 }
 
 .vue-flow__node-value {
-  display: flex;
-  align-items: center;
-  gap: 8px;
+  border-style: var(--tw-border-style);
+  border-width: 1px;
 
   border-radius: var(--radius);
   box-shadow: var(--shadow-xl);
 }
 
 .vue-flow__node-value.selected {
-  box-shadow: 0 0 0 6px var(--color-gray-300);
+  border: 1px solid var(--color-primary);
+
+  box-shadow: 0 0 1.125rem 0 var(--color-primary) !important;
+}
+
+.vue-flow__node-value:hover {
+  box-shadow: 0 0 0.75rem 0 var(--color-primary);
+}
+
+.vue-flow__edge-interaction {
+  stroke-width: 2.5px;
 }

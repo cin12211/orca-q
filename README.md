@@ -40,7 +40,7 @@
 1. **Clone the repository:**
 
    ```sh
-   git clone https://github.com/your-org/orcaq.git
+   git clone https://github.com/cin12211/orca-q.git
    cd orcaq
    ```
 
@@ -67,7 +67,7 @@
 1. **Clone the repository:**
 
    ```sh
-   git clone https://github.com/your-org/orcaq.git
+   git clone https://github.com/cin12211/orca-q.git
    cd orcaq
    ```
 
@@ -160,8 +160,8 @@ See details at [CHANGELOG.md](CHANGELOG.md)
 
 ## Community / Contact
 
-- **Issues**: [GitHub Issues](https://github.com/your-org/orcaq/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/your-org/orcaq/discussions)
+- **Issues**: [GitHub Issues](https://github.com/cin12211/orca-q/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/cin12211/orca-q/discussions)
 - **Email**: taccin03@gmail.com
 
 ---
@@ -184,5 +184,14 @@ This project is licensed under the [MIT License](LICENSE).
 - Contributions from the open-source community
 
 ---
+
+## ⭐ Stargazers
+
+Many thanks to the kind individuals who leave a star.
+Your support is much appreciated!
+
+[![Stargazers repo roster for @cin12211/orca-q](https://reporoster.com/stars/cin12211/orca-q)](https://github.com/cin12211/orca-q/stargazers)
+
+--- 
 
 > _Made with ❤️ by the OrcaQ team and open-source contributors._

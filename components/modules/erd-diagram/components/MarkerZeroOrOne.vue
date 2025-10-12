@@ -4,24 +4,24 @@ defineProps({
     type: String,
     required: true,
   },
-  type: {
-    type: String,
-    required: true,
-  },
-  stroke: {
-    type: String,
-    required: false,
-    default: '#b1b1b7',
-  },
-  fill: {
-    type: String,
-    required: false,
-    default: '#b1b1b7',
-  },
+  // type: {
+  //   type: String,
+  //   required: true,
+  // },
+  // stroke: {
+  //   type: String,
+  //   required: false,
+  //   default: '#b1b1b7',
+  // },
+  // fill: {
+  //   type: String,
+  //   required: false,
+  //   default: '#b1b1b7',
+  // },
   strokeWidth: {
     type: Number,
     required: false,
-    default: 2,
+    default: 1,
   },
   width: {
     type: Number,
@@ -33,29 +33,25 @@ defineProps({
     required: false,
     default: 24,
   },
-  makerClass: {
-    type: String,
-    required: false,
-    default: '',
-  },
+  // makerClass: {
+  //   type: String,
+  //   required: false,
+  //   default: '',
+  // },
 });
 </script>
 
 <template>
-  <svg
-    class="vue-flow__marker vue-flow__container"
-    xmlns="http://www.w3.org/2000/svg"
-  >
+  <svg xmlns="http://www.w3.org/2000/svg">
     <marker
       :id="id"
-      :class="[makerClass, 'vue-flow__arrowhead']"
       viewBox="0 0 24 24"
-      refX="2.5"
+      refX="2"
       refY="8"
       :markerWidth="width"
       :markerHeight="height"
-      :markerUnits="strokeWidth"
       orient="180"
+      markerUnits="userSpaceOnUse"
     >
       <path
         d="M6.665 12.6601C9.24141 12.6601 11.33 10.5715 11.33 7.99508C11.33 5.41867 9.24141 3.33008 6.665 3.33008C4.08859 3.33008 2 5.41867 2 7.99508C2 10.5715 4.08859 12.6601 6.665 12.6601Z"

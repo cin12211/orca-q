@@ -2,7 +2,11 @@
 import { computed } from 'vue';
 import ErdDiagram from '~/components/modules/erd-diagram/ErdDiagram.vue';
 import { useErdQueryTables } from '~/components/modules/erd-diagram/hooks/useErdGetAllTablesData';
-import { createEdges, createNodes, filterTable } from '~/utils/erd/erd-utils';
+import {
+  buildERDWithPrimaryTables,
+  buildFullERDDiagram,
+  oldBuildFullERD,
+} from './utils';
 
 const props = defineProps<{
   tableId: string | undefined;
@@ -12,12 +16,10 @@ const { tableSchema, isFetching } = useErdQueryTables();
 
 const erdData = computed(() => {
   if (!props.tableId) {
-    let initialEdges = createEdges(tableSchema.value || []);
-    let initialNodes = createNodes(tableSchema.value || []);
-    return { filteredNodes: initialNodes, filteredEdges: initialEdges };
+    return oldBuildFullERD(tableSchema.value || []);
   }
 
-  return filterTable([props.tableId], tableSchema.value || []);
+  return buildERDWithPrimaryTables([props.tableId], tableSchema.value || []);
 });
 </script>
 
@@ -25,8 +27,9 @@ const erdData = computed(() => {
   <div class="w-full h-full relative">
     <LoadingOverlay :visible="isFetching" />
     <ErdDiagram
-      :nodes="erdData?.filteredNodes || []"
-      :edges="erdData?.filteredEdges || []"
+      :nodes="erdData.nodes"
+      :edges="erdData.edges"
+      :focusTableId="props.tableId"
     />
   </div>
 </template>
