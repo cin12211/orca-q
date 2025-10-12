@@ -1,28 +1,42 @@
 <script setup lang="ts">
-import { Handle, Position } from '@vue-flow/core';
-import type { TableMetadata } from '~/server/api/get-tables';
-import { HANDLE_HEIGHT, ROW_HEIGHT } from './constants';
+import { computed } from 'vue';
+import { Handle, Position, useVueFlow, type NodeProps } from '@vue-flow/core';
+import type { ColumnMetadata, TableMetadata } from '~/server/api/get-tables';
+import { HANDLE_HEIGHT, HANDLE_LEFT, ROW_HEIGHT, ROW_WIDTH } from './constants';
+import { buildTableNodeId, focusNodeById, onToggleEdgeAnimated } from './utils';
 
-const props = defineProps<
-  {
-    id: string;
-  } & TableMetadata
->();
+const props = defineProps<NodeProps<TableMetadata>>();
 
-const checkPrimaryKey = (key: string) => {
-  const primaryKey = props.primary_keys.map(item => item.column);
+const { getEdges, findNode, fitView, getViewport } = useVueFlow();
 
-  return primaryKey.includes(key);
-};
-const checkForeignKey = (key: string) => {
-  const foreignKey = props.foreign_keys.map(item => item.column);
+// --- 1️⃣ Precompute lookup maps (O(1) instead of array.includes)
+const primaryKeySet = computed(
+  () => new Set(props.data.primary_keys.map(item => item.column))
+);
+const foreignKeySet = computed(
+  () => new Set(props.data.foreign_keys.map(item => item.column))
+);
 
-  return foreignKey.includes(key);
-};
+// --- 2️⃣ Precompute rows to render
+const rows = computed<
+  (ColumnMetadata & { isPrimary: boolean; isForeign: boolean })[]
+>(() =>
+  props.data.columns.map(col => ({
+    ...col,
+    isPrimary: primaryKeySet.value.has(col.name),
+    isForeign: foreignKeySet.value.has(col.name),
+  }))
+);
 
-const calculateTop = (column: string) => {
+const mapColumnIndex = computed(() => {
+  return new Map<string, number>(
+    rows.value.map((col, index) => [col.name, index + 1])
+  );
+});
+
+const getTopPosition = (column: string) => {
   return (
-    (props.columns.findIndex(e => e.name === column) + 1) * ROW_HEIGHT -
+    (mapColumnIndex.value.get(column) || 0) * ROW_HEIGHT -
     ROW_HEIGHT / 2 -
     1 +
     2 +
@@ -30,48 +44,106 @@ const calculateTop = (column: string) => {
     ROW_HEIGHT
   );
 };
+
+// --- 3️⃣ Precompute Handle positions (top coordinates)
+const foreignHandles = computed(() =>
+  props.data.foreign_keys.map(({ column }) => ({
+    id: column,
+    top: getTopPosition(column),
+  }))
+);
+
+const primaryHandles = computed(() =>
+  props.data.primary_keys.map(({ column }) => ({
+    id: column,
+    top: getTopPosition(column),
+  }))
+);
+
+const onHover = (isHover: boolean) => {
+  if (props.selected) {
+    return;
+  }
+
+  const edges = getEdges.value;
+
+  const mapNodeIds = new Map<string, boolean>([[props.id, isHover]]);
+
+  onToggleEdgeAnimated({
+    mapNodeIds,
+    edges,
+  });
+};
+
+const onFocusNode = (
+  row: ColumnMetadata & { isPrimary: boolean; isForeign: boolean }
+) => {
+  if (!row.isForeign) {
+    return;
+  }
+
+  const fkTable = props.data.foreign_keys.find(fk => fk.column === row.name);
+
+  if (!fkTable) {
+    return;
+  }
+
+  const nodeIdToFind = buildTableNodeId({
+    schemaName: fkTable.reference_schema,
+    tableName: fkTable.reference_table,
+  });
+
+  focusNodeById({
+    nodeId: nodeIdToFind,
+    findNode,
+    fitView,
+    getViewport,
+  });
+};
 </script>
 
 <template>
-  <div>
-    <div class="flex flex-col w-96 rounded-md border box-border">
+  <div
+    class="table-node"
+    @mouseenter.prevent="onHover(true)"
+    @mouseleave.prevent="onHover(false)"
+  >
+    <div class="flex flex-col rounded-md" :style="{ width: ROW_WIDTH + 'px' }">
       <div
-        class="col-span-full rounded-t-md box-border p-2 p-x-auto bg-primary/90 flex items-center justify-center"
-        :style="{
-          height: ROW_HEIGHT + 10 + 'px',
-        }"
+        class="rounded-t-md box-border p-2 bg-primary/90 flex items-center justify-center"
+        :style="{ height: ROW_HEIGHT + 10 + 'px' }"
       >
         <p class="w-fit text-center px-2 box-border text-white text-xl">
-          {{ table }}
+          {{ data.table }}
+          {{ data.schema === 'public' ? '' : `(${data.schema})` }}
         </p>
       </div>
+
+      <!-- Columns -->
       <div
-        v-for="({ name, type, nullable }, index) in columns"
-        :key="name"
-        class="grid grid-cols-3"
-        :style="{
-          height: ROW_HEIGHT + 'px',
-        }"
+        v-for="row in rows"
+        :key="row.name"
+        :class="[
+          'grid grid-cols-3 px-2 border-t ',
+          row.isForeign && 'cursor-pointer hover:bg-background',
+        ]"
+        :style="{ height: ROW_HEIGHT + 'px' }"
+        @click="onFocusNode(row)"
       >
-        <div
-          :class="[
-            'col-span-2 box-border border border-r-0 border-t-0 py-2 pl-2 truncate flex items-center gap-1.5',
-            index === columns.length - 1 ? 'rounded-bl-md' : '',
-          ]"
-        >
-          <div class="w-6 box-border flex items-center justify-center">
+        <div class="col-span-2 py-2 truncate flex items-center gap-1">
+          <div class="w-6 flex items-center justify-center">
             <Icon
-              v-if="checkPrimaryKey(name)"
+              v-if="row.isPrimary"
               name="hugeicons:key-01"
               class="w-4 text-yellow-400 text-xl"
             />
             <Icon
-              v-else-if="checkForeignKey(name)"
+              v-else-if="row.isForeign"
               name="hugeicons:key-01"
               class="min-w-4 text-gray-400 text-xl"
             />
             <Icon
-              v-else-if="nullable"
+              v-else-if="row.nullable"
               name="hugeicons:diamond"
               class="min-w-4 text-gray-300"
             />
@@ -81,48 +153,57 @@ const calculateTop = (column: string) => {
               class="min-w-4 text-gray-300"
             />
           </div>
-          <p class="w-fit text-center box-border truncate">
-            {{ name }}
-          </p>
+          <p class="truncate">{{ row.name }}</p>
+
+          <Icon
+            v-if="row.isForeign"
+            name="hugeicons:link-04"
+            class="min-w-3 text-gray-400"
+          />
         </div>
-        <div
-          :class="[
-            'col-span-1 box-border py-2 border border-l-0 border-t-0 truncate',
-            index === columns.length - 1 ? 'rounded-br-md' : '',
-          ]"
-        >
-          <p class="text-center box-border px-2 truncate text-muted-foreground">
-            {{ type }}
-          </p>
+        <div class="col-span-1 py-2 truncate text-center text-muted-foreground">
+          {{ row.type }}
         </div>
       </div>
     </div>
-  </div>
 
-  <Handle
-    v-for="({ column }, index) in foreign_keys"
-    type="source"
-    :id="column"
-    :position="Position.Left"
-    :connectable="false"
-    :style="{
-      top: calculateTop(column) + 'px',
-      left: '-26px',
-      height: HANDLE_HEIGHT,
-      opacity: 0,
-    }"
-  />
-  <Handle
-    v-for="({ column }, index) in primary_keys"
-    :id="column"
-    type="target"
-    :position="Position.Right"
-    :connectable="false"
-    :style="{
-      top: calculateTop(column) + 'px',
-      right: '-26px',
-      height: HANDLE_HEIGHT,
-      opacity: 0,
-    }"
-  />
+    <!-- Handles -->
+    <Handle
+      v-for="hand in foreignHandles"
+      :key="hand.id"
+      type="source"
+      :id="hand.id"
+      :position="Position.Left"
+      :connectable="false"
+      :style="{
+        top: hand.top + 'px',
+        left: HANDLE_LEFT,
+        height: HANDLE_HEIGHT,
+        opacity: 0,
+      }"
+    />
+    <Handle
+      v-for="hand in primaryHandles"
+      :key="hand.id"
+      type="target"
+      :id="hand.id"
+      :position="Position.Right"
+      :connectable="false"
+      :style="{
+        top: hand.top + 'px',
+        right: HANDLE_LEFT,
+        height: HANDLE_HEIGHT,
+        opacity: 0,
+      }"
+    />
+  </div>
 </template>
+
+<style scoped>
+.table-node {
+  will-change: transform;
+  transform: translateZ(0);
+  contain: content;
+  backface-visibility: hidden;
+}
+</style>

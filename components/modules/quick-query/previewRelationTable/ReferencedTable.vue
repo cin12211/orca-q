@@ -4,6 +4,7 @@ import { useTableQueryBuilder } from '~/composables/useTableQueryBuilder';
 import { ComposeOperator, DEFAULT_QUERY_SIZE } from '~/utils/constants';
 import type { FilterSchema } from '~/utils/quickQuery';
 import WrapperErdDiagram from '../../erd-diagram/WrapperErdDiagram.vue';
+import { buildTableNodeId } from '../../erd-diagram/utils';
 import { EDatabaseType } from '../../management-connection/constants';
 import QuickQueryErrorPopup from '../QuickQueryErrorPopup.vue';
 import { QuickQueryTabView } from '../constants';
@@ -229,7 +230,7 @@ watch(quickQueryTabView, newQuickQueryTabView => {
       <WrapperErdDiagram
         v-if="openedQuickQueryTab[QuickQueryTabView.Erd]"
         v-show="quickQueryTabView === QuickQueryTabView.Erd"
-        :tableId="tableName"
+        :tableId="buildTableNodeId({ tableName, schemaName })"
       />
 
       <div

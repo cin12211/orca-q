@@ -37,6 +37,7 @@ export interface IndexMetadata {
 }
 
 export interface TableMetadata {
+  id: string; // = schema + '.' + table , example: "public.users"
   schema: string;
   table: string;
   rows: number;
@@ -242,6 +243,8 @@ export default defineEventHandler(async (event): Promise<DatabaseMetadata> => {
                 SELECT
                     json_agg(
                         json_build_object(
+                            'id',
+                            tbls.table_schema || '.' || tbls.table_name,
                             'schema',
                             tbls.table_schema,
                             'table',
