@@ -5,7 +5,7 @@
   "homepage": "https://orca-q.com/",
   "author": "Cinny",
   "license": "MIT",
-  "version": "1.0.14",
+  "version": "1.0.15",
   "main": ".vite/build/main.js",
   "scripts": {
     "dev": "concurrently --names \"NUXT,ELECTRON\" --prefix-colors \"cyan,magenta\" \"npm run nuxt:dev\" \"cd electron && npm run dev\"",
