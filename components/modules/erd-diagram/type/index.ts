@@ -28,3 +28,17 @@ export type { Edge };
 export type TableNode = Node<TableMetadata>;
 
 export type NodePosition = Node['position'];
+
+export type LabelTableNode = Map<string, boolean>;
+
+export type ActiveEdge = {
+  edgeId: string;
+  sourceId: string;
+  targetId: string;
+};
+
+export type ActiveTable = {
+  tableId: string;
+  edgeIds: Set<string>;
+  relatedColumnIds: Set<string>;
+};

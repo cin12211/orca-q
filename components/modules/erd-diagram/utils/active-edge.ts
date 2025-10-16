@@ -1,41 +1,74 @@
-import type { FindNode, GraphEdge, FitView, GetViewport } from '@vue-flow/core';
+import type {
+  FindNode,
+  FitView,
+  GetViewport,
+  GraphEdge,
+  GraphNode,
+} from '@vue-flow/core';
 import { DEFAULT_FOCUS_DURATION } from '../constants';
+import type { ActiveTable, ActiveEdge, LabelTableNode } from '../type';
 
-export const setAnimatedEdge = (edge: GraphEdge, animated: boolean) => {
-  if (edge.sourceNode.selected || edge.targetNode.selected || edge.selected) {
-    edge.animated = true;
-    return;
-  }
+export const buildNodeHandId = (id: string, handle: string) =>
+  `${id}-${handle}`;
 
-  edge.animated = animated;
-};
+export const activeEdgeAnimated = (
+  edge: GraphEdge,
+  active: boolean,
+  activeTable: ActiveTable | null,
+  activeEdge: ActiveEdge | null
+) => {
+  const { id, sourceHandle, targetHandle, sourceNode, targetNode, selectable } =
+    edge;
 
-export const onToggleEdgeAnimated = ({
-  mapEdgeIds,
-  mapNodeIds,
-  edges,
-}: {
-  mapEdgeIds?: Map<string, boolean>;
-  mapNodeIds?: Map<string, boolean>;
-  edges: GraphEdge[];
-}) => {
-  for (let i = 0; i < edges.length; i++) {
-    const edge = edges[i];
+  // Determine if this edge should be animated
+  const isEdgeActive =
+    active ||
+    activeEdge?.edgeId === id ||
+    activeTable?.edgeIds.has(id) ||
+    false;
 
-    const isMatchedSourceNode = mapNodeIds?.has(edge.source);
-    const isMatchedTargetNode = mapNodeIds?.has(edge.target);
-    const isMatchedEdge = mapEdgeIds?.has(edge.id);
+  edge.animated = isEdgeActive;
 
-    if (isMatchedSourceNode || isMatchedEdge || isMatchedTargetNode) {
-      const active =
-        mapNodeIds?.get(edge.source) ||
-        mapNodeIds?.get(edge.target) ||
-        mapEdgeIds?.get(edge.id) ||
-        false;
+  // Helper to update label state for a node
+  const updateLabelState = (
+    node: GraphNode | undefined,
+    handle: string | undefined,
+    condition: boolean
+  ) => {
+    if (!node || !handle) return;
 
-      setAnimatedEdge(edge, active);
+    if (!node.label) {
+      node.label = new Map<string, boolean>();
     }
-  }
+
+    const label = node.label as LabelTableNode;
+
+    if (condition) {
+      label.set(handle, true);
+    } else {
+      label.delete(handle);
+    }
+  };
+
+  // Compute identifiers for matching related columns
+  const sourceId = buildNodeHandId(sourceNode?.id!, sourceHandle!);
+  const targetId = buildNodeHandId(targetNode?.id!, targetHandle!);
+
+  const isSourceActive =
+    isEdgeActive ||
+    selectable ||
+    activeTable?.relatedColumnIds.has(sourceId) ||
+    activeEdge?.sourceId === sourceId ||
+    active;
+  const isTargetActive =
+    isEdgeActive ||
+    selectable ||
+    activeTable?.relatedColumnIds.has(targetId) ||
+    activeEdge?.targetId === targetId ||
+    active;
+
+  updateLabelState(sourceNode, sourceHandle!, !!isSourceActive);
+  updateLabelState(targetNode, targetHandle!, !!isTargetActive);
 };
 
 export const focusNodeById = ({
