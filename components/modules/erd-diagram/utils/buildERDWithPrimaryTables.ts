@@ -399,6 +399,7 @@ export const createEdges = (tablesData: TableMetadata[]): Edge[] => {
           tableName: foreignKey.reference_table,
         }),
         sourceHandle: foreignKey.column,
+        targetHandle: foreignKey.reference_column,
         updatable: false,
       };
       return edge;

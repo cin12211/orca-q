@@ -2,14 +2,7 @@
 import { useWindowSize } from '@vueuse/core';
 import { Background } from '@vue-flow/background';
 import '@vue-flow/controls/dist/style.css';
-import {
-  useVueFlow,
-  VueFlow,
-  type EdgeChange,
-  type EdgeMouseEvent,
-  type NodeChange,
-  type VueFlowStore,
-} from '@vue-flow/core';
+import { VueFlow } from '@vue-flow/core';
 import '@vue-flow/core/dist/style.css';
 import '@vue-flow/core/dist/theme-default.css';
 import { MiniMap } from '@vue-flow/minimap';
@@ -26,79 +19,23 @@ import '~/components/modules/erd-diagram/style/vue-flow.css';
 import type { ErdDiagramProps } from '~/components/modules/erd-diagram/type';
 import ErdControls from './components/Controls/ErdControls.vue';
 import CustomEdge from './components/CustomEdge.vue';
-import { onToggleEdgeAnimated, setAnimatedEdge } from './utils/active-edge';
+import { useErdFlow } from './hooks/useErdControl';
 
 const { width, height } = useWindowSize();
 
 const props = defineProps<ErdDiagramProps>();
 
-const isHand = ref(false);
-
-const { getEdges } = useVueFlow();
-
-const onInitVueFlow = (instance: VueFlowStore) => {
-  if (props.focusTableId) {
-    const node = instance.findNode(props.focusTableId);
-
-    if (node) {
-      node.selected = true;
-
-      const mapNodeIds = new Map<string, boolean>([[node.id, true]]);
-
-      const edges = instance.getEdges.value;
-
-      onToggleEdgeAnimated({
-        mapNodeIds,
-        edges,
-      });
-    }
-  }
-};
-
-const handleEdgeMouseEnter = ({ edge }: EdgeMouseEvent) => {
-  if (!edge || edge.animated) return;
-
-  setAnimatedEdge(edge, true);
-};
-
-const handleEdgeMouseLeave = ({ edge }: EdgeMouseEvent) => {
-  if (!edge || !edge.animated) return;
-
-  setAnimatedEdge(edge, false);
-};
-
-const onNodesChange = (nodes: NodeChange[]) => {
-  const mapNodeIds = new Map<string, boolean>();
-  nodes.forEach(node => {
-    if (node.type === 'select') {
-      mapNodeIds.set(node.id, node.selected);
-    }
-  });
-
-  if (mapNodeIds.size === 0) return;
-  const edges = getEdges.value;
-  onToggleEdgeAnimated({
-    mapNodeIds,
-    edges,
-  });
-};
-
-const onEdgesChange = (edgeChanges: EdgeChange[]) => {
-  const mapEdgeIds = new Map<string, boolean>();
-
-  edgeChanges.forEach(edge => {
-    if (edge.type === 'select') {
-      mapEdgeIds.set(edge.id, edge.selected);
-    }
-  });
-
-  if (mapEdgeIds.size === 0) return;
-  const edges = getEdges.value;
-  onToggleEdgeAnimated({
-    mapEdgeIds,
-    edges,
-  });
-};
+const {
+  onInitVueFlow,
+  onNodesChange,
+  onEdgesChange,
+  onNodeMouseEnter,
+  onNodeMouseLeave,
+  handleEdgeMouseEnter,
+  handleEdgeMouseLeave,
+  onDoubleClickEdge,
+  isHand,
+} = useErdFlow(props);
 </script>
 
 <template>
@@ -117,10 +54,13 @@ const onEdgesChange = (edgeChanges: EdgeChange[]) => {
     :min-zoom="MIN_ZOOM"
     :max-zoom="MAX_ZOOM"
     v-on:init="onInitVueFlow"
+    @node-mouse-enter="onNodeMouseEnter"
+    @node-mouse-leave="onNodeMouseLeave"
     @edge-mouse-enter="handleEdgeMouseEnter"
     @edge-mouse-leave="handleEdgeMouseLeave"
     @nodes-change="onNodesChange"
     @edges-change="onEdgesChange"
+    @edge-double-click="onDoubleClickEdge"
   >
     <template #edge-custom="edgeProps">
       <CustomEdge v-bind="edgeProps" />

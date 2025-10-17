@@ -3,11 +3,12 @@ import { computed } from 'vue';
 import { Handle, Position, useVueFlow, type NodeProps } from '@vue-flow/core';
 import type { ColumnMetadata, TableMetadata } from '~/server/api/get-tables';
 import { HANDLE_HEIGHT, HANDLE_LEFT, ROW_HEIGHT, ROW_WIDTH } from './constants';
-import { buildTableNodeId, focusNodeById, onToggleEdgeAnimated } from './utils';
+import type { LabelTableNode } from './type';
+import { buildTableNodeId, focusNodeById, getHandPosition } from './utils';
 
 const props = defineProps<NodeProps<TableMetadata>>();
 
-const { getEdges, findNode, fitView, getViewport } = useVueFlow();
+const { findNode, fitView, getViewport } = useVueFlow();
 
 // --- 1️⃣ Precompute lookup maps (O(1) instead of array.includes)
 const primaryKeySet = computed(
@@ -34,46 +35,26 @@ const mapColumnIndex = computed(() => {
   );
 });
 
-const getTopPosition = (column: string) => {
-  return (
-    (mapColumnIndex.value.get(column) || 0) * ROW_HEIGHT -
-    ROW_HEIGHT / 2 -
-    1 +
-    2 +
-    10 +
-    ROW_HEIGHT
-  );
-};
-
 // --- 3️⃣ Precompute Handle positions (top coordinates)
 const foreignHandles = computed(() =>
-  props.data.foreign_keys.map(({ column }) => ({
-    id: column,
-    top: getTopPosition(column),
-  }))
+  props.data.foreign_keys.map(({ column }) => {
+    const colIndex = mapColumnIndex.value.get(column);
+    return {
+      id: column,
+      top: getHandPosition(colIndex),
+    };
+  })
 );
 
 const primaryHandles = computed(() =>
-  props.data.primary_keys.map(({ column }) => ({
-    id: column,
-    top: getTopPosition(column),
-  }))
+  props.data.primary_keys.map(({ column }) => {
+    const colIndex = mapColumnIndex.value.get(column);
+    return {
+      id: column,
+      top: getHandPosition(colIndex),
+    };
+  })
 );
-
-const onHover = (isHover: boolean) => {
-  if (props.selected) {
-    return;
-  }
-
-  const edges = getEdges.value;
-
-  const mapNodeIds = new Map<string, boolean>([[props.id, isHover]]);
-
-  onToggleEdgeAnimated({
-    mapNodeIds,
-    edges,
-  });
-};
 
 const onFocusNode = (
   row: ColumnMetadata & { isPrimary: boolean; isForeign: boolean }
@@ -103,11 +84,7 @@ const onFocusNode = (
 </script>
 
 <template>
-  <div
-    class="table-node"
-    @mouseenter.prevent="onHover(true)"
-    @mouseleave.prevent="onHover(false)"
-  >
+  <div class="table-node">
     <div class="flex flex-col rounded-md" :style="{ width: ROW_WIDTH + 'px' }">
       <div
         class="rounded-t-md box-border p-2 bg-primary/90 flex items-center justify-center"
@@ -125,7 +102,8 @@ const onFocusNode = (
         :key="row.name"
         :class="[
           'grid grid-cols-3 px-2 border-t ',
-          row.isForeign && 'cursor-pointer hover:bg-background',
+          row.isForeign && 'cursor-pointer hover:bg-blue-200/80',
+          (label as LabelTableNode)?.get(row.name) && 'bg-blue-200/40',
         ]"
         :style="{ height: ROW_HEIGHT + 'px' }"
         @click="onFocusNode(row)"
