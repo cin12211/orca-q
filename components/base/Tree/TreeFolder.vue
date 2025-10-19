@@ -88,7 +88,7 @@ const heightItem = 24;
         class="w-full data-[selected]:bg-accent cursor-pointer rounded outline-none hover:bg-accent/60"
       >
         <div
-          class="flex items-center justify-between w-full"
+          class="flex items-center justify-between w-full flex-wrap"
           :style="{
             height: `${heightItem}px`,
           }"
@@ -122,9 +122,9 @@ const heightItem = 24;
             }
           "
         >
-          <div class="flex items-center w-full">
+          <div class="flex items-center flex-1 min-w-0">
             <div
-              class="pr-1"
+              class="pr-1 flex-shrink-0"
               v-if="isShowArrow"
               @click="
                 e => {
@@ -161,9 +161,19 @@ const heightItem = 24;
                 :icon="item.value.closeIcon || defaultCloseIcon"
                 class="size-4 min-w-4"
               />
-              <Icon v-else :icon="item.value.icon" class="size-4 min-w-4" />
+              <Icon
+                v-else
+                :icon="item.value.icon"
+                class="size-4 min-w-4"
+                :class="item.value.iconClass"
+              />
             </template>
-            <Icon v-else :icon="item.value.icon" class="size-4 min-w-4" />
+            <Icon
+              v-else
+              :icon="item.value.icon"
+              class="size-4 min-w-4"
+              :class="item.value.iconClass"
+            />
 
             <template v-if="item.value.status !== ETreeFileSystemStatus.edit">
               <div class="pl-1 truncate font-normal">
@@ -175,7 +185,10 @@ const heightItem = 24;
             </div>
           </div>
 
-          <div v-if="item.value.status !== ETreeFileSystemStatus.edit">
+          <div
+            class="flex-shrink-0"
+            v-if="item.value.status !== ETreeFileSystemStatus.edit"
+          >
             <slot name="extra-actions" :item> </slot>
           </div>
         </div>

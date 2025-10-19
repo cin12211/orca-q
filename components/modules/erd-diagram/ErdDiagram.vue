@@ -11,6 +11,7 @@ import '@vue-flow/node-resizer/dist/style.css';
 import ValueNode from '~/components/modules/erd-diagram/ValueNode.vue';
 import {
   DEFAULT_ZOOM,
+  DEFAULT_ZOOM_DURATION,
   MAX_ZOOM,
   MIN_ZOOM,
   ROW_WIDTH,
@@ -19,11 +20,16 @@ import '~/components/modules/erd-diagram/style/vue-flow.css';
 import type { ErdDiagramProps } from '~/components/modules/erd-diagram/type';
 import ErdControls from './components/Controls/ErdControls.vue';
 import CustomEdge from './components/CustomEdge.vue';
+import ErdFilterPanal from './components/ErdFilterPanal.vue';
 import { useErdFlow } from './hooks/useErdControl';
 
 const { width, height } = useWindowSize();
 
 const props = defineProps<ErdDiagramProps>();
+
+const emit = defineEmits<{
+  (e: 'update:isShowFilter', value: boolean): void;
+}>();
 
 const {
   onInitVueFlow,
@@ -35,7 +41,39 @@ const {
   handleEdgeMouseLeave,
   onDoubleClickEdge,
   isHand,
+  isUseBgGrid,
+  isUseMiniMap,
+  getNodes,
+  fitView,
+  onfocusNode,
 } = useErdFlow(props);
+
+const wrapperRef = ref<HTMLDivElement>();
+
+useHotkeys(
+  [
+    {
+      key: 'meta+f',
+      callback: () => {
+        console.log('🚀 ~ erd onToggleFilter ~ onToggleFilter');
+      },
+      isPreventDefault: true,
+    },
+  ],
+  {
+    target: wrapperRef,
+  }
+);
+const onArrangeDiagram = () => {
+  getNodes.value?.forEach(node => {
+    const position = props.matrixTablePosition?.[node.id];
+    if (position) {
+      node.position = position;
+    }
+  });
+
+  fitView({ duration: DEFAULT_ZOOM_DURATION });
+};
 </script>
 
 <template>
@@ -69,8 +107,30 @@ const {
       <ValueNode v-bind="nodeProps" />
     </template>
 
-    <Background />
-    <ErdControls v-model:isHand="isHand" />
-    <MiniMap pannable zoomable position="top-right" />
+    <Background v-if="isUseBgGrid" :size="2" :gap="30" :variant="isUseBgGrid" />
+
+    <MiniMap
+      v-if="isUseMiniMap"
+      pannable
+      position="top-right"
+      node-color="var(--primary)"
+      :nodeBorderRadius="10"
+    />
+    <ErdControls
+      :isShowFilter="props.isShowFilter"
+      v-model:isHand="isHand"
+      v-model:isUseBgGrid="isUseBgGrid"
+      v-model:isUseMiniMap="isUseMiniMap"
+      @update:is-show-filter="emit('update:isShowFilter', $event)"
+      @arrange="onArrangeDiagram"
+    />
   </VueFlow>
+
+  <ErdFilterPanal
+    v-model:isShowFilter="props.isShowFilter"
+    :table-id="props.tableId"
+    :tables="props.tables"
+    @update:is-show-filter="emit('update:isShowFilter', $event)"
+    @focus-table="onfocusNode"
+  />
 </template>

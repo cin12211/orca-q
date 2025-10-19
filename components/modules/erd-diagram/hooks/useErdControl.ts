@@ -8,11 +8,18 @@ import {
   type NodeSelectionChange,
   type VueFlowStore,
 } from '@vue-flow/core';
-import type { ActiveEdge, ActiveTable, ErdDiagramProps } from '../type';
+import type {
+  ActiveEdge,
+  ActiveTable,
+  BackGroundGridStatus,
+  ErdDiagramProps,
+} from '../type';
 import { activeEdgeAnimated, buildNodeHandId, focusNodeById } from '../utils';
 
 export function useErdFlow(props: ErdDiagramProps) {
   const isHand = ref(false);
+  const isUseMiniMap = ref(true);
+  const isUseBgGrid = ref<BackGroundGridStatus>('dots');
 
   const activeTable = ref<ActiveTable | null>({
     tableId: '',
@@ -26,7 +33,8 @@ export function useErdFlow(props: ErdDiagramProps) {
     targetId: '',
   });
 
-  const { getEdges, findEdge, findNode, fitView, getViewport } = useVueFlow();
+  const { getEdges, findEdge, findNode, fitView, getViewport, getNodes } =
+    useVueFlow();
 
   const onInitVueFlow = (instance: VueFlowStore) => {
     if (!props.focusTableId) return;
@@ -181,7 +189,34 @@ export function useErdFlow(props: ErdDiagramProps) {
     });
   };
 
+  const onfocusNode = (nodeId: string) => {
+    focusNodeById({
+      nodeId,
+      findNode,
+      fitView,
+      getViewport,
+    });
+
+    const node = findNode(nodeId);
+
+    if (!node) {
+      return;
+    }
+
+    node.selected = true;
+
+    onNodesChange([
+      {
+        id: nodeId,
+        type: 'select',
+        selected: true,
+      },
+    ]);
+  };
+
   return {
+    isUseBgGrid,
+    isUseMiniMap,
     isHand,
     activeTable,
     activeEdge,
@@ -193,5 +228,8 @@ export function useErdFlow(props: ErdDiagramProps) {
     handleEdgeMouseEnter,
     handleEdgeMouseLeave,
     onDoubleClickEdge,
+    getNodes,
+    fitView,
+    onfocusNode,
   };
 }
