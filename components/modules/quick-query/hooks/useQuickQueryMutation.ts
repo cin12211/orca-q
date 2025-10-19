@@ -320,6 +320,16 @@ export function useQuickQueryMutation(options: UseQuickQueryMutationOptions) {
     const clipboardData = await navigator.clipboard.readText();
   };
 
+  const onDeselectAll = () => {
+    const gridApi = quickQueryTableRef.value?.gridApi;
+
+    if (!gridApi) {
+      return;
+    }
+
+    // gridApi.deselectAll();
+  };
+
   return {
     onAddEmptyRow,
     onDeleteRows,
@@ -332,5 +342,6 @@ export function useQuickQueryMutation(options: UseQuickQueryMutationOptions) {
     onSelectedRowsChange,
     onCopySelectedCell,
     onFocusedCellChange,
+    onDeselectAll,
   };
 }

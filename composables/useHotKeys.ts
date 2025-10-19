@@ -113,8 +113,6 @@ export function useHotkeys(
 ): void {
   const activeElement = useActiveElement();
   const isEventInsideInput = computed(() => {
-    console.log(activeElement.value?.tagName);
-
     return (
       activeElement.value?.tagName === 'INPUT' ||
       activeElement.value?.tagName === 'TEXTAREA'

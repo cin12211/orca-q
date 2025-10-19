@@ -49,6 +49,7 @@ const props = defineProps<{
 }>();
 
 const emit = defineEmits<{
+  (e: 'onClickOutSide', event: PointerEvent): void;
   (e: 'update:orderBy', value: OrderBy): void;
   (e: 'onSelectedRows', value: RowData[]): void;
   (
@@ -86,8 +87,9 @@ const cellContextMenu = ref<
   | undefined
 >();
 
-onClickOutside(agGridRef, () => {
+onClickOutside(agGridRef, event => {
   emit('onFocusCell', undefined);
+  emit('onClickOutSide', event);
   // gridApi.value?.deselectAll();
 });
 

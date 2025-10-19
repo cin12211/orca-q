@@ -48,22 +48,6 @@ const {
   onfocusNode,
 } = useErdFlow(props);
 
-const wrapperRef = ref<HTMLDivElement>();
-
-useHotkeys(
-  [
-    {
-      key: 'meta+f',
-      callback: () => {
-        console.log('🚀 ~ erd onToggleFilter ~ onToggleFilter');
-      },
-      isPreventDefault: true,
-    },
-  ],
-  {
-    target: wrapperRef,
-  }
-);
 const onArrangeDiagram = () => {
   getNodes.value?.forEach(node => {
     const position = props.matrixTablePosition?.[node.id];

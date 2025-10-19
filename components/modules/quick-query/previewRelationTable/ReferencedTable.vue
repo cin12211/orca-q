@@ -1,7 +1,11 @@
 <script setup lang="ts">
 import { LoadingOverlay } from '#components';
 import { useTableQueryBuilder } from '~/composables/useTableQueryBuilder';
-import { ComposeOperator, DEFAULT_QUERY_SIZE } from '~/utils/constants';
+import {
+  ComposeOperator,
+  DEFAULT_QUERY_SIZE,
+  OperatorSet,
+} from '~/utils/constants';
 import type { FilterSchema } from '~/utils/quickQuery';
 import WrapperErdDiagram from '../../erd-diagram/WrapperErdDiagram.vue';
 import { buildTableNodeId } from '../../erd-diagram/utils';
@@ -25,6 +29,8 @@ const props = defineProps<{
   schemaName: string;
   initFilters?: FilterSchema[];
 }>();
+
+const containerRef = ref<InstanceType<typeof HTMLElement>>();
 
 const emit = defineEmits<{
   (
@@ -54,6 +60,7 @@ const {
   connectionString,
   connectionId,
   workspaceId,
+  focusedCell,
 } = useQuickQuery();
 
 const {
@@ -128,6 +135,9 @@ const {
   onPasteRows,
   onRefresh,
   onSelectedRowsChange,
+  onCopySelectedCell,
+  onFocusedCellChange,
+  onDeselectAll,
 } = useQuickQueryMutation({
   tableName: props.tableName,
   primaryKeys: primaryKeyColumns,
@@ -141,9 +151,29 @@ const {
   pagination,
   quickQueryTableRef,
   refreshCount,
+  focusedCell,
 });
 
 const quickQueryTabView = ref<QuickQueryTabView>(QuickQueryTabView.Data);
+
+const onAddFilterByContextCell = async () => {
+  const cellContextMenu = quickQueryTableRef.value?.cellContextMenu;
+  if (cellContextMenu) {
+    const filter: FilterSchema = {
+      fieldName: cellContextMenu.columnName,
+      isSelect: true,
+      operator: OperatorSet.EQUAL,
+      search: cellContextMenu.cellValue as string,
+    };
+    quickQueryFilterRef.value?.insert(filters.value.length, filter);
+
+    quickQueryFilterRef?.value?.onShowSearch();
+
+    filters.value.push(filter);
+
+    onApplyNewFilter();
+  }
+};
 
 const { isHaveRelationByFieldName } = useReferencedTables({
   schemaName: props.schemaName,
@@ -159,6 +189,46 @@ const openedQuickQueryTab = ref({
 watch(quickQueryTabView, newQuickQueryTabView => {
   openedQuickQueryTab.value[newQuickQueryTabView] = true;
 });
+
+useHotkeys(
+  [
+    {
+      key: 'meta+a',
+      callback: () => {
+        quickQueryTableRef.value?.gridApi?.selectAll();
+      },
+      excludeInput: true,
+      isPreventDefault: true,
+    },
+    {
+      key: 'meta+c',
+      callback: () => {
+        onCopySelectedCell();
+      },
+      excludeInput: true,
+    },
+    {
+      key: 'meta+v',
+      callback: () => onPasteRows(),
+      excludeInput: true,
+    },
+    {
+      key: 'meta+s',
+      callback: () => onSaveData(),
+      isPreventDefault: true,
+    },
+    {
+      key: 'meta+alt+backspace',
+      callback: () => {
+        onDeleteRows();
+      },
+      isPreventDefault: true,
+    },
+  ],
+  {
+    target: containerRef,
+  }
+);
 </script>
 
 <template>
@@ -250,6 +320,7 @@ watch(quickQueryTabView, newQuickQueryTabView => {
         v-show="quickQueryTabView === QuickQueryTabView.Data"
         :total-selected-rows="selectedRows.length"
         :has-edited-rows="hasEditedRows"
+        isReferencedTable
         @onPaginate="onUpdatePagination"
         @onNextPage="onNextPage"
         @onPreviousPage="onPreviousPage"
@@ -257,13 +328,10 @@ watch(quickQueryTabView, newQuickQueryTabView => {
         @onSaveData="onSaveData"
         @onDeleteRows="onDeleteRows"
         @onAddEmptyRow="onAddEmptyRow"
-        @onShowFilter="
-          async () => {
-            await quickQueryFilterRef?.onShowSearch();
-          }
-        "
+        @onFilterByValue="onAddFilterByContextCell"
         @onCopyRows="onCopyRows"
         @on-paste-rows="onPasteRows"
+        @on-copy-selected-cell="onCopySelectedCell"
       >
         <QuickQueryTable
           class="h-full border rounded-md"
@@ -285,8 +353,10 @@ watch(quickQueryTabView, newQuickQueryTabView => {
           :columnTypes="columnTypes"
           :defaultPageSize="DEFAULT_QUERY_SIZE"
           :offset="pagination.offset"
+          @on-focus-cell="onFocusedCellChange"
           :current-schema-name="schemaName"
           :current-table-name="tableName"
+          @on-click-out-side="onDeselectAll"
         />
       </QuickQueryContextMenu>
     </div>

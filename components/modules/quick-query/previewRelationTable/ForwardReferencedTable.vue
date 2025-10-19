@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { uuidv4 } from '~/lib/utils';
 import { OperatorSet } from '~/utils/constants';
 import type { FilterSchema } from '~/utils/quickQuery';
 import ReferencedTable from './ReferencedTable.vue';
@@ -48,6 +49,7 @@ const getInitFilters = () => {
 <template>
   <div class="flex flex-1">
     <ReferencedTable
+      :key="uuidv4()"
       :tableName="tableName"
       :schema-name="schemaName"
       :init-filters="getInitFilters()"
