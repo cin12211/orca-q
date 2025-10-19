@@ -5,7 +5,7 @@ import {
   ROW_HEIGHT,
   HEAD_ROW_HEIGHT,
 } from '../constants';
-import type { NodePosition, TableNode } from '../type';
+import type { MatrixTablePosition, NodePosition, TableNode } from '../type';
 
 export const calcTableHeight = (columnsLength?: number): number =>
   (columnsLength || 0) * ROW_HEIGHT + HEAD_ROW_HEIGHT;
@@ -18,6 +18,16 @@ export const buildTableNodeId = ({
   schemaName: string;
 }): string => {
   return `${schemaName}.${tableName}`;
+};
+
+export const detructTableNodeId = (
+  nodeId: string
+): {
+  schemaName: string;
+  tableName: string;
+} => {
+  const [schemaName, tableName] = nodeId.split('.');
+  return { schemaName, tableName };
 };
 
 export const buildEdgeId = ({
@@ -315,13 +325,17 @@ const genRightMatrixTable = (
   return matrix;
 };
 
-const generateMatrixTableCenter = (
-  leftTablesData: TableMetadata[],
-  rightTablesData: TableMetadata[],
-  tableCenterId: string
-): Record<string, NodePosition> => {
+const generateMatrixTableCenter = ({
+  leftTables,
+  rightTables,
+  tableCenterId,
+}: {
+  leftTables: TableMetadata[];
+  rightTables: TableMetadata[];
+  tableCenterId: string;
+}): MatrixTablePosition => {
   const mapTablesData = new Map(
-    leftTablesData.map(table => [
+    leftTables.map(table => [
       buildTableNodeId({
         schemaName: table.schema,
         tableName: table.table,
@@ -336,13 +350,9 @@ const generateMatrixTableCenter = (
     return {};
   }
 
-  const leftMatrix = genLeftMatrixTable(
-    leftTablesData,
-    tableCenterId,
-    centerTable
-  );
+  const leftMatrix = genLeftMatrixTable(leftTables, tableCenterId, centerTable);
   const rightMatrix = genRightMatrixTable(
-    rightTablesData,
+    rightTables,
     tableCenterId,
     centerTable
   );
@@ -407,14 +417,14 @@ export const createEdges = (tablesData: TableMetadata[]): Edge[] => {
   );
 };
 
-export const buildERDWithPrimaryTables = (
-  centerTableId: string,
+export const getTablesByTableCenterId = (
+  tableCenterId: string,
   tablesData: TableMetadata[]
 ) => {
-  const tableNameSet = new Set([centerTableId]);
+  const tableNameSet = new Set([tableCenterId]);
   // this only get table usage with selected fk field
-  const includesUsageTables: TableMetadata[] = [];
-  const relatedTableNames = new Set([centerTableId]);
+  const rightTables: TableMetadata[] = [];
+  const relatedTableNames = new Set([tableCenterId]);
 
   // Single pass to find usage tables and related tables
   for (const table of tablesData) {
@@ -444,7 +454,7 @@ export const buildERDWithPrimaryTables = (
         });
 
         if (tableNameSet.has(fkTableId)) {
-          includesUsageTables.push(table);
+          rightTables.push(table);
           break;
         }
       }
@@ -452,7 +462,7 @@ export const buildERDWithPrimaryTables = (
   }
 
   // Filter tables based on related table names
-  const filteredTables: TableMetadata[] = [];
+  const leftTables: TableMetadata[] = [];
   for (const table of tablesData) {
     const tableId = buildTableNodeId({
       schemaName: table.schema,
@@ -460,21 +470,79 @@ export const buildERDWithPrimaryTables = (
     });
 
     if (relatedTableNames.has(tableId)) {
-      filteredTables.push(table);
+      leftTables.push(table);
     }
   }
 
   // Merge tables
-  const tables = filteredTables.concat(includesUsageTables);
+  const tables = leftTables.concat(rightTables);
+  return { tables, leftTables, rightTables, tableCenterId };
+};
 
-  const matrix = generateMatrixTableCenter(
-    filteredTables,
-    includesUsageTables,
-    centerTableId
-  );
+export const buildERDWithPrimaryTables = ({
+  tables,
+  leftTables,
+  rightTables,
+  tableCenterId,
+}: {
+  tables: TableMetadata[];
+  leftTables: TableMetadata[];
+  rightTables: TableMetadata[];
+  tableCenterId: string;
+}) => {
+  const matrixPosition = generateMatrixTableCenter({
+    leftTables,
+    rightTables,
+    tableCenterId,
+  });
 
   return {
     edges: createEdges(tables),
-    nodes: createNodes(tables, matrix),
+    nodes: createNodes(tables, matrixPosition),
+    matrixPosition,
   };
+};
+
+/**
+ * Automatically arrange tables and edges around a center table
+ * @param tablesData - The full list of table metadata (from schema)
+ * @param centerTableId - The selected table id to center layout around
+ * @returns { nodes, edges } for Vue Flow
+ */
+export const arrangeDiagram = ({
+  tables,
+  leftTables,
+  rightTables,
+  tableCenterId,
+}: {
+  tables: TableMetadata[];
+  leftTables: TableMetadata[];
+  rightTables: TableMetadata[];
+  tableCenterId: string;
+}): {
+  nodes: ReturnType<typeof buildERDWithPrimaryTables>['nodes'];
+  edges: Edge[];
+} => {
+  // reuse your existing ERD builder for primary table layout
+  const { nodes, edges } = buildERDWithPrimaryTables({
+    tables,
+    leftTables,
+    rightTables,
+    tableCenterId,
+  });
+
+  // optional: normalize or shift layout so everything is visible
+  const minX = Math.min(...nodes.map(n => n.position.x));
+  const minY = Math.min(...nodes.map(n => n.position.y));
+
+  // shift all nodes to start from (0,0) top-left
+  const normalizedNodes = nodes.map(n => ({
+    ...n,
+    position: {
+      x: n.position.x - minX + 200, // small padding
+      y: n.position.y - minY + 200,
+    },
+  }));
+
+  return { nodes: normalizedNodes, edges };
 };

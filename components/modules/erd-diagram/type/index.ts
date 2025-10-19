@@ -1,3 +1,4 @@
+import type { BackgroundVariantType } from '@vue-flow/background';
 import type { Edge, Node } from '@vue-flow/core';
 import type { TableMetadata } from '~/server/api/get-tables';
 
@@ -19,8 +20,11 @@ export interface DBSchemaProps {
 export interface ErdDiagramProps {
   nodes?: TableNode[];
   edges?: Edge[];
-
   focusTableId?: string;
+  isShowFilter: boolean;
+  matrixTablePosition?: MatrixTablePosition;
+  tables: TableMetadata[];
+  tableId?: string;
 }
 
 export type { Edge };
@@ -42,3 +46,7 @@ export type ActiveTable = {
   edgeIds: Set<string>;
   relatedColumnIds: Set<string>;
 };
+
+export type MatrixTablePosition = Record<string, NodePosition>;
+
+export type BackGroundGridStatus = BackgroundVariantType | false;

@@ -74,7 +74,7 @@ const updateSelectedTabInBreadcrumb = (selectedTab: string) => {
 <template>
   <Dialog :open="open" @update:open="$emit('clearBreadcrumb')">
     <DialogContent
-      class="w-[98dvw]! max-w-[98dvw]! max-h-[95dvh] h-[95dvh] gap-3 p-3 flex flex-col flex-1 flex-wrap overflow-hidden"
+      class="w-[98dvw]! max-w-[98dvw]! max-h-[95dvh] h-[95dvh] gap-1 p-3 flex flex-col flex-1 flex-wrap overflow-hidden"
     >
       <DialogHeader>
         <DialogDescription>
