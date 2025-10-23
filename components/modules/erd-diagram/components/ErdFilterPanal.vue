@@ -104,7 +104,7 @@ const onFocusNode = (_e: MouseEvent, item: FlattenedTreeFileSystemItem) => {
     :class="[isShowFilter ? 'w-[20rem]' : 'w-[0rem]']"
   >
     <div
-      class="size-7 h-8 absolute -left-7 top-2 cursor-pointer bg-background border border-r-0 rounded-l-md flex-col justify-center flex items-center"
+      class="w-5 h-8 absolute -left-5 top-2 cursor-pointer bg-background border border-r-0 rounded-l-md flex-col justify-center flex items-center"
       @click="emit('update:isShowFilter', !isShowFilter)"
     >
       <Icon

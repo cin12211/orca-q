@@ -405,7 +405,6 @@ watch(
   async () => {
     await nextTick();
     gridApi.value?.refreshCells({ force: true });
-    gridApi.value?.refreshHeader();
   },
   { flush: 'post' }
 );
@@ -505,7 +504,6 @@ defineExpose({ gridApi, editedCells, columnDefs, cellContextMenu });
 }
 
 .col-highlight-cell {
-  background: rgba(165, 165, 165, 0.15);
-  box-shadow: inset 0 0 0 9999px rgba(160, 160, 160, 0.08);
+  background: var(--ag-selected-row-background-color);
 }
 </style>
