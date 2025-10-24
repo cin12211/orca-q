@@ -1,7 +1,11 @@
 <script setup lang="ts">
 import { refDebounced, templateRef } from '@vueuse/core';
 import type { RouteNameFromPath, RoutePathSchema } from '@typed-router/__paths';
-import { tree, type FlattenedTreeFileSystemItem } from '~/components/base/Tree';
+import {
+  TreeManager,
+  type FlattenedTreeFileSystemItem,
+  type TreeFileSystemItem,
+} from '~/components/base/Tree';
 import TreeFolder from '~/components/base/Tree/TreeFolder.vue';
 import { useAppContext } from '~/shared/contexts/useAppContext';
 import { useActivityBarStore } from '~/shared/stores';
@@ -33,20 +37,20 @@ const items = computed(() => {
   const functions = activeSchema?.value?.functions || [];
   const views = activeSchema?.value?.views || [];
 
-  const treeItems = [
+  const treeItems: TreeFileSystemItem[] = [
     {
       title: 'Functions',
       icon: 'material-icon-theme:folder-functions-open',
       closeIcon: 'material-icon-theme:folder-functions',
-      paths: [SchemaFolderType.Functions],
-      tabViewType: TabViewType.FunctionsOverview,
+      path: SchemaFolderType.Functions,
       id: SchemaFolderType.Functions,
+      tabViewType: TabViewType.FunctionsOverview,
       children: [
         ...functions.map(functionName => ({
           title: functionName,
           id: functionName,
           icon: 'vscode-icons:file-type-haskell',
-          paths: [SchemaFolderType.Functions, functionName],
+          path: `${SchemaFolderType.Functions}/${functionName}`,
           tabViewType: TabViewType.FunctionsDetail,
           isFolder: false,
         })),
@@ -58,14 +62,14 @@ const items = computed(() => {
       id: SchemaFolderType.Tables,
       icon: 'material-icon-theme:folder-database-open',
       closeIcon: 'material-icon-theme:folder-database',
-      paths: [SchemaFolderType.Tables],
+      path: SchemaFolderType.Tables,
       tabViewType: TabViewType.TableOverview,
       children: [
         ...tables.map(tableName => ({
           title: tableName,
           id: tableName,
           icon: 'vscode-icons:file-type-sql',
-          paths: [SchemaFolderType.Tables, tableName],
+          path: `${SchemaFolderType.Tables}/${tableName}`,
           tabViewType: TabViewType.TableDetail,
           isFolder: false,
         })),
@@ -77,14 +81,14 @@ const items = computed(() => {
       id: SchemaFolderType.Views,
       icon: 'material-icon-theme:folder-database-open',
       closeIcon: 'material-icon-theme:folder-database',
-      paths: [SchemaFolderType.Views],
+      path: SchemaFolderType.Views,
       tabViewType: TabViewType.ViewOverview,
       children: [
         ...views.map(viewName => ({
           title: viewName,
           id: viewName,
           icon: 'vscode-icons:file-type-sql',
-          paths: [SchemaFolderType.Views, viewName],
+          path: `${SchemaFolderType.Views}/${viewName}`,
           tabViewType: TabViewType.ViewDetail,
           isFolder: false,
         })),
@@ -97,10 +101,11 @@ const items = computed(() => {
     return treeItems;
   }
 
-  return tree.filterByTitle({
-    data: treeItems,
-    title: debouncedSearch.value,
-  });
+  const tree = new TreeManager([]);
+
+  tree.tree = treeItems;
+
+  return tree.searchByTitle(debouncedSearch.value);
 });
 
 const activityBarStore = useActivityBarStore();

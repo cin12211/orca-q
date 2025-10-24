@@ -1,6 +1,6 @@
 import type { FieldDef } from 'pg';
 import { useAppContext } from '~/shared/contexts/useAppContext';
-import { useExplorerFileStoreStore } from '~/shared/stores';
+import { useExplorerFileStore } from '~/shared/stores';
 import type { MappedRawColumn } from '../interfaces';
 import { formatColumnsInfo } from '../utils';
 
@@ -10,7 +10,7 @@ import { formatColumnsInfo } from '../utils';
 
 export function useRawQueryFileContent() {
   const route = useRoute('workspaceId-connectionId-explorer-fileId');
-  const explorerFileStore = useExplorerFileStoreStore();
+  const explorerFileStore = useExplorerFileStore();
   const { schemaStore, connectionStore } = useAppContext();
   const { activeSchema } = toRefs(schemaStore);
 
@@ -19,9 +19,11 @@ export function useRawQueryFileContent() {
 
   const fieldDefs = ref<FieldDef[]>([]);
 
-  const currentFile = computed(() =>
-    explorerFileStore.getFileById(route.params.fileId as string)
-  );
+  const currentFile = computed(() => {
+    return explorerFileStore?.flatNodes?.find(
+      f => f.id === route.params.fileId
+    );
+  });
 
   const connectionsByWsId = computed(() => {
     return connectionStore.getConnectionsByWorkspaceId(

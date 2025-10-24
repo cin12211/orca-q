@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { refDebounced, templateRef } from '@vueuse/core';
-import { tree } from '~/components/base/Tree';
+import { TreeManager, type TreeFileSystemItem } from '~/components/base/Tree';
 import TreeFolder from '~/components/base/Tree/TreeFolder.vue';
 import { useAppContext } from '~/shared/contexts/useAppContext';
 import { useActivityBarStore } from '~/shared/stores';
@@ -30,14 +30,14 @@ enum SchemaFolderType {
 const items = computed(() => {
   const tables = activeSchema?.value?.tables || [];
 
-  const treeItems = [
+  const treeItems: TreeFileSystemItem[] = [
     {
       title: 'All Tables',
       id: SchemaFolderType.Tables,
       icon: 'hugeicons:hierarchy-circle-02',
       closeIcon: 'hugeicons:hierarchy-circle-02',
-      paths: [SchemaFolderType.Tables],
-      tabViewType: TabViewType.TableOverview,
+      tabViewType: TabViewType.AllERD,
+      path: SchemaFolderType.Tables,
       children: [
         ...tables.map(tableName => {
           const refId = buildTableNodeId({
@@ -49,8 +49,8 @@ const items = computed(() => {
             title: tableName,
             id: refId,
             icon: 'hugeicons:hierarchy-circle-01',
-            paths: [SchemaFolderType.Tables, refId],
-            tabViewType: TabViewType.TableDetail,
+            path: `${SchemaFolderType.Tables}/${refId}`,
+            tabViewType: TabViewType.DetailERD,
             isFolder: false,
           };
         }),
@@ -63,10 +63,11 @@ const items = computed(() => {
     return treeItems;
   }
 
-  return tree.filterByTitle({
-    data: treeItems,
-    title: debouncedSearch.value,
-  });
+  const tree = new TreeManager([]);
+
+  tree.tree = treeItems;
+
+  return tree.searchByTitle(debouncedSearch.value);
 });
 
 const activityBarStore = useActivityBarStore();
@@ -230,7 +231,7 @@ const onNavigateToOverviewErdDiagram = async () => {
         async (_, item) => {
           const tabViewType: TabViewType = (item.value as any).tabViewType;
 
-          if (tabViewType === TabViewType.TableOverview) {
+          if (tabViewType === TabViewType.AllERD) {
             onNavigateToOverviewErdDiagram();
             return;
           }

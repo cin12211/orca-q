@@ -37,22 +37,21 @@ const items = computed(() => {
       return;
     }
 
-    const columns = table.columns;
-
     const nodeTableId = buildTableNodeId({
       schemaName: table.schema,
       tableName: table.table,
     });
 
-    const mapPK = new Map(table.primary_keys.map(item => [item.column, item]));
-    const mapFK = new Map(table.foreign_keys.map(item => [item.column, item]));
+    // const columns = table.columns;
+    // const mapPK = new Map(table.primary_keys.map(item => [item.column, item]));
+    // const mapFK = new Map(table.foreign_keys.map(item => [item.column, item]));
 
     const treeItem: TreeFileSystemItem = {
       title: table.table,
       id: nodeTableId,
       icon: 'vscode-icons:file-type-sql',
       closeIcon: 'vscode-icons:file-type-sql',
-      paths: [table.table],
+      path: nodeTableId,
       // children: [
       //   ...columns.map(column => {
       //     let icon = 'hugeicons:diamond';

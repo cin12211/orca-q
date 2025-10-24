@@ -3,12 +3,12 @@ import dayjs from 'dayjs';
 import type { FlattenedItem } from 'reka-ui';
 import { uuidv4 } from '~/lib/utils';
 
-export enum ETreeFileSystemStatus {
+enum ETreeFileSystemStatus {
   edit = 'edit',
   onlyView = 'onlyView',
 }
 
-export interface TreeFileSystemItem {
+interface TreeFileSystemItem {
   id: string;
   title: string;
   icon: string;
@@ -28,9 +28,9 @@ export interface TreeFileSystemItem {
   };
 }
 
-export type TreeFileSystem = TreeFileSystemItem[];
+type TreeFileSystem = TreeFileSystemItem[];
 
-export type FlattenedTreeFileSystemItem = FlattenedItem<TreeFileSystemItem>;
+type FlattenedTreeFileSystemItem = FlattenedItem<TreeFileSystemItem>;
 
 export type TreeAction =
   | {
@@ -53,11 +53,11 @@ export type TreeAction =
     }
   | { type: 'modal-move'; itemId: string; targetId: string; index: number };
 
-export const getTreeItemPath = (paths: string[]): string => {
+const getTreeItemPath = (paths: string[]): string => {
   return paths.join('/');
 };
 
-export const tree = {
+const tree = {
   removeItemByPaths(
     data: TreeFileSystem,
     targetPaths: string[]

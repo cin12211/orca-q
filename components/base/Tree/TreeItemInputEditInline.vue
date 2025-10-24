@@ -1,60 +1,67 @@
 <template>
   <Input
     type="text"
-    :class="[
-      'pl-2 w-full h-full! rounded-sm',
-      isExitFileNameRef && 'border-destructive! ring-destructive/20!',
-    ]"
-    @keyup.enter="onEnter"
-    @blur="onblur"
-    @keydown.stop
-    @keyup="handleKeydown"
+    class="pl-2 w-full h-full! rounded-sm"
+    :class="isDuplicateName && 'border-destructive! ring-destructive/20!'"
     v-model="inputValue"
+    @keyup.enter="handleEnter"
+    @blur.stop="handleBlur"
+    @keydown.stop
+    @keyup.stop
   />
 </template>
 
 <script lang="ts" setup>
+const emit = defineEmits<{
+  (e: 'onRename', name: string): void;
+  (e: 'onCancelEdit'): void;
+  (e: 'onDeleteFile'): void;
+}>();
+
 const props = defineProps<{
-  onRename: (name: string) => void;
-  onCancelCreate: () => void;
   validateName: (name: string) => boolean;
 }>();
 
-const inputValue = ref<string>('');
-const isExitFileNameRef = ref(false);
+const inputValue = ref('');
+const isDuplicateName = ref(false);
 
-const onHandleRename = (newName: string, isBlur: boolean) => {
-  if (!newName) {
-    props.onCancelCreate();
-  }
-
-  const isExistedFileName = props.validateName(newName);
-
-  if (isExistedFileName) {
-    isBlur && props.onCancelCreate();
-  } else {
-    props.onRename(newName);
-  }
-};
-
-const handleKeydown = async (e: FocusEvent) => {
-  const name = (e.target as HTMLInputElement).value;
-
-  const isExistedFileName = props.validateName(name);
-  isExitFileNameRef.value = isExistedFileName;
-};
-
-const onEnter = (e: FocusEvent) => {
-  const name = (e.target as HTMLInputElement).value;
-  onHandleRename(name, false);
-};
-
-const onblur = (e: FocusEvent) => {
-  const name = (e.target as HTMLInputElement).value;
-  onHandleRename(name, true);
-};
-
-defineExpose({
-  inputValue,
+// validate each time input changes
+watch(inputValue, val => {
+  isDuplicateName.value = props.validateName(val);
 });
+
+const handleRename = (name: string) => {
+  if (!name) {
+    emit('onCancelEdit');
+    return;
+  }
+
+  if (!props.validateName(name)) {
+    emit('onRename', name);
+    return;
+  }
+};
+
+const handleEnter = (e: KeyboardEvent) => {
+  const name = (e.target as HTMLInputElement).value.trim();
+  handleRename(name);
+};
+
+const handleBlur = (e: FocusEvent) => {
+  const input = e.target as HTMLInputElement;
+  const name = input.value;
+
+  if (!name) {
+    emit('onDeleteFile');
+    return;
+  }
+
+  if (props.validateName(name)) {
+    emit('onCancelEdit');
+  } else {
+    handleRename(name);
+  }
+};
+
+defineExpose({ inputValue });
 </script>

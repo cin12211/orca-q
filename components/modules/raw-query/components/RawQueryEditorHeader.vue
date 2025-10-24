@@ -1,15 +1,14 @@
 <script setup lang="ts">
-import { useAppContext } from '~/shared/contexts';
-import type { Connection } from '~/shared/stores';
+import { type Connection, type RowQueryFile } from '~/shared/stores';
 import PureConnectionSelector from '../../selectors/PureConnectionSelector.vue';
 import { RawQueryEditorLayout } from '../constants';
 import AddVariableModal from './AddVariableModal.vue';
 import RawQueryConfigModal from './RawQueryConfigModal.vue';
 
 defineProps<{
+  currentFileInfo?: RowQueryFile;
   fileVariables: string;
   workspaceId: string;
-  connectionId: string;
   connections: Connection[];
   connection?: Connection;
   codeEditorLayout: RawQueryEditorLayout;
@@ -19,8 +18,6 @@ defineEmits<{
   (e: 'update:connectionId', connectionId: string): void;
   (e: 'update:updateFileVariables', fileVariablesValue: string): Promise<void>;
 }>();
-
-const { tabViewStore } = useAppContext();
 
 const isOpenAddVariableModal = ref(false);
 const isOpenConfigModal = ref(false);
@@ -42,14 +39,15 @@ const openConfigModal = () => {
   />
   <RawQueryConfigModal v-model:open="isOpenConfigModal" />
 
+  <!-- {{ currentFileInfo }} -->
   <div class="flex items-center justify-between p-1 rounded-md bg-gray-50">
     <div>
       <Breadcrumb>
         <BreadcrumbList class="gap-0!">
           <BreadcrumbItem>
             <BreadcrumbLink class="flex items-center gap-0.5">
-              <Icon :name="tabViewStore.activeTab?.icon" />
-              {{ tabViewStore.activeTab?.name }}
+              <Icon :name="currentFileInfo?.icon" />
+              {{ currentFileInfo?.path }}
             </BreadcrumbLink>
           </BreadcrumbItem>
         </BreadcrumbList>
@@ -71,8 +69,9 @@ const openConfigModal = () => {
         />
         <Icon name="hugeicons:absolute" /> Add variables
       </Button>
+
       <PureConnectionSelector
-        :connectionId="connectionId"
+        :connectionId="currentFileInfo?.connectionId || ''"
         @update:connectionId="$emit('update:connectionId', $event)"
         :connections="connections"
         :connection="connection"
