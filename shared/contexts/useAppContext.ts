@@ -5,7 +5,6 @@ import {
   useTabViewsStore,
   useWorkspacesStore,
   useWSStateStore,
-  type Schema,
 } from '../stores';
 import {
   useManagementConnectionStore,
@@ -197,14 +196,6 @@ export const useAppContext = () => {
     wsId: string;
     onSuccess?: () => Promise<void>;
   }) => {
-    await navigateTo({
-      name: 'workspaceId-connectionId',
-      params: {
-        workspaceId: wsId,
-        connectionId: connId,
-      },
-    });
-
     await workspaceStore.updateLastOpened(wsId);
 
     let wsStateUpdated = allWsStates.value.find(
@@ -222,6 +213,14 @@ export const useAppContext = () => {
       connId: connId,
       wsId: wsId,
       isRefresh: false,
+    });
+
+    await navigateTo({
+      name: 'workspaceId-connectionId',
+      params: {
+        workspaceId: wsId,
+        connectionId: connId,
+      },
     });
 
     await onSuccess?.();

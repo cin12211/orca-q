@@ -7,9 +7,9 @@ import {
   OperatorSet,
 } from '~/utils/constants';
 import type { FilterSchema } from '~/utils/quickQuery';
+import { EDatabaseType } from '../../connection/constants';
 import WrapperErdDiagram from '../../erd-diagram/WrapperErdDiagram.vue';
 import { buildTableNodeId } from '../../erd-diagram/utils';
-import { EDatabaseType } from '../../management-connection/constants';
 import QuickQueryErrorPopup from '../QuickQueryErrorPopup.vue';
 import { QuickQueryTabView } from '../constants';
 import {

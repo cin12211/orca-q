@@ -5,7 +5,7 @@ import { tabViewsIDBApi } from './tabViewsIDBApi';
 import { workspaceIDBApi } from './workspaceIDBApi';
 import { workspaceStateIDBApi } from './workspaceStateIDBApi';
 
-export const initIDB = async () => {
+export const initIDB = () => {
   if (window.electron) {
     return;
   }

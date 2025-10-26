@@ -2,46 +2,48 @@
 import { Select, SelectGroup, SelectItem, SelectTrigger } from '#components';
 import type { AcceptableValue } from 'reka-ui';
 import { cn } from '@/lib/utils';
-import { useAppContext } from '~/shared/contexts/useAppContext';
+import { useConnectionsService } from '~/shared/services/useConnectionService';
+import { useWorkspacesService } from '~/shared/services/useWorkspacesService';
 import { type Connection } from '~/shared/stores';
-import CreateConnectionModal from '../management-connection/CreateConnectionModal.vue';
-import { getDatabaseSupportByType } from '../management-connection/constants';
+import CreateConnectionModal from '../connection/CreateConnectionModal.vue';
+import {
+  EDatabaseType,
+  getDatabaseSupportByType,
+} from '../connection/constants';
 
-const {
-  connectionStore,
-  createConnection,
-  wsStateStore,
-  openWorkspaceWithConnection,
-} = useAppContext();
+const route = useRoute('workspaceId-connectionId');
 
-const { connectionId: activeConnectionId } = toRefs(wsStateStore);
+const activeConnectionId = computed(() => {
+  return route.params.connectionId;
+});
 
-const { selectedConnection } = toRefs(connectionStore);
+const { openWorkspace } = useWorkspacesService();
+const { create: createConnection, connStore } = useConnectionsService();
 
 const props = defineProps<{ class: string; workspaceId: string }>();
 
 const open = ref(false);
+const isModalCreateConnectionOpen = ref(false);
+
+const currentConnection = computed(() => {
+  return connStore.connectionById(activeConnectionId.value);
+});
+
+const connectionsByWsId = computed(() => {
+  return connStore.connectionsByWorkspaceId(props.workspaceId);
+});
 
 const onChangeConnection = async (connectionId: AcceptableValue) => {
   if (
     typeof connectionId === 'string' &&
     connectionId !== activeConnectionId.value
   ) {
-    await openWorkspaceWithConnection({
+    await openWorkspace({
       connId: connectionId,
       wsId: props.workspaceId,
     });
-
-    // await setConnectionId({
-    //   connectionId,
-    //   async onSuccess() {
-    //     await tabViewStore.onActiveCurrentTab(connectionId);
-    //   },
-    // });
   }
 };
-
-const isModalCreateConnectionOpen = ref(false);
 
 const handleAddConnection = (connection: Connection) => {
   createConnection(connection);
@@ -51,10 +53,6 @@ const onOpenAddConnectionModal = () => {
   isModalCreateConnectionOpen.value = true;
   open.value = false;
 };
-
-const connectionsByWsId = computed(() => {
-  return connectionStore.getConnectionsByWorkspaceId(props.workspaceId);
-});
 </script>
 <template>
   <CreateConnectionModal
@@ -73,13 +71,17 @@ const connectionsByWsId = computed(() => {
     <SelectTrigger :class="cn(props.class, 'w-48 cursor-pointer')" size="sm">
       <div
         class="flex items-center gap-2 w-44 truncate"
-        v-if="selectedConnection"
+        v-if="currentConnection"
       >
         <component
-          :is="getDatabaseSupportByType(selectedConnection.type)?.icon"
+          :is="
+            getDatabaseSupportByType(
+              currentConnection.value?.type as EDatabaseType
+            )?.icon
+          "
           class="size-4! min-w-4!"
         />
-        {{ selectedConnection?.name }}
+        {{ currentConnection.value?.name }}
       </div>
       <div class="opacity-50" v-else>Select connection</div>
     </SelectTrigger>
