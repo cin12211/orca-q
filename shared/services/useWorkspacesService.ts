@@ -1,11 +1,15 @@
+import dayjs from 'dayjs';
 import { useWorkspacesStore } from './useWorkspacesStore';
+import { useAppStatesService } from './useWsStateService';
 
 export function useWorkspacesService() {
   const wsStore = useWorkspacesStore();
-  //   const connStore = useManagementConnectionStore();
-  //   const filesStore = useExplorerFileStore();
-  //   const tabsStore = useTabViewsStore();
-  //   const qqStore = useQuickQueryLogs();
+
+  const {
+    create: createAppState,
+    setSelectedState,
+    store: appStateStore,
+  } = useAppStatesService();
 
   const isLoading = ref(false);
   const error = ref<string>();
@@ -112,5 +116,58 @@ export function useWorkspacesService() {
   //   onMounted(startChannel);
   //   onBeforeUnmount(stopChannel);
 
-  return { isLoading, error, loadAll, create, update, remove, wsStore };
+  const changeLastOpened = async (workspaceId: string) => {
+    const workSpaceUpdated = await wsStore.updateWorkspace(workspaceId, {
+      lastOpened: dayjs().toISOString(),
+    });
+
+    if (workSpaceUpdated) await window.workspaceApi.update(workSpaceUpdated);
+  };
+
+  const openWorkspace = async ({
+    wsId,
+    connId,
+  }: {
+    wsId: string;
+    connId: string;
+  }) => {
+    await changeLastOpened(wsId);
+
+    const stateId = `${wsId}:${connId}`;
+
+    const state = appStateStore.allStates.find(ws => ws.id === stateId);
+
+    if (!state) {
+      await createAppState({
+        id: stateId,
+        workspaceId: wsId,
+        connectionId: connId,
+        isSelect: false,
+      });
+    }
+
+    await setSelectedState({
+      connId,
+      wsId,
+    });
+
+    await navigateTo({
+      name: 'workspaceId-connectionId',
+      params: {
+        workspaceId: wsId,
+        connectionId: connId,
+      },
+    });
+  };
+
+  return {
+    isLoading,
+    error,
+    loadAll,
+    create,
+    update,
+    remove,
+    wsStore,
+    openWorkspace,
+  };
 }

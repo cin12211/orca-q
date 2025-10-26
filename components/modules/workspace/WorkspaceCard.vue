@@ -35,7 +35,7 @@ const { connStore, create: createConnection } = useConnectionsService();
 // const { connectionStore, createConnection, openWorkspaceWithConnection } =
 //   useAppContext();
 
-const { remove: revmoveWorkspace } = useWorkspacesService();
+const { remove: revmoveWorkspace, openWorkspace } = useWorkspacesService();
 
 const isOpenEditModal = ref(false);
 const isOpenDeleteModal = ref(false);
@@ -52,7 +52,7 @@ const connections = computed(() => {
   return connStore.connectionsByWorkspaceId(props.workspace.id);
 });
 
-const onOpenWorkspace = (workspaceId: string) => {
+const onSelectWorkspace = (workspaceId: string) => {
   emits('onSelectWorkspace', workspaceId);
 };
 
@@ -60,28 +60,13 @@ const onOpenConnectionSelector = () => {
   isOpenConnectionSelector.value = true;
 };
 
-// TODO: Cinny 0001
 const onOpenWorkspaceWithConnection = async (connectionId: string) => {
   isOpenConnectionSelector.value = false;
 
-  // setActiveWSId({
-  //   connId: connectionId,
-  //   wsId: wsStateStore.workspaceId,
-  // });
-
-  // await nextTick();
-
-  // await openWorkspaceWithConnection({
-  //   connId: connectionId,
-  //   wsId: props.workspace.id,
-  // });
-
-  // await setConnectionId({
-  //   connectionId,
-  //   async onSuccess() {
-  //     await tabViewStore.onActiveCurrentTab(connectionId);
-  //   },
-  // });
+  openWorkspace({
+    connId: connectionId,
+    wsId: props.workspace.id,
+  });
 };
 
 const handleAddConnection = (connection: Connection) => {
@@ -226,7 +211,7 @@ const handleAddConnection = (connection: Connection) => {
           ref="dropdownTriggerRef"
           variant="default"
           class="w-full flex items-center justify-between"
-          @click="onOpenWorkspace(workspace.id)"
+          @click="onSelectWorkspace(workspace.id)"
           size="sm"
         >
           <div class="flex items-center gap-1">

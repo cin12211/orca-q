@@ -98,16 +98,6 @@ export const useWorkspacesStore = defineStore('workspace-store', () => {
     return state.byId[id];
   }
 
-  /** 👇 NEW: đổi lastOpened (mặc định = now), đồng thời cập nhật updatedAt */
-  function setLastOpened(id: string, iso?: string): void {
-    const current = state.byId[id];
-    if (!current) return;
-    state.byId[id] = {
-      ...current,
-      lastOpened: iso ?? nowIso(),
-    };
-  }
-
   // ============= Selectors (derived) =============
   const allWorkspaces = computed(() => state.allIds.map(id => state.byId[id]));
   const workspaceCount = computed(() => state.allIds.length);
@@ -134,8 +124,7 @@ export const useWorkspacesStore = defineStore('workspace-store', () => {
     upsertWorkspace,
     removeWorkspaces,
     removeWorkspace,
-    updateWorkspace, // 👈 added
-    setLastOpened, // 👈 added
+    updateWorkspace,
 
     // selectors
     allWorkspaces,

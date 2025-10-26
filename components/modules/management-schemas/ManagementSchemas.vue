@@ -14,10 +14,16 @@ import { DEFAULT_DEBOUNCE_INPUT } from '~/utils/constants';
 import ConnectionSelector from '../selectors/ConnectionSelector.vue';
 import SchemaSelector from '../selectors/SchemaSelector.vue';
 
+const route = useRoute('workspaceId-connectionId');
+
+const activeWorkspaceId = computed(() => {
+  return route.params.workspaceId;
+});
+
 const { schemaStore, connectToConnection, wsStateStore, tabViewStore } =
   useAppContext();
 const { activeSchema } = toRefs(schemaStore);
-const { connectionId, schemaId, workspaceId } = toRefs(wsStateStore);
+const { connectionId, schemaId } = toRefs(wsStateStore);
 
 const isRefreshing = ref(false);
 
@@ -146,7 +152,7 @@ const onRefreshSchema = async () => {
 
   isRefreshing.value = true;
   await connectToConnection({
-    wsId: workspaceId.value,
+    wsId: activeWorkspaceId.value,
     connId: connectionId.value,
     isRefresh: true,
   });
@@ -208,7 +214,7 @@ const onHandleOpenTab = async (
       routeParams,
       connectionId: connectionId.value,
       schemaId: schemaId.value || '',
-      workspaceId: workspaceId.value || '',
+      workspaceId: activeWorkspaceId.value || '',
       tableName: item.value.title,
     });
 
@@ -226,7 +232,7 @@ const onHandleOpenTab = async (
         >
           Connections
         </p>
-        <ConnectionSelector class="w-full!" :workspaceId="workspaceId" />
+        <ConnectionSelector class="w-full!" :workspaceId="activeWorkspaceId" />
       </div>
 
       <div>

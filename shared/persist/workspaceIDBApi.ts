@@ -1,5 +1,6 @@
 import dayjs from 'dayjs';
 import localforage from 'localforage';
+import { uuidv4 } from '~/lib/utils';
 import type { Workspace } from '../stores';
 import { createLocalforageGateway } from './localforageGateway';
 
@@ -23,7 +24,7 @@ export const workspaceIDBApi: Window['workspaceApi'] = {
   async create(workspace: Workspace) {
     const data: Workspace = {
       ...workspace,
-      id: workspace.id || crypto.randomUUID(),
+      id: workspace.id || uuidv4(),
       createdAt: dayjs().toISOString(),
       updatedAt: dayjs().toISOString(),
     };

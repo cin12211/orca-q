@@ -22,6 +22,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import type { Connection } from '~/shared/services/useConnectionStore';
+import { useWorkspacesService } from '~/shared/services/useWorkspacesService';
 import { getDatabaseSupportByType } from './constants';
 
 defineProps<{
@@ -33,6 +34,8 @@ const emit = defineEmits<{
   (e: 'delete', id: string): void;
   (e: 'create'): void;
 }>();
+
+const { openWorkspace } = useWorkspacesService();
 
 const deleteId = ref<string | null>(null);
 
@@ -47,8 +50,12 @@ const confirmDelete = () => {
   }
 };
 
-// TODO: Cinny 0001
 const onConnectConnection = (connection: Connection) => {
+  openWorkspace({
+    connId: connection.id,
+    wsId: connection.id,
+  });
+
   // openWorkspaceWithConnection({
   //   connId: connection.id,
   //   wsId: connection.workspaceId,

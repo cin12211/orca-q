@@ -1,9 +1,12 @@
 // services/useConnectionsService.ts
 import { ref, toRaw } from 'vue';
 import { useConnectionStore } from './useConnectionStore';
+import { useAppStatesService } from './useWsStateService';
 
 export function useConnectionsService() {
   const connStore = useConnectionStore();
+
+  const { create: createAppState } = useAppStatesService();
 
   const isLoading = ref(false);
   const error = ref<string>();
@@ -38,6 +41,14 @@ export function useConnectionsService() {
       const created = await window.connectionApi.create(payload);
       // (optional) sync lại đúng dữ liệu từ IO (nếu IO có bổ sung field)
       if (created?.id) connStore.upsertConnection(created);
+
+      await createAppState({
+        connectionId: payload.id,
+        workspaceId: payload.workspaceId,
+        id: '',
+        isSelect: false,
+      });
+
       return created;
     } catch (e) {
       // rollback

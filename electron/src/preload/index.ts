@@ -2,7 +2,7 @@
 // https://www.electronjs.org/docs/latest/tutorial/process-model#preload-scripts
 import { electronAPI } from '@electron-toolkit/preload'
 import { contextBridge, ipcRenderer } from 'electron'
-import type { Connection, TabView, Workspace } from '../../../shared/stores'
+import type { TabView, Workspace } from '../../../shared/stores'
 import {
   ConnectionIpcChannels,
   TabViewsIpcChannels,
@@ -13,11 +13,12 @@ import {
   RowQueryFilesIpcChannels
 } from '../constants'
 import { type UpdateWindowTitleProps } from '../main/ipc/updateWindowTitle'
-import { type WorkspaceState } from '../../../shared/stores/useWSStateStore'
 import { type DeleteTabViewProps, type GetTabViewsByContextProps } from '../main/ipc/tabViews'
 import type { QuickQueryLog } from '../../../shared/stores/useQuickQueryLogs'
 import type { DeleteQQueryLogsProps, GetQQueryLogsProps } from '../main/ipc/quickQueryLogs'
 import type { RowQueryFile, RowQueryFileContent } from '../../../shared/stores/useExplorerFileStore'
+import { Connection } from '../../../shared/services/useConnectionStore'
+import { AppState } from '../../../shared/services/useWsStateStore'
 
 export const electronBridgeApi = {
   updateWindowTitle: (props: UpdateWindowTitleProps) =>
@@ -25,12 +26,12 @@ export const electronBridgeApi = {
 }
 
 export const workspaceStateApi = {
-  getAll: (): Promise<WorkspaceState[]> => ipcRenderer.invoke(WorkspaceStateIpcChannels.Gets),
-  create: (wsState: WorkspaceState): Promise<WorkspaceState> =>
+  getAll: (): Promise<AppState[]> => ipcRenderer.invoke(WorkspaceStateIpcChannels.Gets),
+  create: (wsState: AppState): Promise<AppState> =>
     ipcRenderer.invoke(WorkspaceStateIpcChannels.Create, wsState),
-  update: (wsState: WorkspaceState): Promise<WorkspaceState | null> =>
+  update: (wsState: AppState): Promise<AppState | null> =>
     ipcRenderer.invoke(WorkspaceStateIpcChannels.Update, wsState),
-  delete: (id: string): Promise<WorkspaceState | null> =>
+  delete: (id: string): Promise<AppState | null> =>
     ipcRenderer.invoke(WorkspaceStateIpcChannels.Delete, id)
 }
 
