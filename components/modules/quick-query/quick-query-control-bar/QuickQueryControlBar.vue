@@ -31,19 +31,6 @@ const emit = defineEmits<{
 
 const quickQueryControlBarRef = ref<HTMLElement>();
 
-useHotkeys([
-  {
-    key: 'meta+s',
-    callback: () => emit('onSaveData'),
-  },
-  {
-    key: 'meta+alt+backspace',
-    callback: () => {
-      emit('onDeleteRows');
-    },
-  },
-]);
-
 const isDataView = computed(() => {
   return props.tabView === QuickQueryTabView.Data;
 });

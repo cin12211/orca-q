@@ -1,9 +1,10 @@
 import dayjs from 'dayjs';
 import localforage from 'localforage';
+import { toRawJSON } from '~/utils/common';
 import type {
   RowQueryFile,
   RowQueryFileContent,
-} from '../stores/useExplorerFileStoreStore';
+} from '../stores/useExplorerFileStore';
 
 const rowQueryFileIDBStore = localforage.createInstance({
   name: 'rowQueryFileIDBStore',
@@ -45,26 +46,25 @@ export const rowQueryFileIDBApi: (typeof window)['rowQueryFilesApi'] = {
   },
 
   createFiles: async (fileValue: RowQueryFile): Promise<RowQueryFile> => {
-    const file: RowQueryFile = {
+    const file: RowQueryFile = toRawJSON({
       ...fileValue,
       createdAt: fileValue.createdAt || dayjs().toISOString(),
-    };
-
-    const fileContent: RowQueryFileContent = {
-      id: fileValue.id,
-      contents: '',
-      variables: '',
-    };
+    });
 
     const isExitFileContent =
       await rowQueryFileContentIDBStore.getItem<RowQueryFileContent>(file.id);
 
-    await Promise.all([
-      rowQueryFileIDBStore.setItem(file.id, file),
-      isExitFileContent
-        ? undefined
-        : rowQueryFileContentIDBStore.setItem(file.id, fileContent),
-    ]);
+    await rowQueryFileIDBStore.setItem(file.id, file);
+
+    if (!isExitFileContent) {
+      const fileContent: RowQueryFileContent = {
+        id: file.id,
+        contents: '',
+        variables: '',
+      };
+
+      await rowQueryFileContentIDBStore.setItem(file.id, fileContent);
+    }
 
     return file;
   },
@@ -78,10 +78,10 @@ export const rowQueryFileIDBApi: (typeof window)['rowQueryFilesApi'] = {
 
     if (!existing) return null;
 
-    const fileUpdated: RowQueryFile = {
+    const fileUpdated: RowQueryFile = toRawJSON<RowQueryFile>({
       ...existing,
       ...fileValue,
-    };
+    });
 
     await rowQueryFileIDBStore.setItem(fileValue.id, fileUpdated);
     return fileUpdated;

@@ -10,6 +10,8 @@ import { useWSStateStore } from './useWSStateStore';
 // }
 
 export enum TabViewType {
+  AllERD = 'AllERD',
+  DetailERD = 'DetailERD',
   TableOverview = 'TableOverview',
   TableDetail = 'tableDetail',
 

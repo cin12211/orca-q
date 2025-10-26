@@ -100,3 +100,7 @@ export function jsonFormat(json: string, config?: JSONFormatConfig): string {
 
   return JSONFormat(normalized, indentType);
 }
+
+export function toRawJSON<T>(obj: T): T {
+  return JSON.parse(JSON.stringify(obj));
+}

@@ -141,9 +141,9 @@ onActivated(async () => {
             :connections="connectionsByWsId"
             :connection="connection"
             :workspaceId="route.params.workspaceId"
-            :connectionId="currentFile?.connectionId || ''"
             :file-variables="fileVariables"
             :code-editor-layout="appLayoutStore.codeEditorLayout"
+            :currentFileInfo="currentFile"
             @update:update-file-variables="updateFileVariables"
           />
           <div class="h-full flex flex-col overflow-y-auto">

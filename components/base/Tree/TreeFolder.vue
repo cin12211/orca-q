@@ -3,10 +3,9 @@ import { Icon } from '@iconify/vue';
 import { TreeItem, TreeRoot, TreeVirtualizer } from 'reka-ui';
 import {
   ETreeFileSystemStatus,
-  getTreeItemPath,
   type FlattenedTreeFileSystemItem,
   type TreeFileSystem,
-} from './treeUtils';
+} from './treeManagement';
 
 defineProps<{
   explorerFiles: TreeFileSystem;
@@ -53,7 +52,7 @@ const heightItem = 24;
     "
     class="list-none h-full overflow-y-auto select-none px-1 text-sm font-medium custom-scrollbar mr-1"
     :items="explorerFiles"
-    :get-key="item => getTreeItemPath(item.paths || [])"
+    :get-key="item => item.path"
     :expanded="expandedState"
     v-on:update:expanded="onUpdateExpanded"
     ref="treeRootRef"

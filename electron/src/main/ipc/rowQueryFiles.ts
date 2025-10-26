@@ -3,7 +3,7 @@ import dayjs from 'dayjs'
 import type {
   RowQueryFile,
   RowQueryFileContent
-} from '../../../../shared/stores/useExplorerFileStoreStore'
+} from '../../../../shared/stores/useExplorerFileStore'
 import { RowQueryFilesIpcChannels } from '../../constants'
 import { initDBRowQueryFiles, initDBRowQueryFileContents } from '../utils'
 

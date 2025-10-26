@@ -238,14 +238,62 @@ watch(quickQueryTabView, newQuickQueryTabView => {
   }
 });
 
+const isSkipShortcut = computed(
+  () => previewRelationBreadcrumbs.value.length > 0
+);
+
 useHotkeys(
   [
     {
       key: 'meta+a',
       callback: () => {
+        if (isSkipShortcut.value) {
+          return;
+        }
         quickQueryTableRef.value?.gridApi?.selectAll();
       },
       excludeInput: true,
+      isPreventDefault: true,
+    },
+    {
+      key: 'meta+c',
+      callback: () => {
+        if (isSkipShortcut.value) {
+          return;
+        }
+
+        onCopySelectedCell();
+      },
+      excludeInput: true,
+    },
+    {
+      key: 'meta+v',
+      callback: () => {
+        if (isSkipShortcut.value) {
+          return;
+        }
+        onPasteRows();
+      },
+      excludeInput: true,
+    },
+    {
+      key: 'meta+s',
+      callback: () => {
+        if (isSkipShortcut.value) {
+          return;
+        }
+        onSaveData();
+      },
+      isPreventDefault: true,
+    },
+    {
+      key: 'meta+alt+backspace',
+      callback: () => {
+        if (isSkipShortcut.value) {
+          return;
+        }
+        onDeleteRows();
+      },
       isPreventDefault: true,
     },
   ],
@@ -253,6 +301,18 @@ useHotkeys(
     target: containerRef,
   }
 );
+
+useHotkeys([
+  {
+    key: 'meta+f',
+    callback: async () => {
+      if (isSkipShortcut.value) {
+        return;
+      }
+      await quickQueryFilterRef.value?.onShowSearch();
+    },
+  },
+]);
 
 const columns = ref();
 

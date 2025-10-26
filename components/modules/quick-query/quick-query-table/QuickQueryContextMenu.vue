@@ -6,6 +6,7 @@ const { onShowSecondSidebar } = useAppLayoutStore();
 defineProps<{
   totalSelectedRows: number;
   hasEditedRows: boolean;
+  isReferencedTable?: boolean;
 }>();
 
 const emit = defineEmits<{
@@ -18,24 +19,6 @@ const emit = defineEmits<{
   (e: 'onCopySelectedCell'): void;
   (e: 'onFilterByValue'): void;
 }>();
-
-useHotkeys(
-  [
-    {
-      key: 'meta+c',
-      callback: () => emit('onCopySelectedCell'),
-      excludeInput: true,
-    },
-    {
-      key: 'meta+v',
-      callback: () => emit('onPasteRows'),
-      excludeInput: true,
-    },
-  ],
-  {
-    isPreventDefault: false,
-  }
-);
 </script>
 
 <template>
@@ -52,7 +35,7 @@ useHotkeys(
     </ContextMenuTrigger>
 
     <ContextMenuContent class="min-w-56">
-      <ContextMenuItem @select="onShowSecondSidebar">
+      <ContextMenuItem v-if="!isReferencedTable" @select="onShowSecondSidebar">
         <Icon
           name="hugeicons:view"
           class="size-4! min-w-4 text-muted-foreground"

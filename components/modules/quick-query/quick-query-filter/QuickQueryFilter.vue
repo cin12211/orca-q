@@ -180,15 +180,6 @@ const onShowSearch = () => {
   });
 };
 
-useHotkeys([
-  {
-    key: 'meta+f',
-    callback: async () => {
-      await onShowSearch();
-    },
-  },
-]);
-
 const getCurrentFocusInput = (): number | undefined => {
   if (!filterSearchRefs.value) {
     return;

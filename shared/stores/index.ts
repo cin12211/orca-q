@@ -6,4 +6,4 @@ export * from './useWorkspacesStore';
 export * from './useSchemaStore';
 export * from './useWSStateStore';
 export * from './useQuickQueryLogs';
-export * from './useExplorerFileStoreStore';
+export * from './useExplorerFileStore';

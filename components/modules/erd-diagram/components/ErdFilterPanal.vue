@@ -37,22 +37,21 @@ const items = computed(() => {
       return;
     }
 
-    const columns = table.columns;
-
     const nodeTableId = buildTableNodeId({
       schemaName: table.schema,
       tableName: table.table,
     });
 
-    const mapPK = new Map(table.primary_keys.map(item => [item.column, item]));
-    const mapFK = new Map(table.foreign_keys.map(item => [item.column, item]));
+    // const columns = table.columns;
+    // const mapPK = new Map(table.primary_keys.map(item => [item.column, item]));
+    // const mapFK = new Map(table.foreign_keys.map(item => [item.column, item]));
 
     const treeItem: TreeFileSystemItem = {
       title: table.table,
       id: nodeTableId,
       icon: 'vscode-icons:file-type-sql',
       closeIcon: 'vscode-icons:file-type-sql',
-      paths: [table.table],
+      path: nodeTableId,
       // children: [
       //   ...columns.map(column => {
       //     let icon = 'hugeicons:diamond';
@@ -104,7 +103,7 @@ const onFocusNode = (_e: MouseEvent, item: FlattenedTreeFileSystemItem) => {
     :class="[isShowFilter ? 'w-[20rem]' : 'w-[0rem]']"
   >
     <div
-      class="size-7 h-8 absolute -left-7 top-2 cursor-pointer bg-background border border-r-0 rounded-l-md flex-col justify-center flex items-center"
+      class="w-5 h-8 absolute -left-5 top-2 cursor-pointer bg-background border border-r-0 rounded-l-md flex-col justify-center flex items-center"
       @click="emit('update:isShowFilter', !isShowFilter)"
     >
       <Icon

@@ -10,7 +10,7 @@ export function generateTableAlias(tableName: string): string {
   // remove prefix like 'tbl_', 'table_'
   const prefixes = ['tbl_', 'table_'];
   for (const prefix of prefixes) {
-    if (name.startsWith(prefix)) {
+    if (name?.startsWith(prefix)) {
       name = name.slice(prefix.length);
     }
   }

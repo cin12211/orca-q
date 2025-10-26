@@ -1,14 +1,14 @@
 <script setup lang="ts">
 import { refDebounced } from '@vueuse/core';
 import { Icon } from '#components';
+import dayjs from 'dayjs';
 import {
   ETreeFileSystemStatus,
-  getTreeItemPath,
-  tree,
   type FlattenedTreeFileSystemItem,
 } from '~/components/base/Tree';
 import TreeItemInputEditInline from '~/components/base/Tree/TreeItemInputEditInline.vue';
-import { useExplorerFileStoreStore } from '~/shared/stores';
+import { uuidv4 } from '~/lib/utils';
+import { useExplorerFileStore } from '~/shared/stores';
 import {
   TabViewType,
   useTabViewsStore,
@@ -19,14 +19,17 @@ import TreeFolder from '../../base/Tree/TreeFolder.vue';
 
 const route = useRoute('workspaceId-connectionId-explorer-fileId');
 
-const explorerFileStore = useExplorerFileStoreStore();
+const explorerFileStore = useExplorerFileStore();
 const explorerStore = useManagementExplorerStore();
 
 const searchInput = shallowRef('');
 const debouncedSearch = refDebounced(searchInput, DEFAULT_DEBOUNCE_INPUT);
 
+const { onRemoveExpandedByPath, onCollapsedExplorer, onUpdateExpandedState } =
+  explorerStore;
+
 const { expandedState } = toRefs(explorerStore);
-const { explorerFileTree } = toRefs(explorerFileStore);
+const { treeNodeRef } = toRefs(explorerFileStore);
 
 const selectedItems = ref<FlattenedTreeFileSystemItem[]>([]);
 
@@ -36,114 +39,130 @@ const editFileNameInlineRef = useTemplateRef<InstanceType<
   typeof TreeItemInputEditInline
 > | null>('editFileNameInline');
 
-const onUpdateExpandedState = (paths: string[], oldPaths?: string[]) => {
-  const newStringPath = getTreeItemPath(paths);
-
-  const uniquePaths = new Set([...(expandedState.value || []), newStringPath]);
-
-  if (oldPaths) {
-    const oldStringPath = getTreeItemPath(oldPaths);
-
-    expandedState.value = [...uniquePaths].map(e => {
-      if (e?.startsWith(oldStringPath)) {
-        return e.replace(oldStringPath, newStringPath);
-      }
-
-      return e;
-    });
-  } else {
-    expandedState.value = [...uniquePaths];
-  }
-};
+const tabViewStore = useTabViewsStore();
 
 const onAddNewItem = async ({
-  paths,
+  node,
   isFolder,
 }: {
-  paths?: string[];
+  node?: FlattenedTreeFileSystemItem;
   isFolder: boolean;
 }) => {
-  if (paths) {
-    onUpdateExpandedState(paths);
+  const connectionId = route.params.connectionId;
+  const workspaceId = route.params.workspaceId;
+
+  const defaultFolder = {
+    title: '',
+    id: uuidv4(),
+    icon: 'lucide:folder-open',
+    closeIcon: 'lucide:folder',
+    status: ETreeFileSystemStatus.edit,
+    connectionId,
+    workspaceId,
+    createdAt: dayjs().toISOString(),
+    isFolder: true,
+    path: '',
+    children: [],
+  };
+
+  const defaultFile = {
+    title: '',
+    id: uuidv4(),
+    icon: 'lucide:file',
+    status: ETreeFileSystemStatus.edit,
+    connectionId,
+    workspaceId,
+    createdAt: dayjs().toISOString(),
+    isFolder: false,
+    path: '',
+    children: undefined,
+  };
+
+  const item = isFolder ? defaultFolder : defaultFile;
+
+  const nodeId = node?.value.id;
+  treeNodeRef.value.insertNode(nodeId || null, item);
+
+  treeNodeRef.value.sortByTitle();
+
+  if (node?.value.isFolder) {
+    onUpdateExpandedState(node?.value.path);
   }
 
-  const newTree = tree.onAddNewItemByPath({
-    data: explorerFileTree.value,
-    paths,
-    isFolder,
-    connectionId: route.params.connectionId,
-    workspaceId: route.params.workspaceId,
-  });
-
-  explorerFileStore.batchUpdateTreeFiles(newTree);
-
   await nextTick();
+
   editFileNameInlineRef.value?.$el?.focus();
 };
 
-const onReNameFile = (
+const onRenameFile = (
   fileInfo: FlattenedTreeFileSystemItem,
   newName: string
 ) => {
-  const isExpanded = expandedState.value.includes(
-    getTreeItemPath(fileInfo.value.paths)
-  );
+  const newPath =
+    (fileInfo.value.path as string).split('/').slice(0, -1).join('/') +
+    '/' +
+    newName;
 
-  const newPaths = [...fileInfo.value.paths.slice(0, -1), newName];
-  const paths = fileInfo.value.paths;
+  const oldPath = fileInfo.value.path;
 
-  const newTree = tree.renameByPath({
-    items: explorerFileTree.value,
-    paths: fileInfo.value.paths,
-    newName,
-  });
-
-  explorerFileStore.batchUpdateTreeFiles(newTree);
+  const isExpanded = expandedState.value.includes(oldPath);
 
   if (isExpanded) {
-    onUpdateExpandedState(newPaths, paths);
+    onUpdateExpandedState(newPath, oldPath);
+  }
+
+  treeNodeRef.value.updateNode(fileInfo.value.id, {
+    status: ETreeFileSystemStatus.onlyView,
+    title: newName,
+  });
+};
+
+const onDeleteNodeById = (id: string, node?: FlattenedTreeFileSystemItem) => {
+  treeNodeRef.value.deleteNode(id);
+
+  if (node) {
+    onRemoveExpandedByPath(node.value.path);
   }
 };
 
-const onRemoveItemByPaths = (fileInfo: FlattenedTreeFileSystemItem) => {
-  const newTree = tree.removeItemByPaths(
-    explorerFileTree.value,
-    fileInfo.value.paths
+const onCancelEditNode = (node: FlattenedTreeFileSystemItem) => {
+  if (node.value.title === '') {
+    onDeleteNodeById(node.value.id);
+    return;
+  }
+
+  const id = node.value.id;
+  treeNodeRef.value.updateNode(
+    id,
+    {
+      status: ETreeFileSystemStatus.onlyView,
+    },
+    false
   );
-
-  explorerFileStore.batchUpdateTreeFiles(newTree);
-
-  // get all folder , subfolder nested , file nested
-  const fileIds = tree.flattenTree([fileInfo.value]).map(item => item.id);
-
-  explorerFileStore.deleteFiles(fileIds);
-};
-
-const onCollapsedExplorer = () => {
-  expandedState.value = [];
 };
 
 const onSetAllowEditFileName = async (
   fileInfo: FlattenedTreeFileSystemItem
 ) => {
-  const newTree = tree.updateByPath({
-    items: explorerFileTree.value,
-    paths: fileInfo.value.paths,
-    newItem: item => {
-      return {
-        ...item,
-        status: ETreeFileSystemStatus.edit,
-      };
+  treeNodeRef.value.updateNode(
+    fileInfo.value.id,
+    {
+      status: ETreeFileSystemStatus.edit,
     },
-  });
-
-  explorerFileStore.batchUpdateTreeFiles(newTree);
+    false
+  );
 
   await nextTick();
 
   if (editFileNameInlineRef.value) {
-    editFileNameInlineRef.value.inputValue = fileInfo.value.title;
-    editFileNameInlineRef.value?.$el?.focus();
+    const inputEl = editFileNameInlineRef.value.$el as HTMLInputElement;
+
+    inputEl.value = fileInfo.value.title;
+
+    inputEl.focus();
+    // move cursor to the end
+    const length = fileInfo.value?.title?.length;
+    inputEl.setSelectionRange(length, length);
   }
 };
 
@@ -157,18 +176,36 @@ const onDelayedCallback = (callBack: () => void) => {
   }, 200);
 };
 
-const tabViewStore = useTabViewsStore();
-
 const mappedExplorerFiles = computed(() => {
-  if (!debouncedSearch.value) {
-    return explorerFileTree.value;
+  if (debouncedSearch.value) {
+    return treeNodeRef.value.searchByTitle(debouncedSearch.value);
   }
 
-  return tree.filterByTitle({
-    data: explorerFileTree.value,
-    title: debouncedSearch.value,
-  });
+  return treeNodeRef.value.tree;
 });
+
+const onClickNode = (item: FlattenedTreeFileSystemItem) => {
+  if (item?.value.isFolder) {
+    return;
+  }
+
+  tabViewStore.openTab({
+    icon: item.value.icon,
+    id: item.value.id,
+    name: item.value.title,
+    type: TabViewType.CodeQuery,
+    routeName: 'workspaceId-connectionId-explorer-fileId',
+    routeParams: {
+      fileId: item.value.id,
+    },
+    connectionId: route.params.connectionId,
+    schemaId: '',
+    workspaceId: route.params.workspaceId,
+    tableName: item.value.title,
+  });
+
+  tabViewStore.selectTab(item.value.id);
+};
 </script>
 
 <template>
@@ -230,10 +267,6 @@ const mappedExplorerFiles = computed(() => {
     </div>
 
     <div class="w-full h-full overflow-y-auto">
-      <!-- TODO: add move able file/ folder ,  -->
-      <!-- TODO: check function of menu context for 3 case : [file, folder, root]  -->
-      <!-- TODO: control file content / persist / restore  -->
-      <!-- TODO: save state search / expanded state  -->
       <ContextMenu
         @update:open="
           isOpen => {
@@ -252,127 +285,37 @@ const mappedExplorerFiles = computed(() => {
             :onRightClickItem="onRightClickItem"
             v-on:clickTreeItem="
               (_, item) => {
-                if (item?.hasChildren) {
-                  return;
-                }
-
-                tabViewStore.openTab({
-                  icon: item.value.icon,
-                  id: item.value.id,
-                  name: item.value.title,
-                  type: TabViewType.CodeQuery,
-                  routeName: 'workspaceId-connectionId-explorer-fileId',
-                  routeParams: {
-                    fileId: item.value.id,
-                  },
-                  connectionId: route.params.connectionId,
-                  schemaId: '',
-                  workspaceId: route.params.workspaceId,
-                  tableName: item.value.title,
-                });
-
-                tabViewStore.selectTab(item.value.id);
+                onClickNode(item);
               }
             "
           >
             <template #edit-inline="{ item }">
               <TreeItemInputEditInline
                 ref="editFileNameInline"
-                @rename="
-                  name => {
-                    onReNameFile(item as FlattenedTreeFileSystemItem, name);
-                  }
+                @onRename="
+                  onRenameFile(item as FlattenedTreeFileSystemItem, $event)
                 "
-                @cancel-create="
-                  () => {
-                    onRemoveItemByPaths(item as FlattenedTreeFileSystemItem);
-                  }
+                @onCancelEdit="
+                  onCancelEditNode(item as FlattenedTreeFileSystemItem)
+                "
+                @onDeleteFile="
+                  onDeleteNodeById(
+                    item.value.id,
+                    item as FlattenedTreeFileSystemItem
+                  )
                 "
                 :validate-name="
                   name => {
-                    const flattenedFileNames = (
-                      (
-                        (item as FlattenedTreeFileSystemItem).parentItem
-                          ?.children || explorerFileTree
-                      )?.map(e => e.title) ?? []
-                    ).filter(e => e !== item.value.title);
-
-                    return flattenedFileNames.includes(name);
+                    return treeNodeRef.isExitNodeNameInPath(
+                      name,
+                      item.value.id,
+                      item.value?.parentId
+                    );
                   }
                 "
                 :id="item._id"
               />
             </template>
-
-            <!-- <template #extra-actions="{ item }">
-            <div class="flex items-center">
-              <Button
-                size="iconSm"
-                class="hover:bg-background/80!"
-                variant="ghost"
-                @click.stop="
-                  () => {
-                    onAddNewItem({
-                      paths: item.value.paths,
-                      isFolder: false,
-                    });
-                  }
-                "
-                v-if="item.hasChildren"
-              >
-                <Icon
-                  name="lucide:file-plus-2"
-                  class="size-4! min-w-4 text-muted-foreground"
-                />
-              </Button>
-
-              <Button
-                size="iconSm"
-                variant="ghost"
-                class="hover:bg-background/80!"
-                @click.stop="
-                  () => {
-                    onAddNewItem({
-                      paths: item.value.paths,
-                      isFolder: true,
-                    });
-                  }
-                "
-                v-if="item.hasChildren"
-              >
-                <Icon
-                  name="lucide:folder-plus"
-                  class="size-4! min-w-4 text-muted-foreground"
-                />
-              </Button>
-              <Button
-                size="iconSm"
-                class="hover:bg-background/80!"
-                variant="ghost"
-                @click.stop="
-                  () => {
-                    onSetAllowEditFileName(item);
-                  }
-                "
-              >
-                <Icon
-                  name="lucide:pencil"
-                  class="size-4! min-w-4 text-muted-foreground"
-                />
-              </Button>
-              <Button
-                size="iconSm"
-                class="hover:bg-background/80!"
-                variant="ghost"
-                @click.stop="() => onRemoveFile(item)"
-              >
-                <Icon
-                  name="lucide:trash"
-                  class="size-4! min-w-4 text-muted-foreground"
-                />
-              </Button>
-            </div>
-          </template> -->
           </TreeFolder>
         </ContextMenuTrigger>
 
@@ -383,7 +326,7 @@ const mappedExplorerFiles = computed(() => {
                 onDelayedCallback(() => {
                   rightClickSelectedItem &&
                     onAddNewItem({
-                      paths: rightClickSelectedItem.value.paths,
+                      node: rightClickSelectedItem,
                       isFolder: false,
                     });
                 });
@@ -408,7 +351,7 @@ const mappedExplorerFiles = computed(() => {
                 onDelayedCallback(() => {
                   rightClickSelectedItem &&
                     onAddNewItem({
-                      paths: rightClickSelectedItem.value.paths,
+                      node: rightClickSelectedItem,
                       isFolder: true,
                     });
                 });
@@ -445,7 +388,10 @@ const mappedExplorerFiles = computed(() => {
             @click.stop="
               () =>
                 rightClickSelectedItem &&
-                onRemoveItemByPaths(rightClickSelectedItem)
+                onDeleteNodeById(
+                  rightClickSelectedItem.value.id,
+                  rightClickSelectedItem
+                )
             "
           >
             <Icon
@@ -458,3 +404,8 @@ const mappedExplorerFiles = computed(() => {
     </div>
   </div>
 </template>
+
+<!-- TODO: add move able file/ folder ,  -->
+<!-- TODO: check function of menu context for 3 case : [file, folder, root]  -->
+<!-- TODO: control file content / persist / restore  -->
+<!-- TODO: save state search / expanded state  -->
