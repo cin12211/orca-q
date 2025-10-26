@@ -14,8 +14,9 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { uuidv4 } from '~/lib/utils';
-import { useAppContext } from '~/shared/contexts/useAppContext';
+import { useWorkspacesService } from '~/shared/services/useWorkspacesService';
 import { type Workspace } from '~/shared/stores';
+import CustomPickIconField from './CustomPickIconField.vue';
 
 const props = defineProps<{
   open: Boolean;
@@ -24,20 +25,31 @@ const props = defineProps<{
 
 const emit = defineEmits(['update:open']);
 
-const { workspaceStore } = useAppContext();
+const defaultIcon = 'lucide:badge';
+const defaultName = 'My workspace';
+
+const { update: updateWorkspace, create: createWorkspace } =
+  useWorkspacesService();
 
 const schema = z.object({
+  icon: z.string().optional(),
   name: z.string().nonempty('Workspace name is required.'),
-
   desc: z.string().optional(),
 });
 
 const form = useForm({
   validationSchema: toTypedSchema(schema),
-  initialValues: props.workspace && {
-    name: props.workspace.name,
-    desc: props.workspace.desc,
-  },
+  initialValues: props.workspace
+    ? {
+        icon: props.workspace?.icon,
+        name: props.workspace?.name,
+        desc: props.workspace?.desc,
+      }
+    : {
+        icon: defaultIcon,
+        name: defaultName,
+        desc: '',
+      },
   name: 'workspace-form',
 });
 
@@ -45,21 +57,22 @@ function onSubmit(values: z.infer<typeof schema>) {
   const isUpdate = !!props.workspace;
 
   if (isUpdate) {
-    workspaceStore.updateWorkspace({
+    updateWorkspace(props.workspace.id, {
       ...props.workspace,
       desc: values.desc,
       name: values.name,
+      icon: values.icon || '',
     });
 
     toast('Workspace has been updated', {
       description: dayjs().toString(),
     });
   } else {
-    workspaceStore.createWorkspace({
+    createWorkspace({
       desc: values.desc,
       id: uuidv4(),
       name: values.name,
-      icon: 'lucide:badge',
+      icon: values.icon || '',
       createdAt: dayjs().toISOString(),
     });
 
@@ -79,9 +92,6 @@ function onSubmit(values: z.infer<typeof schema>) {
         <DialogTitle>
           {{ workspace ? 'Update workspace' : 'New workspace' }}
         </DialogTitle>
-        <!-- <DialogDescription>
-          Make changes to your profile here. Click save when you're done.
-        </DialogDescription> -->
       </DialogHeader>
 
       <AutoForm
@@ -89,6 +99,10 @@ function onSubmit(values: z.infer<typeof schema>) {
         :schema="schema"
         :form="form"
         :field-config="{
+          icon: {
+            component: CustomPickIconField,
+            label: 'Icon',
+          },
           name: {
             component: 'string',
             inputProps: { placeholder: 'Workspace name' },

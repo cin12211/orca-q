@@ -5,7 +5,6 @@ import {
   useTabViewsStore,
   useWorkspacesStore,
   useWSStateStore,
-  type Schema,
 } from '../stores';
 import {
   useManagementConnectionStore,

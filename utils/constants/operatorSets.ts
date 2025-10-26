@@ -1,4 +1,4 @@
-import type { EDatabaseType } from '~/components/modules/management-connection/constants';
+import type { EDatabaseType } from '~/components/modules/connection/constants';
 
 export enum ComposeOperator {
   AND = 'AND',

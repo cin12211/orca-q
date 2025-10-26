@@ -3,16 +3,19 @@ import { Select, SelectGroup, SelectItem, SelectTrigger } from '#components';
 import type { AcceptableValue } from 'reka-ui';
 import { cn } from '@/lib/utils';
 import { useAppContext } from '~/shared/contexts/useAppContext';
+import { useConnectionsService } from '~/shared/services/useConnectionService';
 import { type Connection } from '~/shared/stores';
-import CreateConnectionModal from '../management-connection/CreateConnectionModal.vue';
-import { getDatabaseSupportByType } from '../management-connection/constants';
+import CreateConnectionModal from '../connection/CreateConnectionModal.vue';
+import { getDatabaseSupportByType } from '../connection/constants';
 
 const {
-  connectionStore,
-  createConnection,
-  wsStateStore,
-  openWorkspaceWithConnection,
-} = useAppContext();
+  create: createConnection,
+  update: updateConnection,
+  remove: removeConnection,
+} = useConnectionsService();
+
+const { connectionStore, wsStateStore, openWorkspaceWithConnection } =
+  useAppContext();
 
 const { connectionId: activeConnectionId } = toRefs(wsStateStore);
 

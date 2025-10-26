@@ -4,8 +4,9 @@ import { LoadingOverlay, TooltipProvider } from '#components';
 import { AllCommunityModule, ModuleRegistry } from 'ag-grid-community';
 import Settings from './components/modules/settings/Settings.vue';
 import { Toaster } from './components/ui/sonner';
-import { useAppContext } from './shared/contexts';
 import { initIDB } from './shared/persist';
+import { useConnectionsService } from './shared/services/useConnectionService';
+import { useWorkspacesService } from './shared/services/useWorkspacesService';
 import { DEFAULT_DEBOUNCE_INPUT } from './utils/constants';
 
 initIDB();
@@ -18,7 +19,9 @@ const { initialize } = useAmplitude();
 const appLoading = useAppLoading();
 const { isLoading } = useLoadingIndicator();
 
-const { connectToConnection } = useAppContext();
+// const { connectToConnection } = useAppContext();
+const { loadAll: loadWorkspaces } = useWorkspacesService();
+const { loadAll: loadConnections } = useConnectionsService();
 
 const route = useRoute('workspaceId-connectionId');
 
@@ -31,18 +34,24 @@ onBeforeMount(() => {
 });
 
 onMounted(async () => {
-  const workspaceId = route.params.workspaceId;
-  const connectionId = route.params.connectionId;
+  appLoading.start();
 
-  if (!workspaceId || !connectionId) {
-    return;
-  }
+  await Promise.all([loadWorkspaces(), loadConnections()]);
 
-  await connectToConnection({
-    connId: connectionId,
-    wsId: workspaceId,
-    isRefresh: true,
-  });
+  appLoading.finish();
+
+  //  const workspaceId = route.params.workspaceId;
+  // const connectionId = route.params.connectionId;
+
+  // if (!workspaceId || !connectionId) {
+  //   return;
+  // }
+
+  // await connectToConnection({
+  //   connId: connectionId,
+  //   wsId: workspaceId,
+  //   isRefresh: true,
+  // });
 });
 </script>
 

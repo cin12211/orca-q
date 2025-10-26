@@ -1,6 +1,6 @@
 import debounce from 'lodash-es/debounce';
 import { toast } from 'vue-sonner';
-import { EDatabaseType } from '~/components/modules/management-connection/constants';
+import { EDatabaseType } from '~/components/modules/connection/constants';
 import { useQuickQueryLogs } from '~/shared/stores';
 import {
   ComposeOperator,

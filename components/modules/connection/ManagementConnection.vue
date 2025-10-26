@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import { Button } from '@/components/ui/button';
-import { useAppContext } from '~/shared/contexts/useAppContext';
-import type { Connection } from '~/shared/stores';
+import { useConnectionsService } from '~/shared/services/useConnectionService';
+import type { Connection } from '~/shared/services/useConnectionStore';
 import ConnectionsList from './ConnectionsList.vue';
 import CreateConnectionModal from './CreateConnectionModal.vue';
 
@@ -13,7 +13,11 @@ defineProps<{
 
 const isModalOpen = ref(false);
 
-const { createConnection, connectionStore } = useAppContext();
+const {
+  create: createConnection,
+  update: updateConnection,
+  remove: removeConnection,
+} = useConnectionsService();
 
 const editingConnection = ref<Connection | null>(null);
 
@@ -27,7 +31,7 @@ const handleAddConnection = (connection: Connection) => {
 };
 
 const handleUpdateConnection = (connection: Connection) => {
-  connectionStore.updateConnection(connection);
+  updateConnection(connection.id, connection);
 };
 
 const onOpenUpdateConnectionModal = (connection: Connection) => {
@@ -36,7 +40,7 @@ const onOpenUpdateConnectionModal = (connection: Connection) => {
 };
 
 const handleDeleteConnection = (id: string) => {
-  connectionStore.onDeleteConnection(id);
+  removeConnection(id);
 };
 </script>
 
@@ -65,7 +69,7 @@ const handleDeleteConnection = (id: string) => {
 
       <CreateConnectionModal
         :open="isModalOpen"
-        :editing-connection="editingConnection"
+        :editingConnection="editingConnection"
         @update:open="isModalOpen = $event"
         @addNew="handleAddConnection"
         @update="handleUpdateConnection"

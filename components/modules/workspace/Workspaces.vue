@@ -3,23 +3,27 @@ import { refDebounced } from '@vueuse/core';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 import { Search } from 'lucide-vue-next';
-import { useAppContext } from '~/shared/contexts/useAppContext';
+import { useWorkspacesService } from '~/shared/services/useWorkspacesService';
 import { DEFAULT_DEBOUNCE_INPUT } from '~/utils/constants';
-import ManagementConnectionModal from '../management-connection/ManagementConnectionModal.vue';
+import ConnectionsModal from '../connection/ConnectionsModal.vue';
 import CreateWorkspaceModal from './CreateWorkspaceModal.vue';
 import WorkspaceCard from './WorkspaceCard.vue';
 import WorkspaceHeader from './WorkspaceHeader.vue';
 
 dayjs.extend(relativeTime);
 
-const { workspaceStore, connectionStore } = useAppContext();
+const { wsStore } = useWorkspacesService();
 
 const search = shallowRef('');
 const workspaceId = ref('');
 const debouncedSearch = refDebounced(search, DEFAULT_DEBOUNCE_INPUT);
 
 const mappedWorkspaces = computed(() => {
-  return (workspaceStore.workspaces || []).filter(workspace => {
+  if (!debouncedSearch.value) {
+    return wsStore.allWorkspaces;
+  }
+
+  return wsStore.allWorkspaces.filter(workspace => {
     return workspace.name
       .toLowerCase()
       .includes(debouncedSearch.value.toLowerCase());
@@ -42,9 +46,8 @@ const onSelectWorkspace = (id: string) => {
     v-if="isOpenCreateWSModal"
   />
 
-  <ManagementConnectionModal
+  <ConnectionsModal
     v-model:open="isOpenSelectConnectionModal"
-    :connections="connectionStore.getConnectionsByWorkspaceId(workspaceId)"
     :workspace-id="workspaceId"
   />
   <div class="flex flex-col h-full overflow-y-auto p-4 pt-0 space-y-4">

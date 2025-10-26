@@ -12,10 +12,11 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { useAppContext } from '~/shared/contexts/useAppContext';
+import { useConnectionsService } from '~/shared/services/useConnectionService';
+import { useWorkspacesService } from '~/shared/services/useWorkspacesService';
 import { type Connection, type Workspace } from '~/shared/stores';
-import CreateConnectionModal from '../management-connection/CreateConnectionModal.vue';
-import { getDatabaseSupportByType } from '../management-connection/constants';
+import CreateConnectionModal from '../connection/CreateConnectionModal.vue';
+import { getDatabaseSupportByType } from '../connection/constants';
 import CreateWorkspaceModal from './CreateWorkspaceModal.vue';
 import DeleteWorkspaceModal from './DeleteWorkspaceModal.vue';
 
@@ -30,12 +31,11 @@ const emits = defineEmits<{
   (e: 'onSelectWorkspace', wsId: string): void;
 }>();
 
-const {
-  workspaceStore,
-  connectionStore,
-  createConnection,
-  openWorkspaceWithConnection,
-} = useAppContext();
+const { connStore, create: createConnection } = useConnectionsService();
+// const { connectionStore, createConnection, openWorkspaceWithConnection } =
+//   useAppContext();
+
+const { remove: revmoveWorkspace } = useWorkspacesService();
 
 const isOpenEditModal = ref(false);
 const isOpenDeleteModal = ref(false);
@@ -45,11 +45,11 @@ const isModalCreateConnectionOpen = ref(false);
 
 const onConfirmDelete = () => {
   isOpenDeleteModal.value = false;
-  workspaceStore.deleteWorkspace(props.workspace.id);
+  revmoveWorkspace(props.workspace.id);
 };
 
 const connections = computed(() => {
-  return connectionStore.getConnectionsByWorkspaceId(props.workspace.id);
+  return connStore.connectionsByWorkspaceId(props.workspace.id);
 });
 
 const onOpenWorkspace = (workspaceId: string) => {
@@ -60,6 +60,7 @@ const onOpenConnectionSelector = () => {
   isOpenConnectionSelector.value = true;
 };
 
+// TODO: Cinny 0001
 const onOpenWorkspaceWithConnection = async (connectionId: string) => {
   isOpenConnectionSelector.value = false;
 
@@ -70,10 +71,10 @@ const onOpenWorkspaceWithConnection = async (connectionId: string) => {
 
   // await nextTick();
 
-  await openWorkspaceWithConnection({
-    connId: connectionId,
-    wsId: props.workspace.id,
-  });
+  // await openWorkspaceWithConnection({
+  //   connId: connectionId,
+  //   wsId: props.workspace.id,
+  // });
 
   // await setConnectionId({
   //   connectionId,

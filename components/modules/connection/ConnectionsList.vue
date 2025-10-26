@@ -1,8 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import { Tooltip, TooltipContent, TooltipTrigger } from '#components';
-import dayjs from 'dayjs';
-import { EditIcon, Trash2Icon, ExternalLinkIcon } from 'lucide-vue-next';
+import { EditIcon, ExternalLinkIcon, Trash2Icon } from 'lucide-vue-next';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -22,11 +21,8 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { useAppContext } from '~/shared/contexts/useAppContext';
-import { useTabViewsStore, type Connection } from '~/shared/stores';
+import type { Connection } from '~/shared/services/useConnectionStore';
 import { getDatabaseSupportByType } from './constants';
-
-const { tabViewStore, openWorkspaceWithConnection } = useAppContext();
 
 defineProps<{
   connections: Connection[];
@@ -40,10 +36,6 @@ const emit = defineEmits<{
 
 const deleteId = ref<string | null>(null);
 
-const formatDate = (date: Date) => {
-  return dayjs(date).format('DD/MM/YYYY HH:mm');
-};
-
 const openDeleteDialog = (id: string) => {
   deleteId.value = id;
 };
@@ -55,12 +47,12 @@ const confirmDelete = () => {
   }
 };
 
+// TODO: Cinny 0001
 const onConnectConnection = (connection: Connection) => {
-  openWorkspaceWithConnection({
-    connId: connection.id,
-    wsId: connection.workspaceId,
-  });
-
+  // openWorkspaceWithConnection({
+  //   connId: connection.id,
+  //   wsId: connection.workspaceId,
+  // });
   // setConnectionId({
   //   connectionId: connection.id,
   //   async onSuccess() {
