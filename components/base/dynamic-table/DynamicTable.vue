@@ -138,7 +138,8 @@ const columnDefs = computed<ColDef[]>(() => {
         field: fieldId,
         filter: true,
         resizable: true,
-        editable: canMutate,
+        editable: false,
+        // editable: canMutate,//TODO: fix for editable inline
         sortable: true,
         cellClass: 'cellCenter',
         type: 'editableColumn',
@@ -150,6 +151,7 @@ const columnDefs = computed<ColDef[]>(() => {
         valueFormatter: (params: ValueFormatterParams) => {
           return cellValueFormatter(params.value, type);
         },
+
         width: estimatedWidth,
       };
       colDefs.push(column);
@@ -221,7 +223,8 @@ const columnTypes = ref<{
         style.color = 'var(--muted-foreground)';
       }
 
-      const haveDifferent = oldValue !== params.value;
+      const haveDifferent =
+        JSON.stringify(oldValue) !== JSON.stringify(params.value);
 
       if (haveDifferent) {
         style.backgroundColor = 'var(--color-orange-200)';
@@ -273,7 +276,9 @@ useHotkeys(
           const colId = selectedCell.column.getColId();
           const cellValue = rowNode?.data?.[colId];
 
-          await navigator.clipboard.writeText(String(cellValue));
+          await navigator.clipboard.writeText(
+            cellValueFormatter(cellValue) || ''
+          );
         }
       },
       excludeInput: true,

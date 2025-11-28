@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { Label, Switch } from '#components';
 import { formatNumber, formatQueryTime } from '~/utils/common/format';
 import type { EditorCursor } from '../interfaces';
 
@@ -9,11 +10,13 @@ defineProps<{
   executeErrors: boolean;
   queryTime: number;
   rawQueryResultsLength: number;
+  isRawViewMode: boolean;
 }>();
 
 defineEmits<{
   (e: 'onFormatCode'): void;
   (e: 'onExecuteCurrent'): void;
+  (e: 'update:isRawViewMode', value: boolean): void;
 }>();
 </script>
 <template>
@@ -43,6 +46,16 @@ defineEmits<{
     </div>
 
     <div class="flex gap-1">
+      <div class="flex items-center mr-1">
+        <Switch
+          :model-value="isRawViewMode"
+          @update:model-value="$emit('update:isRawViewMode', $event)"
+          class="scale-75"
+          id="airplane-mode"
+        />
+        <Label for="airplane-mode" class="font-normal">Raw Mode</Label>
+      </div>
+
       <Button
         @click="$emit('onFormatCode')"
         variant="outline"

@@ -1,6 +1,7 @@
 import { ref } from 'vue';
 import { toast } from 'vue-sonner';
 import { HASH_INDEX_ID } from '~/components/base/dynamic-table/constants';
+import { cellValueFormatter } from '~/components/base/dynamic-table/utils';
 import { useAppContext } from '~/shared/contexts/useAppContext';
 import { copyRowsToClipboard } from '~/utils/common';
 import { buildUpdateStatements } from '~/utils/quickQuery';
@@ -296,7 +297,9 @@ export function useQuickQueryMutation(options: UseQuickQueryMutationOptions) {
 
   const onCopySelectedCell = async () => {
     if (focusedCell?.value) {
-      await navigator.clipboard.writeText(String(focusedCell.value));
+      await navigator.clipboard.writeText(
+        cellValueFormatter(focusedCell.value) || ''
+      );
     }
   };
 
