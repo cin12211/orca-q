@@ -1,4 +1,7 @@
 <script setup lang="ts">
+import { useElementSize } from '@vueuse/core';
+import VueJsonPretty from 'vue-json-pretty';
+import 'vue-json-pretty/lib/styles.css';
 import BaseCodeEditor from '~/components/base/code-editor/BaseCodeEditor.vue';
 import { useAppLayoutStore } from '~/shared/stores/appLayoutStore';
 import IntroRawQuery from './components/IntroRawQuery.vue';
@@ -39,6 +42,7 @@ const {
   onHandleFormatCode,
   currentRawQueryResult,
   queryProcessState,
+  rawResponse,
   // sqlCompartment,
   // executedResults,
 } = toRefs(rawQueryEditor);
@@ -129,6 +133,11 @@ onActivated(async () => {
     }, 50);
   }
 });
+
+const jsonViewRef = useTemplateRef('jsonViewRef');
+const { height } = useElementSize(jsonViewRef);
+
+const isRawViewMode = ref(false);
 </script>
 
 <template>
@@ -165,6 +174,8 @@ onActivated(async () => {
             :is-have-one-execute="queryProcessState.isHaveOneExecute"
             :queryTime="queryProcessState.queryTime"
             :raw-query-results-length="currentRawQueryResult.length"
+            :isRawViewMode="isRawViewMode"
+            @update:isRawViewMode="isRawViewMode = $event"
             @onFormatCode="onHandleFormatCode"
             @on-execute-current="onExecuteCurrent"
           />
@@ -237,9 +248,30 @@ onActivated(async () => {
         </Collapsible>
       </div>
 
+      <div
+        ref="jsonViewRef"
+        class="h-full flex flex-col flex-1 overflow-y-auto"
+        v-show="
+          !queryProcessState.executeErrors &&
+          queryProcessState.isHaveOneExecute &&
+          isRawViewMode
+        "
+      >
+        <VueJsonPretty
+          virtual
+          showLineNumber
+          showIcon
+          showLength
+          :height="height"
+          :data="rawResponse"
+        />
+      </div>
+
       <DynamicTable
         v-show="
-          !queryProcessState.executeErrors && queryProcessState.isHaveOneExecute
+          !queryProcessState.executeErrors &&
+          queryProcessState.isHaveOneExecute &&
+          !isRawViewMode
         "
         :columns="mappedColumns"
         :data="currentRawQueryResult || []"

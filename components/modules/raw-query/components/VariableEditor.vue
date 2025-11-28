@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { json } from '@codemirror/lang-json';
+import { json, jsonParseLinter } from '@codemirror/lang-json';
+import { linter, lintGutter } from '@codemirror/lint';
 import { placeholder } from '@codemirror/view';
 import BaseCodeEditor from '~/components/base/code-editor/BaseCodeEditor.vue';
 import { shortCutFormatOnSave } from '~/components/base/code-editor/extensions';
@@ -34,8 +35,8 @@ const extensions = [
     }
   }),
   json(),
-  // lintGutter(), // show gutter for linter warnings
-  // linter(jsonParseLinter() as any), // attach JSON linter
+  lintGutter(), // show gutter for linter warnings
+  linter(jsonParseLinter()), // attach JSON linter
 ];
 
 const updateFileContent = (fileContentsValue: string) => {

@@ -67,6 +67,14 @@ export function useRawQueryEditor({
 }) {
   const codeEditorRef = ref<InstanceType<typeof BaseCodeEditor> | null>(null);
   const currentRawQueryResult = shallowRef<RowData[]>([]);
+  const rawResponse = shallowRef<
+    | {
+        rows: Record<string, any>[];
+        fields: FieldDef[];
+        queryTime: number;
+      }
+    | {}
+  >({});
 
   //TODO: open when support multiple statements
   // const executedResults = shallowRef<ExecutedResultItem[]>([]);
@@ -219,6 +227,7 @@ export function useRawQueryEditor({
 
     fieldDefs.value = [];
     currentRawQueryResult.value = [];
+    rawResponse.value = {};
     queryProcessState.executeLoading = true;
 
     // const executedResultItem: ExecutedResultItem = {
@@ -248,6 +257,7 @@ export function useRawQueryEditor({
       // executedResultItem.metadata.queryTime = result.queryTime || 0;
       // executedResultItem.metadata.connection = connection.value;
 
+      rawResponse.value = result;
       currentRawQueryResult.value = result.rows as RowData[];
       queryProcessState.executeErrors = undefined;
       queryProcessState.queryTime = result.queryTime || 0;
@@ -350,6 +360,7 @@ export function useRawQueryEditor({
   return {
     codeEditorRef,
     currentRawQueryResult,
+    rawResponse,
     queryProcessState,
     onExecuteCurrent,
     extensions,
