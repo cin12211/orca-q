@@ -4,10 +4,9 @@
   "description": "The open source | Next Generation database editor",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#fafafa",
-  "theme_color": "#fafafa",
   "dir": "ltr",
   "orientation": "portrait",
+  "display_override": ["window-controls-overlay"],
 
   "icons": [
     {

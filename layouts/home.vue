@@ -1,12 +1,17 @@
 <script setup lang="ts">
-import { isElectron } from '~/lib/utils';
+import { cn } from '@/lib/utils';
+import { isElectron, isPWA } from '~/lib/utils';
 
-const isAppVersion = computed(() => isElectron());
+const isAppVersion = computed(() => isElectron() || isPWA());
 </script>
 
 <template>
   <div
-    class="w-full h-9 select-none pr-2 flex justify-center electron-drag-region"
+    :class="
+      cn(
+        'w-full h-10.5 select-none pr-2 bg-sidebar flex justify-center electron-drag-region'
+      )
+    "
     v-if="isAppVersion"
   >
     <div class="flex items-center justify-between py-2 px-2">
