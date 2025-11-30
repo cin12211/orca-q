@@ -46,7 +46,7 @@ export function isElectron() {
 
 export const isPWA = () => {
   if (!!('windowControlsOverlay' in navigator)) {
-    return (navigator.windowControlsOverlay as any)?.visible;
+    return !!(navigator.windowControlsOverlay as any)?.visible;
   }
 
   return false;
