@@ -15,7 +15,8 @@ const appLayoutStore = useAppLayoutStore();
 const { isPrimarySidebarCollapsed, isSecondSidebarCollapsed } =
   toRefs(appLayoutStore);
 
-// const isAppVersion = computed(() => isElectron() || isPWA());
+const isPWAApp = computed(() => isPWA());
+const isElectronApp = computed(() => isElectron());
 
 const minWidth = computed(() => {
   const widthPercentage = appLayoutStore.layoutSize[0];
@@ -49,9 +50,9 @@ const isAccessRightPanel = computed(() => {
   <div
     :class="[
       'w-screen h-9 select-none border-b pr-2 electron-drag-region bg-sidebar!',
-      isElectron() && isPrimarySidebarCollapsed ? 'pl-[4.5rem]' : '',
-      isPWA() && isPrimarySidebarCollapsed ? 'pl-[6rem]' : '',
-      isPWA() && 'h-10.5 pr-30',
+      isElectronApp && isPrimarySidebarCollapsed ? 'pl-[4.5rem]' : '',
+      isPWAApp && isPrimarySidebarCollapsed ? 'pl-[6rem]' : '',
+      isPWAApp && 'h-10.5 pr-30',
     ]"
   >
     <div class="flex justify-between items-center h-full">
@@ -66,8 +67,8 @@ const isAccessRightPanel = computed(() => {
       >
         <div
           :class="[
-            isElectron() ? 'pl-[4.5rem]' : '',
-            isPWA() ? 'pl-[6rem]' : '',
+            isElectronApp ? 'pl-[4.5rem]' : '',
+            isPWAApp ? 'pl-[6rem]' : '',
             'flex justify-center w-full',
           ]"
           v-if="!isPrimarySidebarCollapsed"
