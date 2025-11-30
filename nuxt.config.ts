@@ -1,7 +1,27 @@
 import tailwindcss from '@tailwindcss/vite';
-import type { DefineNuxtConfig } from 'nuxt/config';
+import type { DefineNuxtConfig, NuxtConfig } from 'nuxt/config';
 
 // https://nuxt.com/docs/api/configuration/nuxt-config
+
+const appHeaderConfig: NonNullable<NuxtConfig['app']>['head'] = {
+  htmlAttrs: {
+    lang: 'en',
+  },
+  meta: [
+    {
+      name: 'viewport',
+      content:
+        'width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover',
+    },
+    { name: 'theme-color', content: '#fafafa' },
+    // Apple PWA
+    { name: 'apple-mobile-web-app-capable', content: 'yes' },
+    { name: 'apple-mobile-web-app-status-bar-style', content: 'default' },
+    { name: 'apple-mobile-web-app-title', content: 'ChiaXien' },
+  ],
+
+  link: [{ rel: 'manifest', href: '/manifest.json' }],
+};
 
 const shadcnConfig: Parameters<DefineNuxtConfig>[number]['shadcn'] = {
   /**
@@ -72,5 +92,8 @@ export default defineNuxtConfig({
   ],
   piniaPluginPersistedstate: {
     storage: 'localStorage',
+  },
+  app: {
+    head: appHeaderConfig,
   },
 });

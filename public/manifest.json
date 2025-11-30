@@ -1,0 +1,26 @@
+{
+  "name": "Orca query",
+  "short_name": "OrcaQ",
+  "description": "The open source | Next Generation database editor",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#fafafa",
+  "theme_color": "#fafafa",
+  "dir": "ltr",
+  "orientation": "portrait",
+
+  "icons": [
+    {
+      "src": "/logo.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
