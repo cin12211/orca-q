@@ -1,8 +1,14 @@
 <script setup lang="ts">
+import { useElementSize, type MaybeComputedElementRef } from '@vueuse/core';
 import { useAppLayoutStore } from '~/shared/stores/appLayoutStore';
 import { DEFAULT_DEBOUNCE_INPUT } from '~/utils/constants';
 
 const route = useRoute();
+
+const primarySideBarPanelRef = useTemplateRef('primarySideBarPanel');
+const { width: primarySideBarWidth } = useElementSize(
+  primarySideBarPanelRef as MaybeComputedElementRef
+);
 
 const appLayoutStore = useAppLayoutStore();
 const { layoutSize, isPrimarySidebarCollapsed, bodySize } =
@@ -53,7 +59,8 @@ useHotkeys([
     <div
       class="h-screen w-screen flex flex-col flex-1 max-h-screen overflow-y-auto"
     >
-      <TabViewContainer />
+      <TabViewContainer :primarySideBarWidth="primarySideBarWidth" />
+
       <div
         class="h-full flex overflow-y-auto w-screen max-w-screen overflow-x-hidden"
         v-auto-animate="{ duration: DEFAULT_DEBOUNCE_INPUT }"
@@ -61,10 +68,11 @@ useHotkeys([
         <ActivityBar v-if="isPrimarySidebarCollapsed" />
 
         <ResizablePanel
-          :min-size="15"
+          :min-size="10"
           :max-size="40"
           :default-size="layoutSize[0]"
           :collapsed-size="0"
+          ref="primarySideBarPanel"
           collapsible
           id="default-layout-group-1-panel-1"
           key="primarySideBarPanel"

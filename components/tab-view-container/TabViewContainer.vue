@@ -1,8 +1,12 @@
 <script setup lang="ts">
-import { isElectron } from '~/lib/utils';
+import { isElectron, isPWA } from '~/lib/utils';
 import { useAppLayoutStore } from '~/shared/stores/appLayoutStore';
 import ActivityBarHorizontal from '../activity-bar/ActivityBarHorizontal.vue';
 import TabViews from './TabViews.vue';
+
+const props = defineProps<{
+  primarySideBarWidth: number;
+}>();
 
 const route = useRoute();
 
@@ -11,7 +15,7 @@ const appLayoutStore = useAppLayoutStore();
 const { isPrimarySidebarCollapsed, isSecondSidebarCollapsed } =
   toRefs(appLayoutStore);
 
-const isAppVersion = computed(() => isElectron());
+// const isAppVersion = computed(() => isElectron() || isPWA());
 
 const minWidth = computed(() => {
   const widthPercentage = appLayoutStore.layoutSize[0];
@@ -20,11 +24,19 @@ const minWidth = computed(() => {
     return '2.25rem';
   }
 
-  if (isAppVersion.value) {
-    return `calc( ${widthPercentage}% + 1px) `;
-  }
+  return `${props.primarySideBarWidth}px`;
 
-  return `calc( ${widthPercentage}% + 1px) `;
+  // if (isPWA()) {
+  //   return `calc( ${props.primarySideBarWidth} - 6rem)`;
+  // }
+
+  // if (isElectron()) {
+  //   return `calc( ${props.primarySideBarWidth} - 4.5rem)`;
+  // }
+  // if (isAppVersion.value) {
+  //   return `calc( ${widthPercentage}% + 1px) `;
+  // }
+  // return `calc( ${widthPercentage}% + 1px) `;
 });
 
 const isAccessRightPanel = computed(() => {
@@ -37,7 +49,9 @@ const isAccessRightPanel = computed(() => {
   <div
     :class="[
       'w-screen h-9 select-none border-b pr-2 electron-drag-region bg-sidebar!',
-      isAppVersion && isPrimarySidebarCollapsed ? 'pl-[4.5rem]' : '',
+      isElectron() && isPrimarySidebarCollapsed ? 'pl-[4.5rem]' : '',
+      isPWA() && isPrimarySidebarCollapsed ? 'pl-[6rem]' : '',
+      isPWA() && 'h-10.5 pr-30',
     ]"
   >
     <div class="flex justify-between items-center h-full">
@@ -52,7 +66,8 @@ const isAccessRightPanel = computed(() => {
       >
         <div
           :class="[
-            isAppVersion ? 'pl-[4.5rem]' : '',
+            isElectron() ? 'pl-[4.5rem]' : '',
+            isPWA() ? 'pl-[6rem]' : '',
             'flex justify-center w-full',
           ]"
           v-if="!isPrimarySidebarCollapsed"

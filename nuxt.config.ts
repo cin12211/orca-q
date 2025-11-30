@@ -13,9 +13,9 @@ const appHeaderConfig: NonNullable<NuxtConfig['app']>['head'] = {
       content:
         'width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover',
     },
-    { name: 'theme-color', content: '#fafafa' },
+    { name: 'theme-color', content: '#FAFAFA' },
     // Apple PWA
-    { name: 'apple-mobile-web-app-capable', content: 'yes' },
+    { name: 'apple-mobile-web-app-capable', content: 'no' },
     { name: 'apple-mobile-web-app-status-bar-style', content: 'default' },
     { name: 'apple-mobile-web-app-title', content: 'ChiaXien' },
   ],
