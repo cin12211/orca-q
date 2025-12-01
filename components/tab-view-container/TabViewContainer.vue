@@ -52,7 +52,7 @@ const isAccessRightPanel = computed(() => {
       'w-screen h-9 select-none border-b pr-2 electron-drag-region bg-sidebar!',
       isElectronApp && isPrimarySidebarCollapsed ? 'pl-[4.5rem]' : '',
       isPWAApp && isPrimarySidebarCollapsed ? 'pl-[6rem]' : '',
-      isPWAApp && 'h-10.5 pr-30',
+      isPWAApp && 'h-10.5 header-tab-view-pwa',
     ]"
   >
     <div class="flex justify-between items-center h-full">
@@ -66,9 +66,13 @@ const isAccessRightPanel = computed(() => {
         }"
       >
         <div
+          v-if="isPWAApp && !isPrimarySidebarCollapsed"
+          class="vitrual-light-trafic-button"
+        ></div>
+
+        <div
           :class="[
             isElectronApp ? 'pl-[4.5rem]' : '',
-            isPWAApp ? 'pl-[6rem]' : '',
             'flex justify-center w-full',
           ]"
           v-if="!isPrimarySidebarCollapsed"
@@ -117,3 +121,15 @@ const isAccessRightPanel = computed(() => {
     </div>
   </div>
 </template>
+
+<style>
+.header-tab-view-pwa {
+  width: calc(
+    env(titlebar-area-width, 100vw) + env(titlebar-area-x)
+  ) !important;
+}
+
+.vitrual-light-trafic-button {
+  min-width: env(titlebar-area-x);
+}
+</style>
