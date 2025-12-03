@@ -43,6 +43,7 @@ export const getDatabaseSource = async ({
     url: dbConnectionString, // Your connection string
     synchronize: false, // Set to true if you want TypeORM to auto-create tables (use with caution in production)
     logging: true, // Logs SQL queries for debugging,
+    applicationName: 'orca-query-server',
   });
 
   await newSource.initialize();
@@ -63,8 +64,8 @@ export async function healthCheckConnection({ url }: { url: string }) {
       synchronize: false, // Set to true if you want TypeORM to auto-create tables (use with caution in production)
       logging: true, // Logs SQL queries for debugging
       entities: [], // Add entities if required
+      applicationName: 'orca-query-server',
     });
-
     await connection.initialize();
 
     return connection.isConnected;

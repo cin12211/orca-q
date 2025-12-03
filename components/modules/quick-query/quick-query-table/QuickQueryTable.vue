@@ -10,8 +10,6 @@ import type {
   GridOptions,
   SuppressKeyboardEventParams,
   ValueFormatterParams,
-  ValueGetterParams,
-  ValueSetterParams,
 } from 'ag-grid-community';
 import { AgGridVue } from 'ag-grid-vue3';
 import {
@@ -23,12 +21,12 @@ import {
 } from '~/components/base/dynamic-table/constants';
 import { useAgGridApi } from '~/components/base/dynamic-table/hooks';
 import {
-  cellValueFormatter,
-  type RowData,
   estimateAllColumnWidths,
+  type RowData,
 } from '~/components/base/dynamic-table/utils';
 import type { ForeignKeyMetadata } from '~/server/api/get-schema-meta-data';
 import { DEFAULT_BUFFER_ROWS, DEFAULT_QUERY_SIZE } from '~/utils/constants';
+import AgJsonCellEditor from './AgJsonCellEditor.vue';
 import CustomCellUuid from './CustomCellUuid.vue';
 import CustomHeaderTable from './CustomHeaderTable.vue';
 
@@ -257,42 +255,17 @@ const columnDefs = computed<ColDef[]>(() => {
         },
       },
 
-      // 🌟 PHẦN CẤU HÌNH ĐÃ SỬA: CHỈ ÁP DỤNG KHI LÀ CỘT OBJECT
       ...(isObjectColumn && {
-        // Sử dụng một Editor có thể xử lý chuỗi JSON nhiều dòng
-        cellEditor: 'agLargeTextCellEditor',
+        cellEditor: 'AgJsonCellEditor',
         cellEditorPopup: true,
-
-        // Chuyển Object thành chuỗi JSON khi vào chế độ chỉnh sửa
-        valueGetter: (params: ValueGetterParams) => {
-          const value = params.data[fieldId];
-          if (typeof value === 'object' && value !== null) {
-            return JSON.stringify(value, null, 2); // Chuỗi có định dạng đẹp
-          }
-          return value; // Giá trị nguyên thủy
-        },
-
-        // Chuyển chuỗi JSON trở lại Object khi thoát chế độ chỉnh sửa
-        valueSetter: (params: ValueSetterParams) => {
-          try {
-            const newValue = JSON.parse(params.newValue);
-            params.data[fieldId] = newValue;
-            return true; // Cập nhật thành công
-          } catch (e) {
-            console.error(`Invalid JSON format in column ${fieldId}:`, e);
-            // Có thể giữ lại giá trị cũ hoặc trả về false để hủy cập nhật
-            return false; // Cập nhật thất bại
-          }
-        },
       }),
 
       valueFormatter: (params: ValueFormatterParams) => {
         if (params.value === null) {
           return 'NULL';
         }
-        return (params.value || '') as string;
 
-        // return cellValueFormatter(params.value, type);
+        return (params.value || '') as string;
       },
     };
     columns.push(column);
@@ -333,100 +306,46 @@ const columnTypes = ref<{
         return undefined;
       }
 
-      // Lấy ID/Index của hàng. Giả định ID hoặc Index là khóa của dữ liệu gốc trong props.data
       const rowId = Number(params.node.id ?? params.node.rowIndex);
 
       const originalRowData = props.data[rowId];
 
-      // 1. Tô màu cho HÀNG MỚI (chưa có trong dữ liệu gốc)
       if (originalRowData === undefined) {
         return { backgroundColor: 'var(--color-green-200)' };
       }
 
       const style: { backgroundColor?: string; color?: string } = {};
 
-      const oldValue = originalRowData[field];
+      const originalFieldValue = originalRowData[field];
       const newValue = params.value;
 
-      if (field === 'info') {
-        console.log('🚀 ~ oldValue:', params.colDef, oldValue, newValue);
-      }
-
-      // 2. Xử lý giá trị cũ là NULL
-      if (oldValue === null) {
+      if (originalFieldValue === null || newValue === null) {
         style.color = 'var(--muted-foreground)';
       }
 
-      // 3. ✨ KHẮC PHỤC LỖI SO SÁNH OBJECT/JSON ✨
       let isChanged = false;
 
-      if (typeof oldValue === 'object' && oldValue !== null) {
-        // Nếu là Object/Array, so sánh chuỗi JSON của nó
-        try {
-          const oldValueString = JSON.stringify(oldValue, null, 2);
-          const newValueString = JSON.stringify(newValue, null, 2);
-          isChanged = oldValueString !== newValueString;
-        } catch (e) {
-          // Nếu JSON.stringify lỗi (ví dụ: circular reference), coi là thay đổi
-          isChanged = true;
-        }
-      } else {
-        // Đối với các kiểu dữ liệu nguyên thủy (string, number, boolean)
-        isChanged = oldValue !== newValue;
-      }
+      isChanged = originalFieldValue !== newValue;
 
-      // 4. Áp dụng Style thay đổi (Màu cam)
       if (isChanged) {
         style.backgroundColor = 'var(--color-orange-200)';
-        // Loại bỏ style màu chữ cũ nếu có sự thay đổi
         delete style.color;
       }
 
       return style;
     },
-    // Logic cellClass vẫn giữ nguyên
     cellClass: (p: CellClassParams) => {
       const isSelectedCol = p.column.getColId() === props.selectedColumnFieldId;
       return isSelectedCol ? 'col-highlight-cell cellCenter' : 'cellCenter';
     },
   },
-
-  // editableColumn: {
-  //   cellStyle: (params: CellClassParams) => {
-  //     const rowId = Number(params.node.id ?? params.node.rowIndex);
-
-  //     if (props.data?.[rowId] === undefined) {
-  //       return { backgroundColor: 'var(--color-green-200)' };
-  //     }
-
-  //     const field = params.colDef.field ?? '';
-
-  //     const style: { backgroundColor?: string; color?: string } = {};
-
-  //     const oldValue = props?.data?.[rowId]?.[field];
-
-  //     if (oldValue === null) {
-  //       style.color = 'var(--muted-foreground)';
-  //     }
-
-  //     const haveDifferent = oldValue !== params.value;
-
-  //     if (haveDifferent) {
-  //       style.backgroundColor = 'var(--color-orange-200)';
-  //       delete style.color;
-  //     }
-
-  //     return style;
-  //   },
-  //   cellClass: (p: CellClassParams) => {
-  //     const isSelectedCol = p.column.getColId() === props.selectedColumnFieldId;
-  //     return isSelectedCol ? 'col-highlight-cell cellCenter' : 'cellCenter';
-  //   },
-  // },
 });
 
 const gridOptions = computed(() => {
   const options: GridOptions = {
+    components: {
+      AgJsonCellEditor,
+    },
     paginationPageSize: pageSize.value,
     rowBuffer: DEFAULT_BUFFER_ROWS,
     rowClass: 'class-row-border-none',
