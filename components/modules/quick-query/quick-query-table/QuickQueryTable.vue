@@ -10,6 +10,8 @@ import type {
   GridOptions,
   SuppressKeyboardEventParams,
   ValueFormatterParams,
+  ValueGetterParams,
+  ValueSetterParams,
 } from 'ag-grid-community';
 import { AgGridVue } from 'ag-grid-vue3';
 import {
@@ -79,13 +81,8 @@ const { gridApi, onGridReady } = useAgGridApi();
 
 const agGridRef = useTemplateRef<HTMLElement>('agGridRef');
 
-const cellContextMenu = ref<
-  | {
-      cellValue: unknown;
-      columnName: string;
-    }
-  | undefined
->();
+const cellContextMenu = ref<CellContextMenuEvent | undefined>();
+const cellHeaderContextMenu = ref<CellContextMenuEvent | undefined>();
 
 onClickOutside(agGridRef, event => {
   emit('onFocusCell', undefined);
@@ -217,6 +214,8 @@ const columnDefs = computed<ColDef[]>(() => {
     const isShowCustomCellUuid =
       (isPrimaryKey && haveRelationByFieldName) || (isForeignKey && foreignKey);
 
+    const isObjectColumn = ['object', 'json', 'jsonb'].includes(type);
+
     const column: ColDef = {
       headerName: fieldId,
       field: fieldId,
@@ -257,8 +256,43 @@ const columnDefs = computed<ColDef[]>(() => {
           }
         },
       },
+
+      // 🌟 PHẦN CẤU HÌNH ĐÃ SỬA: CHỈ ÁP DỤNG KHI LÀ CỘT OBJECT
+      ...(isObjectColumn && {
+        // Sử dụng một Editor có thể xử lý chuỗi JSON nhiều dòng
+        cellEditor: 'agLargeTextCellEditor',
+        cellEditorPopup: true,
+
+        // Chuyển Object thành chuỗi JSON khi vào chế độ chỉnh sửa
+        valueGetter: (params: ValueGetterParams) => {
+          const value = params.data[fieldId];
+          if (typeof value === 'object' && value !== null) {
+            return JSON.stringify(value, null, 2); // Chuỗi có định dạng đẹp
+          }
+          return value; // Giá trị nguyên thủy
+        },
+
+        // Chuyển chuỗi JSON trở lại Object khi thoát chế độ chỉnh sửa
+        valueSetter: (params: ValueSetterParams) => {
+          try {
+            const newValue = JSON.parse(params.newValue);
+            params.data[fieldId] = newValue;
+            return true; // Cập nhật thành công
+          } catch (e) {
+            console.error(`Invalid JSON format in column ${fieldId}:`, e);
+            // Có thể giữ lại giá trị cũ hoặc trả về false để hủy cập nhật
+            return false; // Cập nhật thất bại
+          }
+        },
+      }),
+
       valueFormatter: (params: ValueFormatterParams) => {
-        return cellValueFormatter(params.value, type);
+        if (params.value === null) {
+          return 'NULL';
+        }
+        return (params.value || '') as string;
+
+        // return cellValueFormatter(params.value, type);
       },
     };
     columns.push(column);
@@ -294,36 +328,101 @@ const columnTypes = ref<{
 }>({
   editableColumn: {
     cellStyle: (params: CellClassParams) => {
+      const field = params.colDef.colId ?? '';
+      if (!field || !props.data) {
+        return undefined;
+      }
+
+      // Lấy ID/Index của hàng. Giả định ID hoặc Index là khóa của dữ liệu gốc trong props.data
       const rowId = Number(params.node.id ?? params.node.rowIndex);
 
-      if (props.data?.[rowId] === undefined) {
+      const originalRowData = props.data[rowId];
+
+      // 1. Tô màu cho HÀNG MỚI (chưa có trong dữ liệu gốc)
+      if (originalRowData === undefined) {
         return { backgroundColor: 'var(--color-green-200)' };
       }
 
-      const field = params.colDef.field ?? '';
-
       const style: { backgroundColor?: string; color?: string } = {};
 
-      const oldValue = props?.data?.[rowId]?.[field];
+      const oldValue = originalRowData[field];
+      const newValue = params.value;
 
+      if (field === 'info') {
+        console.log('🚀 ~ oldValue:', params.colDef, oldValue, newValue);
+      }
+
+      // 2. Xử lý giá trị cũ là NULL
       if (oldValue === null) {
         style.color = 'var(--muted-foreground)';
       }
 
-      const haveDifferent = oldValue !== params.value;
+      // 3. ✨ KHẮC PHỤC LỖI SO SÁNH OBJECT/JSON ✨
+      let isChanged = false;
 
-      if (haveDifferent) {
+      if (typeof oldValue === 'object' && oldValue !== null) {
+        // Nếu là Object/Array, so sánh chuỗi JSON của nó
+        try {
+          const oldValueString = JSON.stringify(oldValue, null, 2);
+          const newValueString = JSON.stringify(newValue, null, 2);
+          isChanged = oldValueString !== newValueString;
+        } catch (e) {
+          // Nếu JSON.stringify lỗi (ví dụ: circular reference), coi là thay đổi
+          isChanged = true;
+        }
+      } else {
+        // Đối với các kiểu dữ liệu nguyên thủy (string, number, boolean)
+        isChanged = oldValue !== newValue;
+      }
+
+      // 4. Áp dụng Style thay đổi (Màu cam)
+      if (isChanged) {
         style.backgroundColor = 'var(--color-orange-200)';
+        // Loại bỏ style màu chữ cũ nếu có sự thay đổi
         delete style.color;
       }
 
       return style;
     },
+    // Logic cellClass vẫn giữ nguyên
     cellClass: (p: CellClassParams) => {
       const isSelectedCol = p.column.getColId() === props.selectedColumnFieldId;
       return isSelectedCol ? 'col-highlight-cell cellCenter' : 'cellCenter';
     },
   },
+
+  // editableColumn: {
+  //   cellStyle: (params: CellClassParams) => {
+  //     const rowId = Number(params.node.id ?? params.node.rowIndex);
+
+  //     if (props.data?.[rowId] === undefined) {
+  //       return { backgroundColor: 'var(--color-green-200)' };
+  //     }
+
+  //     const field = params.colDef.field ?? '';
+
+  //     const style: { backgroundColor?: string; color?: string } = {};
+
+  //     const oldValue = props?.data?.[rowId]?.[field];
+
+  //     if (oldValue === null) {
+  //       style.color = 'var(--muted-foreground)';
+  //     }
+
+  //     const haveDifferent = oldValue !== params.value;
+
+  //     if (haveDifferent) {
+  //       style.backgroundColor = 'var(--color-orange-200)';
+  //       delete style.color;
+  //     }
+
+  //     return style;
+  //   },
+  //   cellClass: (p: CellClassParams) => {
+  //     const isSelectedCol = p.column.getColId() === props.selectedColumnFieldId;
+  //     return isSelectedCol ? 'col-highlight-cell cellCenter' : 'cellCenter';
+  //   },
+  // },
 });
 
 const gridOptions = computed(() => {
@@ -389,15 +488,11 @@ const onCellFocus = () => {
 };
 
 const onCellContextMenu = (event: CellContextMenuEvent) => {
-  const columnName = event.colDef.field;
-  const cellValue = event.value;
+  cellContextMenu.value = event;
+};
 
-  if (columnName) {
-    cellContextMenu.value = {
-      cellValue,
-      columnName,
-    };
-  }
+const onCellHeaderContextMenu = (event: CellContextMenuEvent) => {
+  cellHeaderContextMenu.value = event;
 };
 
 watch(
@@ -445,7 +540,19 @@ const onRowDataUpdated = () => {
   });
 };
 
-defineExpose({ gridApi, editedCells, columnDefs, cellContextMenu });
+const clearCellContextMenu = () => {
+  cellContextMenu.value = undefined;
+  cellHeaderContextMenu.value = undefined;
+};
+
+defineExpose({
+  gridApi,
+  editedCells,
+  columnDefs,
+  cellContextMenu,
+  cellHeaderContextMenu,
+  clearCellContextMenu,
+});
 
 //  @mouseup="onStopRangeSelection"
 //     @click.keyup="onStopRangeSelection"
@@ -460,6 +567,7 @@ defineExpose({ gridApi, editedCells, columnDefs, cellContextMenu });
     @cell-focused="onCellFocus"
     @rowDataUpdated="onRowDataUpdated"
     @cellContextMenu="onCellContextMenu"
+    @columnHeaderContextMenu="onCellHeaderContextMenu"
     :class="props.class"
     :grid-options="gridOptions"
     :columnDefs="columnDefs"

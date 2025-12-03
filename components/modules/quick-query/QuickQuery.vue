@@ -209,11 +209,14 @@ const onOpenForwardReferencedTableModal = ({
 const onAddFilterByContextCell = async () => {
   const cellContextMenu = quickQueryTableRef.value?.cellContextMenu;
   if (cellContextMenu) {
+    const columnName = cellContextMenu.colDef.field || '';
+    const cellValue = cellContextMenu.value;
+
     const filter: FilterSchema = {
-      fieldName: cellContextMenu.columnName,
+      fieldName: columnName,
       isSelect: true,
       operator: OperatorSet.EQUAL,
-      search: cellContextMenu.cellValue as string,
+      search: cellValue as string,
     };
     quickQueryFilterRef.value?.insert(filters.value.length, filter);
 
@@ -480,8 +483,12 @@ const onBackPreviousBreadcrumbByIndex = (index: number) => {
 
       <QuickQueryContextMenu
         v-show="quickQueryTabView === QuickQueryTabView.Data"
+        :data="data"
         :total-selected-rows="selectedRows.length"
         :has-edited-rows="hasEditedRows"
+        :cellContextMenu="quickQueryTableRef?.cellContextMenu"
+        :cellHeaderContextMenu="quickQueryTableRef?.cellHeaderContextMenu"
+        @onClearContextMenu="quickQueryTableRef?.clearCellContextMenu()"
         @onPaginate="onUpdatePagination"
         @onNextPage="onNextPage"
         @onPreviousPage="onPreviousPage"
