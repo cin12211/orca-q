@@ -10,6 +10,7 @@ import TreeFolder from '~/components/base/Tree/TreeFolder.vue';
 import { useAppContext } from '~/shared/contexts/useAppContext';
 import { useActivityBarStore } from '~/shared/stores';
 import { TabViewType } from '~/shared/stores/useTabViewsStore';
+import { FunctionSchemaEnum } from '~/shared/types';
 import { DEFAULT_DEBOUNCE_INPUT } from '~/utils/constants';
 import ConnectionSelector from '../selectors/ConnectionSelector.vue';
 import SchemaSelector from '../selectors/SchemaSelector.vue';
@@ -47,13 +48,17 @@ const items = computed(() => {
       id: SchemaFolderType.Functions,
       tabViewType: TabViewType.FunctionsOverview,
       children: [
-        ...functions.map(functionName => ({
-          title: functionName,
-          id: functionName,
-          icon: 'vscode-icons:file-type-haskell',
-          path: `${SchemaFolderType.Functions}/${functionName}`,
+        ...functions.map(({ name, oId, type }) => ({
+          title: name,
+          id: oId,
+          icon: 'gravity-ui:function',
+          path: `${SchemaFolderType.Functions}/${oId}`,
           tabViewType: TabViewType.FunctionsDetail,
           isFolder: false,
+          iconClass:
+            type === FunctionSchemaEnum.Function
+              ? 'text-blue-400'
+              : 'text-orange-400',
         })),
       ],
       isFolder: true,
@@ -179,7 +184,7 @@ const onHandleOpenTab = async (
       'workspaceId-connectionId-quick-query-function-over-view-functionName';
 
     routeParams = {
-      functionName: item.value.title,
+      functionName: item.value.id,
       schemaName: schemaId.value || '',
     };
   }

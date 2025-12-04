@@ -125,7 +125,7 @@ defineExpose({
   @apply rounded-t-md;
 }
 
-.jse-contents {
+.jse-text-mode .jse-contents {
   @apply rounded-b-md border-b;
 }
 

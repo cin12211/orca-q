@@ -131,59 +131,63 @@ export const useAppContext = () => {
 
     let databaseSource: SchemaMetaData[] = [];
 
-    if (!isExitSchema || isRefresh) {
-      const dbConnectionString: string = connection.connectionString || '';
+    try {
+      if (!isExitSchema || isRefresh) {
+        const dbConnectionString: string = connection.connectionString || '';
 
-      databaseSource = await fetchCurrentSchema(dbConnectionString);
+        databaseSource = await fetchCurrentSchema(dbConnectionString);
 
-      databaseSource.forEach(schema => {
-        const schemaId = `${wsId}-${connId}-${schema.name}`;
+        databaseSource.forEach(schema => {
+          const schemaId = `${wsId}-${connId}-${schema.name}`;
 
-        const isExitSchema = schemas.value.find(e => e.id === schemaId);
+          const isExitSchema = schemas.value.find(e => e.id === schemaId);
 
-        if (schema.name === PUBLIC_SCHEMA_ID) {
-          includedPublic = true;
-        }
+          if (schema.name === PUBLIC_SCHEMA_ID) {
+            includedPublic = true;
+          }
 
-        if (!isExitSchema) {
-          schemas.value.push({
-            id: schemaId,
-            workspaceId: wsState.value?.id || '',
-            connectionId: connId,
-            name: schema.name,
-            functions: schema.functions || [],
-            tables: schema.tables || [],
-            views: schema.views || [],
-            tableDetails: schema?.table_details || null,
-          });
-        }
-      });
-    }
+          if (!isExitSchema) {
+            schemas.value.push({
+              id: schemaId,
+              workspaceId: wsState.value?.id || '',
+              connectionId: connId,
+              name: schema.name,
+              functions: schema.functions || [],
+              tables: schema.tables || [],
+              views: schema.views || [],
+              tableDetails: schema?.table_details || null,
+            });
+          }
+        });
+      }
 
-    const currentState = wsStateStore.getStateById({
-      workspaceId: wsId,
-      connectionId: connId,
-    });
-
-    const currentSchema = currentState?.connectionStates?.find(
-      connectionState => connectionState.id === connId
-    );
-
-    if (!currentSchema?.schemaId) {
-      await wsStateStore.setSchemaId({
-        connectionId: connId,
+      const currentState = wsStateStore.getStateById({
         workspaceId: wsId,
-        schemaId: includedPublic
-          ? PUBLIC_SCHEMA_ID
-          : databaseSource[0]?.name || PUBLIC_SCHEMA_ID,
+        connectionId: connId,
       });
-    }
 
-    await fetchReservedTableSchemas({
-      connId: connId,
-      wsId: wsId,
-      includeLoading: false,
-    });
+      const currentSchema = currentState?.connectionStates?.find(
+        connectionState => connectionState.id === connId
+      );
+
+      if (!currentSchema?.schemaId) {
+        await wsStateStore.setSchemaId({
+          connectionId: connId,
+          workspaceId: wsId,
+          schemaId: includedPublic
+            ? PUBLIC_SCHEMA_ID
+            : databaseSource[0]?.name || PUBLIC_SCHEMA_ID,
+        });
+      }
+
+      await fetchReservedTableSchemas({
+        connId: connId,
+        wsId: wsId,
+        includeLoading: false,
+      });
+    } catch (e) {
+      console.error(e);
+    }
 
     finish();
   };

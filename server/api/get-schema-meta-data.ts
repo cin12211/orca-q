@@ -1,4 +1,5 @@
 import { getDatabaseSource } from '~/server/utils/db-connection';
+import { FunctionSchemaEnum } from '~/shared/types';
 
 export interface ColumnShortMetadata {
   name: string;
@@ -29,11 +30,17 @@ export interface TableDetails {
   [tableName: string]: TableDetailMetadata;
 }
 
+export interface FunctionSchema {
+  oId: string;
+  name: string;
+  type: FunctionSchemaEnum;
+}
+
 export interface SchemaMetaData {
   name: string;
   tables: string[] | null;
   views: string[] | null;
-  functions: string[] | null;
+  functions: FunctionSchema[] | null;
   table_details: TableDetails | null;
 }
 
@@ -68,9 +75,20 @@ export default defineEventHandler(async (event): Promise<SchemaMetaData[]> => {
       ) AS views,
       -- functions
       (
-        SELECT json_agg(routine_name)
+       SELECT JSON_AGG(
+          JSONB_BUILD_OBJECT(
+            'name',
+            routine_name,
+            'oId',
+            p.oid,
+            'type',
+            routine_type
+          )
+        )
         FROM information_schema.routines r
+        JOIN pg_proc p ON p.proname = r.routine_name
         WHERE r.routine_schema = nsp.nspname
+          AND r.specific_schema NOT IN ('pg_catalog', 'information_schema')
       ) AS functions,
       -- table_details
       (
