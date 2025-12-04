@@ -3,6 +3,7 @@ import { ref } from 'vue';
 import { key } from 'localforage';
 import type { ReservedTableSchemas } from '~/server/api/get-reverse-table-schemas';
 import type {
+  FunctionSchema,
   TableDetailMetadata,
   TableDetails,
 } from '~/server/api/get-schema-meta-data';
@@ -16,7 +17,7 @@ export interface Schema {
   tableDetails?: TableDetails | null;
   tables: string[];
   views: string[];
-  functions: string[];
+  functions: FunctionSchema[];
 }
 
 export const PUBLIC_SCHEMA_ID = 'public';
