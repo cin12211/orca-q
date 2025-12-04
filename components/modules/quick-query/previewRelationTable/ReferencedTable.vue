@@ -323,6 +323,7 @@ useHotkeys(
         v-show="quickQueryTabView === QuickQueryTabView.Data"
         :total-selected-rows="selectedRows.length"
         :has-edited-rows="hasEditedRows"
+        :selectedRows="selectedRows"
         isReferencedTable
         @onPaginate="onUpdatePagination"
         @onNextPage="onNextPage"

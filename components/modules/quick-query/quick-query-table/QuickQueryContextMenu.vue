@@ -12,6 +12,7 @@ const props = defineProps<{
   cellContextMenu?: CellContextMenuEvent;
   cellHeaderContextMenu?: CellContextMenuEvent;
   data?: RowData[];
+  selectedRows: Record<string, any>[];
 }>();
 
 const emit = defineEmits<{
@@ -26,8 +27,23 @@ const emit = defineEmits<{
   (e: 'onClearContextMenu'): void;
 }>();
 
-const getColumnKey = () =>
-  props.cellHeaderContextMenu?.column?.getColId() ?? '';
+const getColumnKeyBy = (type: 'cellContextMenu' | 'cellHeaderContextMenu') => {
+  if (type === 'cellContextMenu') {
+    return props.cellContextMenu?.column?.getColId() ?? '';
+  }
+  if (type === 'cellHeaderContextMenu') {
+    return props.cellHeaderContextMenu?.column?.getColId() ?? '';
+  }
+};
+
+const getRawDatas = (type: 'cellContextMenu' | 'cellHeaderContextMenu') => {
+  if (type === 'cellContextMenu') {
+    return props.selectedRows;
+  }
+  if (type === 'cellHeaderContextMenu') {
+    return props.data;
+  }
+};
 
 const copyToClipboard = async (text: string) => {
   try {
@@ -38,35 +54,24 @@ const copyToClipboard = async (text: string) => {
   }
 };
 
-// const onCopyColumnData = () => {
-//   const columnKey = getColumnKey();
-
-//   if (!columnKey || !props.data?.length) {
-//     console.warn('Cannot copy column data: Column key or data is missing.');
-//     return;
-//   }
-
-//   const values = props.data.map(row => {
-//     const item = row[columnKey];
-//     const mappedItem =
-//       item !== null && typeof item === 'object' ? JSON.stringify(item) : item;
-//     return mappedItem;
-//   });
-//   copyToClipboard(values.join('\n'));
-// };
-
 const onCopyColumnData = () => {
-  const columnKey = getColumnKey();
+  const columnKey = getColumnKeyBy(
+    props.cellContextMenu ? 'cellContextMenu' : 'cellHeaderContextMenu'
+  );
+  const rawDatas =
+    getRawDatas(
+      props.cellContextMenu ? 'cellContextMenu' : 'cellHeaderContextMenu'
+    ) || [];
 
-  if (!columnKey || !props.data?.length) {
+  if (!columnKey || !rawDatas?.length) {
     console.warn('Cannot copy column data: Column key or data is missing.');
     return;
   }
 
-  const values = props.data.map(row => {
+  const mappedDatas = rawDatas.map(row => {
     const item = row[columnKey];
 
-    let mappedItem =
+    const mappedItem =
       item !== null && typeof item === 'object'
         ? JSON.stringify(item)
         : String(item ?? '');
@@ -74,18 +79,24 @@ const onCopyColumnData = () => {
     return `'${mappedItem}'`;
   });
 
-  copyToClipboard(values.join(', '));
+  copyToClipboard(mappedDatas.join(', '));
 };
 
 const onCopyColumnDataAsJson = () => {
-  const columnKey = getColumnKey();
+  const columnKey = getColumnKeyBy(
+    props.cellContextMenu ? 'cellContextMenu' : 'cellHeaderContextMenu'
+  );
+  const rawDatas =
+    getRawDatas(
+      props.cellContextMenu ? 'cellContextMenu' : 'cellHeaderContextMenu'
+    ) || [];
 
-  if (!columnKey || !props.data?.length) {
+  if (!columnKey || !rawDatas?.length) {
     console.warn('Cannot copy column data: Column key or data is missing.');
     return;
   }
 
-  const jsonArray = props.data.map(row => {
+  const jsonArray = rawDatas.map(row => {
     const item = row[columnKey];
 
     return {
@@ -140,7 +151,10 @@ const onCopyColumnDataAsJson = () => {
         <ContextMenuShortcut>⌘R</ContextMenuShortcut>
       </ContextMenuItem>
 
-      <ContextMenuItem @select="onCopyColumnData" v-if="cellHeaderContextMenu">
+      <ContextMenuItem
+        @select="onCopyColumnData"
+        v-if="cellHeaderContextMenu || cellContextMenu"
+      >
         <Icon
           name="hugeicons:copy-02"
           class="size-4! min-w-4 text-muted-foreground"
@@ -150,7 +164,7 @@ const onCopyColumnDataAsJson = () => {
 
       <ContextMenuItem
         @select="onCopyColumnDataAsJson"
-        v-if="cellHeaderContextMenu"
+        v-if="cellHeaderContextMenu || cellContextMenu"
       >
         <Icon
           name="hugeicons:copy-02"

@@ -488,6 +488,7 @@ const onBackPreviousBreadcrumbByIndex = (index: number) => {
         :has-edited-rows="hasEditedRows"
         :cellContextMenu="quickQueryTableRef?.cellContextMenu"
         :cellHeaderContextMenu="quickQueryTableRef?.cellHeaderContextMenu"
+        :selectedRows="selectedRows"
         @onClearContextMenu="quickQueryTableRef?.clearCellContextMenu()"
         @onPaginate="onUpdatePagination"
         @onNextPage="onNextPage"
