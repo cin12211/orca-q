@@ -35,7 +35,6 @@ enum SchemaFolderType {
 const items = computed(() => {
   const tables = activeSchema?.value?.tables || [];
   const functions = activeSchema?.value?.functions || [];
-  console.log('🚀 ~ functions:', functions);
 
   const views = activeSchema?.value?.views || [];
 

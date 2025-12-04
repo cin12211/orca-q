@@ -328,11 +328,7 @@ export const useTableQueryBuilder = ({
     );
   });
 
-  const cellValueFormatter = (content: unknown, type?: string): string => {
-    // if (content === null) {
-    //   return 'NULL';
-    // }
-
+  const getFormattedRow = (content: unknown, type?: string): string => {
     const isJsonType = type === 'jsonb' || type === 'json';
     const isObjectType =
       (typeof content === 'object' ||
@@ -356,7 +352,7 @@ export const useTableQueryBuilder = ({
 
       Object.keys(row).forEach(key => {
         const value = row[key];
-        formattedRow[key] = cellValueFormatter(value);
+        formattedRow[key] = getFormattedRow(value);
       });
 
       return formattedRow;

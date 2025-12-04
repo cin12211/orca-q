@@ -76,7 +76,7 @@ function afterGuiAttached(): void {
 
 <template>
   <div
-    class="w-[35rem] h-[30rem] bg-background rounded-md p-2 flex flex-col gap-2"
+    class="w-[35rem] h-[25rem] bg-background rounded-md p-2 flex flex-col gap-2"
     tabindex="0"
     @keydown.esc="onCancel"
     @keydown.ctrl.enter="onConfirm"
