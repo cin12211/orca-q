@@ -6,9 +6,13 @@ import type {
   ColDef,
   ColTypeDef,
   GridOptions,
+  ICellEditorParams,
   ValueFormatterParams,
+  ValueGetterParams,
+  ValueSetterParams,
 } from 'ag-grid-community';
 import { AgGridVue } from 'ag-grid-vue3';
+import AgJsonCellEditor from '~/components/modules/quick-query/quick-query-table/AgJsonCellEditor.vue';
 import type { MappedRawColumn } from '~/components/modules/raw-query/interfaces';
 import { DEFAULT_BUFFER_ROWS } from '~/utils/constants';
 import DynamicPrimaryKeyHeader from './DynamicPrimaryKeyHeader.vue';
@@ -24,8 +28,8 @@ import { useAgGridApi } from './hooks';
 import {
   type RowData,
   cellValueFormatter,
-  estimateColumnWidth,
   estimateAllColumnWidths,
+  estimateColumnWidth,
 } from './utils';
 
 // TODO: refactor this component to reuse in query table
@@ -138,7 +142,7 @@ const columnDefs = computed<ColDef[]>(() => {
         field: fieldId,
         filter: true,
         resizable: true,
-        editable: false,
+        editable: true,
         // editable: canMutate,//TODO: fix for editable inline
         sortable: true,
         cellClass: 'cellCenter',
@@ -148,8 +152,77 @@ const columnDefs = computed<ColDef[]>(() => {
           isPrimaryKey: isPrimaryKey,
           isForeignKey: isForeignKey,
         },
+
+        cellEditorSelector: (params: ICellEditorParams) => {
+          const value = params.data[fieldId];
+
+          const type = typeof value;
+
+          // Object or Array → complex JSON
+          if (type === 'object' && value !== null) {
+            return {
+              component: 'AgJsonCellEditor',
+              popup: true,
+              popupPosition: 'under',
+            };
+          }
+
+          // If value is null or undefined → allow editing as string (or keep null)
+          // if (value === null || value === undefined) {
+          //   return {
+          //     component: 'agTextCellEditor', // or your own null-friendly editor
+          //   };
+          // }
+          // // // Primitive types
+          // if (type === 'string') {
+          //   return { component: 'agTextCellEditor' };
+          // }
+          // if (type === 'number') {
+          //   return { component: 'agNumberCellEditor' };
+          // }
+          // if (type === 'boolean') {
+          //   return { component: 'agCheckboxCellEditor' }; // optional: or custom select
+          // }
+          // // // Fallback
+          // return { component: 'agTextCellEditor' };
+        },
+
+        // cellEditor: 'AgJsonCellEditor',
+        // cellEditorPopup: true,
+
         valueFormatter: (params: ValueFormatterParams) => {
-          return cellValueFormatter(params.value, type);
+          const value = params.value;
+          if (value === null) {
+            return 'NULL';
+          }
+
+          if (typeof value === 'object' && value !== null) {
+            return JSON.stringify(value, null, 2); // Chuỗi có định dạng đẹp
+          }
+
+          return (value || '') as string;
+        },
+
+        // // // Chuyển Object thành chuỗi JSON khi vào chế độ chỉnh sửa
+        // valueGetter: (params: ValueGetterParams) => {
+        //   const value = params.data[fieldId];
+        //   if (typeof value === 'object' && value !== null) {
+        //     return JSON.stringify(value, null, 2); // Chuỗi có định dạng đẹp
+        //   }
+        //   return value; // Giá trị nguyên thủy
+        // },
+
+        // // Chuyển chuỗi JSON trở lại Object khi thoát chế độ chỉnh sửa
+        valueSetter: (params: ValueSetterParams) => {
+          try {
+            const newValue = JSON.parse(params.newValue);
+            params.data[fieldId] = newValue;
+            return true; // Cập nhật thành công
+          } catch (e) {
+            console.error(`Invalid JSON format in column ${fieldId}:`, e);
+            // Có thể giữ lại giá trị cũ hoặc trả về false để hủy cập nhật
+            return false; // Cập nhật thất bại
+          }
         },
 
         width: estimatedWidth,
@@ -185,6 +258,9 @@ const gridOptions = computed(() => {
     animateRows: true,
     onCellMouseDown: handleCellMouseDown,
     onCellMouseOver: handleCellMouseOverDebounced,
+    components: {
+      AgJsonCellEditor,
+    },
   };
   return options;
 });
@@ -223,13 +299,14 @@ const columnTypes = ref<{
         style.color = 'var(--muted-foreground)';
       }
 
-      const haveDifferent =
-        JSON.stringify(oldValue) !== JSON.stringify(params.value);
+      // TODO: Cinny open when support edit in raw query
+      // const haveDifferent =
+      //   JSON.stringify(oldValue) !== JSON.stringify(params.value);
 
-      if (haveDifferent) {
-        style.backgroundColor = 'var(--color-orange-200)';
-        delete style.color;
-      }
+      // if (haveDifferent) {
+      //   style.backgroundColor = 'var(--color-orange-200)';
+      //   delete style.color;
+      // }
       return style;
     },
     cellClass: () => {

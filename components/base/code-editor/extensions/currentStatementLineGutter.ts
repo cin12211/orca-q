@@ -46,9 +46,9 @@ const currentStatementBaseTheme = EditorView.baseTheme({
     backgroundColor: `unset !important`,
     border: `none !important`,
   },
-  '.cm-line': {
-    paddingLeft: `4px !important`,
-  },
+  // '.cm-line': {
+  //   paddingLeft: `4px !important`,
+  // },
   '.cm-focused': {
     outline: `unset !important`,
   },

@@ -71,7 +71,6 @@ export default defineEventHandler(async (event): Promise<SchemaMetaData[]> => {
         SELECT json_agg(routine_name)
         FROM information_schema.routines r
         WHERE r.routine_schema = nsp.nspname
-          AND r.routine_type = 'FUNCTION'
       ) AS functions,
       -- table_details
       (

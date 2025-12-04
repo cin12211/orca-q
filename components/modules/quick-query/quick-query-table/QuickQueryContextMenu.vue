@@ -1,12 +1,17 @@
 <script setup lang="ts">
+import type { CellContextMenuEvent } from 'ag-grid-community';
+import type { RowData } from '~/components/base/dynamic-table/utils';
 import { useAppLayoutStore } from '~/shared/stores/appLayoutStore';
 
 const { onShowSecondSidebar } = useAppLayoutStore();
 
-defineProps<{
+const props = defineProps<{
   totalSelectedRows: number;
   hasEditedRows: boolean;
   isReferencedTable?: boolean;
+  cellContextMenu?: CellContextMenuEvent;
+  cellHeaderContextMenu?: CellContextMenuEvent;
+  data?: RowData[];
 }>();
 
 const emit = defineEmits<{
@@ -18,7 +23,78 @@ const emit = defineEmits<{
   (e: 'onPasteRows'): void;
   (e: 'onCopySelectedCell'): void;
   (e: 'onFilterByValue'): void;
+  (e: 'onClearContextMenu'): void;
 }>();
+
+const getColumnKey = () =>
+  props.cellHeaderContextMenu?.column?.getColId() ?? '';
+
+const copyToClipboard = async (text: string) => {
+  try {
+    await navigator.clipboard.writeText(text);
+    console.log('Copied successfully!');
+  } catch (err) {
+    console.error('Copy failed:', err);
+  }
+};
+
+// const onCopyColumnData = () => {
+//   const columnKey = getColumnKey();
+
+//   if (!columnKey || !props.data?.length) {
+//     console.warn('Cannot copy column data: Column key or data is missing.');
+//     return;
+//   }
+
+//   const values = props.data.map(row => {
+//     const item = row[columnKey];
+//     const mappedItem =
+//       item !== null && typeof item === 'object' ? JSON.stringify(item) : item;
+//     return mappedItem;
+//   });
+//   copyToClipboard(values.join('\n'));
+// };
+
+const onCopyColumnData = () => {
+  const columnKey = getColumnKey();
+
+  if (!columnKey || !props.data?.length) {
+    console.warn('Cannot copy column data: Column key or data is missing.');
+    return;
+  }
+
+  const values = props.data.map(row => {
+    const item = row[columnKey];
+
+    let mappedItem =
+      item !== null && typeof item === 'object'
+        ? JSON.stringify(item)
+        : String(item ?? '');
+
+    return `'${mappedItem}'`;
+  });
+
+  copyToClipboard(values.join(', '));
+};
+
+const onCopyColumnDataAsJson = () => {
+  const columnKey = getColumnKey();
+
+  if (!columnKey || !props.data?.length) {
+    console.warn('Cannot copy column data: Column key or data is missing.');
+    return;
+  }
+
+  const jsonArray = props.data.map(row => {
+    const item = row[columnKey];
+
+    return {
+      [columnKey]: item,
+    };
+  });
+
+  copyToClipboard(JSON.stringify(jsonArray));
+};
 </script>
 
 <template>
@@ -26,6 +102,7 @@ const emit = defineEmits<{
     @update:open="
       isOpen => {
         if (!isOpen) {
+          emit('onClearContextMenu');
         }
       }
     "
@@ -35,14 +112,17 @@ const emit = defineEmits<{
     </ContextMenuTrigger>
 
     <ContextMenuContent class="min-w-56">
-      <ContextMenuItem v-if="!isReferencedTable" @select="onShowSecondSidebar">
+      <ContextMenuItem
+        v-if="!isReferencedTable && cellContextMenu"
+        @select="onShowSecondSidebar"
+      >
         <Icon
           name="hugeicons:view"
           class="size-4! min-w-4 text-muted-foreground"
         />
         View row detail
       </ContextMenuItem>
-      <ContextMenuItem @select="emit('onFilterByValue')">
+      <ContextMenuItem v-if="cellContextMenu" @select="emit('onFilterByValue')">
         <Icon
           name="lucide:filter"
           class="size-4! min-w-4 text-muted-foreground"
@@ -60,16 +140,38 @@ const emit = defineEmits<{
         <ContextMenuShortcut>⌘R</ContextMenuShortcut>
       </ContextMenuItem>
 
-      <ContextMenuItem @select="emit('onCopySelectedCell')">
+      <ContextMenuItem @select="onCopyColumnData" v-if="cellHeaderContextMenu">
+        <Icon
+          name="hugeicons:copy-02"
+          class="size-4! min-w-4 text-muted-foreground"
+        />
+        Copy columns data
+      </ContextMenuItem>
+
+      <ContextMenuItem
+        @select="onCopyColumnDataAsJson"
+        v-if="cellHeaderContextMenu"
+      >
+        <Icon
+          name="hugeicons:copy-02"
+          class="size-4! min-w-4 text-muted-foreground"
+        />
+        Copy columns data (json)
+      </ContextMenuItem>
+
+      <!-- <ContextMenuItem @select="emit('onCopySelectedCell')">
         <Icon
           name="hugeicons:copy-02"
           class="size-4! min-w-4 text-muted-foreground"
         />
         Copy current cell
         <ContextMenuShortcut>⌘C</ContextMenuShortcut>
-      </ContextMenuItem>
+      </ContextMenuItem> -->
 
-      <ContextMenuItem v-if="totalSelectedRows" @select="emit('onCopyRows')">
+      <ContextMenuItem
+        v-if="totalSelectedRows && cellContextMenu"
+        @select="emit('onCopyRows')"
+      >
         <Icon
           name="lucide:copy"
           class="size-4! min-w-4 text-muted-foreground"
@@ -86,7 +188,10 @@ const emit = defineEmits<{
         <ContextMenuShortcut>⌘S</ContextMenuShortcut>
       </ContextMenuItem>
 
-      <ContextMenuItem @select="emit('onDeleteRows')" v-if="totalSelectedRows">
+      <ContextMenuItem
+        @select="emit('onDeleteRows')"
+        v-if="totalSelectedRows && cellContextMenu"
+      >
         <Icon
           name="lucide:trash"
           class="size-4! min-w-4 text-muted-foreground"

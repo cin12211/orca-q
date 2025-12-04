@@ -35,6 +35,7 @@ enum SchemaFolderType {
 const items = computed(() => {
   const tables = activeSchema?.value?.tables || [];
   const functions = activeSchema?.value?.functions || [];
+
   const views = activeSchema?.value?.views || [];
 
   const treeItems: TreeFileSystemItem[] = [

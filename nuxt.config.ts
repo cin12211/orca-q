@@ -63,7 +63,7 @@ export default defineNuxtConfig({
     'nuxt-typed-router',
     '@formkit/auto-animate',
   ],
-  css: ['~/assets/css/tailwind.css'],
+  css: ['~/assets/css/tailwind.css', 'vue-json-pretty/lib/styles.css'],
   colorMode: {
     preference: 'no-preference',
     fallback: 'light',

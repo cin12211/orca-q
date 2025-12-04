@@ -21,12 +21,12 @@ import {
 } from '~/components/base/dynamic-table/constants';
 import { useAgGridApi } from '~/components/base/dynamic-table/hooks';
 import {
-  cellValueFormatter,
-  type RowData,
   estimateAllColumnWidths,
+  type RowData,
 } from '~/components/base/dynamic-table/utils';
 import type { ForeignKeyMetadata } from '~/server/api/get-schema-meta-data';
 import { DEFAULT_BUFFER_ROWS, DEFAULT_QUERY_SIZE } from '~/utils/constants';
+import AgJsonCellEditor from './AgJsonCellEditor.vue';
 import CustomCellUuid from './CustomCellUuid.vue';
 import CustomHeaderTable from './CustomHeaderTable.vue';
 
@@ -79,13 +79,8 @@ const { gridApi, onGridReady } = useAgGridApi();
 
 const agGridRef = useTemplateRef<HTMLElement>('agGridRef');
 
-const cellContextMenu = ref<
-  | {
-      cellValue: unknown;
-      columnName: string;
-    }
-  | undefined
->();
+const cellContextMenu = ref<CellContextMenuEvent | undefined>();
+const cellHeaderContextMenu = ref<CellContextMenuEvent | undefined>();
 
 onClickOutside(agGridRef, event => {
   emit('onFocusCell', undefined);
@@ -217,6 +212,8 @@ const columnDefs = computed<ColDef[]>(() => {
     const isShowCustomCellUuid =
       (isPrimaryKey && haveRelationByFieldName) || (isForeignKey && foreignKey);
 
+    const isObjectColumn = ['object', 'json', 'jsonb'].includes(type);
+
     const column: ColDef = {
       headerName: fieldId,
       field: fieldId,
@@ -257,8 +254,18 @@ const columnDefs = computed<ColDef[]>(() => {
           }
         },
       },
+
+      ...(isObjectColumn && {
+        cellEditor: 'AgJsonCellEditor',
+        cellEditorPopup: true,
+      }),
+
       valueFormatter: (params: ValueFormatterParams) => {
-        return cellValueFormatter(params.value, type);
+        if (params.value === null) {
+          return 'NULL';
+        }
+
+        return (params.value || '') as string;
       },
     };
     columns.push(column);
@@ -294,25 +301,33 @@ const columnTypes = ref<{
 }>({
   editableColumn: {
     cellStyle: (params: CellClassParams) => {
+      const field = params.colDef.colId ?? '';
+      if (!field || !props.data) {
+        return undefined;
+      }
+
       const rowId = Number(params.node.id ?? params.node.rowIndex);
 
-      if (props.data?.[rowId] === undefined) {
+      const originalRowData = props.data[rowId];
+
+      if (originalRowData === undefined) {
         return { backgroundColor: 'var(--color-green-200)' };
       }
 
-      const field = params.colDef.field ?? '';
-
       const style: { backgroundColor?: string; color?: string } = {};
 
-      const oldValue = props?.data?.[rowId]?.[field];
+      const originalFieldValue = originalRowData[field];
+      const newValue = params.value;
 
-      if (oldValue === null) {
+      if (originalFieldValue === null || newValue === null) {
         style.color = 'var(--muted-foreground)';
       }
 
-      const haveDifferent = oldValue !== params.value;
+      let isChanged = false;
 
-      if (haveDifferent) {
+      isChanged = originalFieldValue !== newValue;
+
+      if (isChanged) {
         style.backgroundColor = 'var(--color-orange-200)';
         delete style.color;
       }
@@ -328,6 +343,9 @@ const columnTypes = ref<{
 
 const gridOptions = computed(() => {
   const options: GridOptions = {
+    components: {
+      AgJsonCellEditor,
+    },
     paginationPageSize: pageSize.value,
     rowBuffer: DEFAULT_BUFFER_ROWS,
     rowClass: 'class-row-border-none',
@@ -389,15 +407,11 @@ const onCellFocus = () => {
 };
 
 const onCellContextMenu = (event: CellContextMenuEvent) => {
-  const columnName = event.colDef.field;
-  const cellValue = event.value;
+  cellContextMenu.value = event;
+};
 
-  if (columnName) {
-    cellContextMenu.value = {
-      cellValue,
-      columnName,
-    };
-  }
+const onCellHeaderContextMenu = (event: CellContextMenuEvent) => {
+  cellHeaderContextMenu.value = event;
 };
 
 watch(
@@ -445,7 +459,19 @@ const onRowDataUpdated = () => {
   });
 };
 
-defineExpose({ gridApi, editedCells, columnDefs, cellContextMenu });
+const clearCellContextMenu = () => {
+  cellContextMenu.value = undefined;
+  cellHeaderContextMenu.value = undefined;
+};
+
+defineExpose({
+  gridApi,
+  editedCells,
+  columnDefs,
+  cellContextMenu,
+  cellHeaderContextMenu,
+  clearCellContextMenu,
+});
 
 //  @mouseup="onStopRangeSelection"
 //     @click.keyup="onStopRangeSelection"
@@ -460,6 +486,7 @@ defineExpose({ gridApi, editedCells, columnDefs, cellContextMenu });
     @cell-focused="onCellFocus"
     @rowDataUpdated="onRowDataUpdated"
     @cellContextMenu="onCellContextMenu"
+    @columnHeaderContextMenu="onCellHeaderContextMenu"
     :class="props.class"
     :grid-options="gridOptions"
     :columnDefs="columnDefs"

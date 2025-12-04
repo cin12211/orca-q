@@ -328,8 +328,37 @@ export const useTableQueryBuilder = ({
     );
   });
 
+  const getFormattedRow = (content: unknown, type?: string): string => {
+    const isJsonType = type === 'jsonb' || type === 'json';
+    const isObjectType =
+      (typeof content === 'object' ||
+        Object.prototype.toString.call(content) === '[object Object]') &&
+      content !== null;
+
+    if (isJsonType || isObjectType) {
+      return content ? JSON.stringify(content, null, 2) : '';
+    }
+
+    return content as string;
+  };
+
   const tableData = computed(() => {
-    return data.value?.result || [];
+    if (!data.value?.result || !Array.isArray(data.value.result)) {
+      return [];
+    }
+
+    const mappedRows = data.value.result.map((row: any) => {
+      const formattedRow: Record<string, string> = {};
+
+      Object.keys(row).forEach(key => {
+        const value = row[key];
+        formattedRow[key] = getFormattedRow(value);
+      });
+
+      return formattedRow;
+    });
+
+    return mappedRows || [];
   });
 
   return {
