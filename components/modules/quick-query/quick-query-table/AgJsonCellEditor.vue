@@ -72,6 +72,13 @@ function isCancelBeforeStart(): boolean {
 function afterGuiAttached(): void {
   // Có thể focus vào JsonEditorVue ở đây
 }
+
+defineExpose({
+  getValue,
+  isCancelAfterEnd,
+  isCancelBeforeStart,
+  afterGuiAttached,
+});
 </script>
 
 <template>
