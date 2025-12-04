@@ -83,7 +83,7 @@ defineExpose({
 
 <template>
   <div
-    class="w-[35rem] h-[25rem] bg-background rounded-md p-2 flex flex-col gap-2"
+    class="w-[35rem] h-[20rem] bg-background border resize overflow-y-auto rounded-md flex flex-col"
     tabindex="0"
     @keydown.esc="onCancel"
     @keydown.ctrl.enter="onConfirm"
@@ -91,22 +91,31 @@ defineExpose({
     <div class="flex-1 overflow-hidden">
       <JsonEditorVue
         v-model="localValue"
-        :mode="mode as unknown as undefined"
-        @modeChange="mode = $event"
         class="h-full rounded-md"
-        :style="{ height: '100%' }"
+        :mode="mode as unknown as undefined"
+        :navigationBar="false"
+        @modeChange="mode = $event"
       />
     </div>
 
-    <div class="flex justify-end gap-1">
-      <Button @click="onCancel" variant="outline" size="sm"> Cancel </Button>
-      <Button @click="onConfirm" size="sm"> Oke </Button>
+    <div class="flex justify-end gap-1 p-2">
+      <Button @click="onCancel" variant="outline" class="h-6 px-2 font-medium">
+        Cancel
+      </Button>
+      <Button @click="onConfirm" class="h-6 font-medium px-2">
+        <Icon name="lucide:check"> </Icon>
+        Oke
+      </Button>
     </div>
   </div>
 </template>
 
 <style lang="css">
 @reference "@/assets/css/tailwind.css";
+
+.jse-status-bar {
+  display: none !important;
+}
 
 .ag-popup-editor {
   @apply rounded-md shadow;
@@ -117,7 +126,7 @@ defineExpose({
 }
 
 .jse-contents {
-  @apply rounded-b-md;
+  @apply rounded-b-md border-b;
 }
 
 .jse-button.jse-group-button.jse-first {
