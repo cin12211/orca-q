@@ -3,6 +3,7 @@ import { onClickOutside } from '@vueuse/core';
 import type { HTMLAttributes } from 'vue';
 import type {
   CellClassParams,
+  CellContextMenuEvent,
   ColDef,
   ColTypeDef,
   GridOptions,
@@ -40,6 +41,7 @@ const props = defineProps<{
   class?: HTMLAttributes['class'];
   skipReColumnSize?: boolean;
   columnKeyBy: 'index' | 'field';
+  selectedRows?: RowData[];
 }>();
 
 const emit = defineEmits<{
@@ -52,6 +54,8 @@ const { gridApi, onGridReady } = useAgGridApi();
 const agGridRef = useTemplateRef<HTMLElement>('agGridRef');
 
 const containerRef = ref<InstanceType<typeof HTMLElement>>();
+const cellContextMenu = ref<CellContextMenuEvent | undefined>();
+const cellHeaderContextMenu = ref<CellContextMenuEvent | undefined>();
 
 onClickOutside(agGridRef, () => {
   // emit('onFocusCell', undefined);
@@ -91,20 +95,19 @@ const columnDefs = computed<ColDef[]>(() => {
     width: DEFAULT_HASH_INDEX_WIDTH,
   });
 
-  const setColumnName = new Set();
-
   const tempRows = (props.data || []).slice(0, 10);
 
   props.columns.forEach(
     (
       {
         originalName,
-        canMutate,
-        queryFieldName,
-        type,
-        tableName,
+        // canMutate,
+        // queryFieldName,
+        // type,
+        // tableName,
         isPrimaryKey,
         isForeignKey,
+        aliasFieldName,
       },
       index
     ) => {
@@ -116,15 +119,7 @@ const columnDefs = computed<ColDef[]>(() => {
         fieldId = originalName;
       }
 
-      let fieldName = queryFieldName;
-
-      if (setColumnName.has(fieldName)) {
-        fieldName = `${tableName}.${queryFieldName}`;
-      } else {
-        setColumnName.add(fieldName);
-      }
-
-      const headerName = fieldName;
+      const headerName = aliasFieldName;
 
       const additionalGap =
         isPrimaryKey || isForeignKey ? DEFAULT_COLUMN_ADDITIONAL_GAP_WIDTH : 0;
@@ -405,7 +400,30 @@ const onRowDataUpdated = async () => {
   });
 };
 
-defineExpose({ gridApi });
+const onCellContextMenu = (event: CellContextMenuEvent) => {
+  if (!props.selectedRows?.length) {
+    event?.node?.setSelected(true);
+  }
+
+  cellContextMenu.value = event;
+};
+
+const onCellHeaderContextMenu = (event: CellContextMenuEvent) => {
+  cellHeaderContextMenu.value = event;
+};
+
+const clearCellContextMenu = () => {
+  cellContextMenu.value = undefined;
+  cellHeaderContextMenu.value = undefined;
+};
+
+defineExpose({
+  gridApi,
+  columnDefs,
+  cellContextMenu,
+  cellHeaderContextMenu,
+  clearCellContextMenu,
+});
 </script>
 
 <template>
@@ -415,6 +433,8 @@ defineExpose({ gridApi });
       @grid-ready="onGridReady"
       @cell-focused="onCellFocus"
       @row-data-updated="onRowDataUpdated"
+      @cellContextMenu="onCellContextMenu"
+      @columnHeaderContextMenu="onCellHeaderContextMenu"
       :class="props.class"
       :grid-options="gridOptions"
       :columnDefs="columnDefs"

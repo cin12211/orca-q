@@ -343,22 +343,24 @@ export const useTableQueryBuilder = ({
   };
 
   const tableData = computed(() => {
-    if (!data.value?.result || !Array.isArray(data.value.result)) {
-      return [];
-    }
+    return data.value?.result || [];
 
-    const mappedRows = data.value.result.map((row: any) => {
-      const formattedRow: Record<string, string> = {};
+    // if (!data.value?.result || !Array.isArray(data.value.result)) {
+    //   return [];
+    // }
 
-      Object.keys(row).forEach(key => {
-        const value = row[key];
-        formattedRow[key] = getFormattedRow(value);
-      });
+    // const mappedRows = data.value.result.map((row: any) => {
+    //   const formattedRow: Record<string, string> = {};
 
-      return formattedRow;
-    });
+    //   Object.keys(row).forEach(key => {
+    //     const value = row[key];
+    //     formattedRow[key] = getFormattedRow(value);
+    //   });
 
-    return mappedRows || [];
+    //   return formattedRow;
+    // });
+
+    // return mappedRows || [];
   });
 
   return {

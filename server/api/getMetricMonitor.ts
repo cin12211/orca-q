@@ -27,7 +27,6 @@ export default defineEventHandler(async (event): Promise<MetricsResponse> => {
   const sessionsRes = await resource.query(
     'SELECT COUNT(*) FROM pg_stat_activity'
   );
-  console.log('🚀 ~ defineEventHandler ~ sessionsRes:', sessionsRes);
 
   const sessionCount = parseInt(sessionsRes[0].count);
 

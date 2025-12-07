@@ -8,8 +8,10 @@ import type {
   ColDef,
   ColTypeDef,
   GridOptions,
+  ICellEditorParams,
   SuppressKeyboardEventParams,
   ValueFormatterParams,
+  ValueSetterParams,
 } from 'ag-grid-community';
 import { AgGridVue } from 'ag-grid-vue3';
 import {
@@ -46,6 +48,7 @@ const props = defineProps<{
   selectedColumnFieldId?: string | undefined;
   currentTableName: string;
   currentSchemaName: string;
+  selectedRows: RowData[];
 }>();
 
 const emit = defineEmits<{
@@ -119,17 +122,25 @@ const onCellValueChanged = (event: CellValueChangedEvent) => {
 
     const oldFieldValue = props?.data?.[rowId]?.[field];
 
-    const haveDifferent = oldFieldValue !== newValue;
+    let haveDifferent = oldFieldValue !== newValue;
+
+    if (typeof oldFieldValue === 'object' && typeof newValue === 'object') {
+      haveDifferent =
+        JSON.stringify(oldFieldValue) !== JSON.stringify(newValue);
+    }
 
     const haveEditedCellRecord = editedCells.value.some(
       cell => cell.rowId === rowId
     );
 
+    const formatNewValue =
+      typeof newValue === 'object' ? JSON.stringify(newValue) : newValue;
+
     if (haveDifferent && !haveEditedCellRecord) {
       editedCells.value.push({
         rowId,
         changedData: {
-          [field]: newValue,
+          [field]: formatNewValue,
         },
       });
       return;
@@ -142,7 +153,7 @@ const onCellValueChanged = (event: CellValueChangedEvent) => {
             ...cell,
             changedData: {
               ...cell.changedData,
-              [field]: newValue,
+              [field]: formatNewValue,
             },
           };
         }
@@ -255,18 +266,54 @@ const columnDefs = computed<ColDef[]>(() => {
         },
       },
 
-      ...(isObjectColumn && {
-        cellEditor: 'AgJsonCellEditor',
-        cellEditorPopup: true,
-      }),
+      cellEditorSelector: (params: ICellEditorParams) => {
+        const value = params.data[fieldId];
+
+        const type = typeof value;
+
+        // Object or Array → complex JSON
+        if (type === 'object' && value !== null) {
+          return {
+            component: 'AgJsonCellEditor',
+            popup: true,
+            popupPosition: 'under',
+          };
+        }
+      },
 
       valueFormatter: (params: ValueFormatterParams) => {
-        if (params.value === null) {
+        const value = params.value;
+        if (value === null) {
           return 'NULL';
         }
 
-        return (params.value || '') as string;
+        if (typeof value === 'object' && value !== null) {
+          return JSON.stringify(value, null, 2); // Chuỗi có định dạng đẹp
+        }
+
+        return (value || '') as string;
       },
+      valueSetter: (params: ValueSetterParams) => {
+        try {
+          const newValue = JSON.parse(params.newValue);
+          params.data[fieldId] = newValue;
+          return true;
+        } catch (e) {
+          console.error(`Invalid JSON format in column ${fieldId}:`, e);
+          return false;
+        }
+      },
+
+      // ...(isObjectColumn && {
+      //   cellEditor: 'AgJsonCellEditor',
+      //   cellEditorPopup: true,
+      // }),
+      // valueFormatter: (params: ValueFormatterParams) => {
+      //   if (params.value === null) {
+      //     return 'NULL';
+      //   }
+      //   return (params.value || '') as string;
+      // },
     };
     columns.push(column);
   });
@@ -325,11 +372,21 @@ const columnTypes = ref<{
 
       let isChanged = false;
 
-      isChanged = originalFieldValue !== newValue;
+      if (
+        typeof originalFieldValue === 'object' &&
+        typeof newValue === 'object'
+      ) {
+        isChanged =
+          JSON.stringify(originalFieldValue) !== JSON.stringify(newValue);
+      } else {
+        isChanged = originalFieldValue !== newValue;
+      }
 
       if (isChanged) {
         style.backgroundColor = 'var(--color-orange-200)';
         delete style.color;
+      } else {
+        style.backgroundColor = 'unset';
       }
 
       return style;
@@ -385,6 +442,7 @@ const gridOptions = computed(() => {
 const onSelectionChanged = () => {
   if (gridApi.value) {
     const selectedRows = gridApi.value.getSelectedRows();
+
     handleSelection(selectedRows);
   }
 };
@@ -407,6 +465,10 @@ const onCellFocus = () => {
 };
 
 const onCellContextMenu = (event: CellContextMenuEvent) => {
+  if (!props.selectedRows?.length) {
+    event?.node?.setSelected(true);
+  }
+
   cellContextMenu.value = event;
 };
 

@@ -3,8 +3,10 @@ import { useElementSize } from '@vueuse/core';
 import VueJsonPretty from 'vue-json-pretty';
 import 'vue-json-pretty/lib/styles.css';
 import BaseCodeEditor from '~/components/base/code-editor/BaseCodeEditor.vue';
+import type DynamicTable from '~/components/base/dynamic-table/DynamicTable.vue';
 import { useAppLayoutStore } from '~/shared/stores/appLayoutStore';
 import IntroRawQuery from './components/IntroRawQuery.vue';
+import RawQueryContextMenu from './components/RawQueryContextMenu.vue';
 import RawQueryEditorFooter from './components/RawQueryEditorFooter.vue';
 import RawQueryEditorHeader from './components/RawQueryEditorHeader.vue';
 import RawQueryLayout from './components/RawQueryLayout.vue';
@@ -27,6 +29,8 @@ const {
   activeSchema,
   fieldDefs,
 } = toRefs(rawQueryFileContent);
+
+const rawQueryTableRef = ref<InstanceType<typeof DynamicTable>>();
 
 const rawQueryEditor = useRawQueryEditor({
   activeSchema,
@@ -138,6 +142,45 @@ const jsonViewRef = useTemplateRef('jsonViewRef');
 const { height } = useElementSize(jsonViewRef);
 
 const isRawViewMode = ref(false);
+
+const selectedRows = ref<Record<string, any>[]>([]);
+
+const onSelectedRowsChange = (rows: unknown[]) => {
+  selectedRows.value = rows as Record<string, any>[];
+};
+
+const formattedData = computed(() => {
+  return currentRawQueryResult.value?.map(item => {
+    const mappedItem: Record<string, any> = {};
+
+    for (const [key, value] of Object.entries(item)) {
+      const columnName = mappedColumns.value[Number(key)]?.queryFieldName || '';
+      if (columnName) {
+        mappedItem[columnName] = value;
+      }
+    }
+
+    return mappedItem;
+  });
+});
+
+const formattedSelectedRows = computed(() => {
+  return (
+    selectedRows.value?.map?.(item => {
+      const mappedItem: Record<string, any> = {};
+
+      for (const [key, value] of Object.entries(item)) {
+        const columnName =
+          mappedColumns.value[Number(key)]?.queryFieldName || '';
+        if (columnName) {
+          mappedItem[columnName] = value;
+        }
+      }
+
+      return mappedItem;
+    }) || []
+  );
+});
 </script>
 
 <template>
@@ -263,22 +306,37 @@ const isRawViewMode = ref(false);
           showIcon
           showLength
           :height="height"
-          :data="rawResponse"
+          :data="formattedData"
         />
       </div>
 
-      <DynamicTable
+      <div
+        class="h-full"
         v-show="
           !queryProcessState.executeErrors &&
           queryProcessState.isHaveOneExecute &&
           !isRawViewMode
         "
-        :columns="mappedColumns"
-        :data="currentRawQueryResult || []"
-        class="h-full border rounded-md"
-        skip-re-column-size
-        columnKeyBy="index"
-      />
+      >
+        <RawQueryContextMenu
+          :data="formattedData || []"
+          :selectedRows="formattedSelectedRows || []"
+          :cellContextMenu="rawQueryTableRef?.cellContextMenu"
+          :cellHeaderContextMenu="rawQueryTableRef?.cellHeaderContextMenu"
+          @onClearContextMenu="rawQueryTableRef?.clearCellContextMenu()"
+        >
+          <DynamicTable
+            ref="rawQueryTableRef"
+            :columns="mappedColumns"
+            :data="currentRawQueryResult || []"
+            :selectedRows="selectedRows"
+            @on-selected-rows="onSelectedRowsChange"
+            class="h-full border rounded-md"
+            skip-re-column-size
+            columnKeyBy="index"
+          />
+        </RawQueryContextMenu>
+      </div>
     </template>
   </RawQueryLayout>
 </template>

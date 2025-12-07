@@ -489,6 +489,7 @@ const onBackPreviousBreadcrumbByIndex = (index: number) => {
         :cellContextMenu="quickQueryTableRef?.cellContextMenu"
         :cellHeaderContextMenu="quickQueryTableRef?.cellHeaderContextMenu"
         :selectedRows="selectedRows"
+        :table-name="tableName"
         @onClearContextMenu="quickQueryTableRef?.clearCellContextMenu()"
         @onPaginate="onUpdatePagination"
         @onNextPage="onNextPage"
@@ -505,6 +506,7 @@ const onBackPreviousBreadcrumbByIndex = (index: number) => {
         <QuickQueryTable
           class="h-full border rounded-md"
           ref="quickQueryTableRef"
+          :selected-rows="selectedRows"
           :data="data || []"
           :orderBy="orderBy"
           @on-selected-rows="onSelectedRowsChange"

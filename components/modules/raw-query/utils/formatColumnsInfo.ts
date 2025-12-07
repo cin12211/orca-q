@@ -25,12 +25,21 @@ export const formatColumnsInfo = ({
 }): MappedRawColumn[] => {
   const mapTableInfo = new Map<string, TableDetailMetadata>();
   const mapTableName = new Map<string, string>();
+  const mapFileName = new Map<string, string>();
 
   return fieldDefs.map(field => {
     const tableId = `${field.tableID}`;
 
+    const fieldName = field.name;
+
     let tableInfo = mapTableInfo.get(tableId);
     let tableName = mapTableName.get(tableId);
+
+    const isHaveFieldName = mapFileName.has(fieldName);
+
+    if (!isHaveFieldName) {
+      mapFileName.set(fieldName, fieldName);
+    }
 
     if (!tableInfo) {
       if (activeSchema) {
@@ -58,9 +67,14 @@ export const formatColumnsInfo = ({
       fk => fk.column === field.name
     );
 
+    const aliasFieldName = isHaveFieldName
+      ? `${tableName}.${field.name}`
+      : field.name;
+
     const columnInfo: MappedRawColumn = {
       tableName: tableName || '',
       ...column,
+      aliasFieldName,
       queryFieldName: field.name,
       originalName: column?.name || '',
       canMutate: !!column,

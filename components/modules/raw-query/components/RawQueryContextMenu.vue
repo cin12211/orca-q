@@ -1,11 +1,11 @@
 <script setup lang="ts">
+import { BaseContextMenu } from '#components';
 import type { CellContextMenuEvent } from 'ag-grid-community';
 import {
   ContextMenuItemType,
   type ContextMenuItem,
 } from '~/components/base/context-menu/menuContext.type';
 import type { RowData } from '~/components/base/dynamic-table/utils';
-import { useAppLayoutStore } from '~/shared/stores/appLayoutStore';
 import {
   copyColumnData,
   copyRowsData,
@@ -15,28 +15,15 @@ import {
   type ExportFormat,
 } from '~/utils/common/copyData';
 
-const { onShowSecondSidebar } = useAppLayoutStore();
-
 const props = defineProps<{
-  totalSelectedRows: number;
-  hasEditedRows: boolean;
-  isReferencedTable?: boolean;
   cellContextMenu?: CellContextMenuEvent;
   cellHeaderContextMenu?: CellContextMenuEvent;
   data?: RowData[];
-  selectedRows: Record<string, any>[];
-  tableName: string;
+  selectedRows: RowData[];
+  tableName?: string;
 }>();
 
 const emit = defineEmits<{
-  (e: 'onRefresh'): void;
-  (e: 'onSaveData'): void;
-  (e: 'onAddEmptyRow'): void;
-  (e: 'onDeleteRows'): void;
-  (e: 'onCopyRows'): void;
-  (e: 'onPasteRows'): void;
-  (e: 'onCopySelectedCell'): void;
-  (e: 'onFilterByValue'): void;
   (e: 'onClearContextMenu'): void;
 }>();
 
@@ -280,39 +267,6 @@ const contextMenuItems = computed<ContextMenuItem[]>(() => {
   ];
 
   return [
-    {
-      title: 'View row detail',
-      icon: 'hugeicons:view',
-      type: ContextMenuItemType.ACTION,
-      select: () => {
-        onShowSecondSidebar();
-      },
-      condition: !props.isReferencedTable && !!props.cellContextMenu,
-    },
-    {
-      title: 'Filter by value',
-      icon: 'lucide:filter',
-      type: ContextMenuItemType.ACTION,
-      shortcut: '⌘F',
-      select: () => {
-        emit('onFilterByValue');
-      },
-      condition: !!props.cellContextMenu,
-    },
-    {
-      title: 'Refresh',
-      icon: 'hugeicons:refresh',
-      type: ContextMenuItemType.ACTION,
-      shortcut: '⌘R',
-      select: () => {
-        emit('onRefresh');
-      },
-    },
-
-    {
-      type: ContextMenuItemType.SEPARATOR,
-    },
-
     {
       type: ContextMenuItemType.ACTION,
       title: 'Copy current cell',

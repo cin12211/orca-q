@@ -14,8 +14,6 @@ const { schemaId } = toRefs(wsStateStore);
   <Select
     @update:model-value="
       e => {
-        console.log('e', e);
-
         setSchemaId(e as string);
       }
     "

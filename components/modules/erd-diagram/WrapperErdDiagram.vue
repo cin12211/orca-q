@@ -57,7 +57,6 @@ useHotkeys(
     {
       key: 'meta+f',
       callback: () => {
-        console.log('🚀 ~ onToggleFilter ~ onToggleFilter');
         onToggleFilter();
       },
       isPreventDefault: true,

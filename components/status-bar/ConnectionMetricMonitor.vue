@@ -31,7 +31,7 @@ onMounted(() => {
     blksRead.value = result.block_io.blks_read;
     blksHit.value = result.block_io.blks_hit;
     //TODO : make to 5
-  }, 10000 * ONE_SECOND);
+  }, 100000000 * ONE_SECOND);
 });
 
 onBeforeUnmount(() => {

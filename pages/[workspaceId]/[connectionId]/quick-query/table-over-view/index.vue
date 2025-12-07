@@ -32,6 +32,7 @@ const mappedColumns = computed(() => {
       queryFieldName: key,
       tableName: '',
       canMutate: false,
+      aliasFieldName: key,
     });
   }
 

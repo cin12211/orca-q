@@ -324,6 +324,7 @@ useHotkeys(
         :total-selected-rows="selectedRows.length"
         :has-edited-rows="hasEditedRows"
         :selectedRows="selectedRows"
+        :table-name="tableName"
         isReferencedTable
         @onPaginate="onUpdatePagination"
         @onNextPage="onNextPage"
@@ -340,6 +341,7 @@ useHotkeys(
         <QuickQueryTable
           class="h-full border rounded-md"
           ref="quickQueryTableRef"
+          :selected-rows="selectedRows"
           :data="data || []"
           :orderBy="orderBy"
           @on-selected-rows="onSelectedRowsChange"

@@ -10,8 +10,8 @@ export const useActivityMenu = () => {
   const activity = computed(() => [
     {
       id: ActivityBarItemType.Explorer,
-      title: 'Files',
-      icon: 'hugeicons:files-02',
+      title: 'Files / Folders',
+      icon: 'hugeicons:folder-file-storage',
       isActive: activityStore.activityActive === ActivityBarItemType.Explorer,
     },
     {
