@@ -294,13 +294,18 @@ const columnDefs = computed<ColDef[]>(() => {
         return (value || '') as string;
       },
       valueSetter: (params: ValueSetterParams) => {
-        try {
-          const newValue = JSON.parse(params.newValue);
-          params.data[fieldId] = newValue;
+        if (isObjectColumn) {
+          try {
+            const newValue = JSON.parse(params.newValue);
+            params.data[fieldId] = newValue;
+            return true;
+          } catch (e) {
+            console.error(`Invalid JSON format in column ${fieldId}:`, e);
+            return false;
+          }
+        } else {
+          params.data[fieldId] = params.newValue;
           return true;
-        } catch (e) {
-          console.error(`Invalid JSON format in column ${fieldId}:`, e);
-          return false;
         }
       },
 
