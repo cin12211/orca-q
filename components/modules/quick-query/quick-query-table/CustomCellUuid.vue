@@ -14,7 +14,9 @@ defineProps<{
 
 <template>
   <div class="flex items-center justify-between">
-    <span class="truncate"> {{ params.value }}</span>
+    <span class="truncate">
+      {{ params?.formatValue?.(params.value) || params.value }}</span
+    >
 
     <Icon
       v-if="params.isPrimaryKey && params.value"

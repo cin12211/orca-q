@@ -111,11 +111,25 @@ const { handleCellMouseOverDebounced, handleCellMouseDown } =
     gridRef: agGridRef,
   });
 
+const mapColumnDef = computed(() => {
+  return new Map(
+    props.columnTypes.map(columnType => [columnType.name, columnType])
+  );
+});
+
+const isJSONColumn = (fieldId: string) => {
+  const fieldType = mapColumnDef.value.get(fieldId)?.type || '';
+
+  return ['object', 'json', 'jsonb'].includes(fieldType);
+};
+
 /* Handle cell value changed --------------------------------------- */
 const onCellValueChanged = (event: CellValueChangedEvent) => {
   const { colDef, newValue, rowIndex } = event;
   const rowId = Number(rowIndex); // Use row ID or index
   const field = colDef.field;
+
+  const isObjectColumn = isJSONColumn(field ?? '');
 
   if (rowId !== null && field) {
     // Add to edited cells if not already present
@@ -124,7 +138,7 @@ const onCellValueChanged = (event: CellValueChangedEvent) => {
 
     let haveDifferent = oldFieldValue !== newValue;
 
-    if (typeof oldFieldValue === 'object' && typeof newValue === 'object') {
+    if (isObjectColumn) {
       haveDifferent =
         JSON.stringify(oldFieldValue) !== JSON.stringify(newValue);
     }
@@ -133,8 +147,11 @@ const onCellValueChanged = (event: CellValueChangedEvent) => {
       cell => cell.rowId === rowId
     );
 
-    const formatNewValue =
-      typeof newValue === 'object' ? JSON.stringify(newValue) : newValue;
+    let formatNewValue = isObjectColumn ? JSON.stringify(newValue) : newValue;
+
+    if (!formatNewValue) {
+      formatNewValue = null;
+    }
 
     if (haveDifferent && !haveEditedCellRecord) {
       editedCells.value.push({
@@ -223,7 +240,7 @@ const columnDefs = computed<ColDef[]>(() => {
     const isShowCustomCellUuid =
       (isPrimaryKey && haveRelationByFieldName) || (isForeignKey && foreignKey);
 
-    const isObjectColumn = ['object', 'json', 'jsonb'].includes(type);
+    const isObjectColumn = ['json', 'jsonb'].includes(type);
 
     const column: ColDef = {
       headerName: fieldId,
@@ -266,13 +283,8 @@ const columnDefs = computed<ColDef[]>(() => {
         },
       },
 
-      cellEditorSelector: (params: ICellEditorParams) => {
-        const value = params.data[fieldId];
-
-        const type = typeof value;
-
-        // Object or Array → complex JSON
-        if (type === 'object' && value !== null) {
+      cellEditorSelector: (_params: ICellEditorParams) => {
+        if (isObjectColumn) {
           return {
             component: 'AgJsonCellEditor',
             popup: true,
@@ -283,12 +295,17 @@ const columnDefs = computed<ColDef[]>(() => {
 
       valueFormatter: (params: ValueFormatterParams) => {
         const value = params.value;
+
+        if (typeof value === 'number' || typeof value === 'bigint') {
+          return value.toString();
+        }
+
         if (value === null) {
           return 'NULL';
         }
 
-        if (typeof value === 'object' && value !== null) {
-          return JSON.stringify(value, null, 2); // Chuỗi có định dạng đẹp
+        if (isObjectColumn) {
+          return JSON.stringify(value, null, 2);
         }
 
         return (value || '') as string;
@@ -308,17 +325,6 @@ const columnDefs = computed<ColDef[]>(() => {
           return true;
         }
       },
-
-      // ...(isObjectColumn && {
-      //   cellEditor: 'AgJsonCellEditor',
-      //   cellEditorPopup: true,
-      // }),
-      // valueFormatter: (params: ValueFormatterParams) => {
-      //   if (params.value === null) {
-      //     return 'NULL';
-      //   }
-      //   return (params.value || '') as string;
-      // },
     };
     columns.push(column);
   });
@@ -358,6 +364,8 @@ const columnTypes = ref<{
         return undefined;
       }
 
+      const isObjectColumn = isJSONColumn(field ?? '');
+
       const rowId = Number(params.node.id ?? params.node.rowIndex);
 
       const originalRowData = props.data[rowId];
@@ -377,10 +385,7 @@ const columnTypes = ref<{
 
       let isChanged = false;
 
-      if (
-        typeof originalFieldValue === 'object' &&
-        typeof newValue === 'object'
-      ) {
+      if (isObjectColumn) {
         isChanged =
           JSON.stringify(originalFieldValue) !== JSON.stringify(newValue);
       } else {
