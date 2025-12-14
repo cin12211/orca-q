@@ -42,8 +42,7 @@ export default defineNuxtConfig({
 
   runtimeConfig: {
     public: {
-      //TODO: move this to env
-      amplitudeApiKey: 'f6ca565b6cac8b973b4df623e04a7968',
+      amplitudeApiKey: process.env.NUXT_AMPLITUDE_API_KEY,
     },
   },
 
