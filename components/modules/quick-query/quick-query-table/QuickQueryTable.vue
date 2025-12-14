@@ -127,14 +127,16 @@ const isJSONColumn = (fieldId: string) => {
 const onCellValueChanged = (event: CellValueChangedEvent) => {
   const { colDef, newValue, rowIndex } = event;
   const rowId = Number(rowIndex); // Use row ID or index
-  const field = colDef.field;
+  const fieldId = colDef.field;
 
-  const isObjectColumn = isJSONColumn(field ?? '');
+  const isObjectColumn = isJSONColumn(fieldId ?? '');
 
-  if (rowId !== null && field) {
-    // Add to edited cells if not already present
+  const fieldType = mapColumnDef.value.get(fieldId ?? '')?.type || '';
 
-    const oldFieldValue = props?.data?.[rowId]?.[field];
+  const isBoolenColumn = fieldType === 'bool';
+
+  if (rowId !== null && fieldId) {
+    const oldFieldValue = props?.data?.[rowId]?.[fieldId];
 
     let haveDifferent = oldFieldValue !== newValue;
 
@@ -153,11 +155,15 @@ const onCellValueChanged = (event: CellValueChangedEvent) => {
       formatNewValue = null;
     }
 
+    if (isBoolenColumn) {
+      formatNewValue = !!formatNewValue;
+    }
+
     if (haveDifferent && !haveEditedCellRecord) {
       editedCells.value.push({
         rowId,
         changedData: {
-          [field]: formatNewValue,
+          [fieldId]: formatNewValue,
         },
       });
       return;
@@ -170,7 +176,7 @@ const onCellValueChanged = (event: CellValueChangedEvent) => {
             ...cell,
             changedData: {
               ...cell.changedData,
-              [field]: formatNewValue,
+              [fieldId]: formatNewValue,
             },
           };
         }
@@ -181,7 +187,7 @@ const onCellValueChanged = (event: CellValueChangedEvent) => {
         if (cell.rowId === rowId) {
           const newChangedData = cell.changedData;
 
-          delete newChangedData[field];
+          delete newChangedData[fieldId];
 
           return {
             ...cell,
