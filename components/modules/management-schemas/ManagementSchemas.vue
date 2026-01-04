@@ -14,6 +14,7 @@ import { FunctionSchemaEnum } from '~/shared/types';
 import { DEFAULT_DEBOUNCE_INPUT } from '~/utils/constants';
 import ConnectionSelector from '../selectors/ConnectionSelector.vue';
 import SchemaSelector from '../selectors/SchemaSelector.vue';
+import { SchemaFolderType } from './constants';
 
 const { schemaStore, connectToConnection, wsStateStore, tabViewStore } =
   useAppContext();
@@ -24,14 +25,6 @@ const isRefreshing = ref(false);
 
 const searchInput = shallowRef('');
 const debouncedSearch = refDebounced(searchInput, DEFAULT_DEBOUNCE_INPUT);
-
-const treeFolderRef = templateRef('treeFolderRef');
-
-enum SchemaFolderType {
-  Tables = 'Tables',
-  Functions = 'Functions',
-  Views = 'Views',
-}
 
 const items = computed(() => {
   const tables = activeSchema?.value?.tables || [];
@@ -117,32 +110,6 @@ const items = computed(() => {
 const activityBarStore = useActivityBarStore();
 const { schemasExpandedState, schemaCurrentScrollTop } =
   toRefs(activityBarStore);
-
-onMounted(() => {
-  nextTick(() => {
-    const el = treeFolderRef.value?.$el as HTMLElement | undefined;
-
-    if (!el) {
-      return;
-    }
-
-    el.scrollTo({
-      top: schemaCurrentScrollTop.value,
-    });
-
-    el.onscroll = () => {
-      schemaCurrentScrollTop.value = el.scrollTop || 0;
-    };
-  });
-});
-
-onActivated(() => {
-  nextTick(() => {
-    treeFolderRef.value?.$el?.scrollTo({
-      top: schemaCurrentScrollTop.value,
-    });
-  });
-});
 
 const onRefreshSchema = async () => {
   if (!connectionId.value) {
@@ -299,7 +266,6 @@ const onHandleOpenTab = async (
     </div>
 
     <TreeFolder
-      ref="treeFolderRef"
       v-model:explorerFiles="items"
       v-model:expandedState="schemasExpandedState"
       :isShowArrow="true"

@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { useScroll } from '@vueuse/core';
+import { useTemplateRef } from 'vue';
 import { Icon } from '@iconify/vue';
 import { TreeItem, TreeRoot, TreeVirtualizer } from 'reka-ui';
 import {
@@ -7,7 +9,7 @@ import {
   type TreeFileSystem,
 } from './treeManagement';
 
-defineProps<{
+const props = defineProps<{
   explorerFiles: TreeFileSystem;
   expandedState?: string[];
   selectedItems?: FlattenedTreeFileSystemItem[];
@@ -24,7 +26,8 @@ const emits = defineEmits<{
   (e: 'update:selectedItems', value: FlattenedTreeFileSystemItem[]): void;
 }>();
 
-const treeRootRef = ref<HTMLElement | null>(null);
+const treeRootRef = useTemplateRef<HTMLElement | null>('treeRootRef');
+const { y } = useScroll(treeRootRef);
 
 const onUpdateExpanded = (value: string[]) => {
   emits('update:expandedState', value);
@@ -42,6 +45,13 @@ defineExpose({
 const selectedValue = ref<FlattenedTreeFileSystemItem[]>();
 
 const heightItem = 24;
+
+onActivated(() => {
+  (treeRootRef.value as unknown as ComponentPublicInstance)?.$el?.scrollTo?.(
+    0,
+    y.value
+  );
+});
 </script>
 
 <template>

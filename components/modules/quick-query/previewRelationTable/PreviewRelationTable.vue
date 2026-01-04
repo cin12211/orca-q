@@ -130,7 +130,7 @@ const updateSelectedTabInBreadcrumb = (selectedTab: string) => {
         </DialogDescription>
       </DialogHeader>
 
-      <KeepAlive :max="DEFAULT_MAX_KEEP_ALIVE">
+      <KeepAlive>
         <component
           :is="
             latestBreadcrumb?.type === 'backReferenced'

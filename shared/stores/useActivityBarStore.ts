@@ -7,6 +7,7 @@ export enum ActivityBarItemType {
   ErdDiagram = 'ERDiagram',
 }
 
+//TODO: refactor
 export const useActivityBarStore = defineStore(
   'activity-bar',
   () => {

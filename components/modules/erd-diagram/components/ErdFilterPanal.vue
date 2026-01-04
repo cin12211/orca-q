@@ -145,7 +145,6 @@ const onFocusNode = (_e: MouseEvent, item: FlattenedTreeFileSystemItem) => {
       <div class="h-full w-[19rem] overflow-y-auto">
         <TreeFolder
           class="overflow-x-hidden"
-          ref="treeFolderRef"
           v-model:explorerFiles="items"
           :isShowArrow="false"
           :isExpandedByArrow="false"

@@ -140,7 +140,7 @@ export function useRawQueryEditor({
 
             let from = _from;
 
-            if (matched?.startsWith(':')) {
+            if (matched?.startsWith?.(':')) {
               from = _from - 1;
             }
 

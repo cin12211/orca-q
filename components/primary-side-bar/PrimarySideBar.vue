@@ -1,5 +1,9 @@
 <script setup lang="ts">
-import { ModulesManagementErdDiagram } from '#components';
+import {
+  ModulesManagementErdDiagram,
+  ModulesManagementExplorer,
+  ModulesManagementSchemas,
+} from '#components';
 import { useAppLayoutStore } from '~/shared/stores/appLayoutStore';
 import {
   ActivityBarItemType,
@@ -8,42 +12,33 @@ import {
 
 const activityStore = useActivityBarStore();
 
-//TODO: fix v-if="layout.layoutSize[0]"
 const layout = useAppLayoutStore();
+
+const current = shallowRef();
+
+watch(
+  () => activityStore.activityActive,
+  () => {
+    if (activityStore.activityActive === ActivityBarItemType.Explorer) {
+      current.value = ModulesManagementExplorer;
+    }
+    if (activityStore.activityActive === ActivityBarItemType.Schemas) {
+      current.value = ModulesManagementSchemas;
+    }
+    if (activityStore.activityActive === ActivityBarItemType.ErdDiagram) {
+      current.value = ModulesManagementErdDiagram;
+    }
+  },
+  {
+    immediate: true,
+  }
+);
 </script>
 
 <template>
   <div class="w-full h-full flex flex-col" v-if="layout.layoutSize[0]">
-    <ModulesManagementExplorer
-      v-show="activityStore.activityActive === ActivityBarItemType.Explorer"
-    />
-
-    <ModulesManagementSchemas
-      v-show="activityStore.activityActive === ActivityBarItemType.Schemas"
-    />
-    <ModulesManagementErdDiagram
-      v-show="activityStore.activityActive === ActivityBarItemType.ErdDiagram"
-    />
-
-    <!-- <ModulesManagementExplorer
-      :class="[
-        activityStore.activityActive === ActivityBarItemType.Explorer
-          ? ''
-          : 'hidden',
-      ]"
-    />
-
-    <ModulesManagementSchemas
-      :class="[
-        activityStore.activityActive === ActivityBarItemType.Schemas
-          ? ''
-          : 'hidden',
-      ]"
-    /> -->
-
-    <!-- TODO: open later -->
-    <!-- <div class="h-11 border-t w-full">
-      <ActivityBarHorizontalBottom />
-    </div> -->
+    <KeepAlive>
+      <component :is="current"></component>
+    </KeepAlive>
   </div>
 </template>

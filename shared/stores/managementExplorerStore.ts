@@ -14,7 +14,7 @@ export const useManagementExplorerStore = defineStore(
 
       // If a folder was renamed, update all affected paths
       const updatedExpanded = Array.from(currentExpanded).map(expandedPath => {
-        if (oldPath && expandedPath?.startsWith(oldPath)) {
+        if (oldPath && expandedPath?.startsWith?.(oldPath)) {
           return expandedPath.replace(oldPath, newPath);
         }
         return expandedPath;
@@ -26,7 +26,7 @@ export const useManagementExplorerStore = defineStore(
     const onRemoveExpandedByPath = (path: string) => {
       // Remove all expanded paths that belong under the deleted path
       expandedState.value = expandedState.value.filter(
-        expandedPath => !expandedPath?.startsWith(path)
+        expandedPath => !expandedPath?.startsWith?.(path)
       );
     };
 
