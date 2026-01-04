@@ -554,6 +554,31 @@ defineExpose({
 //  @mouseup="onStopRangeSelection"
 //     @click.keyup="onStopRangeSelection"
 //     @mouseleave="onStopRangeSelection"
+
+onActivated(async () => {
+  if (!gridApi.value) return;
+
+  await nextTick();
+
+  const scrollPosition = gridApi.value.getState();
+  const gridBody = document.querySelector('.ag-body-viewport');
+
+  if (gridBody) {
+    gridBody.scrollTop = scrollPosition.scroll?.top || 0;
+  }
+
+  const columns = gridApi.value?.getAllGridColumns() || [];
+  let sumColmnWidth = 0;
+
+  for (const column of columns) {
+    if (sumColmnWidth >= (scrollPosition.scroll?.left || 0)) {
+      gridApi.value.ensureColumnVisible(column.getColId(), 'start');
+      break;
+    }
+
+    sumColmnWidth += column.getActualWidth();
+  }
+});
 </script>
 
 <template>

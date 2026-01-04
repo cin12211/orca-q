@@ -7,6 +7,7 @@ import { useActivityBarStore } from '~/shared/stores';
 import { TabViewType } from '~/shared/stores/useTabViewsStore';
 import { DEFAULT_DEBOUNCE_INPUT } from '~/utils/constants';
 import { buildTableNodeId } from '../erd-diagram/utils';
+import { SchemaFolderType } from '../management-schemas/constants';
 import ConnectionSelector from '../selectors/ConnectionSelector.vue';
 import SchemaSelector from '../selectors/SchemaSelector.vue';
 
@@ -18,14 +19,6 @@ const isRefreshing = ref(false);
 
 const searchInput = shallowRef('');
 const debouncedSearch = refDebounced(searchInput, DEFAULT_DEBOUNCE_INPUT);
-
-const treeFolderRef = templateRef('treeFolderRef');
-
-enum SchemaFolderType {
-  Tables = 'Tables',
-  Functions = 'Functions',
-  Views = 'Views',
-}
 
 const items = computed(() => {
   const tables = activeSchema?.value?.tables || [];
@@ -71,34 +64,7 @@ const items = computed(() => {
 });
 
 const activityBarStore = useActivityBarStore();
-const { schemasExpandedState, schemaCurrentScrollTop } =
-  toRefs(activityBarStore);
-
-onMounted(() => {
-  nextTick(() => {
-    const el = treeFolderRef.value?.$el as HTMLElement | undefined;
-
-    if (!el) {
-      return;
-    }
-
-    el.scrollTo({
-      top: schemaCurrentScrollTop.value,
-    });
-
-    el.onscroll = () => {
-      schemaCurrentScrollTop.value = el.scrollTop || 0;
-    };
-  });
-});
-
-onActivated(() => {
-  nextTick(() => {
-    treeFolderRef.value?.$el?.scrollTo({
-      top: schemaCurrentScrollTop.value,
-    });
-  });
-});
+const { schemasExpandedState } = toRefs(activityBarStore);
 
 const onRefreshSchema = async () => {
   if (!connectionId.value) {
@@ -222,7 +188,6 @@ const onNavigateToOverviewErdDiagram = async () => {
     </div>
 
     <TreeFolder
-      ref="treeFolderRef"
       v-model:explorerFiles="items"
       v-model:expandedState="schemasExpandedState"
       :isShowArrow="true"

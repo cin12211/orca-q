@@ -98,6 +98,17 @@ const getInitFilters = (tabName?: string) => {
 const onUpdateSelectedTab = (tab: string) => {
   emit('update:selectedTab', tab);
 };
+
+const onClickTab = (event: Event) => {
+  const target = event.target;
+  if (target instanceof HTMLElement) {
+    target.scrollIntoView({
+      behavior: 'smooth',
+      block: 'nearest',
+      inline: 'center',
+    });
+  }
+};
 </script>
 
 <template>
@@ -111,6 +122,7 @@ const onUpdateSelectedTab = (tab: string) => {
         <TabsTrigger
           class="cursor-pointer font-normal! flex-none!"
           v-for="tab in tabTables"
+          @click="onClickTab"
           :value="tab"
           :key="tab"
         >
@@ -138,7 +150,7 @@ const onUpdateSelectedTab = (tab: string) => {
     </div>
 
     <div class="flex flex-1">
-      <KeepAlive :max="DEFAULT_MAX_KEEP_ALIVE">
+      <KeepAlive>
         <ReferencedTable
           :key="selectedTab"
           :tableName="selectedTab || ''"
