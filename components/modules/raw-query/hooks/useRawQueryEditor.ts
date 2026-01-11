@@ -4,13 +4,7 @@ import {
   type Completion,
 } from '@codemirror/autocomplete';
 import { PostgreSQL, sql } from '@codemirror/lang-sql';
-import {
-  linter,
-  lintGutter,
-  setDiagnostics,
-  type Diagnostic,
-} from '@codemirror/lint';
-import { Compartment, EditorState, Transaction } from '@codemirror/state';
+import { Compartment } from '@codemirror/state';
 import { EditorView, keymap } from '@codemirror/view';
 import merge from 'lodash-es/merge';
 import type { FieldDef } from 'pg';
@@ -28,7 +22,6 @@ import {
 import {
   getCurrentStatement,
   pgKeywordCompletion,
-  pushDiagnostics,
 } from '~/components/base/code-editor/utils';
 import type { RowData } from '~/components/base/dynamic-table/utils';
 import { uuidv4 } from '~/lib/utils';
@@ -180,13 +173,16 @@ export function useRawQueryEditor({
     return tables;
   });
 
-  // const schema: SQLNamespace = activeSchema.value?.tableDetails ?? {};
   const sqlCompartment = new Compartment();
 
-  // 1. Khởi tạo Compartment cho Linter
-  const lintCompartment = new Compartment();
-
-  const dynamicDiagnostics = ref<Diagnostic[]>([]);
+  // TODO: for show lint error when query
+  // const lintCompartment = new Compartment();
+  // const dynamicDiagnostics = ref<Diagnostic[]>([]);
+  // const createSqlLinter = () => {
+  //   return linter(view => {
+  //     return dynamicDiagnostics.value;
+  //   });
+  // };
 
   const executeCurrentStatement = async ({
     currentStatements,
@@ -214,21 +210,20 @@ export function useRawQueryEditor({
       }
     });
 
-    const cursorPos = editorView.value?.state.selection.main.head || 0;
-
-    const queryWithFormat = formatStatementSql(currentStatement.text);
-
-    editorView.value?.dispatch({
-      changes: [
-        {
-          from: currentStatement.from,
-          to: currentStatement.to,
-          insert: queryWithFormat,
-        },
-      ],
-      selection: { anchor: cursorPos, head: cursorPos },
-      annotations: [Transaction.addToHistory.of(true)],
-    });
+    // TODO: for show lint error when query
+    // const cursorPos = editorView.value?.state.selection.main.head || 0;
+    // const queryWithFormat = formatStatementSql(currentStatement.text);
+    // editorView.value?.dispatch({
+    //   changes: [
+    //     {
+    //       from: currentStatement.from,
+    //       to: currentStatement.to,
+    //       insert: queryWithFormat,
+    //     },
+    //   ],
+    //   selection: { anchor: cursorPos, head: cursorPos },
+    //   annotations: [Transaction.addToHistory.of(true)],
+    // });
 
     const reversedCurrentStatementTrees = currentStatementTrees.toReversed();
 
@@ -311,26 +306,25 @@ export function useRawQueryEditor({
     } catch (e: any) {
       queryProcessState.executeErrors = e.data;
       executedResultItem.metadata.executeErrors = e.data;
-      // Auto-set view to 'error' when query fails
       executedResultItem.view = 'error';
 
-      const message = e.data.message;
-      const errorDetail = JSON.parse(e.data.data);
-      if (editorView.value && errorDetail) {
-        const pos =
-          Number(currentStatement.from) + parseInt(errorDetail.position) - 1;
-        const diagnostics: Diagnostic[] = [
-          {
-            from: pos,
-            to: pos + 1,
-            severity: 'error',
-            message,
-          },
-        ];
-        dynamicDiagnostics.value = diagnostics;
-
-        // pushDiagnostics(editorView.value, diagnostics);
-      }
+      // TODO: for show lint error when query
+      // const message = e.data.message;
+      // const errorDetail = JSON.parse(e.data.data);
+      // if (editorView.value && errorDetail) {
+      //   const pos =
+      //     Number(currentStatement.from) + parseInt(errorDetail.position) - 1;
+      //   const diagnostics: Diagnostic[] = [
+      //     {
+      //       from: pos,
+      //       to: pos + 1,
+      //       severity: 'error',
+      //       message,
+      //     },
+      //   ];
+      //   // dynamicDiagnostics.value = diagnostics;
+      //   pushDiagnostics(editorView.value, diagnostics);
+      // }
     }
 
     queryProcessState.executeLoading = false;
@@ -363,12 +357,6 @@ export function useRawQueryEditor({
     });
   };
 
-  const createSqlLinter = () => {
-    return linter(view => {
-      return dynamicDiagnostics.value;
-    });
-  };
-
   const extensions = [
     shortCutExecuteCurrentStatement(executeCurrentStatement),
     shortCutFormatOnSave((fileContent: string) => {
@@ -394,8 +382,8 @@ export function useRawQueryEditor({
     ...sqlAutoCompletion(),
     //TODO: close to slow to usage
     // lintGutter(),
-    lintGutter(),
-    lintCompartment.of(createSqlLinter()),
+    // lintGutter(),
+    // lintCompartment.of(createSqlLinter()),
   ];
 
   const reloadSqlCompartment = () => {
