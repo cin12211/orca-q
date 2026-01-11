@@ -1,15 +1,11 @@
 <script setup lang="ts">
-import { useElementSize } from '@vueuse/core';
-import VueJsonPretty from 'vue-json-pretty';
-import 'vue-json-pretty/lib/styles.css';
 import BaseCodeEditor from '~/components/base/code-editor/BaseCodeEditor.vue';
-import type DynamicTable from '~/components/base/dynamic-table/DynamicTable.vue';
 import { useAppLayoutStore } from '~/shared/stores/appLayoutStore';
 import IntroRawQuery from './components/IntroRawQuery.vue';
-import RawQueryContextMenu from './components/RawQueryContextMenu.vue';
 import RawQueryEditorFooter from './components/RawQueryEditorFooter.vue';
 import RawQueryEditorHeader from './components/RawQueryEditorHeader.vue';
 import RawQueryLayout from './components/RawQueryLayout.vue';
+import RawQueryResultTabs from './components/RawQueryResultTabs.vue';
 import VariableEditor from './components/VariableEditor.vue';
 import { useRawQueryEditor, useRawQueryFileContent } from './hooks';
 
@@ -30,8 +26,6 @@ const {
   fieldDefs,
 } = toRefs(rawQueryFileContent);
 
-const rawQueryTableRef = ref<InstanceType<typeof DynamicTable>>();
-
 const rawQueryEditor = useRawQueryEditor({
   activeSchema,
   connection,
@@ -46,9 +40,9 @@ const {
   onHandleFormatCode,
   currentRawQueryResult,
   queryProcessState,
-  rawResponse,
-  // sqlCompartment,
-  // executedResults,
+  // Results tab management
+  executedResults,
+  activeResultTabId,
 } = toRefs(rawQueryEditor);
 
 watch(
@@ -137,50 +131,6 @@ onActivated(async () => {
     }, 50);
   }
 });
-
-const jsonViewRef = useTemplateRef('jsonViewRef');
-const { height } = useElementSize(jsonViewRef);
-
-const isRawViewMode = ref(false);
-
-const selectedRows = ref<Record<string, any>[]>([]);
-
-const onSelectedRowsChange = (rows: unknown[]) => {
-  selectedRows.value = rows as Record<string, any>[];
-};
-
-const formattedData = computed(() => {
-  return currentRawQueryResult.value?.map(item => {
-    const mappedItem: Record<string, any> = {};
-
-    for (const [key, value] of Object.entries(item)) {
-      const columnName = mappedColumns.value[Number(key)]?.queryFieldName || '';
-      if (columnName) {
-        mappedItem[columnName] = value;
-      }
-    }
-
-    return mappedItem;
-  });
-});
-
-const formattedSelectedRows = computed(() => {
-  return (
-    selectedRows.value?.map?.(item => {
-      const mappedItem: Record<string, any> = {};
-
-      for (const [key, value] of Object.entries(item)) {
-        const columnName =
-          mappedColumns.value[Number(key)]?.queryFieldName || '';
-        if (columnName) {
-          mappedItem[columnName] = value;
-        }
-      }
-
-      return mappedItem;
-    }) || []
-  );
-});
 </script>
 
 <template>
@@ -217,8 +167,6 @@ const formattedSelectedRows = computed(() => {
             :is-have-one-execute="queryProcessState.isHaveOneExecute"
             :queryTime="queryProcessState.queryTime"
             :raw-query-results-length="currentRawQueryResult.length"
-            :isRawViewMode="isRawViewMode"
-            @update:isRawViewMode="isRawViewMode = $event"
             @onFormatCode="onHandleFormatCode"
             @on-execute-current="onExecuteCurrent"
           />
@@ -243,100 +191,20 @@ const formattedSelectedRows = computed(() => {
     </template>
 
     <template #result>
-      <LoadingOverlay v-if="queryProcessState.executeLoading" visible />
-      <IntroRawQuery v-if="!queryProcessState.isHaveOneExecute" />
+      <IntroRawQuery v-if="executedResults.size === 0" />
 
-      <!-- <Tabs class="flex-1 mb-1 flex-wrap h-fit! w-full">
-        <TabsList class="overflow-x-auto w-full justify-start!">
-          <TabsTrigger
-            class="cursor-pointer font-normal! flex-none!"
-            v-for="(tab, index) in executedResults"
-            :value="tab.id"
-            :key="tab.id"
-          >
-            {{ tab.metadata.statementQuery.slice(0, 20) }} ({{ index }})
-
-            <div class="hover:bg-accent p-0.5 rounded-full">
-              <X class="size-3 stroke-[2.5]!" />
-            </div>
-          </TabsTrigger>
-        </TabsList>
-      </Tabs> -->
-
-      <div v-if="queryProcessState.executeErrors" class="pt-2">
-        <span class="font-normal text-sm text-muted-foreground block leading-5">
-          Error message:
-          <span class="decoration-wavy underline decoration-red-600">
-            {{ queryProcessState.executeErrors.message }}
-          </span>
-        </span>
-        <span class="font-normal text-sm text-muted-foreground block">
-          Errors detail: {{ queryProcessState.executeErrors.data }}
-        </span>
-
-        <Collapsible>
-          <CollapsibleTrigger>
-            <span
-              class="font-normal text-sm text-muted-foreground block flex items-center gap-1 cursor-pointer"
-            >
-              Execute query
-              <Icon name="hugeicons:arrow-down-01" class="size-4!" />
-            </span>
-          </CollapsibleTrigger>
-          <CollapsibleContent>
-            <span class="font-normal text-sm text-muted-foreground block">
-              {{ queryProcessState.currentStatementQuery }}
-            </span>
-          </CollapsibleContent>
-        </Collapsible>
-      </div>
-
-      <div
-        ref="jsonViewRef"
-        class="h-full flex flex-col flex-1 overflow-y-auto"
-        v-show="
-          !queryProcessState.executeErrors &&
-          queryProcessState.isHaveOneExecute &&
-          isRawViewMode
-        "
-      >
-        <VueJsonPretty
-          virtual
-          showLineNumber
-          showIcon
-          showLength
-          :height="height"
-          :data="formattedData"
-        />
-      </div>
-
-      <div
-        class="h-full"
-        v-show="
-          !queryProcessState.executeErrors &&
-          queryProcessState.isHaveOneExecute &&
-          !isRawViewMode
-        "
-      >
-        <RawQueryContextMenu
-          :data="formattedData || []"
-          :selectedRows="formattedSelectedRows || []"
-          :cellContextMenu="rawQueryTableRef?.cellContextMenu"
-          :cellHeaderContextMenu="rawQueryTableRef?.cellHeaderContextMenu"
-          @onClearContextMenu="rawQueryTableRef?.clearCellContextMenu()"
-        >
-          <DynamicTable
-            ref="rawQueryTableRef"
-            :columns="mappedColumns"
-            :data="currentRawQueryResult || []"
-            :selectedRows="selectedRows"
-            @on-selected-rows="onSelectedRowsChange"
-            class="h-full border rounded-md"
-            skip-re-column-size
-            columnKeyBy="index"
-          />
-        </RawQueryContextMenu>
-      </div>
+      <RawQueryResultTabs
+        v-else
+        :executed-results="executedResults"
+        :active-tab-id="activeResultTabId"
+        :mapped-columns="mappedColumns"
+        :execute-loading="queryProcessState.executeLoading"
+        @update:active-tab="rawQueryEditor.setActiveResultTab"
+        @close-tab="rawQueryEditor.closeResultTab"
+        @close-other-tabs="rawQueryEditor.closeOtherResultTabs"
+        @close-tabs-to-right="rawQueryEditor.closeResultTabsToRight"
+        @update:view="rawQueryEditor.updateResultTabView"
+      />
     </template>
   </RawQueryLayout>
 </template>

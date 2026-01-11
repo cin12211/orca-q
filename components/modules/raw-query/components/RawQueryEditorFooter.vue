@@ -10,7 +10,7 @@ defineProps<{
   executeErrors: boolean;
   queryTime: number;
   rawQueryResultsLength: number;
-  isRawViewMode: boolean;
+  isRawViewMode?: boolean;
 }>();
 
 defineEmits<{
@@ -46,16 +46,6 @@ defineEmits<{
     </div>
 
     <div class="flex gap-1">
-      <div class="flex items-center mr-1">
-        <Switch
-          :model-value="isRawViewMode"
-          @update:model-value="$emit('update:isRawViewMode', $event)"
-          class="scale-75"
-          id="airplane-mode"
-        />
-        <Label for="airplane-mode" class="font-normal">Raw Mode</Label>
-      </div>
-
       <Button
         @click="$emit('onFormatCode')"
         variant="outline"

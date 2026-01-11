@@ -4,8 +4,13 @@ import {
   type Completion,
 } from '@codemirror/autocomplete';
 import { PostgreSQL, sql } from '@codemirror/lang-sql';
-import { setDiagnostics, type Diagnostic } from '@codemirror/lint';
-import { Compartment } from '@codemirror/state';
+import {
+  linter,
+  lintGutter,
+  setDiagnostics,
+  type Diagnostic,
+} from '@codemirror/lint';
+import { Compartment, EditorState, Transaction } from '@codemirror/state';
 import { EditorView, keymap } from '@codemirror/view';
 import merge from 'lodash-es/merge';
 import type { FieldDef } from 'pg';
@@ -23,8 +28,10 @@ import {
 import {
   getCurrentStatement,
   pgKeywordCompletion,
+  pushDiagnostics,
 } from '~/components/base/code-editor/utils';
 import type { RowData } from '~/components/base/dynamic-table/utils';
+import { uuidv4 } from '~/lib/utils';
 import type { Connection, Schema } from '~/shared/stores';
 import {
   convertParameters,
@@ -37,22 +44,25 @@ import {
   getMappedSchemaSuggestion,
 } from '../utils';
 
-// interface ExecutedResultItem {
-//   id: string;
-//   metadata: {
-//     queryTime: number;
-//     statementQuery: string;
-//     executeErrors:
-//       | {
-//           message: string;
-//           data: Record<string, unknown>;
-//         }
-//       | undefined;
-//     fieldDefs?: FieldDef[];
-//     connection?: Connection | undefined;
-//   };
-//   result: RowData[];
-// }
+export interface ExecutedResultItem {
+  id: string;
+  metadata: {
+    queryTime: number;
+    statementQuery: string;
+    executedAt: Date;
+    executeErrors:
+      | {
+          message: string;
+          data: Record<string, unknown>;
+        }
+      | undefined;
+    fieldDefs?: FieldDef[];
+    connection?: Connection | undefined;
+  };
+  result: RowData[];
+  seqIndex: number;
+  view: 'result' | 'error' | 'info' | 'raw';
+}
 
 export function useRawQueryEditor({
   activeSchema,
@@ -76,8 +86,19 @@ export function useRawQueryEditor({
     | {}
   >({});
 
+  const seqIndex = shallowRef(0);
+
   //TODO: open when support multiple statements
-  // const executedResults = shallowRef<ExecutedResultItem[]>([]);
+  const executedResults = shallowRef<Map<string, ExecutedResultItem>>(
+    new Map()
+  );
+
+  // Track active result tab - new executions will be set as active
+  const activeResultTabId = ref<string | null>(null);
+
+  const editorView = computed<EditorView | null>(
+    () => codeEditorRef.value?.editorView as EditorView
+  );
 
   const queryProcessState = reactive<{
     isHaveOneExecute: boolean;
@@ -162,6 +183,11 @@ export function useRawQueryEditor({
   // const schema: SQLNamespace = activeSchema.value?.tableDetails ?? {};
   const sqlCompartment = new Compartment();
 
+  // 1. Khởi tạo Compartment cho Linter
+  const lintCompartment = new Compartment();
+
+  const dynamicDiagnostics = ref<Diagnostic[]>([]);
+
   const executeCurrentStatement = async ({
     currentStatements,
     treeNodes,
@@ -188,7 +214,22 @@ export function useRawQueryEditor({
       }
     });
 
-    // console.log('currentStatementTrees:::', currentStatementTrees);
+    const cursorPos = editorView.value?.state.selection.main.head || 0;
+
+    const queryWithFormat = formatStatementSql(currentStatement.text);
+
+    editorView.value?.dispatch({
+      changes: [
+        {
+          from: currentStatement.from,
+          to: currentStatement.to,
+          insert: queryWithFormat,
+        },
+      ],
+      selection: { anchor: cursorPos, head: cursorPos },
+      annotations: [Transaction.addToHistory.of(true)],
+    });
+
     const reversedCurrentStatementTrees = currentStatementTrees.toReversed();
 
     let parameters: ParsedParametersResult | null = null;
@@ -230,17 +271,23 @@ export function useRawQueryEditor({
     rawResponse.value = {};
     queryProcessState.executeLoading = true;
 
-    // const executedResultItem: ExecutedResultItem = {
-    //   id: uuidv4(),
-    //   metadata: {
-    //     queryTime: 0,
-    //     statementQuery: executeQuery,
-    //     executeErrors: undefined,
-    //     fieldDefs: undefined,
-    //     connection: undefined,
-    //   },
-    //   result: [],
-    // };
+    seqIndex.value++;
+
+    const executedResultItem: ExecutedResultItem = {
+      id: uuidv4(),
+      metadata: {
+        queryTime: 0,
+        statementQuery: executeQuery,
+        executedAt: new Date(),
+        executeErrors: undefined,
+        fieldDefs: undefined,
+        connection: undefined,
+      },
+      result: [],
+      view: 'result',
+      seqIndex: seqIndex.value,
+    };
+
     try {
       const result = await $fetch('/api/raw-execute', {
         method: 'POST',
@@ -252,10 +299,10 @@ export function useRawQueryEditor({
 
       fieldDefs.value = result.fields;
 
-      // executedResultItem.metadata.fieldDefs = result.fields;
-      // executedResultItem.result = result.rows;
-      // executedResultItem.metadata.queryTime = result.queryTime || 0;
-      // executedResultItem.metadata.connection = connection.value;
+      executedResultItem.metadata.fieldDefs = result.fields;
+      executedResultItem.result = result.rows;
+      executedResultItem.metadata.queryTime = result.queryTime || 0;
+      executedResultItem.metadata.connection = connection.value;
 
       rawResponse.value = result;
       currentRawQueryResult.value = result.rows as RowData[];
@@ -263,12 +310,42 @@ export function useRawQueryEditor({
       queryProcessState.queryTime = result.queryTime || 0;
     } catch (e: any) {
       queryProcessState.executeErrors = e.data;
-      // executedResultItem.metadata.executeErrors = e.data;
+      executedResultItem.metadata.executeErrors = e.data;
+      // Auto-set view to 'error' when query fails
+      executedResultItem.view = 'error';
+
+      const message = e.data.message;
+      const errorDetail = JSON.parse(e.data.data);
+      if (editorView.value && errorDetail) {
+        const pos =
+          Number(currentStatement.from) + parseInt(errorDetail.position) - 1;
+        const diagnostics: Diagnostic[] = [
+          {
+            from: pos,
+            to: pos + 1,
+            severity: 'error',
+            message,
+          },
+        ];
+        dynamicDiagnostics.value = diagnostics;
+
+        // pushDiagnostics(editorView.value, diagnostics);
+      }
     }
 
     queryProcessState.executeLoading = false;
 
-    // executedResults.value.push(executedResultItem);
+    // Add to results map at the BEGINNING (new tabs first)
+    const newMap = new Map<string, ExecutedResultItem>();
+    newMap.set(executedResultItem.id, executedResultItem);
+    // Add existing items after the new one
+    executedResults.value.forEach((value, key) => {
+      newMap.set(key, value);
+    });
+    executedResults.value = newMap;
+
+    // Set the new result as active tab
+    activeResultTabId.value = executedResultItem.id;
   };
 
   const onExecuteCurrent = () => {
@@ -283,6 +360,12 @@ export function useRawQueryEditor({
     executeCurrentStatement({
       currentStatements,
       treeNodes,
+    });
+  };
+
+  const createSqlLinter = () => {
+    return linter(view => {
+      return dynamicDiagnostics.value;
     });
   };
 
@@ -311,7 +394,8 @@ export function useRawQueryEditor({
     ...sqlAutoCompletion(),
     //TODO: close to slow to usage
     // lintGutter(),
-    // sqlLinter(),
+    lintGutter(),
+    lintCompartment.of(createSqlLinter()),
   ];
 
   const reloadSqlCompartment = () => {
@@ -332,6 +416,73 @@ export function useRawQueryEditor({
     });
   };
 
+  // Tab management functions
+  const setActiveResultTab = (tabId: string) => {
+    if (executedResults.value.has(tabId)) {
+      activeResultTabId.value = tabId;
+    }
+  };
+
+  const closeResultTab = (tabId: string) => {
+    const newMap = new Map(executedResults.value);
+    newMap.delete(tabId);
+    executedResults.value = newMap;
+
+    // If closing the active tab, switch to the last remaining tab
+    if (activeResultTabId.value === tabId) {
+      const remainingIds = Array.from(newMap.keys());
+      activeResultTabId.value =
+        remainingIds.length > 0 ? remainingIds[remainingIds.length - 1] : null;
+    }
+  };
+
+  const updateResultTabView = (
+    tabId: string,
+    view: ExecutedResultItem['view']
+  ) => {
+    const tab = executedResults.value.get(tabId);
+    if (tab) {
+      const newMap = new Map(executedResults.value);
+      newMap.set(tabId, { ...tab, view });
+      executedResults.value = newMap;
+    }
+  };
+
+  const closeOtherResultTabs = (keepTabId: string) => {
+    const tabToKeep = executedResults.value.get(keepTabId);
+    if (!tabToKeep) return;
+
+    const newMap = new Map<string, ExecutedResultItem>();
+    newMap.set(keepTabId, tabToKeep);
+    executedResults.value = newMap;
+
+    // Set the kept tab as active
+    activeResultTabId.value = keepTabId;
+  };
+
+  const closeResultTabsToRight = (tabId: string) => {
+    const tabIds = Array.from(executedResults.value.keys());
+    const currentIndex = tabIds.indexOf(tabId);
+
+    if (currentIndex < 0) return;
+
+    // Keep tabs from start to current index (inclusive)
+    const newMap = new Map<string, ExecutedResultItem>();
+    for (let i = 0; i <= currentIndex; i++) {
+      const id = tabIds[i];
+      const tab = executedResults.value.get(id);
+      if (tab) {
+        newMap.set(id, tab);
+      }
+    }
+    executedResults.value = newMap;
+
+    // If active tab was deleted, switch to the current tab
+    if (!newMap.has(activeResultTabId.value || '')) {
+      activeResultTabId.value = tabId;
+    }
+  };
+
   const onHandleFormatCode = () => {
     if (!codeEditorRef.value?.editorView) {
       return;
@@ -342,20 +493,6 @@ export function useRawQueryEditor({
       formatStatementSql
     );
   };
-
-  //TODO:push error when execution error
-  function pushSqlError(view: EditorView) {
-    const diagnostics: Diagnostic[] = [
-      {
-        from: 0,
-        to: 5,
-        severity: 'error',
-        message: 'Example error at the beginning',
-      },
-    ];
-
-    view.dispatch(setDiagnostics(view.state, diagnostics));
-  }
 
   return {
     codeEditorRef,
@@ -368,7 +505,14 @@ export function useRawQueryEditor({
     cursorInfo,
     onHandleFormatCode,
     reloadSqlCompartment,
-    pushSqlError,
-    // executedResults,
+
+    // Results tab management
+    executedResults,
+    activeResultTabId,
+    setActiveResultTab,
+    closeResultTab,
+    closeOtherResultTabs,
+    closeResultTabsToRight,
+    updateResultTabView,
   };
 }
