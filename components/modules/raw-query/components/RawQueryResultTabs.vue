@@ -10,6 +10,7 @@ import type { RowData } from '~/components/base/dynamic-table/utils';
 import type { ExecutedResultItem } from '../hooks/useRawQueryEditor';
 import type { MappedRawColumn } from '../interfaces';
 import {
+  ResultTabAgentView,
   ResultTabErrorView,
   ResultTabInfoView,
   ResultTabRawView,
@@ -45,13 +46,14 @@ const isHaveRightItem = computed(() => {
 });
 
 // View modes for the vertical tabs
-type ViewMode = 'result' | 'raw' | 'info' | 'error';
+type ViewMode = 'result' | 'raw' | 'info' | 'error' | 'agent';
 
 const viewModes: { value: ViewMode; label: string }[] = [
   { value: 'result', label: 'Result' },
   { value: 'raw', label: 'Raw' },
   { value: 'info', label: 'Info' },
   { value: 'error', label: 'Errors' },
+  { value: 'agent', label: 'Agent' },
 ];
 
 // Get the active tab data
@@ -271,6 +273,12 @@ const hasErrors = (tab: ExecutedResultItem) => {
         <!-- Errors View -->
         <ResultTabErrorView
           v-else-if="activeTab && currentView === 'error'"
+          :active-tab="activeTab"
+        />
+
+        <!-- Agent View -->
+        <ResultTabAgentView
+          v-else-if="activeTab && currentView === 'agent'"
           :active-tab="activeTab"
         />
       </div>

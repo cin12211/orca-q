@@ -27,6 +27,7 @@ const emits = defineEmits<{
 }>();
 
 const { dependencies } = toRefs(props);
+//@ts-ignore
 provideDependencies(dependencies);
 
 const shapes = computed(() => {
@@ -48,6 +49,7 @@ const shapes = computed(() => {
       type: getBaseType(item),
       default: getDefaultValueInZodStack(item),
       options,
+      //@ts-ignore
       required: !['ZodOptional', 'ZodNullable'].includes(item._def.typeName),
       schema: baseItem,
     };
@@ -79,6 +81,7 @@ const formComponent = computed(() => (props.form ? 'form' : Form));
 const formComponentProps = computed(() => {
   if (props.form) {
     return {
+      // @ts-ignore
       onSubmit: props.form.handleSubmit(val => emits('submit', val)),
     };
   } else {
@@ -86,6 +89,7 @@ const formComponentProps = computed(() => {
     return {
       keepValues: true,
       validationSchema: formSchema,
+      // @ts-ignore
       onSubmit: (val: GenericObject) => emits('submit', val),
     };
   }
@@ -107,7 +111,7 @@ const formComponentProps = computed(() => {
               fieldConfig?.[key as keyof typeof fieldConfig] as ConfigItem
             "
             :field-name="key.toString()"
-            :shape="shape"
+            :shape="shape as Shape"
           />
         </slot>
       </template>

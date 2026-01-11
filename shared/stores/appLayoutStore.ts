@@ -16,6 +16,15 @@ export interface CodeEditorConfigs {
   indentation: boolean;
 }
 
+export type AIProvider = 'openai' | 'google' | 'anthropic' | 'xai';
+
+export interface AgentApiKeyConfigs {
+  openai: string;
+  google: string;
+  anthropic: string;
+  xai: string;
+}
+
 const DEFAULT_APP_LAYOUT_SIZE = [25, 50, 25];
 
 const intiAppLayout = [30, 70, 0];
@@ -142,6 +151,17 @@ export const useAppLayoutStore = defineStore(
       indentation: DEFAULT_EDITOR_CONFIG.indentation,
     });
 
+    // Agent AI settings
+    const agentApiKeyConfigs = reactive<AgentApiKeyConfigs>({
+      openai: '',
+      google: '',
+      anthropic: '',
+      xai: '',
+    });
+
+    const agentSelectedProvider = ref<AIProvider>('google');
+    const agentSelectedModel = ref<string>('gemini-2.5-flash');
+
     return {
       historyBodySize,
       layoutSize,
@@ -161,6 +181,9 @@ export const useAppLayoutStore = defineStore(
       editorLayoutSizes,
       editorLayoutInnerVariableSizes,
       codeEditorConfigs,
+      agentApiKeyConfigs,
+      agentSelectedProvider,
+      agentSelectedModel,
     };
   },
   {
