@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, watch } from 'vue';
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -11,6 +11,8 @@ import {
   Icon,
 } from '#components';
 import { Globe, Lock, Paintbrush, Settings } from 'lucide-vue-next';
+import { useSettingsModal } from '~/shared/contexts/useSettingsModal';
+import AgentConfig from './AgentConfig.vue';
 import EditorConfig from './EditorConfig.vue';
 
 const settingNavs = [
@@ -21,6 +23,11 @@ const settingNavs = [
     name: 'Editor',
     icon: h(Icon, { name: 'lucide:scroll-text', class: 'size-4!' }),
     component: EditorConfig,
+  },
+  {
+    name: 'Agent',
+    icon: h(Icon, { name: 'hugeicons:chat-bot', class: 'size-4!' }),
+    component: AgentConfig,
   },
   { name: 'Appearance', icon: Paintbrush, disable: true },
   // { name: 'Messages & media', icon: MessageCircle },
@@ -33,13 +40,24 @@ const settingNavs = [
   { name: 'Advanced', icon: Settings, disable: true },
 ];
 
-const isOpenSettingModal = ref(false);
+// Use composable for global modal control
+const { isSettingsOpen, settingsActiveTab } = useSettingsModal();
+
 const activeNavName = ref(settingNavs[0].name);
 const activeNav = ref(settingNavs[0].component);
 
+// Watch for external tab changes
+watch(settingsActiveTab, newTab => {
+  const nav = settingNavs.find(n => n.name === newTab);
+  if (nav && !nav.disable) {
+    activeNavName.value = nav.name;
+    activeNav.value = nav.component;
+  }
+});
+
 useHotkeys([
   {
-    callback: () => (isOpenSettingModal.value = !isOpenSettingModal.value),
+    callback: () => (isSettingsOpen.value = !isSettingsOpen.value),
     key: 'meta+,',
   },
 ]);
@@ -61,7 +79,7 @@ const handleNavClick = async ({
 </script>
 
 <template>
-  <Dialog v-model:open="isOpenSettingModal">
+  <Dialog v-model:open="isSettingsOpen">
     <DialogContent
       class="overflow-hidden p-0 max-h-[80vh] md:max-w-[60vw] lg:max-w-[60vw]"
     >

@@ -1,8 +1,10 @@
 import type { z } from 'zod';
 
 // TODO: This should support recursive ZodEffects but TypeScript doesn't allow circular type definitions.
+
 export type ZodObjectOrWrapped =
   | z.ZodObject<any, any>
+  //@ts-ignore
   | z.ZodEffects<z.ZodObject<any, any>>;
 
 /**
@@ -36,7 +38,9 @@ export function getIndexIfArray(string: string) {
  * This will unpack optionals, refinements, etc.
  */
 export function getBaseSchema<
+  //@ts-ignore
   ChildType extends z.ZodAny | z.AnyZodObject = z.ZodAny,
+  //@ts-ignore
 >(schema: ChildType | z.ZodEffects<ChildType>): ChildType | null {
   if (!schema) return null;
   if ('innerType' in schema._def)
@@ -54,6 +58,7 @@ export function getBaseSchema<
  */
 export function getBaseType(schema: z.ZodAny) {
   const baseSchema = getBaseSchema(schema);
+  //@ts-ignore
   return baseSchema ? baseSchema._def.typeName : '';
 }
 
@@ -65,7 +70,9 @@ export function getDefaultValueInZodStack(schema: z.ZodAny): any {
     z.ZodNumber | z.ZodString
   >;
 
+  //@ts-ignore
   if (typedSchema._def.typeName === 'ZodDefault')
+    //@ts-ignore
     return typedSchema._def.defaultValue();
 
   if ('innerType' in typedSchema._def) {
@@ -86,6 +93,7 @@ export function getObjectFormSchema(
   schema: ZodObjectOrWrapped
 ): z.ZodObject<any, any> {
   if (schema?._def.typeName === 'ZodEffects') {
+    //@ts-ignore
     const typedSchema = schema as z.ZodEffects<z.ZodObject<any, any>>;
     return getObjectFormSchema(typedSchema._def.schema);
   }

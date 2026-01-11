@@ -61,7 +61,7 @@ export interface ExecutedResultItem {
   };
   result: RowData[];
   seqIndex: number;
-  view: 'result' | 'error' | 'info' | 'raw';
+  view: 'result' | 'error' | 'info' | 'raw' | 'agent';
 }
 
 export function useRawQueryEditor({
