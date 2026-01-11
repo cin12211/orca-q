@@ -64,13 +64,11 @@ export default defineNuxtConfig({
   ],
   css: ['~/assets/css/tailwind.css', 'vue-json-pretty/lib/styles.css'],
   colorMode: {
-    preference: 'no-preference',
+    preference: 'light',
     fallback: 'light',
     globalName: '__NUXT_COLOR_MODE__',
     componentName: 'ColorScheme',
-    classPrefix: '',
-    classSuffix: '',
-    storage: 'localStorage',
+    storage: 'cookie',
     storageKey: 'nuxt-color-mode',
   },
   vite: {
