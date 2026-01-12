@@ -57,3 +57,6 @@ tsconfig.tsbuildinfo
 .electron-build
 .electron-out
 .db
+
+# NPX package build output
+npx-package/.output
