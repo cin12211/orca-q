@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import { Command } from 'commander';
 import { spawn } from 'node:child_process';
-import { existsSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -9,12 +9,16 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const packageRoot = join(__dirname, '..');
 
+const packageJson = JSON.parse(
+  readFileSync(join(packageRoot, 'package.json'), 'utf-8')
+);
+
 const program = new Command();
 
 program
   .name('orcaq')
   .description('OrcaQ - The open source database editor')
-  .version('1.0.20')
+  .version(packageJson.version)
   .option('-p, --port <port>', 'Port to run the server on', '9432')
   .option('-h, --host <host>', 'Host to bind to', '0.0.0.0')
   .option('--no-open', "Don't open browser automatically")
