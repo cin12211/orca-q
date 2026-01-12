@@ -30,5 +30,8 @@
     "mysql",
     "editor",
     "gui"
-  ]
+  ],
+  "dependencies": {
+    "commander": "^14.0.2"
+  }
 }
