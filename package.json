@@ -14,6 +14,8 @@
     "nuxt:build-web": "nuxt build",
     "nuxt:generate": "nuxt generate",
     "app:build": "sh scripts/build-app.sh",
+    "npx:build": "npm run nuxt:build-web && node scripts/build-npx.mjs",
+    "npx:pack": "cd npx-package && npm pack",
     "typecheck": "nuxt typecheck",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
