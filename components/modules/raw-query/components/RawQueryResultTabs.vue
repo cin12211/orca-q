@@ -256,6 +256,7 @@ const hasErrors = (tab: ExecutedResultItem) => {
           :active-tab="activeTab"
           :active-tab-columns="activeTabColumns"
           :formatted-data="formattedData"
+          :key="activeTab.id"
         />
 
         <!-- Raw View (JSON) -->

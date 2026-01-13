@@ -101,6 +101,7 @@ const handleAddConnection = (connection: Connection) => {
   <CreateWorkspaceModal
     v-model:open="isOpenEditModal"
     :workspace="workspace"
+    :workspaceSeq="workspaceStore.workspaces.length"
     v-if="isOpenEditModal"
   />
 
