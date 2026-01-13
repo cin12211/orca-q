@@ -26,7 +26,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent } from '@/components/ui/tabs';
 import { uuidv4 } from '~/lib/utils';
-import { useAppContext } from '~/shared/contexts/useAppContext';
 import type { Connection } from '~/shared/stores';
 import DatabaseTypeCard from './DatabaseTypeCard.vue';
 import { databaseSupports, EDatabaseType } from './constants';
@@ -45,7 +44,7 @@ const emit = defineEmits<{
 }>();
 
 const step = ref<1 | 2>(1);
-const dbType = ref<EDatabaseType | null>(null);
+const dbType = ref<EDatabaseType | null>(EDatabaseType.PG);
 const connectionName = ref('');
 const connectionMethod = ref<EConnectionMethod>(EConnectionMethod.STRING);
 const connectionString = ref('');
@@ -60,7 +59,7 @@ const testStatus = ref<'idle' | 'testing' | 'success' | 'error'>('idle');
 
 const resetForm = () => {
   step.value = 1;
-  dbType.value = null;
+  dbType.value = EDatabaseType.PG;
   connectionName.value = '';
   connectionMethod.value = EConnectionMethod.STRING;
   connectionString.value = '';
