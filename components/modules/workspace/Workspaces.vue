@@ -39,6 +39,7 @@ const onSelectWorkspace = (id: string) => {
 <template>
   <CreateWorkspaceModal
     v-model:open="isOpenCreateWSModal"
+    :workspaceSeq="workspaceStore.workspaces.length"
     v-if="isOpenCreateWSModal"
   />
 
