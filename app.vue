@@ -2,9 +2,11 @@
 // main.ts (or the entry that mounts Vue)
 import { LoadingOverlay, TooltipProvider } from '#components';
 import { AllCommunityModule, ModuleRegistry } from 'ag-grid-community';
+import ChangelogPopup from './components/modules/changelog/ChangelogPopup.vue';
 import Settings from './components/modules/settings/Settings.vue';
 import { Toaster } from './components/ui/sonner';
 import { useAppContext } from './shared/contexts';
+import { useChangelogModal } from './shared/contexts/useChangelogModal';
 import { initIDB } from './shared/persist';
 import { DEFAULT_DEBOUNCE_INPUT } from './utils/constants';
 
@@ -19,6 +21,7 @@ const appLoading = useAppLoading();
 const { isLoading } = useLoadingIndicator();
 
 const { connectToConnection } = useAppContext();
+const { autoShowIfNewVersion } = useChangelogModal();
 
 const route = useRoute('workspaceId-connectionId');
 
@@ -31,6 +34,9 @@ onBeforeMount(() => {
 });
 
 onMounted(async () => {
+  // Auto-show changelog if there's a new version
+  autoShowIfNewVersion();
+
   const workspaceId = route.params.workspaceId;
   const connectionId = route.params.connectionId;
 
@@ -59,6 +65,7 @@ onMounted(async () => {
     </TooltipProvider>
 
     <Settings />
+    <ChangelogPopup />
     <Toaster position="top-right" :close-button="true" />
   </ClientOnly>
 </template>
