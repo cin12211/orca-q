@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import { useAppContext } from '~/shared/contexts/useAppContext';
+import { useChangelogModal } from '~/shared/contexts/useChangelogModal';
 import ConnectionMetricMonitor from './ConnectionMetricMonitor.vue';
 import CurrentPositionPath from './CurrentPositionPath.vue';
 
 const { tabViewStore } = useAppContext();
+const { openChangelog } = useChangelogModal();
 
 const { activeTab } = toRefs(tabViewStore);
 
@@ -36,6 +38,15 @@ const onBackToHome = async () => {
       <p class="text-black/80 inline">{{ activeTab?.name }}</p>
     </div>
 
-    <ConnectionMetricMonitor />
+    <div class="flex items-center gap-3">
+      <div
+        class="flex items-center justify-center hover:bg-muted rounded cursor-pointer"
+        @click="openChangelog"
+        title="What's New"
+      >
+        <Icon name="hugeicons:notification-01" class="size-4!" />
+      </div>
+      <!-- <ConnectionMetricMonitor /> -->
+    </div>
   </div>
 </template>
