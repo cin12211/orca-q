@@ -1,8 +1,10 @@
 export function buildDeleteStatements({
+  schemaName,
   tableName,
   pKeys,
   pKeyValue,
 }: {
+  schemaName: string;
   tableName: string;
   pKeys: string[];
   pKeyValue: Record<string, string>;
@@ -18,16 +20,18 @@ export function buildDeleteStatements({
     .join(' AND ');
 
   // Construct final query
-  const query = `DELETE FROM ${tableName} WHERE ${whereClause}`;
+  const query = `DELETE FROM ${schemaName}.${tableName} WHERE ${whereClause}`;
 
   return query;
 }
 
 export function buildBulkDeleteStatement({
+  schemaName,
   tableName,
   pKeys,
   pKeyValues,
 }: {
+  schemaName: string;
   tableName: string;
   pKeys: string[];
   pKeyValues: Record<string, string>[];
@@ -51,5 +55,5 @@ export function buildBulkDeleteStatement({
 
   const keysClause = pKeys.length === 1 ? pKeys[0] : `(${pKeys.join(', ')})`;
 
-  return `DELETE FROM ${tableName} WHERE ${keysClause} IN (${valueTuples.join(', ')});`;
+  return `DELETE FROM ${schemaName}.${tableName} WHERE ${keysClause} IN (${valueTuples.join(', ')});`;
 }

@@ -140,6 +140,7 @@ const {
   onDeselectAll,
 } = useQuickQueryMutation({
   tableName: props.tableName,
+  schemaName: props.schemaName,
   primaryKeys: primaryKeyColumns,
   refreshTableData,
   columnNames,

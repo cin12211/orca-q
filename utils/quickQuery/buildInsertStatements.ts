@@ -1,7 +1,9 @@
 export function buildInsertStatements({
+  schemaName,
   tableName,
   insertData,
 }: {
+  schemaName: string;
   tableName: string;
   insertData: Record<string, any>;
 }): string {
@@ -30,7 +32,7 @@ export function buildInsertStatements({
     .join(', ');
 
   // Construct final query
-  const query = `INSERT INTO ${tableName} (${columnsClause}) VALUES (${valuesClause})`;
+  const query = `INSERT INTO ${schemaName}.${tableName} (${columnsClause}) VALUES (${valuesClause})`;
 
   return query;
 }

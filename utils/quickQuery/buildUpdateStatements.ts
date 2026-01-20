@@ -17,11 +17,13 @@ export const differentObject = (
 };
 
 export function buildUpdateStatements({
+  schemaName,
   tableName,
   pKeys,
   update,
   pKeyValue,
 }: {
+  schemaName: string;
   tableName: string;
   pKeys: string[];
   pKeyValue: Record<string, string>;
@@ -54,7 +56,7 @@ export function buildUpdateStatements({
     .join(' AND ');
 
   // Construct final query
-  const query = `UPDATE ${tableName} SET ${setClause} WHERE ${whereClause}`;
+  const query = `UPDATE ${schemaName}.${tableName} SET ${setClause} WHERE ${whereClause}`;
 
   return query;
 }
