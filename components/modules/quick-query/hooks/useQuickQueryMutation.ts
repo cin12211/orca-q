@@ -27,6 +27,7 @@ interface PaginationInfo {
  */
 interface UseQuickQueryMutationOptions {
   tableName: string;
+  schemaName: string;
   primaryKeys: Ref<string[]>;
   columnNames: Ref<string[]>;
   data: Ref<Record<string, any>[] | undefined | null>;
@@ -50,6 +51,7 @@ interface UseQuickQueryMutationOptions {
 export function useQuickQueryMutation(options: UseQuickQueryMutationOptions) {
   const {
     tableName,
+    schemaName,
     primaryKeys,
     columnNames,
     data,
@@ -113,6 +115,7 @@ export function useQuickQueryMutation(options: UseQuickQueryMutationOptions) {
       if (isUpdateStatement) {
         const sqlUpdateStatement = buildUpdateStatements({
           tableName: tableName,
+          schemaName: schemaName,
           update: cell.changedData,
           pKeys: primaryKeys.value,
           pKeyValue: rowData,
@@ -121,6 +124,7 @@ export function useQuickQueryMutation(options: UseQuickQueryMutationOptions) {
       } else if (isInsertStatement) {
         const sqlInsertStatement = buildInsertStatements({
           tableName: tableName,
+          schemaName: schemaName,
           insertData: cell.changedData,
         });
         sqlBulkInsertOrUpdateStatements.push(sqlInsertStatement);
@@ -179,6 +183,7 @@ export function useQuickQueryMutation(options: UseQuickQueryMutationOptions) {
     selectedRows.value.forEach(row => {
       const sqlDeleteStatement = buildDeleteStatements({
         tableName: tableName,
+        schemaName: schemaName,
         pKeys: primaryKeys.value,
         pKeyValue: row,
       });

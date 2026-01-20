@@ -127,6 +127,7 @@ const {
   onFocusedCellChange,
 } = useQuickQueryMutation({
   tableName: tableName.value,
+  schemaName: schemaName.value,
   primaryKeys: primaryKeyColumns,
   refreshTableData,
   columnNames,
