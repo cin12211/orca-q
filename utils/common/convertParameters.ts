@@ -8,6 +8,10 @@ function formatValueRecursive(val: unknown): unknown {
   if (typeof val === 'string') {
     return `'${val}'`;
   }
+  if (val === null) {
+    return 'NULL';
+  }
+
   if (Array.isArray(val)) {
     return val.map(formatValueRecursive);
   }
