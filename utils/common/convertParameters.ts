@@ -8,6 +8,15 @@ function formatValueRecursive(val: unknown): unknown {
   if (typeof val === 'string') {
     return `'${val}'`;
   }
+
+  if (typeof val === 'number') {
+    if (val === 0) {
+      return `0`;
+    }
+
+    return val;
+  }
+
   if (val === null) {
     return 'NULL';
   }
