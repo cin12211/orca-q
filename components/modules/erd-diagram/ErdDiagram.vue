@@ -22,13 +22,21 @@ import ErdControls from './components/Controls/ErdControls.vue';
 import CustomEdge from './components/CustomEdge.vue';
 import ErdFilterPanal from './components/ErdFilterPanal.vue';
 import { useErdFlow } from './hooks/useErdControl';
+import { buildTableNodeId } from './utils';
 
 const { width, height } = useWindowSize();
 
-const props = defineProps<ErdDiagramProps>();
+export interface ErdDiagramAdditionalProps {
+  isExpanded?: (tableId: string) => boolean;
+  hasRelations?: (tableId: string) => boolean;
+}
+
+const props = defineProps<ErdDiagramProps & ErdDiagramAdditionalProps>();
 
 const emit = defineEmits<{
   (e: 'update:isShowFilter', value: boolean): void;
+  (e: 'expand', tableId: string): void;
+  (e: 'collapse', tableId: string): void;
 }>();
 
 const {
@@ -88,7 +96,27 @@ const onArrangeDiagram = () => {
       <CustomEdge v-bind="edgeProps" />
     </template>
     <template #node-value="nodeProps">
-      <ValueNode v-bind="nodeProps" />
+      <ValueNode
+        v-bind="nodeProps"
+        :isExpanded="
+          props.isExpanded?.(
+            buildTableNodeId({
+              schemaName: nodeProps.data.schema,
+              tableName: nodeProps.data.table,
+            })
+          )
+        "
+        :hasRelations="
+          props.hasRelations?.(
+            buildTableNodeId({
+              schemaName: nodeProps.data.schema,
+              tableName: nodeProps.data.table,
+            })
+          )
+        "
+        @expand="emit('expand', $event)"
+        @collapse="emit('collapse', $event)"
+      />
     </template>
 
     <Background v-if="isUseBgGrid" :size="2" :gap="30" :variant="isUseBgGrid" />

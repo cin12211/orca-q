@@ -6,7 +6,12 @@ import {
   ROW_HEIGHT,
 } from '../constants';
 import type { NodePosition, TableNode } from '../type';
-import { createEdges, createNodes } from './buildERDWithPrimaryTables';
+import {
+  buildTableNodeId,
+  createEdges,
+  createNodes,
+  calcTableHeight,
+} from './buildERDWithPrimaryTables';
 
 const { HORIZONTAL_STEP, VERTICAL_STEP } = DEFAULT_VUE_FLOW_LAYOUT_CONFIG;
 
@@ -18,7 +23,7 @@ interface TableRelationGraph {
 }
 
 /** Xây dựng graph liên kết giữa các bảng */
-const buildRelationGraph = (
+export const buildRelationGraph = (
   tablesData: TableMetadata[]
 ): TableRelationGraph => {
   const graph: TableRelationGraph = {};
@@ -45,12 +50,62 @@ const buildRelationGraph = (
 };
 
 /** Tìm bảng trung tâm có nhiều liên kết nhất */
-const findCenterNode = (graph: TableRelationGraph): string => {
-  return Object.entries(graph).sort((a, b) => b[1].degree - a[1].degree)[0][0];
+export const findCenterNode = (graph: TableRelationGraph): string => {
+  const entries = Object.entries(graph);
+  if (entries.length === 0) return '';
+  return entries.sort((a, b) => b[1].degree - a[1].degree)[0][0];
+};
+
+/**
+ * Calculate connection weight for a table among visible tables
+ * Weight = number of visible tables this table is connected to
+ */
+export const calculateConnectionWeight = (
+  tableId: string,
+  visibleTableIds: Set<string>,
+  allTables: TableMetadata[]
+): number => {
+  const graph = buildRelationGraph(allTables);
+  const node = graph[tableId];
+  if (!node) return 0;
+
+  let weight = 0;
+  for (const connId of node.connections) {
+    if (visibleTableIds.has(connId)) {
+      weight++;
+    }
+  }
+  return weight;
+};
+
+/**
+ * Find the table with highest connection weight among visible tables
+ * Returns the tableId with most connections to other visible tables
+ */
+export const findBestCenterTable = (
+  visibleTableIds: Set<string>,
+  allTables: TableMetadata[]
+): string | undefined => {
+  let bestTableId: string | undefined;
+  let maxWeight = -1;
+
+  for (const tableId of visibleTableIds) {
+    const weight = calculateConnectionWeight(
+      tableId,
+      visibleTableIds,
+      allTables
+    );
+    if (weight > maxWeight) {
+      maxWeight = weight;
+      bestTableId = tableId;
+    }
+  }
+
+  return bestTableId;
 };
 
 /** Phân tầng bằng BFS (layering) */
-const classifyLayers = (
+export const classifyLayers = (
   graph: TableRelationGraph,
   startId: string
 ): Record<string, number> => {
@@ -64,12 +119,54 @@ const classifyLayers = (
     visited.add(id);
     layers[id] = depth;
 
-    for (const conn of graph[id].connections) {
-      if (!visited.has(conn)) queue.push({ id: conn, depth: depth + 1 });
+    if (graph[id]) {
+      for (const conn of graph[id].connections) {
+        if (!visited.has(conn)) queue.push({ id: conn, depth: depth + 1 });
+      }
     }
   }
 
   return layers;
+};
+
+/**
+ * Rebuild layout with a new center table based on connection weights
+ * Useful when expanding tables and the center of gravity shifts
+ */
+export const rebuildLayoutWithNewCenter = (
+  visibleTableIds: Set<string>,
+  allTables: TableMetadata[]
+): {
+  nodes: TableNode[];
+  edges: Edge[];
+  matrixPosition: Record<string, NodePosition>;
+  centerId: string;
+} => {
+  // Filter to only visible tables
+  const visibleTables = allTables.filter(t => {
+    const tId = buildTableNodeId({ schemaName: t.schema, tableName: t.table });
+    return visibleTableIds.has(tId);
+  });
+
+  if (visibleTables.length === 0) {
+    return { nodes: [], edges: [], matrixPosition: {}, centerId: '' };
+  }
+
+  // Build graph and find best center
+  const graph = buildRelationGraph(visibleTables);
+  const centerId = findCenterNode(graph);
+  const layers = classifyLayers(graph, centerId);
+  const matrix = layoutGraph(graph, layers, visibleTables);
+
+  const nodes = createNodes(visibleTables, matrix);
+  const edges = createEdges(visibleTables);
+
+  return {
+    nodes,
+    edges,
+    matrixPosition: matrix,
+    centerId,
+  };
 };
 
 /** Tính layout dựa trên chiều cao bảng thực tế */
