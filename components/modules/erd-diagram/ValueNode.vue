@@ -6,9 +6,36 @@ import { HANDLE_HEIGHT, HANDLE_LEFT, ROW_HEIGHT, ROW_WIDTH } from './constants';
 import type { LabelTableNode } from './type';
 import { buildTableNodeId, focusNodeById, getHandPosition } from './utils';
 
-const props = defineProps<NodeProps<TableMetadata>>();
+export interface ValueNodeProps extends NodeProps<TableMetadata> {
+  isExpanded?: boolean;
+  hasRelations?: boolean;
+}
+
+const props = defineProps<ValueNodeProps>();
+
+const emit = defineEmits<{
+  (e: 'expand', tableId: string): void;
+  (e: 'collapse', tableId: string): void;
+}>();
 
 const { findNode, fitView, getViewport } = useVueFlow();
+
+// Compute the node ID for this table
+const nodeId = computed(() =>
+  buildTableNodeId({
+    schemaName: props.data.schema,
+    tableName: props.data.table,
+  })
+);
+
+// Handle expand/collapse button click
+const onToggleExpand = () => {
+  if (props.isExpanded) {
+    emit('collapse', nodeId.value);
+  } else {
+    emit('expand', nodeId.value);
+  }
+};
 
 // --- 1️⃣ Precompute lookup maps (O(1) instead of array.includes)
 const primaryKeySet = computed(
@@ -87,13 +114,30 @@ const onFocusNode = (
   <div class="table-node">
     <div class="flex flex-col rounded-md" :style="{ width: ROW_WIDTH + 'px' }">
       <div
-        class="rounded-t-md box-border p-2 bg-primary/90 flex items-center justify-center"
+        class="rounded-t-md box-border p-2 bg-primary/90 flex items-center justify-between gap-2"
         :style="{ height: ROW_HEIGHT + 10 + 'px' }"
       >
-        <p class="w-fit text-center px-2 box-border text-white text-xl">
+        <p
+          class="flex-1 text-center px-2 box-border text-white text-xl truncate"
+        >
           {{ data.table }}
           {{ data.schema === 'public' ? '' : `(${data.schema})` }}
         </p>
+        <button
+          v-if="hasRelations"
+          class="flex-shrink-0 p-1 px-2 h-full rounded hover:bg-white/20 transition-colors"
+          :title="
+            isExpanded ? 'Collapse related tables' : 'Expand related tables'
+          "
+          @click.stop="onToggleExpand"
+        >
+          <Icon
+            :name="
+              isExpanded ? 'hugeicons:remove-circle' : 'hugeicons:add-circle'
+            "
+            class="w-5 h-5 text-white"
+          />
+        </button>
       </div>
 
       <!-- Columns -->
