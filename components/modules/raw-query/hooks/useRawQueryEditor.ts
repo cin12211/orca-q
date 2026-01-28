@@ -3,7 +3,7 @@ import {
   startCompletion,
   type Completion,
 } from '@codemirror/autocomplete';
-import { PostgreSQL, sql } from '@codemirror/lang-sql';
+import { StandardSQL, sql, PostgreSQL, SQLDialect } from '@codemirror/lang-sql';
 import { Compartment } from '@codemirror/state';
 import { EditorView, keymap } from '@codemirror/view';
 import merge from 'lodash-es/merge';
@@ -370,7 +370,10 @@ export function useRawQueryEditor({
 
     sqlCompartment.of(
       sql({
-        dialect: PostgreSQL,
+        dialect: SQLDialect.define({
+          ...PostgreSQL.spec,
+          doubleDollarQuotedStrings: false,
+        }),
         upperCaseKeywords: true,
         keywordCompletion: pgKeywordCompletion,
         tables: mappedTablesSchema.value,
@@ -394,7 +397,10 @@ export function useRawQueryEditor({
     codeEditorRef.value?.editorView.dispatch({
       effects: sqlCompartment.reconfigure(
         sql({
-          dialect: PostgreSQL,
+          dialect: SQLDialect.define({
+            ...PostgreSQL.spec,
+            doubleDollarQuotedStrings: false,
+          }),
           upperCaseKeywords: true,
           keywordCompletion: pgKeywordCompletion,
           tables: mappedTablesSchema.value,

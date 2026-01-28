@@ -4,7 +4,14 @@ import {
   startCompletion,
   type Completion,
 } from '@codemirror/autocomplete';
-import { PostgreSQL, sql, type SQLNamespace } from '@codemirror/lang-sql';
+import {
+  MySQL,
+  SQLDialect,
+  StandardSQL,
+  sql,
+  type SQLNamespace,
+  PostgreSQL,
+} from '@codemirror/lang-sql';
 import { Compartment } from '@codemirror/state';
 import { keymap } from '@codemirror/view';
 import { format } from 'sql-formatter';
@@ -95,7 +102,29 @@ const extensions = [
 
   sqlCompartment.of(
     sql({
-      dialect: PostgreSQL,
+      dialect: SQLDialect.define({
+        ...PostgreSQL.spec,
+        doubleDollarQuotedStrings: false,
+        // charSetCasts: true,
+        // doubleDollarQuotedStrings: true,
+        // operatorChars: '+-*/<>=~!@#%^&|`?',
+        // specialVar: '',
+        // keywords: PostgreSQL.spec.keywords,
+        // types: PostgreSQL.spec.types,
+
+        // mysql style
+        // operatorChars: '*+-%<>!=&|^',
+        // charSetCasts: true,
+        // doubleQuotedStrings: true,
+        // unquotedBitLiterals: true,
+        // hashComments: true,
+        // spaceAfterDashes: true,
+        // // specialVar: '@?',
+        // identifierQuotes: '`',
+        // // keywords: MySQL.spec.keywords,
+        // // types: MySQL.spec.types,
+        // builtin: MySQL.spec.builtin,
+      }),
       upperCaseKeywords: true,
       keywordCompletion: pgKeywordCompletion,
       schema: mappedSchema.value,
