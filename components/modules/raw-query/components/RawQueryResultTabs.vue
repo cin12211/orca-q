@@ -275,6 +275,7 @@ const hasErrors = (tab: ExecutedResultItem) => {
         <ResultTabErrorView
           v-else-if="activeTab && currentView === 'error'"
           :active-tab="activeTab"
+          @onChangeView="setViewMode($event)"
         />
 
         <!-- Agent View -->
