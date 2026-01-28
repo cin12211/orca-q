@@ -15,7 +15,7 @@ npm run format:husky
 echo "Removing unused files..."
 # npm run remove-unused
 
-git add .
+# git add .
 # ... (rest of the script remains the same)
 END_TIME=$(date +%s)
 EXECUTION_TIME=$((END_TIME - START_TIME))

@@ -20,7 +20,7 @@ import {
 const props = defineProps<{
   executedResults: Map<string, ExecutedResultItem>;
   activeTabId: string | null;
-  mappedColumns: MappedRawColumn[];
+  // mappedColumns: MappedRawColumn[];
   executeLoading: boolean;
 }>();
 
