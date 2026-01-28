@@ -20,7 +20,7 @@ import {
 const props = defineProps<{
   executedResults: Map<string, ExecutedResultItem>;
   activeTabId: string | null;
-  mappedColumns: MappedRawColumn[];
+  // mappedColumns: MappedRawColumn[];
   executeLoading: boolean;
 }>();
 
@@ -275,6 +275,7 @@ const hasErrors = (tab: ExecutedResultItem) => {
         <ResultTabErrorView
           v-else-if="activeTab && currentView === 'error'"
           :active-tab="activeTab"
+          @onChangeView="setViewMode($event)"
         />
 
         <!-- Agent View -->

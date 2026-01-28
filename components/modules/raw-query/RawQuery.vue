@@ -17,17 +17,14 @@ const {
   currentFile,
   fileContents,
   fileVariables,
-  mappedColumns,
   updateFileConnection,
   updateFileContent,
   updateFileVariables,
   connectionsByWsId,
-  activeSchema,
   fieldDefs,
 } = toRefs(rawQueryFileContent);
 
 const rawQueryEditor = useRawQueryEditor({
-  activeSchema,
   connection,
   fieldDefs,
   fileVariables,
@@ -44,18 +41,6 @@ const {
   executedResults,
   activeResultTabId,
 } = toRefs(rawQueryEditor);
-
-watch(
-  () => [activeSchema.value?.tableDetails],
-  () => {
-    if (!activeSchema.value?.tableDetails) return;
-    rawQueryEditor.reloadSqlCompartment();
-  },
-  {
-    deep: true,
-    immediate: true,
-  }
-);
 
 watch(fileVariables, () => {
   rawQueryEditor.reloadSqlCompartment();
@@ -197,7 +182,6 @@ onActivated(async () => {
         v-else
         :executed-results="executedResults"
         :active-tab-id="activeResultTabId"
-        :mapped-columns="mappedColumns"
         :execute-loading="queryProcessState.executeLoading"
         @update:active-tab="rawQueryEditor.setActiveResultTab"
         @close-tab="rawQueryEditor.closeResultTab"

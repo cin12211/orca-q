@@ -1,15 +1,10 @@
-import {
-  acceptCompletion,
-  startCompletion,
-  type Completion,
-} from '@codemirror/autocomplete';
-import { PostgreSQL, sql } from '@codemirror/lang-sql';
+import { acceptCompletion, startCompletion } from '@codemirror/autocomplete';
+import { sql, PostgreSQL, SQLDialect } from '@codemirror/lang-sql';
 import { Compartment } from '@codemirror/state';
 import { EditorView, keymap } from '@codemirror/view';
 import merge from 'lodash-es/merge';
 import type { FieldDef } from 'pg';
 import type BaseCodeEditor from '~/components/base/code-editor/BaseCodeEditor.vue';
-import { CompletionIcon } from '~/components/base/code-editor/constants';
 import {
   currentStatementLineGutterExtension,
   currentStatementLineHighlightExtension,
@@ -25,17 +20,14 @@ import {
 } from '~/components/base/code-editor/utils';
 import type { RowData } from '~/components/base/dynamic-table/utils';
 import { uuidv4 } from '~/lib/utils';
-import type { Connection, Schema } from '~/shared/stores';
+import { useSchemaStore, type Connection, type Schema } from '~/shared/stores';
 import {
   convertParameters,
   type ParsedParametersResult,
 } from '~/utils/common/convertParameters';
 import type { EditorCursor } from '../interfaces';
-import {
-  formatStatementSql,
-  generateTableAlias,
-  getMappedSchemaSuggestion,
-} from '../utils';
+import { formatStatementSql } from '../utils';
+import { mappedSchemaSuggestion } from '../utils/getMappedSchemaSuggestion';
 
 export interface ExecutedResultItem {
   id: string;
@@ -58,16 +50,18 @@ export interface ExecutedResultItem {
 }
 
 export function useRawQueryEditor({
-  activeSchema,
   fileVariables,
   connection,
   fieldDefs,
 }: {
-  activeSchema: Ref<Schema | undefined>;
   fileVariables: Ref<string>;
   connection: Ref<Connection | undefined>;
   fieldDefs: Ref<FieldDef[]>;
 }) {
+  const schemaStore = useSchemaStore();
+  const { schemasByContext: connectionSchemas, activeSchema } =
+    toRefs(schemaStore);
+
   const codeEditorRef = ref<InstanceType<typeof BaseCodeEditor> | null>(null);
   const currentRawQueryResult = shallowRef<RowData[]>([]);
   const rawResponse = shallowRef<
@@ -114,75 +108,32 @@ export function useRawQueryEditor({
 
   const cursorInfo = ref<EditorCursor>({ line: 1, column: 1 });
 
-  const mappedSchema = computed(() => {
-    const tableDetails = activeSchema.value?.tableDetails;
+  const defaultSchemaName = computed(
+    () => activeSchema.value?.name || 'public'
+  );
 
-    return getMappedSchemaSuggestion({
-      tableDetails,
+  const schemaConfig = computed(() => {
+    return mappedSchemaSuggestion({
+      schemas: connectionSchemas.value,
+      defaultSchemaName: defaultSchemaName.value,
+      fileVariables: fileVariables.value,
     });
   });
 
-  const mappedTablesSchema = computed(() => {
-    const tableDetails = activeSchema.value?.tableDetails;
-
-    const tables: Completion[] = [];
-
-    for (const tableName in tableDetails) {
-      const label = `${tableName} as ${generateTableAlias(tableName)}`;
-      const apply = `${tableName} AS ${generateTableAlias(tableName)}`;
-
-      tables.push({
-        label,
-        type: CompletionIcon.Table,
-        detail: `Schema: ${activeSchema.value?.name}`,
-        boost: 100,
-        apply,
-      });
-    }
-
-    // file variables
-    try {
-      const fileVariablesJson = JSON.parse(fileVariables.value);
-      for (const key in fileVariablesJson) {
-        tables.push({
-          label: `:${key}`,
-          type: CompletionIcon.Variable,
-          boost: 120,
-          detail: 'variable',
-          apply(view, completion, _from, to) {
-            const matched = view.state.doc.sliceString(_from - 1, to);
-
-            let from = _from;
-
-            if (matched?.startsWith?.(':')) {
-              from = _from - 1;
-            }
-
-            view.dispatch({
-              changes: {
-                from,
-                to,
-                insert: completion.label,
-              },
-            });
-          },
-        });
-      }
-    } catch {}
-
-    return tables;
-  });
+  //TODO: support nested CTE and alias from multiple schemas
+  /**
+   * Custom completion sources for enhanced SQL autocomplete
+   * These handle alias-based column completion and CTE references
+   * Now supports multiple schemas
+   */
+  // const customCompletionSources = computed<CompletionSource[]>(() => {
+  //   return [
+  //     createAliasCompletionSource(connectionSchemas, defaultSchemaName.value),
+  //     createCTECompletionSource(connectionSchemas),
+  //   ];
+  // });
 
   const sqlCompartment = new Compartment();
-
-  // TODO: for show lint error when query
-  // const lintCompartment = new Compartment();
-  // const dynamicDiagnostics = ref<Diagnostic[]>([]);
-  // const createSqlLinter = () => {
-  //   return linter(view => {
-  //     return dynamicDiagnostics.value;
-  //   });
-  // };
 
   const executeCurrentStatement = async ({
     currentStatements,
@@ -211,6 +162,13 @@ export function useRawQueryEditor({
     });
 
     // TODO: for show lint error when query
+    // const lintCompartment = new Compartment();
+    // const dynamicDiagnostics = ref<Diagnostic[]>([]);
+    // const createSqlLinter = () => {
+    //   return linter(view => {
+    //     return dynamicDiagnostics.value;
+    //   });
+    // };
     // const cursorPos = editorView.value?.state.selection.main.head || 0;
     // const queryWithFormat = formatStatementSql(currentStatement.text);
     // editorView.value?.dispatch({
@@ -370,16 +328,26 @@ export function useRawQueryEditor({
 
     sqlCompartment.of(
       sql({
-        dialect: PostgreSQL,
+        dialect: SQLDialect.define({
+          ...PostgreSQL.spec,
+          doubleDollarQuotedStrings: false,
+        }),
         upperCaseKeywords: true,
         keywordCompletion: pgKeywordCompletion,
-        tables: mappedTablesSchema.value,
-        schema: mappedSchema.value,
+        // Use enhanced schema with proper SQLNamespace structure
+        tables: schemaConfig.value.variableCompletions,
+        schema: schemaConfig.value.schema,
+        // Set default schema for direct table completion
+        defaultSchema: schemaConfig.value.defaultSchema,
       })
     ),
     currentStatementLineHighlightExtension,
     currentStatementLineGutterExtension,
+    // Enhanced SQL autocompletion with custom sources for aliases and CTEs
     ...sqlAutoCompletion(),
+    //   {
+    //   override: customCompletionSources.value,
+    // }
     //TODO: close to slow to usage
     // lintGutter(),
     // lintGutter(),
@@ -394,11 +362,17 @@ export function useRawQueryEditor({
     codeEditorRef.value?.editorView.dispatch({
       effects: sqlCompartment.reconfigure(
         sql({
-          dialect: PostgreSQL,
+          dialect: SQLDialect.define({
+            ...PostgreSQL.spec,
+            doubleDollarQuotedStrings: false,
+          }),
           upperCaseKeywords: true,
           keywordCompletion: pgKeywordCompletion,
-          tables: mappedTablesSchema.value,
-          schema: mappedSchema.value,
+          // Use enhanced schema with proper SQLNamespace structure
+          tables: schemaConfig.value.variableCompletions,
+          schema: schemaConfig.value.schema,
+          // Set default schema for direct table completion
+          defaultSchema: schemaConfig.value.defaultSchema,
         })
       ),
     });
@@ -481,6 +455,18 @@ export function useRawQueryEditor({
       formatStatementSql
     );
   };
+
+  watch(
+    () => activeSchema.value?.name,
+    () => {
+      if (!activeSchema.value?.name) return;
+      reloadSqlCompartment();
+    },
+    {
+      deep: true,
+      immediate: true,
+    }
+  );
 
   return {
     codeEditorRef,

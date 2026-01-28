@@ -1,6 +1,6 @@
 import type { FieldDef } from 'pg';
 import { useAppContext } from '~/shared/contexts/useAppContext';
-import { useExplorerFileStore } from '~/shared/stores';
+import { useExplorerFileStore, useSchemaStore } from '~/shared/stores';
 import type { MappedRawColumn } from '../interfaces';
 import { formatColumnsInfo } from '../utils';
 
@@ -11,8 +11,7 @@ import { formatColumnsInfo } from '../utils';
 export function useRawQueryFileContent() {
   const route = useRoute('workspaceId-connectionId-explorer-fileId');
   const explorerFileStore = useExplorerFileStore();
-  const { schemaStore, connectionStore } = useAppContext();
-  const { activeSchema } = toRefs(schemaStore);
+  const { connectionStore } = useAppContext();
 
   const fileContents = ref('');
   const fileVariables = ref('');
@@ -88,17 +87,18 @@ export function useRawQueryFileContent() {
     fileVariables.value = variables;
   });
 
-  const mappedColumns = computed<MappedRawColumn[]>(() => {
-    return formatColumnsInfo({
-      activeSchema: activeSchema.value,
-      fieldDefs: fieldDefs.value,
-      getTableInfoById: schemaStore.getTableInfoById,
-    });
-  });
+  //TODO: for edit inline table after query
+  // const mappedColumns = computed<MappedRawColumn[]>(() => {
+  //   return formatColumnsInfo({
+  //     activeSchema: activeSchema.value,
+  //     fieldDefs: fieldDefs.value,
+  //     getTableInfoById: schemaStore.getTableInfoById,
+  //   });
+  // });
 
   return {
     fieldDefs,
-    mappedColumns,
+    // mappedColumns,
     fileContents,
     fileVariables,
     currentFile,
@@ -107,7 +107,6 @@ export function useRawQueryFileContent() {
     updateFileVariables,
     connection,
     connectionsByWsId,
-    activeSchema,
     updateFileCursorPos,
   };
 }
