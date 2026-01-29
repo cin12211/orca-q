@@ -107,3 +107,7 @@
     transform: scale(1);
   }
 }
+
+.cm-focused {
+  outline: unset !important;
+}

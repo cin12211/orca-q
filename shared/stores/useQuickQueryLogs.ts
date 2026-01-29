@@ -57,8 +57,15 @@ export const useQuickQueryLogs = defineStore(
         return;
       }
 
+      let logs = `\n${log.logs}`;
+
+      if (log.errorMessage) {
+        logs += `\n-- Error: ${log.errorMessage}`;
+      }
+
       const logTmp: QuickQueryLog = {
         ...log,
+        logs,
         connectionId: connectionId.value,
         workspaceId: wsStateStore.workspaceId,
         createdAt: dayjs().toISOString(),

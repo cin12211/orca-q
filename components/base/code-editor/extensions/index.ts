@@ -1,6 +1,7 @@
 export * from './currentStatementLineGutter';
 export * from './shortCutExecuteCurrentStatement';
 export * from './shortCutFormatOnSave';
+export * from './shortCutSaveFunction';
 export * from './customAutoCompleteUi';
 export * from './currentStatementHighlighter';
 export * from './shortCutFormatOnSave';

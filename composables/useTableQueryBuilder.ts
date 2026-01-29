@@ -105,16 +105,10 @@ export const useTableQueryBuilder = ({
     error?: Record<string, any>,
     errorMessage?: string
   ) => {
-    let logs = `\n${log}`;
-
-    if (errorMessage) {
-      logs += `\n-- Error: ${errorMessage}`;
-    }
-
     qqLogStore.createLog({
       tableName,
       schemaName,
-      logs,
+      logs: log,
       queryTime,
       error,
       errorMessage,
