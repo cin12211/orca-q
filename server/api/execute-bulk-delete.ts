@@ -106,7 +106,7 @@ export default defineEventHandler(
               driverError: queryError.driverError,
               query: queryError.query,
             },
-            message: `Database DELETE operation failed: ${queryError.message}`,
+            message: queryError.message,
           });
         }
 

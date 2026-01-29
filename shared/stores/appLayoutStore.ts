@@ -162,6 +162,9 @@ export const useAppLayoutStore = defineStore(
     const agentSelectedProvider = ref<AIProvider>('google');
     const agentSelectedModel = ref<string>('gemini-2.5-flash');
 
+    // Quick Query settings
+    const quickQuerySafeModeEnabled = ref<boolean>(false);
+
     return {
       historyBodySize,
       layoutSize,
@@ -184,6 +187,7 @@ export const useAppLayoutStore = defineStore(
       agentApiKeyConfigs,
       agentSelectedProvider,
       agentSelectedModel,
+      quickQuerySafeModeEnabled,
     };
   },
   {

@@ -112,7 +112,7 @@ export default defineEventHandler(
               driverError: queryError.driverError,
               query: queryError.query,
             },
-            message: `Database UPDATE ,INSERT operation failed: ${queryError.message}`,
+            message: queryError.message,
           });
         }
 

@@ -33,13 +33,23 @@ interface UseQuickQueryMutationOptions {
   data: Ref<Record<string, any>[] | undefined | null>;
   selectedRows: Ref<Record<string, any>[]>;
   pagination: PaginationInfo;
-  addHistoryLog: (log: string, queryTime: number) => void;
+  addHistoryLog: (
+    log: string,
+    queryTime: number,
+    data?: Record<string, any>,
+    errorMessage?: string
+  ) => void;
   refreshTableData: () => void;
   refreshCount: () => void;
   openErrorModal: Ref<boolean>;
   errorMessage: Ref<string | undefined>;
   quickQueryTableRef: Ref<InstanceType<typeof QuickQueryTable> | undefined>;
   focusedCell?: Ref<unknown | undefined>;
+  safeModeEnabled?: Ref<boolean>;
+  onRequestSafeModeConfirm?: (
+    sql: string,
+    type: 'save' | 'delete'
+  ) => Promise<boolean>;
 }
 
 /**
@@ -64,6 +74,8 @@ export function useQuickQueryMutation(options: UseQuickQueryMutationOptions) {
     errorMessage,
     quickQueryTableRef,
     focusedCell,
+    safeModeEnabled,
+    onRequestSafeModeConfirm,
   } = options;
 
   const { connectionStore } = useAppContext();
@@ -136,6 +148,17 @@ export function useQuickQueryMutation(options: UseQuickQueryMutationOptions) {
       return;
     }
 
+    // Safe mode confirmation
+    if (safeModeEnabled?.value && onRequestSafeModeConfirm) {
+      const confirmed = await onRequestSafeModeConfirm(
+        sqlBulkInsertOrUpdateStatements.join('\n'),
+        'save'
+      );
+      if (!confirmed) {
+        return;
+      }
+    }
+
     isMutating.value = true;
 
     try {
@@ -147,11 +170,19 @@ export function useQuickQueryMutation(options: UseQuickQueryMutationOptions) {
             connectionStore.selectedConnection?.connectionString,
         },
         onResponseError({ response }) {
+          const errorData = response?._data?.data?.driverError;
+          const message = response?._data?.message as string;
           openErrorModal.value = true;
           console.error('Error during bulk update:', response?._data);
           errorMessage.value =
-            response?._data?.message ||
-            'An unknown error occurred during update.';
+            message || 'An unknown error occurred during update.';
+
+          addHistoryLog(
+            sqlBulkInsertOrUpdateStatements.join('\n'),
+            0,
+            errorData,
+            message
+          );
         },
       });
 
@@ -163,7 +194,6 @@ export function useQuickQueryMutation(options: UseQuickQueryMutationOptions) {
       refreshTableData();
       toast.success('Data saved successfully!');
     } catch (error) {
-      // Error is primarily handled by onResponseError callback
       console.error('Fetch error in onSaveData:', error);
     } finally {
       isMutating.value = false;
@@ -199,6 +229,17 @@ export function useQuickQueryMutation(options: UseQuickQueryMutationOptions) {
 
     // console.log('sqlDeleteStatement:', sqlDeleteStatement);
 
+    // Safe mode confirmation
+    if (safeModeEnabled?.value && onRequestSafeModeConfirm) {
+      const confirmed = await onRequestSafeModeConfirm(
+        sqlDeleteStatements.join('\n'),
+        'delete'
+      );
+      if (!confirmed) {
+        return;
+      }
+    }
+
     isMutating.value = true;
 
     try {
@@ -210,11 +251,13 @@ export function useQuickQueryMutation(options: UseQuickQueryMutationOptions) {
             connectionStore.selectedConnection?.connectionString,
         },
         onResponseError({ response }) {
+          const errorData = response?._data?.data?.driverError;
+          const message = response?._data?.message as string;
           openErrorModal.value = true;
           errorMessage.value =
-            response?._data?.message ||
-            'An unknown error occurred during deletion.';
-          console.error('Error during bulk delete:', response?._data);
+            message || 'An unknown error occurred during deletion.';
+
+          addHistoryLog(sqlDeleteStatements.join('\n'), 0, errorData, message);
         },
       });
 
@@ -231,7 +274,6 @@ export function useQuickQueryMutation(options: UseQuickQueryMutationOptions) {
       refreshTableData();
       toast.success('Rows deleted successfully!');
     } catch (error) {
-      // Error is primarily handled by onResponseError callback
       console.error('Fetch error in onDeleteRows:', error);
     } finally {
       isMutating.value = false;
