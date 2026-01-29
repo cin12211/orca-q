@@ -14,6 +14,8 @@ export interface QuickQueryLog {
   queryTime: number; // in milliseconds
   createdAt: string;
   updatedAt?: string;
+  error?: Record<string, any>;
+  errorMessage?: string;
 }
 
 export const useQuickQueryLogs = defineStore(
@@ -42,7 +44,12 @@ export const useQuickQueryLogs = defineStore(
     const createLog = async (
       log: Pick<
         QuickQueryLog,
-        'logs' | 'queryTime' | 'tableName' | 'schemaName'
+        | 'logs'
+        | 'queryTime'
+        | 'tableName'
+        | 'schemaName'
+        | 'error'
+        | 'errorMessage'
       >
     ) => {
       if (!connectionId.value || !wsStateStore.workspaceId) {

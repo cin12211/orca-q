@@ -99,14 +99,25 @@ export const useTableQueryBuilder = ({
     return `${DEFAULT_QUERY_COUNT} "${schemaName}"."${tableName}" ${whereClauses.value || ''}`;
   });
 
-  const addHistoryLog = (log: string, queryTime: number = 0) => {
-    const logs = `\n${log}`;
+  const addHistoryLog = (
+    log: string,
+    queryTime: number = 0,
+    error?: Record<string, any>,
+    errorMessage?: string
+  ) => {
+    let logs = `\n${log}`;
+
+    if (errorMessage) {
+      logs += `\n-- Error: ${errorMessage}`;
+    }
 
     qqLogStore.createLog({
       tableName,
       schemaName,
       logs,
       queryTime,
+      error,
+      errorMessage,
     });
   };
 
@@ -130,6 +141,9 @@ export const useTableQueryBuilder = ({
       openErrorModal.value = true;
 
       errorMessage.value = error.response?._data?.message || '';
+
+      // Log error to history
+      addHistoryLog(queryString.value, 0, errorData, errorMessage.value);
 
       toast(error.response?.statusText, {
         important: true,

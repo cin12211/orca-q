@@ -14,6 +14,7 @@ import { Globe, Lock, Paintbrush, Settings } from 'lucide-vue-next';
 import { useSettingsModal } from '~/shared/contexts/useSettingsModal';
 import AgentConfig from './AgentConfig.vue';
 import EditorConfig from './EditorConfig.vue';
+import QuickQueryConfig from './QuickQueryConfig.vue';
 
 const settingNavs = [
   // { name: 'Notifications', icon: Bell },
@@ -23,6 +24,11 @@ const settingNavs = [
     name: 'Editor',
     icon: h(Icon, { name: 'lucide:scroll-text', class: 'size-4!' }),
     component: EditorConfig,
+  },
+  {
+    name: 'Quick Query',
+    icon: h(Icon, { name: 'lucide:table-2', class: 'size-4!' }),
+    component: QuickQueryConfig,
   },
   {
     name: 'Agent',

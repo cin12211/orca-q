@@ -10,6 +10,7 @@ import WrapperErdDiagram from '../erd-diagram/WrapperErdDiagram.vue';
 import { buildTableNodeId } from '../erd-diagram/utils';
 import { EDatabaseType } from '../management-connection/constants';
 import QuickQueryErrorPopup from './QuickQueryErrorPopup.vue';
+import SafeModeConfirmDialog from './SafeModeConfirmDialog.vue';
 import { QuickQueryTabView } from './constants';
 import {
   useQuickQuery,
@@ -44,6 +45,38 @@ const schemaName = computed(
 const previewRelationBreadcrumbs = ref<PreviewRelationBreadcrumb[]>([]);
 
 const containerRef = ref<InstanceType<typeof HTMLElement>>();
+
+// Safe mode confirmation dialog state
+const safeModeDialogOpen = ref(false);
+const safeModeDialogSql = ref('');
+const safeModeDialogType = ref<'save' | 'delete'>('save');
+let safeModeResolve: ((confirmed: boolean) => void) | null = null;
+
+const onRequestSafeModeConfirm = (
+  sql: string,
+  type: 'save' | 'delete'
+): Promise<boolean> => {
+  return new Promise(resolve => {
+    safeModeDialogSql.value = sql;
+    safeModeDialogType.value = type;
+    safeModeDialogOpen.value = true;
+    safeModeResolve = resolve;
+  });
+};
+
+const onSafeModeConfirm = () => {
+  if (safeModeResolve) {
+    safeModeResolve(true);
+    safeModeResolve = null;
+  }
+};
+
+const onSafeModeCancel = () => {
+  if (safeModeResolve) {
+    safeModeResolve(false);
+    safeModeResolve = null;
+  }
+};
 
 const {
   quickQueryFilterRef,
@@ -140,6 +173,8 @@ const {
   quickQueryTableRef,
   refreshCount,
   focusedCell,
+  safeModeEnabled: toRef(appLayoutStore, 'quickQuerySafeModeEnabled'),
+  onRequestSafeModeConfirm,
 });
 
 const { handleSelectColumn, selectedColumnFieldId, resetGridState } =
@@ -368,6 +403,14 @@ const onBackPreviousBreadcrumbByIndex = (index: number) => {
     @onUpdateSelectedTabInBreadcrumb="onUpdateSelectedTabInBreadcrumb"
     @onBackPreviousBreadcrumb="onBackPreviousBreadcrumb"
     @onBackPreviousBreadcrumbByIndex="onBackPreviousBreadcrumbByIndex"
+  />
+
+  <SafeModeConfirmDialog
+    v-model:open="safeModeDialogOpen"
+    :sql="safeModeDialogSql"
+    :type="safeModeDialogType"
+    @confirm="onSafeModeConfirm"
+    @cancel="onSafeModeCancel"
   />
 
   <Teleport defer to="#preview-select-row" v-if="isActiveTeleport">

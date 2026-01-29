@@ -1,8 +1,13 @@
 <script setup lang="ts">
-import { Icon } from '#components';
+import { Icon, Tooltip, TooltipContent, TooltipTrigger } from '#components';
+import { useSettingsModal } from '~/shared/contexts/useSettingsModal';
+import { useAppLayoutStore } from '~/shared/stores/appLayoutStore';
 import { QuickQueryTabView } from '../constants';
 import QuickPagination from './QuickPagination.vue';
 import RefreshButton from './RefreshButton.vue';
+
+const appLayoutStore = useAppLayoutStore();
+const { openSettings } = useSettingsModal();
 
 const props = defineProps<{
   isAllowNextPage: boolean;
@@ -182,10 +187,37 @@ const isDataView = computed(() => {
         </TabsList>
       </Tabs>
 
-      <!-- TODO: add config for query control bar -->
-      <!-- <Button variant="outline" size="iconSm" class="h-6">
-        <Icon name="lucide:settings-2" class="inline"> </Icon>
-      </Button> -->
+      <!-- Safe Mode Status Icon -->
+      <Tooltip>
+        <TooltipTrigger as-child>
+          <Button
+            variant="ghost"
+            size="iconSm"
+            class="h-6 w-6"
+            @click="openSettings('Quick Query')"
+          >
+            <Icon
+              v-if="appLayoutStore.quickQuerySafeModeEnabled"
+              name="lucide:shield-check"
+              class="size-4!"
+            />
+            <Icon
+              v-else
+              name="lucide:shield-minus"
+              class="size-4! text-muted-foreground"
+            />
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent>
+          <p>
+            Safe Mode:
+            {{
+              appLayoutStore.quickQuerySafeModeEnabled ? 'Enabled' : 'Disabled'
+            }}
+          </p>
+          <p class="text-xs text-muted-foreground">Click to configure</p>
+        </TooltipContent>
+      </Tooltip>
     </div>
   </div>
 </template>

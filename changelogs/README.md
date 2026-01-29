@@ -40,7 +40,7 @@ Your changelog content here in markdown format...
 
 - 🎉 Major release
 - ✨ New features
-- 🔧 Improvements / Changes
+- 🔧 Improvements / Changes / Enhancements
 - 🐛 Bug fixes
 - 🗑️ Removed features
 - ⚠️ Breaking changes
