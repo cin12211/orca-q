@@ -7,8 +7,8 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '~/components/ui/tooltip';
+import { useCopyToClipboard } from '~/composables/useCopyToClipboard';
 import { useCodeHighlighter } from '~/composables/useSqlHighlighter';
-import { copyToClipboard } from '~/utils/common/copyData';
 import type { ExecutedResultItem } from '../../hooks/useRawQueryEditor';
 
 const props = defineProps<{
@@ -20,11 +20,13 @@ const emits = defineEmits<{
 }>();
 
 const { highlighter, currentTheme } = useCodeHighlighter();
-
-const copiedStates = ref<Record<string, boolean>>({
-  details: false,
-  query: false,
-});
+const {
+  copiedStates,
+  handleCopyWithKey,
+  getCopyIcon,
+  getCopyIconClass,
+  getCopyTooltip,
+} = useCopyToClipboard();
 
 const hasErrors = (tab: ExecutedResultItem) => {
   return !!tab.metadata.executeErrors;
@@ -101,12 +103,8 @@ const highlightErrorDetails = computed(() => {
   });
 });
 
-const handleCopy = async (section: 'details' | 'query', text: string) => {
-  await copyToClipboard(text);
-  copiedStates.value[section] = true;
-  setTimeout(() => {
-    copiedStates.value[section] = false;
-  }, 2000);
+const handleCopy = (section: 'details' | 'query', text: string) => {
+  handleCopyWithKey(section, text);
 };
 
 const errorDetails = computed(() => {
@@ -172,22 +170,14 @@ const onAskAiToFix = () => {
                 @click="handleCopy('query', executedQuery)"
               >
                 <Icon
-                  :name="
-                    copiedStates.query
-                      ? 'hugeicons:tick-02'
-                      : 'hugeicons:copy-01'
-                  "
+                  :name="getCopyIcon(copiedStates.query)"
                   class="size-4"
-                  :class="
-                    copiedStates.query
-                      ? 'text-green-500'
-                      : 'text-muted-foreground'
-                  "
+                  :class="getCopyIconClass(copiedStates.query)"
                 />
               </Button>
             </TooltipTrigger>
             <TooltipContent>
-              <p>{{ copiedStates.query ? 'Copied!' : 'Copy query' }}</p>
+              <p>{{ getCopyTooltip(copiedStates.query, 'Copy query') }}</p>
             </TooltipContent>
           </Tooltip>
         </div>
@@ -210,22 +200,14 @@ const onAskAiToFix = () => {
                 @click="handleCopy('details', errorDetails)"
               >
                 <Icon
-                  :name="
-                    copiedStates.details
-                      ? 'hugeicons:tick-02'
-                      : 'hugeicons:copy-01'
-                  "
+                  :name="getCopyIcon(copiedStates.details)"
                   class="size-4"
-                  :class="
-                    copiedStates.details
-                      ? 'text-green-500'
-                      : 'text-muted-foreground'
-                  "
+                  :class="getCopyIconClass(copiedStates.details)"
                 />
               </Button>
             </TooltipTrigger>
             <TooltipContent>
-              <p>{{ copiedStates.details ? 'Copied!' : 'Copy details' }}</p>
+              <p>{{ getCopyTooltip(copiedStates.details, 'Copy details') }}</p>
             </TooltipContent>
           </Tooltip>
         </div>

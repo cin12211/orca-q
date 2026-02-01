@@ -20,6 +20,8 @@ export interface TreeFileSystemItemPersistent {
   parentId?: string;
   isFolder: boolean;
   cursorPos?: { from: number; to: number };
+  name?: string;
+  parameters?: string;
 }
 
 export interface TreeFileSystemItem extends TreeFileSystemItemPersistent {

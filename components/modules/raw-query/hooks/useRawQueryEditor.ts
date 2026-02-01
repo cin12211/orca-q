@@ -207,6 +207,7 @@ export function useRawQueryEditor({
       mergeParameters = merge(mergeParameters, parameters.values || {});
     }
 
+    //TODO: bug with formatStatementSql -> this format incorrect for function
     const fillQueryWithParameters = formatStatementSql(
       currentStatement.text,
       mergeParameters
@@ -328,6 +329,8 @@ export function useRawQueryEditor({
 
     sqlCompartment.of(
       sql({
+        //TODO: bug if use PostgreSQL -> can higlight function name
+        // and if use -> parse incorrect for function
         dialect: SQLDialect.define({
           ...PostgreSQL.spec,
           doubleDollarQuotedStrings: false,

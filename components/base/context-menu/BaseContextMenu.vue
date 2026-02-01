@@ -5,7 +5,7 @@ defineProps<{
   contextMenuItems: ContextMenuItem[];
 }>();
 
-defineEmits<{
+const emits = defineEmits<{
   (e: 'onClearContextMenu'): void;
 }>();
 
@@ -16,10 +16,16 @@ const paserCondition = (condition?: boolean | undefined) => {
 
   return !!condition;
 };
+
+const onMenuContextOpenChange = (open: boolean) => {
+  if (!open) {
+    emits('onClearContextMenu');
+  }
+};
 </script>
 
 <template>
-  <ContextMenu @update:open="isOpen => !isOpen && $emit('onClearContextMenu')">
+  <ContextMenu @update:open="onMenuContextOpenChange">
     <ContextMenuTrigger as-child>
       <slot />
     </ContextMenuTrigger>
@@ -42,6 +48,7 @@ const paserCondition = (condition?: boolean | undefined) => {
             paserCondition(item.condition)
           "
           @select="item.select"
+          :disabled="item.disabled"
         >
           <Icon
             v-if="item.icon"
