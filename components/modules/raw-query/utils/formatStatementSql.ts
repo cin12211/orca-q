@@ -12,7 +12,7 @@ export const formatStatementSql = (
       functionCase: 'upper',
       newlineBeforeSemicolon: true,
       paramTypes: {
-        named: [':', '$'],
+        named: [':'],
       },
       params: params,
     });
