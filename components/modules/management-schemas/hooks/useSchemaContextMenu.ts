@@ -12,6 +12,7 @@ import type {
   ColumnShortMetadata,
   TableDetailMetadata,
 } from '~/server/api/get-schema-meta-data';
+import { useManagementConnectionStore } from '~/shared/stores';
 import { useAppLayoutStore } from '~/shared/stores/appLayoutStore';
 import type { Schema } from '~/shared/stores/useSchemaStore';
 import { TabViewType } from '~/shared/stores/useTabViewsStore';
@@ -28,7 +29,6 @@ import {
 
 export interface SchemaContextMenuOptions {
   schemaName: Ref<string>;
-  connectionString: string;
   activeSchema: Ref<Schema | undefined>;
   onRefreshSchema: () => Promise<void>;
 }
@@ -41,6 +41,12 @@ export enum ExportTableDataFormat {
 export function useSchemaContextMenu(options: SchemaContextMenuOptions) {
   const appLayoutStore = useAppLayoutStore();
   const safeModeEnabled = toRef(appLayoutStore, 'quickQuerySafeModeEnabled');
+
+  const connectionStore = useManagementConnectionStore();
+
+  const currentConnectionString = computed(
+    () => connectionStore.selectedConnection?.connectionString
+  );
 
   const selectedItem = ref<FlattenedTreeFileSystemItem['value'] | null>(null);
 
@@ -207,7 +213,7 @@ export function useSchemaContextMenu(options: SchemaContextMenuOptions) {
         await $fetch('/api/delete-function', {
           method: 'POST',
           body: {
-            dbConnectionString: options.connectionString,
+            dbConnectionString: currentConnectionString.value,
             schemaName: getSchemaName(),
             functionName,
           },
@@ -254,7 +260,7 @@ export function useSchemaContextMenu(options: SchemaContextMenuOptions) {
           await $fetch('/api/rename-function', {
             method: 'POST',
             body: {
-              dbConnectionString: options.connectionString,
+              dbConnectionString: currentConnectionString.value,
               schemaName: getSchemaName(),
               oldName: renameDialogValue.value,
               newName,
@@ -283,7 +289,7 @@ export function useSchemaContextMenu(options: SchemaContextMenuOptions) {
           await $fetch('/api/execute', {
             method: 'POST',
             body: {
-              dbConnectionString: options.connectionString,
+              dbConnectionString: currentConnectionString.value,
               query: sql,
             },
           });
@@ -310,7 +316,7 @@ export function useSchemaContextMenu(options: SchemaContextMenuOptions) {
         {
           method: 'POST',
           body: {
-            dbConnectionString: options.connectionString,
+            dbConnectionString: currentConnectionString.value,
             functionId: selectedItem.value.id,
           },
         }
@@ -361,7 +367,7 @@ export function useSchemaContextMenu(options: SchemaContextMenuOptions) {
         {
           method: 'POST',
           body: {
-            dbConnectionString: options.connectionString,
+            dbConnectionString: currentConnectionString.value,
             functionId: selectedItem.value.id,
           },
         }
@@ -414,7 +420,7 @@ export function useSchemaContextMenu(options: SchemaContextMenuOptions) {
       const def = await $fetch('/api/get-one-function', {
         method: 'POST',
         body: {
-          dbConnectionString: options.connectionString,
+          dbConnectionString: currentConnectionString.value,
           functionId: selectedItem.value.id,
         },
       });
@@ -455,7 +461,7 @@ export function useSchemaContextMenu(options: SchemaContextMenuOptions) {
     form.style.display = 'none';
 
     const fields = {
-      dbConnectionString: options.connectionString,
+      dbConnectionString: currentConnectionString.value!,
       schemaName: getSchemaName(),
       tableName,
       format,
@@ -502,7 +508,7 @@ export function useSchemaContextMenu(options: SchemaContextMenuOptions) {
       url: '/api/export-table-data',
       method: 'POST',
       body: {
-        dbConnectionString: options.connectionString,
+        dbConnectionString: currentConnectionString.value,
         schemaName: getSchemaName(),
         tableName,
         format,
@@ -537,7 +543,7 @@ export function useSchemaContextMenu(options: SchemaContextMenuOptions) {
         await $fetch('/api/execute', {
           method: 'POST',
           body: {
-            dbConnectionString: options.connectionString,
+            dbConnectionString: currentConnectionString.value,
             query: sql,
           },
         });
@@ -795,7 +801,7 @@ WHERE ${pkCondition};`;
       const ddl = await $fetch('/api/get-table-ddl', {
         method: 'POST',
         body: {
-          dbConnectionString: options.connectionString,
+          dbConnectionString: currentConnectionString.value,
           schemaName: getSchemaName(),
           tableName: selectedItem.value.name,
         },

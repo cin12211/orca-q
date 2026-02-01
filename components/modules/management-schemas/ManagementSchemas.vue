@@ -22,16 +22,11 @@ import RenameDialog from './dialogs/RenameDialog.vue';
 import SqlPreviewDialog from './dialogs/SqlPreviewDialog.vue';
 import { useSchemaContextMenu } from './hooks/useSchemaContextMenu';
 
-const {
-  schemaStore,
-  connectToConnection,
-  wsStateStore,
-  tabViewStore,
-  connectionStore,
-} = useAppContext();
+const { schemaStore, connectToConnection, wsStateStore, tabViewStore } =
+  useAppContext();
+
 const { activeSchema } = toRefs(schemaStore);
 const { connectionId, schemaId, workspaceId } = toRefs(wsStateStore);
-const { currentConnectionString } = toRefs(connectionStore);
 
 const isRefreshing = ref(false);
 
@@ -173,7 +168,6 @@ const {
   safeModeLoading,
 } = useSchemaContextMenu({
   schemaName,
-  connectionString: currentConnectionString.value || '',
   activeSchema,
   onRefreshSchema,
 });
