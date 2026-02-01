@@ -331,10 +331,11 @@ export function useRawQueryEditor({
       sql({
         //TODO: bug if use PostgreSQL -> can higlight function name
         // and if use -> parse incorrect for function
-        dialect: SQLDialect.define({
-          ...PostgreSQL.spec,
-          doubleDollarQuotedStrings: false,
-        }),
+        // dialect: SQLDialect.define({
+        //   ...PostgreSQL.spec,
+        //   doubleDollarQuotedStrings: false,
+        // }),
+        dialect: PostgreSQL,
         upperCaseKeywords: true,
         keywordCompletion: pgKeywordCompletion,
         // Use enhanced schema with proper SQLNamespace structure
@@ -365,10 +366,11 @@ export function useRawQueryEditor({
     codeEditorRef.value?.editorView.dispatch({
       effects: sqlCompartment.reconfigure(
         sql({
-          dialect: SQLDialect.define({
-            ...PostgreSQL.spec,
-            doubleDollarQuotedStrings: false,
-          }),
+          // dialect: SQLDialect.define({
+          //   ...PostgreSQL.spec,
+          //   doubleDollarQuotedStrings: false,
+          // }),
+          dialect: PostgreSQL,
           upperCaseKeywords: true,
           keywordCompletion: pgKeywordCompletion,
           // Use enhanced schema with proper SQLNamespace structure
