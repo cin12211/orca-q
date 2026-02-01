@@ -7,19 +7,31 @@ import {
   type TreeFileSystemItem,
 } from '~/components/base/Tree';
 import TreeFolder from '~/components/base/Tree/TreeFolder.vue';
+import BaseContextMenu from '~/components/base/context-menu/BaseContextMenu.vue';
+import SafeModeConfirmDialog from '~/components/modules/quick-query/SafeModeConfirmDialog.vue';
 import { useAppContext } from '~/shared/contexts/useAppContext';
 import { useActivityBarStore } from '~/shared/stores';
 import { TabViewType } from '~/shared/stores/useTabViewsStore';
 import { FunctionSchemaEnum } from '~/shared/types';
 import { DEFAULT_DEBOUNCE_INPUT } from '~/utils/constants';
+import { getFormatParameters } from '~/utils/sql-generators';
 import ConnectionSelector from '../selectors/ConnectionSelector.vue';
 import SchemaSelector from '../selectors/SchemaSelector.vue';
 import { SchemaFolderType } from './constants';
+import RenameDialog from './dialogs/RenameDialog.vue';
+import SqlPreviewDialog from './dialogs/SqlPreviewDialog.vue';
+import { useSchemaContextMenu } from './hooks/useSchemaContextMenu';
 
-const { schemaStore, connectToConnection, wsStateStore, tabViewStore } =
-  useAppContext();
+const {
+  schemaStore,
+  connectToConnection,
+  wsStateStore,
+  tabViewStore,
+  connectionStore,
+} = useAppContext();
 const { activeSchema } = toRefs(schemaStore);
 const { connectionId, schemaId, workspaceId } = toRefs(wsStateStore);
+const { currentConnectionString } = toRefs(connectionStore);
 
 const isRefreshing = ref(false);
 
@@ -32,6 +44,13 @@ const items = computed(() => {
 
   const views = activeSchema?.value?.views || [];
 
+  //TODO: split logic to utiles
+  const formatFunctionName = (name: string, parameters: string) => {
+    const formatParameters = getFormatParameters(parameters);
+
+    return `${name}(${formatParameters})`;
+  };
+
   const treeItems: TreeFileSystemItem[] = [
     {
       title: 'Functions',
@@ -41,8 +60,10 @@ const items = computed(() => {
       id: SchemaFolderType.Functions,
       tabViewType: TabViewType.FunctionsOverview,
       children: [
-        ...functions.map(({ name, oId, type }) => ({
-          title: name,
+        ...functions.map(({ name, oId, type, parameters }) => ({
+          title: formatFunctionName(name, parameters),
+          parameters,
+          name: name,
           id: oId,
           icon: 'gravity-ui:function',
           path: `${SchemaFolderType.Functions}/${oId}`,
@@ -66,6 +87,7 @@ const items = computed(() => {
       children: [
         ...tables.map(tableName => ({
           title: tableName,
+          name: tableName,
           id: tableName,
           icon: 'vscode-icons:file-type-sql',
           path: `${SchemaFolderType.Tables}/${tableName}`,
@@ -126,6 +148,35 @@ const onRefreshSchema = async () => {
 
   isRefreshing.value = false;
 };
+
+// Context menu setup
+const schemaName = computed(() => activeSchema.value?.name || 'public');
+
+const {
+  selectedItem,
+  contextMenuItems,
+  safeModeDialogOpen,
+  safeModeDialogSQL,
+  safeModeDialogType,
+  onSafeModeConfirm,
+  onSafeModeCancel,
+  renameDialogType,
+  renameDialogOpen,
+  renameDialogValue,
+
+  onConfirmRename,
+  sqlPreviewDialogOpen,
+  sqlPreviewDialogSQL,
+  sqlPreviewDialogTitle,
+  onRightClickItem,
+  isFetching,
+  safeModeLoading,
+} = useSchemaContextMenu({
+  schemaName,
+  connectionString: currentConnectionString.value || '',
+  activeSchema,
+  onRefreshSchema,
+});
 
 const onHandleOpenTab = async (
   _: MouseEvent,
@@ -191,7 +242,7 @@ const onHandleOpenTab = async (
 </script>
 
 <template>
-  <div class="flex flex-col h-full w-full overflow-y-auto">
+  <div class="flex flex-col h-full w-full overflow-y-auto relative">
     <div class="relative w-full items-center px-2 pt-1 space-y-1">
       <div>
         <p
@@ -257,7 +308,6 @@ const onHandleOpenTab = async (
 
     <!-- TODO: check flow when change connection  -->
     <!-- TODO: check flow when change schema  -->
-
     <div
       v-if="!items.length"
       class="flex flex-col items-center h-full justify-center"
@@ -265,12 +315,47 @@ const onHandleOpenTab = async (
       No data!
     </div>
 
-    <TreeFolder
-      v-model:explorerFiles="items"
-      v-model:expandedState="schemasExpandedState"
-      :isShowArrow="true"
-      :isExpandedByArrow="true"
-      v-on:clickTreeItem="onHandleOpenTab"
+    <!-- Context Menu Wrapper -->
+    <BaseContextMenu
+      :context-menu-items="contextMenuItems"
+      @on-clear-context-menu="selectedItem = null"
+    >
+      <TreeFolder
+        v-model:explorerFiles="items"
+        v-model:expandedState="schemasExpandedState"
+        :isShowArrow="true"
+        :isExpandedByArrow="true"
+        :onRightClickItem="onRightClickItem"
+        v-on:clickTreeItem="onHandleOpenTab"
+      />
+    </BaseContextMenu>
+
+    <!-- Safe Mode Confirm Dialog -->
+    <SafeModeConfirmDialog
+      :loading="safeModeLoading"
+      :open="safeModeDialogOpen"
+      :sql="safeModeDialogSQL"
+      :type="safeModeDialogType"
+      @update:open="safeModeDialogOpen = $event"
+      @confirm="onSafeModeConfirm"
+      @cancel="onSafeModeCancel"
+    />
+
+    <!-- Rename Dialog -->
+    <RenameDialog
+      v-model:open="renameDialogOpen"
+      :tabViewType="renameDialogType"
+      :current-name="renameDialogValue"
+      @confirm="onConfirmRename"
+    />
+
+    <!-- SQL Preview Dialog -->
+    <SqlPreviewDialog
+      :open="sqlPreviewDialogOpen"
+      :sql="sqlPreviewDialogSQL"
+      :title="sqlPreviewDialogTitle"
+      :isLoading="isFetching"
+      @update:open="sqlPreviewDialogOpen = $event"
     />
   </div>
 </template>

@@ -13,6 +13,7 @@ type ContextMenuItemAction = {
   type: ContextMenuItemType.ACTION;
   select?: () => void;
   condition?: boolean;
+  disabled?: boolean;
 };
 
 type ContextMenuItemLabel = {
@@ -39,6 +40,7 @@ type ContextMenuItemSubMenu = {
     | ContextMenuItemSubMenu
   )[];
   condition?: boolean;
+  disabled?: boolean;
 };
 
 type ContextMenuItem =

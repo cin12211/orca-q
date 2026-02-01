@@ -6,6 +6,8 @@ export interface ColumnShortMetadata {
   ordinal_position: number;
   type: string;
   short_type_name: string;
+  is_nullable: boolean;
+  default_value: string | null;
 }
 
 export interface ForeignKeyMetadata {
@@ -34,6 +36,7 @@ export interface FunctionSchema {
   oId: string;
   name: string;
   type: FunctionSchemaEnum;
+  parameters: string;
 }
 
 export interface SchemaMetaData {
@@ -82,13 +85,19 @@ export default defineEventHandler(async (event): Promise<SchemaMetaData[]> => {
             'oId',
             p.oid,
             'type',
-            routine_type
+            routine_type,
+            'parameters',
+            PG_GET_FUNCTION_ARGUMENTS(p.oid),
+            'schema',
+            r.specific_schema
           )
         )
         FROM information_schema.routines r
         JOIN pg_proc p ON p.proname = r.routine_name
+        JOIN pg_namespace n ON n.oid = p.pronamespace
         WHERE r.routine_schema = nsp.nspname
           AND r.specific_schema NOT IN ('pg_catalog', 'information_schema')
+          AND n.nspname = r.specific_schema
       ) AS functions,
       -- table_details
       (
@@ -102,6 +111,8 @@ export default defineEventHandler(async (event): Promise<SchemaMetaData[]> => {
                   'name', a.attname,
                   'ordinal_position', a.attnum,
                   'type', format_type(a.atttypid, a.atttypmod),
+                  'is_nullable', NOT a.attnotnull,
+                  'default_value', pg_get_expr(d.adbin, d.adrelid),
                   'short_type_name',
                   CASE
                     WHEN format_type(a.atttypid, a.atttypmod) LIKE 'character varying%' 
@@ -129,6 +140,7 @@ export default defineEventHandler(async (event): Promise<SchemaMetaData[]> => {
                 )
               )
               FROM pg_attribute a
+              LEFT JOIN pg_attrdef d ON d.adrelid = a.attrelid AND d.adnum = a.attnum
               WHERE a.attrelid = pc.oid
                 AND a.attnum > 0
                 AND NOT a.attisdropped

@@ -10,7 +10,13 @@ export default defineEventHandler(async (event): Promise<string> => {
   });
 
   const result = await resource.query(`
-        SELECT pg_get_functiondef('${body.functionId}'::regproc) as def;`);
+        SELECT
+          p.oid AS function_id,
+          p.proname AS function_name,
+          pg_get_functiondef(p.oid) AS function_definition
+       FROM pg_proc p
+       WHERE p.oid = ${body.functionId};
+`);
 
-  return result?.[0]?.def;
+  return result?.[0]?.function_definition;
 });

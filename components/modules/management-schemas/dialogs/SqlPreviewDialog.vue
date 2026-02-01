@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { LoadingOverlay } from '#components';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -22,35 +21,17 @@ import { useCodeHighlighter } from '~/composables/useSqlHighlighter';
 const props = defineProps<{
   open: boolean;
   sql: string;
-  type: 'save' | 'delete';
-  loading?: boolean;
+  title: string;
+  isLoading: boolean;
 }>();
 
 const emit = defineEmits<{
   (e: 'update:open', value: boolean): void;
-  (e: 'confirm'): void;
-  (e: 'cancel'): void;
 }>();
 
 const { highlightSql } = useCodeHighlighter();
 const { copied, handleCopy, getCopyIcon, getCopyIconClass, getCopyTooltip } =
   useCopyToClipboard();
-
-const title = computed(() => {
-  return props.type === 'save'
-    ? 'Confirm Save Operation'
-    : 'Confirm Delete Operation';
-});
-
-const description = computed(() => {
-  return props.type === 'save'
-    ? 'The following SQL will be executed to save your changes:'
-    : 'The following SQL will be executed to delete the selected rows:';
-});
-
-const actionLabel = computed(() => {
-  return props.type === 'save' ? 'Save' : 'Delete';
-});
 
 // Highlight SQL with Shiki
 const highlightedSql = computed(() => {
@@ -63,13 +44,7 @@ const highlightedSql = computed(() => {
 
 const onCopy = () => handleCopy(props.sql);
 
-const onConfirm = () => {
-  emit('confirm');
-  emit('update:open', false);
-};
-
-const onCancel = () => {
-  emit('cancel');
+const onClose = () => {
   emit('update:open', false);
 };
 </script>
@@ -77,13 +52,15 @@ const onCancel = () => {
 <template>
   <AlertDialog :open="open" @update:open="emit('update:open', $event)">
     <AlertDialogContent class="border w-[55vw]! max-w-[55vw]!">
-      <LoadingOverlay :visible="!!loading" />
+      <!-- DDL Loading Overlay -->
+      <LoadingOverlay :visible="isLoading" />
       <AlertDialogHeader>
         <AlertDialogTitle class="flex items-center text-base font-medium">
+          <Icon name="lucide:code" class="size-4 mr-2" />
           {{ title }}
         </AlertDialogTitle>
         <AlertDialogDescription>
-          {{ description }}
+          Generated SQL statement. Click copy to use.
         </AlertDialogDescription>
       </AlertDialogHeader>
 
@@ -122,18 +99,15 @@ const onCancel = () => {
       </div>
 
       <AlertDialogFooter>
-        <AlertDialogCancel class="border font-normal" @click="onCancel">
-          Cancel
+        <AlertDialogCancel class="border font-normal" @click="onClose">
+          Close
         </AlertDialogCancel>
         <AlertDialogAction
           class="border font-normal flex gap-1"
-          @click="onConfirm"
+          @click="onCopy"
         >
-          <Icon
-            :name="type === 'save' ? 'lucide:save' : 'lucide:trash-2'"
-            class="size-4"
-          />
-          {{ actionLabel }}
+          <Icon :name="getCopyIcon(copied)" class="size-4" />
+          {{ getCopyTooltip(copied, 'Copy to Clipboard') }}
         </AlertDialogAction>
       </AlertDialogFooter>
     </AlertDialogContent>
