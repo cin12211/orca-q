@@ -10,12 +10,17 @@ definePageMeta({
 const { connectionStore, wsStateStore } = useAppContext();
 const { schemaId } = toRefs(wsStateStore);
 
-const { data, status } = useFetch('/api/get-over-view-function', {
-  method: 'POST',
-  body: {
+const body = computed(() => {
+  return {
     dbConnectionString: connectionStore.selectedConnection?.connectionString,
     schema: schemaId.value,
-  },
+  };
+});
+
+const { data, status } = useFetch('/api/get-over-view-function', {
+  method: 'POST',
+  body,
+  watch: [schemaId],
 });
 
 const mappedColumns = computed(() => {

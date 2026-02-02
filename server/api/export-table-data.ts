@@ -8,19 +8,14 @@ import {
 import { Readable } from 'node:stream';
 import { to } from 'pg-copy-streams';
 import QueryStream from 'pg-query-stream';
+import { ExportDataFormatType } from '~/components/modules/management-schemas/hooks/context-menu/types';
 import { getPgPool } from '../utils/db-row-connection';
-
-export enum ExportDataFormat {
-  CSV = 'csv',
-  JSON = 'json',
-  SQL = 'sql',
-}
 
 interface ExportTableDataRequest {
   dbConnectionString: string;
   schemaName: string;
   tableName: string;
-  format: ExportDataFormat;
+  format: ExportDataFormatType;
 }
 
 /**
@@ -56,11 +51,11 @@ export default defineEventHandler(async event => {
     });
   }
 
-  if (!Object.values(ExportDataFormat).includes(format)) {
+  if (!Object.values(ExportDataFormatType).includes(format)) {
     throw createError({
       statusCode: 400,
       message: `Invalid format. Must be one of: ${Object.values(
-        ExportDataFormat
+        ExportDataFormatType
       ).join(', ')}`,
     });
   }
@@ -73,10 +68,10 @@ export default defineEventHandler(async event => {
     type: 'postgres',
   });
 
-  const contentTypes: Record<ExportDataFormat, string> = {
-    [ExportDataFormat.SQL]: 'application/sql',
-    [ExportDataFormat.JSON]: 'application/json',
-    [ExportDataFormat.CSV]: 'text/csv',
+  const contentTypes: Record<ExportDataFormatType, string> = {
+    [ExportDataFormatType.SQL]: 'application/sql',
+    [ExportDataFormatType.JSON]: 'application/json',
+    [ExportDataFormatType.CSV]: 'text/csv',
   };
 
   const timestamp = dayjs().format('YYYY-MM-DD_HH-mm');
@@ -115,7 +110,7 @@ export default defineEventHandler(async event => {
   // ------------------------
   // Streaming
   // ------------------------
-  if (format === ExportDataFormat.CSV) {
+  if (format === ExportDataFormatType.CSV) {
     const client = await pool.connect();
     try {
       const sql = `COPY "${schemaName}"."${tableName}" TO STDOUT WITH (FORMAT CSV, HEADER)`;
@@ -141,25 +136,25 @@ export default defineEventHandler(async event => {
   // Format handlers
   // ------------------------
   const formatHandlers: Record<
-    ExportDataFormat,
+    ExportDataFormatType,
     {
       header?: () => string;
       row: (row: Record<string, unknown>, isFirst: boolean) => string;
       footer?: (totalRows: number) => string;
     }
   > = {
-    [ExportDataFormat.JSON]: {
+    [ExportDataFormatType.JSON]: {
       header: () => '[\n',
       row: (row, isFirst) => (isFirst ? '' : ',\n') + JSON.stringify(row),
       footer: () => '\n]',
     },
 
-    [ExportDataFormat.CSV]: {
+    [ExportDataFormatType.CSV]: {
       header: () => columns.map(escapeCSVValue).join(',') + '\n',
       row: row => generateCSVRow(columns, row),
     },
 
-    [ExportDataFormat.SQL]: {
+    [ExportDataFormatType.SQL]: {
       // SQL uses batch processing, these are not used directly
       row: () => '',
     },
@@ -170,7 +165,7 @@ export default defineEventHandler(async event => {
   const stream = new Readable({ read() {} });
 
   // SQL format uses batch processing for efficiency
-  if (format === ExportDataFormat.SQL) {
+  if (format === ExportDataFormatType.SQL) {
     (async () => {
       const client = await pool.connect();
 

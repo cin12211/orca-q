@@ -12,7 +12,7 @@ import SafeModeConfirmDialog from '~/components/modules/quick-query/SafeModeConf
 import { useAppContext } from '~/shared/contexts/useAppContext';
 import { useActivityBarStore } from '~/shared/stores';
 import { TabViewType } from '~/shared/stores/useTabViewsStore';
-import { FunctionSchemaEnum } from '~/shared/types';
+import { FunctionSchemaEnum, ViewSchemaEnum } from '~/shared/types';
 import { DEFAULT_DEBOUNCE_INPUT } from '~/utils/constants';
 import { getFormatParameters } from '~/utils/sql-generators';
 import ConnectionSelector from '../selectors/ConnectionSelector.vue';
@@ -84,7 +84,8 @@ const items = computed(() => {
           title: tableName,
           name: tableName,
           id: tableName,
-          icon: 'vscode-icons:file-type-sql',
+          icon: 'hugeicons:grid-table',
+          iconClass: 'text-yellow-400',
           path: `${SchemaFolderType.Tables}/${tableName}`,
           tabViewType: TabViewType.TableDetail,
           isFolder: false,
@@ -95,16 +96,21 @@ const items = computed(() => {
     {
       title: 'Views',
       id: SchemaFolderType.Views,
-      icon: 'material-icon-theme:folder-database-open',
-      closeIcon: 'material-icon-theme:folder-database',
+      icon: 'material-icon-theme:folder-enum-open',
+      closeIcon: 'material-icon-theme:folder-enum',
       path: SchemaFolderType.Views,
       tabViewType: TabViewType.ViewOverview,
       children: [
-        ...views.map(viewName => ({
-          title: viewName,
-          id: viewName,
-          icon: 'vscode-icons:file-type-sql',
-          path: `${SchemaFolderType.Views}/${viewName}`,
+        ...views.map(({ name, oid, type }) => ({
+          title: name,
+          id: oid,
+          icon:
+            type === ViewSchemaEnum.View
+              ? 'hugeicons:property-view'
+              : 'hugeicons:property-new',
+          iconClass:
+            type === ViewSchemaEnum.View ? 'text-green-700' : 'text-orange-500',
+          path: `${SchemaFolderType.Views}/${name}`,
           tabViewType: TabViewType.ViewDetail,
           isFolder: false,
         })),
@@ -181,6 +187,10 @@ const onHandleOpenTab = async (
   let routeName: RouteNameFromPath<RoutePathSchema> | null = null;
   let routeParams;
 
+  if (!schemaId.value) {
+    return;
+  }
+
   if (tabViewType === TabViewType.FunctionsOverview) {
     routeName =
       'workspaceId-connectionId-quick-query-function-over-view' as unknown as any;
@@ -189,6 +199,11 @@ const onHandleOpenTab = async (
   if (tabViewType === TabViewType.TableOverview) {
     routeName =
       'workspaceId-connectionId-quick-query-table-over-view' as unknown as any;
+  }
+
+  if (tabViewType === TabViewType.ViewOverview) {
+    routeName =
+      'workspaceId-connectionId-quick-query-view-over-view' as unknown as any;
   }
 
   if (tabViewType === TabViewType.FunctionsDetail) {
@@ -201,24 +216,28 @@ const onHandleOpenTab = async (
     };
   }
 
-  if (!schemaId.value) {
-    return;
-  }
-
   const tabId = `${item.value.title}-${schemaId.value}`;
 
   //TODO: refactor route to tabId
-  if (tabViewType === TabViewType.TableDetail) {
-    routeName = 'workspaceId-connectionId-quick-query-tabViewId';
+  if (
+    tabViewType === TabViewType.TableDetail ||
+    tabViewType === TabViewType.ViewDetail
+  ) {
+    routeName =
+      'workspaceId-connectionId-quick-query-tabViewId' as unknown as any;
 
     routeParams = {
       tabViewId: tabId,
     };
   }
 
+  const virtualTableId =
+    tabViewType === TabViewType.ViewDetail ? item.value.id : undefined;
+
   if (routeName) {
     await tabViewStore.openTab({
       icon: item.value.icon,
+      iconClass: item.value.iconClass!,
       id: tabId,
       name: item.value.title,
       type: (item.value as any).tabViewType,
@@ -228,6 +247,7 @@ const onHandleOpenTab = async (
       schemaId: schemaId.value || '',
       workspaceId: workspaceId.value || '',
       tableName: item.value.title,
+      virtualTableId: virtualTableId,
     });
 
     await tabViewStore.selectTab(tabId);

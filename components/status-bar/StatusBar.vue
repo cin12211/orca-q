@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import { useAppContext } from '~/shared/contexts/useAppContext';
 import { useChangelogModal } from '~/shared/contexts/useChangelogModal';
-import ConnectionMetricMonitor from './ConnectionMetricMonitor.vue';
+import { TabViewType } from '~/shared/stores';
 import CurrentPositionPath from './CurrentPositionPath.vue';
+
+// import ConnectionMetricMonitor from './ConnectionMetricMonitor.vue';
 
 const { tabViewStore } = useAppContext();
 const { openChangelog } = useChangelogModal();
@@ -16,6 +18,35 @@ const onBackToHome = async () => {
   //   wsId: undefined,
   // });
 };
+
+const formattedTabType = computed(() => {
+  const type = activeTab.value?.type;
+  if (!type) return '';
+
+  switch (type) {
+    case TabViewType.AllERD:
+    case TabViewType.DetailERD:
+      return 'erd';
+
+    case TabViewType.TableOverview:
+    case TabViewType.TableDetail:
+      return 'table';
+
+    case TabViewType.FunctionsOverview:
+    case TabViewType.FunctionsDetail:
+      return 'func';
+
+    case TabViewType.ViewOverview:
+    case TabViewType.ViewDetail:
+      return 'view';
+
+    case TabViewType.CodeQuery:
+      return 'raw query';
+
+    default:
+      return '';
+  }
+});
 </script>
 <template>
   <div
@@ -33,9 +64,12 @@ const onBackToHome = async () => {
       <CurrentPositionPath />
     </div>
 
-    <div class="text-muted-foreground text-xs">
-      Table :
-      <p class="text-black/80 inline">{{ activeTab?.name }}</p>
+    <div class="text-muted-foreground text-xs" v-if="activeTab">
+      {{ formattedTabType }}:
+      <p class="text-black/80 inline">
+        {{ activeTab?.schemaId ? `${activeTab?.schemaId}.` : ''
+        }}{{ activeTab?.name }}
+      </p>
     </div>
 
     <div class="flex items-center gap-3">

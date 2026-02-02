@@ -19,6 +19,7 @@ const props = defineProps<{
   totalSelectedRows: number;
   hasEditedRows: boolean;
   tabView: QuickQueryTabView;
+  isViewVirtualTable?: boolean;
 }>();
 
 const emit = defineEmits<{
@@ -94,7 +95,7 @@ const isDataView = computed(() => {
         variant="outline"
         size="sm"
         class="h-6 px-1 gap-1"
-        v-if="hasEditedRows"
+        v-if="hasEditedRows && !isViewVirtualTable"
         @click="emit('onSaveData')"
       >
         <Icon name="lucide:save"> </Icon>
@@ -106,7 +107,7 @@ const isDataView = computed(() => {
         variant="outline"
         size="sm"
         class="h-6 px-1 gap-1 mr-1"
-        v-if="totalSelectedRows"
+        v-if="totalSelectedRows && !isViewVirtualTable"
         @click="emit('onDeleteRows')"
       >
         <Icon name="lucide:trash"> </Icon>
@@ -181,6 +182,7 @@ const isDataView = computed(() => {
           <TabsTrigger
             :value="QuickQueryTabView.Erd"
             class="h-5! px-1 font-medium text-xs cursor-pointer text-primary/80"
+            :disabled="isViewVirtualTable"
           >
             ERD
           </TabsTrigger>

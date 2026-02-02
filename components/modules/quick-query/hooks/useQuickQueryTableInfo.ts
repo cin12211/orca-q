@@ -1,16 +1,18 @@
-import { toast } from 'vue-sonner';
 import { useAppContext } from '~/shared/contexts/useAppContext';
+import { TabViewType } from '~/shared/stores';
 
 export const useQuickQueryTableInfo = ({
   tableName,
   schemaName,
   connectionId,
+  tabViewType,
 }: {
   tableName: string;
   schemaName: string;
   connectionId: string;
+  tabViewType?: TabViewType | null;
 }) => {
-  const { connectionStore, schemaStore } = useAppContext();
+  const { schemaStore } = useAppContext();
 
   const { schemas } = toRefs(schemaStore);
 
@@ -20,26 +22,31 @@ export const useQuickQueryTableInfo = ({
     );
   });
 
-  // const { data: tableSchema, status: tableSchemaStatus } = useFetch(
-  //   '/api/get-one-table',
-  //   {
-  //     method: 'POST',
-  //     body: {
-  //       tableName: tableName,
-  //       dbConnectionString:
-  //         connectionStore.selectedConnection?.connectionString,
-  //       schema: schemaName,
-  //     },
-  //     key: `schema-${tableName}-${schemaName}`,
-  //     onResponseError({ response }) {
-  //       toast(response?.statusText);
-  //     },
-  //   }
-  // );
-
+  // Check tableDetails first, then viewDetails for views
   const tableMetaData = computed(() => {
-    const table = activeSchema.value?.tableDetails?.[tableName]!;
-    return table;
+    switch (tabViewType) {
+      case TabViewType.TableDetail:
+        return activeSchema.value?.tableDetails?.[tableName];
+      case TabViewType.ViewDetail: {
+        const view = activeSchema.value?.viewDetails?.[tableName];
+        // ViewDetailMetadata has columns but no foreign_keys/primary_keys
+        return {
+          columns: view?.columns,
+          foreign_keys: [],
+          primary_keys: [],
+          table_id: view?.view_id,
+        };
+        // return activeSchema.value?.viewDetails?.[tableName];
+      }
+
+      default:
+        return null;
+    }
+  });
+
+  // Check if this is a view (no mutations allowed)
+  const isVirtualTable = computed(() => {
+    return tabViewType === TabViewType.ViewDetail;
   });
 
   const columnNames = computed(() => {
@@ -65,18 +72,13 @@ export const useQuickQueryTableInfo = ({
     );
   });
 
-  const isLoadingTableSchema = computed(() => {
-    return false;
-    // return tableSchemaStatus.value === 'pending';
-  });
-
   return {
     primaryKeyColumns,
     foreignKeys,
     columnNames,
-    isLoadingTableSchema,
     tableMetaData,
     columnTypes,
     foreignKeyColumns,
+    isVirtualTable,
   };
 };

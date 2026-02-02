@@ -35,12 +35,12 @@ const appLayoutStore = useAppLayoutStore();
 const { tabViewStore } = useAppContext();
 const { tabViews } = toRefs(tabViewStore);
 
-const tableName = computed(
-  () => tabViews.value.find(t => t.id === props.tabViewId)?.tableName || ''
+const tabInfo = computed(() =>
+  tabViews.value.find(t => t.id === props.tabViewId)
 );
-const schemaName = computed(
-  () => tabViews.value.find(t => t.id === props.tabViewId)?.schemaId || ''
-);
+
+const tableName = computed(() => tabInfo.value?.tableName || '');
+const schemaName = computed(() => tabInfo.value?.schemaId || '');
 
 const previewRelationBreadcrumbs = ref<PreviewRelationBreadcrumb[]>([]);
 
@@ -92,14 +92,15 @@ const {
   columnNames,
   foreignKeys,
   primaryKeyColumns,
-  isLoadingTableSchema,
   tableMetaData,
   columnTypes,
   foreignKeyColumns,
+  isVirtualTable,
 } = useQuickQueryTableInfo({
   tableName: tableName.value,
   schemaName: schemaName.value,
   connectionId: connectionId.value,
+  tabViewType: tabInfo.value?.type,
 });
 
 const {
@@ -138,7 +139,7 @@ const {
 watch(
   tableMetaData,
   newSchema => {
-    if (newSchema?.columns?.length > 0) {
+    if (newSchema?.columns && newSchema.columns.length > 0) {
       refreshCount();
       refreshTableData();
     }
@@ -281,6 +282,8 @@ const isSkipShortcut = computed(
   () => previewRelationBreadcrumbs.value.length > 0
 );
 
+const isViewOnly = computed(() => isVirtualTable.value);
+
 useHotkeys(
   [
     {
@@ -318,7 +321,7 @@ useHotkeys(
     {
       key: 'meta+s',
       callback: () => {
-        if (isSkipShortcut.value) {
+        if (isSkipShortcut.value || isViewOnly.value) {
           return;
         }
         onSaveData();
@@ -328,7 +331,7 @@ useHotkeys(
     {
       key: 'meta+alt+backspace',
       callback: () => {
-        if (isSkipShortcut.value) {
+        if (isSkipShortcut.value || isViewOnly.value) {
           return;
         }
         onDeleteRows();
@@ -451,9 +454,7 @@ const onBackPreviousBreadcrumbByIndex = (index: number) => {
     class="flex flex-col h-full w-full relative"
     tabindex="0"
   >
-    <LoadingOverlay
-      :visible="isLoadingTableSchema || isMutating || isFetchingTableData"
-    />
+    <LoadingOverlay :visible="isMutating || isFetchingTableData" />
 
     <div class="px-1">
       <QuickQueryControlBar
@@ -465,6 +466,7 @@ const onBackPreviousBreadcrumbByIndex = (index: number) => {
         :currentTotalRows="data?.length || 0"
         :offset="pagination.offset"
         :has-edited-rows="hasEditedRows"
+        :isViewVirtualTable="isVirtualTable"
         @onPaginate="onUpdatePagination"
         @onNextPage="onNextPage"
         @onPreviousPage="onPreviousPage"
@@ -519,9 +521,11 @@ const onBackPreviousBreadcrumbByIndex = (index: number) => {
         class="h-full"
       >
         <StructureTable
+          :isVirtualTable="isVirtualTable"
           :schema="schemaName"
           :tableName="tableName"
           :connectionString="connectionString"
+          :virtualTableId="tabInfo?.virtualTableId as string"
         />
       </div>
 
@@ -568,6 +572,7 @@ const onBackPreviousBreadcrumbByIndex = (index: number) => {
           :selectedColumnFieldId="selectedColumnFieldId"
           :current-schema-name="schemaName"
           :current-table-name="tableName"
+          :isViewOnly="isViewOnly"
         />
       </QuickQueryContextMenu>
     </div>

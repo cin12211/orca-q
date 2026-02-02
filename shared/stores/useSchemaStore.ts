@@ -1,11 +1,12 @@
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
-import { key } from 'localforage';
 import type { ReservedTableSchemas } from '~/server/api/get-reverse-table-schemas';
 import type {
   FunctionSchema,
   TableDetailMetadata,
   TableDetails,
+  ViewSchema,
+  ViewDetails,
 } from '~/server/api/get-schema-meta-data';
 import { useWSStateStore } from './useWSStateStore';
 
@@ -16,12 +17,14 @@ export interface Schema {
   name: string;
   tableDetails?: TableDetails | null;
   tables: string[];
-  views: string[];
+  views: ViewSchema[];
+  viewDetails?: ViewDetails | null;
   functions: FunctionSchema[];
 }
 
 export const PUBLIC_SCHEMA_ID = 'public';
 
+// TODO: refactor
 export const useSchemaStore = defineStore(
   'schema-store',
   () => {

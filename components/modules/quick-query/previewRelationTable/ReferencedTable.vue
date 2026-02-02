@@ -67,7 +67,6 @@ const {
   columnNames,
   foreignKeys,
   primaryKeyColumns,
-  isLoadingTableSchema,
   tableMetaData,
   columnTypes,
   foreignKeyColumns,
@@ -246,9 +245,7 @@ useHotkeys(
     class="flex flex-col h-full w-full relative"
     tabindex="0"
   >
-    <LoadingOverlay
-      :visible="isLoadingTableSchema || isMutating || isFetchingTableData"
-    />
+    <LoadingOverlay :visible="isMutating || isFetchingTableData" />
 
     <div class="px-2">
       <QuickQueryControlBar
