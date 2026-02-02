@@ -25,6 +25,17 @@ export const useActivityBarStore = defineStore(
     const explorerExpandedState = ref<string[]>([]);
     const explorerCurrentScrollTop = ref(0);
 
+    const erdExpandedState = ref<string[]>([]);
+    const erdCurrentScrollTop = ref(0);
+
+    const onCollapsedSchemaTree = () => {
+      schemasExpandedState.value = [];
+    };
+
+    const onCollapsedErdTree = () => {
+      erdExpandedState.value = [];
+    };
+
     return {
       activityActive,
       setActivityActive,
@@ -32,6 +43,10 @@ export const useActivityBarStore = defineStore(
       schemaCurrentScrollTop,
       explorerExpandedState,
       explorerCurrentScrollTop,
+      onCollapsedSchemaTree,
+      onCollapsedErdTree,
+      erdExpandedState,
+      erdCurrentScrollTop,
     };
   },
   {

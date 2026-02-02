@@ -64,7 +64,7 @@ const items = computed(() => {
 });
 
 const activityBarStore = useActivityBarStore();
-const { schemasExpandedState } = toRefs(activityBarStore);
+const { erdExpandedState, onCollapsedErdTree } = toRefs(activityBarStore);
 
 const onRefreshSchema = async () => {
   if (!connectionId.value) {
@@ -146,15 +146,32 @@ const onNavigateToOverviewErdDiagram = async () => {
       </p>
 
       <div class="flex items-center">
-        <Button size="iconSm" variant="ghost" @click="onRefreshSchema">
-          <Icon
-            name="lucide:refresh-ccw"
-            :class="[
-              'size-4! min-w-4 text-muted-foreground',
-              isRefreshing && 'animate-spin',
-            ]"
-          />
-        </Button>
+        <Tooltip>
+          <TooltipTrigger as-child>
+            <Button size="iconSm" variant="ghost" @click="onCollapsedErdTree">
+              <Icon
+                name="lucide:copy-minus"
+                class="size-4! min-w-4 text-muted-foreground"
+              />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent> Collapse All </TooltipContent>
+        </Tooltip>
+
+        <Tooltip>
+          <TooltipTrigger as-child>
+            <Button size="iconSm" variant="ghost" @click="onRefreshSchema">
+              <Icon
+                name="lucide:refresh-ccw"
+                :class="[
+                  'size-4! min-w-4 text-muted-foreground',
+                  isRefreshing && 'animate-spin',
+                ]"
+              />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent> Refresh Schema </TooltipContent>
+        </Tooltip>
       </div>
     </div>
 
@@ -189,7 +206,7 @@ const onNavigateToOverviewErdDiagram = async () => {
 
     <TreeFolder
       v-model:explorerFiles="items"
-      v-model:expandedState="schemasExpandedState"
+      v-model:expandedState="erdExpandedState"
       :isShowArrow="true"
       :isExpandedByArrow="true"
       v-on:clickTreeItem="

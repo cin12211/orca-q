@@ -131,7 +131,7 @@ const items = computed(() => {
 });
 
 const activityBarStore = useActivityBarStore();
-const { schemasExpandedState, schemaCurrentScrollTop } =
+const { schemasExpandedState, onCollapsedSchemaTree } =
   toRefs(activityBarStore);
 
 const onRefreshSchema = async () => {
@@ -283,6 +283,22 @@ const onHandleOpenTab = async (
       </p>
 
       <div class="flex items-center">
+        <Tooltip>
+          <TooltipTrigger as-child>
+            <Button
+              size="iconSm"
+              variant="ghost"
+              @click="onCollapsedSchemaTree"
+            >
+              <Icon
+                name="lucide:copy-minus"
+                class="size-4! min-w-4 text-muted-foreground"
+              />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent> Collapse All </TooltipContent>
+        </Tooltip>
+
         <Tooltip>
           <TooltipTrigger as-child>
             <Button size="iconSm" variant="ghost" @click="onRefreshSchema">

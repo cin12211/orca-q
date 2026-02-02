@@ -53,13 +53,18 @@ const formattedTabType = computed(() => {
     class="w-full h-6 min-h-6 shadow px-2 flex items-center justify-between bg-sidebar"
   >
     <div class="flex items-center gap-3 h-full">
-      <div
-        class="flex items-center h-full gap-0.5 hover:bg-muted px-1 rounded cursor-pointer"
-        @click="onBackToHome"
-      >
-        <Icon name="hugeicons:home-06" class="size-4!" />
-        <p class="text-xs inline">Home</p>
-      </div>
+      <Tooltip>
+        <TooltipTrigger as-child>
+          <div
+            class="flex items-center h-full gap-0.5 hover:bg-muted px-1 rounded cursor-pointer"
+            @click="onBackToHome"
+          >
+            <Icon name="hugeicons:home-06" class="size-4!" />
+            <p class="text-xs inline">Home</p>
+          </div>
+        </TooltipTrigger>
+        <TooltipContent> Back to Home </TooltipContent>
+      </Tooltip>
 
       <CurrentPositionPath />
     </div>
@@ -73,13 +78,17 @@ const formattedTabType = computed(() => {
     </div>
 
     <div class="flex items-center gap-3">
-      <div
-        class="flex items-center justify-center hover:bg-muted rounded cursor-pointer"
-        @click="openChangelog"
-        title="What's New"
-      >
-        <Icon name="hugeicons:notification-01" class="size-4!" />
-      </div>
+      <Tooltip>
+        <TooltipTrigger as-child>
+          <div
+            class="flex items-center justify-center hover:bg-muted rounded cursor-pointer"
+            @click="openChangelog"
+          >
+            <Icon name="hugeicons:notification-01" class="size-4!" />
+          </div>
+        </TooltipTrigger>
+        <TooltipContent> What's New </TooltipContent>
+      </Tooltip>
       <!-- <ConnectionMetricMonitor /> -->
     </div>
   </div>
