@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { LoadingOverlay } from '#components';
 import { useTableQueryBuilder } from '~/composables/useTableQueryBuilder';
+import { TabViewType } from '~/shared/stores';
 import {
   ComposeOperator,
   DEFAULT_QUERY_SIZE,
@@ -74,6 +75,7 @@ const {
   tableName: props.tableName,
   schemaName: props.schemaName,
   connectionId: connectionId.value,
+  tabViewType: TabViewType.TableDetail,
 });
 
 const {
