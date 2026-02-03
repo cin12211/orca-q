@@ -1,6 +1,13 @@
 <script setup lang="ts">
 import { ref } from 'vue';
-import { Button, ContextMenuShortcut, Icon } from '#components';
+import {
+  Button,
+  ContextMenuShortcut,
+  Icon,
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '#components';
 
 const emit = defineEmits<{
   (e: 'onRefresh'): void;
@@ -30,21 +37,27 @@ useHotkeys(
 </script>
 
 <template>
-  <Button
-    variant="outline"
-    size="sm"
-    class="h-6 px-1 gap-1"
-    @click="handleRefreshClick"
-    aria-label="Refresh table"
-  >
-    <Icon
-      name="hugeicons:refresh"
-      :style="{ transform: `rotate(${rotation}deg)` }"
-      class="icon-transition"
-    />
+  <Tooltip>
+    <TooltipTrigger as-child>
+      <Button
+        variant="outline"
+        size="xxs"
+        @click="handleRefreshClick"
+        aria-label="Refresh table"
+      >
+        <Icon
+          name="hugeicons:refresh"
+          :style="{ transform: `rotate(${rotation}deg)` }"
+          class="icon-transition"
+        />
 
-    <ContextMenuShortcut>⌘R</ContextMenuShortcut>
-  </Button>
+        <ContextMenuShortcut>⌘R</ContextMenuShortcut>
+      </Button>
+    </TooltipTrigger>
+    <TooltipContent>
+      <p>Refresh data</p>
+    </TooltipContent>
+  </Tooltip>
 </template>
 
 <style scoped>

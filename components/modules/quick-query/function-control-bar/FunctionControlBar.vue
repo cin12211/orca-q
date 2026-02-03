@@ -20,8 +20,7 @@ const emit = defineEmits<{
           <div>
             <Button
               variant="outline"
-              size="sm"
-              class="h-6 px-1 gap-1"
+              size="xxs"
               :disabled="!hasChanges || isSaving"
               @click="emit('onSave')"
             >
@@ -48,8 +47,7 @@ const emit = defineEmits<{
           <div>
             <Button
               variant="outline"
-              size="sm"
-              class="h-6 px-1 gap-1 text-xs font-medium"
+              size="xxs"
               :disabled="isSaving"
               @click="emit('onDiscard')"
             >

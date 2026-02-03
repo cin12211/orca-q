@@ -99,10 +99,8 @@ defineExpose({
     </div>
 
     <div class="flex justify-end gap-1 p-2">
-      <Button @click="onCancel" variant="outline" class="h-6 px-2 font-medium">
-        Cancel
-      </Button>
-      <Button @click="onConfirm" class="h-6 font-medium px-2">
+      <Button @click="onCancel" variant="outline" size="xs"> Cancel </Button>
+      <Button @click="onConfirm" size="xs">
         <Icon name="lucide:check"> </Icon>
         Oke
       </Button>
