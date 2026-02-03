@@ -19,6 +19,7 @@ const props = defineProps<{
   totalSelectedRows: number;
   hasEditedRows: boolean;
   tabView: QuickQueryTabView;
+  isViewVirtualTable?: boolean;
 }>();
 
 const emit = defineEmits<{
@@ -48,16 +49,18 @@ const isDataView = computed(() => {
   >
     <!-- TODO: review to sort button position for each function-->
     <div class="flex items-center gap-1" v-auto-animate v-if="isDataView">
-      <Button
-        variant="outline"
-        size="sm"
-        class="h-6 px-1 gap-1"
-        @click="emit('onShowFilter')"
-      >
-        <Icon name="lucide:filter"> </Icon>
-        <ContextMenuShortcut>⌘F</ContextMenuShortcut>
-        <!-- Filter -->
-      </Button>
+      <Tooltip>
+        <TooltipTrigger as-child>
+          <Button variant="outline" size="xxs" @click="emit('onShowFilter')">
+            <Icon name="lucide:filter"> </Icon>
+            <ContextMenuShortcut>⌘F</ContextMenuShortcut>
+            <!-- Filter -->
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent>
+          <p>Filter data</p>
+        </TooltipContent>
+      </Tooltip>
 
       <RefreshButton @on-refresh="emit('onRefresh')" />
 
@@ -65,23 +68,29 @@ const isDataView = computed(() => {
       <Button
         v-if="false"
         variant="outline"
-        size="sm"
-        class="h-6 px-1 gap-1 text-xs"
+        size="xxs"
+        class="text-xs"
         @click="emit('onAddEmptyRow')"
       >
         <Icon name="lucide:plus" class="text-sm"> </Icon>
         Row
       </Button>
 
-      <Button
-        variant="outline"
-        size="sm"
-        class="h-6 px-1 gap-1"
-        @click="emit('onToggleHistoryPanel')"
-      >
-        <Icon name="lucide:terminal"> </Icon>
-        <ContextMenuShortcut>⌘j</ContextMenuShortcut>
-      </Button>
+      <Tooltip>
+        <TooltipTrigger as-child>
+          <Button
+            variant="outline"
+            size="xxs"
+            @click="emit('onToggleHistoryPanel')"
+          >
+            <Icon name="lucide:terminal"> </Icon>
+            <ContextMenuShortcut>⌘j</ContextMenuShortcut>
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent>
+          <p>History logs</p>
+        </TooltipContent>
+      </Tooltip>
 
       <p class="font-normal text-xs text-primary/60" v-if="totalSelectedRows">
         Selected
@@ -90,29 +99,31 @@ const isDataView = computed(() => {
         {{ totalSelectedRows }}
       </p>
 
-      <Button
-        variant="outline"
-        size="sm"
-        class="h-6 px-1 gap-1"
-        v-if="hasEditedRows"
-        @click="emit('onSaveData')"
-      >
-        <Icon name="lucide:save"> </Icon>
-        <ContextMenuShortcut>⌘S</ContextMenuShortcut>
-        <!-- Save -->
-      </Button>
+      <Tooltip v-if="hasEditedRows && !isViewVirtualTable">
+        <TooltipTrigger as-child>
+          <Button variant="outline" size="xxs" @click="emit('onSaveData')">
+            <Icon name="lucide:save"> </Icon>
+            <ContextMenuShortcut>⌘S</ContextMenuShortcut>
+            <!-- Save -->
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent>
+          <p>Save changes</p>
+        </TooltipContent>
+      </Tooltip>
 
-      <Button
-        variant="outline"
-        size="sm"
-        class="h-6 px-1 gap-1 mr-1"
-        v-if="totalSelectedRows"
-        @click="emit('onDeleteRows')"
-      >
-        <Icon name="lucide:trash"> </Icon>
-        <ContextMenuShortcut>⌥⌘⌫</ContextMenuShortcut>
-        <!-- Delete -->
-      </Button>
+      <Tooltip v-if="totalSelectedRows && !isViewVirtualTable">
+        <TooltipTrigger as-child>
+          <Button variant="outline" size="xxs" @click="emit('onDeleteRows')">
+            <Icon name="lucide:trash"> </Icon>
+            <ContextMenuShortcut>⌥⌘⌫</ContextMenuShortcut>
+            <!-- Delete -->
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent>
+          <p>Delete selected rows</p>
+        </TooltipContent>
+      </Tooltip>
 
       <!-- TODO: Config export to excel or csv -->
       <!-- <Button variant="outline" size="iconSm" class="h-6">
@@ -122,15 +133,21 @@ const isDataView = computed(() => {
     <div v-else></div>
 
     <div class="flex items-center gap-2" v-if="isDataView">
-      <Button
-        variant="outline"
-        size="iconSm"
-        class="h-6"
-        :disabled="!isAllowPreviousPage"
-        @click="emit('onPreviousPage')"
-      >
-        <Icon name="lucide:chevron-left"> </Icon>
-      </Button>
+      <Tooltip>
+        <TooltipTrigger as-child>
+          <Button
+            variant="outline"
+            size="iconSm"
+            :disabled="!isAllowPreviousPage"
+            @click="emit('onPreviousPage')"
+          >
+            <Icon name="lucide:chevron-left"> </Icon>
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent>
+          <p>Previous page</p>
+        </TooltipContent>
+      </Tooltip>
 
       <div class="font-normal text-sm text-primary/80">
         {{ offset + 1 }}-{{ offset + currentTotalRows }}
@@ -139,15 +156,21 @@ const isDataView = computed(() => {
         <p class="font-normal text-xs text-primary/60 inline">rows</p>
       </div>
 
-      <Button
-        variant="outline"
-        size="iconSm"
-        class="h-6"
-        :disabled="!isAllowNextPage"
-        @click="emit('onNextPage')"
-      >
-        <Icon name="lucide:chevron-right"> </Icon>
-      </Button>
+      <Tooltip>
+        <TooltipTrigger as-child>
+          <Button
+            variant="outline"
+            size="iconSm"
+            :disabled="!isAllowNextPage"
+            @click="emit('onNextPage')"
+          >
+            <Icon name="lucide:chevron-right"> </Icon>
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent>
+          <p>Next page</p>
+        </TooltipContent>
+      </Tooltip>
 
       <QuickPagination
         :limit="limit"
@@ -181,6 +204,7 @@ const isDataView = computed(() => {
           <TabsTrigger
             :value="QuickQueryTabView.Erd"
             class="h-5! px-1 font-medium text-xs cursor-pointer text-primary/80"
+            :disabled="isViewVirtualTable"
           >
             ERD
           </TabsTrigger>
@@ -193,7 +217,6 @@ const isDataView = computed(() => {
           <Button
             variant="ghost"
             size="iconSm"
-            class="h-6 w-6"
             @click="openSettings('Quick Query')"
           >
             <Icon

@@ -49,6 +49,7 @@ const props = defineProps<{
   currentTableName: string;
   currentSchemaName: string;
   selectedRows: RowData[];
+  isViewOnly?: boolean;
 }>();
 
 const emit = defineEmits<{
@@ -317,6 +318,10 @@ const columnDefs = computed<ColDef[]>(() => {
         return (value || '') as string;
       },
       valueSetter: (params: ValueSetterParams) => {
+        if (props.isViewOnly) {
+          return false;
+        }
+
         if (isObjectColumn) {
           try {
             const newValue = JSON.parse(params.newValue);

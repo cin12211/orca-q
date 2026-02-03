@@ -23,26 +23,38 @@
       </div>
 
       <div class="flex items-center gap-1">
-        <Button
-          v-if="tab === HistoryLogTabs.All"
-          variant="outline"
-          size="sm"
-          class="h-6 px-1 gap-1 text-xs"
-          @click="qqLogStore.deleteAllLogs"
-        >
-          <Icon name="lucide:trash" />
-          <p class="font-normal">Delete all logs</p>
-        </Button>
-        <Button
-          v-else
-          variant="outline"
-          size="sm"
-          class="h-6 px-1 gap-1 text-xs"
-          @click="qqLogStore.deleteLogsOfTable(props)"
-        >
-          <Icon name="lucide:trash" />
-          <p class="font-normal">Delete logs</p>
-        </Button>
+        <Tooltip v-if="tab === HistoryLogTabs.All">
+          <TooltipTrigger as-child>
+            <Button
+              variant="outline"
+              size="xxs"
+              class="text-xs"
+              @click="qqLogStore.deleteAllLogs"
+            >
+              <Icon name="lucide:trash" />
+              <p class="font-normal">Delete all logs</p>
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>Delete all logs</p>
+          </TooltipContent>
+        </Tooltip>
+        <Tooltip v-else>
+          <TooltipTrigger as-child>
+            <Button
+              variant="outline"
+              size="xxs"
+              class="text-xs"
+              @click="qqLogStore.deleteLogsOfTable(props)"
+            >
+              <Icon name="lucide:trash" />
+              <p class="font-normal">Delete logs</p>
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>Delete logs for this table</p>
+          </TooltipContent>
+        </Tooltip>
 
         <!-- TODO: open when to this feature -->
         <!-- <Button  variant="outline" size="sm" class="h-6 px-1 gap-1 text-xs">
@@ -121,6 +133,7 @@
 <script setup lang="ts">
 import { useElementSize } from '@vueuse/core';
 import { computed, ref, useTemplateRef } from 'vue';
+import { Tooltip, TooltipContent, TooltipTrigger } from '#components';
 import plsql from '@shikijs/langs/plsql';
 import catppuccinLatte from '@shikijs/themes/catppuccin-latte';
 import { useVirtualizer } from '@tanstack/vue-virtual';

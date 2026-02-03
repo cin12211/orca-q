@@ -1,11 +1,14 @@
 <script setup lang="ts">
 import { DynamicTable } from '#components';
 import type { MappedRawColumn } from '../../raw-query/interfaces';
+import VirtualTableDefinition from './VirtualTableDefinition.vue';
 
 const props = defineProps<{
   schema: string;
   tableName: string;
   connectionString: string;
+  isVirtualTable?: boolean;
+  virtualTableId?: string;
 }>();
 
 const { data, status } = useFetch('/api/get-table-structure', {
@@ -42,6 +45,14 @@ const mappedColumns = computed(() => {
 
 <template>
   <LoadingOverlay :visible="status === 'pending'" />
+
+  <VirtualTableDefinition
+    v-if="isVirtualTable && virtualTableId"
+    :connectionString="connectionString"
+    :schema="schema"
+    :viewName="tableName"
+    :viewId="virtualTableId!"
+  />
 
   <DynamicTable
     :columns="mappedColumns"

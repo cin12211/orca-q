@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Icon } from '#components';
+import { Icon, Tooltip, TooltipContent, TooltipTrigger } from '#components';
 import { toTypedSchema } from '@vee-validate/zod';
 import debounce from 'lodash-es/debounce';
 import { useFieldArray, useForm } from 'vee-validate';
@@ -310,29 +310,44 @@ defineExpose({
         ref="filterSearchRefs"
       />
 
-      <Button
-        class="h-6 px-1.5"
-        variant="outline"
-        @click="onApplyFilter(index)"
-      >
-        Apply
-      </Button>
-      <Button
-        size="iconSm"
-        class="size-5!"
-        variant="outline"
-        @click="onRemoveFilter(index)"
-      >
-        <Icon name="hugeicons:minus-sign" />
-      </Button>
-      <Button
-        size="iconSm"
-        class="size-5!"
-        variant="outline"
-        @click="() => onAddFilter(index)"
-      >
-        <Icon name="hugeicons:plus-sign" />
-      </Button>
+      <Tooltip>
+        <TooltipTrigger as-child>
+          <Button size="xs" variant="outline" @click="onApplyFilter(index)">
+            Apply
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent>
+          <p>Apply this filter</p>
+        </TooltipContent>
+      </Tooltip>
+      <Tooltip>
+        <TooltipTrigger as-child>
+          <Button
+            size="iconSm"
+            variant="outline"
+            @click="onRemoveFilter(index)"
+          >
+            <Icon name="hugeicons:minus-sign" />
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent>
+          <p>Remove filter (Meta+Backspace)</p>
+        </TooltipContent>
+      </Tooltip>
+      <Tooltip>
+        <TooltipTrigger as-child>
+          <Button
+            size="iconSm"
+            variant="outline"
+            @click="() => onAddFilter(index)"
+          >
+            <Icon name="hugeicons:plus-sign" />
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent>
+          <p>Add new filter (Meta+I)</p>
+        </TooltipContent>
+      </Tooltip>
     </div>
 
     <QuickQueryFilterGuide

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { Tooltip, TooltipContent, TooltipTrigger } from '#components';
 import ModelSelector from '~/components/modules/selectors/ModelSelector.vue';
 import { useAiChat } from '~/composables/useAiChat';
 import { useSettingsModal } from '~/shared/contexts/useSettingsModal';
@@ -92,22 +93,37 @@ const handleQuickAction = async (text: string) => {
         <span>SQL Assistant</span>
 
         <div>
-          <ModelSelector
-            v-model:provider="selectedProvider"
-            v-model:model="selectedModel"
-            class="min-w-[160px] h-6!"
-          />
+          <Tooltip>
+            <TooltipTrigger as-child>
+              <div>
+                <ModelSelector
+                  v-model:provider="selectedProvider"
+                  v-model:model="selectedModel"
+                  class="min-w-[160px] h-6!"
+                />
+              </div>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Select AI Model</p>
+            </TooltipContent>
+          </Tooltip>
         </div>
       </div>
-      <Button
-        variant="ghost"
-        size="sm"
-        class="h-7 px-2"
-        @click="clearChat"
-        :disabled="messages.length === 0"
-      >
-        <Icon name="lucide:trash-2" class="size-3.5" />
-      </Button>
+      <Tooltip>
+        <TooltipTrigger as-child>
+          <Button
+            variant="ghost"
+            size="xs"
+            @click="clearChat"
+            :disabled="messages.length === 0"
+          >
+            <Icon name="lucide:trash-2" class="size-3.5" />
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent>
+          <p>Clear chat history</p>
+        </TooltipContent>
+      </Tooltip>
     </div>
 
     <!-- SQL Context Preview -->
@@ -146,15 +162,22 @@ const handleQuickAction = async (text: string) => {
         <p class="text-xs text-muted-foreground mb-3">
           Configure your API keys in Settings → Agent
         </p>
-        <Button
-          variant="outline"
-          size="sm"
-          class="text-xs"
-          @click="openSettings('Agent')"
-        >
-          <Icon name="lucide:settings" class="size-4 mr-1" />
-          Open Settings
-        </Button>
+        <Tooltip>
+          <TooltipTrigger as-child>
+            <Button
+              variant="outline"
+              size="sm"
+              class="text-xs"
+              @click="openSettings('Agent')"
+            >
+              <Icon name="lucide:settings" class="size-4 mr-1" />
+              Open Settings
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>Open functionality settings</p>
+          </TooltipContent>
+        </Tooltip>
       </div>
     </div>
 
@@ -175,24 +198,24 @@ const handleQuickAction = async (text: string) => {
         <div class="mt-4 flex flex-wrap justify-center gap-2">
           <Button
             variant="outline"
-            size="sm"
-            class="text-xs h-6"
+            size="xs"
+            class="text-xs"
             @click="handleQuickAction('Explain this query')"
           >
             Explain this query
           </Button>
           <Button
             variant="outline"
-            size="sm"
-            class="text-xs h-6"
+            size="xs"
+            class="text-xs"
             @click="handleQuickAction('How can I optimize this query?')"
           >
             Optimize query
           </Button>
           <Button
             variant="outline"
-            size="sm"
-            class="text-xs h-6"
+            size="xs"
+            class="text-xs"
             @click="
               handleQuickAction('What are potential issues with this query?')
             "
@@ -267,17 +290,24 @@ const handleQuickAction = async (text: string) => {
           :disabled="isLoading"
           class="min-h-4!"
         />
-        <Button
-          type="submit"
-          size="iconSm"
-          class="absolute right-2 top-1/2 -translate-y-1/2 rounded-full"
-          :disabled="!messageInput.trim() || isLoading"
-        >
-          <Icon
-            :name="isLoading ? 'lucide:loader-2' : 'lucide:arrow-up'"
-            :class="['size-4', isLoading ? 'animate-spin' : '']"
-          />
-        </Button>
+        <Tooltip>
+          <TooltipTrigger as-child>
+            <Button
+              type="submit"
+              size="iconSm"
+              class="absolute right-2 top-1/2 -translate-y-1/2 rounded-full"
+              :disabled="!messageInput.trim() || isLoading"
+            >
+              <Icon
+                :name="isLoading ? 'lucide:loader-2' : 'lucide:arrow-up'"
+                :class="['size-4', isLoading ? 'animate-spin' : '']"
+              />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>Send message</p>
+          </TooltipContent>
+        </Tooltip>
       </form>
     </div>
   </div>

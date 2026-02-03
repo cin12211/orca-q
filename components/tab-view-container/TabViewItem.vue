@@ -14,6 +14,7 @@ import {
 import { preserveOffsetOnSource } from '@atlaskit/pragmatic-drag-and-drop/element/preserve-offset-on-source';
 import { setCustomNativeDragPreview } from '@atlaskit/pragmatic-drag-and-drop/element/set-custom-native-drag-preview';
 import { X } from 'lucide-vue-next';
+import { cn } from '@/lib/utils';
 import type { TabView } from '~/shared/stores';
 import TabViewItemPreview from './TabViewItemPreview.vue';
 
@@ -160,7 +161,7 @@ watchEffect(onCleanup => {
         @click.left="selectTab(tab.id)"
         :id="tab.id"
       >
-        <Icon :name="tab.icon" class="size-4 min-w-4" />
+        <Icon :name="tab.icon" :class="cn('size-4 min-w-4', tab.iconClass)" />
 
         <Tooltip :id="tab.id">
           <TooltipTrigger as-child>

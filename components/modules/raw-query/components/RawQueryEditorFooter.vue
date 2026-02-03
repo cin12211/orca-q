@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Label, Switch } from '#components';
+import { Tooltip, TooltipContent, TooltipTrigger } from '#components';
 import { formatNumber, formatQueryTime } from '~/utils/common/format';
 import type { EditorCursor } from '../interfaces';
 
@@ -46,27 +46,35 @@ defineEmits<{
     </div>
 
     <div class="flex gap-1">
-      <Button
-        @click="$emit('onFormatCode')"
-        variant="outline"
-        size="sm"
-        class="h-6 px-2 gap-1 font-normal"
-      >
-        <Icon name="hugeicons:magic-wand-01"> </Icon>
-        Format
-        <ContextMenuShortcut>⌘S</ContextMenuShortcut>
-      </Button>
+      <Tooltip>
+        <TooltipTrigger as-child>
+          <Button @click="$emit('onFormatCode')" variant="outline" size="xs">
+            <Icon name="hugeicons:magic-wand-01"> </Icon>
+            Format
+            <ContextMenuShortcut>⌘S</ContextMenuShortcut>
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent>
+          <p>Format SQL (⌘S)</p>
+        </TooltipContent>
+      </Tooltip>
 
-      <Button
-        @click="$emit('onExecuteCurrent')"
-        variant="outline"
-        size="sm"
-        class="h-6 px-2 gap-1 font-normal"
-      >
-        <Icon name="hugeicons:play"> </Icon>
-        Execute current
-        <ContextMenuShortcut>⌘↵</ContextMenuShortcut>
-      </Button>
+      <Tooltip>
+        <TooltipTrigger as-child>
+          <Button
+            @click="$emit('onExecuteCurrent')"
+            variant="outline"
+            size="xs"
+          >
+            <Icon name="hugeicons:play"> </Icon>
+            Execute current
+            <ContextMenuShortcut>⌘↵</ContextMenuShortcut>
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent>
+          <p>Execute Query (⌘↵)</p>
+        </TooltipContent>
+      </Tooltip>
     </div>
   </div>
 </template>

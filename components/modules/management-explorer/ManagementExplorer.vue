@@ -234,34 +234,53 @@ const onClickNode = (item: FlattenedTreeFileSystemItem) => {
         </p>
 
         <div class="flex items-center">
-          <Button
-            size="iconSm"
-            variant="ghost"
-            @click="() => onAddNewItem({ isFolder: false })"
-          >
-            <Icon
-              name="lucide:file-plus-2"
-              class="size-4! min-w-4 text-muted-foreground"
-            />
-          </Button>
+          <Tooltip>
+            <TooltipTrigger as-child>
+              <Button
+                size="iconSm"
+                variant="ghost"
+                @click="() => onAddNewItem({ isFolder: false })"
+              >
+                <Icon
+                  name="lucide:file-plus-2"
+                  class="size-4! min-w-4 text-muted-foreground"
+                />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent> New File </TooltipContent>
+          </Tooltip>
 
-          <Button
-            size="iconSm"
-            variant="ghost"
-            @click="() => onAddNewItem({ isFolder: true })"
-          >
-            <Icon
-              name="lucide:folder-plus"
-              class="size-4! min-w-4 text-muted-foreground"
-            />
-          </Button>
+          <Tooltip>
+            <TooltipTrigger as-child>
+              <Button
+                size="iconSm"
+                variant="ghost"
+                @click="() => onAddNewItem({ isFolder: true })"
+              >
+                <Icon
+                  name="lucide:folder-plus"
+                  class="size-4! min-w-4 text-muted-foreground"
+                />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent> New Folder </TooltipContent>
+          </Tooltip>
 
-          <Button size="iconSm" variant="ghost" @click="onCollapsedExplorer">
-            <Icon
-              name="lucide:copy-minus"
-              class="size-4! min-w-4 text-muted-foreground"
-            />
-          </Button>
+          <Tooltip>
+            <TooltipTrigger as-child>
+              <Button
+                size="iconSm"
+                variant="ghost"
+                @click="onCollapsedExplorer"
+              >
+                <Icon
+                  name="lucide:copy-minus"
+                  class="size-4! min-w-4 text-muted-foreground"
+                />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent> Collapse All </TooltipContent>
+          </Tooltip>
         </div>
       </div>
     </div>

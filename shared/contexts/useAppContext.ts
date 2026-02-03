@@ -156,6 +156,7 @@ export const useAppContext = () => {
               tables: schema.tables || [],
               views: schema.views || [],
               tableDetails: schema?.table_details || null,
+              viewDetails: schema?.view_details || null,
             });
           }
         });

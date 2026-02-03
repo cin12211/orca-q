@@ -1,5 +1,5 @@
 import { getDatabaseSource } from '~/server/utils/db-connection';
-import { FunctionSchemaEnum } from '~/shared/types';
+import { FunctionSchemaEnum, ViewSchemaEnum } from '~/shared/types';
 
 export interface ColumnShortMetadata {
   name: string;
@@ -28,8 +28,18 @@ export interface TableDetailMetadata {
   table_id: string;
 }
 
+export interface ViewDetailMetadata {
+  columns: ColumnShortMetadata[];
+  view_id: string;
+  type: ViewSchemaEnum;
+}
+
 export interface TableDetails {
   [tableName: string]: TableDetailMetadata;
+}
+
+export interface ViewDetails {
+  [tableName: string]: ViewDetailMetadata;
 }
 
 export interface FunctionSchema {
@@ -39,18 +49,26 @@ export interface FunctionSchema {
   parameters: string;
 }
 
+export interface ViewSchema {
+  name: string;
+  type: ViewSchemaEnum;
+  oid: string;
+}
+
 export interface SchemaMetaData {
   name: string;
   tables: string[] | null;
-  views: string[] | null;
+  views: ViewSchema[] | null;
   functions: FunctionSchema[] | null;
   table_details: TableDetails | null;
+  view_details: ViewDetails | null;
 }
 
 interface RequestBody {
   dbConnectionString: string;
 }
 
+//TODO: need refactor map return type -> map in js to able scale for multiple db
 export default defineEventHandler(async (event): Promise<SchemaMetaData[]> => {
   const body: RequestBody = await readBody(event);
 
@@ -71,11 +89,70 @@ export default defineEventHandler(async (event): Promise<SchemaMetaData[]> => {
       ) AS tables,
       -- views
       (
-        SELECT json_agg(table_name)
-        FROM information_schema.tables t
-        WHERE t.table_schema = nsp.nspname
-          AND t.table_type = 'VIEW'
+        SELECT json_agg(
+          json_build_object(
+            'name', c.relname,
+            'type',
+              CASE c.relkind
+                WHEN 'v' THEN 'VIEW'
+                WHEN 'm' THEN 'MATERIALIZED_VIEW'
+              END,
+            'oid', c.oid
+          )
+          ORDER BY c.relname
+        )
+        FROM pg_class c
+        JOIN pg_namespace pn ON pn.oid = c.relnamespace
+        WHERE pn.nspname = nsp.nspname
+          AND c.relkind IN ('v', 'm')
       ) AS views,
+      -- view_details
+      (
+        SELECT json_object_agg(
+          c.relname,
+          json_build_object(
+            'view_id', c.oid,
+            'type',
+              CASE c.relkind
+                WHEN 'v' THEN 'VIEW'
+                WHEN 'm' THEN 'MATERIALIZED_VIEW'
+              END,
+            'columns', (
+              SELECT json_agg(
+                json_build_object(
+                  'name', a.attname,
+                  'ordinal_position', a.attnum,
+                  'type', format_type(a.atttypid, a.atttypmod),
+                  'is_nullable', NOT a.attnotnull,
+                  'short_type_name',
+                    CASE
+                      WHEN format_type(a.atttypid, a.atttypmod) LIKE 'character varying%'
+                        THEN REPLACE(format_type(a.atttypid, a.atttypmod), 'character varying', 'varchar')
+                      WHEN format_type(a.atttypid, a.atttypmod) = 'integer' THEN 'int4'
+                      WHEN format_type(a.atttypid, a.atttypmod) = 'bigint' THEN 'int8'
+                      WHEN format_type(a.atttypid, a.atttypmod) = 'boolean' THEN 'bool'
+                      WHEN format_type(a.atttypid, a.atttypmod) LIKE 'numeric%'
+                        THEN REPLACE(format_type(a.atttypid, a.atttypmod), 'numeric', 'decimal')
+                      WHEN format_type(a.atttypid, a.atttypmod) = 'timestamp without time zone' THEN 'timestamp'
+                      WHEN format_type(a.atttypid, a.atttypmod) = 'timestamp with time zone' THEN 'timestamptz'
+                      ELSE format_type(a.atttypid, a.atttypmod)
+                    END
+                )
+                ORDER BY a.attnum
+              )
+              FROM pg_attribute a
+              WHERE a.attrelid = c.oid
+                AND a.attnum > 0
+                AND NOT a.attisdropped
+            )
+            -- 'definition', pg_get_viewdef(c.oid, true)
+          )
+        )
+        FROM pg_class c
+        JOIN pg_namespace pn ON pn.oid = c.relnamespace
+        WHERE pn.nspname = nsp.nspname
+          AND c.relkind IN ('v', 'm')
+      ) AS view_details,
       -- functions
       (
        SELECT JSON_AGG(

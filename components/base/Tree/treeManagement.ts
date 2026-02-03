@@ -10,6 +10,7 @@ export interface TreeFileSystemItemPersistent {
   id: string;
   title: string;
   icon: string;
+  iconClass?: string;
   closeIcon?: string;
   status?: ETreeFileSystemStatus;
   tabViewType?: TabViewType;

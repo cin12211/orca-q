@@ -142,12 +142,7 @@ const onAskAiToFix = () => {
           </span>
         </div>
 
-        <Button
-          @click="onAskAiToFix"
-          size="sm"
-          variant="outline"
-          class="font-normal h-6 px-2"
-        >
+        <Button @click="onAskAiToFix" size="xs" variant="outline">
           <Icon name="hugeicons:ai-brain-04" class="size-4" />
           Ask AI to fix this error
         </Button>

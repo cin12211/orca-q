@@ -32,10 +32,12 @@ export type TabView = {
   index: number;
   name: string;
   icon: string;
+  iconClass?: string;
   type: TabViewType;
   tableName?: string;
   routeName: RouteNameFromPath<RoutePathSchema>;
   routeParams?: Record<string, string | number>;
+  virtualTableId?: string;
 };
 
 export const useTabViewsStore = defineStore(

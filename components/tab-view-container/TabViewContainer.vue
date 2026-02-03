@@ -80,44 +80,54 @@ const isAccessRightPanel = computed(() => {
           <ActivityBarHorizontal />
         </div>
 
-        <Button
-          variant="ghost"
-          size="iconSm"
-          @click="appLayoutStore.onToggleActivityBarPanel()"
-        >
-          <Icon
-            name="hugeicons:sidebar-left"
-            class="size-5!"
-            v-if="isPrimarySidebarCollapsed"
-          />
-          <Icon name="hugeicons:sidebar-left-01" class="size-5!" v-else />
+        <Tooltip>
+          <TooltipTrigger as-child>
+            <Button
+              variant="ghost"
+              size="iconSm"
+              @click="appLayoutStore.onToggleActivityBarPanel()"
+            >
+              <Icon
+                name="hugeicons:sidebar-left"
+                class="size-5!"
+                v-if="isPrimarySidebarCollapsed"
+              />
+              <Icon name="hugeicons:sidebar-left-01" class="size-5!" v-else />
 
-          <!-- <PanelLeftOpen class="size-4" v-if="isPrimarySideBarPanelCollapsed" />
+              <!-- <PanelLeftOpen class="size-4" v-if="isPrimarySideBarPanelCollapsed" />
           <PanelLeftClose class="size-4" v-else /> -->
-        </Button>
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent> Toggle Sidebar </TooltipContent>
+        </Tooltip>
       </div>
 
       <TabViews />
 
-      <Button
-        v-if="isAccessRightPanel"
-        variant="ghost"
-        size="iconSm"
-        @click="appLayoutStore.onToggleSecondSidebar()"
-      >
-        <Icon
-          name="hugeicons:sidebar-right"
-          class="size-5!"
-          v-if="isSecondSidebarCollapsed"
-        />
-        <Icon name="hugeicons:sidebar-right-01" class="size-5!" v-else />
+      <Tooltip>
+        <TooltipTrigger as-child>
+          <Button
+            v-if="isAccessRightPanel"
+            variant="ghost"
+            size="iconSm"
+            @click="appLayoutStore.onToggleSecondSidebar()"
+          >
+            <Icon
+              name="hugeicons:sidebar-right"
+              class="size-5!"
+              v-if="isSecondSidebarCollapsed"
+            />
+            <Icon name="hugeicons:sidebar-right-01" class="size-5!" v-else />
 
-        <!-- <PanelRightOpen
+            <!-- <PanelRightOpen
           class="size-4"
           v-if="isSecondarySideBarPanelCollapsed"
         />
         <PanelRightClose class="size-4" v-else /> -->
-      </Button>
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent> Toggle Sidebar </TooltipContent>
+      </Tooltip>
     </div>
   </div>
 </template>

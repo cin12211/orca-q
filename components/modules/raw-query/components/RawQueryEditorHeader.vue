@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { Tooltip, TooltipContent, TooltipTrigger } from '#components';
 import { type Connection, type RowQueryFile } from '~/shared/stores';
 import PureConnectionSelector from '../../selectors/PureConnectionSelector.vue';
 import { RawQueryEditorLayout } from '../constants';
@@ -55,33 +56,53 @@ const openConfigModal = () => {
     </div>
 
     <div class="flex gap-2 items-center">
-      <Button
-        @click="openAddVariableModal"
-        variant="outline"
-        size="sm"
-        class="h-6 px-2 gap-1 font-normal relative"
-        v-if="codeEditorLayout === RawQueryEditorLayout.horizontal"
-      >
-        <Icon
-          name="lucide:triangle-alert"
-          class="absolute -top-1 -right-1 text-red-400"
-          v-if="isVariableError"
-        />
-        <Icon name="hugeicons:absolute" /> Add variables
-      </Button>
+      <Tooltip v-if="codeEditorLayout === RawQueryEditorLayout.horizontal">
+        <TooltipTrigger as-child>
+          <Button
+            @click="openAddVariableModal"
+            variant="outline"
+            size="xs"
+            class="relative"
+          >
+            <Icon
+              name="lucide:triangle-alert"
+              class="absolute -top-1 -right-1 text-red-400"
+              v-if="isVariableError"
+            />
+            <Icon name="hugeicons:absolute" /> Add variables
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent>
+          <p>Add variables</p>
+        </TooltipContent>
+      </Tooltip>
 
-      <PureConnectionSelector
-        :connectionId="currentFileInfo?.connectionId || ''"
-        @update:connectionId="$emit('update:connectionId', $event)"
-        :connections="connections"
-        :connection="connection"
-        class="w-16 h-6! px-1.5"
-        :workspaceId="workspaceId"
-      />
+      <Tooltip>
+        <TooltipTrigger as-child>
+          <PureConnectionSelector
+            :connectionId="currentFileInfo?.connectionId || ''"
+            @update:connectionId="$emit('update:connectionId', $event)"
+            :connections="connections"
+            :connection="connection"
+            class="w-16 h-6! px-1.5"
+            :workspaceId="workspaceId"
+          />
+        </TooltipTrigger>
+        <TooltipContent>
+          <p>Select connection</p>
+        </TooltipContent>
+      </Tooltip>
 
-      <Button @click="openConfigModal" variant="outline" size="iconSm">
-        <Icon name="hugeicons:dashboard-square-02" />
-      </Button>
+      <Tooltip>
+        <TooltipTrigger as-child>
+          <Button @click="openConfigModal" variant="outline" size="iconSm">
+            <Icon name="hugeicons:dashboard-square-02" />
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent>
+          <p>Query Settings</p>
+        </TooltipContent>
+      </Tooltip>
 
       <!-- <Button @click="openAddVariableModal" variant="outline" size="iconSm">
         <Icon name="hugeicons:settings-01" />

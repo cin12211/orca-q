@@ -47,7 +47,7 @@ const isShowTabName = computed(
         {{ selectedConnection?.name }}
       </BreadcrumbItem>
 
-      <BreadcrumbSeparator v-if="isShowSchemaName" />
+      <!-- <BreadcrumbSeparator v-if="isShowSchemaName" />
       <BreadcrumbItem class="text-xs" v-if="isShowSchemaName">
         {{ activeSchema?.name }}
       </BreadcrumbItem>
@@ -55,7 +55,7 @@ const isShowTabName = computed(
       <BreadcrumbSeparator v-if="isShowTabName" />
       <BreadcrumbItem class="text-xs" v-if="isShowTabName">
         {{ activeTab?.name }}
-      </BreadcrumbItem>
+      </BreadcrumbItem> -->
     </BreadcrumbList>
   </Breadcrumb>
 </template>
