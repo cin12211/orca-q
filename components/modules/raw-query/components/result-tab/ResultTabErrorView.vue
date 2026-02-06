@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue';
+import { computed, nextTick, ref, watch } from 'vue';
 import type { DecorationItem } from 'shiki';
 import { Button } from '~/components/ui/button';
 import {
@@ -86,6 +86,32 @@ const highlightSqlWithError = computed(() => {
     decorations,
   });
 });
+
+const scrollToErrorHighlight = async () => {
+  if (typeof window === 'undefined') return;
+
+  await nextTick();
+
+  const target = document.querySelector(
+    '.error-query-container .error-highlight'
+  ) as HTMLElement | null;
+
+  if (target) {
+    target.scrollIntoView({
+      behavior: 'smooth',
+      block: 'center',
+      inline: 'nearest',
+    });
+  }
+};
+
+watch(
+  () => highlightSqlWithError.value,
+  () => {
+    scrollToErrorHighlight();
+  },
+  { flush: 'post' }
+);
 
 // Highlight JSON for error details
 const highlightErrorDetails = computed(() => {

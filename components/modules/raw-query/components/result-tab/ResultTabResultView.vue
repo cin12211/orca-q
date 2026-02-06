@@ -36,6 +36,7 @@ const formattedSelectedRows = computed(() => {
     }) || []
   );
 });
+// TODO: refactor formattedData, formattedSelectedRows to optimize performance
 </script>
 
 <template>
