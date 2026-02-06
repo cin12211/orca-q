@@ -1,13 +1,38 @@
 <script setup lang="ts">
+import { computed } from 'vue';
 import { useCodeHighlighter } from '~/composables/useSqlHighlighter';
+import { formatBytes } from '~/utils/common';
 import { formatNumber, formatQueryTime } from '~/utils/common/format';
 import type { ExecutedResultItem } from '../../hooks/useRawQueryEditor';
 
-defineProps<{
+const props = defineProps<{
   activeTab: ExecutedResultItem;
 }>();
 
 const { highlightSql } = useCodeHighlighter();
+
+const textEncoder =
+  typeof TextEncoder !== 'undefined' ? new TextEncoder() : null;
+
+const resultSize = computed(() => {
+  const data = props.activeTab?.result ?? [];
+
+  if (!textEncoder) {
+    return { bytes: 0, formatted: 'N/A' };
+  }
+
+  try {
+    const jsonString = JSON.stringify(data);
+    const bytes = jsonString ? textEncoder.encode(jsonString).length : 0;
+
+    return {
+      bytes,
+      formatted: formatBytes(bytes),
+    };
+  } catch (error) {
+    return { bytes: 0, formatted: 'N/A' };
+  }
+});
 </script>
 
 <template>
@@ -30,6 +55,12 @@ const { highlightSql } = useCodeHighlighter();
         <span class="font-medium">{{
           formatNumber(activeTab.result?.length || 0)
         }}</span>
+      </div>
+
+      <div class="flex items-center gap-2 text-sm">
+        <Icon name="hugeicons:file-02" class="size-4 text-muted-foreground" />
+        <span class="text-muted-foreground">Result Size:</span>
+        <span class="font-medium">{{ resultSize.formatted }}</span>
       </div>
 
       <div class="flex items-center gap-2 text-sm">

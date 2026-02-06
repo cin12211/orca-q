@@ -315,7 +315,7 @@ const columnDefs = computed<ColDef[]>(() => {
           return JSON.stringify(value, null, 2);
         }
 
-        return (value || '') as string;
+        return (value ?? '') as string;
       },
       valueSetter: (params: ValueSetterParams) => {
         if (props.isViewOnly) {

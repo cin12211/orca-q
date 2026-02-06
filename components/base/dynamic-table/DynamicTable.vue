@@ -9,7 +9,6 @@ import type {
   GridOptions,
   ICellEditorParams,
   ValueFormatterParams,
-  ValueGetterParams,
   ValueSetterParams,
 } from 'ag-grid-community';
 import { AgGridVue } from 'ag-grid-vue3';
@@ -195,7 +194,7 @@ const columnDefs = computed<ColDef[]>(() => {
             return JSON.stringify(value, null, 2); // Chuỗi có định dạng đẹp
           }
 
-          return (value || '') as string;
+          return (value ?? '') as string;
         },
 
         // // // Chuyển Object thành chuỗi JSON khi vào chế độ chỉnh sửa
