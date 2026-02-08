@@ -674,9 +674,9 @@ defineExpose({
  * File Tree Component Styles
  * Uses CSS variables from your design system for easy theming
  * Customize by overriding these CSS variables:
- * - --tree-scrollbar-thumb
- * - --tree-scrollbar-thumb-hover
- * - --tree-scrollbar-track
+ * - --v-tree-scrollbar-thumb
+ * - --v-tree-scrollbar-thumb-hover
+ * - --v-tree-scrollbar-track
  */
 
 .file-tree {
@@ -686,18 +686,18 @@ defineExpose({
   outline: none;
   contain: strict;
   content-visibility: auto;
-  background-color: var(--tree-bg, transparent);
-  color: var(--tree-text, hsl(var(--foreground)));
+  background-color: var(--v-tree-bg, transparent);
+  color: var(--v-tree-text, hsl(var(--foreground)));
 }
 
 .file-tree::-webkit-scrollbar {
-  width: var(--tree-scrollbar-width, 10px);
-  height: var(--tree-scrollbar-height, 10px);
+  width: var(--v-tree-scrollbar-width, 10px);
+  height: var(--v-tree-scrollbar-height, 10px);
 }
 
 .file-tree::-webkit-scrollbar-thumb {
   background-color: var(
-    --tree-scrollbar-thumb,
+    --v-tree-scrollbar-thumb,
     hsl(var(--muted-foreground) / 0.3)
   );
   border-radius: var(--radius-sm, 5px);
@@ -705,12 +705,12 @@ defineExpose({
 
 .file-tree::-webkit-scrollbar-thumb:hover {
   background-color: var(
-    --tree-scrollbar-thumb-hover,
+    --v-tree-scrollbar-thumb-hover,
     hsl(var(--muted-foreground) / 0.5)
   );
 }
 
 .file-tree::-webkit-scrollbar-track {
-  background-color: var(--tree-scrollbar-track, transparent);
+  background-color: var(--v-tree-scrollbar-track, transparent);
 }
 </style>

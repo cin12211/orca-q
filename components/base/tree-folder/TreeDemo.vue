@@ -392,14 +392,19 @@ const treeStats = computed(() => {
 </script>
 
 <template>
-  <div class="demo-container">
+  <div class="flex h-screen w-full bg-background text-foreground font-sans">
     <!-- Controls Panel -->
-    <div class="controls-panel">
-      <h2>🚀 Tree Performance Test</h2>
+    <div
+      class="w-[350px] shrink-0 overflow-y-auto border-r border-border bg-card p-5 [&::-webkit-scrollbar-thumb]:rounded-sm [&::-webkit-scrollbar-thumb]:bg-muted-foreground/30 hover:[&::-webkit-scrollbar-thumb]:bg-muted-foreground/50 [&::-webkit-scrollbar]:w-2"
+    >
+      <h2 class="mb-5 text-xl font-semibold">🚀 Tree Performance Test</h2>
 
-      <div class="control-group">
-        <label>Dataset Size:</label>
-        <select v-model.number="selectedSize">
+      <div class="mb-4">
+        <label class="mb-2 block text-[13px] font-medium">Dataset Size:</label>
+        <select
+          v-model.number="selectedSize"
+          class="mb-2 w-full rounded-md border border-border bg-input p-2 text-[13px] text-foreground"
+        >
           <option
             v-for="size in testSizes"
             :key="size.value"
@@ -408,20 +413,36 @@ const treeStats = computed(() => {
             {{ size.label }}
           </option>
         </select>
-        <button @click="generateData" class="btn-primary">
+        <button
+          @click="generateData"
+          class="w-full rounded-md border-none bg-primary px-4 py-2 text-[13px] text-primary-foreground transition-all hover:opacity-90"
+        >
           Generate New Data
         </button>
       </div>
 
-      <div class="control-group">
-        <button @click="expandAll" class="btn-secondary">Expand All</button>
-        <button @click="collapseAll" class="btn-secondary">Collapse All</button>
+      <div class="mb-4">
+        <button
+          @click="expandAll"
+          class="mr-2 rounded-md border-none bg-secondary px-4 py-2 text-[13px] text-secondary-foreground transition-all hover:bg-secondary/80"
+        >
+          Expand All
+        </button>
+        <button
+          @click="collapseAll"
+          class="mr-2 rounded-md border-none bg-secondary px-4 py-2 text-[13px] text-secondary-foreground transition-all hover:bg-secondary/80"
+        >
+          Collapse All
+        </button>
       </div>
 
       <!-- Theme Selection -->
-      <div class="control-group">
-        <label>Theme:</label>
-        <select v-model="selectedTheme">
+      <div class="mb-4">
+        <label class="mb-2 block text-[13px] font-medium">Theme:</label>
+        <select
+          v-model="selectedTheme"
+          class="mb-2 w-full rounded-md border border-border bg-input p-2 text-[13px] text-foreground"
+        >
           <option
             v-for="theme in themes"
             :key="theme.value"
@@ -430,18 +451,28 @@ const treeStats = computed(() => {
             {{ theme.label }}
           </option>
         </select>
-        <div class="help-text">
+        <div
+          class="mt-1.5 rounded-sm border-l-[3px] border-primary bg-muted p-2 text-[11px] text-muted-foreground"
+        >
           Switch between different color themes to see customization options
         </div>
       </div>
 
       <!-- Drag-Drop Configuration -->
-      <div class="control-group">
-        <label class="checkbox-label">
-          <input type="checkbox" v-model="allowSort" class="checkbox-input" />
+      <div class="mb-4">
+        <label
+          class="flex cursor-pointer select-none items-center gap-2 text-[13px]"
+        >
+          <input
+            type="checkbox"
+            v-model="allowSort"
+            class="h-4 w-4 cursor-pointer accent-primary"
+          />
           <span>Allow Reordering (before/after)</span>
         </label>
-        <div class="help-text">
+        <div
+          class="mt-1.5 rounded-sm border-l-[3px] border-primary bg-muted p-2 text-[11px] text-muted-foreground"
+        >
           {{
             allowSort
               ? '✓ Can reorder items and move into folders'
@@ -451,50 +482,59 @@ const treeStats = computed(() => {
       </div>
 
       <!-- Focus Feature -->
-      <div class="focus-feature">
-        <h3>🎯 Focus Feature</h3>
-        <div class="control-group">
+      <div class="mt-5 rounded-lg bg-muted p-4">
+        <h3 class="mb-3 mt-0 text-sm font-semibold text-muted-foreground">
+          🎯 Focus Feature
+        </h3>
+        <div class="mb-4">
           <input
             v-model="searchQuery"
             type="text"
             placeholder="Search to focus..."
-            class="search-input"
+            class="mb-2 w-full rounded-md border border-border bg-input px-3 py-2 text-[13px] text-foreground outline-none focus:border-ring"
           />
         </div>
 
         <!-- Search Results -->
-        <div v-if="searchResults.length > 0" class="search-results">
-          <div class="search-results-header">
+        <div
+          v-if="searchResults.length > 0"
+          class="mt-3 max-h-[300px] overflow-y-auto rounded-md border border-border bg-card [&::-webkit-scrollbar-thumb]:rounded-sm [&::-webkit-scrollbar-thumb]:bg-muted-foreground/30 hover:[&::-webkit-scrollbar-thumb]:bg-muted-foreground/50 [&::-webkit-scrollbar]:w-[6px]"
+        >
+          <div
+            class="border-b border-border bg-muted px-3 py-2 text-[11px] text-muted-foreground"
+          >
             Found {{ searchResults.length }} items (showing max 20)
           </div>
-          <div class="search-results-list">
+          <div class="p-1">
             <div
               v-for="node in searchResults"
               :key="node.id"
-              class="search-result-item"
+              class="flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-[12px] transition-colors hover:bg-accent"
               @click="focusOnItem(node.id)"
             >
-              <span class="result-icon">{{
+              <span class="shrink-0 text-sm">{{
                 node.type === 'folder' ? '📁' : '📄'
               }}</span>
-              <span class="result-name">{{ node.name }}</span>
-              <span class="result-depth">depth: {{ node.depth }}</span>
+              <span class="flex-1 truncate text-foreground">{{
+                node.name
+              }}</span>
+              <span class="shrink-0 text-[10px] text-muted-foreground"
+                >depth: {{ node.depth }}</span
+              >
             </div>
           </div>
         </div>
 
         <button
           @click="focusRandomItem"
-          class="btn-secondary"
-          style="width: 100%; margin-top: 8px"
+          class="mr-2 mt-2 w-full rounded-md border-none bg-secondary px-4 py-2 text-[13px] text-secondary-foreground transition-all hover:bg-secondary/80"
         >
           🎲 Focus Random Item
         </button>
 
         <button
           @click="focusDeepestItem"
-          class="btn-secondary"
-          style="width: 100%; margin-top: 8px"
+          class="mr-2 mt-2 w-full rounded-md border-none bg-secondary px-4 py-2 text-[13px] text-secondary-foreground transition-all hover:bg-secondary/80"
           title="Collapses all folders then focuses deepest nested item (auto-expands path)"
         >
           🎯 Focus Deepest Item
@@ -502,67 +542,111 @@ const treeStats = computed(() => {
       </div>
 
       <!-- Metrics -->
-      <div class="metrics">
-        <h3>📊 Performance Metrics</h3>
-        <div class="metric-row">
+      <div class="mt-5 rounded-lg bg-muted p-4">
+        <h3
+          class="mb-2.5 mt-5 text-sm font-semibold text-muted-foreground first:mt-0"
+        >
+          📊 Performance Metrics
+        </h3>
+        <div class="flex justify-between py-1.5 text-[13px]">
           <span>Data Generation:</span>
-          <strong>{{ metrics.generationTime.toFixed(2) }}ms</strong>
+          <strong class="text-primary"
+            >{{ metrics.generationTime.toFixed(2) }}ms</strong
+          >
         </div>
-        <div class="metric-row">
+        <div class="flex justify-between py-1.5 text-[13px]">
           <span>Initial Render:</span>
-          <strong>{{ metrics.renderTime.toFixed(2) }}ms</strong>
+          <strong class="text-primary"
+            >{{ metrics.renderTime.toFixed(2) }}ms</strong
+          >
         </div>
-        <div class="metric-row">
+        <div class="flex justify-between py-1.5 text-[13px]">
           <span>Total Nodes:</span>
-          <strong>{{ metrics.nodeCount.toLocaleString() }}</strong>
+          <strong class="text-primary">{{
+            metrics.nodeCount.toLocaleString()
+          }}</strong>
         </div>
       </div>
 
       <!-- Stats -->
-      <div class="stats">
-        <h3>📁 Tree Statistics</h3>
-        <div class="stat-row">
+      <div class="mt-5 rounded-lg bg-muted p-4">
+        <h3
+          class="mb-2.5 mt-5 text-sm font-semibold text-muted-foreground first:mt-0"
+        >
+          📁 Tree Statistics
+        </h3>
+        <div class="flex justify-between py-1.5 text-[13px]">
           <span>Total Items:</span>
-          <strong>{{ treeStats.total.toLocaleString() }}</strong>
+          <strong class="text-primary">{{
+            treeStats.total.toLocaleString()
+          }}</strong>
         </div>
-        <div class="stat-row">
+        <div class="flex justify-between py-1.5 text-[13px]">
           <span>Folders:</span>
-          <strong>{{ treeStats.folders.toLocaleString() }}</strong>
+          <strong class="text-primary">{{
+            treeStats.folders.toLocaleString()
+          }}</strong>
         </div>
-        <div class="stat-row">
+        <div class="flex justify-between py-1.5 text-[13px]">
           <span>Files:</span>
-          <strong>{{ treeStats.files.toLocaleString() }}</strong>
+          <strong class="text-primary">{{
+            treeStats.files.toLocaleString()
+          }}</strong>
         </div>
-        <div class="stat-row">
+        <div class="flex justify-between py-1.5 text-[13px]">
           <span>Selected:</span>
-          <strong>{{ selectedNodes.length }}</strong>
+          <strong class="text-primary">{{ selectedNodes.length }}</strong>
         </div>
       </div>
 
       <!-- Move Log -->
-      <div class="move-log">
-        <h3>🔄 Recent Moves</h3>
-        <div v-if="moveLog.length === 0" class="empty-log">
+      <div class="mt-5 rounded-lg bg-muted p-4">
+        <h3
+          class="mb-2.5 mt-5 text-sm font-semibold text-muted-foreground first:mt-0"
+        >
+          🔄 Recent Moves
+        </h3>
+        <div
+          v-if="moveLog.length === 0"
+          class="p-2.5 text-center text-xs italic text-muted-foreground"
+        >
           Drag & drop nodes to see moves...
         </div>
-        <div v-else class="log-entries">
-          <div v-for="(log, idx) in moveLog" :key="idx" class="log-entry">
+        <div
+          v-else
+          class="max-h-[200px] space-y-1 overflow-y-auto [&::-webkit-scrollbar-thumb]:rounded-sm [&::-webkit-scrollbar-thumb]:bg-muted-foreground/30 hover:[&::-webkit-scrollbar-thumb]:bg-muted-foreground/50 [&::-webkit-scrollbar]:w-[6px]"
+        >
+          <div
+            v-for="(log, idx) in moveLog"
+            :key="idx"
+            class="mb-1 rounded-sm border-l-[3px] border-primary bg-card px-2 py-1.5 font-mono text-[11px]"
+          >
             {{ log }}
           </div>
         </div>
       </div>
 
       <!-- Action Log -->
-      <div class="action-log">
-        <h3>⚡ Recent Actions</h3>
-        <div v-if="actionLog.length === 0" class="empty-log">
+      <div class="mt-5 rounded-lg bg-muted p-4">
+        <h3
+          class="mb-2.5 mt-5 text-sm font-semibold text-muted-foreground first:mt-0"
+        >
+          ⚡ Recent Actions
+        </h3>
+        <div
+          v-if="actionLog.length === 0"
+          class="p-2.5 text-center text-xs italic text-muted-foreground"
+        >
           Right-click or use action buttons...
         </div>
-        <div v-else class="log-entries">
+        <div
+          v-else
+          class="max-h-[200px] space-y-1 overflow-y-auto [&::-webkit-scrollbar-thumb]:rounded-sm [&::-webkit-scrollbar-thumb]:bg-muted-foreground/30 hover:[&::-webkit-scrollbar-thumb]:bg-muted-foreground/50 [&::-webkit-scrollbar]:w-[6px]"
+        >
           <div
             v-for="(log, idx) in actionLog"
             :key="idx"
-            class="log-entry log-entry--action"
+            class="mb-1 rounded-sm border-l-[3px] border-chart-2 bg-card px-2 py-1.5 font-mono text-[11px]"
           >
             {{ log }}
           </div>
@@ -570,57 +654,68 @@ const treeStats = computed(() => {
       </div>
 
       <!-- Instructions -->
-      <div class="instructions">
-        <h3>💡 Test Instructions</h3>
-        <ul>
-          <li><strong>Click</strong> to select items</li>
-          <li><strong>Ctrl/Cmd + Click</strong> for multi-select</li>
-          <li><strong>Shift + Click</strong> for range select</li>
+      <div class="mt-5 rounded-lg bg-muted p-4">
+        <h3
+          class="mb-2.5 mt-5 text-sm font-semibold text-muted-foreground first:mt-0"
+        >
+          💡 Test Instructions
+        </h3>
+        <ul class="m-0 space-y-1 pl-5 text-xs leading-relaxed">
+          <li><strong class="text-primary">Click</strong> to select items</li>
           <li>
-            <strong>Drag multiple items</strong> - Select multiple items then
-            drag to move them all together (shows count in drag preview)
+            <strong class="text-primary">Ctrl/Cmd + Click</strong> for
+            multi-select
           </li>
           <li>
-            <strong>Double-click</strong> or <strong>chevron</strong> to
-            expand/collapse
+            <strong class="text-primary">Shift + Click</strong> for range select
           </li>
           <li>
-            <strong>Arrow keys</strong> for keyboard navigation (auto-scrolls to
-            focused item)
+            <strong class="text-primary">Drag multiple items</strong> - Select
+            multiple items then drag to move them all together (shows count in
+            drag preview)
           </li>
           <li>
-            <strong>Drag & drop</strong> to reorder or move into folders (toggle
-            "Allow Reordering" to test both modes)
+            <strong class="text-primary">Double-click</strong> or
+            <strong class="text-primary">chevron</strong> to expand/collapse
           </li>
           <li>
-            <strong>Hover</strong> anywhere over a closed folder during drag to
-            auto-expand after 500ms
+            <strong class="text-primary">Arrow keys</strong> for keyboard
+            navigation (auto-scrolls to focused item)
           </li>
           <li>
-            <strong>Drag near edges</strong> (top/bottom 50px) to auto-scroll
+            <strong class="text-primary">Drag & drop</strong> to reorder or move
+            into folders (toggle "Allow Reordering" to test both modes)
           </li>
           <li>
-            <strong>Search & Focus</strong> to jump to specific items instantly
-            (auto-expands parent folders)
-          </li>
-          :class="`theme-${selectedTheme}`"
-          <li>
-            <strong>Right-click</strong> for context menu with actions (rename,
-            duplicate, share, delete)
+            <strong class="text-primary">Hover</strong> anywhere over a closed
+            folder during drag to auto-expand after 500ms
           </li>
           <li>
-            <strong>Action buttons</strong> appear on hover (rename, share,
-            delete)
+            <strong class="text-primary">Drag near edges</strong> (top/bottom
+            50px) to auto-scroll
           </li>
           <li>
-            <strong>Inline editing</strong> with Enter/Esc to confirm/cancel
+            <strong class="text-primary">Search & Focus</strong> to jump to
+            specific items instantly (auto-expands parent folders)
+          </li>
+          <li>
+            <strong class="text-primary">Right-click</strong> for context menu
+            with actions (rename, duplicate, share, delete)
+          </li>
+          <li>
+            <strong class="text-primary">Action buttons</strong> appear on hover
+            (rename, share, delete)
+          </li>
+          <li>
+            <strong class="text-primary">Inline editing</strong> with Enter/Esc
+            to confirm/cancel
           </li>
         </ul>
       </div>
     </div>
 
     <!-- Tree Container -->
-    <div class="tree-container" :class="`theme-${selectedTheme}`">
+    <div class="flex-1 overflow-hidden p-5" :class="`theme-${selectedTheme}`">
       <BaseContextMenu
         :context-menu-items="contextMenuItems"
         @on-clear-context-menu="clearContextMenu"
@@ -638,21 +733,21 @@ const treeStats = computed(() => {
           <!-- Action buttons slot -->
           <template #actions="{ node }">
             <button
-              class="action-button"
+              class="flex h-6 w-6 cursor-pointer items-center justify-center rounded-sm border-none bg-transparent p-0 text-foreground transition-all duration-150 hover:bg-accent hover:text-accent-foreground active:scale-95"
               title="Rename"
               @click.stop="handleQuickAction('rename', node.id)"
             >
               <Edit2 :size="14" />
             </button>
             <button
-              class="action-button"
+              class="flex h-6 w-6 cursor-pointer items-center justify-center rounded-sm border-none bg-transparent p-0 text-foreground transition-all duration-150 hover:bg-accent hover:text-accent-foreground active:scale-95"
               title="Share"
               @click.stop="handleQuickAction('share', node.id)"
             >
               <Share2 :size="14" />
             </button>
             <button
-              class="action-button action-button--danger"
+              class="flex h-6 w-6 cursor-pointer items-center justify-center rounded-sm border-none bg-transparent p-0 text-foreground transition-all duration-150 hover:bg-destructive/20 hover:text-destructive active:scale-95"
               title="Delete"
               @click.stop="handleQuickAction('delete', node.id)"
             >
@@ -666,462 +761,193 @@ const treeStats = computed(() => {
 </template>
 
 <style scoped>
-/* 
- * Tree Demo Styles
- * Uses CSS variables from your design system
- * Works in both light and dark modes
- */
-
-.demo-container {
-  display: flex;
-  height: 100vh;
-  width: 100%;
-  background-color: hsl(var(--background));
-  color: hsl(var(--foreground));
-  font-family: var(--system-ui);
-}
-
-.controls-panel {
-  width: 350px;
-  padding: 20px;
-  background-color: hsl(var(--card));
-  border-right: 1px solid hsl(var(--border));
-  overflow-y: auto;
-  flex-shrink: 0;
-}
-
-.controls-panel h2 {
-  margin: 0 0 20px 0;
-  font-size: 20px;
-  font-weight: 600;
-}
-
-.controls-panel h3 {
-  margin: 20px 0 10px 0;
-  font-size: 14px;
-  font-weight: 600;
-  color: hsl(var(--muted-foreground));
-}
-
-.control-group {
-  margin-bottom: 15px;
-}
-
-.control-group label {
-  display: block;
-  margin-bottom: 8px;
-  font-size: 13px;
-  font-weight: 500;
-}
-
-.control-group select {
-  width: 100%;
-  padding: 8px;
-  margin-bottom: 8px;
-  background-color: hsl(var(--input));
-  border: 1px solid hsl(var(--border));
-  border-radius: var(--radius-md);
-  color: hsl(var(--foreground));
-  font-size: 13px;
-}
-
-.btn-primary,
-.btn-secondary {
-  padding: 8px 16px;
-  border: none;
-  border-radius: var(--radius-md);
-  font-size: 13px;
-  cursor: pointer;
-  transition: background-color 0.2s;
-}
-
-.btn-primary {
-  width: 100%;
-  background-color: hsl(var(--primary));
-  color: hsl(var(--primary-foreground));
-}
-
-.btn-primary:hover {
-  opacity: 0.9;
-}
-
-.btn-secondary {
-  background-color: hsl(var(--secondary));
-  color: hsl(var(--secondary-foreground));
-  margin-right: 8px;
-}
-
-.btn-secondary:hover {
-  background-color: hsl(var(--secondary) / 0.8);
-}
-
-.checkbox-label {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  cursor: pointer;
-  font-size: 13px;
-  user-select: none;
-}
-
-.checkbox-input {
-  width: 16px;
-  height: 16px;
-  cursor: pointer;
-  accent-color: hsl(var(--primary));
-}
-
-.help-text {
-  margin-top: 6px;
-  padding: 8px;
-  font-size: 11px;
-  background-color: hsl(var(--muted));
-  border-left: 3px solid hsl(var(--primary));
-  border-radius: var(--radius-sm);
-  color: hsl(var(--muted-foreground));
-}
-
-.metrics,
-.stats,
-.move-log,
-.action-log,
-.focus-feature,
-.instructions {
-  margin-top: 20px;
-  padding: 15px;
-  background-color: hsl(var(--muted));
-  border-radius: var(--radius-lg);
-}
-
-.metric-row,
-.stat-row {
-  display: flex;
-  justify-content: space-between;
-  padding: 6px 0;
-  font-size: 13px;
-}
-
-.metric-row strong,
-.stat-row strong {
-  color: hsl(var(--primary));
-}
-
-.empty-log {
-  padding: 10px;
-  text-align: center;
-  font-size: 12px;
-  color: hsl(var(--muted-foreground));
-  font-style: italic;
-}
-
-.log-entries {
-  max-height: 200px;
-  overflow-y: auto;
-}
-
-.log-entry {
-  padding: 6px 8px;
-  margin-bottom: 4px;
-  background-color: hsl(var(--card));
-  border-left: 3px solid hsl(var(--primary));
-  border-radius: var(--radius-sm);
-  font-size: 11px;
-  font-family: 'Courier New', monospace;
-}
-
-.log-entry--action {
-  border-left-color: hsl(var(--chart-2));
-}
-
-.instructions ul {
-  margin: 0;
-  padding-left: 20px;
-  font-size: 12px;
-  line-height: 1.8;
-}
-
-.instructions li {
-  margin-bottom: 6px;
-}
-
-.instructions strong {
-  color: hsl(var(--primary));
-}
-
-.tree-container {
-  flex: 1;
-  padding: 20px;
-  overflow: hidden;
-}
-
-/* Scrollbar styling */
-.controls-panel::-webkit-scrollbar {
-  width: 8px;
-}
-
-.controls-panel::-webkit-scrollbar-thumb {
-  background-color: hsl(var(--muted-foreground) / 0.3);
-  border-radius: var(--radius-sm);
-}
-
-.controls-panel::-webkit-scrollbar-thumb:hover {
-  background-color: hsl(var(--muted-foreground) / 0.5);
-}
-
-.log-entries::-webkit-scrollbar {
-  width: 6px;
-}
-
-.log-entries::-webkit-scrollbar-thumb {
-  background-color: hsl(var(--muted-foreground) / 0.3);
-  border-radius: var(--radius-sm);
-}
-
-/* Focus Feature Styles */
-.focus-feature h3 {
-  margin: 0 0 12px 0;
-}
-
-.search-input {
-  width: 100%;
-  padding: 8px 12px;
-  background-color: hsl(var(--input));
-  border: 1px solid hsl(var(--border));
-  border-radius: var(--radius-md);
-  color: hsl(var(--foreground));
-  font-size: 13px;
-  outline: none;
-}
-
-.search-input:focus {
-  border-color: hsl(var(--ring));
-}
-
-.search-results {
-  margin-top: 12px;
-  max-height: 300px;
-  overflow-y: auto;
-  border: 1px solid hsl(var(--border));
-  border-radius: var(--radius-md);
-  background-color: hsl(var(--card));
-}
-
-.search-results-header {
-  padding: 8px 12px;
-  font-size: 11px;
-  color: hsl(var(--muted-foreground));
-  border-bottom: 1px solid hsl(var(--border));
-  background-color: hsl(var(--muted));
-}
-
-.search-results-list {
-  padding: 4px;
-}
-
-.search-result-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 6px 8px;
-  cursor: pointer;
-  border-radius: var(--radius-sm);
-  font-size: 12px;
-  transition: background-color 0.15s;
-}
-
-.search-result-item:hover {
-  background-color: hsl(var(--accent));
-}
-
-.result-icon {
-  font-size: 14px;
-  flex-shrink: 0;
-}
-
-.result-name {
-  flex: 1;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  color: hsl(var(--foreground));
-}
-
-.result-depth {
-  font-size: 10px;
-  color: hsl(var(--muted-foreground));
-  flex-shrink: 0;
-}
-
-.search-results::-webkit-scrollbar {
-  width: 6px;
-}
-
-.search-results::-webkit-scrollbar-thumb {
-  background-color: hsl(var(--muted-foreground) / 0.3);
-  border-radius: var(--radius-sm);
-}
-
-/* Action Buttons */
-.action-button {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 24px;
-  height: 24px;
-  padding: 0;
-  border: none;
-  background-color: transparent;
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-  color: hsl(var(--foreground));
-  transition: all 0.15s ease;
-}
-
-.action-button:hover {
-  background-color: hsl(var(--accent));
-  color: hsl(var(--accent-foreground));
-}
-
-.action-button--danger:hover {
-  background-color: hsl(var(--destructive) / 0.2);
-  color: hsl(var(--destructive));
-}
-
-.action-button:active {
-  transform: scale(0.95);
-}
-
 /* Theme Variants */
 /* VSCode Dark Theme */
 .theme-vscode {
-  --tree-bg: oklch(0.15 0 0);
-  --tree-text: oklch(0.8 0 0);
-  --tree-row-hover-bg: oklch(0.2 0 0);
-  --tree-row-selected-bg: oklch(0.3 0.08 230 / 0.5);
-  --tree-row-selected-hover-bg: oklch(0.35 0.08 230 / 0.6);
-  --tree-row-focus-ring: oklch(0.5 0.18 230);
-  --tree-indicator-color: oklch(0.5 0.18 230);
-  --tree-drop-inside-bg: oklch(0.3 0.08 230 / 0.3);
-  --tree-chevron-hover-bg: oklch(0.25 0 0);
-  --drag-preview-bg: linear-gradient(
+  --v-tree-bg: oklch(0.15 0 0);
+  --v-tree-text: oklch(0.8 0 0);
+  --v-tree-row-hover-bg: oklch(0.2 0 0);
+  --v-tree-row-selected-bg: oklch(0.3 0.08 230 / 0.5);
+  --v-tree-row-selected-hover-bg: oklch(0.35 0.08 230 / 0.6);
+  --v-tree-row-focus-ring: oklch(0.5 0.18 230);
+  --v-tree-indicator-color: oklch(0.5 0.18 230);
+  --v-tree-drop-inside-bg: oklch(0.3 0.08 230 / 0.3);
+  --v-tree-chevron-hover-bg: oklch(0.25 0 0);
+
+  /* Input Field */
+  --v-tree-input-bg: oklch(0.25 0 0);
+  --v-tree-input-border: oklch(0.3 0 0);
+  --v-tree-input-text-color: oklch(0.9 0 0);
+  --v-tree-input-focus-bg: oklch(0.25 0 0);
+  --v-tree-input-focus-border: oklch(0.5 0.18 230);
+
+  --v-tree-drag-preview-bg: linear-gradient(
     to bottom right,
     oklch(0.5 0.18 230 / 0.95),
     oklch(0.4 0.18 230 / 0.98)
   );
-  --drag-preview-text: oklch(1 0 0);
+  --v-tree-drag-preview-text: oklch(1 0 0);
 }
 
 /* GitHub Light Theme */
 .theme-github-light {
-  --tree-bg: oklch(1 0 0);
-  --tree-text: oklch(0.2 0 0);
-  --tree-row-hover-bg: oklch(0.95 0 0);
-  --tree-row-selected-bg: oklch(0.65 0.15 250 / 0.35);
-  --tree-row-selected-hover-bg: oklch(0.65 0.15 250 / 0.45);
-  --tree-row-focus-ring: oklch(0.5 0.18 250);
-  --tree-indicator-color: oklch(0.5 0.18 250);
-  --tree-drop-inside-bg: oklch(0.65 0.15 250 / 0.2);
-  --tree-chevron-hover-bg: oklch(0.92 0 0);
-  --drag-preview-bg: linear-gradient(
+  --v-tree-bg: oklch(1 0 0);
+  --v-tree-text: oklch(0.2 0 0);
+  --v-tree-row-hover-bg: oklch(0.95 0 0);
+  --v-tree-row-selected-bg: oklch(0.65 0.15 250 / 0.35);
+  --v-tree-row-selected-hover-bg: oklch(0.65 0.15 250 / 0.45);
+  --v-tree-row-focus-ring: oklch(0.5 0.18 250);
+  --v-tree-indicator-color: oklch(0.5 0.18 250);
+  --v-tree-drop-inside-bg: oklch(0.65 0.15 250 / 0.2);
+  --v-tree-chevron-hover-bg: oklch(0.92 0 0);
+
+  /* Input Field */
+  --v-tree-input-bg: oklch(1 0 0);
+  --v-tree-input-border: oklch(0.9 0 0);
+  --v-tree-input-text-color: oklch(0.2 0 0);
+  --v-tree-input-focus-bg: oklch(1 0 0);
+  --v-tree-input-focus-border: oklch(0.5 0.18 250);
+
+  --v-tree-drag-preview-bg: linear-gradient(
     to bottom right,
     oklch(0.5 0.18 250 / 0.95),
     oklch(0.4 0.18 250 / 0.98)
   );
-  --drag-preview-text: oklch(1 0 0);
+  --v-tree-drag-preview-text: oklch(1 0 0);
 }
 
 /* GitHub Dark Theme */
 .theme-github-dark {
-  --tree-bg: oklch(0.12 0 0);
-  --tree-text: oklch(0.8 0 0);
-  --tree-row-hover-bg: oklch(0.18 0 0);
-  --tree-row-selected-bg: oklch(0.55 0.2 250 / 0.2);
-  --tree-row-selected-hover-bg: oklch(0.55 0.2 250 / 0.3);
-  --tree-row-focus-ring: oklch(0.6 0.2 250);
-  --tree-indicator-color: oklch(0.6 0.2 250);
-  --tree-drop-inside-bg: oklch(0.55 0.2 250 / 0.15);
-  --tree-chevron-hover-bg: oklch(0.2 0 0);
-  --drag-preview-bg: linear-gradient(
+  --v-tree-bg: oklch(0.12 0 0);
+  --v-tree-text: oklch(0.8 0 0);
+  --v-tree-row-hover-bg: oklch(0.18 0 0);
+  --v-tree-row-selected-bg: oklch(0.55 0.2 250 / 0.2);
+  --v-tree-row-selected-hover-bg: oklch(0.55 0.2 250 / 0.3);
+  --v-tree-row-focus-ring: oklch(0.6 0.2 250);
+  --v-tree-indicator-color: oklch(0.6 0.2 250);
+  --v-tree-drop-inside-bg: oklch(0.55 0.2 250 / 0.15);
+  --v-tree-chevron-hover-bg: oklch(0.2 0 0);
+
+  /* Input Field */
+  --v-tree-input-bg: oklch(0.18 0 0);
+  --v-tree-input-border: oklch(0.3 0 0);
+  --v-tree-input-text-color: oklch(0.9 0 0);
+  --v-tree-input-focus-bg: oklch(0.18 0 0);
+  --v-tree-input-focus-border: oklch(0.6 0.2 250);
+
+  --v-tree-drag-preview-bg: linear-gradient(
     to bottom right,
     oklch(0.6 0.2 250 / 0.95),
     oklch(0.5 0.2 250 / 0.98)
   );
-  --drag-preview-text: oklch(1 0 0);
+  --v-tree-drag-preview-text: oklch(1 0 0);
 }
 
 /* Notion Theme */
 .theme-notion {
-  --tree-bg: oklch(0.99 0 0);
-  --tree-text: oklch(0.25 0 0);
-  --tree-row-hover-bg: oklch(0.96 0 0);
-  --tree-row-selected-bg: oklch(0.65 0.12 200 / 0.25);
-  --tree-row-selected-hover-bg: oklch(0.65 0.12 200 / 0.35);
-  --tree-row-focus-ring: oklch(0.65 0.12 200);
-  --tree-indicator-color: oklch(0.65 0.12 200);
-  --tree-drop-inside-bg: oklch(0.65 0.12 200 / 0.15);
-  --tree-chevron-hover-bg: oklch(0.94 0 0);
-  --drag-preview-bg: linear-gradient(
+  --v-tree-bg: oklch(0.99 0 0);
+  --v-tree-text: oklch(0.25 0 0);
+  --v-tree-row-hover-bg: oklch(0.96 0 0);
+  --v-tree-row-selected-bg: oklch(0.65 0.12 200 / 0.25);
+  --v-tree-row-selected-hover-bg: oklch(0.65 0.12 200 / 0.35);
+  --v-tree-row-focus-ring: oklch(0.65 0.12 200);
+  --v-tree-indicator-color: oklch(0.65 0.12 200);
+  --v-tree-drop-inside-bg: oklch(0.65 0.12 200 / 0.15);
+  --v-tree-chevron-hover-bg: oklch(0.94 0 0);
+
+  /* Input Field */
+  --v-tree-input-bg: oklch(0.98 0 0);
+  --v-tree-input-border: oklch(0.9 0 0);
+  --v-tree-input-text-color: oklch(0.25 0 0);
+  --v-tree-input-focus-bg: oklch(1 0 0);
+  --v-tree-input-focus-border: oklch(0.65 0.12 200);
+
+  --v-tree-drag-preview-bg: linear-gradient(
     to bottom right,
     oklch(0.65 0.12 200 / 0.95),
     oklch(0.55 0.12 200 / 0.98)
   );
-  --drag-preview-text: oklch(1 0 0);
+  --v-tree-drag-preview-text: oklch(1 0 0);
 }
 
 /* Forest Green Theme */
 .theme-forest {
-  --tree-bg: oklch(0.18 0.02 150);
-  --tree-text: oklch(0.85 0.05 140);
-  --tree-row-hover-bg: oklch(0.22 0.03 150);
-  --tree-row-selected-bg: oklch(0.45 0.15 140 / 0.4);
-  --tree-row-selected-hover-bg: oklch(0.45 0.15 140 / 0.5);
-  --tree-row-focus-ring: oklch(0.55 0.18 140);
-  --tree-indicator-color: oklch(0.6 0.2 140);
-  --tree-drop-inside-bg: oklch(0.45 0.15 140 / 0.25);
-  --tree-chevron-hover-bg: oklch(0.25 0.03 150);
-  --drag-preview-bg: linear-gradient(
+  --v-tree-bg: oklch(0.18 0.02 150);
+  --v-tree-text: oklch(0.85 0.05 140);
+  --v-tree-row-hover-bg: oklch(0.22 0.03 150);
+  --v-tree-row-selected-bg: oklch(0.45 0.15 140 / 0.4);
+  --v-tree-row-selected-hover-bg: oklch(0.45 0.15 140 / 0.5);
+  --v-tree-row-focus-ring: oklch(0.55 0.18 140);
+  --v-tree-indicator-color: oklch(0.6 0.2 140);
+  --v-tree-drop-inside-bg: oklch(0.45 0.15 140 / 0.25);
+  --v-tree-chevron-hover-bg: oklch(0.25 0.03 150);
+
+  /* Input Field */
+  --v-tree-input-bg: oklch(0.22 0.03 150);
+  --v-tree-input-border: oklch(0.3 0.05 140);
+  --v-tree-input-text-color: oklch(0.9 0.05 140);
+  --v-tree-input-focus-bg: oklch(0.22 0.03 150);
+  --v-tree-input-focus-border: oklch(0.55 0.18 140);
+
+  --v-tree-drag-preview-bg: linear-gradient(
     to bottom right,
     oklch(0.5 0.18 140 / 0.95),
     oklch(0.4 0.18 140 / 0.98)
   );
-  --drag-preview-text: oklch(1 0 0);
+  --v-tree-drag-preview-text: oklch(1 0 0);
 }
 
 /* Ocean Blue Theme */
 .theme-ocean {
-  --tree-bg: oklch(0.16 0.03 240);
-  --tree-text: oklch(0.85 0.05 220);
-  --tree-row-hover-bg: oklch(0.2 0.04 240);
-  --tree-row-selected-bg: oklch(0.5 0.18 210 / 0.4);
-  --tree-row-selected-hover-bg: oklch(0.5 0.18 210 / 0.5);
-  --tree-row-focus-ring: oklch(0.6 0.2 210);
-  --tree-indicator-color: oklch(0.65 0.22 210);
-  --tree-drop-inside-bg: oklch(0.5 0.18 210 / 0.25);
-  --tree-chevron-hover-bg: oklch(0.22 0.04 240);
-  --drag-preview-bg: linear-gradient(
+  --v-tree-bg: oklch(0.16 0.03 240);
+  --v-tree-text: oklch(0.85 0.05 220);
+  --v-tree-row-hover-bg: oklch(0.2 0.04 240);
+  --v-tree-row-selected-bg: oklch(0.5 0.18 210 / 0.4);
+  --v-tree-row-selected-hover-bg: oklch(0.5 0.18 210 / 0.5);
+  --v-tree-row-focus-ring: oklch(0.6 0.2 210);
+  --v-tree-indicator-color: oklch(0.65 0.22 210);
+  --v-tree-drop-inside-bg: oklch(0.5 0.18 210 / 0.25);
+  --v-tree-chevron-hover-bg: oklch(0.22 0.04 240);
+
+  /* Input Field */
+  --v-tree-input-bg: oklch(0.2 0.04 240);
+  --v-tree-input-border: oklch(0.3 0.1 240);
+  --v-tree-input-text-color: oklch(0.9 0.05 220);
+  --v-tree-input-focus-bg: oklch(0.2 0.04 240);
+  --v-tree-input-focus-border: oklch(0.6 0.2 210);
+
+  --v-tree-drag-preview-bg: linear-gradient(
     to bottom right,
     oklch(0.55 0.2 210 / 0.95),
     oklch(0.45 0.2 210 / 0.98)
   );
-  --drag-preview-text: oklch(1 0 0);
+  --v-tree-drag-preview-text: oklch(1 0 0);
 }
 
 /* Sunset Orange Theme */
 .theme-sunset {
-  --tree-bg: oklch(0.2 0.03 30);
-  --tree-text: oklch(0.9 0.05 50);
-  --tree-row-hover-bg: oklch(0.25 0.04 30);
-  --tree-row-selected-bg: oklch(0.6 0.2 40 / 0.4);
-  --tree-row-selected-hover-bg: oklch(0.6 0.2 40 / 0.5);
-  --tree-row-focus-ring: oklch(0.65 0.22 40);
-  --tree-indicator-color: oklch(0.7 0.24 40);
-  --tree-drop-inside-bg: oklch(0.6 0.2 40 / 0.25);
-  --tree-chevron-hover-bg: oklch(0.28 0.04 30);
-  --drag-preview-bg: linear-gradient(
+  --v-tree-bg: oklch(0.2 0.03 30);
+  --v-tree-text: oklch(0.9 0.05 50);
+  --v-tree-row-hover-bg: oklch(0.25 0.04 30);
+  --v-tree-row-selected-bg: oklch(0.6 0.2 40 / 0.4);
+  --v-tree-row-selected-hover-bg: oklch(0.6 0.2 40 / 0.5);
+  --v-tree-row-focus-ring: oklch(0.65 0.22 40);
+  --v-tree-indicator-color: oklch(0.7 0.24 40);
+  --v-tree-drop-inside-bg: oklch(0.6 0.2 40 / 0.25);
+  --v-tree-chevron-hover-bg: oklch(0.28 0.04 30);
+
+  /* Input Field */
+  --v-tree-input-bg: oklch(0.25 0.04 30);
+  --v-tree-input-border: oklch(0.35 0.1 40);
+  --v-tree-input-text-color: oklch(0.95 0.05 50);
+  --v-tree-input-focus-bg: oklch(0.25 0.04 30);
+  --v-tree-input-focus-border: oklch(0.65 0.22 40);
+
+  --v-tree-drag-preview-bg: linear-gradient(
     to bottom right,
     oklch(0.65 0.22 40 / 0.95),
     oklch(0.55 0.22 40 / 0.98)
   );
-  --drag-preview-text: oklch(0.1 0 0);
+  --v-tree-drag-preview-text: oklch(0.1 0 0);
 }
 </style>

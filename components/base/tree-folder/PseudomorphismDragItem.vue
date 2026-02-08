@@ -68,39 +68,42 @@ const showBadge = computed(() => props.count > 1);
   /* Layout */
   display: flex;
   align-items: center;
-  gap: var(--drag-preview-gap, 0.5rem);
-  min-width: var(--drag-preview-min-width, 120px);
-  max-width: var(--drag-preview-max-width, 300px);
-  padding: var(--drag-preview-padding, 0.5rem 1rem);
+  gap: var(--v-tree-drag-preview-gap, 0.5rem);
+  min-width: var(--v-tree-drag-preview-min-width, 120px);
+  max-width: var(--v-tree-drag-preview-max-width, 300px);
+  padding: var(--v-tree-drag-preview-padding, 0.5rem 1rem);
 
   /* Appearance */
   background: var(
-    --drag-preview-bg,
+    --v-tree-drag-preview-bg,
     linear-gradient(
       to bottom right,
       hsl(var(--primary) / 0.95),
       hsl(var(--primary) / 0.98)
     )
   );
-  color: var(--drag-preview-text, hsl(var(--primary-foreground)));
-  border-radius: var(--drag-preview-border-radius, var(--radius-lg, 0.5rem));
-  font-size: var(--drag-preview-font-size, 13px);
-  font-weight: var(--drag-preview-font-weight, 600);
+  color: var(--v-tree-drag-preview-text, hsl(var(--primary-foreground)));
+  border-radius: var(
+    --v-tree-drag-preview-border-radius,
+    var(--radius-lg, 0.5rem)
+  );
+  font-size: var(--v-tree-drag-preview-font-size, 13px);
+  font-weight: var(--v-tree-drag-preview-font-weight, 600);
 
   /* Effects */
   box-shadow: var(
-    --drag-preview-shadow,
+    --v-tree-drag-preview-shadow,
     0 10px 30px rgba(0, 0, 0, 0.3),
     0 0 0 1px rgba(255, 255, 255, 0.1)
   );
-  backdrop-filter: var(--drag-preview-backdrop-filter, blur(10px));
+  backdrop-filter: var(--v-tree-drag-preview-backdrop-filter, blur(10px));
 }
 
 .drag-preview__icon {
   display: flex;
   align-items: center;
   flex-shrink: 0;
-  color: var(--drag-preview-icon-color, currentColor);
+  color: var(--v-tree-drag-preview-icon-color, currentColor);
 }
 
 .drag-preview__text {
@@ -108,16 +111,16 @@ const showBadge = computed(() => props.count > 1);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font-size: var(--drag-preview-text-font-size, inherit);
+  font-size: var(--v-tree-drag-preview-text-font-size, inherit);
 }
 
 .drag-preview__badge {
   margin-left: auto;
   flex-shrink: 0;
-  padding: var(--drag-preview-badge-padding, 0.125rem 0.5rem);
-  background: var(--drag-preview-badge-bg, rgba(255, 255, 255, 0.25));
-  border-radius: var(--drag-preview-badge-radius, 0.75rem);
-  font-size: var(--drag-preview-badge-font-size, 11px);
-  font-weight: var(--drag-preview-badge-font-weight, 700);
+  padding: var(--v-tree-drag-preview-badge-padding, 0.125rem 0.5rem);
+  background: var(--v-tree-drag-preview-badge-bg, rgba(255, 255, 255, 0.25));
+  border-radius: var(--v-tree-drag-preview-badge-radius, 0.75rem);
+  font-size: var(--v-tree-drag-preview-badge-font-size, 11px);
+  font-weight: var(--v-tree-drag-preview-badge-font-weight, 700);
 }
 </style>

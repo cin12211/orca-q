@@ -175,36 +175,36 @@ defineExpose({
 .tree-row {
   display: flex;
   align-items: center;
-  height: var(--tree-row-height, 24px);
+  height: var(--v-tree-row-height, 24px);
   cursor: pointer;
   user-select: none;
   position: relative;
-  transition: var(--tree-row-transition, background-color 0.1s ease);
+  transition: var(--v-tree-row-transition, background-color 0.1s ease);
   border-radius: var(--radius-sm, 4px);
-  margin: var(--tree-row-margin, 0 4px);
+  margin: var(--v-tree-row-margin, 0 4px);
   /* Performance: Use CSS containment */
   contain: layout style paint;
 }
 
 .tree-row:hover {
-  background-color: var(--tree-row-hover-bg, hsl(var(--accent)));
+  background-color: var(--v-tree-row-hover-bg, hsl(var(--accent)));
 }
 
 .tree-row--selected {
-  background-color: var(--tree-row-selected-bg, hsl(var(--primary) / 0.15));
+  background-color: var(--v-tree-row-selected-bg, hsl(var(--primary) / 0.15));
 }
 
 .tree-row--selected:hover {
   background-color: var(
-    --tree-row-selected-hover-bg,
+    --v-tree-row-selected-hover-bg,
     hsl(var(--primary) / 0.2)
   );
 }
 
 .tree-row--focused {
-  outline: var(--tree-row-focus-ring-width, 1px) solid
-    var(--tree-row-focus-ring, hsl(var(--ring)));
-  outline-offset: var(--tree-row-focus-ring-offset, -1px);
+  outline: var(--v-tree-row-focus-ring-width, 1px) solid
+    var(--v-tree-row-focus-ring, hsl(var(--ring)));
+  outline-offset: var(--v-tree-row-focus-ring-offset, -1px);
 }
 
 /* Drop indicators - Optimized for performance */
@@ -214,8 +214,8 @@ defineExpose({
   position: absolute;
   left: 0;
   right: 0;
-  height: var(--tree-indicator-height, 2px);
-  background-color: var(--tree-indicator-color, hsl(var(--primary)));
+  height: var(--v-tree-indicator-height, 2px);
+  background-color: var(--v-tree-indicator-color, hsl(var(--primary)));
   z-index: 10;
   /* Performance: Hint browser about animation */
   will-change: transform;
@@ -231,10 +231,10 @@ defineExpose({
 }
 
 .tree-row--drop-inside {
-  background-color: var(--tree-drop-inside-bg, hsl(var(--primary) / 0.1));
+  background-color: var(--v-tree-drop-inside-bg, hsl(var(--primary) / 0.1));
   /* Performance: Use box-shadow instead of outline for compositing */
-  box-shadow: inset 0 0 0 var(--tree-drop-inside-border-width, 1px)
-    var(--tree-indicator-color, hsl(var(--primary)));
+  box-shadow: inset 0 0 0 var(--v-tree-drop-inside-border-width, 1px)
+    var(--v-tree-indicator-color, hsl(var(--primary)));
   /* Performance: Hint browser */
   will-change: background-color;
 }
@@ -243,31 +243,31 @@ defineExpose({
   display: flex;
   align-items: center;
   justify-content: center;
-  width: var(--tree-chevron-size, 20px);
-  height: var(--tree-chevron-size, 20px);
+  width: var(--v-tree-chevron-size, 20px);
+  height: var(--v-tree-chevron-size, 20px);
   padding: 0;
   border: none;
   background: transparent;
   cursor: pointer;
-  transition: var(--tree-chevron-transition, transform 0.15s ease);
+  transition: var(--v-tree-chevron-transition, transform 0.15s ease);
   flex-shrink: 0;
   color: currentColor;
 }
 
 .tree-row__chevron:hover {
-  background-color: var(--tree-chevron-hover-bg, hsl(var(--accent)));
+  background-color: var(--v-tree-chevron-hover-bg, hsl(var(--accent)));
   border-radius: var(--radius-sm, 3px);
 }
 
 .tree-row__spacer {
-  width: var(--tree-chevron-size, 20px);
+  width: var(--v-tree-chevron-size, 20px);
   flex-shrink: 0;
 }
 
 .tree-row__icon {
-  margin-right: var(--tree-icon-spacing, 6px);
+  margin-right: var(--v-tree-icon-spacing, 6px);
   flex-shrink: 0;
-  color: var(--tree-icon-color, currentColor);
+  color: var(--v-tree-icon-color, currentColor);
 }
 
 .tree-row__name {
@@ -275,40 +275,40 @@ defineExpose({
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font-size: var(--tree-row-font-size, 13px);
-  color: var(--tree-row-text-color, currentColor);
+  font-size: var(--v-tree-row-font-size, 13px);
+  color: var(--v-tree-row-text-color, currentColor);
 }
 
 .tree-row__edit-input {
   flex: 1;
-  padding: var(--tree-input-padding, 2px 6px);
-  font-size: var(--tree-input-font-size, 13px);
-  background-color: var(--tree-input-bg, hsl(var(--input)));
-  border: var(--tree-input-border-width, 1px) solid
-    var(--tree-input-border, hsl(var(--border)));
+  padding: var(--v-tree-input-padding, 2px 6px);
+  font-size: var(--v-tree-input-font-size, 13px);
+  background-color: var(--v-tree-input-bg, hsl(var(--input)));
+  border: var(--v-tree-input-border-width, 1px) solid
+    var(--v-tree-input-border, hsl(var(--border)));
   border-radius: var(--radius-sm, 3px);
-  color: var(--tree-input-text-color, hsl(var(--foreground)));
+  color: var(--v-tree-input-text-color, hsl(var(--foreground)));
   outline: none;
 }
 
 .tree-row__edit-input:focus {
-  background-color: var(--tree-input-focus-bg, hsl(var(--accent)));
-  border-color: var(--tree-input-focus-border, hsl(var(--ring)));
+  background-color: var(--v-tree-input-focus-bg, hsl(var(--accent)));
+  border-color: var(--v-tree-input-focus-border, hsl(var(--ring)));
 }
 
 .tree-row__actions {
   display: flex;
   align-items: center;
-  gap: var(--tree-actions-gap, 4px);
-  margin-left: var(--tree-actions-spacing, 8px);
-  opacity: var(--tree-actions-opacity-hidden, 0);
+  gap: var(--v-tree-actions-gap, 4px);
+  margin-left: var(--v-tree-actions-spacing, 8px);
+  opacity: var(--v-tree-actions-opacity-hidden, 0);
   /* Performance: No transition during drag operations */
-  transition: var(--tree-actions-transition, opacity 0.1s ease);
+  transition: var(--v-tree-actions-transition, opacity 0.1s ease);
   /* Performance: Hint browser about changes */
   will-change: opacity;
 }
 
 .tree-row:hover .tree-row__actions {
-  opacity: var(--tree-actions-opacity-visible, 1);
+  opacity: var(--v-tree-actions-opacity-visible, 1);
 }
 </style>

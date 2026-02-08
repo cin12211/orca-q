@@ -41,19 +41,19 @@ The component uses **CSS variables** for complete theming control. See [CUSTOMIZ
 <style>
 .custom-tree {
   /* Override CSS variables for custom theme */
-  --tree-row-selected-bg: rgba(34, 197, 94, 0.2);
-  --tree-indicator-color: #22c55e;
-  --drag-preview-bg: linear-gradient(to bottom right, #22c55e, #16a34a);
+  --v-tree-row-selected-bg: rgba(34, 197, 94, 0.2);
+  --v-tree-indicator-color: #22c55e;
+  --v-tree-drag-preview-bg: linear-gradient(to bottom right, #22c55e, #16a34a);
 }
 </style>
 ```
 
 ### Available CSS Variables
 
-- `--tree-row-hover-bg` - Row hover background
-- `--tree-row-selected-bg` - Selected row background
-- `--tree-indicator-color` - Drag drop indicator color
-- `--drag-preview-bg` - Drag preview background
+- `--v-tree-row-hover-bg` - Row hover background
+- `--v-tree-row-selected-bg` - Selected row background
+- `--v-tree-indicator-color` - Drag drop indicator color
+- `--v-tree-drag-preview-bg` - Drag preview background
 - And many more... see [CUSTOMIZATION.md](./CUSTOMIZATION.md)
 
 ## 🎯 Quick Start
