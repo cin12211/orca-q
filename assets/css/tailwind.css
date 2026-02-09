@@ -52,11 +52,11 @@
   --v-tree-text: oklch(0.145 0 0);
 
   /* --- Scrollbar Styles --- */
-  --v-tree-scrollbar-thumb: oklch(0.556 0 0 / 0.3);
-  --v-tree-scrollbar-thumb-hover: oklch(0.556 0 0 / 0.5);
+  --v-tree-scrollbar-thumb: oklch(0.556 0 0 / 0.4);
+  --v-tree-scrollbar-thumb-hover: oklch(0.556 0 0 / 0.6);
   --v-tree-scrollbar-track: transparent;
-  --v-tree-scrollbar-width: 10px;
-  --v-tree-scrollbar-height: 10px;
+  --v-tree-scrollbar-width: 12px;
+  --v-tree-scrollbar-height: 12px;
 
   /* --- TreeRow Colors --- */
   --v-tree-row-hover-bg: oklch(0.97 0 0);
@@ -195,11 +195,11 @@
   --v-tree-text: oklch(0.985 0 0);
 
   /* --- Scrollbar Styles --- */
-  --v-tree-scrollbar-thumb: oklch(0.708 0 0 / 0.3);
-  --v-tree-scrollbar-thumb-hover: oklch(0.708 0 0 / 0.5);
+  --v-tree-scrollbar-thumb: oklch(0.708 0 0 / 0.4);
+  --v-tree-scrollbar-thumb-hover: oklch(0.708 0 0 / 0.6);
   --v-tree-scrollbar-track: transparent;
-  --v-tree-scrollbar-width: 10px;
-  --v-tree-scrollbar-height: 10px;
+  --v-tree-scrollbar-width: 12px;
+  --v-tree-scrollbar-height: 12px;
 
   /* --- TreeRow Colors --- */
   --v-tree-row-hover-bg: oklch(0.269 0 0);

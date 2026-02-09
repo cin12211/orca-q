@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, ref, nextTick, watch } from 'vue';
+import { Icon } from '#components';
 import { ChevronRight, Folder, FolderOpen, File } from 'lucide-vue-next';
 import type { FileNode, DropPosition } from './types';
 
@@ -83,7 +84,16 @@ const indentation = computed(() => ({
 }));
 
 // Determine which icon to show
-const Icon = computed(() => {
+const customIcon = computed(() => {
+  if (props.node.type === 'folder') {
+    return props.isExpanded
+      ? props.node.iconOpen || props.node.iconClose
+      : props.node.iconClose;
+  }
+  return props.node.iconClose;
+});
+
+const defaultIcon = computed(() => {
   if (props.node.type === 'folder') {
     return props.isExpanded ? FolderOpen : Folder;
   }
@@ -123,7 +133,7 @@ defineExpose({
     @dragleave="emit('dragleave', $event)"
     @dragend="emit('dragend', $event)"
     @drop="emit('drop', $event)"
-    @contextmenu.prevent="emit('contextmenu', $event)"
+    @click.right="emit('contextmenu', $event)"
   >
     <!-- Chevron (only for folders) -->
     <button
@@ -137,7 +147,19 @@ defineExpose({
     <div v-else class="tree-row__spacer" />
 
     <!-- Icon -->
-    <component :is="Icon" :size="16" class="tree-row__icon" />
+    <Icon
+      v-if="customIcon"
+      :name="customIcon"
+      class="tree-row__icon size-4!"
+      :class="node.iconClass"
+    />
+    <component
+      v-else
+      :is="defaultIcon"
+      :size="16"
+      class="tree-row__icon"
+      :class="node.iconClass"
+    />
 
     <!-- Name or Edit Input -->
     <span v-if="!isEditing" class="tree-row__name">{{ node.name }}</span>
@@ -148,7 +170,7 @@ defineExpose({
       type="text"
       class="tree-row__edit-input"
       @blur="handleRenameSubmit"
-      @keydown.enter="handleRenameSubmit"
+      @keydown.enter.stop="handleRenameSubmit"
       @keydown.esc="handleRenameCancel"
       @click.stop
       @dblclick.stop
@@ -267,7 +289,7 @@ defineExpose({
 .tree-row__icon {
   margin-right: var(--v-tree-icon-spacing, 6px);
   flex-shrink: 0;
-  color: var(--v-tree-icon-color, currentColor);
+  /* color: var(--v-tree-icon-color, currentColor); */
 }
 
 .tree-row__name {

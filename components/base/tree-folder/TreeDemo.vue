@@ -720,41 +720,43 @@ const treeStats = computed(() => {
         :context-menu-items="contextMenuItems"
         @on-clear-context-menu="clearContextMenu"
       >
-        <FileTree
-          ref="treeRef"
-          :initial-data="treeData"
-          :allow-sort="allowSort"
-          storage-key="demo_tree"
-          @move="handleMove"
-          @select="handleSelect"
-          @contextmenu="handleContextMenu"
-          @rename="handleRename"
-        >
-          <!-- Action buttons slot -->
-          <template #actions="{ node }">
-            <button
-              class="flex h-6 w-6 cursor-pointer items-center justify-center rounded-sm border-none bg-transparent p-0 text-foreground transition-all duration-150 hover:bg-accent hover:text-accent-foreground active:scale-95"
-              title="Rename"
-              @click.stop="handleQuickAction('rename', node.id)"
-            >
-              <Edit2 :size="14" />
-            </button>
-            <button
-              class="flex h-6 w-6 cursor-pointer items-center justify-center rounded-sm border-none bg-transparent p-0 text-foreground transition-all duration-150 hover:bg-accent hover:text-accent-foreground active:scale-95"
-              title="Share"
-              @click.stop="handleQuickAction('share', node.id)"
-            >
-              <Share2 :size="14" />
-            </button>
-            <button
-              class="flex h-6 w-6 cursor-pointer items-center justify-center rounded-sm border-none bg-transparent p-0 text-foreground transition-all duration-150 hover:bg-destructive/20 hover:text-destructive active:scale-95"
-              title="Delete"
-              @click.stop="handleQuickAction('delete', node.id)"
-            >
-              <Trash2 :size="14" />
-            </button>
-          </template>
-        </FileTree>
+        <div class="h-full">
+          <FileTree
+            ref="treeRef"
+            :initial-data="treeData"
+            :allow-sort="allowSort"
+            storage-key="demo_tree"
+            @move="handleMove"
+            @select="handleSelect"
+            @contextmenu="handleContextMenu"
+            @rename="handleRename"
+          >
+            <!-- Action buttons slot -->
+            <template #actions="{ node }">
+              <button
+                class="flex h-6 w-6 cursor-pointer items-center justify-center rounded-sm border-none bg-transparent p-0 text-foreground transition-all duration-150 hover:bg-accent hover:text-accent-foreground active:scale-95"
+                title="Rename"
+                @click.stop="handleQuickAction('rename', node.id)"
+              >
+                <Edit2 :size="14" />
+              </button>
+              <button
+                class="flex h-6 w-6 cursor-pointer items-center justify-center rounded-sm border-none bg-transparent p-0 text-foreground transition-all duration-150 hover:bg-accent hover:text-accent-foreground active:scale-95"
+                title="Share"
+                @click.stop="handleQuickAction('share', node.id)"
+              >
+                <Share2 :size="14" />
+              </button>
+              <button
+                class="flex h-6 w-6 cursor-pointer items-center justify-center rounded-sm border-none bg-transparent p-0 text-foreground transition-all duration-150 hover:bg-destructive/20 hover:text-destructive active:scale-95"
+                title="Delete"
+                @click.stop="handleQuickAction('delete', node.id)"
+              >
+                <Trash2 :size="14" />
+              </button>
+            </template>
+          </FileTree>
+        </div>
       </BaseContextMenu>
     </div>
   </div>

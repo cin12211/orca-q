@@ -23,6 +23,7 @@ const emit = defineEmits<{
     position: 'before' | 'after' | 'inside',
   ];
   select: [nodeIds: string[]];
+  click: [nodeId: string, event: MouseEvent];
   contextmenu: [nodeId: string, event: MouseEvent];
   rename: [nodeId: string, newName: string];
 }>();
@@ -119,6 +120,10 @@ const handleRowClick = (event: MouseEvent, nodeId: string) => {
 
   focusedId.value = nodeId;
   emit('select', Array.from(selectedIds.value));
+
+  if (event.type === 'click') {
+    emit('click', nodeId, event);
+  }
 };
 
 const handleRowDblClick = (nodeId: string) => {
@@ -474,10 +479,10 @@ const handleKeyDown = (event: KeyboardEvent) => {
 
   if (newIdx !== currentIdx) {
     focusedId.value = visibleNodeIds.value[newIdx];
-    if (!event.shiftKey) {
-      selectedIds.value = new Set([focusedId.value]);
-      emit('select', [focusedId.value]);
-    }
+    // if (!event.shiftKey) {
+    //   selectedIds.value = new Set([focusedId.value]);
+    //   emit('select', [focusedId.value]);
+    // }
 
     // Scroll focused item into view
     scrollToItem(focusedId.value);
@@ -486,6 +491,7 @@ const handleKeyDown = (event: KeyboardEvent) => {
 
 // Context menu handler
 const handleContextMenu = (event: MouseEvent, nodeId: string) => {
+  handleRowClick(event, nodeId);
   emit('contextmenu', nodeId, event);
 };
 
@@ -542,6 +548,20 @@ onMounted(() => {
     focusedId.value = visibleNodeIds.value[0];
   }
 });
+
+// React to external data changes
+watch(
+  () => props.initialData,
+  newData => {
+    if (newData) {
+      nodes.value = newData;
+      // Preserve or reset selection/expansion if needed?
+      // For now, let's keep expansion state as is, but validate if IDs still exist?
+      // Simple approach: just update data. virtualization and computed will handle the rest.
+    }
+  },
+  { deep: true }
+);
 
 // Public methods
 const expandAll = () => {
@@ -690,27 +710,23 @@ defineExpose({
   color: var(--v-tree-text, hsl(var(--foreground)));
 }
 
-.file-tree::-webkit-scrollbar {
+/* .file-tree::-webkit-scrollbar {
   width: var(--v-tree-scrollbar-width, 10px);
   height: var(--v-tree-scrollbar-height, 10px);
 }
 
 .file-tree::-webkit-scrollbar-thumb {
-  background-color: var(
-    --v-tree-scrollbar-thumb,
-    hsl(var(--muted-foreground) / 0.3)
-  );
-  border-radius: var(--radius-sm, 5px);
+  background-color: var(--v-tree-scrollbar-thumb, oklch(0.556 0 0 / 0.3));
+  border-radius: 99px;
+  border: 2px solid transparent;
+  background-clip: content-box;
 }
 
 .file-tree::-webkit-scrollbar-thumb:hover {
-  background-color: var(
-    --v-tree-scrollbar-thumb-hover,
-    hsl(var(--muted-foreground) / 0.5)
-  );
+  background-color: var(--v-tree-scrollbar-thumb-hover, oklch(0.556 0 0 / 0.5));
 }
 
 .file-tree::-webkit-scrollbar-track {
   background-color: var(--v-tree-scrollbar-track, transparent);
-}
+} */
 </style>
