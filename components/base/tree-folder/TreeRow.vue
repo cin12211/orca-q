@@ -11,10 +11,18 @@ interface Props {
   isFocused: boolean;
   dropIndicator?: { position: DropPosition } | null;
   isEditing?: boolean;
+  allowDragAndDrop?: boolean;
+  itemHeight?: number;
+  indentSize?: number;
+  baseIndent?: number;
 }
 
 const props = withDefaults(defineProps<Props>(), {
   isEditing: false,
+  allowDragAndDrop: true,
+  itemHeight: 24,
+  indentSize: 20,
+  baseIndent: 8,
 });
 
 const emit = defineEmits<{
@@ -78,9 +86,10 @@ watch(
   }
 );
 
-// Calculate indentation based on depth
-const indentation = computed(() => ({
-  paddingLeft: `${props.node.depth * 20 + 8}px`,
+// Calculate indentation and height based on props
+const rowStyle = computed(() => ({
+  paddingLeft: `${props.node.depth * props.indentSize + props.baseIndent}px`,
+  height: `${props.itemHeight}px`,
 }));
 
 // Determine which icon to show
@@ -124,8 +133,8 @@ defineExpose({
 <template>
   <div
     :class="rowClasses"
-    :style="indentation"
-    :draggable="!isEditing"
+    :style="rowStyle"
+    :draggable="allowDragAndDrop && !isEditing"
     @click="emit('click', $event)"
     @dblclick="emit('dblclick', $event)"
     @dragstart="emit('dragstart', $event)"
@@ -197,7 +206,6 @@ defineExpose({
 .tree-row {
   display: flex;
   align-items: center;
-  height: var(--v-tree-row-height, 24px);
   cursor: pointer;
   user-select: none;
   position: relative;

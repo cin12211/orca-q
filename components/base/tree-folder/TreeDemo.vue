@@ -134,6 +134,9 @@ const treeRef = ref<InstanceType<typeof FileTree> | null>(null);
 
 // Drag-drop configuration
 const allowSort = ref(false); // Default: only allow moving into folders
+const allowDragAndDrop = ref(true); // Default: allow drag and drop
+const itemHeight = ref(24);
+const indentSize = ref(20);
 
 // Theme configuration
 const selectedTheme = ref('default');
@@ -480,6 +483,53 @@ const treeStats = computed(() => {
           }}
         </div>
       </div>
+      <div class="mb-4">
+        <label
+          class="flex cursor-pointer select-none items-center gap-2 text-[13px]"
+        >
+          <input
+            type="checkbox"
+            v-model="allowDragAndDrop"
+            class="h-4 w-4 cursor-pointer accent-primary"
+          />
+          <span>Allow Drag and Drop</span>
+        </label>
+        <div
+          class="mt-1.5 rounded-sm border-l-[3px] border-primary bg-muted p-2 text-[11px] text-muted-foreground"
+        >
+          {{ allowDragAndDrop ? '✓ Can move' : '✗ Cannot move' }}
+        </div>
+      </div>
+
+      <!-- Item Height -->
+      <div class="mb-4">
+        <label class="mb-2 block text-[13px] font-medium"
+          >Item Height: {{ itemHeight }}px</label
+        >
+        <input
+          type="range"
+          v-model.number="itemHeight"
+          min="20"
+          max="48"
+          step="1"
+          class="w-full cursor-pointer accent-primary"
+        />
+      </div>
+
+      <!-- Indent Size -->
+      <div class="mb-4">
+        <label class="mb-2 block text-[13px] font-medium"
+          >Indent Size: {{ indentSize }}px</label
+        >
+        <input
+          type="range"
+          v-model.number="indentSize"
+          min="10"
+          max="40"
+          step="1"
+          class="w-full cursor-pointer accent-primary"
+        />
+      </div>
 
       <!-- Focus Feature -->
       <div class="mt-5 rounded-lg bg-muted p-4">
@@ -725,6 +775,9 @@ const treeStats = computed(() => {
             ref="treeRef"
             :initial-data="treeData"
             :allow-sort="allowSort"
+            :allow-drag-and-drop="allowDragAndDrop"
+            :item-height="itemHeight"
+            :indent-size="indentSize"
             storage-key="demo_tree"
             @move="handleMove"
             @select="handleSelect"

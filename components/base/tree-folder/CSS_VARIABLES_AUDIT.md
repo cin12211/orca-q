@@ -11,15 +11,18 @@ This document lists **ALL 61 customizable CSS variables** in the Tree Component,
 ### 1. Colors (19 variables)
 
 #### Container Colors (2)
+
 - ✅ `--v-tree-bg` - Tree container background
 - ✅ `--v-tree-text` - Default text color
 
 #### Scrollbar Colors (3)
+
 - ✅ `--v-tree-scrollbar-thumb` - Scrollbar thumb color
 - ✅ `--v-tree-scrollbar-thumb-hover` - Scrollbar thumb hover color
 - ✅ `--v-tree-scrollbar-track` - Scrollbar track color
 
 #### Row State Colors (5)
+
 - ✅ `--v-tree-row-hover-bg` - Row background on hover
 - ✅ `--v-tree-row-selected-bg` - Selected row background
 - ✅ `--v-tree-row-selected-hover-bg` - Selected row hover background
@@ -27,11 +30,13 @@ This document lists **ALL 61 customizable CSS variables** in the Tree Component,
 - ✅ `--v-tree-row-text-color` - Row text color
 
 #### Drag & Drop Colors (3)
+
 - ✅ `--v-tree-indicator-color` - Drop indicator line color
 - ✅ `--v-tree-drop-inside-bg` - Background when dropping inside folder
 - ✅ `--v-tree-chevron-hover-bg` - Chevron button hover background
 
 #### Input Colors (4)
+
 - ✅ `--v-tree-input-bg` - Input background
 - ✅ `--v-tree-input-border` - Input border color
 - ✅ `--v-tree-input-text-color` - Input text color
@@ -39,6 +44,7 @@ This document lists **ALL 61 customizable CSS variables** in the Tree Component,
 - ✅ `--v-tree-input-focus-border` - Input border when focused
 
 #### Drag Preview Colors (2)
+
 - ✅ `--v-tree-drag-preview-bg` - Drag preview background gradient
 - ✅ `--v-tree-drag-preview-text` - Drag preview text color
 - ✅ `--v-tree-drag-preview-icon-color` - Drag preview icon color
@@ -46,29 +52,32 @@ This document lists **ALL 61 customizable CSS variables** in the Tree Component,
 ### 2. Dimensions (13 variables)
 
 #### Scrollbar Dimensions (2)
-- ✅ `--v-tree-scrollbar-width` - Vertical scrollbar width (10px)
-- ✅ `--v-tree-scrollbar-height` - Horizontal scrollbar height (10px)
 
 #### Row Dimensions (2)
-- ✅ `--v-tree-row-height` - Height of each row (24px)
+
 - ✅ `--v-tree-row-margin` - Margin around each row (0 4px)
 
 #### Focus Ring Dimensions (2)
+
 - ✅ `--v-tree-row-focus-ring-width` - Width of focus ring (1px)
 - ✅ `--v-tree-row-focus-ring-offset` - Offset from row edge (-1px)
 
 #### Indicator Dimensions (2)
+
 - ✅ `--v-tree-indicator-height` - Height of drop indicator line (2px)
 - ✅ `--v-tree-drop-inside-border-width` - Border width for drop-inside (1px)
 
 #### Icon & Chevron Dimensions (2)
+
 - ✅ `--v-tree-chevron-size` - Width and height of chevron button (20px)
 - ✅ `--v-tree-icon-spacing` - Space between icon and text (6px)
 
 #### Input Dimensions (1)
+
 - ✅ `--v-tree-input-border-width` - Input border width (1px)
 
 #### Drag Preview Dimensions (4)
+
 - ✅ `--v-tree-drag-preview-min-width` - Minimum width (120px)
 - ✅ `--v-tree-drag-preview-max-width` - Maximum width (300px)
 - ✅ `--v-tree-drag-preview-gap` - Space between elements (0.5rem)
@@ -77,13 +86,16 @@ This document lists **ALL 61 customizable CSS variables** in the Tree Component,
 ### 3. Typography (8 variables)
 
 #### Row Typography (1)
+
 - ✅ `--v-tree-row-font-size` - Font size for row text (13px)
 
 #### Input Typography (2)
+
 - ✅ `--v-tree-input-padding` - Input internal padding (2px 6px)
 - ✅ `--v-tree-input-font-size` - Input font size (13px)
 
 #### Drag Preview Typography (5)
+
 - ✅ `--v-tree-drag-preview-font-size` - Main font size (13px)
 - ✅ `--v-tree-drag-preview-font-weight` - Font weight (600)
 - ✅ `--v-tree-drag-preview-text-font-size` - Text element font size (inherit)
@@ -93,36 +105,44 @@ This document lists **ALL 61 customizable CSS variables** in the Tree Component,
 ### 4. Spacing (7 variables)
 
 #### Row Spacing (3)
+
 - ✅ `--v-tree-actions-gap` - Space between action buttons (4px)
 - ✅ `--v-tree-actions-spacing` - Space from row text to actions (8px)
 - ✅ `--v-tree-icon-spacing` - Space between icon and text (6px) [duplicate, counted in dimensions]
 
 #### Input Spacing (1)
+
 - ✅ `--v-tree-input-padding` - Input internal padding (2px 6px) [already counted in typography]
 
 #### Drag Preview Spacing (2)
+
 - ✅ `--v-tree-drag-preview-badge-padding` - Badge padding (0.125rem 0.5rem)
 - ✅ `--v-tree-drag-preview-padding` - Container padding (0.5rem 1rem) [already counted]
 
 ### 5. Effects (6 variables)
 
 #### Border Radius (2)
+
 - ✅ `--v-tree-drag-preview-border-radius` - Drag preview corner radius (var(--radius-lg))
 - ✅ `--v-tree-drag-preview-badge-radius` - Badge corner radius (0.75rem)
 
 #### Shadows (1)
+
 - ✅ `--v-tree-drag-preview-shadow` - Drag preview drop shadow
 
 #### Filters (1)
+
 - ✅ `--v-tree-drag-preview-backdrop-filter` - Backdrop blur effect (blur(10px))
 
 #### Opacity (2)
+
 - ✅ `--v-tree-actions-opacity-hidden` - Actions opacity when hidden (0)
 - ✅ `--v-tree-actions-opacity-visible` - Actions opacity when visible (1)
 
 ### 6. Transitions & Animations (4 variables)
 
 #### Timing Functions (4)
+
 - ✅ `--v-tree-row-transition` - Row hover/select transition (background-color 0.1s ease)
 - ✅ `--v-tree-chevron-transition` - Chevron rotation animation (transform 0.15s ease)
 - ✅ `--v-tree-actions-transition` - Actions fade animation (opacity 0.1s ease)
@@ -186,29 +206,28 @@ All 61 unique CSS variables:
 43. `--v-tree-row-focus-ring-offset`
 44. `--v-tree-row-focus-ring-width`
 45. `--v-tree-row-font-size`
-46. `--v-tree-row-height`
-47. `--v-tree-row-hover-bg`
-48. `--v-tree-row-margin`
-49. `--v-tree-row-selected-bg`
-50. `--v-tree-row-selected-hover-bg`
-51. `--v-tree-row-text-color`
-52. `--v-tree-row-transition`
-53. `--v-tree-scrollbar-height`
-54. `--v-tree-scrollbar-thumb`
-55. `--v-tree-scrollbar-thumb-hover`
-56. `--v-tree-scrollbar-track`
-57. `--v-tree-scrollbar-width`
-58. `--v-tree-text`
+46. `--v-tree-row-hover-bg`
+47. `--v-tree-row-margin`
+48. `--v-tree-row-selected-bg`
+49. `--v-tree-row-selected-hover-bg`
+50. `--v-tree-row-text-color`
+51. `--v-tree-row-transition`
+52. `--v-tree-scrollbar-thumb`
+53. `--v-tree-scrollbar-thumb-hover`
+54. `--v-tree-scrollbar-track`
+55. `--v-tree-text`
 
 ---
 
 ## 🎯 Conversion Summary
 
 ### Before
+
 - **18 variables** (colors only)
 - Hardcoded: height, width, padding, margin, font-sizes, transitions, borders, shadows
 
 ### After
+
 - **61 variables** (complete coverage)
 - Zero hardcoded values
 - True Headless UI pattern
@@ -219,7 +238,8 @@ All 61 unique CSS variables:
 ## ✅ Files Updated
 
 1. **TreeRow.vue** - 12 property updates
-   - Row dimensions (height, margin)
+
+   - Row dimensions (margin)
    - Focus ring (width, offset)
    - Indicators (height, border-width)
    - Chevron (size, transition)
@@ -230,9 +250,11 @@ All 61 unique CSS variables:
    - Row transition
 
 2. **FileTree.vue** - 2 property updates
+
    - Scrollbar dimensions (width, height)
 
 3. **PseudomorphismDragItem.vue** - 13 property updates
+
    - Dimensions (gap, min-width, max-width, padding)
    - Typography (font-size, font-weight, text-font-size)
    - Effects (border-radius, shadow, backdrop-filter)
@@ -240,6 +262,7 @@ All 61 unique CSS variables:
    - Icon color
 
 4. **tailwind.css** - Added 43 new variables
+
    - Organized by category with clear comments
    - Full light/dark mode support
    - All variables documented

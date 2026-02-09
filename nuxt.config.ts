@@ -61,6 +61,7 @@ export default defineNuxtConfig({
     'pinia-plugin-persistedstate/nuxt',
     'nuxt-typed-router',
     '@formkit/auto-animate',
+    '@nuxtjs/storybook',
   ],
   css: ['~/assets/css/tailwind.css', 'vue-json-pretty/lib/styles.css'],
   colorMode: {

@@ -9,11 +9,27 @@ interface Props {
   initialData?: Record<string, FileNode>;
   storageKey?: string;
   allowSort?: boolean; // Allow reordering items (before/after positions)
+  allowDragAndDrop?: boolean; // Allow any drag and drop (including nesting)
+  itemHeight?: number;
+  indentSize?: number;
+  baseIndent?: number;
+  autoExpandDelay?: number;
+  autoScrollThreshold?: number;
+  autoScrollSpeed?: number;
+  overscan?: number;
 }
 
 const props = withDefaults(defineProps<Props>(), {
   storageKey: 'vscode_tree_state',
   allowSort: false, // By default, only allow moving into folders
+  allowDragAndDrop: true,
+  itemHeight: 24,
+  indentSize: 20,
+  baseIndent: 8,
+  autoExpandDelay: 500,
+  autoScrollThreshold: 50,
+  autoScrollSpeed: 10,
+  overscan: 10,
 });
 
 const emit = defineEmits<{
@@ -72,8 +88,8 @@ const rowVirtualizer = useVirtualizer({
     return visibleNodeIds.value.length;
   },
   getScrollElement: () => parentRef.value,
-  estimateSize: () => 24,
-  overscan: 10,
+  estimateSize: () => props.itemHeight,
+  overscan: props.overscan,
 });
 
 // Drag and drop state
@@ -135,6 +151,11 @@ const handleRowDblClick = (nodeId: string) => {
 
 // Drag handlers
 const handleDragStart = (event: DragEvent, nodeId: string) => {
+  if (!props.allowDragAndDrop) {
+    event.preventDefault();
+    return;
+  }
+
   draggedId.value = nodeId;
   isDragging.value = true;
   const node = nodes.value[nodeId];
@@ -198,8 +219,8 @@ const handleAutoScroll = (event: DragEvent) => {
 
   const container = parentRef.value;
   const rect = container.getBoundingClientRect();
-  const scrollThreshold = 50; // pixels from edge to trigger scroll
-  const scrollSpeed = 10; // pixels to scroll per interval
+  const scrollThreshold = props.autoScrollThreshold; // pixels from edge to trigger scroll
+  const scrollSpeed = props.autoScrollSpeed; // pixels to scroll per interval
 
   const mouseY = event.clientY - rect.top;
   const containerHeight = rect.height;
@@ -262,6 +283,8 @@ const calculateDropPosition = (
 const handleDragOver = (event: DragEvent, nodeId: string) => {
   event.preventDefault();
 
+  if (!props.allowDragAndDrop) return;
+
   if (!draggedId.value || draggedId.value === nodeId) {
     return;
   }
@@ -299,7 +322,7 @@ const handleDragOver = (event: DragEvent, nodeId: string) => {
           expandedIds.value.add(nodeId);
           expandedIds.value = new Set(expandedIds.value);
         }
-      }, 500); // 500ms delay
+      }, props.autoExpandDelay);
     }
   }
 };
@@ -324,6 +347,9 @@ const handleDragEnd = () => {
 
 const handleDrop = (event: DragEvent, targetId: string) => {
   event.preventDefault();
+
+  if (!props.allowDragAndDrop) return;
+
   clearTimeout(autoExpandTimer.value);
   if (autoScrollInterval.value) {
     clearInterval(autoScrollInterval.value);
@@ -656,6 +682,10 @@ defineExpose({
             dropIndicator?.nodeId === visibleNodeIds[item.index]
               ? dropIndicator
               : null,
+            props.itemHeight,
+            props.indentSize,
+            props.baseIndent,
+            props.allowDragAndDrop,
           ]"
           :node="nodes[visibleNodeIds[item.index]]"
           :is-selected="selectedIds.has(visibleNodeIds[item.index])"
@@ -667,6 +697,10 @@ defineExpose({
               ? dropIndicator
               : null
           "
+          :item-height="props.itemHeight"
+          :indent-size="props.indentSize"
+          :base-indent="props.baseIndent"
+          :allow-drag-and-drop="props.allowDragAndDrop"
           @click="handleRowClick($event, visibleNodeIds[item.index])"
           @dblclick="handleRowDblClick(visibleNodeIds[item.index])"
           @toggle="toggleExpansion(visibleNodeIds[item.index])"

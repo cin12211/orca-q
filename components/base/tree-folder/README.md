@@ -148,10 +148,19 @@ import { TreeDemo } from '@/components/base/tree-folder';
 
 #### Props
 
-| Prop          | Type                       | Default               | Description                       |
-| ------------- | -------------------------- | --------------------- | --------------------------------- |
-| `initialData` | `Record<string, FileNode>` | `{}`                  | Tree node data in flat map format |
-| `storageKey`  | `string`                   | `'vscode_tree_state'` | LocalStorage key for persistence  |
+| Prop                  | Type                       | Default               | Description                           |
+| --------------------- | -------------------------- | --------------------- | ------------------------------------- |
+| `initialData`         | `Record<string, FileNode>` | `{}`                  | Tree node data in flat map format     |
+| `storageKey`          | `string`                   | `'vscode_tree_state'` | LocalStorage key for persistence      |
+| `allowSort`           | `boolean`                  | `false`               | Allow reordering items (siblings)     |
+| `allowDragAndDrop`    | `boolean`                  | `true`                | Enable/Disable drag & drop entirely   |
+| `itemHeight`          | `number`                   | `24`                  | Height of each row in pixels          |
+| `indentSize`          | `number`                   | `20`                  | Indentation per depth level in pixels |
+| `baseIndent`          | `number`                   | `8`                   | Base indentation in pixels            |
+| `autoExpandDelay`     | `number`                   | `500`                 | MS to hover before folder expands     |
+| `autoScrollThreshold` | `number`                   | `50`                  | Distance from edge to trigger scroll  |
+| `autoScrollSpeed`     | `number`                   | `10`                  | Pixels to scroll per frame            |
+| `overscan`            | `number`                   | `10`                  | Extra items to render off-screen      |
 
 #### Events
 
