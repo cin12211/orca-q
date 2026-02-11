@@ -7,7 +7,7 @@ import { promises as fs } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { promisify } from 'node:util';
-import type { ImportOptions } from '~/shared/types';
+import type { ImportOptions } from '~/core/types';
 
 const execAsync = promisify(exec);
 

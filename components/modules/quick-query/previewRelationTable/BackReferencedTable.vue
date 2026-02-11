@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Input } from '#components';
-import { DEFAULT_MAX_KEEP_ALIVE, OperatorSet } from '~/utils/constants';
-import type { FilterSchema } from '~/utils/quickQuery';
+import type { FilterSchema } from '~/components/modules/quick-query/utils';
+import { DEFAULT_MAX_KEEP_ALIVE, OperatorSet } from '~/core/constants';
 import { useReferencedTables } from '../hooks';
 import ReferencedTable from './ReferencedTable.vue';
 

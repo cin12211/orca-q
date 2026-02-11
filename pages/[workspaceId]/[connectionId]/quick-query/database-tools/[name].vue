@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import ExportOptionsForm from '~/components/modules/management-export/components/ExportOptionsForm.vue';
 import { useDatabaseExport } from '~/components/modules/management-export/hooks/useDatabaseExport';
-import { useAppContext } from '~/shared/contexts/useAppContext';
-import type { ExportOptions, ImportOptions } from '~/shared/types';
+import { useAppContext } from '~/core/contexts/useAppContext';
+import type { ExportOptions, ImportOptions } from '~/core/types';
 
 definePageMeta({
   keepalive: true,

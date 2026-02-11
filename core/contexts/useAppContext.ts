@@ -31,7 +31,6 @@ export const useAppContext = () => {
   const setSchemaId = (schemaId: string) => {
     if (!workspaceId.value || !connectionId.value) {
       throw new Error('No workspace or connection selected');
-      return;
     }
 
     wsStateStore.setSchemaId({
@@ -114,7 +113,6 @@ export const useAppContext = () => {
       finish();
 
       throw new Error('No connection found');
-      return;
     }
 
     if (isRefresh) {

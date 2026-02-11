@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
 import dayjs from 'dayjs';
-import { uuidv4 } from '~/lib/utils';
+import { uuidv4 } from '~/core/helpers';
 import { useWSStateStore } from './useWSStateStore';
 
 export interface QuickQueryLog {

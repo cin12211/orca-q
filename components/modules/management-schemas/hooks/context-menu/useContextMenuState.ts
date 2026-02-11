@@ -1,6 +1,6 @@
 import { ref } from 'vue';
 import type { FlattenedTreeFileSystemItem } from '~/components/base/Tree';
-import type { TabViewType } from '~/shared/stores/useTabViewsStore';
+import type { TabViewType } from '~/core/stores/useTabViewsStore';
 import type { ContextMenuState, SafeModeDialogType } from './types';
 
 export function useContextMenuState(): ContextMenuState {

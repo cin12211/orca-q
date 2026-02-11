@@ -81,6 +81,7 @@ export default defineNuxtConfig({
   },
   imports: {
     autoImport: true,
+    dirs: ['core/composables'],
   },
   components: [
     { path: '~/components/base', pathPrefix: false },

@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { useAppContext } from '~/shared/contexts/useAppContext';
-import { TabViewType } from '~/shared/stores/useTabViewsStore';
+import { useAppContext } from '~/core/contexts/useAppContext';
+import { TabViewType } from '~/core/stores/useTabViewsStore';
 import ConnectionSelector from '../selectors/ConnectionSelector.vue';
 
 const { wsStateStore, connectionStore, tabViewStore } = useAppContext();

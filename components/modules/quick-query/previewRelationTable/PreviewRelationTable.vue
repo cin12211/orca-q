@@ -6,7 +6,7 @@ import {
   Dialog,
   DialogContent,
 } from '#components';
-import { DEFAULT_MAX_KEEP_ALIVE } from '~/utils/constants';
+import { DEFAULT_MAX_KEEP_ALIVE } from '~/core/constants';
 import BackReferencedTable from './BackReferencedTable.vue';
 import ForwardReferencedTable from './ForwardReferencedTable.vue';
 

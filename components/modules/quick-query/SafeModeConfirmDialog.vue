@@ -16,8 +16,8 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '~/components/ui/tooltip';
-import { useCopyToClipboard } from '~/composables/useCopyToClipboard';
-import { useCodeHighlighter } from '~/composables/useSqlHighlighter';
+import { useCopyToClipboard } from '~/core/composables/useCopyToClipboard';
+import { useCodeHighlighter } from '~/core/composables/useSqlHighlighter';
 
 const props = defineProps<{
   open: boolean;

@@ -6,7 +6,7 @@ import {
   EExtendedField,
   OperatorSet,
   operatorSets,
-} from '~/utils/constants';
+} from '~/core/constants';
 
 /* -------------------------------------------------------------------------- */
 /*                                   Types                                    */

@@ -2,7 +2,7 @@
 import type { Slot } from 'vue';
 import { Pane, Splitpanes } from 'splitpanes';
 import 'splitpanes/dist/splitpanes.css';
-import { useAppLayoutStore } from '~/shared/stores/appLayoutStore';
+import { useAppLayoutStore } from '~/core/stores/appLayoutStore';
 import { RawQueryEditorLayout } from '../constants';
 
 const props = defineProps<{

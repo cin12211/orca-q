@@ -2,14 +2,14 @@ import { ref } from 'vue';
 import { toast } from 'vue-sonner';
 import { HASH_INDEX_ID } from '~/components/base/dynamic-table/constants';
 import { cellValueFormatter } from '~/components/base/dynamic-table/utils';
-import { useAppContext } from '~/shared/contexts/useAppContext';
-import { copyRowsToClipboard } from '~/utils/common';
-import { buildUpdateStatements } from '~/utils/quickQuery';
+import { buildUpdateStatements } from '~/components/modules/quick-query/utils';
 import {
   // buildBulkDeleteStatement,
   buildDeleteStatements,
-} from '~/utils/quickQuery/buildDeleteStatements';
-import { buildInsertStatements } from '~/utils/quickQuery/buildInsertStatements';
+} from '~/components/modules/quick-query/utils/buildDeleteStatements';
+import { buildInsertStatements } from '~/components/modules/quick-query/utils/buildInsertStatements';
+import { useAppContext } from '~/core/contexts/useAppContext';
+import { copyRowsToClipboard } from '~/core/helpers';
 import type QuickQueryTable from '../quick-query-table/QuickQueryTable.vue';
 
 // Adjust the path as per your project structure

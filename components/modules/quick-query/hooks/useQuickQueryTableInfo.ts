@@ -1,5 +1,5 @@
-import { useAppContext } from '~/shared/contexts/useAppContext';
-import { TabViewType } from '~/shared/stores';
+import { useAppContext } from '~/core/contexts/useAppContext';
+import { TabViewType } from '~/core/stores';
 
 export const useQuickQueryTableInfo = ({
   tableName,

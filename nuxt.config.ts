@@ -61,7 +61,8 @@ export default defineNuxtConfig({
     'pinia-plugin-persistedstate/nuxt',
     'nuxt-typed-router',
     '@formkit/auto-animate',
-    '@nuxtjs/storybook',
+    // '@nuxtjs/storybook',
+    // 'nuxt-mcp-dev',
   ],
   css: ['~/assets/css/tailwind.css', 'vue-json-pretty/lib/styles.css'],
   colorMode: {
@@ -82,6 +83,7 @@ export default defineNuxtConfig({
   },
   imports: {
     autoImport: true,
+    dirs: ['core/composables'],
   },
   components: [
     { path: '~/components/base', pathPrefix: false },

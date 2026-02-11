@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { useAppContext } from '~/shared/contexts/useAppContext';
-import { useChangelogModal } from '~/shared/contexts/useChangelogModal';
-import { TabViewType } from '~/shared/stores';
+import { useAppContext } from '~/core/contexts/useAppContext';
+import { useChangelogModal } from '~/core/contexts/useChangelogModal';
+import { TabViewType } from '~/core/stores';
 import CurrentPositionPath from './CurrentPositionPath.vue';
 
 // import ConnectionMetricMonitor from './ConnectionMetricMonitor.vue';

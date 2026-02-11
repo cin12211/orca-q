@@ -1,7 +1,7 @@
 import { ipcMain } from 'electron'
 import { QQueryLogsIpcChannels } from '../../constants'
 import { initDBQuickQueryLogs } from '../utils'
-import { type QuickQueryLog } from '../../../../shared/stores/useQuickQueryLogs'
+import { type QuickQueryLog } from '../../../../core/stores/useQuickQueryLogs'
 
 export interface GetQQueryLogsProps {
   connectionId: string

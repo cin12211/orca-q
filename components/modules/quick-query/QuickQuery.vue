@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import QuickQueryTableSummary from '~/components/modules/quick-query/quick-query-table-summary/QuickQueryTableSummary.vue';
-import { useTableQueryBuilder } from '~/composables/useTableQueryBuilder';
-import { uuidv4 } from '~/lib/utils';
-import { useAppContext } from '~/shared/contexts';
-import { useAppLayoutStore } from '~/shared/stores/appLayoutStore';
-import { DEFAULT_QUERY_SIZE, OperatorSet } from '~/utils/constants';
-import type { FilterSchema } from '~/utils/quickQuery';
+import type { FilterSchema } from '~/components/modules/quick-query/utils';
+import { useTableQueryBuilder } from '~/core/composables/useTableQueryBuilder';
+import { DEFAULT_QUERY_SIZE, OperatorSet } from '~/core/constants';
+import { useAppContext } from '~/core/contexts';
+import { uuidv4 } from '~/core/helpers';
+import { useAppLayoutStore } from '~/core/stores/appLayoutStore';
 import WrapperErdDiagram from '../erd-diagram/WrapperErdDiagram.vue';
 import { buildTableNodeId } from '../erd-diagram/utils';
 import { EDatabaseType } from '../management-connection/constants';

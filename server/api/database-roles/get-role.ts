@@ -3,7 +3,7 @@
  * Fetches all database roles/users with metadata
  * Supports multiple database types via adapter pattern
  */
-import type { DatabaseRole, GetDatabaseRolesRequest } from '~/shared/types';
+import type { DatabaseRole, GetDatabaseRolesRequest } from '~/core/types';
 import {
   createRoleAdapter,
   type SupportedDatabaseType,

@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import type { ColDef } from 'ag-grid-community';
-import { useTableSize } from '~/composables/useTableSize.js';
+import { useTableSize } from '~/core/composables/useTableSize.js';
 import { cn } from '~/lib/utils.js';
 
 type Props = {

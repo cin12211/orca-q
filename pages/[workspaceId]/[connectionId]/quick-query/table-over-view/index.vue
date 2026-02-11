@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { DynamicTable } from '#components';
 import type { MappedRawColumn } from '~/components/modules/raw-query/interfaces';
-import { useAppContext } from '~/shared/contexts/useAppContext';
+import { useAppContext } from '~/core/contexts/useAppContext';
 
 definePageMeta({
   keepalive: true,

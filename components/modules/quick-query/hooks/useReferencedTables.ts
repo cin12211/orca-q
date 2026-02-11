@@ -1,4 +1,4 @@
-import { useAppContext } from '~/shared/contexts';
+import { useAppContext } from '~/core/contexts';
 
 export const useReferencedTables = ({
   schemaName,

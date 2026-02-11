@@ -1,4 +1,6 @@
-export * from './operatorSets';
+/**
+ * Default query constants used across the application.
+ */
 
 export const DEFAULT_QUERY = 'SELECT * from';
 export const DEFAULT_QUERY_COUNT = 'SELECT COUNT(*) as count from';

@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import { Button } from '@/components/ui/button';
-import { useAppContext } from '~/shared/contexts/useAppContext';
-import type { Connection } from '~/shared/stores';
+import { useAppContext } from '~/core/contexts/useAppContext';
+import type { Connection } from '~/core/stores';
 import ConnectionsList from './ConnectionsList.vue';
 import CreateConnectionModal from './CreateConnectionModal.vue';
 

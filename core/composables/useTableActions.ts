@@ -1,4 +1,4 @@
-import type QuickQueryTable from '../components/modules/quick-query/quick-query-table/QuickQueryTable.vue';
+import type QuickQueryTable from '~/components/modules/quick-query/quick-query-table/QuickQueryTable.vue';
 
 type TableActionsProps = {
   quickQueryTableRef: Ref<InstanceType<typeof QuickQueryTable> | undefined>;

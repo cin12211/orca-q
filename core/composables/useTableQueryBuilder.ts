@@ -1,15 +1,18 @@
 import debounce from 'lodash-es/debounce';
 import { toast } from 'vue-sonner';
 import { EDatabaseType } from '~/components/modules/management-connection/constants';
-import { useQuickQueryLogs } from '~/shared/stores';
+import {
+  formatWhereClause,
+  type FilterSchema,
+} from '~/components/modules/quick-query/utils';
 import {
   ComposeOperator,
   DEFAULT_DEBOUNCE_INPUT,
   DEFAULT_QUERY,
   DEFAULT_QUERY_COUNT,
   DEFAULT_QUERY_SIZE,
-} from '~/utils/constants';
-import { formatWhereClause, type FilterSchema } from '~/utils/quickQuery';
+} from '~/core/constants';
+import { useQuickQueryLogs } from '~/core/stores';
 
 export interface OrderBy {
   columnName?: string;

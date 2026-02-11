@@ -83,6 +83,7 @@
     "marked": "^17.0.1",
     "nuxt": "^3.16.2",
     "nuxt-icon": "^1.0.0-beta.7",
+    "nuxt-mcp-dev": "^0.3.2",
     "nuxt-typed-router": "3.8.0",
     "papaparse": "^5.5.3",
     "pg": "^8.14.1",

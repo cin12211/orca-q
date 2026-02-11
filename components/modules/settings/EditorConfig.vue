@@ -7,7 +7,7 @@ import {
   EditorThemeDark,
   EditorThemeLight,
 } from '~/components/base/code-editor/constants';
-import { useAppLayoutStore } from '~/shared/stores/appLayoutStore';
+import { useAppLayoutStore } from '~/core/stores/appLayoutStore';
 import { RawQueryEditorLayout } from '../raw-query/constants';
 
 const appLayoutStore = useAppLayoutStore();

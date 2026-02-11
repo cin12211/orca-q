@@ -1,11 +1,10 @@
 <script setup lang="ts">
-import { refDebounced, templateRef } from '@vueuse/core';
-import { TreeManager, type TreeFileSystemItem } from '~/components/base/Tree';
-import TreeFolder from '~/components/base/Tree/TreeFolder.vue';
-import { useAppContext } from '~/shared/contexts/useAppContext';
-import { useActivityBarStore } from '~/shared/stores';
-import { TabViewType } from '~/shared/stores/useTabViewsStore';
-import { DEFAULT_DEBOUNCE_INPUT } from '~/utils/constants';
+import { refDebounced } from '@vueuse/core';
+import FileTree from '~/components/base/tree-folder/FileTree.vue';
+import type { FileNode } from '~/components/base/tree-folder/types';
+import { DEFAULT_DEBOUNCE_INPUT } from '~/core/constants';
+import { useAppContext } from '~/core/contexts/useAppContext';
+import { TabViewType } from '~/core/stores/useTabViewsStore';
 import { buildTableNodeId } from '../erd-diagram/utils';
 import { SchemaFolderType } from '../management-schemas/constants';
 import ConnectionSelector from '../selectors/ConnectionSelector.vue';
@@ -16,60 +15,81 @@ const { activeSchema } = toRefs(schemaStore);
 const { connectionId, workspaceId } = toRefs(wsStateStore);
 
 const isRefreshing = ref(false);
+const fileTreeRef = ref<InstanceType<typeof FileTree> | null>(null);
 
 const searchInput = shallowRef('');
 const debouncedSearch = refDebounced(searchInput, DEFAULT_DEBOUNCE_INPUT);
 
-const items = computed(() => {
+/**
+ * Build flat FileNode data from schema tables
+ */
+const fileTreeData = computed<Record<string, FileNode>>(() => {
+  const nodes: Record<string, FileNode> = {};
   const tables = activeSchema?.value?.tables || [];
 
-  const treeItems: TreeFileSystemItem[] = [
-    {
-      title: 'All Tables',
-      id: SchemaFolderType.Tables,
-      icon: 'hugeicons:hierarchy-circle-02',
-      closeIcon: 'hugeicons:hierarchy-circle-02',
-      tabViewType: TabViewType.AllERD,
-      path: SchemaFolderType.Tables,
-      children: [
-        ...tables.map(tableName => {
-          const refId = buildTableNodeId({
-            schemaName: activeSchema.value?.name || '',
-            tableName,
-          });
+  // Root folder: All Tables
+  nodes[SchemaFolderType.Tables] = {
+    id: SchemaFolderType.Tables,
+    parentId: null,
+    name: 'All Tables',
+    type: 'folder',
+    depth: 0,
+    iconOpen: 'hugeicons:structure-folder',
+    iconClose: 'hugeicons:structure-folder',
+    children: [],
+    data: { tabViewType: TabViewType.AllERD },
+  };
 
-          return {
-            title: tableName,
-            id: refId,
-            icon: 'hugeicons:hierarchy-circle-01',
-            path: `${SchemaFolderType.Tables}/${refId}`,
-            tabViewType: TabViewType.DetailERD,
-            isFolder: false,
-          };
-        }),
-      ],
-      isFolder: true,
-    },
-  ];
+  // Child items: individual tables
+  tables.forEach(tableName => {
+    const refId = buildTableNodeId({
+      schemaName: activeSchema.value?.name || '',
+      tableName,
+    });
 
-  if (!debouncedSearch.value) {
-    return treeItems;
+    nodes[refId] = {
+      id: refId,
+      parentId: SchemaFolderType.Tables,
+      name: tableName,
+      type: 'file',
+      depth: 1,
+      iconClose: 'hugeicons:hierarchy-circle-01',
+      data: { tabViewType: TabViewType.DetailERD },
+    };
+
+    nodes[SchemaFolderType.Tables].children!.push(refId);
+  });
+
+  // Filter by search
+  if (debouncedSearch.value) {
+    const query = debouncedSearch.value.toLowerCase();
+    const filteredNodes: Record<string, FileNode> = {};
+
+    const rootNode = nodes[SchemaFolderType.Tables];
+    const matchingChildren = rootNode.children?.filter(childId => {
+      const child = nodes[childId];
+      return child.name.toLowerCase().includes(query);
+    });
+
+    if (matchingChildren && matchingChildren.length > 0) {
+      filteredNodes[SchemaFolderType.Tables] = {
+        ...rootNode,
+        children: matchingChildren,
+      };
+      matchingChildren.forEach(childId => {
+        filteredNodes[childId] = nodes[childId];
+      });
+    }
+
+    return filteredNodes;
   }
 
-  const tree = new TreeManager([]);
-
-  tree.tree = treeItems;
-
-  return tree.searchByTitle(debouncedSearch.value);
+  return nodes;
 });
-
-const activityBarStore = useActivityBarStore();
-const { erdExpandedState, onCollapsedErdTree } = toRefs(activityBarStore);
 
 const onRefreshSchema = async () => {
   if (!connectionId.value) {
     throw new Error('No connection selected');
-    return;
   }
 
   isRefreshing.value = true;
@@ -82,11 +102,14 @@ const onRefreshSchema = async () => {
   isRefreshing.value = false;
 };
 
+const onCollapseAll = () => {
+  fileTreeRef.value?.collapseAll();
+};
+
 // Navigation functions
 const onNavigateToErdDiagram = async (tableName: string) => {
   if (!workspaceId.value) {
     throw new Error('No workspace selected');
-    return;
   }
 
   const tableId = buildTableNodeId({
@@ -103,6 +126,7 @@ const onNavigateToErdDiagram = async (tableName: string) => {
     },
   });
 };
+
 const onNavigateToOverviewErdDiagram = async () => {
   if (!workspaceId.value) {
     throw new Error('No workspace selected');
@@ -115,6 +139,23 @@ const onNavigateToOverviewErdDiagram = async () => {
       connectionId: connectionId.value || '',
     },
   });
+};
+
+/**
+ * Handle FileTree click — resolve node and navigate
+ */
+const handleTreeClick = (nodeId: string) => {
+  const node = fileTreeData.value[nodeId];
+  if (!node) return;
+
+  const tabViewType = node.data?.tabViewType as TabViewType;
+
+  if (tabViewType === TabViewType.AllERD) {
+    onNavigateToOverviewErdDiagram();
+    return;
+  }
+
+  onNavigateToErdDiagram(node.name);
 };
 </script>
 
@@ -148,7 +189,7 @@ const onNavigateToOverviewErdDiagram = async () => {
       <div class="flex items-center">
         <Tooltip>
           <TooltipTrigger as-child>
-            <Button size="iconSm" variant="ghost" @click="onCollapsedErdTree">
+            <Button size="iconSm" variant="ghost" @click="onCollapseAll">
               <Icon
                 name="lucide:copy-minus"
                 class="size-4! min-w-4 text-muted-foreground"
@@ -198,48 +239,17 @@ const onNavigateToOverviewErdDiagram = async () => {
     <!-- TODO: check flow when change schema  -->
 
     <div
-      v-if="!items.length"
+      v-if="Object.keys(fileTreeData).length === 0"
       class="flex flex-col items-center h-full justify-center"
     >
       No data!
     </div>
 
-    <TreeFolder
-      v-model:explorerFiles="items"
-      v-model:expandedState="erdExpandedState"
-      :isShowArrow="true"
-      :isExpandedByArrow="true"
-      v-on:clickTreeItem="
-        async (_, item) => {
-          const tabViewType: TabViewType = (item.value as any).tabViewType;
-
-          if (tabViewType === TabViewType.AllERD) {
-            onNavigateToOverviewErdDiagram();
-            return;
-          }
-
-          onNavigateToErdDiagram(item.value.title);
-        }
-      "
+    <FileTree
+      ref="fileTreeRef"
+      :initial-data="fileTreeData"
+      :allow-drag-and-drop="false"
+      @click="handleTreeClick"
     />
-    <!-- <template #extra-actions="{ item }">
-        <div
-          class="flex items-center"
-          v-if="item.value.paths.includes('Tables')"
-        >
-          <Button
-            size="iconSm"
-            class="hover:bg-background/80!"
-            variant="ghost"
-            @click.stop="onNavigateToErdDiagram(item.value.title)"
-          >
-            <Icon
-              name="raphael:diagram"
-              class="size-4! min-w-4 text-muted-foreground"
-            />
-          </Button>
-        </div>
-      </template> -->
-    <!-- </TreeFolder> -->
   </div>
 </template>

@@ -4,6 +4,8 @@ import { shallowRef, watchEffect } from 'vue';
 import {
   ContextMenu,
   ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuShortcut,
   ContextMenuTrigger,
 } from '#components';
 import { autoScrollForElements } from '@atlaskit/pragmatic-drag-and-drop-auto-scroll/element';
@@ -14,7 +16,7 @@ import {
 import { getReorderDestinationIndex } from '@atlaskit/pragmatic-drag-and-drop-hitbox/util/get-reorder-destination-index';
 import { combine } from '@atlaskit/pragmatic-drag-and-drop/combine';
 import { monitorForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
-import { useTabViewsStore, type TabView } from '~/shared/stores';
+import { useTabViewsStore, type TabView } from '~/core/stores';
 import TabViewItem from './TabViewItem.vue';
 
 const tabsStore = useTabViewsStore();

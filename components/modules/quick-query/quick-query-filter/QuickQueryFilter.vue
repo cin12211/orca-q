@@ -4,19 +4,19 @@ import { toTypedSchema } from '@vee-validate/zod';
 import debounce from 'lodash-es/debounce';
 import { useFieldArray, useForm } from 'vee-validate';
 import { z } from 'zod';
+import {
+  filterSchema,
+  formatWhereClause,
+  getPlaceholderSearchByOperator,
+  type FilterSchema,
+} from '~/components/modules/quick-query/utils';
 import type { Input } from '~/components/ui/input';
 import {
   ComposeOperator,
   DEFAULT_DEBOUNCE_INPUT,
   EExtendedField,
   OperatorSet,
-} from '~/utils/constants';
-import {
-  filterSchema,
-  formatWhereClause,
-  getPlaceholderSearchByOperator,
-  type FilterSchema,
-} from '~/utils/quickQuery';
+} from '~/core/constants';
 import { EDatabaseType } from '../../management-connection/constants';
 import ColumnSelector from '../../selectors/ColumnSelector.vue';
 import OperatorSelector from '../../selectors/OperatorSelector.vue';

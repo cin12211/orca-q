@@ -1,6 +1,6 @@
 import dayjs from 'dayjs';
 import localforage from 'localforage';
-import { toRawJSON } from '~/utils/common';
+import { toRawJSON } from '~/core/helpers';
 import type {
   RowQueryFile,
   RowQueryFileContent,

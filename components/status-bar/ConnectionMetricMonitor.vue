@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { useAppContext } from '~/shared/contexts/useAppContext';
-import { ONE_SECOND } from '~/utils/constants';
+import { ONE_SECOND } from '~/core/constants';
+import { useAppContext } from '~/core/contexts/useAppContext';
 
 const { connectionStore } = useAppContext();
 

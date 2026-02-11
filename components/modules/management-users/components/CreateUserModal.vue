@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { useCopyToClipboard } from '~/composables/useCopyToClipboard';
-import { useCodeHighlighter } from '~/composables/useSqlHighlighter';
+import { useCopyToClipboard } from '~/core/composables/useCopyToClipboard';
+import { useCodeHighlighter } from '~/core/composables/useSqlHighlighter';
 import type {
   CreateRoleRequest,
   DatabaseInfo,
@@ -10,7 +10,7 @@ import type {
   ObjectGrant,
   PrivilegeType,
   ObjectType,
-} from '~/shared/types';
+} from '~/core/types';
 
 interface Props {
   open: boolean;

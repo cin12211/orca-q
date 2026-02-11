@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { cn } from '@/lib/utils';
-import { isElectron, isPWA } from '~/lib/utils';
+import { isElectron, isPWA } from '~/core/helpers';
 
 const isAppVersion = computed(() => isElectron() || isPWA());
 </script>

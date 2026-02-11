@@ -1,5 +1,5 @@
 import type { FlattenedItem } from 'reka-ui';
-import type { TabViewType } from '~/shared/stores';
+import type { TabViewType } from '~/core/stores';
 
 export enum ETreeFileSystemStatus {
   edit = 'edit',

@@ -1,5 +1,5 @@
 import { ipcMain } from 'electron'
-import type { TabView } from '../../../../shared/stores'
+import type { TabView } from '../../../../core/stores'
 import { TabViewsIpcChannels } from '../../constants'
 import { initDBTabViews } from '../utils'
 

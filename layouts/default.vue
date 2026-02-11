@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useElementSize, type MaybeComputedElementRef } from '@vueuse/core';
-import { useAppLayoutStore } from '~/shared/stores/appLayoutStore';
-import { DEFAULT_DEBOUNCE_INPUT } from '~/utils/constants';
+import { DEFAULT_DEBOUNCE_INPUT } from '~/core/constants';
+import { useAppLayoutStore } from '~/core/stores/appLayoutStore';
 
 const route = useRoute();
 

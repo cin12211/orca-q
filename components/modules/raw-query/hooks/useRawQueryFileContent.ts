@@ -1,6 +1,6 @@
 import type { FieldDef } from 'pg';
-import { useAppContext } from '~/shared/contexts/useAppContext';
-import { useExplorerFileStore, useSchemaStore } from '~/shared/stores';
+import { useAppContext } from '~/core/contexts/useAppContext';
+import { useExplorerFileStore, useSchemaStore } from '~/core/stores';
 import type { MappedRawColumn } from '../interfaces';
 import { formatColumnsInfo } from '../utils';
 

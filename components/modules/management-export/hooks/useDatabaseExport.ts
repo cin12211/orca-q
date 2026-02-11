@@ -2,7 +2,7 @@ import type {
   ExportDatabaseRequest,
   ExportDatabaseResponse,
   ExportOptions,
-} from '~/shared/types';
+} from '~/core/types';
 
 /**
  * Composable for database export operations

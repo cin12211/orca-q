@@ -1,12 +1,12 @@
 import dayjs from 'dayjs';
 import { toast } from 'vue-sonner';
-import { generateTableAlias } from '~/components/modules/raw-query/utils/getMappedSchemaSuggestion';
-import { useStreamingDownload } from '~/composables/useStreamingDownload';
-import { TabViewType } from '~/shared/stores/useTabViewsStore';
 import {
   generateDropTableSQL,
   generateRenameTableSQL,
-} from '~/utils/sql-generators/generateTableSQL';
+} from '~/components/modules/management-schemas/utils/generateTableSQL';
+import { generateTableAlias } from '~/components/modules/raw-query/utils/getMappedSchemaSuggestion';
+import { useStreamingDownload } from '~/core/composables/useStreamingDownload';
+import { TabViewType } from '~/core/stores/useTabViewsStore';
 import {
   ExportDataFormatType,
   type ContextMenuState,

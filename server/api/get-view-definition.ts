@@ -1,5 +1,5 @@
+import { ViewSchemaEnum } from '~/core/types';
 import { getDatabaseSource } from '~/server/utils/db-connection';
-import { ViewSchemaEnum } from '~/shared/types';
 
 interface RequestBody {
   dbConnectionString: string;

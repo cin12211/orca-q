@@ -66,7 +66,7 @@
   --v-tree-row-text-color: currentColor;
 
   /* --- TreeRow Dimensions --- */
-  --v-tree-row-margin: 0 4px;
+  --v-tree-row-margin: 0 0px;
 
   /* --- TreeRow Focus Ring --- */
   --v-tree-row-focus-ring-width: 1px;
@@ -77,6 +77,8 @@
   --v-tree-indicator-height: 2px;
   --v-tree-drop-inside-bg: oklch(0.205 0 0 / 0.1);
   --v-tree-drop-inside-border-width: 1px;
+  --v-tree-drop-overlay-bg: oklch(0.205 0 0 / 0.04);
+  --v-tree-drop-overlay-border: oklch(0.205 0 0 / 0.25);
 
   /* --- Chevron (Toggle) --- */
   --v-tree-chevron-size: 20px;
@@ -206,6 +208,8 @@
   /* --- Drag & Drop Colors --- */
   --v-tree-indicator-color: oklch(0.985 0 0);
   --v-tree-drop-inside-bg: oklch(0.985 0 0 / 0.1);
+  --v-tree-drop-overlay-bg: oklch(0.985 0 0 / 0.04);
+  --v-tree-drop-overlay-border: oklch(0.985 0 0 / 0.2);
 
   /* --- Chevron --- */
   --v-tree-chevron-hover-bg: oklch(0.269 0 0);

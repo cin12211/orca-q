@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { AcceptableValue } from 'reka-ui';
-import { extendedFields } from '~/utils/constants';
+import { extendedFields } from '~/core/constants';
 
 defineProps<{ columns: string[]; value: string }>();
 

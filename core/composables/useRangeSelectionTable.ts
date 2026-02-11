@@ -9,7 +9,7 @@ import debounce from 'lodash-es/debounce';
 import {
   DEFAULT_DEBOUNCE_RANGE_SELECTION,
   DEFAULT_ROW_HEIGHT,
-} from '~/utils/constants';
+} from '~/core/constants';
 
 /**
  * Hook hỗ trợ:

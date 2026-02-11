@@ -3,7 +3,7 @@ import {
   ContextMenuItemType,
   type ContextMenuItem,
 } from '~/components/base/context-menu/menuContext.type';
-import { ViewSchemaEnum } from '~/shared/types';
+import { ViewSchemaEnum } from '~/core/types';
 import type { useViewActions } from '../actions/useViewActions';
 import type { ContextMenuState } from '../types';
 

@@ -142,8 +142,8 @@ import {
   createJavaScriptRegexEngine,
   type HighlighterCore,
 } from 'shiki';
-import { useQuickQueryLogs } from '~/shared/stores';
-import { formatQueryTime } from '~/utils/common/format';
+import { formatQueryTime } from '~/core/helpers/format';
+import { useQuickQueryLogs } from '~/core/stores';
 import QuickQueryHistoryLogItem from './QuickQueryHistoryLogItem.vue';
 
 enum HistoryLogTabs {

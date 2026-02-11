@@ -1,13 +1,13 @@
 <script setup lang="ts">
 import { LoadingOverlay } from '#components';
-import { useTableQueryBuilder } from '~/composables/useTableQueryBuilder';
-import { TabViewType } from '~/shared/stores';
+import type { FilterSchema } from '~/components/modules/quick-query/utils';
+import { useTableQueryBuilder } from '~/core/composables/useTableQueryBuilder';
 import {
   ComposeOperator,
   DEFAULT_QUERY_SIZE,
   OperatorSet,
-} from '~/utils/constants';
-import type { FilterSchema } from '~/utils/quickQuery';
+} from '~/core/constants';
+import { TabViewType } from '~/core/stores';
 import WrapperErdDiagram from '../../erd-diagram/WrapperErdDiagram.vue';
 import { buildTableNodeId } from '../../erd-diagram/utils';
 import { EDatabaseType } from '../../management-connection/constants';

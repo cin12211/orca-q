@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Select, SelectGroup, SelectItem, SelectTrigger } from '#components';
 import { cn } from '@/lib/utils';
-import { useAppContext } from '~/shared/contexts/useAppContext';
+import { useAppContext } from '~/core/contexts/useAppContext';
 
 const props = defineProps<{ class: string }>();
 

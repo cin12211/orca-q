@@ -10,7 +10,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { Input } from '@/components/ui/input';
-import { TabViewType } from '~/shared/stores';
+import { TabViewType } from '~/core/stores';
 
 interface Props {
   open: boolean;

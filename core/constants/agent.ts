@@ -1,4 +1,4 @@
-import { type AIProvider } from '~/shared/stores/appLayoutStore';
+import { type AIProvider } from '~/core/stores/appLayoutStore';
 
 export interface ModelConfig {
   id: string;

@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { uuidv4 } from '~/lib/utils';
-import { OperatorSet } from '~/utils/constants';
-import type { FilterSchema } from '~/utils/quickQuery';
+import type { FilterSchema } from '~/components/modules/quick-query/utils';
+import { OperatorSet } from '~/core/constants';
+import { uuidv4 } from '~/core/helpers';
 import ReferencedTable from './ReferencedTable.vue';
 
 const props = defineProps<{

@@ -214,6 +214,9 @@ defineExpose({
   margin: var(--v-tree-row-margin, 0 4px);
   /* Performance: Use CSS containment */
   contain: layout style paint;
+
+  /* Performance: Use will-change for smooth animations */
+  will-change: transform;
 }
 
 .tree-row:hover {

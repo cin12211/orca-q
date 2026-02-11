@@ -1,6 +1,6 @@
 import { ipcMain } from 'electron'
 import { initDBWorkspace } from '../utils'
-import { type Workspace } from '~/../../../shared/stores'
+import { type Workspace } from '~/../../../core/stores'
 import { WorkspaceIpcChannels } from '../../constants'
 import { updateDockMenus } from '../dockMenu'
 import { deleteAllConnectionByWorkspaceId } from './connections'

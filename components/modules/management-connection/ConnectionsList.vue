@@ -22,8 +22,8 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { useAppContext } from '~/shared/contexts/useAppContext';
-import { useTabViewsStore, type Connection } from '~/shared/stores';
+import { useAppContext } from '~/core/contexts/useAppContext';
+import { useTabViewsStore, type Connection } from '~/core/stores';
 import { getDatabaseSupportByType } from './constants';
 
 const { tabViewStore, openWorkspaceWithConnection } = useAppContext();

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import BaseCodeEditor from '~/components/base/code-editor/BaseCodeEditor.vue';
-import { useAppLayoutStore } from '~/shared/stores/appLayoutStore';
+import { useAppLayoutStore } from '~/core/stores/appLayoutStore';
 import IntroRawQuery from './components/IntroRawQuery.vue';
 import RawQueryEditorFooter from './components/RawQueryEditorFooter.vue';
 import RawQueryEditorHeader from './components/RawQueryEditorHeader.vue';

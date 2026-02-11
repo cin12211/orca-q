@@ -2,7 +2,7 @@
  * API: Delete Role
  * Deletes a PostgreSQL role/user
  */
-import type { DeleteRoleRequest, GrantRevokeResponse } from '~/shared/types';
+import type { DeleteRoleRequest, GrantRevokeResponse } from '~/core/types';
 import {
   createRoleAdapter,
   type SupportedDatabaseType,

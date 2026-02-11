@@ -2,7 +2,7 @@
  * API: Get Schema Objects
  * Fetches tables, views, functions, sequences in a schema
  */
-import type { SchemaObjects } from '~/shared/types';
+import type { SchemaObjects } from '~/core/types';
 import {
   createRoleAdapter,
   type SupportedDatabaseType,

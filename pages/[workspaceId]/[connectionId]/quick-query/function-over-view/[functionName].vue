@@ -24,8 +24,8 @@ import {
 import { pgKeywordCompletion } from '~/components/base/code-editor/utils/pgKeywordCompletion';
 import QuickQueryErrorPopup from '~/components/modules/quick-query/QuickQueryErrorPopup.vue';
 import FunctionControlBar from '~/components/modules/quick-query/function-control-bar/FunctionControlBar.vue';
-import { useAppContext } from '~/shared/contexts/useAppContext';
-import { useQuickQueryLogs } from '~/shared/stores';
+import { useAppContext } from '~/core/contexts/useAppContext';
+import { useQuickQueryLogs } from '~/core/stores';
 
 definePageMeta({
   keepalive: true,

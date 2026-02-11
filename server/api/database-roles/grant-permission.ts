@@ -3,7 +3,7 @@
  * Grants permissions to a role
  * Supports multiple database types via adapter pattern
  */
-import type { GrantRevokeRequest, GrantRevokeResponse } from '~/shared/types';
+import type { GrantRevokeRequest, GrantRevokeResponse } from '~/core/types';
 import {
   createRoleAdapter,
   type SupportedDatabaseType,

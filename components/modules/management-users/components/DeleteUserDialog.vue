@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { DatabaseRole } from '~/shared/types';
+import type { DatabaseRole } from '~/core/types';
 
 interface Props {
   open: boolean;

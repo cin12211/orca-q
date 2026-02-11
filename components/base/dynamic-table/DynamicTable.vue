@@ -14,7 +14,7 @@ import type {
 import { AgGridVue } from 'ag-grid-vue3';
 import AgJsonCellEditor from '~/components/modules/quick-query/quick-query-table/AgJsonCellEditor.vue';
 import type { MappedRawColumn } from '~/components/modules/raw-query/interfaces';
-import { DEFAULT_BUFFER_ROWS } from '~/utils/constants';
+import { DEFAULT_BUFFER_ROWS } from '~/core/constants';
 import DynamicPrimaryKeyHeader from './DynamicPrimaryKeyHeader.vue';
 import {
   baseTableTheme,

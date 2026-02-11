@@ -1,10 +1,10 @@
 import { Chat } from '@ai-sdk/vue';
 import { DefaultChatTransport } from 'ai';
+import { AI_PROVIDERS } from '~/core/constants/agent';
 import {
   useAppLayoutStore,
   type AIProvider,
-} from '~/shared/stores/appLayoutStore';
-import { AI_PROVIDERS } from '~/utils/constants/agent';
+} from '~/core/stores/appLayoutStore';
 
 /**
  * Composable for AI chat functionality using Vercel AI SDK

@@ -6,8 +6,8 @@ import {
   ContextMenuItemType,
   type ContextMenuItem,
 } from '~/components/base/context-menu/menuContext.type';
-import type { DatabaseRole, GrantRevokeResponse } from '~/shared/types';
-import { RoleCategory } from '~/shared/types';
+import type { DatabaseRole, GrantRevokeResponse } from '~/core/types';
+import { RoleCategory } from '~/core/types';
 
 export interface UserContextMenuParams {
   onViewPermissions: (role: DatabaseRole) => void;

@@ -1,9 +1,9 @@
 import type { FieldDef } from 'pg';
+import type { Schema } from '~/core/stores';
 import type {
   ColumnShortMetadata,
   TableDetailMetadata,
 } from '~/server/api/get-schema-meta-data';
-import type { Schema } from '~/shared/stores';
 import type { MappedRawColumn } from '../interfaces';
 
 export const formatColumnsInfo = ({

@@ -19,7 +19,7 @@ import type {
   BulkGrantRequest,
   BulkGrantResponse,
   BulkGrantResult,
-} from '~/shared/types';
+} from '~/core/types';
 import type { IDatabaseRoleAdapter, DatabaseRoleAdapterParams } from './types';
 
 export class PostgresRoleAdapter implements IDatabaseRoleAdapter {

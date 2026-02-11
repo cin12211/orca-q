@@ -1,13 +1,13 @@
 import { toast } from 'vue-sonner';
-import type { ViewDefinitionResponse } from '~/server/api/get-view-definition';
-import { TabViewType } from '~/shared/stores/useTabViewsStore';
-import { ViewSchemaEnum } from '~/shared/types';
 import {
   generateDropViewSQL,
   generateRenameViewSQL,
   generateRefreshMaterializedViewSQL,
   generateViewSelectSQL,
-} from '~/utils/sql-generators/generateViewSQL';
+} from '~/components/modules/management-schemas/utils/generateViewSQL';
+import { TabViewType } from '~/core/stores/useTabViewsStore';
+import { ViewSchemaEnum } from '~/core/types';
+import type { ViewDefinitionResponse } from '~/server/api/get-view-definition';
 import type { ContextMenuState, SchemaContextMenuOptions } from '../types';
 import type { useContextMenuHelpers } from '../useContextMenuHelpers';
 

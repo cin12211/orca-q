@@ -27,13 +27,13 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 import { Textarea } from '@/components/ui/textarea';
-import { uuidv4 } from '~/lib/utils';
 import {
   DEFAULT_WORKSPACE_ICON,
   WORKSPACE_ICONS,
-} from '~/shared/constants/workspace-icon-constants';
-import { useAppContext } from '~/shared/contexts/useAppContext';
-import { type Workspace } from '~/shared/stores';
+} from '~/core/constants/workspace-icon-constants';
+import { useAppContext } from '~/core/contexts/useAppContext';
+import { uuidv4 } from '~/core/helpers';
+import { type Workspace } from '~/core/stores';
 
 const props = defineProps<{
   open: Boolean;

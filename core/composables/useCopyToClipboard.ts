@@ -1,5 +1,5 @@
 import { ref } from 'vue';
-import { copyToClipboard } from '~/utils/common/copyData';
+import { copyToClipboard } from '~/core/helpers/copyData';
 
 /**
  * Composable for managing copy-to-clipboard functionality with visual feedback.

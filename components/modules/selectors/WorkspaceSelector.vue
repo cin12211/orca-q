@@ -2,7 +2,7 @@
 import { Select, SelectGroup, SelectItem, SelectTrigger } from '#components';
 import type { AcceptableValue } from 'reka-ui';
 import { cn } from '@/lib/utils';
-import { useAppContext } from '~/shared/contexts/useAppContext';
+import { useAppContext } from '~/core/contexts/useAppContext';
 
 const {
   workspaceStore,

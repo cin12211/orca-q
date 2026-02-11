@@ -16,13 +16,13 @@ import { throttle } from 'lodash';
 import debounce from 'lodash/debounce';
 import { cn } from '@/lib/utils';
 import {
-  useAppLayoutStore,
-  type CodeEditorConfigs,
-} from '~/shared/stores/appLayoutStore';
-import {
   DEFAULT_DEBOUNCE_INPUT,
   DEFAULT_DEBOUNCE_SCROLL,
-} from '~/utils/constants';
+} from '~/core/constants';
+import {
+  useAppLayoutStore,
+  type CodeEditorConfigs,
+} from '~/core/stores/appLayoutStore';
 import { EditorThemeMap } from './constants';
 import {
   cursorSmooth,

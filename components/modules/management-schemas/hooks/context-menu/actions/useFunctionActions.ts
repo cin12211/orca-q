@@ -1,12 +1,12 @@
 import { toast } from 'vue-sonner';
-import type { FunctionSignature } from '~/server/api/get-function-signature';
-import { TabViewType } from '~/shared/stores/useTabViewsStore';
 import {
   generateFunctionCallSQL,
   generateFunctionSelectSQL,
   generateDropFunctionSQL,
   generateRenameFunctionSQL,
-} from '~/utils/sql-generators/generateFunctionSQL';
+} from '~/components/modules/management-schemas/utils/generateFunctionSQL';
+import { TabViewType } from '~/core/stores/useTabViewsStore';
+import type { FunctionSignature } from '~/server/api/get-function-signature';
 import type { ContextMenuState, SchemaContextMenuOptions } from '../types';
 import type { useContextMenuHelpers } from '../useContextMenuHelpers';
 

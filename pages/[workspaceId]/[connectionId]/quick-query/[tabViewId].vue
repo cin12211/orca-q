@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import QuickQuery from '~/components/modules/quick-query/QuickQuery.vue';
-import { DEFAULT_MAX_KEEP_ALIVE } from '~/utils/constants';
+import { DEFAULT_MAX_KEEP_ALIVE } from '~/core/constants';
 
 definePageMeta({
   keepalive: {
@@ -12,6 +12,5 @@ const route = useRoute('workspaceId-connectionId-quick-query-tabViewId');
 </script>
 
 <template>
-  <TreeDemo />
-  <!-- <QuickQuery :tab-view-id="route.params.tabViewId" /> -->
+  <QuickQuery :tab-view-id="route.params.tabViewId" />
 </template>

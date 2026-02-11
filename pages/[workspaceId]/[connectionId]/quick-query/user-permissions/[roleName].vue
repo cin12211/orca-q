@@ -2,7 +2,7 @@
 import { LoadingOverlay } from '#components';
 import GrantRevokeDialog from '~/components/modules/management-users/components/GrantRevokeDialog.vue';
 import { useDatabasePermissions } from '~/components/modules/management-users/hooks/useDatabaseRoles';
-import { useAppContext } from '~/shared/contexts/useAppContext';
+import { useAppContext } from '~/core/contexts/useAppContext';
 import type {
   RolePermissions,
   ObjectPermission,
@@ -10,7 +10,7 @@ import type {
   PrivilegeType,
   RoleInheritanceNode,
   DatabaseRole,
-} from '~/shared/types';
+} from '~/core/types';
 import DatabasePermissionCard from '../../../../../components/modules/management-users/components/DatabasePermissionCard.vue';
 import RoleAttributesCard from '../../../../../components/modules/management-users/components/RoleAttributesCard.vue';
 

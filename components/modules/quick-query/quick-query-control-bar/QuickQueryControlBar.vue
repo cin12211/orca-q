@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Icon, Tooltip, TooltipContent, TooltipTrigger } from '#components';
-import { useSettingsModal } from '~/shared/contexts/useSettingsModal';
-import { useAppLayoutStore } from '~/shared/stores/appLayoutStore';
+import { useSettingsModal } from '~/core/contexts/useSettingsModal';
+import { useAppLayoutStore } from '~/core/stores/appLayoutStore';
 import { QuickQueryTabView } from '../constants';
 import QuickPagination from './QuickPagination.vue';
 import RefreshButton from './RefreshButton.vue';

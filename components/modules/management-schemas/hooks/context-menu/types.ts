@@ -1,7 +1,7 @@
 import type { Ref } from 'vue';
 import type { FlattenedTreeFileSystemItem } from '~/components/base/Tree';
-import type { Schema } from '~/shared/stores/useSchemaStore';
-import type { TabViewType } from '~/shared/stores/useTabViewsStore';
+import type { Schema } from '~/core/stores/useSchemaStore';
+import type { TabViewType } from '~/core/stores/useTabViewsStore';
 
 export interface SchemaContextMenuOptions {
   schemaName: Ref<string>;

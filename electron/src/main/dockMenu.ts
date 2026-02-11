@@ -1,7 +1,7 @@
 import { app, Menu } from 'electron'
 import { createWindow, currentPort } from '.'
 import { initDBConnection, initDBWorkspace, initDBWorkspaceState } from './utils'
-import type { Connection, WorkspaceState, Workspace } from '../../../shared/stores'
+import type { Connection, WorkspaceState, Workspace } from '../../../core/stores'
 
 const workspaceItemTemplateId = 'workspace'
 const MAX_RECENT_WORKSPACES = 5

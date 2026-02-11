@@ -2,7 +2,7 @@
  * API: Get Schemas
  * Fetches all schemas in the connected database
  */
-import type { SchemaInfo } from '~/shared/types';
+import type { SchemaInfo } from '~/core/types';
 import {
   createRoleAdapter,
   type SupportedDatabaseType,

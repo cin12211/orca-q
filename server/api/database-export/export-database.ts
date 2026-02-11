@@ -11,7 +11,7 @@ import {
   type ConnectionOptions,
   type DumpOptionsType,
 } from 'pg-dump-restore';
-import type { ExportDatabaseRequest, ExportFormat } from '~/shared/types';
+import type { ExportDatabaseRequest, ExportFormat } from '~/core/types';
 
 /**
  * Map export format to pg_dump FormatEnum

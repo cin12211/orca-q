@@ -1,4 +1,4 @@
-import { useAppContext } from '~/shared/contexts/useAppContext';
+import { useAppContext } from '~/core/contexts/useAppContext';
 import type QuickQueryFilter from '../quick-query-filter/QuickQueryFilter.vue';
 import type QuickQueryTable from '../quick-query-table/QuickQueryTable.vue';
 

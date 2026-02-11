@@ -1,10 +1,10 @@
 import { toRaw, toRef } from 'vue';
 import type { FlattenedTreeFileSystemItem } from '~/components/base/Tree';
+import { useAppLayoutStore } from '~/core/stores/appLayoutStore';
 import type {
   ColumnShortMetadata,
   TableDetailMetadata,
 } from '~/server/api/get-schema-meta-data';
-import { useAppLayoutStore } from '~/shared/stores/appLayoutStore';
 import type { ContextMenuState, SchemaContextMenuOptions } from './types';
 
 export function useContextMenuHelpers(

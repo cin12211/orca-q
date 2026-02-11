@@ -1,4 +1,4 @@
-import { useAppContext } from '~/shared/contexts/useAppContext';
+import { useAppContext } from '~/core/contexts/useAppContext';
 
 export const useTableSize = ({
   tableName,
