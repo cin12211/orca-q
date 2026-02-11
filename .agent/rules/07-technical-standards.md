@@ -1,5 +1,5 @@
 ---
-activation: always_on
+trigger: always_on
 ---
 
 # Technical Standards

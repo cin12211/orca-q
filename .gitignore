@@ -60,3 +60,5 @@ tsconfig.tsbuildinfo
 
 # NPX package build output
 npx-package/.output
+*storybook.log
+storybook-static

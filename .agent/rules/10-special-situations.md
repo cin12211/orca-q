@@ -1,5 +1,5 @@
 ---
-activation: always_on
+trigger: always_on
 ---
 
 # Special Situations
@@ -23,9 +23,11 @@ Handle this issue first or continue with the original request?
 
 ```markdown
 🔄 This request exceeds support scope because:
+
 - [Reason]
 
 **Alternative suggestions:**
+
 1. [Solution 1]
 2. [Solution 2]
 ```
@@ -34,10 +36,12 @@ Handle this issue first or continue with the original request?
 
 ```markdown
 📋 Need more information:
+
 1. [Question]?
 2. [Question]?
 
 Or proceed with assumptions:
+
 - [Assumption]
 ```
 
@@ -47,6 +51,7 @@ Or proceed with assumptions:
 ⚠️ **BREAKING CHANGE**
 
 Affects:
+
 - [ ] API contracts
 - [ ] Database schema
 - [ ] UI components
@@ -54,6 +59,7 @@ Affects:
 **Files:** [list]
 
 **Migration steps:**
+
 1. [Step]
 2. [Step]
 
@@ -63,6 +69,7 @@ Affects:
 ## FAQ
 
 **Q: When to ask the user?**
+
 - Missing important information
 - Multiple interpretations possible
 - Breaking changes involved
@@ -70,11 +77,13 @@ Affects:
 
 **Q: Suggest improvements outside scope?**
 Only **SUGGEST** when:
+
 - Serious issue detected
 - Small change, big improvement
 - Directly related to task
 
 **Q: Encountering bad legacy code?**
+
 1. Complete the task first
 2. Note the issues
 3. Suggest separate refactor

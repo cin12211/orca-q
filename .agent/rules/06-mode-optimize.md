@@ -1,5 +1,5 @@
 ---
-activation: model_decision
+trigger: always_on
 description: Apply when user requests refactoring, optimization, or performance improvement
 ---
 
@@ -7,7 +7,7 @@ description: Apply when user requests refactoring, optimization, or performance 
 
 **Goal:** Improve quality **WITHOUT changing behavior**.
 
-## Process
+## Processs
 
 1. Measure current state (baseline)
 2. Identify main bottleneck
@@ -18,12 +18,12 @@ description: Apply when user requests refactoring, optimization, or performance 
 
 ## Evaluation Criteria
 
-| Criterion | Tool | Good Threshold |
-|-----------|------|----------------|
-| Bundle size | `npm run build` | < 500KB |
-| Render time | React DevTools | < 16ms |
-| Memory | Chrome DevTools | No leaks |
-| Complexity | ESLint | Cyclomatic < 10 |
+| Criterion   | Tool            | Good Threshold  |
+| ----------- | --------------- | --------------- |
+| Bundle size | `npm run build` | < 500KB         |
+| Render time | React DevTools  | < 16ms          |
+| Memory      | Chrome DevTools | No leaks        |
+| Complexity  | ESLint          | Cyclomatic < 10 |
 
 ## Output Format
 
@@ -33,6 +33,7 @@ description: Apply when user requests refactoring, optimization, or performance 
 **Issue:** [slow / duplicate code / hard to maintain]
 
 **Baseline:**
+
 - Bundle: X KB
 - Render: X ms
 - LOC: X
@@ -40,25 +41,28 @@ description: Apply when user requests refactoring, optimization, or performance 
 ---
 
 ### Bottleneck:
-| Issue | Location | Severity |
-|-------|----------|----------|
-| [Description] | `file:line` | 🔴 High |
+
+| Issue         | Location    | Severity |
+| ------------- | ----------- | -------- |
+| [Description] | `file:line` | 🔴 High  |
 
 ### Proposal:
-| Item | Before | After | Δ |
-|------|--------|-------|---|
-| Bundle | 800KB | 450KB | -44% |
+
+| Item   | Before | After | Δ    |
+| ------ | ------ | ----- | ---- |
+| Bundle | 800KB  | 450KB | -44% |
 
 ### Regression Check:
+
 - [ ] Tests still pass
 - [ ] Behavior unchanged
 ```
 
 ## Principles
 
-| ❌ DON'T | ✅ DO |
-|----------|-------|
-| Optimize prematurely | Measure first, optimize later |
-| Change behavior | Keep behavior unchanged |
-| Prioritize cleverness | Readability > Performance |
-| Skip tests | Re-run tests |
+| ❌ DON'T              | ✅ DO                         |
+| --------------------- | ----------------------------- |
+| Optimize prematurely  | Measure first, optimize later |
+| Change behavior       | Keep behavior unchanged       |
+| Prioritize cleverness | Readability > Performance     |
+| Skip tests            | Re-run tests                  |
