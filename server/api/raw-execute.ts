@@ -1,4 +1,3 @@
-import { readBody, defineEventHandler, createError } from 'h3';
 import type { FieldDef } from 'pg';
 import { type QueryFailedError } from 'typeorm';
 import { getPgPool } from '../utils/db-row-connection';
@@ -34,8 +33,8 @@ export default defineEventHandler(
 
       return { rows, queryTime, fields };
     } catch (error) {
+      console.log('🚀 ~ error:', JSON.stringify(error));
       const queryError: QueryFailedError = error as any;
-
       throw createError({
         statusCode: 500,
         statusMessage: queryError.message,

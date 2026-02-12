@@ -169,7 +169,6 @@ onActivated(() => {
                 v-if="!isExpanded"
                 :icon="item.value.closeIcon || defaultCloseIcon"
                 class="size-4 min-w-4"
-                :class="item.value.iconClass"
               />
               <Icon
                 v-else

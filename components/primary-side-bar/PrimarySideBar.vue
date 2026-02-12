@@ -3,8 +3,6 @@ import {
   ModulesManagementErdDiagram,
   ModulesManagementExplorer,
   ModulesManagementSchemas,
-  ModulesManagementUsersAndPermission,
-  ModulesManagementExport,
 } from '#components';
 import { useAppLayoutStore } from '~/shared/stores/appLayoutStore';
 import {
@@ -29,12 +27,6 @@ watch(
     }
     if (activityStore.activityActive === ActivityBarItemType.ErdDiagram) {
       current.value = ModulesManagementErdDiagram;
-    }
-    if (activityStore.activityActive === ActivityBarItemType.UsersRoles) {
-      current.value = ModulesManagementUsersAndPermission;
-    }
-    if (activityStore.activityActive === ActivityBarItemType.DatabaseExport) {
-      current.value = ModulesManagementExport;
     }
   },
   {

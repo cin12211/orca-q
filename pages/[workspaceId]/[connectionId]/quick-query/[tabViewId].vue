@@ -12,6 +12,5 @@ const route = useRoute('workspaceId-connectionId-quick-query-tabViewId');
 </script>
 
 <template>
-  <TreeDemo />
-  <!-- <QuickQuery :tab-view-id="route.params.tabViewId" /> -->
+  <QuickQuery :tab-view-id="route.params.tabViewId" />
 </template>
