@@ -1,5 +1,5 @@
 ---
-trigger: always_on
+activation: model_decision
 description: Apply when user asks for opinions, compares approaches, or requests solutions
 ---
 
@@ -26,23 +26,20 @@ description: Apply when user asks for opinions, compares approaches, or requests
 ---
 
 ### Option A: [Name]
-
-| Pros   | Cons   |
-| ------ | ------ |
+| Pros | Cons |
+|------|------|
 | ✅ ... | ⚠️ ... |
 
 **Best when:** [conditions]
 
 ### Option B: [Name]
-
-| Pros   | Cons   |
-| ------ | ------ |
+| Pros | Cons |
+|------|------|
 | ✅ ... | ⚠️ ... |
 
 ---
 
 ## ✅ Recommendation: Option [X]
-
 **Reason:** [explanation]
 
 ⏭️ **Confirm to proceed?**
@@ -50,8 +47,8 @@ description: Apply when user asks for opinions, compares approaches, or requests
 
 ## Principles
 
-| ❌ DON'T                     | ✅ DO                        |
-| ---------------------------- | ---------------------------- |
-| Provide code before approval | Wait for user confirmation   |
-| Give only 1 option           | Provide at least 2-3 options |
-| Skip trade-offs              | Clearly state pros/cons      |
+| ❌ DON'T | ✅ DO |
+|----------|-------|
+| Provide code before approval | Wait for user confirmation |
+| Give only 1 option | Provide at least 2-3 options |
+| Skip trade-offs | Clearly state pros/cons |

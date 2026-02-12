@@ -1,5 +1,5 @@
 ---
-trigger: always_on
+activation: always_on
 ---
 
 # Pre-Delivery Checklist

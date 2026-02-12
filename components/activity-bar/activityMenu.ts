@@ -26,19 +26,6 @@ export const useActivityMenu = () => {
       icon: 'hugeicons:hierarchy-square-02',
       isActive: activityStore.activityActive === ActivityBarItemType.ErdDiagram,
     },
-    {
-      id: ActivityBarItemType.UsersRoles,
-      title: 'Users & Roles',
-      icon: 'hugeicons:user-shield-01',
-      isActive: activityStore.activityActive === ActivityBarItemType.UsersRoles,
-    },
-    // {
-    //   id: ActivityBarItemType.DatabaseExport,
-    //   title: 'Export Database',
-    //   icon: 'hugeicons:file-export',
-    //   isActive:
-    //     activityStore.activityActive === ActivityBarItemType.DatabaseExport,
-    // },
   ]);
 
   const onChangeActivity = (
