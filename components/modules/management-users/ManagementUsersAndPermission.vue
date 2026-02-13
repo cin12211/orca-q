@@ -235,7 +235,7 @@ const onDeleteUser = async (role: DatabaseRole) => {
     </div>
 
     <!-- Header with Actions -->
-    <div class="px-2 pt-2 flex items-center justify-between shrink-0">
+    <div class="px-2 pt-1 flex items-center justify-between shrink-0">
       <p class="text-sm font-medium text-muted-foreground leading-none">
         Users & Roles
       </p>
@@ -269,7 +269,7 @@ const onDeleteUser = async (role: DatabaseRole) => {
               :disabled="isRefreshing || !dbConnectionString"
             >
               <Icon
-                name="lucide:refresh-ccw"
+                name="hugeicons:redo"
                 :class="[
                   'size-4! min-w-4 text-muted-foreground',
                   isRefreshing && 'animate-spin',
@@ -283,7 +283,7 @@ const onDeleteUser = async (role: DatabaseRole) => {
     </div>
 
     <!-- Search -->
-    <div class="px-2 pb-1 pt-1 shrink-0">
+    <div class="px-2 pb-1 shrink-0">
       <div class="relative w-full">
         <Input
           type="text"

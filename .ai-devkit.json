@@ -1,0 +1,10 @@
+{
+  "version": "0.11.0",
+  "environments": [
+    "codex",
+    "antigravity"
+  ],
+  "initializedPhases": [],
+  "createdAt": "2026-02-13T04:42:32.097Z",
+  "updatedAt": "2026-02-13T04:42:51.227Z"
+}

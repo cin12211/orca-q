@@ -1,18 +1,13 @@
 <script setup lang="ts">
-import { refDebounced, templateRef } from '@vueuse/core';
+import { refDebounced } from '@vueuse/core';
 import type { RouteNameFromPath, RoutePathSchema } from '@typed-router/__paths';
-import {
-  TreeManager,
-  type FlattenedTreeFileSystemItem,
-  type TreeFileSystemItem,
-} from '~/components/base/Tree';
-import TreeFolder from '~/components/base/Tree/TreeFolder.vue';
 import BaseContextMenu from '~/components/base/context-menu/BaseContextMenu.vue';
+import FileTree from '~/components/base/tree-folder/FileTree.vue';
+import type { FileNode } from '~/components/base/tree-folder/types';
 import { getFormatParameters } from '~/components/modules/management-schemas/utils';
 import SafeModeConfirmDialog from '~/components/modules/quick-query/SafeModeConfirmDialog.vue';
 import { DEFAULT_DEBOUNCE_INPUT } from '~/core/constants';
 import { useAppContext } from '~/core/contexts/useAppContext';
-import { useActivityBarStore } from '~/core/stores';
 import { TabViewType } from '~/core/stores/useTabViewsStore';
 import { FunctionSchemaEnum, ViewSchemaEnum } from '~/core/types';
 import ConnectionSelector from '../selectors/ConnectionSelector.vue';
@@ -30,109 +25,210 @@ const { connectionId, schemaId, workspaceId } = toRefs(wsStateStore);
 
 const isRefreshing = ref(false);
 
+const fileTreeRef = useTemplateRef<typeof FileTree | null>('fileTreeRef');
+const isTreeCollapsed = ref(false);
+
 const searchInput = shallowRef('');
 const debouncedSearch = refDebounced(searchInput, DEFAULT_DEBOUNCE_INPUT);
 
-const items = computed(() => {
+const fileTreeData = computed<Record<string, FileNode>>(() => {
   const tables = activeSchema?.value?.tables || [];
   const functions = activeSchema?.value?.functions || [];
-
   const views = activeSchema?.value?.views || [];
 
-  //TODO: split logic to utiles
+  const nodes: Record<string, FileNode> = {};
+
   const formatFunctionName = (name: string, parameters: string) => {
     const formatParameters = getFormatParameters(parameters);
-
     return `${name}(${formatParameters})`;
   };
 
-  const treeItems: TreeFileSystemItem[] = [
-    {
-      title: 'Functions',
-      icon: 'material-icon-theme:folder-functions-open',
-      closeIcon: 'material-icon-theme:folder-functions',
-      path: SchemaFolderType.Functions,
-      id: SchemaFolderType.Functions,
-      tabViewType: TabViewType.FunctionsOverview,
-      children: [
-        ...functions.map(({ name, oId, type, parameters }) => ({
-          title: formatFunctionName(name, parameters),
-          parameters,
-          name: name,
+  const addFolder = (
+    id: string,
+    name: string,
+    iconOpen: string,
+    iconClose: string,
+    tabViewType: TabViewType,
+    iconClass?: string
+  ) => {
+    nodes[id] = {
+      id,
+      parentId: null,
+      name,
+      type: 'folder',
+      depth: 0,
+      iconOpen,
+      iconClose,
+      iconClass,
+      children: [],
+      data: { tabViewType },
+    };
+  };
+
+  addFolder(
+    SchemaFolderType.Functions,
+    'Functions',
+    'material-icon-theme:folder-functions-open',
+    'material-icon-theme:folder-functions',
+    TabViewType.FunctionsOverview
+  );
+
+  addFolder(
+    SchemaFolderType.Tables,
+    'Tables',
+    'material-icon-theme:folder-database-open',
+    'material-icon-theme:folder-database',
+    TabViewType.TableOverview
+  );
+
+  addFolder(
+    SchemaFolderType.Views,
+    'Views',
+    'material-icon-theme:folder-enum-open',
+    'material-icon-theme:folder-enum',
+    TabViewType.ViewOverview
+  );
+
+  functions.forEach(({ name, oId, type, parameters }) => {
+    const nodeId = String(oId);
+    const displayName = formatFunctionName(name, parameters);
+
+    nodes[nodeId] = {
+      id: nodeId,
+      parentId: SchemaFolderType.Functions,
+      name: displayName,
+      type: 'file',
+      depth: 1,
+      iconOpen: 'gravity-ui:function',
+      iconClose: 'gravity-ui:function',
+      iconClass:
+        type === FunctionSchemaEnum.Function
+          ? 'text-blue-400'
+          : 'text-orange-400',
+      data: {
+        tabViewType: TabViewType.FunctionsDetail,
+        itemValue: {
+          title: displayName,
+          name,
           id: oId,
-          icon: 'gravity-ui:function',
-          path: `${SchemaFolderType.Functions}/${oId}`,
+          parameters,
           tabViewType: TabViewType.FunctionsDetail,
-          isFolder: false,
+          icon: 'gravity-ui:function',
           iconClass:
             type === FunctionSchemaEnum.Function
               ? 'text-blue-400'
               : 'text-orange-400',
-        })),
-      ],
-      isFolder: true,
-    },
-    {
-      title: 'Tables',
-      id: SchemaFolderType.Tables,
-      icon: 'material-icon-theme:folder-database-open',
-      closeIcon: 'material-icon-theme:folder-database',
-      path: SchemaFolderType.Tables,
-      tabViewType: TabViewType.TableOverview,
-      children: [
-        ...tables.map(tableName => ({
+        },
+        parameters,
+      },
+    };
+
+    nodes[SchemaFolderType.Functions].children!.push(nodeId);
+  });
+
+  tables.forEach(tableName => {
+    const nodeId = tableName;
+
+    nodes[nodeId] = {
+      id: nodeId,
+      parentId: SchemaFolderType.Tables,
+      name: tableName,
+      type: 'file',
+      depth: 1,
+      iconOpen: 'hugeicons:grid-table',
+      iconClose: 'hugeicons:grid-table',
+      iconClass: 'text-yellow-400',
+      data: {
+        tabViewType: TabViewType.TableDetail,
+        itemValue: {
           title: tableName,
           name: tableName,
           id: tableName,
+          tabViewType: TabViewType.TableDetail,
           icon: 'hugeicons:grid-table',
           iconClass: 'text-yellow-400',
-          path: `${SchemaFolderType.Tables}/${tableName}`,
-          tabViewType: TabViewType.TableDetail,
-          isFolder: false,
-        })),
-      ],
-      isFolder: true,
-    },
-    {
-      title: 'Views',
-      id: SchemaFolderType.Views,
-      icon: 'material-icon-theme:folder-enum-open',
-      closeIcon: 'material-icon-theme:folder-enum',
-      path: SchemaFolderType.Views,
-      tabViewType: TabViewType.ViewOverview,
-      children: [
-        ...views.map(({ name, oid, type }) => ({
+        },
+      },
+    };
+
+    nodes[SchemaFolderType.Tables].children!.push(nodeId);
+  });
+
+  views.forEach(({ name, oid, type }) => {
+    const nodeId = String(oid);
+
+    nodes[nodeId] = {
+      id: nodeId,
+      parentId: SchemaFolderType.Views,
+      name,
+      type: 'file',
+      depth: 1,
+      iconOpen:
+        type === ViewSchemaEnum.View
+          ? 'hugeicons:property-view'
+          : 'hugeicons:property-new',
+      iconClose:
+        type === ViewSchemaEnum.View
+          ? 'hugeicons:property-view'
+          : 'hugeicons:property-new',
+      iconClass:
+        type === ViewSchemaEnum.View ? 'text-green-700' : 'text-orange-500',
+      data: {
+        tabViewType: TabViewType.ViewDetail,
+        itemValue: {
           title: name,
+          name,
           id: oid,
+          tabViewType: TabViewType.ViewDetail,
           icon:
             type === ViewSchemaEnum.View
               ? 'hugeicons:property-view'
               : 'hugeicons:property-new',
           iconClass:
             type === ViewSchemaEnum.View ? 'text-green-700' : 'text-orange-500',
-          path: `${SchemaFolderType.Views}/${name}`,
-          tabViewType: TabViewType.ViewDetail,
-          isFolder: false,
-        })),
-      ],
-      isFolder: true,
-    },
-  ];
+        },
+      },
+    };
 
-  if (!debouncedSearch.value) {
-    return treeItems;
+    nodes[SchemaFolderType.Views].children!.push(nodeId);
+  });
+
+  if (debouncedSearch.value) {
+    const query = debouncedSearch.value.toLowerCase();
+    const filtered: Record<string, FileNode> = {};
+
+    [
+      SchemaFolderType.Functions,
+      SchemaFolderType.Tables,
+      SchemaFolderType.Views,
+    ].forEach(folderId => {
+      const folder = nodes[folderId];
+      if (!folder) return;
+
+      const matchingChildren = folder.children?.filter(childId => {
+        const child = nodes[childId];
+        return child?.name.toLowerCase().includes(query);
+      });
+
+      if (matchingChildren && matchingChildren.length > 0) {
+        filtered[folderId] = {
+          ...folder,
+          children: matchingChildren,
+        };
+
+        matchingChildren.forEach(childId => {
+          filtered[childId] = nodes[childId];
+        });
+      }
+    });
+
+    return filtered;
   }
 
-  const tree = new TreeManager([]);
-
-  tree.tree = treeItems;
-
-  return tree.searchByTitle(debouncedSearch.value);
+  return nodes;
 });
 
-const activityBarStore = useActivityBarStore();
-const { schemasExpandedState, onCollapsedSchemaTree } =
-  toRefs(activityBarStore);
+const hasTreeData = computed(() => Object.keys(fileTreeData.value).length > 0);
 
 const onRefreshSchema = async () => {
   if (!connectionId.value) {
@@ -148,6 +244,18 @@ const onRefreshSchema = async () => {
   });
 
   isRefreshing.value = false;
+};
+
+const onToggleCollapse = () => {
+  if (!fileTreeRef.value) return;
+
+  if (isTreeCollapsed.value) {
+    fileTreeRef.value.expandAll();
+    isTreeCollapsed.value = false;
+  } else {
+    fileTreeRef.value.collapseAll();
+    isTreeCollapsed.value = true;
+  }
 };
 
 // Context menu setup
@@ -178,18 +286,33 @@ const {
   onRefreshSchema,
 });
 
-const onHandleOpenTab = async (
-  _: MouseEvent,
-  item: FlattenedTreeFileSystemItem
-) => {
-  const tabViewType: TabViewType = (item.value as any).tabViewType;
+const handleTreeClick = async (nodeId: string) => {
+  const node = fileTreeData.value[nodeId];
+  if (!node) return;
 
-  let routeName: RouteNameFromPath<RoutePathSchema> | null = null;
-  let routeParams;
+  const tabViewType: TabViewType | undefined = node.data?.tabViewType as
+    | TabViewType
+    | undefined;
 
-  if (!schemaId.value) {
+  const itemValue = (node.data as any)?.itemValue as
+    | {
+        id?: string | number;
+        icon?: string;
+        iconClass?: string;
+        tabViewType?: TabViewType;
+        name?: string;
+        title?: string;
+      }
+    | undefined;
+
+  if (!schemaId.value || !tabViewType) {
     return;
   }
+
+  let routeName: RouteNameFromPath<RoutePathSchema> | null = null;
+  let routeParams: Record<string, any> | undefined;
+
+  const tabId = `${node.name}-${schemaId.value}`;
 
   if (tabViewType === TabViewType.FunctionsOverview) {
     routeName =
@@ -211,14 +334,11 @@ const onHandleOpenTab = async (
       'workspaceId-connectionId-quick-query-function-over-view-functionName';
 
     routeParams = {
-      functionName: item.value.id,
+      functionName: String(itemValue?.id ?? node.id ?? ''),
       schemaName: schemaId.value || '',
     };
   }
 
-  const tabId = `${item.value.title}-${schemaId.value}`;
-
-  //TODO: refactor route to tabId
   if (
     tabViewType === TabViewType.TableDetail ||
     tabViewType === TabViewType.ViewDetail
@@ -232,27 +352,77 @@ const onHandleOpenTab = async (
   }
 
   const virtualTableId =
-    tabViewType === TabViewType.ViewDetail ? item.value.id : undefined;
+    tabViewType === TabViewType.ViewDetail
+      ? String(itemValue?.id ?? node.id ?? '')
+      : undefined;
 
   if (routeName) {
+    const icon =
+      itemValue?.icon ||
+      node.iconOpen ||
+      node.iconClose ||
+      'hugeicons:grid-table';
     await tabViewStore.openTab({
-      icon: item.value.icon,
-      iconClass: item.value.iconClass!,
+      icon,
+      iconClass: itemValue?.iconClass || node.iconClass,
       id: tabId,
-      name: item.value.title,
-      type: (item.value as any).tabViewType,
+      name: node.name,
+      type: tabViewType,
       routeName,
       routeParams,
       connectionId: connectionId.value,
       schemaId: schemaId.value || '',
       workspaceId: workspaceId.value || '',
-      tableName: item.value.title,
-      virtualTableId: virtualTableId,
+      tableName: node.name,
+      virtualTableId,
+      treeNodeId: node.id,
     });
 
     await tabViewStore.selectTab(tabId);
   }
 };
+
+const handleTreeContextMenu = (nodeId: string, event: MouseEvent) => {
+  const node = fileTreeData.value[nodeId];
+  if (!node) return;
+
+  const itemValue = (node.data as any)?.itemValue || {
+    title: node.name,
+    name: node.name,
+    id: node.id,
+    tabViewType: (node.data as any)?.tabViewType,
+    icon: node.iconOpen || node.iconClose,
+    iconClass: node.iconClass,
+  };
+
+  // Reuse existing context menu helper signature
+  onRightClickItem(event, { value: itemValue } as any);
+};
+
+watch(
+  () => tabViewStore.activeTab,
+  activeTab => {
+    console.log('🚀 ~ activeTab:', activeTab);
+
+    if (
+      activeTab?.type === TabViewType.TableDetail ||
+      activeTab?.type === TabViewType.TableOverview ||
+      activeTab?.type === TabViewType.ViewDetail ||
+      activeTab?.type === TabViewType.ViewOverview ||
+      activeTab?.type === TabViewType.FunctionsDetail ||
+      activeTab?.type === TabViewType.FunctionsOverview
+    ) {
+      const nodeId = activeTab.treeNodeId;
+
+      console.log('🚀 ~ activeTab:::', nodeId);
+
+      if (typeof nodeId === 'string' && !fileTreeRef.value?.isMouseInside) {
+        fileTreeRef.value?.focusItem(nodeId);
+      }
+    }
+  },
+  { flush: 'post', immediate: true }
+);
 </script>
 
 <template>
@@ -285,27 +455,25 @@ const onHandleOpenTab = async (
       <div class="flex items-center">
         <Tooltip>
           <TooltipTrigger as-child>
-            <Button
-              size="iconSm"
-              variant="ghost"
-              @click="onCollapsedSchemaTree"
-            >
+            <Button size="iconSm" variant="ghost" @click="onToggleCollapse">
               <Icon
-                name="lucide:copy-minus"
+                name="hugeicons:plus-minus"
                 class="size-4! min-w-4 text-muted-foreground"
               />
             </Button>
           </TooltipTrigger>
-          <TooltipContent> Collapse All </TooltipContent>
+          <TooltipContent>
+            {{ isTreeCollapsed ? 'Expand All' : 'Collapse All' }}
+          </TooltipContent>
         </Tooltip>
 
         <Tooltip>
           <TooltipTrigger as-child>
             <Button size="iconSm" variant="ghost" @click="onRefreshSchema">
               <Icon
-                name="lucide:refresh-ccw"
+                name="hugeicons:redo"
                 :class="[
-                  'size-4! min-w-4 text-muted-foreground',
+                  'size-4! min-w-4 stroke-amber-400! text-muted-foreground',
                   isRefreshing && 'animate-spin',
                 ]"
               />
@@ -339,7 +507,7 @@ const onHandleOpenTab = async (
     <!-- TODO: check flow when change connection  -->
     <!-- TODO: check flow when change schema  -->
     <div
-      v-if="!items.length"
+      v-if="!hasTreeData"
       class="flex flex-col items-center h-full justify-center"
     >
       No data!
@@ -350,14 +518,16 @@ const onHandleOpenTab = async (
       :context-menu-items="contextMenuItems"
       @on-clear-context-menu="selectedItem = null"
     >
-      <TreeFolder
-        v-model:explorerFiles="items"
-        v-model:expandedState="schemasExpandedState"
-        :isShowArrow="true"
-        :isExpandedByArrow="true"
-        :onRightClickItem="onRightClickItem"
-        v-on:clickTreeItem="onHandleOpenTab"
-      />
+      <div class="h-full">
+        <FileTree
+          ref="fileTreeRef"
+          :initial-data="fileTreeData"
+          :allow-drag-and-drop="false"
+          :delay-focus="0"
+          @click="handleTreeClick"
+          @contextmenu="handleTreeContextMenu"
+        />
+      </div>
     </BaseContextMenu>
 
     <!-- Safe Mode Confirm Dialog -->

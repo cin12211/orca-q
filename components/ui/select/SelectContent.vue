@@ -16,7 +16,12 @@ defineOptions({
 });
 
 const props = withDefaults(
-  defineProps<SelectContentProps & { class?: HTMLAttributes['class'] }>(),
+  defineProps<
+    SelectContentProps & {
+      class?: HTMLAttributes['class'];
+      showScrollButtons?: boolean;
+    }
+  >(),
   {
     position: 'popper',
   }
@@ -24,7 +29,7 @@ const props = withDefaults(
 const emits = defineEmits<SelectContentEmits>();
 
 const delegatedProps = computed(() => {
-  const { class: _, ...delegated } = props;
+  const { class: _, showScrollButtons: __, ...delegated } = props;
 
   return delegated;
 });
@@ -46,7 +51,7 @@ const forwarded = useForwardPropsEmits(delegatedProps, emits);
         )
       "
     >
-      <SelectScrollUpButton />
+      <SelectScrollUpButton v-if="props.showScrollButtons" />
       <SelectViewport
         :class="
           cn(
@@ -58,7 +63,7 @@ const forwarded = useForwardPropsEmits(delegatedProps, emits);
       >
         <slot />
       </SelectViewport>
-      <SelectScrollDownButton />
+      <SelectScrollDownButton v-if="props.showScrollButtons" />
     </SelectContent>
   </SelectPortal>
 </template>

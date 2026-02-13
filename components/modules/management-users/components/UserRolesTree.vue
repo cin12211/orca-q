@@ -329,12 +329,13 @@ watch(
   activeTab => {
     if (activeTab?.type === TabViewType.UserPermissions) {
       const roleName = activeTab.routeParams?.roleName;
-      if (typeof roleName === 'string') {
+
+      if (typeof roleName === 'string' && !fileTreeRef.value?.isMouseInside) {
         fileTreeRef.value?.focusItem(roleName);
       }
     }
   },
-  { immediate: true }
+  { flush: 'post', immediate: true }
 );
 </script>
 
@@ -368,6 +369,7 @@ watch(
             ref="fileTreeRef"
             :initial-data="fileTreeData"
             :allow-drag-and-drop="false"
+            :delay-focus="0"
             @click="handleTreeClick"
             @contextmenu="handleTreeContextMenu"
           />

@@ -10,9 +10,10 @@ import { SchemaFolderType } from '../management-schemas/constants';
 import ConnectionSelector from '../selectors/ConnectionSelector.vue';
 import SchemaSelector from '../selectors/SchemaSelector.vue';
 
-const { schemaStore, connectToConnection, wsStateStore } = useAppContext();
+const { schemaStore, connectToConnection, wsStateStore, tabViewStore } =
+  useAppContext();
 const { activeSchema } = toRefs(schemaStore);
-const { connectionId, workspaceId } = toRefs(wsStateStore);
+const { connectionId, workspaceId, schemaId } = toRefs(wsStateStore);
 
 const isRefreshing = ref(false);
 const fileTreeRef = ref<InstanceType<typeof FileTree> | null>(null);
@@ -36,6 +37,7 @@ const fileTreeData = computed<Record<string, FileNode>>(() => {
     depth: 0,
     iconOpen: 'hugeicons:structure-folder',
     iconClose: 'hugeicons:structure-folder',
+
     children: [],
     data: { tabViewType: TabViewType.AllERD },
   };
@@ -53,7 +55,8 @@ const fileTreeData = computed<Record<string, FileNode>>(() => {
       name: tableName,
       type: 'file',
       depth: 1,
-      iconClose: 'hugeicons:hierarchy-circle-01',
+      iconOpen: 'hugeicons:flowchart-01',
+      iconClose: 'hugeicons:flowchart-01',
       data: { tabViewType: TabViewType.DetailERD },
     };
 
@@ -107,56 +110,110 @@ const onCollapseAll = () => {
 };
 
 // Navigation functions
-const onNavigateToErdDiagram = async (tableName: string) => {
+const openErdTab = async (node: FileNode) => {
   if (!workspaceId.value) {
     throw new Error('No workspace selected');
   }
 
-  const tableId = buildTableNodeId({
-    schemaName: activeSchema.value?.name || '',
-    tableName,
-  });
-
-  navigateTo({
-    name: 'workspaceId-connectionId-erd-tableId',
-    params: {
-      workspaceId: workspaceId.value || '',
-      connectionId: connectionId.value || '',
-      tableId,
-    },
-  });
-};
-
-const onNavigateToOverviewErdDiagram = async () => {
-  if (!workspaceId.value) {
-    throw new Error('No workspace selected');
+  if (!connectionId.value) {
+    throw new Error('No connection selected');
   }
 
-  navigateTo({
-    name: 'workspaceId-connectionId-erd',
-    params: {
-      workspaceId: workspaceId.value || '',
-      connectionId: connectionId.value || '',
-    },
+  const tabViewType = node.data?.tabViewType as TabViewType | undefined;
+  if (
+    tabViewType !== TabViewType.AllERD &&
+    tabViewType !== TabViewType.DetailERD
+  ) {
+    return;
+  }
+
+  const currentSchemaId = schemaId.value || activeSchema.value?.name || '';
+  const isOverview = tabViewType === TabViewType.AllERD;
+
+  const tableId = isOverview
+    ? undefined
+    : node.id ||
+      buildTableNodeId({
+        schemaName: activeSchema.value?.name || '',
+        tableName: node.name,
+      });
+
+  const tabId = isOverview
+    ? `erd-overview-${currentSchemaId || 'all'}`
+    : `erd-${tableId}`;
+
+  await tabViewStore.openTab({
+    id: tabId,
+    name: isOverview ? 'All Tables' : node.name,
+    icon: node.iconOpen || node.iconClose || 'hugeicons:structure-folder',
+    iconClass: node.iconClass,
+    type: tabViewType,
+    routeName: isOverview
+      ? 'workspaceId-connectionId-erd'
+      : 'workspaceId-connectionId-erd-tableId',
+    routeParams: isOverview
+      ? {
+          workspaceId: workspaceId.value,
+          connectionId: connectionId.value,
+        }
+      : {
+          workspaceId: workspaceId.value,
+          connectionId: connectionId.value,
+          tableId: tableId || '',
+        },
+    connectionId: connectionId.value,
+    workspaceId: workspaceId.value,
+    schemaId: currentSchemaId,
+    tableName: isOverview ? undefined : node.name,
   });
+
+  await tabViewStore.selectTab(tabId);
 };
 
 /**
  * Handle FileTree click — resolve node and navigate
  */
-const handleTreeClick = (nodeId: string) => {
+const handleTreeClick = async (nodeId: string) => {
   const node = fileTreeData.value[nodeId];
   if (!node) return;
 
-  const tabViewType = node.data?.tabViewType as TabViewType;
-
-  if (tabViewType === TabViewType.AllERD) {
-    onNavigateToOverviewErdDiagram();
-    return;
-  }
-
-  onNavigateToErdDiagram(node.name);
+  await openErdTab(node);
 };
+
+watch(
+  () => tabViewStore.activeTab,
+  activeTab => {
+    if (!activeTab || fileTreeRef.value?.isMouseInside) return;
+
+    if (activeTab.type === TabViewType.AllERD) {
+      if (fileTreeData.value[SchemaFolderType.Tables]) {
+        fileTreeRef.value?.focusItem(SchemaFolderType.Tables);
+      }
+      return;
+    }
+
+    if (activeTab.type === TabViewType.DetailERD) {
+      const rawTableId = activeTab.routeParams?.tableId;
+      if (typeof rawTableId !== 'string') return;
+
+      const directMatch = fileTreeData.value[rawTableId];
+      if (directMatch) {
+        fileTreeRef.value?.focusItem(rawTableId);
+        return;
+      }
+
+      const schemaName = activeSchema.value?.name || '';
+      const composedId = schemaName
+        ? buildTableNodeId({ schemaName, tableName: rawTableId })
+        : rawTableId;
+
+      if (fileTreeData.value[composedId]) {
+        fileTreeRef.value?.focusItem(composedId);
+      }
+    }
+  },
+  { flush: 'post', immediate: true }
+);
 </script>
 
 <template>
@@ -203,7 +260,7 @@ const handleTreeClick = (nodeId: string) => {
           <TooltipTrigger as-child>
             <Button size="iconSm" variant="ghost" @click="onRefreshSchema">
               <Icon
-                name="lucide:refresh-ccw"
+                name="hugeicons:redo"
                 :class="[
                   'size-4! min-w-4 text-muted-foreground',
                   isRefreshing && 'animate-spin',

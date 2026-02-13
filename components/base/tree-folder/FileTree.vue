@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { useFocus, useFocusWithin } from '@vueuse/core';
 import { ref, computed, watch, onMounted, shallowRef, h, render } from 'vue';
 import { useVirtualizer } from '@tanstack/vue-virtual';
 import PseudomorphismDragItem from './PseudomorphismDragItem.vue';
@@ -27,8 +28,8 @@ const props = withDefaults(defineProps<Props>(), {
   itemHeight: 24,
   indentSize: 20,
   baseIndent: 8,
-  autoExpandDelay: 500,
-  delayFocus: 100,
+  autoExpandDelay: 200,
+  delayFocus: 50,
   autoScrollThreshold: 50,
   autoScrollSpeed: 10,
   overscan: 10,
@@ -83,7 +84,8 @@ const visibleNodeIds = computed(() => {
 });
 
 // Virtualization setup
-const parentRef = ref<HTMLElement | null>(null);
+const parentRef = useTemplateRef<HTMLElement | null>('parentRef');
+const isMouseInside = ref(false);
 
 const rowVirtualizer = useVirtualizer({
   get count() {
@@ -623,9 +625,9 @@ onMounted(() => {
   }
 
   // Set initial focus
-  if (visibleNodeIds.value.length > 0) {
-    focusedId.value = visibleNodeIds.value[0];
-  }
+  // if (visibleNodeIds.value.length > 0) {
+  //   focusedId.value = visibleNodeIds.value[0];
+  // }
 });
 
 // React to external data changes
@@ -701,11 +703,19 @@ defineExpose({
   collapseAll,
   focusItem,
   startEditing,
+  isMouseInside,
 });
 </script>
 
 <template>
-  <div ref="parentRef" class="file-tree" tabindex="0" @keydown="handleKeyDown">
+  <div
+    ref="parentRef"
+    @mouseenter="isMouseInside = true"
+    @mouseleave="isMouseInside = false"
+    class="file-tree"
+    tabindex="0"
+    @keydown="handleKeyDown"
+  >
     <div
       :style="{
         height: `${rowVirtualizer.getTotalSize()}px`,
