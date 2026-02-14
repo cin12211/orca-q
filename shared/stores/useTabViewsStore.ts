@@ -22,6 +22,9 @@ export enum TabViewType {
   ViewDetail = 'ViewDetail',
 
   CodeQuery = 'CodeQuery',
+
+  UserPermissions = 'UserPermissions',
+  DatabaseTools = 'DatabaseTools',
 }
 
 export type TabView = {

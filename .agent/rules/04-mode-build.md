@@ -1,5 +1,5 @@
 ---
-activation: model_decision
+trigger: always_on
 description: Apply when user requests creating new feature, component, or module
 ---
 
@@ -17,30 +17,36 @@ description: Apply when user requests creating new feature, component, or module
 
 ## Output Format
 
-```markdown
+````markdown
 ## 🏗️ BUILD: [Feature name]
 
 **Scope:** [description]
 
 **Acceptance Criteria:**
+
 - [ ] AC1: [criterion 1]
 - [ ] AC2: [criterion 2]
 
 ---
 
 ### Code:
+
 **File: `[path]`**
+
 ```typescript
 // Code here
 ```
+````
 
 ---
 
 ### ✅ Checklist:
+
 - [x] Type-safe (no any)
 - [x] Complete error handling
 - [x] No hardcoded values
 - [x] Comments for complex logic
+
 ```
 
 ## Principles
@@ -52,3 +58,4 @@ description: Apply when user requests creating new feature, component, or module
 | Hardcode values | Use constants/config |
 | Skip error handling | Handle errors and edge cases |
 | Write one large block | Split into small functions/components |
+```

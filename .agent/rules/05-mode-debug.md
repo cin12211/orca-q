@@ -1,5 +1,5 @@
 ---
-activation: model_decision
+trigger: always_on
 description: Apply when user reports bugs, errors that need fixing
 ---
 
@@ -25,12 +25,13 @@ description: Apply when user reports bugs, errors that need fixing
 
 ## Output Format
 
-```markdown
+````markdown
 ## 🔧 DEBUG
 
 **Symptom:** [error description]
 
 **Reproduction:**
+
 1. [Step 1]
 2. [Step 2]
 3. [Error appears]
@@ -38,22 +39,27 @@ description: Apply when user reports bugs, errors that need fixing
 ---
 
 ### Analysis:
+
 **Root Cause:** [root cause]
 **Location:** `[file:line]`
 
 ### Fix:
+
 ```diff
 - [old code]
 + [new code]
 ```
+````
 
 **Reason:** [explanation]
 
 ### Prevention:
-| Suggestion | Priority |
-|------------|----------|
-| [Add validation] | 🔴 High |
+
+| Suggestion        | Priority  |
+| ----------------- | --------- |
+| [Add validation]  | 🔴 High   |
 | [Write unit test] | 🟡 Medium |
+
 ```
 
 ## Principles
@@ -64,3 +70,4 @@ description: Apply when user reports bugs, errors that need fixing
 | Refactor randomly | Fix the right place, minimal change |
 | Stop after fixing | Propose prevention |
 | Fix symptoms | Find and fix root cause |
+```
