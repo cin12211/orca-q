@@ -37,26 +37,27 @@ export function buildUpdateStatements({
   }
 
   // Build SET clause
+  // Build SET clause
   const setClause = Object.entries(update)
     .map(([column, value]) => {
       // Handle different value types
       if (value === null) {
-        return `${column} = NULL`;
+        return `"${column}" = NULL`;
       }
       if (typeof value === 'string') {
-        return `${column} = '${value.replace(/'/g, "''")}'`; // Escape single quotes
+        return `"${column}" = '${value.replace(/'/g, "''")}'`; // Escape single quotes
       }
-      return `${column} = ${value}`;
+      return `"${column}" = ${value}`;
     })
     .join(', ');
 
   // Build WHERE clause
   const whereClause = pKeys
-    .map(key => `${key} = '${pKeyValue[key]}'`)
+    .map(key => `"${key}" = '${pKeyValue[key]}'`)
     .join(' AND ');
 
   // Construct final query
-  const query = `UPDATE ${schemaName}.${tableName} SET ${setClause} WHERE ${whereClause}`;
+  const query = `UPDATE "${schemaName}"."${tableName}" SET ${setClause} WHERE ${whereClause}`;
 
   return query;
 }

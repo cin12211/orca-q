@@ -14,7 +14,7 @@ export function buildInsertStatements({
 
   const columnsClause = Object.entries(insertData)
     .map(([column]) => {
-      return `${column}`;
+      return `"${column}"`;
     })
     .join(', ');
 
@@ -32,7 +32,7 @@ export function buildInsertStatements({
     .join(', ');
 
   // Construct final query
-  const query = `INSERT INTO ${schemaName}.${tableName} (${columnsClause}) VALUES (${valuesClause})`;
+  const query = `INSERT INTO "${schemaName}"."${tableName}" (${columnsClause}) VALUES (${valuesClause})`;
 
   return query;
 }

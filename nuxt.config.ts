@@ -78,6 +78,10 @@ export default defineNuxtConfig({
   },
   shadcn: shadcnConfig,
   icon: {
+    serverBundle: 'local',
+    clientBundle: {
+      scan: true,
+    },
     // collections: ['material-icon-theme', 'hugeicons', 'logos', 'lucide'],
     provider: 'iconify',
   },

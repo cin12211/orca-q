@@ -41,6 +41,7 @@ export type TabView = {
   routeName: RouteNameFromPath<RoutePathSchema>;
   routeParams?: Record<string, string | number>;
   virtualTableId?: string;
+  treeNodeId?: string;
 };
 
 export const useTabViewsStore = defineStore(
@@ -62,7 +63,6 @@ export const useTabViewsStore = defineStore(
         throw new Error(
           'No workspace or connection selected or schema selected'
         );
-        return;
       }
 
       await wsStateStore.setTabViewId({
@@ -86,9 +86,9 @@ export const useTabViewsStore = defineStore(
       };
 
       //TODO: check this with when open file editor
-      const isExitTab = tabViews.value.some(t => t.id === tab.id);
+      const tabExists = tabViews.value.some(t => t.id === tab.id);
 
-      if (!isExitTab) {
+      if (!tabExists) {
         tabViews.value.push(tabTmp);
 
         await window.tabViewsApi.create(tabTmp);
@@ -131,7 +131,6 @@ export const useTabViewsStore = defineStore(
     const closeTab = async (tabId: string) => {
       if (!wsStateStore.schemaId || !connectionId.value) {
         throw new Error('No schema or connection selected or schema selected');
-        return;
       }
 
       const index = tabViews.value.findIndex(t => t.id === tabId);

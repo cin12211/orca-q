@@ -27,6 +27,7 @@ export function useTableActions(
     getTableColumnsMetadata,
     getPrimaryKeyColumns,
     getColumnPlaceholder,
+    executeWithLoading,
   } = helpers;
 
   // dowload file with progress by native browser
@@ -127,22 +128,22 @@ export function useTableActions(
     );
 
     await executeWithSafeMode(sql, 'delete', async () => {
-      try {
-        await $fetch('/api/execute', {
-          method: 'POST',
-          body: {
-            dbConnectionString: options.currentConnectionString.value,
-            query: sql,
-          },
-        });
+      await executeWithLoading(
+        async () => {
+          await $fetch('/api/execute', {
+            method: 'POST',
+            body: {
+              dbConnectionString: options.currentConnectionString.value,
+              query: sql,
+            },
+          });
 
-        toast.success('Table deleted successfully');
-        await options.onRefreshSchema();
-      } catch (e: unknown) {
-        console.log(e);
-        const error = e as { message?: string };
-        toast.error(error.message || 'Failed to delete table');
-      }
+          toast.success('Table deleted successfully');
+          await options.onRefreshSchema();
+        },
+        state.isFetching,
+        'Failed to delete table'
+      );
     });
   };
 
@@ -169,21 +170,22 @@ export function useTableActions(
     );
 
     await executeWithSafeMode(sql, 'save', async () => {
-      try {
-        await $fetch('/api/execute', {
-          method: 'POST',
-          body: {
-            dbConnectionString: options.currentConnectionString.value,
-            query: sql,
-          },
-        });
+      await executeWithLoading(
+        async () => {
+          await $fetch('/api/execute', {
+            method: 'POST',
+            body: {
+              dbConnectionString: options.currentConnectionString.value,
+              query: sql,
+            },
+          });
 
-        toast.success('Table renamed successfully');
-        await options.onRefreshSchema();
-      } catch (e: unknown) {
-        const error = e as { message?: string };
-        toast.error(error.message || 'Failed to rename table');
-      }
+          toast.success('Table renamed successfully');
+          await options.onRefreshSchema();
+        },
+        state.isFetching,
+        'Failed to rename table'
+      );
     });
   };
 
@@ -193,9 +195,10 @@ export function useTableActions(
     const schemaName = getSchemaName();
     const tableName = state.selectedItem.value.name;
 
-    const colsStr = columns.length > 0 ? columns.join(', ') : '*';
+    const colsStr =
+      columns.length > 0 ? columns.map(c => `"${c}"`).join(', ') : '*';
     const sql = `SELECT ${colsStr}
-FROM ${schemaName}.${tableName};
+FROM "${schemaName}"."${tableName}";
 -- WHERE ?
 -- LIMIT 100 OFFSET 0`;
 
@@ -211,15 +214,15 @@ FROM ${schemaName}.${tableName};
     const tableName = state.selectedItem.value.name;
 
     if (columnsMetadata.length > 0) {
-      const colsStr = columnsMetadata.map(c => c.name).join(', ');
+      const colsStr = columnsMetadata.map(c => `"${c.name}"`).join(', ');
       const valuesStr = columnsMetadata
         .map(c => getColumnPlaceholder(c))
         .join(', ');
-      const sql = `INSERT INTO ${schemaName}.${tableName} (${colsStr})
+      const sql = `INSERT INTO "${schemaName}"."${tableName}" (${colsStr})
 VALUES (${valuesStr});`;
       showSqlPreview(sql, 'INSERT Statement');
     } else {
-      const sql = `INSERT INTO ${schemaName}.${tableName} (column1, column2, ...)
+      const sql = `INSERT INTO "${schemaName}"."${tableName}" ("column1", "column2", ...)
 VALUES (value1, value2, ...);`;
       showSqlPreview(sql, 'INSERT Statement');
     }
@@ -241,17 +244,17 @@ VALUES (value1, value2, ...);`;
     const setClause =
       updateCols.length > 0
         ? updateCols
-            .map(c => `  ${c.name} = ${getColumnPlaceholder(c)}`)
+            .map(c => `  "${c.name}" = ${getColumnPlaceholder(c)}`)
             .join(',\n')
-        : '  column1 = value1,\n  column2 = value2';
+        : '  "column1" = value1,\n  "column2" = value2';
 
     // Build WHERE clause with primary keys
     const whereClause =
       primaryKeys.length > 0
-        ? primaryKeys.map(pk => `${pk} = ?`).join(' AND ')
+        ? primaryKeys.map(pk => `"${pk}" = ?`).join(' AND ')
         : '1=0 -- Add your WHERE clause';
 
-    const sql = `UPDATE ${schemaName}.${tableName}
+    const sql = `UPDATE "${schemaName}"."${tableName}"
 SET
 ${setClause}
 WHERE ${whereClause};`;
@@ -267,10 +270,10 @@ WHERE ${whereClause};`;
 
     const whereClause =
       primaryKeys.length > 0
-        ? primaryKeys.map(pk => `${pk} = ?`).join(' AND ')
+        ? primaryKeys.map(pk => `"${pk}" = ?`).join(' AND ')
         : '1=0 -- Add your WHERE clause (safety: 1=0 to prevent accidental deletes)';
 
-    const sql = `DELETE FROM ${schemaName}.${tableName}
+    const sql = `DELETE FROM "${schemaName}"."${tableName}"
 WHERE ${whereClause};`;
 
     showSqlPreview(sql, 'DELETE Statement');
@@ -285,24 +288,41 @@ WHERE ${whereClause};`;
     const tableAlias = generateTableAlias(tableName);
 
     const colList =
-      columns.length > 0 ? columns.join(', ') : 'column1, column2';
+      columns.length > 0
+        ? columns.map(c => `"${c}"`).join(', ')
+        : '"column1", "column2"';
+
+    // Note: tableAlias is usually simple but let's double quote if complex,
+    // but strictly strictly standard SQL might not like "alias"."col" if alias is not defined with quotes.
+    // However, for consistency, let's quote the alias definition: AS "alias"
+    // And use it with quotes: "alias"."id"
+    // But generateTableAlias typically returns safe simple string.
+    // Let's assume we quote the alias name itself in the query.
+
+    // Actually, let's stick to quoting identifiers.
+    const qTableAlias = `"${tableAlias}"`;
+
     const pkCondition =
       primaryKeys.length > 0
-        ? primaryKeys.map(pk => `${tableAlias}.${pk} = src.${pk}`).join(' AND ')
-        : `${tableAlias}.id = src.id`;
+        ? primaryKeys
+            .map(pk => `${qTableAlias}."${pk}" = src."${pk}"`)
+            .join(' AND ')
+        : `${qTableAlias}."id" = src."id"`;
+
     const updateSet =
       columns.length > 0
         ? columns
             .filter(c => !primaryKeys.includes(c))
-            .map(c => `    ${c} = src.${c}`)
+            .map(c => `    "${c}" = src."${c}"`)
             .join(',\n')
-        : '    column1 = src.column1';
+        : '    "column1" = src."column1"';
+
     const sourceValues =
       columns.length > 0
-        ? columns.map(c => `src.${c}`).join(', ')
-        : 'src.column1, src.column2';
+        ? columns.map(c => `src."${c}"`).join(', ')
+        : 'src."column1", src."column2"';
 
-    const sql = `MERGE INTO ${schemaName}.${tableName} AS ${tableAlias}
+    const sql = `MERGE INTO "${schemaName}"."${tableName}" AS ${qTableAlias}
 USING (SELECT ${colList} FROM source_table) AS src
 ON ${pkCondition}
 WHEN MATCHED THEN
@@ -326,22 +346,27 @@ WHEN NOT MATCHED THEN
 
     const colsStr =
       columnsMetadata.length > 0
-        ? columnsMetadata.map(c => c.name).join(', ')
-        : 'column1, column2';
+        ? columnsMetadata.map(c => `"${c.name}"`).join(', ')
+        : '"column1", "column2"';
     const valuesStr =
       columnsMetadata.length > 0
         ? columnsMetadata.map(c => getColumnPlaceholder(c)).join(', ')
         : 'value1, value2';
-    const conflictCols = primaryKeys.length > 0 ? primaryKeys.join(', ') : 'id';
+    const conflictCols =
+      primaryKeys.length > 0
+        ? primaryKeys.map(pk => `"${pk}"`).join(', ')
+        : '"id"';
     const updateCols = columnsMetadata.filter(
       c => !primaryKeys.includes(c.name)
     );
     const updateClause =
       updateCols.length > 0
-        ? updateCols.map(c => `    ${c.name} = EXCLUDED.${c.name}`).join(',\n')
-        : '    column1 = EXCLUDED.column1';
+        ? updateCols
+            .map(c => `    "${c.name}" = EXCLUDED."${c.name}"`)
+            .join(',\n')
+        : '    "column1" = EXCLUDED."column1"';
 
-    const sql = `INSERT INTO ${schemaName}.${tableName} (${colsStr})
+    const sql = `INSERT INTO "${schemaName}"."${tableName}" (${colsStr})
 VALUES (${valuesStr})
 ON CONFLICT (${conflictCols})
 DO UPDATE SET
@@ -357,20 +382,23 @@ ${updateClause};`;
     const schemaName = getSchemaName();
     const tableName = state.selectedItem.value.name;
     const tableAlias = generateTableAlias(tableName);
+    const qTableAlias = `"${tableAlias}"`;
 
     const updateSet =
       columns.length > 0
         ? columns
             .filter(c => !primaryKeys.includes(c))
-            .map(c => `  ${c} = src.${c}`)
+            .map(c => `  "${c}" = src."${c}"`)
             .join(',\n')
-        : '  column1 = src.column1';
+        : '  "column1" = src."column1"';
     const pkCondition =
       primaryKeys.length > 0
-        ? primaryKeys.map(pk => `${tableAlias}.${pk} = src.${pk}`).join(' AND ')
-        : `${tableAlias}.id = src.id`;
+        ? primaryKeys
+            .map(pk => `${qTableAlias}."${pk}" = src."${pk}"`)
+            .join(' AND ')
+        : `${qTableAlias}."id" = src."id"`;
 
-    const sql = `UPDATE ${schemaName}.${tableName} AS ${tableAlias}
+    const sql = `UPDATE "${schemaName}"."${tableName}" AS ${qTableAlias}
 SET
 ${updateSet}
 FROM source_table AS src
@@ -385,13 +413,16 @@ WHERE ${pkCondition};`;
     const schemaName = getSchemaName();
     const tableName = state.selectedItem.value.name;
     const tableAlias = generateTableAlias(tableName);
+    const qTableAlias = `"${tableAlias}"`;
 
     const pkCondition =
       primaryKeys.length > 0
-        ? primaryKeys.map(pk => `${tableAlias}.${pk} = src.${pk}`).join(' AND ')
-        : `${tableAlias}.id = src.id`;
+        ? primaryKeys
+            .map(pk => `${qTableAlias}."${pk}" = src."${pk}"`)
+            .join(' AND ')
+        : `${qTableAlias}."id" = src."id"`;
 
-    const sql = `DELETE FROM ${schemaName}.${tableName} AS ${tableAlias}
+    const sql = `DELETE FROM "${schemaName}"."${tableName}" AS ${qTableAlias}
 USING source_table AS src
 WHERE ${pkCondition};`;
 
@@ -403,24 +434,22 @@ WHERE ${pkCondition};`;
 
     showSqlPreview('', 'Table DDL');
 
-    state.isFetching.value = true;
-    try {
-      const ddl = await $fetch('/api/get-table-ddl', {
-        method: 'POST',
-        body: {
-          dbConnectionString: options.currentConnectionString.value,
-          schemaName: getSchemaName(),
-          tableName: state.selectedItem.value.name,
-        },
-      });
+    await executeWithLoading(
+      async () => {
+        const ddl = await $fetch('/api/get-table-ddl', {
+          method: 'POST',
+          body: {
+            dbConnectionString: options.currentConnectionString.value,
+            schemaName: getSchemaName(),
+            tableName: state.selectedItem.value!.name,
+          },
+        });
 
-      showSqlPreview(ddl, 'Table DDL');
-    } catch (e: unknown) {
-      const error = e as { message?: string };
-      toast.error(error.message || 'Failed to get table DDL');
-    } finally {
-      state.isFetching.value = false;
-    }
+        showSqlPreview(ddl as string, 'Table DDL');
+      },
+      state.isFetching,
+      'Failed to get table DDL'
+    );
   };
 
   return {

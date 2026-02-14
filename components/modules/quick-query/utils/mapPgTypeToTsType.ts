@@ -1,7 +1,13 @@
-// TODO: write function to handle for all database types
 export function mapPgTypeToTsType(udtName: string): string {
   // Normalize udtName to lowercase to handle case variations
   const normalizedUdtName = udtName.toLowerCase();
+
+  if (normalizedUdtName.startsWith('_')) {
+    // Array types (e.g., _text, _int4)
+    // defined recursively or just return typed array string
+    const singularType = mapPgTypeToTsType(normalizedUdtName.substring(1));
+    return `${singularType}[]`;
+  }
 
   switch (normalizedUdtName) {
     // String types
@@ -10,6 +16,15 @@ export function mapPgTypeToTsType(udtName: string): string {
     case 'text':
     case 'uuid':
     case 'citext':
+    case 'money':
+    case 'inet':
+    case 'cidr':
+    case 'macaddr':
+    case 'macaddr8':
+    case 'tsvector':
+    case 'tsquery':
+    case 'xml':
+    case 'bytea':
       return 'string';
 
     // Number types
@@ -20,10 +35,12 @@ export function mapPgTypeToTsType(udtName: string): string {
     case 'float4': // real
     case 'float8': // double precision
     case 'decimal':
+    case 'oid':
       return 'number';
 
     // Boolean type
     case 'bool':
+    case 'boolean':
       return 'boolean';
 
     // Common JSON types (often mapped to string or any in TS)
@@ -37,7 +54,13 @@ export function mapPgTypeToTsType(udtName: string): string {
     case 'timestamptz':
     case 'time':
     case 'timetz':
+    case 'interval':
       return 'string'; // or 'Date' if you prefer Date objects
+
+    // Bit strings
+    case 'bit':
+    case 'varbit':
+      return 'string';
 
     // Default for unmapped types
     default:

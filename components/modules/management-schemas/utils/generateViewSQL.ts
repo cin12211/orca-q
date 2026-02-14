@@ -64,7 +64,7 @@ export function generateViewSelectSQL(
   viewName: string,
   columns?: string[]
 ): string {
-  const colsStr = columns?.length ? columns.join(', ') : '*';
+  const colsStr = columns?.length ? columns.map(c => `"${c}"`).join(', ') : '*';
   return `SELECT ${colsStr}
 FROM "${schemaName}"."${viewName}"
 WHERE 1=1

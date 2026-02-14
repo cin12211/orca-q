@@ -9,6 +9,8 @@ const props = defineProps<{
   schemaName: string;
   columnName: string;
   recordId: string;
+  connectionId: string;
+  workspaceId: string;
 }>();
 
 const emit = defineEmits<{
@@ -53,6 +55,8 @@ const getInitFilters = () => {
       :tableName="tableName"
       :schema-name="schemaName"
       :init-filters="getInitFilters()"
+      :connectionId="props.connectionId"
+      :workspaceId="props.workspaceId"
       @onOpenBackReferencedTableModal="
         emit('onOpenBackReferencedTableModal', $event)
       "

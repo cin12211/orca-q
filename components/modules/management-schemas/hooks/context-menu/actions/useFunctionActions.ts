@@ -15,7 +15,12 @@ export function useFunctionActions(
   state: ContextMenuState,
   helpers: ReturnType<typeof useContextMenuHelpers>
 ) {
-  const { getSchemaName, executeWithSafeMode, showSqlPreview } = helpers;
+  const {
+    getSchemaName,
+    executeWithSafeMode,
+    showSqlPreview,
+    executeWithLoading,
+  } = helpers;
 
   const onDeleteFunction = async () => {
     if (
@@ -36,22 +41,23 @@ export function useFunctionActions(
     const functionName = state.selectedItem.value!.name;
 
     await executeWithSafeMode(sql, 'delete', async () => {
-      try {
-        await $fetch('/api/delete-function', {
-          method: 'POST',
-          body: {
-            dbConnectionString: options.currentConnectionString.value,
-            schemaName: getSchemaName(),
-            functionName,
-          },
-        });
+      await executeWithLoading(
+        async () => {
+          await $fetch('/api/delete-function', {
+            method: 'POST',
+            body: {
+              dbConnectionString: options.currentConnectionString.value,
+              schemaName: getSchemaName(),
+              functionName,
+            },
+          });
 
-        toast.success('Function deleted successfully');
-        await options.onRefreshSchema();
-      } catch (e: unknown) {
-        const error = e as { message?: string };
-        toast.error(error.message || 'Failed to delete function');
-      }
+          toast.success('Function deleted successfully');
+          await options.onRefreshSchema();
+        },
+        state.isFetching, // or safeModeLoading? safeMode already handles loading for the action it wraps usually, checking helpers.
+        'Failed to delete function'
+      );
     });
   };
 
@@ -79,23 +85,24 @@ export function useFunctionActions(
     );
 
     await executeWithSafeMode(sql, 'save', async () => {
-      try {
-        await $fetch('/api/rename-function', {
-          method: 'POST',
-          body: {
-            dbConnectionString: options.currentConnectionString.value,
-            schemaName: getSchemaName(),
-            oldName: state.renameDialogValue.value,
-            newName,
-          },
-        });
+      await executeWithLoading(
+        async () => {
+          await $fetch('/api/rename-function', {
+            method: 'POST',
+            body: {
+              dbConnectionString: options.currentConnectionString.value,
+              schemaName: getSchemaName(),
+              oldName: state.renameDialogValue.value,
+              newName,
+            },
+          });
 
-        toast.success('Function renamed successfully');
-        await options.onRefreshSchema();
-      } catch (e: unknown) {
-        const error = e as { message?: string };
-        toast.error(error.message || 'Failed to rename function');
-      }
+          toast.success('Function renamed successfully');
+          await options.onRefreshSchema();
+        },
+        state.isFetching,
+        'Failed to rename function'
+      );
     });
   };
 
@@ -105,49 +112,47 @@ export function useFunctionActions(
     showSqlPreview('', 'CALL Statement');
     state.isFetching.value = true;
 
-    try {
-      const signature = await $fetch<FunctionSignature | null>(
-        '/api/get-function-signature',
-        {
-          method: 'POST',
-          body: {
-            dbConnectionString: options.currentConnectionString.value,
-            functionId: state.selectedItem.value.id,
-          },
-        }
-      );
-
-      const schemaName = getSchemaName();
-      const functionName = signature?.name || '';
-
-      let sql: string;
-      if (signature?.parameters && signature.parameters.length > 0) {
-        // Filter only IN and INOUT parameters
-        const inputParams = signature.parameters.filter(
-          p => p.mode === 'IN' || p.mode === 'INOUT' || p.mode === 'VARIADIC'
+    await executeWithLoading(
+      async () => {
+        const signature = await $fetch<FunctionSignature | null>(
+          '/api/get-function-signature',
+          {
+            method: 'POST',
+            body: {
+              dbConnectionString: options.currentConnectionString.value,
+              functionId: state.selectedItem.value!.id,
+            },
+          }
         );
 
-        if (inputParams.length > 0) {
-          const paramComment = inputParams
-            .map(p => `${p.name}::${p.type}`)
-            .join(', ');
-          const paramArgs = inputParams.map(p => `:${p.name}`).join(', ');
-          sql = `-- ${paramComment}\nCALL "${schemaName}"."${functionName}"(${paramArgs});`;
-        } else {
-          sql = `CALL "${schemaName}"."${functionName}"();`;
-        }
-      } else {
-        sql = generateFunctionCallSQL(schemaName, functionName);
-      }
+        const schemaName = getSchemaName();
+        const functionName = signature?.name || '';
 
-      state.sqlPreviewDialogSQL.value = sql;
-    } catch (e: unknown) {
-      const error = e as { message?: string };
-      toast.error(error.message || 'Failed to get function signature');
-      state.sqlPreviewDialogOpen.value = false;
-    } finally {
-      state.isFetching.value = false;
-    }
+        let sql: string;
+        if (signature?.parameters && signature.parameters.length > 0) {
+          // Filter only IN and INOUT parameters
+          const inputParams = signature.parameters.filter(
+            p => p.mode === 'IN' || p.mode === 'INOUT' || p.mode === 'VARIADIC'
+          );
+
+          if (inputParams.length > 0) {
+            const paramComment = inputParams
+              .map(p => `${p.name}::${p.type}`)
+              .join(', ');
+            const paramArgs = inputParams.map(p => `:${p.name}`).join(', ');
+            sql = `-- ${paramComment}\nCALL "${schemaName}"."${functionName}"(${paramArgs});`;
+          } else {
+            sql = `CALL "${schemaName}"."${functionName}"();`;
+          }
+        } else {
+          sql = generateFunctionCallSQL(schemaName, functionName);
+        }
+
+        state.sqlPreviewDialogSQL.value = sql;
+      },
+      state.isFetching,
+      'Failed to get function signature'
+    );
   };
 
   const onGenFunctionSelectSQL = async () => {
@@ -156,50 +161,47 @@ export function useFunctionActions(
     showSqlPreview('', 'SELECT Function');
     state.isFetching.value = true;
 
-    try {
-      const signature = await $fetch<FunctionSignature | null>(
-        '/api/get-function-signature',
-        {
-          method: 'POST',
-          body: {
-            dbConnectionString: options.currentConnectionString.value,
-            functionId: state.selectedItem.value.id,
-          },
-        }
-      );
-
-      const schemaName = getSchemaName();
-      const functionName = signature?.name || '';
-
-      let sql: string;
-      if (signature?.parameters && signature.parameters.length > 0) {
-        // Filter only IN and INOUT parameters
-        const inputParams = signature.parameters.filter(
-          p => p.mode === 'IN' || p.mode === 'INOUT' || p.mode === 'VARIADIC'
+    await executeWithLoading(
+      async () => {
+        const signature = await $fetch<FunctionSignature | null>(
+          '/api/get-function-signature',
+          {
+            method: 'POST',
+            body: {
+              dbConnectionString: options.currentConnectionString.value,
+              functionId: state.selectedItem.value!.id,
+            },
+          }
         );
 
-        if (inputParams.length > 0) {
-          const paramComment = inputParams
-            .map(p => `${p.name}::${p.type}`)
-            .join(', ');
-          const paramArgs = inputParams.map(p => `:${p.name}`).join(', ');
-          sql = `-- ${paramComment}\nSELECT * FROM "${schemaName}"."${functionName}"(${paramArgs});`;
-        } else {
-          sql = `SELECT * FROM "${schemaName}"."${functionName}"();`;
-        }
-      } else {
-        sql = generateFunctionSelectSQL(schemaName, functionName);
-      }
+        const schemaName = getSchemaName();
+        const functionName = signature?.name || '';
 
-      state.sqlPreviewDialogSQL.value = sql;
-    } catch (e: unknown) {
-      console.log(e);
-      const error = e as { message?: string };
-      toast.error(error.message || 'Failed to get function signature');
-      state.sqlPreviewDialogOpen.value = false;
-    } finally {
-      state.isFetching.value = false;
-    }
+        let sql: string;
+        if (signature?.parameters && signature.parameters.length > 0) {
+          // Filter only IN and INOUT parameters
+          const inputParams = signature.parameters.filter(
+            p => p.mode === 'IN' || p.mode === 'INOUT' || p.mode === 'VARIADIC'
+          );
+
+          if (inputParams.length > 0) {
+            const paramComment = inputParams
+              .map(p => `${p.name}::${p.type}`)
+              .join(', ');
+            const paramArgs = inputParams.map(p => `:${p.name}`).join(', ');
+            sql = `-- ${paramComment}\nSELECT * FROM "${schemaName}"."${functionName}"(${paramArgs});`;
+          } else {
+            sql = `SELECT * FROM "${schemaName}"."${functionName}"();`;
+          }
+        } else {
+          sql = generateFunctionSelectSQL(schemaName, functionName);
+        }
+
+        state.sqlPreviewDialogSQL.value = sql;
+      },
+      state.isFetching,
+      'Failed to get function signature'
+    );
   };
 
   const onGenFunctionDDL = async () => {
@@ -209,28 +211,26 @@ export function useFunctionActions(
     )
       return;
 
-    try {
-      state.isFetching.value = true;
-      showSqlPreview('', 'Function DDL');
-      const def = await $fetch('/api/get-one-function', {
-        method: 'POST',
-        body: {
-          dbConnectionString: options.currentConnectionString.value,
-          functionId: state.selectedItem.value.id,
-        },
-      });
+    await executeWithLoading(
+      async () => {
+        showSqlPreview('', 'Function DDL');
+        const def = await $fetch('/api/get-one-function', {
+          method: 'POST',
+          body: {
+            dbConnectionString: options.currentConnectionString.value,
+            functionId: state.selectedItem.value!.id,
+          },
+        });
 
-      if (def) {
-        showSqlPreview(def, 'Function DDL');
-      } else {
-        toast.error('Could not retrieve function definition');
-      }
-    } catch (e: unknown) {
-      const error = e as { message?: string };
-      toast.error(error.message || 'Failed to get function DDL');
-    } finally {
-      state.isFetching.value = false;
-    }
+        if (def) {
+          showSqlPreview(def as string, 'Function DDL');
+        } else {
+          throw new Error('Could not retrieve function definition');
+        }
+      },
+      state.isFetching,
+      'Failed to get function DDL'
+    );
   };
 
   return {

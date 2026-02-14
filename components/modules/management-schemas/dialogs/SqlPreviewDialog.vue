@@ -9,6 +9,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import LoadingOverlay from '~/components/base/LoadingOverlay.vue';
 import { Button } from '~/components/ui/button';
 import {
   Tooltip,

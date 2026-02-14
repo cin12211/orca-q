@@ -3,3 +3,7 @@ export enum SchemaFolderType {
   Functions = 'Functions',
   Views = 'Views',
 }
+
+export enum ERDFolderType {
+  Root = 'Root',
+}

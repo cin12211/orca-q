@@ -1,4 +1,5 @@
 import { toRaw, toRef } from 'vue';
+import { toast } from 'vue-sonner';
 import type { FlattenedTreeFileSystemItem } from '~/components/base/Tree';
 import { useAppLayoutStore } from '~/core/stores/appLayoutStore';
 import type {
@@ -131,6 +132,27 @@ export function useContextMenuHelpers(
     state.safeModeDialogOpen.value = false;
   };
 
+  /**
+   * Execute an async action with loading state and error handling
+   */
+  const executeWithLoading = async (
+    action: () => Promise<void>,
+    loadingRef: Ref<boolean> = state.isFetching,
+    errorMessage = 'An error occurred'
+  ) => {
+    try {
+      loadingRef.value = true;
+      await action();
+    } catch (e: unknown) {
+      console.error(e);
+      const error = e as { message?: string };
+      toast.error(error.message || errorMessage);
+      state.sqlPreviewDialogOpen.value = false;
+    } finally {
+      loadingRef.value = false;
+    }
+  };
+
   return {
     getSchemaName,
     getTableMetadata,
@@ -143,6 +165,7 @@ export function useContextMenuHelpers(
     executeWithSafeMode,
     onSafeModeConfirm,
     onSafeModeCancel,
+    executeWithLoading,
     safeModeLoading,
   };
 }

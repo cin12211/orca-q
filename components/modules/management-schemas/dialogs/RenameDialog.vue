@@ -19,39 +19,37 @@ interface Props {
 }
 
 const props = defineProps<Props>();
+const open = defineModel<boolean>('open', { required: true });
+
 const emit = defineEmits<{
-  (e: 'update:open', value: boolean): void;
   (e: 'confirm', newName: string): void;
   (e: 'cancel'): void;
 }>();
 
 const inputValue = ref('');
 
-watch(
-  () => props.open,
-  isOpen => {
-    if (isOpen) {
-      inputValue.value = props.currentName || '';
-    }
+watch(open, isOpen => {
+  if (isOpen) {
+    inputValue.value = props.currentName || '';
   }
-);
+});
 
 const handleConfirm = () => {
   if (inputValue.value && inputValue.value !== props.currentName) {
     emit('confirm', inputValue.value);
   } else {
-    emit('update:open', false);
+    open.value = false;
   }
 };
 
 const handleCancel = () => {
-  emit('update:open', false);
+  open.value = false;
   emit('cancel');
 };
 </script>
 
 <template>
-  <AlertDialog :open="open" @update:open="emit('update:open', $event)">
+  <AlertDialog v-model:open="open">
     <AlertDialogContent class="border w-96!">
       <AlertDialogHeader>
         <AlertDialogTitle>

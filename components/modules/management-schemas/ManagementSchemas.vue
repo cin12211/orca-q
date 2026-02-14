@@ -3,16 +3,12 @@ import { refDebounced } from '@vueuse/core';
 import type { RouteNameFromPath, RoutePathSchema } from '@typed-router/__paths';
 import BaseContextMenu from '~/components/base/context-menu/BaseContextMenu.vue';
 import FileTree from '~/components/base/tree-folder/FileTree.vue';
-import type { FileNode } from '~/components/base/tree-folder/types';
-import { getFormatParameters } from '~/components/modules/management-schemas/utils';
-import SafeModeConfirmDialog from '~/components/modules/quick-query/SafeModeConfirmDialog.vue';
+import { useSchemaTreeData } from '~/components/modules/management-schemas/hooks/useSchemaTreeData';
 import { DEFAULT_DEBOUNCE_INPUT } from '~/core/constants';
 import { useAppContext } from '~/core/contexts/useAppContext';
 import { TabViewType } from '~/core/stores/useTabViewsStore';
-import { FunctionSchemaEnum, ViewSchemaEnum } from '~/core/types';
 import ConnectionSelector from '../selectors/ConnectionSelector.vue';
 import SchemaSelector from '../selectors/SchemaSelector.vue';
-import { SchemaFolderType } from './constants';
 import RenameDialog from './dialogs/RenameDialog.vue';
 import SqlPreviewDialog from './dialogs/SqlPreviewDialog.vue';
 import { useSchemaContextMenu } from './hooks/useSchemaContextMenu';
@@ -31,202 +27,10 @@ const isTreeCollapsed = ref(false);
 const searchInput = shallowRef('');
 const debouncedSearch = refDebounced(searchInput, DEFAULT_DEBOUNCE_INPUT);
 
-const fileTreeData = computed<Record<string, FileNode>>(() => {
-  const tables = activeSchema?.value?.tables || [];
-  const functions = activeSchema?.value?.functions || [];
-  const views = activeSchema?.value?.views || [];
-
-  const nodes: Record<string, FileNode> = {};
-
-  const formatFunctionName = (name: string, parameters: string) => {
-    const formatParameters = getFormatParameters(parameters);
-    return `${name}(${formatParameters})`;
-  };
-
-  const addFolder = (
-    id: string,
-    name: string,
-    iconOpen: string,
-    iconClose: string,
-    tabViewType: TabViewType,
-    iconClass?: string
-  ) => {
-    nodes[id] = {
-      id,
-      parentId: null,
-      name,
-      type: 'folder',
-      depth: 0,
-      iconOpen,
-      iconClose,
-      iconClass,
-      children: [],
-      data: { tabViewType },
-    };
-  };
-
-  addFolder(
-    SchemaFolderType.Functions,
-    'Functions',
-    'material-icon-theme:folder-functions-open',
-    'material-icon-theme:folder-functions',
-    TabViewType.FunctionsOverview
-  );
-
-  addFolder(
-    SchemaFolderType.Tables,
-    'Tables',
-    'material-icon-theme:folder-database-open',
-    'material-icon-theme:folder-database',
-    TabViewType.TableOverview
-  );
-
-  addFolder(
-    SchemaFolderType.Views,
-    'Views',
-    'material-icon-theme:folder-enum-open',
-    'material-icon-theme:folder-enum',
-    TabViewType.ViewOverview
-  );
-
-  functions.forEach(({ name, oId, type, parameters }) => {
-    const nodeId = String(oId);
-    const displayName = formatFunctionName(name, parameters);
-
-    nodes[nodeId] = {
-      id: nodeId,
-      parentId: SchemaFolderType.Functions,
-      name: displayName,
-      type: 'file',
-      depth: 1,
-      iconOpen: 'gravity-ui:function',
-      iconClose: 'gravity-ui:function',
-      iconClass:
-        type === FunctionSchemaEnum.Function
-          ? 'text-blue-400'
-          : 'text-orange-400',
-      data: {
-        tabViewType: TabViewType.FunctionsDetail,
-        itemValue: {
-          title: displayName,
-          name,
-          id: oId,
-          parameters,
-          tabViewType: TabViewType.FunctionsDetail,
-          icon: 'gravity-ui:function',
-          iconClass:
-            type === FunctionSchemaEnum.Function
-              ? 'text-blue-400'
-              : 'text-orange-400',
-        },
-        parameters,
-      },
-    };
-
-    nodes[SchemaFolderType.Functions].children!.push(nodeId);
-  });
-
-  tables.forEach(tableName => {
-    const nodeId = tableName;
-
-    nodes[nodeId] = {
-      id: nodeId,
-      parentId: SchemaFolderType.Tables,
-      name: tableName,
-      type: 'file',
-      depth: 1,
-      iconOpen: 'hugeicons:grid-table',
-      iconClose: 'hugeicons:grid-table',
-      iconClass: 'text-yellow-400',
-      data: {
-        tabViewType: TabViewType.TableDetail,
-        itemValue: {
-          title: tableName,
-          name: tableName,
-          id: tableName,
-          tabViewType: TabViewType.TableDetail,
-          icon: 'hugeicons:grid-table',
-          iconClass: 'text-yellow-400',
-        },
-      },
-    };
-
-    nodes[SchemaFolderType.Tables].children!.push(nodeId);
-  });
-
-  views.forEach(({ name, oid, type }) => {
-    const nodeId = String(oid);
-
-    nodes[nodeId] = {
-      id: nodeId,
-      parentId: SchemaFolderType.Views,
-      name,
-      type: 'file',
-      depth: 1,
-      iconOpen:
-        type === ViewSchemaEnum.View
-          ? 'hugeicons:property-view'
-          : 'hugeicons:property-new',
-      iconClose:
-        type === ViewSchemaEnum.View
-          ? 'hugeicons:property-view'
-          : 'hugeicons:property-new',
-      iconClass:
-        type === ViewSchemaEnum.View ? 'text-green-700' : 'text-orange-500',
-      data: {
-        tabViewType: TabViewType.ViewDetail,
-        itemValue: {
-          title: name,
-          name,
-          id: oid,
-          tabViewType: TabViewType.ViewDetail,
-          icon:
-            type === ViewSchemaEnum.View
-              ? 'hugeicons:property-view'
-              : 'hugeicons:property-new',
-          iconClass:
-            type === ViewSchemaEnum.View ? 'text-green-700' : 'text-orange-500',
-        },
-      },
-    };
-
-    nodes[SchemaFolderType.Views].children!.push(nodeId);
-  });
-
-  if (debouncedSearch.value) {
-    const query = debouncedSearch.value.toLowerCase();
-    const filtered: Record<string, FileNode> = {};
-
-    [
-      SchemaFolderType.Functions,
-      SchemaFolderType.Tables,
-      SchemaFolderType.Views,
-    ].forEach(folderId => {
-      const folder = nodes[folderId];
-      if (!folder) return;
-
-      const matchingChildren = folder.children?.filter(childId => {
-        const child = nodes[childId];
-        return child?.name.toLowerCase().includes(query);
-      });
-
-      if (matchingChildren && matchingChildren.length > 0) {
-        filtered[folderId] = {
-          ...folder,
-          children: matchingChildren,
-        };
-
-        matchingChildren.forEach(childId => {
-          filtered[childId] = nodes[childId];
-        });
-      }
-    });
-
-    return filtered;
-  }
-
-  return nodes;
-});
+const { fileTreeData, defaultFolderOpenId } = useSchemaTreeData(
+  activeSchema,
+  debouncedSearch
+);
 
 const hasTreeData = computed(() => Object.keys(fileTreeData.value).length > 0);
 
@@ -402,8 +206,6 @@ const handleTreeContextMenu = (nodeId: string, event: MouseEvent) => {
 watch(
   () => tabViewStore.activeTab,
   activeTab => {
-    console.log('🚀 ~ activeTab:', activeTab);
-
     if (
       activeTab?.type === TabViewType.TableDetail ||
       activeTab?.type === TabViewType.TableOverview ||
@@ -413,8 +215,6 @@ watch(
       activeTab?.type === TabViewType.FunctionsOverview
     ) {
       const nodeId = activeTab.treeNodeId;
-
-      console.log('🚀 ~ activeTab:::', nodeId);
 
       if (typeof nodeId === 'string' && !fileTreeRef.value?.isMouseInside) {
         fileTreeRef.value?.focusItem(nodeId);
@@ -521,7 +321,9 @@ watch(
       <div class="h-full">
         <FileTree
           ref="fileTreeRef"
+          :init-expanded-ids="[defaultFolderOpenId]"
           :initial-data="fileTreeData"
+          :storage-key="`${connectionId}-schemas-tree`"
           :allow-drag-and-drop="false"
           :delay-focus="0"
           @click="handleTreeClick"

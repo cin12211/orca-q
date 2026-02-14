@@ -43,6 +43,7 @@ const deleteDialogOpen = ref(false);
 const deleteDialogRole = ref<DatabaseRole | null>(null);
 const isDeleting = ref(false);
 
+const defaultExpandedKeys = [RoleCategory.User];
 /**
  * Transform roles into flat FileNode data for FileTree
  */
@@ -367,9 +368,11 @@ watch(
         <div class="h-full">
           <FileTree
             ref="fileTreeRef"
+            :init-expanded-ids="defaultExpandedKeys"
             :initial-data="fileTreeData"
             :allow-drag-and-drop="false"
             :delay-focus="0"
+            :storage-key="`${connectionId}-user-roles-tree`"
             @click="handleTreeClick"
             @contextmenu="handleTreeContextMenu"
           />

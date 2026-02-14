@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { useFocus, useFocusWithin } from '@vueuse/core';
 import { ref, computed, watch, onMounted, shallowRef, h, render } from 'vue';
 import { useVirtualizer } from '@tanstack/vue-virtual';
 import PseudomorphismDragItem from './PseudomorphismDragItem.vue';
@@ -7,6 +6,7 @@ import TreeRow from './TreeRow.vue';
 import type { FileNode, DropIndicator, DragData } from './types';
 
 interface Props {
+  initExpandedIds?: string[];
   initialData?: Record<string, FileNode>;
   storageKey?: string;
   allowSort?: boolean; // Allow reordering items (before/after positions)
@@ -28,7 +28,7 @@ const props = withDefaults(defineProps<Props>(), {
   itemHeight: 24,
   indentSize: 20,
   baseIndent: 8,
-  autoExpandDelay: 200,
+  autoExpandDelay: 100,
   delayFocus: 50,
   autoScrollThreshold: 50,
   autoScrollSpeed: 10,
@@ -49,7 +49,7 @@ const emit = defineEmits<{
 
 // Core state - use shallowRef for performance with large datasets
 const nodes = shallowRef<Record<string, FileNode>>({});
-const expandedIds = ref<Set<string>>(new Set());
+const expandedIds = ref<Set<string>>(new Set(props.initExpandedIds || []));
 const selectedIds = ref<Set<string>>(new Set());
 const focusedId = ref<string | null>(null);
 const editingId = ref<string | null>(null);

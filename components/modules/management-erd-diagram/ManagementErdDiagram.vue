@@ -6,7 +6,7 @@ import { DEFAULT_DEBOUNCE_INPUT } from '~/core/constants';
 import { useAppContext } from '~/core/contexts/useAppContext';
 import { TabViewType } from '~/core/stores/useTabViewsStore';
 import { buildTableNodeId } from '../erd-diagram/utils';
-import { SchemaFolderType } from '../management-schemas/constants';
+import { ERDFolderType } from '../management-schemas/constants';
 import ConnectionSelector from '../selectors/ConnectionSelector.vue';
 import SchemaSelector from '../selectors/SchemaSelector.vue';
 
@@ -21,6 +21,7 @@ const fileTreeRef = ref<InstanceType<typeof FileTree> | null>(null);
 const searchInput = shallowRef('');
 const debouncedSearch = refDebounced(searchInput, DEFAULT_DEBOUNCE_INPUT);
 
+const defaultExpandedKeys = [ERDFolderType.Root];
 /**
  * Build flat FileNode data from schema tables
  */
@@ -29,8 +30,8 @@ const fileTreeData = computed<Record<string, FileNode>>(() => {
   const tables = activeSchema?.value?.tables || [];
 
   // Root folder: All Tables
-  nodes[SchemaFolderType.Tables] = {
-    id: SchemaFolderType.Tables,
+  nodes[ERDFolderType.Root] = {
+    id: ERDFolderType.Root,
     parentId: null,
     name: 'All Tables',
     type: 'folder',
@@ -51,7 +52,7 @@ const fileTreeData = computed<Record<string, FileNode>>(() => {
 
     nodes[refId] = {
       id: refId,
-      parentId: SchemaFolderType.Tables,
+      parentId: ERDFolderType.Root,
       name: tableName,
       type: 'file',
       depth: 1,
@@ -60,7 +61,7 @@ const fileTreeData = computed<Record<string, FileNode>>(() => {
       data: { tabViewType: TabViewType.DetailERD },
     };
 
-    nodes[SchemaFolderType.Tables].children!.push(refId);
+    nodes[ERDFolderType.Root].children!.push(refId);
   });
 
   // Filter by search
@@ -68,14 +69,14 @@ const fileTreeData = computed<Record<string, FileNode>>(() => {
     const query = debouncedSearch.value.toLowerCase();
     const filteredNodes: Record<string, FileNode> = {};
 
-    const rootNode = nodes[SchemaFolderType.Tables];
+    const rootNode = nodes[ERDFolderType.Root];
     const matchingChildren = rootNode.children?.filter(childId => {
       const child = nodes[childId];
       return child.name.toLowerCase().includes(query);
     });
 
     if (matchingChildren && matchingChildren.length > 0) {
-      filteredNodes[SchemaFolderType.Tables] = {
+      filteredNodes[ERDFolderType.Root] = {
         ...rootNode,
         children: matchingChildren,
       };
@@ -186,8 +187,8 @@ watch(
     if (!activeTab || fileTreeRef.value?.isMouseInside) return;
 
     if (activeTab.type === TabViewType.AllERD) {
-      if (fileTreeData.value[SchemaFolderType.Tables]) {
-        fileTreeRef.value?.focusItem(SchemaFolderType.Tables);
+      if (fileTreeData.value[ERDFolderType.Root]) {
+        fileTreeRef.value?.focusItem(ERDFolderType.Root);
       }
       return;
     }
@@ -304,6 +305,8 @@ watch(
 
     <FileTree
       ref="fileTreeRef"
+      :default-expanded-keys="defaultExpandedKeys"
+      :storage-key="`${connectionId}-erd-tree`"
       :initial-data="fileTreeData"
       :allow-drag-and-drop="false"
       @click="handleTreeClick"

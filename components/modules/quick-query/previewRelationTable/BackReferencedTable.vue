@@ -11,6 +11,8 @@ const props = defineProps<{
   columnName: string;
   recordId: string;
   selectedTab: string | undefined;
+  connectionId: string;
+  workspaceId: string;
 }>();
 
 const emit = defineEmits<{
@@ -156,6 +158,8 @@ const onClickTab = (event: Event) => {
           :tableName="selectedTab || ''"
           :schema-name="schemaName"
           :init-filters="getInitFilters(selectedTab)"
+          :connectionId="props.connectionId"
+          :workspaceId="props.workspaceId"
           @onOpenBackReferencedTableModal="
             emit('onOpenBackReferencedTableModal', $event)
           "

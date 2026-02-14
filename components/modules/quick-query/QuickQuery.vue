@@ -3,9 +3,9 @@ import QuickQueryTableSummary from '~/components/modules/quick-query/quick-query
 import type { FilterSchema } from '~/components/modules/quick-query/utils';
 import { useTableQueryBuilder } from '~/core/composables/useTableQueryBuilder';
 import { DEFAULT_QUERY_SIZE, OperatorSet } from '~/core/constants';
-import { useAppContext } from '~/core/contexts';
 import { uuidv4 } from '~/core/helpers';
 import { useAppLayoutStore } from '~/core/stores/appLayoutStore';
+import { useManagementConnectionStore } from '~/core/stores/managementConnectionStore';
 import WrapperErdDiagram from '../erd-diagram/WrapperErdDiagram.vue';
 import { buildTableNodeId } from '../erd-diagram/utils';
 import { EDatabaseType } from '../management-connection/constants';
@@ -29,21 +29,29 @@ import QuickQueryContextMenu from './quick-query-table/QuickQueryContextMenu.vue
 import QuickQueryTable from './quick-query-table/QuickQueryTable.vue';
 import StructureTable from './structure/StructureTable.vue';
 
-const props = defineProps<{ tabViewId: string }>();
+const props = defineProps<{
+  connectionId: string;
+  workspaceId: string;
+  tableName: string;
+  schemaName: string;
+  tabViewType?: any;
+  virtualTableId?: string;
+}>();
 
 const appLayoutStore = useAppLayoutStore();
-const { tabViewStore } = useAppContext();
-const { tabViews } = toRefs(tabViewStore);
+const connectionStore = useManagementConnectionStore();
 
-const tabInfo = computed(() =>
-  tabViews.value.find(t => t.id === props.tabViewId)
-);
+const connectionString = computed(() => {
+  const connection = connectionStore.connections.find(
+    c => c.id === props.connectionId
+  );
+  return connection?.connectionString || '';
+});
 
-const tableName = computed(() => tabInfo.value?.tableName || '');
-const schemaName = computed(() => tabInfo.value?.schemaId || '');
+const tableName = computed(() => props.tableName);
+const schemaName = computed(() => props.schemaName);
 
 const previewRelationBreadcrumbs = ref<PreviewRelationBreadcrumb[]>([]);
-
 const containerRef = ref<InstanceType<typeof HTMLElement>>();
 
 // Safe mode confirmation dialog state
@@ -78,15 +86,8 @@ const onSafeModeCancel = () => {
   }
 };
 
-const {
-  quickQueryFilterRef,
-  quickQueryTableRef,
-  selectedRows,
-  connectionString,
-  connectionId,
-  workspaceId,
-  focusedCell,
-} = useQuickQuery();
+const { quickQueryFilterRef, quickQueryTableRef, selectedRows, focusedCell } =
+  useQuickQuery();
 
 const {
   columnNames,
@@ -99,8 +100,8 @@ const {
 } = useQuickQueryTableInfo({
   tableName: tableName.value,
   schemaName: schemaName.value,
-  connectionId: connectionId.value,
-  tabViewType: tabInfo.value?.type,
+  connectionId: props.connectionId,
+  tabViewType: props.tabViewType,
 });
 
 const {
@@ -130,8 +131,8 @@ const {
   connectionString,
   primaryKeys: primaryKeyColumns,
   columns: columnNames,
-  connectionId,
-  workspaceId,
+  connectionId: computed(() => props.connectionId),
+  workspaceId: computed(() => props.workspaceId),
   tableName: tableName.value,
   schemaName: schemaName.value,
 });
@@ -176,6 +177,7 @@ const {
   focusedCell,
   safeModeEnabled: toRef(appLayoutStore, 'quickQuerySafeModeEnabled'),
   onRequestSafeModeConfirm,
+  connectionString,
 });
 
 const { handleSelectColumn, selectedColumnFieldId, resetGridState } =
@@ -400,6 +402,8 @@ const onBackPreviousBreadcrumbByIndex = (index: number) => {
     :open="previewRelationBreadcrumbs.length > 0"
     :breadcrumbs="previewRelationBreadcrumbs"
     :currentTableName="tableName"
+    :connectionId="connectionId"
+    :workspaceId="workspaceId"
     @clear-breadcrumb="onClearBreadcrumbs"
     @onOpenBackReferencedTableModal="onOpenBackReferencedTableModal"
     @onOpenForwardReferencedTableModal="onOpenForwardReferencedTableModal"
@@ -525,7 +529,7 @@ const onBackPreviousBreadcrumbByIndex = (index: number) => {
           :schema="schemaName"
           :tableName="tableName"
           :connectionString="connectionString"
-          :virtualTableId="tabInfo?.virtualTableId as string"
+          :virtualTableId="props.virtualTableId"
         />
       </div>
 

@@ -54,6 +54,8 @@ const props = defineProps<{
   open: boolean;
   breadcrumbs: PreviewRelationBreadcrumb[];
   currentTableName: string;
+  connectionId: string;
+  workspaceId: string;
 }>();
 
 const latestBreadcrumb = computed(() =>
@@ -145,6 +147,8 @@ const updateSelectedTabInBreadcrumb = (selectedTab: string) => {
             schemaName: latestBreadcrumb.schemaName,
             tableName: latestBreadcrumb.tableName,
             selectedTab: latestBreadcrumb.selectedTab,
+            connectionId: props.connectionId,
+            workspaceId: props.workspaceId,
           }"
           @onOpenBackReferencedTableModal="
             emit('onOpenBackReferencedTableModal', $event)
