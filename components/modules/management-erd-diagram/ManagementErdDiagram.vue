@@ -165,7 +165,11 @@ const openErdTab = async (node: FileNode) => {
     connectionId: connectionId.value,
     workspaceId: workspaceId.value,
     schemaId: currentSchemaId,
-    tableName: isOverview ? undefined : node.name,
+    metadata: {
+      type: tabViewType,
+      tableName: isOverview ? undefined : node.name,
+      treeNodeId: node.id,
+    },
   });
 
   await tabViewStore.selectTab(tabId);
@@ -184,7 +188,12 @@ const handleTreeClick = async (nodeId: string) => {
 watch(
   () => tabViewStore.activeTab,
   activeTab => {
-    if (!activeTab || fileTreeRef.value?.isMouseInside) return;
+    if (!activeTab) {
+      fileTreeRef.value?.clearSelection();
+      return;
+    }
+
+    if (fileTreeRef.value?.isMouseInside) return;
 
     if (activeTab.type === TabViewType.AllERD) {
       if (fileTreeData.value[ERDFolderType.Root]) {
@@ -194,22 +203,9 @@ watch(
     }
 
     if (activeTab.type === TabViewType.DetailERD) {
-      const rawTableId = activeTab.routeParams?.tableId;
-      if (typeof rawTableId !== 'string') return;
-
-      const directMatch = fileTreeData.value[rawTableId];
-      if (directMatch) {
-        fileTreeRef.value?.focusItem(rawTableId);
+      if (typeof activeTab.metadata?.treeNodeId === 'string') {
+        fileTreeRef.value?.focusItem(activeTab.metadata.treeNodeId);
         return;
-      }
-
-      const schemaName = activeSchema.value?.name || '';
-      const composedId = schemaName
-        ? buildTableNodeId({ schemaName, tableName: rawTableId })
-        : rawTableId;
-
-      if (fileTreeData.value[composedId]) {
-        fileTreeRef.value?.focusItem(composedId);
       }
     }
   },

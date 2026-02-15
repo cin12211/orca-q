@@ -27,13 +27,10 @@ import FunctionControlBar from '~/components/modules/quick-query/function-contro
 import { useAppContext } from '~/core/contexts/useAppContext';
 import { useQuickQueryLogs } from '~/core/stores';
 
-definePageMeta({
-  keepalive: true,
-});
-
-const route = useRoute(
-  'workspaceId-connectionId-quick-query-function-over-view-functionName'
-);
+const props = defineProps<{
+  functionId: string;
+  connectionId?: string;
+}>();
 
 const { connectionStore, schemaStore } = useAppContext();
 const { activeSchema } = toRefs(schemaStore);
@@ -72,12 +69,22 @@ const mappedSchema = computed(() => {
 
 const sqlCompartment = new Compartment();
 
+const connectionString = computed(() => {
+  if (props.connectionId) {
+    return connectionStore.connections.find(c => c.id === props.connectionId)
+      ?.connectionString;
+  }
+  return connectionStore.selectedConnection?.connectionString;
+});
+
+const requestBody = computed(() => ({
+  functionId: props.functionId,
+  dbConnectionString: connectionString.value,
+}));
+
 const { status } = useFetch('/api/get-one-function', {
   method: 'POST',
-  body: {
-    functionId: route.params.functionName,
-    dbConnectionString: connectionStore.selectedConnection?.connectionString,
-  },
+  body: requestBody,
   onResponse: response => {
     if (typeof response.response._data === 'string') {
       const fetchedCode = response.response._data || '';
@@ -85,6 +92,7 @@ const { status } = useFetch('/api/get-one-function', {
       originalCode.value = fetchedCode;
     }
   },
+  watch: [requestBody],
 });
 
 const saveFunction = async () => {
@@ -123,17 +131,6 @@ const discardChanges = () => {
 };
 
 const extensions = [
-  // shortCutExecuteCurrentStatement(
-  //   async (currentStatement: SyntaxTreeNodeData) => {
-  //     console.log(
-  //       '🚀 ~ shortCutCurrentStatementExecute ~ currentStatement:',
-  //       currentStatement,
-
-  //       currentConnectionString.value,
-  //       currentStatement.text
-  //     );
-  //   }
-  // ),
   shortCutSaveFunction(saveFunction),
   shortCutFormatOnSave((fileContent: string) => {
     const formatted = format(fileContent, {
@@ -159,8 +156,6 @@ const extensions = [
       schema: mappedSchema.value,
     })
   ),
-  //TODO: turn on when fix done bugs
-  // currentStatementHighlighter,
   ...sqlAutoCompletion(),
   currentStatementLineGutterExtension,
 ];

@@ -188,28 +188,37 @@ const handleTreeClick = async (nodeId: string) => {
 
   const tabId = `user-permissions-${roleName}`;
 
+  const icon = role?.isSuperuser
+    ? 'hugeicons:crown'
+    : role?.canLogin
+      ? 'hugeicons:user-circle'
+      : 'hugeicons:user-lock-01';
+
+  const iconClass = role?.isSuperuser
+    ? 'text-yellow-500'
+    : role?.canLogin
+      ? 'text-blue-400'
+      : 'text-purple-400';
+
   await tabViewStore.openTab({
     workspaceId: workspaceId.value,
     connectionId: connectionId.value,
     schemaId: schemaId.value || '',
     id: tabId,
     name: `${roleName} Permissions`,
-    icon: role?.isSuperuser
-      ? 'hugeicons:crown'
-      : role?.canLogin
-        ? 'hugeicons:user-circle'
-        : 'hugeicons:user-lock-01',
-    iconClass: role?.isSuperuser
-      ? 'text-yellow-500'
-      : role?.canLogin
-        ? 'text-blue-400'
-        : 'text-purple-400',
+    icon: icon,
+    iconClass: iconClass,
     type: TabViewType.UserPermissions,
-    routeName: 'workspaceId-connectionId-quick-query-user-permissions-roleName',
+    routeName: 'workspaceId-connectionId-user-permissions-roleName',
     routeParams: {
       workspaceId: workspaceId.value,
       connectionId: connectionId.value,
       roleName: roleName,
+    },
+    metadata: {
+      type: TabViewType.UserPermissions,
+      roleName: roleName,
+      treeNodeId: node.id,
     },
   });
 
@@ -328,11 +337,17 @@ const confirmDelete = async () => {
 watch(
   () => tabViewStore.activeTab,
   activeTab => {
-    if (activeTab?.type === TabViewType.UserPermissions) {
-      const roleName = activeTab.routeParams?.roleName;
+    if (!activeTab) {
+      fileTreeRef.value?.clearSelection();
+      return;
+    }
 
-      if (typeof roleName === 'string' && !fileTreeRef.value?.isMouseInside) {
-        fileTreeRef.value?.focusItem(roleName);
+    if (fileTreeRef.value?.isMouseInside) return;
+
+    if (activeTab?.type === TabViewType.UserPermissions) {
+      if (typeof activeTab.metadata?.treeNodeId === 'string') {
+        fileTreeRef.value?.focusItem(activeTab.metadata.treeNodeId);
+        return;
       }
     }
   },

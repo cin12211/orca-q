@@ -3,16 +3,24 @@ import { DynamicTable } from '#components';
 import type { MappedRawColumn } from '~/components/modules/raw-query/interfaces';
 import { useAppContext } from '~/core/contexts/useAppContext';
 
-definePageMeta({
-  keepalive: true,
-});
+const props = defineProps<{
+  connectionId?: string;
+}>();
 
 const { connectionStore, wsStateStore } = useAppContext();
 const { schemaId } = toRefs(wsStateStore);
 
+const connectionString = computed(() => {
+  if (props.connectionId) {
+    return connectionStore.connections.find(c => c.id === props.connectionId)
+      ?.connectionString;
+  }
+  return connectionStore.selectedConnection?.connectionString;
+});
+
 const body = computed(() => {
   return {
-    dbConnectionString: connectionStore.selectedConnection?.connectionString,
+    dbConnectionString: connectionString.value,
     schema: schemaId.value,
   };
 });
@@ -20,7 +28,7 @@ const body = computed(() => {
 const { data, status } = useFetch('/api/get-over-view-function', {
   method: 'POST',
   body,
-  watch: [schemaId],
+  watch: [schemaId, body],
 });
 
 const mappedColumns = computed(() => {

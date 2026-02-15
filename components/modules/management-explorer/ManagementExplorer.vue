@@ -198,7 +198,10 @@ const onClickNode = (item: FlattenedTreeFileSystemItem) => {
     connectionId: route.params.connectionId,
     schemaId: '',
     workspaceId: route.params.workspaceId,
-    tableName: item.value.title,
+    metadata: {
+      type: TabViewType.CodeQuery,
+      tableName: item.value.title,
+    },
   });
 
   tabViewStore.selectTab(item.value.id);

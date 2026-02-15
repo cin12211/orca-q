@@ -698,10 +698,17 @@ const focusItem = (nodeId: string) => {
   }, props.delayFocus);
 };
 
+const clearSelection = () => {
+  focusedId.value = null;
+  selectedIds.value = new Set();
+  emit('select', []);
+};
+
 defineExpose({
   expandAll,
   collapseAll,
   focusItem,
+  clearSelection,
   startEditing,
   isMouseInside,
 });

@@ -4,11 +4,6 @@ import { reorder } from '@atlaskit/pragmatic-drag-and-drop/reorder';
 import type { RouteNameFromPath, RoutePathSchema } from '@typed-router/__paths';
 import { useWSStateStore } from './useWSStateStore';
 
-// export enum TabViewType {
-//   SmartView = "SmartView",
-//   CodeQuery = "CodeQuery",
-// }
-
 export enum TabViewType {
   AllERD = 'AllERD',
   DetailERD = 'DetailERD',
@@ -25,7 +20,52 @@ export enum TabViewType {
 
   UserPermissions = 'UserPermissions',
   DatabaseTools = 'DatabaseTools',
+  Connection = 'Connection',
+  Explorer = 'Explorer',
+  Schema = 'Schema',
+  Export = 'Export',
 }
+
+export interface BaseTabMetadata {
+  type: TabViewType;
+  treeNodeId?: string;
+  [key: string]: any;
+}
+
+export interface TableDetailMetadata extends BaseTabMetadata {
+  type: TabViewType.TableDetail;
+  tableName: string;
+}
+
+export interface ViewDetailMetadata extends BaseTabMetadata {
+  type: TabViewType.ViewDetail;
+  virtualTableId: string;
+  viewName: string;
+}
+
+export interface FunctionDetailMetadata extends BaseTabMetadata {
+  type: TabViewType.FunctionsDetail;
+  functionId: string;
+}
+
+export interface ErdDetailMetadata extends BaseTabMetadata {
+  type: TabViewType.DetailERD | TabViewType.AllERD;
+  tableName?: string;
+}
+
+export interface CodeQueryMetadata extends BaseTabMetadata {
+  type: TabViewType.CodeQuery;
+  tableName?: string;
+  queryId?: string;
+}
+
+export type TabMetadata =
+  | TableDetailMetadata
+  | ViewDetailMetadata
+  | FunctionDetailMetadata
+  | ErdDetailMetadata
+  | CodeQueryMetadata
+  | BaseTabMetadata;
 
 export type TabView = {
   workspaceId: string;
@@ -37,11 +77,9 @@ export type TabView = {
   icon: string;
   iconClass?: string;
   type: TabViewType;
-  tableName?: string;
   routeName: RouteNameFromPath<RoutePathSchema>;
   routeParams?: Record<string, string | number>;
-  virtualTableId?: string;
-  treeNodeId?: string;
+  metadata?: TabMetadata;
 };
 
 export const useTabViewsStore = defineStore(
@@ -81,7 +119,11 @@ export const useTabViewsStore = defineStore(
       // }
 
       const tabTmp: TabView = {
-        ...tab,
+        // ...deepUnref(tab),
+        ...({
+          ...tab,
+          metadata: { ...tab.metadata },
+        } as TabView),
         index: tabViews.value.length,
       };
 

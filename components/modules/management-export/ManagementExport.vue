@@ -36,7 +36,7 @@ const openDatabaseTools = async (type: 'export' | 'import') => {
     icon: 'lucide:database',
     iconClass: 'text-primary',
     type: TabViewType.DatabaseTools,
-    routeName: 'workspaceId-connectionId-quick-query-database-tools-name',
+    routeName: 'workspaceId-connectionId-database-tools-name',
     routeParams: {
       workspaceId: workspaceId.value,
       connectionId: connectionId.value,

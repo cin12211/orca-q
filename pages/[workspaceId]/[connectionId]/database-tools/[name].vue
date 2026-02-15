@@ -8,9 +8,7 @@ definePageMeta({
   keepalive: true,
 });
 
-const route = useRoute(
-  'workspaceId-connectionId-quick-query-database-tools-name'
-);
+const route = useRoute('workspaceId-connectionId-database-tools-name');
 const { connectionStore, schemaStore } = useAppContext();
 
 const connectionId = computed(() => route.params.connectionId as string);

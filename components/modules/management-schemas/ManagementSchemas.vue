@@ -118,42 +118,11 @@ const handleTreeClick = async (nodeId: string) => {
 
   const tabId = `${node.name}-${schemaId.value}`;
 
-  if (tabViewType === TabViewType.FunctionsOverview) {
-    routeName =
-      'workspaceId-connectionId-quick-query-function-over-view' as unknown as any;
-  }
+  routeName = 'workspaceId-connectionId-quick-query-tabViewId';
 
-  if (tabViewType === TabViewType.TableOverview) {
-    routeName =
-      'workspaceId-connectionId-quick-query-table-over-view' as unknown as any;
-  }
-
-  if (tabViewType === TabViewType.ViewOverview) {
-    routeName =
-      'workspaceId-connectionId-quick-query-view-over-view' as unknown as any;
-  }
-
-  if (tabViewType === TabViewType.FunctionsDetail) {
-    routeName =
-      'workspaceId-connectionId-quick-query-function-over-view-functionName';
-
-    routeParams = {
-      functionName: String(itemValue?.id ?? node.id ?? ''),
-      schemaName: schemaId.value || '',
-    };
-  }
-
-  if (
-    tabViewType === TabViewType.TableDetail ||
-    tabViewType === TabViewType.ViewDetail
-  ) {
-    routeName =
-      'workspaceId-connectionId-quick-query-tabViewId' as unknown as any;
-
-    routeParams = {
-      tabViewId: tabId,
-    };
-  }
+  routeParams = {
+    tabViewId: tabId,
+  };
 
   const virtualTableId =
     tabViewType === TabViewType.ViewDetail
@@ -177,9 +146,13 @@ const handleTreeClick = async (nodeId: string) => {
       connectionId: connectionId.value,
       schemaId: schemaId.value || '',
       workspaceId: workspaceId.value || '',
-      tableName: node.name,
-      virtualTableId,
-      treeNodeId: node.id,
+      metadata: {
+        type: tabViewType,
+        tableName: node.name,
+        virtualTableId,
+        functionId: String(itemValue?.id || ''),
+        treeNodeId: node.id,
+      },
     });
 
     await tabViewStore.selectTab(tabId);
@@ -206,6 +179,13 @@ const handleTreeContextMenu = (nodeId: string, event: MouseEvent) => {
 watch(
   () => tabViewStore.activeTab,
   activeTab => {
+    if (!activeTab) {
+      fileTreeRef.value?.clearSelection();
+      return;
+    }
+
+    if (fileTreeRef.value?.isMouseInside) return;
+
     if (
       activeTab?.type === TabViewType.TableDetail ||
       activeTab?.type === TabViewType.TableOverview ||
@@ -214,9 +194,9 @@ watch(
       activeTab?.type === TabViewType.FunctionsDetail ||
       activeTab?.type === TabViewType.FunctionsOverview
     ) {
-      const nodeId = activeTab.treeNodeId;
+      const nodeId = activeTab.metadata?.treeNodeId;
 
-      if (typeof nodeId === 'string' && !fileTreeRef.value?.isMouseInside) {
+      if (typeof nodeId === 'string') {
         fileTreeRef.value?.focusItem(nodeId);
       }
     }
