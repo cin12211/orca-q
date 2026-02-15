@@ -6,7 +6,6 @@ import {
   Dialog,
   DialogContent,
 } from '#components';
-import { DEFAULT_MAX_KEEP_ALIVE } from '~/core/constants';
 import BackReferencedTable from './BackReferencedTable.vue';
 import ForwardReferencedTable from './ForwardReferencedTable.vue';
 
@@ -17,7 +16,6 @@ export type PreviewRelationBreadcrumb = {
   tableName: string;
   columnName: string;
   recordId: string;
-
   selectedTab?: string;
 };
 
@@ -28,7 +26,8 @@ const emit = defineEmits<{
   (
     e: 'onUpdateSelectedTabInBreadcrumb',
     index: number,
-    selectedTab: string
+    selectedTab: string,
+    schemaName: string
   ): void;
   (
     e: 'onOpenBackReferencedTableModal',
@@ -56,6 +55,7 @@ const props = defineProps<{
   currentTableName: string;
   connectionId: string;
   workspaceId: string;
+  rootSchemaName: string;
 }>();
 
 const latestBreadcrumb = computed(() =>
@@ -64,12 +64,28 @@ const latestBreadcrumb = computed(() =>
     : null
 );
 
-const updateSelectedTabInBreadcrumb = (selectedTab: string) => {
+const updateSelectedTabInBreadcrumb = (
+  selectedTab: string,
+  schemaName: string
+) => {
   emit(
     'onUpdateSelectedTabInBreadcrumb',
     props.breadcrumbs.length - 1,
-    selectedTab
+    selectedTab,
+    schemaName
   );
+};
+
+const mappingBreadcrumbName = (breadcrumb: PreviewRelationBreadcrumb) => {
+  if (breadcrumb.type === 'backReferenced') {
+    if (props.rootSchemaName === breadcrumb.schemaName) {
+      return breadcrumb.selectedTab;
+    }
+
+    return `${breadcrumb.schemaName}.${breadcrumb.selectedTab}`;
+  }
+
+  return `${breadcrumb.schemaName}.${breadcrumb.tableName}`;
 };
 </script>
 
@@ -106,22 +122,14 @@ const updateSelectedTabInBreadcrumb = (selectedTab: string) => {
                     ]"
                   >
                     <BreadcrumbPage v-if="index === breadcrumbs.length - 1">
-                      {{
-                        item.type === 'backReferenced'
-                          ? item.selectedTab
-                          : item.tableName
-                      }}
+                      {{ mappingBreadcrumbName(item) }}
                     </BreadcrumbPage>
 
                     <BreadcrumbLink
                       v-else
                       @click="emit('onBackPreviousBreadcrumbByIndex', index)"
                     >
-                      {{
-                        item.type === 'backReferenced'
-                          ? item.selectedTab
-                          : item.tableName
-                      }}
+                      {{ mappingBreadcrumbName(item) }}
                     </BreadcrumbLink>
                   </BreadcrumbItem>
                   <BreadcrumbSeparator v-if="index < breadcrumbs.length - 1" />
@@ -149,6 +157,7 @@ const updateSelectedTabInBreadcrumb = (selectedTab: string) => {
             selectedTab: latestBreadcrumb.selectedTab,
             connectionId: props.connectionId,
             workspaceId: props.workspaceId,
+            rootSchemaName: props.rootSchemaName,
           }"
           @onOpenBackReferencedTableModal="
             emit('onOpenBackReferencedTableModal', $event)

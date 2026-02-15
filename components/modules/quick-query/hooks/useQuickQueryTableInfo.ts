@@ -1,5 +1,4 @@
-import { useAppContext } from '~/core/contexts/useAppContext';
-import { TabViewType } from '~/core/stores';
+import { TabViewType, useSchemaStore } from '~/core/stores';
 
 export const useQuickQueryTableInfo = ({
   tableName,
@@ -12,14 +11,18 @@ export const useQuickQueryTableInfo = ({
   connectionId: string;
   tabViewType?: TabViewType | null;
 }) => {
-  const { schemaStore } = useAppContext();
+  const schemaStore = useSchemaStore();
 
   const { schemas } = toRefs(schemaStore);
 
   const activeSchema = computed(() => {
-    return schemas.value.find(
-      s => s.name === schemaName && s.connectionId === connectionId
-    );
+    const connectionSchemas = schemas.value[connectionId];
+
+    if (!connectionSchemas) {
+      return undefined;
+    }
+
+    return connectionSchemas.find(s => s.name === schemaName);
   });
 
   // Check tableDetails first, then viewDetails for views

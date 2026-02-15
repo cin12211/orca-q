@@ -33,7 +33,7 @@ const databaseName = computed(
 // Get available schemas
 const availableSchemas = computed(() => {
   if (!connectionId.value) return [];
-  return schemaStore.schemas
+  return (schemaStore.schemas[connectionId.value] || [])
     .filter(s => s.connectionId === connectionId.value)
     .map(s => s.name);
 });

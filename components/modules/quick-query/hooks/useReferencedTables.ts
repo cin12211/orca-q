@@ -8,10 +8,10 @@ export const useReferencedTables = ({
   tableName: string;
 }) => {
   const { schemaStore } = useAppContext();
-  const { reservedSchemas } = toRefs(schemaStore);
+  const { activeReservedSchemas } = toRefs(schemaStore);
 
   const reverseTables = computed(() => {
-    const tables = reservedSchemas.value || [];
+    const tables = activeReservedSchemas.value || [];
 
     return tables.find(
       table => table.table === tableName && table.schema === schemaName
@@ -32,5 +32,5 @@ export const useReferencedTables = ({
     return mapReferencedColumn.value.has(columnName);
   };
 
-  return { reservedSchemas, reverseTables, isHaveRelationByFieldName };
+  return { activeReservedSchemas, reverseTables, isHaveRelationByFieldName };
 };

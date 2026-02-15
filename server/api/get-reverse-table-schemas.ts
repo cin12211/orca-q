@@ -20,14 +20,15 @@ export interface QueryResult {
 }
 
 export default defineEventHandler(async (event): Promise<QueryResult> => {
-  const body: { dbConnectionString: string } = await readBody(event);
+  try {
+    const body: { dbConnectionString: string } = await readBody(event);
 
-  const resource = await getDatabaseSource({
-    dbConnectionString: body.dbConnectionString,
-    type: 'postgres',
-  });
+    const resource = await getDatabaseSource({
+      dbConnectionString: body.dbConnectionString,
+      type: 'postgres',
+    });
 
-  const result = await resource.query(`
+    const result = await resource.query(`
         WITH
         pk_info AS (
             SELECT
@@ -112,7 +113,18 @@ export default defineEventHandler(async (event): Promise<QueryResult> => {
         tbls;
     `);
 
-  return {
-    result: result[0]?.tables,
-  };
+    return {
+      result: result[0]?.tables || [],
+    };
+  } catch (error: any) {
+    console.error('Error in get-reverse-table-schemas:', error);
+
+    throw createError({
+      statusCode: 500,
+      statusMessage: error.message,
+      cause: error.cause,
+      data: error.driverError,
+      message: error.message,
+    });
+  }
 });

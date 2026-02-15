@@ -112,7 +112,7 @@ onActivated(() => {
             async (e: MouseEvent) => {
               selectedValue = [];
 
-              await nextTick();
+              await $nextTick();
 
               handleSelect();
 

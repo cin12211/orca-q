@@ -22,7 +22,6 @@ export const useAppContext = () => {
   const tabViewStore = useTabViewsStore();
   const { wsState, workspaceId, connectionId, allWsStates } =
     toRefs(wsStateStore);
-  const { schemas } = toRefs(schemaStore);
 
   const createConnection = async (connection: Connection) => {
     await connectionStore.createNewConnection(connection);
@@ -38,54 +37,6 @@ export const useAppContext = () => {
       connectionId: connectionId.value,
       workspaceId: workspaceId.value,
     });
-  };
-
-  const fetchReservedTableSchemas = async ({
-    wsId,
-    connId,
-    includeLoading,
-  }: {
-    wsId: string;
-    connId: string;
-    includeLoading?: boolean;
-  }) => {
-    if (!connectionStore.connections.length) {
-      await connectionStore.loadPersistData();
-    }
-
-    const connectionsByWsId = connectionStore.getConnectionsByWorkspaceId(wsId);
-
-    const connection = connectionsByWsId.find(
-      connection => connection.id === connId
-    );
-
-    if (!connection) {
-      throw new Error('No connection found');
-    }
-
-    includeLoading && start();
-
-    const reservedSchemas = await $fetch('/api/get-reverse-table-schemas', {
-      method: 'POST',
-      body: {
-        dbConnectionString: connection.connectionString,
-      },
-    });
-
-    includeLoading && finish();
-
-    schemaStore.reservedSchemas = reservedSchemas.result;
-  };
-
-  const fetchCurrentSchema = async (dbConnectionString: string) => {
-    const databaseSource = await $fetch('/api/get-schema-meta-data', {
-      method: 'POST',
-      body: {
-        dbConnectionString,
-      },
-    });
-
-    return databaseSource;
   };
 
   const connectToConnection = async ({
@@ -111,54 +62,23 @@ export const useAppContext = () => {
 
     if (!connection) {
       finish();
-
       throw new Error('No connection found');
     }
 
-    if (isRefresh) {
-      schemas.value = [...schemas.value].filter(
-        schema => schema.connectionId !== connId
-      );
-    }
-
-    const isExitSchema = schemas.value.some(
-      schema => schema.connectionId === connId
-    );
-
-    let includedPublic = false;
-
-    let databaseSource: SchemaMetaData[] = [];
-
     try {
-      if (!isExitSchema || isRefresh) {
-        const dbConnectionString: string = connection.connectionString || '';
+      const dbConnectionString = connection.connectionString || '';
 
-        databaseSource = await fetchCurrentSchema(dbConnectionString);
+      const result = await schemaStore.fetchSchemas({
+        connectionId: connId,
+        workspaceId: wsId,
+        dbConnectionString,
+        isRefresh,
+      });
 
-        databaseSource.forEach(schema => {
-          const schemaId = `${wsId}-${connId}-${schema.name}`;
-
-          const isExitSchema = schemas.value.find(e => e.id === schemaId);
-
-          if (schema.name === PUBLIC_SCHEMA_ID) {
-            includedPublic = true;
-          }
-
-          if (!isExitSchema) {
-            schemas.value.push({
-              id: schemaId,
-              workspaceId: wsState.value?.id || '',
-              connectionId: connId,
-              name: schema.name,
-              functions: schema.functions || [],
-              tables: schema.tables || [],
-              views: schema.views || [],
-              tableDetails: schema?.table_details || null,
-              viewDetails: schema?.view_details || null,
-            });
-          }
-        });
-      }
+      // If we got a result, it means we fetched schemas (or they existed and we used them,
+      // but fetchSchemas returns void if it didn't fetch... actually it returns undefined if early return.
+      // Wait, let's check fetchSchemas return type. It returns object if fetched, undefined if not fetched (existing).
+      // But we need to handle setting the default schema if none is selected.
 
       const currentState = wsStateStore.getStateById({
         workspaceId: wsId,
@@ -170,25 +90,46 @@ export const useAppContext = () => {
       );
 
       if (!currentSchema?.schemaId) {
+        // If no schema selected, select the first one or public
+        // We need to know what schemas are available.
+        // If we fetched new ones, we have them in result.
+        // If we used existing ones, we can look them up.
+
+        // Let's get the schemas for this context from store
+        const contextSchemas = (schemaStore.schemas[connId] || []).filter(
+          s => s.connectionId === connId && s.workspaceId === wsId
+        );
+
+        let firstSchemaName = result?.firstSchemaName;
+        let includedPublic = result?.includedPublic;
+
+        if (!result) {
+          // Logic if we didn't fetch (already valid)
+          const publicSchema = contextSchemas.find(
+            s => s.name === PUBLIC_SCHEMA_ID
+          );
+          includedPublic = !!publicSchema;
+          firstSchemaName = contextSchemas[0]?.name;
+        }
+
         await wsStateStore.setSchemaId({
           connectionId: connId,
           workspaceId: wsId,
           schemaId: includedPublic
             ? PUBLIC_SCHEMA_ID
-            : databaseSource[0]?.name || PUBLIC_SCHEMA_ID,
+            : firstSchemaName || PUBLIC_SCHEMA_ID,
         });
       }
 
-      await fetchReservedTableSchemas({
-        connId: connId,
-        wsId: wsId,
-        includeLoading: false,
+      await schemaStore.fetchReservedSchemas({
+        connectionId: connId,
+        dbConnectionString,
       });
     } catch (e) {
       console.error(e);
+    } finally {
+      finish();
     }
-
-    finish();
   };
 
   const openWorkspaceWithConnection = async ({
@@ -246,6 +187,5 @@ export const useAppContext = () => {
     setSchemaId,
     connectToConnection,
     openWorkspaceWithConnection,
-    fetchReservedTableSchemas,
   };
 };

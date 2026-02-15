@@ -372,10 +372,12 @@ watch(
 
 const onUpdateSelectedTabInBreadcrumb = (
   index: number,
-  selectedTab: string
+  selectedTab: string,
+  schemaName: string
 ) => {
   if (previewRelationBreadcrumbs.value[index]) {
     previewRelationBreadcrumbs.value[index].selectedTab = selectedTab;
+    previewRelationBreadcrumbs.value[index].schemaName = schemaName;
   }
 };
 
@@ -404,6 +406,7 @@ const onBackPreviousBreadcrumbByIndex = (index: number) => {
     :currentTableName="tableName"
     :connectionId="connectionId"
     :workspaceId="workspaceId"
+    :rootSchemaName="schemaName"
     @clear-breadcrumb="onClearBreadcrumbs"
     @onOpenBackReferencedTableModal="onOpenBackReferencedTableModal"
     @onOpenForwardReferencedTableModal="onOpenForwardReferencedTableModal"

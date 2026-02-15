@@ -281,7 +281,7 @@ defineExpose({
         @update:open="
           isOpen => {
             if (!isOpen) {
-              nextTick(() => focusSearchByIndex(index));
+              $nextTick(() => focusSearchByIndex(index));
             }
           }
         "
@@ -294,7 +294,7 @@ defineExpose({
         @update:open="
           isOpen => {
             if (!isOpen) {
-              nextTick(() => focusSearchByIndex(index));
+              $nextTick(() => focusSearchByIndex(index));
             }
           }
         "
