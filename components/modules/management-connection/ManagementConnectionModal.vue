@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Dialog, DialogContent } from '@/components/ui/dialog';
-import type { Connection } from '~/shared/stores';
+import type { Connection } from '~/core/stores';
 import ManagementConnection from './ManagementConnection.vue';
 
 defineProps<{

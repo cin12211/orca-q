@@ -8,7 +8,7 @@ import './ipc'
 import MenuBuilder from './menu'
 import { findAvailablePort } from './utils'
 import { DEFAULT_PORT } from '../constants'
-import { DEFAULT_WINDOW_NAME } from '../../../utils/constants'
+import { DEFAULT_WINDOW_NAME } from '../../../core/constants'
 
 export let windows: Map<number, BrowserWindow> = new Map()
 

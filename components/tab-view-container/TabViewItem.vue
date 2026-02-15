@@ -15,7 +15,7 @@ import { preserveOffsetOnSource } from '@atlaskit/pragmatic-drag-and-drop/elemen
 import { setCustomNativeDragPreview } from '@atlaskit/pragmatic-drag-and-drop/element/set-custom-native-drag-preview';
 import { X } from 'lucide-vue-next';
 import { cn } from '@/lib/utils';
-import type { TabView } from '~/shared/stores';
+import type { TabView } from '~/core/stores';
 import TabViewItemPreview from './TabViewItemPreview.vue';
 
 const props = defineProps<{

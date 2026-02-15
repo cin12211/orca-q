@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { useAppContext } from '~/shared/contexts/useAppContext';
-import { TabViewType } from '~/shared/stores/useTabViewsStore';
+import { useAppContext } from '~/core/contexts/useAppContext';
+import { TabViewType } from '~/core/stores/useTabViewsStore';
 import ConnectionSelector from '../selectors/ConnectionSelector.vue';
 
 const { wsStateStore, connectionStore, tabViewStore } = useAppContext();
@@ -36,7 +36,7 @@ const openDatabaseTools = async (type: 'export' | 'import') => {
     icon: 'lucide:database',
     iconClass: 'text-primary',
     type: TabViewType.DatabaseTools,
-    routeName: 'workspaceId-connectionId-quick-query-database-tools-name',
+    routeName: 'workspaceId-connectionId-database-tools-name',
     routeParams: {
       workspaceId: workspaceId.value,
       connectionId: connectionId.value,

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Input } from '#components';
-import { DEFAULT_MAX_KEEP_ALIVE, OperatorSet } from '~/utils/constants';
-import type { FilterSchema } from '~/utils/quickQuery';
+import type { FilterSchema } from '~/components/modules/quick-query/utils';
+import { OperatorSet } from '~/core/constants';
 import { useReferencedTables } from '../hooks';
 import ReferencedTable from './ReferencedTable.vue';
 
@@ -11,6 +11,9 @@ const props = defineProps<{
   columnName: string;
   recordId: string;
   selectedTab: string | undefined;
+  connectionId: string;
+  workspaceId: string;
+  rootSchemaName: string;
 }>();
 
 const emit = defineEmits<{
@@ -32,7 +35,7 @@ const emit = defineEmits<{
       schemaName: string;
     }
   ): void;
-  (e: 'update:selectedTab', tab: string): void;
+  (e: 'update:selectedTab', table: string, schemaName: string): void;
 }>();
 
 const { reverseTables } = useReferencedTables({
@@ -43,22 +46,27 @@ const { reverseTables } = useReferencedTables({
 const searchInput = ref('');
 
 const tabTables = computed(() => {
-  const usedByTables = new Set<string>();
+  const usedByTables = new Map<string, { table: string; schema: string }>();
 
   const reverseTablesUsedBy = toRaw(reverseTables.value?.used_by) || [];
 
   for (const table of reverseTablesUsedBy) {
     if (table.referenced_column === props.columnName) {
-      usedByTables.add(table.referencing_table);
+      usedByTables.set(table.referencing_table, {
+        table: table.referencing_table,
+        schema: table.referencing_schema,
+      });
     }
   }
 
-  let tableList = [...usedByTables].sort();
+  let tableList = [...usedByTables.values()].sort((a, b) =>
+    a.table.localeCompare(b.table)
+  );
 
   if (searchInput.value) {
     const lowerSearch = searchInput.value.toLowerCase();
     tableList = tableList.filter(table =>
-      table.toLowerCase().includes(lowerSearch)
+      table.table.toLowerCase().includes(lowerSearch)
     );
   }
 
@@ -67,7 +75,11 @@ const tabTables = computed(() => {
 
 watchEffect(() => {
   if (!props.selectedTab && tabTables.value.length > 0) {
-    emit('update:selectedTab', tabTables.value[0]);
+    emit(
+      'update:selectedTab',
+      tabTables.value[0].table,
+      tabTables.value[0].schema
+    );
   }
 });
 
@@ -95,8 +107,9 @@ const getInitFilters = (tabName?: string) => {
   return filterSchemas;
 };
 
-const onUpdateSelectedTab = (tab: string) => {
-  emit('update:selectedTab', tab);
+const onUpdateSelectedTab = (tabKey: string) => {
+  const { schemaName, tableName } = extractSchemaAndTableFromKey(tabKey);
+  emit('update:selectedTab', tableName, schemaName);
 };
 
 const onClickTab = (event: Event) => {
@@ -109,11 +122,24 @@ const onClickTab = (event: Event) => {
     });
   }
 };
+
+const buildTabKey = (tab: { table: string; schema: string }) => {
+  return `${tab.schema}.${tab.table}`;
+};
+
+const extractSchemaAndTableFromKey = (tabKey: string) => {
+  const [schemaName, tableName] = tabKey.split('.');
+
+  return {
+    schemaName,
+    tableName,
+  };
+};
 </script>
 
 <template>
   <Tabs
-    :model-value="selectedTab"
+    :model-value="buildTabKey({ table: selectedTab || '', schema: schemaName })"
     @update:model-value="onUpdateSelectedTab($event as string)"
     class="flex-1 flex-wrap h-full w-full"
   >
@@ -123,10 +149,11 @@ const onClickTab = (event: Event) => {
           class="cursor-pointer font-normal! flex-none!"
           v-for="tab in tabTables"
           @click="onClickTab"
-          :value="tab"
-          :key="tab"
+          :value="buildTabKey(tab)"
+          :key="buildTabKey(tab)"
         >
-          {{ tab }}
+          {{ rootSchemaName === tab.schema ? null : `${tab.schema}.`
+          }}{{ tab.table }}
         </TabsTrigger>
       </TabsList>
       <div>
@@ -156,6 +183,8 @@ const onClickTab = (event: Event) => {
           :tableName="selectedTab || ''"
           :schema-name="schemaName"
           :init-filters="getInitFilters(selectedTab)"
+          :connectionId="props.connectionId"
+          :workspaceId="props.workspaceId"
           @onOpenBackReferencedTableModal="
             emit('onOpenBackReferencedTableModal', $event)
           "

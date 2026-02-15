@@ -3,7 +3,7 @@ import type {
   DatabasePermission,
   ObjectPermission,
   RolePermissions,
-} from '~/shared/types';
+} from '~/core/types';
 import PermissionBadge from './PermissionBadge.vue';
 
 interface Props {

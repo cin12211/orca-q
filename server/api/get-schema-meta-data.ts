@@ -1,5 +1,5 @@
+import { FunctionSchemaEnum, ViewSchemaEnum } from '~/core/types';
 import { getDatabaseSource } from '~/server/utils/db-connection';
-import { FunctionSchemaEnum, ViewSchemaEnum } from '~/shared/types';
 
 export interface ColumnShortMetadata {
   name: string;

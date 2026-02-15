@@ -2,7 +2,7 @@ import { ipcMain } from 'electron'
 import { initDBConnection } from '../utils'
 import { ConnectionIpcChannels } from '../../constants'
 import { updateDockMenus } from '../dockMenu'
-import type { Connection } from '../../../../shared/stores'
+import type { Connection } from '../../../../core/stores'
 import dayjs from 'dayjs'
 import { deleteQuickQueryLogs } from './quickQueryLogs'
 

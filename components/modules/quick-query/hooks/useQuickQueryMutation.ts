@@ -2,14 +2,13 @@ import { ref } from 'vue';
 import { toast } from 'vue-sonner';
 import { HASH_INDEX_ID } from '~/components/base/dynamic-table/constants';
 import { cellValueFormatter } from '~/components/base/dynamic-table/utils';
-import { useAppContext } from '~/shared/contexts/useAppContext';
-import { copyRowsToClipboard } from '~/utils/common';
-import { buildUpdateStatements } from '~/utils/quickQuery';
+import { buildUpdateStatements } from '~/components/modules/quick-query/utils';
 import {
   // buildBulkDeleteStatement,
   buildDeleteStatements,
-} from '~/utils/quickQuery/buildDeleteStatements';
-import { buildInsertStatements } from '~/utils/quickQuery/buildInsertStatements';
+} from '~/components/modules/quick-query/utils/buildDeleteStatements';
+import { buildInsertStatements } from '~/components/modules/quick-query/utils/buildInsertStatements';
+import { copyRowsToClipboard } from '~/core/helpers';
 import type QuickQueryTable from '../quick-query-table/QuickQueryTable.vue';
 
 // Adjust the path as per your project structure
@@ -50,6 +49,7 @@ interface UseQuickQueryMutationOptions {
     sql: string,
     type: 'save' | 'delete'
   ) => Promise<boolean>;
+  connectionString: Ref<string>;
 }
 
 /**
@@ -76,9 +76,9 @@ export function useQuickQueryMutation(options: UseQuickQueryMutationOptions) {
     focusedCell,
     safeModeEnabled,
     onRequestSafeModeConfirm,
+    connectionString,
   } = options;
 
-  const { connectionStore } = useAppContext();
   const isMutating = ref(false); // Reactive state for mutation loading indicator
 
   const onRefresh = async () => {
@@ -166,8 +166,7 @@ export function useQuickQueryMutation(options: UseQuickQueryMutationOptions) {
         method: 'POST',
         body: {
           sqlUpdateStatements: sqlBulkInsertOrUpdateStatements,
-          dbConnectionString:
-            connectionStore.selectedConnection?.connectionString,
+          dbConnectionString: connectionString.value,
         },
         onResponseError({ response }) {
           const errorData = response?._data?.data?.driverError;
@@ -247,8 +246,7 @@ export function useQuickQueryMutation(options: UseQuickQueryMutationOptions) {
         method: 'POST',
         body: {
           sqlDeleteStatements,
-          dbConnectionString:
-            connectionStore.selectedConnection?.connectionString,
+          dbConnectionString: connectionString.value,
         },
         onResponseError({ response }) {
           const errorData = response?._data?.data?.driverError;

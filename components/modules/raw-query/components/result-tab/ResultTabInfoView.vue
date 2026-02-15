@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { computed } from 'vue';
-import { useCodeHighlighter } from '~/composables/useSqlHighlighter';
-import { formatBytes } from '~/utils/common';
-import { formatNumber, formatQueryTime } from '~/utils/common/format';
+import { useCodeHighlighter } from '~/core/composables/useSqlHighlighter';
+import { formatBytes } from '~/core/helpers';
+import { formatNumber, formatQueryTime } from '~/core/helpers/format';
 import type { ExecutedResultItem } from '../../hooks/useRawQueryEditor';
 
 const props = defineProps<{

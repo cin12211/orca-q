@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Tooltip, TooltipContent, TooltipTrigger } from '#components';
-import { type Connection, type RowQueryFile } from '~/shared/stores';
+import { type Connection, type RowQueryFile } from '~/core/stores';
 import PureConnectionSelector from '../../selectors/PureConnectionSelector.vue';
 import { RawQueryEditorLayout } from '../constants';
 import AddVariableModal from './AddVariableModal.vue';

@@ -6,6 +6,7 @@ import TreeRow from './TreeRow.vue';
 import type { FileNode, DropIndicator, DragData } from './types';
 
 interface Props {
+  initExpandedIds?: string[];
   initialData?: Record<string, FileNode>;
   storageKey?: string;
   allowSort?: boolean; // Allow reordering items (before/after positions)
@@ -14,6 +15,7 @@ interface Props {
   indentSize?: number;
   baseIndent?: number;
   autoExpandDelay?: number;
+  delayFocus?: number;
   autoScrollThreshold?: number;
   autoScrollSpeed?: number;
   overscan?: number;
@@ -26,7 +28,8 @@ const props = withDefaults(defineProps<Props>(), {
   itemHeight: 24,
   indentSize: 20,
   baseIndent: 8,
-  autoExpandDelay: 500,
+  autoExpandDelay: 100,
+  delayFocus: 50,
   autoScrollThreshold: 50,
   autoScrollSpeed: 10,
   overscan: 10,
@@ -46,7 +49,7 @@ const emit = defineEmits<{
 
 // Core state - use shallowRef for performance with large datasets
 const nodes = shallowRef<Record<string, FileNode>>({});
-const expandedIds = ref<Set<string>>(new Set());
+const expandedIds = ref<Set<string>>(new Set(props.initExpandedIds || []));
 const selectedIds = ref<Set<string>>(new Set());
 const focusedId = ref<string | null>(null);
 const editingId = ref<string | null>(null);
@@ -81,7 +84,8 @@ const visibleNodeIds = computed(() => {
 });
 
 // Virtualization setup
-const parentRef = ref<HTMLElement | null>(null);
+const parentRef = useTemplateRef<HTMLElement | null>('parentRef');
+const isMouseInside = ref(false);
 
 const rowVirtualizer = useVirtualizer({
   get count() {
@@ -99,6 +103,35 @@ const autoExpandTimer = ref<any>(null);
 const lastHoverId = ref<string | null>(null);
 const autoScrollInterval = ref<any>(null);
 const isDragging = ref(false);
+const overlayFolderId = ref<string | null>(null);
+
+// Overlay position — computed from the folder's index and its last visible descendant
+const overlayPosition = computed(() => {
+  if (!overlayFolderId.value || !isDragging.value) return null;
+
+  const folderId = overlayFolderId.value;
+  const folderIndex = visibleNodeIds.value.indexOf(folderId);
+  if (folderIndex === -1) return null;
+
+  const folder = nodes.value[folderId];
+  if (!folder) return null;
+
+  // Descendants are contiguous in DFS order — walk forward while depth > folder.depth
+  let lastIndex = folderIndex;
+  for (let i = folderIndex + 1; i < visibleNodeIds.value.length; i++) {
+    const node = nodes.value[visibleNodeIds.value[i]];
+    if (node.depth > folder.depth) {
+      lastIndex = i;
+    } else {
+      break;
+    }
+  }
+
+  return {
+    top: folderIndex * props.itemHeight,
+    height: (lastIndex - folderIndex + 1) * props.itemHeight,
+  };
+});
 
 // Toggle expansion
 const toggleExpansion = (nodeId: string) => {
@@ -253,6 +286,20 @@ const handleAutoScroll = (event: DragEvent) => {
   }
 };
 
+// Check if nodeId is a descendant of potentialAncestorId
+// Walks up the tree via parentId — prevents dropping a parent into its own subtree
+const isDescendantOf = (
+  nodeId: string,
+  potentialAncestorId: string
+): boolean => {
+  let currentId: string | null = nodeId;
+  while (currentId) {
+    if (currentId === potentialAncestorId) return true;
+    currentId = nodes.value[currentId]?.parentId ?? null;
+  }
+  return false;
+};
+
 const calculateDropPosition = (
   event: DragEvent,
   nodeId: string
@@ -290,36 +337,61 @@ const handleDragOver = (event: DragEvent, nodeId: string) => {
   }
 
   const node = nodes.value[nodeId];
-  if (node.type === 'file') {
-    return;
-  }
 
   // Handle auto-scroll
   handleAutoScroll(event);
 
-  const position = calculateDropPosition(event, nodeId);
-
-  // PERFORMANCE: Only update if position or nodeId actually changed
-  if (
-    !dropIndicator.value ||
-    dropIndicator.value.nodeId !== nodeId ||
-    dropIndicator.value.position !== position
-  ) {
-    dropIndicator.value = { nodeId, position };
+  // Resolve the target folder for the overlay
+  // - Hovering a folder → target is that folder
+  // - Hovering a file → target is the parent folder
+  let targetFolderId: string | null = null;
+  if (node.type === 'folder') {
+    targetFolderId = nodeId;
+  } else if (node.parentId) {
+    targetFolderId = node.parentId;
   }
 
-  // Auto-expand logic - expand ANY collapsed folder on hover during drag
-  if (nodeId !== lastHoverId.value) {
-    clearTimeout(autoExpandTimer.value);
-    lastHoverId.value = nodeId;
+  // Prevent dropping into the dragged item itself or its descendant
+  if (
+    targetFolderId === draggedId.value ||
+    (targetFolderId && isDescendantOf(targetFolderId, draggedId.value))
+  ) {
+    overlayFolderId.value = null;
+    dropIndicator.value = null;
+    return;
+  }
 
-    // const node = nodes.value[nodeId];
-    // Expand collapsed folders regardless of drop position
-    if (node.type === 'folder' && !expandedIds.value.has(nodeId)) {
+  // Set overlay folder
+  if (targetFolderId) {
+    overlayFolderId.value = targetFolderId;
+    // Set dropIndicator for internal drop handling
+    dropIndicator.value = { nodeId: targetFolderId, position: 'inside' };
+  }
+
+  // For folders with sorting enabled, also calculate before/after positions
+  if (props.allowSort && node.type === 'folder') {
+    const position = calculateDropPosition(event, nodeId);
+    if (position !== 'inside') {
+      // Show line indicator instead of overlay
+      overlayFolderId.value = null;
+      dropIndicator.value = { nodeId, position };
+    }
+  }
+
+  // Auto-expand logic — keyed on target folder
+  const autoExpandTarget = targetFolderId || nodeId;
+  if (autoExpandTarget !== lastHoverId.value) {
+    clearTimeout(autoExpandTimer.value);
+    lastHoverId.value = autoExpandTarget;
+
+    const targetNode = nodes.value[autoExpandTarget];
+    if (
+      targetNode?.type === 'folder' &&
+      !expandedIds.value.has(autoExpandTarget)
+    ) {
       autoExpandTimer.value = setTimeout(() => {
-        // Double check the folder is still being hovered
-        if (lastHoverId.value === nodeId && isDragging.value) {
-          expandedIds.value.add(nodeId);
+        if (lastHoverId.value === autoExpandTarget && isDragging.value) {
+          expandedIds.value.add(autoExpandTarget);
           expandedIds.value = new Set(expandedIds.value);
         }
       }, props.autoExpandDelay);
@@ -343,6 +415,7 @@ const handleDragEnd = () => {
   draggedId.value = null;
   dropIndicator.value = null;
   lastHoverId.value = null;
+  overlayFolderId.value = null;
 };
 
 const handleDrop = (event: DragEvent, targetId: string) => {
@@ -356,13 +429,10 @@ const handleDrop = (event: DragEvent, targetId: string) => {
     autoScrollInterval.value = null;
   }
 
-  if (!draggedId.value || !dropIndicator.value) {
+  if (!draggedId.value) {
     handleDragEnd();
     return;
   }
-
-  const position = dropIndicator.value.position;
-  const targetNode = nodes.value[targetId];
 
   // Determine what's being dragged (single or multi-select)
   let draggedItems: string[];
@@ -378,55 +448,40 @@ const handleDrop = (event: DragEvent, targetId: string) => {
     draggedItems = [draggedId.value];
   }
 
-  // Prevent dropping an item onto itself or its descendants
-  if (draggedItems.includes(targetId)) {
-    console.warn('Cannot drop item onto itself');
+  // When overlay is active, use the overlay folder as the effective drop target
+  const effectiveTargetId = overlayFolderId.value || targetId;
+  const effectivePosition: 'before' | 'after' | 'inside' = overlayFolderId.value
+    ? 'inside'
+    : dropIndicator.value?.position || 'inside';
+
+  // Prevent dropping an item onto itself or into its own subtree
+  if (
+    draggedItems.includes(effectiveTargetId) ||
+    draggedItems.some(id => isDescendantOf(effectiveTargetId, id))
+  ) {
+    console.warn('Cannot drop item onto itself or into its own subtree');
     handleDragEnd();
     return;
   }
 
-  // When sorting is disabled
+  // When sorting is disabled — always drop 'inside' the resolved folder
   if (!props.allowSort) {
-    // Only allow 'inside' drops
-    if (position !== 'inside') {
-      console.warn('Sorting disabled: Can only move items inside folders');
-      handleDragEnd();
-      return;
-    }
-
-    // If target is a file, move into the parent folder instead
-    if (targetNode.type === 'file') {
-      if (targetNode.parentId) {
-        emit(
-          'move',
-          draggedItems.length === 1 ? draggedItems[0] : draggedItems,
-          targetNode.parentId,
-          'inside'
-        );
-      } else {
-        console.warn('Cannot drop: target file has no parent');
-      }
-      handleDragEnd();
-      return;
-    }
-
-    // Target is a folder, allow drop inside
     emit(
       'move',
       draggedItems.length === 1 ? draggedItems[0] : draggedItems,
-      targetId,
+      effectiveTargetId,
       'inside'
     );
     handleDragEnd();
     return;
   }
 
-  // Sorting enabled - allow all positions
+  // Sorting enabled — allow all positions
   emit(
     'move',
     draggedItems.length === 1 ? draggedItems[0] : draggedItems,
-    targetId,
-    position
+    effectiveTargetId,
+    effectivePosition
   );
 
   // Reset state
@@ -570,9 +625,9 @@ onMounted(() => {
   }
 
   // Set initial focus
-  if (visibleNodeIds.value.length > 0) {
-    focusedId.value = visibleNodeIds.value[0];
-  }
+  // if (visibleNodeIds.value.length > 0) {
+  //   focusedId.value = visibleNodeIds.value[0];
+  // }
 });
 
 // React to external data changes
@@ -640,19 +695,34 @@ const focusItem = (nodeId: string) => {
     selectedIds.value = new Set([nodeId]);
     emit('select', [nodeId]);
     scrollToItem(nodeId);
-  }, 500);
+  }, props.delayFocus);
+};
+
+const clearSelection = () => {
+  focusedId.value = null;
+  selectedIds.value = new Set();
+  emit('select', []);
 };
 
 defineExpose({
   expandAll,
   collapseAll,
   focusItem,
+  clearSelection,
   startEditing,
+  isMouseInside,
 });
 </script>
 
 <template>
-  <div ref="parentRef" class="file-tree" tabindex="0" @keydown="handleKeyDown">
+  <div
+    ref="parentRef"
+    @mouseenter="isMouseInside = true"
+    @mouseleave="isMouseInside = false"
+    class="file-tree"
+    tabindex="0"
+    @keydown="handleKeyDown"
+  >
     <div
       :style="{
         height: `${rowVirtualizer.getTotalSize()}px`,
@@ -679,6 +749,7 @@ defineExpose({
             expandedIds.has(visibleNodeIds[item.index]),
             focusedId === visibleNodeIds[item.index],
             editingId === visibleNodeIds[item.index],
+            !overlayFolderId &&
             dropIndicator?.nodeId === visibleNodeIds[item.index]
               ? dropIndicator
               : null,
@@ -693,6 +764,7 @@ defineExpose({
           :is-focused="focusedId === visibleNodeIds[item.index]"
           :is-editing="editingId === visibleNodeIds[item.index]"
           :drop-indicator="
+            !overlayFolderId &&
             dropIndicator?.nodeId === visibleNodeIds[item.index]
               ? dropIndicator
               : null
@@ -719,6 +791,19 @@ defineExpose({
           </template>
         </TreeRow>
       </div>
+
+      <!-- Unified folder drop overlay -->
+      <div
+        v-if="overlayPosition && isDragging"
+        class="tree-drop-overlay"
+        :style="{
+          position: 'absolute',
+          top: `${overlayPosition.top}px`,
+          left: 0,
+          width: '100%',
+          height: `${overlayPosition.height}px`,
+        }"
+      />
     </div>
   </div>
 </template>
@@ -763,4 +848,16 @@ defineExpose({
 .file-tree::-webkit-scrollbar-track {
   background-color: var(--v-tree-scrollbar-track, transparent);
 } */
+
+/* Unified folder drop overlay */
+.tree-drop-overlay {
+  pointer-events: none;
+  z-index: 5;
+  border-radius: var(--radius-sm, 4px);
+  background-color: var(--v-tree-drop-overlay-bg, hsl(var(--primary) / 0.06));
+  border: 1px solid var(--v-tree-drop-overlay-border, hsl(var(--primary) / 0.3));
+  transition:
+    top 0.12s ease,
+    height 0.12s ease;
+}
 </style>

@@ -2,7 +2,7 @@
 // https://www.electronjs.org/docs/latest/tutorial/process-model#preload-scripts
 import { electronAPI } from '@electron-toolkit/preload'
 import { contextBridge, ipcRenderer } from 'electron'
-import type { Connection, TabView, Workspace } from '../../../shared/stores'
+import type { Connection, TabView, Workspace } from '../../../core/stores'
 import {
   ConnectionIpcChannels,
   TabViewsIpcChannels,
@@ -13,11 +13,11 @@ import {
   RowQueryFilesIpcChannels
 } from '../constants'
 import { type UpdateWindowTitleProps } from '../main/ipc/updateWindowTitle'
-import { type WorkspaceState } from '../../../shared/stores/useWSStateStore'
+import { type WorkspaceState } from '../../../core/stores/useWSStateStore'
 import { type DeleteTabViewProps, type GetTabViewsByContextProps } from '../main/ipc/tabViews'
-import type { QuickQueryLog } from '../../../shared/stores/useQuickQueryLogs'
+import type { QuickQueryLog } from '../../../core/stores/useQuickQueryLogs'
 import type { DeleteQQueryLogsProps, GetQQueryLogsProps } from '../main/ipc/quickQueryLogs'
-import type { RowQueryFile, RowQueryFileContent } from '../../../shared/stores/useExplorerFileStore'
+import type { RowQueryFile, RowQueryFileContent } from '../../../core/stores/useExplorerFileStore'
 
 export const electronBridgeApi = {
   updateWindowTitle: (props: UpdateWindowTitleProps) =>

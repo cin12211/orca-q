@@ -1,13 +1,13 @@
 import { toast } from 'vue-sonner';
-import type { ViewDefinitionResponse } from '~/server/api/get-view-definition';
-import { TabViewType } from '~/shared/stores/useTabViewsStore';
-import { ViewSchemaEnum } from '~/shared/types';
 import {
   generateDropViewSQL,
   generateRenameViewSQL,
   generateRefreshMaterializedViewSQL,
   generateViewSelectSQL,
-} from '~/utils/sql-generators/generateViewSQL';
+} from '~/components/modules/management-schemas/utils/generateViewSQL';
+import { TabViewType } from '~/core/stores/useTabViewsStore';
+import { ViewSchemaEnum } from '~/core/types';
+import type { ViewDefinitionResponse } from '~/server/api/get-view-definition';
 import type { ContextMenuState, SchemaContextMenuOptions } from '../types';
 import type { useContextMenuHelpers } from '../useContextMenuHelpers';
 
@@ -16,7 +16,12 @@ export function useViewActions(
   state: ContextMenuState,
   helpers: ReturnType<typeof useContextMenuHelpers>
 ) {
-  const { getSchemaName, executeWithSafeMode, showSqlPreview } = helpers;
+  const {
+    getSchemaName,
+    executeWithSafeMode,
+    showSqlPreview,
+    executeWithLoading,
+  } = helpers;
 
   /**
    * Get view info from schema
@@ -57,33 +62,30 @@ export function useViewActions(
         : 'VIEW';
 
     showSqlPreview('', `${viewType} DDL`);
-    state.isFetching.value = true;
+    await executeWithLoading(
+      async () => {
+        const response = await $fetch<ViewDefinitionResponse>(
+          '/api/get-view-definition',
+          {
+            method: 'POST',
+            body: {
+              dbConnectionString: options.currentConnectionString.value,
+              viewId: state.selectedItem.value!.id,
+              schemaName: getSchemaName(),
+              viewName,
+            },
+          }
+        );
 
-    try {
-      const response = await $fetch<ViewDefinitionResponse>(
-        '/api/get-view-definition',
-        {
-          method: 'POST',
-          body: {
-            dbConnectionString: options.currentConnectionString.value,
-            viewId: state.selectedItem.value.id,
-            schemaName: getSchemaName(),
-            viewName,
-          },
+        if (response && response.definition) {
+          showSqlPreview(response.definition, `${viewType} DDL`);
+        } else {
+          throw new Error('Could not retrieve view definition');
         }
-      );
-
-      if (response && response.definition) {
-        showSqlPreview(response.definition, `${viewType} DDL`);
-      } else {
-        toast.error('Could not retrieve view definition');
-      }
-    } catch (e: unknown) {
-      const error = e as { message?: string };
-      toast.error(error.message || 'Failed to get view DDL');
-    } finally {
-      state.isFetching.value = false;
-    }
+      },
+      state.isFetching,
+      'Failed to get view DDL'
+    );
   };
 
   const onRenameView = () => {
@@ -117,21 +119,22 @@ export function useViewActions(
     );
 
     await executeWithSafeMode(sql, 'save', async () => {
-      try {
-        await $fetch('/api/execute', {
-          method: 'POST',
-          body: {
-            dbConnectionString: options.currentConnectionString.value,
-            query: sql,
-          },
-        });
+      await executeWithLoading(
+        async () => {
+          await $fetch('/api/execute', {
+            method: 'POST',
+            body: {
+              dbConnectionString: options.currentConnectionString.value,
+              query: sql,
+            },
+          });
 
-        toast.success('View renamed successfully');
-        await options.onRefreshSchema();
-      } catch (e: unknown) {
-        const error = e as { message?: string };
-        toast.error(error.message || 'Failed to rename view');
-      }
+          toast.success('View renamed successfully');
+          await options.onRefreshSchema();
+        },
+        state.isFetching,
+        'Failed to rename view'
+      );
     });
   };
 
@@ -155,22 +158,22 @@ export function useViewActions(
     );
 
     await executeWithSafeMode(sql, 'delete', async () => {
-      try {
-        await $fetch('/api/execute', {
-          method: 'POST',
-          body: {
-            dbConnectionString: options.currentConnectionString.value,
-            query: sql,
-          },
-        });
+      await executeWithLoading(
+        async () => {
+          await $fetch('/api/execute', {
+            method: 'POST',
+            body: {
+              dbConnectionString: options.currentConnectionString.value,
+              query: sql,
+            },
+          });
 
-        toast.success('View deleted successfully');
-        await options.onRefreshSchema();
-      } catch (e: unknown) {
-        console.log(e);
-        const error = e as { message?: string };
-        toast.error(error.message || 'Failed to delete view');
-      }
+          toast.success('View deleted successfully');
+          await options.onRefreshSchema();
+        },
+        state.isFetching,
+        'Failed to delete view'
+      );
     });
   };
 
@@ -196,21 +199,21 @@ export function useViewActions(
     );
 
     await executeWithSafeMode(sql, 'save', async () => {
-      try {
-        await $fetch('/api/execute', {
-          method: 'POST',
-          body: {
-            dbConnectionString: options.currentConnectionString.value,
-            query: sql,
-          },
-        });
+      await executeWithLoading(
+        async () => {
+          await $fetch('/api/execute', {
+            method: 'POST',
+            body: {
+              dbConnectionString: options.currentConnectionString.value,
+              query: sql,
+            },
+          });
 
-        toast.success('Materialized view refreshed successfully');
-      } catch (e: unknown) {
-        console.log(e);
-        const error = e as { message?: string };
-        toast.error(error.message || 'Failed to refresh materialized view');
-      }
+          toast.success('Materialized view refreshed successfully');
+        },
+        state.isFetching,
+        'Failed to refresh materialized view'
+      );
     });
   };
 

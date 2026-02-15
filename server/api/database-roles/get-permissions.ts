@@ -3,10 +3,7 @@
  * Fetches permissions for a specific role
  * Supports multiple database types via adapter pattern
  */
-import type {
-  GetRolePermissionsRequest,
-  RolePermissions,
-} from '~/shared/types';
+import type { GetRolePermissionsRequest, RolePermissions } from '~/core/types';
 import {
   createRoleAdapter,
   type SupportedDatabaseType,

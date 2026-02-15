@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { isElectron, isPWA } from '~/lib/utils';
-import { useAppLayoutStore } from '~/shared/stores/appLayoutStore';
+import { isElectron, isPWA } from '~/core/helpers';
+import { useAppLayoutStore } from '~/core/stores/appLayoutStore';
 import ActivityBarHorizontal from '../activity-bar/ActivityBarHorizontal.vue';
 import TabViews from './TabViews.vue';
 

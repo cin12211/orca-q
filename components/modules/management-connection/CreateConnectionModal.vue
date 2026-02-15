@@ -25,8 +25,8 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent } from '@/components/ui/tabs';
-import { uuidv4 } from '~/lib/utils';
-import type { Connection } from '~/shared/stores';
+import { uuidv4 } from '~/core/helpers';
+import type { Connection } from '~/core/stores';
 import DatabaseTypeCard from './DatabaseTypeCard.vue';
 import { databaseSupports, EDatabaseType } from './constants';
 import { EConnectionMethod } from './type/index';

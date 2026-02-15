@@ -2,7 +2,7 @@
  * API: Get Databases
  * Fetches all databases (no role-specific permissions)
  */
-import type { DatabaseInfo } from '~/shared/types';
+import type { DatabaseInfo } from '~/core/types';
 import {
   createRoleAdapter,
   type SupportedDatabaseType,

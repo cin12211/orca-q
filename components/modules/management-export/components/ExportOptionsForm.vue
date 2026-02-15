@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { ExportFormat, ExportScope, ExportOptions } from '~/shared/types';
+import type { ExportFormat, ExportScope, ExportOptions } from '~/core/types';
 
 interface Props {
   schemas: string[];

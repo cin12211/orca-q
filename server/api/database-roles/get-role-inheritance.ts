@@ -2,7 +2,7 @@
  * API: Get Role Inheritance Tree
  * Fetches inherited roles using recursive query
  */
-import type { RoleInheritanceNode } from '~/shared/types';
+import type { RoleInheritanceNode } from '~/core/types';
 import {
   createRoleAdapter,
   type SupportedDatabaseType,

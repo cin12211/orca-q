@@ -7,14 +7,11 @@ import {
   type FlattenedTreeFileSystemItem,
 } from '~/components/base/Tree';
 import TreeItemInputEditInline from '~/components/base/Tree/TreeItemInputEditInline.vue';
-import { uuidv4 } from '~/lib/utils';
-import { useExplorerFileStore } from '~/shared/stores';
-import {
-  TabViewType,
-  useTabViewsStore,
-} from '~/shared/stores/useTabViewsStore';
-import { DEFAULT_DEBOUNCE_INPUT } from '~/utils/constants';
-import { useManagementExplorerStore } from '../../../shared/stores/managementExplorerStore';
+import { DEFAULT_DEBOUNCE_INPUT } from '~/core/constants';
+import { uuidv4 } from '~/core/helpers';
+import { useExplorerFileStore } from '~/core/stores';
+import { useManagementExplorerStore } from '~/core/stores/managementExplorerStore';
+import { TabViewType, useTabViewsStore } from '~/core/stores/useTabViewsStore';
 import TreeFolder from '../../base/Tree/TreeFolder.vue';
 
 const route = useRoute('workspaceId-connectionId-explorer-fileId');
@@ -201,7 +198,10 @@ const onClickNode = (item: FlattenedTreeFileSystemItem) => {
     connectionId: route.params.connectionId,
     schemaId: '',
     workspaceId: route.params.workspaceId,
-    tableName: item.value.title,
+    metadata: {
+      type: TabViewType.CodeQuery,
+      tableName: item.value.title,
+    },
   });
 
   tabViewStore.selectTab(item.value.id);

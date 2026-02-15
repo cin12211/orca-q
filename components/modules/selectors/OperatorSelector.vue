@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { SelectSeparator } from '#components';
 import type { AcceptableValue } from 'reka-ui';
-import { separatorRow, operatorSets } from '~/utils/constants';
+import { separatorRow, operatorSets } from '~/core/constants';
 import { EDatabaseType } from '../management-connection/constants';
 
 const props = defineProps<{ dbType: EDatabaseType; value?: string }>();

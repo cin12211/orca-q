@@ -1,7 +1,7 @@
 // import type { Instruction } from "@atlaskit/pragmatic-drag-and-drop-hitbox/tree-item";
 import dayjs from 'dayjs';
 import type { FlattenedItem } from 'reka-ui';
-import { uuidv4 } from '~/lib/utils';
+import { uuidv4 } from '~/core/helpers';
 
 enum ETreeFileSystemStatus {
   edit = 'edit',

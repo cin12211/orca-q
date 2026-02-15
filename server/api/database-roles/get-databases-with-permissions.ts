@@ -2,7 +2,7 @@
  * API: Get Databases with Permissions
  * Fetches all databases and the role's permissions on each
  */
-import type { DatabasePermission } from '~/shared/types';
+import type { DatabasePermission } from '~/core/types';
 import {
   createRoleAdapter,
   type SupportedDatabaseType,

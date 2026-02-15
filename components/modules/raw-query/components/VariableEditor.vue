@@ -4,7 +4,7 @@ import { linter, lintGutter } from '@codemirror/lint';
 import { placeholder } from '@codemirror/view';
 import BaseCodeEditor from '~/components/base/code-editor/BaseCodeEditor.vue';
 import { shortCutFormatOnSave } from '~/components/base/code-editor/extensions';
-import { jsonFormat } from '~/utils/common';
+import { jsonFormat } from '~/core/helpers';
 
 defineProps<{
   fileVariables: string;

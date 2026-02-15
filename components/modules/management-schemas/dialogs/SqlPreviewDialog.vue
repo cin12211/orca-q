@@ -9,14 +9,15 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import LoadingOverlay from '~/components/base/LoadingOverlay.vue';
 import { Button } from '~/components/ui/button';
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from '~/components/ui/tooltip';
-import { useCopyToClipboard } from '~/composables/useCopyToClipboard';
-import { useCodeHighlighter } from '~/composables/useSqlHighlighter';
+import { useCopyToClipboard } from '~/core/composables/useCopyToClipboard';
+import { useCodeHighlighter } from '~/core/composables/useSqlHighlighter';
 
 const props = defineProps<{
   open: boolean;

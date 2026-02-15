@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { uuidv4 } from '~/lib/utils';
-import { OperatorSet } from '~/utils/constants';
-import type { FilterSchema } from '~/utils/quickQuery';
+import type { FilterSchema } from '~/components/modules/quick-query/utils';
+import { OperatorSet } from '~/core/constants';
+import { uuidv4 } from '~/core/helpers';
 import ReferencedTable from './ReferencedTable.vue';
 
 const props = defineProps<{
@@ -9,6 +9,8 @@ const props = defineProps<{
   schemaName: string;
   columnName: string;
   recordId: string;
+  connectionId: string;
+  workspaceId: string;
 }>();
 
 const emit = defineEmits<{
@@ -53,6 +55,8 @@ const getInitFilters = () => {
       :tableName="tableName"
       :schema-name="schemaName"
       :init-filters="getInitFilters()"
+      :connectionId="props.connectionId"
+      :workspaceId="props.workspaceId"
       @onOpenBackReferencedTableModal="
         emit('onOpenBackReferencedTableModal', $event)
       "

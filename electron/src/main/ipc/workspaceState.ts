@@ -1,7 +1,7 @@
 import { ipcMain } from 'electron'
 import { initDBWorkspaceState } from '../utils'
 import { WorkspaceStateIpcChannels } from '../../constants'
-import { type WorkspaceState } from '../../../../shared/stores/useWSStateStore'
+import { type WorkspaceState } from '../../../../core/stores/useWSStateStore'
 import dayjs from 'dayjs'
 
 export const deleteWorkspaceStateById = async (id: string) => {

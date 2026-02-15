@@ -5,10 +5,10 @@ import { AllCommunityModule, ModuleRegistry } from 'ag-grid-community';
 import ChangelogPopup from './components/modules/changelog/ChangelogPopup.vue';
 import Settings from './components/modules/settings/Settings.vue';
 import { Toaster } from './components/ui/sonner';
-import { useAppContext } from './shared/contexts';
-import { useChangelogModal } from './shared/contexts/useChangelogModal';
-import { initIDB } from './shared/persist';
-import { DEFAULT_DEBOUNCE_INPUT } from './utils/constants';
+import { DEFAULT_DEBOUNCE_INPUT } from './core/constants';
+import { useAppContext } from './core/contexts';
+import { useChangelogModal } from './core/contexts/useChangelogModal';
+import { initIDB } from './core/persist';
 
 initIDB();
 

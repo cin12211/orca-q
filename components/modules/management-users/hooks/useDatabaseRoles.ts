@@ -11,7 +11,7 @@ import type {
   SchemaObjects,
   BulkGrantRequest,
   BulkGrantResponse,
-} from '~/shared/types';
+} from '~/core/types';
 
 /**
  * Composable for managing database roles data

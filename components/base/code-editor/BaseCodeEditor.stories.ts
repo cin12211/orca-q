@@ -1,6 +1,6 @@
 import { createPinia, setActivePinia } from 'pinia';
 import type { Meta, StoryObj } from '@storybook/vue3';
-import { useAppLayoutStore } from '~/shared/stores/appLayoutStore';
+import { useAppLayoutStore } from '~/core/stores/appLayoutStore';
 import BaseCodeEditor from './BaseCodeEditor.vue';
 import { EditorTheme } from './constants';
 

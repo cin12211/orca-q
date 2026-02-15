@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Switch } from '#components';
-import { useAppLayoutStore } from '~/shared/stores/appLayoutStore';
+import { useAppLayoutStore } from '~/core/stores/appLayoutStore';
 
 const appLayoutStore = useAppLayoutStore();
 </script>

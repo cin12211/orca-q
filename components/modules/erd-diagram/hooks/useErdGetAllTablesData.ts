@@ -1,7 +1,7 @@
 import { toast } from 'vue-sonner';
+import { useAppContext } from '~/core/contexts';
+import { useErdStore } from '~/core/stores/erdStore';
 import type { TableMetadata } from '~/server/api/get-tables';
-import { useAppContext } from '~/shared/contexts';
-import { useErdStore } from '~/shared/stores/erdStore';
 
 export const useErdQueryTables = () => {
   const { connectionStore } = useAppContext();

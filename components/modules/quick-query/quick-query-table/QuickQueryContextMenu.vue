@@ -5,7 +5,6 @@ import {
   type ContextMenuItem,
 } from '~/components/base/context-menu/menuContext.type';
 import type { RowData } from '~/components/base/dynamic-table/utils';
-import { useAppLayoutStore } from '~/shared/stores/appLayoutStore';
 import {
   copyColumnData,
   copyRowsData,
@@ -13,7 +12,8 @@ import {
   exportData,
   type ColumnCopyFormat,
   type ExportFormat,
-} from '~/utils/common/copyData';
+} from '~/core/helpers/copyData';
+import { useAppLayoutStore } from '~/core/stores/appLayoutStore';
 
 const { onShowSecondSidebar } = useAppLayoutStore();
 

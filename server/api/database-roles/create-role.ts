@@ -2,7 +2,7 @@
  * API: Create Role
  * Creates a new PostgreSQL role/user
  */
-import type { CreateRoleRequest, GrantRevokeResponse } from '~/shared/types';
+import type { CreateRoleRequest, GrantRevokeResponse } from '~/core/types';
 import {
   createRoleAdapter,
   type SupportedDatabaseType,

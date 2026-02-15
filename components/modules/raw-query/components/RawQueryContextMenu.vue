@@ -13,7 +13,7 @@ import {
   exportData,
   type ColumnCopyFormat,
   type ExportFormat,
-} from '~/utils/common/copyData';
+} from '~/core/helpers/copyData';
 
 const props = defineProps<{
   cellContextMenu?: CellContextMenuEvent;

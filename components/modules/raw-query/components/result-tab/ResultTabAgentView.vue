@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { Tooltip, TooltipContent, TooltipTrigger } from '#components';
 import ModelSelector from '~/components/modules/selectors/ModelSelector.vue';
-import { useAiChat } from '~/composables/useAiChat';
-import { useSettingsModal } from '~/shared/contexts/useSettingsModal';
+import { useAiChat } from '~/core/composables/useAiChat';
+import { useSettingsModal } from '~/core/contexts/useSettingsModal';
 import type { ExecutedResultItem } from '../../hooks/useRawQueryEditor';
 
 const props = defineProps<{

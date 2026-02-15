@@ -2,8 +2,8 @@ import { render, h } from 'vue';
 import type { Completion } from '@codemirror/autocomplete';
 import type { SQLNamespace } from '@codemirror/lang-sql';
 import { CompletionIcon } from '~/components/base/code-editor/constants';
+import type { Schema } from '~/core/stores';
 import type { TableDetailMetadata } from '~/server/api/get-schema-meta-data';
-import type { Schema } from '~/shared/stores';
 import SuggestionTableInfo from '../components/SuggestionTableInfo.vue';
 import SuggetionColumnInfo from '../components/SuggetionColumnInfo.vue';
 

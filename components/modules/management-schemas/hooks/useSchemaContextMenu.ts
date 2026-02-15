@@ -4,9 +4,9 @@ import {
   ContextMenuItemType,
   type ContextMenuItem,
 } from '~/components/base/context-menu/menuContext.type';
-import { useManagementConnectionStore } from '~/shared/stores';
-import type { Schema } from '~/shared/stores/useSchemaStore';
-import { TabViewType } from '~/shared/stores/useTabViewsStore';
+import { useManagementConnectionStore } from '~/core/stores';
+import type { Schema } from '~/core/stores/useSchemaStore';
+import { TabViewType } from '~/core/stores/useTabViewsStore';
 import { useFunctionActions } from './context-menu/actions/useFunctionActions';
 import { useTableActions } from './context-menu/actions/useTableActions';
 import { useViewActions } from './context-menu/actions/useViewActions';

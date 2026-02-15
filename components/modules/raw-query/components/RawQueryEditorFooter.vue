@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Tooltip, TooltipContent, TooltipTrigger } from '#components';
-import { formatNumber, formatQueryTime } from '~/utils/common/format';
+import { formatNumber, formatQueryTime } from '~/core/helpers/format';
 import type { EditorCursor } from '../interfaces';
 
 defineProps<{

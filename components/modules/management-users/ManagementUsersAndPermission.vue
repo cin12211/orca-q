@@ -1,18 +1,14 @@
 <script setup lang="ts">
 import { refDebounced } from '@vueuse/core';
-import { useAppContext } from '~/shared/contexts/useAppContext';
-import {
-  useTabViewsStore,
-  TabViewType,
-} from '~/shared/stores/useTabViewsStore';
+import { DEFAULT_DEBOUNCE_INPUT } from '~/core/constants';
+import { useAppContext } from '~/core/contexts/useAppContext';
 import type {
   CreateRoleRequest,
   DatabaseRole,
   SchemaGrant,
   ObjectGrant,
   PrivilegeType,
-} from '~/shared/types';
-import { DEFAULT_DEBOUNCE_INPUT } from '~/utils/constants';
+} from '~/core/types';
 import ConnectionSelector from '../selectors/ConnectionSelector.vue';
 import CreateUserModal from './components/CreateUserModal.vue';
 import UserRolesTree from './components/UserRolesTree.vue';
@@ -26,7 +22,6 @@ import {
 
 const { wsStateStore, connectionStore } = useAppContext();
 const { connectionId, workspaceId } = toRefs(wsStateStore);
-const tabViewStore = useTabViewsStore();
 
 // Get the database connection string from the selected connection
 const dbConnectionString = computed(() => {
@@ -126,24 +121,6 @@ const debouncedSearch = refDebounced(searchInput, DEFAULT_DEBOUNCE_INPUT);
 const isRefreshing = ref(false);
 const createModalOpen = ref(false);
 const createError = ref<string | null>(null);
-
-// Selected role name - syncs with active tab
-const selectedRoleName = ref<string | null>(null);
-
-// Sync selected role with active tab
-watch(
-  () => tabViewStore.activeTab,
-  activeTab => {
-    if (activeTab?.type === TabViewType.UserPermissions) {
-      // Extract roleName from routeParams
-      const roleName = activeTab.routeParams?.roleName;
-      if (typeof roleName === 'string') {
-        selectedRoleName.value = roleName;
-      }
-    }
-  },
-  { immediate: true }
-);
 
 // Filtered roles based on search
 const filteredRoles = computed(() => {
@@ -258,7 +235,7 @@ const onDeleteUser = async (role: DatabaseRole) => {
     </div>
 
     <!-- Header with Actions -->
-    <div class="px-2 pt-2 flex items-center justify-between shrink-0">
+    <div class="px-2 pt-1 flex items-center justify-between shrink-0">
       <p class="text-sm font-medium text-muted-foreground leading-none">
         Users & Roles
       </p>
@@ -292,7 +269,7 @@ const onDeleteUser = async (role: DatabaseRole) => {
               :disabled="isRefreshing || !dbConnectionString"
             >
               <Icon
-                name="lucide:refresh-ccw"
+                name="hugeicons:redo"
                 :class="[
                   'size-4! min-w-4 text-muted-foreground',
                   isRefreshing && 'animate-spin',
@@ -306,7 +283,7 @@ const onDeleteUser = async (role: DatabaseRole) => {
     </div>
 
     <!-- Search -->
-    <div class="px-2 pb-1 pt-1 shrink-0">
+    <div class="px-2 pb-1 shrink-0">
       <div class="relative w-full">
         <Input
           type="text"
@@ -341,7 +318,6 @@ const onDeleteUser = async (role: DatabaseRole) => {
         <UserRolesTree
           :roles="filteredRoles"
           :loading="isLoadingRoles"
-          :selectedRoleName="selectedRoleName"
           :onCreateUser="onOpenCreateModal"
           :canCreateUser="canCreateUser"
           :createUserDisabledReason="createUserDisabledReason"

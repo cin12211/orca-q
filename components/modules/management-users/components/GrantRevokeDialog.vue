@@ -1,11 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue';
 import { Label } from '#components';
-import type {
-  ObjectPermission,
-  ObjectType,
-  PrivilegeType,
-} from '~/shared/types';
+import type { ObjectPermission, ObjectType, PrivilegeType } from '~/core/types';
 
 const tablePrivileges: PrivilegeType[] = [
   'SELECT',

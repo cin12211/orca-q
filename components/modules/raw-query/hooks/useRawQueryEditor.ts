@@ -19,12 +19,9 @@ import {
   pgKeywordCompletion,
 } from '~/components/base/code-editor/utils';
 import type { RowData } from '~/components/base/dynamic-table/utils';
-import { uuidv4 } from '~/lib/utils';
-import { useSchemaStore, type Connection, type Schema } from '~/shared/stores';
-import {
-  convertParameters,
-  type ParsedParametersResult,
-} from '~/utils/common/convertParameters';
+import { uuidv4 } from '~/core/helpers';
+import { convertParameters, type ParsedParametersResult } from '~/core/helpers';
+import { useSchemaStore, type Connection, type Schema } from '~/core/stores';
 import type { EditorCursor } from '../interfaces';
 import { formatStatementSql } from '../utils';
 import { mappedSchemaSuggestion } from '../utils/getMappedSchemaSuggestion';

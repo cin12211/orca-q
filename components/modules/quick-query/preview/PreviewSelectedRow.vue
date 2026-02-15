@@ -3,8 +3,8 @@ import { refDebounced } from '@vueuse/core';
 import { Textarea } from '#components';
 import * as z from 'zod';
 import { cellValueFormatter } from '~/components/base/dynamic-table/utils';
-import { DEFAULT_DEBOUNCE_INPUT } from '~/utils/constants';
-import { mapPgTypeToTsType } from '~/utils/quickQuery/mapPgTypeToTsType';
+import { mapPgTypeToTsType } from '~/components/modules/quick-query/utils/mapPgTypeToTsType';
+import { DEFAULT_DEBOUNCE_INPUT } from '~/core/constants';
 import DynamicForm, { type ConfigFieldItem } from './DynamicForm.vue';
 
 const props = defineProps<{

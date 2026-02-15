@@ -1,22 +1,15 @@
 <script setup lang="ts">
-import {
-  TreeManager,
-  type FlattenedTreeFileSystemItem,
-  type TreeFileSystemItem,
-} from '~/components/base/Tree';
-import TreeFolder from '~/components/base/Tree/TreeFolder.vue';
 import BaseContextMenu from '~/components/base/context-menu/BaseContextMenu.vue';
 import {
   ContextMenuItemType,
   type ContextMenuItem,
 } from '~/components/base/context-menu/menuContext.type';
-import {
-  useTabViewsStore,
-  TabViewType,
-} from '~/shared/stores/useTabViewsStore';
-import { useWSStateStore } from '~/shared/stores/useWSStateStore';
-import type { DatabaseRole } from '~/shared/types';
-import { RoleCategory } from '~/shared/types';
+import FileTree from '~/components/base/tree-folder/FileTree.vue';
+import type { FileNode } from '~/components/base/tree-folder/types';
+import { useTabViewsStore, TabViewType } from '~/core/stores/useTabViewsStore';
+import { useWSStateStore } from '~/core/stores/useWSStateStore';
+import type { DatabaseRole } from '~/core/types';
+import { RoleCategory } from '~/core/types';
 import DeleteUserDialog from './DeleteUserDialog.vue';
 
 interface Props {
@@ -36,12 +29,7 @@ const tabViewStore = useTabViewsStore();
 const wsStateStore = useWSStateStore();
 const { workspaceId, connectionId, schemaId } = toRefs(wsStateStore);
 
-// Expanded state for tree folders
-const expandedState = ref<string[]>([
-  RoleCategory.Superuser,
-  RoleCategory.User,
-  RoleCategory.Role,
-]);
+const fileTreeRef = useTemplateRef<typeof FileTree | null>('fileTreeRef');
 
 // Selected item for context menu
 const selectedItem = ref<{
@@ -55,10 +43,13 @@ const deleteDialogOpen = ref(false);
 const deleteDialogRole = ref<DatabaseRole | null>(null);
 const isDeleting = ref(false);
 
+const defaultExpandedKeys = [RoleCategory.User];
 /**
- * Transform roles into TreeFileSystemItem format
+ * Transform roles into flat FileNode data for FileTree
  */
-const items = computed<TreeFileSystemItem[]>(() => {
+const fileTreeData = computed<Record<string, FileNode>>(() => {
+  const nodes: Record<string, FileNode> = {};
+
   const superusers: DatabaseRole[] = [];
   const users: DatabaseRole[] = [];
   const roles: DatabaseRole[] = [];
@@ -73,64 +64,74 @@ const items = computed<TreeFileSystemItem[]>(() => {
     }
   }
 
-  const createRoleItem = (role: DatabaseRole): TreeFileSystemItem => ({
-    id: role.roleName,
-    title: role.roleName,
-    path: role.roleName,
-    icon: role.canLogin ? 'hugeicons:user-circle' : 'hugeicons:user-lock-01',
-    iconClass: role.isSuperuser
-      ? 'text-yellow-500'
-      : role.canLogin
-        ? 'text-blue-400'
-        : 'text-purple-400',
-    isFolder: false,
-    tabViewType: TabViewType.UserPermissions,
-    // Store role data for context menu
-    ...({ roleData: role } as any),
-  });
-
-  const treeItems: TreeFileSystemItem[] = [];
+  const addRoleNode = (role: DatabaseRole, parentId: string, depth: number) => {
+    nodes[role.roleName] = {
+      id: role.roleName,
+      parentId,
+      name: role.roleName,
+      type: 'file',
+      depth,
+      iconClose: role.canLogin
+        ? 'hugeicons:user-circle'
+        : 'hugeicons:user-lock-01',
+      iconClass: role.isSuperuser
+        ? 'text-yellow-500'
+        : role.canLogin
+          ? 'text-blue-400'
+          : 'text-purple-400',
+      data: {
+        tabViewType: TabViewType.UserPermissions,
+        roleData: role,
+      },
+    };
+  };
 
   if (superusers.length > 0) {
-    treeItems.push({
+    nodes[RoleCategory.Superuser] = {
       id: RoleCategory.Superuser,
-      title: `Superusers (${superusers.length})`,
-      path: RoleCategory.Superuser,
-      icon: 'hugeicons:crown',
-      closeIcon: 'hugeicons:crown',
+      parentId: null,
+      name: `Superusers (${superusers.length})`,
+      type: 'folder',
+      depth: 0,
+      iconOpen: 'hugeicons:crown',
+      iconClose: 'hugeicons:crown',
       iconClass: 'text-yellow-500',
-      isFolder: true,
-      children: superusers.map(createRoleItem),
-    });
+      children: superusers.map(r => r.roleName),
+    };
+    superusers.forEach(role => addRoleNode(role, RoleCategory.Superuser, 1));
   }
 
   if (users.length > 0) {
-    treeItems.push({
+    nodes[RoleCategory.User] = {
       id: RoleCategory.User,
-      title: `Users (${users.length})`,
-      path: RoleCategory.User,
-      icon: 'hugeicons:user',
-      closeIcon: 'hugeicons:user',
+      parentId: null,
+      name: `Users (${users.length})`,
+      type: 'folder',
+      depth: 0,
+      iconOpen: 'hugeicons:user',
+      iconClose: 'hugeicons:user',
       iconClass: 'text-blue-500',
-      isFolder: true,
-      children: users.map(createRoleItem),
-    });
+      children: users.map(r => r.roleName),
+    };
+    users.forEach(role => addRoleNode(role, RoleCategory.User, 1));
   }
 
   if (roles.length > 0) {
-    treeItems.push({
+    nodes[RoleCategory.Role] = {
       id: RoleCategory.Role,
-      title: `Roles (${roles.length})`,
-      path: RoleCategory.Role,
-      icon: 'hugeicons:user-group',
-      closeIcon: 'hugeicons:user-group',
+      parentId: null,
+      name: `Roles (${roles.length})`,
+      type: 'folder',
+      depth: 0,
+      iconOpen: 'hugeicons:user-group',
+      iconClose: 'hugeicons:user-group',
       iconClass: 'text-purple-500',
-      isFolder: true,
-      children: roles.map(createRoleItem),
-    });
+      children: roles.map(r => r.roleName),
+    };
+    roles.forEach(role => addRoleNode(role, RoleCategory.Role, 1));
   }
 
-  return treeItems;
+  return nodes;
 });
 
 /**
@@ -141,27 +142,28 @@ const findRole = (roleName: string): DatabaseRole | undefined => {
 };
 
 /**
- * Handle right-click on tree item
+ * Handle right-click on tree item via FileTree contextmenu emit
  */
-const onRightClickItem = (e: MouseEvent, item: FlattenedTreeFileSystemItem) => {
-  e.preventDefault();
+const handleTreeContextMenu = (nodeId: string, event: MouseEvent) => {
+  // event.preventDefault();
 
-  const value = item.value as TreeFileSystemItem;
+  const node = fileTreeData.value[nodeId];
+  if (!node) return;
 
-  if (value.isFolder) {
+  if (node.type === 'folder') {
     // Category folder
     selectedItem.value = {
       type: 'category',
-      category: value.id as RoleCategory,
+      category: node.id as RoleCategory,
     };
   } else {
     // Role item
-    const role = (value as any).roleData as DatabaseRole | undefined;
+    const role = node.data?.roleData as DatabaseRole | undefined;
     if (role) {
       selectedItem.value = { type: 'role', role };
     } else {
       // Fallback: find role by name
-      const foundRole = findRole(value.id);
+      const foundRole = findRole(node.id);
       if (foundRole) {
         selectedItem.value = { type: 'role', role: foundRole };
       }
@@ -172,21 +174,31 @@ const onRightClickItem = (e: MouseEvent, item: FlattenedTreeFileSystemItem) => {
 /**
  * Handle click on tree item - open permissions tab
  */
-const onClickTreeItem = async (
-  _: MouseEvent,
-  item: FlattenedTreeFileSystemItem
-) => {
-  const value = item.value as TreeFileSystemItem;
+const handleTreeClick = async (nodeId: string) => {
+  const node = fileTreeData.value[nodeId];
+  if (!node) return;
 
   // Don't open tab for folders
-  if (value.isFolder) return;
+  if (node.type === 'folder') return;
 
   if (!workspaceId.value || !connectionId.value) return;
 
-  const role = (value as any).roleData as DatabaseRole | undefined;
-  const roleName = role?.roleName || value.id;
+  const role = node.data?.roleData as DatabaseRole | undefined;
+  const roleName = role?.roleName || node.id;
 
   const tabId = `user-permissions-${roleName}`;
+
+  const icon = role?.isSuperuser
+    ? 'hugeicons:crown'
+    : role?.canLogin
+      ? 'hugeicons:user-circle'
+      : 'hugeicons:user-lock-01';
+
+  const iconClass = role?.isSuperuser
+    ? 'text-yellow-500'
+    : role?.canLogin
+      ? 'text-blue-400'
+      : 'text-purple-400';
 
   await tabViewStore.openTab({
     workspaceId: workspaceId.value,
@@ -194,22 +206,19 @@ const onClickTreeItem = async (
     schemaId: schemaId.value || '',
     id: tabId,
     name: `${roleName} Permissions`,
-    icon: role?.isSuperuser
-      ? 'hugeicons:crown'
-      : role?.canLogin
-        ? 'hugeicons:user-circle'
-        : 'hugeicons:user-lock-01',
-    iconClass: role?.isSuperuser
-      ? 'text-yellow-500'
-      : role?.canLogin
-        ? 'text-blue-400'
-        : 'text-purple-400',
+    icon: icon,
+    iconClass: iconClass,
     type: TabViewType.UserPermissions,
-    routeName: 'workspaceId-connectionId-quick-query-user-permissions-roleName',
+    routeName: 'workspaceId-connectionId-user-permissions-roleName',
     routeParams: {
       workspaceId: workspaceId.value,
       connectionId: connectionId.value,
       roleName: roleName,
+    },
+    metadata: {
+      type: TabViewType.UserPermissions,
+      roleName: roleName,
+      treeNodeId: node.id,
     },
   });
 
@@ -276,16 +285,7 @@ const contextMenuItems = computed<ContextMenuItem[]>(() => {
       icon: 'hugeicons:shield-01',
       type: ContextMenuItemType.ACTION,
       select: () => {
-        // Simulate click to open tab
-        const fakeEvent = new MouseEvent('click');
-        const fakeItem = {
-          value: {
-            id: role.roleName,
-            isFolder: false,
-            roleData: role,
-          },
-        } as unknown as FlattenedTreeFileSystemItem;
-        onClickTreeItem(fakeEvent, fakeItem);
+        handleTreeClick(role.roleName);
       },
     });
     menuItems.push({ type: ContextMenuItemType.SEPARATOR });
@@ -333,10 +333,30 @@ const confirmDelete = async () => {
     isDeleting.value = false;
   }
 };
+
+watch(
+  () => tabViewStore.activeTab,
+  activeTab => {
+    if (!activeTab) {
+      fileTreeRef.value?.clearSelection();
+      return;
+    }
+
+    if (fileTreeRef.value?.isMouseInside) return;
+
+    if (activeTab?.type === TabViewType.UserPermissions) {
+      if (typeof activeTab.metadata?.treeNodeId === 'string') {
+        fileTreeRef.value?.focusItem(activeTab.metadata.treeNodeId);
+        return;
+      }
+    }
+  },
+  { flush: 'post', immediate: true }
+);
 </script>
 
 <template>
-  <div class="flex flex-col gap-1 py-1 min-h-[200px]">
+  <div class="flex flex-col gap-1 py-1 h-full">
     <!-- Loading State -->
     <div v-if="loading" class="flex items-center justify-center py-8">
       <Icon
@@ -354,20 +374,24 @@ const confirmDelete = async () => {
       <p class="text-sm">No roles found</p>
     </div>
 
-    <!-- Roles Tree using TreeFolder -->
+    <!-- Roles Tree using FileTree -->
     <template v-else>
       <BaseContextMenu
         :context-menu-items="contextMenuItems"
         @on-clear-context-menu="clearSelection"
       >
-        <TreeFolder
-          v-model:explorerFiles="items"
-          v-model:expandedState="expandedState"
-          :isShowArrow="true"
-          :isExpandedByArrow="true"
-          :onRightClickItem="onRightClickItem"
-          @clickTreeItem="onClickTreeItem"
-        />
+        <div class="h-full">
+          <FileTree
+            ref="fileTreeRef"
+            :init-expanded-ids="defaultExpandedKeys"
+            :initial-data="fileTreeData"
+            :allow-drag-and-drop="false"
+            :delay-focus="0"
+            :storage-key="`${connectionId}-user-roles-tree`"
+            @click="handleTreeClick"
+            @contextmenu="handleTreeContextMenu"
+          />
+        </div>
       </BaseContextMenu>
     </template>
   </div>

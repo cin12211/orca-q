@@ -17,7 +17,7 @@ import type {
   SchemaObjects,
   BulkGrantRequest,
   BulkGrantResponse,
-} from '~/shared/types';
+} from '~/core/types';
 
 export interface IDatabaseRoleAdapter {
   /**

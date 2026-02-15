@@ -2,7 +2,7 @@
  * API: Grant Bulk Permissions
  * Executes multiple permission grants in sequence (for wizard)
  */
-import type { BulkGrantRequest, BulkGrantResponse } from '~/shared/types';
+import type { BulkGrantRequest, BulkGrantResponse } from '~/core/types';
 import {
   createRoleAdapter,
   type SupportedDatabaseType,

@@ -11,7 +11,7 @@ import {
   Icon,
 } from '#components';
 import { Globe, Lock, Paintbrush, Settings } from 'lucide-vue-next';
-import { useSettingsModal } from '~/shared/contexts/useSettingsModal';
+import { useSettingsModal } from '~/core/contexts/useSettingsModal';
 import AgentConfig from './AgentConfig.vue';
 import EditorConfig from './EditorConfig.vue';
 import QuickQueryConfig from './QuickQueryConfig.vue';

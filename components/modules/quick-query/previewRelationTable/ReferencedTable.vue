@@ -1,13 +1,14 @@
 <script setup lang="ts">
 import { LoadingOverlay } from '#components';
-import { useTableQueryBuilder } from '~/composables/useTableQueryBuilder';
-import { TabViewType } from '~/shared/stores';
+import type { FilterSchema } from '~/components/modules/quick-query/utils';
+import { useTableQueryBuilder } from '~/core/composables/useTableQueryBuilder';
 import {
   ComposeOperator,
   DEFAULT_QUERY_SIZE,
   OperatorSet,
-} from '~/utils/constants';
-import type { FilterSchema } from '~/utils/quickQuery';
+} from '~/core/constants';
+import { TabViewType } from '~/core/stores';
+import { useManagementConnectionStore } from '~/core/stores/managementConnectionStore';
 import WrapperErdDiagram from '../../erd-diagram/WrapperErdDiagram.vue';
 import { buildTableNodeId } from '../../erd-diagram/utils';
 import { EDatabaseType } from '../../management-connection/constants';
@@ -29,6 +30,8 @@ const props = defineProps<{
   tableName: string;
   schemaName: string;
   initFilters?: FilterSchema[];
+  connectionId: string;
+  workspaceId: string;
 }>();
 
 const containerRef = ref<InstanceType<typeof HTMLElement>>();
@@ -54,15 +57,18 @@ const emit = defineEmits<{
   ): void;
 }>();
 
-const {
-  quickQueryFilterRef,
-  quickQueryTableRef,
-  selectedRows,
-  connectionString,
-  connectionId,
-  workspaceId,
-  focusedCell,
-} = useQuickQuery();
+// useQuickQuery removed as it no longer provides context
+const { quickQueryFilterRef, quickQueryTableRef, selectedRows, focusedCell } =
+  useQuickQuery();
+
+const connectionStore = useManagementConnectionStore();
+
+const connectionString = computed(() => {
+  const connection = connectionStore.connections.find(
+    c => c.id === props.connectionId
+  );
+  return connection?.connectionString || '';
+});
 
 const {
   columnNames,
@@ -74,7 +80,7 @@ const {
 } = useQuickQueryTableInfo({
   tableName: props.tableName,
   schemaName: props.schemaName,
-  connectionId: connectionId.value,
+  connectionId: props.connectionId,
   tabViewType: TabViewType.TableDetail,
 });
 
@@ -105,8 +111,8 @@ const {
   connectionString,
   primaryKeys: primaryKeyColumns,
   columns: columnNames,
-  connectionId,
-  workspaceId,
+  connectionId: computed(() => props.connectionId),
+  workspaceId: computed(() => props.workspaceId),
   tableName: props.tableName,
   schemaName: props.schemaName,
   isPersist: false,
@@ -154,6 +160,7 @@ const {
   quickQueryTableRef,
   refreshCount,
   focusedCell,
+  connectionString,
 });
 
 const quickQueryTabView = ref<QuickQueryTabView>(QuickQueryTabView.Data);

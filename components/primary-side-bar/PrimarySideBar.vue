@@ -6,11 +6,11 @@ import {
   ModulesManagementUsersAndPermission,
   ModulesManagementExport,
 } from '#components';
-import { useAppLayoutStore } from '~/shared/stores/appLayoutStore';
+import { useAppLayoutStore } from '~/core/stores/appLayoutStore';
 import {
   ActivityBarItemType,
   useActivityBarStore,
-} from '~/shared/stores/useActivityBarStore';
+} from '~/core/stores/useActivityBarStore';
 
 const activityStore = useActivityBarStore();
 

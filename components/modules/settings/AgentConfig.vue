@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import ModelSelector from '~/components/modules/selectors/ModelSelector.vue';
-import { useAppLayoutStore } from '~/shared/stores/appLayoutStore';
+import { useAppLayoutStore } from '~/core/stores/appLayoutStore';
 
 const appLayoutStore = useAppLayoutStore();
 

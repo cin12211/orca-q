@@ -3,7 +3,7 @@ import type { HTMLAttributes } from 'vue';
 import { toTypedSchema } from '@vee-validate/zod';
 import { Field, useForm } from 'vee-validate';
 import * as z from 'zod';
-import { uuidv4 } from '~/lib/utils';
+import { uuidv4 } from '~/core/helpers';
 
 export interface ConfigFieldItem {
   name: string;

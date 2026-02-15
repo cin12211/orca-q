@@ -11,7 +11,7 @@ import {
 } from '#components';
 import { Sparkles } from 'lucide-vue-next';
 import { marked } from 'marked';
-import { useChangelogModal } from '~/shared/contexts/useChangelogModal';
+import { useChangelogModal } from '~/core/contexts/useChangelogModal';
 
 const { isChangelogOpen, changelogEntries, isLoading, closeChangelog } =
   useChangelogModal();

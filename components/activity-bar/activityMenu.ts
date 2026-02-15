@@ -1,5 +1,5 @@
-import { ActivityBarItemType, useActivityBarStore } from '~/shared/stores';
-import { useAppLayoutStore } from '~/shared/stores/appLayoutStore';
+import { ActivityBarItemType, useActivityBarStore } from '~/core/stores';
+import { useAppLayoutStore } from '~/core/stores/appLayoutStore';
 
 export const useActivityMenu = () => {
   const activityStore = useActivityBarStore();
