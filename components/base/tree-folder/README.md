@@ -13,6 +13,7 @@ A blazingly fast VS Code-style file tree component for Vue 3, capable of renderi
 - **📦 NPM Ready**: Static CSS classes, framework-agnostic styling
 - **🔄 Smart Auto-Expand**: Folders automatically expand when hovering during drag (500ms)
 - **💾 State Persistence**: Automatic save/restore of expansion state
+- **🧩 Pluggable Persistence**: Optional extension pattern for web, Electron, and API sync
 - **♿ Accessible**: Keyboard navigation and ARIA support
 - **🌓 Dark Mode**: Built-in dark mode support via CSS variables
 - **⚡ Optimized**: `shallowRef`, `v-memo`, CSS containment
@@ -27,7 +28,9 @@ npm install @tanstack/vue-virtual lucide-vue-next
 
 ## 🎨 Theming & Customization
 
-The component uses **CSS variables** for complete theming control. See [CUSTOMIZATION.md](./CUSTOMIZATION.md) for full documentation.
+The component uses **CSS variables** for complete theming control. See [CUSTOMIZATION.md](./docs/CUSTOMIZATION.md) for full documentation.
+
+For persistence architecture and adapter usage, see [docs/PERSISTENCE_EXTENSION.md](./docs/PERSISTENCE_EXTENSION.md).
 
 ### Quick Theme Example
 
@@ -54,7 +57,7 @@ The component uses **CSS variables** for complete theming control. See [CUSTOMIZ
 - `--v-tree-row-selected-bg` - Selected row background
 - `--v-tree-indicator-color` - Drag drop indicator color
 - `--v-tree-drag-preview-bg` - Drag preview background
-- And many more... see [CUSTOMIZATION.md](./CUSTOMIZATION.md)
+- And many more... see [CUSTOMIZATION.md](./docs/CUSTOMIZATION.md)
 
 ## 🎯 Quick Start
 
@@ -148,19 +151,20 @@ import { TreeDemo } from '@/components/base/tree-folder';
 
 #### Props
 
-| Prop                  | Type                       | Default               | Description                           |
-| --------------------- | -------------------------- | --------------------- | ------------------------------------- |
-| `initialData`         | `Record<string, FileNode>` | `{}`                  | Tree node data in flat map format     |
-| `storageKey`          | `string`                   | `'vscode_tree_state'` | LocalStorage key for persistence      |
-| `allowSort`           | `boolean`                  | `false`               | Allow reordering items (siblings)     |
-| `allowDragAndDrop`    | `boolean`                  | `true`                | Enable/Disable drag & drop entirely   |
-| `itemHeight`          | `number`                   | `24`                  | Height of each row in pixels          |
-| `indentSize`          | `number`                   | `20`                  | Indentation per depth level in pixels |
-| `baseIndent`          | `number`                   | `8`                   | Base indentation in pixels            |
-| `autoExpandDelay`     | `number`                   | `500`                 | MS to hover before folder expands     |
-| `autoScrollThreshold` | `number`                   | `50`                  | Distance from edge to trigger scroll  |
-| `autoScrollSpeed`     | `number`                   | `10`                  | Pixels to scroll per frame            |
-| `overscan`            | `number`                   | `10`                  | Extra items to render off-screen      |
+| Prop                   | Type                       | Default               | Description                           |
+| ---------------------- | -------------------------- | --------------------- | ------------------------------------- |
+| `initialData`          | `Record<string, FileNode>` | `{}`                  | Tree node data in flat map format     |
+| `storageKey`           | `string`                   | `'vscode_tree_state'` | LocalStorage key for persistence      |
+| `persistenceExtension` | `TreePersistenceExtension` | `undefined`           | Custom persistence adapter strategy   |
+| `allowSort`            | `boolean`                  | `false`               | Allow reordering items (siblings)     |
+| `allowDragAndDrop`     | `boolean`                  | `true`                | Enable/Disable drag & drop entirely   |
+| `itemHeight`           | `number`                   | `24`                  | Height of each row in pixels          |
+| `indentSize`           | `number`                   | `20`                  | Indentation per depth level in pixels |
+| `baseIndent`           | `number`                   | `8`                   | Base indentation in pixels            |
+| `autoExpandDelay`      | `number`                   | `100`                 | MS to hover before folder expands     |
+| `autoScrollThreshold`  | `number`                   | `50`                  | Distance from edge to trigger scroll  |
+| `autoScrollSpeed`      | `number`                   | `10`                  | Pixels to scroll per frame            |
+| `overscan`             | `number`                   | `10`                  | Extra items to render off-screen      |
 
 #### Events
 
@@ -287,13 +291,15 @@ Recursive components (`<TreeNode>` calling `<TreeNode>`) create thousands of Vue
 
 MIT
 
-## � Additional Documentation
+## Additional Documentation
 
-- **[V2 Summary](./V2_SUMMARY.md)** - Latest features: Keyboard auto-scroll & focus feature- **[Visual Guide](./VISUAL_GUIDE.md)** - Visual examples and diagrams of drag & drop behaviors
-- **[Enhancements](./ENHANCEMENTS.md)** - Detailed technical documentation of recent improvements
-- **[Examples](./EXAMPLES.md)** - Real-world usage examples and patterns
-- **[Test Guide](./TEST_GUIDE.md)** - Comprehensive testing instructions
+- **[Documentation Index](./docs/README.md)** - All tree-folder docs in one place
+- **[V2 Summary](./docs/V2_SUMMARY.md)** - Latest features: keyboard auto-scroll and focus
+- **[Visual Guide](./docs/VISUAL_GUIDE.md)** - Visual examples of drag and drop behaviors
+- **[Enhancements](./docs/ENHANCEMENTS.md)** - Detailed technical documentation of improvements
+- **[Examples](./docs/EXAMPLES.md)** - Real-world usage examples and patterns
+- **[Test Guide](./docs/TEST_GUIDE.md)** - Comprehensive testing instructions
 
-## �🙏 Credits
+## Credits
 
-Built following the specifications in [guild.md](./guild.md), based on VS Code's file explorer architecture.
+Built following the specifications in [guild.md](./docs/guild.md), based on VS Code's file explorer architecture.

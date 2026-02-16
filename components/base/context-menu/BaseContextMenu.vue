@@ -30,7 +30,7 @@ const onMenuContextOpenChange = (open: boolean) => {
       <slot />
     </ContextMenuTrigger>
 
-    <ContextMenuContent class="min-w-56">
+    <ContextMenuContent class="min-w-56" @close-auto-focus.prevent>
       <template v-for="(item, index) in contextMenuItems" :key="index">
         <ContextMenuLabel
           v-if="

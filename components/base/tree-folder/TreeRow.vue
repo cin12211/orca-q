@@ -11,6 +11,7 @@ interface Props {
   isFocused: boolean;
   dropIndicator?: { position: DropPosition } | null;
   isEditing?: boolean;
+  renameError?: string;
   allowDragAndDrop?: boolean;
   itemHeight?: number;
   indentSize?: number;
@@ -19,6 +20,7 @@ interface Props {
 
 const props = withDefaults(defineProps<Props>(), {
   isEditing: false,
+  renameError: '',
   allowDragAndDrop: true,
   itemHeight: 24,
   indentSize: 20,
@@ -36,6 +38,7 @@ const emit = defineEmits<{
   drop: [event: DragEvent];
   contextmenu: [event: MouseEvent];
   rename: [newName: string];
+  editingChange: [newName: string];
   cancelRename: [];
 }>();
 
@@ -51,6 +54,18 @@ const handleRenameSubmit = () => {
   } else {
     emit('cancelRename');
   }
+};
+
+const hasError = computed(() => !!props.renameError);
+
+const handleBlurSubmit = () => {
+  // On outside click, invalid rename should be discarded and reverted.
+  if (hasError.value) {
+    handleRenameCancel();
+    return;
+  }
+
+  handleRenameSubmit();
 };
 
 // Handle rename cancel
@@ -113,7 +128,7 @@ const defaultIcon = computed(() => {
 const rowClasses = computed(() => ({
   'tree-row': true,
   'tree-row--selected': props.isSelected,
-  'tree-row--focused': props.isFocused,
+  'tree-row--focused': props.isFocused && !props.isEditing,
   'tree-row--drop-before': props.dropIndicator?.position === 'before',
   'tree-row--drop-after': props.dropIndicator?.position === 'after',
   'tree-row--drop-inside': props.dropIndicator?.position === 'inside',
@@ -178,9 +193,14 @@ defineExpose({
       v-model="editingName"
       type="text"
       class="tree-row__edit-input"
-      @blur="handleRenameSubmit"
+      :class="{ 'tree-row__edit-input--error': hasError }"
+      :aria-invalid="hasError"
+      :aria-errormessage="hasError ? `rename-error-${node.id}` : undefined"
+      @input="emit('editingChange', editingName)"
+      @blur="handleBlurSubmit"
       @keydown.enter.stop="handleRenameSubmit"
       @keydown.esc="handleRenameCancel"
+      @keydown.space.stop
       @click.stop
       @dblclick.stop
     />
@@ -282,7 +302,7 @@ defineExpose({
   border: none;
   background: transparent;
   cursor: pointer;
-  transition: var(--v-tree-chevron-transition, transform 0.15s ease);
+  /* transition: var(--v-tree-chevron-transition, transform 0.15s ease); */
   flex-shrink: 0;
   color: currentColor;
 }
@@ -322,11 +342,18 @@ defineExpose({
   border-radius: var(--radius-sm, 3px);
   color: var(--v-tree-input-text-color, hsl(var(--foreground)));
   outline: none;
+  height: 100%;
+  margin-top: 2px;
+  margin-bottom: 2px;
 }
 
 .tree-row__edit-input:focus {
   background-color: var(--v-tree-input-focus-bg, hsl(var(--accent)));
   border-color: var(--v-tree-input-focus-border, hsl(var(--ring)));
+}
+
+.tree-row__edit-input--error {
+  border-color: var(--destructive) !important;
 }
 
 .tree-row__actions {
