@@ -360,7 +360,7 @@ export class TreeManager {
     return resultRoots;
   }
 
-  public isExitNodeNameInPath(
+  public isExitNodeNameInFolder(
     name: string,
     nodeId: string,
     parentId: string
@@ -371,8 +371,8 @@ export class TreeManager {
 
     const nodes = (parentNode ? parentNode.children : this.tree) ?? [];
 
-    const isExitNode = nodes.find(n => n.title === name && n.id !== nodeId);
-    if (!!isExitNode) {
+    const duplicateNode = nodes.find(n => n.title === name && n.id !== nodeId);
+    if (!!duplicateNode) {
       return true;
     }
 

@@ -23,3 +23,18 @@ export interface DropIndicator {
   nodeId: string;
   position: DropPosition;
 }
+
+export interface TreePersistenceContext {
+  storageKey: string;
+}
+
+export interface TreePersistenceExtension {
+  loadExpandedIds?: (
+    context: TreePersistenceContext
+  ) => string[] | null | undefined;
+  saveExpandedIds?: (
+    expandedIds: string[],
+    context: TreePersistenceContext
+  ) => void;
+  clearExpandedIds?: (context: TreePersistenceContext) => void;
+}

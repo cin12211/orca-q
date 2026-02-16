@@ -3,11 +3,18 @@ import { ref, computed, watch, onMounted, shallowRef, h, render } from 'vue';
 import { useVirtualizer } from '@tanstack/vue-virtual';
 import PseudomorphismDragItem from './PseudomorphismDragItem.vue';
 import TreeRow from './TreeRow.vue';
-import type { FileNode, DropIndicator, DragData } from './types';
+import { createTreePersistencePlugin } from './plugins/tree-persistence';
+import type {
+  FileNode,
+  DropIndicator,
+  DragData,
+  TreePersistenceExtension,
+} from './types';
 
 interface Props {
   initExpandedIds?: string[];
   initialData?: Record<string, FileNode>;
+  validateRename?: (nodeId: string, newName: string) => string | true;
   storageKey?: string;
   allowSort?: boolean; // Allow reordering items (before/after positions)
   allowDragAndDrop?: boolean; // Allow any drag and drop (including nesting)
@@ -19,6 +26,7 @@ interface Props {
   autoScrollThreshold?: number;
   autoScrollSpeed?: number;
   overscan?: number;
+  persistenceExtension?: TreePersistenceExtension;
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -33,6 +41,11 @@ const props = withDefaults(defineProps<Props>(), {
   autoScrollThreshold: 50,
   autoScrollSpeed: 10,
   overscan: 10,
+  persistenceExtension: () =>
+    createTreePersistencePlugin({
+      mode: 'web',
+      pushDebounceMs: 400,
+    }),
 });
 
 const emit = defineEmits<{
@@ -45,6 +58,7 @@ const emit = defineEmits<{
   click: [nodeId: string, event: MouseEvent];
   contextmenu: [nodeId: string, event: MouseEvent];
   rename: [nodeId: string, newName: string];
+  'cancel-rename': [nodeId: string];
 }>();
 
 // Core state - use shallowRef for performance with large datasets
@@ -53,6 +67,70 @@ const expandedIds = ref<Set<string>>(new Set(props.initExpandedIds || []));
 const selectedIds = ref<Set<string>>(new Set());
 const focusedId = ref<string | null>(null);
 const editingId = ref<string | null>(null);
+const renameErrors = ref<Record<string, string>>({});
+
+const persistenceContext = computed(() => ({
+  storageKey: `${props.storageKey}_expanded`,
+}));
+
+type ExpandedPersistenceStrategy = {
+  load: () => string[] | null;
+  save: (expandedNodeIds: string[]) => void;
+};
+
+const normalizeExpandedIds = (value: unknown): string[] | null => {
+  if (!Array.isArray(value)) {
+    return null;
+  }
+
+  return value.filter((id): id is string => typeof id === 'string');
+};
+
+const extensionPersistenceStrategy = computed<ExpandedPersistenceStrategy>(
+  () => ({
+    load: () => {
+      const loadExpandedIds = props.persistenceExtension?.loadExpandedIds;
+      if (!loadExpandedIds) {
+        return null;
+      }
+
+      try {
+        const loadedExpandedIds = loadExpandedIds(persistenceContext.value);
+        return normalizeExpandedIds(loadedExpandedIds);
+      } catch (error) {
+        console.error(
+          'Failed to load expanded ids from persistence extension',
+          error
+        );
+        return null;
+      }
+    },
+    save: expandedNodeIds => {
+      const saveExpandedIds = props.persistenceExtension?.saveExpandedIds;
+      if (!saveExpandedIds) {
+        return;
+      }
+
+      try {
+        saveExpandedIds(expandedNodeIds, persistenceContext.value);
+      } catch (error) {
+        console.error(
+          'Failed to save expanded ids using persistence extension',
+          error
+        );
+      }
+    },
+  })
+);
+
+const expandedIdsPersistenceStrategy =
+  computed<ExpandedPersistenceStrategy | null>(() => {
+    if (props.persistenceExtension) {
+      return extensionPersistenceStrategy.value;
+    }
+
+    return null;
+  });
 
 // Root node IDs (nodes with parentId === null)
 const rootIds = computed(() =>
@@ -130,6 +208,31 @@ const overlayPosition = computed(() => {
   return {
     top: folderIndex * props.itemHeight,
     height: (lastIndex - folderIndex + 1) * props.itemHeight,
+  };
+});
+
+// Error tooltip position — computed from the editing node's index (like overlayPosition)
+const errorTooltipPosition = computed(() => {
+  if (!editingId.value) return null;
+
+  const errorMessage = renameErrors.value[editingId.value];
+  if (!errorMessage) return null;
+
+  const nodeIndex = visibleNodeIds.value.indexOf(editingId.value);
+  if (nodeIndex === -1) return null;
+
+  const node = nodes.value[editingId.value];
+  if (!node) return null;
+
+  // Position directly below the editing row
+  const top = (nodeIndex + 1) * props.itemHeight + 2; // 4px gap from the row
+  // Align left with the node's text area (depth indent + base + chevron + icon)
+  const left = node.depth * props.indentSize + props.baseIndent + 20 + 22;
+
+  return {
+    top,
+    left,
+    message: errorMessage,
   };
 });
 
@@ -554,6 +657,8 @@ const handleKeyDown = (event: KeyboardEvent) => {
       const node = nodes.value[focusedId.value];
       if (node.type === 'folder') {
         toggleExpansion(focusedId.value);
+      } else {
+        emit('click', focusedId.value, event as unknown as MouseEvent);
       }
       break;
   }
@@ -578,16 +683,68 @@ const handleContextMenu = (event: MouseEvent, nodeId: string) => {
 
 // Rename handlers
 const handleRename = (nodeId: string, newName: string) => {
+  if (props.validateRename) {
+    const result = props.validateRename(nodeId, newName);
+    if (result !== true) {
+      renameErrors.value = {
+        ...renameErrors.value,
+        [nodeId]: result,
+      };
+      editingId.value = nodeId;
+      return;
+    }
+  }
+
+  if (renameErrors.value[nodeId]) {
+    const nextErrors = { ...renameErrors.value };
+    delete nextErrors[nodeId];
+    renameErrors.value = nextErrors;
+  }
+
   editingId.value = null;
   emit('rename', nodeId, newName);
 };
 
-const handleCancelRename = () => {
+const handleCancelRename = (nodeId: string) => {
+  if (renameErrors.value[nodeId]) {
+    const nextErrors = { ...renameErrors.value };
+    delete nextErrors[nodeId];
+    renameErrors.value = nextErrors;
+  }
+
   editingId.value = null;
+  emit('cancel-rename', nodeId);
+};
+
+const handleEditingChange = (nodeId: string, newName: string) => {
+  if (!props.validateRename) return;
+
+  const result = props.validateRename(nodeId, newName);
+  const hasError = !!renameErrors.value[nodeId];
+
+  if (result !== true) {
+    renameErrors.value = {
+      ...renameErrors.value,
+      [nodeId]: result,
+    };
+    return;
+  }
+
+  if (result === true && hasError) {
+    const nextErrors = { ...renameErrors.value };
+    delete nextErrors[nodeId];
+    renameErrors.value = nextErrors;
+  }
 };
 
 // Public method to start editing
 const startEditing = (nodeId: string) => {
+  if (renameErrors.value[nodeId]) {
+    const nextErrors = { ...renameErrors.value };
+    delete nextErrors[nodeId];
+    renameErrors.value = nextErrors;
+  }
+
   editingId.value = nodeId;
 };
 
@@ -595,12 +752,7 @@ const startEditing = (nodeId: string) => {
 watch(
   () => Array.from(expandedIds.value),
   newVal => {
-    if (typeof window !== 'undefined') {
-      localStorage.setItem(
-        `${props.storageKey}_expanded`,
-        JSON.stringify(newVal)
-      );
-    }
+    expandedIdsPersistenceStrategy.value?.save(newVal);
   }
 );
 
@@ -611,17 +763,9 @@ onMounted(() => {
     nodes.value = props.initialData;
   }
 
-  // Load expansion state
-  if (typeof window !== 'undefined') {
-    const savedState = localStorage.getItem(`${props.storageKey}_expanded`);
-    if (savedState) {
-      try {
-        const ids = JSON.parse(savedState);
-        expandedIds.value = new Set(ids);
-      } catch (e) {
-        console.error('Failed to load tree state', e);
-      }
-    }
+  const persistedExpandedIds = expandedIdsPersistenceStrategy.value?.load();
+  if (persistedExpandedIds !== null && persistedExpandedIds !== undefined) {
+    expandedIds.value = new Set(persistedExpandedIds);
   }
 
   // Set initial focus
@@ -704,6 +848,15 @@ const clearSelection = () => {
   emit('select', []);
 };
 
+const handleBackgroundClick = (event: MouseEvent) => {
+  const target = event.target as HTMLElement;
+  // If the click originated from a tree row or its children, ignore it
+  if (target.closest('.tree-row')) {
+    return;
+  }
+  clearSelection();
+};
+
 defineExpose({
   expandAll,
   collapseAll,
@@ -722,6 +875,7 @@ defineExpose({
     class="file-tree"
     tabindex="0"
     @keydown="handleKeyDown"
+    @click="handleBackgroundClick"
   >
     <div
       :style="{
@@ -757,12 +911,14 @@ defineExpose({
             props.indentSize,
             props.baseIndent,
             props.allowDragAndDrop,
+            renameErrors[visibleNodeIds[item.index]],
           ]"
           :node="nodes[visibleNodeIds[item.index]]"
           :is-selected="selectedIds.has(visibleNodeIds[item.index])"
           :is-expanded="expandedIds.has(visibleNodeIds[item.index])"
           :is-focused="focusedId === visibleNodeIds[item.index]"
           :is-editing="editingId === visibleNodeIds[item.index]"
+          :rename-error="renameErrors[visibleNodeIds[item.index]] || ''"
           :drop-indicator="
             !overlayFolderId &&
             dropIndicator?.nodeId === visibleNodeIds[item.index]
@@ -783,7 +939,10 @@ defineExpose({
           @drop="handleDrop($event, visibleNodeIds[item.index])"
           @contextmenu="handleContextMenu($event, visibleNodeIds[item.index])"
           @rename="handleRename(visibleNodeIds[item.index], $event)"
-          @cancel-rename="handleCancelRename"
+          @editing-change="
+            handleEditingChange(visibleNodeIds[item.index], $event)
+          "
+          @cancel-rename="handleCancelRename(visibleNodeIds[item.index])"
         >
           <!-- Pass through action slot -->
           <template #actions="{ node }">
@@ -791,6 +950,30 @@ defineExpose({
           </template>
         </TreeRow>
       </div>
+
+      <!-- Rename error tooltip overlay (positioned like drop overlay) -->
+      <Transition name="tree-error">
+        <div
+          v-if="errorTooltipPosition"
+          :id="`rename-error-${editingId}`"
+          class="flex items-start gap-1 text-xs font-normal pointer-events-none text-muted-foreground z-30 whitespace-break-spaces px-1 py-2 shadow-md border border-destructive border-l-[3px] rounded-md bg-popover"
+          :style="{
+            position: 'absolute',
+            top: `${errorTooltipPosition.top}px`,
+            left: `${errorTooltipPosition.left}px`,
+            right: '8px',
+          }"
+          role="alert"
+          aria-live="assertive"
+        >
+          <Icon
+            name="lucide:alert-circle"
+            class="text-destructive size-4!"
+            aria-hidden="true"
+          />
+          {{ errorTooltipPosition.message }}
+        </div>
+      </Transition>
 
       <!-- Unified folder drop overlay -->
       <div
@@ -859,5 +1042,28 @@ defineExpose({
   transition:
     top 0.12s ease,
     height 0.12s ease;
+}
+
+/* Error tooltip transition */
+.tree-error-enter-active {
+  transition:
+    opacity 0.15s ease,
+    transform 0.15s ease;
+}
+
+.tree-error-leave-active {
+  transition:
+    opacity 0.1s ease,
+    transform 0.1s ease;
+}
+
+.tree-error-enter-from {
+  opacity: 0;
+  transform: translateY(-4px);
+}
+
+.tree-error-leave-to {
+  opacity: 0;
+  transform: translateY(-4px);
 }
 </style>
