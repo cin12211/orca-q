@@ -1,5 +1,12 @@
 <script setup lang="ts">
 import { useElementSize, type MaybeComputedElementRef } from '@vueuse/core';
+import {
+  ActivityBar,
+  PrimarySideBar,
+  SecondarySideBar,
+  StatusBar,
+  TabViewContainer,
+} from '~/components/modules/app-shell';
 import { DEFAULT_DEBOUNCE_INPUT } from '~/core/constants';
 import { useAppLayoutStore } from '~/core/stores/appLayoutStore';
 

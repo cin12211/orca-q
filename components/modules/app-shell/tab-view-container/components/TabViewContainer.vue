@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { isElectron, isPWA } from '~/core/helpers';
 import { useAppLayoutStore } from '~/core/stores/appLayoutStore';
-import ActivityBarHorizontal from '../activity-bar/ActivityBarHorizontal.vue';
+import { ActivityBarHorizontal } from '../../activity-bar';
 import TabViews from './TabViews.vue';
 
 const props = defineProps<{

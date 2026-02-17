@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { useActivityMenu } from './activityMenu';
+import { useActivityMenu } from '../hooks/useActivityMenu';
 
 const { activity, onChangeActivity } = useActivityMenu();
 </script>

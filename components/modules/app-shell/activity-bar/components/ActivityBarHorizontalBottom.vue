@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import WorkspaceSelector from '../modules/selectors/WorkspaceSelector.vue';
+import WorkspaceSelector from '~/components/modules/selectors/WorkspaceSelector.vue';
 
 // TODO: update
 const user = {

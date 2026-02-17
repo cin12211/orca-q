@@ -5,8 +5,8 @@ import {
   BreadcrumbList,
   BreadcrumbSeparator,
 } from '#components';
+import { getDatabaseSupportByType } from '~/components/modules/management-connection/constants';
 import { useAppContext } from '~/core/contexts/useAppContext';
-import { getDatabaseSupportByType } from '../modules/management-connection/constants';
 
 const { workspaceStore, connectionStore, tabViewStore, schemaStore } =
   useAppContext();
