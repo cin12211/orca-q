@@ -5,7 +5,7 @@ import relativeTime from 'dayjs/plugin/relativeTime';
 import { Search } from 'lucide-vue-next';
 import { DEFAULT_DEBOUNCE_INPUT } from '~/core/constants';
 import { useAppContext } from '~/core/contexts/useAppContext';
-import ManagementConnectionModal from '../management-connection/ManagementConnectionModal.vue';
+import ManagementConnectionModal from '../connection/ManagementConnectionModal.vue';
 import CreateWorkspaceModal from './CreateWorkspaceModal.vue';
 import WorkspaceCard from './WorkspaceCard.vue';
 import WorkspaceHeader from './WorkspaceHeader.vue';

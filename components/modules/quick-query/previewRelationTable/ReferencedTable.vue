@@ -9,9 +9,9 @@ import {
 } from '~/core/constants';
 import { TabViewType } from '~/core/stores';
 import { useManagementConnectionStore } from '~/core/stores/managementConnectionStore';
+import { EDatabaseType } from '../../connection/constants';
 import WrapperErdDiagram from '../../erd-diagram/WrapperErdDiagram.vue';
 import { buildTableNodeId } from '../../erd-diagram/utils';
-import { EDatabaseType } from '../../management-connection/constants';
 import QuickQueryErrorPopup from '../QuickQueryErrorPopup.vue';
 import { QuickQueryTabView } from '../constants';
 import {

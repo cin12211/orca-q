@@ -165,6 +165,9 @@ const visibleNodeIds = computed(() => {
 const parentRef = useTemplateRef<HTMLElement | null>('parentRef');
 const isMouseInside = ref(false);
 
+// KeepAlive scroll position persistence
+const savedScrollOffset = ref(0);
+
 const rowVirtualizer = useVirtualizer({
   get count() {
     return visibleNodeIds.value.length;
@@ -172,6 +175,19 @@ const rowVirtualizer = useVirtualizer({
   getScrollElement: () => parentRef.value,
   estimateSize: () => props.itemHeight,
   overscan: props.overscan,
+});
+
+onDeactivated(() => {
+  savedScrollOffset.value =
+    Math.round(rowVirtualizer.value.scrollOffset ?? 0) || 0;
+});
+
+onActivated(async () => {
+  await nextTick();
+
+  setTimeout(() => {
+    rowVirtualizer.value.scrollToOffset(savedScrollOffset.value);
+  }, 0);
 });
 
 // Drag and drop state

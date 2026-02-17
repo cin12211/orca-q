@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
-import type { EDatabaseType } from '~/components/modules/management-connection/constants';
-import type { EConnectionMethod } from '~/components/modules/management-connection/type';
+import type { EDatabaseType } from '~/components/modules/connection/constants';
+import type { EConnectionMethod } from '~/components/modules/connection/type';
 import { useWSStateStore } from './useWSStateStore';
 
 export interface Connection {
