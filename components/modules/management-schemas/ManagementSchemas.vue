@@ -7,6 +7,7 @@ import { useSchemaTreeData } from '~/components/modules/management-schemas/hooks
 import { DEFAULT_DEBOUNCE_INPUT } from '~/core/constants';
 import { useAppContext } from '~/core/contexts/useAppContext';
 import { TabViewType } from '~/core/stores/useTabViewsStore';
+import SafeModeConfirmDialog from '../quick-query/SafeModeConfirmDialog.vue';
 import ConnectionSelector from '../selectors/ConnectionSelector.vue';
 import SchemaSelector from '../selectors/SchemaSelector.vue';
 import RenameDialog from './dialogs/RenameDialog.vue';

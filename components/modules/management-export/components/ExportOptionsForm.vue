@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { Badge, Label, Slider } from '#components';
 import type { ExportFormat, ExportScope, ExportOptions } from '~/core/types';
 
 interface Props {
@@ -125,9 +126,12 @@ const onSubmit = () => {
           :variant="selectedSchemas.includes(schema) ? 'default' : 'outline'"
           class="cursor-pointer"
           @click="
-            selectedSchemas.includes(schema)
-              ? (selectedSchemas = selectedSchemas.filter(s => s !== schema))
-              : selectedSchemas.push(schema)
+            () =>
+              selectedSchemas.includes(schema)
+                ? (selectedSchemas = selectedSchemas.filter(
+                    (s: any) => s !== schema
+                  ))
+                : selectedSchemas.push(schema)
           "
         >
           {{ schema }}
@@ -152,8 +156,8 @@ const onSubmit = () => {
           :max="9"
           :step="1"
           class="flex-1"
-          @update:model-value="(val: number[]) => (compressLevel = val[0])"
         />
+        <!-- @update:model-value="(val: number[]) => (compressLevel = val[0])" -->
         <span class="text-sm font-mono w-6">{{ compressLevel }}</span>
       </div>
     </div>

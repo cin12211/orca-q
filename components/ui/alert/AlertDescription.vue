@@ -8,10 +8,7 @@ const props = defineProps<{
 </script>
 
 <template>
-  <div
-    data-slot="dialog-header"
-    :class="cn('flex flex-col gap-2 text-center sm:text-left', props.class)"
-  >
+  <div :class="cn('text-sm [&_p]:leading-relaxed', props.class)">
     <slot />
   </div>
 </template>

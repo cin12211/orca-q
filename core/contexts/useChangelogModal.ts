@@ -5,7 +5,7 @@ import {
   getLatestVersion,
   getVersionsSince,
   type ChangelogEntry,
-} from '../data/changelog';
+} from '../data/changelogs/changelog';
 
 const LAST_SEEN_VERSION_KEY = 'orcaq-last-seen-version';
 
@@ -15,7 +15,7 @@ const changelogEntries = ref<ChangelogEntry[]>([]);
 const isLoading = ref(false);
 
 // Import all changelog markdown files
-const changelogModules = import.meta.glob('/changelogs/*.md', {
+const changelogModules = import.meta.glob('../data/changelogs/*.md', {
   query: '?raw',
   import: 'default',
 });
@@ -75,7 +75,7 @@ export function useChangelogModal() {
     const entries: ChangelogEntry[] = [];
 
     for (const version of versions) {
-      const path = `/changelogs/${version}.md`;
+      const path = `../data/changelogs/${version}.md`;
 
       if (changelogModules[path]) {
         try {

@@ -1,5 +1,5 @@
 // Changelog configuration
-// The actual changelog content is loaded from /changelogs/*.md files
+// The actual changelog content is loaded from core/data/changelogs/*.md files
 
 export interface ChangelogEntry {
   version: string;
