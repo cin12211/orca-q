@@ -85,7 +85,7 @@ const handleNavClick = async ({
 </script>
 
 <template>
-  <Dialog v-model:open="isSettingsOpen">
+  <Dialog v-if="isSettingsOpen" v-model:open="isSettingsOpen">
     <DialogContent
       class="overflow-hidden p-0 max-h-[80vh] md:max-w-[60vw] lg:max-w-[60vw]"
     >

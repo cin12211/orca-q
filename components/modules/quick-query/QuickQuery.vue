@@ -17,6 +17,7 @@ import {
   useQuickQueryMutation,
   useQuickQueryTableInfo,
   useReferencedTables,
+  useSafeModeDialog,
 } from './hooks';
 import PreviewSelectedRow from './preview/PreviewSelectedRow.vue';
 import PreviewRelationTable, {
@@ -54,37 +55,14 @@ const schemaName = computed(() => props.schemaName);
 const previewRelationBreadcrumbs = ref<PreviewRelationBreadcrumb[]>([]);
 const containerRef = ref<InstanceType<typeof HTMLElement>>();
 
-// Safe mode confirmation dialog state
-const safeModeDialogOpen = ref(false);
-const safeModeDialogSql = ref('');
-const safeModeDialogType = ref<'save' | 'delete'>('save');
-let safeModeResolve: ((confirmed: boolean) => void) | null = null;
-
-const onRequestSafeModeConfirm = (
-  sql: string,
-  type: 'save' | 'delete'
-): Promise<boolean> => {
-  return new Promise(resolve => {
-    safeModeDialogSql.value = sql;
-    safeModeDialogType.value = type;
-    safeModeDialogOpen.value = true;
-    safeModeResolve = resolve;
-  });
-};
-
-const onSafeModeConfirm = () => {
-  if (safeModeResolve) {
-    safeModeResolve(true);
-    safeModeResolve = null;
-  }
-};
-
-const onSafeModeCancel = () => {
-  if (safeModeResolve) {
-    safeModeResolve(false);
-    safeModeResolve = null;
-  }
-};
+const {
+  onRequestSafeModeConfirm,
+  onSafeModeCancel,
+  onSafeModeConfirm,
+  safeModeDialogOpen,
+  safeModeDialogSql,
+  safeModeDialogType,
+} = useSafeModeDialog();
 
 const { quickQueryFilterRef, quickQueryTableRef, selectedRows, focusedCell } =
   useQuickQuery();
