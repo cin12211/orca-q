@@ -9,7 +9,7 @@ import type {
   ObjectGrant,
   PrivilegeType,
 } from '~/core/types';
-import ConnectionSelector from '../selectors/ConnectionSelector.vue';
+import ConnectionSelector from '../../selectors/ConnectionSelector.vue';
 import CreateUserModal from './components/CreateUserModal.vue';
 import UserRolesTree from './components/UserRolesTree.vue';
 import {

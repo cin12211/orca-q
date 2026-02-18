@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { useCopyToClipboard } from '~/core/composables/useCopyToClipboard';
-import { useCodeHighlighter } from '~/core/composables/useSqlHighlighter';
 import type {
   CreateRoleRequest,
   DatabaseInfo,
@@ -196,13 +195,6 @@ const generatedSQL = computed(() => {
   }
 
   return sql;
-});
-
-// SQL Highlighting
-const { highlightSql } = useCodeHighlighter();
-const highlightedSql = computed(() => {
-  if (!generatedSQL.value) return null;
-  return highlightSql(generatedSQL.value);
 });
 
 // Clipboard copy with feedback
@@ -919,16 +911,7 @@ const stepTitles = ['User Info', 'Database', 'Schemas', 'Objects', 'Review'];
             <div
               class="max-h-[140px] w-full overflow-y-auto rounded-md border bg-muted/50"
             >
-              <div
-                v-if="highlightedSql"
-                class="text-xs rounded-md overflow-x-auto [&>pre]:p-3 [&>pre]:rounded-md [&>pre]:whitespace-pre-wrap"
-                v-html="highlightedSql"
-              />
-              <pre
-                v-else
-                class="text-xs font-mono whitespace-pre-wrap break-all p-3"
-                >{{ generatedSQL }}</pre
-              >
+              <CodeHighlightPreview :code="generatedSQL" max-height="140px" />
             </div>
           </div>
         </div>

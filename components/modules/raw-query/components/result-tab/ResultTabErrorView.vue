@@ -2,13 +2,6 @@
 import { computed, nextTick, ref, watch } from 'vue';
 import type { DecorationItem } from 'shiki';
 import { Button } from '~/components/ui/button';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from '~/components/ui/tooltip';
-import { useCopyToClipboard } from '~/core/composables/useCopyToClipboard';
-import { useCodeHighlighter } from '~/core/composables/useSqlHighlighter';
 import type { ExecutedResultItem } from '../../hooks/useRawQueryEditor';
 
 const props = defineProps<{
@@ -19,7 +12,6 @@ const emits = defineEmits<{
   (e: 'onChangeView', view: ExecutedResultItem['view']): void;
 }>();
 
-const { highlighter, currentTheme } = useCodeHighlighter();
 const {
   copiedStates,
   handleCopyWithKey,
@@ -43,10 +35,10 @@ const getErrorPosition = computed(() => {
   return parseInt(errorData.position, 10);
 });
 
-const highlightSqlWithError = computed(() => {
+const errorDecorations = computed(() => {
   const query = props.activeTab.metadata.statementQuery;
-  if (!query || !highlighter.value) {
-    return null;
+  if (!query) {
+    return [];
   }
 
   const errorPosition = getErrorPosition.value;
@@ -80,11 +72,7 @@ const highlightSqlWithError = computed(() => {
     });
   }
 
-  return highlighter.value.codeToHtml(query, {
-    lang: 'plsql',
-    theme: currentTheme.value,
-    decorations,
-  });
+  return decorations;
 });
 
 const scrollToErrorHighlight = async () => {
@@ -106,32 +94,12 @@ const scrollToErrorHighlight = async () => {
 };
 
 watch(
-  () => highlightSqlWithError.value,
+  () => errorDecorations.value,
   () => {
     scrollToErrorHighlight();
   },
   { flush: 'post' }
 );
-
-// Highlight JSON for error details
-const highlightErrorDetails = computed(() => {
-  const data = props.activeTab.metadata.executeErrors?.data;
-  if (!data || !highlighter.value) {
-    return '';
-  }
-
-  const jsonString =
-    typeof data === 'string' ? data : JSON.stringify(data, null, 2);
-
-  return highlighter.value.codeToHtml(jsonString, {
-    lang: 'json',
-    theme: currentTheme.value,
-  });
-});
-
-const handleCopy = (section: 'details' | 'query', text: string) => {
-  handleCopyWithKey(section, text);
-};
 
 const errorDetails = computed(() => {
   const data = props.activeTab.metadata.executeErrors?.data;
@@ -175,68 +143,31 @@ const onAskAiToFix = () => {
       </div>
 
       <!-- View Executed Query Section (moved above Error Details) -->
+      <!-- View Executed Query Section (moved above Error Details) -->
       <div class="pt-2 border-t">
-        <div class="flex items-center justify-between mb-2">
+        <div class="mb-2">
           <span
             class="font-normal text-sm text-muted-foreground flex items-center gap-1"
           >
             View executed query :
           </span>
-
-          <Tooltip>
-            <TooltipTrigger as-child>
-              <Button
-                variant="ghost"
-                size="iconSm"
-                @click="handleCopy('query', executedQuery)"
-              >
-                <Icon
-                  :name="getCopyIcon(copiedStates.query)"
-                  class="size-4"
-                  :class="getCopyIconClass(copiedStates.query)"
-                />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>{{ getCopyTooltip(copiedStates.query, 'Copy query') }}</p>
-            </TooltipContent>
-          </Tooltip>
         </div>
 
-        <div
-          class="text-xs rounded-md mt-2 overflow-x-auto [&>pre]:p-2 [&>pre]:rounded-md [&>pre]:whitespace-pre-wrap error-query-container"
-          v-html="highlightSqlWithError"
-        />
+        <div class="error-query-container">
+          <CodeHighlightPreview
+            :code="executedQuery"
+            :decorations="errorDecorations"
+            show-copy-button
+          />
+        </div>
       </div>
 
-      <!-- Error Details Section (moved below View Executed Query) -->
       <div v-if="activeTab.metadata.executeErrors?.data" class="pt-2 border-t">
         <div class="flex items-center justify-between mb-2">
           <div class="text-sm text-muted-foreground">Error Details:</div>
-          <Tooltip>
-            <TooltipTrigger as-child>
-              <Button
-                variant="ghost"
-                size="iconSm"
-                @click="handleCopy('details', errorDetails)"
-              >
-                <Icon
-                  :name="getCopyIcon(copiedStates.details)"
-                  class="size-4"
-                  :class="getCopyIconClass(copiedStates.details)"
-                />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>{{ getCopyTooltip(copiedStates.details, 'Copy details') }}</p>
-            </TooltipContent>
-          </Tooltip>
         </div>
 
-        <div
-          class="text-xs rounded-md mt-2 overflow-x-auto [&>pre]:p-2 [&>pre]:rounded-md [&>pre]:whitespace-pre-wrap"
-          v-html="highlightErrorDetails"
-        />
+        <CodeHighlightPreview :code="errorDetails" language="json" />
       </div>
     </div>
   </div>

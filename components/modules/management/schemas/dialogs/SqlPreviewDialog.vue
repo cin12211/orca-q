@@ -10,14 +10,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import LoadingOverlay from '~/components/base/LoadingOverlay.vue';
-import { Button } from '~/components/ui/button';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from '~/components/ui/tooltip';
 import { useCopyToClipboard } from '~/core/composables/useCopyToClipboard';
-import { useCodeHighlighter } from '~/core/composables/useSqlHighlighter';
 
 const props = defineProps<{
   open: boolean;
@@ -30,18 +23,8 @@ const emit = defineEmits<{
   (e: 'update:open', value: boolean): void;
 }>();
 
-const { highlightSql } = useCodeHighlighter();
-const { copied, handleCopy, getCopyIcon, getCopyIconClass, getCopyTooltip } =
+const { copied, handleCopy, getCopyIcon, getCopyTooltip } =
   useCopyToClipboard();
-
-// Highlight SQL with Shiki
-const highlightedSql = computed(() => {
-  if (!props.sql) {
-    return null;
-  }
-
-  return highlightSql(props.sql);
-});
 
 const onCopy = () => handleCopy(props.sql);
 
@@ -65,39 +48,7 @@ const onClose = () => {
         </AlertDialogDescription>
       </AlertDialogHeader>
 
-      <div class="relative">
-        <div class="absolute top-2 right-2 z-10">
-          <Tooltip>
-            <TooltipTrigger as-child>
-              <Button variant="ghost" size="iconSm" @click="onCopy">
-                <Icon
-                  :name="getCopyIcon(copied)"
-                  class="size-4"
-                  :class="getCopyIconClass(copied)"
-                />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>{{ getCopyTooltip(copied, 'Copy SQL') }}</p>
-            </TooltipContent>
-          </Tooltip>
-        </div>
-
-        <div
-          class="max-h-96 w-full overflow-y-auto rounded-md border bg-muted/50"
-        >
-          <div
-            v-if="highlightedSql"
-            class="text-xs rounded-md overflow-x-auto [&>pre]:p-3 [&>pre]:rounded-md [&>pre]:whitespace-pre-wrap"
-            v-html="highlightedSql"
-          />
-          <pre
-            v-else
-            class="text-xs font-mono whitespace-pre-wrap break-all p-3"
-            >{{ sql }}</pre
-          >
-        </div>
-      </div>
+      <CodeHighlightPreview :code="sql" show-copy-button max-height="24rem" />
 
       <AlertDialogFooter>
         <AlertDialogCancel class="border font-normal" @click="onClose">

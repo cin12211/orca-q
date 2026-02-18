@@ -4,7 +4,7 @@ import {
   generateRenameViewSQL,
   generateRefreshMaterializedViewSQL,
   generateViewSelectSQL,
-} from '~/components/modules/management-schemas/utils/generateViewSQL';
+} from '~/components/modules/management/schemas/utils/generateViewSQL';
 import { TabViewType } from '~/core/stores/useTabViewsStore';
 import { ViewSchemaEnum } from '~/core/types';
 import type { ViewDefinitionResponse } from '~/server/api/get-view-definition';

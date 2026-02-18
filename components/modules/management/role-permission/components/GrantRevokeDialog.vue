@@ -53,7 +53,6 @@ const initialPrivileges = ref<PrivilegeType[]>([]);
 /* =======================
  * Composables
  ======================= */
-const { highlightSql } = useCodeHighlighter();
 const { copied, handleCopy, getCopyIcon, getCopyIconClass, getCopyTooltip } =
   useCopyToClipboard();
 
@@ -137,8 +136,6 @@ const rawSql = computed(() => {
 
   return sql.length ? sql.join('\n\n') : '-- No permission changes';
 });
-
-const highlightedSql = computed(() => highlightSql(rawSql.value));
 
 /* =======================
  * Actions
@@ -232,31 +229,13 @@ const dialogTitle = computed(() =>
           </div>
         </div>
 
-        <!-- SQL Preview -->
         <div class="grid gap-2">
           <Label>SQL Preview</Label>
-          <div class="relative">
-            <div class="absolute top-2 right-2">
-              <Button variant="ghost" size="iconSm" @click="onCopy">
-                <Icon
-                  :name="getCopyIcon(copied)"
-                  class="size-4"
-                  :class="getCopyIconClass(copied)"
-                />
-              </Button>
-            </div>
-
-            <div class="max-h-96 overflow-y-auto rounded-md border bg-muted/50">
-              <div
-                v-if="highlightedSql"
-                class="text-xs [&>pre]:p-3 [&>pre]:whitespace-pre-wrap"
-                v-html="highlightedSql"
-              />
-              <pre v-else class="text-xs p-3 whitespace-pre-wrap"
-                >{{ rawSql }}
-              </pre>
-            </div>
-          </div>
+          <CodeHighlightPreview
+            :code="rawSql"
+            show-copy-button
+            max-height="24rem"
+          />
         </div>
       </div>
 

@@ -3,7 +3,7 @@ import { toast } from 'vue-sonner';
 import {
   generateDropTableSQL,
   generateRenameTableSQL,
-} from '~/components/modules/management-schemas/utils/generateTableSQL';
+} from '~/components/modules/management/schemas/utils/generateTableSQL';
 import { generateTableAlias } from '~/components/modules/raw-query/utils/getMappedSchemaSuggestion';
 import { useStreamingDownload } from '~/core/composables/useStreamingDownload';
 import { TabViewType } from '~/core/stores/useTabViewsStore';

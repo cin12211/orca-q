@@ -7,6 +7,7 @@ import {
   createHighlighterCore,
   createJavaScriptRegexEngine,
   type HighlighterCore,
+  type DecorationItem,
 } from 'shiki';
 
 // Light theme for light mode, dark theme for dark mode
@@ -35,11 +36,8 @@ const LANGUAGE_MAP: Record<SupportedLanguage, string> = {
  * // Highlight SQL
  * const sqlHtml = highlight('SELECT * FROM users', 'sql');
  *
- * // Highlight JSON
- * const jsonHtml = highlight('{"key": "value"}', 'json');
- *
- * // Highlight JavaScript
- * const jsHtml = highlight('const x = 1;', 'javascript');
+ * // Highlight with decorations
+ * const html = highlight('SELECT *', 'sql', { decorations: [...] });
  * ```
  */
 export function useCodeHighlighter() {
@@ -73,11 +71,13 @@ export function useCodeHighlighter() {
    * Highlight code and return HTML string
    * @param code - Code to highlight
    * @param language - Language for syntax highlighting
+   * @param options - Additional options including decorations
    * @returns Highlighted HTML string
    */
   const highlight = (
     code: string,
-    language: SupportedLanguage = 'sql'
+    language: SupportedLanguage = 'sql',
+    options?: { decorations?: DecorationItem[] }
   ): string => {
     if (!highlighter.value || !code) {
       return `<pre><code>${escapeHtml(code)}</code></pre>`;
@@ -88,6 +88,7 @@ export function useCodeHighlighter() {
     return highlighter.value.codeToHtml(code, {
       lang,
       theme: currentTheme.value,
+      decorations: options?.decorations,
     });
   };
 

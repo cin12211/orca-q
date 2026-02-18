@@ -1,6 +1,6 @@
 import type { Ref } from 'vue';
 import type { FileNode } from '~/components/base/tree-folder/types';
-import { getFormatParameters } from '~/components/modules/management-schemas/utils';
+import { getFormatParameters } from '~/components/modules/management/schemas/utils';
 import { TabViewType } from '~/core/stores/useTabViewsStore';
 import { FunctionSchemaEnum, ViewSchemaEnum } from '~/core/types';
 import { SchemaFolderType } from '../constants';

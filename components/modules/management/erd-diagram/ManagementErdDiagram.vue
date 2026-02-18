@@ -5,10 +5,10 @@ import type { FileNode } from '~/components/base/tree-folder/types';
 import { DEFAULT_DEBOUNCE_INPUT } from '~/core/constants';
 import { useAppContext } from '~/core/contexts/useAppContext';
 import { TabViewType } from '~/core/stores/useTabViewsStore';
-import { buildTableNodeId } from '../erd-diagram/utils';
-import { ERDFolderType } from '../management-schemas/constants';
-import ConnectionSelector from '../selectors/ConnectionSelector.vue';
-import SchemaSelector from '../selectors/SchemaSelector.vue';
+import { buildTableNodeId } from '../../erd-diagram/utils';
+import ConnectionSelector from '../../selectors/ConnectionSelector.vue';
+import SchemaSelector from '../../selectors/SchemaSelector.vue';
+import { ERDFolderType } from '../schemas/constants';
 
 const { schemaStore, connectToConnection, wsStateStore, tabViewStore } =
   useAppContext();

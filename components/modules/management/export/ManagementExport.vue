@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useAppContext } from '~/core/contexts/useAppContext';
 import { TabViewType } from '~/core/stores/useTabViewsStore';
-import ConnectionSelector from '../selectors/ConnectionSelector.vue';
+import ConnectionSelector from '../../selectors/ConnectionSelector.vue';
 
 const { wsStateStore, connectionStore, tabViewStore } = useAppContext();
 const { connectionId, workspaceId } = toRefs(wsStateStore);

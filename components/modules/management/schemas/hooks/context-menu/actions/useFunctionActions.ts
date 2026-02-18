@@ -4,7 +4,7 @@ import {
   generateFunctionSelectSQL,
   generateDropFunctionSQL,
   generateRenameFunctionSQL,
-} from '~/components/modules/management-schemas/utils/generateFunctionSQL';
+} from '~/components/modules/management/schemas/utils/generateFunctionSQL';
 import { TabViewType } from '~/core/stores/useTabViewsStore';
 import type { FunctionSignature } from '~/server/api/get-function-signature';
 import type { ContextMenuState, SchemaContextMenuOptions } from '../types';

@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import {
-  ModulesManagementErdDiagram,
-  ModulesManagementExplorer,
-  ModulesManagementSchemas,
-  ModulesManagementUsersAndPermission,
-  ModulesManagementExport,
+  ManagementErdDiagram,
+  ManagementExplorer,
+  ManagementSchemas,
+  ManagementExport,
+  ManagementUsersAndPermission,
 } from '#components';
 import { useAppLayoutStore } from '~/core/stores/appLayoutStore';
 import {
@@ -22,19 +22,19 @@ watch(
   () => activityStore.activityActive,
   () => {
     if (activityStore.activityActive === ActivityBarItemType.Explorer) {
-      current.value = ModulesManagementExplorer;
+      current.value = ManagementExplorer;
     }
     if (activityStore.activityActive === ActivityBarItemType.Schemas) {
-      current.value = ModulesManagementSchemas;
+      current.value = ManagementSchemas;
     }
     if (activityStore.activityActive === ActivityBarItemType.ErdDiagram) {
-      current.value = ModulesManagementErdDiagram;
+      current.value = ManagementErdDiagram;
     }
     if (activityStore.activityActive === ActivityBarItemType.UsersRoles) {
-      current.value = ModulesManagementUsersAndPermission;
+      current.value = ManagementUsersAndPermission;
     }
     if (activityStore.activityActive === ActivityBarItemType.DatabaseExport) {
-      current.value = ModulesManagementExport;
+      current.value = ManagementExport;
     }
   },
   {

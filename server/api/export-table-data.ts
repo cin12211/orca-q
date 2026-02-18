@@ -8,7 +8,7 @@ import {
 import { Readable } from 'node:stream';
 import { to } from 'pg-copy-streams';
 import QueryStream from 'pg-query-stream';
-import { ExportDataFormatType } from '~/components/modules/management-schemas/hooks/context-menu/types';
+import { ExportDataFormatType } from '~/components/modules/management/schemas/hooks/context-menu/types';
 import { getPgPool } from '../utils/db-row-connection';
 
 interface ExportTableDataRequest {

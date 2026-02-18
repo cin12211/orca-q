@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import ManagementExplorerHeader from '~/components/modules/management-explorer/components/ManagementExplorerHeader.vue';
-import ManagementExplorerTree from '~/components/modules/management-explorer/components/ManagementExplorerTree.vue';
-import { useManagementExplorerTree } from '~/components/modules/management-explorer/hooks/useManagementExplorerTree';
+import ManagementExplorerHeader from '~/components/modules/management/explorer/components/ManagementExplorerHeader.vue';
+import ManagementExplorerTree from '~/components/modules/management/explorer/components/ManagementExplorerTree.vue';
+import { useManagementExplorerTree } from '~/components/modules/management/explorer/hooks/useManagementExplorerTree';
 import { useAppContext } from '~/core/contexts/useAppContext';
 import { TabViewType } from '~/core/stores/useTabViewsStore';
 
