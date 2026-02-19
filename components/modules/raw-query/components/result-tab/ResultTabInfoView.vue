@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { computed } from 'vue';
-import { useCodeHighlighter } from '~/core/composables/useSqlHighlighter';
 import { formatBytes } from '~/core/helpers';
 import { formatNumber, formatQueryTime } from '~/core/helpers/format';
 import type { ExecutedResultItem } from '../../hooks/useRawQueryEditor';
@@ -8,8 +7,6 @@ import type { ExecutedResultItem } from '../../hooks/useRawQueryEditor';
 const props = defineProps<{
   activeTab: ExecutedResultItem;
 }>();
-
-const { highlightSql } = useCodeHighlighter();
 
 const textEncoder =
   typeof TextEncoder !== 'undefined' ? new TextEncoder() : null;
@@ -102,10 +99,7 @@ const resultSize = computed(() => {
 
     <div class="pt-3 border-t">
       <div class="text-sm text-muted-foreground mb-2">Query:</div>
-      <div
-        class="text-xs rounded-md overflow-x-auto [&>pre]:p-2 [&>pre]:rounded-md [&>pre]:whitespace-pre-wrap"
-        v-html="highlightSql(activeTab.metadata.statementQuery)"
-      />
+      <CodeHighlightPreview :code="activeTab.metadata.statementQuery || ''" />
     </div>
 
     <div v-if="activeTab.metadata.fieldDefs?.length" class="pt-3 border-t">

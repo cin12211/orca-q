@@ -90,9 +90,10 @@ export default defineNuxtConfig({
     dirs: ['core/composables'],
   },
   components: [
-    { path: '~/components/base', pathPrefix: false },
+    { path: '~/components', pathPrefix: false },
+    // { path: '~/components/modules', pathPrefix: false },
 
-    '~/components',
+    // '~/components',
   ],
   piniaPluginPersistedstate: {
     storage: 'localStorage',

@@ -14,8 +14,8 @@ import {
 } from '@/components/ui/card';
 import { useAppContext } from '~/core/contexts/useAppContext';
 import { type Connection, type Workspace } from '~/core/stores';
-import CreateConnectionModal from '../management-connection/CreateConnectionModal.vue';
-import { getDatabaseSupportByType } from '../management-connection/constants';
+import CreateConnectionModal from '../connection/CreateConnectionModal.vue';
+import { getDatabaseSupportByType } from '../connection/constants';
 import CreateWorkspaceModal from './CreateWorkspaceModal.vue';
 import DeleteWorkspaceModal from './DeleteWorkspaceModal.vue';
 

@@ -8,17 +8,20 @@ import {
   OperatorSet,
 } from '~/core/constants';
 import { TabViewType } from '~/core/stores';
+import { useAppLayoutStore } from '~/core/stores/appLayoutStore';
 import { useManagementConnectionStore } from '~/core/stores/managementConnectionStore';
+import { EDatabaseType } from '../../connection/constants';
 import WrapperErdDiagram from '../../erd-diagram/WrapperErdDiagram.vue';
 import { buildTableNodeId } from '../../erd-diagram/utils';
-import { EDatabaseType } from '../../management-connection/constants';
 import QuickQueryErrorPopup from '../QuickQueryErrorPopup.vue';
+import SafeModeConfirmDialog from '../SafeModeConfirmDialog.vue';
 import { QuickQueryTabView } from '../constants';
 import {
   useQuickQuery,
   useQuickQueryMutation,
   useQuickQueryTableInfo,
   useReferencedTables,
+  useSafeModeDialog,
 } from '../hooks';
 import QuickQueryControlBar from '../quick-query-control-bar/QuickQueryControlBar.vue';
 import QuickQueryFilter from '../quick-query-filter/QuickQueryFilter.vue';
@@ -61,7 +64,18 @@ const emit = defineEmits<{
 const { quickQueryFilterRef, quickQueryTableRef, selectedRows, focusedCell } =
   useQuickQuery();
 
+const appLayoutStore = useAppLayoutStore();
 const connectionStore = useManagementConnectionStore();
+
+// Safe mode confirmation dialog state
+const {
+  onRequestSafeModeConfirm,
+  onSafeModeCancel,
+  onSafeModeConfirm,
+  safeModeDialogOpen,
+  safeModeDialogSql,
+  safeModeDialogType,
+} = useSafeModeDialog();
 
 const connectionString = computed(() => {
   const connection = connectionStore.connections.find(
@@ -161,6 +175,8 @@ const {
   refreshCount,
   focusedCell,
   connectionString,
+  safeModeEnabled: toRef(appLayoutStore, 'quickQuerySafeModeEnabled'),
+  onRequestSafeModeConfirm,
 });
 
 const quickQueryTabView = ref<QuickQueryTabView>(QuickQueryTabView.Data);
@@ -247,6 +263,14 @@ useHotkeys(
   <QuickQueryErrorPopup
     v-model:open="openErrorModal"
     :message="errorMessage || ''"
+  />
+
+  <SafeModeConfirmDialog
+    v-model:open="safeModeDialogOpen"
+    :sql="safeModeDialogSql"
+    :type="safeModeDialogType"
+    @confirm="onSafeModeConfirm"
+    @cancel="onSafeModeCancel"
   />
 
   <div

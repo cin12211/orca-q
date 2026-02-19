@@ -6,9 +6,9 @@ import { DEFAULT_QUERY_SIZE, OperatorSet } from '~/core/constants';
 import { uuidv4 } from '~/core/helpers';
 import { useAppLayoutStore } from '~/core/stores/appLayoutStore';
 import { useManagementConnectionStore } from '~/core/stores/managementConnectionStore';
+import { EDatabaseType } from '../connection/constants';
 import WrapperErdDiagram from '../erd-diagram/WrapperErdDiagram.vue';
 import { buildTableNodeId } from '../erd-diagram/utils';
-import { EDatabaseType } from '../management-connection/constants';
 import QuickQueryErrorPopup from './QuickQueryErrorPopup.vue';
 import SafeModeConfirmDialog from './SafeModeConfirmDialog.vue';
 import { QuickQueryTabView } from './constants';
@@ -17,6 +17,7 @@ import {
   useQuickQueryMutation,
   useQuickQueryTableInfo,
   useReferencedTables,
+  useSafeModeDialog,
 } from './hooks';
 import PreviewSelectedRow from './preview/PreviewSelectedRow.vue';
 import PreviewRelationTable, {
@@ -54,37 +55,14 @@ const schemaName = computed(() => props.schemaName);
 const previewRelationBreadcrumbs = ref<PreviewRelationBreadcrumb[]>([]);
 const containerRef = ref<InstanceType<typeof HTMLElement>>();
 
-// Safe mode confirmation dialog state
-const safeModeDialogOpen = ref(false);
-const safeModeDialogSql = ref('');
-const safeModeDialogType = ref<'save' | 'delete'>('save');
-let safeModeResolve: ((confirmed: boolean) => void) | null = null;
-
-const onRequestSafeModeConfirm = (
-  sql: string,
-  type: 'save' | 'delete'
-): Promise<boolean> => {
-  return new Promise(resolve => {
-    safeModeDialogSql.value = sql;
-    safeModeDialogType.value = type;
-    safeModeDialogOpen.value = true;
-    safeModeResolve = resolve;
-  });
-};
-
-const onSafeModeConfirm = () => {
-  if (safeModeResolve) {
-    safeModeResolve(true);
-    safeModeResolve = null;
-  }
-};
-
-const onSafeModeCancel = () => {
-  if (safeModeResolve) {
-    safeModeResolve(false);
-    safeModeResolve = null;
-  }
-};
+const {
+  onRequestSafeModeConfirm,
+  onSafeModeCancel,
+  onSafeModeConfirm,
+  safeModeDialogOpen,
+  safeModeDialogSql,
+  safeModeDialogType,
+} = useSafeModeDialog();
 
 const { quickQueryFilterRef, quickQueryTableRef, selectedRows, focusedCell } =
   useQuickQuery();

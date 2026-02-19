@@ -4,8 +4,8 @@ import type { AcceptableValue } from 'reka-ui';
 import { cn } from '@/lib/utils';
 import { useAppContext } from '~/core/contexts/useAppContext';
 import { type Connection } from '~/core/stores';
-import CreateConnectionModal from '../management-connection/CreateConnectionModal.vue';
-import { getDatabaseSupportByType } from '../management-connection/constants';
+import CreateConnectionModal from '../connection/CreateConnectionModal.vue';
+import { getDatabaseSupportByType } from '../connection/constants';
 
 const {
   connectionStore,

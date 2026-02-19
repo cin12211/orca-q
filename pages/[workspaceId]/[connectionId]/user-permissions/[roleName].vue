@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { LoadingOverlay } from '#components';
-import DatabasePermissionCard from '~/components/modules/management-users/components/DatabasePermissionCard.vue';
-import GrantRevokeDialog from '~/components/modules/management-users/components/GrantRevokeDialog.vue';
-import RoleAttributesCard from '~/components/modules/management-users/components/RoleAttributesCard.vue';
-import { useDatabasePermissions } from '~/components/modules/management-users/hooks/useDatabaseRoles';
+import DatabasePermissionCard from '~/components/modules/management/role-permission/components/DatabasePermissionCard.vue';
+import GrantRevokeDialog from '~/components/modules/management/role-permission/components/GrantRevokeDialog.vue';
+import RoleAttributesCard from '~/components/modules/management/role-permission/components/RoleAttributesCard.vue';
+import { useDatabasePermissions } from '~/components/modules/management/role-permission/hooks/useDatabaseRoles';
 import { useAppContext } from '~/core/contexts/useAppContext';
 import type {
   RolePermissions,
