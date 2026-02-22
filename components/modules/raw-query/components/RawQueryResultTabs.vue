@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { defineAsyncComponent } from 'vue';
 import {
   ContextMenu,
   ContextMenuContent,
@@ -9,25 +8,12 @@ import {
 import { cn } from '@/lib/utils';
 import type { RowData } from '~/components/base/dynamic-table/utils';
 import type { ExecutedResultItem, MappedRawColumn } from '../interfaces';
-
-const ResultTabResultView = defineAsyncComponent(
-  () => import('./result-tab/ResultTabResultView.vue')
-);
-const ResultTabExplainView = defineAsyncComponent(
-  () => import('./result-tab/explain/ResultTabExplainView.vue')
-);
-const ResultTabRawView = defineAsyncComponent(
-  () => import('./result-tab/ResultTabRawView.vue')
-);
-const ResultTabInfoView = defineAsyncComponent(
-  () => import('./result-tab/ResultTabInfoView.vue')
-);
-const ResultTabErrorView = defineAsyncComponent(
-  () => import('./result-tab/ResultTabErrorView.vue')
-);
-const ResultTabAgentView = defineAsyncComponent(
-  () => import('./result-tab/ResultTabAgentView.vue')
-);
+import ResultTabAgentView from './result-tab/ResultTabAgentView.vue';
+import ResultTabErrorView from './result-tab/ResultTabErrorView.vue';
+import ResultTabInfoView from './result-tab/ResultTabInfoView.vue';
+import ResultTabRawView from './result-tab/ResultTabRawView.vue';
+import ResultTabResultView from './result-tab/ResultTabResultView.vue';
+import ResultTabExplainView from './result-tab/explain/ResultTabExplainView.vue';
 
 const props = defineProps<{
   executedResults: Map<string, ExecutedResultItem>;

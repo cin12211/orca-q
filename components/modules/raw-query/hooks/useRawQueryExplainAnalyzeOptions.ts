@@ -10,8 +10,8 @@ export function useRawQueryExplainAnalyzeOptions() {
   >({
     BUFFERS: true,
     COSTS: true,
-    GENERIC_PLAN: true,
-    MEMORY: true,
+    GENERIC_PLAN: false,
+    MEMORY: false,
     SETTINGS: true,
     SUMMARY: true,
     TIMING: true,
@@ -19,7 +19,7 @@ export function useRawQueryExplainAnalyzeOptions() {
     WAL: true,
   });
 
-  const serializeMode = ref<ExplainAnalyzeSerializeMode>('TEXT');
+  const serializeMode = ref<ExplainAnalyzeSerializeMode>('NONE');
 
   const toggleExplainOption = (option: ExplainAnalyzeToggleOptionKey) => {
     explainAnalyzeOptions.value[option] = !explainAnalyzeOptions.value[option];
