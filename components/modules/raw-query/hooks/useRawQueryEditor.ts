@@ -1,5 +1,5 @@
 import { acceptCompletion, startCompletion } from '@codemirror/autocomplete';
-import { sql, PostgreSQL, SQLDialect } from '@codemirror/lang-sql';
+import { sql, PostgreSQL } from '@codemirror/lang-sql';
 import { Compartment } from '@codemirror/state';
 import { EditorView, keymap } from '@codemirror/view';
 import merge from 'lodash-es/merge';
@@ -8,43 +8,23 @@ import type BaseCodeEditor from '~/components/base/code-editor/BaseCodeEditor.vu
 import {
   currentStatementLineGutterExtension,
   currentStatementLineHighlightExtension,
-  handleFormatCode,
   shortCutExecuteCurrentStatement,
-  shortCutFormatOnSave,
   sqlAutoCompletion,
   type SyntaxTreeNodeData,
 } from '~/components/base/code-editor/extensions';
 import {
   getCurrentStatement,
+  getTreeNodes,
   pgKeywordCompletion,
 } from '~/components/base/code-editor/utils';
 import type { RowData } from '~/components/base/dynamic-table/utils';
 import { uuidv4 } from '~/core/helpers';
 import { convertParameters, type ParsedParametersResult } from '~/core/helpers';
-import { useSchemaStore, type Connection, type Schema } from '~/core/stores';
-import type { EditorCursor } from '../interfaces';
-import { formatStatementSql } from '../utils';
+import { useSchemaStore, type Connection } from '~/core/stores';
+import type { EditorCursor, ExecutedResultItem } from '../interfaces';
+import { formatStatementSql, rawQueryEditorFormat } from '../utils';
 import { mappedSchemaSuggestion } from '../utils/getMappedSchemaSuggestion';
-
-export interface ExecutedResultItem {
-  id: string;
-  metadata: {
-    queryTime: number;
-    statementQuery: string;
-    executedAt: Date;
-    executeErrors:
-      | {
-          message: string;
-          data: Record<string, unknown>;
-        }
-      | undefined;
-    fieldDefs?: FieldDef[];
-    connection?: Connection | undefined;
-  };
-  result: RowData[];
-  seqIndex: number;
-  view: 'result' | 'error' | 'info' | 'raw' | 'agent';
-}
+import { useRawQueryExplainAnalyzeOptions } from './useRawQueryExplainAnalyzeOptions';
 
 export function useRawQueryEditor({
   fileVariables,
@@ -80,10 +60,6 @@ export function useRawQueryEditor({
   // Track active result tab - new executions will be set as active
   const activeResultTabId = ref<string | null>(null);
 
-  const editorView = computed<EditorView | null>(
-    () => codeEditorRef.value?.editorView as EditorView
-  );
-
   const queryProcessState = reactive<{
     isHaveOneExecute: boolean;
     executeLoading: boolean;
@@ -104,6 +80,13 @@ export function useRawQueryEditor({
   });
 
   const cursorInfo = ref<EditorCursor>({ line: 1, column: 1 });
+  const {
+    explainAnalyzeOptionItems,
+    serializeMode,
+    toggleExplainOption,
+    setSerializeMode,
+    buildExplainAnalyzePrefix,
+  } = useRawQueryExplainAnalyzeOptions();
 
   const defaultSchemaName = computed(
     () => activeSchema.value?.name || 'public'
@@ -131,14 +114,24 @@ export function useRawQueryEditor({
   // });
 
   const sqlCompartment = new Compartment();
+  const { onHandleFormatCurrentStatement, onHandleFormatCode } =
+    rawQueryEditorFormat({
+      getEditorView: () => codeEditorRef.value?.editorView as EditorView | null,
+    });
 
   const executeCurrentStatement = async ({
     currentStatements,
     treeNodes,
+    queryPrefix,
   }: {
     currentStatements: SyntaxTreeNodeData[];
     treeNodes: SyntaxTreeNodeData[];
+    queryPrefix?: string;
   }) => {
+    if (!currentStatements.length) {
+      return;
+    }
+
     // TODO: support multiple statements
     const currentStatement = currentStatements[0];
 
@@ -212,6 +205,10 @@ export function useRawQueryEditor({
 
     executeQuery = fillQueryWithParameters;
 
+    if (queryPrefix) {
+      executeQuery = `${queryPrefix} ${fillQueryWithParameters}`;
+    }
+
     //TODO: parse AST to get columns
     //      import { parse, type Statement } from 'pgsql-ast-parser';
     //     const ast: Statement[] = parse(rawNodeText);
@@ -235,7 +232,7 @@ export function useRawQueryEditor({
         connection: undefined,
       },
       result: [],
-      view: 'result',
+      view: queryPrefix?.startsWith('EXPLAIN') ? 'explain' : 'result',
       seqIndex: seqIndex.value,
     };
 
@@ -303,7 +300,11 @@ export function useRawQueryEditor({
       return;
     }
 
-    const { currentStatements, treeNodes } = getCurrentStatement(
+    const { currentStatements } = getCurrentStatement(
+      codeEditorRef.value?.editorView as EditorView
+    );
+
+    const treeNodes = getTreeNodes(
       codeEditorRef.value?.editorView as EditorView
     );
 
@@ -313,13 +314,54 @@ export function useRawQueryEditor({
     });
   };
 
+  const onExplainAnalyzeCurrent = () => {
+    if (!codeEditorRef.value?.editorView) {
+      return;
+    }
+
+    const { currentStatements } = getCurrentStatement(
+      codeEditorRef.value?.editorView as EditorView
+    );
+
+    const treeNodes = getTreeNodes(
+      codeEditorRef.value?.editorView as EditorView
+    );
+
+    executeCurrentStatement({
+      currentStatements,
+      treeNodes,
+      queryPrefix: buildExplainAnalyzePrefix(),
+    });
+  };
+
   const extensions = [
     shortCutExecuteCurrentStatement(executeCurrentStatement),
-    shortCutFormatOnSave((fileContent: string) => {
-      return formatStatementSql(fileContent);
-    }),
 
     keymap.of([
+      {
+        key: 'Mod-s',
+        run: () => {
+          onHandleFormatCurrentStatement();
+          return true;
+        },
+        preventDefault: true,
+      },
+      {
+        key: 'Shift-Alt-f',
+        run: () => {
+          onHandleFormatCode();
+          return true;
+        },
+        preventDefault: true,
+      },
+      {
+        key: 'Mod-e',
+        run: () => {
+          onExplainAnalyzeCurrent();
+          return true;
+        },
+        preventDefault: true,
+      },
       { key: 'Mod-i', run: startCompletion },
       { key: 'Tab', run: acceptCompletion },
     ]),
@@ -447,17 +489,6 @@ export function useRawQueryEditor({
     }
   };
 
-  const onHandleFormatCode = () => {
-    if (!codeEditorRef.value?.editorView) {
-      return;
-    }
-
-    handleFormatCode(
-      codeEditorRef.value?.editorView as EditorView,
-      formatStatementSql
-    );
-  };
-
   watch(
     () => activeSchema.value?.name,
     () => {
@@ -480,6 +511,12 @@ export function useRawQueryEditor({
     sqlCompartment,
     cursorInfo,
     onHandleFormatCode,
+    onHandleFormatCurrentStatement,
+    onExplainAnalyzeCurrent,
+    explainAnalyzeOptionItems,
+    serializeMode,
+    toggleExplainOption,
+    setSerializeMode,
     reloadSqlCompartment,
 
     // Results tab management

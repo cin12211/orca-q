@@ -2,7 +2,7 @@
 import { computed } from 'vue';
 import { formatBytes } from '~/core/helpers';
 import { formatNumber, formatQueryTime } from '~/core/helpers/format';
-import type { ExecutedResultItem } from '../../hooks/useRawQueryEditor';
+import type { ExecutedResultItem } from '../../interfaces';
 
 const props = defineProps<{
   activeTab: ExecutedResultItem;

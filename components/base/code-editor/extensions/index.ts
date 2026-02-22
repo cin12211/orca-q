@@ -10,3 +10,4 @@ export * from './sqlLinter';
 export * from './cursorSmooth';
 export * from './minimapFactory';
 export * from './fontSizeTheme';
+export * from './shortCutExplainCurrentStatement';

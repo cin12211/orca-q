@@ -19,3 +19,11 @@ export function formatQueryTime(ms: number) {
 export function formatNumber(value: number) {
   return new Intl.NumberFormat('en-US').format(value);
 }
+
+export function formatDuration(ms?: number) {
+  if (ms === undefined) return '-';
+  if (ms < 0.001) return '<0.001ms';
+  if (ms < 1) return `${(ms * 1000).toFixed(2)}µs`;
+  if (ms >= 1000) return `${(ms / 1000).toFixed(2)}s`;
+  return `${ms.toFixed(2)}ms`;
+}

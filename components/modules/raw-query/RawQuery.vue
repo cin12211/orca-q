@@ -35,6 +35,10 @@ const {
   codeEditorRef,
   onExecuteCurrent,
   onHandleFormatCode,
+  onHandleFormatCurrentStatement,
+  onExplainAnalyzeCurrent,
+  explainAnalyzeOptionItems,
+  serializeMode,
   currentRawQueryResult,
   queryProcessState,
   // Results tab management
@@ -152,7 +156,13 @@ onActivated(async () => {
             :is-have-one-execute="queryProcessState.isHaveOneExecute"
             :queryTime="queryProcessState.queryTime"
             :raw-query-results-length="currentRawQueryResult.length"
-            @onFormatCode="onHandleFormatCode"
+            :explain-analyze-option-items="explainAnalyzeOptionItems"
+            :serialize-mode="serializeMode"
+            @on-format-current-statement="onHandleFormatCurrentStatement"
+            @on-format-all="onHandleFormatCode"
+            @on-explain-analyze-current="onExplainAnalyzeCurrent"
+            @toggle-explain-option="rawQueryEditor.toggleExplainOption"
+            @update:serialize-mode="rawQueryEditor.setSerializeMode"
             @on-execute-current="onExecuteCurrent"
           />
         </div>

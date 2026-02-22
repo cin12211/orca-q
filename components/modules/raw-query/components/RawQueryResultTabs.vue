@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { defineAsyncComponent } from 'vue';
 import {
   ContextMenu,
   ContextMenuContent,
@@ -7,15 +8,26 @@ import {
 } from '#components';
 import { cn } from '@/lib/utils';
 import type { RowData } from '~/components/base/dynamic-table/utils';
-import type { ExecutedResultItem } from '../hooks/useRawQueryEditor';
-import type { MappedRawColumn } from '../interfaces';
-import {
-  ResultTabAgentView,
-  ResultTabErrorView,
-  ResultTabInfoView,
-  ResultTabRawView,
-  ResultTabResultView,
-} from './result-tab';
+import type { ExecutedResultItem, MappedRawColumn } from '../interfaces';
+
+const ResultTabResultView = defineAsyncComponent(
+  () => import('./result-tab/ResultTabResultView.vue')
+);
+const ResultTabExplainView = defineAsyncComponent(
+  () => import('./result-tab/explain/ResultTabExplainView.vue')
+);
+const ResultTabRawView = defineAsyncComponent(
+  () => import('./result-tab/ResultTabRawView.vue')
+);
+const ResultTabInfoView = defineAsyncComponent(
+  () => import('./result-tab/ResultTabInfoView.vue')
+);
+const ResultTabErrorView = defineAsyncComponent(
+  () => import('./result-tab/ResultTabErrorView.vue')
+);
+const ResultTabAgentView = defineAsyncComponent(
+  () => import('./result-tab/ResultTabAgentView.vue')
+);
 
 const props = defineProps<{
   executedResults: Map<string, ExecutedResultItem>;
@@ -46,10 +58,11 @@ const isHaveRightItem = computed(() => {
 });
 
 // View modes for the vertical tabs
-type ViewMode = 'result' | 'raw' | 'info' | 'error' | 'agent';
+type ViewMode = 'result' | 'raw' | 'info' | 'error' | 'agent' | 'explain';
 
 const viewModes: { value: ViewMode; label: string }[] = [
   { value: 'result', label: 'Result' },
+  { value: 'explain', label: 'Explain' },
   { value: 'raw', label: 'Raw' },
   { value: 'info', label: 'Info' },
   { value: 'error', label: 'Errors' },
@@ -135,7 +148,10 @@ const hasErrors = (tab: ExecutedResultItem) => {
             // Error tab styling
             mode.value === 'error' && hasErrors(activeTab)
               ? 'hover:bg-muted cursor-pointer'
-              : '',
+              : mode.value === 'explain' &&
+                  !activeTab.metadata.statementQuery.startsWith('EXPLAIN')
+                ? null
+                : '',
             mode.value === 'error' && !hasErrors(activeTab)
               ? 'opacity-40 cursor-not-allowed'
               : '',
@@ -144,11 +160,17 @@ const hasErrors = (tab: ExecutedResultItem) => {
               hasErrors(activeTab)
               ? 'opacity-40 cursor-not-allowed'
               : '',
+            mode.value === 'explain' &&
+              !activeTab.metadata.statementQuery.startsWith('EXPLAIN')
+              ? 'opacity-40 cursor-not-allowed'
+              : '',
             // Normal hover state for enabled tabs
             !(
               (mode.value === 'error' && !hasErrors(activeTab)) ||
               ((mode.value === 'result' || mode.value === 'raw') &&
-                hasErrors(activeTab))
+                hasErrors(activeTab)) ||
+              (mode.value === 'explain' &&
+                !activeTab.metadata.statementQuery.startsWith('EXPLAIN'))
             )
               ? 'hover:bg-muted cursor-pointer'
               : ''
@@ -199,7 +221,7 @@ const hasErrors = (tab: ExecutedResultItem) => {
                 </div>
               </TooltipTrigger>
 
-              <TooltipContent>
+              <TooltipContent class="max-w-xl">
                 <p>{{ tab.metadata.statementQuery }}</p>
               </TooltipContent>
             </Tooltip>
@@ -257,6 +279,11 @@ const hasErrors = (tab: ExecutedResultItem) => {
           :active-tab-columns="activeTabColumns"
           :formatted-data="formattedData"
           :key="activeTab.id"
+        />
+
+        <ResultTabExplainView
+          v-else-if="activeTab && currentView === 'explain'"
+          :active-tab="activeTab"
         />
 
         <!-- Raw View (JSON) -->

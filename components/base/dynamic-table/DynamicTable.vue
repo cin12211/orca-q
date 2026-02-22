@@ -34,14 +34,25 @@ import {
 
 // TODO: refactor this component to reuse in query table
 /* props ------------------------------------------------------------- */
-const props = defineProps<{
-  columns: MappedRawColumn[];
-  data: RowData[];
-  class?: HTMLAttributes['class'];
-  skipReColumnSize?: boolean;
-  columnKeyBy: 'index' | 'field';
-  selectedRows?: RowData[];
-}>();
+const props = withDefaults(
+  defineProps<{
+    columns: MappedRawColumn[];
+    data: RowData[];
+    class?: HTMLAttributes['class'];
+    skipReColumnSize?: boolean;
+    columnKeyBy: 'index' | 'field';
+    selectedRows?: RowData[];
+    hasHashIndex?: boolean;
+    getCellClass?: (field: string, row: RowData) => string | undefined;
+    overrideColumnDefs?: ColDef[];
+    overrideRowData?: RowData[];
+    externalGridOptions?: GridOptions;
+    externalComponents?: Record<string, unknown>;
+  }>(),
+  {
+    hasHashIndex: true,
+  }
+);
 
 const emit = defineEmits<{
   (e: 'onSelectedRows', value: unknown[]): void;
@@ -61,14 +72,18 @@ onClickOutside(agGridRef, () => {
   // gridApi.value?.deselectAll();
 });
 
-const rowData = computed<unknown[]>(() =>
-  (props.data ?? []).map((e, index) => {
+const rowData = computed<unknown[]>(() => {
+  if (props.overrideRowData) {
+    return props.overrideRowData;
+  }
+
+  return (props.data ?? []).map((e, index) => {
     return {
       [HASH_INDEX_ID]: index + 1,
       ...e,
     };
-  })
-);
+  });
+});
 
 const { handleCellMouseOverDebounced, handleCellMouseDown } =
   useRangeSelectionTable({
@@ -77,22 +92,29 @@ const { handleCellMouseOverDebounced, handleCellMouseDown } =
   });
 
 const columnDefs = computed<ColDef[]>(() => {
+  if (props.overrideColumnDefs) {
+    return props.overrideColumnDefs;
+  }
+
   if (!props.columns?.length) {
     return [];
   }
 
   const colDefs: ColDef[] = [];
-  colDefs.push({
-    colId: HASH_INDEX_ID,
-    headerName: HASH_INDEX_HEADER,
-    field: HASH_INDEX_ID,
-    filter: false,
-    resizable: false,
-    editable: false,
-    sortable: true,
-    pinned: 'left',
-    width: DEFAULT_HASH_INDEX_WIDTH,
-  });
+
+  if (props.hasHashIndex) {
+    colDefs.push({
+      colId: HASH_INDEX_ID,
+      headerName: HASH_INDEX_HEADER,
+      field: HASH_INDEX_ID,
+      filter: false,
+      resizable: false,
+      editable: false,
+      sortable: true,
+      pinned: 'left',
+      width: DEFAULT_HASH_INDEX_WIDTH,
+    });
+  }
 
   const tempRows = (props.data || []).slice(0, 10);
 
@@ -139,12 +161,20 @@ const columnDefs = computed<ColDef[]>(() => {
         editable: true,
         // editable: canMutate,//TODO: fix for editable inline
         sortable: true,
-        cellClass: 'cellCenter',
         type: 'editableColumn',
         headerComponentParams: {
           innerHeaderComponent: DynamicPrimaryKeyHeader,
           isPrimaryKey: isPrimaryKey,
           isForeignKey: isForeignKey,
+        },
+        cellClass: params => {
+          const field = String(params.colDef.field || '');
+          const customClass = props.getCellClass?.(
+            field,
+            params.data as RowData
+          );
+
+          return customClass ? `cellCenter ${customClass}` : 'cellCenter';
         },
 
         cellEditorSelector: (params: ICellEditorParams) => {
@@ -229,7 +259,7 @@ const columnDefs = computed<ColDef[]>(() => {
 });
 
 const gridOptions = computed(() => {
-  const options: GridOptions = {
+  const baseOptions: GridOptions = {
     rowClass: 'class-row-border-none',
     rowBuffer: DEFAULT_BUFFER_ROWS,
     getRowStyle: params => {
@@ -256,7 +286,18 @@ const gridOptions = computed(() => {
       AgJsonCellEditor,
     },
   };
-  return options;
+
+  const externalOptions = props.externalGridOptions || {};
+
+  return {
+    ...baseOptions,
+    ...externalOptions,
+    components: {
+      ...(baseOptions.components || {}),
+      ...(externalOptions.components || {}),
+      ...(props.externalComponents || {}),
+    },
+  };
 });
 
 const columnTypes = ref<{
@@ -362,7 +403,7 @@ useHotkeys(
 );
 
 const onRowDataUpdated = async () => {
-  if (!gridApi.value || props.skipReColumnSize) {
+  if (!gridApi.value || props.skipReColumnSize || props.overrideColumnDefs) {
     return;
   }
 

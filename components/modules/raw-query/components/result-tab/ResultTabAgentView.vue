@@ -3,7 +3,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '#components';
 import ModelSelector from '~/components/modules/selectors/ModelSelector.vue';
 import { useAiChat } from '~/core/composables/useAiChat';
 import { useSettingsModal } from '~/core/contexts/useSettingsModal';
-import type { ExecutedResultItem } from '../../hooks/useRawQueryEditor';
+import type { ExecutedResultItem } from '../../interfaces';
 
 const props = defineProps<{
   activeTab: ExecutedResultItem;

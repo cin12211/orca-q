@@ -3,3 +3,4 @@ export { default as ResultTabRawView } from './ResultTabRawView.vue';
 export { default as ResultTabInfoView } from './ResultTabInfoView.vue';
 export { default as ResultTabErrorView } from './ResultTabErrorView.vue';
 export { default as ResultTabAgentView } from './ResultTabAgentView.vue';
+export { default as ResultTabExplainView } from './explain/ResultTabExplainView.vue';
