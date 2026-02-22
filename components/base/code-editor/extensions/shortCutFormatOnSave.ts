@@ -1,5 +1,5 @@
 import { EditorView, keymap } from '@codemirror/view';
-import { getCurrentStatement, getTreeNodes } from '../utils';
+import { getTreeNodes } from '../utils';
 
 function findNearestNodeIndexes(
   nodes: { from: number; to: number; type: string }[],
@@ -114,7 +114,7 @@ export const shortCutFormatOnSave = (
 ) =>
   keymap.of([
     {
-      key: 'Ctrl-s',
+      key: 'Mod-s',
       mac: 'Cmd-s',
       run: (view: EditorView) => {
         return handleFormatCode(view, updateFormatOnSave);

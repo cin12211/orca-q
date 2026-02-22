@@ -1,7 +1,27 @@
 <script setup lang="ts">
-import { Tooltip, TooltipContent, TooltipTrigger } from '#components';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '#components';
 import { formatNumber, formatQueryTime } from '~/core/helpers/format';
-import type { EditorCursor } from '../interfaces';
+import type {
+  EditorCursor,
+  ExplainAnalyzeOptionItem,
+  ExplainAnalyzeSerializeMode,
+  ExplainAnalyzeToggleOptionKey,
+} from '../interfaces';
+
+const isExplainAnalyzeMenuOpen = ref(false);
 
 defineProps<{
   cursorInfo: EditorCursor;
@@ -11,10 +31,16 @@ defineProps<{
   queryTime: number;
   rawQueryResultsLength: number;
   isRawViewMode?: boolean;
+  explainAnalyzeOptionItems: ExplainAnalyzeOptionItem[];
+  serializeMode: ExplainAnalyzeSerializeMode;
 }>();
 
 defineEmits<{
-  (e: 'onFormatCode'): void;
+  (e: 'onFormatCurrentStatement'): void;
+  (e: 'onFormatAll'): void;
+  (e: 'onExplainAnalyzeCurrent'): void;
+  (e: 'toggleExplainOption', value: ExplainAnalyzeToggleOptionKey): void;
+  (e: 'update:serializeMode', value: ExplainAnalyzeSerializeMode): void;
   (e: 'onExecuteCurrent'): void;
   (e: 'update:isRawViewMode', value: boolean): void;
 }>();
@@ -47,15 +73,138 @@ defineEmits<{
 
     <div class="flex gap-1">
       <Tooltip>
-        <TooltipTrigger as-child>
-          <Button @click="$emit('onFormatCode')" variant="outline" size="xs">
-            <Icon name="hugeicons:magic-wand-01"> </Icon>
-            Format
-            <ContextMenuShortcut>⌘S</ContextMenuShortcut>
-          </Button>
+        <TooltipTrigger>
+          <div class="flex items-center">
+            <Button
+              @click="$emit('onFormatCurrentStatement')"
+              variant="outline"
+              size="xxs"
+              class="rounded-r-none text-xs font-medium"
+            >
+              <Icon name="hugeicons:magic-wand-01"> </Icon>
+              Format
+              <ContextMenuShortcut>⌘S</ContextMenuShortcut>
+            </Button>
+
+            <DropdownMenu>
+              <DropdownMenuTrigger as-child>
+                <Button
+                  variant="outline"
+                  size="iconSm"
+                  class="rounded-l-none border-l-0 px-2"
+                >
+                  <Icon
+                    name="hugeicons:arrow-down-01"
+                    class="size-4! min-w-4"
+                  />
+                </Button>
+              </DropdownMenuTrigger>
+
+              <DropdownMenuContent align="end" class="min-w-44">
+                <DropdownMenuLabel class="py-0"
+                  >Format Options
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+
+                <DropdownMenuItem
+                  @click="$emit('onFormatCurrentStatement')"
+                  class="h-6 cursor-pointer"
+                >
+                  Current Statement
+                  <ContextMenuShortcut>⌘S</ContextMenuShortcut>
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  @click="$emit('onFormatAll')"
+                  class="h-6 cursor-pointer"
+                >
+                  All Statement
+                  <ContextMenuShortcut>⇧⌥F</ContextMenuShortcut>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         </TooltipTrigger>
         <TooltipContent>
-          <p>Format SQL (⌘S)</p>
+          <p>Format current statement (⌘S)</p>
+        </TooltipContent>
+      </Tooltip>
+
+      <Tooltip>
+        <TooltipTrigger>
+          <div class="flex items-center">
+            <Button
+              @click="$emit('onExplainAnalyzeCurrent')"
+              variant="outline"
+              size="xs"
+              class="rounded-r-none text-xs font-medium"
+            >
+              <Icon name="hugeicons:analytics-up"> </Icon>
+              Explain
+              <ContextMenuShortcut>⌘E</ContextMenuShortcut>
+            </Button>
+
+            <DropdownMenu v-model:open="isExplainAnalyzeMenuOpen">
+              <DropdownMenuTrigger as-child>
+                <Button
+                  variant="outline"
+                  size="iconSm"
+                  class="rounded-l-none border-l-0 px-2"
+                >
+                  <Icon
+                    name="hugeicons:arrow-down-01"
+                    class="size-4! min-w-4"
+                  />
+                </Button>
+              </DropdownMenuTrigger>
+
+              <DropdownMenuContent align="end" class="min-w-52">
+                <DropdownMenuLabel class="py-0"
+                  >Explain Analyze Options</DropdownMenuLabel
+                >
+
+                <DropdownMenuSeparator />
+
+                <DropdownMenuCheckboxItem
+                  v-for="item in explainAnalyzeOptionItems"
+                  :key="item.key"
+                  :model-value="item.checked"
+                  @select.prevent
+                  @update:model-value="$emit('toggleExplainOption', item.key)"
+                  class="h-6 cursor-pointer"
+                >
+                  {{ item.label }}
+                </DropdownMenuCheckboxItem>
+
+                <DropdownMenuSeparator />
+
+                <DropdownMenuLabel class="py-0">Serialize</DropdownMenuLabel>
+                <DropdownMenuRadioGroup
+                  :model-value="serializeMode"
+                  @update:model-value="
+                    $emit(
+                      'update:serializeMode',
+                      $event as ExplainAnalyzeSerializeMode
+                    )
+                  "
+                >
+                  <DropdownMenuRadioItem value="NONE" class="h-6 cursor-pointer"
+                    >None</DropdownMenuRadioItem
+                  >
+                  <DropdownMenuRadioItem value="TEXT" class="h-6 cursor-pointer"
+                    >Text</DropdownMenuRadioItem
+                  >
+                  <DropdownMenuRadioItem
+                    value="BINARY"
+                    class="h-6 cursor-pointer"
+                    >Binary</DropdownMenuRadioItem
+                  >
+                </DropdownMenuRadioGroup>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        </TooltipTrigger>
+        <TooltipContent>
+          <p>Run Explain Analyze (⌘E) or open options</p>
         </TooltipContent>
       </Tooltip>
 
@@ -65,6 +214,7 @@ defineEmits<{
             @click="$emit('onExecuteCurrent')"
             variant="outline"
             size="xs"
+            class="text-xs font-medium"
           >
             <Icon name="hugeicons:play"> </Icon>
             Execute current

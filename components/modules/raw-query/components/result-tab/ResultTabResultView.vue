@@ -1,8 +1,7 @@
 <script setup lang="ts">
 import type DynamicTable from '~/components/base/dynamic-table/DynamicTable.vue';
 import type { RowData } from '~/components/base/dynamic-table/utils';
-import type { ExecutedResultItem } from '../../hooks/useRawQueryEditor';
-import type { MappedRawColumn } from '../../interfaces';
+import type { ExecutedResultItem, MappedRawColumn } from '../../interfaces';
 import RawQueryContextMenu from '../RawQueryContextMenu.vue';
 
 const props = defineProps<{
