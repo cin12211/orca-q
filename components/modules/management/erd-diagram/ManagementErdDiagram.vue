@@ -224,12 +224,12 @@ watch(
   <div class="flex flex-col h-full w-full overflow-y-auto">
     <ManagementSidebarHeader
       v-model:search="searchInput"
-      title="Schemas"
+      title="ERD Diagram"
       :show-connection="true"
       :show-schema="true"
       :workspace-id="workspaceId"
       :show-search="true"
-      search-placeholder="Search in all tables or functions"
+      search-placeholder="Search in diagram..."
     >
       <template #actions>
         <Tooltip>
@@ -258,7 +258,7 @@ watch(
               />
             </Button>
           </TooltipTrigger>
-          <TooltipContent> Refresh Schema </TooltipContent>
+          <TooltipContent> Refresh ERD Data </TooltipContent>
         </Tooltip>
       </template>
     </ManagementSidebarHeader>
@@ -275,7 +275,7 @@ watch(
 
     <FileTree
       ref="fileTreeRef"
-      :default-expanded-keys="defaultExpandedKeys"
+      :init-expanded-ids="defaultExpandedKeys"
       :storage-key="`${connectionId}-erd-tree`"
       :initial-data="fileTreeData"
       :allow-drag-and-drop="false"
