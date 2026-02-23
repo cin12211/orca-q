@@ -47,18 +47,26 @@ const collapseAll = () => {
   fileTreeRef.value?.collapseAll();
 };
 
+const expandAll = () => {
+  fileTreeRef.value?.expandAll();
+};
+
 const clearSelection = () => {
   fileTreeRef.value?.clearSelection();
 };
 
 const isMouseInside = computed(() => fileTreeRef.value?.isMouseInside ?? false);
 
+const isExpandedAll = computed(() => fileTreeRef.value?.isExpandedAll || false);
+
 defineExpose({
   startEditing,
   focusItem,
   collapseAll,
+  expandAll,
   clearSelection,
   isMouseInside,
+  isExpandedAll,
 });
 </script>
 

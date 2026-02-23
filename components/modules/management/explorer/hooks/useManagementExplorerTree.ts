@@ -20,6 +20,8 @@ interface UseManagementExplorerTreeOptions {
   startEditingNode: (nodeId: string) => void;
   focusNode: (nodeId: string) => void;
   collapseAll: () => void;
+  expandAll: () => void;
+  isExpandedAll: Ref<boolean>;
 }
 
 const mapTreeToFileNodes = (tree: TreeFileSystem): Record<string, FileNode> => {
@@ -60,6 +62,8 @@ export const useManagementExplorerTree = ({
   startEditingNode,
   focusNode,
   collapseAll,
+  expandAll,
+  isExpandedAll,
 }: UseManagementExplorerTreeOptions) => {
   const route = useRoute('workspaceId-connectionId-explorer-fileId');
 
@@ -298,8 +302,12 @@ export const useManagementExplorerTree = ({
     },
   });
 
-  const onCollapsedExplorer = () => {
-    collapseAll();
+  const onToggleCollapseExplorer = () => {
+    if (isExpandedAll.value) {
+      collapseAll();
+    } else {
+      expandAll();
+    }
   };
 
   const onClickNode = (nodeId: string) => {
@@ -340,7 +348,8 @@ export const useManagementExplorerTree = ({
     onCancelEditNode,
     onClearContextMenu: explorerContextMenu.onClearContextMenu,
     onClickNode,
-    onCollapsedExplorer,
+    isExpandedAll,
+    onToggleCollapseExplorer,
     onMoveNode,
     onRenameFile,
     onTreeContextMenu: explorerContextMenu.onRightClickItem,

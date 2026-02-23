@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import LoadingOverlay from '~/components/base/LoadingOverlay.vue';
 import BaseContextMenu from '~/components/base/context-menu/BaseContextMenu.vue';
 import {
   ContextMenuItemType,
@@ -353,17 +354,28 @@ watch(
   },
   { flush: 'post', immediate: true }
 );
+
+const expandAll = () => {
+  fileTreeRef.value?.expandAll();
+};
+
+const collapseAll = () => {
+  fileTreeRef.value?.collapseAll();
+};
+
+const isExpandedAll = computed(() => fileTreeRef.value?.isExpandedAll ?? false);
+
+defineExpose({
+  expandAll,
+  collapseAll,
+  isExpandedAll,
+});
 </script>
 
 <template>
-  <div class="flex flex-col gap-1 py-1 h-full">
+  <div class="flex flex-col gap-1 py-1 h-full relative">
     <!-- Loading State -->
-    <div v-if="loading" class="flex items-center justify-center py-8">
-      <Icon
-        name="lucide:loader-2"
-        class="size-6 animate-spin text-muted-foreground"
-      />
-    </div>
+    <LoadingOverlay v-if="loading" visible />
 
     <!-- Empty State -->
     <div

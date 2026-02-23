@@ -81,7 +81,7 @@ const generatedSQL = computed(() => {
         >
           <Icon
             v-if="loading"
-            name="lucide:loader-2"
+            name="lucide:loader"
             class="size-4 mr-2 animate-spin"
           />
           Delete Role

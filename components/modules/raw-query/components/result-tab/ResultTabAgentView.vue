@@ -275,7 +275,7 @@ const handleQuickAction = async (text: string) => {
       >
         <div class="bg-muted rounded-lg p-3 text-sm">
           <div class="flex items-center gap-2">
-            <Icon name="lucide:loader-2" class="size-4 animate-spin" />
+            <Icon name="lucide:loader" class="size-4 animate-spin" />
             <span class="text-muted-foreground">Thinking...</span>
           </div>
         </div>
@@ -299,7 +299,7 @@ const handleQuickAction = async (text: string) => {
               :disabled="!messageInput.trim() || isLoading"
             >
               <Icon
-                :name="isLoading ? 'lucide:loader-2' : 'lucide:arrow-up'"
+                :name="isLoading ? 'lucide:loader' : 'lucide:arrow-up'"
                 :class="['size-4', isLoading ? 'animate-spin' : '']"
               />
             </Button>

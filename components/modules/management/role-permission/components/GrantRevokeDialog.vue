@@ -244,7 +244,7 @@ const dialogTitle = computed(() =>
         <Button :disabled="!hasChanges || loading" @click="onConfirm">
           <Icon
             v-if="loading"
-            name="lucide:loader-2"
+            name="lucide:loader"
             class="size-4 mr-2 animate-spin"
           />
           {{ mode === 'grant' ? 'Grant' : 'Update' }}
