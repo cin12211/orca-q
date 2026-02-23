@@ -816,6 +816,16 @@ const collapseAll = () => {
   expandedIds.value = new Set();
 };
 
+const isExpandedAll = computed(() => {
+  const allFolderIds = Object.values(nodes.value)
+    .filter(node => node.type === 'folder')
+    .map(node => node.id);
+
+  if (allFolderIds.length === 0) return false;
+
+  return allFolderIds.every(id => expandedIds.value.has(id));
+});
+
 const focusItem = (nodeId: string) => {
   // Check if node exists
   const node = nodes.value[nodeId];
@@ -880,6 +890,7 @@ defineExpose({
   clearSelection,
   startEditing,
   isMouseInside,
+  isExpandedAll,
 });
 </script>
 

@@ -20,7 +20,7 @@ const {
   onCancelEditNode,
   onClearContextMenu,
   onClickNode,
-  isTreeCollapsed,
+  isExpandedAll,
   onToggleCollapseExplorer,
   onMoveNode,
   onRenameFile,
@@ -30,9 +30,10 @@ const {
   validateRename,
 } = useManagementExplorerTree({
   startEditingNode: nodeId => treePanelRef.value?.startEditing(nodeId),
-  focusNode: nodeId => treePanelRef.value?.focusItem(nodeId),
+  focusNode: (nodeId: string) => treePanelRef.value?.focusItem(nodeId),
   collapseAll: () => treePanelRef.value?.collapseAll(),
   expandAll: () => treePanelRef.value?.expandAll(),
+  isExpandedAll: computed(() => treePanelRef.value?.isExpandedAll ?? false),
 });
 
 watch(
@@ -103,7 +104,7 @@ watch(
             </Button>
           </TooltipTrigger>
           <TooltipContent>
-            {{ isTreeCollapsed ? 'Expand All' : 'Collapse All' }}
+            {{ isExpandedAll ? 'Collapse All' : 'Expand All' }}
           </TooltipContent>
         </Tooltip>
       </template>

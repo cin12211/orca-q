@@ -105,15 +105,15 @@ const onRefreshSchema = async () => {
   isRefreshing.value = false;
 };
 
-const isTreeCollapsed = ref(false);
+const isTreeCollapsed = computed(() => {
+  return fileTreeRef.value ? !fileTreeRef.value.isExpandedAll : true;
+});
 
 const onToggleCollapse = () => {
   if (isTreeCollapsed.value) {
     fileTreeRef.value?.expandAll();
-    isTreeCollapsed.value = false;
   } else {
     fileTreeRef.value?.collapseAll();
-    isTreeCollapsed.value = true;
   }
 };
 

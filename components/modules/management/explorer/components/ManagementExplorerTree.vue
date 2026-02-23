@@ -57,6 +57,8 @@ const clearSelection = () => {
 
 const isMouseInside = computed(() => fileTreeRef.value?.isMouseInside ?? false);
 
+const isExpandedAll = computed(() => fileTreeRef.value?.isExpandedAll || false);
+
 defineExpose({
   startEditing,
   focusItem,
@@ -64,6 +66,7 @@ defineExpose({
   expandAll,
   clearSelection,
   isMouseInside,
+  isExpandedAll,
 });
 </script>
 
