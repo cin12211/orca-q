@@ -26,7 +26,7 @@ const emit = defineEmits<{
             >
               <Icon
                 v-if="isSaving"
-                name="lucide:loader-2"
+                name="lucide:loader"
                 class="size-4 animate-spin"
               />
               <Icon v-else name="lucide:save" class="size-4" />

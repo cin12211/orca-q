@@ -98,7 +98,11 @@ watch(
               @click="onToggleCollapseExplorer"
             >
               <Icon
-                name="hugeicons:plus-minus"
+                :name="
+                  isExpandedAll
+                    ? 'hugeicons:unfold-less'
+                    : 'hugeicons:unfold-more'
+                "
                 class="size-4! min-w-4 text-muted-foreground"
               />
             </Button>

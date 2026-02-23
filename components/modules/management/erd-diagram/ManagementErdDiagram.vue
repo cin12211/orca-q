@@ -236,7 +236,11 @@ watch(
           <TooltipTrigger as-child>
             <Button size="iconSm" variant="ghost" @click="onToggleCollapse">
               <Icon
-                name="hugeicons:plus-minus"
+                :name="
+                  isTreeCollapsed
+                    ? 'hugeicons:unfold-more'
+                    : 'hugeicons:unfold-less'
+                "
                 class="size-4! min-w-4 text-muted-foreground"
               />
             </Button>

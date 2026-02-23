@@ -396,7 +396,7 @@ const formatFileSize = (bytes: number) => {
               @click="onImport"
             >
               <Icon
-                :name="isImporting ? 'lucide:loader-2' : 'lucide:upload'"
+                :name="isImporting ? 'lucide:loader' : 'lucide:upload'"
                 :class="['size-4 mr-2', isImporting && 'animate-spin']"
               />
               {{ isImporting ? 'Importing...' : 'Import Database' }}

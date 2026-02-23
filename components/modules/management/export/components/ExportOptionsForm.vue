@@ -201,7 +201,7 @@ const onSubmit = () => {
     <Button class="w-full" :disabled="loading" @click="onSubmit">
       <Icon
         v-if="loading"
-        name="lucide:loader-2"
+        name="lucide:loader"
         class="size-4 mr-2 animate-spin"
       />
       <Icon v-else name="lucide:download" class="size-4 mr-2" />
