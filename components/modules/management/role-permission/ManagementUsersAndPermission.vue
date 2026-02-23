@@ -9,7 +9,6 @@ import type {
   ObjectGrant,
   PrivilegeType,
 } from '~/core/types';
-import ConnectionSelector from '../../selectors/ConnectionSelector.vue';
 import { ManagementSidebarHeader } from '../shared';
 import CreateUserModal from './components/CreateUserModal.vue';
 import UserRolesTree from './components/UserRolesTree.vue';
@@ -250,24 +249,6 @@ const onDeleteUser = async (role: DatabaseRole) => {
       <template #actions>
         <Tooltip>
           <TooltipTrigger as-child>
-            <Button size="iconSm" variant="ghost" @click="onToggleCollapse">
-              <Icon
-                :name="
-                  isTreeCollapsed
-                    ? 'hugeicons:unfold-more'
-                    : 'hugeicons:unfold-less'
-                "
-                class="size-4! min-w-4 text-muted-foreground"
-              />
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent>
-            {{ isTreeCollapsed ? 'Expand All' : 'Collapse All' }}
-          </TooltipContent>
-        </Tooltip>
-
-        <Tooltip>
-          <TooltipTrigger as-child>
             <span>
               <Button
                 size="iconSm"
@@ -275,14 +256,29 @@ const onDeleteUser = async (role: DatabaseRole) => {
                 @click="onOpenCreateModal"
                 :disabled="!canCreateUser"
               >
-                <Icon
-                  name="hugeicons:user-add-01"
-                  class="size-4! min-w-4 text-muted-foreground"
-                />
+                <Icon name="hugeicons:user-add-01" class="size-4! min-w-4" />
               </Button>
             </span>
           </TooltipTrigger>
           <TooltipContent>{{ createUserDisabledReason }}</TooltipContent>
+        </Tooltip>
+
+        <Tooltip>
+          <TooltipTrigger as-child>
+            <Button size="iconSm" variant="ghost" @click="onToggleCollapse">
+              <Icon
+                :name="
+                  isTreeCollapsed
+                    ? 'hugeicons:unfold-more'
+                    : 'hugeicons:unfold-less'
+                "
+                class="size-4! min-w-4"
+              />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>
+            {{ isTreeCollapsed ? 'Expand All' : 'Collapse All' }}
+          </TooltipContent>
         </Tooltip>
 
         <Tooltip>
@@ -295,10 +291,7 @@ const onDeleteUser = async (role: DatabaseRole) => {
             >
               <Icon
                 name="hugeicons:redo"
-                :class="[
-                  'size-4! min-w-4 text-muted-foreground',
-                  isRefreshing && 'animate-spin',
-                ]"
+                :class="['size-4! min-w-4 ', isRefreshing && 'animate-spin']"
               />
             </Button>
           </TooltipTrigger>

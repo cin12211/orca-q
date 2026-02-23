@@ -226,7 +226,7 @@ watch(
                     ? 'hugeicons:unfold-more'
                     : 'hugeicons:unfold-less'
                 "
-                class="size-4! min-w-4 text-muted-foreground"
+                class="size-4! min-w-4"
               />
             </Button>
           </TooltipTrigger>
@@ -240,10 +240,7 @@ watch(
             <Button size="iconSm" variant="ghost" @click="onRefreshSchema">
               <Icon
                 name="hugeicons:redo"
-                :class="[
-                  'size-4! min-w-4 text-muted-foreground',
-                  isRefreshing && 'animate-spin',
-                ]"
+                :class="['size-4! min-w-4', isRefreshing && 'animate-spin']"
               />
             </Button>
           </TooltipTrigger>

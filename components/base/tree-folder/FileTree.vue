@@ -804,12 +804,22 @@ watch(
   { deep: true }
 );
 
+const allFolderIds = computed(() => {
+  const result: string[] = [];
+
+  for (const key in nodes.value) {
+    const node = nodes.value[key];
+    if (node.type === 'folder') {
+      result.push(node.id);
+    }
+  }
+
+  return result;
+});
+
 // Public methods
 const expandAll = () => {
-  const allFolderIds = Object.values(nodes.value)
-    .filter(node => node.type === 'folder')
-    .map(node => node.id);
-  expandedIds.value = new Set(allFolderIds);
+  expandedIds.value = new Set(allFolderIds.value);
 };
 
 const collapseAll = () => {
@@ -817,13 +827,14 @@ const collapseAll = () => {
 };
 
 const isExpandedAll = computed(() => {
-  const allFolderIds = Object.values(nodes.value)
-    .filter(node => node.type === 'folder')
-    .map(node => node.id);
+  const folders = allFolderIds.value;
+  if (folders.length === 0) return false;
 
-  if (allFolderIds.length === 0) return false;
+  for (const id of folders) {
+    if (!expandedIds.value.has(id)) return false;
+  }
 
-  return allFolderIds.every(id => expandedIds.value.has(id));
+  return true;
 });
 
 const focusItem = (nodeId: string) => {

@@ -69,10 +69,7 @@ watch(
         <Tooltip>
           <TooltipTrigger as-child>
             <Button size="iconSm" variant="ghost" @click="onAddFile">
-              <Icon
-                name="hugeicons:file-add"
-                class="size-4! min-w-4 text-muted-foreground"
-              />
+              <Icon name="hugeicons:file-add" class="size-4! min-w-4" />
             </Button>
           </TooltipTrigger>
           <TooltipContent> New File </TooltipContent>
@@ -81,10 +78,7 @@ watch(
         <Tooltip>
           <TooltipTrigger as-child>
             <Button size="iconSm" variant="ghost" @click="onAddFolder">
-              <Icon
-                name="hugeicons:folder-add"
-                class="size-4! min-w-4 text-muted-foreground"
-              />
+              <Icon name="hugeicons:folder-add" class="size-4! min-w-4" />
             </Button>
           </TooltipTrigger>
           <TooltipContent> New Folder </TooltipContent>
@@ -103,7 +97,7 @@ watch(
                     ? 'hugeicons:unfold-less'
                     : 'hugeicons:unfold-more'
                 "
-                class="size-4! min-w-4 text-muted-foreground"
+                class="size-4! min-w-4"
               />
             </Button>
           </TooltipTrigger>

@@ -32,23 +32,15 @@ const onClearSearch = () => {
     <!-- Connection & Schema Selectors -->
     <div
       v-if="showConnection || showSchema"
-      class="relative w-full items-center px-2 pt-1 space-y-1"
+      class="relative w-full items-center px-2 pt-1.5 space-y-1"
     >
       <div v-if="showConnection">
-        <p
-          class="text-sm font-medium text-muted-foreground leading-none block pb-1"
-        >
-          Connections
-        </p>
+        <p class="text-sm leading-none block pb-1">Connections</p>
         <ConnectionSelector class="w-full!" :workspaceId="workspaceId!" />
       </div>
 
       <div v-if="showSchema">
-        <p
-          class="text-sm font-medium text-muted-foreground leading-none block pb-1"
-        >
-          Schemas
-        </p>
+        <p class="text-sm leading-none block pb-1">Schemas</p>
         <SchemaSelector class="w-full!" />
       </div>
     </div>
@@ -57,10 +49,10 @@ const onClearSearch = () => {
     <div
       :class="[
         'px-2 flex items-center justify-between',
-        showConnection || showSchema ? 'pt-2' : 'pt-1',
+        showConnection || showSchema ? 'pt-2' : 'pt-0.5',
       ]"
     >
-      <p class="text-sm font-medium text-muted-foreground leading-none">
+      <p class="text-sm leading-none">
         {{ title }}
       </p>
 
