@@ -10,6 +10,7 @@ import type {
   PrivilegeType,
 } from '~/core/types';
 import ConnectionSelector from '../../selectors/ConnectionSelector.vue';
+import { ManagementSidebarHeader } from '../shared';
 import CreateUserModal from './components/CreateUserModal.vue';
 import UserRolesTree from './components/UserRolesTree.vue';
 import {
@@ -222,25 +223,15 @@ const onDeleteUser = async (role: DatabaseRole) => {
 
 <template>
   <div class="flex flex-col h-full w-full overflow-hidden">
-    <!-- Connection Selector -->
-    <div class="relative w-full items-center px-2 pt-1 space-y-1 shrink-0">
-      <div>
-        <p
-          class="text-sm font-medium text-muted-foreground leading-none block pb-1"
-        >
-          Connections
-        </p>
-        <ConnectionSelector class="w-full!" :workspaceId="workspaceId" />
-      </div>
-    </div>
-
-    <!-- Header with Actions -->
-    <div class="px-2 pt-1 flex items-center justify-between shrink-0">
-      <p class="text-sm font-medium text-muted-foreground leading-none">
-        Users & Roles
-      </p>
-
-      <div class="flex items-center gap-1">
+    <ManagementSidebarHeader
+      v-model:search="searchInput"
+      title="Users & Roles"
+      :show-connection="true"
+      :workspace-id="workspaceId"
+      :show-search="true"
+      search-placeholder="Search users/roles..."
+    >
+      <template #actions>
         <Tooltip>
           <TooltipTrigger as-child>
             <span>
@@ -251,7 +242,7 @@ const onDeleteUser = async (role: DatabaseRole) => {
                 :disabled="!canCreateUser"
               >
                 <Icon
-                  name="lucide:user-plus"
+                  name="hugeicons:user-add-01"
                   class="size-4! min-w-4 text-muted-foreground"
                 />
               </Button>
@@ -279,28 +270,8 @@ const onDeleteUser = async (role: DatabaseRole) => {
           </TooltipTrigger>
           <TooltipContent>Refresh Roles</TooltipContent>
         </Tooltip>
-      </div>
-    </div>
-
-    <!-- Search -->
-    <div class="px-2 pb-1 shrink-0">
-      <div class="relative w-full">
-        <Input
-          type="text"
-          placeholder="Search users/roles..."
-          class="pr-6 w-full h-8"
-          v-model="searchInput"
-        />
-
-        <div
-          v-if="searchInput"
-          class="absolute right-2 top-1.5 w-4 cursor-pointer hover:bg-accent"
-          @click="searchInput = ''"
-        >
-          <Icon name="lucide:x" class="stroke-3! text-muted-foreground" />
-        </div>
-      </div>
-    </div>
+      </template>
+    </ManagementSidebarHeader>
 
     <!-- No Connection State -->
     <div

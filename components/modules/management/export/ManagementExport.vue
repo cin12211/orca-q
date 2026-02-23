@@ -2,6 +2,7 @@
 import { useAppContext } from '~/core/contexts/useAppContext';
 import { TabViewType } from '~/core/stores/useTabViewsStore';
 import ConnectionSelector from '../../selectors/ConnectionSelector.vue';
+import { ManagementSidebarHeader } from '../shared';
 
 const { wsStateStore, connectionStore, tabViewStore } = useAppContext();
 const { connectionId, workspaceId } = toRefs(wsStateStore);
@@ -50,24 +51,11 @@ const openDatabaseTools = async (type: 'export' | 'import') => {
 
 <template>
   <div class="flex flex-col h-full w-full overflow-hidden">
-    <!-- Connection Selector -->
-    <div class="relative w-full items-center px-2 pt-1 space-y-1 shrink-0">
-      <div>
-        <p
-          class="text-sm font-medium text-muted-foreground leading-none block pb-1"
-        >
-          Connections
-        </p>
-        <ConnectionSelector class="w-full!" :workspaceId="workspaceId" />
-      </div>
-    </div>
-
-    <!-- Header -->
-    <div class="px-3 pt-3 pb-2 shrink-0">
-      <p class="text-sm font-medium text-muted-foreground leading-none">
-        Database Tools
-      </p>
-    </div>
+    <ManagementSidebarHeader
+      title="Database Tools"
+      :show-connection="true"
+      :workspace-id="workspaceId"
+    />
 
     <!-- No Connection State -->
     <div

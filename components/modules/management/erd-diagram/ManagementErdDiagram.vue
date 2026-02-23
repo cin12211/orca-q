@@ -6,9 +6,8 @@ import { DEFAULT_DEBOUNCE_INPUT } from '~/core/constants';
 import { useAppContext } from '~/core/contexts/useAppContext';
 import { TabViewType } from '~/core/stores/useTabViewsStore';
 import { buildTableNodeId } from '../../erd-diagram/utils';
-import ConnectionSelector from '../../selectors/ConnectionSelector.vue';
-import SchemaSelector from '../../selectors/SchemaSelector.vue';
 import { ERDFolderType } from '../schemas/constants';
+import { ManagementSidebarHeader } from '../shared';
 
 const { schemaStore, connectToConnection, wsStateStore, tabViewStore } =
   useAppContext();
@@ -215,37 +214,21 @@ watch(
 
 <template>
   <div class="flex flex-col h-full w-full overflow-y-auto">
-    <div class="relative w-full items-center px-2 pt-1 space-y-1">
-      <div>
-        <p
-          class="text-sm font-medium text-muted-foreground leading-none block pb-1"
-        >
-          Connections
-        </p>
-        <ConnectionSelector class="w-full!" :workspaceId="workspaceId" />
-      </div>
-
-      <div>
-        <p
-          class="text-sm font-medium text-muted-foreground leading-none block pb-1"
-        >
-          Schemas
-        </p>
-        <SchemaSelector class="w-full!" />
-      </div>
-    </div>
-
-    <div class="px-2 pt-2 flex items-center justify-between">
-      <p class="text-sm font-medium text-muted-foreground leading-none">
-        Schemas
-      </p>
-
-      <div class="flex items-center">
+    <ManagementSidebarHeader
+      v-model:search="searchInput"
+      title="Schemas"
+      :show-connection="true"
+      :show-schema="true"
+      :workspace-id="workspaceId"
+      :show-search="true"
+      search-placeholder="Search in all tables or functions"
+    >
+      <template #actions>
         <Tooltip>
           <TooltipTrigger as-child>
             <Button size="iconSm" variant="ghost" @click="onCollapseAll">
               <Icon
-                name="lucide:copy-minus"
+                name="hugeicons:plus-minus"
                 class="size-4! min-w-4 text-muted-foreground"
               />
             </Button>
@@ -267,27 +250,8 @@ watch(
           </TooltipTrigger>
           <TooltipContent> Refresh Schema </TooltipContent>
         </Tooltip>
-      </div>
-    </div>
-
-    <div class="px-2 pb-1">
-      <div class="relative w-full">
-        <Input
-          type="text"
-          placeholder="Search in all tables or functions"
-          class="pr-6 w-full h-8"
-          v-model="searchInput"
-        />
-
-        <div
-          v-if="searchInput"
-          class="absolute right-2 top-1.5 w-4 cursor-pointer hover:bg-accent"
-          @click="searchInput = ''"
-        >
-          <Icon name="lucide:x" class="stroke-3! text-muted-foreground" />
-        </div>
-      </div>
-    </div>
+      </template>
+    </ManagementSidebarHeader>
 
     <!-- TODO: check flow when change connection  -->
     <!-- TODO: check flow when change schema  -->
