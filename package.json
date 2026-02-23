@@ -45,6 +45,7 @@
     "@codemirror/lint": "^6.8.5",
     "@codemirror/state": "^6.5.2",
     "@codemirror/view": "^6.36.5",
+    "@marimo-team/codemirror-sql": "^0.2.4",
     "@nuxt/icon": "1.11.0",
     "@nuxt/image": "1.10.0",
     "@pinia/nuxt": "^0.10.1",
