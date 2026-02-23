@@ -353,6 +353,22 @@ watch(
   },
   { flush: 'post', immediate: true }
 );
+
+const expandAll = () => {
+  fileTreeRef.value?.expandAll();
+};
+
+const collapseAll = () => {
+  fileTreeRef.value?.collapseAll();
+};
+
+const isExpandedAll = computed(() => fileTreeRef.value?.isExpandedAll ?? false);
+
+defineExpose({
+  expandAll,
+  collapseAll,
+  isExpandedAll,
+});
 </script>
 
 <template>

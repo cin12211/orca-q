@@ -150,6 +150,22 @@ const onRefreshRoles = async () => {
   isRefreshing.value = false;
 };
 
+const userRolesTreeRef = useTemplateRef<typeof UserRolesTree | null>(
+  'userRolesTreeRef'
+);
+
+const isTreeCollapsed = computed(() => {
+  return userRolesTreeRef.value ? !userRolesTreeRef.value.isExpandedAll : true;
+});
+
+const onToggleCollapse = () => {
+  if (isTreeCollapsed.value) {
+    userRolesTreeRef.value?.expandAll();
+  } else {
+    userRolesTreeRef.value?.collapseAll();
+  }
+};
+
 const onClearError = () => {
   createError.value = null;
 };
@@ -234,6 +250,20 @@ const onDeleteUser = async (role: DatabaseRole) => {
       <template #actions>
         <Tooltip>
           <TooltipTrigger as-child>
+            <Button size="iconSm" variant="ghost" @click="onToggleCollapse">
+              <Icon
+                name="hugeicons:plus-minus"
+                class="size-4! min-w-4 text-muted-foreground"
+              />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>
+            {{ isTreeCollapsed ? 'Expand All' : 'Collapse All' }}
+          </TooltipContent>
+        </Tooltip>
+
+        <Tooltip>
+          <TooltipTrigger as-child>
             <span>
               <Button
                 size="iconSm"
@@ -287,6 +317,7 @@ const onDeleteUser = async (role: DatabaseRole) => {
       <!-- Roles Tree -->
       <div class="flex-1 overflow-y-auto min-h-0">
         <UserRolesTree
+          ref="userRolesTreeRef"
           :roles="filteredRoles"
           :loading="isLoadingRoles"
           :onCreateUser="onOpenCreateModal"
