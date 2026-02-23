@@ -47,6 +47,10 @@ const collapseAll = () => {
   fileTreeRef.value?.collapseAll();
 };
 
+const expandAll = () => {
+  fileTreeRef.value?.expandAll();
+};
+
 const clearSelection = () => {
   fileTreeRef.value?.clearSelection();
 };
@@ -57,6 +61,7 @@ defineExpose({
   startEditing,
   focusItem,
   collapseAll,
+  expandAll,
   clearSelection,
   isMouseInside,
 });

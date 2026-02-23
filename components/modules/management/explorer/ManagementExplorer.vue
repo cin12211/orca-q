@@ -20,7 +20,8 @@ const {
   onCancelEditNode,
   onClearContextMenu,
   onClickNode,
-  onCollapsedExplorer,
+  isTreeCollapsed,
+  onToggleCollapseExplorer,
   onMoveNode,
   onRenameFile,
   onSelectNode,
@@ -31,6 +32,7 @@ const {
   startEditingNode: nodeId => treePanelRef.value?.startEditing(nodeId),
   focusNode: nodeId => treePanelRef.value?.focusItem(nodeId),
   collapseAll: () => treePanelRef.value?.collapseAll(),
+  expandAll: () => treePanelRef.value?.expandAll(),
 });
 
 watch(
@@ -89,14 +91,20 @@ watch(
 
         <Tooltip>
           <TooltipTrigger as-child>
-            <Button size="iconSm" variant="ghost" @click="onCollapsedExplorer">
+            <Button
+              size="iconSm"
+              variant="ghost"
+              @click="onToggleCollapseExplorer"
+            >
               <Icon
                 name="hugeicons:plus-minus"
                 class="size-4! min-w-4 text-muted-foreground"
               />
             </Button>
           </TooltipTrigger>
-          <TooltipContent> Collapse All </TooltipContent>
+          <TooltipContent>
+            {{ isTreeCollapsed ? 'Expand All' : 'Collapse All' }}
+          </TooltipContent>
         </Tooltip>
       </template>
     </ManagementSidebarHeader>

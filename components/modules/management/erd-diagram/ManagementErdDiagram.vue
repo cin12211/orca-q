@@ -105,8 +105,16 @@ const onRefreshSchema = async () => {
   isRefreshing.value = false;
 };
 
-const onCollapseAll = () => {
-  fileTreeRef.value?.collapseAll();
+const isTreeCollapsed = ref(false);
+
+const onToggleCollapse = () => {
+  if (isTreeCollapsed.value) {
+    fileTreeRef.value?.expandAll();
+    isTreeCollapsed.value = false;
+  } else {
+    fileTreeRef.value?.collapseAll();
+    isTreeCollapsed.value = true;
+  }
 };
 
 // Navigation functions
@@ -226,14 +234,16 @@ watch(
       <template #actions>
         <Tooltip>
           <TooltipTrigger as-child>
-            <Button size="iconSm" variant="ghost" @click="onCollapseAll">
+            <Button size="iconSm" variant="ghost" @click="onToggleCollapse">
               <Icon
                 name="hugeicons:plus-minus"
                 class="size-4! min-w-4 text-muted-foreground"
               />
             </Button>
           </TooltipTrigger>
-          <TooltipContent> Collapse All </TooltipContent>
+          <TooltipContent>
+            {{ isTreeCollapsed ? 'Expand All' : 'Collapse All' }}
+          </TooltipContent>
         </Tooltip>
 
         <Tooltip>

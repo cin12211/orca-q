@@ -64,13 +64,13 @@ const onClearSearch = () => {
         {{ title }}
       </p>
 
-      <div v-if="$slots.actions" class="flex items-center gap-1">
+      <div v-if="$slots.actions" class="flex items-center">
         <slot name="actions" />
       </div>
     </div>
 
     <!-- Search -->
-    <div v-if="showSearch" class="px-2 pb-1 pt-2">
+    <div v-if="showSearch" class="px-2 pb-1">
       <div class="relative w-full">
         <Input
           type="text"
