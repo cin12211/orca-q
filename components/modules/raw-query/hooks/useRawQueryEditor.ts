@@ -1,11 +1,12 @@
 import { acceptCompletion, startCompletion } from '@codemirror/autocomplete';
-import { PostgreSQL, sql } from '@codemirror/lang-sql';
+import { PostgreSQL, SQLDialect, sql } from '@codemirror/lang-sql';
 import { Compartment } from '@codemirror/state';
 import { EditorView, keymap } from '@codemirror/view';
 import { sqlExtension } from '@marimo-team/codemirror-sql';
 import merge from 'lodash-es/merge';
 import type { FieldDef } from 'pg';
 import type BaseCodeEditor from '~/components/base/code-editor/BaseCodeEditor.vue';
+import { SQLDialectSupport } from '~/components/base/code-editor/constants';
 import {
   currentStatementLineGutterExtension,
   currentStatementLineHighlightExtension,
@@ -387,13 +388,7 @@ export function useRawQueryEditor({
 
     sqlCompartment.of(
       sql({
-        //TODO: bug if use PostgreSQL -> can higlight function name
-        // and if use -> parse incorrect for function
-        // dialect: SQLDialect.define({
-        //   ...PostgreSQL.spec,
-        //   doubleDollarQuotedStrings: false,
-        // }),
-        dialect: PostgreSQL,
+        dialect: SQLDialectSupport['PostgreSQL'],
         upperCaseKeywords: true,
         keywordCompletion: pgKeywordCompletion,
         // Use enhanced schema with proper SQLNamespace structure
@@ -447,11 +442,7 @@ export function useRawQueryEditor({
       effects: [
         sqlCompartment.reconfigure(
           sql({
-            // dialect: SQLDialect.define({
-            //   ...PostgreSQL.spec,
-            //   doubleDollarQuotedStrings: false,
-            // }),
-            dialect: PostgreSQL,
+            dialect: SQLDialectSupport['PostgreSQL'],
             upperCaseKeywords: true,
             keywordCompletion: pgKeywordCompletion,
             // Use enhanced schema with proper SQLNamespace structure
