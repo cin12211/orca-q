@@ -123,7 +123,10 @@ onActivated(async () => {
 </script>
 
 <template>
-  <RawQueryLayout :layout="appLayoutStore.codeEditorLayout">
+  <RawQueryLayout
+    :layout="appLayoutStore.codeEditorLayout"
+    :customLayout="appLayoutStore.activeCustomLayout"
+  >
     <template #content>
       <div class="flex flex-col h-full p-1">
         <div class="flex flex-col h-full border rounded-md">
