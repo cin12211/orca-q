@@ -111,3 +111,9 @@
 .cm-focused {
   outline: unset !important;
 }
+
+.cm-tooltip:has(.cm-sql-hover-tooltip) {
+  border-radius: calc(var(--radius) - 2px);
+  border: none !important;
+  box-shadow: none !important;
+}

@@ -1,7 +1,8 @@
 import { acceptCompletion, startCompletion } from '@codemirror/autocomplete';
-import { sql, PostgreSQL } from '@codemirror/lang-sql';
+import { PostgreSQL, sql } from '@codemirror/lang-sql';
 import { Compartment } from '@codemirror/state';
 import { EditorView, keymap } from '@codemirror/view';
+import { sqlExtension } from '@marimo-team/codemirror-sql';
 import merge from 'lodash-es/merge';
 import type { FieldDef } from 'pg';
 import type BaseCodeEditor from '~/components/base/code-editor/BaseCodeEditor.vue';
@@ -18,13 +19,24 @@ import {
   pgKeywordCompletion,
 } from '~/components/base/code-editor/utils';
 import type { RowData } from '~/components/base/dynamic-table/utils';
-import { uuidv4 } from '~/core/helpers';
-import { convertParameters, type ParsedParametersResult } from '~/core/helpers';
+import {
+  convertParameters,
+  uuidv4,
+  type ParsedParametersResult,
+} from '~/core/helpers';
 import { useSchemaStore, type Connection } from '~/core/stores';
 import type { EditorCursor, ExecutedResultItem } from '../interfaces';
 import { formatStatementSql, rawQueryEditorFormat } from '../utils';
+import { createCteAwareCompletionSource } from '../utils/cteAwareCompletionSource';
 import { mappedSchemaSuggestion } from '../utils/getMappedSchemaSuggestion';
 import { useRawQueryExplainAnalyzeOptions } from './useRawQueryExplainAnalyzeOptions';
+
+const getKeywordDocs = async () => {
+  const keywords = await import(
+    '@marimo-team/codemirror-sql/data/common-keywords.json'
+  );
+  return keywords.default.keywords;
+};
 
 export function useRawQueryEditor({
   fileVariables,
@@ -114,6 +126,13 @@ export function useRawQueryEditor({
   // });
 
   const sqlCompartment = new Compartment();
+  const sqlCompletionCompartment = new Compartment();
+  const buildCteAwareCompletionSource = () =>
+    createCteAwareCompletionSource({
+      schemas: connectionSchemas.value,
+      defaultSchemaName: defaultSchemaName.value,
+    });
+
   const { onHandleFormatCurrentStatement, onHandleFormatCode } =
     rawQueryEditorFormat({
       getEditorView: () => codeEditorRef.value?.editorView as EditorView | null,
@@ -384,6 +403,11 @@ export function useRawQueryEditor({
         defaultSchema: schemaConfig.value.defaultSchema,
       })
     ),
+    sqlCompletionCompartment.of(
+      PostgreSQL.language.data.of({
+        autocomplete: buildCteAwareCompletionSource(),
+      })
+    ),
     currentStatementLineHighlightExtension,
     currentStatementLineGutterExtension,
     // Enhanced SQL autocompletion with custom sources for aliases and CTEs
@@ -395,6 +419,23 @@ export function useRawQueryEditor({
     // lintGutter(),
     // lintGutter(),
     // lintCompartment.of(createSqlLinter()),
+    sqlExtension({
+      enableLinting: false,
+      enableGutterMarkers: false,
+      enableHover: true,
+      hoverConfig: {
+        hoverTime: 250,
+        enableKeywords: true,
+        keywords: async () => {
+          const keywords = await getKeywordDocs();
+
+          return keywords;
+        },
+        enableTables: false,
+        enableColumns: false,
+        enableFuzzySearch: false,
+      },
+    }),
   ];
 
   const reloadSqlCompartment = () => {
@@ -403,22 +444,29 @@ export function useRawQueryEditor({
     }
 
     codeEditorRef.value?.editorView.dispatch({
-      effects: sqlCompartment.reconfigure(
-        sql({
-          // dialect: SQLDialect.define({
-          //   ...PostgreSQL.spec,
-          //   doubleDollarQuotedStrings: false,
-          // }),
-          dialect: PostgreSQL,
-          upperCaseKeywords: true,
-          keywordCompletion: pgKeywordCompletion,
-          // Use enhanced schema with proper SQLNamespace structure
-          tables: schemaConfig.value.variableCompletions,
-          schema: schemaConfig.value.schema,
-          // Set default schema for direct table completion
-          defaultSchema: schemaConfig.value.defaultSchema,
-        })
-      ),
+      effects: [
+        sqlCompartment.reconfigure(
+          sql({
+            // dialect: SQLDialect.define({
+            //   ...PostgreSQL.spec,
+            //   doubleDollarQuotedStrings: false,
+            // }),
+            dialect: PostgreSQL,
+            upperCaseKeywords: true,
+            keywordCompletion: pgKeywordCompletion,
+            // Use enhanced schema with proper SQLNamespace structure
+            tables: schemaConfig.value.variableCompletions,
+            schema: schemaConfig.value.schema,
+            // Set default schema for direct table completion
+            defaultSchema: schemaConfig.value.defaultSchema,
+          })
+        ),
+        sqlCompletionCompartment.reconfigure(
+          PostgreSQL.language.data.of({
+            autocomplete: buildCteAwareCompletionSource(),
+          })
+        ),
+      ],
     });
   };
 
@@ -490,7 +538,7 @@ export function useRawQueryEditor({
   };
 
   watch(
-    () => activeSchema.value?.name,
+    () => [activeSchema.value?.name, connectionSchemas.value],
     () => {
       if (!activeSchema.value?.name) return;
       reloadSqlCompartment();

@@ -3,7 +3,11 @@ import type { Completion } from '@codemirror/autocomplete';
 import type { SQLNamespace } from '@codemirror/lang-sql';
 import { CompletionIcon } from '~/components/base/code-editor/constants';
 import type { Schema } from '~/core/stores';
-import type { TableDetailMetadata } from '~/server/api/get-schema-meta-data';
+import type {
+  ColumnShortMetadata,
+  ForeignKeyMetadata,
+  TableDetailMetadata,
+} from '~/server/api/get-schema-meta-data';
 import SuggestionTableInfo from '../components/SuggestionTableInfo.vue';
 import SuggetionColumnInfo from '../components/SuggetionColumnInfo.vue';
 
@@ -98,7 +102,7 @@ export function createColumnInfoTooltip(
   dataType: string,
   tableName: string,
   isPrimaryKey: boolean,
-  foreignKey?: { referenced_table: string; referenced_column: string },
+  foreignKey?: ForeignKeyMetadata,
   schemaName?: string
 ): HTMLElement {
   const container = document.createElement('div');
@@ -120,7 +124,7 @@ export function createColumnInfoTooltip(
 /**
  * Maps column data type to appropriate CompletionIcon
  */
-function getColumnTypeIcon(typeName: string): CompletionIcon {
+export function getColumnTypeIcon(typeName: string): CompletionIcon {
   const lowerType = typeName.toLowerCase();
 
   // Numeric types
@@ -179,6 +183,73 @@ function getColumnTypeIcon(typeName: string): CompletionIcon {
 }
 
 /**
+ * Resolves the final completion icon for a column using the same rule
+ * in all SQL completion sources.
+ */
+export function resolveColumnCompletionIcon({
+  typeName,
+  isPrimaryKey,
+  hasForeignKey,
+}: {
+  typeName: string;
+  isPrimaryKey: boolean;
+  hasForeignKey: boolean;
+}): CompletionIcon {
+  if (isPrimaryKey) {
+    return CompletionIcon.Keyword;
+  }
+
+  if (hasForeignKey) {
+    return CompletionIcon.ForeignKey;
+  }
+
+  return getColumnTypeIcon(typeName);
+}
+
+export function createColumnCompletion({
+  column,
+  tableName,
+  schemaName,
+  isPrimaryKey,
+  foreignKey,
+  info,
+}: {
+  column: ColumnShortMetadata;
+  tableName: string;
+  schemaName?: string;
+  isPrimaryKey: boolean;
+  foreignKey?: ForeignKeyMetadata;
+  info?: Completion['info'];
+}): Completion {
+  const completion: Completion = {
+    label: column.name,
+    type: resolveColumnCompletionIcon({
+      typeName: column.short_type_name,
+      isPrimaryKey,
+      hasForeignKey: Boolean(foreignKey),
+    }),
+    detail: column.short_type_name,
+    boost: -column.ordinal_position,
+  };
+
+  if (info) {
+    completion.info = info;
+  } else {
+    completion.info = () =>
+      createColumnInfoTooltip(
+        column.name,
+        column.short_type_name,
+        tableName,
+        isPrimaryKey,
+        foreignKey,
+        schemaName
+      );
+  }
+
+  return completion;
+}
+
+/**
  * Creates a combined completion configuration with all enhancements
  * Supports multiple schemas from a connection
  * Returns a hierarchical structure with self/children pattern
@@ -218,32 +289,14 @@ export function mappedSchemaSuggestion({
           const isPrimaryKey = pkColumns.has(col.name);
           const foreignKey = fkMap.get(col.name);
 
-          // Determine icon type based on column role and data type
-          let columnType: CompletionIcon;
-          if (isPrimaryKey) {
-            columnType = CompletionIcon.Keyword;
-          } else if (foreignKey) {
-            columnType = CompletionIcon.ForeignKey;
-          } else {
-            columnType = getColumnTypeIcon(col.short_type_name);
-          }
-
           columnChildren[col.name] = {
-            self: {
-              label: col.name,
-              type: columnType,
-              detail: col.short_type_name,
-              boost: -col.ordinal_position,
-              info: () =>
-                createColumnInfoTooltip(
-                  col.name,
-                  col.short_type_name,
-                  tableName,
-                  isPrimaryKey,
-                  foreignKey,
-                  schemaName
-                ),
-            },
+            self: createColumnCompletion({
+              column: col,
+              tableName,
+              schemaName,
+              isPrimaryKey,
+              foreignKey,
+            }),
             children: {},
           };
         }
