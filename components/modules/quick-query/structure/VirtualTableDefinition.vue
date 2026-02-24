@@ -1,6 +1,6 @@
 <script setup lang="ts">
+import { formatStatementSql } from '~/components/base/code-editor/utils';
 import type { ViewDefinitionResponse } from '~/server/api/get-view-definition';
-import { formatStatementSql } from '../../raw-query/utils';
 
 const props = defineProps<{
   schema: string;

@@ -1,5 +1,5 @@
 import { acceptCompletion, startCompletion } from '@codemirror/autocomplete';
-import { PostgreSQL, SQLDialect, sql } from '@codemirror/lang-sql';
+import { PostgreSQL, sql } from '@codemirror/lang-sql';
 import { Compartment } from '@codemirror/state';
 import { EditorView, keymap } from '@codemirror/view';
 import { sqlExtension } from '@marimo-team/codemirror-sql';
@@ -15,9 +15,13 @@ import {
   type SyntaxTreeNodeData,
 } from '~/components/base/code-editor/extensions';
 import {
+  formatStatementSql,
   getCurrentStatement,
   getTreeNodes,
   pgKeywordCompletion,
+  rawQueryEditorFormat,
+  sqlParserConfigField,
+  updateSqlParserConfigEffect,
 } from '~/components/base/code-editor/utils';
 import type { RowData } from '~/components/base/dynamic-table/utils';
 import {
@@ -27,7 +31,7 @@ import {
 } from '~/core/helpers';
 import { useSchemaStore, type Connection } from '~/core/stores';
 import type { EditorCursor, ExecutedResultItem } from '../interfaces';
-import { formatStatementSql, rawQueryEditorFormat } from '../utils';
+// import { formatStatementSql, rawQueryEditorFormat } from '../utils';
 import { createCteAwareCompletionSource } from '../utils/cteAwareCompletionSource';
 import { mappedSchemaSuggestion } from '../utils/getMappedSchemaSuggestion';
 import { useRawQueryExplainAnalyzeOptions } from './useRawQueryExplainAnalyzeOptions';
@@ -431,6 +435,7 @@ export function useRawQueryEditor({
         enableFuzzySearch: false,
       },
     }),
+    sqlParserConfigField,
   ];
 
   const reloadSqlCompartment = () => {
@@ -440,6 +445,10 @@ export function useRawQueryEditor({
 
     codeEditorRef.value?.editorView.dispatch({
       effects: [
+        updateSqlParserConfigEffect.of({
+          dialect: PostgreSQL,
+          isEnable: true,
+        }),
         sqlCompartment.reconfigure(
           sql({
             dialect: SQLDialectSupport['PostgreSQL'],

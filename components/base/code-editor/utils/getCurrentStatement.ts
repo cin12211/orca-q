@@ -1,21 +1,27 @@
-import { PostgreSQL, sql } from '@codemirror/lang-sql';
+import { sql, type SQLDialect } from '@codemirror/lang-sql';
 import { ensureSyntaxTree, syntaxTree } from '@codemirror/language';
 import { EditorState } from '@codemirror/state';
 import type { EditorView } from '@codemirror/view';
 import type { SyntaxNode } from '@lezer/common';
 import type { SyntaxTreeNodeData } from '../extensions';
+import { sqlParserConfigField } from '../states/sqlParserConfig';
 
-const statementParserExtensions = [sql({ dialect: PostgreSQL })];
+export type { SqlParserConfig } from '../states/sqlParserConfig';
+export {
+  updateSqlParserConfigEffect,
+  sqlParserConfigField,
+} from '../states/sqlParserConfig';
+
 const parserStateCacheByDoc = new WeakMap<object, EditorState>();
 
-function getStatementTree(view: EditorView, upto: number) {
+function getStatementTree(view: EditorView, upto: number, dialect: SQLDialect) {
   const docKey = view.state.doc as unknown as object;
   let parserState = parserStateCacheByDoc.get(docKey);
 
   if (!parserState) {
     parserState = EditorState.create({
       doc: view.state.doc,
-      extensions: statementParserExtensions,
+      extensions: [sql({ dialect: dialect })],
     });
     parserStateCacheByDoc.set(docKey, parserState);
   }
@@ -25,7 +31,7 @@ function getStatementTree(view: EditorView, upto: number) {
     return ensuredTree;
   }
 
-  return PostgreSQL.language.parser.parse(view.state.doc.toString());
+  return dialect.language.parser.parse(view.state.doc.toString());
 }
 
 /**
@@ -37,7 +43,11 @@ function getStatementTree(view: EditorView, upto: number) {
 export const getCurrentStatement = (view: EditorView) => {
   const selection = view.state.selection.main;
   const { from, to, empty } = selection;
-  const tree = getStatementTree(view, view.state.doc.length);
+  const parserConfig = view.state.field(sqlParserConfigField);
+
+  const tree = parserConfig.isEnable
+    ? getStatementTree(view, view.state.doc.length, parserConfig.dialect)
+    : syntaxTree(view.state);
 
   // Helper to find Statement node at a given position
   const findStatementNode = (pos: number, side: -1 | 1): SyntaxNode | null => {
@@ -76,7 +86,7 @@ export const getCurrentStatement = (view: EditorView) => {
   tree.iterate({
     from,
     to,
-    enter(node) {
+    enter(node: SyntaxNode) {
       if (
         node.type.name === 'Statement' &&
         !seen.has(node.from) &&
