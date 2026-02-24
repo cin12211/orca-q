@@ -7,13 +7,71 @@ import {
   EditorThemeDark,
   EditorThemeLight,
 } from '~/components/base/code-editor/constants';
+import {
+  MAX_CUSTOM_LAYOUTS,
+  RawQueryEditorLayout,
+  type CustomLayoutDefinition,
+} from '~/components/modules/raw-query/constants';
 import { useAppLayoutStore } from '~/core/stores/appLayoutStore';
-import { RawQueryEditorLayout } from '../raw-query/constants';
+import { LayoutBuilderDialog, LayoutPreview } from './layout-builder';
 
 const appLayoutStore = useAppLayoutStore();
+
+// --- Custom Layout Dialog ---
+const isBuilderOpen = ref(false);
+const editingLayout = ref<CustomLayoutDefinition | null>(null);
+
+const openCreateDialog = () => {
+  editingLayout.value = null;
+  isBuilderOpen.value = true;
+};
+
+const openEditDialog = (layout: CustomLayoutDefinition) => {
+  editingLayout.value = layout;
+  isBuilderOpen.value = true;
+};
+
+const onSaveLayout = (layout: CustomLayoutDefinition) => {
+  if (editingLayout.value) {
+    const success = appLayoutStore.updateCustomLayout(layout.id, {
+      name: layout.name,
+      direction: layout.direction,
+      panels: layout.panels,
+      innerSplit: layout.innerSplit,
+    });
+
+    if (!success) return;
+  } else {
+    const success = appLayoutStore.addCustomLayout(layout);
+    if (!success) return;
+  }
+
+  // Auto-apply the saved layout
+  appLayoutStore.applyCustomLayout(layout.id);
+};
+
+const onDeleteLayout = (id: string) => {
+  appLayoutStore.deleteCustomLayout(id);
+};
+
+const isPresetActive = (preset: RawQueryEditorLayout): boolean => {
+  return (
+    !appLayoutStore.isUsingCustomLayout &&
+    appLayoutStore.codeEditorLayout === preset
+  );
+};
+
+const onSelectPreset = (preset: RawQueryEditorLayout) => {
+  appLayoutStore.applyPresetLayout(preset);
+};
+
+const canAddLayout = computed(
+  () => appLayoutStore.customLayouts.length < MAX_CUSTOM_LAYOUTS
+);
 </script>
 <template>
   <div class="h-full flex flex-col overflow-y-auto gap-2">
+    <!-- Preset Layouts -->
     <div>
       <h4
         class="text-sm font-medium leading-7 text-primary flex items-center gap-1 mb-2"
@@ -30,16 +88,12 @@ const appLayoutStore = useAppLayoutStore();
           <div
             class="grid grid-cols-5 grid-rows-5 cursor-pointer gap-2 h-36 border p-2 rounded-md"
             :class="{
-              'ring ring-primary':
-                appLayoutStore.codeEditorLayout ===
-                RawQueryEditorLayout.vertical,
-              'hover:ring':
-                appLayoutStore.codeEditorLayout !==
-                RawQueryEditorLayout.vertical,
+              'ring ring-primary': isPresetActive(
+                RawQueryEditorLayout.vertical
+              ),
+              'hover:ring': !isPresetActive(RawQueryEditorLayout.vertical),
             }"
-            @click="
-              appLayoutStore.setCodeEditorLayout(RawQueryEditorLayout.vertical)
-            "
+            @click="onSelectPreset(RawQueryEditorLayout.vertical)"
           >
             <div
               className="col-span-4 row-span-3 border rounded-md bg-accent"
@@ -50,13 +104,6 @@ const appLayoutStore = useAppLayoutStore();
             <div
               className="row-span-3 col-start-5 row-start-1 border rounded-md bg-accent"
             ></div>
-
-            <!-- <div
-                  class="col-span-6 row-span-4 border rounded-md bg-accent"
-                ></div>
-                <div
-                  class="col-span-6 row-span-3 border rounded-md bg-accent"
-                ></div> -->
           </div>
         </div>
 
@@ -68,17 +115,15 @@ const appLayoutStore = useAppLayoutStore();
           <div
             class="grid grid-cols-5 grid-rows-6 cursor-pointer gap-2 h-36 border p-2 rounded-md"
             :class="{
-              'ring ring-primary':
-                appLayoutStore.codeEditorLayout ===
-                RawQueryEditorLayout.horizontalWithVariables,
-              'hover:ring':
-                appLayoutStore.codeEditorLayout !==
-                RawQueryEditorLayout.horizontalWithVariables,
+              'ring ring-primary': isPresetActive(
+                RawQueryEditorLayout.horizontalWithVariables
+              ),
+              'hover:ring': !isPresetActive(
+                RawQueryEditorLayout.horizontalWithVariables
+              ),
             }"
             @click="
-              appLayoutStore.setCodeEditorLayout(
-                RawQueryEditorLayout.horizontalWithVariables
-              )
+              onSelectPreset(RawQueryEditorLayout.horizontalWithVariables)
             "
           >
             <div
@@ -94,24 +139,17 @@ const appLayoutStore = useAppLayoutStore();
         </div>
 
         <!-- Horizontal -->
-
         <div class="w-1/3">
           <p class="text-xs mb-0.5 text-accent-foreground">Horizontal</p>
           <div
             class="grid grid-cols-6 grid-rows-6 cursor-pointer gap-2 h-36 border p-2 rounded-md"
             :class="{
-              'ring ring-primary':
-                appLayoutStore.codeEditorLayout ===
-                RawQueryEditorLayout.horizontal,
-              'hover:ring':
-                appLayoutStore.codeEditorLayout !==
-                RawQueryEditorLayout.horizontal,
-            }"
-            @click="
-              appLayoutStore.setCodeEditorLayout(
+              'ring ring-primary': isPresetActive(
                 RawQueryEditorLayout.horizontal
-              )
-            "
+              ),
+              'hover:ring': !isPresetActive(RawQueryEditorLayout.horizontal),
+            }"
+            @click="onSelectPreset(RawQueryEditorLayout.horizontal)"
           >
             <div
               class="col-span-3 row-span-6 border rounded-md bg-accent"
@@ -124,6 +162,77 @@ const appLayoutStore = useAppLayoutStore();
       </div>
     </div>
 
+    <!-- Custom Layouts -->
+    <div>
+      <div class="flex items-center justify-between mb-2">
+        <h4
+          class="text-sm font-medium leading-7 text-primary flex items-center gap-1"
+        >
+          <Icon name="hugeicons:layout-03" class="size-5!" /> Custom Layouts
+        </h4>
+        <Button
+          size="xs"
+          variant="outline"
+          :disabled="!canAddLayout"
+          @click="openCreateDialog"
+          class="cursor-pointer"
+        >
+          <Icon name="hugeicons:add-01" class="size-3.5! mr-1" />
+          Add Layout
+        </Button>
+      </div>
+
+      <div
+        v-if="appLayoutStore.customLayouts.length === 0"
+        class="text-sm text-muted-foreground px-1 py-3 text-center border border-dashed rounded-md"
+      >
+        No custom layouts yet. Click "Add Layout" to create one.
+      </div>
+
+      <div v-else class="grid grid-cols-3 gap-3 px-1">
+        <div
+          v-for="layout in appLayoutStore.customLayouts"
+          :key="layout.id"
+          class="flex flex-col gap-1"
+        >
+          <div class="flex items-center justify-between">
+            <p class="text-xs text-accent-foreground truncate flex-1">
+              {{ layout.name }}
+            </p>
+            <div class="flex items-center gap-0.5">
+              <Button
+                size="xs"
+                variant="ghost"
+                @click.stop="openEditDialog(layout)"
+                class="cursor-pointer h-5 w-5 p-0"
+              >
+                <Icon name="hugeicons:edit-02" class="size-3!" />
+              </Button>
+              <Button
+                size="xs"
+                variant="ghost"
+                @click.stop="onDeleteLayout(layout.id)"
+                class="cursor-pointer h-5 w-5 p-0"
+              >
+                <Icon name="hugeicons:delete-02" class="size-3!" />
+              </Button>
+            </div>
+          </div>
+          <div @click="appLayoutStore.applyCustomLayout(layout.id)">
+            <LayoutPreview
+              :layout="layout"
+              :isActive="
+                appLayoutStore.isUsingCustomLayout &&
+                appLayoutStore.activeCustomLayoutId === layout.id
+              "
+              class="h-36"
+            />
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Code Editor Settings -->
     <div>
       <h4
         class="text-sm font-medium leading-7 text-primary flex items-center gap-1 mb-1"
@@ -222,5 +331,13 @@ const appLayoutStore = useAppLayoutStore();
         </div>
       </div>
     </div>
+
+    <!-- Layout Builder Dialog -->
+    <LayoutBuilderDialog
+      :open="isBuilderOpen"
+      :editLayout="editingLayout"
+      @update:open="isBuilderOpen = $event"
+      @save="onSaveLayout"
+    />
   </div>
 </template>

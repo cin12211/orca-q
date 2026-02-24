@@ -7,6 +7,8 @@ import {
 import {
   RawQueryEditorDefaultSize,
   RawQueryEditorLayout,
+  MAX_CUSTOM_LAYOUTS,
+  type CustomLayoutDefinition,
 } from '~/components/modules/raw-query/constants';
 
 export interface CodeEditorConfigs {
@@ -14,6 +16,11 @@ export interface CodeEditorConfigs {
   fontSize: number;
   showMiniMap: boolean;
   indentation: boolean;
+}
+
+export interface CustomLayoutSizeEntry {
+  panels: number[];
+  innerPanels: number[];
 }
 
 export type AIProvider = 'openai' | 'google' | 'anthropic' | 'xai';
@@ -165,6 +172,94 @@ export const useAppLayoutStore = defineStore(
     // Quick Query settings
     const quickQuerySafeModeEnabled = ref<boolean>(false);
 
+    // --- Custom Layouts ---
+    const customLayouts = ref<CustomLayoutDefinition[]>([]);
+    const activeCustomLayoutId = ref<string | null>(null);
+    const customLayoutSizes = ref<Record<string, CustomLayoutSizeEntry>>({});
+
+    const isUsingCustomLayout = computed(
+      () => activeCustomLayoutId.value !== null
+    );
+
+    const activeCustomLayout = computed(() => {
+      if (!activeCustomLayoutId.value) return null;
+      return (
+        customLayouts.value.find(l => l.id === activeCustomLayoutId.value) ??
+        null
+      );
+    });
+
+    const addCustomLayout = (layout: CustomLayoutDefinition): boolean => {
+      if (customLayouts.value.length >= MAX_CUSTOM_LAYOUTS) return false;
+
+      const isDuplicateName = customLayouts.value.some(
+        l => l.name.toLowerCase() === layout.name.toLowerCase()
+      );
+      if (isDuplicateName) return false;
+
+      customLayouts.value.push(layout);
+      return true;
+    };
+
+    const updateCustomLayout = (
+      id: string,
+      partial: Partial<Omit<CustomLayoutDefinition, 'id' | 'createdAt'>>
+    ): boolean => {
+      const index = customLayouts.value.findIndex(l => l.id === id);
+      if (index === -1) return false;
+
+      // Validate unique name if name is being updated
+      if (partial.name) {
+        const isDuplicateName = customLayouts.value.some(
+          l =>
+            l.id !== id && l.name.toLowerCase() === partial.name!.toLowerCase()
+        );
+        if (isDuplicateName) return false;
+      }
+
+      customLayouts.value[index] = {
+        ...customLayouts.value[index],
+        ...partial,
+      };
+      return true;
+    };
+
+    const deleteCustomLayout = (id: string): void => {
+      customLayouts.value = customLayouts.value.filter(l => l.id !== id);
+
+      // Clean up persisted sizes
+      delete customLayoutSizes.value[id];
+
+      // Switch to preset if the deleted layout was active
+      if (activeCustomLayoutId.value === id) {
+        activeCustomLayoutId.value = null;
+        codeEditorLayout.value = RawQueryEditorLayout.vertical;
+      }
+    };
+
+    const updateCustomLayoutSizes = (
+      layoutId: string,
+      panels: number[],
+      innerPanels?: number[]
+    ): void => {
+      customLayoutSizes.value[layoutId] = {
+        panels,
+        innerPanels:
+          innerPanels ?? customLayoutSizes.value[layoutId]?.innerPanels ?? [],
+      };
+    };
+
+    const applyCustomLayout = (id: string): void => {
+      const layout = customLayouts.value.find(l => l.id === id);
+      if (!layout) return;
+      activeCustomLayoutId.value = id;
+    };
+
+    const applyPresetLayout = (preset: RawQueryEditorLayout): void => {
+      activeCustomLayoutId.value = null;
+      codeEditorLayout.value = preset;
+    };
+
     return {
       historyBodySize,
       layoutSize,
@@ -188,6 +283,18 @@ export const useAppLayoutStore = defineStore(
       agentSelectedProvider,
       agentSelectedModel,
       quickQuerySafeModeEnabled,
+      // Custom Layouts
+      customLayouts,
+      activeCustomLayoutId,
+      customLayoutSizes,
+      isUsingCustomLayout,
+      activeCustomLayout,
+      addCustomLayout,
+      updateCustomLayout,
+      deleteCustomLayout,
+      applyCustomLayout,
+      applyPresetLayout,
+      updateCustomLayoutSizes,
     };
   },
   {

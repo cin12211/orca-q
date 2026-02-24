@@ -2,18 +2,20 @@ FROM node:22-alpine AS builder
 
 WORKDIR /app
 
+ENV NODE_OPTIONS="--max-old-space-size=8192"
+
 # Install bash and curl (if not already)
 RUN apk add --no-cache bash curl
 
 # Check for Bun; install only if missing
 RUN if ! command -v bun > /dev/null 2>&1; then \
-      echo "Installing Bun..." && \
-      curl -fsSL https://bun.sh/install | bash && \
-      export BUN_INSTALL="/root/.bun" && \
-      export PATH="$BUN_INSTALL/bin:$PATH"; \
-    else \
-      echo "Bun already installed"; \
-    fi
+  echo "Installing Bun..." && \
+  curl -fsSL https://bun.sh/install | bash && \
+  export BUN_INSTALL="/root/.bun" && \
+  export PATH="$BUN_INSTALL/bin:$PATH"; \
+  else \
+  echo "Bun already installed"; \
+  fi
 
 # Make Bun available for later steps
 ENV BUN_INSTALL="/root/.bun"
