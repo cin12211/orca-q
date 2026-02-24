@@ -1,3 +1,4 @@
+import { MariaSQL, MySQL, PostgreSQL, SQLDialect } from '@codemirror/lang-sql';
 import {
   tomorrow,
   amy,
@@ -104,3 +105,14 @@ export enum CompletionIcon {
   Field = 'FIELD',
   ForeignKey = 'FOREIGNKEY',
 }
+
+const PostgreSQLCustom = SQLDialect.define({
+  ...PostgreSQL.spec,
+  doubleDollarQuotedStrings: false,
+});
+
+export const SQLDialectSupport = {
+  PostgreSQL: PostgreSQLCustom,
+  MySQL,
+  MariaSQL,
+};

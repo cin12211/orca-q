@@ -6,6 +6,7 @@ import { sqlExtension } from '@marimo-team/codemirror-sql';
 import merge from 'lodash-es/merge';
 import type { FieldDef } from 'pg';
 import type BaseCodeEditor from '~/components/base/code-editor/BaseCodeEditor.vue';
+import { SQLDialectSupport } from '~/components/base/code-editor/constants';
 import {
   currentStatementLineGutterExtension,
   currentStatementLineHighlightExtension,
@@ -14,9 +15,13 @@ import {
   type SyntaxTreeNodeData,
 } from '~/components/base/code-editor/extensions';
 import {
+  formatStatementSql,
   getCurrentStatement,
   getTreeNodes,
   pgKeywordCompletion,
+  rawQueryEditorFormat,
+  sqlParserConfigField,
+  updateSqlParserConfigEffect,
 } from '~/components/base/code-editor/utils';
 import type { RowData } from '~/components/base/dynamic-table/utils';
 import {
@@ -26,7 +31,7 @@ import {
 } from '~/core/helpers';
 import { useSchemaStore, type Connection } from '~/core/stores';
 import type { EditorCursor, ExecutedResultItem } from '../interfaces';
-import { formatStatementSql, rawQueryEditorFormat } from '../utils';
+// import { formatStatementSql, rawQueryEditorFormat } from '../utils';
 import { createCteAwareCompletionSource } from '../utils/cteAwareCompletionSource';
 import { mappedSchemaSuggestion } from '../utils/getMappedSchemaSuggestion';
 import { useRawQueryExplainAnalyzeOptions } from './useRawQueryExplainAnalyzeOptions';
@@ -387,13 +392,7 @@ export function useRawQueryEditor({
 
     sqlCompartment.of(
       sql({
-        //TODO: bug if use PostgreSQL -> can higlight function name
-        // and if use -> parse incorrect for function
-        // dialect: SQLDialect.define({
-        //   ...PostgreSQL.spec,
-        //   doubleDollarQuotedStrings: false,
-        // }),
-        dialect: PostgreSQL,
+        dialect: SQLDialectSupport['PostgreSQL'],
         upperCaseKeywords: true,
         keywordCompletion: pgKeywordCompletion,
         // Use enhanced schema with proper SQLNamespace structure
@@ -436,6 +435,7 @@ export function useRawQueryEditor({
         enableFuzzySearch: false,
       },
     }),
+    sqlParserConfigField,
   ];
 
   const reloadSqlCompartment = () => {
@@ -445,13 +445,13 @@ export function useRawQueryEditor({
 
     codeEditorRef.value?.editorView.dispatch({
       effects: [
+        updateSqlParserConfigEffect.of({
+          dialect: PostgreSQL,
+          isEnable: true,
+        }),
         sqlCompartment.reconfigure(
           sql({
-            // dialect: SQLDialect.define({
-            //   ...PostgreSQL.spec,
-            //   doubleDollarQuotedStrings: false,
-            // }),
-            dialect: PostgreSQL,
+            dialect: SQLDialectSupport['PostgreSQL'],
             upperCaseKeywords: true,
             keywordCompletion: pgKeywordCompletion,
             // Use enhanced schema with proper SQLNamespace structure
