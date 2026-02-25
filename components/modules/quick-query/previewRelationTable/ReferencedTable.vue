@@ -356,6 +356,7 @@ useHotkeys(
         :has-edited-rows="hasEditedRows"
         :selectedRows="selectedRows"
         :table-name="tableName"
+        :schema-name="schemaName"
         isReferencedTable
         @onPaginate="onUpdatePagination"
         @onNextPage="onNextPage"

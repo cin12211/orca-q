@@ -1,4 +1,43 @@
+import pg from 'pg';
 import { type DatabaseType, DataSource } from 'typeorm';
+
+/**
+ * Disable pg's automatic type conversions for temporal and precision-sensitive
+ * types. Must be set BEFORE any DataSource/Pool is initialized, at module load.
+ *
+ * Without this, pg converts TIMESTAMP → JS Date, which gets serialised to UTC
+ * ISO string and then re-parsed by the browser in local timezone → wrong value.
+ *
+ * OIDs: https://www.postgresql.org/docs/current/catalog-pg-type.html
+ */
+const RAW = (val: string) => val;
+const TEMPORAL_OIDS = [
+  1082,
+  1083,
+  1114,
+  1184,
+  1266, // date, time, timestamp, timestamptz, timetz
+  1182,
+  1183,
+  1115,
+  1185,
+  1270, // array variants
+] as const;
+const PRECISION_OIDS = [
+  1700,
+  1231, // numeric/decimal + array (avoid JS float precision loss)
+  20,
+  1016, // int8/bigint + array   (avoid MAX_SAFE_INTEGER overflow)
+] as const;
+
+[...TEMPORAL_OIDS, ...PRECISION_OIDS].forEach(oid =>
+  // Cast needed: array-type OIDs (e.g. 1182, 1183) are valid pg OIDs but
+  // are not listed in pg's narrow `TypeId` union type definition.
+  pg.types.setTypeParser(
+    oid as Parameters<typeof pg.types.setTypeParser>[0],
+    RAW
+  )
+);
 
 type CachedConnection = {
   source: DataSource;

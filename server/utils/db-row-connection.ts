@@ -1,6 +1,35 @@
 import pkg from 'pg';
 import type { Pool } from 'pg';
 
+/**
+ * Same type-parser overrides as db-connection.ts.
+ * pg.types is a global singleton — calling setTypeParser here is idempotent
+ * with the call in db-connection.ts. Both files set these so each is
+ * self-contained regardless of import order.
+ */
+const RAW = (val: string) => val;
+[
+  1082,
+  1083,
+  1114,
+  1184,
+  1266, // date, time, timestamp, timestamptz, timetz
+  1182,
+  1183,
+  1115,
+  1185,
+  1270, // array variants
+  1700,
+  1231,
+  20,
+  1016, // numeric, bigint + arrays
+].forEach(oid =>
+  pkg.types.setTypeParser(
+    oid as Parameters<typeof pkg.types.setTypeParser>[0],
+    RAW
+  )
+);
+
 const { Pool: PoolClass } = pkg;
 
 type DatabaseType = 'postgres';
