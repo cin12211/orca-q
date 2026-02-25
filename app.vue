@@ -2,6 +2,7 @@
 // main.ts (or the entry that mounts Vue)
 import { LoadingOverlay, TooltipProvider } from '#components';
 import { AllCommunityModule, ModuleRegistry } from 'ag-grid-community';
+import CommandPalette from './components/modules/app-shell/CommandPalette.vue';
 import ChangelogPopup from './components/modules/changelog/ChangelogPopup.vue';
 import Settings from './components/modules/settings/Settings.vue';
 import { Toaster } from './components/ui/sonner';
@@ -64,6 +65,7 @@ onMounted(async () => {
       </NuxtLayout>
     </TooltipProvider>
 
+    <CommandPalette />
     <Settings />
     <ChangelogPopup />
     <Toaster position="top-right" :close-button="true" />
