@@ -1,13 +1,16 @@
 <script setup lang="ts">
+import type { EditorView } from '@codemirror/view';
 import BaseCodeEditor from '~/components/base/code-editor/BaseCodeEditor.vue';
 import { useAppLayoutStore } from '~/core/stores/appLayoutStore';
 import IntroRawQuery from './components/IntroRawQuery.vue';
+import RawQueryEditorContextMenu from './components/RawQueryEditorContextMenu.vue';
 import RawQueryEditorFooter from './components/RawQueryEditorFooter.vue';
 import RawQueryEditorHeader from './components/RawQueryEditorHeader.vue';
 import RawQueryLayout from './components/RawQueryLayout.vue';
 import RawQueryResultTabs from './components/RawQueryResultTabs.vue';
 import VariableEditor from './components/VariableEditor.vue';
 import { useRawQueryEditor, useRawQueryFileContent } from './hooks';
+import { useRawQueryEditorContextMenu } from './hooks/useRawQueryEditorContextMenu';
 
 const route = useRoute('workspaceId-connectionId-explorer-fileId');
 const appLayoutStore = useAppLayoutStore();
@@ -45,6 +48,15 @@ const {
   executedResults,
   activeResultTabId,
 } = toRefs(rawQueryEditor);
+
+const { contextMenuItems, onContextMenuOpen } = useRawQueryEditorContextMenu({
+  onExecuteCurrent: rawQueryEditor.onExecuteCurrent,
+  onExplainAnalyzeCurrent: rawQueryEditor.onExplainAnalyzeCurrent,
+  onHandleFormatCurrentStatement: rawQueryEditor.onHandleFormatCurrentStatement,
+  onHandleFormatCode: rawQueryEditor.onHandleFormatCode,
+  getEditorView: () =>
+    codeEditorRef.value?.editorView as EditorView | null | undefined,
+});
 
 watch(fileVariables, () => {
   rawQueryEditor.reloadSqlCompartment();
@@ -141,15 +153,20 @@ onActivated(async () => {
             @update:update-file-variables="updateFileVariables"
           />
           <div class="h-full flex flex-col overflow-y-auto">
-            <BaseCodeEditor
-              @update:modelValue="updateFileContent"
-              @update:cursorInfo="onUpdateCursorInfo"
-              @update:onScrollTop="scrollTop = $event"
-              :modelValue="fileContents"
-              :extensions="extensions"
-              :disabled="false"
-              ref="codeEditorRef"
-            />
+            <RawQueryEditorContextMenu
+              :context-menu-items="contextMenuItems"
+              @update:open="onContextMenuOpen"
+            >
+              <BaseCodeEditor
+                @update:modelValue="updateFileContent"
+                @update:cursorInfo="onUpdateCursorInfo"
+                @update:onScrollTop="scrollTop = $event"
+                :modelValue="fileContents"
+                :extensions="extensions"
+                :disabled="false"
+                ref="codeEditorRef"
+              />
+            </RawQueryEditorContextMenu>
           </div>
 
           <RawQueryEditorFooter

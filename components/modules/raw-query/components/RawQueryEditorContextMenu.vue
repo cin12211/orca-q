@@ -1,15 +1,18 @@
 <script setup lang="ts">
-import { ContextMenuItemType, type ContextMenuItem } from './menuContext.type';
+import {
+  ContextMenuItemType,
+  type ContextMenuItem,
+} from '~/components/base/context-menu/menuContext.type';
 
 defineProps<{
   contextMenuItems: ContextMenuItem[];
 }>();
 
-const emits = defineEmits<{
-  (e: 'onClearContextMenu'): void;
+const emit = defineEmits<{
+  (e: 'update:open', open: boolean): void;
 }>();
 
-const paserCondition = (condition?: boolean | undefined) => {
+const parseCondition = (condition?: boolean | undefined) => {
   if (typeof condition === 'undefined') {
     return true;
   }
@@ -18,9 +21,7 @@ const paserCondition = (condition?: boolean | undefined) => {
 };
 
 const onMenuContextOpenChange = (open: boolean) => {
-  if (!open) {
-    emits('onClearContextMenu');
-  }
+  emit('update:open', open);
 };
 </script>
 
@@ -35,7 +36,7 @@ const onMenuContextOpenChange = (open: boolean) => {
         <ContextMenuLabel
           v-if="
             item.type === ContextMenuItemType.LABEL &&
-            paserCondition(item.condition)
+            parseCondition(item.condition)
           "
           class="font-medium text-xs text-muted-foreground"
         >
@@ -45,7 +46,7 @@ const onMenuContextOpenChange = (open: boolean) => {
         <ContextMenuItem
           v-else-if="
             item.type === ContextMenuItemType.ACTION &&
-            paserCondition(item.condition)
+            parseCondition(item.condition)
           "
           @select="item.select"
           :disabled="item.disabled"
@@ -64,14 +65,14 @@ const onMenuContextOpenChange = (open: boolean) => {
         <ContextMenuSeparator
           v-else-if="
             item.type === ContextMenuItemType.SEPARATOR &&
-            paserCondition(item.condition)
+            parseCondition(item.condition)
           "
         />
 
         <ContextMenuSub
           v-else-if="
             item.type === ContextMenuItemType.SUBMENU &&
-            paserCondition(item.condition)
+            parseCondition(item.condition)
           "
           :disabled="!item.items || item.items.length === 0"
         >
@@ -92,7 +93,7 @@ const onMenuContextOpenChange = (open: boolean) => {
               <ContextMenuItem
                 v-if="
                   subItem.type === ContextMenuItemType.ACTION &&
-                  paserCondition(subItem.condition)
+                  parseCondition(subItem.condition)
                 "
                 @select="subItem.select"
               >
@@ -102,12 +103,15 @@ const onMenuContextOpenChange = (open: boolean) => {
                   class="size-4! min-w-4 text-muted-foreground"
                 />
                 {{ subItem.title }}
+                <ContextMenuShortcut v-if="subItem.shortcut">
+                  {{ subItem.shortcut }}
+                </ContextMenuShortcut>
               </ContextMenuItem>
 
               <ContextMenuLabel
                 v-else-if="
                   subItem.type === ContextMenuItemType.LABEL &&
-                  paserCondition(subItem.condition)
+                  parseCondition(subItem.condition)
                 "
                 class="font-medium text-xs text-muted-foreground"
               >
@@ -117,7 +121,7 @@ const onMenuContextOpenChange = (open: boolean) => {
               <ContextMenuSeparator
                 v-else-if="
                   subItem.type === ContextMenuItemType.SEPARATOR &&
-                  paserCondition(subItem.condition)
+                  parseCondition(subItem.condition)
                 "
               />
             </template>
