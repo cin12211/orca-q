@@ -481,9 +481,9 @@ const handleSelectCommand = (item: { execute: () => void | Promise<void> }) => {
       class="flex items-center justify-between border-t px-3 py-1.5 text-[11px] text-muted-foreground"
     >
       <div class="flex items-center gap-3">
-        <span><Kbd class="text-xs">↑↓</Kbd> Navigate</span>
-        <span><Kbd class="text-xs">↵</Kbd> Select</span>
-        <span><Kbd class="text-xs">Esc</Kbd> Close</span>
+        <span><Kbd class="text-[10px]">↑↓</Kbd> Navigate</span>
+        <span><Kbd class="text-[10px]">↵</Kbd> Select</span>
+        <span><Kbd class="text-[10px]">Esc</Kbd> Close</span>
       </div>
 
       <div class="w-6">
