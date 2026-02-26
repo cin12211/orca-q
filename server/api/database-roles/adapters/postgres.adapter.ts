@@ -2,7 +2,6 @@
  * PostgreSQL Role Adapter
  * Implements database role management for PostgreSQL
  */
-import type { DataSource } from 'typeorm';
 import type {
   DatabaseRole,
   ObjectPermission,
@@ -20,14 +19,15 @@ import type {
   BulkGrantResponse,
   BulkGrantResult,
 } from '~/core/types';
+import type { IDatabaseAdapter } from '~/server/utils/adapters';
 import type { IDatabaseRoleAdapter, DatabaseRoleAdapterParams } from './types';
 
 export class PostgresRoleAdapter implements IDatabaseRoleAdapter {
   readonly dbType = 'postgres';
-  private dataSource: DataSource;
+  private adapter: IDatabaseAdapter;
 
-  constructor(dataSource: DataSource) {
-    this.dataSource = dataSource;
+  constructor(adapter: IDatabaseAdapter) {
+    this.adapter = adapter;
   }
 
   /**
@@ -36,11 +36,11 @@ export class PostgresRoleAdapter implements IDatabaseRoleAdapter {
   static async create(
     params: DatabaseRoleAdapterParams
   ): Promise<PostgresRoleAdapter> {
-    const dataSource = await getDatabaseSource({
+    const adapter = await getDatabaseSource({
       dbConnectionString: params.dbConnectionString,
       type: 'postgres',
     });
-    return new PostgresRoleAdapter(dataSource);
+    return new PostgresRoleAdapter(adapter);
   }
 
   async getRole(roleName: string): Promise<DatabaseRole> {
@@ -75,7 +75,7 @@ export class PostgresRoleAdapter implements IDatabaseRoleAdapter {
             am.member
         ) members ON members.member = r.oid
       WHERE
-        r.rolname = $1
+        r.rolname = ?
       ORDER BY
         r.rolcanlogin DESC,
         r.rolsuper DESC,
@@ -83,7 +83,7 @@ export class PostgresRoleAdapter implements IDatabaseRoleAdapter {
       ;
     `;
 
-    const result = await this.dataSource.query(query, [roleName]);
+    const result = await this.adapter.rawQuery(query, [roleName]);
 
     return result.map(
       (row: {
@@ -154,7 +154,7 @@ export class PostgresRoleAdapter implements IDatabaseRoleAdapter {
       ;
     `;
 
-    const result = await this.dataSource.query(query);
+    const result = await this.adapter.rawQuery(query);
 
     return result.map(
       (row: {
@@ -212,7 +212,7 @@ export class PostgresRoleAdapter implements IDatabaseRoleAdapter {
        AND g.table_name   = t.tablename
        AND g.grantee      = r.rolname
     WHERE
-      r.rolname = $1
+      r.rolname = ?
       AND t.schemaname NOT IN ('pg_catalog', 'information_schema')
     GROUP BY
       r.rolname,
@@ -258,7 +258,7 @@ export class PostgresRoleAdapter implements IDatabaseRoleAdapter {
        AND g.table_name   = v.object_name
        AND g.grantee      = r.rolname
     WHERE
-      r.rolname = $1
+      r.rolname = ?
     GROUP BY
       r.rolname,
       v.schemaname,
@@ -274,8 +274,8 @@ export class PostgresRoleAdapter implements IDatabaseRoleAdapter {
     const schemaPermissionsQuery = `
     SELECT
       n.nspname AS schema_name,
-      has_schema_privilege($1, n.nspname, 'USAGE')  AS has_usage,
-      has_schema_privilege($1, n.nspname, 'CREATE') AS has_create
+      has_schema_privilege(?, n.nspname, 'USAGE')  AS has_usage,
+      has_schema_privilege(?, n.nspname, 'CREATE') AS has_create
     FROM
       pg_namespace n
     WHERE
@@ -294,7 +294,7 @@ export class PostgresRoleAdapter implements IDatabaseRoleAdapter {
       n.nspname AS schema_name,
       p.proname AS function_name,
       pg_get_function_identity_arguments(p.oid) AS arguments,
-      has_function_privilege($1, p.oid, 'EXECUTE') AS has_execute
+      has_function_privilege(?, p.oid, 'EXECUTE') AS has_execute
     FROM
       pg_proc p
     JOIN
@@ -308,10 +308,10 @@ export class PostgresRoleAdapter implements IDatabaseRoleAdapter {
 
     const [tableResults, viewResults, schemaResults, functionResults] =
       await Promise.all([
-        this.dataSource.query(tablePermissionsQuery, [roleName]),
-        this.dataSource.query(viewPermissionsQuery, [roleName]),
-        this.dataSource.query(schemaPermissionsQuery, [roleName]),
-        this.dataSource.query(functionPermissionsQuery, [roleName]),
+        this.adapter.rawQuery(tablePermissionsQuery, [roleName]),
+        this.adapter.rawQuery(viewPermissionsQuery, [roleName]),
+        this.adapter.rawQuery(schemaPermissionsQuery, [roleName, roleName]),
+        this.adapter.rawQuery(functionPermissionsQuery, [roleName]),
       ]);
 
     /* =====================================================
@@ -340,7 +340,7 @@ export class PostgresRoleAdapter implements IDatabaseRoleAdapter {
 
     const schemaPermissions: ObjectPermission[] = schemaResults.map(
       (row: any) => {
-        const privileges: string[] = [];
+        const privileges: PrivilegeType[] = [];
         if (row.has_usage) privileges.push('USAGE');
         if (row.has_create) privileges.push('CREATE');
 
@@ -392,7 +392,7 @@ export class PostgresRoleAdapter implements IDatabaseRoleAdapter {
     const sql = `GRANT ${privileges} ON ${objectReference} TO "${params.roleName}"`;
 
     try {
-      await this.dataSource.query(sql);
+      await this.adapter.rawQuery(sql);
 
       return {
         success: true,
@@ -428,7 +428,7 @@ export class PostgresRoleAdapter implements IDatabaseRoleAdapter {
     const sql = `REVOKE ${privileges} ON ${objectReference} FROM "${params.roleName}"`;
 
     try {
-      await this.dataSource.query(sql);
+      await this.adapter.rawQuery(sql);
 
       return {
         success: true,
@@ -483,16 +483,20 @@ export class PostgresRoleAdapter implements IDatabaseRoleAdapter {
       SELECT 
         d.datname AS database_name,
         d.oid AS database_oid,
-        has_database_privilege($1, d.datname, 'CONNECT') AS can_connect,
-        has_database_privilege($1, d.datname, 'CREATE') AS can_create,
-        has_database_privilege($1, d.datname, 'TEMPORARY') AS can_temp
+        has_database_privilege(?, d.datname, 'CONNECT') AS can_connect,
+        has_database_privilege(?, d.datname, 'CREATE') AS can_create,
+        has_database_privilege(?, d.datname, 'TEMPORARY') AS can_temp
       FROM pg_database d
       WHERE d.datistemplate = false 
         AND d.datallowconn = true
       ORDER BY d.datname;
     `;
 
-    const result = await this.dataSource.query(query, [roleName]);
+    const result = await this.adapter.rawQuery(query, [
+      roleName,
+      roleName,
+      roleName,
+    ]);
 
     return result.map(
       (row: {
@@ -519,7 +523,7 @@ export class PostgresRoleAdapter implements IDatabaseRoleAdapter {
       WITH RECURSIVE role_tree AS (
         SELECT r.oid, r.rolname, 0 AS depth
         FROM pg_roles r
-        WHERE r.rolname = $1
+        WHERE r.rolname = ?
         UNION ALL
         SELECT p.oid, p.rolname, rt.depth + 1
         FROM pg_auth_members m 
@@ -532,7 +536,7 @@ export class PostgresRoleAdapter implements IDatabaseRoleAdapter {
       ORDER BY depth, rolname;
     `;
 
-    const result = await this.dataSource.query(query, [roleName]);
+    const result = await this.adapter.rawQuery(query, [roleName]);
 
     return result.map((row: { rolname: string; depth: number }) => ({
       roleName: row.rolname,
@@ -554,7 +558,7 @@ export class PostgresRoleAdapter implements IDatabaseRoleAdapter {
       ORDER BY d.datname;
     `;
 
-    const result = await this.dataSource.query(query);
+    const result = await this.adapter.rawQuery(query);
 
     return result.map(
       (row: { database_name: string; database_oid: number }) => ({
@@ -594,12 +598,12 @@ export class PostgresRoleAdapter implements IDatabaseRoleAdapter {
     const sql = `CREATE ROLE "${params.roleName}" WITH ${options.join(' ')}`;
 
     try {
-      await this.dataSource.query(sql);
+      await this.adapter.rawQuery(sql);
 
       // Handle role memberships
       if (params.memberOf && params.memberOf.length > 0) {
         for (const parentRole of params.memberOf) {
-          await this.dataSource.query(
+          await this.adapter.rawQuery(
             `GRANT "${parentRole}" TO "${params.roleName}"`
           );
         }
@@ -607,8 +611,8 @@ export class PostgresRoleAdapter implements IDatabaseRoleAdapter {
 
       // Add comment if provided
       if (params.comment) {
-        await this.dataSource.query(
-          `COMMENT ON ROLE "${params.roleName}" IS $1`,
+        await this.adapter.rawQuery(
+          `COMMENT ON ROLE "${params.roleName}" IS ?`,
           [params.comment]
         );
       }
@@ -637,7 +641,7 @@ export class PostgresRoleAdapter implements IDatabaseRoleAdapter {
     const sql = `DROP ROLE IF EXISTS "${roleName}"`;
 
     try {
-      await this.dataSource.query(sql);
+      await this.adapter.rawQuery(sql);
 
       return {
         success: true,
@@ -672,7 +676,7 @@ export class PostgresRoleAdapter implements IDatabaseRoleAdapter {
       ORDER BY nspname;
     `;
 
-    const result = await this.dataSource.query(query);
+    const result = await this.adapter.rawQuery(query);
 
     return result.map(
       (row: {
@@ -695,7 +699,7 @@ export class PostgresRoleAdapter implements IDatabaseRoleAdapter {
     const tablesQuery = `
       SELECT table_name
       FROM information_schema.tables
-      WHERE table_schema = $1 AND table_type = 'BASE TABLE'
+      WHERE table_schema = ? AND table_type = 'BASE TABLE'
       ORDER BY table_name;
     `;
 
@@ -703,7 +707,7 @@ export class PostgresRoleAdapter implements IDatabaseRoleAdapter {
     const viewsQuery = `
       SELECT table_name
       FROM information_schema.views
-      WHERE table_schema = $1
+      WHERE table_schema = ?
       ORDER BY table_name;
     `;
 
@@ -714,7 +718,7 @@ export class PostgresRoleAdapter implements IDatabaseRoleAdapter {
         pg_get_function_identity_arguments(p.oid) AS signature
       FROM pg_proc p
       JOIN pg_namespace n ON p.pronamespace = n.oid
-      WHERE n.nspname = $1
+      WHERE n.nspname = ?
       ORDER BY p.proname;
     `;
 
@@ -722,15 +726,15 @@ export class PostgresRoleAdapter implements IDatabaseRoleAdapter {
     const sequencesQuery = `
       SELECT sequence_name
       FROM information_schema.sequences
-      WHERE sequence_schema = $1
+      WHERE sequence_schema = ?
       ORDER BY sequence_name;
     `;
 
     const [tables, views, functions, sequences] = await Promise.all([
-      this.dataSource.query(tablesQuery, [schemaName]),
-      this.dataSource.query(viewsQuery, [schemaName]),
-      this.dataSource.query(functionsQuery, [schemaName]),
-      this.dataSource.query(sequencesQuery, [schemaName]),
+      this.adapter.rawQuery(tablesQuery, [schemaName]),
+      this.adapter.rawQuery(viewsQuery, [schemaName]),
+      this.adapter.rawQuery(functionsQuery, [schemaName]),
+      this.adapter.rawQuery(sequencesQuery, [schemaName]),
     ]);
 
     return {
@@ -760,7 +764,7 @@ export class PostgresRoleAdapter implements IDatabaseRoleAdapter {
       const privileges = dbGrant.privileges.join(', ');
       const sql = `GRANT ${privileges} ON DATABASE "${dbGrant.databaseName}" TO "${params.roleName}"`;
       try {
-        await this.dataSource.query(sql);
+        await this.adapter.rawQuery(sql);
         results.push({ success: true, sql });
       } catch (error) {
         results.push({
@@ -777,7 +781,7 @@ export class PostgresRoleAdapter implements IDatabaseRoleAdapter {
       const privileges = schemaGrant.privileges.join(', ');
       const sql = `GRANT ${privileges} ON SCHEMA "${schemaGrant.schemaName}" TO "${params.roleName}"`;
       try {
-        await this.dataSource.query(sql);
+        await this.adapter.rawQuery(sql);
         results.push({ success: true, sql });
       } catch (error) {
         results.push({
@@ -810,7 +814,7 @@ export class PostgresRoleAdapter implements IDatabaseRoleAdapter {
 
       const sql = `GRANT ${privileges} ON ${objectRef} TO "${params.roleName}"`;
       try {
-        await this.dataSource.query(sql);
+        await this.adapter.rawQuery(sql);
         results.push({ success: true, sql });
       } catch (error) {
         results.push({
@@ -825,7 +829,7 @@ export class PostgresRoleAdapter implements IDatabaseRoleAdapter {
         const typeWord = this.getObjectTypeWord(objGrant.objectType);
         const defaultSql = `ALTER DEFAULT PRIVILEGES IN SCHEMA "${objGrant.schemaName}" GRANT ${privileges} ON ${typeWord} TO "${params.roleName}"`;
         try {
-          await this.dataSource.query(defaultSql);
+          await this.adapter.rawQuery(defaultSql);
           results.push({ success: true, sql: defaultSql });
         } catch (error) {
           results.push({

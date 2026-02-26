@@ -15,7 +15,6 @@ export default defineEventHandler(async (event): Promise<string> => {
     type: 'postgres',
   });
 
-  // Get table DDL using PostgreSQL system catalogs
   const ddlQuery = `
     WITH table_info AS (
       SELECT
@@ -25,8 +24,8 @@ export default defineEventHandler(async (event): Promise<string> => {
         pg_get_userbyid(c.relowner) AS table_owner
       FROM pg_class c
       JOIN pg_namespace n ON n.oid = c.relnamespace
-      WHERE n.nspname = $1
-        AND c.relname = $2
+      WHERE n.nspname = '${schemaName}'
+        AND c.relname = '${tableName}'
         AND c.relkind = 'r'
     ),
     columns AS (
@@ -78,7 +77,7 @@ export default defineEventHandler(async (event): Promise<string> => {
     foreign_keys AS (
       SELECT
         con.conname AS fk_name,
-        'ALTER TABLE ' || $1 || '.' || $2 || ' ADD CONSTRAINT ' || con.conname || ' FOREIGN KEY (' ||
+        'ALTER TABLE "${schemaName}"."${tableName}" ADD CONSTRAINT ' || con.conname || ' FOREIGN KEY (' ||
           string_agg(att.attname, ', ' ORDER BY u.seq) ||
           ') REFERENCES ' || nf.nspname || '.' || cf.relname || '(' ||
           string_agg(af.attname, ', ' ORDER BY u.seq) || ')' AS fk_def
@@ -94,15 +93,15 @@ export default defineEventHandler(async (event): Promise<string> => {
     ),
     grants AS (
       SELECT
-        'GRANT ' || privilege_type || ' ON TABLE ' || $1 || '.' || $2 || ' TO ' || grantee || ';' AS grant_def
+        'GRANT ' || privilege_type || ' ON TABLE "${schemaName}"."${tableName}" TO ' || grantee || ';' AS grant_def
       FROM information_schema.table_privileges
-      WHERE table_schema = $1
-        AND table_name = $2
+      WHERE table_schema = '${schemaName}'
+        AND table_name = '${tableName}'
     )
     SELECT
       json_build_object(
-        'schema_name', $1,
-        'table_name', $2,
+        'schema_name', '${schemaName}',
+        'table_name', '${tableName}',
         'table_owner', (SELECT table_owner FROM table_info),
         'columns', (SELECT json_agg(row_to_json(columns.*) ORDER BY ordinal_position) FROM columns),
         'constraints', (SELECT json_agg(row_to_json(constraints.*)) FROM constraints),
@@ -112,7 +111,8 @@ export default defineEventHandler(async (event): Promise<string> => {
       ) AS ddl_data
   `;
 
-  const result = await resource.query(ddlQuery, [schemaName, tableName]);
+  // Nhờ Named Bindings, mình chỉ cần truyền 1 object có 2 keys. Knex sẽ tự map tụi nó vào :schemaName và :tableName ở trên!
+  const result = await resource.rawQuery(ddlQuery);
 
   if (!result || result.length === 0) {
     throw createError({

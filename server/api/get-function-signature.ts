@@ -30,7 +30,7 @@ export default defineEventHandler(
     });
 
     // Get function parameters using pg_proc - simplified query
-    const result = await resource.query(
+    const result = await resource.rawQuery(
       `
       SELECT
         p.proname AS name,
@@ -43,7 +43,7 @@ export default defineEventHandler(
         p.pronargdefaults AS num_defaults
       FROM pg_proc p
       JOIN pg_namespace n ON n.oid = p.pronamespace
-      WHERE p.oid = $1::oid
+      WHERE p.oid = ?::oid
     `,
       [body.functionId]
     );

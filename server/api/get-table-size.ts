@@ -23,11 +23,11 @@ export default defineEventHandler(
     FROM pg_class c
     JOIN pg_namespace n ON n.oid = c.relnamespace
     LEFT JOIN pg_description d ON d.objoid = c.oid AND d.classoid = 'pg_class'::regclass
-    WHERE n.nspname = $1 AND c.relname = $2
+    WHERE n.nspname = ? AND c.relname = ?
     LIMIT 1;
   `;
 
-    const [result] = await resource.query(query, [schema, tableName]);
+    const [result] = await resource.rawQuery(query, [schema, tableName]);
 
     if (!result) {
       throw createError({

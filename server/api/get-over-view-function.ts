@@ -9,7 +9,7 @@ export default defineEventHandler(async (event): Promise<RoutineMetadata[]> => {
     type: 'postgres',
   });
 
-  const result = await resource.query(`
+  const result = await resource.rawQuery(`
         SELECT 
             r.routine_name AS name,
             r.routine_schema AS schema,

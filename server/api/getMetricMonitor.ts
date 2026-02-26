@@ -25,14 +25,14 @@ export default defineEventHandler(async (event): Promise<MetricsResponse> => {
   });
 
   // Get session count
-  const sessionsRes = await resource.query(
+  const sessionsRes = await resource.rawQuery(
     'SELECT COUNT(*) FROM pg_stat_activity'
   );
 
   const sessionCount = parseInt(sessionsRes[0].count);
 
   // Get total transactions
-  const txnRes = await resource.query(`
+  const txnRes = await resource.rawQuery(`
     SELECT SUM(xact_commit + xact_rollback)::bigint AS total_txn FROM pg_stat_database;
   `);
   const totalTxn = parseInt(txnRes[0].total_txn);
@@ -40,7 +40,7 @@ export default defineEventHandler(async (event): Promise<MetricsResponse> => {
   previousTxnCount = totalTxn;
 
   // Get block IO data
-  const blockIO = await resource.query(`
+  const blockIO = await resource.rawQuery(`
     SELECT SUM(blks_read)::bigint AS blks_read, SUM(blks_hit)::bigint AS blks_hit FROM pg_stat_database;
   `);
 

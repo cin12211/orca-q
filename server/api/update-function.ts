@@ -53,7 +53,7 @@ export default defineEventHandler(
         type: 'postgres',
       });
 
-      await dbConnection.query(functionDefinition);
+      await dbConnection.rawQuery(functionDefinition);
 
       const endTime = performance.now();
       const queryTime = Number((endTime - startTime).toFixed(2));

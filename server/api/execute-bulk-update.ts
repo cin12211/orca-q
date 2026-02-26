@@ -59,46 +59,45 @@ export default defineEventHandler(
         type: 'postgres',
       });
 
+      const client = await dbConnection.acquireRawConnection();
       try {
-        // Execute transaction
-        const queryResults = await dbConnection.transaction(async txManager => {
-          const results: {
-            query: string;
-            affectedRows: number;
-            results: Record<string, unknown>[];
-          }[] = [];
+        await client.query('BEGIN');
+        const results: {
+          query: string;
+          affectedRows: number;
+          results: Record<string, unknown>[];
+        }[] = [];
 
-          for (const statement of sqlUpdateStatements) {
-            const queryResult = await txManager.query(statement);
-            // For PostgreSQL, queryResult[1] contains the row count for UPDATE queries
-            const affectedRows = Array.isArray(queryResult)
-              ? queryResult[1] || 0
-              : 0;
+        for (const statement of sqlUpdateStatements) {
+          const queryResult = await client.query({ text: statement });
+          const affectedRows = queryResult.rowCount || 0;
 
-            results.push({
-              query: statement,
-              affectedRows,
-              results: queryResult,
-            });
+          results.push({
+            query: statement,
+            affectedRows,
+            results: queryResult.rows || [],
+          });
 
-            console.debug('Executed UPDATE,INSERT statement:', {
-              statement,
-              affectedRows,
-            });
-          }
-
-          return results;
-        });
+          console.debug('Executed UPDATE,INSERT statement:', {
+            statement,
+            affectedRows,
+          });
+        }
+        await client.query('COMMIT');
 
         const endTime = performance.now();
         const queryTime = Number((endTime - startTime).toFixed(2));
 
         return {
           success: true,
-          data: queryResults,
+          data: results,
           queryTime,
         };
+      } catch (e) {
+        await client.query('ROLLBACK');
+        throw e;
       } finally {
+        await dbConnection.releaseRawConnection(client);
       }
     } catch (error) {
       if (error instanceof Error) {

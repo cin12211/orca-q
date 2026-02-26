@@ -28,6 +28,8 @@ defineProps<{
   isHaveOneExecute: boolean;
   executeLoading: boolean;
   executeErrors: boolean;
+  isStreaming: boolean;
+  streamingRowCount: number;
   queryTime: number;
   rawQueryResultsLength: number;
   isRawViewMode?: boolean;
@@ -43,6 +45,7 @@ defineEmits<{
   (e: 'update:serializeMode', value: ExplainAnalyzeSerializeMode): void;
   (e: 'onExecuteCurrent'): void;
   (e: 'update:isRawViewMode', value: boolean): void;
+  (e: 'onCancelQuery'): void;
 }>();
 </script>
 <template>
@@ -55,7 +58,21 @@ defineEmits<{
       v-if="isHaveOneExecute"
       class="font-normal text-xs text-muted-foreground"
     >
-      <span v-if="executeLoading" class="flex items-center gap-1"
+      <span v-if="isStreaming" class="flex items-center gap-1">
+        <Icon name="hugeicons:loading-03" class="size-4! animate-spin" />
+        Streaming... {{ formatNumber(streamingRowCount) }} rows
+        <Button
+          size="iconSm"
+          @click="$emit('onCancelQuery')"
+          class="transition-colors h-5 px-1 gap-1 text-xs w-auto"
+          title="Cancel query"
+          variant="outline"
+        >
+          <Icon name="hugeicons:stop" class="size-4! text-red-500" />
+          Cancel query
+        </Button>
+      </span>
+      <span v-else-if="executeLoading" class="flex items-center gap-1"
         >Processing
 
         <Icon name="hugeicons:loading-03" class="size-4! animate-spin"> </Icon>

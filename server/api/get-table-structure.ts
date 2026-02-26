@@ -19,7 +19,7 @@ export default defineEventHandler(async (event): Promise<TableStructure[]> => {
     type: 'postgres',
   });
 
-  const result = await resource.query(
+  const result = await resource.rawQuery(
     `SELECT
         a.attname AS column_name,
         CASE
@@ -95,8 +95,8 @@ export default defineEventHandler(async (event): Promise<TableStructure[]> => {
             AND a.attnum = ANY (rc.conkey)
         ) fk_info ON TRUE
       WHERE
-        c.relname = $1
-        AND n.nspname = $2
+        c.relname = ?
+        AND n.nspname = ?
         AND a.attnum > 0
         AND NOT a.attisdropped
       ORDER BY

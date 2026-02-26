@@ -1,12 +1,6 @@
 import type { FieldDef } from 'pg';
 import { useAppContext } from '~/core/contexts/useAppContext';
-import { useExplorerFileStore, useSchemaStore } from '~/core/stores';
-import type { MappedRawColumn } from '../interfaces';
-import { formatColumnsInfo } from '../utils';
-
-//TODO: create lint check error for sql
-// https://www.npmjs.com/package/node-sql-parser?activeTab=readme
-// https://codemirror.net/examples/lint/
+import { useExplorerFileStore } from '~/core/stores';
 
 export function useRawQueryFileContent() {
   const route = useRoute('workspaceId-connectionId-explorer-fileId');

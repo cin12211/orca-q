@@ -25,7 +25,7 @@ export default defineEventHandler(
     });
 
     // Query to get view definition and type
-    const result = await resource.query(`
+    const result = await resource.rawQuery(`
     SELECT
       c.relname AS view_name,
       n.nspname AS schema_name,

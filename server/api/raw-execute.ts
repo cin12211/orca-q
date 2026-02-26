@@ -1,7 +1,7 @@
 import { readBody, defineEventHandler, createError } from 'h3';
 import type { FieldDef } from 'pg';
 import { type QueryFailedError } from 'typeorm';
-import { getPgPool } from '../utils/db-row-connection';
+import { getDatabaseSource } from '../utils/db-connection';
 
 interface QueryResultWithMetadata {
   rows: Record<string, any>[];
@@ -12,22 +12,37 @@ interface QueryResultWithMetadata {
 export default defineEventHandler(
   async (event): Promise<QueryResultWithMetadata> => {
     try {
-      const body: { query: string; dbConnectionString: string } =
-        await readBody(event);
+      const body: {
+        query: string;
+        dbConnectionString: string;
+        params: any[] | Record<string, any>;
+      } = await readBody(event);
 
       const startTime = performance.now();
-      const connection = await getPgPool({
+      const adapter = await getDatabaseSource({
         dbConnectionString: body.dbConnectionString,
         type: 'postgres',
       });
 
-      const result = await connection.query({
-        text: body.query,
-        rowMode: 'array',
-      });
+      // const client = await adapter.acquireRawConnection();
 
-      const fields: FieldDef[] = result.fields;
-      const rows: unknown[][] = result.rows;
+      let fields: FieldDef[];
+      let rows: unknown[][];
+
+      // try {
+      // const result = await client.query({
+      //   text: body.query,
+      //   rowMode: 'array',
+      // });
+
+      const result = await adapter.rawOut(body.query, body.params as any[]);
+      fields = result.fields as FieldDef[];
+      rows = result.rows;
+
+      // }
+      // finally {
+      //   await adapter.releaseRawConnection(client);
+      // }
 
       const endTime = performance.now();
       const queryTime = Number((endTime - startTime).toFixed(2));
@@ -36,9 +51,9 @@ export default defineEventHandler(
     } catch (error) {
       const queryError: QueryFailedError = error as any;
 
+      console.log('🚀 ~ queryError:', queryError);
       throw createError({
         statusCode: 500,
-        statusMessage: queryError.message,
         cause: queryError.cause,
         data: JSON.stringify(error, null, 2),
         message: queryError.message,

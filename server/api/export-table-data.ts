@@ -9,7 +9,7 @@ import { Readable } from 'node:stream';
 import { to } from 'pg-copy-streams';
 import QueryStream from 'pg-query-stream';
 import { ExportDataFormatType } from '~/components/modules/management/schemas/hooks/context-menu/types';
-import { getPgPool } from '../utils/db-row-connection';
+import { getDatabaseSource } from '../utils/db-connection';
 
 interface ExportTableDataRequest {
   dbConnectionString: string;
@@ -63,7 +63,7 @@ export default defineEventHandler(async event => {
   // ------------------------
   // DB & headers
   // ------------------------
-  const pool = await getPgPool({
+  const adapter = await getDatabaseSource({
     dbConnectionString,
     type: 'postgres',
   });
@@ -85,18 +85,18 @@ export default defineEventHandler(async event => {
   // ------------------------
   // Load columns
   // ------------------------
-  const columnsResult = await pool.query(
+  const columnsResult = await adapter.rawQuery(
     `
       SELECT column_name
       FROM information_schema.columns
-      WHERE table_schema = $1
-        AND table_name = $2
+      WHERE table_schema = ?
+        AND table_name = ?
       ORDER BY ordinal_position
     `,
     [schemaName, tableName]
   );
 
-  const columns: string[] = columnsResult.rows.map(
+  const columns: string[] = columnsResult.map(
     (r: { column_name: string }) => r.column_name
   );
 
@@ -111,18 +111,18 @@ export default defineEventHandler(async event => {
   // Streaming
   // ------------------------
   if (format === ExportDataFormatType.CSV) {
-    const client = await pool.connect();
+    const client = await adapter.acquireRawConnection();
     try {
       const sql = `COPY "${schemaName}"."${tableName}" TO STDOUT WITH (FORMAT CSV, HEADER)`;
       const stream = client.query(to(sql));
 
       stream.on('finish', () => {
-        client.release();
+        adapter.releaseRawConnection(client);
       });
 
       stream.on('error', (err: Error) => {
         console.error('CSV stream error:', err);
-        client.release();
+        adapter.releaseRawConnection(client);
       });
 
       return stream;
@@ -167,7 +167,7 @@ export default defineEventHandler(async event => {
   // SQL format uses batch processing for efficiency
   if (format === ExportDataFormatType.SQL) {
     (async () => {
-      const client = await pool.connect();
+      const client = await adapter.acquireRawConnection();
 
       try {
         const queryStream = new QueryStream(
@@ -207,7 +207,7 @@ export default defineEventHandler(async event => {
       } catch (err) {
         stream.destroy(err as Error);
       } finally {
-        client.release();
+        await adapter.releaseRawConnection(client);
       }
     })();
 
@@ -216,7 +216,7 @@ export default defineEventHandler(async event => {
 
   // JSON format streaming
   (async () => {
-    const client = await pool.connect();
+    const client = await adapter.acquireRawConnection();
 
     try {
       const queryStream = new QueryStream(
@@ -248,7 +248,7 @@ export default defineEventHandler(async event => {
     } catch (err) {
       stream.destroy(err as Error);
     } finally {
-      client.release();
+      await adapter.releaseRawConnection(client);
     }
   })();
 

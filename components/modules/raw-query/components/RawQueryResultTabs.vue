@@ -79,6 +79,8 @@ const activeTabColumns = computed<MappedRawColumn[]>(() => {
   }));
 });
 
+//TODO: performace issues
+//TODO: need to check again this is haveay task
 // Format data for display (map column indices to names using tab's own fieldDefs)
 const formattedData = computed(() => {
   if (!activeTab.value?.result) return [];

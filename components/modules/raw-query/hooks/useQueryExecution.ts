@@ -1,0 +1,352 @@
+import type { EditorView } from '@codemirror/view';
+import type { FieldDef } from 'pg';
+import type { SyntaxTreeNodeData } from '~/components/base/code-editor/extensions';
+import {
+  applySqlErrorDiagnostics,
+  clearSqlErrorDiagnostics,
+  getCurrentStatement,
+  getTreeNodes,
+} from '~/components/base/code-editor/utils';
+import type { RowData } from '~/components/base/dynamic-table/utils';
+import {
+  convertParameters,
+  uuidv4,
+  type ParsedParametersResult,
+} from '~/core/helpers';
+import type { Connection } from '~/core/stores';
+import type { ExecutedResultItem } from '../interfaces';
+import type { ResultTabsReturn } from './useResultTabs';
+import { executeStreamingQuery } from './useStreamingQuery';
+
+interface UseQueryExecutionParams {
+  getEditorView: () => EditorView | null;
+  connection: Ref<Connection | undefined>;
+  fileVariables: Ref<string>;
+  fieldDefs: Ref<FieldDef[]>;
+  resultTabs: ResultTabsReturn;
+  buildExplainAnalyzePrefix: () => string;
+}
+
+/**
+ * Handles the full SQL query execution lifecycle:
+ * prepare → execute (fetch / streaming) → update result tabs → abort.
+ */
+export function useQueryExecution({
+  getEditorView,
+  connection,
+  fileVariables,
+  fieldDefs,
+  resultTabs,
+  buildExplainAnalyzePrefix,
+}: UseQueryExecutionParams) {
+  const currentRawQueryResult = shallowRef<RowData[]>([]);
+  const rawResponse = shallowRef<
+    | {
+        rows: Record<string, any>[];
+        fields: FieldDef[];
+        queryTime: number;
+      }
+    | {}
+  >({});
+
+  const seqIndex = shallowRef(0);
+
+  const queryProcessState = reactive<{
+    isHaveOneExecute: boolean;
+    executeLoading: boolean;
+    isStreaming: boolean;
+    streamingRowCount: number;
+    queryTime: number;
+    executeErrors:
+      | {
+          message: string;
+          data: Record<string, unknown>;
+        }
+      | undefined;
+    currentStatementQuery: string;
+  }>({
+    isHaveOneExecute: false,
+    executeLoading: false,
+    isStreaming: false,
+    streamingRowCount: 0,
+    queryTime: 0,
+    executeErrors: undefined,
+    currentStatementQuery: '',
+  });
+
+  // Abort controller for cancelling streaming queries
+  let activeStreamAbort: (() => void) | null = null;
+
+  /**
+   * Core execution pipeline for a single SQL statement.
+   */
+  const executeCurrentStatement = async ({
+    currentStatements,
+    treeNodes,
+    queryPrefix,
+  }: {
+    currentStatements: SyntaxTreeNodeData[];
+    treeNodes: SyntaxTreeNodeData[];
+    queryPrefix?: string;
+  }) => {
+    if (!currentStatements.length) {
+      return;
+    }
+
+    // TODO: support multiple statements
+    const currentStatement = currentStatements[0];
+
+    queryProcessState.isHaveOneExecute = true;
+    queryProcessState.currentStatementQuery = currentStatement.text;
+
+    let executeQuery = currentStatement.text;
+
+    const currentStatementTrees: SyntaxTreeNodeData[] = [];
+
+    treeNodes.forEach(item => {
+      if (
+        item.from >= currentStatement.from &&
+        item.to <= currentStatement.to
+      ) {
+        currentStatementTrees.push(item);
+      }
+    });
+
+    const reversedCurrentStatementTrees = currentStatementTrees.toReversed();
+
+    let parameters: ParsedParametersResult | null = null;
+
+    for (var statement of reversedCurrentStatementTrees) {
+      if (statement.type === 'LineComment') {
+        const convertResult = convertParameters(statement.text);
+
+        if (convertResult.values) {
+          parameters = convertResult;
+          break;
+        }
+      }
+    }
+
+    let fileParameters: Record<string, unknown> = {};
+
+    try {
+      fileParameters = JSON.parse(fileVariables.value || '{}');
+    } catch (e) {
+      console.log('fileParameters error::', e);
+    }
+
+    if (queryPrefix) {
+      executeQuery = `${queryPrefix} ${executeQuery}`;
+    }
+
+    fieldDefs.value = [];
+    currentRawQueryResult.value = [];
+    rawResponse.value = {};
+    queryProcessState.executeLoading = true;
+    queryProcessState.isStreaming = false;
+    queryProcessState.streamingRowCount = 0;
+
+    // Cancel any in-flight streaming query
+    if (activeStreamAbort) {
+      activeStreamAbort();
+      activeStreamAbort = null;
+    }
+
+    seqIndex.value++;
+
+    const executedResultItem: ExecutedResultItem = {
+      id: uuidv4(),
+      metadata: {
+        queryTime: 0,
+        statementQuery: executeQuery,
+        executedAt: new Date(),
+        executeErrors: undefined,
+        fieldDefs: undefined,
+        connection: undefined,
+      },
+      result: [],
+      view: queryPrefix?.startsWith('EXPLAIN') ? 'explain' : 'result',
+      seqIndex: seqIndex.value,
+    };
+
+    // Register the result tab immediately so user sees it
+    resultTabs.addResultTab(executedResultItem);
+    clearSqlErrorDiagnostics(getEditorView() as EditorView);
+
+    // TODO: fix, this trick is not good
+    const isExplain = !!queryPrefix?.startsWith('EXPLAIN');
+    const rowBuffer: RowData[] = []; // accumulator, không reactive
+
+    if (isExplain) {
+      // EXPLAIN queries: use traditional $fetch (small result sets)
+      console.log('mergeParameters::', fileParameters);
+      try {
+        const result = await $fetch('/api/raw-execute', {
+          method: 'POST',
+          body: {
+            dbConnectionString: connection.value?.connectionString,
+            query: executeQuery,
+            params: fileParameters,
+          },
+
+          onResponseError: ({ response }) => {
+            const message = response._data.data;
+            const errorDetail = JSON.parse(response._data.data);
+            const editorView = getEditorView();
+            if (editorView && errorDetail) {
+              applySqlErrorDiagnostics({
+                editorView: editorView as EditorView,
+                originalSql: currentStatement.text,
+                statementFrom: Number(currentStatement.from),
+                fileParameters,
+                rawErrorMessage: message,
+                clientType: 'pg',
+              });
+            }
+          },
+        });
+
+        fieldDefs.value = result.fields;
+        executedResultItem.metadata.fieldDefs = result.fields;
+        executedResultItem.result = result.rows;
+        executedResultItem.metadata.queryTime = result.queryTime || 0;
+        executedResultItem.metadata.connection = connection.value;
+
+        rawResponse.value = result;
+        currentRawQueryResult.value = result.rows as RowData[];
+        queryProcessState.executeErrors = undefined;
+        queryProcessState.queryTime = result.queryTime || 0;
+      } catch (e: any) {
+        queryProcessState.executeErrors = e.data;
+        executedResultItem.metadata.executeErrors = e.data;
+        executedResultItem.view = 'error';
+      }
+
+      queryProcessState.executeLoading = false;
+
+      // Refresh the tab with final data
+      resultTabs.refreshResultTab(executedResultItem.id, executedResultItem);
+      return;
+    }
+
+    // Regular queries: use streaming for progressive rendering
+    queryProcessState.isStreaming = true;
+    queryProcessState.executeLoading = false;
+
+    const { abort } = executeStreamingQuery({
+      query: executeQuery,
+      dbConnectionString: connection.value?.connectionString || '',
+      params: fileParameters,
+      onMeta: (fields, _command) => {
+        fieldDefs.value = fields;
+        executedResultItem.metadata.fieldDefs = fields;
+        executedResultItem.metadata.connection = connection.value;
+
+        // Refresh tab to show column headers
+        resultTabs.refreshResultTab(executedResultItem.id, executedResultItem);
+      },
+      onRows: (batch, totalSoFar) => {
+        rowBuffer.push(...batch);
+        queryProcessState.streamingRowCount = totalSoFar;
+        executedResultItem.result = rowBuffer;
+        currentRawQueryResult.value = rowBuffer;
+        resultTabs.refreshResultTab(executedResultItem.id, executedResultItem);
+      },
+      onDone: (rowCount, queryTime) => {
+        queryProcessState.executeLoading = false;
+        queryProcessState.isStreaming = false;
+        queryProcessState.queryTime = queryTime;
+        queryProcessState.executeErrors = undefined;
+        queryProcessState.streamingRowCount = rowCount;
+
+        executedResultItem.metadata.queryTime = queryTime;
+
+        rawResponse.value = {
+          rows: executedResultItem.result,
+          fields: fieldDefs.value,
+          queryTime,
+        };
+
+        // Final refresh
+        resultTabs.refreshResultTab(executedResultItem.id, executedResultItem);
+
+        activeStreamAbort = null;
+      },
+      onError: message => {
+        queryProcessState.executeLoading = false;
+        queryProcessState.isStreaming = false;
+        queryProcessState.executeErrors = {
+          message,
+          data: { message },
+        };
+        executedResultItem.metadata.executeErrors = {
+          message,
+          data: { message },
+        };
+        executedResultItem.view = 'error';
+
+        // Refresh tab to show error
+        resultTabs.refreshResultTab(executedResultItem.id, executedResultItem);
+
+        activeStreamAbort = null;
+      },
+    });
+
+    activeStreamAbort = abort;
+  };
+
+  /**
+   * Execute the SQL statement at current cursor position.
+   */
+  const onExecuteCurrent = () => {
+    const editorView = getEditorView();
+    if (!editorView) return;
+
+    const { currentStatements } = getCurrentStatement(editorView);
+    const treeNodes = getTreeNodes(editorView);
+
+    executeCurrentStatement({
+      currentStatements,
+      treeNodes,
+    });
+  };
+
+  /**
+   * Execute EXPLAIN ANALYZE for the SQL statement at current cursor position.
+   */
+  const onExplainAnalyzeCurrent = () => {
+    const editorView = getEditorView();
+    if (!editorView) return;
+
+    const { currentStatements } = getCurrentStatement(editorView);
+    const treeNodes = getTreeNodes(editorView);
+
+    executeCurrentStatement({
+      currentStatements,
+      treeNodes,
+      queryPrefix: buildExplainAnalyzePrefix(),
+    });
+  };
+
+  /**
+   * Cancel an in-flight streaming query.
+   */
+  const cancelStreamingQuery = () => {
+    if (activeStreamAbort) {
+      activeStreamAbort();
+      activeStreamAbort = null;
+      queryProcessState.executeLoading = false;
+      queryProcessState.isStreaming = false;
+    }
+  };
+
+  return {
+    currentRawQueryResult,
+    rawResponse,
+    queryProcessState,
+    executeCurrentStatement,
+    onExecuteCurrent,
+    onExplainAnalyzeCurrent,
+    cancelStreamingQuery,
+  };
+}

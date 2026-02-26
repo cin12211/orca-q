@@ -28,7 +28,7 @@ export default defineEventHandler(async (event): Promise<QueryResult> => {
       type: 'postgres',
     });
 
-    const result = await resource.query(`
+    const result = await resource.rawQuery(`
         WITH
         pk_info AS (
             SELECT

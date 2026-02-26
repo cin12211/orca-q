@@ -101,4 +101,5 @@ export default defineNuxtConfig({
   app: {
     head: appHeaderConfig,
   },
+  spaLoadingTemplate: true,
 });

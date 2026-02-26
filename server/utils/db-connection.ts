@@ -1,113 +1,120 @@
-import pg from 'pg';
-import { type DatabaseType, DataSource } from 'typeorm';
+import {
+  createDatabaseAdapter,
+  type DatabaseType,
+  type IDatabaseAdapter,
+} from './adapters';
 
-/**
- * Disable pg's automatic type conversions for temporal and precision-sensitive
- * types. Must be set BEFORE any DataSource/Pool is initialized, at module load.
- *
- * Without this, pg converts TIMESTAMP → JS Date, which gets serialised to UTC
- * ISO string and then re-parsed by the browser in local timezone → wrong value.
- *
- * OIDs: https://www.postgresql.org/docs/current/catalog-pg-type.html
- */
-const RAW = (val: string) => val;
-const TEMPORAL_OIDS = [
-  1082,
-  1083,
-  1114,
-  1184,
-  1266, // date, time, timestamp, timestamptz, timetz
-  1182,
-  1183,
-  1115,
-  1185,
-  1270, // array variants
-] as const;
-const PRECISION_OIDS = [
-  1700,
-  1231, // numeric/decimal + array (avoid JS float precision loss)
-  20,
-  1016, // int8/bigint + array   (avoid MAX_SAFE_INTEGER overflow)
-] as const;
-
-[...TEMPORAL_OIDS, ...PRECISION_OIDS].forEach(oid =>
-  // Cast needed: array-type OIDs (e.g. 1182, 1183) are valid pg OIDs but
-  // are not listed in pg's narrow `TypeId` union type definition.
-  pg.types.setTypeParser(
-    oid as Parameters<typeof pg.types.setTypeParser>[0],
-    RAW
-  )
-);
-
-type CachedConnection = {
-  source: DataSource;
+type CachedAdapter = {
+  adapter: IDatabaseAdapter;
   lastUsed: number;
 };
 
-const connectionCache = new Map<string, CachedConnection>();
+const adapterCache = new Map<string, CachedAdapter>();
 const LRU_TIMEOUT = 5 * 60 * 1000; // 5 minutes
 
 // Cleanup every 1 minute
-setInterval(() => {
+function cleanupIdleAdapters() {
   const now = Date.now();
 
-  for (const [connStr, conn] of connectionCache.entries()) {
-    const idleTime = now - conn.lastUsed;
+  for (const [key, cached] of adapterCache.entries()) {
+    const idleTime = now - cached.lastUsed;
 
     if (idleTime > LRU_TIMEOUT) {
-      conn.source.destroy().catch(console.error);
-      connectionCache.delete(connStr);
-      console.log(`[Connection Cache] Destroyed idle connection: ${connStr}`);
+      cached.adapter.destroy().catch(console.error);
+      adapterCache.delete(key);
+      console.log(
+        `[Adapter Cache] Destroyed idle adapter for ${cached.adapter.dbType}`
+      );
     }
   }
-}, 60 * 1000); // Every 1 min
+}
 
-//TODO: only support postgres
+setInterval(cleanupIdleAdapters, 60 * 1000);
+
+// Graceful shutdown handler
+async function shutdownAllAdapters() {
+  for (const [key, cached] of adapterCache.entries()) {
+    try {
+      await cached.adapter.destroy();
+      console.log(
+        `[Adapter Cache] Adapter closed on shutdown: ${cached.adapter.dbType}`
+      );
+    } catch (err) {
+      console.error(
+        `[Adapter Cache] Error shutting down adapter: ${cached.adapter.dbType}`,
+        err
+      );
+    } finally {
+      adapterCache.delete(key);
+    }
+  }
+}
+
+process.on('SIGINT', async () => {
+  await shutdownAllAdapters();
+  process.exit(0);
+});
+
+process.on('SIGTERM', async () => {
+  await shutdownAllAdapters();
+  process.exit(0);
+});
+
+process.on('exit', async () => {
+  await shutdownAllAdapters();
+});
+
+// We export this with the same name to be a drop-in replacement where possible,
+// though it now returns an IDatabaseAdapter instead of a TypeORM DataSource.
 export const getDatabaseSource = async ({
   dbConnectionString,
   type,
 }: {
   dbConnectionString: string;
-  type: DatabaseType;
+  type: DatabaseType | 'postgres'; // allow typeorm db types temporarily if any remain
   schema?: string;
-}) => {
-  const cached = connectionCache.get(dbConnectionString);
-  if (cached && cached.source.isInitialized) {
+}): Promise<IDatabaseAdapter> => {
+  const cacheKey = `${type}://${dbConnectionString}`;
+  let cached = adapterCache.get(cacheKey);
+
+  if (cached) {
     cached.lastUsed = Date.now();
-    return cached.source;
+    return cached.adapter;
   }
 
-  const newSource = new DataSource({
-    type: 'postgres', // Ensure the type is explicitly set to 'postgres'
-    url: dbConnectionString, // Your connection string
-    synchronize: false, // Set to true if you want TypeORM to auto-create tables (use with caution in production)
-    logging: true, // Logs SQL queries for debugging,
-    applicationName: 'orca-query-server',
-  });
+  let dbType: DatabaseType = 'postgres';
+  if (type === 'postgres' || type === 'mysql' || type === 'sqlite') {
+    dbType = type as DatabaseType;
+  } else {
+    // fallback
+    dbType = 'postgres';
+  }
 
-  await newSource.initialize();
+  const newAdapter = createDatabaseAdapter(dbType, dbConnectionString);
 
-  connectionCache.set(dbConnectionString, {
-    source: newSource,
+  adapterCache.set(cacheKey, {
+    adapter: newAdapter,
     lastUsed: Date.now(),
   });
 
-  return newSource;
+  return newAdapter;
 };
 
-export async function healthCheckConnection({ url }: { url: string }) {
+export async function healthCheckConnection({
+  url,
+  type = 'postgres',
+}: {
+  url: string;
+  type?: DatabaseType | 'postgres';
+}) {
   try {
-    const connection = new DataSource({
-      type: 'postgres', // Ensure the type is explicitly set to 'postgres'
-      url, // Your connection string
-      synchronize: false, // Set to true if you want TypeORM to auto-create tables (use with caution in production)
-      logging: true, // Logs SQL queries for debugging
-      entities: [], // Add entities if required
-      applicationName: 'orca-query-server',
-    });
-    await connection.initialize();
-
-    return connection.isConnected;
+    const adapter = createDatabaseAdapter(
+      (type as DatabaseType) || 'postgres',
+      url
+    );
+    const isConnected = await adapter.healthCheck();
+    await adapter.destroy();
+    return isConnected;
   } catch (error) {
     console.error('Database connection failed:', error);
     return false;

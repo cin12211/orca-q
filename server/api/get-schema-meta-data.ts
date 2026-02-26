@@ -77,7 +77,7 @@ export default defineEventHandler(async (event): Promise<SchemaMetaData[]> => {
     type: 'postgres',
   });
 
-  const result = await resource.query(`
+  const result = await resource.rawQuery(`
     SELECT
       nsp.nspname AS name,
       -- tables

@@ -67,7 +67,7 @@ export default defineEventHandler(
       // Build and execute ALTER FUNCTION RENAME statement
       const renameQuery = `ALTER FUNCTION "${schemaName}"."${oldName}" RENAME TO "${newName}";`;
 
-      await dbConnection.query(renameQuery);
+      await dbConnection.rawQuery(renameQuery);
 
       const endTime = performance.now();
       const queryTime = Number((endTime - startTime).toFixed(2));

@@ -51,7 +51,7 @@ export default defineEventHandler(
       const cascadeClause = cascade ? ' CASCADE' : '';
       const dropQuery = `DROP FUNCTION IF EXISTS "${schemaName}"."${functionName}"${cascadeClause};`;
 
-      await dbConnection.query(dropQuery);
+      await dbConnection.rawQuery(dropQuery);
 
       const endTime = performance.now();
       const queryTime = Number((endTime - startTime).toFixed(2));

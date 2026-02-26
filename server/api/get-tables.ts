@@ -76,7 +76,7 @@ export default defineEventHandler(async (event): Promise<DatabaseMetadata> => {
     type: 'postgres',
   });
 
-  const result = await resource.query(`
+  const result = await resource.rawQuery(`
         -- select nspname
         -- from pg_catalog.pg_namespace;
         -- show all table detail in schema (2)

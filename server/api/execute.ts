@@ -19,7 +19,7 @@ export default defineEventHandler(
         type: 'postgres',
       });
 
-      const result: Record<string, unknown>[] = await resource.query(
+      const result: Record<string, unknown>[] = await resource.rawQuery(
         body.query
       );
 

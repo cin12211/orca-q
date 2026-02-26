@@ -16,7 +16,7 @@ export default defineEventHandler(
       type: 'postgres',
     });
 
-    const result = await resource.query(`
+    const result = await resource.rawQuery(`
       SELECT 
         c.relname AS name,
         n.nspname AS schema,
