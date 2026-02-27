@@ -61,16 +61,6 @@ defineEmits<{
       <span v-if="isStreaming" class="flex items-center gap-1">
         <Icon name="hugeicons:loading-03" class="size-4! animate-spin" />
         Streaming... {{ formatNumber(streamingRowCount) }} rows
-        <Button
-          size="iconSm"
-          @click="$emit('onCancelQuery')"
-          class="transition-colors h-5 px-1 gap-1 text-xs w-auto"
-          title="Cancel query"
-          variant="outline"
-        >
-          <Icon name="hugeicons:stop" class="size-4! text-red-500" />
-          Cancel query
-        </Button>
       </span>
       <span v-else-if="executeLoading" class="flex items-center gap-1"
         >Processing
@@ -228,18 +218,30 @@ defineEmits<{
       <Tooltip>
         <TooltipTrigger as-child>
           <Button
+            v-if="isStreaming || executeLoading"
+            @click="$emit('onCancelQuery')"
+            variant="outline"
+            size="xs"
+            class="text-xs font-medium"
+          >
+            <Icon name="hugeicons:stop" class="size-4! text-red-500" />
+            Cancel query
+          </Button>
+          <Button
+            v-else
             @click="$emit('onExecuteCurrent')"
             variant="outline"
             size="xs"
             class="text-xs font-medium"
           >
-            <Icon name="hugeicons:play"> </Icon>
+            <Icon name="hugeicons:play" />
             Execute current
             <ContextMenuShortcut>⌘↵</ContextMenuShortcut>
           </Button>
         </TooltipTrigger>
         <TooltipContent>
-          <p>Execute Query (⌘↵)</p>
+          <p v-if="isStreaming || executeLoading">Cancel query</p>
+          <p v-else>Execute Query (⌘↵)</p>
         </TooltipContent>
       </Tooltip>
     </div>
