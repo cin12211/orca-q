@@ -165,7 +165,11 @@ const onToggleSelectedSlotStatus = async () => {
 <template>
   <div class="space-y-4">
     <div class="flex items-center justify-between">
-      <h3 class="text-sm font-medium">Replication</h3>
+      <div>
+        <h3 class="text-sm font-medium">Replication</h3>
+        <p class="text-xs text-muted-foreground">Replication stats and slots</p>
+      </div>
+
       <Button
         variant="outline"
         size="xs"

@@ -130,7 +130,13 @@ const onTerminateSelectedConnection = async () => {
 <template>
   <div class="space-y-4">
     <div class="flex items-center justify-between">
-      <h3 class="text-sm font-medium">State</h3>
+      <div>
+        <h3 class="text-sm font-medium">State</h3>
+        <p class="text-xs text-muted-foreground">
+          Active sessions, locks, prepared transactions
+        </p>
+      </div>
+
       <Button
         variant="outline"
         size="xs"

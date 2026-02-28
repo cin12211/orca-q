@@ -273,7 +273,12 @@ const blockIoChartOption = computed<EChartsOption>(() => ({
 <template>
   <div class="space-y-4">
     <div class="flex items-center justify-between">
-      <h3 class="text-sm font-medium">Activity Dashboard</h3>
+      <div>
+        <h3 class="text-sm font-medium">Activity Dashboard</h3>
+        <p class="text-xs text-muted-foreground">
+          Sessions, TPS, tuples and block I/O
+        </p>
+      </div>
 
       <Button
         variant="outline"
@@ -301,43 +306,33 @@ const blockIoChartOption = computed<EChartsOption>(() => ({
 
     <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-2.5">
       <div class="h-full border rounded-lg p-2.5 space-y-2">
-        <div class="flex items-end justify-between gap-2">
-          <p class="text-[11px] uppercase tracking-wide text-muted-foreground">
-            Sessions
-          </p>
-          <p class="text-lg font-semibold leading-none tabular-nums">
+        <div class="flex items-center gap-1">
+          <p class="text-xs uppercase text-muted-foreground">Sessions:</p>
+          <p class="text-sm font-semibold leading-none tabular-nums">
             {{ formatNumber(dashboard?.sessions.total) }}
           </p>
         </div>
         <div class="grid grid-cols-2 gap-x-3 gap-y-1 text-[11px]">
-          <p
-            class="flex items-center justify-between gap-2 text-muted-foreground"
-          >
-            <span>Active</span>
+          <p class="text-muted-foreground">
+            <span>Active: </span>
             <span class="tabular-nums text-foreground">
               {{ formatNumber(dashboard?.sessions.active) }}
             </span>
           </p>
-          <p
-            class="flex items-center justify-between gap-2 text-muted-foreground"
-          >
-            <span>Idle</span>
+          <p class="text-muted-foreground">
+            <span>Idle: </span>
             <span class="tabular-nums text-foreground">
               {{ formatNumber(dashboard?.sessions.idle) }}
             </span>
           </p>
-          <p
-            class="flex items-center justify-between gap-2 text-muted-foreground"
-          >
-            <span>Max</span>
+          <p class="text-muted-foreground">
+            <span>Max: </span>
             <span class="tabular-nums text-foreground">
               {{ formatNumber(dashboard?.sessions.maxConnections) }}
             </span>
           </p>
-          <p
-            class="flex items-center justify-between gap-2 text-muted-foreground"
-          >
-            <span>Usage</span>
+          <p class="text-muted-foreground">
+            <span>Usage: </span>
             <span class="tabular-nums text-foreground">
               {{ formatPercent(dashboard?.sessions.usagePercent) }}
             </span>
@@ -346,72 +341,68 @@ const blockIoChartOption = computed<EChartsOption>(() => ({
       </div>
 
       <div class="h-full border rounded-lg p-2.5 space-y-2">
-        <div class="flex items-end justify-between gap-2">
-          <p class="text-[11px] uppercase tracking-wide text-muted-foreground">
-            TPS
-          </p>
-          <p class="text-lg font-semibold leading-none tabular-nums">
+        <div class="flex items-center gap-1">
+          <p class="text-xs uppercase text-muted-foreground">TPS:</p>
+          <p class="text-sm font-semibold leading-none tabular-nums">
             {{ formatRate(dashboard?.transactions.tps) }}
           </p>
         </div>
         <div class="grid grid-cols-2 gap-x-3 gap-y-1 text-[11px]">
-          <p
-            class="flex items-center justify-between gap-2 text-muted-foreground"
-          >
-            <span>Commits</span>
+          <p class="text-muted-foreground">
+            <span>Commits/sec: </span>
             <span class="tabular-nums text-foreground">
               {{ formatRate(dashboard?.transactions.commitsPerSec) }}
             </span>
           </p>
-          <p
-            class="flex items-center justify-between gap-2 text-muted-foreground"
-          >
-            <span>Rollbacks</span>
+          <p class="text-muted-foreground">
+            <span>Rollbacks/sec: </span>
             <span class="tabular-nums text-foreground">
               {{ formatRate(dashboard?.transactions.rollbacksPerSec) }}
+            </span>
+          </p>
+          <p class="text-muted-foreground">
+            <span>Total Commits: </span>
+            <span class="tabular-nums text-foreground">
+              {{ formatNumber(dashboard?.transactions.totalCommits) }}
+            </span>
+          </p>
+          <p class="text-muted-foreground">
+            <span>Total Rollbacks: </span>
+            <span class="tabular-nums text-foreground">
+              {{ formatNumber(dashboard?.transactions.totalRollbacks) }}
             </span>
           </p>
         </div>
       </div>
 
       <div class="h-full border rounded-lg p-2.5 space-y-2">
-        <div class="flex items-end justify-between gap-2">
-          <p class="text-[11px] uppercase tracking-wide text-muted-foreground">
-            Tuples
-          </p>
-          <p class="text-lg font-semibold leading-none tabular-nums">
+        <div class="flex items-center gap-1">
+          <p class="text-xs uppercase text-muted-foreground">Tuples:</p>
+          <p class="text-sm font-semibold leading-none tabular-nums">
             {{ formatRate(dashboard?.tuples.insertsPerSec) }}
           </p>
         </div>
         <div class="grid grid-cols-2 gap-x-3 gap-y-1 text-[11px]">
-          <p
-            class="flex items-center justify-between gap-2 text-muted-foreground"
-          >
-            <span>Updates</span>
+          <p class="text-muted-foreground">
+            <span>Updates: </span>
             <span class="tabular-nums text-foreground">
               {{ formatRate(dashboard?.tuples.updatesPerSec) }}
             </span>
           </p>
-          <p
-            class="flex items-center justify-between gap-2 text-muted-foreground"
-          >
-            <span>Deletes</span>
+          <p class="text-muted-foreground">
+            <span>Deletes: </span>
             <span class="tabular-nums text-foreground">
               {{ formatRate(dashboard?.tuples.deletesPerSec) }}
             </span>
           </p>
-          <p
-            class="flex items-center justify-between gap-2 text-muted-foreground"
-          >
-            <span>Fetched</span>
+          <p class="text-muted-foreground">
+            <span>Fetched: </span>
             <span class="tabular-nums text-foreground">
               {{ formatRate(dashboard?.tuples.fetchedPerSec) }}
             </span>
           </p>
-          <p
-            class="flex items-center justify-between gap-2 text-muted-foreground"
-          >
-            <span>Returned</span>
+          <p class="text-muted-foreground">
+            <span>Returned: </span>
             <span class="tabular-nums text-foreground">
               {{ formatRate(dashboard?.tuples.returnedPerSec) }}
             </span>
@@ -420,29 +411,36 @@ const blockIoChartOption = computed<EChartsOption>(() => ({
       </div>
 
       <div class="h-full border rounded-lg p-2.5 space-y-2">
-        <div class="flex items-end justify-between gap-2">
-          <p class="text-[11px] uppercase tracking-wide text-muted-foreground">
-            Block I/O
-          </p>
-          <p class="text-lg font-semibold leading-none tabular-nums">
+        <div class="flex items-center gap-1">
+          <p class="text-xs uppercase text-muted-foreground">Block I/O:</p>
+          <p class="text-sm font-semibold leading-none tabular-nums">
             {{ formatPercent(dashboard?.blockIO.bufferHitRatio) }}
           </p>
         </div>
         <div class="grid grid-cols-2 gap-x-3 gap-y-1 text-[11px]">
-          <p
-            class="flex items-center justify-between gap-2 text-muted-foreground"
-          >
-            <span>Reads</span>
+          <p class="text-muted-foreground">
+            <span>Reads/sec: </span>
             <span class="tabular-nums text-foreground">
               {{ formatRate(dashboard?.blockIO.readsPerSec) }}
             </span>
           </p>
-          <p
-            class="flex items-center justify-between gap-2 text-muted-foreground"
-          >
-            <span>Hits</span>
+          <p class="text-muted-foreground">
+            <span>Hits/sec: </span>
             <span class="tabular-nums text-foreground">
               {{ formatRate(dashboard?.blockIO.hitsPerSec) }}
+            </span>
+          </p>
+
+          <p class="text-muted-foreground">
+            <span>Total Reads: </span>
+            <span class="tabular-nums text-foreground">
+              {{ formatNumber(dashboard?.blockIO.totalReads) }}
+            </span>
+          </p>
+          <p class="text-muted-foreground">
+            <span>Total Hits: </span>
+            <span class="tabular-nums text-foreground">
+              {{ formatNumber(dashboard?.blockIO.totalHits) }}
             </span>
           </p>
         </div>

@@ -39,6 +39,7 @@ export interface BlockIOSummaryMetrics {
 export interface InstanceInsightsDashboard {
   capturedAt: string;
   intervalSeconds: number;
+  version: string;
   sessions: SessionSummaryMetrics;
   transactions: TransactionSummaryMetrics;
   tuples: TupleSummaryMetrics;

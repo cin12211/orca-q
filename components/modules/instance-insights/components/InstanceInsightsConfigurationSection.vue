@@ -40,7 +40,11 @@ const configurationColumns = computed(() =>
 <template>
   <div class="space-y-4 h-full flex flex-col overflow-auto">
     <div class="flex items-center justify-between gap-2 flex-wrap">
-      <h3 class="text-sm font-medium">Configuration</h3>
+      <div>
+        <h3 class="text-sm font-medium">Configuration</h3>
+        <p class="text-xs text-muted-foreground">Searchable pg_settings</p>
+      </div>
+
       <Button
         variant="outline"
         size="xs"

@@ -117,9 +117,12 @@ const onToggleSlotStatus = (params: {
             <span class="font-medium text-foreground">{{ databaseName }}</span>
           </div>
         </div>
-        <p class="text-xs text-muted-foreground">
-          {{ activeSectionMeta?.subtitle }}
-        </p>
+
+        <div v-if="dashboard?.version" class="flex items-center gap-1.5 mt-0.5">
+          <Badge variant="outline" class="text-[10px] h-5 px-1.5 font-normal">
+            PostgreSQL {{ dashboard.version }}
+          </Badge>
+        </div>
       </div>
 
       <div class="flex items-center gap-2 flex-wrap">

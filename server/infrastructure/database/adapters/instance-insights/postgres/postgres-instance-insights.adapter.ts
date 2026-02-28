@@ -68,33 +68,40 @@ export class PostgresInstanceInsightsAdapter
   }
 
   async getDashboard(): Promise<InstanceInsightsDashboard> {
-    const sessionsResult = await this.adapter.rawQuery<{
-      total: string;
-      active: string;
-      idle: string;
-    }>(`
+    const [
+      sessionsResult,
+      versionResult,
+      maxConnectionsResult,
+      countersResult,
+    ] = await Promise.all([
+      this.adapter.rawQuery<{
+        total: string;
+        active: string;
+        idle: string;
+      }>(`
       SELECT
         COUNT(*)::bigint AS total,
         COUNT(*) FILTER (WHERE state = 'active')::bigint AS active,
         COUNT(*) FILTER (WHERE state = 'idle')::bigint AS idle
       FROM pg_stat_activity
-    `);
-
-    const maxConnectionsResult = await this.adapter.rawQuery<{
-      max_connections: string;
-    }>('SHOW max_connections');
-
-    const countersResult = await this.adapter.rawQuery<{
-      commits: string;
-      rollbacks: string;
-      inserts: string;
-      updates: string;
-      deletes: string;
-      fetched: string;
-      returned: string;
-      blks_read: string;
-      blks_hit: string;
-    }>(`
+    `),
+      this.adapter.rawQuery<{
+        server_version: string;
+      }>('SHOW server_version'),
+      this.adapter.rawQuery<{
+        max_connections: string;
+      }>('SHOW max_connections'),
+      this.adapter.rawQuery<{
+        commits: string;
+        rollbacks: string;
+        inserts: string;
+        updates: string;
+        deletes: string;
+        fetched: string;
+        returned: string;
+        blks_read: string;
+        blks_hit: string;
+      }>(`
       SELECT
         COALESCE(xact_commit, 0)::bigint AS commits,
         COALESCE(xact_rollback, 0)::bigint AS rollbacks,
@@ -107,7 +114,8 @@ export class PostgresInstanceInsightsAdapter
         COALESCE(blks_hit, 0)::bigint AS blks_hit
       FROM pg_stat_database
       WHERE datname = current_database()
-    `);
+    `),
+    ]);
 
     const nowMs = Date.now();
     const previousSnapshot = previousSnapshotByConnection.get(this.cacheKey);
@@ -198,9 +206,12 @@ export class PostgresInstanceInsightsAdapter
     const bufferHitRatio =
       totalBlocks > 0 ? (blksHit / totalBlocks) * 100 : 100;
 
+    const serverVersion = versionResult[0]?.server_version || 'Unknown';
+
     return {
       capturedAt: new Date(nowMs).toISOString(),
       intervalSeconds,
+      version: serverVersion,
       sessions: {
         total: totalSessions,
         active: this.toNumber(sessions?.active),
@@ -239,20 +250,21 @@ export class PostgresInstanceInsightsAdapter
   }
 
   async getState(): Promise<InstanceInsightsState> {
-    const sessionsResult = await this.adapter.rawQuery<{
-      pid: number;
-      user: string;
-      application: string | null;
-      client: string | null;
-      backend_start: string | null;
-      transaction_start: string | null;
-      state: string | null;
-      wait_event: string | null;
-      blocking_pids: number[] | null;
-      sql: string | null;
-      query_start: string | null;
-      duration_seconds: string | null;
-    }>(`
+    const [sessionsResult, locksResult, preparedResult] = await Promise.all([
+      this.adapter.rawQuery<{
+        pid: number;
+        user: string;
+        application: string | null;
+        client: string | null;
+        backend_start: string | null;
+        transaction_start: string | null;
+        state: string | null;
+        wait_event: string | null;
+        blocking_pids: number[] | null;
+        sql: string | null;
+        query_start: string | null;
+        duration_seconds: string | null;
+      }>(`
       SELECT
         a.pid,
         a.usename AS "user",
@@ -281,18 +293,17 @@ export class PostgresInstanceInsightsAdapter
         END,
         a.query_start DESC NULLS LAST,
         a.backend_start DESC
-    `);
-
-    const locksResult = await this.safeRawQuery<{
-      pid: number | null;
-      lock_type: string;
-      target_relation: string | null;
-      mode: string;
-      granted: boolean;
-      state: string | null;
-      user: string | null;
-      sql: string | null;
-    }>(`
+    `),
+      this.safeRawQuery<{
+        pid: number | null;
+        lock_type: string;
+        target_relation: string | null;
+        mode: string;
+        granted: boolean;
+        state: string | null;
+        user: string | null;
+        sql: string | null;
+      }>(`
       SELECT
         l.pid,
         l.locktype AS lock_type,
@@ -312,15 +323,14 @@ export class PostgresInstanceInsightsAdapter
       WHERE l.database IS NULL
          OR l.database = (SELECT oid FROM pg_database WHERE datname = current_database())
       ORDER BY l.granted ASC, l.pid NULLS LAST, l.locktype
-    `);
-
-    const preparedResult = await this.safeRawQuery<{
-      transaction: string;
-      gid: string;
-      prepared: string;
-      owner: string;
-      database: string;
-    }>(`
+    `),
+      this.safeRawQuery<{
+        transaction: string;
+        gid: string;
+        prepared: string;
+        owner: string;
+        database: string;
+      }>(`
       SELECT
         transaction::text AS transaction,
         gid,
@@ -329,7 +339,8 @@ export class PostgresInstanceInsightsAdapter
         database
       FROM pg_prepared_xacts
       ORDER BY prepared DESC
-    `);
+    `),
+    ]);
 
     const sessions: InstanceSessionRow[] = sessionsResult.map(row => ({
       pid: this.toNumber(row.pid),
@@ -486,21 +497,22 @@ export class PostgresInstanceInsightsAdapter
       ? 'pg_last_wal_receive_lsn()'
       : 'pg_current_wal_lsn()';
 
-    const replicationStatsResult = await this.safeRawQuery<{
-      pid: number;
-      client_addr: string | null;
-      application_name: string | null;
-      state: string | null;
-      sync_state: string | null;
-      reply_time: string | null;
-      write_lag: string | null;
-      flush_lag: string | null;
-      replay_lag: string | null;
-      sent_lsn: string | null;
-      write_lsn: string | null;
-      flush_lsn: string | null;
-      replay_lsn: string | null;
-    }>(`
+    const [replicationStatsResult, replicationSlotsResult] = await Promise.all([
+      this.safeRawQuery<{
+        pid: number;
+        client_addr: string | null;
+        application_name: string | null;
+        state: string | null;
+        sync_state: string | null;
+        reply_time: string | null;
+        write_lag: string | null;
+        flush_lag: string | null;
+        replay_lag: string | null;
+        sent_lsn: string | null;
+        write_lsn: string | null;
+        flush_lsn: string | null;
+        replay_lsn: string | null;
+      }>(`
       SELECT
         pid,
         COALESCE(client_addr::text, client_hostname, 'local') AS client_addr,
@@ -517,18 +529,17 @@ export class PostgresInstanceInsightsAdapter
         replay_lsn::text
       FROM pg_stat_replication
       ORDER BY application_name NULLS LAST, pid
-    `);
-
-    const replicationSlotsResult = await this.safeRawQuery<{
-      slot_name: string;
-      slot_type: string;
-      active: boolean;
-      active_pid: number | null;
-      restart_lsn: string | null;
-      confirmed_flush_lsn: string | null;
-      retained_bytes: string;
-      temporary: boolean;
-    }>(`
+    `),
+      this.safeRawQuery<{
+        slot_name: string;
+        slot_type: string;
+        active: boolean;
+        active_pid: number | null;
+        restart_lsn: string | null;
+        confirmed_flush_lsn: string | null;
+        retained_bytes: string;
+        temporary: boolean;
+      }>(`
       SELECT
         slot_name,
         slot_type,
@@ -546,7 +557,8 @@ export class PostgresInstanceInsightsAdapter
         temporary
       FROM pg_replication_slots
       ORDER BY active DESC, slot_name
-    `);
+    `),
+    ]);
 
     const replicationStats: ReplicationStatRow[] = replicationStatsResult.map(
       row => ({
