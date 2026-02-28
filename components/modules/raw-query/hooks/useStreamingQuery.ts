@@ -77,7 +77,7 @@ export function executeStreamingQuery({
 
   const run = async () => {
     try {
-      const response = await fetch('/api/raw-execute-stream', {
+      const response = await fetch('/api/query/raw-execute-stream', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

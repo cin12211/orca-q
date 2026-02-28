@@ -11,7 +11,7 @@ const props = defineProps<{
   virtualTableId?: string;
 }>();
 
-const { data, status } = useFetch('/api/get-table-structure', {
+const { data, status } = useFetch('/api/tables/structure', {
   method: 'POST',
   body: {
     dbConnectionString: props.connectionString,

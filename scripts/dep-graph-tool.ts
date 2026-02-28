@@ -1,0 +1,246 @@
+#!/usr/bin/env node
+import { readFileSync } from 'node:fs';
+import { dirname, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+// ─────────────────────────────────────────────────────────────────────────────
+// TYPES
+// ─────────────────────────────────────────────────────────────────────────────
+
+interface Dependency {
+  resolved: string;
+  module: string;
+  dynamic: boolean;
+  coreModule: boolean;
+  couldNotResolve: boolean;
+  dependencyTypes: string[];
+  circular?: boolean;
+}
+
+interface Module {
+  source: string;
+  dependencies: Dependency[];
+  valid: boolean;
+  violations: { rule: { name: string }; severity: string }[];
+}
+
+interface DepGraph {
+  modules: Module[];
+  summary: any;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// LOAD GRAPH
+// ─────────────────────────────────────────────────────────────────────────────
+
+const SCRIPT_DIR = dirname(fileURLToPath(import.meta.url));
+const PROJECT_ROOT = resolve(SCRIPT_DIR, '');
+
+const graphPath =
+  process.env['DEP_GRAPH_PATH'] ??
+  resolve(PROJECT_ROOT, '../docs/dependency-graph.json');
+
+console.log('graphPath::', graphPath);
+function loadGraph(): DepGraph {
+  const raw = readFileSync(graphPath, 'utf-8');
+  return JSON.parse(raw) as DepGraph;
+}
+
+const graph = loadGraph();
+
+// ─────────────────────────────────────────────────────────────────────────────
+// BUILD REVERSE INDEX
+// ─────────────────────────────────────────────────────────────────────────────
+
+const dependentsMap = new Map<string, string[]>();
+
+for (const mod of graph.modules) {
+  for (const dep of mod.dependencies) {
+    if (!dep.resolved) continue;
+    const existing = dependentsMap.get(dep.resolved) ?? [];
+    existing.push(mod.source);
+    dependentsMap.set(dep.resolved, existing);
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// HELPERS
+// ─────────────────────────────────────────────────────────────────────────────
+
+function normalizeFile(file: string): string {
+  return file.replace(/^\//, '');
+}
+
+function findModule(file: string): Module | undefined {
+  const normalized = normalizeFile(file);
+  return graph.modules.find(
+    m => m.source === normalized || m.source.includes(normalized)
+  );
+}
+
+function output(data: any) {
+  console.log(JSON.stringify(data, null, 2));
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// TOOL IMPLEMENTATIONS
+// ─────────────────────────────────────────────────────────────────────────────
+
+function getDependencies(file: string) {
+  const mod = findModule(file);
+  if (!mod) {
+    output({ error: `Module not found: ${file}` });
+    process.exit(1);
+  }
+
+  const deps = mod.dependencies
+    .filter(d => !d.coreModule)
+    .map(d => ({
+      file: d.resolved,
+      types: d.dependencyTypes,
+      circular: d.circular ?? false,
+      couldNotResolve: d.couldNotResolve,
+    }));
+
+  output({
+    tool: 'get_dependencies',
+    source: mod.source,
+    dependencies: deps,
+  });
+}
+
+function getDependents(file: string) {
+  const mod = findModule(file);
+  if (!mod) {
+    output({ error: `Module not found: ${file}` });
+    process.exit(1);
+  }
+
+  output({
+    tool: 'get_dependents',
+    source: mod.source,
+    importedBy: dependentsMap.get(mod.source) ?? [],
+  });
+}
+
+function findCircular() {
+  const cycles: { from: string; to: string }[] = [];
+
+  for (const mod of graph.modules) {
+    for (const dep of mod.dependencies) {
+      if (dep.circular) {
+        cycles.push({ from: mod.source, to: dep.resolved });
+      }
+    }
+  }
+
+  output({
+    tool: 'find_circular',
+    totalCircular: cycles.length,
+    cycles,
+  });
+}
+
+function findOrphans() {
+  const allImported = new Set<string>();
+
+  for (const mod of graph.modules) {
+    for (const dep of mod.dependencies) {
+      if (dep.resolved) allImported.add(dep.resolved);
+    }
+  }
+
+  const orphans = graph.modules
+    .filter(m => !allImported.has(m.source))
+    .map(m => m.source);
+
+  output({
+    tool: 'find_orphans',
+    totalOrphans: orphans.length,
+    orphans,
+  });
+}
+
+function getModuleTree(dir: string) {
+  const normalized = normalizeFile(dir);
+
+  const modules = graph.modules.filter(m => m.source.includes(normalized));
+
+  output({
+    tool: 'get_module_tree',
+    dir,
+    totalFiles: modules.length,
+    modules: modules.map(m => ({
+      source: m.source,
+      externalDeps: m.dependencies
+        .filter(d => !d.resolved.startsWith(normalized) && !d.coreModule)
+        .map(d => d.resolved),
+    })),
+  });
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SELF-DESCRIBE FOR AGENTS
+// ─────────────────────────────────────────────────────────────────────────────
+
+function describe() {
+  output({
+    name: 'dep-graph',
+    version: '1.0.0',
+    description: 'Analyze dependency graph generated by dependency-cruiser.',
+    commands: {
+      get_dependencies: {
+        args: { file: 'string (required)' },
+        description: 'Get direct dependencies of a file.',
+      },
+      get_dependents: {
+        args: { file: 'string (required)' },
+        description: 'Get reverse dependencies of a file.',
+      },
+      find_circular: {
+        args: {},
+        description: 'List all circular dependencies.',
+      },
+      find_orphans: {
+        args: {},
+        description: 'List modules not imported by anyone.',
+      },
+      get_module_tree: {
+        args: { dir: 'string (required)' },
+        description: 'Get dependency overview for a directory/module path.',
+      },
+    },
+    outputFormat: 'JSON only',
+  });
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// CLI ENTRY
+// ─────────────────────────────────────────────────────────────────────────────
+
+const [, , command, arg] = process.argv;
+
+if (command === '--describe') {
+  describe();
+  process.exit(0);
+}
+
+switch (command) {
+  case 'get_dependencies':
+    getDependencies(arg);
+    break;
+  case 'get_dependents':
+    getDependents(arg);
+    break;
+  case 'find_circular':
+    findCircular();
+    break;
+  case 'find_orphans':
+    findOrphans();
+    break;
+  case 'get_module_tree':
+    getModuleTree(arg);
+    break;
+  default:
+    describe();
+}

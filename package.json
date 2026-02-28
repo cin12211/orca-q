@@ -25,7 +25,8 @@
     "version:minor": "npm version minor --no-git-tag-version && node scripts/sync-version.mjs",
     "version:major": "npm version major --no-git-tag-version && node scripts/sync-version.mjs",
     "storybook": "storybook dev -p 6006",
-    "build-storybook": "storybook build"
+    "build-storybook": "storybook build",
+    "depcruise:json": "depcruise components core server pages layouts plugins --config .dependency-cruiser.js --output-type json > docs/dependency-graph.json"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^3.0.9",
@@ -138,6 +139,7 @@
     "autoprefixer": "^10.4.21",
     "clsx": "^2.1.1",
     "concurrently": "^9.1.2",
+    "dependency-cruiser": "^17.3.8",
     "http": "^0.0.1-security",
     "husky": "^9.1.7",
     "knex": "^3.1.0",

@@ -1,13 +1,15 @@
 import { defineStore } from 'pinia';
 import { ref, computed, toRefs } from 'vue';
-import type { ReservedTableSchemas } from '~/server/api/get-reverse-table-schemas';
+import type { ReservedTableSchemas } from '~/core/types';
 import type {
   FunctionSchema,
+  SchemaMetaData,
   TableDetailMetadata,
   TableDetails,
   ViewSchema,
   ViewDetails,
-} from '~/server/api/get-schema-meta-data';
+  ViewDetailMetadata,
+} from '~/core/types';
 import { useWSStateStore } from './useWSStateStore';
 
 export interface Schema {
@@ -88,7 +90,7 @@ export const useSchemaStore = defineStore(
       if (reservedSchemas.value[connId]?.length) return;
 
       try {
-        const result = await $fetch('/api/get-reverse-table-schemas', {
+        const result = await $fetch('/api/metadata/reverse-schemas', {
           method: 'POST',
           body: {
             dbConnectionString,
@@ -130,7 +132,7 @@ export const useSchemaStore = defineStore(
 
       loading.value[connId] = true;
       try {
-        const databaseSource = await $fetch('/api/get-schema-meta-data', {
+        const databaseSource = await $fetch('/api/metadata/meta-data', {
           method: 'POST',
           body: {
             dbConnectionString,

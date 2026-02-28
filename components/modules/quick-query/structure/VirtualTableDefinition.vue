@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { formatStatementSql } from '~/components/base/code-editor/utils';
-import type { ViewDefinitionResponse } from '~/server/api/get-view-definition';
+import type { ViewDefinitionResponse } from '~/core/types';
 
 const props = defineProps<{
   schema: string;
@@ -10,7 +10,7 @@ const props = defineProps<{
 }>();
 
 const { data, status } = useFetch<ViewDefinitionResponse>(
-  '/api/get-view-definition',
+  '/api/views/definition',
   {
     method: 'POST',
     body: {

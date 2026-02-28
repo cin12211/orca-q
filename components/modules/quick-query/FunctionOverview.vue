@@ -25,7 +25,7 @@ const body = computed(() => {
   };
 });
 
-const { data, status } = useFetch('/api/get-over-view-function', {
+const { data, status } = useFetch('/api/functions/overview', {
   method: 'POST',
   body,
   watch: [schemaId, body],

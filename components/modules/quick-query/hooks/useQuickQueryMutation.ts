@@ -162,7 +162,7 @@ export function useQuickQueryMutation(options: UseQuickQueryMutationOptions) {
     isMutating.value = true;
 
     try {
-      const { queryTime } = await $fetch('/api/execute-bulk-update', {
+      const { queryTime } = await $fetch('/api/tables/bulk-update', {
         method: 'POST',
         body: {
           sqlUpdateStatements: sqlBulkInsertOrUpdateStatements,
@@ -242,7 +242,7 @@ export function useQuickQueryMutation(options: UseQuickQueryMutationOptions) {
     isMutating.value = true;
 
     try {
-      const { queryTime } = await $fetch('/api/execute-bulk-delete', {
+      const { queryTime } = await $fetch('/api/tables/bulk-delete', {
         method: 'POST',
         body: {
           sqlDeleteStatements,

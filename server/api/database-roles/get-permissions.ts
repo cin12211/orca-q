@@ -7,7 +7,7 @@ import type { GetRolePermissionsRequest, RolePermissions } from '~/core/types';
 import {
   createRoleAdapter,
   type SupportedDatabaseType,
-} from './adapters/index';
+} from '~/server/infrastructure/database/adapters/database-roles';
 
 interface RequestBody extends GetRolePermissionsRequest {
   dbType?: SupportedDatabaseType;

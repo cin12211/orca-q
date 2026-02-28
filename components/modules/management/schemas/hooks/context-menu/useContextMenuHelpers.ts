@@ -3,9 +3,11 @@ import { toast } from 'vue-sonner';
 import type { FlattenedTreeFileSystemItem } from '~/components/base/Tree';
 import { useAppLayoutStore } from '~/core/stores/appLayoutStore';
 import type {
-  ColumnShortMetadata,
+  SchemaColumnMetadata as ColumnShortMetadata,
+  SchemaForeignKeyMetadata as ForeignKeyMetadata,
+  SchemaPrimaryKey as PrimaryKey,
   TableDetailMetadata,
-} from '~/server/api/get-schema-meta-data';
+} from '~/core/types';
 import type { ContextMenuState, SchemaContextMenuOptions } from './types';
 
 export function useContextMenuHelpers(

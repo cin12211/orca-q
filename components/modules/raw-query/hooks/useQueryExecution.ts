@@ -181,7 +181,7 @@ export function useQueryExecution({
       // EXPLAIN queries: use traditional $fetch (small result sets)
       console.log('mergeParameters::', fileParameters);
       try {
-        const result = await $fetch('/api/raw-execute', {
+        const result = await $fetch('/api/query/raw-execute', {
           method: 'POST',
           body: {
             dbConnectionString: connection.value?.connectionString,

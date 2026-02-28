@@ -16,7 +16,7 @@ onMounted(() => {
     if (!connectionStore.selectedConnection) return;
 
     //TODO: need to review api for metrics
-    const result = await $fetch('/api/getMetricMonitor', {
+    const result = await $fetch('/api/metrics/monitor', {
       method: 'POST',
       body: {
         dbConnectionString:
