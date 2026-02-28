@@ -16,6 +16,8 @@ interface FetchOptions {
 
 const AUTO_REFRESH_INTERVAL_MS = 5000;
 
+//TODO: need to check if tab is active -> call api update
+
 export function useInstanceInsights(dbConnectionString: Ref<string>) {
   const activeSection = ref<InsightsSection>('activity');
   const autoRefresh = ref(true);
@@ -39,6 +41,16 @@ export function useInstanceInsights(dbConnectionString: Ref<string>) {
   const debouncedConfigurationSearch = refDebounced(configurationSearch, 350);
 
   const hasConnection = computed(() => Boolean(dbConnectionString.value));
+
+  const isActivate = ref(true);
+
+  onDeactivated(() => {
+    isActivate.value = false;
+  });
+
+  onActivated(() => {
+    isActivate.value = true;
+  });
 
   const resetData = () => {
     error.value = null;
@@ -373,7 +385,7 @@ export function useInstanceInsights(dbConnectionString: Ref<string>) {
 
   const { pause, resume, isActive } = useIntervalFn(
     async () => {
-      if (!hasConnection.value) return;
+      if (!hasConnection.value || !isActivate.value) return;
       await refreshSection(activeSection.value, { silent: true });
     },
     refreshIntervalMs,
