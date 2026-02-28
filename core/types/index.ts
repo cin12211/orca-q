@@ -7,3 +7,4 @@ export * from './database-views.types';
 export * from './database-schemas.types';
 export * from './database-query.types';
 export * from './database-metrics.types';
+export * from './instance-insights.types';

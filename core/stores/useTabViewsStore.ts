@@ -20,6 +20,7 @@ export enum TabViewType {
 
   UserPermissions = 'UserPermissions',
   DatabaseTools = 'DatabaseTools',
+  InstanceInsights = 'InstanceInsights',
   Connection = 'Connection',
   Explorer = 'Explorer',
   Schema = 'Schema',

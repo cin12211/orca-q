@@ -5,6 +5,7 @@ export * from './query';
 export * from './metadata';
 export * from './tables';
 export * from './views';
+export * from './instance-insights';
 export * from './shared';
 
 export { SupportedDatabaseType } from './shared';

@@ -1,6 +1,9 @@
 <script setup lang="ts">
 import { DynamicTable } from '#components';
-import type { MappedRawColumn } from '../../raw-query/interfaces';
+import {
+  buildMappedColumnsFromKeys,
+  buildMappedColumnsFromRows,
+} from '~/core/helpers';
 import VirtualTableDefinition from './VirtualTableDefinition.vue';
 
 const props = defineProps<{
@@ -10,6 +13,17 @@ const props = defineProps<{
   isVirtualTable?: boolean;
   virtualTableId?: string;
 }>();
+
+const STRUCTURE_TABLE_COLUMN_KEYS = [
+  'column_name',
+  'data_type',
+  'is_nullable',
+  'default_value',
+  'foreign_keys',
+  'on_update',
+  'on_delete',
+  'column_comment',
+] as const;
 
 const { data, status } = useFetch('/api/tables/structure', {
   method: 'POST',
@@ -22,24 +36,12 @@ const { data, status } = useFetch('/api/tables/structure', {
 });
 
 const mappedColumns = computed(() => {
-  if (!data.value?.[0]) {
-    return [];
+  const rows = (data.value || []) as Record<string, unknown>[];
+  if (rows.length > 0) {
+    return buildMappedColumnsFromRows(rows);
   }
 
-  const columns: MappedRawColumn[] = [];
-  for (const key of Object.keys(data.value?.[0])) {
-    columns.push({
-      isForeignKey: false,
-      isPrimaryKey: false,
-      originalName: key,
-      queryFieldName: key,
-      tableName: '',
-      canMutate: false,
-      aliasFieldName: key,
-    });
-  }
-
-  return columns;
+  return buildMappedColumnsFromKeys(STRUCTURE_TABLE_COLUMN_KEYS);
 });
 </script>
 

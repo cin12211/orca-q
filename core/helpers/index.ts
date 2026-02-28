@@ -6,3 +6,4 @@ export * from './jsonFormat';
 export * from './format';
 export * from './copyData';
 export * from './convertParameters';
+export * from './mapped-columns';

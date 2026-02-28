@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { useMagicKeys, whenever } from '@vueuse/core';
 import { computed } from 'vue';
 import { Button } from '#components';
 import { Icon, Tooltip, TooltipContent, TooltipTrigger } from '#components';
@@ -29,13 +28,24 @@ const { isCommandPaletteOpen } = useCommandPalette();
 const { searchInput, groupedResults, activePrefix, placeholder, resetSearch } =
   useCommandEngine();
 
-// Cmd+K / Ctrl+K toggle
-const { meta, ctrl, k } = useMagicKeys();
-whenever(
-  () => (meta.value || ctrl.value) && k.value,
-  () => {
-    isCommandPaletteOpen.value = !isCommandPaletteOpen.value;
-  }
+useHotkeys(
+  [
+    {
+      key: 'meta+k',
+      callback: async () => {
+        isCommandPaletteOpen.value = !isCommandPaletteOpen.value;
+      },
+      isPreventDefault: true,
+    },
+    {
+      key: 'meta+p',
+      callback: () => {
+        isCommandPaletteOpen.value = !isCommandPaletteOpen.value;
+      },
+      isPreventDefault: true,
+    },
+  ],
+  {}
 );
 
 // Reset search when dialog closes
