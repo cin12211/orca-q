@@ -54,6 +54,7 @@ export default defineNuxtConfig({
     },
   },
   modules: [
+    // '@nuxt/test-utils/module',
     'shadcn-nuxt',
     '@nuxt/icon',
     '@nuxtjs/color-mode',

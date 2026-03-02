@@ -63,3 +63,7 @@ tsconfig.tsbuildinfo
 npx-package/.output
 *storybook.log
 storybook-static
+
+
+# 
+coverage
