@@ -1,4 +1,7 @@
-import type { CommandPrefix, CommandProvider } from './commandEngine.types';
+import type {
+  CommandPrefix,
+  CommandProvider,
+} from '../types/commandEngine.types';
 
 /**
  * Registry holding all command providers keyed by prefix.

@@ -1,4 +1,4 @@
-import type { CommandPrefix, ParsedInput } from './commandEngine.types';
+import type { CommandPrefix, ParsedInput } from '../types/commandEngine.types';
 
 /**
  * Parse raw input string into prefix + query.

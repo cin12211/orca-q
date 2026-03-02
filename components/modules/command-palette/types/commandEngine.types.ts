@@ -1,3 +1,5 @@
+import type { FuseResultMatch } from 'fuse.js';
+
 /** A single executable command item shown in the palette */
 export interface CommandItem {
   id: string;
@@ -6,6 +8,8 @@ export interface CommandItem {
   iconClass?: string;
   group: string;
   description?: string;
+  initials?: string;
+  matches?: readonly FuseResultMatch[];
   execute: () => void | Promise<void>;
 }
 

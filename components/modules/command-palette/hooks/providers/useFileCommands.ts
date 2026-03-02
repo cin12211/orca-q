@@ -1,7 +1,7 @@
 import { useExplorerFileStore } from '~/core/stores/useExplorerFileStore';
 import { TabViewType, useTabViewsStore } from '~/core/stores/useTabViewsStore';
 import { useWSStateStore } from '~/core/stores/useWSStateStore';
-import type { CommandItem, CommandProvider } from '../commandEngine.types';
+import type { CommandItem, CommandProvider } from '../../types/commandEngine.types';
 
 /**
  * File provider has no user-facing prefix.

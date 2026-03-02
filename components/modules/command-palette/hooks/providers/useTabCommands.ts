@@ -1,5 +1,5 @@
 import { useTabViewsStore } from '~/core/stores/useTabViewsStore';
-import type { CommandItem, CommandProvider } from '../commandEngine.types';
+import type { CommandItem, CommandProvider } from '../../types/commandEngine.types';
 
 const PREFIX = {
   key: 'tab:',

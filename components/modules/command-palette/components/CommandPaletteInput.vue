@@ -6,7 +6,7 @@ import { ListboxFilter, useForwardProps } from 'reka-ui';
 import type { ListboxFilterProps } from 'reka-ui';
 import { useCommand } from '@/components/ui/command';
 import { cn } from '@/lib/utils';
-import type { CommandPrefix } from '~/core/command-engine/commandEngine.types';
+import type { CommandPrefix } from '../types/commandEngine.types';
 
 defineOptions({
   inheritAttrs: false,
@@ -36,16 +36,10 @@ const { filterState } = useCommand();
 // In prefix mode, strip prefix from what filterState sees so shadcn filtering still works
 watch(
   searchInput,
-  val => {
-    if (props.activePrefix) {
-      // Strip prefix from filterState so shadcn filters on the query part only
-      const query = val.startsWith(props.activePrefix.key)
-        ? val.slice(props.activePrefix.key.length).trimStart()
-        : val;
-      filterState.search = query;
-    } else {
-      filterState.search = val;
-    }
+  () => {
+    // Disable shadcn's internal filtering by always setting search to empty.
+    // This allows our custom fuzzy search engine to handle all filtering.
+    filterState.search = '';
   },
   { immediate: true }
 );

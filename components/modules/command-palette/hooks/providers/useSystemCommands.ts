@@ -1,6 +1,6 @@
 import { useAppContext } from '~/core/contexts/useAppContext';
 import { useSettingsModal } from '~/core/contexts/useSettingsModal';
-import type { CommandItem, CommandProvider } from '../commandEngine.types';
+import type { CommandItem, CommandProvider } from '../../types/commandEngine.types';
 
 const PREFIX = {
   key: '>',

@@ -1,7 +1,7 @@
 import { useSchemaStore } from '~/core/stores/useSchemaStore';
 import { TabViewType, useTabViewsStore } from '~/core/stores/useTabViewsStore';
 import { useWSStateStore } from '~/core/stores/useWSStateStore';
-import type { CommandItem, CommandProvider } from '../commandEngine.types';
+import type { CommandItem, CommandProvider } from '../../types/commandEngine.types';
 
 const PREFIX = {
   key: 't:',

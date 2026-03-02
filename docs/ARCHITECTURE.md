@@ -1,7 +1,7 @@
 # OrcaQ — Internal Architecture Documentation
 
 > **Document Type:** Internal Technical Architecture Reference  
-> **Product:** OrcaQ (formerly HeraQ / ChiaXien)  
+> **Product:** OrcaQ
 > **Version:** 1.0.26  
 > **Author:** Principal Frontend Architect (reverse-engineered from source)  
 > **Last Updated:** 2026-03-02

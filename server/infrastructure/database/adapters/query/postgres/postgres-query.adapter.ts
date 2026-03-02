@@ -182,6 +182,10 @@ export class PostgresQueryAdapter
     } catch (error: any) {
       const message = error?.message || 'Unknown query error';
 
+      console.dir(error, { depth: null });
+      console.log(Object.getOwnPropertyNames(error));
+      console.log({ ...error });
+
       try {
         writeLine({ type: 'error', message });
         res.end();
