@@ -7,7 +7,7 @@ export interface NormalizationError {
   message: string;
 }
 
-export class DatabaseDriverError {
+export class DatabaseDriverNormalizerError {
   constructor(public rawError?: RawDatabaseDriverError | any) {}
 
   get nomaltliztionErrror(): NormalizationError {

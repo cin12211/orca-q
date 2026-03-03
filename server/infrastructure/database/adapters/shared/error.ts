@@ -1,6 +1,6 @@
 import { createError } from 'h3';
 import { DatabaseClientType } from '~/core/constants/database-client-type';
-import { DatabaseDriverError as ErrorNormalizer } from '~/core/helpers';
+import { DatabaseDriverNormalizerError as ErrorNormalizer } from '~/core/helpers';
 import type { DatabaseDriverError } from '~/core/types';
 
 export function createDatabaseHttpError(

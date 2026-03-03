@@ -2,7 +2,7 @@ import type { Diagnostic } from '@codemirror/lint';
 import type { EditorView } from '@codemirror/view';
 import { knex, type Knex } from 'knex';
 import { DatabaseClientType } from '~/core/constants/database-client-type';
-import { DatabaseDriverError as ErrorNormalizer } from '~/core/helpers';
+import { DatabaseDriverNormalizerError as ErrorNormalizer } from '~/core/helpers';
 import type { DatabaseDriverError } from '~/core/types';
 import { pushDiagnostics } from './diagnostic-lint';
 

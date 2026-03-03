@@ -1,7 +1,7 @@
 import { createError, type H3Event } from 'h3';
 import QueryStream from 'pg-query-stream';
 import { DatabaseClientType } from '~/core/constants/database-client-type';
-import { DatabaseDriverError as ErrorNormalizer } from '~/core/helpers';
+import { DatabaseDriverNormalizerError as ErrorNormalizer } from '~/core/helpers';
 import type {
   QueryResult,
   RawQueryResultWithMetadata,
