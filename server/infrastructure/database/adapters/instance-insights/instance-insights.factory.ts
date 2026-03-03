@@ -1,7 +1,5 @@
-import {
-  createDomainAdapter,
-  type SupportedDatabaseTypeInput,
-} from '../shared';
+import { DatabaseClientType } from '~/core/constants/database-client-type';
+import { createDomainAdapter } from '../shared';
 import { PostgresInstanceInsightsAdapter } from './postgres/postgres-instance-insights.adapter';
 import type {
   IDatabaseInstanceInsightsAdapter,
@@ -9,7 +7,7 @@ import type {
 } from './types';
 
 export async function createInstanceInsightsAdapter(
-  dbType: SupportedDatabaseTypeInput,
+  dbType: DatabaseClientType,
   params: InstanceInsightsAdapterParams
 ): Promise<IDatabaseInstanceInsightsAdapter> {
   return createDomainAdapter(dbType, params, 'instance insights', {

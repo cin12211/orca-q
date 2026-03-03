@@ -1,7 +1,5 @@
-import {
-  createDomainAdapter,
-  type SupportedDatabaseTypeInput,
-} from '../shared';
+import { DatabaseClientType } from '~/core/constants/database-client-type';
+import { createDomainAdapter } from '../shared';
 import { PostgresMetadataAdapter } from './postgres/postgres-metadata.adapter';
 import type {
   IDatabaseMetadataAdapter,
@@ -9,7 +7,7 @@ import type {
 } from './types';
 
 export async function createMetadataAdapter(
-  dbType: SupportedDatabaseTypeInput,
+  dbType: DatabaseClientType,
   params: DatabaseMetadataAdapterParams
 ): Promise<IDatabaseMetadataAdapter> {
   return createDomainAdapter(dbType, params, 'metadata', {

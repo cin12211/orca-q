@@ -3,11 +3,8 @@
  * Creates the appropriate adapter based on database type
  */
 import { createError } from 'h3';
-import {
-  createDomainAdapter,
-  SupportedDatabaseType,
-  type SupportedDatabaseTypeInput,
-} from '../shared';
+import { DatabaseClientType } from '~/core/constants/database-client-type';
+import { createDomainAdapter } from '../shared';
 import { PostgresRoleAdapter } from './postgres/postgres-role.adapter';
 import type { IDatabaseRoleAdapter, DatabaseRoleAdapterParams } from './types';
 
@@ -16,17 +13,17 @@ import type { IDatabaseRoleAdapter, DatabaseRoleAdapterParams } from './types';
  * Extend this to add support for new database types
  */
 export async function createRoleAdapter(
-  dbType: SupportedDatabaseTypeInput,
+  dbType: DatabaseClientType,
   params: DatabaseRoleAdapterParams
 ): Promise<IDatabaseRoleAdapter> {
-  if (dbType === SupportedDatabaseType.MYSQL) {
+  if (dbType === DatabaseClientType.MYSQL) {
     throw createError({
       statusCode: 501,
       statusMessage: 'MySQL role adapter not yet implemented',
     });
   }
 
-  if (dbType === SupportedDatabaseType.SQLITE) {
+  if (dbType === DatabaseClientType.SQLITE3) {
     throw createError({
       statusCode: 501,
       statusMessage: 'SQLite role adapter not yet implemented',

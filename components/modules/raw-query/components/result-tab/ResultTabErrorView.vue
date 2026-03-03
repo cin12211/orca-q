@@ -12,27 +12,25 @@ const emits = defineEmits<{
   (e: 'onChangeView', view: ExecutedResultItem['view']): void;
 }>();
 
-const {
-  copiedStates,
-  handleCopyWithKey,
-  getCopyIcon,
-  getCopyIconClass,
-  getCopyTooltip,
-} = useCopyToClipboard();
-
 const hasErrors = (tab: ExecutedResultItem) => {
   return !!tab.metadata.executeErrors;
 };
 
-// Get error position from error data (PostgreSQL position is 1-indexed)
+// Get error position from normalized error
 const getErrorPosition = computed(() => {
-  const errorData = JSON.parse(
-    (props.activeTab.metadata.executeErrors?.data as unknown as string) || '{}'
-  ) as { position?: string; line?: string } | undefined;
+  const errorData = props.activeTab.metadata.executeErrors?.data as any;
+  return errorData?.normalizeError?.position || null;
+});
 
-  if (!errorData?.position) return null;
+const getErrorMessage = computed(() => {
+  const executeErrors = props.activeTab.metadata.executeErrors;
+  const errorData = executeErrors?.data as any;
+  return errorData?.normalizeError?.message || executeErrors?.message || '';
+});
 
-  return parseInt(errorData.position, 10);
+const getErrorHint = computed(() => {
+  const errorData = props.activeTab.metadata.executeErrors?.data as any;
+  return errorData?.normalizeError?.hint || null;
 });
 
 const errorDecorations = computed(() => {
@@ -132,8 +130,14 @@ const onAskAiToFix = () => {
           <span
             class="text-sm pl-5 text-muted-foreground decoration-wavy underline decoration-red-600"
           >
-            {{ activeTab.metadata.executeErrors?.message }}
+            {{ getErrorMessage }}
           </span>
+          <div
+            v-if="getErrorHint"
+            class="pl-5 mt-1 text-sm text-amber-600/90 font-medium"
+          >
+            Hint: {{ getErrorHint }}
+          </div>
         </div>
 
         <Button @click="onAskAiToFix" size="xs" variant="outline">

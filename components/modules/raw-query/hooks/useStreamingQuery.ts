@@ -1,5 +1,7 @@
 import type { FieldDef } from 'pg';
 import type { RowData } from '~/components/base/dynamic-table/utils';
+import type { DatabaseDriverError } from '~/core/types';
+import type { ExecutedResultItem } from '../interfaces';
 
 /**
  * NDJSON message types sent by the streaming endpoint.
@@ -24,6 +26,7 @@ interface StreamDoneMessage {
 interface StreamErrorMessage {
   type: 'error';
   message: string;
+  error?: Record<string, any>;
 }
 
 type StreamMessage =
@@ -36,7 +39,7 @@ export interface StreamingQueryCallbacks {
   onMeta?: (fields: FieldDef[], command: string) => void;
   onRows?: (rows: RowData[], totalSoFar: number) => void;
   onDone?: (rowCount: number, queryTime: number) => void;
-  onError?: (message: string) => void;
+  onError?: (message: string, errorDetail?: DatabaseDriverError) => void;
 }
 
 /**
@@ -137,7 +140,10 @@ export function executeStreamingQuery({
                 break;
 
               case 'error':
-                onError?.(message.message);
+                onError?.(
+                  message.message,
+                  message.error as DatabaseDriverError
+                );
                 break;
             }
           } catch {

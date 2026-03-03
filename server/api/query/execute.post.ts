@@ -1,7 +1,8 @@
-import { defineEventHandler, readBody, createError } from 'h3';
-import { type QueryFailedError } from 'typeorm';
+import { defineEventHandler, readBody } from 'h3';
+import { DatabaseClientType } from '~/core/constants/database-client-type';
 import type { QueryResult } from '~/core/types';
 import { createQueryAdapter } from '~/server/infrastructure/database/adapters/query';
+import { createDatabaseHttpError } from '~/server/infrastructure/database/adapters/shared/error';
 
 export default defineEventHandler(async (event): Promise<QueryResult> => {
   try {
@@ -10,20 +11,15 @@ export default defineEventHandler(async (event): Promise<QueryResult> => {
       dbConnectionString: string;
     } = await readBody(event);
 
-    const adapter = await createQueryAdapter('postgres', {
+    const adapter = await createQueryAdapter(DatabaseClientType.POSTGRES, {
       dbConnectionString: body.dbConnectionString,
     });
 
     return await adapter.execute(body.query);
-  } catch (error) {
-    const queryError: QueryFailedError = error as unknown as QueryFailedError;
-
-    throw createError({
-      statusCode: 500,
-      statusMessage: queryError.message,
-      cause: queryError.cause,
-      data: queryError.driverError,
-      message: queryError.message,
-    });
+  } catch (error: any) {
+    throw createDatabaseHttpError(
+      error?.dbType || DatabaseClientType.POSTGRES,
+      error
+    );
   }
 });

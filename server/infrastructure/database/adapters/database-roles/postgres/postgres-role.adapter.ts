@@ -1,3 +1,4 @@
+import { DatabaseClientType } from '~/core/constants/database-client-type';
 import type {
   DatabaseRole,
   ObjectType,
@@ -14,7 +15,7 @@ import type {
   BulkGrantResponse,
 } from '~/core/types';
 import type { IDatabaseAdapter } from '~/server/infrastructure/driver';
-import { BaseDomainAdapter, SupportedDatabaseType } from '../../shared';
+import { BaseDomainAdapter } from '../../shared';
 import type { IDatabaseRoleAdapter, DatabaseRoleAdapterParams } from '../types';
 import { PostgresRoleManagementAdapter } from './role-management.adapter';
 import { PostgresRolePermissionsAdapter } from './role-permissions.adapter';
@@ -24,7 +25,7 @@ export class PostgresRoleAdapter
   extends BaseDomainAdapter
   implements IDatabaseRoleAdapter
 {
-  readonly dbType = SupportedDatabaseType.POSTGRES;
+  readonly dbType = DatabaseClientType.POSTGRES;
   private readonly queryAdapter: PostgresRoleQueryAdapter;
   private readonly permissionsAdapter: PostgresRolePermissionsAdapter;
   private readonly managementAdapter: PostgresRoleManagementAdapter;
@@ -41,7 +42,7 @@ export class PostgresRoleAdapter
   ): Promise<PostgresRoleAdapter> {
     const adapter = await PostgresRoleAdapter.resolveAdapter(
       params,
-      SupportedDatabaseType.POSTGRES
+      DatabaseClientType.POSTGRES
     );
     return new PostgresRoleAdapter(adapter);
   }

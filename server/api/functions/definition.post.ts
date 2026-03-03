@@ -1,4 +1,5 @@
 import { defineEventHandler, readBody, createError } from 'h3';
+import { DatabaseClientType } from '~/core/constants/database-client-type';
 import { createFunctionAdapter } from '~/server/infrastructure/database/adapters/functions';
 
 export default defineEventHandler(async event => {
@@ -14,7 +15,7 @@ export default defineEventHandler(async event => {
     });
   }
 
-  const adapter = await createFunctionAdapter('postgres', {
+  const adapter = await createFunctionAdapter(DatabaseClientType.POSTGRES, {
     dbConnectionString: body.dbConnectionString,
   });
 

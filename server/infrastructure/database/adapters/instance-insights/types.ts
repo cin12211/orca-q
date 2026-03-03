@@ -1,3 +1,4 @@
+import { DatabaseClientType } from '~/core/constants/database-client-type';
 import type {
   InstanceActionResponse,
   InstanceInsightsConfiguration,
@@ -6,10 +7,7 @@ import type {
   InstanceInsightsState,
   ReplicationSlotDesiredStatus,
 } from '~/core/types';
-import type {
-  BaseDatabaseAdapterParams,
-  SupportedDatabaseType,
-} from '../shared';
+import type { BaseDatabaseAdapterParams } from '../shared';
 
 export type InstanceInsightsAdapterParams = BaseDatabaseAdapterParams;
 
@@ -19,7 +17,7 @@ export interface InstanceInsightsConfigurationOptions {
 }
 
 export interface IDatabaseInstanceInsightsAdapter {
-  readonly dbType: SupportedDatabaseType;
+  readonly dbType: DatabaseClientType;
   getDashboard(): Promise<InstanceInsightsDashboard>;
   getState(): Promise<InstanceInsightsState>;
   getConfiguration(

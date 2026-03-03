@@ -1,9 +1,10 @@
+import { DatabaseClientType } from '~/core/constants/database-client-type';
 import type {
   SchemaMetaData,
   DatabaseMetadata,
   ReservedTableSchemas,
 } from '~/core/types';
-import { BaseDomainAdapter, SupportedDatabaseType } from '../../shared';
+import { BaseDomainAdapter } from '../../shared';
 import type {
   IDatabaseMetadataAdapter,
   DatabaseMetadataAdapterParams,
@@ -18,14 +19,14 @@ export class PostgresMetadataAdapter
   extends BaseDomainAdapter
   implements IDatabaseMetadataAdapter
 {
-  readonly dbType = SupportedDatabaseType.POSTGRES;
+  readonly dbType = DatabaseClientType.POSTGRES;
 
   static async create(
     params: DatabaseMetadataAdapterParams
   ): Promise<PostgresMetadataAdapter> {
     const adapter = await PostgresMetadataAdapter.resolveAdapter(
       params,
-      SupportedDatabaseType.POSTGRES
+      DatabaseClientType.POSTGRES
     );
     return new PostgresMetadataAdapter(adapter);
   }

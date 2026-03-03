@@ -1,6 +1,6 @@
 // ~/utils/query-generator.ts
 import { z } from 'zod';
-import type { EDatabaseType } from '~/components/modules/connection/constants';
+import { EDatabaseType } from '~/components/modules/connection/constants';
 import {
   ComposeOperator,
   EExtendedField,
@@ -42,11 +42,11 @@ type Handler = (a: HandleArgs) => WhereResult;
 
 // trợ giúp build placeholder
 const makePlaceholder = (db: EDatabaseType) => (i: number) =>
-  db === 'postgres' ? `$${i}` : '?';
+  db === EDatabaseType.PG ? `$${i}` : '?';
 
 // bọc tên cột
 const wrap = (db: EDatabaseType) => (c: string) =>
-  db === 'postgres' ? `"${c}"` : `\`${c}\``;
+  db === EDatabaseType.PG ? `"${c}"` : `\`${c}\``;
 
 /* -------------------------------------------------------------------------- */
 /*                           Handler implement‑ations                         */
@@ -79,7 +79,7 @@ const likeHandler: Handler = ({ col, op, search, db, nextPlaceholder }) => {
   const includeNegative = op.toUpperCase().startsWith('NOT');
 
   const ilike = op.toUpperCase().startsWith('ILIKE');
-  const syntax = db === 'postgres' && ilike ? 'ILIKE' : 'LIKE';
+  const syntax = db === EDatabaseType.PG && ilike ? 'ILIKE' : 'LIKE';
   let value = search;
 
   if (op.endsWith('%VALUE%')) value = `%${search}%`;
@@ -302,7 +302,7 @@ export function formatWhereClause<F extends readonly FilterSchema[]>({
         : `'${String(v).replace(/'/g, "''")}'`;
 
   /** Postgres: $1, $2 … ・ MySQL: ? */
-  if (db === 'postgres') {
+  if (db === EDatabaseType.PG) {
     let out = where;
     params.forEach((p, i) => {
       // \b = word‑boundary → “$1 ”, “$1)” ...

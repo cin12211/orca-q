@@ -1,6 +1,7 @@
+import { DatabaseClientType } from '~/core/constants/database-client-type';
 import type { IDatabaseAdapter } from '~/server/infrastructure/driver';
 import { getDatabaseSource } from '~/server/infrastructure/driver/db-connection';
-import type { BaseDatabaseAdapterParams, SupportedDatabaseType } from './types';
+import type { BaseDatabaseAdapterParams } from './types';
 
 export abstract class BaseDomainAdapter {
   protected readonly adapter: IDatabaseAdapter;
@@ -11,7 +12,7 @@ export abstract class BaseDomainAdapter {
 
   protected static async resolveAdapter(
     params: BaseDatabaseAdapterParams,
-    dbType: SupportedDatabaseType
+    dbType: DatabaseClientType
   ): Promise<IDatabaseAdapter> {
     return getDatabaseSource({
       dbConnectionString: params.dbConnectionString,

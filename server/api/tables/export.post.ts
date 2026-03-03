@@ -1,12 +1,13 @@
 import dayjs from 'dayjs';
 import { defineEventHandler, readBody, setResponseHeaders } from 'h3';
+import { DatabaseClientType } from '~/core/constants/database-client-type';
 import { createTableAdapter } from '~/server/infrastructure/database/adapters/tables';
 
 export default defineEventHandler(async event => {
   const body = await readBody(event);
   const { dbConnectionString, schemaName, tableName, format } = body;
 
-  const adapter = await createTableAdapter('postgres', {
+  const adapter = await createTableAdapter(DatabaseClientType.POSTGRES, {
     dbConnectionString,
   });
 

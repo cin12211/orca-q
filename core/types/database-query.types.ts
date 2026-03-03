@@ -1,3 +1,7 @@
+import type { DatabaseError } from 'pg';
+import { DatabaseClientType } from '~/core/constants/database-client-type';
+import type { NormalizationError } from '~/core/helpers';
+
 export interface QueryResult {
   result: Record<string, unknown>[];
   queryTime: number;
@@ -18,3 +22,38 @@ export interface RawQueryResultWithMetadata {
   fields: DatabaseField[] | any[];
   queryTime: number;
 }
+
+export interface BaseDatabaseError extends Error {
+  dbType: DatabaseClientType | 'unknown';
+  normalizeError?: NormalizationError & {
+    dbType: DatabaseClientType | 'unknown';
+  };
+}
+
+export type PostgresDatabaseError = {
+  dbType: DatabaseClientType.POSTGRES;
+} & DatabaseError;
+
+export interface MysqlDatabaseError extends BaseDatabaseError {
+  dbType: DatabaseClientType.MYSQL;
+  code?: string;
+  errno?: number;
+  sqlMessage?: string;
+  sqlState?: string;
+}
+
+export interface SqliteDatabaseError extends BaseDatabaseError {
+  dbType: DatabaseClientType.SQLITE3;
+  code?: string;
+  errno?: number;
+}
+
+export interface UnknownDatabaseError extends BaseDatabaseError {
+  dbType: 'unknown';
+}
+
+export type DatabaseDriverError =
+  | PostgresDatabaseError
+  | MysqlDatabaseError
+  | SqliteDatabaseError
+  | UnknownDatabaseError;

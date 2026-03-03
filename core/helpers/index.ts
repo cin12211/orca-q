@@ -8,3 +8,4 @@ export * from './copyData';
 export * from './convertParameters';
 export * from './mapped-columns';
 export * from './deepUnRef';
+export * from './database-error';

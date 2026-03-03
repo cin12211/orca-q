@@ -1,6 +1,7 @@
+import { DatabaseClientType } from '~/core/constants/database-client-type';
 import type { BulkUpdateResponse } from '~/core/types';
 import type { IDatabaseAdapter } from '~/server/infrastructure/driver';
-import { toDatabaseHttpError } from '../../shared';
+import { createDatabaseHttpError } from '../../shared';
 
 export class PostgresTableMutationAdapter {
   constructor(private readonly adapter: IDatabaseAdapter) {}
@@ -36,7 +37,7 @@ export class PostgresTableMutationAdapter {
       };
     } catch (e) {
       await client.query('ROLLBACK');
-      throw toDatabaseHttpError(e);
+      throw createDatabaseHttpError(DatabaseClientType.POSTGRES, e);
     } finally {
       await this.adapter.releaseRawConnection(client);
     }

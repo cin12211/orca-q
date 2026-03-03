@@ -1,24 +1,25 @@
 import { createError } from 'h3';
+import { DatabaseClientType } from '~/core/constants/database-client-type';
 import type {
   ViewOverviewMetadata,
   ViewDefinitionResponse,
   ViewSchemaEnum,
 } from '~/core/types';
-import { BaseDomainAdapter, SupportedDatabaseType } from '../../shared';
+import { BaseDomainAdapter } from '../../shared';
 import type { IDatabaseViewAdapter, DatabaseViewAdapterParams } from '../types';
 
 export class PostgresViewAdapter
   extends BaseDomainAdapter
   implements IDatabaseViewAdapter
 {
-  readonly dbType = SupportedDatabaseType.POSTGRES;
+  readonly dbType = DatabaseClientType.POSTGRES;
 
   static async create(
     params: DatabaseViewAdapterParams
   ): Promise<PostgresViewAdapter> {
     const adapter = await PostgresViewAdapter.resolveAdapter(
       params,
-      SupportedDatabaseType.POSTGRES
+      DatabaseClientType.POSTGRES
     );
     return new PostgresViewAdapter(adapter);
   }

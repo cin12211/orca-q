@@ -1,11 +1,14 @@
 import { createError, type H3Event } from 'h3';
 import QueryStream from 'pg-query-stream';
+import { DatabaseClientType } from '~/core/constants/database-client-type';
+import { DatabaseDriverError as ErrorNormalizer } from '~/core/helpers';
 import type {
   QueryResult,
   RawQueryResultWithMetadata,
   DatabaseField,
+  DatabaseDriverError,
 } from '~/core/types';
-import { BaseDomainAdapter, SupportedDatabaseType } from '../../shared';
+import { BaseDomainAdapter } from '../../shared';
 import type {
   IDatabaseQueryAdapter,
   DatabaseQueryAdapterParams,
@@ -17,14 +20,14 @@ export class PostgresQueryAdapter
   extends BaseDomainAdapter
   implements IDatabaseQueryAdapter
 {
-  readonly dbType = SupportedDatabaseType.POSTGRES;
+  readonly dbType = DatabaseClientType.POSTGRES;
 
   static async create(
     params: DatabaseQueryAdapterParams
   ): Promise<PostgresQueryAdapter> {
     const adapter = await PostgresQueryAdapter.resolveAdapter(
       params,
-      SupportedDatabaseType.POSTGRES
+      DatabaseClientType.POSTGRES
     );
     return new PostgresQueryAdapter(adapter);
   }
@@ -180,14 +183,26 @@ export class PostgresQueryAdapter
 
       res.end();
     } catch (error: any) {
-      const message = error?.message || 'Unknown query error';
+      const dbError = error as DatabaseDriverError;
+      const message = dbError?.message || 'Unknown query error';
 
       console.dir(error, { depth: null });
-      console.log(Object.getOwnPropertyNames(error));
-      console.log({ ...error });
-
       try {
-        writeLine({ type: 'error', message });
+        const payloadError = { dbType: this.dbType, ...error };
+        const normalizeError = new ErrorNormalizer(payloadError)
+          .nomaltliztionErrror;
+
+        writeLine({
+          type: 'error',
+          message,
+          error: {
+            ...payloadError,
+            normalizeError: {
+              dbType: this.dbType,
+              ...normalizeError,
+            },
+          },
+        });
         res.end();
       } catch {
         // Response already destroyed

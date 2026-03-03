@@ -1,7 +1,5 @@
-import {
-  createDomainAdapter,
-  type SupportedDatabaseTypeInput,
-} from '../shared';
+import { DatabaseClientType } from '~/core/constants/database-client-type';
+import { createDomainAdapter } from '../shared';
 import { PostgresQueryAdapter } from './postgres/postgres-query.adapter';
 import type {
   IDatabaseQueryAdapter,
@@ -9,7 +7,7 @@ import type {
 } from './types';
 
 export async function createQueryAdapter(
-  dbType: SupportedDatabaseTypeInput,
+  dbType: DatabaseClientType,
   params: DatabaseQueryAdapterParams
 ): Promise<IDatabaseQueryAdapter> {
   return createDomainAdapter(dbType, params, 'query', {

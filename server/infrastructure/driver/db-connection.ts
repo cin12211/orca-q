@@ -1,5 +1,6 @@
+import { DatabaseClientType } from '~/core/constants/database-client-type';
 import { createDatabaseAdapter } from './factory';
-import type { DatabaseType, IDatabaseAdapter } from './types';
+import type { IDatabaseAdapter } from './types';
 
 type CachedAdapter = {
   adapter: IDatabaseAdapter;
@@ -61,30 +62,20 @@ process.on('exit', async () => {
   await shutdownAllAdapters();
 });
 
-// We export this with the same name to be a drop-in replacement where possible,
-// though it now returns an IDatabaseAdapter instead of a TypeORM DataSource.
 export const getDatabaseSource = async ({
   dbConnectionString,
   type,
 }: {
   dbConnectionString: string;
-  type: DatabaseType | 'postgres'; // allow typeorm db types temporarily if any remain
-  schema?: string;
+  type?: DatabaseClientType;
 }): Promise<IDatabaseAdapter> => {
-  const cacheKey = `${type}://${dbConnectionString}`;
+  const dbType = type ?? DatabaseClientType.POSTGRES;
+  const cacheKey = `${dbType}://${dbConnectionString}`;
   let cached = adapterCache.get(cacheKey);
 
   if (cached) {
     cached.lastUsed = Date.now();
     return cached.adapter;
-  }
-
-  let dbType: DatabaseType = 'postgres';
-  if (type === 'postgres' || type === 'mysql' || type === 'sqlite') {
-    dbType = type as DatabaseType;
-  } else {
-    // fallback
-    dbType = 'postgres';
   }
 
   const newAdapter = createDatabaseAdapter(dbType, dbConnectionString);
@@ -99,16 +90,13 @@ export const getDatabaseSource = async ({
 
 export async function healthCheckConnection({
   url,
-  type = 'postgres',
+  type = DatabaseClientType.POSTGRES,
 }: {
   url: string;
-  type?: DatabaseType | 'postgres';
+  type?: DatabaseClientType;
 }) {
   try {
-    const adapter = createDatabaseAdapter(
-      (type as DatabaseType) || 'postgres',
-      url
-    );
+    const adapter = createDatabaseAdapter(type, url);
     const isConnected = await adapter.healthCheck();
     await adapter.destroy();
     return isConnected;

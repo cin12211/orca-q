@@ -1,3 +1,4 @@
+import { DatabaseClientType } from '~/core/constants/database-client-type';
 import type {
   TableOverviewMetadata,
   TableStructure,
@@ -5,7 +6,7 @@ import type {
   BulkUpdateResponse,
 } from '~/core/types';
 import type { IDatabaseAdapter } from '~/server/infrastructure/driver';
-import { BaseDomainAdapter, SupportedDatabaseType } from '../../shared';
+import { BaseDomainAdapter } from '../../shared';
 import type {
   IDatabaseTableAdapter,
   DatabaseTableAdapterParams,
@@ -19,7 +20,7 @@ export class PostgresTableAdapter
   extends BaseDomainAdapter
   implements IDatabaseTableAdapter
 {
-  readonly dbType = SupportedDatabaseType.POSTGRES;
+  readonly dbType = DatabaseClientType.POSTGRES;
   private readonly metadataAdapter: PostgresTableMetadataAdapter;
   private readonly structureAdapter: PostgresTableStructureAdapter;
   private readonly mutationAdapter: PostgresTableMutationAdapter;
@@ -38,7 +39,7 @@ export class PostgresTableAdapter
   ): Promise<PostgresTableAdapter> {
     const adapter = await PostgresTableAdapter.resolveAdapter(
       params,
-      SupportedDatabaseType.POSTGRES
+      DatabaseClientType.POSTGRES
     );
     return new PostgresTableAdapter(adapter);
   }

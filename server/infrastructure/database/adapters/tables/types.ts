@@ -1,18 +1,16 @@
+import { DatabaseClientType } from '~/core/constants/database-client-type';
 import type {
   TableOverviewMetadata,
   TableStructure,
   TableSize,
   BulkUpdateResponse,
 } from '~/core/types';
-import type {
-  BaseDatabaseAdapterParams,
-  SupportedDatabaseType,
-} from '../shared';
+import type { BaseDatabaseAdapterParams } from '../shared';
 
 export type DatabaseTableAdapterParams = BaseDatabaseAdapterParams;
 
 export interface IDatabaseTableAdapter {
-  readonly dbType: SupportedDatabaseType;
+  readonly dbType: DatabaseClientType;
 
   getOverviewTables(schema: string): Promise<TableOverviewMetadata[]>;
   getTableStructure(

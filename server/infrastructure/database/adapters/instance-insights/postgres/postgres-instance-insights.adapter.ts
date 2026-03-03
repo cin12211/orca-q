@@ -1,4 +1,5 @@
 import { createError } from 'h3';
+import { DatabaseClientType } from '~/core/constants/database-client-type';
 import type {
   InstanceActionResponse,
   InstanceConfigurationRow,
@@ -13,11 +14,7 @@ import type {
   ReplicationStatRow,
 } from '~/core/types';
 import type { IDatabaseAdapter } from '~/server/infrastructure/driver';
-import {
-  BaseDomainAdapter,
-  SupportedDatabaseType,
-  toDatabaseHttpError,
-} from '../../shared';
+import { BaseDomainAdapter, createDatabaseHttpError } from '../../shared';
 import type {
   IDatabaseInstanceInsightsAdapter,
   InstanceInsightsAdapterParams,
@@ -45,7 +42,7 @@ export class PostgresInstanceInsightsAdapter
   extends BaseDomainAdapter
   implements IDatabaseInstanceInsightsAdapter
 {
-  readonly dbType = SupportedDatabaseType.POSTGRES;
+  readonly dbType = DatabaseClientType.POSTGRES;
   private readonly cacheKey: string;
 
   constructor(params: { cacheKey: string; adapter: IDatabaseAdapter }) {
@@ -58,7 +55,7 @@ export class PostgresInstanceInsightsAdapter
   ): Promise<PostgresInstanceInsightsAdapter> {
     const adapter = await PostgresInstanceInsightsAdapter.resolveAdapter(
       params,
-      SupportedDatabaseType.POSTGRES
+      DatabaseClientType.POSTGRES
     );
 
     return new PostgresInstanceInsightsAdapter({
@@ -627,7 +624,7 @@ export class PostgresInstanceInsightsAdapter
           : `Could not cancel query for PID ${pid}.`,
       };
     } catch (error) {
-      throw toDatabaseHttpError(error);
+      throw createDatabaseHttpError(DatabaseClientType.POSTGRES, error);
     }
   }
 
@@ -649,7 +646,7 @@ export class PostgresInstanceInsightsAdapter
           : `Could not terminate connection for PID ${pid}.`,
       };
     } catch (error) {
-      throw toDatabaseHttpError(error);
+      throw createDatabaseHttpError(DatabaseClientType.POSTGRES, error);
     }
   }
 
@@ -679,7 +676,7 @@ export class PostgresInstanceInsightsAdapter
         message: `Dropped replication slot "${normalized}".`,
       };
     } catch (error) {
-      throw toDatabaseHttpError(error);
+      throw createDatabaseHttpError(DatabaseClientType.POSTGRES, error);
     }
   }
 
@@ -760,7 +757,7 @@ export class PostgresInstanceInsightsAdapter
         message: `Turned on logical slot "${slotName}" using a probe reader.`,
       };
     } catch (error) {
-      throw toDatabaseHttpError(error);
+      throw createDatabaseHttpError(DatabaseClientType.POSTGRES, error);
     }
   }
 

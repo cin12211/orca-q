@@ -1,4 +1,5 @@
 import { createError, defineEventHandler, readBody } from 'h3';
+import { DatabaseClientType } from '~/core/constants/database-client-type';
 import type { InstanceInsightsReplication } from '~/core/types';
 import { createInstanceInsightsAdapter } from '~/server/infrastructure/database/adapters/instance-insights';
 
@@ -14,9 +15,12 @@ export default defineEventHandler(
         });
       }
 
-      const adapter = await createInstanceInsightsAdapter('postgres', {
-        dbConnectionString: body.dbConnectionString,
-      });
+      const adapter = await createInstanceInsightsAdapter(
+        DatabaseClientType.POSTGRES,
+        {
+          dbConnectionString: body.dbConnectionString,
+        }
+      );
 
       return await adapter.getReplication();
     } catch (error: any) {

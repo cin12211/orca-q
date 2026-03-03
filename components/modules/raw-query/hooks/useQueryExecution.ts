@@ -8,12 +8,14 @@ import {
   getTreeNodes,
 } from '~/components/base/code-editor/utils';
 import type { RowData } from '~/components/base/dynamic-table/utils';
+import { DatabaseClientType } from '~/core/constants/database-client-type';
 import {
   convertParameters,
   uuidv4,
   type ParsedParametersResult,
 } from '~/core/helpers';
 import type { Connection } from '~/core/stores';
+import type { DatabaseDriverError } from '~/core/types';
 import type { ExecutedResultItem } from '../interfaces';
 import type { ResultTabsReturn } from './useResultTabs';
 import { executeStreamingQuery } from './useStreamingQuery';
@@ -42,7 +44,7 @@ export function useQueryExecution({
   const currentRawQueryResult = shallowRef<RowData[]>([]);
   const rawResponse = shallowRef<
     | {
-        rows: Record<string, any>[];
+        rows: RowData[];
         fields: FieldDef[];
         queryTime: number;
       }
@@ -57,12 +59,7 @@ export function useQueryExecution({
     isStreaming: boolean;
     streamingRowCount: number;
     queryTime: number;
-    executeErrors:
-      | {
-          message: string;
-          data: Record<string, unknown>;
-        }
-      | undefined;
+    executeErrors: ExecutedResultItem['metadata']['executeErrors'];
     currentStatementQuery: string;
   }>({
     isHaveOneExecute: false,
@@ -135,8 +132,13 @@ export function useQueryExecution({
       console.log('fileParameters error::', e);
     }
 
+    let executedResultView: ExecutedResultItem['view'] = 'result';
+
     if (queryPrefix) {
       executeQuery = `${queryPrefix} ${executeQuery}`;
+      if (queryPrefix.startsWith('EXPLAIN')) {
+        executedResultView = 'explain';
+      }
     }
 
     fieldDefs.value = [];
@@ -165,7 +167,7 @@ export function useQueryExecution({
         connection: undefined,
       },
       result: [],
-      view: queryPrefix?.startsWith('EXPLAIN') ? 'explain' : 'result',
+      view: executedResultView,
       seqIndex: seqIndex.value,
     };
 
@@ -173,13 +175,9 @@ export function useQueryExecution({
     resultTabs.addResultTab(executedResultItem);
     clearSqlErrorDiagnostics(getEditorView() as EditorView);
 
-    // TODO: fix, this trick is not good
-    const isExplain = !!queryPrefix?.startsWith('EXPLAIN');
     const rowBuffer: RowData[] = []; // accumulator, không reactive
 
-    if (isExplain) {
-      // EXPLAIN queries: use traditional $fetch (small result sets)
-      console.log('mergeParameters::', fileParameters);
+    if (queryPrefix && executedResultView === 'explain') {
       try {
         const result = await $fetch('/api/query/raw-execute', {
           method: 'POST',
@@ -190,8 +188,7 @@ export function useQueryExecution({
           },
 
           onResponseError: ({ response }) => {
-            const message = response._data.data;
-            const errorDetail = JSON.parse(response._data.data);
+            const errorDetail = response._data?.data as DatabaseDriverError;
             const editorView = getEditorView();
             if (editorView && errorDetail) {
               applySqlErrorDiagnostics({
@@ -199,8 +196,11 @@ export function useQueryExecution({
                 originalSql: currentStatement.text,
                 statementFrom: Number(currentStatement.from),
                 fileParameters,
-                rawErrorMessage: message,
-                clientType: 'pg',
+                errorDetail,
+                clientType:
+                  (connection.value?.type as unknown as DatabaseClientType) ||
+                  DatabaseClientType.POSTGRES,
+                queryPrefix,
               });
             }
           },
@@ -272,18 +272,31 @@ export function useQueryExecution({
 
         activeStreamAbort = null;
       },
-      onError: message => {
+      onError: (message, errorDetail) => {
+        const resolvedError = {
+          message,
+          data: errorDetail || { message },
+        };
+
         queryProcessState.executeLoading = false;
         queryProcessState.isStreaming = false;
-        queryProcessState.executeErrors = {
-          message,
-          data: { message },
-        };
-        executedResultItem.metadata.executeErrors = {
-          message,
-          data: { message },
-        };
+        queryProcessState.executeErrors = resolvedError;
+        executedResultItem.metadata.executeErrors = resolvedError;
         executedResultItem.view = 'error';
+
+        const editorView = getEditorView();
+        if (editorView && errorDetail) {
+          applySqlErrorDiagnostics({
+            editorView: editorView as EditorView,
+            originalSql: currentStatement.text,
+            statementFrom: Number(currentStatement.from),
+            fileParameters,
+            errorDetail: errorDetail,
+            clientType:
+              (connection.value?.type as unknown as DatabaseClientType) ||
+              DatabaseClientType.POSTGRES,
+          });
+        }
 
         // Refresh tab to show error
         resultTabs.refreshResultTab(executedResultItem.id, executedResultItem);

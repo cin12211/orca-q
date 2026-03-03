@@ -1,3 +1,4 @@
+import { DatabaseClientType } from '~/core/constants/database-client-type';
 import type {
   FunctionSignature,
   RoutineMetadata,
@@ -5,15 +6,12 @@ import type {
   UpdateFunctionResponse,
   DeleteFunctionResponse,
 } from '~/core/types';
-import type {
-  BaseDatabaseAdapterParams,
-  SupportedDatabaseType,
-} from '../shared';
+import type { BaseDatabaseAdapterParams } from '../shared';
 
 export type DatabaseFunctionAdapterParams = BaseDatabaseAdapterParams;
 
 export interface IDatabaseFunctionAdapter {
-  readonly dbType: SupportedDatabaseType;
+  readonly dbType: DatabaseClientType;
 
   getFunctionSignature(functionId: string): Promise<FunctionSignature | null>;
   getOneFunction(functionId: string): Promise<string | null>;

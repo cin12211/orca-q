@@ -2,16 +2,14 @@
  * API: Get Role Inheritance Tree
  * Fetches inherited roles using recursive query
  */
+import { DatabaseClientType } from '~/core/constants/database-client-type';
 import type { RoleInheritanceNode } from '~/core/types';
-import {
-  createRoleAdapter,
-  type SupportedDatabaseType,
-} from '~/server/infrastructure/database/adapters/database-roles';
+import { createRoleAdapter } from '~/server/infrastructure/database/adapters/database-roles';
 
 interface RequestBody {
   dbConnectionString: string;
   roleName: string;
-  dbType?: SupportedDatabaseType;
+  dbType?: DatabaseClientType;
 }
 
 export default defineEventHandler(
@@ -32,9 +30,12 @@ export default defineEventHandler(
       });
     }
 
-    const adapter = await createRoleAdapter(body.dbType || 'postgres', {
-      dbConnectionString: body.dbConnectionString,
-    });
+    const adapter = await createRoleAdapter(
+      body.dbType || DatabaseClientType.POSTGRES,
+      {
+        dbConnectionString: body.dbConnectionString,
+      }
+    );
 
     return adapter.getRoleInheritance(body.roleName);
   }

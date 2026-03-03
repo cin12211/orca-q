@@ -1,14 +1,12 @@
 import type { H3Event } from 'h3';
+import { DatabaseClientType } from '~/core/constants/database-client-type';
 import type { QueryResult, RawQueryResultWithMetadata } from '~/core/types';
-import type {
-  BaseDatabaseAdapterParams,
-  SupportedDatabaseType,
-} from '../shared';
+import type { BaseDatabaseAdapterParams } from '../shared';
 
 export type DatabaseQueryAdapterParams = BaseDatabaseAdapterParams;
 
 export interface IDatabaseQueryAdapter {
-  readonly dbType: SupportedDatabaseType;
+  readonly dbType: DatabaseClientType;
 
   /**
    * Simple execution returning only array of data rows.

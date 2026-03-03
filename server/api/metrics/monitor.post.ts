@@ -1,4 +1,5 @@
 import { defineEventHandler, readBody, createError } from 'h3';
+import { DatabaseClientType } from '~/core/constants/database-client-type';
 import type { DatabaseMetrics } from '~/core/types';
 import { createMetricsAdapter } from '~/server/infrastructure/database/adapters/metrics';
 
@@ -15,7 +16,7 @@ export default defineEventHandler(async (event): Promise<DatabaseMetrics> => {
       });
     }
 
-    const adapter = await createMetricsAdapter('postgres', {
+    const adapter = await createMetricsAdapter(DatabaseClientType.POSTGRES, {
       dbConnectionString: body.dbConnectionString,
     });
 

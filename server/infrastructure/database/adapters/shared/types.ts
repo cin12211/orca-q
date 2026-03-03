@@ -1,31 +1,14 @@
-export enum SupportedDatabaseType {
-  POSTGRES = 'postgres',
-  MYSQL = 'mysql',
-  SQLITE = 'sqlite',
-}
+import { DatabaseClientType } from '~/core/constants/database-client-type';
 
-export type SupportedDatabaseTypeInput =
-  | SupportedDatabaseType
-  | 'postgres'
-  | 'mysql'
-  | 'sqlite';
+export { DatabaseClientType };
 
 export function normalizeSupportedDatabaseType(
-  dbType: SupportedDatabaseTypeInput
-): SupportedDatabaseType {
-  if (dbType === SupportedDatabaseType.POSTGRES) {
-    return SupportedDatabaseType.POSTGRES;
+  dbType: DatabaseClientType
+): DatabaseClientType {
+  if (Object.values(DatabaseClientType).includes(dbType)) {
+    return dbType;
   }
-
-  if (dbType === SupportedDatabaseType.MYSQL) {
-    return SupportedDatabaseType.MYSQL;
-  }
-
-  if (dbType === SupportedDatabaseType.SQLITE) {
-    return SupportedDatabaseType.SQLITE;
-  }
-
-  return SupportedDatabaseType.POSTGRES;
+  return DatabaseClientType.POSTGRES;
 }
 
 export interface BaseDatabaseAdapterParams {

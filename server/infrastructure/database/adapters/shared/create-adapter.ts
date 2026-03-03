@@ -1,21 +1,18 @@
 import { createError } from 'h3';
-import { SupportedDatabaseType, normalizeSupportedDatabaseType } from './types';
-import type {
-  BaseDatabaseAdapterParams,
-  SupportedDatabaseTypeInput,
-} from './types';
+import { DatabaseClientType } from '~/core/constants/database-client-type';
+import { normalizeSupportedDatabaseType } from './types';
+import type { BaseDatabaseAdapterParams } from './types';
 
-type AdapterFactories<TAdapter, TParams extends BaseDatabaseAdapterParams> = {
-  [SupportedDatabaseType.POSTGRES]?: (params: TParams) => Promise<TAdapter>;
-  [SupportedDatabaseType.MYSQL]?: (params: TParams) => Promise<TAdapter>;
-  [SupportedDatabaseType.SQLITE]?: (params: TParams) => Promise<TAdapter>;
-};
+type AdapterFactories<
+  TAdapter,
+  TParams extends BaseDatabaseAdapterParams,
+> = Partial<Record<DatabaseClientType, (params: TParams) => Promise<TAdapter>>>;
 
 export async function createDomainAdapter<
   TAdapter,
   TParams extends BaseDatabaseAdapterParams,
 >(
-  dbType: SupportedDatabaseTypeInput,
+  dbType: DatabaseClientType,
   params: TParams,
   adapterName: string,
   factories: AdapterFactories<TAdapter, TParams>
@@ -27,14 +24,14 @@ export async function createDomainAdapter<
     return factory(params);
   }
 
-  if (normalizedDbType === SupportedDatabaseType.MYSQL) {
+  if (normalizedDbType === DatabaseClientType.MYSQL) {
     throw createError({
       statusCode: 501,
       statusMessage: `MySQL ${adapterName} adapter not yet implemented`,
     });
   }
 
-  if (normalizedDbType === SupportedDatabaseType.SQLITE) {
+  if (normalizedDbType === DatabaseClientType.SQLITE3) {
     throw createError({
       statusCode: 501,
       statusMessage: `SQLite ${adapterName} adapter not yet implemented`,

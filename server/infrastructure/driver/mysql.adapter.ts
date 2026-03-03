@@ -1,12 +1,13 @@
 import type { Knex } from 'knex';
 import type { Readable } from 'node:stream';
+import { DatabaseClientType } from '~/core/constants/database-client-type';
 import type { IDatabaseAdapter, RawQueryResult } from './types';
 
 const MYSQL_PLACEHOLDER_MESSAGE =
   'MySQL adapter is a placeholder and not implemented yet.';
 
 export class MysqlAdapter implements IDatabaseAdapter {
-  readonly dbType = 'mysql' as const;
+  readonly dbType = DatabaseClientType.MYSQL;
 
   constructor(public readonly connectionString: string) {}
 

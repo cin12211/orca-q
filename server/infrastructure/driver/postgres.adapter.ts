@@ -1,6 +1,7 @@
 import knex, { type Knex } from 'knex';
 import type { Readable } from 'node:stream';
 import pg from 'pg';
+import { DatabaseClientType } from '~/core/constants/database-client-type';
 import { BaseDatabaseAdapter } from './base.adapter';
 import type { RawQueryResult } from './types';
 
@@ -23,7 +24,7 @@ export class PostgresAdapter extends BaseDatabaseAdapter {
     applicationName: string = 'orca-query-server'
   ) {
     const knexInstance = knex({
-      client: 'pg',
+      client: DatabaseClientType.POSTGRES,
       connection: connectionString,
       pool: {
         min: 1,
@@ -47,7 +48,7 @@ export class PostgresAdapter extends BaseDatabaseAdapter {
       },
     });
 
-    super('postgres', connectionString, knexInstance);
+    super(DatabaseClientType.POSTGRES, connectionString, knexInstance);
   }
 
   protected async _rawQuery<T = any>(

@@ -1,39 +1,20 @@
 import type { Diagnostic } from '@codemirror/lint';
 import type { EditorView } from '@codemirror/view';
 import { knex, type Knex } from 'knex';
+import { DatabaseClientType } from '~/core/constants/database-client-type';
+import { DatabaseDriverError as ErrorNormalizer } from '~/core/helpers';
+import type { DatabaseDriverError } from '~/core/types';
 import { pushDiagnostics } from './diagnostic-lint';
-
-/* -------------------------------------------------------------------------- */
-/*                                Types                                       */
-/* -------------------------------------------------------------------------- */
-
-export type SupportedKnexClient =
-  | 'pg'
-  | 'mysql'
-  | 'mysql2'
-  | 'sqlite3'
-  | 'better-sqlite3'
-  | 'mssql'
-  | 'oracledb';
-
-interface SqlErrorDetail {
-  position?: number | string;
-  message?: string;
-  [key: string]: unknown;
-}
 
 export interface ApplySqlErrorDiagnosticsOptions {
   editorView: EditorView | null | undefined;
   originalSql: string;
   statementFrom: number;
   fileParameters?: Record<string, unknown>;
-  rawErrorMessage: string;
-  clientType: SupportedKnexClient;
+  errorDetail?: DatabaseDriverError;
+  clientType: DatabaseClientType;
+  queryPrefix?: string;
 }
-
-/* -------------------------------------------------------------------------- */
-/*                         Map Error Position Logic                           */
-/* -------------------------------------------------------------------------- */
 
 /**
  * Map driver error position (1-based)
@@ -100,61 +81,44 @@ function mapErrorPosition(
   return origIdx;
 }
 
-/* -------------------------------------------------------------------------- */
-/*                          Main Public Function                              */
-/* -------------------------------------------------------------------------- */
-
 export function applySqlErrorDiagnostics({
   editorView,
   originalSql,
   statementFrom,
   fileParameters = {},
-  rawErrorMessage,
+  errorDetail,
   clientType,
+  queryPrefix,
 }: ApplySqlErrorDiagnosticsOptions): void {
-  if (!editorView || !rawErrorMessage) return;
+  if (!editorView || !errorDetail) return;
 
-  let errorDetail: SqlErrorDetail | null = null;
+  const { message, position: numericPosition } =
+    (errorDetail as any).normalizeError ||
+    new ErrorNormalizer(errorDetail).nomaltliztionErrror;
 
-  try {
-    errorDetail = JSON.parse(rawErrorMessage) as SqlErrorDetail;
-  } catch {
-    pushFullLineError(editorView, statementFrom, originalSql, rawErrorMessage);
+  if (!numericPosition) {
+    pushFullLineError(editorView, statementFrom, originalSql, message);
     return;
   }
 
-  if (!errorDetail?.position) {
-    pushFullLineError(editorView, statementFrom, originalSql, rawErrorMessage);
-    return;
-  }
-
-  const numericPosition =
-    typeof errorDetail.position === 'string'
-      ? Number(errorDetail.position)
-      : errorDetail.position;
-
-  if (!numericPosition || Number.isNaN(numericPosition)) {
-    pushFullLineError(editorView, statementFrom, originalSql, rawErrorMessage);
-    return;
-  }
-
-  // 🔥 Dynamic knex creation based on clientType
   const knexInstance: Knex = knex({
     client: clientType,
   });
 
+  const mapOriginalSql = `${queryPrefix}${originalSql}`;
+
   const formatted = knexInstance
-    .raw(originalSql, fileParameters)
+    .raw(mapOriginalSql, fileParameters)
     .toSQL()
     .toNative();
 
   const mappedPos = mapErrorPosition(
-    originalSql,
+    mapOriginalSql,
     formatted.sql,
     numericPosition
   );
 
-  const startOffset = Math.max(mappedPos - 1, 0);
+  const startOffset = Math.max(mappedPos - 1, 0) - (queryPrefix?.length || 0);
 
   const { from, to } = calculateTokenRange(
     originalSql,
@@ -167,16 +131,12 @@ export function applySqlErrorDiagnostics({
       from,
       to,
       severity: 'error',
-      message: errorDetail.message || rawErrorMessage,
+      message: message,
     },
   ];
 
   pushDiagnostics(editorView, diagnostics);
 }
-
-/* -------------------------------------------------------------------------- */
-/*                                Helpers                                     */
-/* -------------------------------------------------------------------------- */
 
 function calculateTokenRange(
   sql: string,

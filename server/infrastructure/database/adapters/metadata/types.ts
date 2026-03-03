@@ -1,17 +1,15 @@
+import { DatabaseClientType } from '~/core/constants/database-client-type';
 import type {
   SchemaMetaData,
   DatabaseMetadata,
   ReservedTableSchemas,
 } from '~/core/types';
-import type {
-  BaseDatabaseAdapterParams,
-  SupportedDatabaseType,
-} from '../shared';
+import type { BaseDatabaseAdapterParams } from '../shared';
 
 export type DatabaseMetadataAdapterParams = BaseDatabaseAdapterParams;
 
 export interface IDatabaseMetadataAdapter {
-  readonly dbType: SupportedDatabaseType;
+  readonly dbType: DatabaseClientType;
 
   getSchemaMetaData(): Promise<SchemaMetaData[]>;
   getErdData(): Promise<DatabaseMetadata>;

@@ -1,6 +1,7 @@
+import { DatabaseClientType } from '~/core/constants/database-client-type';
 import type { DatabaseMetrics } from '~/core/types';
 import type { IDatabaseAdapter } from '~/server/infrastructure/driver';
-import { BaseDomainAdapter, SupportedDatabaseType } from '../../shared';
+import { BaseDomainAdapter } from '../../shared';
 import type {
   IDatabaseMetricsAdapter,
   DatabaseMetricsAdapterParams,
@@ -12,7 +13,7 @@ export class PostgresMetricsAdapter
   extends BaseDomainAdapter
   implements IDatabaseMetricsAdapter
 {
-  readonly dbType = SupportedDatabaseType.POSTGRES;
+  readonly dbType = DatabaseClientType.POSTGRES;
   private readonly cacheKey: string;
 
   constructor(adapter: IDatabaseAdapter, dbConnectionString: string) {
@@ -25,7 +26,7 @@ export class PostgresMetricsAdapter
   ): Promise<PostgresMetricsAdapter> {
     const adapter = await PostgresMetricsAdapter.resolveAdapter(
       params,
-      SupportedDatabaseType.POSTGRES
+      DatabaseClientType.POSTGRES
     );
     return new PostgresMetricsAdapter(adapter, params.dbConnectionString);
   }

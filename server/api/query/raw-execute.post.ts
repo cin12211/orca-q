@@ -1,7 +1,8 @@
-import { defineEventHandler, readBody, createError } from 'h3';
-import { type QueryFailedError } from 'typeorm';
+import { defineEventHandler, readBody } from 'h3';
+import { DatabaseClientType } from '~/core/constants/database-client-type';
 import type { RawQueryResultWithMetadata } from '~/core/types';
 import { createQueryAdapter } from '~/server/infrastructure/database/adapters/query';
+import { createDatabaseHttpError } from '~/server/infrastructure/database/adapters/shared/error';
 
 export default defineEventHandler(
   async (event): Promise<RawQueryResultWithMetadata> => {
@@ -12,21 +13,16 @@ export default defineEventHandler(
         params: any[] | Record<string, any>;
       } = await readBody(event);
 
-      const adapter = await createQueryAdapter('postgres', {
+      const adapter = await createQueryAdapter(DatabaseClientType.POSTGRES, {
         dbConnectionString: body.dbConnectionString,
       });
 
       return await adapter.rawExecute(body.query, body.params);
-    } catch (error) {
-      const queryError: QueryFailedError = error as any;
-
-      console.log('🚀 ~ queryError:', queryError);
-      throw createError({
-        statusCode: 500,
-        cause: queryError.cause,
-        data: JSON.stringify(error, null, 2),
-        message: queryError.message,
-      });
+    } catch (error: any) {
+      throw createDatabaseHttpError(
+        error?.dbType || DatabaseClientType.POSTGRES,
+        error
+      );
     }
   }
 );

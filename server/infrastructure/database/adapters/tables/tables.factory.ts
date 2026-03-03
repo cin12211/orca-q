@@ -1,7 +1,5 @@
-import {
-  createDomainAdapter,
-  type SupportedDatabaseTypeInput,
-} from '../shared';
+import { DatabaseClientType } from '~/core/constants/database-client-type';
+import { createDomainAdapter } from '../shared';
 import { PostgresTableAdapter } from './postgres/postgres-table.adapter';
 import type {
   IDatabaseTableAdapter,
@@ -9,7 +7,7 @@ import type {
 } from './types';
 
 export async function createTableAdapter(
-  dbType: SupportedDatabaseTypeInput,
+  dbType: DatabaseClientType,
   params: DatabaseTableAdapterParams
 ): Promise<IDatabaseTableAdapter> {
   return createDomainAdapter(dbType, params, 'table', {

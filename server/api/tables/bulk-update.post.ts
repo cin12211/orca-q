@@ -1,4 +1,5 @@
 import { defineEventHandler, readBody, createError } from 'h3';
+import { DatabaseClientType } from '~/core/constants/database-client-type';
 import { createTableAdapter } from '~/server/infrastructure/database/adapters/tables';
 
 export default defineEventHandler(async event => {
@@ -24,6 +25,8 @@ export default defineEventHandler(async event => {
     }
   }
 
-  const adapter = await createTableAdapter('postgres', { dbConnectionString });
+  const adapter = await createTableAdapter(DatabaseClientType.POSTGRES, {
+    dbConnectionString,
+  });
   return await adapter.executeBulkUpdate(sqlUpdateStatements);
 });

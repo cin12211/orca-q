@@ -1,14 +1,15 @@
 import type { Knex } from 'knex';
 import type { Readable } from 'node:stream';
-import type { DatabaseType, IDatabaseAdapter, RawQueryResult } from './types';
+import { DatabaseClientType } from '~/core/constants/database-client-type';
+import type { IDatabaseAdapter, RawQueryResult } from './types';
 
 export abstract class BaseDatabaseAdapter implements IDatabaseAdapter {
   protected knex: Knex;
-  public readonly dbType: DatabaseType;
+  public readonly dbType: DatabaseClientType;
   public readonly connectionString: string;
 
   constructor(
-    dbType: DatabaseType,
+    dbType: DatabaseClientType,
     connectionString: string,
     knexInstance: Knex
   ) {

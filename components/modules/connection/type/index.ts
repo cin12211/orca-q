@@ -1,7 +1,3 @@
-import type { RendererElement, RendererNode } from 'vue';
-import type { DatabaseType } from 'typeorm';
-import type { EDatabaseType } from '../constants';
-
 // export interface IDBSupport {
 //   type: EDatabaseType;
 //   name: string;

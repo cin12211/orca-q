@@ -1,4 +1,5 @@
 import { createError } from 'h3';
+import { DatabaseClientType } from '~/core/constants/database-client-type';
 import type {
   FunctionSignature,
   FunctionParameter,
@@ -7,8 +8,7 @@ import type {
   UpdateFunctionResponse,
   DeleteFunctionResponse,
 } from '~/core/types';
-import { BaseDomainAdapter, toDatabaseHttpError } from '../../shared';
-import { SupportedDatabaseType } from '../../shared';
+import { BaseDomainAdapter, createDatabaseHttpError } from '../../shared';
 import type {
   IDatabaseFunctionAdapter,
   DatabaseFunctionAdapterParams,
@@ -18,14 +18,14 @@ export class PostgresFunctionAdapter
   extends BaseDomainAdapter
   implements IDatabaseFunctionAdapter
 {
-  readonly dbType = SupportedDatabaseType.POSTGRES;
+  readonly dbType = DatabaseClientType.POSTGRES;
 
   static async create(
     params: DatabaseFunctionAdapterParams
   ): Promise<PostgresFunctionAdapter> {
     const adapter = await PostgresFunctionAdapter.resolveAdapter(
       params,
-      SupportedDatabaseType.POSTGRES
+      DatabaseClientType.POSTGRES
     );
     return new PostgresFunctionAdapter(adapter);
   }
@@ -167,7 +167,7 @@ export class PostgresFunctionAdapter
         queryTime: Number((endTime - startTime).toFixed(2)),
       };
     } catch (error) {
-      throw toDatabaseHttpError(error);
+      throw createDatabaseHttpError(DatabaseClientType.POSTGRES, error);
     }
   }
 
@@ -184,7 +184,7 @@ export class PostgresFunctionAdapter
         queryTime: Number((endTime - startTime).toFixed(2)),
       };
     } catch (error) {
-      throw toDatabaseHttpError(error);
+      throw createDatabaseHttpError(DatabaseClientType.POSTGRES, error);
     }
   }
 
@@ -205,7 +205,7 @@ export class PostgresFunctionAdapter
         queryTime: Number((endTime - startTime).toFixed(2)),
       };
     } catch (error) {
-      throw toDatabaseHttpError(error);
+      throw createDatabaseHttpError(DatabaseClientType.POSTGRES, error);
     }
   }
 }
