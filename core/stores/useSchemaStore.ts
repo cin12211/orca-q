@@ -1,6 +1,13 @@
 import { defineStore } from 'pinia';
 import { ref, computed, toRefs } from 'vue';
-import type { ReservedTableSchemas } from '~/core/types';
+import type {
+  ReservedTableSchemas,
+  TableIndex,
+  RLSPolicy,
+  TableRule,
+  TableTrigger,
+  ViewMeta,
+} from '~/core/types';
 import type {
   FunctionSchema,
   SchemaMetaData,
@@ -39,6 +46,15 @@ export const useSchemaStore = defineStore(
 
     // Store loading state per connection: Record<string (connectionId), boolean>
     const loading = ref<Record<string, boolean>>({});
+
+    // Advanced objects cache: Record<"schema.table", T[]>
+    const indexesMap = ref<Record<string, TableIndex[]>>({});
+    const rlsMap = ref<Record<string, RLSPolicy[]>>({});
+    const rulesMap = ref<Record<string, TableRule[]>>({});
+    const triggersMap = ref<Record<string, TableTrigger[]>>({});
+
+    // View meta cache: Record<"schema.viewName", ViewMeta>
+    const viewMetaMap = ref<Record<string, ViewMeta>>({});
 
     const activeSchema = computed(() => {
       const currentSchemas = schemas.value[connectionId.value] || [];
@@ -210,6 +226,11 @@ export const useSchemaStore = defineStore(
       reservedSchemas, // Expose raw per-connection map
       schemas, // Expose raw per-connection map
       loading, // Expose raw per-connection map
+      indexesMap,
+      rlsMap,
+      rulesMap,
+      triggersMap,
+      viewMetaMap,
 
       // Getters
       activeSchema,

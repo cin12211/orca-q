@@ -97,6 +97,15 @@ export interface TableSize {
   indexSize: string;
 }
 
+export interface TableMeta {
+  type: string;
+  owner: string;
+  rowEstimate?: number;
+  totalSize?: string;
+  tableSize?: string;
+  indexSize?: string;
+}
+
 export interface ReservedTableSchemas {
   schema: string;
   table: string;
@@ -123,4 +132,43 @@ export interface BulkUpdateResponse {
   }[];
   error?: string;
   queryTime: number;
+}
+
+// --- Table Advanced Objects (View Only) ---
+
+export interface TableIndex {
+  indexName: string;
+  isUnique: boolean;
+  isPrimary: boolean;
+  method: string;
+  definition: string;
+}
+
+export interface RLSPolicy {
+  policyName: string;
+  permissive: string;
+  command: string;
+  roles: string[];
+  usingExpression: string | null;
+  withCheckExpression: string | null;
+}
+
+export interface RLSStatus {
+  enabled: boolean;
+}
+
+export interface TableRule {
+  ruleName: string;
+  event: string;
+  actionType: string;
+  definition: string;
+}
+
+export interface TableTrigger {
+  triggerName: string;
+  enabled: boolean;
+  timing: string;
+  events: string[];
+  orientation: string;
+  definition: string;
 }
