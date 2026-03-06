@@ -4,12 +4,15 @@ import { useChangelogModal } from '~/core/contexts/useChangelogModal';
 import { TabViewType } from '~/core/stores';
 import CurrentPositionPath from './CurrentPositionPath.vue';
 
-// import ConnectionMetricMonitor from './ConnectionMetricMonitor.vue';
-
-const { tabViewStore } = useAppContext();
+const { tabViewStore, wsStateStore, connectionStore } = useAppContext();
 const { openChangelog } = useChangelogModal();
 
 const { activeTab } = toRefs(tabViewStore);
+const { workspaceId, connectionId } = toRefs(wsStateStore);
+
+const canOpenInstanceInsights = computed(
+  () => !!workspaceId.value && !!connectionId.value
+);
 
 const onBackToHome = async () => {
   await navigateTo('/');
@@ -17,6 +20,40 @@ const onBackToHome = async () => {
   //   connId: undefined,
   //   wsId: undefined,
   // });
+};
+
+const onOpenInstanceInsights = async () => {
+  if (!workspaceId.value || !connectionId.value) return;
+
+  const selectedConnection = connectionStore.connections.find(
+    connection => connection.id === connectionId.value
+  );
+  const databaseName =
+    selectedConnection?.database ||
+    selectedConnection?.name ||
+    'Instance Insights';
+  const tabId = `instance-insights-${connectionId.value}`;
+
+  await tabViewStore.openTab({
+    workspaceId: workspaceId.value,
+    connectionId: connectionId.value,
+    schemaId: '',
+    id: tabId,
+    name: `${databaseName} - Insights`,
+    icon: 'hugeicons:activity-02',
+    iconClass: 'text-primary',
+    type: TabViewType.InstanceInsights,
+    routeName: 'workspaceId-connectionId-instance-insights',
+    routeParams: {
+      workspaceId: workspaceId.value,
+      connectionId: connectionId.value,
+    },
+    metadata: {
+      type: TabViewType.InstanceInsights,
+    },
+  });
+
+  await tabViewStore.selectTab(tabId);
 };
 
 const formattedTabType = computed(() => {
@@ -42,6 +79,12 @@ const formattedTabType = computed(() => {
 
     case TabViewType.CodeQuery:
       return 'raw query';
+
+    case TabViewType.DatabaseTools:
+      return 'db tools';
+
+    case TabViewType.InstanceInsights:
+      return 'insights';
 
     default:
       return '';
@@ -82,6 +125,19 @@ const formattedTabType = computed(() => {
         <TooltipTrigger as-child>
           <div
             class="flex items-center justify-center hover:bg-muted rounded cursor-pointer"
+            :class="!canOpenInstanceInsights && 'opacity-50 cursor-not-allowed'"
+            @click="onOpenInstanceInsights"
+          >
+            <Icon name="hugeicons:activity-02" class="size-4!" />
+          </div>
+        </TooltipTrigger>
+        <TooltipContent> Instance Insights </TooltipContent>
+      </Tooltip>
+
+      <Tooltip>
+        <TooltipTrigger as-child>
+          <div
+            class="flex items-center justify-center hover:bg-muted rounded cursor-pointer"
             @click="openChangelog"
           >
             <Icon name="hugeicons:notification-01" class="size-4!" />
@@ -89,7 +145,6 @@ const formattedTabType = computed(() => {
         </TooltipTrigger>
         <TooltipContent> What's New </TooltipContent>
       </Tooltip>
-      <!-- <ConnectionMetricMonitor /> -->
     </div>
   </div>
 </template>

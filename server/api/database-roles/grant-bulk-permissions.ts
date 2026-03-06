@@ -2,14 +2,12 @@
  * API: Grant Bulk Permissions
  * Executes multiple permission grants in sequence (for wizard)
  */
+import { DatabaseClientType } from '~/core/constants/database-client-type';
 import type { BulkGrantRequest, BulkGrantResponse } from '~/core/types';
-import {
-  createRoleAdapter,
-  type SupportedDatabaseType,
-} from './adapters/index';
+import { createRoleAdapter } from '~/server/infrastructure/database/adapters/database-roles';
 
 interface RequestBody extends BulkGrantRequest {
-  dbType?: SupportedDatabaseType;
+  dbType?: DatabaseClientType;
 }
 
 export default defineEventHandler(async (event): Promise<BulkGrantResponse> => {
@@ -29,9 +27,12 @@ export default defineEventHandler(async (event): Promise<BulkGrantResponse> => {
     });
   }
 
-  const adapter = await createRoleAdapter(body.dbType || 'postgres', {
-    dbConnectionString: body.dbConnectionString,
-  });
+  const adapter = await createRoleAdapter(
+    body.dbType || DatabaseClientType.POSTGRES,
+    {
+      dbConnectionString: body.dbConnectionString,
+    }
+  );
 
   return adapter.grantBulkPermissions({
     roleName: body.roleName,

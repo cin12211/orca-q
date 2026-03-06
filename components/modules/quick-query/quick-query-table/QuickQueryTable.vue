@@ -27,7 +27,7 @@ import {
   type RowData,
 } from '~/components/base/dynamic-table/utils';
 import { DEFAULT_BUFFER_ROWS, DEFAULT_QUERY_SIZE } from '~/core/constants';
-import type { ForeignKeyMetadata } from '~/server/api/get-schema-meta-data';
+import type { SchemaForeignKeyMetadata as ForeignKeyMetadata } from '~/core/types';
 import AgJsonCellEditor from './AgJsonCellEditor.vue';
 import CustomCellUuid from './CustomCellUuid.vue';
 import CustomHeaderTable from './CustomHeaderTable.vue';

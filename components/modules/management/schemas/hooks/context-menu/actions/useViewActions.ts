@@ -7,7 +7,7 @@ import {
 } from '~/components/modules/management/schemas/utils/generateViewSQL';
 import { TabViewType } from '~/core/stores/useTabViewsStore';
 import { ViewSchemaEnum } from '~/core/types';
-import type { ViewDefinitionResponse } from '~/server/api/get-view-definition';
+import type { ViewDefinitionResponse } from '~/core/types';
 import type { ContextMenuState, SchemaContextMenuOptions } from '../types';
 import type { useContextMenuHelpers } from '../useContextMenuHelpers';
 
@@ -64,8 +64,8 @@ export function useViewActions(
     showSqlPreview('', `${viewType} DDL`);
     await executeWithLoading(
       async () => {
-        const response = await $fetch<ViewDefinitionResponse>(
-          '/api/get-view-definition',
+        const data = await $fetch<ViewDefinitionResponse>(
+          '/api/views/definition',
           {
             method: 'POST',
             body: {
@@ -77,8 +77,8 @@ export function useViewActions(
           }
         );
 
-        if (response && response.definition) {
-          showSqlPreview(response.definition, `${viewType} DDL`);
+        if (data && data.definition) {
+          showSqlPreview(data.definition, `${viewType} DDL`);
         } else {
           throw new Error('Could not retrieve view definition');
         }
@@ -121,7 +121,7 @@ export function useViewActions(
     await executeWithSafeMode(sql, 'save', async () => {
       await executeWithLoading(
         async () => {
-          await $fetch('/api/execute', {
+          await $fetch('/api/query/execute', {
             method: 'POST',
             body: {
               dbConnectionString: options.currentConnectionString.value,
@@ -160,7 +160,7 @@ export function useViewActions(
     await executeWithSafeMode(sql, 'delete', async () => {
       await executeWithLoading(
         async () => {
-          await $fetch('/api/execute', {
+          await $fetch('/api/query/execute', {
             method: 'POST',
             body: {
               dbConnectionString: options.currentConnectionString.value,
@@ -201,7 +201,7 @@ export function useViewActions(
     await executeWithSafeMode(sql, 'save', async () => {
       await executeWithLoading(
         async () => {
-          await $fetch('/api/execute', {
+          await $fetch('/api/query/execute', {
             method: 'POST',
             body: {
               dbConnectionString: options.currentConnectionString.value,

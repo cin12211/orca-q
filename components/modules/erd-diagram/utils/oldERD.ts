@@ -1,4 +1,4 @@
-import type { TableMetadata } from '~/server/api/get-tables';
+import type { TableMetadata } from '~/core/types';
 import { DEFAULT_VUE_FLOW_LAYOUT_CONFIG } from '../constants';
 import type { NodePosition } from '../type';
 import {

@@ -122,7 +122,7 @@ export const useTableQueryBuilder = ({
     data,
     status: fetchingTableStatus,
     refresh: refreshTableData,
-  } = useFetch('/api/execute', {
+  } = useFetch('/api/query/execute', {
     method: 'POST',
     body: {
       query: queryString,
@@ -158,7 +158,7 @@ export const useTableQueryBuilder = ({
     refresh: refreshCount,
     data: dataCount,
     status: fetchCountStatus,
-  } = useFetch('/api/execute', {
+  } = useFetch('/api/query/execute', {
     method: 'POST',
     body: {
       query: queryCountString,

@@ -1,0 +1,71 @@
+<div class="spa-loading-friendly">
+  <img
+    class="spa-logo-dynamic"
+    src="https://orca-q.com/images/logo.png"
+    alt="Orca Q Logo"
+  />
+</div>
+
+<style>
+  .spa-loading-friendly {
+    display: block;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    animation: friendlyLoader 2.6s ease-in-out infinite;
+  }
+  .spa-logo-dynamic {
+    width: 100px;
+    height: auto;
+  }
+
+  /* Combined gentle bounce + slow rotation + subtle scale */
+  @keyframes friendlyLoader {
+    0% {
+      transform: translate(-50%, -50%) rotate(0deg) scale(1);
+      opacity: 0.6;
+    }
+    15% {
+      transform: translate(-50%, -50%) rotate(8deg) scale(1.08);
+      opacity: 0.8;
+    }
+    30% {
+      transform: translate(-50%, -50%) rotate(15deg) scale(1);
+      opacity: 1;
+    }
+    50% {
+      transform: translate(-50%, -50%) rotate(22deg) scale(1.05);
+      opacity: 0.75;
+    }
+    70% {
+      transform: translate(-50%, -50%) rotate(30deg) scale(0.98);
+      opacity: 0.9;
+    }
+    100% {
+      transform: translate(-50%, -50%) rotate(360deg) scale(1);
+      opacity: 0.8;
+    }
+  }
+
+  /* Optional: make the dot orbit a little for extra cuteness */
+  .spa-loading-friendly circle {
+    animation: dotWobble 3s ease-in-out infinite;
+  }
+
+  @keyframes dotWobble {
+    0%,
+    100% {
+      transform: translate(0, 0);
+    }
+    25% {
+      transform: translate(4px, -6px);
+    }
+    50% {
+      transform: translate(-3px, 5px);
+    }
+    75% {
+      transform: translate(5px, 3px);
+    }
+  }
+</style>

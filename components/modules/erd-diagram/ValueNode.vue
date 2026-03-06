@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import { Handle, Position, useVueFlow, type NodeProps } from '@vue-flow/core';
-import type { ColumnMetadata, TableMetadata } from '~/server/api/get-tables';
+import type { ColumnMetadata, TableMetadata } from '~/core/types';
 import { HANDLE_HEIGHT, HANDLE_LEFT, ROW_HEIGHT, ROW_WIDTH } from './constants';
 import type { LabelTableNode } from './type';
 import { buildTableNodeId, focusNodeById, getHandPosition } from './utils';

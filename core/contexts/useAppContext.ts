@@ -1,4 +1,4 @@
-import type { SchemaMetaData } from '~/server/api/get-schema-meta-data';
+import type { SchemaMetaData } from '~/core/types';
 import {
   PUBLIC_SCHEMA_ID,
   useSchemaStore,

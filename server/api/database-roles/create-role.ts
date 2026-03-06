@@ -2,14 +2,12 @@
  * API: Create Role
  * Creates a new PostgreSQL role/user
  */
+import { DatabaseClientType } from '~/core/constants/database-client-type';
 import type { CreateRoleRequest, GrantRevokeResponse } from '~/core/types';
-import {
-  createRoleAdapter,
-  type SupportedDatabaseType,
-} from './adapters/index';
+import { createRoleAdapter } from '~/server/infrastructure/database/adapters/database-roles';
 
 interface RequestBody extends CreateRoleRequest {
-  dbType?: SupportedDatabaseType;
+  dbType?: DatabaseClientType;
 }
 
 export default defineEventHandler(
@@ -23,9 +21,12 @@ export default defineEventHandler(
       });
     }
 
-    const adapter = await createRoleAdapter(body.dbType || 'postgres', {
-      dbConnectionString: body.dbConnectionString,
-    });
+    const adapter = await createRoleAdapter(
+      body.dbType || DatabaseClientType.POSTGRES,
+      {
+        dbConnectionString: body.dbConnectionString,
+      }
+    );
 
     return adapter.createRole({
       roleName: body.roleName,

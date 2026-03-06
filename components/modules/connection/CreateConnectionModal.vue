@@ -152,9 +152,9 @@ const handleCreateConnection = async () => {
 
 const getDefaultPort = () => {
   switch (dbType.value) {
-    case 'postgres':
+    case EDatabaseType.PG:
       return '5432';
-    case 'mysql':
+    case EDatabaseType.MYSQL:
       return '3306';
     // case 'redis':
     //   return '6379';
@@ -165,9 +165,9 @@ const getDefaultPort = () => {
 
 const getConnectionPlaceholder = () => {
   switch (dbType.value) {
-    case 'postgres':
+    case EDatabaseType.PG:
       return 'postgresql://username:password@localhost:5432/database';
-    case 'mysql':
+    case EDatabaseType.MYSQL:
       return 'mysql://username:password@localhost:3306/database';
     // case 'redis':
     //   return 'redis://username:password@localhost:6379';

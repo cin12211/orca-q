@@ -55,6 +55,13 @@ const viewModes: { value: ViewMode; label: string }[] = [
   { value: 'agent', label: 'Agent' },
 ];
 
+// Thay vì recompute mỗi lần switch, cache lại result đã format theo từng tab
+const formattedDataCache = new Map<string, Record<string, any>[]>();
+
+const formattedData = shallowRef<Record<string, any>[]>([]);
+
+let rafId: number | null = null;
+
 // Get the active tab data
 const activeTab = computed(() => {
   if (!props.activeTabId) return null;
@@ -79,21 +86,37 @@ const activeTabColumns = computed<MappedRawColumn[]>(() => {
   }));
 });
 
-// Format data for display (map column indices to names using tab's own fieldDefs)
-const formattedData = computed(() => {
-  if (!activeTab.value?.result) return [];
-  const fieldDefs = activeTab.value.metadata.fieldDefs || [];
-  return activeTab.value.result.map((item: RowData) => {
-    const mappedItem: Record<string, any> = {};
-    for (const [key, value] of Object.entries(item)) {
-      const fieldDef = fieldDefs[Number(key)];
-      const columnName = fieldDef?.name || '';
-      if (columnName) {
-        mappedItem[columnName] = value;
+const getFormattedData = (tab: ExecutedResultItem): Record<string, any>[] => {
+  if (formattedDataCache.has(tab.id)) {
+    return formattedDataCache.get(tab.id)!; // instant, no recompute
+  }
+
+  const fieldDefs = tab.metadata.fieldDefs || [];
+  const formatted =
+    tab.result?.map((item: RowData) => {
+      const mappedItem: Record<string, any> = {};
+      for (const [key, value] of Object.entries(item)) {
+        const columnName = fieldDefs[Number(key)]?.name || '';
+        if (columnName) mappedItem[columnName] = value;
       }
-    }
-    return mappedItem;
+      return mappedItem;
+    }) ?? [];
+
+  formattedDataCache.set(tab.id, formatted);
+  return formatted;
+};
+
+watch(activeTab, newTab => {
+  if (rafId) cancelAnimationFrame(rafId);
+
+  rafId = requestAnimationFrame(() => {
+    formattedData.value = newTab ? getFormattedData(newTab) : [];
+    rafId = null;
   });
+});
+
+onUnmounted(() => {
+  if (rafId) cancelAnimationFrame(rafId);
 });
 
 // Switch view mode

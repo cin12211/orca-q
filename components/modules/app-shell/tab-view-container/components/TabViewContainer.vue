@@ -133,6 +133,7 @@ const isAccessRightPanel = computed(() => {
 </template>
 
 <style>
+/*TODO: use to control logic , dont use css env() -> import { useScreenSafeArea } from '@vueuse/core' */
 .header-tab-view-pwa {
   width: calc(
     env(titlebar-area-width, 100vw) + env(titlebar-area-x)

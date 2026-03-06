@@ -1,7 +1,18 @@
 <script setup lang="ts">
 import { DynamicTable } from '#components';
-import type { MappedRawColumn } from '~/components/modules/raw-query/interfaces';
 import { useAppContext } from '~/core/contexts/useAppContext';
+import {
+  buildMappedColumnsFromKeys,
+  buildMappedColumnsFromRows,
+} from '~/core/helpers';
+
+const VIEW_OVERVIEW_COLUMN_KEYS = [
+  'name',
+  'schema',
+  'type',
+  'owner',
+  'comment',
+] as const;
 
 const props = defineProps<{
   connectionId?: string;
@@ -25,31 +36,19 @@ const body = computed(() => {
   };
 });
 
-const { data, status } = useFetch('/api/get-over-view-views', {
+const { data, status } = useFetch('/api/views/overview', {
   method: 'POST',
   body,
   watch: [schemaId, body],
 });
 
 const mappedColumns = computed(() => {
-  if (!data.value?.[0]) {
-    return [];
+  const rows = (data.value || []) as Record<string, unknown>[];
+  if (rows.length > 0) {
+    return buildMappedColumnsFromRows(rows);
   }
 
-  const columns: MappedRawColumn[] = [];
-  for (const key of Object.keys(data.value?.[0])) {
-    columns.push({
-      isForeignKey: false,
-      isPrimaryKey: false,
-      originalName: key,
-      queryFieldName: key,
-      tableName: '',
-      canMutate: false,
-      aliasFieldName: key,
-    });
-  }
-
-  return columns;
+  return buildMappedColumnsFromKeys(VIEW_OVERVIEW_COLUMN_KEYS);
 });
 </script>
 

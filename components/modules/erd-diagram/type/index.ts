@@ -1,6 +1,6 @@
 import type { BackgroundVariantType } from '@vue-flow/background';
 import type { Edge, Node } from '@vue-flow/core';
-import type { TableMetadata } from '~/server/api/get-tables';
+import type { TableMetadata } from '~/core/types';
 
 export interface DBSchemaProps {
   id: string;
