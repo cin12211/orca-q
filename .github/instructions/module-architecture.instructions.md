@@ -3,7 +3,7 @@ applyTo: '*'
 description: 'Module Architecture Guide: A comprehensive guide to structuring frontend modules with low coupling and high cohesion. Covers folder structure, core principles, dependency rules, layer details, and best practices for scalable and maintainable code.'
 ---
 
-# Module Architecture Guide
+## Module Architecture Guide
 
 > **Goal:** Low Coupling · High Cohesion · Readable · Testable · Scalable
 >
