@@ -3,8 +3,19 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { useAiChat } from '~/core/composables/useAiChat';
 import { AI_PROVIDERS } from '~/core/constants/agent';
 
-const { sendMessageMock, latestChat, chatSeed, storeSeed } = vi.hoisted(() => ({
+const {
+  sendMessageMock,
+  addToolApprovalResponseMock,
+  stopMock,
+  clearErrorMock,
+  latestChat,
+  chatSeed,
+  storeSeed,
+} = vi.hoisted(() => ({
   sendMessageMock: vi.fn(),
+  addToolApprovalResponseMock: vi.fn(),
+  stopMock: vi.fn(),
+  clearErrorMock: vi.fn(),
   latestChat: { instance: null as any },
   chatSeed: {
     status: 'ready' as 'ready' | 'streaming' | 'error',
@@ -37,13 +48,29 @@ vi.mock('@ai-sdk/vue', () => ({
     messages = [...chatSeed.messages];
     status = chatSeed.status;
     error = chatSeed.error;
+    transport: any;
+    sendAutomaticallyWhen: any;
 
-    constructor() {
+    constructor(options: any) {
+      this.transport = options.transport;
+      this.sendAutomaticallyWhen = options.sendAutomaticallyWhen;
       latestChat.instance = this;
     }
 
     sendMessage(payload: { text: string }) {
       sendMessageMock(payload);
+    }
+
+    addToolApprovalResponse(payload: { id: string; approved: boolean }) {
+      addToolApprovalResponseMock(payload);
+    }
+
+    stop() {
+      stopMock();
+    }
+
+    clearError() {
+      clearErrorMock();
     }
   },
 }));
@@ -165,5 +192,40 @@ describe('useAiChat', () => {
 
     expect(messages.value.length).toBe(0);
     expect(latestChat.instance.messages.length).toBe(0);
+  });
+
+  it('supports custom api routes and request body', () => {
+    const body = vi.fn(() => ({
+      dbConnectionString: 'postgres://localhost/db',
+    }));
+
+    useAiChat({
+      api: '/api/ai/agent',
+      body,
+    });
+
+    expect(latestChat.instance.transport.api).toBe('/api/ai/agent');
+    expect(latestChat.instance.transport.body()).toEqual({
+      dbConnectionString: 'postgres://localhost/db',
+      provider: 'google',
+      model: 'gemini-2.5-flash',
+      apiKey: 'google-key',
+      systemPrompt: expect.any(String),
+    });
+    expect(body).toHaveBeenCalledTimes(1);
+  });
+
+  it('exposes tool approval response helper', () => {
+    const { addToolApprovalResponse } = useAiChat();
+
+    addToolApprovalResponse({
+      id: 'approval-1',
+      approved: true,
+    });
+
+    expect(addToolApprovalResponseMock).toHaveBeenCalledWith({
+      id: 'approval-1',
+      approved: true,
+    });
   });
 });
