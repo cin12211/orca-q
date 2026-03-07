@@ -43,7 +43,11 @@ const highlightedCode = computed(() => {
 
 const containerStyle = computed(() => {
   return props.maxHeight
-    ? { maxHeight: props.maxHeight, overflowY: 'auto' as const }
+    ? {
+        maxHeight: props.maxHeight,
+        overflowY: 'auto' as const,
+        overflowX: 'auto' as const,
+      }
     : {};
 });
 

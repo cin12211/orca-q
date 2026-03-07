@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useCopyToClipboard } from '~/core/composables/useCopyToClipboard';
-import type { AgentGenerateQueryResult } from '../db-agent.types';
+import type { AgentGenerateQueryResult } from '../../types';
 
 const props = defineProps<{
   data: AgentGenerateQueryResult;
@@ -20,7 +20,9 @@ watch(
 </script>
 
 <template>
-  <div class="space-y-3 rounded-[1.35rem] border border-border/70 bg-muted/20 p-4">
+  <div
+    class="space-y-3 rounded-[1.35rem] border border-border/70 bg-muted/20 p-4"
+  >
     <div class="flex items-start justify-between gap-3">
       <p class="text-sm leading-6 text-foreground/90">
         {{ data.explanation }}
@@ -38,7 +40,6 @@ watch(
       v-model="sqlDraft"
       class="min-h-[150px]! rounded-2xl border bg-background/80 font-mono text-[13px] leading-6 shadow-none"
     />
-
     <div class="flex justify-end">
       <Tooltip>
         <TooltipTrigger as-child>

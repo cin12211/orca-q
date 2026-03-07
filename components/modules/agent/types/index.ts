@@ -147,6 +147,7 @@ export interface DbAgentRequestBody {
   schemaName?: string;
   schemaContext?: string;
   schemaSnapshot?: DbAgentSchemaSnapshot;
+  sendReasoning?: boolean;
 }
 
 export type DbAgentUITools = {
@@ -161,12 +162,20 @@ export type DbAgentMessage = UIMessage<unknown, never, DbAgentUITools>;
 export interface AgentTextBlock {
   kind: 'text' | 'markdown';
   content: string;
+  isStreaming?: boolean;
 }
 
 export interface AgentCodeBlock {
   kind: 'code';
   code: string;
   language: string;
+  isStreaming?: boolean;
+}
+
+export interface AgentReasoningBlock {
+  kind: 'reasoning';
+  content: string;
+  isStreaming: boolean;
 }
 
 export interface AgentLoadingBlock {
@@ -201,6 +210,7 @@ export interface AgentApprovalBlock<
 export type AgentBlock =
   | AgentTextBlock
   | AgentCodeBlock
+  | AgentReasoningBlock
   | AgentLoadingBlock
   | AgentErrorBlock
   | AgentToolBlock
@@ -228,6 +238,7 @@ export interface AgentHistorySession {
   updatedAt: string;
   provider: string;
   model: string;
+  showReasoning: boolean;
   messages: DbAgentMessage[];
 }
 

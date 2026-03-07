@@ -2,6 +2,7 @@
 @import 'tw-animate-css';
 @import './v-tree.css';
 
+/* @plugin "@tailwindcss/typography"; */
 @plugin 'tailwind-scrollbar';
 
 @custom-variant dark (&:is(.dark *));

@@ -5,7 +5,7 @@ import type {
   AgentHistorySession,
   AgentPresetItem,
   AgentSelectedContext,
-} from '../db-agent.types';
+} from '../types';
 
 const ROOT_NODE_ID = 'agent-control-root';
 const SECTION_NODE_IDS = {
@@ -144,8 +144,8 @@ const getLastPreview = (messages: AgentHistorySession['messages']) => {
     .reverse()
     .flatMap(message =>
       (message.parts || [])
-        .filter((part): part is { type: 'text'; text: string } =>
-          part.type === 'text'
+        .filter(
+          (part): part is { type: 'text'; text: string } => part.type === 'text'
         )
         .map(part => part.text)
     )
@@ -160,6 +160,10 @@ export const useAgentWorkspace = createGlobalState(() => {
   const selectedNodeId = useStorage<string>(
     'heraq-agent-selected-node',
     SECTION_NODE_IDS.history
+  );
+  const draftShowReasoning = useStorage<boolean>(
+    'heraq-agent-draft-show-reasoning',
+    true
   );
   const activeHistoryId = useStorage<string | null>(
     'heraq-agent-active-history',
@@ -199,7 +203,9 @@ export const useAgentWorkspace = createGlobalState(() => {
         depth: 0,
         iconOpen: 'lucide:bot',
         iconClose: 'lucide:bot',
-        children: Object.values(SECTION_NODE_IDS),
+        children: Object.values(SECTION_NODE_IDS).filter(
+          id => id !== SECTION_NODE_IDS.history
+        ),
       },
     };
 
@@ -209,10 +215,10 @@ export const useAgentWorkspace = createGlobalState(() => {
     ][]) {
       nodes[meta.id] = {
         id: meta.id,
-        parentId: ROOT_NODE_ID,
+        parentId: section === 'chat-history' ? null : ROOT_NODE_ID,
         name: meta.title,
         type: 'folder',
-        depth: 1,
+        depth: section === 'chat-history' ? 0 : 1,
         iconOpen: meta.icon,
         iconClose: meta.icon,
         children: [],
@@ -274,9 +280,9 @@ export const useAgentWorkspace = createGlobalState(() => {
             parentId: meta.id,
             name: history.title,
             type: 'file',
-            depth: 2,
-            iconOpen: 'lucide:message-square-text',
-            iconClose: 'lucide:message-square-text',
+            depth: 1,
+            iconOpen: 'hugeicons:chat-spark-01',
+            iconClose: 'hugeicons:chat-spark-01',
           };
           nodes[meta.id].children?.push(nodeId);
         });
@@ -317,7 +323,9 @@ export const useAgentWorkspace = createGlobalState(() => {
       }
     }
 
-    const ruleItem = RULE_ITEMS.find(item => `agent-rule-${item.id}` === nodeId);
+    const ruleItem = RULE_ITEMS.find(
+      item => `agent-rule-${item.id}` === nodeId
+    );
     if (ruleItem) {
       return {
         id: nodeId,
@@ -389,6 +397,22 @@ export const useAgentWorkspace = createGlobalState(() => {
       : null
   );
 
+  const showReasoning = computed({
+    get: () => activeHistory.value?.showReasoning ?? draftShowReasoning.value,
+    set: value => {
+      if (!activeHistoryId.value) {
+        draftShowReasoning.value = value;
+        return;
+      }
+
+      histories.value = histories.value.map(history =>
+        history.id === activeHistoryId.value
+          ? { ...history, showReasoning: value }
+          : history
+      );
+    },
+  });
+
   const selectNode = (nodeId: string) => {
     selectedNodeId.value = nodeId;
 
@@ -410,10 +434,12 @@ export const useAgentWorkspace = createGlobalState(() => {
     messages,
     provider,
     model,
+    showReasoning,
   }: {
     messages: AgentHistorySession['messages'];
     provider: string;
     model: string;
+    showReasoning: boolean;
   }) => {
     const firstPrompt = getFirstUserPrompt(messages);
 
@@ -422,8 +448,7 @@ export const useAgentWorkspace = createGlobalState(() => {
     }
 
     const now = new Date().toISOString();
-    const nextId =
-      activeHistoryId.value || `agent-${Date.now().toString(36)}`;
+    const nextId = activeHistoryId.value || `agent-${Date.now().toString(36)}`;
     const existing = histories.value.find(history => history.id === nextId);
 
     const nextHistory: AgentHistorySession = {
@@ -434,6 +459,7 @@ export const useAgentWorkspace = createGlobalState(() => {
       updatedAt: now,
       provider,
       model,
+      showReasoning,
       messages: cloneMessages(messages),
     };
 
@@ -465,6 +491,7 @@ export const useAgentWorkspace = createGlobalState(() => {
     histories: sortedHistories,
     activeHistory,
     activeHistoryId,
+    showReasoning,
     selectNode,
     startNewChat,
     saveConversation,

@@ -7,13 +7,8 @@ import {
   StatusBar,
   TabViewContainer,
 } from '~/components/modules/app-shell';
-import AgentWorkspace from '~/components/modules/agent/AgentWorkspace.vue';
 import { DEFAULT_DEBOUNCE_INPUT } from '~/core/constants';
 import { useAppLayoutStore } from '~/core/stores/appLayoutStore';
-import {
-  ActivityBarItemType,
-  useActivityBarStore,
-} from '~/core/stores/useActivityBarStore';
 
 const route = useRoute();
 
@@ -23,13 +18,8 @@ const { width: primarySideBarWidth } = useElementSize(
 );
 
 const appLayoutStore = useAppLayoutStore();
-const activityStore = useActivityBarStore();
 const { layoutSize, isPrimarySidebarCollapsed, bodySize } =
   toRefs(appLayoutStore);
-
-const isAgentMode = computed(
-  () => activityStore.activityActive === ActivityBarItemType.Agent
-);
 
 const isAccessBottomPanel = computed(() => {
   if (route.meta.notAllowBottomPanel) return false;
@@ -114,10 +104,9 @@ useHotkeys([
                 key="default-layout-body-group-panel-1"
               >
                 <div class="flex flex-col overflow-y-auto w-full h-full">
-                  <div v-show="!isAgentMode" class="h-full">
+                  <div class="h-full">
                     <slot />
                   </div>
-                  <AgentWorkspace v-show="isAgentMode" />
                 </div>
               </ResizablePanel>
               <ResizableHandle

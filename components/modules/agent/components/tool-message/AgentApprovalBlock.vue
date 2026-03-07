@@ -1,8 +1,5 @@
 <script setup lang="ts">
-import type {
-  AgentToolInputMap,
-  DbAgentToolName,
-} from '../db-agent.types';
+import type { AgentToolInputMap, DbAgentToolName } from '../../types';
 
 const props = defineProps<{
   toolName: DbAgentToolName;
@@ -37,7 +34,10 @@ const preview = computed(() => {
       </p>
     </div>
 
-    <pre class="overflow-x-auto rounded-2xl border border-amber-300/30 bg-background/70 px-3 py-3 text-[12px] leading-6">{{ preview }}</pre>
+    <pre
+      class="overflow-x-auto rounded-2xl border border-amber-300/30 bg-background/70 px-3 py-3 text-[12px] leading-6"
+      >{{ preview }}</pre
+    >
 
     <div class="flex flex-wrap justify-end gap-2">
       <Button

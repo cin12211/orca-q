@@ -1,14 +1,30 @@
 <script setup lang="ts">
 import { useDebounceFn } from '@vueuse/core';
+import { nextTick, ref, computed, watch, onMounted } from 'vue';
 import { Tooltip, TooltipContent, TooltipTrigger } from '#components';
 import ModelSelector from '~/components/modules/selectors/ModelSelector.vue';
+import Badge from '~/components/ui/badge/Badge.vue';
+import {
+  useAppLayoutStore,
+  type AIProvider,
+} from '~/core/stores/appLayoutStore';
 import AgentChatFooter from './components/AgentChatFooter.vue';
 import AgentMessageBubble from './components/AgentMessageBubble.vue';
 import AgentSetupCard from './components/AgentSetupCard.vue';
-import type { DbAgentMessage } from './db-agent.types';
 import { useAgentChat } from './hooks/useDbAgentChat';
 import { useAgentRenderer } from './hooks/useDbAgentRenderer';
 import { useAgentWorkspace } from './hooks/useDbAgentWorkspace';
+import type { DbAgentMessage } from './types';
+
+const {
+  selectedContext,
+  sectionCounts,
+  activeHistory,
+  activeHistoryId,
+  showReasoning,
+  saveConversation,
+  startNewChat,
+} = useAgentWorkspace();
 
 const {
   selectedProvider,
@@ -21,34 +37,44 @@ const {
   sendMessage,
   addToolApprovalResponse,
   schemaStats,
-} = useAgentChat();
-
-const {
-  selectedContext,
-  sectionCounts,
-  activeHistory,
-  activeHistoryId,
-  saveConversation,
-  startNewChat,
-} = useAgentWorkspace();
+} = useAgentChat(showReasoning);
 
 const { renderedMessages, getComponent } = useAgentRenderer(messages);
 
 const messageInput = ref('');
 const messagesContainer = ref<HTMLElement | null>(null);
+const footerRef = ref<InstanceType<typeof AgentChatFooter> | null>(null);
 const isHydratingHistory = ref(false);
 const lastLoadedHistoryId = ref<string | null>(null);
 
 const cloneMessages = (value: DbAgentMessage[]) =>
   JSON.parse(JSON.stringify(value)) as DbAgentMessage[];
 
-const scrollToBottom = () => {
+const showScrollButton = ref(false);
+
+const handleScroll = () => {
+  if (!messagesContainer.value) return;
+  const { scrollTop, scrollHeight, clientHeight } = messagesContainer.value;
+  showScrollButton.value = scrollHeight - scrollTop - clientHeight > 150;
+};
+
+const scrollToBottom = (smooth = false) => {
   if (!messagesContainer.value) {
     return;
   }
 
-  messagesContainer.value.scrollTop = messagesContainer.value.scrollHeight;
+  messagesContainer.value.scrollTo({
+    top: messagesContainer.value.scrollHeight,
+    behavior: smooth === true ? 'smooth' : 'auto',
+  });
+  showScrollButton.value = false;
 };
+
+onMounted(() => {
+  setTimeout(() => {
+    scrollToBottom();
+  }, 100);
+});
 
 const replaceMessages = (nextMessages: DbAgentMessage[]) => {
   messages.value.splice(0, messages.value.length, ...nextMessages);
@@ -102,6 +128,12 @@ const handleApproval = async (approvalId: string, approved: boolean) => {
   });
 };
 
+const handleEditMessage = async (text: string) => {
+  messageInput.value = text;
+  await nextTick();
+  footerRef.value?.focusInput();
+};
+
 const persistConversation = useDebounceFn(() => {
   if (isHydratingHistory.value || messages.value.length === 0) {
     return;
@@ -111,6 +143,7 @@ const persistConversation = useDebounceFn(() => {
     messages: cloneMessages(messages.value),
     provider: selectedProvider.value,
     model: selectedModel.value,
+    showReasoning: showReasoning.value,
   });
 }, 250);
 
@@ -126,6 +159,13 @@ watch(
 
     if (historyId && activeHistory.value) {
       replaceMessages(cloneMessages(activeHistory.value.messages));
+      if (activeHistory.value.provider)
+        selectedProvider.value = activeHistory.value.provider as AIProvider;
+      if (activeHistory.value.model)
+        selectedModel.value = activeHistory.value.model;
+      if (typeof activeHistory.value.showReasoning === 'boolean') {
+        showReasoning.value = activeHistory.value.showReasoning;
+      }
     } else if (messages.value.length > 0) {
       replaceMessages([]);
     }
@@ -166,9 +206,14 @@ watch(
 );
 
 watch(
-  () => messages.value,
-  currentMessages => {
-    if (!currentMessages.length || isHydratingHistory.value) {
+  () => [
+    messages.value,
+    selectedModel.value,
+    selectedProvider.value,
+    showReasoning.value,
+  ],
+  () => {
+    if (!messages.value.length || isHydratingHistory.value) {
       return;
     }
 
@@ -207,119 +252,45 @@ const historyBadge = computed(() => {
 
 <template>
   <section
-    class="h-full w-full bg-[radial-gradient(circle_at_top,_hsl(var(--primary)/0.12),transparent_40%),linear-gradient(180deg,hsl(var(--background)),hsl(var(--background)))]"
+    class="relative h-full w-full bg-[radial-gradient(circle_at_top,_hsl(var(--primary)/0.12),transparent_40%),linear-gradient(180deg,hsl(var(--background)),hsl(var(--background)))]"
   >
-    <div class="flex h-full flex-col overflow-hidden">
+    <div class="absolute inset-0 flex flex-col overflow-hidden">
       <header
         class="border-b border-border/70 bg-background/85 backdrop-blur-sm"
       >
         <div
-          class="mx-auto flex w-full max-w-6xl flex-col gap-4 px-6 py-5 lg:flex-row lg:items-start lg:justify-between"
+          class="mx-auto flex w-full flex-col gap-4 px-3 py-2 lg:flex-row lg:items-start lg:justify-between"
         >
-          <div class="space-y-3">
-            <div
-              class="flex flex-wrap items-center gap-2 text-xs text-muted-foreground"
-            >
-              <span class="rounded-full border bg-background px-2.5 py-1">
-                {{ schemaBadge }}
-              </span>
-              <span class="rounded-full border bg-background px-2.5 py-1">
-                {{ historyBadge }}
-              </span>
-              <span class="rounded-full border bg-background px-2.5 py-1">
-                {{ sectionCounts.rules }} rules
-              </span>
-              <span class="rounded-full border bg-background px-2.5 py-1">
-                {{ sectionCounts.skills }} skills
-              </span>
-            </div>
-
-            <div>
-              <h1 class="text-2xl font-semibold tracking-tight">
-                DB Editor Agent
-              </h1>
-              <p class="mt-1 max-w-3xl text-sm leading-6 text-muted-foreground">
-                Schema-aware chat workspace for database exploration, query
-                design, and guided analysis.
-              </p>
-            </div>
-
-            <div
-              class="rounded-[1.5rem] border border-border/70 bg-background/80 px-4 py-3 shadow-sm"
-            >
-              <div
-                class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between"
-              >
-                <div>
-                  <div
-                    v-if="selectedContext.badge"
-                    class="text-[11px] font-medium uppercase tracking-[0.22em] text-muted-foreground"
-                  >
-                    {{ selectedContext.badge }}
-                  </div>
-                  <div class="mt-1 text-sm font-medium">
-                    {{ selectedContext.title }}
-                  </div>
-                  <p class="mt-1 text-sm leading-6 text-muted-foreground">
-                    {{ selectedContext.description }}
-                  </p>
-                </div>
-
-                <Button
-                  v-if="selectedContext.promptSuggestion"
-                  variant="outline"
-                  size="sm"
-                  class="rounded-xl"
-                  @click="handleUseContextPrompt"
-                >
-                  Use Prompt
-                </Button>
-              </div>
-            </div>
+          <div
+            class="flex flex-wrap items-center gap-2 text-xs text-muted-foreground"
+          >
+            <Badge variant="outline">
+              {{ schemaBadge }}
+            </Badge>
+            <Badge variant="outline">
+              {{ historyBadge }}
+            </Badge>
+            <Badge variant="outline"> {{ sectionCounts.rules }} rules </Badge>
+            <Badge variant="outline"> {{ sectionCounts.skills }} skills </Badge>
           </div>
 
           <div class="flex shrink-0 items-center gap-2">
-            <Tooltip>
-              <TooltipTrigger as-child>
-                <div>
-                  <ModelSelector
-                    v-model:provider="selectedProvider"
-                    v-model:model="selectedModel"
-                    class="min-w-[180px] h-9!"
-                  />
-                </div>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Select model</p>
-              </TooltipContent>
-            </Tooltip>
-
-            <Button
-              variant="outline"
-              class="rounded-xl"
-              @click="handleNewThread"
-            >
-              <Icon name="lucide:square-pen" class="mr-2 size-4" />
+            <Button variant="outline" size="xs" @click="handleNewThread">
+              <Icon name="hugeicons:plus-sign" class="mr-2 size-4" />
               New Thread
             </Button>
           </div>
         </div>
       </header>
 
-      <div ref="messagesContainer" class="flex-1 overflow-y-auto">
+      <div
+        ref="messagesContainer"
+        class="flex-1 overflow-y-auto min-h-0"
+        @scroll="handleScroll"
+      >
         <div
           class="mx-auto flex min-h-full w-full max-w-5xl flex-col px-6 py-8"
         >
-          <div
-            v-if="error"
-            class="mb-6 rounded-2xl border border-destructive/20 bg-destructive/10 px-4 py-3 text-sm text-destructive"
-          >
-            <div class="flex items-center gap-2">
-              <Icon name="lucide:alert-circle" class="size-4" />
-              {{ error }}
-            </div>
-          </div>
-
           <AgentSetupCard
             v-if="!hasApiKey"
             class="my-auto"
@@ -359,37 +330,73 @@ const historyBadge = computed(() => {
             </div>
           </template>
 
-          <div v-else class="space-y-6 pb-10">
+          <div v-else class="w-full space-y-4 pb-6">
             <AgentMessageBubble
               v-for="message in renderedMessages"
               :key="message.id"
               :message="message"
               :get-tool-component="getComponent"
+              :show-reasoning="showReasoning"
+              :is-streaming="
+                isLoading &&
+                message.role === 'assistant' &&
+                message.id === renderedMessages.at(-1)?.id
+              "
               @approval="handleApproval"
+              @edit="handleEditMessage"
             />
 
+            <!-- Thinking indicator -->
             <div
+              class="flex items-center gap-1 py-2"
               v-if="
                 isLoading &&
-                (!messages.at(-1)?.parts ||
-                  messages.at(-1)?.parts?.length === 0)
+                (!renderedMessages.at(-1)?.blocks ||
+                  renderedMessages.at(-1)?.blocks?.length === 0 ||
+                  renderedMessages.at(-1)?.role === 'user')
               "
-              class="flex justify-start"
             >
-              <div class="flex max-w-3xl gap-3">
-                <div
-                  class="mt-1 flex size-8 shrink-0 items-center justify-center rounded-2xl border bg-background/80 text-primary shadow-sm"
-                >
-                  <Icon name="hugeicons:ai-chat-02" class="size-4" />
-                </div>
+              <div
+                class="flex size-7 shrink-0 items-center justify-center rounded-2xl border bg-background/80 text-primary shadow-sm"
+              >
+                <img src="public/logo.png" class="w-7 rounded-full" />
+              </div>
 
+              <div
+                class="flex items-center gap-1.5 text-xs font-medium text-muted-foreground"
+              >
+                <span>Thinking</span>
+                <span class="inline-flex gap-0.5">
+                  <span class="animate-bounce [animation-delay:0ms]">.</span>
+                  <span class="animate-bounce [animation-delay:150ms]">.</span>
+                  <span class="animate-bounce [animation-delay:300ms]">.</span>
+                </span>
+              </div>
+            </div>
+
+            <!-- Error block -->
+            <div
+              v-if="error"
+              class="mt-4 overflow-hidden rounded-2xl border border-destructive/15 bg-destructive/5 backdrop-blur-sm"
+            >
+              <div class="flex items-start gap-3 px-4 py-3">
                 <div
-                  class="rounded-3xl border bg-background/85 px-4 py-3 text-sm text-muted-foreground shadow-sm"
+                  class="mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-full bg-destructive/10"
                 >
-                  <div class="flex items-center gap-2">
-                    <Icon name="lucide:loader" class="size-4 animate-spin" />
-                    Thinking...
-                  </div>
+                  <Icon
+                    name="lucide:alert-triangle"
+                    class="size-3.5 text-destructive/90"
+                  />
+                </div>
+                <div class="min-w-0 flex-1">
+                  <p
+                    class="text-[11px] font-semibold uppercase tracking-wider text-destructive/70"
+                  >
+                    Error
+                  </p>
+                  <p class="mt-0.5 text-sm leading-relaxed text-destructive">
+                    {{ error }}
+                  </p>
                 </div>
               </div>
             </div>
@@ -398,14 +405,18 @@ const historyBadge = computed(() => {
       </div>
 
       <AgentChatFooter
+        ref="footerRef"
         v-model="messageInput"
         v-model:provider="selectedProvider"
         v-model:model="selectedModel"
         :is-loading="isLoading"
         :has-api-key="hasApiKey"
+        :show-reasoning="showReasoning"
+        :show-scroll-button="showScrollButton"
         @submit="handleSubmit"
         @keydown="handleKeyDown"
-        @scroll-to-bottom="scrollToBottom"
+        @update:show-reasoning="showReasoning = $event"
+        @scroll-to-bottom="scrollToBottom(true)"
       />
     </div>
   </section>

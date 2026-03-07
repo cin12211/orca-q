@@ -1,7 +1,7 @@
 import { computed, ref } from 'vue';
 import { describe, expect, it } from 'vitest';
-import type { DbAgentMessage } from '~/components/modules/agent/db-agent.types';
 import { useAgentRenderer } from '~/components/modules/agent/hooks/useDbAgentRenderer';
+import type { DbAgentMessage } from '~/components/modules/agent/types';
 
 describe('useAgentRenderer', () => {
   it('splits text into markdown and code blocks', () => {
@@ -18,7 +18,9 @@ describe('useAgentRenderer', () => {
       } as DbAgentMessage,
     ]);
 
-    const { renderedMessages } = useAgentRenderer(computed(() => messages.value));
+    const { renderedMessages } = useAgentRenderer(
+      computed(() => messages.value)
+    );
 
     expect(renderedMessages.value).toHaveLength(1);
     expect(renderedMessages.value[0]?.blocks).toEqual([
@@ -112,5 +114,43 @@ describe('useAgentRenderer', () => {
 
     expect(hasMutationPending.value).toBe(true);
     expect(getComponent('describe_table')).toBe('AgentDescribeBlock');
+  });
+
+  it('maps reasoning and streaming text parts', () => {
+    const messages = ref<DbAgentMessage[]>([
+      {
+        id: 'assistant-3',
+        role: 'assistant',
+        parts: [
+          {
+            type: 'reasoning',
+            text: 'Inspecting schema relationships.\nValidating filters.',
+            state: 'streaming',
+          },
+          {
+            type: 'text',
+            text: 'Working through the result',
+            state: 'streaming',
+          },
+        ],
+      } as DbAgentMessage,
+    ]);
+
+    const { renderedMessages } = useAgentRenderer(
+      computed(() => messages.value)
+    );
+
+    expect(renderedMessages.value[0]?.blocks).toEqual([
+      {
+        kind: 'reasoning',
+        content: 'Inspecting schema relationships.\nValidating filters.',
+        isStreaming: true,
+      },
+      {
+        kind: 'text',
+        content: 'Working through the result',
+        isStreaming: true,
+      },
+    ]);
   });
 });

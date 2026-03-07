@@ -60,4 +60,24 @@ export const AI_PROVIDERS: ProviderConfig[] = [
       { id: 'grok-2', name: 'Grok 2' },
     ],
   },
+  {
+    id: 'openrouter',
+    name: 'Open Router',
+    keyLabel: 'OpenRouter API Key',
+    keyUrl: 'https://openrouter.ai/settings/keys',
+    models: [
+      {
+        id: 'stepfun/step-3.5-flash:free',
+        name: 'StepFun: Step 3.5 Flash (free)',
+      },
+      {
+        id: 'arcee-ai/trinity-large-preview:free',
+        name: 'Arcee AI: Trinity Large Preview (free)',
+      },
+      {
+        id: 'z-ai/glm-4.5-air:free',
+        name: 'Z.ai: GLM 4.5 Air (free)',
+      },
+    ],
+  },
 ];

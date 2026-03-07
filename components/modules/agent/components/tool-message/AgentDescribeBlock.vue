@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { AgentDescribeTableResult } from '../db-agent.types';
+import type { AgentDescribeTableResult } from '../../types';
 
 defineProps<{
   data: AgentDescribeTableResult;
@@ -7,7 +7,9 @@ defineProps<{
 </script>
 
 <template>
-  <div class="space-y-4 rounded-[1.35rem] border border-border/70 bg-muted/20 p-4">
+  <div
+    class="space-y-4 rounded-[1.35rem] border border-border/70 bg-muted/20 p-4"
+  >
     <div class="space-y-2">
       <div class="flex items-center gap-2">
         <Icon name="lucide:table-properties" class="size-4 text-primary" />
@@ -22,7 +24,9 @@ defineProps<{
     </div>
 
     <div class="overflow-hidden rounded-2xl border bg-background/90">
-      <div class="border-b px-3 py-2 text-[11px] font-medium uppercase tracking-[0.18em] text-muted-foreground">
+      <div
+        class="border-b px-3 py-2 text-[11px] font-medium uppercase tracking-[0.18em] text-muted-foreground"
+      >
         Columns
       </div>
 
@@ -45,13 +49,27 @@ defineProps<{
             <Badge variant="outline" class="text-[10px] tracking-[0.16em]">
               {{ column.type }}
             </Badge>
-            <Badge v-if="column.isPrimaryKey" variant="secondary" class="text-[10px] tracking-[0.16em]">
+            <Badge
+              v-if="column.isPrimaryKey"
+              variant="secondary"
+              class="text-[10px] tracking-[0.16em]"
+            >
               PK
             </Badge>
-            <Badge v-if="column.isForeignKey" variant="secondary" class="text-[10px] tracking-[0.16em]">
-              FK<span v-if="column.referencesTable" class="ml-1">-> {{ column.referencesTable }}</span>
+            <Badge
+              v-if="column.isForeignKey"
+              variant="secondary"
+              class="text-[10px] tracking-[0.16em]"
+            >
+              FK<span v-if="column.referencesTable" class="ml-1"
+                >-> {{ column.referencesTable }}</span
+              >
             </Badge>
-            <Badge v-if="column.isNullable" variant="outline" class="text-[10px] tracking-[0.16em]">
+            <Badge
+              v-if="column.isNullable"
+              variant="outline"
+              class="text-[10px] tracking-[0.16em]"
+            >
               nullable
             </Badge>
           </div>
@@ -60,7 +78,9 @@ defineProps<{
     </div>
 
     <div v-if="data.relatedTables.length > 0" class="space-y-2">
-      <div class="text-[11px] font-medium uppercase tracking-[0.18em] text-muted-foreground">
+      <div
+        class="text-[11px] font-medium uppercase tracking-[0.18em] text-muted-foreground"
+      >
         Related Tables
       </div>
 

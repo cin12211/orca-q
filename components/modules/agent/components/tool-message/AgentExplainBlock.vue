@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { AgentExplainQueryResult } from '../db-agent.types';
+import type { AgentExplainQueryResult } from '../../types';
 
 defineProps<{
   data: AgentExplainQueryResult;
@@ -7,7 +7,9 @@ defineProps<{
 </script>
 
 <template>
-  <div class="space-y-4 rounded-[1.35rem] border border-border/70 bg-muted/20 p-4">
+  <div
+    class="space-y-4 rounded-[1.35rem] border border-border/70 bg-muted/20 p-4"
+  >
     <div class="flex flex-wrap items-center gap-2">
       <Badge variant="secondary" class="text-[10px] tracking-[0.16em]">
         {{ data.slowestNode }}
@@ -22,7 +24,9 @@ defineProps<{
     </p>
 
     <div v-if="data.suggestions.length > 0" class="space-y-2">
-      <div class="text-[11px] font-medium uppercase tracking-[0.18em] text-muted-foreground">
+      <div
+        class="text-[11px] font-medium uppercase tracking-[0.18em] text-muted-foreground"
+      >
         Suggestions
       </div>
 
@@ -41,7 +45,9 @@ defineProps<{
       <summary class="cursor-pointer px-3 py-2 text-sm font-medium">
         Raw EXPLAIN output
       </summary>
-      <pre class="overflow-x-auto border-t px-3 py-3 text-[12px] leading-6">{{ data.rawPlan }}</pre>
+      <pre class="overflow-x-auto border-t px-3 py-3 text-[12px] leading-6">{{
+        data.rawPlan
+      }}</pre>
     </details>
   </div>
 </template>

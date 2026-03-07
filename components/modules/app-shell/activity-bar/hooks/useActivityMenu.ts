@@ -42,7 +42,7 @@ export const useActivityMenu = () => {
     {
       id: ActivityBarItemType.Agent,
       title: 'AI Agent',
-      icon: 'hugeicons:ai-chat-02',
+      icon: 'hugeicons:robotic',
       isActive: activityStore.activityActive === ActivityBarItemType.Agent,
     },
   ]);

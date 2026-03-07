@@ -6,10 +6,11 @@ import type { FileNode } from '~/components/base/tree-folder/types';
 import { useAgentWorkspace } from '~/components/modules/agent/hooks/useDbAgentWorkspace';
 import { DEFAULT_DEBOUNCE_INPUT } from '~/core/constants';
 import { useAppContext } from '~/core/contexts/useAppContext';
+import { TabViewType } from '~/core/stores/useTabViewsStore';
 import { ManagementSidebarHeader } from '../shared';
 
-const { wsStateStore } = useAppContext();
-const { workspaceId } = toRefs(wsStateStore);
+const { wsStateStore, tabViewStore } = useAppContext();
+const { workspaceId, connectionId } = toRefs(wsStateStore);
 
 const fileTreeRef = useTemplateRef<InstanceType<typeof FileTree> | null>(
   'fileTreeRef'
@@ -99,6 +100,32 @@ const handleToggleTree = () => {
   fileTreeRef.value?.collapseAll();
 };
 
+const openAgentTab = async (historyId?: string) => {
+  if (!workspaceId.value || !connectionId.value) return;
+
+  const tabId = 'agent-workspace';
+  const tabName = 'AI Agent';
+
+  await tabViewStore.openTab({
+    id: tabId,
+    workspaceId: workspaceId.value,
+    connectionId: connectionId.value,
+    schemaId: wsStateStore.schemaId || '',
+    name: tabName,
+    icon: 'hugeicons:robotic',
+    type: TabViewType.AgentChat,
+    routeName: 'workspaceId-connectionId-agent-tabViewId', // Dedicated agent route
+    routeParams: {
+      tabViewId: tabId,
+      connectionId: connectionId.value,
+    },
+    metadata: {
+      type: TabViewType.AgentChat,
+      historyId,
+    },
+  });
+};
+
 watch(
   () => selectedNodeId.value,
   async nodeId => {
@@ -127,7 +154,16 @@ watch(
       <template #actions>
         <Tooltip>
           <TooltipTrigger as-child>
-            <Button size="iconSm" variant="ghost" @click="startNewChat">
+            <Button
+              size="iconSm"
+              variant="ghost"
+              @click="
+                () => {
+                  startNewChat();
+                  openAgentTab();
+                }
+              "
+            >
               <Icon name="lucide:square-pen" class="size-4" />
             </Button>
           </TooltipTrigger>
@@ -157,25 +193,33 @@ watch(
     <div class="border-b px-2 pb-2">
       <div class="grid grid-cols-2 gap-2">
         <div class="rounded-xl border bg-muted/30 px-2.5 py-2">
-          <p class="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
+          <p
+            class="text-[11px] uppercase tracking-[0.18em] text-muted-foreground"
+          >
             Rules
           </p>
           <p class="mt-1 text-sm font-medium">{{ sectionCounts.rules }}</p>
         </div>
         <div class="rounded-xl border bg-muted/30 px-2.5 py-2">
-          <p class="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
+          <p
+            class="text-[11px] uppercase tracking-[0.18em] text-muted-foreground"
+          >
             Skills
           </p>
           <p class="mt-1 text-sm font-medium">{{ sectionCounts.skills }}</p>
         </div>
         <div class="rounded-xl border bg-muted/30 px-2.5 py-2">
-          <p class="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
+          <p
+            class="text-[11px] uppercase tracking-[0.18em] text-muted-foreground"
+          >
             MCP
           </p>
           <p class="mt-1 text-sm font-medium">{{ sectionCounts.mcp }}</p>
         </div>
         <div class="rounded-xl border bg-muted/30 px-2.5 py-2">
-          <p class="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
+          <p
+            class="text-[11px] uppercase tracking-[0.18em] text-muted-foreground"
+          >
             History
           </p>
           <p class="mt-1 text-sm font-medium">{{ sectionCounts.history }}</p>
@@ -205,7 +249,15 @@ watch(
         :allow-drag-and-drop="false"
         :allow-sort="false"
         :validate-rename="validateRename"
-        @click="nodeId => selectNode(nodeId)"
+        @click="
+          nodeId => {
+            selectNode(nodeId);
+            // If it's a history node, open tab with it
+            if (nodeId.startsWith('agent-history-')) {
+              openAgentTab(nodeId.replace('agent-history-', ''));
+            }
+          }
+        "
       />
     </div>
   </div>

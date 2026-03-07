@@ -3,7 +3,7 @@ import type {
   AgentAnomalyIssue,
   AgentAnomalySeverity,
   AgentDetectAnomalyResult,
-} from '../db-agent.types';
+} from '../../types';
 
 defineProps<{
   data: AgentDetectAnomalyResult;
@@ -23,7 +23,9 @@ const getSeverityVariant = (severity: AgentAnomalyIssue['severity']) =>
 </script>
 
 <template>
-  <div class="space-y-4 rounded-[1.35rem] border border-border/70 bg-muted/20 p-4">
+  <div
+    class="space-y-4 rounded-[1.35rem] border border-border/70 bg-muted/20 p-4"
+  >
     <div class="flex flex-wrap items-center gap-2">
       <Badge variant="secondary" class="text-[10px] tracking-[0.16em]">
         Clean Score {{ data.cleanScore }}/100
@@ -33,7 +35,10 @@ const getSeverityVariant = (severity: AgentAnomalyIssue['severity']) =>
       </Badge>
     </div>
 
-    <div v-if="data.issues.length === 0" class="rounded-2xl border bg-background/80 px-3 py-3 text-sm">
+    <div
+      v-if="data.issues.length === 0"
+      class="rounded-2xl border bg-background/80 px-3 py-3 text-sm"
+    >
       No anomalies were detected in the requested checks.
     </div>
 
@@ -44,7 +49,10 @@ const getSeverityVariant = (severity: AgentAnomalyIssue['severity']) =>
         class="rounded-2xl border bg-background/90 p-3"
       >
         <div class="flex flex-wrap items-center gap-2">
-          <Badge :variant="getSeverityVariant(issue.severity)" class="text-[10px] tracking-[0.16em]">
+          <Badge
+            :variant="getSeverityVariant(issue.severity)"
+            class="text-[10px] tracking-[0.16em]"
+          >
             {{ issue.severity.toUpperCase() }}
           </Badge>
           <Badge variant="outline" class="text-[10px] tracking-[0.16em]">
@@ -60,10 +68,15 @@ const getSeverityVariant = (severity: AgentAnomalyIssue['severity']) =>
         </p>
 
         <details v-if="issue.fixSql" class="mt-3 rounded-xl border bg-muted/30">
-          <summary class="cursor-pointer px-3 py-2 text-xs font-medium uppercase tracking-[0.16em] text-muted-foreground">
+          <summary
+            class="cursor-pointer px-3 py-2 text-xs font-medium uppercase tracking-[0.16em] text-muted-foreground"
+          >
             Fix suggestion
           </summary>
-          <pre class="overflow-x-auto border-t px-3 py-3 text-[12px] leading-6">{{ issue.fixSql }}</pre>
+          <pre
+            class="overflow-x-auto border-t px-3 py-3 text-[12px] leading-6"
+            >{{ issue.fixSql }}</pre
+          >
         </details>
       </div>
     </div>

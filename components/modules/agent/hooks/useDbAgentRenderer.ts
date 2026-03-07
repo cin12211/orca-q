@@ -1,30 +1,37 @@
-import type { ComputedRef } from 'vue';
+import type { ComputedRef, Component } from 'vue';
+import {
+  AgentQueryBlock,
+  AgentTableBlock,
+  AgentExplainBlock,
+  AgentAnomalyBlock,
+  AgentDescribeBlock,
+} from '../components/tool-message';
 import type {
   AgentBlock,
   AgentRenderedMessage,
   DbAgentMessage,
   DbAgentToolName,
-} from '../db-agent.types';
-import { DB_AGENT_TOOL_NAMES } from '../db-agent.types';
+} from '../types';
+import { DB_AGENT_TOOL_NAMES } from '../types';
 
 const MARKDOWN_PATTERN =
   /^#{1,6}\s|(\*\*|__).+(\*\*|__)|^[-*]\s|^\d+\.\s|^\|.+\|/m;
 const CODE_BLOCK_PATTERN = /```([\w-]*)\n?([\s\S]*?)```/g;
 
-export const TOOL_COMPONENT_MAP: Record<DbAgentToolName, string> = {
-  generate_query: 'AgentQueryBlock',
-  render_table: 'AgentTableBlock',
-  explain_query: 'AgentExplainBlock',
-  detect_anomaly: 'AgentAnomalyBlock',
-  describe_table: 'AgentDescribeBlock',
+export const TOOL_COMPONENT_MAP: Record<DbAgentToolName, Component> = {
+  generate_query: AgentQueryBlock,
+  render_table: AgentTableBlock,
+  explain_query: AgentExplainBlock,
+  detect_anomaly: AgentAnomalyBlock,
+  describe_table: AgentDescribeBlock,
 };
 
 const TOOL_LOADING_LABELS: Record<DbAgentToolName, string> = {
-  generate_query: 'Dang tao query...',
-  render_table: 'Dang chay query...',
-  explain_query: 'Dang phan tich query...',
-  detect_anomaly: 'Dang quet du lieu...',
-  describe_table: 'Dang doc schema...',
+  generate_query: 'Generating query...',
+  render_table: 'Running query...',
+  explain_query: 'Analyzing query...',
+  detect_anomaly: 'Scanning data...',
+  describe_table: 'Reading schema...',
 };
 
 const isDbAgentToolName = (toolName: string): toolName is DbAgentToolName => {
@@ -33,9 +40,7 @@ const isDbAgentToolName = (toolName: string): toolName is DbAgentToolName => {
 
 const pushTextBlock = (blocks: AgentBlock[], content: string) => {
   const trimmed = content.trim();
-  if (!trimmed) {
-    return;
-  }
+  if (!trimmed) return;
 
   blocks.push({
     kind: MARKDOWN_PATTERN.test(trimmed) ? 'markdown' : 'text',
@@ -43,7 +48,7 @@ const pushTextBlock = (blocks: AgentBlock[], content: string) => {
   });
 };
 
-const textToBlocks = (content: string): AgentBlock[] => {
+const textToBlocks = (content: string, isStreaming = false): AgentBlock[] => {
   const blocks: AgentBlock[] = [];
   let lastIndex = 0;
 
@@ -63,6 +68,20 @@ const textToBlocks = (content: string): AgentBlock[] => {
 
   pushTextBlock(blocks, content.slice(lastIndex));
 
+  if (isStreaming) {
+    for (let index = blocks.length - 1; index >= 0; index -= 1) {
+      const block = blocks[index];
+      if (
+        block?.kind === 'text' ||
+        block?.kind === 'markdown' ||
+        block?.kind === 'code'
+      ) {
+        block.isStreaming = true;
+        break;
+      }
+    }
+  }
+
   return blocks;
 };
 
@@ -72,9 +91,7 @@ const toErrorMessage = (part: Record<string, any>) =>
 const toolPartToBlocks = (part: Record<string, any>): AgentBlock[] => {
   const toolName = String(part.type || '').replace(/^tool-/, '');
 
-  if (!isDbAgentToolName(toolName)) {
-    return [];
-  }
+  if (!isDbAgentToolName(toolName)) return [];
 
   if (part.state === 'input-streaming' || part.state === 'input-available') {
     return [
@@ -128,7 +145,23 @@ const toolPartToBlocks = (part: Record<string, any>): AgentBlock[] => {
 
 const partToBlocks = (part: Record<string, any>): AgentBlock[] => {
   if (part.type === 'text') {
-    return textToBlocks(part.text || '');
+    return textToBlocks(
+      typeof part.text === 'string' ? part.text : '',
+      part.state === 'streaming'
+    );
+  }
+
+  if (part.type === 'reasoning') {
+    const content = typeof part.text === 'string' ? part.text.trim() : '';
+    if (!content) return [];
+
+    return [
+      {
+        kind: 'reasoning',
+        content,
+        isStreaming: part.state === 'streaming',
+      },
+    ];
   }
 
   if (typeof part.type === 'string' && part.type.startsWith('tool-')) {
@@ -143,18 +176,62 @@ const partToBlocks = (part: Record<string, any>): AgentBlock[] => {
 };
 
 export function useAgentRenderer(messages: ComputedRef<DbAgentMessage[]>) {
-  const renderedMessages = computed<AgentRenderedMessage[]>(() =>
-    messages.value
-      .filter(message => message.role !== 'system')
-      .map(message => ({
+  const renderedMessages = computed<AgentRenderedMessage[]>(() => {
+    const source = messages.value ?? [];
+    console.log('🚀 ~ useAgentRenderer ~ source:', source);
+    const result: AgentRenderedMessage[] = [];
+
+    for (let i = 0; i < source.length; i++) {
+      const message = source[i];
+
+      if (message.role === 'system') continue;
+
+      const parts = message.parts ?? [];
+      const rawBlocks: AgentBlock[] = [];
+
+      for (let j = 0; j < parts.length; j++) {
+        const mapped = partToBlocks(parts[j] as Record<string, any>);
+        if (mapped?.length) {
+          rawBlocks.push(...mapped);
+        }
+      }
+
+      if (rawBlocks.length === 0) continue;
+
+      // Gom toàn bộ reasoning trong message thành 1 block duy nhất
+      // vì agent có thể emit nhiều reasoning chunk rải rác giữa các tool calls
+      const reasoningBlocks = rawBlocks.filter(b => b.kind === 'reasoning');
+      const otherBlocks = rawBlocks.filter(b => b.kind !== 'reasoning');
+      const blocks: AgentBlock[] = [];
+
+      if (reasoningBlocks.length > 0) {
+        const mergedContent = reasoningBlocks
+          .map(b => (b.kind === 'reasoning' ? b.content : ''))
+          .filter(Boolean)
+          .join('\n\n');
+
+        const isStreaming = reasoningBlocks.some(
+          b => b.kind === 'reasoning' && b.isStreaming
+        );
+
+        blocks.push({
+          kind: 'reasoning',
+          content: mergedContent,
+          isStreaming,
+        });
+      }
+
+      blocks.push(...otherBlocks);
+
+      result.push({
         id: message.id,
         role: message.role,
-        blocks: (message.parts || []).flatMap(part =>
-          partToBlocks(part as Record<string, any>)
-        ),
-      }))
-      .filter(message => message.blocks.length > 0)
-  );
+        blocks,
+      });
+    }
+
+    return result;
+  });
 
   const hasMutationPending = computed(() =>
     renderedMessages.value.some(message =>
@@ -162,7 +239,7 @@ export function useAgentRenderer(messages: ComputedRef<DbAgentMessage[]>) {
     )
   );
 
-  const getComponent = (toolName: DbAgentToolName) =>
+  const getComponent = (toolName: DbAgentToolName): Component | null =>
     TOOL_COMPONENT_MAP[toolName] || null;
 
   return {

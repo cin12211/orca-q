@@ -1,30 +1,49 @@
 <script setup lang="ts">
-import { Tooltip, TooltipContent, TooltipTrigger } from '#components';
-import { marked } from 'marked';
+import type { Component } from 'vue';
 import { useCopyToClipboard } from '~/core/composables/useCopyToClipboard';
-import type {
-  AgentRenderedMessage,
-  DbAgentToolName,
-} from '../db-agent.types';
+import type { AgentRenderedMessage, DbAgentToolName } from '../types';
+import {
+  BlockMessageText,
+  BlockMessageMarkdown,
+  BlockMessageCode,
+  BlockMessageLoading,
+  BlockMessageError,
+  BlockMessageTool,
+} from './block-message';
+import { AgentApprovalBlock, AgentReasoningBlock } from './tool-message';
 
 const props = defineProps<{
   message: AgentRenderedMessage;
-  getToolComponent: (toolName: DbAgentToolName) => string | null;
+  getToolComponent: (toolName: DbAgentToolName) => Component | null;
+  showReasoning: boolean;
+  isStreaming: boolean;
 }>();
 
 const emit = defineEmits<{
   approval: [approvalId: string, approved: boolean];
+  edit: [text: string];
 }>();
 
-const { handleCopyWithKey, isCopied, getCopyIcon, getCopyTooltip } =
-  useCopyToClipboard();
-
-const renderMarkdown = (content: string) =>
-  marked.parse(content, { async: false }) as string;
-
-const stringifyValue = (value: unknown) => JSON.stringify(value, null, 2);
+const {
+  handleCopyWithKey,
+  isCopied,
+  getCopyIcon,
+  getCopyIconClass,
+  getCopyTooltip,
+} = useCopyToClipboard();
 
 const isUserMessage = computed(() => props.message.role === 'user');
+
+const messageText = computed(() => {
+  return (props.message.blocks ?? [])
+    .map(b => {
+      if (b.kind === 'text' || b.kind === 'markdown') return b.content;
+      if (b.kind === 'code') return b.code;
+      return '';
+    })
+    .filter(Boolean)
+    .join('\n\n');
+});
 </script>
 
 <template>
@@ -36,103 +55,90 @@ const isUserMessage = computed(() => props.message.role === 'user');
   >
     <div
       :class="[
-        'flex max-w-3xl gap-3',
+        'flex w-full max-w-3xl gap-3',
         isUserMessage ? 'justify-end' : 'items-start',
       ]"
     >
-      <div
+      <!-- <div
         v-if="!isUserMessage"
         class="mt-1 flex size-8 shrink-0 items-center justify-center rounded-2xl border bg-background/80 text-primary shadow-sm"
       >
-        <Icon name="hugeicons:ai-chat-02" class="size-4" />
-      </div>
+        <img src="public/logo.png" class="w-7 rounded-full" />
 
-      <div class="min-w-0 flex-1 space-y-3">
+          <Icon name="hugeicons:ai-chat-02" class="size-4" />  
+      </div> -->
+
+      <div class="min-w-0 flex-1 overflow-hidden">
+        <!-- TODO hide -->
         <div
-          v-if="!isUserMessage"
-          class="px-1 text-[11px] font-medium uppercase tracking-[0.22em] text-muted-foreground"
+          v-if="!isUserMessage && false"
+          class="text-xs flex items-center gap-1 font-medium text-muted-foreground"
         >
-          Agent
+          <div
+            class="flex size-6 shrink-0 items-center justify-center rounded-full border text-primary shadow-sm"
+          >
+            <img src="public/logo.png" class="size-5 rounded-full" />
+          </div>
+
+          <div>Orca</div>
         </div>
 
         <div
           v-for="(block, index) in message.blocks"
           :key="`${message.id}-${block.kind}-${index}`"
           :class="[
-            'overflow-hidden',
+            'overflow-hidden text-xs',
             isUserMessage
-              ? 'rounded-[1.35rem] bg-primary px-4 py-3 text-sm text-primary-foreground shadow-sm'
-              : 'rounded-3xl border border-border/70 bg-background/85 px-4 py-3 text-sm shadow-sm backdrop-blur-sm',
+              ? 'rounded-xl bg-[#f4f4f4] text-foreground p-2 px-3 shadow-none whitespace-pre-wrap ml-auto'
+              : 'rounded-xl border-none bg-transparent py-2 shadow-none flex flex-col gap-1.5',
           ]"
         >
-          <p
+          <BlockMessageText
             v-if="block.kind === 'text'"
-            class="whitespace-pre-wrap leading-7"
-          >
-            {{ block.content }}
-          </p>
-
-          <div
-            v-else-if="block.kind === 'markdown'"
-            class="prose prose-sm max-w-none prose-p:my-2 prose-pre:my-3 prose-pre:rounded-2xl prose-pre:bg-slate-950 prose-pre:px-4 prose-pre:py-3 prose-pre:text-slate-100 prose-ul:my-2 prose-ol:my-2 prose-headings:mt-4 prose-headings:mb-2 dark:prose-invert"
-            v-html="renderMarkdown(block.content)"
+            :content="block.content"
+            :is-block-streaming="block.isStreaming"
+            :is-streaming="isStreaming"
+            :is-user-message="isUserMessage"
           />
 
-          <div v-else-if="block.kind === 'code'" class="overflow-hidden rounded-2xl border bg-slate-950">
-            <div
-              class="flex items-center justify-between border-b border-white/10 px-3 py-2 text-[11px] uppercase tracking-[0.18em] text-slate-300"
-            >
-              <span>{{ block.language || 'text' }}</span>
+          <AgentReasoningBlock
+            v-else-if="block.kind === 'reasoning' && showReasoning"
+            :content="block.content"
+            :is-streaming="block.isStreaming"
+          />
 
-              <Tooltip>
-                <TooltipTrigger as-child>
-                  <Button
-                    variant="ghost"
-                    size="xs"
-                    class="h-7 rounded-xl px-2 text-slate-200 hover:bg-white/10 hover:text-white"
-                    @click="handleCopyWithKey(`${message.id}-${index}`, block.code)"
-                  >
-                    <Icon
-                      :name="getCopyIcon(isCopied(`${message.id}-${index}`))"
-                      class="size-3.5"
-                    />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>{{ getCopyTooltip(isCopied(`${message.id}-${index}`)) }}</p>
-                </TooltipContent>
-              </Tooltip>
-            </div>
+          <BlockMessageMarkdown
+            v-else-if="block.kind === 'markdown'"
+            :content="block.content"
+            :is-block-streaming="block.isStreaming"
+            :is-streaming="isStreaming"
+            :is-user-message="isUserMessage"
+          />
 
-            <pre class="overflow-x-auto px-4 py-3 text-[13px] leading-6 text-slate-100"><code>{{ block.code }}</code></pre>
-          </div>
+          <BlockMessageCode
+            v-else-if="block.kind === 'code'"
+            :id="`${message.id}-${index}`"
+            :code="block.code"
+            :language="block.language || 'text'"
+            :is-block-streaming="block.isStreaming"
+            :is-streaming="isStreaming"
+          />
 
-          <div
+          <BlockMessageLoading
             v-else-if="block.kind === 'loading'"
-            class="flex items-center gap-2 text-muted-foreground"
-          >
-            <Icon name="lucide:loader" class="size-4 animate-spin" />
-            <span>{{ block.label }}</span>
-          </div>
+            :label="block.label"
+          />
 
-          <div
+          <BlockMessageError
             v-else-if="block.kind === 'error'"
-            class="rounded-2xl border border-destructive/20 bg-destructive/10 px-3 py-2 text-destructive"
-          >
-            {{ block.message }}
-          </div>
+            :message="block.message"
+          />
 
-          <div
-            v-else-if="block.kind === 'tool' && !getToolComponent(block.toolName)"
-            class="rounded-2xl border bg-muted/40"
-          >
-            <pre class="overflow-x-auto px-3 py-3 text-[12px] leading-6">{{ stringifyValue(block.result) }}</pre>
-          </div>
-
-          <component
-            :is="getToolComponent(block.toolName)"
+          <BlockMessageTool
             v-else-if="block.kind === 'tool'"
-            :data="block.result"
+            :tool-name="block.toolName"
+            :result="block.result"
+            :get-tool-component="getToolComponent"
           />
 
           <AgentApprovalBlock
@@ -143,6 +149,47 @@ const isUserMessage = computed(() => props.message.role === 'user');
             @approve="emit('approval', $event, true)"
             @deny="emit('approval', $event, false)"
           />
+        </div>
+
+        <div
+          v-if="!isStreaming"
+          class="mt-1 flex items-center gap-1"
+          :class="isUserMessage ? 'justify-end' : 'justify-start'"
+        >
+          <Tooltip>
+            <TooltipTrigger as-child>
+              <Button
+                size="iconSm"
+                variant="ghost"
+                class="p-0 size-4!"
+                @click="handleCopyWithKey(message.id, messageText)"
+              >
+                <Icon
+                  :name="getCopyIcon(isCopied(message.id))"
+                  :class="['size-3!', getCopyIconClass(isCopied(message.id))]"
+                />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>{{ getCopyTooltip(isCopied(message.id)) }}</p>
+            </TooltipContent>
+          </Tooltip>
+
+          <Tooltip v-if="isUserMessage">
+            <TooltipTrigger as-child>
+              <Button
+                size="iconSm"
+                variant="ghost"
+                class="p-0 size-4!"
+                @click="emit('edit', messageText)"
+              >
+                <Icon name="lucide:pencil" class="size-3!" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Edit</p>
+            </TooltipContent>
+          </Tooltip>
         </div>
       </div>
     </div>

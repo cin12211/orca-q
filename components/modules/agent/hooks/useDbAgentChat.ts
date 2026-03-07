@@ -6,7 +6,7 @@ import type {
   DbAgentDialect,
   DbAgentMessage,
   DbAgentSchemaSnapshot,
-} from '../db-agent.types';
+} from '../types';
 
 const buildAgentSystemPrompt = (
   schemaContext?: string
@@ -55,7 +55,7 @@ const formatTableContext = (
     `Tables (${snapshot.tables.length}): ${snapshot.tables.join(', ')}`,
   ];
 
-  const tableSummaries = snapshot.tables.slice(0, maxTables).map(tableName => {
+  const tableSummaries = snapshot.tables.slice(0, maxTables)?.map(tableName => {
     const detail = snapshot.tableDetails?.[tableName];
 
     if (!detail) {
@@ -104,7 +104,7 @@ const formatTableContext = (
   return [...header, ...tableSummaries].join('\n');
 };
 
-export function useAgentChat() {
+export function useAgentChat(sendReasoning?: Ref<boolean>) {
   const { schemaStore, connectionStore } = useAppContext();
 
   const schemaStats = computed(() => {
@@ -151,6 +151,7 @@ export function useAgentChat() {
       schemaName: schemaSnapshot.value?.schemaName,
       schemaContext: schemaContext.value,
       schemaSnapshot: schemaSnapshot.value,
+      sendReasoning: sendReasoning?.value ?? true,
     }),
     sendAutomaticallyWhen: lastAssistantMessageIsCompleteWithApprovalResponses,
   });
