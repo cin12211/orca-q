@@ -2,6 +2,7 @@ import type { ComputedRef, Component } from 'vue';
 import {
   AgentQueryBlock,
   AgentTableBlock,
+  AgentVisualizeTableBlock,
   AgentExplainBlock,
   AgentAnomalyBlock,
   AgentDescribeBlock,
@@ -21,6 +22,7 @@ const CODE_BLOCK_PATTERN = /```([\w-]*)\n?([\s\S]*?)```/g;
 export const TOOL_COMPONENT_MAP: Record<DbAgentToolName, Component> = {
   generate_query: AgentQueryBlock,
   render_table: AgentTableBlock,
+  visualize_table: AgentVisualizeTableBlock,
   explain_query: AgentExplainBlock,
   detect_anomaly: AgentAnomalyBlock,
   describe_table: AgentDescribeBlock,
@@ -29,6 +31,7 @@ export const TOOL_COMPONENT_MAP: Record<DbAgentToolName, Component> = {
 const TOOL_LOADING_LABELS: Record<DbAgentToolName, string> = {
   generate_query: 'Generating query...',
   render_table: 'Running query...',
+  visualize_table: 'Building chart...',
   explain_query: 'Analyzing query...',
   detect_anomaly: 'Scanning data...',
   describe_table: 'Reading schema...',
@@ -160,6 +163,29 @@ const partToBlocks = (part: Record<string, any>): AgentBlock[] => {
         kind: 'reasoning',
         content,
         isStreaming: part.state === 'streaming',
+      },
+    ];
+  }
+
+  if (part.type === 'source-url') {
+    return [
+      {
+        kind: 'source',
+        sourceId: part.sourceId || '',
+        url: part.url,
+        title: part.title,
+      },
+    ];
+  }
+
+  if (part.type === 'source-document') {
+    return [
+      {
+        kind: 'source',
+        sourceId: part.sourceId || '',
+        title: part.title,
+        mediaType: part.mediaType,
+        filename: part.filename,
       },
     ];
   }

@@ -210,7 +210,6 @@ describe('useAiChat', () => {
       provider: 'google',
       model: 'gemini-2.5-flash',
       apiKey: 'google-key',
-      systemPrompt: expect.any(String),
     });
     expect(body).toHaveBeenCalledTimes(1);
   });

@@ -5,3 +5,4 @@ export { default as AgentExplainBlock } from './AgentExplainBlock.vue';
 export { default as AgentQueryBlock } from './AgentQueryBlock.vue';
 export { default as AgentReasoningBlock } from './AgentReasoningBlock.vue';
 export { default as AgentTableBlock } from './AgentTableBlock.vue';
+export { default as AgentVisualizeTableBlock } from './AgentVisualizeTableBlock.vue';

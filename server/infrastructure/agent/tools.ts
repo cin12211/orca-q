@@ -1,22 +1,40 @@
-import { generateObject, tool, type LanguageModel } from 'ai';
+import { generateText, tool, Output, type LanguageModel } from 'ai';
 import { z } from 'zod/v4';
+import {
+  getAgentCommandOptionsByIds,
+  type AgentCommandOptionId,
+} from '~/components/modules/agent/constants/command-options';
 import type {
   AgentDescribeTableResult,
   AgentExplainQueryResult,
   AgentGenerateQueryResult,
+  AgentVisualizeTableResult,
   DbAgentRequestBody,
   DbAgentSchemaSnapshot,
 } from '~/components/modules/agent/types';
+import {
+  getQualifiedTableName,
+  isMutationSql,
+  MAX_RENDER_LIMIT,
+  normalizeSql,
+} from './core/sql';
+import type { DatabaseAdapter, QueryPlan, RawQueryResult } from './core/types';
 import {
   buildExplainSuggestions,
   buildExplainSummary,
   findSlowestPlanNode,
   formatPlanTree,
-} from './explain';
-import { getCountFromRows, renderTableResult, rowsToRecords } from './render';
+} from './renderers/explain';
+import {
+  getCountFromRows,
+  renderTableResult,
+  rowsToRecords,
+  visualizeTableResult,
+} from './renderers/render';
 import {
   assertDatabaseAdapter,
   buildDuplicateCandidates,
+  buildSchemaContext,
   buildTableSummary,
   calculateCleanScore,
   getIssueSeverity,
@@ -24,83 +42,243 @@ import {
   resolveTableDetail,
   toColumnsForDescribe,
   toQuotedColumnName,
-} from './schema';
-import {
-  getQualifiedTableName,
-  isMutationSql,
-  MAX_RENDER_LIMIT,
-  normalizeSql,
-} from './sql';
-import type { DatabaseAdapter, QueryPlan, RawQueryResult } from './types';
+} from './schema/schema';
 
+// ─── Helper: tìm snapshot chứa table cần tìm ─────────────────────────────────
+// detect_anomaly và describe_table cần single snapshot đúng schema
+// Ưu tiên: snapshot nào có tableName trong tables list → dùng cái đó
+// Fallback: snapshot đầu tiên
+function findSnapshotForTable(
+  schemaSnapshots: DbAgentSchemaSnapshot[] | undefined,
+  schemaName: string,
+  tableName: string
+): DbAgentSchemaSnapshot | undefined {
+  if (!schemaSnapshots?.length) return undefined;
+
+  const snapshot =
+    schemaSnapshots.find(
+      s => s.name.toLowerCase() === schemaName.toLowerCase()
+    ) || schemaSnapshots[0];
+
+  return snapshot;
+}
+
+// ─── System prompt ───────────────────────────────────────────────────────────
+export function buildAgentSystemPrompt(
+  schemaSnapshots?: DbAgentSchemaSnapshot[],
+  selectedCommandOptions?: AgentCommandOptionId[]
+): string {
+  const resolvedSchema = buildSchemaContext(schemaSnapshots);
+  const selectedOptions = selectedCommandOptions?.length
+    ? getAgentCommandOptionsByIds(selectedCommandOptions)
+    : [];
+  const selectedCommandSection = selectedOptions.length
+    ? [
+        '## Current user intent focus',
+        'The user explicitly selected these tool intents before sending the message:',
+        ...selectedOptions.map(
+          option => `- ${option.label}: ${option.promptHint}`
+        ),
+        'Honor these hints when they fit the request, but do not invent missing information or bypass any approval rule.',
+        '',
+      ].join('\n')
+    : null;
+
+  return [
+    '# You are Orca Agent.',
+    '',
+    'You help users explore schemas, reason about SQL, explain database structures, and suggest safe next steps for the current database.',
+    'You have DIRECT access to a connected database via tools.',
+    '',
+    '## Available tools',
+    'Use tools whenever they can produce a structured result:',
+    '- `generate_query` — convert natural language into SQL.',
+    '- `render_table` — execute SQL and show structured rows.',
+    '- `visualize_table` — execute read-only SQL and render a bar, line, pie, or scatter chart.',
+    '- `describe_table` — schema introspection (columns, keys, relationships).',
+    '- `explain_query` — performance analysis via EXPLAIN.',
+    '- `detect_anomaly` — data quality scans (nulls, duplicates, orphan FKs, outliers).',
+    '',
+    '## Connection',
+    'NEVER ask the user for connection info, credentials, or database details — the database is already connected.',
+    '',
+    '## READ queries (SELECT)',
+    'For read-only requests, call tools immediately without asking for confirmation.',
+    'Workflow:',
+    '  1. Call generate_query to convert the request to SQL.',
+    '  2. Call render_table to execute the SQL and return results.',
+    '  3. Summarize the results clearly for the user.',
+    'If the user asks for a chart or visualization, call `visualize_table` instead of `render_table` once you have a read-only SQL query.',
+    'If the user asks to visualize data but does not specify a chart type, ask them to choose one:',
+    '  1. bar',
+    '  2. line',
+    '  3. pie',
+    '  4. scatter',
+    '  5. other (ask them to type what they want, then explain the supported options if needed)',
+    '',
+    '## MUTATION queries (INSERT / UPDATE / DELETE / DROP / TRUNCATE / ALTER)',
+    'NEVER auto-execute mutation SQL. Always follow this workflow:',
+    '  1. Call generate_query to produce the SQL.',
+    '  2. STOP. Show the generated SQL to the user and explain exactly what it will change.',
+    '  3. Explicitly ask the user to confirm before proceeding.',
+    '  4. Only call render_table after the user gives clear approval.',
+    'Even if the user says "just do it" — still show the SQL and ask once before executing.',
+    '',
+    '## Rules',
+    '- Stay grounded in the provided schema context.',
+    '- Never invent tables or columns that are not present in the schema context.',
+    '- If schema context is incomplete, say what is missing before making assumptions.',
+    '- After generating a read-only query, prefer calling `render_table` so the user gets concrete results.',
+    '- For destructive or mutating SQL, explain the plan clearly and let the approval flow gate execution.',
+    '- Keep narration concise and let tool blocks carry the detailed output.',
+    '',
+    ...(selectedCommandSection ? [selectedCommandSection] : []),
+    '## Database schema (always loaded)',
+    resolvedSchema,
+  ].join('\n');
+}
+
+// ─── Active tools resolver ────────────────────────────────────────────────────
+export function resolveActiveTools(
+  adapter: DatabaseAdapter | null,
+  schemaSnapshots?: DbAgentSchemaSnapshot[]
+): Array<
+  | 'generate_query'
+  | 'render_table'
+  | 'visualize_table'
+  | 'explain_query'
+  | 'detect_anomaly'
+  | 'describe_table'
+> {
+  const hasSnapshot = !!schemaSnapshots?.length;
+
+  if (adapter) {
+    return [
+      'generate_query',
+      'render_table',
+      'visualize_table',
+      'explain_query',
+      ...(hasSnapshot ? (['detect_anomaly', 'describe_table'] as const) : []),
+    ];
+  }
+
+  // Không có adapter: chỉ schema-based tools
+  return hasSnapshot
+    ? ['generate_query', 'describe_table']
+    : ['generate_query'];
+}
+
+// ─── Tools ────────────────────────────────────────────────────────────────────
 export function createDbAgentTools({
   model,
   adapter,
   dialect,
-  schemaContext,
-  schemaSnapshot,
+  schemaSnapshots,
 }: {
   model: LanguageModel;
   adapter: DatabaseAdapter | null;
   dialect: DbAgentRequestBody['dialect'];
-  schemaContext?: string;
-  schemaSnapshot?: DbAgentSchemaSnapshot;
+  schemaSnapshots?: DbAgentSchemaSnapshot[];
 }) {
+  // Full schema context từ tất cả snapshots — dùng trong descriptions và generate_query
+  const resolvedSchemaContext = buildSchemaContext(schemaSnapshots);
+
   return {
     generate_query: tool({
       description:
-        'Convert a natural language request into SQL for the active database schema.',
+        'Convert a natural language request into SQL for the active database schema. Always call this first before render_table.',
       inputSchema: z.object({
         prompt: z.string().min(1),
+        // schema override per-call nếu agent muốn pass schema cụ thể
         schema: z.string().optional(),
         dialect: z
           .enum(['postgresql', 'mysql', 'sqlite'])
           .default('postgresql'),
       }),
       execute: async input => {
-        const result = await generateObject({
+        const result = await generateText({
           model,
-          schema: z.object({
-            sql: z.string().min(1),
-            isMutation: z.boolean(),
-            explanation: z.string().min(1),
-          }),
-          prompt: [
+          system: [
             `You convert user requests into ${input.dialect || dialect || 'postgresql'} SQL.`,
             'Return a single SQL statement only.',
-            'Prefer SELECT queries unless the user explicitly requests a mutation.',
+            'Default to SELECT queries. Only generate mutation SQL (INSERT/UPDATE/DELETE/DROP/TRUNCATE/ALTER) when the user EXPLICITLY and clearly requests a data change.',
+            'If the intent is ambiguous, generate a SELECT instead.',
             'Never reference tables or columns outside the provided schema context.',
-            input.schema || schemaContext || 'No schema context is available.',
+            'Set isMutation: true for ANY statement that modifies data or schema.',
+          ].join('\n'),
+          prompt: [
+            // input.schema (per-call override) → full snapshot context → fallback
+            `Schema:\n${input.schema || resolvedSchemaContext}`,
             `User request: ${input.prompt}`,
           ].join('\n\n'),
+          output: Output.object({
+            schema: z.object({
+              sql: z.string().describe('A single valid SQL statement.'),
+              isMutation: z
+                .boolean()
+                .describe(
+                  'True if the SQL modifies data (INSERT/UPDATE/DELETE/DROP etc).'
+                ),
+              explanation: z
+                .string()
+                .describe(
+                  'A short plain-English explanation of what the query does.'
+                ),
+            }),
+          }),
         });
 
-        const sql = normalizeSql(result.object.sql);
-        const isMutation = result.object.isMutation || isMutationSql(sql);
+        const parsed = result.output;
+        const sql = normalizeSql(parsed.sql);
+        const isMutation = parsed.isMutation || isMutationSql(sql);
 
         return {
           sql,
           isMutation,
-          explanation: result.object.explanation,
+          explanation: parsed.explanation,
         } satisfies AgentGenerateQueryResult;
       },
     }),
+
     render_table: tool({
       description:
-        'Execute SQL and return a structured table result for the current database.',
+        'Execute SQL and return results. For SELECT queries, call immediately after generate_query. ' +
+        'For mutation SQL (INSERT/UPDATE/DELETE/DROP/TRUNCATE/ALTER), this tool requires explicit user approval — ' +
+        'NEVER call it with mutation SQL unless the user has confirmed after seeing the SQL.',
       inputSchema: z.object({
         sql: z.string().min(1),
         limit: z.number().int().min(1).max(MAX_RENDER_LIMIT).default(100),
       }),
-      needsApproval: input => isMutationSql(input.sql),
+      needsApproval: (input: { sql: string }) => isMutationSql(input.sql),
       execute: async input => {
         assertDatabaseAdapter(adapter);
         return renderTableResult(adapter, input.sql, input.limit);
       },
     }),
+
+    visualize_table: tool({
+      description:
+        'Execute a read-only SQL query and render a chart. Use this when the user wants a visualization and has chosen one of these chart types: bar, line, pie, or scatter. Ask the user to choose a chart type before calling this tool if they did not specify one.',
+      inputSchema: z.object({
+        sql: z.string().min(1),
+        chartType: z.enum(['bar', 'line', 'pie', 'scatter']),
+      }),
+      execute: async input => {
+        assertDatabaseAdapter(adapter);
+
+        const result = await visualizeTableResult(
+          adapter,
+          input.sql,
+          input.chartType
+        );
+
+        return result satisfies AgentVisualizeTableResult;
+      },
+    }),
+
     explain_query: tool({
       description:
-        'Run EXPLAIN on a query and return a readable summary of the plan.',
+        'Run EXPLAIN on a query and return a readable summary of the execution plan. Use this when the user asks about query performance, slow queries, or indexes.',
       inputSchema: z.object({
         sql: z.string().min(1),
       }),
@@ -136,11 +314,13 @@ export function createDbAgentTools({
         } satisfies AgentExplainQueryResult;
       },
     }),
+
     detect_anomaly: tool({
       description:
-        'Scan a table for nulls, duplicate identifiers, orphan foreign keys, and numeric outliers.',
+        'Scan a table for data quality issues: nulls, duplicate identifiers, orphan foreign keys, and numeric outliers. Use when the user asks about data quality or cleanliness.',
       inputSchema: z.object({
         tableName: z.string().min(1),
+        schemaName: z.string().min(1),
         checks: z
           .array(z.enum(['nulls', 'duplicates', 'orphan_fk', 'outliers']))
           .default(['nulls', 'duplicates', 'orphan_fk']),
@@ -148,14 +328,21 @@ export function createDbAgentTools({
       execute: async input => {
         assertDatabaseAdapter(adapter);
 
+        // Tìm snapshot chứa table này, không hardcode snapshot đầu tiên
+        const snapshot = findSnapshotForTable(
+          schemaSnapshots,
+          input.schemaName,
+          input.tableName
+        );
         const { tableName, detail } = resolveTableDetail(
-          schemaSnapshot,
+          snapshot,
           input.tableName
         );
         const qualifiedTable = getQualifiedTableName(
-          schemaSnapshot?.schemaName || 'public',
+          snapshot?.name || 'public',
           tableName
         );
+
         const issues = [] as Array<{
           type: 'nulls' | 'duplicates' | 'orphan_fk' | 'outliers';
           severity: 'high' | 'medium' | 'low';
@@ -163,6 +350,7 @@ export function createDbAgentTools({
           description: string;
           fixSql?: string;
         }>;
+
         const countResult = (await adapter.rawOut(
           `SELECT COUNT(*)::int AS total FROM ${qualifiedTable}`
         )) as RawQueryResult;
@@ -183,12 +371,9 @@ export function createDbAgentTools({
               rowsToRecords(result.rows || [], result.fields || [])
             );
 
-            if (nullCount <= 0) {
-              continue;
-            }
+            if (nullCount <= 0) continue;
 
             const ratio = totalRows === 0 ? 0 : nullCount / totalRows;
-
             issues.push({
               type: 'nulls',
               severity: getIssueSeverity(ratio),
@@ -214,9 +399,7 @@ export function createDbAgentTools({
               rowsToRecords(result.rows || [], result.fields || [])
             );
 
-            if (duplicateGroups <= 0) {
-              continue;
-            }
+            if (duplicateGroups <= 0) continue;
 
             issues.push({
               type: 'duplicates',
@@ -246,12 +429,9 @@ export function createDbAgentTools({
               rowsToRecords(result.rows || [], result.fields || [])
             );
 
-            if (orphanCount <= 0) {
-              continue;
-            }
+            if (orphanCount <= 0) continue;
 
             const ratio = totalRows === 0 ? 0 : orphanCount / totalRows;
-
             issues.push({
               type: 'orphan_fk',
               severity: getIssueSeverity(ratio),
@@ -284,12 +464,9 @@ export function createDbAgentTools({
               rowsToRecords(result.rows || [], result.fields || [])
             );
 
-            if (outlierCount <= 0) {
-              continue;
-            }
+            if (outlierCount <= 0) continue;
 
             const ratio = totalRows === 0 ? 0 : outlierCount / totalRows;
-
             issues.push({
               type: 'outliers',
               severity: getIssueSeverity(ratio),
@@ -307,15 +484,23 @@ export function createDbAgentTools({
         };
       },
     }),
+
     describe_table: tool({
       description:
-        'Summarize a table, its columns, and its direct relationships using schema metadata.',
+        'Summarize a table, its columns, and its direct relationships using schema metadata. Use this when the user asks about table structure, columns, or relationships.',
       inputSchema: z.object({
         tableName: z.string().min(1),
+        schemaName: z.string().min(1),
       }),
       execute: async input => {
+        // Tìm đúng snapshot chứa table này
+        const snapshot = findSnapshotForTable(
+          schemaSnapshots,
+          input.schemaName,
+          input.tableName
+        );
         const { tableName, detail } = resolveTableDetail(
-          schemaSnapshot,
+          snapshot,
           input.tableName
         );
         const columns = toColumnsForDescribe(detail);

@@ -1,170 +1,70 @@
 <script setup lang="ts">
-import { refDebounced } from '@vueuse/core';
 import { Tooltip, TooltipContent, TooltipTrigger } from '#components';
-import FileTree from '~/components/base/tree-folder/FileTree.vue';
-import type { FileNode } from '~/components/base/tree-folder/types';
-import { useAgentWorkspace } from '~/components/modules/agent/hooks/useDbAgentWorkspace';
-import { DEFAULT_DEBOUNCE_INPUT } from '~/core/constants';
+import AgentEmptyState from '~/components/modules/management/agent/components/AgentEmptyState.vue';
+import ManagementAgentHistoryTree from '~/components/modules/management/agent/components/ManagementAgentHistoryTree.vue';
+import { useManagementAgentHistoryTree } from '~/components/modules/management/agent/hooks/useManagementAgentHistoryTree';
 import { useAppContext } from '~/core/contexts/useAppContext';
-import { TabViewType } from '~/core/stores/useTabViewsStore';
 import { ManagementSidebarHeader } from '../shared';
 
-const { wsStateStore, tabViewStore } = useAppContext();
-const { workspaceId, connectionId } = toRefs(wsStateStore);
+const { wsStateStore } = useAppContext();
+const { workspaceId } = toRefs(wsStateStore);
 
-const fileTreeRef = useTemplateRef<InstanceType<typeof FileTree> | null>(
-  'fileTreeRef'
+type ManagementAgentHistoryTreeExpose = {
+  collapseAll: () => void;
+  expandAll: () => void;
+  focusItem: (nodeId: string) => void;
+  isExpandedAll: boolean;
+};
+
+const treePanelRef = useTemplateRef<ManagementAgentHistoryTreeExpose | null>(
+  'treePanelRef'
 );
-
-const searchInput = shallowRef('');
-const debouncedSearch = refDebounced(searchInput, DEFAULT_DEBOUNCE_INPUT);
 
 const {
-  treeData,
-  selectedNodeId,
+  contextMenuItems,
   defaultExpandedNodeIds,
-  sectionCounts,
-  selectNode,
-  startNewChat,
-} = useAgentWorkspace();
-
-const includeDescendants = (
-  source: Record<string, FileNode>,
-  nodeId: string,
-  target: Set<string>
-) => {
-  if (target.has(nodeId)) {
-    return;
-  }
-
-  target.add(nodeId);
-
-  const children = source[nodeId]?.children || [];
-  children.forEach(childId => includeDescendants(source, childId, target));
-};
-
-const filteredTreeData = computed<Record<string, FileNode>>(() => {
-  if (!debouncedSearch.value.trim()) {
-    return treeData.value;
-  }
-
-  const query = debouncedSearch.value.trim().toLowerCase();
-  const includedNodeIds = new Set<string>();
-  const source = treeData.value;
-
-  Object.values(source).forEach(node => {
-    if (!node.name.toLowerCase().includes(query)) {
-      return;
-    }
-
-    includeDescendants(source, node.id, includedNodeIds);
-
-    let currentParentId = node.parentId;
-    while (currentParentId) {
-      includedNodeIds.add(currentParentId);
-      currentParentId = source[currentParentId]?.parentId || null;
-    }
-  });
-
-  const filtered: Record<string, FileNode> = {};
-
-  includedNodeIds.forEach(nodeId => {
-    const node = source[nodeId];
-    if (!node) {
-      return;
-    }
-
-    filtered[nodeId] = {
-      ...node,
-      children: (node.children || []).filter(childId =>
-        includedNodeIds.has(childId)
-      ),
-    };
-  });
-
-  return filtered;
+  filteredHistoryTreeData,
+  historySectionId,
+  historyStorageKey,
+  isExpandedAll,
+  onClearContextMenu,
+  onClickNode,
+  onCreateThread,
+  onDeleteHistory,
+  onToggleCollapseHistory,
+  onTreeContextMenu,
+  searchInput,
+} = useManagementAgentHistoryTree({
+  focusNode: nodeId => treePanelRef.value?.focusItem(nodeId),
+  collapseAll: () => treePanelRef.value?.collapseAll(),
+  expandAll: () => treePanelRef.value?.expandAll(),
+  isExpandedAll: computed(() => treePanelRef.value?.isExpandedAll ?? false),
 });
 
-const validateRename = (_nodeId: string, _newName: string): true => true;
+const isTreeCollapsed = computed(() => !isExpandedAll.value);
 
-const isTreeCollapsed = computed(() =>
-  fileTreeRef.value ? !fileTreeRef.value.isExpandedAll : false
-);
-
-const handleToggleTree = () => {
-  if (isTreeCollapsed.value) {
-    fileTreeRef.value?.expandAll();
-    return;
-  }
-
-  fileTreeRef.value?.collapseAll();
-};
-
-const openAgentTab = async (historyId?: string) => {
-  if (!workspaceId.value || !connectionId.value) return;
-
-  const tabId = 'agent-workspace';
-  const tabName = 'AI Agent';
-
-  await tabViewStore.openTab({
-    id: tabId,
-    workspaceId: workspaceId.value,
-    connectionId: connectionId.value,
-    schemaId: wsStateStore.schemaId || '',
-    name: tabName,
-    icon: 'hugeicons:robotic',
-    type: TabViewType.AgentChat,
-    routeName: 'workspaceId-connectionId-agent-tabViewId', // Dedicated agent route
-    routeParams: {
-      tabViewId: tabId,
-      connectionId: connectionId.value,
-    },
-    metadata: {
-      type: TabViewType.AgentChat,
-      historyId,
-    },
-  });
-};
-
-watch(
-  () => selectedNodeId.value,
-  async nodeId => {
-    await nextTick();
-    if (!nodeId || !filteredTreeData.value[nodeId]) {
-      return;
-    }
-
-    fileTreeRef.value?.focusItem(nodeId);
-  },
-  { flush: 'post', immediate: true }
-);
+const isHistoryEmpty = computed(() => {
+  const sectionNode = filteredHistoryTreeData.value[historySectionId];
+  return !sectionNode || (sectionNode.children?.length ?? 0) === 0;
+});
 </script>
 
 <template>
   <div class="flex h-full w-full flex-col overflow-hidden">
     <ManagementSidebarHeader
       v-model:search="searchInput"
-      title="Agent Control"
+      title="Chat History"
       :show-search="true"
       :show-connection="true"
       :show-schema="true"
       :workspace-id="workspaceId"
-      search-placeholder="Search controls..."
+      search-placeholder="Search threads..."
     >
       <template #actions>
         <Tooltip>
           <TooltipTrigger as-child>
-            <Button
-              size="iconSm"
-              variant="ghost"
-              @click="
-                () => {
-                  startNewChat();
-                  openAgentTab();
-                }
-              "
-            >
-              <Icon name="lucide:square-pen" class="size-4" />
+            <Button size="iconSm" variant="ghost" @click="onCreateThread">
+              <Icon name="hugeicons:quill-write-02" class="size-4" />
             </Button>
           </TooltipTrigger>
           <TooltipContent> New thread </TooltipContent>
@@ -172,7 +72,11 @@ watch(
 
         <Tooltip>
           <TooltipTrigger as-child>
-            <Button size="iconSm" variant="ghost" @click="handleToggleTree">
+            <Button
+              size="iconSm"
+              variant="ghost"
+              @click="onToggleCollapseHistory"
+            >
               <Icon
                 :name="
                   isTreeCollapsed
@@ -190,75 +94,32 @@ watch(
       </template>
     </ManagementSidebarHeader>
 
-    <div class="border-b px-2 pb-2">
-      <div class="grid grid-cols-2 gap-2">
-        <div class="rounded-xl border bg-muted/30 px-2.5 py-2">
-          <p
-            class="text-[11px] uppercase tracking-[0.18em] text-muted-foreground"
-          >
-            Rules
-          </p>
-          <p class="mt-1 text-sm font-medium">{{ sectionCounts.rules }}</p>
-        </div>
-        <div class="rounded-xl border bg-muted/30 px-2.5 py-2">
-          <p
-            class="text-[11px] uppercase tracking-[0.18em] text-muted-foreground"
-          >
-            Skills
-          </p>
-          <p class="mt-1 text-sm font-medium">{{ sectionCounts.skills }}</p>
-        </div>
-        <div class="rounded-xl border bg-muted/30 px-2.5 py-2">
-          <p
-            class="text-[11px] uppercase tracking-[0.18em] text-muted-foreground"
-          >
-            MCP
-          </p>
-          <p class="mt-1 text-sm font-medium">{{ sectionCounts.mcp }}</p>
-        </div>
-        <div class="rounded-xl border bg-muted/30 px-2.5 py-2">
-          <p
-            class="text-[11px] uppercase tracking-[0.18em] text-muted-foreground"
-          >
-            History
-          </p>
-          <p class="mt-1 text-sm font-medium">{{ sectionCounts.history }}</p>
-        </div>
-      </div>
-    </div>
+    <div class="flex flex-1 flex-col overflow-hidden">
+      <div class="flex-1 overflow-y-auto">
+        <AgentEmptyState
+          v-if="isHistoryEmpty"
+          title="No chat history yet"
+          description="Start a new thread to ask about schema design, query plans, reports, or safe mutations."
+          action-label="Start chat"
+          icon="hugeicons:search-remove"
+          @action="onCreateThread"
+        />
 
-    <div class="flex-1 overflow-hidden">
-      <div
-        v-if="Object.keys(filteredTreeData).length === 0"
-        class="flex h-full flex-col items-center justify-center px-4 text-center text-muted-foreground"
-      >
-        <Icon name="lucide:search-x" class="mb-3 size-8 opacity-50" />
-        <p class="text-sm">No matching controls</p>
-        <p class="mt-1 text-xs">
-          Try searching for a section, rule, skill, or saved thread.
-        </p>
+        <ManagementAgentHistoryTree
+          v-else
+          ref="treePanelRef"
+          :context-menu-items="contextMenuItems"
+          :history-section-id="historySectionId"
+          :storage-key="historyStorageKey"
+          :tree-data="filteredHistoryTreeData"
+          :init-expanded-ids="defaultExpandedNodeIds"
+          @click-node="onClickNode"
+          @context-node="onTreeContextMenu"
+          @clear-context-menu="onClearContextMenu"
+          @delete-history="onDeleteHistory"
+          @new-thread="onCreateThread"
+        />
       </div>
-
-      <FileTree
-        v-else
-        ref="fileTreeRef"
-        class="pt-1"
-        storage-key="agent-control-tree"
-        :initial-data="filteredTreeData"
-        :init-expanded-ids="defaultExpandedNodeIds"
-        :allow-drag-and-drop="false"
-        :allow-sort="false"
-        :validate-rename="validateRename"
-        @click="
-          nodeId => {
-            selectNode(nodeId);
-            // If it's a history node, open tab with it
-            if (nodeId.startsWith('agent-history-')) {
-              openAgentTab(nodeId.replace('agent-history-', ''));
-            }
-          }
-        "
-      />
     </div>
   </div>
 </template>

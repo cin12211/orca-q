@@ -1,23 +1,12 @@
 import type { UIMessage, UITool } from 'ai';
+import type { AgentCommandOptionId } from '../constants/command-options';
+import type { Schema } from '~/core/stores';
 import type { TableDetails } from '~/core/types';
-
-export type AgentControlSection =
-  | 'mcp-config'
-  | 'rules'
-  | 'skills'
-  | 'chat-history';
-
-export type AgentControlNodeKind =
-  | 'root'
-  | 'section'
-  | 'mcp-file'
-  | 'rule-file'
-  | 'skill-file'
-  | 'history-entry';
 
 export const DB_AGENT_TOOL_NAMES = [
   'generate_query',
   'render_table',
+  'visualize_table',
   'explain_query',
   'detect_anomaly',
   'describe_table',
@@ -25,6 +14,7 @@ export const DB_AGENT_TOOL_NAMES = [
 
 export type DbAgentToolName = (typeof DB_AGENT_TOOL_NAMES)[number];
 export type DbAgentDialect = 'postgresql' | 'mysql' | 'sqlite';
+export type AgentChartType = 'bar' | 'line' | 'pie' | 'scatter';
 
 export interface AgentGenerateQueryInput {
   prompt: string;
@@ -43,14 +33,37 @@ export interface AgentRenderTableInput {
   limit?: number;
 }
 
+export interface AgentVisualizeTableInput {
+  sql: string;
+  chartType: AgentChartType;
+}
+
 export interface AgentTableColumn {
   name: string;
   type: string;
 }
 
 export interface AgentRenderTableResult {
+  sql?: string;
   columns: AgentTableColumn[];
   rows: Record<string, unknown>[];
+  rowCount: number;
+  truncated: boolean;
+}
+
+export interface AgentVisualizePoint {
+  label: string;
+  x: string | number | null;
+  y: number;
+}
+
+export interface AgentVisualizeTableResult {
+  sql: string;
+  chartType: AgentChartType;
+  xField?: string;
+  yField?: string;
+  labelField?: string;
+  points: AgentVisualizePoint[];
   rowCount: number;
   truncated: boolean;
 }
@@ -117,6 +130,7 @@ export interface AgentDescribeTableResult {
 export interface AgentToolInputMap {
   generate_query: AgentGenerateQueryInput;
   render_table: AgentRenderTableInput;
+  visualize_table: AgentVisualizeTableInput;
   explain_query: AgentExplainQueryInput;
   detect_anomaly: AgentDetectAnomalyInput;
   describe_table: AgentDescribeTableInput;
@@ -125,28 +139,26 @@ export interface AgentToolInputMap {
 export interface AgentToolResultMap {
   generate_query: AgentGenerateQueryResult;
   render_table: AgentRenderTableResult;
+  visualize_table: AgentVisualizeTableResult;
   explain_query: AgentExplainQueryResult;
   detect_anomaly: AgentDetectAnomalyResult;
   describe_table: AgentDescribeTableResult;
 }
 
-export interface DbAgentSchemaSnapshot {
-  schemaName: string;
-  tables: string[];
-  tableDetails?: TableDetails | null;
-}
+export type DbAgentSchemaSnapshot = Schema;
 
 export interface DbAgentRequestBody {
   provider: string;
   model: string;
   apiKey: string;
   messages: DbAgentMessage[];
+  selectedCommandOptions?: AgentCommandOptionId[];
   systemPrompt?: string;
   dbConnectionString?: string;
+  dbType?: 'postgres' | 'mysql';
   dialect?: DbAgentDialect;
-  schemaName?: string;
-  schemaContext?: string;
   schemaSnapshot?: DbAgentSchemaSnapshot;
+  schemaSnapshots?: DbAgentSchemaSnapshot[];
   sendReasoning?: boolean;
 }
 
@@ -207,6 +219,15 @@ export interface AgentApprovalBlock<
   approvalId: string;
 }
 
+export interface AgentSourceBlock {
+  kind: 'source';
+  sourceId: string;
+  url?: string;
+  title?: string;
+  mediaType?: string;
+  filename?: string;
+}
+
 export type AgentBlock =
   | AgentTextBlock
   | AgentCodeBlock
@@ -214,7 +235,8 @@ export type AgentBlock =
   | AgentLoadingBlock
   | AgentErrorBlock
   | AgentToolBlock
-  | AgentApprovalBlock;
+  | AgentApprovalBlock
+  | AgentSourceBlock;
 
 export interface AgentRenderedMessage {
   id: string;
@@ -240,14 +262,5 @@ export interface AgentHistorySession {
   model: string;
   showReasoning: boolean;
   messages: DbAgentMessage[];
-}
-
-export interface AgentSelectedContext {
-  id: string;
-  section: AgentControlSection;
-  kind: AgentControlNodeKind;
-  title: string;
-  description: string;
-  badge?: string;
-  promptSuggestion?: string;
+  workspaceId?: string;
 }

@@ -1,26 +1,23 @@
 <script setup lang="ts">
 import { useDebounceFn } from '@vueuse/core';
-import { nextTick, ref, computed, watch, onMounted } from 'vue';
-import { Tooltip, TooltipContent, TooltipTrigger } from '#components';
-import ModelSelector from '~/components/modules/selectors/ModelSelector.vue';
+import { computed, nextTick, onMounted, ref, watch } from 'vue';
 import Badge from '~/components/ui/badge/Badge.vue';
-import {
-  useAppLayoutStore,
-  type AIProvider,
-} from '~/core/stores/appLayoutStore';
+import { type AIProvider } from '~/core/stores/appLayoutStore';
 import AgentChatFooter from './components/AgentChatFooter.vue';
 import AgentMessageBubble from './components/AgentMessageBubble.vue';
 import AgentSetupCard from './components/AgentSetupCard.vue';
+import AgentTextBloom from './components/AgentTextBloom.vue';
+import AgentWelcomePanel from './components/AgentWelcomePanel.vue';
+import type { AgentCommandOptionId } from './constants/command-options';
 import { useAgentChat } from './hooks/useDbAgentChat';
 import { useAgentRenderer } from './hooks/useDbAgentRenderer';
 import { useAgentWorkspace } from './hooks/useDbAgentWorkspace';
 import type { DbAgentMessage } from './types';
 
 const {
-  selectedContext,
-  sectionCounts,
   activeHistory,
   activeHistoryId,
+  histories,
   showReasoning,
   saveConversation,
   startNewChat,
@@ -36,12 +33,13 @@ const {
   currentProvider,
   sendMessage,
   addToolApprovalResponse,
-  schemaStats,
+  stopStream,
 } = useAgentChat(showReasoning);
 
 const { renderedMessages, getComponent } = useAgentRenderer(messages);
 
 const messageInput = ref('');
+const selectedCommandOptions = ref<AgentCommandOptionId[]>([]);
 const messagesContainer = ref<HTMLElement | null>(null);
 const footerRef = ref<InstanceType<typeof AgentChatFooter> | null>(null);
 const isHydratingHistory = ref(false);
@@ -88,8 +86,10 @@ const handleSubmit = async (event?: Event) => {
   }
 
   const nextMessage = messageInput.value.trim();
+  const nextSelectedCommandOptions = [...selectedCommandOptions.value];
   messageInput.value = '';
-  sendMessage(nextMessage);
+  selectedCommandOptions.value = [];
+  sendMessage(nextMessage, nextSelectedCommandOptions);
 
   await nextTick();
   scrollToBottom();
@@ -108,16 +108,13 @@ const handleQuickAction = async (prompt: string) => {
   await handleSubmit();
 };
 
-const handleUseContextPrompt = () => {
-  if (!selectedContext.value.promptSuggestion) {
-    return;
-  }
-
-  messageInput.value = selectedContext.value.promptSuggestion;
+const handleStop = () => {
+  stopStream();
 };
 
 const handleNewThread = () => {
   startNewChat();
+  selectedCommandOptions.value = [];
   replaceMessages([]);
 };
 
@@ -223,30 +220,11 @@ watch(
 );
 
 const promptCards = computed(() => {
-  const contextualPrompt = selectedContext.value.promptSuggestion;
-
   return [
-    contextualPrompt,
     'Summarize the current schema and highlight the tables that matter most.',
     'Suggest safe next steps for debugging a slow database query.',
     'Write a query plan for the report I need before generating SQL.',
   ].filter((item): item is string => !!item);
-});
-
-const schemaBadge = computed(() => {
-  if (!schemaStats.value.tableCount) {
-    return 'No schema context';
-  }
-
-  return `${schemaStats.value.name} · ${schemaStats.value.tableCount} tables`;
-});
-
-const historyBadge = computed(() => {
-  if (!activeHistoryId.value || !activeHistory.value) {
-    return 'New thread';
-  }
-
-  return `Resuming ${activeHistory.value.title}`;
 });
 </script>
 
@@ -264,14 +242,10 @@ const historyBadge = computed(() => {
           <div
             class="flex flex-wrap items-center gap-2 text-xs text-muted-foreground"
           >
-            <Badge variant="outline">
-              {{ schemaBadge }}
+            <Badge variant="outline"> {{ histories.length }} threads </Badge>
+            <Badge v-if="activeHistoryId" variant="outline">
+              Resumed thread
             </Badge>
-            <Badge variant="outline">
-              {{ historyBadge }}
-            </Badge>
-            <Badge variant="outline"> {{ sectionCounts.rules }} rules </Badge>
-            <Badge variant="outline"> {{ sectionCounts.skills }} skills </Badge>
           </div>
 
           <div class="flex shrink-0 items-center gap-2">
@@ -298,83 +272,54 @@ const historyBadge = computed(() => {
           />
 
           <template v-else-if="renderedMessages.length === 0">
-            <div class="mx-auto my-auto w-full max-w-3xl py-8 text-center">
-              <div
-                class="mx-auto mb-5 flex size-16 items-center justify-center rounded-[1.75rem] border border-border/70 bg-background/85 shadow-sm"
-              >
-                <Icon name="hugeicons:ai-chat-02" class="size-7 text-primary" />
-              </div>
-
-              <h2 class="text-3xl font-semibold tracking-tight">
-                Ask the agent anything about this database
-              </h2>
-              <p
-                class="mx-auto mt-3 max-w-2xl text-sm leading-7 text-muted-foreground"
-              >
-                Start from a question, a report idea, or a workflow from the
-                workspace tree. The agent keeps schema context in view and can
-                continue old conversations from chat history.
-              </p>
-
-              <div class="mt-8 grid gap-3 sm:grid-cols-2">
-                <Button
-                  v-for="prompt in promptCards"
-                  :key="prompt"
-                  variant="outline"
-                  class="h-auto min-h-16 justify-start rounded-2xl px-4 py-3 text-left whitespace-normal"
-                  @click="handleQuickAction(prompt)"
-                >
-                  {{ prompt }}
-                </Button>
-              </div>
-            </div>
+            <AgentWelcomePanel
+              :prompt-cards="promptCards"
+              :thread-count="histories.length"
+              @prompt="handleQuickAction"
+            />
           </template>
 
-          <div v-else class="w-full space-y-4 pb-6">
-            <AgentMessageBubble
-              v-for="message in renderedMessages"
-              :key="message.id"
-              :message="message"
-              :get-tool-component="getComponent"
-              :show-reasoning="showReasoning"
-              :is-streaming="
-                isLoading &&
-                message.role === 'assistant' &&
-                message.id === renderedMessages.at(-1)?.id
-              "
-              @approval="handleApproval"
-              @edit="handleEditMessage"
-            />
+          <div v-else class="w-full pb-6">
+            <div class="space-y-4">
+              <AgentMessageBubble
+                v-for="message in renderedMessages"
+                :key="message.id"
+                :message="message"
+                :get-tool-component="getComponent"
+                :show-reasoning="showReasoning"
+                :is-streaming="
+                  isLoading &&
+                  message.role === 'assistant' &&
+                  message.id === renderedMessages.at(-1)?.id
+                "
+                @approval="handleApproval"
+                @edit="handleEditMessage"
+              />
+            </div>
 
-            <!-- Thinking indicator -->
             <div
-              class="flex items-center gap-1 py-2"
               v-if="
                 isLoading &&
                 (!renderedMessages.at(-1)?.blocks ||
                   renderedMessages.at(-1)?.blocks?.length === 0 ||
                   renderedMessages.at(-1)?.role === 'user')
               "
+              class="flex items-center gap-1 py-2"
             >
               <div
-                class="flex size-7 shrink-0 items-center justify-center rounded-2xl border bg-background/80 text-primary shadow-sm"
+                class="flex size-7 shrink-0 items-center justify-center rounded-2xl border shadow-sm agent-thinking-animation"
               >
                 <img src="public/logo.png" class="w-7 rounded-full" />
               </div>
 
-              <div
-                class="flex items-center gap-1.5 text-xs font-medium text-muted-foreground"
-              >
-                <span>Thinking</span>
-                <span class="inline-flex gap-0.5">
-                  <span class="animate-bounce [animation-delay:0ms]">.</span>
-                  <span class="animate-bounce [animation-delay:150ms]">.</span>
-                  <span class="animate-bounce [animation-delay:300ms]">.</span>
-                </span>
-              </div>
+              <AgentTextBloom
+                label="Thinking"
+                class="text-xs font-medium text-muted-foreground"
+                bloom-color="#64748b"
+                :bloom-intensity="1.08"
+              />
             </div>
 
-            <!-- Error block -->
             <div
               v-if="error"
               class="mt-4 overflow-hidden rounded-2xl border border-destructive/15 bg-destructive/5 backdrop-blur-sm"
@@ -409,11 +354,13 @@ const historyBadge = computed(() => {
         v-model="messageInput"
         v-model:provider="selectedProvider"
         v-model:model="selectedModel"
+        v-model:selected-command-options="selectedCommandOptions"
         :is-loading="isLoading"
         :has-api-key="hasApiKey"
         :show-reasoning="showReasoning"
         :show-scroll-button="showScrollButton"
         @submit="handleSubmit"
+        @stop="handleStop"
         @keydown="handleKeyDown"
         @update:show-reasoning="showReasoning = $event"
         @scroll-to-bottom="scrollToBottom(true)"

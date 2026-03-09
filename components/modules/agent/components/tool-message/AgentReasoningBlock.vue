@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { toRef } from 'vue';
 import { useSmoothStream } from '~/core/composables/useSmoothStream';
+import AgentTextBloom from '../AgentTextBloom.vue';
 
 const props = defineProps<{
   content: string;
@@ -69,13 +70,15 @@ function onLeave(el: Element) {
         :class="{ 'animate-pulse text-primary': isStreaming }"
       />
 
-      <span class="inline-flex items-center gap-0.5 text-primary">
+      <AgentTextBloom
+        v-if="isStreaming"
+        label="Reasoning"
+        class="text-xs font-medium text-primary"
+        bloom-color="#4f46e5"
+        :bloom-intensity="1.06"
+      />
+      <span v-else class="inline-flex items-center gap-0.5 text-primary">
         Reasoning
-        <span class="inline-flex gap-0.5" v-if="isStreaming">
-          <span class="animate-bounce [animation-delay:0ms]">.</span>
-          <span class="animate-bounce [animation-delay:150ms]">.</span>
-          <span class="animate-bounce [animation-delay:300ms]">.</span>
-        </span>
       </span>
 
       <Icon

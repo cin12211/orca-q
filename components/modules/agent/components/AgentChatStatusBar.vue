@@ -14,13 +14,14 @@ const emit = defineEmits<{
   <div
     class="flex items-center justify-between px-4 mt-2 text-[12px] text-muted-foreground relative z-30"
   >
-    <div class="flex items-center gap-6">
-      <div class="flex items-center gap-1.5">
+    <div class="flex items-center gap-4">
+      <div class="flex items-center gap-1">
         <Icon name="hugeicons:ai-brain-05" class="size-3.5 stroke-[1.5]" />
         <span>Reasoning</span>
         <Switch
           :model-value="showReasoning"
           aria-label="Toggle reasoning"
+          class="cursor-pointer"
           @update:model-value="emit('update:showReasoning', !!$event)"
         />
       </div>
@@ -33,7 +34,9 @@ const emit = defineEmits<{
 
     <div class="flex items-center gap-1.5">
       <Icon
-        :name="isLoading ? 'lucide:loader-circle' : 'lucide:circle-check-big'"
+        :name="
+          isLoading ? 'hugeicons:loading-03' : 'hugeicons:checkmark-circle-01'
+        "
         :class="['size-3.5 stroke-[1.5]', isLoading ? 'animate-spin' : '']"
       />
       <span>{{ isLoading ? 'Streaming' : 'Ready' }}</span>

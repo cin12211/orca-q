@@ -50,15 +50,17 @@ const componentProps = computed(() => {
 </script>
 
 <template>
-  <div class="h-full w-full">
-    <component
-      v-if="activeComponent"
-      :is="activeComponent"
-      v-bind="componentProps"
-    />
-    <Empty v-else>
-      <EmptyTitle> Tab view not found </EmptyTitle>
-      <EmptyDescription> Close this tab and try again </EmptyDescription>
-    </Empty>
+  <div class="h-full w-full flex">
+    <div class="flex-1 min-w-0 w-full">
+      <component
+        v-if="activeComponent"
+        :is="activeComponent"
+        v-bind="componentProps"
+      />
+      <Empty v-else>
+        <EmptyTitle> Tab view not found </EmptyTitle>
+        <EmptyDescription> Close this tab and try again </EmptyDescription>
+      </Empty>
+    </div>
   </div>
 </template>

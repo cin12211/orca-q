@@ -47,6 +47,7 @@
     "@codemirror/autocomplete": "^6.18.6",
     "@codemirror/commands": "^6.8.1",
     "@codemirror/lang-json": "^6.0.1",
+    "@codemirror/lang-markdown": "^6.5.0",
     "@codemirror/lang-sql": "^6.8.0",
     "@codemirror/language": "^6.11.0",
     "@codemirror/lint": "^6.8.5",

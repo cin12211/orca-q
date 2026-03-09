@@ -9,6 +9,7 @@ import {
   BlockMessageLoading,
   BlockMessageError,
   BlockMessageTool,
+  BlockMessageSource,
 } from './block-message';
 import { AgentApprovalBlock, AgentReasoningBlock } from './tool-message';
 
@@ -89,7 +90,7 @@ const messageText = computed(() => {
           :class="[
             'overflow-hidden text-xs',
             isUserMessage
-              ? 'rounded-xl bg-[#f4f4f4] text-foreground p-2 px-3 shadow-none whitespace-pre-wrap ml-auto'
+              ? 'rounded-xl bg-gray-100 text-foreground p-2 px-3 shadow-none whitespace-pre-wrap ml-auto'
               : 'rounded-xl border-none bg-transparent py-2 shadow-none flex flex-col gap-1.5',
           ]"
         >
@@ -148,6 +149,15 @@ const messageText = computed(() => {
             :approval-id="block.approvalId"
             @approve="emit('approval', $event, true)"
             @deny="emit('approval', $event, false)"
+          />
+
+          <BlockMessageSource
+            v-else-if="block.kind === 'source'"
+            :source-id="block.sourceId"
+            :url="block.url"
+            :title="block.title"
+            :media-type="block.mediaType"
+            :filename="block.filename"
           />
         </div>
 

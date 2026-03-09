@@ -22,36 +22,33 @@ const preview = computed(() => {
 </script>
 
 <template>
-  <div
-    class="space-y-4 rounded-[1.35rem] border border-amber-300/30 bg-amber-50 p-4 text-amber-950 dark:border-amber-500/20 dark:bg-amber-950/30 dark:text-amber-100"
-  >
-    <div class="space-y-1">
-      <div class="text-[11px] font-medium uppercase tracking-[0.18em]">
-        Approval Required
-      </div>
-      <p class="text-sm leading-6">
-        This action needs confirmation before execution.
+  <div class="space-y-2">
+    <div class="">
+      <div class="text-xs font-medium">Approval Required</div>
+      <p class="text-xs text-muted-foreground">
+        *This action needs confirmation before execution.
       </p>
     </div>
 
-    <pre
-      class="overflow-x-auto rounded-2xl border border-amber-300/30 bg-background/70 px-3 py-3 text-[12px] leading-6"
-      >{{ preview }}</pre
-    >
+    <BlockMessageCode
+      :id="props.approvalId"
+      :code="preview || ''"
+      language="sql"
+    />
 
-    <div class="flex flex-wrap justify-end gap-2">
+    <div class="flex flex-wrap justify-start gap-2">
       <Button
         variant="outline"
-        size="sm"
-        class="rounded-xl"
+        size="xs"
+        class="rounded-xl font-normal"
         @click="emit('deny', approvalId)"
       >
         Cancel
       </Button>
 
       <Button
-        size="sm"
-        class="rounded-xl bg-amber-600 text-white hover:bg-amber-700"
+        size="xs"
+        class="rounded-xl font-normal"
         @click="emit('approve', approvalId)"
       >
         Confirm

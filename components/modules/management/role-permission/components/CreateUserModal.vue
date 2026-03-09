@@ -606,7 +606,7 @@ const stepTitles = ['User Info', 'Database', 'Schemas', 'Objects', 'Review'];
             class="flex items-center justify-center gap-2 py-8 text-muted-foreground"
           >
             <Icon
-              name="lucide:loader"
+              name="hugeicons:loading-03"
               class="size-5 animate-spin text-muted-foreground"
             />
             <p class="text-sm">Loading databases...</p>
@@ -634,7 +634,7 @@ const stepTitles = ['User Info', 'Database', 'Schemas', 'Objects', 'Review'];
             class="flex items-center justify-center gap-2 py-8 text-muted-foreground"
           >
             <Icon
-              name="lucide:loader"
+              name="hugeicons:loading-03"
               class="size-5 animate-spin text-muted-foreground"
             />
             <p class="text-sm">Loading schemas...</p>
@@ -953,7 +953,7 @@ const stepTitles = ['User Info', 'Database', 'Schemas', 'Objects', 'Review'];
           >
             <Icon
               v-if="loading"
-              name="lucide:loader"
+              name="hugeicons:loading-03"
               class="size-4 mr-2 animate-spin"
             />
             Create User

@@ -9,8 +9,6 @@ import {
 type ChatTransportBody = object | (() => object | undefined) | undefined;
 
 interface UseAiChatOptions<UI_MESSAGE extends UIMessage = UIMessage> {
-  context?: Ref<string | undefined>;
-  buildSystemPrompt?: (context?: string) => string;
   api?: string;
   body?: ChatTransportBody;
   sendAutomaticallyWhen?: ChatInit<UI_MESSAGE>['sendAutomaticallyWhen'];
@@ -31,13 +29,11 @@ const resolveTransportBody = (body: ChatTransportBody) => {
  * NOTE: Provider/model selection is LOCAL to this instance - not synced back to global config
  */
 export function useAiChat<UI_MESSAGE extends UIMessage = UIMessage>(
-  input?: Ref<string | undefined> | UseAiChatOptions<UI_MESSAGE>
+  options?: UseAiChatOptions<UI_MESSAGE>
 ) {
   const appLayoutStore = useAppLayoutStore();
 
-  const options: UseAiChatOptions<UI_MESSAGE> = isRef(input)
-    ? { context: input }
-    : (input ?? {});
+  const resolvedOptions: UseAiChatOptions<UI_MESSAGE> = options ?? {};
 
   // Provider and model selection (LOCAL state, initialized from global settings)
   // Changes here do NOT sync back to global config
@@ -68,47 +64,22 @@ export function useAiChat<UI_MESSAGE extends UIMessage = UIMessage>(
     return !!currentApiKey.value;
   });
 
-  // Build system prompt with SQL context
-  const buildDefaultSystemPrompt = (sql?: string) => {
-    return `You are a helpful SQL assistant for database developers. You help analyze, explain, debug, and optimize SQL queries.
-
-${
-  sql
-    ? `The user is currently working with this SQL query:
-
-\`\`\`sql
-${sql}
-\`\`\`
-
-Please provide helpful insights, explanations, or suggestions based on the user's questions about this query.`
-    : 'The user may ask you questions about SQL queries, database concepts, or need help writing queries.'
-}
-
-Be concise but thorough. Use markdown formatting for code blocks and lists when appropriate.`;
-  };
-
-  const buildSystemPrompt = () => {
-    const context = options.context?.value;
-    return (options.buildSystemPrompt ?? buildDefaultSystemPrompt)(context);
-  };
-
   // Create Chat instance with dynamic transport configuration
   const chat = new Chat<UI_MESSAGE>({
     transport: new DefaultChatTransport({
-      api: options.api ?? '/api/ai/chat',
+      api: resolvedOptions.api ?? '/api/ai/chat',
       body: () => {
-        const extraBody = resolveTransportBody(options.body);
+        const extraBody = resolveTransportBody(resolvedOptions.body);
 
         return {
           ...extraBody,
           provider: selectedProvider.value,
           model: selectedModel.value,
           apiKey: currentApiKey.value,
-          systemPrompt: buildSystemPrompt(),
         };
       },
     }),
-    sendAutomaticallyWhen: options.sendAutomaticallyWhen,
+    sendAutomaticallyWhen: resolvedOptions.sendAutomaticallyWhen,
   });
 
   // Expose chat state as computed refs for reactivity

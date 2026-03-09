@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 import { Icon } from '#components';
 import type { AIProvider } from '~/core/stores/appLayoutStore';
+import type { AgentCommandOptionId } from '../constants/command-options';
 import AgentChatInput from './AgentChatInput.vue';
 import AgentChatStatusBar from './AgentChatStatusBar.vue';
 
@@ -11,6 +12,7 @@ const props = defineProps<{
   hasApiKey: boolean;
   provider: AIProvider;
   model: string;
+  selectedCommandOptions: AgentCommandOptionId[];
   showReasoning: boolean;
   showScrollButton?: boolean;
 }>();
@@ -19,8 +21,10 @@ const emit = defineEmits<{
   (e: 'update:modelValue', value: string): void;
   (e: 'update:provider', value: AIProvider): void;
   (e: 'update:model', value: string): void;
+  (e: 'update:selectedCommandOptions', value: AgentCommandOptionId[]): void;
   (e: 'update:showReasoning', value: boolean): void;
   (e: 'submit', event?: Event): void;
+  (e: 'stop'): void;
   (e: 'keydown', event: KeyboardEvent): void;
   (e: 'scrollToBottom'): void;
 }>();
@@ -38,6 +42,11 @@ const internalProvider = computed({
 const internalModel = computed({
   get: () => props.model,
   set: val => emit('update:model', val),
+});
+
+const internalSelectedCommandOptions = computed({
+  get: () => props.selectedCommandOptions,
+  set: val => emit('update:selectedCommandOptions', val),
 });
 
 const modelLabel = computed(() => `${props.provider} / ${props.model}`);
@@ -84,9 +93,11 @@ defineExpose({ focusInput });
         v-model="internalModelValue"
         v-model:provider="internalProvider"
         v-model:model="internalModel"
+        v-model:selected-command-options="internalSelectedCommandOptions"
         :is-loading="isLoading"
         :has-api-key="hasApiKey"
         @submit="emit('submit', $event)"
+        @stop="emit('stop')"
         @keydown="emit('keydown', $event)"
       />
 

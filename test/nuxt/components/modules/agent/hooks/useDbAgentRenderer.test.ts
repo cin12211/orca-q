@@ -87,7 +87,7 @@ describe('useAgentRenderer', () => {
         kind: 'loading',
         toolName: 'generate_query',
         toolCallId: 'tool-1',
-        label: 'Dang tao query...',
+        label: 'Generating query...',
       },
       {
         kind: 'approval',
@@ -150,6 +150,74 @@ describe('useAgentRenderer', () => {
         kind: 'text',
         content: 'Working through the result',
         isStreaming: true,
+      },
+    ]);
+  });
+
+  it('preserves reasoning order around tool blocks and merges only adjacent reasoning parts', () => {
+    const messages = ref<DbAgentMessage[]>([
+      {
+        id: 'assistant-4',
+        role: 'assistant',
+        parts: [
+          {
+            type: 'reasoning',
+            text: 'Inspecting schema.',
+            state: 'done',
+          },
+          {
+            type: 'reasoning',
+            text: 'Checking relationships.',
+            state: 'done',
+          },
+          {
+            type: 'tool-generate_query',
+            state: 'input-available',
+            toolCallId: 'tool-4',
+            input: {
+              prompt: 'Count users',
+              schema: 'Schema: public',
+              dialect: 'postgresql',
+            },
+          },
+          {
+            type: 'reasoning',
+            text: 'Preparing a concise answer.',
+            state: 'streaming',
+          },
+          {
+            type: 'text',
+            text: 'Here is the current plan.',
+            state: 'done',
+          },
+        ],
+      } as DbAgentMessage,
+    ]);
+
+    const { renderedMessages } = useAgentRenderer(
+      computed(() => messages.value)
+    );
+
+    expect(renderedMessages.value[0]?.blocks).toEqual([
+      {
+        kind: 'reasoning',
+        content: 'Inspecting schema.\n\nChecking relationships.',
+        isStreaming: false,
+      },
+      {
+        kind: 'loading',
+        toolName: 'generate_query',
+        toolCallId: 'tool-4',
+        label: 'Generating query...',
+      },
+      {
+        kind: 'reasoning',
+        content: 'Preparing a concise answer.',
+        isStreaming: true,
+      },
+      {
+        kind: 'text',
+        content: 'Here is the current plan.',
       },
     ]);
   });

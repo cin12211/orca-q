@@ -2,6 +2,7 @@
 import DynamicTable from '~/components/base/dynamic-table/DynamicTable.vue';
 import type { MappedRawColumn } from '~/components/modules/raw-query/interfaces';
 import type { AgentRenderTableResult } from '../../types';
+import AgentToolSqlPreview from './AgentToolSqlPreview.vue';
 
 const props = defineProps<{
   data: AgentRenderTableResult;
@@ -21,6 +22,9 @@ const mappedColumns = computed<MappedRawColumn[]>(() =>
 );
 
 const rows = computed(() => props.data.rows ?? []);
+const sqlPreviewId = computed(
+  () => `agent-render-table-${props.data.sql || ''}`
+);
 
 const tableHeight = computed(() => {
   const ROW_HEIGHT = 32;
@@ -34,6 +38,13 @@ const tableHeight = computed(() => {
 </script>
 
 <template>
+  <AgentToolSqlPreview
+    v-if="data.sql"
+    :id="sqlPreviewId"
+    :sql="data.sql"
+    label="View SQL"
+  />
+
   <div
     v-if="data.truncated"
     class="text-xs text-muted-foreground border-l-2 pl-2"
@@ -42,7 +53,7 @@ const tableHeight = computed(() => {
   </div>
 
   <div
-    class="overflow-hidden rounded-xl border max-h-96"
+    class="overflow-hidden rounded-lg border max-h-96"
     :style="{ height: `${tableHeight}px` }"
   >
     <DynamicTable

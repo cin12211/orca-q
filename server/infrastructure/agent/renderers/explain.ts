@@ -1,4 +1,4 @@
-import type { QueryPlan } from './types';
+import type { QueryPlan } from '../core/types';
 
 const getPlanString = (node: QueryPlan, key: string) => {
   const value = node[key];

@@ -3,8 +3,9 @@ import type {
   AgentDescribeColumn,
   DbAgentSchemaSnapshot,
 } from '~/components/modules/agent/types';
-import { quoteIdentifier } from './sql';
-import type { DatabaseAdapter } from './types';
+import { FunctionSchemaEnum, ViewSchemaEnum } from '~/core/types';
+import { quoteIdentifier } from '../core/sql';
+import type { DatabaseAdapter } from '../core/types';
 
 const NUMERIC_COLUMN_PATTERN =
   /(smallint|integer|bigint|decimal|numeric|real|double precision|float|serial)/i;
@@ -32,7 +33,7 @@ export function findCanonicalTableName(
 
   if (!lowerCaseMatch) {
     throw new Error(
-      `Table "${requestedTableName}" does not exist in schema ${snapshot.schemaName}.`
+      `Table "${requestedTableName}" does not exist in schema ${snapshot.name}.`
     );
   }
 
@@ -202,4 +203,123 @@ export function getNumericColumns(detail: TableDetail) {
 
 export function toQuotedColumnName(columnName: string) {
   return quoteIdentifier(columnName);
+}
+
+export function serializeSingleSnapshot(
+  schema: DbAgentSchemaSnapshot
+): string[] {
+  const { name, tables, tableDetails, views, viewDetails, functions } = schema;
+  const lines: string[] = [];
+
+  const parts: string[] = [`${tables.length} tables`];
+  if (views.length) parts.push(`${views.length} views`);
+  if (functions.length) parts.push(`${functions.length} functions`);
+  lines.push(`Schema: ${name} (${parts.join(', ')})`);
+
+  if (tables.length && tableDetails) {
+    lines.push('');
+    lines.push('  Tables:');
+
+    for (const tableName of tables) {
+      const detail = tableDetails[tableName];
+      if (!detail) {
+        lines.push(`    - ${name}.${tableName}`);
+        continue;
+      }
+
+      lines.push('');
+      lines.push(`    Table: ${name}.${tableName}`);
+
+      if (detail.columns?.length) {
+        const pkSet = new Set((detail.primary_keys ?? []).map(k => k.column));
+        const fkSet = new Set((detail.foreign_keys ?? []).map(k => k.column));
+
+        for (const c of detail.columns) {
+          const flags: string[] = [];
+          if (pkSet.has(c.name)) flags.push('PK');
+          if (fkSet.has(c.name)) flags.push('FK');
+          if (!c.is_nullable) flags.push('NOT NULL');
+
+          const typeName = c.short_type_name || c.type;
+          const flagStr = flags.length ? ` [${flags.join(', ')}]` : '';
+          lines.push(`      - ${c.name}: ${typeName}${flagStr}`);
+        }
+      }
+
+      if (detail.foreign_keys?.length) {
+        lines.push('      References:');
+        for (const fk of detail.foreign_keys) {
+          lines.push(
+            `        ${tableName}.${fk.column} → ${fk.referenced_table_schema}.${fk.referenced_table}.${fk.referenced_column}`
+          );
+        }
+      }
+    }
+  }
+
+  if (views.length) {
+    lines.push('');
+    lines.push('  Views:');
+
+    for (const view of views) {
+      const typeLabel =
+        view.type === ViewSchemaEnum.MaterializedView
+          ? 'MATERIALIZED VIEW'
+          : 'VIEW';
+      const detail = viewDetails?.[view.name];
+
+      if (!detail?.columns?.length) {
+        lines.push(`    - ${name}.${view.name} (${typeLabel})`);
+        continue;
+      }
+
+      lines.push('');
+      lines.push(`    View: ${name}.${view.name} (${typeLabel})`);
+      for (const c of detail.columns) {
+        const typeName = c.short_type_name || c.type;
+        const nullable = c.is_nullable ? '' : ' NOT NULL';
+        lines.push(`      - ${c.name}: ${typeName}${nullable}`);
+      }
+    }
+  }
+
+  if (functions.length) {
+    lines.push('');
+    lines.push('  Functions:');
+
+    for (const fn of functions) {
+      const typeLabel =
+        fn.type === FunctionSchemaEnum.Procedure ? 'PROCEDURE' : 'FUNCTION';
+      const params = fn.parameters || 'none';
+      lines.push(`    - ${fn.name} (${typeLabel}) params: ${params}`);
+    }
+  }
+
+  return lines;
+}
+
+export function buildSchemaContext(
+  schemaSnapshot?: DbAgentSchemaSnapshot | DbAgentSchemaSnapshot[]
+): string {
+  const snapshots = !schemaSnapshot
+    ? []
+    : Array.isArray(schemaSnapshot)
+      ? schemaSnapshot
+      : [schemaSnapshot];
+
+  if (snapshots.length === 0) {
+    return 'No schema context is currently loaded.';
+  }
+
+  const lines: string[] = [];
+
+  if (snapshots.length > 0) {
+    lines.push(`Available schemas (${snapshots.length}):`);
+    for (const snapshot of snapshots) {
+      lines.push('');
+      lines.push(...serializeSingleSnapshot(snapshot));
+    }
+  }
+
+  return lines.join('\n');
 }

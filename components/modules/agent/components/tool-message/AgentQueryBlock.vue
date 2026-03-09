@@ -1,22 +1,12 @@
 <script setup lang="ts">
-import { useCopyToClipboard } from '~/core/composables/useCopyToClipboard';
 import type { AgentGenerateQueryResult } from '../../types';
+import AgentToolSqlPreview from './AgentToolSqlPreview.vue';
 
 const props = defineProps<{
   data: AgentGenerateQueryResult;
 }>();
 
-const sqlDraft = ref(props.data.sql);
-
-const { handleCopyWithKey, isCopied, getCopyIcon, getCopyTooltip } =
-  useCopyToClipboard();
-
-watch(
-  () => props.data.sql,
-  nextSql => {
-    sqlDraft.value = nextSql;
-  }
-);
+const sqlPreviewId = computed(() => `agent-query-${props.data.sql}`);
 </script>
 
 <template>
@@ -36,30 +26,11 @@ watch(
       </Badge>
     </div>
 
-    <Textarea
-      v-model="sqlDraft"
-      class="min-h-[150px]! rounded-2xl border bg-background/80 font-mono text-[13px] leading-6 shadow-none"
+    <AgentToolSqlPreview
+      :id="sqlPreviewId"
+      :sql="data.sql"
+      :label="data.isMutation ? 'Review SQL before approval' : 'View SQL'"
+      :default-open="data.isMutation"
     />
-    <div class="flex justify-end">
-      <Tooltip>
-        <TooltipTrigger as-child>
-          <Button
-            variant="outline"
-            size="sm"
-            class="rounded-xl"
-            @click="handleCopyWithKey(`agent-query-${data.sql}`, sqlDraft)"
-          >
-            <Icon
-              :name="getCopyIcon(isCopied(`agent-query-${data.sql}`))"
-              class="mr-2 size-4"
-            />
-            Copy SQL
-          </Button>
-        </TooltipTrigger>
-        <TooltipContent>
-          <p>{{ getCopyTooltip(isCopied(`agent-query-${data.sql}`)) }}</p>
-        </TooltipContent>
-      </Tooltip>
-    </div>
   </div>
 </template>

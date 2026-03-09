@@ -62,9 +62,7 @@ const key = computed(() => `${lang.value}-${colorMode.value}`);
 </script>
 
 <template>
-  <div
-    class="rounded-xl border border-border/60 bg-muted/30 overflow-hidden shadow-sm"
-  >
+  <div class="rounded-xl border overflow-hidden shadow-sm">
     <!-- Header -->
     <div
       class="flex items-center justify-between px-3 py-1 border-b border-border/40 bg-muted/50"
