@@ -332,12 +332,8 @@ const internalModel = computed({
       class="absolute bottom-[calc(100%+8px)] left-4 right-4 z-50 overflow-hidden rounded-2xl border border-border/80 bg-background shadow-lg"
     >
       <div class="border-b border-border/50 px-3 py-2">
-        <p
-          class="text-[11px] font-medium uppercase tracking-[0.18em] text-muted-foreground"
-        >
-          Agent tools
-        </p>
-        <p class="mt-1 text-[11px] text-muted-foreground">
+        <p class="text-xs font-medium">Agent tools</p>
+        <p class="mt-1 text-xs text-muted-foreground">
           Type after <span class="font-medium text-foreground">/</span> to
           filter.
         </p>
@@ -356,7 +352,7 @@ const internalModel = computed({
           type="button"
           role="option"
           :aria-selected="index === activeCommandIndex"
-          class="mt-0.5 flex w-full items-start gap-2 rounded-xl px-3 py-2 text-left transition-colors first:mt-0"
+          class="mt-0.5 flex w-full items-start gap-2 rounded-xl px-3 py-2 text-left transition-colors first:mt-0 cursor-pointer"
           :class="
             index === activeCommandIndex
               ? 'bg-muted text-foreground'
@@ -372,11 +368,6 @@ const internalModel = computed({
               <span class="text-xs font-medium text-foreground">{{
                 option.label
               }}</span>
-              <span
-                class="rounded-full bg-muted-foreground/10 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-muted-foreground"
-              >
-                {{ option.toolName }}
-              </span>
             </span>
             <span class="mt-1 block text-xs text-muted-foreground">
               {{ option.description }}
@@ -389,7 +380,7 @@ const internalModel = computed({
                 selectedCommandChips.find(selected => selected.id === option.id)
               "
               name="hugeicons:checkmark-circle-01"
-              class="size-4 mt-0.5 text-muted-foreground"
+              class="size-4 mt-0.5 text-muted-foreground cursor-pointer"
             />
           </div>
         </button>

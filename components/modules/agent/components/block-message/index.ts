@@ -5,3 +5,4 @@ export { default as BlockMessageLoading } from './BlockMessageLoading.vue';
 export { default as BlockMessageError } from './BlockMessageError.vue';
 export { default as BlockMessageTool } from './BlockMessageTool.vue';
 export { default as BlockMessageSource } from './BlockMessageSource.vue';
+export { default as BlockMessageQuiz } from './BlockMessageQuiz.vue';

@@ -13,7 +13,7 @@ import type {
   DbAgentMessage,
   DbAgentToolName,
 } from '../types';
-import { DB_AGENT_TOOL_NAMES } from '../types';
+import { AgentToolName, DB_AGENT_TOOL_NAMES } from '../types';
 
 const MARKDOWN_PATTERN =
   /^#{1,6}\s|(\*\*|__).+(\*\*|__)|^[-*]\s|^\d+\.\s|^\|.+\|/m;
@@ -93,6 +93,23 @@ const toErrorMessage = (part: Record<string, any>) =>
 
 const toolPartToBlocks = (part: Record<string, any>): AgentBlock[] => {
   const toolName = String(part.type || '').replace(/^tool-/, '');
+
+  // askClarification renders as an inline quiz block using part.input (not part.output)
+  if (toolName === AgentToolName.AskClarification) {
+    if (part.state === 'output-available') {
+      return [
+        {
+          kind: 'quiz',
+          toolCallId: String(part.toolCallId || ''),
+          context: String(part.input?.context || ''),
+          questions: Array.isArray(part.input?.questions)
+            ? part.input.questions
+            : [],
+        },
+      ];
+    }
+    return []; // hide streaming/loading states for this tool
+  }
 
   if (!isDbAgentToolName(toolName)) return [];
 

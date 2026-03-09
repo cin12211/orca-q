@@ -1,9 +1,5 @@
 import { generateText, tool, Output, type LanguageModel } from 'ai';
 import { z } from 'zod/v4';
-import {
-  getAgentCommandOptionsByIds,
-  type AgentCommandOptionId,
-} from '~/components/modules/agent/constants/command-options';
 import type {
   AgentDescribeTableResult,
   AgentExplainQueryResult,
@@ -12,6 +8,7 @@ import type {
   DbAgentRequestBody,
   DbAgentSchemaSnapshot,
 } from '~/components/modules/agent/types';
+import { AgentToolName } from '~/components/modules/agent/types';
 import {
   getQualifiedTableName,
   isMutationSql,
@@ -50,8 +47,7 @@ import {
 // Fallback: snapshot đầu tiên
 function findSnapshotForTable(
   schemaSnapshots: DbAgentSchemaSnapshot[] | undefined,
-  schemaName: string,
-  tableName: string
+  schemaName: string
 ): DbAgentSchemaSnapshot | undefined {
   if (!schemaSnapshots?.length) return undefined;
 
@@ -63,109 +59,34 @@ function findSnapshotForTable(
   return snapshot;
 }
 
-// ─── System prompt ───────────────────────────────────────────────────────────
-export function buildAgentSystemPrompt(
-  schemaSnapshots?: DbAgentSchemaSnapshot[],
-  selectedCommandOptions?: AgentCommandOptionId[]
-): string {
-  const resolvedSchema = buildSchemaContext(schemaSnapshots);
-  const selectedOptions = selectedCommandOptions?.length
-    ? getAgentCommandOptionsByIds(selectedCommandOptions)
-    : [];
-  const selectedCommandSection = selectedOptions.length
-    ? [
-        '## Current user intent focus',
-        'The user explicitly selected these tool intents before sending the message:',
-        ...selectedOptions.map(
-          option => `- ${option.label}: ${option.promptHint}`
-        ),
-        'Honor these hints when they fit the request, but do not invent missing information or bypass any approval rule.',
-        '',
-      ].join('\n')
-    : null;
-
-  return [
-    '# You are Orca Agent.',
-    '',
-    'You help users explore schemas, reason about SQL, explain database structures, and suggest safe next steps for the current database.',
-    'You have DIRECT access to a connected database via tools.',
-    '',
-    '## Available tools',
-    'Use tools whenever they can produce a structured result:',
-    '- `generate_query` — convert natural language into SQL.',
-    '- `render_table` — execute SQL and show structured rows.',
-    '- `visualize_table` — execute read-only SQL and render a bar, line, pie, or scatter chart.',
-    '- `describe_table` — schema introspection (columns, keys, relationships).',
-    '- `explain_query` — performance analysis via EXPLAIN.',
-    '- `detect_anomaly` — data quality scans (nulls, duplicates, orphan FKs, outliers).',
-    '',
-    '## Connection',
-    'NEVER ask the user for connection info, credentials, or database details — the database is already connected.',
-    '',
-    '## READ queries (SELECT)',
-    'For read-only requests, call tools immediately without asking for confirmation.',
-    'Workflow:',
-    '  1. Call generate_query to convert the request to SQL.',
-    '  2. Call render_table to execute the SQL and return results.',
-    '  3. Summarize the results clearly for the user.',
-    'If the user asks for a chart or visualization, call `visualize_table` instead of `render_table` once you have a read-only SQL query.',
-    'If the user asks to visualize data but does not specify a chart type, ask them to choose one:',
-    '  1. bar',
-    '  2. line',
-    '  3. pie',
-    '  4. scatter',
-    '  5. other (ask them to type what they want, then explain the supported options if needed)',
-    '',
-    '## MUTATION queries (INSERT / UPDATE / DELETE / DROP / TRUNCATE / ALTER)',
-    'NEVER auto-execute mutation SQL. Always follow this workflow:',
-    '  1. Call generate_query to produce the SQL.',
-    '  2. STOP. Show the generated SQL to the user and explain exactly what it will change.',
-    '  3. Explicitly ask the user to confirm before proceeding.',
-    '  4. Only call render_table after the user gives clear approval.',
-    'Even if the user says "just do it" — still show the SQL and ask once before executing.',
-    '',
-    '## Rules',
-    '- Stay grounded in the provided schema context.',
-    '- Never invent tables or columns that are not present in the schema context.',
-    '- If schema context is incomplete, say what is missing before making assumptions.',
-    '- After generating a read-only query, prefer calling `render_table` so the user gets concrete results.',
-    '- For destructive or mutating SQL, explain the plan clearly and let the approval flow gate execution.',
-    '- Keep narration concise and let tool blocks carry the detailed output.',
-    '',
-    ...(selectedCommandSection ? [selectedCommandSection] : []),
-    '## Database schema (always loaded)',
-    resolvedSchema,
-  ].join('\n');
-}
-
 // ─── Active tools resolver ────────────────────────────────────────────────────
 export function resolveActiveTools(
   adapter: DatabaseAdapter | null,
   schemaSnapshots?: DbAgentSchemaSnapshot[]
-): Array<
-  | 'generate_query'
-  | 'render_table'
-  | 'visualize_table'
-  | 'explain_query'
-  | 'detect_anomaly'
-  | 'describe_table'
-> {
+): AgentToolName[] {
   const hasSnapshot = !!schemaSnapshots?.length;
 
   if (adapter) {
     return [
-      'generate_query',
-      'render_table',
-      'visualize_table',
-      'explain_query',
-      ...(hasSnapshot ? (['detect_anomaly', 'describe_table'] as const) : []),
+      AgentToolName.GenerateQuery,
+      AgentToolName.RenderTable,
+      AgentToolName.VisualizeTable,
+      AgentToolName.ExplainQuery,
+      ...(hasSnapshot
+        ? [AgentToolName.DetectAnomaly, AgentToolName.DescribeTable]
+        : []),
+      AgentToolName.AskClarification,
     ];
   }
 
   // Không có adapter: chỉ schema-based tools
   return hasSnapshot
-    ? ['generate_query', 'describe_table']
-    : ['generate_query'];
+    ? [
+        AgentToolName.GenerateQuery,
+        AgentToolName.DescribeTable,
+        AgentToolName.AskClarification,
+      ]
+    : [AgentToolName.GenerateQuery, AgentToolName.AskClarification];
 }
 
 // ─── Tools ────────────────────────────────────────────────────────────────────
@@ -331,8 +252,7 @@ export function createDbAgentTools({
         // Tìm snapshot chứa table này, không hardcode snapshot đầu tiên
         const snapshot = findSnapshotForTable(
           schemaSnapshots,
-          input.schemaName,
-          input.tableName
+          input.schemaName
         );
         const { tableName, detail } = resolveTableDetail(
           snapshot,
@@ -496,8 +416,7 @@ export function createDbAgentTools({
         // Tìm đúng snapshot chứa table này
         const snapshot = findSnapshotForTable(
           schemaSnapshots,
-          input.schemaName,
-          input.tableName
+          input.schemaName
         );
         const { tableName, detail } = resolveTableDetail(
           snapshot,
@@ -515,6 +434,37 @@ export function createDbAgentTools({
           relatedTables,
         } satisfies AgentDescribeTableResult;
       },
+    }),
+
+    askClarification: tool({
+      description:
+        'Ask the user clarifying questions when their request is genuinely ambiguous. ' +
+        'Call this tool at most ONCE per user message. ' +
+        'Never call it again after the conversation contains a "[Quiz answers]" message.',
+      inputSchema: z.object({
+        context: z
+          .string()
+          .describe('One sentence explaining why clarification is needed.'),
+        questions: z
+          .array(
+            z.object({
+              id: z
+                .string()
+                .describe('Short camelCase identifier, e.g. "lang"'),
+              question: z.string(),
+              type: z.enum(['single', 'multiple', 'open']),
+              suggestions: z
+                .array(z.string())
+                .min(0)
+                .max(5)
+                .describe('3–5 suggestion chips shown to the user'),
+              required: z.boolean(),
+            })
+          )
+          .min(1)
+          .max(5),
+      }),
+      execute: async () => ({ acknowledged: true }) as const,
     }),
   };
 }

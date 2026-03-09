@@ -62,7 +62,7 @@ defineExpose({
                   variant="ghost"
                   @click.stop="emit('new-thread')"
                 >
-                  <Icon name="hugeicons:quill-write-02" class="size-3.5" />
+                  <Icon name="hugeicons:plus-sign" class="size-3.5" />
                 </Button>
               </TooltipTrigger>
               <TooltipContent> New thread </TooltipContent>

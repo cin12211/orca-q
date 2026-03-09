@@ -12,8 +12,8 @@ import type {
   AIProvider,
   DatabaseAdapter,
 } from '~/server/infrastructure/agent/core/types';
+import { buildAgentSystemPrompt } from '~/server/infrastructure/agent/systemPromt';
 import {
-  buildAgentSystemPrompt,
   createDbAgentTools,
   resolveActiveTools,
 } from '~/server/infrastructure/agent/tools';
@@ -111,7 +111,12 @@ export default defineEventHandler(async event => {
         selectedCommandOptions
       ),
       tools,
-      stopWhen: stepCountIs(5),
+      stopWhen: ({ steps }) =>
+        steps.some(s =>
+          s.toolCalls?.some(
+            (tc: { toolName: string }) => tc.toolName === 'askClarification'
+          )
+        ) || stepCountIs(5)({ steps }),
       activeTools: resolveActiveTools(adapter, schemaSnapshots),
     });
 

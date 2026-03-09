@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { toRef } from 'vue';
+import Shimmer from '~/components/ai-elements/shimmer/Shimmer.vue';
 import { useSmoothStream } from '~/core/composables/useSmoothStream';
-import AgentTextBloom from '../AgentTextBloom.vue';
 
 const props = defineProps<{
   content: string;
@@ -61,25 +61,17 @@ function onLeave(el: Element) {
   <div class="overflow-hidden">
     <button
       type="button"
-      class="flex cursor-pointer items-center justify-start gap-2 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
+      class="flex cursor-pointer items-center justify-start gap-1 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
       @click="isOpen = !isOpen"
     >
       <Icon
-        name="hugeicons:ai-brain-05"
+        name="hugeicons:ai-brain-02"
         class="size-4 shrink-0"
         :class="{ 'animate-pulse text-primary': isStreaming }"
       />
 
-      <AgentTextBloom
-        v-if="isStreaming"
-        label="Reasoning"
-        class="text-xs font-medium text-primary"
-        bloom-color="#4f46e5"
-        :bloom-intensity="1.06"
-      />
-      <span v-else class="inline-flex items-center gap-0.5 text-primary">
-        Reasoning
-      </span>
+      <Shimmer :duration="1" v-if="isStreaming">Reasoning</Shimmer>
+      <span v-else class=""> Reasoning </span>
 
       <Icon
         name="lucide:chevron-down"

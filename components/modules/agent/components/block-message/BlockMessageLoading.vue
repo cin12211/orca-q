@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import AgentTextBloom from '../AgentTextBloom.vue';
+import Shimmer from '~/components/ai-elements/shimmer/Shimmer.vue';
 
 defineProps<{
   label?: string;
@@ -7,13 +7,10 @@ defineProps<{
 </script>
 
 <template>
-  <div class="flex items-center gap-2 text-muted-foreground">
+  <div class="flex items-center gap-2 text-xs text-muted-foreground">
     <Icon name="hugeicons:loading-03" class="size-4 animate-spin" />
-    <AgentTextBloom
-      :label="label"
-      class="text-xs"
-      bloom-color="#64748b"
-      :bloom-intensity="1.1"
-    />
+    <Shimmer>
+      {{ label || 'Generating summary...' }}
+    </Shimmer>
   </div>
 </template>

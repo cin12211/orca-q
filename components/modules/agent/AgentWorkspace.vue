@@ -1,12 +1,12 @@
 <script setup lang="ts">
 import { useDebounceFn } from '@vueuse/core';
 import { computed, nextTick, onMounted, ref, watch } from 'vue';
+import Shimmer from '~/components/ai-elements/shimmer/Shimmer.vue';
 import Badge from '~/components/ui/badge/Badge.vue';
 import { type AIProvider } from '~/core/stores/appLayoutStore';
 import AgentChatFooter from './components/AgentChatFooter.vue';
 import AgentMessageBubble from './components/AgentMessageBubble.vue';
 import AgentSetupCard from './components/AgentSetupCard.vue';
-import AgentTextBloom from './components/AgentTextBloom.vue';
 import AgentWelcomePanel from './components/AgentWelcomePanel.vue';
 import type { AgentCommandOptionId } from './constants/command-options';
 import { useAgentChat } from './hooks/useDbAgentChat';
@@ -219,6 +219,12 @@ watch(
   { deep: true }
 );
 
+const handleQuizSubmit = async (text: string) => {
+  await sendMessage(text);
+  await nextTick();
+  scrollToBottom();
+};
+
 const promptCards = computed(() => {
   return [
     'Summarize the current schema and highlight the tables that matter most.',
@@ -250,7 +256,7 @@ const promptCards = computed(() => {
 
           <div class="flex shrink-0 items-center gap-2">
             <Button variant="outline" size="xs" @click="handleNewThread">
-              <Icon name="hugeicons:plus-sign" class="mr-2 size-4" />
+              <Icon name="hugeicons:plus-sign" class="size-4" />
               New Thread
             </Button>
           </div>
@@ -294,6 +300,7 @@ const promptCards = computed(() => {
                 "
                 @approval="handleApproval"
                 @edit="handleEditMessage"
+                @quiz-submit="handleQuizSubmit"
               />
             </div>
 
@@ -312,12 +319,9 @@ const promptCards = computed(() => {
                 <img src="public/logo.png" class="w-7 rounded-full" />
               </div>
 
-              <AgentTextBloom
-                label="Thinking"
-                class="text-xs font-medium text-muted-foreground"
-                bloom-color="#64748b"
-                :bloom-intensity="1.08"
-              />
+              <div class="text-xs font-medium text-muted-foreground">
+                <Shimmer>Thinking</Shimmer>
+              </div>
             </div>
 
             <div

@@ -1,15 +1,28 @@
 import type { UIMessage, UITool } from 'ai';
-import type { AgentCommandOptionId } from '../constants/command-options';
 import type { Schema } from '~/core/stores';
 import type { TableDetails } from '~/core/types';
+import type { AgentCommandOptionId } from '../constants/command-options';
 
+// ─── Shared tool name enum (FE + BE) ─────────────────────────────────────────
+export const AgentToolName = {
+  GenerateQuery: 'generate_query',
+  RenderTable: 'render_table',
+  VisualizeTable: 'visualize_table',
+  ExplainQuery: 'explain_query',
+  DetectAnomaly: 'detect_anomaly',
+  DescribeTable: 'describe_table',
+  AskClarification: 'askClarification',
+} as const;
+export type AgentToolName = (typeof AgentToolName)[keyof typeof AgentToolName];
+
+// DB-rendering tools (excludes askClarification — not a renderable tool block)
 export const DB_AGENT_TOOL_NAMES = [
-  'generate_query',
-  'render_table',
-  'visualize_table',
-  'explain_query',
-  'detect_anomaly',
-  'describe_table',
+  AgentToolName.GenerateQuery,
+  AgentToolName.RenderTable,
+  AgentToolName.VisualizeTable,
+  AgentToolName.ExplainQuery,
+  AgentToolName.DetectAnomaly,
+  AgentToolName.DescribeTable,
 ] as const;
 
 export type DbAgentToolName = (typeof DB_AGENT_TOOL_NAMES)[number];
@@ -228,6 +241,21 @@ export interface AgentSourceBlock {
   filename?: string;
 }
 
+export interface QuizQuestion {
+  id: string;
+  question: string;
+  type: 'single' | 'multiple' | 'open';
+  suggestions: string[];
+  required: boolean;
+}
+
+export interface AgentQuizBlock {
+  kind: 'quiz';
+  toolCallId: string;
+  context: string;
+  questions: QuizQuestion[];
+}
+
 export type AgentBlock =
   | AgentTextBlock
   | AgentCodeBlock
@@ -236,7 +264,8 @@ export type AgentBlock =
   | AgentErrorBlock
   | AgentToolBlock
   | AgentApprovalBlock
-  | AgentSourceBlock;
+  | AgentSourceBlock
+  | AgentQuizBlock;
 
 export interface AgentRenderedMessage {
   id: string;

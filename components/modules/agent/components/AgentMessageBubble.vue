@@ -10,6 +10,7 @@ import {
   BlockMessageError,
   BlockMessageTool,
   BlockMessageSource,
+  BlockMessageQuiz,
 } from './block-message';
 import { AgentApprovalBlock, AgentReasoningBlock } from './tool-message';
 
@@ -23,6 +24,7 @@ const props = defineProps<{
 const emit = defineEmits<{
   approval: [approvalId: string, approved: boolean];
   edit: [text: string];
+  'quiz-submit': [text: string];
 }>();
 
 const {
@@ -158,6 +160,14 @@ const messageText = computed(() => {
             :title="block.title"
             :media-type="block.mediaType"
             :filename="block.filename"
+          />
+
+          <BlockMessageQuiz
+            v-else-if="block.kind === 'quiz'"
+            :tool-call-id="block.toolCallId"
+            :context="block.context"
+            :questions="block.questions"
+            @submit="emit('quiz-submit', $event)"
           />
         </div>
 

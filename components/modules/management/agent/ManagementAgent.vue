@@ -56,7 +56,7 @@ const isHistoryEmpty = computed(() => {
       title="Chat History"
       :show-search="true"
       :show-connection="true"
-      :show-schema="true"
+      :show-schema="false"
       :workspace-id="workspaceId"
       search-placeholder="Search threads..."
     >
@@ -64,7 +64,7 @@ const isHistoryEmpty = computed(() => {
         <Tooltip>
           <TooltipTrigger as-child>
             <Button size="iconSm" variant="ghost" @click="onCreateThread">
-              <Icon name="hugeicons:quill-write-02" class="size-4" />
+              <Icon name="hugeicons:plus-sign" class="size-4" />
             </Button>
           </TooltipTrigger>
           <TooltipContent> New thread </TooltipContent>
@@ -101,7 +101,6 @@ const isHistoryEmpty = computed(() => {
           title="No chat history yet"
           description="Start a new thread to ask about schema design, query plans, reports, or safe mutations."
           action-label="Start chat"
-          icon="hugeicons:search-remove"
           @action="onCreateThread"
         />
 
