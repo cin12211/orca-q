@@ -3,6 +3,10 @@ import { useAiChat } from '~/core/composables/useAiChat';
 import { useAppContext } from '~/core/contexts/useAppContext';
 import type { AgentCommandOptionId } from '../constants/command-options';
 import type { DbAgentMessage } from '../types';
+import {
+  hasIncompleteDbAgentMessages,
+  sanitizeDbAgentMessages,
+} from '../utils/sanitizeDbAgentMessages';
 
 export function useAgentChat(sendReasoning?: Ref<boolean>) {
   const { schemaStore, connectionStore } = useAppContext();
@@ -23,10 +27,25 @@ export function useAgentChat(sendReasoning?: Ref<boolean>) {
     sendAutomaticallyWhen: lastAssistantMessageIsCompleteWithApprovalResponses,
   });
 
+  const repairIncompleteMessages = () => {
+    if (!hasIncompleteDbAgentMessages(chat.messages.value)) {
+      return;
+    }
+
+    const sanitizedMessages = sanitizeDbAgentMessages(chat.messages.value);
+
+    chat.messages.value.splice(
+      0,
+      chat.messages.value.length,
+      ...sanitizedMessages
+    );
+  };
+
   const sendMessage = async (
     text: string,
     nextSelectedCommandOptions: AgentCommandOptionId[] = []
   ) => {
+    repairIncompleteMessages();
     selectedCommandOptions.value = [...nextSelectedCommandOptions];
 
     try {

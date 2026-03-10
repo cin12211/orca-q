@@ -65,7 +65,7 @@ const tableHeight = computed(() => {
         </div>
       </div>
 
-      <p class="text-sm leading-6 text-foreground/90">
+      <p class="text-sm leading-6">
         {{ data.summary }}
       </p>
     </div>
@@ -89,18 +89,16 @@ const tableHeight = computed(() => {
   </div>
 
   <div v-if="data.relatedTables.length > 0" class="space-y-2">
-    <div
-      class="text-[11px] font-medium uppercase tracking-[0.18em] text-muted-foreground"
-    >
+    <div class="text-[11px] font-medium text-muted-foreground">
       Related Tables
     </div>
 
-    <div class="flex flex-wrap gap-2">
+    <div class="flex flex-wrap gap-1">
       <Badge
         v-for="table in data.relatedTables"
         :key="table"
         variant="outline"
-        class="text-[10px] tracking-[0.16em]"
+        class="text-[10px]"
       >
         {{ table }}
       </Badge>

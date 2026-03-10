@@ -1,5 +1,9 @@
 import { createGlobalState, useStorage } from '@vueuse/core';
 import type { AgentHistorySession } from '../types';
+import {
+  hasIncompleteDbAgentMessages,
+  sanitizeDbAgentMessages,
+} from '../utils/sanitizeDbAgentMessages';
 
 const SECTION_NODE_IDS = {
   history: 'agent-section-history',
@@ -33,6 +37,20 @@ const getLastPreview = (messages: AgentHistorySession['messages']) => {
 
 const historyNodeId = (historyId: string) => `agent-history-${historyId}`;
 
+const sanitizeHistorySession = (history: AgentHistorySession) => {
+  const sanitizedMessages = sanitizeDbAgentMessages(history.messages);
+
+  if (!hasIncompleteDbAgentMessages(history.messages)) {
+    return history;
+  }
+
+  return {
+    ...history,
+    preview: getLastPreview(sanitizedMessages).slice(0, 140),
+    messages: cloneMessages(sanitizedMessages),
+  };
+};
+
 export const useAgentWorkspace = createGlobalState(() => {
   const currentWorkspaceId = ref<string>('');
   const selectedNodeId = useStorage<string>(
@@ -51,6 +69,16 @@ export const useAgentWorkspace = createGlobalState(() => {
     'heraq-agent-chat-history',
     []
   );
+
+  const normalizedHistories = histories.value.map(sanitizeHistorySession);
+
+  if (
+    normalizedHistories.some(
+      (history, index) => history !== histories.value[index]
+    )
+  ) {
+    histories.value = normalizedHistories;
+  }
 
   const workspaceHistories = computed(() =>
     histories.value.filter(
@@ -116,7 +144,8 @@ export const useAgentWorkspace = createGlobalState(() => {
     model: string;
     showReasoning: boolean;
   }) => {
-    const firstPrompt = getFirstUserPrompt(messages);
+    const sanitizedMessages = sanitizeDbAgentMessages(messages);
+    const firstPrompt = getFirstUserPrompt(sanitizedMessages);
 
     if (!firstPrompt) {
       return;
@@ -129,13 +158,13 @@ export const useAgentWorkspace = createGlobalState(() => {
     const nextHistory: AgentHistorySession = {
       id: nextId,
       title: (existing?.title || firstPrompt).slice(0, 60),
-      preview: getLastPreview(messages).slice(0, 140),
+      preview: getLastPreview(sanitizedMessages).slice(0, 140),
       createdAt: existing?.createdAt || now,
       updatedAt: now,
       provider,
       model,
       showReasoning,
-      messages: cloneMessages(messages),
+      messages: cloneMessages(sanitizedMessages),
       workspaceId: currentWorkspaceId.value || undefined,
     };
 

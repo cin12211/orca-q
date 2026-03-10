@@ -5,7 +5,7 @@ defineProps<{
 </script>
 
 <template>
-  <div class="rounded-xl bg-destructive/10 px-3 py-2 text-destructive">
+  <div class="rounded-xl py-2 text-destructive">
     {{ message }}
   </div>
 </template>

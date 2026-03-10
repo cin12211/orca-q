@@ -10,9 +10,7 @@ const sqlPreviewId = computed(() => `agent-query-${props.data.sql}`);
 </script>
 
 <template>
-  <div
-    class="space-y-3 rounded-[1.35rem] border border-border/70 bg-muted/20 p-4"
-  >
+  <div class="space-y-3 rounded-xl border border-border/70 bg-muted/20 p-4">
     <div class="flex items-start justify-between gap-3">
       <p class="text-sm leading-6 text-foreground/90">
         {{ data.explanation }}
@@ -20,7 +18,7 @@ const sqlPreviewId = computed(() => `agent-query-${props.data.sql}`);
 
       <Badge
         :variant="data.isMutation ? 'destructive' : 'secondary'"
-        class="shrink-0 text-[10px] tracking-[0.16em]"
+        class="shrink-0 text-[10px]"
       >
         {{ data.isMutation ? 'MUTATION' : 'READ ONLY' }}
       </Badge>
