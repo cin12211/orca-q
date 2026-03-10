@@ -1,5 +1,5 @@
 // export interface IDBSupport {
-//   type: EDatabaseType;
+//   type: DatabaseClientType;
 //   name: string;
 //   icon: globalThis.VNode<
 //     RendererNode,
@@ -18,7 +18,7 @@ export enum EConnectionMethod {
 
 export enum ESSLMode {
   DISABLE = 'disable',
-  PREFER = 'prefer',
+  PREFERRED = 'preferred',
   REQUIRE = 'require',
   VERIFY_CA = 'verify-ca',
   VERIFY_FULL = 'verify-full',
@@ -45,4 +45,6 @@ export interface ISSHConfig {
   authMethod?: ESSHAuthMethod;
   password?: string;
   privateKey?: string;
+  storeInKeychain?: boolean;
+  useSshKey?: boolean;
 }

@@ -1,6 +1,6 @@
 import { PostgreSQL, type SQLDialect } from '@codemirror/lang-sql';
 import { StateEffect, StateField } from '@codemirror/state';
-import type { EDatabaseType } from '~/components/modules/connection';
+import { DatabaseClientType } from '~/core/constants/database-client-type';
 import { SQLDialectSupport } from '../constants';
 
 // ---------------------------------------------------------------------------
@@ -19,16 +19,16 @@ export interface SqlParserConfig {
 // Add a new entry here when a new database type is supported.
 // ---------------------------------------------------------------------------
 
-export const SQL_DIALECT_BY_DB_TYPE: Record<EDatabaseType, SQLDialect> = {
-  postgres: SQLDialectSupport.PostgreSQL,
-  mysql: SQLDialectSupport.MySQL,
+export const SQL_DIALECT_BY_DB_TYPE: Record<string, SQLDialect> = {
+  [DatabaseClientType.POSTGRES]: SQLDialectSupport.PostgreSQL,
+  [DatabaseClientType.MYSQL]: SQLDialectSupport.MySQL,
 } as const;
 
 /**
  * Resolve the CodeMirror SQLDialect for a given connection type.
  * Falls back to PostgreSQL when the type is not (yet) mapped.
  */
-export function resolveDialect(dbType: EDatabaseType | undefined): SQLDialect {
+export function resolveDialect(dbType: DatabaseClientType | undefined): SQLDialect {
   if (!dbType) return PostgreSQL;
   return SQL_DIALECT_BY_DB_TYPE[dbType] ?? PostgreSQL;
 }

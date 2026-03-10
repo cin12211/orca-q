@@ -1,9 +1,7 @@
 <script setup lang="ts">
 import type { ReplicationSlotDesiredStatus } from '~/core/types';
-import {
-  EDatabaseType,
-  getDatabaseSupportByType,
-} from '../connection';
+import { DatabaseClientType } from '~/core/constants/database-client-type';
+import { getDatabaseSupportByType } from '../connection';
 import InstanceInsightsActivitySection from './components/InstanceInsightsActivitySection.vue';
 import InstanceInsightsConfigurationSection from './components/InstanceInsightsConfigurationSection.vue';
 import InstanceInsightsReplicationSection from './components/InstanceInsightsReplicationSection.vue';
@@ -15,7 +13,7 @@ import { formatDateTime } from './utils/formatters';
 const props = defineProps<{
   dbConnectionString: string;
   databaseName: string;
-  dbType?: EDatabaseType;
+  dbType?: DatabaseClientType;
 }>();
 
 const sections = [

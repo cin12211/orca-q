@@ -1,6 +1,6 @@
 import debounce from 'lodash-es/debounce';
 import { toast } from 'vue-sonner';
-import { EDatabaseType } from '~/components/modules/connection';
+import { DatabaseClientType } from '~/core/constants/database-client-type';
 import {
   formatWhereClause,
   type FilterSchema,
@@ -74,7 +74,7 @@ export const useTableQueryBuilder = ({
 
     return formatWhereClause({
       columns: columns.value,
-      db: EDatabaseType.PG,
+      db: DatabaseClientType.POSTGRES,
       filters: filters.value,
       composeWith: composeWith.value,
     });

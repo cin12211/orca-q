@@ -1,4 +1,5 @@
 import type { UIMessage, UITool } from 'ai';
+import type { DatabaseClientType } from '~/core/constants';
 import type { Schema } from '~/core/stores';
 import type { TableDetails } from '~/core/types';
 import type { AgentCommandOptionId } from '../constants/command-options';
@@ -168,7 +169,7 @@ export interface DbAgentRequestBody {
   selectedCommandOptions?: AgentCommandOptionId[];
   systemPrompt?: string;
   dbConnectionString?: string;
-  dbType?: 'postgres' | 'mysql';
+  dbType?: DatabaseClientType;
   dialect?: DbAgentDialect;
   schemaSnapshot?: DbAgentSchemaSnapshot;
   schemaSnapshots?: DbAgentSchemaSnapshot[];

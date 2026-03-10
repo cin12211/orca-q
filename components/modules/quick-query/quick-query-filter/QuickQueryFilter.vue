@@ -17,14 +17,14 @@ import {
   EExtendedField,
   OperatorSet,
 } from '~/core/constants';
-import { EDatabaseType } from '../../connection';
+import { DatabaseClientType } from '~/core/constants/database-client-type';
 import ColumnSelector from '../../selectors/ColumnSelector.vue';
 import OperatorSelector from '../../selectors/OperatorSelector.vue';
 import QuickQueryFilterGuide from './QuickQueryFilterGuide.vue';
 
 const props = defineProps<{
   columns: string[];
-  dbType: EDatabaseType;
+  dbType: DatabaseClientType;
   baseQuery: string;
   initFilters: FilterSchema[];
   composeWith: ComposeOperator;
@@ -354,7 +354,7 @@ defineExpose({
       v-if="fields.length"
       :getParserApplyFilter="getParserApplyFilter"
       :getParserAllFilter="getParserAllFilter"
-      :compose-with="composeWith"
+      :compose-with="compose-with"
       @on-change-compose-with="emit('onChangeComposeWith', $event)"
     />
 

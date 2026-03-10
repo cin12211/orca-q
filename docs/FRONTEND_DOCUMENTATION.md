@@ -511,7 +511,7 @@ interface Connection {
   name: string;
   connectionString: string;
   database: string;
-  type: EDatabaseType;
+  type: DatabaseClientType;
   createdAt: string;
 }
 ```

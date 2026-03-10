@@ -6,7 +6,7 @@ import { DEFAULT_QUERY_SIZE, OperatorSet } from '~/core/constants';
 import { uuidv4 } from '~/core/helpers';
 import { useAppLayoutStore } from '~/core/stores/appLayoutStore';
 import { useManagementConnectionStore } from '~/core/stores/managementConnectionStore';
-import { EDatabaseType } from '../connection';
+import { DatabaseClientType } from '~/core/constants/database-client-type';
 import WrapperErdDiagram from '../erd-diagram/WrapperErdDiagram.vue';
 import { buildTableNodeId } from '../erd-diagram/utils';
 import QuickQueryErrorPopup from './QuickQueryErrorPopup.vue';
@@ -487,7 +487,7 @@ const onBackPreviousBreadcrumbByIndex = (index: number) => {
         :initFilters="filters"
         :baseQuery="baseQueryString"
         :columns="columnNames"
-        :dbType="EDatabaseType.PG"
+        :dbType="DatabaseClientType.POSTGRES"
         :composeWith="composeWith"
         @onChangeComposeWith="onChangeComposeWith"
       />

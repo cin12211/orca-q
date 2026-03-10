@@ -2,7 +2,7 @@ import { reactive, ref, watch } from 'vue';
 import dayjs from 'dayjs';
 import { uuidv4 } from '~/core/helpers';
 import type { Connection } from '~/core/stores';
-import { EDatabaseType } from '../constants';
+import { DatabaseClientType } from '~/core/constants/database-client-type';
 import { EConnectionMethod, ESSLMode, ESSHAuthMethod } from '../types';
 import { connectionService } from '../services/connection.service';
 
@@ -15,7 +15,7 @@ export function useConnectionForm(props: {
   onClose: () => void;
 }) {
   const step = ref<1 | 2>(1);
-  const dbType = ref<EDatabaseType | null>(EDatabaseType.PG);
+  const dbType = ref<DatabaseClientType | null>(DatabaseClientType.POSTGRES);
   const connectionName = ref('');
   const connectionMethod = ref<EConnectionMethod>(EConnectionMethod.STRING);
   const connectionString = ref('');
@@ -40,12 +40,14 @@ export function useConnectionForm(props: {
     sshAuthMethod: ESSHAuthMethod.PASSWORD,
     sshPassword: '',
     sshPrivateKey: '',
+    sshStoreInKeychain: true,
+    sshUseKey: false,
   });
   const testStatus = ref<'idle' | 'testing' | 'success' | 'error'>('idle');
 
   const resetForm = () => {
     step.value = 1;
-    dbType.value = EDatabaseType.PG;
+    dbType.value = DatabaseClientType.POSTGRES;
     connectionName.value = '';
     connectionMethod.value = EConnectionMethod.STRING;
     connectionString.value = '';
@@ -70,6 +72,8 @@ export function useConnectionForm(props: {
     formData.sshAuthMethod = ESSHAuthMethod.PASSWORD;
     formData.sshPassword = '';
     formData.sshPrivateKey = '';
+    formData.sshStoreInKeychain = true;
+    formData.sshUseKey = false;
 
     testStatus.value = 'idle';
   };
@@ -117,9 +121,13 @@ export function useConnectionForm(props: {
           host: formData.sshHost,
           port: formData.sshPort,
           username: formData.sshUsername,
-          authMethod: formData.sshAuthMethod,
+          authMethod: formData.sshUseKey
+            ? ESSHAuthMethod.KEY
+            : ESSHAuthMethod.PASSWORD,
           password: formData.sshPassword,
           privateKey: formData.sshPrivateKey,
+          storeInKeychain: formData.sshStoreInKeychain,
+          useSshKey: formData.sshUseKey,
         };
       }
     }
@@ -156,7 +164,7 @@ export function useConnectionForm(props: {
       workspaceId: props.workspaceId,
       id: props.editingConnection?.id || uuidv4(),
       name: connectionName.value,
-      type: dbType.value as EDatabaseType,
+      type: dbType.value as DatabaseClientType,
       method: connectionMethod.value,
       createdAt: props.editingConnection?.createdAt || dayjs().toISOString(),
     };
@@ -186,14 +194,16 @@ export function useConnectionForm(props: {
           host: formData.sshHost,
           port: formData.sshPort,
           username: formData.sshUsername,
-          authMethod: formData.sshAuthMethod,
+          authMethod: formData.sshUseKey ? ESSHAuthMethod.KEY : ESSHAuthMethod.PASSWORD,
           password: formData.sshPassword,
           privateKey: formData.sshPrivateKey,
+          storeInKeychain: formData.sshStoreInKeychain,
+          useSshKey: formData.sshUseKey,
         };
       }
 
       // Generate connection string for compatibility with other modules
-      const prefix = dbType.value === EDatabaseType.PG ? 'postgresql' : 'mysql';
+      const prefix = dbType.value === DatabaseClientType.POSTGRES ? 'postgresql' : 'mysql';
       connection.connectionString = `${prefix}://${formData.username}:${formData.password}@${formData.host}:${connection.port}/${formData.database}`;
     }
 
@@ -208,9 +218,9 @@ export function useConnectionForm(props: {
 
   const getDefaultPort = () => {
     switch (dbType.value) {
-      case EDatabaseType.PG:
+      case DatabaseClientType.POSTGRES:
         return '5432';
-      case EDatabaseType.MYSQL:
+      case DatabaseClientType.MYSQL:
         return '3306';
       default:
         return '';
@@ -219,9 +229,9 @@ export function useConnectionForm(props: {
 
   const getConnectionPlaceholder = () => {
     switch (dbType.value) {
-      case EDatabaseType.PG:
+      case DatabaseClientType.POSTGRES:
         return 'postgresql://username:password@localhost:5432/database';
-      case EDatabaseType.MYSQL:
+      case DatabaseClientType.MYSQL:
         return 'mysql://username:password@localhost:3306/database';
       default:
         return '';
@@ -249,7 +259,7 @@ export function useConnectionForm(props: {
       if (props.open) {
         if (props.editingConnection) {
           connectionName.value = props.editingConnection.name;
-          dbType.value = props.editingConnection.type;
+          dbType.value = props.editingConnection.type as DatabaseClientType;
           connectionMethod.value = props.editingConnection.method;
           connectionString.value =
             props.editingConnection.connectionString || '';
@@ -281,6 +291,8 @@ export function useConnectionForm(props: {
             formData.sshPassword = props.editingConnection.ssh.password || '';
             formData.sshPrivateKey =
               props.editingConnection.ssh.privateKey || '';
+            formData.sshStoreInKeychain = props.editingConnection.ssh.storeInKeychain ?? true;
+            formData.sshUseKey = props.editingConnection.ssh.useSshKey ?? (props.editingConnection.ssh.authMethod === ESSHAuthMethod.KEY);
           }
 
           step.value = 2;

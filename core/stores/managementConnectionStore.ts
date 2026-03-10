@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
-import type { EDatabaseType } from '~/components/modules/connection';
+import { DatabaseClientType } from '~/core/constants/database-client-type';
 import {
   EConnectionMethod,
   type ISSLConfig,
@@ -12,7 +12,7 @@ export interface Connection {
   workspaceId: string;
   id: string;
   name: string;
-  type: EDatabaseType;
+  type: DatabaseClientType;
   method: EConnectionMethod;
   connectionString?: string;
   host?: string;

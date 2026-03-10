@@ -514,10 +514,10 @@ graph TD
    - **Impact:** Core kernel is not independently testable without component modules.
    - **Fix:** Extract `EditorTheme`, `RawQueryEditorLayout`, `RawQueryEditorDefaultSize`, and `CustomLayoutDefinition` into `core/constants/` or `core/types/`.
 
-2. **Core composable → Feature module coupling (MEDIUM):** `core/composables/useTableQueryBuilder.ts` imports `formatWhereClause` from `~/components/modules/quick-query/utils` and `EDatabaseType` from `~/components/modules/connection/constants`.
+2. **Core composable → Feature module coupling (MEDIUM):** `core/composables/useTableQueryBuilder.ts` imports `formatWhereClause` from `~/components/modules/quick-query/utils` and `DatabaseClientType` from `~/components/modules/connection/constants`.
 
    - **Impact:** Core composable depends on feature module internals.
-   - **Fix:** Move `formatWhereClause` to `core/helpers/` and `EDatabaseType` to `core/types/`.
+   - **Fix:** Move `formatWhereClause` to `core/helpers/` and `DatabaseClientType` to `core/types/`.
 
 3. **No circular dependencies detected** between stores. The store dependency graph is acyclic: `useWSStateStore` ← `useSchemaStore`, `useTabViewsStore`, `useWorkspacesStore`, etc.
 
@@ -852,7 +852,7 @@ The architecture is **well-suited for a desktop/local tool** but would need sign
 
 ### Top 3 High-Impact Improvements
 
-1. **Eliminate core→feature dependency violations** — Move `EditorTheme`, `RawQueryEditorLayout`, `EDatabaseType`, and `formatWhereClause` into `core/`. This unblocks independent core testing and prevents feature module changes from breaking core logic. **Effort: Low. Impact: High.**
+1. **Eliminate core→feature dependency violations** — Move `EditorTheme`, `RawQueryEditorLayout`, `DatabaseClientType`, and `formatWhereClause` into `core/`. This unblocks independent core testing and prevents feature module changes from breaking core logic. **Effort: Low. Impact: High.**
 
 2. **Create a typed API client layer** — Centralize all `$fetch()` calls into `core/api/` with per-domain typed functions, unified error handling, and retry logic. This eliminates 50+ scattered `$fetch` calls and enables interceptors for auth/logging. **Effort: Medium. Impact: High.**
 
