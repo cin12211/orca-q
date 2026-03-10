@@ -500,6 +500,7 @@ defineExpose({
       @row-data-updated="onRowDataUpdated"
       @cellContextMenu="onCellContextMenu"
       @columnHeaderContextMenu="onCellHeaderContextMenu"
+      :suppress-scroll-on-new-data="true"
       :class="props.class"
       :grid-options="gridOptions"
       :columnDefs="columnDefs"

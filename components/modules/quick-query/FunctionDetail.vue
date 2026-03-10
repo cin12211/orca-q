@@ -82,7 +82,7 @@ const requestBody = computed(() => ({
   dbConnectionString: connectionString.value,
 }));
 
-const { status } = useFetch('/api/get-one-function', {
+const { status } = useFetch('/api/functions/definition', {
   method: 'POST',
   body: requestBody,
   onResponse: response => {
@@ -101,7 +101,7 @@ const saveFunction = async () => {
   isSaving.value = true;
 
   try {
-    await $fetch('/api/update-function', {
+    await $fetch('/api/functions/update', {
       method: 'POST',
       body: {
         dbConnectionString:

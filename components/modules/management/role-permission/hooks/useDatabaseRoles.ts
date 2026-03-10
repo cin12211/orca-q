@@ -144,7 +144,6 @@ export const useRoleMutations = (dbConnectionString: Ref<string>) => {
       return response;
     } catch (err) {
       const rawMessage =
-        (err as any)?.data?.statusMessage ||
         (err as any)?.data?.message ||
         (err instanceof Error ? err.message : 'Failed to create role');
       const extracted = extractControlPlaneError(rawMessage);

@@ -28,13 +28,11 @@ definePageMeta({
       <ContextMenuShortcut class="pl-2">(⌘,)</ContextMenuShortcut>
     </div>
 
-    <!-- TODO: OPEN when do setting feature -->
-
-    <!-- <div class="flex items-center pt-1 text-muted-foreground gap-0.5 text-sm">
+    <div class="flex items-center pt-1 text-muted-foreground gap-0.5 text-sm">
       <Icon name="hugeicons:command" /> Command Palette
 
-      <ContextMenuShortcut class="pl-2">(⌘K)</ContextMenuShortcut>
-    </div> -->
+      <ContextMenuShortcut class="pl-2">(⌘K or ⌘P)</ContextMenuShortcut>
+    </div>
 
     <div class="flex items-center pt-1 text-muted-foreground gap-0.5 text-sm">
       <Icon name="hugeicons:sidebar-left" /> Toggle left sidebar

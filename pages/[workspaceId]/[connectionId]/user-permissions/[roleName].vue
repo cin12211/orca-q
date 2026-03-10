@@ -285,7 +285,7 @@ const onDialogConfirm = async (data: {
             @click="fetchPermissions"
           >
             <Icon
-              :name="isLoading ? 'lucide:loader' : 'lucide:refresh-cw'"
+              :name="isLoading ? 'hugeicons:loading-03' : 'lucide:refresh-cw'"
               :class="['size-4', isLoading && 'animate-spin']"
             />
           </Button>
@@ -359,7 +359,10 @@ const onDialogConfirm = async (data: {
                   v-if="isLoadingInheritance"
                   class="flex items-center gap-2 text-muted-foreground"
                 >
-                  <Icon name="lucide:loader" class="size-4 animate-spin" />
+                  <Icon
+                    name="hugeicons:loading-03"
+                    class="size-4 animate-spin"
+                  />
                   <span class="text-sm">Loading inheritance...</span>
                 </div>
                 <div
@@ -401,7 +404,7 @@ const onDialogConfirm = async (data: {
             v-if="isLoadingDatabases"
             class="flex items-center gap-2 text-muted-foreground"
           >
-            <Icon name="lucide:loader" class="size-4 animate-spin" />
+            <Icon name="hugeicons:loading-03" class="size-4 animate-spin" />
             <span class="text-sm">Loading databases...</span>
           </div>
 

@@ -104,7 +104,9 @@ useHotkeys([
                 key="default-layout-body-group-panel-1"
               >
                 <div class="flex flex-col overflow-y-auto w-full h-full">
-                  <slot />
+                  <div class="h-full">
+                    <slot />
+                  </div>
                 </div>
               </ResizablePanel>
               <ResizableHandle

@@ -64,7 +64,7 @@ export function useCopyToClipboard(resetDelayMs = 2000) {
    * Get icon class based on copied state
    */
   const getCopyIconClass = (isCopiedState: boolean = copied.value): string => {
-    return isCopiedState ? 'text-green-500' : 'text-muted-foreground';
+    return isCopiedState ? 'text-green-500' : '';
   };
 
   /**

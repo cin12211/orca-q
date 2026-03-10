@@ -14,73 +14,84 @@ const emit = defineEmits<{
   (e: 'update:model', value: string): void;
 }>();
 
-// Build flat list of all provider/model combinations for lookup
-const allModels = computed(() => {
-  const result: {
-    value: string;
-    label: string;
-    provider: string;
-    providerName: string;
-  }[] = [];
+const DELIMITER = '::';
+
+type ModelItem = {
+  value: string;
+  label: string;
+  provider: AIProvider;
+  providerName: string;
+  modelId: string;
+};
+
+/**
+ * build model list
+ */
+const { groupedModels, modelMap } = (() => {
+  const groups: Record<string, ModelItem[]> = {};
+  const map = new Map<string, ModelItem>();
+
   for (const provider of AI_PROVIDERS) {
+    const list: ModelItem[] = [];
+
     for (const model of provider.models) {
-      result.push({
-        value: `${provider.id}/${model.id}`,
+      const value = `${provider.id}${DELIMITER}${model.id}`;
+
+      const item: ModelItem = {
+        value,
         label: model.name,
-        provider: provider.id,
+        provider: provider.id as AIProvider,
         providerName: provider.name,
-      });
-    }
-  }
-  return result;
-});
+        modelId: model.id,
+      };
 
-// Group models by provider for the selector
-const groupedModels = computed(() => {
-  const groups: Record<string, typeof allModels.value> = {};
-  for (const model of allModels.value) {
-    if (!groups[model.providerName]) {
-      groups[model.providerName] = [];
+      list.push(item);
+      map.set(value, item);
     }
-    groups[model.providerName].push(model);
-  }
-  return groups;
-});
 
-// Combined provider/model value for single selector
+    groups[provider.id] = list;
+  }
+
+  return {
+    groupedModels: groups,
+    modelMap: map,
+  };
+})();
+
+/**
+ * v-model bridge
+ */
 const selectedModelFull = computed({
-  get: () => `${props.provider}/${props.model}`,
+  get: () => `${props.provider}${DELIMITER}${props.model}`,
+
   set: (val: string) => {
-    const [providerId, modelId] = val.split('/');
-    if (providerId && modelId) {
-      // Validate provider exists
-      const providerExists = AI_PROVIDERS.some(p => p.id === providerId);
-      if (providerExists) {
-        // We emit separate events for provider and model
-        // Note: The parent should handle updating both props
-        if (props.provider !== providerId) {
-          emit('update:provider', providerId as AIProvider);
-        }
-        if (props.model !== modelId) {
-          emit('update:model', modelId);
-        }
-      }
+    const [providerId, modelId] = val.split(DELIMITER);
+
+    if (!providerId || !modelId) return;
+
+    if (props.provider !== providerId) {
+      emit('update:provider', providerId as AIProvider);
+    }
+
+    if (props.model !== modelId) {
+      emit('update:model', modelId);
     }
   },
 });
 
-// Get current model display name
+/**
+ * display label
+ */
 const currentModelDisplay = computed(() => {
-  const model = allModels.value.find(m => m.value === selectedModelFull.value);
+  const model = modelMap.get(selectedModelFull.value);
+
   if (model) {
     return `${model.providerName} / ${model.label}`;
   }
-  // Fallback if model not found (e.g. config changed or invalid)
+
   const provider = AI_PROVIDERS.find(p => p.id === props.provider);
-  if (provider) {
-    return `${provider.name} / ${props.model}`;
-  }
-  return 'Select model';
+
+  return provider ? `${provider.name} / ${props.model}` : 'Select model';
 });
 </script>
 
@@ -89,26 +100,28 @@ const currentModelDisplay = computed(() => {
     <SelectTrigger :class="cn('text-xs px-2 w-full', props.class)">
       <SelectValue :placeholder="currentModelDisplay" />
     </SelectTrigger>
+
     <SelectContent>
-      <SelectGroup
-        v-for="(models, providerName) in groupedModels"
-        :key="providerName"
-      >
-        <SelectLabel
-          class="text-xs font-semibold px-2 py-1.5 text-muted-foreground"
-          >{{ providerName }}</SelectLabel
-        >
-        <SelectItem
-          v-for="model in models"
-          :key="model.value"
-          :value="model.value"
-          class="text-xs cursor-pointer"
-        >
-          {{ model.label }}
-        </SelectItem>
+      <template v-for="provider in AI_PROVIDERS" :key="provider.id">
+        <SelectGroup>
+          <SelectLabel
+            class="text-xs font-semibold px-2 py-1.5 text-muted-foreground"
+          >
+            {{ provider.name }}
+          </SelectLabel>
+
+          <SelectItem
+            v-for="model in groupedModels[provider.id]"
+            :key="model.value"
+            :value="model.value"
+            class="text-xs cursor-pointer"
+          >
+            {{ model.label }}
+          </SelectItem>
+        </SelectGroup>
 
         <SelectSeparator class="my-1" />
-      </SelectGroup>
+      </template>
     </SelectContent>
   </Select>
 </template>

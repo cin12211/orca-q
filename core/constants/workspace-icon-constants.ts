@@ -3,7 +3,7 @@ export const WORKSPACE_ICONS = [
   'lucide:building-2',
   'lucide:bone',
   'lucide:book',
-  'lucide:brain-circuit',
+  'hugeicons:ai-brain-05',
   'lucide:circle-dashed',
   'lucide:chess-bishop',
   'lucide:chess-king',

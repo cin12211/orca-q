@@ -4,10 +4,13 @@ import type { SQLNamespace } from '@codemirror/lang-sql';
 import { CompletionIcon } from '~/components/base/code-editor/constants';
 import type { Schema } from '~/core/stores';
 import type {
-  ColumnShortMetadata,
-  ForeignKeyMetadata,
+  SchemaColumnMetadata as ColumnShortMetadata,
+  SchemaForeignKeyMetadata as ForeignKeyMetadata,
+  SchemaMetaData,
   TableDetailMetadata,
-} from '~/server/api/get-schema-meta-data';
+  TableDetails,
+  ViewDetails,
+} from '~/core/types';
 import SuggestionTableInfo from '../components/SuggestionTableInfo.vue';
 import SuggetionColumnInfo from '../components/SuggetionColumnInfo.vue';
 

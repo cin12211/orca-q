@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { formatStatementSql } from '~/components/base/code-editor/utils';
-import type { ViewDefinitionResponse } from '~/server/api/get-view-definition';
+import type { ViewDefinitionResponse } from '~/core/types';
 
 const props = defineProps<{
   schema: string;
@@ -10,7 +10,7 @@ const props = defineProps<{
 }>();
 
 const { data, status } = useFetch<ViewDefinitionResponse>(
-  '/api/get-view-definition',
+  '/api/views/definition',
   {
     method: 'POST',
     body: {
@@ -29,13 +29,21 @@ const formattedSql = computed(() => {
 });
 </script>
 <template>
-  <div class="mb-2" :key="`${props.viewId}-${props.viewName}-${props.schema}`">
+  <div
+    :key="`${props.viewId}-${props.viewName}-${props.schema}`"
+    class="relative"
+  >
     <LoadingOverlay :visible="status === 'pending'" />
-    <p class="text-sm font-normal mb-1">View Definition:</p>
     <CodeHighlightPreview
+      v-if="formattedSql"
       :code="formattedSql"
       show-copy-button
       max-height="24rem"
+    />
+    <BaseEmpty
+      v-else-if="status !== 'pending'"
+      title="No Definition"
+      desc="No SQL definition is available for this view."
     />
   </div>
 </template>

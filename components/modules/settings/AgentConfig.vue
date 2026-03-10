@@ -10,6 +10,7 @@ const visibleKeys = ref<Record<string, boolean>>({
   google: false,
   anthropic: false,
   xai: false,
+  openrouter: false,
 });
 
 const toggleKeyVisibility = (provider: string) => {
@@ -190,6 +191,42 @@ const toggleKeyVisibility = (provider: string) => {
             >
               <Icon
                 :name="visibleKeys.xai ? 'lucide:eye-off' : 'lucide:eye'"
+                class="size-4"
+              />
+            </Button>
+          </div>
+        </div>
+
+        <!-- OpenRouter -->
+        <div class="flex flex-col gap-1">
+          <div class="flex items-center justify-between">
+            <p class="text-sm flex items-center gap-1">
+              <Icon name="lucide:route" />
+              OpenRouter
+            </p>
+            <a
+              href="https://openrouter.ai/settings/keys"
+              target="_blank"
+              class="text-xs text-primary hover:underline"
+            >
+              Get API key →
+            </a>
+          </div>
+          <div class="relative">
+            <Input
+              v-model="appLayoutStore.agentApiKeyConfigs.openrouter"
+              :type="visibleKeys.openrouter ? 'text' : 'password'"
+              placeholder="sk-or-..."
+              class="h-8 pr-8 font-mono text-xs"
+            />
+            <Button
+              variant="ghost"
+              size="sm"
+              class="absolute right-0 top-0 h-8 w-8 p-0"
+              @click="toggleKeyVisibility('openrouter')"
+            >
+              <Icon
+                :name="visibleKeys.openrouter ? 'lucide:eye-off' : 'lucide:eye'"
                 class="size-4"
               />
             </Button>

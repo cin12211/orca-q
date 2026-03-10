@@ -5,6 +5,7 @@ import {
   ManagementSchemas,
   ManagementExport,
   ManagementUsersAndPermission,
+  ManagementAgent,
 } from '#components';
 import { useAppLayoutStore } from '~/core/stores/appLayoutStore';
 import {
@@ -35,6 +36,9 @@ watch(
     }
     if (activityStore.activityActive === ActivityBarItemType.DatabaseExport) {
       current.value = ManagementExport;
+    }
+    if (activityStore.activityActive === ActivityBarItemType.Agent) {
+      current.value = ManagementAgent;
     }
   },
   {

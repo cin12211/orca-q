@@ -6,7 +6,7 @@ import {
   type TreeFileSystemItem,
 } from '~/components/base/Tree';
 import { DEFAULT_DEBOUNCE_INPUT } from '~/core/constants';
-import type { TableMetadata } from '~/server/api/get-tables';
+import type { TableMetadata } from '~/core/types';
 import { buildTableNodeId, detructTableNodeId } from '../utils';
 
 const props = defineProps<{

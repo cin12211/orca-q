@@ -1,4 +1,3 @@
-import { ref, computed, onBeforeMount } from 'vue';
 import json from '@shikijs/langs/json';
 import plsql from '@shikijs/langs/plsql';
 import catppuccinLatte from '@shikijs/themes/catppuccin-latte';

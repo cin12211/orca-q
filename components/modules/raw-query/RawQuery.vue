@@ -174,6 +174,8 @@ onActivated(async () => {
             :execute-loading="queryProcessState.executeLoading"
             :execute-errors="!!queryProcessState.executeErrors"
             :is-have-one-execute="queryProcessState.isHaveOneExecute"
+            :is-streaming="queryProcessState.isStreaming"
+            :streaming-row-count="queryProcessState.streamingRowCount"
             :queryTime="queryProcessState.queryTime"
             :raw-query-results-length="currentRawQueryResult.length"
             :explain-analyze-option-items="explainAnalyzeOptionItems"
@@ -184,6 +186,7 @@ onActivated(async () => {
             @toggle-explain-option="rawQueryEditor.toggleExplainOption"
             @update:serialize-mode="rawQueryEditor.setSerializeMode"
             @on-execute-current="onExecuteCurrent"
+            @on-cancel-query="rawQueryEditor.cancelStreamingQuery"
           />
         </div>
       </div>

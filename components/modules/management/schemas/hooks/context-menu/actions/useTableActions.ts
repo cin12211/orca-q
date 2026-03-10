@@ -46,7 +46,7 @@ export function useTableActions(
     // Browser handles the streaming response with its native download progress
     const form = document.createElement('form');
     form.method = 'POST';
-    form.action = '/api/export-table-data';
+    form.action = '/api/tables/export';
     form.style.display = 'none';
 
     const fields = {
@@ -94,7 +94,7 @@ export function useTableActions(
     const timestamp = dayjs().format('YYYY-MM-DD_HH-mm');
 
     await downloadStream({
-      url: '/api/export-table-data',
+      url: '/api/tables/export',
       method: 'POST',
       body: {
         dbConnectionString: options.currentConnectionString.value,
@@ -130,7 +130,7 @@ export function useTableActions(
     await executeWithSafeMode(sql, 'delete', async () => {
       await executeWithLoading(
         async () => {
-          await $fetch('/api/execute', {
+          await $fetch('/api/query/execute', {
             method: 'POST',
             body: {
               dbConnectionString: options.currentConnectionString.value,
@@ -172,7 +172,7 @@ export function useTableActions(
     await executeWithSafeMode(sql, 'save', async () => {
       await executeWithLoading(
         async () => {
-          await $fetch('/api/execute', {
+          await $fetch('/api/query/execute', {
             method: 'POST',
             body: {
               dbConnectionString: options.currentConnectionString.value,
@@ -436,7 +436,7 @@ WHERE ${pkCondition};`;
 
     await executeWithLoading(
       async () => {
-        const ddl = await $fetch('/api/get-table-ddl', {
+        const ddl = await $fetch('/api/tables/ddl', {
           method: 'POST',
           body: {
             dbConnectionString: options.currentConnectionString.value,

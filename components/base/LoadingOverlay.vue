@@ -10,7 +10,7 @@ defineProps<{
       v-if="visible"
       class="absolute inset-0 z-20 flex items-center justify-center rounded loading-overlay-glass"
     >
-      <Icon name="lucide:loader" class="size-6! animate-spin" />
+      <Icon name="hugeicons:loading-03" class="size-6! animate-spin" />
     </div>
   </transition>
 </template>

@@ -523,6 +523,7 @@ const onBackPreviousBreadcrumbByIndex = (index: number) => {
         :cellHeaderContextMenu="quickQueryTableRef?.cellHeaderContextMenu"
         :selectedRows="selectedRows"
         :table-name="tableName"
+        :schema-name="schemaName"
         @onClearContextMenu="quickQueryTableRef?.clearCellContextMenu()"
         @onPaginate="onUpdatePagination"
         @onNextPage="onNextPage"

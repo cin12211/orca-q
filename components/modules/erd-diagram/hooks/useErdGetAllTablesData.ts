@@ -1,7 +1,7 @@
 import { toast } from 'vue-sonner';
 import { useAppContext } from '~/core/contexts';
 import { useErdStore } from '~/core/stores/erdStore';
-import type { TableMetadata } from '~/server/api/get-tables';
+import type { TableMetadata } from '~/core/types';
 
 export const useErdQueryTables = () => {
   const { connectionStore } = useAppContext();
@@ -18,7 +18,7 @@ export const useErdQueryTables = () => {
   }
 
   const { data: tableSchemaResponse, status: tableSchemaStatus } = useFetch(
-    '/api/get-tables',
+    '/api/metadata/erd',
     {
       method: 'POST',
       body: {

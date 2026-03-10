@@ -6,7 +6,7 @@ import {
   generateRenameFunctionSQL,
 } from '~/components/modules/management/schemas/utils/generateFunctionSQL';
 import { TabViewType } from '~/core/stores/useTabViewsStore';
-import type { FunctionSignature } from '~/server/api/get-function-signature';
+import type { FunctionSignature } from '~/core/types';
 import type { ContextMenuState, SchemaContextMenuOptions } from '../types';
 import type { useContextMenuHelpers } from '../useContextMenuHelpers';
 
@@ -43,7 +43,7 @@ export function useFunctionActions(
     await executeWithSafeMode(sql, 'delete', async () => {
       await executeWithLoading(
         async () => {
-          await $fetch('/api/delete-function', {
+          await $fetch('/api/functions/delete', {
             method: 'POST',
             body: {
               dbConnectionString: options.currentConnectionString.value,
@@ -87,7 +87,7 @@ export function useFunctionActions(
     await executeWithSafeMode(sql, 'save', async () => {
       await executeWithLoading(
         async () => {
-          await $fetch('/api/rename-function', {
+          await $fetch('/api/functions/rename', {
             method: 'POST',
             body: {
               dbConnectionString: options.currentConnectionString.value,
@@ -115,7 +115,7 @@ export function useFunctionActions(
     await executeWithLoading(
       async () => {
         const signature = await $fetch<FunctionSignature | null>(
-          '/api/get-function-signature',
+          '/api/functions/signature',
           {
             method: 'POST',
             body: {
@@ -164,7 +164,7 @@ export function useFunctionActions(
     await executeWithLoading(
       async () => {
         const signature = await $fetch<FunctionSignature | null>(
-          '/api/get-function-signature',
+          '/api/functions/signature',
           {
             method: 'POST',
             body: {
@@ -214,7 +214,7 @@ export function useFunctionActions(
     await executeWithLoading(
       async () => {
         showSqlPreview('', 'Function DDL');
-        const def = await $fetch('/api/get-one-function', {
+        const def = await $fetch('/api/functions/definition', {
           method: 'POST',
           body: {
             dbConnectionString: options.currentConnectionString.value,
