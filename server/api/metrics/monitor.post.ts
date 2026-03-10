@@ -7,17 +7,28 @@ export default defineEventHandler(async (event): Promise<DatabaseMetrics> => {
   try {
     const body: {
       dbConnectionString: string;
+      host?: string;
+      port?: string;
+      username?: string;
+      password?: string;
+      database?: string;
+      type?: DatabaseClientType;
     } = await readBody(event);
 
-    if (!body?.dbConnectionString) {
+    if (!body?.dbConnectionString && !body?.host) {
       throw createError({
         statusCode: 400,
-        statusMessage: 'dbConnectionString is required',
+        statusMessage: 'dbConnectionString or host is required',
       });
     }
 
-    const adapter = await createMetricsAdapter(DatabaseClientType.POSTGRES, {
+    const adapter = await createMetricsAdapter(body.type || DatabaseClientType.POSTGRES, {
       dbConnectionString: body.dbConnectionString,
+      host: body.host,
+      port: body.port,
+      username: body.username,
+      password: body.password,
+      database: body.database,
     });
 
     return await adapter.getMetrics();

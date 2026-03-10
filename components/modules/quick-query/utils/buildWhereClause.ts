@@ -1,6 +1,6 @@
 // ~/utils/query-generator.ts
 import { z } from 'zod';
-import { EDatabaseType } from '~/components/modules/connection/constants';
+import { EDatabaseType } from '~/components/modules/connection';
 import {
   ComposeOperator,
   EExtendedField,

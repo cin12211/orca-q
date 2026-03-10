@@ -25,6 +25,7 @@ import { pgKeywordCompletion } from '~/components/base/code-editor/utils/pgKeywo
 import QuickQueryErrorPopup from '~/components/modules/quick-query/QuickQueryErrorPopup.vue';
 import FunctionControlBar from '~/components/modules/quick-query/function-control-bar/FunctionControlBar.vue';
 import { useAppContext } from '~/core/contexts/useAppContext';
+import { getConnectionParams } from '~/core/helpers/connection-helper';
 import { useQuickQueryLogs } from '~/core/stores';
 
 const props = defineProps<{
@@ -69,17 +70,16 @@ const mappedSchema = computed(() => {
 
 const sqlCompartment = new Compartment();
 
-const connectionString = computed(() => {
+const connection = computed(() => {
   if (props.connectionId) {
-    return connectionStore.connections.find(c => c.id === props.connectionId)
-      ?.connectionString;
+    return connectionStore.connections.find(c => c.id === props.connectionId);
   }
-  return connectionStore.selectedConnection?.connectionString;
+  return connectionStore.selectedConnection;
 });
 
 const requestBody = computed(() => ({
   functionId: props.functionId,
-  dbConnectionString: connectionString.value,
+  ...getConnectionParams(connection.value),
 }));
 
 const { status } = useFetch('/api/functions/definition', {
@@ -104,8 +104,7 @@ const saveFunction = async () => {
     await $fetch('/api/functions/update', {
       method: 'POST',
       body: {
-        dbConnectionString:
-          connectionStore.selectedConnection?.connectionString,
+        ...getConnectionParams(connectionStore.selectedConnection),
         functionDefinition: code.value,
       },
       onResponseError: error => {

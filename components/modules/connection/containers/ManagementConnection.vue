@@ -3,8 +3,8 @@ import { ref } from 'vue';
 import { Button } from '@/components/ui/button';
 import { useAppContext } from '~/core/contexts/useAppContext';
 import type { Connection } from '~/core/stores';
-import ConnectionsList from './ConnectionsList.vue';
-import CreateConnectionModal from './CreateConnectionModal.vue';
+import ConnectionsList from '../components/ConnectionsList.vue';
+import CreateConnectionModal from '../components/CreateConnectionModal.vue';
 
 defineProps<{
   connections: Connection[];

@@ -8,8 +8,11 @@ const MYSQL_PLACEHOLDER_MESSAGE =
 
 export class MysqlAdapter implements IDatabaseAdapter {
   readonly dbType = DatabaseClientType.MYSQL;
+  readonly connection: string | Knex.Config['connection'];
 
-  constructor(public readonly connectionString: string) {}
+  constructor(connection: string | Knex.Config['connection']) {
+    this.connection = connection;
+  }
 
   async rawQuery<T = any>(_sql: string, _bindings: any[] = []): Promise<T[]> {
     throw new Error(MYSQL_PLACEHOLDER_MESSAGE);

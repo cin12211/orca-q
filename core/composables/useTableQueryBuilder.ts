@@ -1,6 +1,6 @@
 import debounce from 'lodash-es/debounce';
 import { toast } from 'vue-sonner';
-import { EDatabaseType } from '~/components/modules/connection/constants';
+import { EDatabaseType } from '~/components/modules/connection';
 import {
   formatWhereClause,
   type FilterSchema,
@@ -12,7 +12,8 @@ import {
   DEFAULT_QUERY_COUNT,
   DEFAULT_QUERY_SIZE,
 } from '~/core/constants';
-import { useQuickQueryLogs } from '~/core/stores';
+import { getConnectionParams } from '../helpers/connection-helper';
+import { useQuickQueryLogs, type Connection } from '~/core/stores';
 
 export interface OrderBy {
   columnName?: string;
@@ -21,7 +22,7 @@ export interface OrderBy {
 
 export const useTableQueryBuilder = ({
   tableName,
-  connectionString,
+  connection,
   primaryKeys,
   columns,
   isPersist = true,
@@ -31,7 +32,7 @@ export const useTableQueryBuilder = ({
   initFilters,
   initComposeWith,
 }: {
-  connectionString: Ref<string>;
+  connection: Ref<Connection | undefined>;
   tableName: string;
   primaryKeys: Ref<string[]>;
   columns: Ref<string[]>;
@@ -126,7 +127,7 @@ export const useTableQueryBuilder = ({
     method: 'POST',
     body: {
       query: queryString,
-      dbConnectionString: connectionString,
+      ...getConnectionParams(connection.value),
     },
     watch: false,
     immediate: false,
@@ -162,7 +163,7 @@ export const useTableQueryBuilder = ({
     method: 'POST',
     body: {
       query: queryCountString,
-      dbConnectionString: connectionString,
+      ...getConnectionParams(connection.value),
     },
     watch: false,
     immediate: false,

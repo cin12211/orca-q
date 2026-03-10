@@ -6,6 +6,8 @@ import {
   buildMappedColumnsFromKeys,
   buildMappedColumnsFromRows,
 } from '~/core/helpers';
+import { getConnectionParams } from '~/core/helpers/connection-helper';
+import { useManagementConnectionStore } from '~/core/stores';
 import type { TableIndex } from '~/core/types';
 import {
   getStructureTableHeightPx,
@@ -15,7 +17,7 @@ import {
 const props = defineProps<{
   schema: string;
   viewName: string;
-  connectionString: string;
+  connectionId?: string;
 }>();
 
 const VIEW_INDEXES_COLUMN_KEYS = [
@@ -29,13 +31,21 @@ const error = ref<string | null>(null);
 
 const cacheKey = computed(() => `${props.schema}.${props.viewName}`);
 
+const connectionStore = useManagementConnectionStore();
+const connection = computed(() => {
+  if (props.connectionId) {
+    return connectionStore.connections.find(c => c.id === props.connectionId);
+  }
+  return connectionStore.selectedConnection;
+});
+
 const { data, status } = useFetch<TableIndex[]>('/api/views/indexes', {
   method: 'POST',
-  body: {
-    dbConnectionString: props.connectionString,
+  body: computed(() => ({
+    ...getConnectionParams(connection.value),
     schema: props.schema,
     viewName: props.viewName,
-  },
+  })),
   key: `view-indexes-${cacheKey.value}`,
   onResponseError({ response }) {
     error.value = response._data?.message || 'Failed to load indexes';

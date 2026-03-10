@@ -66,12 +66,10 @@ export const useAppContext = () => {
     }
 
     try {
-      const dbConnectionString = connection.connectionString || '';
-
       const result = await schemaStore.fetchSchemas({
         connectionId: connId,
         workspaceId: wsId,
-        dbConnectionString,
+        connection,
         isRefresh,
       });
 
@@ -123,7 +121,7 @@ export const useAppContext = () => {
 
       await schemaStore.fetchReservedSchemas({
         connectionId: connId,
-        dbConnectionString,
+        connection,
       });
     } catch (e) {
       console.error(e);

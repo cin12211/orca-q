@@ -11,7 +11,7 @@ export interface RawQueryResult<T = object> {
 
 export interface IDatabaseAdapter {
   readonly dbType: DatabaseClientType;
-  readonly connectionString: string;
+  readonly connection: string | Knex.Config['connection'];
 
   rawQuery<T = any>(sql: string, bindings?: any[]): Promise<T[]>;
   rawOut<T = any>(sql: string, bindings?: any[]): Promise<RawQueryResult<T>>;

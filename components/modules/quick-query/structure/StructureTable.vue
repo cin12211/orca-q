@@ -5,6 +5,8 @@ import {
   buildMappedColumnsFromKeys,
   buildMappedColumnsFromRows,
 } from '~/core/helpers';
+import { getConnectionParams } from '~/core/helpers/connection-helper';
+import { useManagementConnectionStore } from '~/core/stores';
 import { useSchemaStore } from '~/core/stores/useSchemaStore';
 import type { ViewMeta } from '~/core/types';
 import IndexesTab from './IndexesTab.vue';
@@ -24,7 +26,7 @@ import {
 const props = defineProps<{
   schema: string;
   tableName: string;
-  connectionString: string;
+  connectionId?: string;
   isVirtualTable?: boolean;
   virtualTableId?: string;
 }>();
@@ -40,13 +42,21 @@ const STRUCTURE_TABLE_COLUMN_KEYS = [
   'column_comment',
 ] as const;
 
+const connectionStore = useManagementConnectionStore();
+const connection = computed(() => {
+  if (props.connectionId) {
+    return connectionStore.connections.find(c => c.id === props.connectionId);
+  }
+  return connectionStore.selectedConnection;
+});
+
 const { data, status } = useFetch('/api/tables/structure', {
   method: 'POST',
-  body: {
-    dbConnectionString: props.connectionString,
+  body: computed(() => ({
+    ...getConnectionParams(connection.value),
     schema: props.schema,
     tableName: props.tableName,
-  },
+  })),
   key: `${props.schema}.${props.tableName}`,
 });
 
@@ -64,22 +74,22 @@ const structureCacheKey = computed(() => `${props.schema}.${props.tableName}`);
 
 const { data: rlsState } = useFetch<{ enabled: boolean }>('/api/tables/rls', {
   method: 'POST',
-  body: {
-    dbConnectionString: props.connectionString,
+  body: computed(() => ({
+    ...getConnectionParams(connection.value),
     schema: props.schema,
     table: props.tableName,
-  },
+  })),
   key: `rls-${structureCacheKey.value}`,
   immediate: !props.isVirtualTable,
 });
 
 const { data: viewMeta } = useFetch<ViewMeta>('/api/views/meta', {
   method: 'POST',
-  body: {
-    dbConnectionString: props.connectionString,
+  body: computed(() => ({
+    ...getConnectionParams(connection.value),
     schema: props.schema,
     viewName: props.tableName,
-  },
+  })),
   key: `view-meta-struct-${structureCacheKey.value}`,
   immediate: !!props.isVirtualTable,
   getCachedData: () => {
@@ -119,7 +129,7 @@ const columnsTableHeight = computed(() => {
           <TableMetaInfo
             :schema="schema"
             :tableName="tableName"
-            :connectionString="connectionString"
+            :connectionId="connectionId"
           />
         </section>
       </template>
@@ -133,7 +143,7 @@ const columnsTableHeight = computed(() => {
             </p>
           </div>
           <ViewMetaInfo
-            :connectionString="connectionString"
+            :connectionId="connectionId"
             :schema="schema"
             :viewName="tableName"
           />
@@ -176,7 +186,7 @@ const columnsTableHeight = computed(() => {
             <IndexesTab
               :schema="schema"
               :tableName="tableName"
-              :connectionString="connectionString"
+              :connectionId="connectionId"
             />
           </div>
         </section>
@@ -201,7 +211,7 @@ const columnsTableHeight = computed(() => {
             <RlsTab
               :schema="schema"
               :tableName="tableName"
-              :connectionString="connectionString"
+              :connectionId="connectionId"
             />
           </div>
         </section>
@@ -217,7 +227,7 @@ const columnsTableHeight = computed(() => {
             <RulesTab
               :schema="schema"
               :tableName="tableName"
-              :connectionString="connectionString"
+              :connectionId="connectionId"
             />
           </div>
         </section>
@@ -233,7 +243,7 @@ const columnsTableHeight = computed(() => {
             <TriggersTab
               :schema="schema"
               :tableName="tableName"
-              :connectionString="connectionString"
+              :connectionId="connectionId"
             />
           </div>
         </section>
@@ -246,7 +256,7 @@ const columnsTableHeight = computed(() => {
             <p class="text-xs text-muted-foreground">View SQL definition</p>
           </div>
           <VirtualTableDefinition
-            :connectionString="connectionString"
+            :connectionId="connectionId"
             :schema="schema"
             :viewName="tableName"
             :viewId="virtualTableId"
@@ -264,7 +274,7 @@ const columnsTableHeight = computed(() => {
             <ViewIndexesTab
               :schema="schema"
               :viewName="tableName"
-              :connectionString="connectionString"
+              :connectionId="connectionId"
             />
           </div>
         </section>
@@ -280,7 +290,7 @@ const columnsTableHeight = computed(() => {
             <ViewDependencies
               :schema="schema"
               :viewName="tableName"
-              :connectionString="connectionString"
+              :connectionId="connectionId"
             />
           </div>
         </section>

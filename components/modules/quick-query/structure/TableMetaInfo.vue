@@ -2,12 +2,14 @@
 import { Alert, AlertDescription } from '~/components/ui/alert';
 import { Badge } from '~/components/ui/badge';
 import { Button } from '~/components/ui/button';
+import { getConnectionParams } from '~/core/helpers/connection-helper';
+import { useManagementConnectionStore } from '~/core/stores';
 import type { TableMeta } from '~/core/types';
 
 const props = defineProps<{
   schema: string;
   tableName: string;
-  connectionString: string;
+  connectionId?: string;
 }>();
 
 const TABLE_TYPE_LABELS: Record<string, string> = {
@@ -19,13 +21,21 @@ const TABLE_TYPE_LABELS: Record<string, string> = {
 const error = ref<string | null>(null);
 const cacheKey = computed(() => `${props.schema}.${props.tableName}`);
 
+const connectionStore = useManagementConnectionStore();
+const connection = computed(() => {
+  if (props.connectionId) {
+    return connectionStore.connections.find(c => c.id === props.connectionId);
+  }
+  return connectionStore.selectedConnection;
+});
+
 const { data, status } = useFetch<TableMeta>('/api/tables/meta', {
   method: 'POST',
-  body: {
-    dbConnectionString: props.connectionString,
+  body: computed(() => ({
+    ...getConnectionParams(connection.value),
     schema: props.schema,
     tableName: props.tableName,
-  },
+  })),
   key: `table-meta-${cacheKey.value}`,
   onResponseError({ response }) {
     error.value = response._data?.message || 'Failed to load table metadata';

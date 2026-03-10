@@ -1,5 +1,6 @@
 import { toast } from 'vue-sonner';
 import { useAppContext } from '~/core/contexts';
+import { getConnectionParams } from '~/core/helpers/connection-helper';
 import { useErdStore } from '~/core/stores/erdStore';
 import type { TableMetadata } from '~/core/types';
 
@@ -22,8 +23,7 @@ export const useErdQueryTables = () => {
     {
       method: 'POST',
       body: {
-        dbConnectionString:
-          connectionStore.selectedConnection?.connectionString,
+        ...getConnectionParams(connectionStore.selectedConnection),
       },
       onResponseError({ response }) {
         toast(response?.statusText);

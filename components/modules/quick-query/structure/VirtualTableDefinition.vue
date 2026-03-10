@@ -1,24 +1,34 @@
 <script setup lang="ts">
 import { formatStatementSql } from '~/components/base/code-editor/utils';
+import { getConnectionParams } from '~/core/helpers/connection-helper';
+import { useManagementConnectionStore } from '~/core/stores';
 import type { ViewDefinitionResponse } from '~/core/types';
 
 const props = defineProps<{
   schema: string;
-  connectionString: string;
+  connectionId?: string;
   viewName: string;
   viewId: string;
 }>();
+
+const connectionStore = useManagementConnectionStore();
+const connection = computed(() => {
+  if (props.connectionId) {
+    return connectionStore.connections.find(c => c.id === props.connectionId);
+  }
+  return connectionStore.selectedConnection;
+});
 
 const { data, status } = useFetch<ViewDefinitionResponse>(
   '/api/views/definition',
   {
     method: 'POST',
-    body: {
-      dbConnectionString: props.connectionString,
+    body: computed(() => ({
+      ...getConnectionParams(connection.value),
       viewId: props.viewId,
       schemaName: props.schema,
       viewName: props.viewName,
-    },
+    })),
     key: `${props.schema}.${props.viewId}`,
   }
 );

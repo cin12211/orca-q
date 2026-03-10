@@ -3,7 +3,6 @@ import { Icon, Select, SelectContent, SelectItem } from '#components';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 import { ClockFading, ExternalLink } from 'lucide-vue-next';
-import type { ReferenceElement } from 'reka-ui';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -12,10 +11,9 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { useAppContext } from '~/core/contexts/useAppContext';
-import { type Connection, type Workspace } from '~/core/stores';
-import CreateConnectionModal from '../connection/CreateConnectionModal.vue';
-import { getDatabaseSupportByType } from '../connection/constants';
+import { type Workspace } from '~/core/stores';
+import { CreateConnectionModal, getDatabaseSupportByType } from '../../connection';
+import { useWorkspaceCard } from '../hooks/useWorkspaceCard';
 import CreateWorkspaceModal from './CreateWorkspaceModal.vue';
 import DeleteWorkspaceModal from './DeleteWorkspaceModal.vue';
 
@@ -32,60 +30,21 @@ const emits = defineEmits<{
 
 const {
   workspaceStore,
-  connectionStore,
-  createConnection,
-  openWorkspaceWithConnection,
-} = useAppContext();
-
-const isOpenEditModal = ref(false);
-const isOpenDeleteModal = ref(false);
-const isOpenConnectionSelector = ref(false);
-const dropdownTriggerRef = ref<ReferenceElement | undefined>();
-const isModalCreateConnectionOpen = ref(false);
-
-const onConfirmDelete = () => {
-  isOpenDeleteModal.value = false;
-  workspaceStore.deleteWorkspace(props.workspace.id);
-};
-
-const connections = computed(() => {
-  return connectionStore.getConnectionsByWorkspaceId(props.workspace.id);
+  isOpenEditModal,
+  isOpenDeleteModal,
+  isOpenConnectionSelector,
+  dropdownTriggerRef,
+  isModalCreateConnectionOpen,
+  connections,
+  onConfirmDelete,
+  onOpenWorkspace,
+  onOpenConnectionSelector,
+  onOpenWorkspaceWithConnection,
+  handleAddConnection,
+} = useWorkspaceCard({
+  workspace: props.workspace,
+  onSelectWorkspace: wsId => emits('onSelectWorkspace', wsId),
 });
-
-const onOpenWorkspace = (workspaceId: string) => {
-  emits('onSelectWorkspace', workspaceId);
-};
-
-const onOpenConnectionSelector = () => {
-  isOpenConnectionSelector.value = true;
-};
-
-const onOpenWorkspaceWithConnection = async (connectionId: string) => {
-  isOpenConnectionSelector.value = false;
-
-  // setActiveWSId({
-  //   connId: connectionId,
-  //   wsId: wsStateStore.workspaceId,
-  // });
-
-  // await nextTick();
-
-  await openWorkspaceWithConnection({
-    connId: connectionId,
-    wsId: props.workspace.id,
-  });
-
-  // await setConnectionId({
-  //   connectionId,
-  //   async onSuccess() {
-  //     await tabViewStore.onActiveCurrentTab(connectionId);
-  //   },
-  // });
-};
-
-const handleAddConnection = (connection: Connection) => {
-  createConnection(connection);
-};
 </script>
 
 <template>
@@ -122,7 +81,6 @@ const handleAddConnection = (connection: Connection) => {
 
         <div>
           <CardTitle class="line-clamp-1">{{ workspace.name }}</CardTitle>
-          <!-- <CardDescription>You have 3 unread messages.</CardDescription> -->
         </div>
       </div>
 
@@ -138,12 +96,10 @@ const handleAddConnection = (connection: Connection) => {
             @click="isOpenEditModal = true"
           >
             <Icon name="lucide:pencil" class="size-4! min-w-4" />
-
             Edit workspace
           </DropdownMenuItem>
           <DropdownMenuItem class="cursor-pointer flex items-center" disabled>
             <Icon name="lucide:link" class="size-4! min-w-4" />
-
             Invite
           </DropdownMenuItem>
           <DropdownMenuItem
@@ -151,7 +107,6 @@ const handleAddConnection = (connection: Connection) => {
             @click="isOpenDeleteModal = true"
           >
             <Icon name="lucide:trash" class="size-4! min-w-4" />
-
             Delete workspace
           </DropdownMenuItem>
         </DropdownMenuContent>
@@ -163,38 +118,8 @@ const handleAddConnection = (connection: Connection) => {
           {{ workspace.desc }}
         </p>
 
-        <!-- TODO: open collaborator -->
-        <div class="flex items-center pt-2" hidden>
-          <Icon name="lucide:users" class="mr-2 h-4 w-4 opacity-70" />
-          <span class="text-xs text-muted-foreground"> You and ... </span>
-          <!-- <div class="flex">
-                  <Avatar class="size-4">
-                    <AvatarImage
-                      src="https://github.com/unovue.png"
-                      alt="@unovue"
-                    />
-                    <AvatarFallback> U1 </AvatarFallback>
-                  </Avatar>
-                  <Avatar class="size-4">
-                    <AvatarImage
-                      src="https://github.com/"
-                      alt="@unovue"
-                    />
-                    <AvatarFallback> U1 </AvatarFallback>
-                  </Avatar>
-                  <Avatar class="size-4">
-                    <AvatarImage
-                      src="https://github.com/unovue.png"
-                      alt="@unovue"
-                    />
-                    <AvatarFallback> U1 </AvatarFallback>
-                  </Avatar>
-                </div> -->
-        </div>
-
         <div class="flex items-center pt-2">
           <Icon name="hugeicons:connect" class="mr-2 h-4 w-4 opacity-70" />
-
           <span class="text-xs text-muted-foreground">
             Connection : {{ connections.length }}
           </span>
@@ -213,7 +138,6 @@ const handleAddConnection = (connection: Connection) => {
         </div>
         <div class="flex items-center pt-2">
           <Icon name="lucide:clock" class="mr-2 h-4 w-4 opacity-70" />
-
           <span class="text-xs text-muted-foreground">
             Created : {{ dayjs(workspace.createdAt).fromNow() }}
           </span>
@@ -226,7 +150,7 @@ const handleAddConnection = (connection: Connection) => {
           ref="dropdownTriggerRef"
           variant="default"
           class="w-full flex items-center justify-between"
-          @click="onOpenWorkspace(workspace.id)"
+          @click="onOpenWorkspace()"
           size="sm"
         >
           <div class="flex items-center gap-1">
@@ -249,7 +173,6 @@ const handleAddConnection = (connection: Connection) => {
               @click="isModalCreateConnectionOpen = true"
             >
               <Icon name="lucide:plus" />
-
               Add new connection
             </div>
 

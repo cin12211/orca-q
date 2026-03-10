@@ -17,7 +17,7 @@ import {
   EExtendedField,
   OperatorSet,
 } from '~/core/constants';
-import { EDatabaseType } from '../../connection/constants';
+import { EDatabaseType } from '../../connection';
 import ColumnSelector from '../../selectors/ColumnSelector.vue';
 import OperatorSelector from '../../selectors/OperatorSelector.vue';
 import QuickQueryFilterGuide from './QuickQueryFilterGuide.vue';

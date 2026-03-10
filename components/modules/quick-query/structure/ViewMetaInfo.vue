@@ -2,13 +2,15 @@
 import { Alert, AlertDescription } from '~/components/ui/alert';
 import { Badge } from '~/components/ui/badge';
 import { Button } from '~/components/ui/button';
+import { getConnectionParams } from '~/core/helpers/connection-helper';
+import { useManagementConnectionStore } from '~/core/stores';
 import { useSchemaStore } from '~/core/stores/useSchemaStore';
 import type { ViewMeta } from '~/core/types';
 
 const props = defineProps<{
   schema: string;
   viewName: string;
-  connectionString: string;
+  connectionId?: string;
 }>();
 
 const schemaStore = useSchemaStore();
@@ -16,13 +18,21 @@ const cacheKey = computed(() => `${props.schema}.${props.viewName}`);
 
 const error = ref<string | null>(null);
 
+const connectionStore = useManagementConnectionStore();
+const connection = computed(() => {
+  if (props.connectionId) {
+    return connectionStore.connections.find(c => c.id === props.connectionId);
+  }
+  return connectionStore.selectedConnection;
+});
+
 const { data, status } = useFetch<ViewMeta>('/api/views/meta', {
   method: 'POST',
-  body: {
-    dbConnectionString: props.connectionString,
+  body: computed(() => ({
+    ...getConnectionParams(connection.value),
     schema: props.schema,
     viewName: props.viewName,
-  },
+  })),
   key: `view-meta-${cacheKey.value}`,
   getCachedData: () => {
     const cached = schemaStore.viewMetaMap[cacheKey.value];

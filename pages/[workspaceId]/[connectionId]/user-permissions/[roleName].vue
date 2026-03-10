@@ -5,6 +5,7 @@ import GrantRevokeDialog from '~/components/modules/management/role-permission/c
 import RoleAttributesCard from '~/components/modules/management/role-permission/components/RoleAttributesCard.vue';
 import { useDatabasePermissions } from '~/components/modules/management/role-permission/hooks/useDatabaseRoles';
 import { useAppContext } from '~/core/contexts/useAppContext';
+import { getConnectionParams } from '~/core/helpers/connection-helper';
 import type {
   RolePermissions,
   ObjectPermission,
@@ -22,13 +23,13 @@ const route = useRoute('workspaceId-connectionId-user-permissions-roleName');
 const { connectionStore } = useAppContext();
 
 const roleName = computed(() => route.params.roleName as string);
-const dbConnectionString = computed(
-  () => connectionStore.selectedConnection?.connectionString || ''
-);
+const connection = computed(() => connectionStore.selectedConnection);
 
 // Extract current database name from connection string
 const currentDatabaseName = computed(() => {
-  const connStr = dbConnectionString.value;
+  if (!connection.value) return '';
+  if (connection.value.database) return connection.value.database;
+  const connStr = connection.value.connectionString;
   if (!connStr) return '';
 
   try {
@@ -58,7 +59,7 @@ const roleInfo = ref<{
 const inheritedRoles = ref<RoleInheritanceNode[]>([]);
 
 const fetchRoleInfo = async () => {
-  if (!dbConnectionString.value || !roleName.value) return;
+  if (!connection.value || !roleName.value) return;
 
   try {
     const response = await $fetch<DatabaseRole>(
@@ -66,7 +67,7 @@ const fetchRoleInfo = async () => {
       {
         method: 'POST',
         body: {
-          dbConnectionString: dbConnectionString.value,
+          ...getConnectionParams(connection.value),
           roleName: roleName.value,
         },
       }
@@ -91,7 +92,7 @@ const fetchRoleInfo = async () => {
 };
 const isLoadingInheritance = ref(false);
 const fetchInheritance = async () => {
-  if (!dbConnectionString.value || !roleName.value) return;
+  if (!connection.value || !roleName.value) return;
   isLoadingInheritance.value = true;
   try {
     const response = await $fetch<RoleInheritanceNode[]>(
@@ -99,7 +100,7 @@ const fetchInheritance = async () => {
       {
         method: 'POST',
         body: {
-          dbConnectionString: dbConnectionString.value,
+          ...getConnectionParams(connection.value),
           roleName: roleName.value,
         },
       }
@@ -120,7 +121,7 @@ const permissions = ref<RolePermissions | null>(null);
 const error = ref<string | null>(null);
 
 const fetchPermissions = async () => {
-  if (!dbConnectionString.value || !roleName.value) return;
+  if (!connection.value || !roleName.value) return;
 
   isLoading.value = true;
   error.value = null;
@@ -131,7 +132,7 @@ const fetchPermissions = async () => {
       {
         method: 'POST',
         body: {
-          dbConnectionString: dbConnectionString.value,
+          ...getConnectionParams(connection.value),
           roleName: roleName.value,
         },
       }
@@ -164,7 +165,7 @@ const {
   isLoading: isLoadingDatabases,
   databasePermissions,
   fetchDatabasePermissions,
-} = useDatabasePermissions(dbConnectionString);
+} = useDatabasePermissions(connection);
 
 const expandedDatabases = ref<Set<string>>(new Set());
 
@@ -207,7 +208,7 @@ const onDialogConfirm = async (data: {
   grant: PrivilegeType[];
   revoke: PrivilegeType[];
 }) => {
-  if (!dbConnectionString.value || !roleName.value) return;
+  if (!connection.value || !roleName.value) return;
 
   isMutating.value = true;
 
@@ -220,7 +221,7 @@ const onDialogConfirm = async (data: {
         $fetch<unknown>('/api/database-roles/grant-permission', {
           method: 'POST',
           body: {
-            dbConnectionString: dbConnectionString.value,
+            ...getConnectionParams(connection.value),
             roleName: roleName.value,
             objectType: data.objectType,
             schemaName: data.schemaName,
@@ -237,7 +238,7 @@ const onDialogConfirm = async (data: {
         $fetch<unknown>('/api/database-roles/revoke-permission', {
           method: 'POST',
           body: {
-            dbConnectionString: dbConnectionString.value,
+            ...getConnectionParams(connection.value),
             roleName: roleName.value,
             objectType: data.objectType,
             schemaName: data.schemaName,

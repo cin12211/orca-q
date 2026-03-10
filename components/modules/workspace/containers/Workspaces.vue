@@ -1,39 +1,21 @@
 <script setup lang="ts">
-import { refDebounced } from '@vueuse/core';
-import dayjs from 'dayjs';
-import relativeTime from 'dayjs/plugin/relativeTime';
 import { Search } from 'lucide-vue-next';
-import { DEFAULT_DEBOUNCE_INPUT } from '~/core/constants';
-import { useAppContext } from '~/core/contexts/useAppContext';
-import ManagementConnectionModal from '../connection/ManagementConnectionModal.vue';
-import CreateWorkspaceModal from './CreateWorkspaceModal.vue';
-import WorkspaceCard from './WorkspaceCard.vue';
-import WorkspaceHeader from './WorkspaceHeader.vue';
+import { ManagementConnectionModal } from '../../connection';
+import CreateWorkspaceModal from '../components/CreateWorkspaceModal.vue';
+import WorkspaceCard from '../components/WorkspaceCard.vue';
+import WorkspaceHeader from '../components/WorkspaceHeader.vue';
+import { useWorkspaces } from '../hooks/useWorkspaces';
 
-dayjs.extend(relativeTime);
-
-const { workspaceStore, connectionStore } = useAppContext();
-
-const search = shallowRef('');
-const workspaceId = ref('');
-const debouncedSearch = refDebounced(search, DEFAULT_DEBOUNCE_INPUT);
-
-const mappedWorkspaces = computed(() => {
-  return (workspaceStore.workspaces || []).filter(workspace => {
-    return workspace.name
-      .toLowerCase()
-      .includes(debouncedSearch.value.toLowerCase());
-  });
-});
-
-const isOpenSelectConnectionModal = ref(false);
-
-const isOpenCreateWSModal = ref(false);
-
-const onSelectWorkspace = (id: string) => {
-  isOpenSelectConnectionModal.value = true;
-  workspaceId.value = id;
-};
+const {
+  workspaceStore,
+  connectionStore,
+  search,
+  workspaceId,
+  mappedWorkspaces,
+  isOpenSelectConnectionModal,
+  isOpenCreateWSModal,
+  onSelectWorkspace,
+} = useWorkspaces();
 </script>
 
 <template>

@@ -92,30 +92,26 @@ export const useSchemaStore = defineStore(
      */
     const fetchReservedSchemas = async ({
       connectionId: connId,
-      dbConnectionString,
+      connection,
     }: {
       connectionId: string;
-      dbConnectionString: string;
+      connection?: Connection;
     }) => {
-      if (!connId || !dbConnectionString) return;
+      if (!connId || (!connection?.connectionString && !connection?.host))
+        return;
 
-      // If we already have reserved schemas for this connection, we might want to skip or refresh
-      // For now, let's allow re-fetching to be safe or add a check if needed.
-      // But typically reserved schemas shouldn't change that often.
-      // Let's implement a simple check: if exists, don't fetch unless we want to force refresh (not implemented yet).
       if (reservedSchemas.value[connId]?.length) return;
 
       try {
         const result = await $fetch('/api/metadata/reverse-schemas', {
           method: 'POST',
           body: {
-            dbConnectionString,
+            ...getConnectionParams(connection),
           },
         });
         reservedSchemas.value[connId] = result.result;
       } catch (error) {
         console.error('Failed to fetch reserved schemas:', error);
-        // Optionally handle error state
       }
     };
 
@@ -125,24 +121,21 @@ export const useSchemaStore = defineStore(
     const fetchSchemas = async ({
       connectionId: connId,
       workspaceId: wsId,
-      dbConnectionString,
+      connection,
       isRefresh = false,
     }: {
       connectionId: string;
       workspaceId: string;
-      dbConnectionString: string;
+      connection?: Connection;
       isRefresh?: boolean;
     }) => {
-      if (!connId || !wsId || !dbConnectionString) return;
+      if (!connId || !wsId || (!connection?.connectionString && !connection?.host))
+        return;
 
       if (isRefresh) {
-        // Remove existing schemas for this connection if refreshing
         delete schemas.value[connId];
-        // Also clear reserved schemas if hard refresh? Maybe not necessary as they are separate.
-        // But for consistency let's clear reserved schemas too if we are modifying the structure
         delete reservedSchemas.value[connId];
       } else {
-        // Check if we already have schemas for this connection
         if (schemas.value[connId]?.length) return;
       }
 
@@ -151,7 +144,7 @@ export const useSchemaStore = defineStore(
         const databaseSource = await $fetch('/api/metadata/meta-data', {
           method: 'POST',
           body: {
-            dbConnectionString,
+            ...getConnectionParams(connection),
           },
         });
 

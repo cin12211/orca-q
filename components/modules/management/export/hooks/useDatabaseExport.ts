@@ -1,3 +1,5 @@
+import { getConnectionParams } from '~/core/helpers/connection-helper';
+import { type Connection } from '~/core/stores';
 import type {
   ExportDatabaseRequest,
   ExportDatabaseResponse,
@@ -7,7 +9,7 @@ import type {
 /**
  * Composable for database export operations
  */
-export const useDatabaseExport = (dbConnectionString: Ref<string>) => {
+export const useDatabaseExport = (connection: Ref<Connection | undefined>) => {
   const isExporting = ref(false);
   const progress = ref(0);
   const error = ref<string | null>(null);
@@ -20,8 +22,8 @@ export const useDatabaseExport = (dbConnectionString: Ref<string>) => {
     databaseName: string,
     options: ExportOptions
   ): Promise<boolean> => {
-    if (!dbConnectionString.value) {
-      error.value = 'No database connection string provided';
+    if (!connection.value) {
+      error.value = 'No database connection provided';
       return false;
     }
 
@@ -34,10 +36,10 @@ export const useDatabaseExport = (dbConnectionString: Ref<string>) => {
       const response = await $fetch('/api/database-export/export-database', {
         method: 'POST',
         body: {
-          dbConnectionString: dbConnectionString.value,
+          ...getConnectionParams(connection.value),
           databaseName,
           options,
-        } satisfies ExportDatabaseRequest,
+        } as any,
         responseType: 'blob',
         onResponse({ response }) {
           // Get metadata from headers

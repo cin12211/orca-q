@@ -8,16 +8,21 @@ import { createRoleAdapter } from '~/server/infrastructure/database/adapters/dat
 
 interface RequestBody {
   dbConnectionString: string;
+  host?: string;
+  port?: string;
+  username?: string;
+  password?: string;
+  database?: string;
   dbType?: DatabaseClientType;
 }
 
 export default defineEventHandler(async (event): Promise<DatabaseInfo[]> => {
   const body: RequestBody = await readBody(event);
 
-  if (!body.dbConnectionString) {
+  if (!body.dbConnectionString && !body.host) {
     throw createError({
       statusCode: 400,
-      statusMessage: 'Database connection string is required',
+      statusMessage: 'Database connection details are required',
     });
   }
 
@@ -25,6 +30,11 @@ export default defineEventHandler(async (event): Promise<DatabaseInfo[]> => {
     body.dbType || DatabaseClientType.POSTGRES,
     {
       dbConnectionString: body.dbConnectionString,
+      host: body.host,
+      port: body.port,
+      username: body.username,
+      password: body.password,
+      database: body.database,
     }
   );
 

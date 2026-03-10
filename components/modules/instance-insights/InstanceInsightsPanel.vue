@@ -3,11 +3,12 @@ import type { ReplicationSlotDesiredStatus } from '~/core/types';
 import {
   EDatabaseType,
   getDatabaseSupportByType,
-} from '../connection/constants';
+} from '../connection';
 import InstanceInsightsActivitySection from './components/InstanceInsightsActivitySection.vue';
 import InstanceInsightsConfigurationSection from './components/InstanceInsightsConfigurationSection.vue';
 import InstanceInsightsReplicationSection from './components/InstanceInsightsReplicationSection.vue';
 import InstanceInsightsStateSection from './components/InstanceInsightsStateSection.vue';
+import { useAppContext } from '~/core/contexts/useAppContext';
 import { useInstanceInsights } from './hooks/useInstanceInsights';
 import { formatDateTime } from './utils/formatters';
 
@@ -44,7 +45,9 @@ const sections = [
   },
 ] as const;
 
-const connectionStringRef = computed(() => props.dbConnectionString);
+const { connectionStore } = useAppContext();
+
+const connection = computed(() => connectionStore.selectedConnection);
 const {
   activeSection,
   autoRefresh,
@@ -66,7 +69,7 @@ const {
   terminateConnection,
   dropReplicationSlot,
   toggleReplicationSlotStatus,
-} = useInstanceInsights(connectionStringRef);
+} = useInstanceInsights(connection);
 
 const activeSectionMeta = computed(() =>
   sections.find(section => section.id === activeSection.value)

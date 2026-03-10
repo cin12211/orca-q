@@ -6,6 +6,7 @@ import {
 } from '~/components/modules/management/schemas/utils/generateTableSQL';
 import { generateTableAlias } from '~/components/modules/raw-query/utils/getMappedSchemaSuggestion';
 import { useStreamingDownload } from '~/core/composables/useStreamingDownload';
+import { getConnectionParams } from '~/core/helpers/connection-helper';
 import { TabViewType } from '~/core/stores/useTabViewsStore';
 import {
   ExportDataFormatType,
@@ -49,19 +50,22 @@ export function useTableActions(
     form.action = '/api/tables/export';
     form.style.display = 'none';
 
+    const params = getConnectionParams(options.connection.value);
     const fields = {
-      dbConnectionString: options.currentConnectionString.value!,
+      ...params,
       schemaName: getSchemaName(),
       tableName,
       format,
     };
 
     for (const [key, value] of Object.entries(fields)) {
-      const input = document.createElement('input');
-      input.type = 'hidden';
-      input.name = key;
-      input.value = value;
-      form.appendChild(input);
+      if (value !== undefined) {
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = key;
+        input.value = typeof value === 'object' ? JSON.stringify(value) : value.toString();
+        form.appendChild(input);
+      }
     }
 
     document.body.appendChild(form);
@@ -97,7 +101,7 @@ export function useTableActions(
       url: '/api/tables/export',
       method: 'POST',
       body: {
-        dbConnectionString: options.currentConnectionString.value,
+        ...getConnectionParams(options.connection.value),
         schemaName: getSchemaName(),
         tableName,
         format,
@@ -133,7 +137,7 @@ export function useTableActions(
           await $fetch('/api/query/execute', {
             method: 'POST',
             body: {
-              dbConnectionString: options.currentConnectionString.value,
+              ...getConnectionParams(options.connection.value),
               query: sql,
             },
           });
@@ -175,7 +179,7 @@ export function useTableActions(
           await $fetch('/api/query/execute', {
             method: 'POST',
             body: {
-              dbConnectionString: options.currentConnectionString.value,
+              ...getConnectionParams(options.connection.value),
               query: sql,
             },
           });
@@ -439,7 +443,7 @@ WHERE ${pkCondition};`;
         const ddl = await $fetch('/api/tables/ddl', {
           method: 'POST',
           body: {
-            dbConnectionString: options.currentConnectionString.value,
+            ...getConnectionParams(options.connection.value),
             schemaName: getSchemaName(),
             tableName: state.selectedItem.value!.name,
           },

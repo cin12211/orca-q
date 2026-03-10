@@ -9,6 +9,8 @@ import {
 } from '~/components/modules/quick-query/utils/buildDeleteStatements';
 import { buildInsertStatements } from '~/components/modules/quick-query/utils/buildInsertStatements';
 import { copyRowsToClipboard } from '~/core/helpers';
+import { getConnectionParams } from '~/core/helpers/connection-helper';
+import { type Connection } from '~/core/stores';
 import type QuickQueryTable from '../quick-query-table/QuickQueryTable.vue';
 
 // Adjust the path as per your project structure
@@ -49,7 +51,7 @@ interface UseQuickQueryMutationOptions {
     sql: string,
     type: 'save' | 'delete'
   ) => Promise<boolean>;
-  connectionString: Ref<string>;
+  connection: Ref<Connection | undefined>;
 }
 
 /**
@@ -76,7 +78,7 @@ export function useQuickQueryMutation(options: UseQuickQueryMutationOptions) {
     focusedCell,
     safeModeEnabled,
     onRequestSafeModeConfirm,
-    connectionString,
+    connection,
   } = options;
 
   const isMutating = ref(false); // Reactive state for mutation loading indicator
@@ -166,7 +168,7 @@ export function useQuickQueryMutation(options: UseQuickQueryMutationOptions) {
         method: 'POST',
         body: {
           sqlUpdateStatements: sqlBulkInsertOrUpdateStatements,
-          dbConnectionString: connectionString.value,
+          ...getConnectionParams(connection.value),
         },
         onResponseError({ response }) {
           const errorData = response?._data?.data?.driverError;
@@ -246,7 +248,7 @@ export function useQuickQueryMutation(options: UseQuickQueryMutationOptions) {
         method: 'POST',
         body: {
           sqlDeleteStatements,
-          dbConnectionString: connectionString.value,
+          ...getConnectionParams(connection.value),
         },
         onResponseError({ response }) {
           const errorData = response?._data?.data?.driverError;

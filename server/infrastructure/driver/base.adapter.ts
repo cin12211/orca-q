@@ -6,15 +6,15 @@ import type { IDatabaseAdapter, RawQueryResult } from './types';
 export abstract class BaseDatabaseAdapter implements IDatabaseAdapter {
   protected knex: Knex;
   public readonly dbType: DatabaseClientType;
-  public readonly connectionString: string;
+  public readonly connection: string | Knex.Config['connection'];
 
   constructor(
     dbType: DatabaseClientType,
-    connectionString: string,
+    connection: string | Knex.Config['connection'],
     knexInstance: Knex
   ) {
     this.dbType = dbType;
-    this.connectionString = connectionString;
+    this.connection = connection;
     this.knex = knexInstance;
   }
 

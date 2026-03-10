@@ -57,14 +57,20 @@ const parseConnectionString = (connString: string): ConnectionOptions => {
 };
 
 export default defineEventHandler(async event => {
-  const body: ExportDatabaseRequest = await readBody(event);
+  const body: ExportDatabaseRequest & {
+    host?: string;
+    port?: string;
+    username?: string;
+    password?: string;
+    database?: string;
+  } = await readBody(event);
 
   const { dbConnectionString, databaseName, options } = body;
 
-  if (!dbConnectionString) {
+  if (!dbConnectionString && !body.host) {
     throw createError({
       statusCode: 400,
-      statusMessage: 'Database connection string is required',
+      statusMessage: 'Database connection details are required',
     });
   }
 
@@ -75,8 +81,19 @@ export default defineEventHandler(async event => {
   const outputPath = join(tmpdir(), fileName);
 
   try {
-    // Parse connection string
-    const connectionOptions = parseConnectionString(dbConnectionString);
+    // Parse connection string or use form details
+    let connectionOptions: ConnectionOptions;
+    if (dbConnectionString) {
+      connectionOptions = parseConnectionString(dbConnectionString);
+    } else {
+      connectionOptions = {
+        host: body.host!,
+        port: parseInt(body.port || '5432', 10),
+        database: body.database || '',
+        username: body.username || '',
+        password: body.password || '',
+      };
+    }
 
     // Build pg_dump options
     const dumpOptions: DumpOptionsType = {

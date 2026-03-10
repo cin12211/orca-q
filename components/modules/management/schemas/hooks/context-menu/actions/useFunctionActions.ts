@@ -5,6 +5,7 @@ import {
   generateDropFunctionSQL,
   generateRenameFunctionSQL,
 } from '~/components/modules/management/schemas/utils/generateFunctionSQL';
+import { getConnectionParams } from '~/core/helpers/connection-helper';
 import { TabViewType } from '~/core/stores/useTabViewsStore';
 import type { FunctionSignature } from '~/core/types';
 import type { ContextMenuState, SchemaContextMenuOptions } from '../types';
@@ -46,7 +47,7 @@ export function useFunctionActions(
           await $fetch('/api/functions/delete', {
             method: 'POST',
             body: {
-              dbConnectionString: options.currentConnectionString.value,
+              ...getConnectionParams(options.connection.value),
               schemaName: getSchemaName(),
               functionName,
             },
@@ -90,7 +91,7 @@ export function useFunctionActions(
           await $fetch('/api/functions/rename', {
             method: 'POST',
             body: {
-              dbConnectionString: options.currentConnectionString.value,
+              ...getConnectionParams(options.connection.value),
               schemaName: getSchemaName(),
               oldName: state.renameDialogValue.value,
               newName,
@@ -119,7 +120,7 @@ export function useFunctionActions(
           {
             method: 'POST',
             body: {
-              dbConnectionString: options.currentConnectionString.value,
+              ...getConnectionParams(options.connection.value),
               functionId: state.selectedItem.value!.id,
             },
           }
@@ -168,7 +169,7 @@ export function useFunctionActions(
           {
             method: 'POST',
             body: {
-              dbConnectionString: options.currentConnectionString.value,
+              ...getConnectionParams(options.connection.value),
               functionId: state.selectedItem.value!.id,
             },
           }
@@ -217,7 +218,7 @@ export function useFunctionActions(
         const def = await $fetch('/api/functions/definition', {
           method: 'POST',
           body: {
-            dbConnectionString: options.currentConnectionString.value,
+            ...getConnectionParams(options.connection.value),
             functionId: state.selectedItem.value!.id,
           },
         });

@@ -5,6 +5,7 @@ import {
   generateRefreshMaterializedViewSQL,
   generateViewSelectSQL,
 } from '~/components/modules/management/schemas/utils/generateViewSQL';
+import { getConnectionParams } from '~/core/helpers/connection-helper';
 import { TabViewType } from '~/core/stores/useTabViewsStore';
 import { ViewSchemaEnum } from '~/core/types';
 import type { ViewDefinitionResponse } from '~/core/types';
@@ -69,7 +70,7 @@ export function useViewActions(
           {
             method: 'POST',
             body: {
-              dbConnectionString: options.currentConnectionString.value,
+              ...getConnectionParams(options.connection.value),
               viewId: state.selectedItem.value!.id,
               schemaName: getSchemaName(),
               viewName,
@@ -124,7 +125,7 @@ export function useViewActions(
           await $fetch('/api/query/execute', {
             method: 'POST',
             body: {
-              dbConnectionString: options.currentConnectionString.value,
+              ...getConnectionParams(options.connection.value),
               query: sql,
             },
           });
@@ -163,7 +164,7 @@ export function useViewActions(
           await $fetch('/api/query/execute', {
             method: 'POST',
             body: {
-              dbConnectionString: options.currentConnectionString.value,
+              ...getConnectionParams(options.connection.value),
               query: sql,
             },
           });
@@ -204,7 +205,7 @@ export function useViewActions(
           await $fetch('/api/query/execute', {
             method: 'POST',
             body: {
-              dbConnectionString: options.currentConnectionString.value,
+              ...getConnectionParams(options.connection.value),
               query: sql,
             },
           });

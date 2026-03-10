@@ -1,5 +1,7 @@
 import { useIntervalFn, refDebounced } from '@vueuse/core';
 import { toast } from 'vue-sonner';
+import { getConnectionParams } from '~/core/helpers/connection-helper';
+import { type Connection } from '~/core/stores';
 import type {
   InstanceInsightsConfiguration,
   InstanceInsightsDashboard,
@@ -18,7 +20,7 @@ const AUTO_REFRESH_INTERVAL_MS = 5000;
 
 //TODO: need to check if tab is active -> call api update
 
-export function useInstanceInsights(dbConnectionString: Ref<string>) {
+export function useInstanceInsights(connection: Ref<Connection | undefined>) {
   const activeSection = ref<InsightsSection>('activity');
   const autoRefresh = ref(true);
   const refreshIntervalMs = ref(AUTO_REFRESH_INTERVAL_MS);
@@ -40,7 +42,7 @@ export function useInstanceInsights(dbConnectionString: Ref<string>) {
   const configurationSearch = ref('');
   const debouncedConfigurationSearch = refDebounced(configurationSearch, 350);
 
-  const hasConnection = computed(() => Boolean(dbConnectionString.value));
+  const hasConnection = computed(() => Boolean(connection.value));
 
   const isActivate = ref(true);
 
@@ -88,7 +90,7 @@ export function useInstanceInsights(dbConnectionString: Ref<string>) {
         {
           method: 'POST',
           body: {
-            dbConnectionString: dbConnectionString.value,
+            ...getConnectionParams(connection.value),
           },
         }
       );
@@ -112,7 +114,7 @@ export function useInstanceInsights(dbConnectionString: Ref<string>) {
         {
           method: 'POST',
           body: {
-            dbConnectionString: dbConnectionString.value,
+            ...getConnectionParams(connection.value),
           },
         }
       );
@@ -136,7 +138,7 @@ export function useInstanceInsights(dbConnectionString: Ref<string>) {
         {
           method: 'POST',
           body: {
-            dbConnectionString: dbConnectionString.value,
+            ...getConnectionParams(connection.value),
             search: debouncedConfigurationSearch.value || undefined,
           },
         }
@@ -161,7 +163,7 @@ export function useInstanceInsights(dbConnectionString: Ref<string>) {
         {
           method: 'POST',
           body: {
-            dbConnectionString: dbConnectionString.value,
+            ...getConnectionParams(connection.value),
           },
         }
       );
@@ -253,7 +255,7 @@ export function useInstanceInsights(dbConnectionString: Ref<string>) {
         {
           method: 'POST',
           body: {
-            dbConnectionString: dbConnectionString.value,
+            ...getConnectionParams(connection.value),
             pid,
           },
         }
@@ -272,7 +274,7 @@ export function useInstanceInsights(dbConnectionString: Ref<string>) {
         {
           method: 'POST',
           body: {
-            dbConnectionString: dbConnectionString.value,
+            ...getConnectionParams(connection.value),
             pid,
           },
         }
@@ -292,7 +294,7 @@ export function useInstanceInsights(dbConnectionString: Ref<string>) {
         {
           method: 'POST',
           body: {
-            dbConnectionString: dbConnectionString.value,
+            ...getConnectionParams(connection.value),
             slotName,
           },
         }
@@ -316,7 +318,7 @@ export function useInstanceInsights(dbConnectionString: Ref<string>) {
         {
           method: 'POST',
           body: {
-            dbConnectionString: dbConnectionString.value,
+            ...getConnectionParams(connection.value),
             slotName: params.slotName,
             desiredStatus: params.desiredStatus,
             activePid: params.activePid ?? null,
@@ -343,7 +345,7 @@ export function useInstanceInsights(dbConnectionString: Ref<string>) {
   };
 
   watch(
-    () => dbConnectionString.value,
+    () => connection.value,
     async current => {
       if (!current) {
         resetData();

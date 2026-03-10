@@ -5,6 +5,7 @@ import {
   buildMappedColumnsFromKeys,
   buildMappedColumnsFromRows,
 } from '~/core/helpers';
+import { getConnectionParams } from '~/core/helpers/connection-helper';
 
 const TABLE_OVERVIEW_COLUMN_KEYS = [
   'name',
@@ -25,17 +26,16 @@ const props = defineProps<{
 const { connectionStore, wsStateStore } = useAppContext();
 const { schemaId } = toRefs(wsStateStore);
 
-const connectionString = computed(() => {
+const connection = computed(() => {
   if (props.connectionId) {
-    return connectionStore.connections.find(c => c.id === props.connectionId)
-      ?.connectionString;
+    return connectionStore.connections.find(c => c.id === props.connectionId);
   }
-  return connectionStore.selectedConnection?.connectionString;
+  return connectionStore.selectedConnection;
 });
 
 const body = computed(() => {
   return {
-    dbConnectionString: connectionString.value,
+    ...getConnectionParams(connection.value),
     schema: schemaId.value,
   };
 });

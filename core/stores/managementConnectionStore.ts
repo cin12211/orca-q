@@ -1,7 +1,11 @@
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
-import type { EDatabaseType } from '~/components/modules/connection/constants';
-import type { EConnectionMethod } from '~/components/modules/connection/type';
+import type { EDatabaseType } from '~/components/modules/connection';
+import {
+  EConnectionMethod,
+  type ISSLConfig,
+  type ISSHConfig,
+} from '~/components/modules/connection';
 import { useWSStateStore } from './useWSStateStore';
 
 export interface Connection {
@@ -16,6 +20,8 @@ export interface Connection {
   username?: string;
   password?: string;
   database?: string;
+  ssl?: ISSLConfig;
+  ssh?: ISSHConfig;
   createdAt: string;
   updatedAt?: string;
 }

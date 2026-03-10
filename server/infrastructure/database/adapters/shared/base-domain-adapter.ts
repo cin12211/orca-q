@@ -17,6 +17,13 @@ export abstract class BaseDomainAdapter {
     return getDatabaseSource({
       dbConnectionString: params.dbConnectionString,
       type: dbType,
+      host: params.host,
+      port: params.port,
+      username: params.username,
+      password: params.password,
+      database: params.database,
+      ssl: params.ssl,
+      ssh: params.ssh,
     });
   }
 

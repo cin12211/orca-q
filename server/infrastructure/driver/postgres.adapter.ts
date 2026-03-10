@@ -20,12 +20,12 @@ const PRECISION_OIDS = [1700, 1231, 20, 1016] as const;
 
 export class PostgresAdapter extends BaseDatabaseAdapter {
   constructor(
-    connectionString: string,
+    connection: string | Knex.Config['connection'],
     applicationName: string = 'orca-query-server'
   ) {
     const knexInstance = knex({
       client: DatabaseClientType.POSTGRES,
-      connection: connectionString,
+      connection,
       pool: {
         min: 1,
         max: 10,
@@ -48,7 +48,7 @@ export class PostgresAdapter extends BaseDatabaseAdapter {
       },
     });
 
-    super(DatabaseClientType.POSTGRES, connectionString, knexInstance);
+    super(DatabaseClientType.POSTGRES, connection, knexInstance);
   }
 
   protected async _rawQuery<T = any>(

@@ -1,6 +1,6 @@
 import { PostgreSQL, type SQLDialect } from '@codemirror/lang-sql';
 import { StateEffect, StateField } from '@codemirror/state';
-import type { EDatabaseType } from '~/components/modules/connection/constants';
+import type { EDatabaseType } from '~/components/modules/connection';
 import { SQLDialectSupport } from '../constants';
 
 // ---------------------------------------------------------------------------

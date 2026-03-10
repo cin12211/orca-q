@@ -6,6 +6,8 @@ import {
   buildMappedColumnsFromKeys,
   buildMappedColumnsFromRows,
 } from '~/core/helpers';
+import { getConnectionParams } from '~/core/helpers/connection-helper';
+import { useManagementConnectionStore } from '~/core/stores';
 import { useSchemaStore } from '~/core/stores/useSchemaStore';
 import type { RLSPolicy } from '~/core/types';
 import {
@@ -16,7 +18,7 @@ import {
 const props = defineProps<{
   schema: string;
   tableName: string;
-  connectionString: string;
+  connectionId?: string;
 }>();
 
 const RLS_COLUMN_KEYS = [
@@ -33,16 +35,24 @@ const cacheKey = computed(() => `${props.schema}.${props.tableName}`);
 
 const error = ref<string | null>(null);
 
+const connectionStore = useManagementConnectionStore();
+const connection = computed(() => {
+  if (props.connectionId) {
+    return connectionStore.connections.find(c => c.id === props.connectionId);
+  }
+  return connectionStore.selectedConnection;
+});
+
 const { data, status } = useFetch<{
   enabled: boolean;
   policies: RLSPolicy[];
 }>('/api/tables/rls', {
   method: 'POST',
-  body: {
-    dbConnectionString: props.connectionString,
+  body: computed(() => ({
+    ...getConnectionParams(connection.value),
     schema: props.schema,
     table: props.tableName,
-  },
+  })),
   key: `rls-${cacheKey.value}`,
   getCachedData: () => {
     const cached = schemaStore.rlsMap[cacheKey.value];

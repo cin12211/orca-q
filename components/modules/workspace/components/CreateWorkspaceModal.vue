@@ -1,9 +1,4 @@
 <script setup lang="ts">
-import { toTypedSchema } from '@vee-validate/zod';
-import dayjs from 'dayjs';
-import { useForm } from 'vee-validate';
-import { toast } from 'vue-sonner';
-import * as z from 'zod';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import {
@@ -27,13 +22,9 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 import { Textarea } from '@/components/ui/textarea';
-import {
-  DEFAULT_WORKSPACE_ICON,
-  WORKSPACE_ICONS,
-} from '~/core/constants/workspace-icon-constants';
-import { useAppContext } from '~/core/contexts/useAppContext';
-import { uuidv4 } from '~/core/helpers';
 import { type Workspace } from '~/core/stores';
+import { WORKSPACE_ICONS } from '../constants';
+import { useWorkspaceForm } from '../hooks/useWorkspaceForm';
 
 const props = defineProps<{
   open: Boolean;
@@ -43,60 +34,14 @@ const props = defineProps<{
 
 const emit = defineEmits(['update:open']);
 
-const { workspaceStore } = useAppContext();
-
-const schema = z.object({
-  name: z.string({
-    message: 'Workspace name is required.',
-  }),
-  desc: z.string().optional(),
-  icon: z.string().default(DEFAULT_WORKSPACE_ICON),
-});
-
-const form = useForm({
-  validationSchema: toTypedSchema(schema),
-  initialValues: props.workspace
-    ? {
-        name: props.workspace.name,
-        desc: props.workspace.desc,
-        icon: props.workspace.icon || DEFAULT_WORKSPACE_ICON,
-      }
-    : {
-        name: `My workspace ${props?.workspaceSeq || 0}`,
-        icon: DEFAULT_WORKSPACE_ICON,
-      },
-  name: 'workspace-form',
-});
-
-const onSubmit = form.handleSubmit(values => {
-  const isUpdate = !!props.workspace;
-
-  if (isUpdate) {
-    workspaceStore.updateWorkspace({
-      ...props.workspace,
-      desc: values?.desc || undefined,
-      name: values.name,
-      icon: values.icon,
-    });
-
-    toast('Workspace has been updated', {
-      description: dayjs().toString(),
-    });
-  } else {
-    workspaceStore.createWorkspace({
-      desc: values?.desc || undefined,
-      id: uuidv4(),
-      name: values.name,
-      icon: values.icon,
-      createdAt: dayjs().toISOString(),
-    });
-
-    toast('Workspace has been created', {
-      description: dayjs().toString(),
-    });
-  }
-
+const handleClose = () => {
   emit('update:open', false);
+};
+
+const { onSubmit } = useWorkspaceForm({
+  workspace: props.workspace,
+  workspaceSeq: props.workspaceSeq,
+  onClose: handleClose,
 });
 </script>
 
@@ -107,9 +52,6 @@ const onSubmit = form.handleSubmit(values => {
         <DialogTitle>
           {{ workspace ? 'Update workspace' : 'New workspace' }}
         </DialogTitle>
-        <!-- <DialogDescription>
-          Make changes to your profile here. Click save when you're done.
-        </DialogDescription> -->
       </DialogHeader>
 
       <form class="space-y-4" @submit="onSubmit">

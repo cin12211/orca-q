@@ -24,7 +24,7 @@ import {
 } from '@/components/ui/table';
 import { useAppContext } from '~/core/contexts/useAppContext';
 import { useTabViewsStore, type Connection } from '~/core/stores';
-import { getDatabaseSupportByType } from './constants';
+import { getDatabaseSupportByType } from '../constants';
 
 const { tabViewStore, openWorkspaceWithConnection } = useAppContext();
 

@@ -8,6 +8,12 @@ import { createInstanceInsightsAdapter } from '~/server/infrastructure/database/
 
 interface RequestBody {
   dbConnectionString: string;
+  host?: string;
+  port?: string;
+  username?: string;
+  password?: string;
+  database?: string;
+  type?: DatabaseClientType;
   slotName: string;
   desiredStatus: ReplicationSlotDesiredStatus;
   activePid?: number | null;
@@ -19,17 +25,22 @@ export default defineEventHandler(
     try {
       const body = await readBody<RequestBody>(event);
 
-      if (!body?.dbConnectionString) {
+      if (!body?.dbConnectionString && !body?.host) {
         throw createError({
           statusCode: 400,
-          statusMessage: 'dbConnectionString is required',
+          statusMessage: 'dbConnectionString or host is required',
         });
       }
 
       const adapter = await createInstanceInsightsAdapter(
-        DatabaseClientType.POSTGRES,
+        body.type || DatabaseClientType.POSTGRES,
         {
           dbConnectionString: body.dbConnectionString,
+          host: body.host,
+          port: body.port,
+          username: body.username,
+          password: body.password,
+          database: body.database,
         }
       );
 

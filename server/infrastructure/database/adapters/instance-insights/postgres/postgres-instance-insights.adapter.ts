@@ -58,9 +58,11 @@ export class PostgresInstanceInsightsAdapter
       DatabaseClientType.POSTGRES
     );
 
+    const cacheKey = params.dbConnectionString || `${params.username}@${params.host}:${params.port}/${params.database}`;
+
     return new PostgresInstanceInsightsAdapter({
       adapter,
-      cacheKey: params.dbConnectionString,
+      cacheKey,
     });
   }
 
