@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { computed } from 'vue';
 import { Icon } from '#components';
 import { ArrowLeftIcon, DatabaseIcon } from 'lucide-vue-next';
 import { Accordion } from '@/components/ui/accordion';
@@ -76,7 +77,7 @@ const databaseOptions = computed(() =>
 <template>
   <Dialog :open="open" @update:open="$emit('update:open', $event)">
     <DialogContent
-      class="max-w-[50vw]! w-full h-[50vh]! max-h-[90vh] p-0 flex flex-col overflow-hidden"
+      class="max-w-[50vw]! w-full h-[60vh]! max-h-[90vh] p-0 flex flex-col overflow-hidden"
     >
       <template v-if="step === 1">
         <ConnectionStepType
@@ -89,32 +90,16 @@ const databaseOptions = computed(() =>
 
       <template v-else>
         <div class="flex flex-col h-full overflow-hidden">
-          <DialogHeader class="p-4">
-            <DialogTitle class="text-xl">Connection Details</DialogTitle>
+          <DialogHeader class="p-6 pb-2">
+            <DialogTitle>Connection Details</DialogTitle>
             <DialogDescription>
               Enter the details for your {{ dbType }} database
             </DialogDescription>
           </DialogHeader>
 
-          <div class="flex-1 overflow-y-auto p-4 space-y-6">
-            <div class="space-y-2">
-              <Label for="connection-name" class="flex items-center gap-2">
-                <DatabaseIcon class="h-3.5 w-3.5 text-muted-foreground" />
-                Connection Name
-              </Label>
-              <Input
-                id="connection-name"
-                placeholder="My Database Connection"
-                v-model="connectionName"
-              />
-            </div>
-
-            <Tabs
-              :default-value="connectionMethod"
-              @update:value="connectionMethod = $event as any"
-              class="w-full"
-            >
-              <TabsList class="grid w-full grid-cols-2">
+          <div class="flex-1 overflow-y-auto p-4 space-y-4">
+            <Tabs v-model="connectionMethod" class="w-full">
+              <TabsList class="grid w-fit grid-cols-2">
                 <TabsTrigger value="string" class="cursor-pointer"
                   >Connection String</TabsTrigger
                 >
@@ -122,6 +107,18 @@ const databaseOptions = computed(() =>
                   >Connection Form</TabsTrigger
                 >
               </TabsList>
+
+              <div class="space-y-2 mt-2">
+                <Label for="connection-name" class="flex items-center gap-2">
+                  <DatabaseIcon class="h-3.5 w-3.5 text-muted-foreground" />
+                  Connection Name <span class="text-destructive">*</span>
+                </Label>
+                <Input
+                  id="connection-name"
+                  placeholder="My Database Connection"
+                  v-model="connectionName"
+                />
+              </div>
 
               <TabsContent value="string" class="space-y-4 pt-4">
                 <div class="space-y-2">
@@ -133,7 +130,7 @@ const databaseOptions = computed(() =>
                       name="hugeicons:connect"
                       class="h-3.5 w-3.5 text-muted-foreground"
                     />
-                    Connection String
+                    Connection String <span class="text-destructive">*</span>
                   </Label>
                   <Input
                     id="connection-string"
@@ -147,12 +144,14 @@ const databaseOptions = computed(() =>
                 </div>
               </TabsContent>
 
-              <TabsContent value="form" class="space-y-6 pt-4">
+              <TabsContent value="form" class="space-y-6 pt-2">
                 <div class="space-y-4">
                   <!-- Group: Host & Port -->
-                  <div class="grid grid-cols-4 gap-4">
+                  <div class="grid grid-cols-4 gap-2">
                     <div class="col-span-3 space-y-2">
-                      <Label for="host">Host</Label>
+                      <Label for="host"
+                        >Host <span class="text-destructive">*</span></Label
+                      >
                       <Input
                         id="host"
                         placeholder="localhost"
@@ -160,7 +159,9 @@ const databaseOptions = computed(() =>
                       />
                     </div>
                     <div class="space-y-2">
-                      <Label for="port">Port</Label>
+                      <Label for="port"
+                        >Port <span class="text-destructive">*</span></Label
+                      >
                       <Input
                         id="port"
                         :placeholder="getDefaultPort()"
@@ -170,9 +171,11 @@ const databaseOptions = computed(() =>
                   </div>
 
                   <!-- Group: Authentication -->
-                  <div class="grid grid-cols-2 gap-4">
+                  <div class="grid grid-cols-2 gap-2">
                     <div class="space-y-2">
-                      <Label for="username">User</Label>
+                      <Label for="username"
+                        >User <span class="text-destructive">*</span></Label
+                      >
                       <Input
                         id="username"
                         placeholder="username"
@@ -191,7 +194,9 @@ const databaseOptions = computed(() =>
                   </div>
 
                   <div class="space-y-2">
-                    <Label for="database">Database</Label>
+                    <Label for="database"
+                      >Database <span class="text-destructive">*</span></Label
+                    >
                     <Input
                       id="database"
                       placeholder="my_database"
@@ -201,11 +206,19 @@ const databaseOptions = computed(() =>
                 </div>
 
                 <div class="space-y-4">
-                  <Accordion type="single" collapsible class="w-full">
+                  <Accordion
+                    type="single"
+                    collapsible
+                    class="w-full border px-4 rounded-lg shadow"
+                  >
                     <ConnectionSSLConfig :form-data="formData" />
                   </Accordion>
 
-                  <Accordion type="single" collapsible class="w-full">
+                  <Accordion
+                    type="single"
+                    collapsible
+                    class="w-full border px-4 rounded-lg shadow"
+                  >
                     <ConnectionSSHTunnel :form-data="formData" />
                   </Accordion>
                 </div>
@@ -216,10 +229,10 @@ const databaseOptions = computed(() =>
           </div>
 
           <DialogFooter
-            class="p-6 border-t flex flex-col-reverse gap-2 sm:flex-row sm:justify-between sm:space-x-2"
+            class="p-6 pt-4 flex flex-col-reverse gap-2 sm:flex-row sm:justify-between sm:space-x-2"
           >
             <div class="flex flex-1 space-x-2">
-              <Button variant="ghost" @click="handleBack" size="sm">
+              <Button variant="outline" @click="handleBack" size="sm">
                 <ArrowLeftIcon class="mr-2 h-4 w-4" />
                 Back
               </Button>
@@ -229,7 +242,7 @@ const databaseOptions = computed(() =>
                 variant="outline"
                 @click="handleTestConnection"
                 size="sm"
-                :disabled="testStatus === 'testing' || !isFormValid()"
+                :disabled="testStatus === 'testing' || !isFormValid"
               >
                 <Icon
                   v-if="testStatus === 'testing'"
@@ -241,7 +254,7 @@ const databaseOptions = computed(() =>
               <Button
                 @click="handleCreateConnection"
                 size="sm"
-                :disabled="testStatus === 'testing' || !isFormValid()"
+                :disabled="testStatus === 'testing' || !isFormValid"
               >
                 {{ editingConnection ? 'Update' : 'Create' }}
               </Button>

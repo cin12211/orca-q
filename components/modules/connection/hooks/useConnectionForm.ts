@@ -1,10 +1,10 @@
-import { reactive, ref, watch } from 'vue';
+import { reactive, ref, watch, computed } from 'vue';
 import dayjs from 'dayjs';
+import { DatabaseClientType } from '~/core/constants/database-client-type';
 import { uuidv4 } from '~/core/helpers';
 import type { Connection } from '~/core/stores';
-import { DatabaseClientType } from '~/core/constants/database-client-type';
-import { EConnectionMethod, ESSLMode, ESSHAuthMethod } from '../types';
 import { connectionService } from '../services/connection.service';
+import { EConnectionMethod, ESSLMode, ESSHAuthMethod } from '../types';
 
 export function useConnectionForm(props: {
   open: boolean;
@@ -45,6 +45,18 @@ export function useConnectionForm(props: {
   });
   const testStatus = ref<'idle' | 'testing' | 'success' | 'error'>('idle');
 
+  const getDefaultPort = () => {
+    switch (dbType.value) {
+      case DatabaseClientType.POSTGRES:
+        return '5432';
+      case DatabaseClientType.MYSQL:
+      case DatabaseClientType.MYSQL2:
+        return '3306';
+      default:
+        return '';
+    }
+  };
+
   const resetForm = () => {
     step.value = 1;
     dbType.value = DatabaseClientType.POSTGRES;
@@ -53,7 +65,7 @@ export function useConnectionForm(props: {
     connectionString.value = '';
 
     formData.host = '';
-    formData.port = '';
+    formData.port = getDefaultPort();
     formData.username = '';
     formData.password = '';
     formData.database = '';
@@ -194,7 +206,9 @@ export function useConnectionForm(props: {
           host: formData.sshHost,
           port: formData.sshPort,
           username: formData.sshUsername,
-          authMethod: formData.sshUseKey ? ESSHAuthMethod.KEY : ESSHAuthMethod.PASSWORD,
+          authMethod: formData.sshUseKey
+            ? ESSHAuthMethod.KEY
+            : ESSHAuthMethod.PASSWORD,
           password: formData.sshPassword,
           privateKey: formData.sshPrivateKey,
           storeInKeychain: formData.sshStoreInKeychain,
@@ -203,7 +217,8 @@ export function useConnectionForm(props: {
       }
 
       // Generate connection string for compatibility with other modules
-      const prefix = dbType.value === DatabaseClientType.POSTGRES ? 'postgresql' : 'mysql';
+      const prefix =
+        dbType.value === DatabaseClientType.POSTGRES ? 'postgresql' : 'mysql';
       connection.connectionString = `${prefix}://${formData.username}:${formData.password}@${formData.host}:${connection.port}/${formData.database}`;
     }
 
@@ -216,29 +231,19 @@ export function useConnectionForm(props: {
     props.onClose();
   };
 
-  const getDefaultPort = () => {
-    switch (dbType.value) {
-      case DatabaseClientType.POSTGRES:
-        return '5432';
-      case DatabaseClientType.MYSQL:
-        return '3306';
-      default:
-        return '';
-    }
-  };
-
   const getConnectionPlaceholder = () => {
     switch (dbType.value) {
       case DatabaseClientType.POSTGRES:
         return 'postgresql://username:password@localhost:5432/database';
       case DatabaseClientType.MYSQL:
+      case DatabaseClientType.MYSQL2:
         return 'mysql://username:password@localhost:3306/database';
       default:
         return '';
     }
   };
 
-  const isFormValid = () => {
+  const isFormValid = computed(() => {
     if (!connectionName.value) return false;
 
     if (connectionMethod.value === EConnectionMethod.STRING) {
@@ -247,10 +252,18 @@ export function useConnectionForm(props: {
       return !!(
         formData.host &&
         (formData.port || getDefaultPort()) &&
+        formData.username &&
         formData.database
       );
     }
-  };
+  });
+
+  // Watch for dbType changes to auto-fill port
+  watch(dbType, newType => {
+    if (newType) {
+      formData.port = getDefaultPort();
+    }
+  });
 
   // Reset form when modal opens or editing connection changes
   watch(
@@ -286,13 +299,15 @@ export function useConnectionForm(props: {
             formData.sshPort = props.editingConnection.ssh.port || 22;
             formData.sshUsername = props.editingConnection.ssh.username || '';
             formData.sshAuthMethod =
-              props.editingConnection.ssh.authMethod ||
-              ESSHAuthMethod.PASSWORD;
+              props.editingConnection.ssh.authMethod || ESSHAuthMethod.PASSWORD;
             formData.sshPassword = props.editingConnection.ssh.password || '';
             formData.sshPrivateKey =
               props.editingConnection.ssh.privateKey || '';
-            formData.sshStoreInKeychain = props.editingConnection.ssh.storeInKeychain ?? true;
-            formData.sshUseKey = props.editingConnection.ssh.useSshKey ?? (props.editingConnection.ssh.authMethod === ESSHAuthMethod.KEY);
+            formData.sshStoreInKeychain =
+              props.editingConnection.ssh.storeInKeychain ?? true;
+            formData.sshUseKey =
+              props.editingConnection.ssh.useSshKey ??
+              props.editingConnection.ssh.authMethod === ESSHAuthMethod.KEY;
           }
 
           step.value = 2;

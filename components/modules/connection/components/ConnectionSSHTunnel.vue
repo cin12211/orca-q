@@ -1,15 +1,15 @@
 <script setup lang="ts">
 import { Icon } from '#components';
-import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Switch } from '@/components/ui/switch';
-import { Checkbox } from '@/components/ui/checkbox';
 import {
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
 } from '@/components/ui/accordion';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
+import { Textarea } from '@/components/ui/textarea';
 import { useFileDrop } from '~/core/composables/useFileDrop';
 
 const props = defineProps<{
@@ -25,12 +25,14 @@ const props = defineProps<{
   };
 }>();
 
-const { 
-  onDragOver: keyDragOver, 
-  onDragLeave: keyDragLeave, 
-  onDrop: keyDrop, 
-  isDragging: keyDragging 
-} = useFileDrop((content) => { props.formData.sshPrivateKey = content; });
+const {
+  onDragOver: keyDragOver,
+  onDragLeave: keyDragLeave,
+  onDrop: keyDrop,
+  isDragging: keyDragging,
+} = useFileDrop(content => {
+  props.formData.sshPrivateKey = content;
+});
 </script>
 
 <template>
@@ -44,10 +46,7 @@ const {
     <AccordionContent class="space-y-4 pt-4">
       <div class="flex items-center justify-between">
         <Label for="ssh-enabled">Over SSH</Label>
-        <Switch
-          id="ssh-enabled"
-          v-model:model-value="formData.sshEnabled"
-        />
+        <Switch id="ssh-enabled" v-model:model-value="formData.sshEnabled" />
       </div>
 
       <template v-if="formData.sshEnabled">
@@ -56,7 +55,7 @@ const {
             <Label for="ssh-host">Server</Label>
             <Input
               id="ssh-host"
-              placeholder="ssh.example.com"
+              placeholder="e.g. ssh.example.com or 1.2.3.4"
               v-model="formData.sshHost"
             />
           </div>
@@ -65,6 +64,7 @@ const {
             <Input
               id="ssh-port"
               type="number"
+              placeholder="22"
               v-model="formData.sshPort"
             />
           </div>
@@ -75,6 +75,7 @@ const {
             <Label for="ssh-user">User</Label>
             <Input
               id="ssh-user"
+              placeholder="e.g. root or ubuntu"
               v-model="formData.sshUsername"
             />
           </div>
@@ -83,20 +84,31 @@ const {
             <Input
               id="ssh-password"
               type="password"
+              placeholder="SSH password (optional if using key)"
               v-model="formData.sshPassword"
             />
           </div>
         </div>
 
         <div class="flex items-center gap-2">
-          <Checkbox id="ssh-keychain" v-model:model-value="formData.sshStoreInKeychain" />
-          <Label for="ssh-keychain" class="text-sm font-normal">Store in keychain</Label>
+          <Checkbox
+            id="ssh-keychain"
+            v-model:model-value="formData.sshStoreInKeychain"
+          />
+          <Label for="ssh-keychain" class="text-sm font-normal"
+            >Store in keychain</Label
+          >
         </div>
 
         <div class="space-y-4 pt-2 border-t">
           <div class="flex items-center gap-2">
-            <Checkbox id="ssh-use-key" v-model:model-value="formData.sshUseKey" />
-            <Label for="ssh-use-key" class="text-sm font-semibold">SSH Key Authentication</Label>
+            <Checkbox
+              id="ssh-use-key"
+              v-model:model-value="formData.sshUseKey"
+            />
+            <Label for="ssh-use-key" class="text-sm font-semibold"
+              >SSH Key Authentication</Label
+            >
           </div>
 
           <template v-if="formData.sshUseKey">
@@ -105,10 +117,10 @@ const {
               <Textarea
                 id="ssh-key-file"
                 v-model="formData.sshPrivateKey"
-                placeholder="Paste content or drop file..."
+                placeholder="-----BEGIN OPENSSH PRIVATE KEY-----\n...\n-----END OPENSSH PRIVATE KEY-----"
                 :class="[
                   'min-h-[100px] max-h-[200px] text-xs font-mono',
-                  keyDragging ? 'ring-2 ring-primary' : ''
+                  keyDragging ? 'ring-2 ring-primary' : '',
                 ]"
                 @dragover="keyDragOver"
                 @dragleave="keyDragLeave"

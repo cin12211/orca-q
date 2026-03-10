@@ -354,7 +354,7 @@ defineExpose({
       v-if="fields.length"
       :getParserApplyFilter="getParserApplyFilter"
       :getParserAllFilter="getParserAllFilter"
-      :compose-with="compose-with"
+      :compose-with="composeWith"
       @on-change-compose-with="emit('onChangeComposeWith', $event)"
     />
 

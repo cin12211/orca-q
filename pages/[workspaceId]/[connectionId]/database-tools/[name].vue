@@ -56,7 +56,7 @@ const {
   lastExport,
   exportDatabase,
   reset: resetExport,
-} = useDatabaseExport(connectionData);
+} = useDatabaseExport(connectionData.value as any);
 
 // Import state
 const isImporting = ref(false);
@@ -98,7 +98,7 @@ const onImport = async () => {
   try {
     const formData = new FormData();
     formData.append('file', selectedFile.value);
-    
+
     const params = getConnectionParams(connectionData.value);
     Object.entries(params).forEach(([key, value]) => {
       if (value !== undefined) {

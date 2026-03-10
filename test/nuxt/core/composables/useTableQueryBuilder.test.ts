@@ -46,7 +46,7 @@ const createComposable = ({
     });
 
   return useTableQueryBuilder({
-    connectionString: ref('postgres://localhost:5432/db'),
+    connection: ref('postgres://localhost:5432/db') as any,
     tableName: 'users',
     primaryKeys: ref(primaryKeys),
     columns: ref(columns),

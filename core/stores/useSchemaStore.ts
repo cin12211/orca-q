@@ -17,6 +17,8 @@ import type {
   ViewDetails,
   ViewDetailMetadata,
 } from '~/core/types';
+import { getConnectionParams } from '../helpers/connection-helper';
+import type { Connection } from './managementConnectionStore';
 import { useWSStateStore } from './useWSStateStore';
 
 export interface Schema {
@@ -129,7 +131,11 @@ export const useSchemaStore = defineStore(
       connection?: Connection;
       isRefresh?: boolean;
     }) => {
-      if (!connId || !wsId || (!connection?.connectionString && !connection?.host))
+      if (
+        !connId ||
+        !wsId ||
+        (!connection?.connectionString && !connection?.host)
+      )
         return;
 
       if (isRefresh) {

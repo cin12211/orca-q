@@ -1,8 +1,11 @@
 <script setup lang="ts">
 import { Icon } from '#components';
+import {
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from '@/components/ui/accordion';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Switch } from '@/components/ui/switch';
 import {
   Select,
   SelectContent,
@@ -10,11 +13,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import {
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from '@/components/ui/accordion';
+import { Switch } from '@/components/ui/switch';
+import { Textarea } from '@/components/ui/textarea';
 import { useFileDrop } from '~/core/composables/useFileDrop';
 
 const props = defineProps<{
@@ -27,26 +27,32 @@ const props = defineProps<{
   };
 }>();
 
-const { 
-  onDragOver: caDragOver, 
-  onDragLeave: caDragLeave, 
-  onDrop: caDrop, 
-  isDragging: caDragging 
-} = useFileDrop((content) => { props.formData.sslCA = content; });
+const {
+  onDragOver: caDragOver,
+  onDragLeave: caDragLeave,
+  onDrop: caDrop,
+  isDragging: caDragging,
+} = useFileDrop(content => {
+  props.formData.sslCA = content;
+});
 
-const { 
-  onDragOver: certDragOver, 
-  onDragLeave: certDragLeave, 
-  onDrop: certDrop, 
-  isDragging: certDragging 
-} = useFileDrop((content) => { props.formData.sslCert = content; });
+const {
+  onDragOver: certDragOver,
+  onDragLeave: certDragLeave,
+  onDrop: certDrop,
+  isDragging: certDragging,
+} = useFileDrop(content => {
+  props.formData.sslCert = content;
+});
 
-const { 
-  onDragOver: keyDragOver, 
-  onDragLeave: keyDragLeave, 
-  onDrop: keyDrop, 
-  isDragging: keyDragging 
-} = useFileDrop((content) => { props.formData.sslKey = content; });
+const {
+  onDragOver: keyDragOver,
+  onDragLeave: keyDragLeave,
+  onDrop: keyDrop,
+  isDragging: keyDragging,
+} = useFileDrop(content => {
+  props.formData.sslKey = content;
+});
 </script>
 
 <template>
@@ -60,10 +66,7 @@ const {
     <AccordionContent class="space-y-4 pt-4">
       <div class="flex items-center justify-between">
         <Label for="ssl-enabled">Enable SSL</Label>
-        <Switch
-          id="ssl-enabled"
-          v-model:model-value="formData.sslEnabled"
-        />
+        <Switch id="ssl-enabled" v-model:model-value="formData.sslEnabled" />
       </div>
 
       <template v-if="formData.sslEnabled">
@@ -89,10 +92,10 @@ const {
             <Textarea
               id="ssl-ca"
               v-model="formData.sslCA"
-              placeholder="Paste content or drop file..."
+              placeholder="-----BEGIN CERTIFICATE-----\n...\n-----END CERTIFICATE-----"
               :class="[
                 'min-h-[80px] max-h-[160px] text-xs font-mono',
-                caDragging ? 'ring-2 ring-primary' : ''
+                caDragging ? 'ring-2 ring-primary' : '',
               ]"
               @dragover="caDragOver"
               @dragleave="caDragLeave"
@@ -105,10 +108,10 @@ const {
             <Textarea
               id="ssl-cert"
               v-model="formData.sslCert"
-              placeholder="Paste content or drop file..."
+              placeholder="-----BEGIN CERTIFICATE-----\n...\n-----END CERTIFICATE-----"
               :class="[
                 'min-h-[80px] max-h-[160px] text-xs font-mono',
-                certDragging ? 'ring-2 ring-primary' : ''
+                certDragging ? 'ring-2 ring-primary' : '',
               ]"
               @dragover="certDragOver"
               @dragleave="certDragLeave"
@@ -121,10 +124,10 @@ const {
             <Textarea
               id="ssl-key"
               v-model="formData.sslKey"
-              placeholder="Paste content or drop file..."
+              placeholder="-----BEGIN RSA PRIVATE KEY-----\n...\n-----END RSA PRIVATE KEY-----"
               :class="[
                 'min-h-[80px] max-h-[160px] text-xs font-mono',
-                keyDragging ? 'ring-2 ring-primary' : ''
+                keyDragging ? 'ring-2 ring-primary' : '',
               ]"
               @dragover="keyDragOver"
               @dragleave="keyDragLeave"

@@ -21,7 +21,7 @@ const emit = defineEmits<{
 
 <template>
   <div class="flex flex-col h-full overflow-hidden">
-    <DialogHeader class="p-4">
+    <DialogHeader class="p-6">
       <DialogTitle>Select Database Type</DialogTitle>
       <DialogDescription
         >Choose the type of database you want to connect to</DialogDescription
@@ -42,7 +42,7 @@ const emit = defineEmits<{
       </div>
     </div>
 
-    <DialogFooter class="p-4 flex items-center justify-end gap-2">
+    <DialogFooter class="p-6 flex items-center justify-end gap-2">
       <Button variant="outline" @click="$emit('close')" size="sm">
         Cancel
       </Button>
