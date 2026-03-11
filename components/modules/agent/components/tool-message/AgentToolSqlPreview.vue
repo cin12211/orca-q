@@ -42,7 +42,7 @@ function onLeave(el: Element) {
 </script>
 
 <template>
-  <div class="overflow-hidden">
+  <div class="overflow-hidden mb-1">
     <button
       type="button"
       class="flex cursor-pointer items-center justify-start gap-2 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"

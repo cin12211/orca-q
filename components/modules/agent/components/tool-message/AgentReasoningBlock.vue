@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { toRef } from 'vue';
 import Shimmer from '~/components/ai-elements/shimmer/Shimmer.vue';
 import { useSmoothStream } from '~/core/composables/useSmoothStream';
+import BlockMessageMarkdown from '../block-message/BlockMessageMarkdown.vue';
 
 const props = defineProps<{
   content: string;
@@ -23,13 +23,6 @@ watch(
     else isOpen.value = false;
   },
   { immediate: true }
-);
-
-const steps = computed(() =>
-  smoothedContent.value
-    .split(/\n{2,}/)
-    .map(step => step.trim())
-    .filter(Boolean)
 );
 
 function onEnter(el: Element) {
@@ -65,8 +58,8 @@ function onLeave(el: Element) {
       @click="isOpen = !isOpen"
     >
       <Icon
-        name="hugeicons:ai-brain-02"
-        class="size-4 shrink-0"
+        name="hugeicons:ai-brain-05"
+        class="size-3.5! shrink-0"
         :class="{ 'animate-pulse text-primary': isStreaming }"
       />
 
@@ -86,22 +79,14 @@ function onLeave(el: Element) {
         class="overflow-hidden transition-[height,opacity] duration-300 ease-in-out"
       >
         <div
-          class="mt-2 space-y-2 border-l-2 border-border pl-3 py-1 text-xs text-foreground/80"
+          class="mt-2 border-l-2 border-border pl-3 py-1 text-xs text-foreground/80 opacity-70"
         >
-          <template v-if="steps.length > 1">
-            <div
-              v-for="(step, index) in steps"
-              :key="`${index}-${step.slice(0, 24)}`"
-            >
-              <p class="min-w-0 whitespace-pre-wrap leading-relaxed">
-                {{ index + 1 }}. {{ step }}
-              </p>
-            </div>
-          </template>
-
-          <p v-else class="whitespace-pre-wrap leading-relaxed">
-            {{ content }}
-          </p>
+          <BlockMessageMarkdown
+            :content="smoothedContent"
+            :is-streaming="isStreaming"
+            :is-block-streaming="isStreaming"
+            :is-user-message="false"
+          />
         </div>
       </div>
     </Transition>

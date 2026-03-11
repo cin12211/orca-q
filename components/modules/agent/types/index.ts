@@ -1,7 +1,15 @@
-import type { UIMessage, UITool } from 'ai';
+import type {
+  AssistantModelMessage,
+  ModelMessage,
+  SystemModelMessage,
+  ToolModelMessage,
+  ToolUIPart,
+  UIMessage,
+  UITool,
+  UserModelMessage,
+} from 'ai';
 import type { DatabaseClientType } from '~/core/constants';
 import type { Schema } from '~/core/stores';
-import type { TableDetails } from '~/core/types';
 import type { AgentCommandOptionId } from '../constants/command-options';
 
 // ─── Shared tool name enum (FE + BE) ─────────────────────────────────────────
@@ -12,6 +20,7 @@ export const AgentToolName = {
   ExplainQuery: 'explain_query',
   DetectAnomaly: 'detect_anomaly',
   DescribeTable: 'describe_table',
+  ExportFile: 'export_file',
   AskClarification: 'askClarification',
 } as const;
 export type AgentToolName = (typeof AgentToolName)[keyof typeof AgentToolName];
@@ -24,6 +33,7 @@ export const DB_AGENT_TOOL_NAMES = [
   AgentToolName.ExplainQuery,
   AgentToolName.DetectAnomaly,
   AgentToolName.DescribeTable,
+  AgentToolName.ExportFile,
 ] as const;
 
 export type DbAgentToolName = (typeof DB_AGENT_TOOL_NAMES)[number];
@@ -37,6 +47,7 @@ export interface AgentGenerateQueryInput {
 }
 
 export interface AgentGenerateQueryResult {
+  loading?: boolean;
   sql: string;
   isMutation: boolean;
   explanation: string;
@@ -58,6 +69,7 @@ export interface AgentTableColumn {
 }
 
 export interface AgentRenderTableResult {
+  loading?: boolean;
   sql?: string;
   columns: AgentTableColumn[];
   rows: Record<string, unknown>[];
@@ -141,6 +153,32 @@ export interface AgentDescribeTableResult {
   relatedTables: string[];
 }
 
+export type AgentExportFormat = 'csv' | 'json' | 'sql' | 'xlsx';
+
+export interface AgentExportFileInput {
+  data: Record<string, unknown>[];
+  format: AgentExportFormat;
+  filename?: string;
+  tableName?: string;
+}
+
+export interface AgentExportFilePreview {
+  columns: string[];
+  rows: Record<string, unknown>[];
+  truncated: boolean;
+}
+
+export interface AgentExportFileResult {
+  filename: string;
+  mimeType: string;
+  content: string;
+  format: AgentExportFormat;
+  encoding: 'utf8' | 'base64';
+  fileSize: number;
+  preview: AgentExportFilePreview;
+  error?: string;
+}
+
 export interface AgentToolInputMap {
   generate_query: AgentGenerateQueryInput;
   render_table: AgentRenderTableInput;
@@ -148,6 +186,7 @@ export interface AgentToolInputMap {
   explain_query: AgentExplainQueryInput;
   detect_anomaly: AgentDetectAnomalyInput;
   describe_table: AgentDescribeTableInput;
+  export_file: AgentExportFileInput;
 }
 
 export interface AgentToolResultMap {
@@ -157,6 +196,7 @@ export interface AgentToolResultMap {
   explain_query: AgentExplainQueryResult;
   detect_anomaly: AgentDetectAnomalyResult;
   describe_table: AgentDescribeTableResult;
+  export_file: AgentExportFileResult;
 }
 
 export type DbAgentSchemaSnapshot = Schema;
@@ -183,7 +223,21 @@ export type DbAgentUITools = {
   };
 };
 
+export interface DbAgentModelMessageMap {
+  system: SystemModelMessage;
+  user: UserModelMessage;
+  assistant: AssistantModelMessage;
+  tool: ToolModelMessage;
+}
+
+export type DbAgentModelMessageRole = keyof DbAgentModelMessageMap;
+export type DbAgentModelMessage = ModelMessage;
+export type DbAgentModelMessageByRole<T extends DbAgentModelMessageRole> =
+  DbAgentModelMessageMap[T];
+
 export type DbAgentMessage = UIMessage<unknown, never, DbAgentUITools>;
+export type DbAgentMessagePart = NonNullable<DbAgentMessage['parts']>[number];
+export type DbAgentToolUIPart = ToolUIPart<DbAgentUITools>;
 
 export interface AgentTextBlock {
   kind: 'text' | 'markdown';

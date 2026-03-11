@@ -91,7 +91,7 @@ const handleNavClick = async ({
     >
       <SidebarProvider class="items-start">
         <Sidebar collapsible="none" class="flex">
-          <SidebarContent>
+          <SidebarContent class="p-3">
             <SidebarGroup>
               <SidebarGroupContent>
                 <SidebarMenu>
@@ -121,7 +121,7 @@ const handleNavClick = async ({
             </SidebarGroup>
           </SidebarContent>
         </Sidebar>
-        <main class="flex h-[80vh] flex-1 flex-col overflow-hidden">
+        <main class="flex h-[80vh] py-3 flex-1 flex-col overflow-hidden">
           <header
             class="flex h-10 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12"
           >

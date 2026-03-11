@@ -29,6 +29,7 @@ export function buildAgentSystemPrompt(
     'Use tools whenever they can produce a structured result:',
     '- `generate_query` — convert natural language into SQL.',
     '- `render_table` — execute SQL and show structured rows.',
+    '- `export_file` — package structured rows into CSV, JSON, SQL, or XLSX for download.',
     '- `visualize_table` — execute read-only SQL and render a bar, line, pie, or scatter chart.',
     '- `describe_table` — schema introspection (columns, keys, relationships).',
     '- `explain_query` — performance analysis via EXPLAIN.',
@@ -46,7 +47,8 @@ export function buildAgentSystemPrompt(
     'Workflow:',
     '  1. Call generate_query to convert the request to SQL.',
     '  2. Call render_table to execute the SQL and return results.',
-    '  3. Summarize the results clearly for the user.',
+    '  3. If the user asks to export, save, download, dump, return JSON, or open the result in Excel/Sheets, call `export_file` using the rows returned from `render_table`.',
+    '  4. Summarize the results clearly for the user.',
     '',
     'If the user asks for a chart or visualization, call `visualize_table` instead of `render_table` once you have a read-only SQL query.',
     'If the user asks to visualize data but is missing ANY of the following, call `askClarification` BEFORE calling `visualize_table`:',
@@ -74,6 +76,7 @@ export function buildAgentSystemPrompt(
     '- If schema context is incomplete, say what is missing before making assumptions.',
     '- After generating a read-only query, prefer calling `render_table` so the user gets concrete results.',
     '- For destructive or mutating SQL, explain the plan clearly and let the approval flow gate execution.',
+    '- Only call `export_file` for structured row data. Prefer `render_table` first, then export the returned rows.',
     '- Keep narration concise and let tool blocks carry the detailed output.',
   ].join('\n');
 

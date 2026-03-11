@@ -47,7 +47,7 @@ const tableHeight = computed(() => {
 
   <div
     v-if="data.truncated"
-    class="text-xs text-muted-foreground border-l-2 pl-2"
+    class="text-xs text-muted-foreground border-l-2 pl-2 mb-1"
   >
     Showing only the first {{ data.rowCount }} rows.
   </div>
@@ -65,7 +65,7 @@ const tableHeight = computed(() => {
     />
   </div>
 
-  <div class="text-xs text-muted-foreground">
+  <div class="text-xs text-muted-foreground mt-1">
     Showing {{ rows.length }} row{{ rows.length === 1 ? '' : 's' }}
   </div>
 </template>

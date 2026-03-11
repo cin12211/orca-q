@@ -1,5 +1,6 @@
 import type { ComputedRef, Component } from 'vue';
 import {
+  AgentExportFileBlock,
   AgentQueryBlock,
   AgentTableBlock,
   AgentVisualizeTableBlock,
@@ -26,6 +27,7 @@ export const TOOL_COMPONENT_MAP: Record<DbAgentToolName, Component> = {
   explain_query: AgentExplainBlock,
   detect_anomaly: AgentAnomalyBlock,
   describe_table: AgentDescribeBlock,
+  export_file: AgentExportFileBlock,
 };
 
 const TOOL_LOADING_LABELS: Record<DbAgentToolName, string> = {
@@ -35,6 +37,7 @@ const TOOL_LOADING_LABELS: Record<DbAgentToolName, string> = {
   explain_query: 'Analyzing query...',
   detect_anomaly: 'Scanning data...',
   describe_table: 'Reading schema...',
+  export_file: 'Preparing export...',
 };
 
 const isDbAgentToolName = (toolName: string): toolName is DbAgentToolName => {
@@ -221,7 +224,6 @@ const partToBlocks = (part: Record<string, any>): AgentBlock[] => {
 export function useAgentRenderer(messages: ComputedRef<DbAgentMessage[]>) {
   const renderedMessages = computed<AgentRenderedMessage[]>(() => {
     const source = messages.value ?? [];
-    console.log('🚀 ~ useAgentRenderer ~ source:', source);
     const result: AgentRenderedMessage[] = [];
 
     for (let i = 0; i < source.length; i++) {
@@ -241,8 +243,6 @@ export function useAgentRenderer(messages: ComputedRef<DbAgentMessage[]>) {
 
       if (rawBlocks.length === 0) continue;
 
-      // Gom toàn bộ reasoning trong message thành 1 block duy nhất
-      // vì agent có thể emit nhiều reasoning chunk rải rác giữa các tool calls
       const reasoningBlocks = rawBlocks.filter(b => b.kind === 'reasoning');
       const otherBlocks = rawBlocks.filter(b => b.kind !== 'reasoning');
       const blocks: AgentBlock[] = [];

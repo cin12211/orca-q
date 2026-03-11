@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import type { Component } from 'vue';
+import { computed, type Component } from 'vue';
 import { useCopyToClipboard } from '~/core/composables/useCopyToClipboard';
 import type { AgentRenderedMessage, DbAgentToolName } from '../types';
+import AgentMessageBlockWrapper from './AgentMessageBlockWrapper.vue';
 import {
   BlockMessageText,
   BlockMessageMarkdown,
@@ -19,6 +20,8 @@ const props = defineProps<{
   getToolComponent: (toolName: DbAgentToolName) => Component | null;
   showReasoning: boolean;
   isStreaming: boolean;
+  highlightedResponseId?: string | null;
+  registerMessageElement?: (id: string, element: Element | null) => void;
 }>();
 
 const emit = defineEmits<{
@@ -36,6 +39,14 @@ const {
 } = useCopyToClipboard();
 
 const isUserMessage = computed(() => props.message.role === 'user');
+
+const registerMessageContainer = (element: Element | null) => {
+  if (isUserMessage.value || !props.registerMessageElement) {
+    return;
+  }
+
+  props.registerMessageElement(props.message.id, element);
+};
 
 const messageText = computed(() => {
   return (props.message.blocks ?? [])
@@ -55,6 +66,7 @@ const messageText = computed(() => {
       'w-full',
       isUserMessage ? 'flex justify-end' : 'flex justify-start',
     ]"
+    :ref="element => registerMessageContainer(element as Element | null)"
   >
     <div
       :class="[
@@ -91,84 +103,92 @@ const messageText = computed(() => {
           :key="`${message.id}-${block.kind}-${index}`"
           :class="[
             'overflow-hidden text-xs',
+            !isUserMessage && props.highlightedResponseId === message.id
+              ? 'ring-1 ring-primary/25 bg-primary/6'
+              : '',
             isUserMessage
               ? 'rounded-xl bg-gray-100 text-foreground p-2 px-3 shadow-none whitespace-pre-wrap ml-auto'
               : 'rounded-xl border-none bg-transparent py-2 shadow-none flex flex-col gap-1.5',
           ]"
         >
-          <BlockMessageText
-            v-if="block.kind === 'text'"
-            :content="block.content"
-            :is-block-streaming="block.isStreaming"
-            :is-streaming="isStreaming"
+          <AgentMessageBlockWrapper
             :is-user-message="isUserMessage"
-          />
-
-          <AgentReasoningBlock
-            v-else-if="block.kind === 'reasoning' && showReasoning"
-            :content="block.content"
-            :is-streaming="block.isStreaming"
-          />
-
-          <BlockMessageMarkdown
-            v-else-if="block.kind === 'markdown'"
-            :content="block.content"
-            :is-block-streaming="block.isStreaming"
             :is-streaming="isStreaming"
-            :is-user-message="isUserMessage"
-          />
+          >
+            <BlockMessageText
+              v-if="block.kind === 'text'"
+              :content="block.content"
+              :is-block-streaming="block.isStreaming"
+              :is-streaming="isStreaming"
+              :is-user-message="isUserMessage"
+            />
 
-          <BlockMessageCode
-            v-else-if="block.kind === 'code'"
-            :id="`${message.id}-${index}`"
-            :code="block.code"
-            :language="block.language || 'text'"
-            :is-block-streaming="block.isStreaming"
-            :is-streaming="isStreaming"
-          />
+            <AgentReasoningBlock
+              v-else-if="block.kind === 'reasoning' && showReasoning"
+              :content="block.content"
+              :is-streaming="block.isStreaming"
+            />
 
-          <BlockMessageLoading
-            v-else-if="block.kind === 'loading'"
-            :label="block.label"
-          />
+            <BlockMessageMarkdown
+              v-else-if="block.kind === 'markdown'"
+              :content="block.content"
+              :is-block-streaming="block.isStreaming"
+              :is-streaming="isStreaming"
+              :is-user-message="isUserMessage"
+            />
 
-          <BlockMessageError
-            v-else-if="block.kind === 'error'"
-            :message="block.message"
-          />
+            <BlockMessageCode
+              v-else-if="block.kind === 'code'"
+              :id="`${message.id}-${index}`"
+              :code="block.code"
+              :language="block.language || 'text'"
+              :is-block-streaming="block.isStreaming"
+              :is-streaming="isStreaming"
+            />
 
-          <BlockMessageTool
-            v-else-if="block.kind === 'tool'"
-            :tool-name="block.toolName"
-            :result="block.result"
-            :get-tool-component="getToolComponent"
-          />
+            <BlockMessageLoading
+              v-else-if="block.kind === 'loading'"
+              :label="block.label"
+            />
 
-          <AgentApprovalBlock
-            v-else-if="block.kind === 'approval'"
-            :tool-name="block.toolName"
-            :input="block.input"
-            :approval-id="block.approvalId"
-            @approve="emit('approval', $event, true)"
-            @deny="emit('approval', $event, false)"
-          />
+            <BlockMessageError
+              v-else-if="block.kind === 'error'"
+              :message="block.message"
+            />
 
-          <BlockMessageSource
-            v-else-if="block.kind === 'source'"
-            :source-id="block.sourceId"
-            :url="block.url"
-            :title="block.title"
-            :media-type="block.mediaType"
-            :filename="block.filename"
-          />
+            <BlockMessageTool
+              v-else-if="block.kind === 'tool'"
+              :tool-name="block.toolName"
+              :result="block.result"
+              :get-tool-component="getToolComponent"
+            />
 
-          <BlockMessageQuiz
-            v-else-if="block.kind === 'quiz'"
-            :tool-call-id="block.toolCallId"
-            :context="block.context"
-            :questions="block.questions"
-            @submit="emit('quiz-submit', $event)"
-          />
+            <AgentApprovalBlock
+              v-else-if="block.kind === 'approval'"
+              :tool-name="block.toolName"
+              :input="block.input"
+              :approval-id="block.approvalId"
+              @approve="emit('approval', $event, true)"
+              @deny="emit('approval', $event, false)"
+            />
+
+            <BlockMessageSource
+              v-else-if="block.kind === 'source'"
+              :source-id="block.sourceId"
+              :url="block.url"
+              :title="block.title"
+              :media-type="block.mediaType"
+              :filename="block.filename"
+            />
+
+            <BlockMessageQuiz
+              v-else-if="block.kind === 'quiz'"
+              :tool-call-id="block.toolCallId"
+              :context="block.context"
+              :questions="block.questions"
+              @submit="emit('quiz-submit', $event)"
+            />
+          </AgentMessageBlockWrapper>
         </div>
 
         <div

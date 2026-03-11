@@ -22,6 +22,7 @@ import {
   findSlowestPlanNode,
   formatPlanTree,
 } from './renderers/explain';
+import { buildExportFileResult } from './renderers/export';
 import {
   getCountFromRows,
   renderTableResult,
@@ -70,6 +71,7 @@ export function resolveActiveTools(
     return [
       AgentToolName.GenerateQuery,
       AgentToolName.RenderTable,
+      AgentToolName.ExportFile,
       AgentToolName.VisualizeTable,
       AgentToolName.ExplainQuery,
       ...(hasSnapshot
@@ -194,6 +196,25 @@ export function createDbAgentTools({
         );
 
         return result satisfies AgentVisualizeTableResult;
+      },
+    }),
+
+    export_file: tool({
+      description:
+        'Export structured table rows to CSV, JSON, SQL, or XLSX. Use this after render_table when the user asks to download, export, save, or open the result in Excel or a spreadsheet.',
+      inputSchema: z.object({
+        data: z.array(z.record(z.string(), z.unknown())),
+        format: z.enum(['csv', 'json', 'sql', 'xlsx']),
+        filename: z.string().min(1).optional(),
+        tableName: z.string().min(1).optional(),
+      }),
+      execute: async input => {
+        return buildExportFileResult({
+          data: input.data,
+          filename: input.filename,
+          format: input.format,
+          tableName: input.tableName,
+        });
       },
     }),
 

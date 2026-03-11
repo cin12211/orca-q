@@ -120,7 +120,7 @@ const chartOption = computed<EChartsOption>(() => {
 
   <div
     v-if="data.truncated"
-    class="text-xs text-muted-foreground border-l-2 pl-2"
+    class="text-xs text-muted-foreground border-l-2 pl-2 mb-1"
   >
     Showing only the first {{ data.rowCount }} points.
   </div>

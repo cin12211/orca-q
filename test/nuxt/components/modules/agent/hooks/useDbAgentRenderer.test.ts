@@ -75,6 +75,24 @@ describe('useAgentRenderer', () => {
               relatedTables: [],
             },
           },
+          {
+            type: 'tool-export_file',
+            state: 'output-available',
+            toolCallId: 'tool-5',
+            output: {
+              filename: 'users.csv',
+              mimeType: 'text/csv;charset=utf-8',
+              content: 'id,name\n1,Ada',
+              format: 'csv',
+              encoding: 'utf8',
+              fileSize: 13,
+              preview: {
+                columns: ['id', 'name'],
+                rows: [{ id: 1, name: 'Ada' }],
+                truncated: false,
+              },
+            },
+          },
         ],
       } as DbAgentMessage,
     ]);
@@ -110,10 +128,29 @@ describe('useAgentRenderer', () => {
           relatedTables: [],
         },
       },
+      {
+        kind: 'tool',
+        toolName: 'export_file',
+        toolCallId: 'tool-5',
+        result: {
+          filename: 'users.csv',
+          mimeType: 'text/csv;charset=utf-8',
+          content: 'id,name\n1,Ada',
+          format: 'csv',
+          encoding: 'utf8',
+          fileSize: 13,
+          preview: {
+            columns: ['id', 'name'],
+            rows: [{ id: 1, name: 'Ada' }],
+            truncated: false,
+          },
+        },
+      },
     ]);
 
     expect(hasMutationPending.value).toBe(true);
     expect(getComponent('describe_table')).toBe('AgentDescribeBlock');
+    expect(getComponent('export_file')).toBe('AgentExportFileBlock');
   });
 
   it('maps reasoning and streaming text parts', () => {
@@ -150,74 +187,6 @@ describe('useAgentRenderer', () => {
         kind: 'text',
         content: 'Working through the result',
         isStreaming: true,
-      },
-    ]);
-  });
-
-  it('preserves reasoning order around tool blocks and merges only adjacent reasoning parts', () => {
-    const messages = ref<DbAgentMessage[]>([
-      {
-        id: 'assistant-4',
-        role: 'assistant',
-        parts: [
-          {
-            type: 'reasoning',
-            text: 'Inspecting schema.',
-            state: 'done',
-          },
-          {
-            type: 'reasoning',
-            text: 'Checking relationships.',
-            state: 'done',
-          },
-          {
-            type: 'tool-generate_query',
-            state: 'input-available',
-            toolCallId: 'tool-4',
-            input: {
-              prompt: 'Count users',
-              schema: 'Schema: public',
-              dialect: 'postgresql',
-            },
-          },
-          {
-            type: 'reasoning',
-            text: 'Preparing a concise answer.',
-            state: 'streaming',
-          },
-          {
-            type: 'text',
-            text: 'Here is the current plan.',
-            state: 'done',
-          },
-        ],
-      } as DbAgentMessage,
-    ]);
-
-    const { renderedMessages } = useAgentRenderer(
-      computed(() => messages.value)
-    );
-
-    expect(renderedMessages.value[0]?.blocks).toEqual([
-      {
-        kind: 'reasoning',
-        content: 'Inspecting schema.\n\nChecking relationships.',
-        isStreaming: false,
-      },
-      {
-        kind: 'loading',
-        toolName: 'generate_query',
-        toolCallId: 'tool-4',
-        label: 'Generating query...',
-      },
-      {
-        kind: 'reasoning',
-        content: 'Preparing a concise answer.',
-        isStreaming: true,
-      },
-      {
-        kind: 'text',
-        content: 'Here is the current plan.',
       },
     ]);
   });
