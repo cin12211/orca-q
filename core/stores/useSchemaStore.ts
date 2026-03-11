@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia';
 import { ref, computed, toRefs } from 'vue';
+import { getConnectionParams } from '@/core/helpers/connection-helper';
 import type {
   ReservedTableSchemas,
   TableIndex,
@@ -10,14 +11,11 @@ import type {
 } from '~/core/types';
 import type {
   FunctionSchema,
-  SchemaMetaData,
   TableDetailMetadata,
   TableDetails,
   ViewSchema,
   ViewDetails,
-  ViewDetailMetadata,
 } from '~/core/types';
-import { getConnectionParams } from '../helpers/connection-helper';
 import type { Connection } from './managementConnectionStore';
 import { useWSStateStore } from './useWSStateStore';
 

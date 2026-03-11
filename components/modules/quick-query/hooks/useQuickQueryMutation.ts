@@ -1,5 +1,6 @@
 import { ref } from 'vue';
 import { toast } from 'vue-sonner';
+import { getConnectionParams } from '@/core/helpers/connection-helper';
 import { HASH_INDEX_ID } from '~/components/base/dynamic-table/constants';
 import { cellValueFormatter } from '~/components/base/dynamic-table/utils';
 import { buildUpdateStatements } from '~/components/modules/quick-query/utils';
@@ -9,7 +10,6 @@ import {
 } from '~/components/modules/quick-query/utils/buildDeleteStatements';
 import { buildInsertStatements } from '~/components/modules/quick-query/utils/buildInsertStatements';
 import { copyRowsToClipboard } from '~/core/helpers';
-import { getConnectionParams } from '~/core/helpers/connection-helper';
 import { type Connection } from '~/core/stores';
 import type QuickQueryTable from '../quick-query-table/QuickQueryTable.vue';
 

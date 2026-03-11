@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import { Icon } from '#components';
-import { ArrowLeftIcon, DatabaseIcon } from 'lucide-vue-next';
 import { Accordion } from '@/components/ui/accordion';
 import { Button } from '@/components/ui/button';
 import {
@@ -57,9 +56,9 @@ const {
   isFormValid,
   resetForm,
 } = useConnectionForm({
-  open: props.open,
-  editingConnection: props.editingConnection,
-  workspaceId: props.workspaceId,
+  open: () => props.open,
+  editingConnection: () => props.editingConnection,
+  workspaceId: () => props.workspaceId,
   onAddNew: connection => emit('addNew', connection),
   onUpdate: connection => emit('update', connection),
   onClose: handleClose,
@@ -110,7 +109,10 @@ const databaseOptions = computed(() =>
 
               <div class="space-y-2 mt-2">
                 <Label for="connection-name" class="flex items-center gap-2">
-                  <DatabaseIcon class="h-3.5 w-3.5 text-muted-foreground" />
+                  <Icon
+                    name="hugeicons:database"
+                    class="h-3.5 w-3.5 text-muted-foreground"
+                  />
                   Connection Name <span class="text-destructive">*</span>
                 </Label>
                 <Input
@@ -233,7 +235,7 @@ const databaseOptions = computed(() =>
           >
             <div class="flex flex-1 space-x-2">
               <Button variant="outline" @click="handleBack" size="sm">
-                <ArrowLeftIcon class="mr-2 h-4 w-4" />
+                <Icon name="hugeicons:arrow-left-02" />
                 Back
               </Button>
             </div>

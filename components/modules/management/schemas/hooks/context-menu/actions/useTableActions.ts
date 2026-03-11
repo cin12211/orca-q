@@ -1,12 +1,12 @@
 import dayjs from 'dayjs';
 import { toast } from 'vue-sonner';
+import { getConnectionParams } from '@/core/helpers/connection-helper';
 import {
   generateDropTableSQL,
   generateRenameTableSQL,
 } from '~/components/modules/management/schemas/utils/generateTableSQL';
 import { generateTableAlias } from '~/components/modules/raw-query/utils/getMappedSchemaSuggestion';
 import { useStreamingDownload } from '~/core/composables/useStreamingDownload';
-import { getConnectionParams } from '~/core/helpers/connection-helper';
 import { TabViewType } from '~/core/stores/useTabViewsStore';
 import {
   ExportDataFormatType,
@@ -63,7 +63,8 @@ export function useTableActions(
         const input = document.createElement('input');
         input.type = 'hidden';
         input.name = key;
-        input.value = typeof value === 'object' ? JSON.stringify(value) : value.toString();
+        input.value =
+          typeof value === 'object' ? JSON.stringify(value) : value.toString();
         form.appendChild(input);
       }
     }

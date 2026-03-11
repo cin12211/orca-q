@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { reactiveOmit } from '@vueuse/core';
 import type { HTMLAttributes } from 'vue';
-import { Search } from 'lucide-vue-next';
 import { ListboxFilter, useForwardProps } from 'reka-ui';
 import type { ListboxFilterProps } from 'reka-ui';
 import { useCommand } from '@/components/ui/command';
@@ -59,7 +58,7 @@ watch(
       <span>{{ activePrefix.label }}</span>
     </div>
 
-    <Search v-else class="mr-2 h-4 w-4 shrink-0 opacity-50" />
+    <Icon v-else name="hugeicons:search-01" class="mr-2 h-4 w-4 shrink-0" />
 
     <ListboxFilter
       v-bind="{ ...forwardedProps, ...$attrs }"

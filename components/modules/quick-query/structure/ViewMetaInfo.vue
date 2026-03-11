@@ -1,8 +1,8 @@
 <script setup lang="ts">
+import { getConnectionParams } from '@/core/helpers/connection-helper';
 import { Alert, AlertDescription } from '~/components/ui/alert';
 import { Badge } from '~/components/ui/badge';
 import { Button } from '~/components/ui/button';
-import { getConnectionParams } from '~/core/helpers/connection-helper';
 import { useManagementConnectionStore } from '~/core/stores';
 import { useSchemaStore } from '~/core/stores/useSchemaStore';
 import type { ViewMeta } from '~/core/types';

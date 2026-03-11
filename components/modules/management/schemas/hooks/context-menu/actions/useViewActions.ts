@@ -1,11 +1,11 @@
 import { toast } from 'vue-sonner';
+import { getConnectionParams } from '@/core/helpers/connection-helper';
 import {
   generateDropViewSQL,
   generateRenameViewSQL,
   generateRefreshMaterializedViewSQL,
   generateViewSelectSQL,
 } from '~/components/modules/management/schemas/utils/generateViewSQL';
-import { getConnectionParams } from '~/core/helpers/connection-helper';
 import { TabViewType } from '~/core/stores/useTabViewsStore';
 import { ViewSchemaEnum } from '~/core/types';
 import type { ViewDefinitionResponse } from '~/core/types';

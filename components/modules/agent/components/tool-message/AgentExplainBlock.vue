@@ -7,9 +7,7 @@ defineProps<{
 </script>
 
 <template>
-  <div
-    class="space-y-4 rounded-[1.35rem] border border-border/70 bg-muted/20 p-4"
-  >
+  <div class="space-y-4 rounded-xl border border-border/70 bg-muted/20 p-4">
     <div class="flex flex-wrap items-center gap-2">
       <Badge variant="secondary" class="text-[10px] tracking-[0.16em]">
         {{ data.slowestNode }}

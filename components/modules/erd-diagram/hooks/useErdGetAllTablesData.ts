@@ -1,6 +1,6 @@
 import { toast } from 'vue-sonner';
+import { getConnectionParams } from '@/core/helpers/connection-helper';
 import { useAppContext } from '~/core/contexts';
-import { getConnectionParams } from '~/core/helpers/connection-helper';
 import { useErdStore } from '~/core/stores/erdStore';
 import type { TableMetadata } from '~/core/types';
 

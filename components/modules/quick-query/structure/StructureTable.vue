@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import { DynamicTable } from '#components';
+import { getConnectionParams } from '@/core/helpers/connection-helper';
 import { Badge } from '~/components/ui/badge';
 import {
   buildMappedColumnsFromKeys,
   buildMappedColumnsFromRows,
 } from '~/core/helpers';
-import { getConnectionParams } from '~/core/helpers/connection-helper';
 import { useManagementConnectionStore } from '~/core/stores';
 import { useSchemaStore } from '~/core/stores/useSchemaStore';
 import type { ViewMeta } from '~/core/types';

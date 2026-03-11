@@ -1,11 +1,11 @@
 import { toast } from 'vue-sonner';
+import { getConnectionParams } from '@/core/helpers/connection-helper';
 import {
   generateFunctionCallSQL,
   generateFunctionSelectSQL,
   generateDropFunctionSQL,
   generateRenameFunctionSQL,
 } from '~/components/modules/management/schemas/utils/generateFunctionSQL';
-import { getConnectionParams } from '~/core/helpers/connection-helper';
 import { TabViewType } from '~/core/stores/useTabViewsStore';
 import type { FunctionSignature } from '~/core/types';
 import type { ContextMenuState, SchemaContextMenuOptions } from '../types';

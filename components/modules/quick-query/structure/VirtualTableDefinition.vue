@@ -1,6 +1,6 @@
 <script setup lang="ts">
+import { getConnectionParams } from '@/core/helpers/connection-helper';
 import { formatStatementSql } from '~/components/base/code-editor/utils';
-import { getConnectionParams } from '~/core/helpers/connection-helper';
 import { useManagementConnectionStore } from '~/core/stores';
 import type { ViewDefinitionResponse } from '~/core/types';
 

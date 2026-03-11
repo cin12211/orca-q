@@ -1,8 +1,8 @@
 <script setup lang="ts">
+import { getConnectionParams } from '@/core/helpers/connection-helper';
 import ExportOptionsForm from '~/components/modules/management/export/components/ExportOptionsForm.vue';
 import { useDatabaseExport } from '~/components/modules/management/export/hooks/useDatabaseExport';
 import { useAppContext } from '~/core/contexts/useAppContext';
-import { getConnectionParams } from '~/core/helpers/connection-helper';
 import type { ExportOptions, ImportOptions } from '~/core/types';
 
 definePageMeta({

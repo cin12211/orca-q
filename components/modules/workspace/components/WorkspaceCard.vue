@@ -2,7 +2,6 @@
 import { Icon, Select, SelectContent, SelectItem } from '#components';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
-import { ClockFading, ExternalLink } from 'lucide-vue-next';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -12,7 +11,10 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { type Workspace } from '~/core/stores';
-import { CreateConnectionModal, getDatabaseSupportByType } from '../../connection';
+import {
+  CreateConnectionModal,
+  getDatabaseSupportByType,
+} from '../../connection';
 import { useWorkspaceCard } from '../hooks/useWorkspaceCard';
 import CreateWorkspaceModal from './CreateWorkspaceModal.vue';
 import DeleteWorkspaceModal from './DeleteWorkspaceModal.vue';
@@ -95,18 +97,18 @@ const {
             class="cursor-pointer flex items-center"
             @click="isOpenEditModal = true"
           >
-            <Icon name="lucide:pencil" class="size-4! min-w-4" />
+            <Icon name="hugeicons:pencil-edit-02" class="size-4! min-w-4" />
             Edit workspace
           </DropdownMenuItem>
           <DropdownMenuItem class="cursor-pointer flex items-center" disabled>
-            <Icon name="lucide:link" class="size-4! min-w-4" />
+            <Icon name="hugeicons:link-04" class="size-4! min-w-4" />
             Invite
           </DropdownMenuItem>
           <DropdownMenuItem
             class="cursor-pointer flex items-center"
             @click="isOpenDeleteModal = true"
           >
-            <Icon name="lucide:trash" class="size-4! min-w-4" />
+            <Icon name="hugeicons:delete-02" class="size-4! min-w-4" />
             Delete workspace
           </DropdownMenuItem>
         </DropdownMenuContent>
@@ -125,7 +127,7 @@ const {
           </span>
         </div>
         <div class="flex items-center pt-2">
-          <ClockFading class="mr-2 h-4 w-4 opacity-70" />
+          <Icon name="hugeicons:clock-05" class="mr-2 h-4 w-4 opacity-70" />
           <span
             class="text-xs text-muted-foreground"
             v-if="workspace.lastOpened"
@@ -137,7 +139,7 @@ const {
           </span>
         </div>
         <div class="flex items-center pt-2">
-          <Icon name="lucide:clock" class="mr-2 h-4 w-4 opacity-70" />
+          <Icon name="hugeicons:clock-01" class="mr-2 h-4 w-4 opacity-70" />
           <span class="text-xs text-muted-foreground">
             Created : {{ dayjs(workspace.createdAt).fromNow() }}
           </span>
@@ -154,7 +156,8 @@ const {
           size="sm"
         >
           <div class="flex items-center gap-1">
-            <ExternalLink class="h-4 w-4" /> Open workspace
+            <Icon name="hugeicons:square-arrow-up-right" class="h-4 w-4" />
+            Open workspace
           </div>
 
           <Button
@@ -162,7 +165,7 @@ const {
             variant="ghost"
             @click.stop="onOpenConnectionSelector()"
           >
-            <Icon name="lucide:chevron-down" class="size-5!" />
+            <Icon name="hugeicons:arrow-down-01" class="size-5!" />
           </Button>
         </Button>
 
@@ -172,7 +175,7 @@ const {
               class="flex px-2 py-0.5 h-8 hover:bg-muted rounded-md font-normal text-sm items-center gap-1 cursor-pointer"
               @click="isModalCreateConnectionOpen = true"
             >
-              <Icon name="lucide:plus" />
+              <Icon name="hugeicons:plus-sign" />
               Add new connection
             </div>
 

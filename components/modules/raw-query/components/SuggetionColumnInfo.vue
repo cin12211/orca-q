@@ -7,7 +7,7 @@
       v-if="isPrimaryKey"
       class="text-xs text-yellow-500 mt-1 flex items-center gap-1"
     >
-      <KeyRound class="w-4 text-yellow-400 text-xl" />
+      <Icon name="hugeicons:key-01" class="w-4 text-yellow-400 text-xl" />
 
       <span>Primary Key</span>
     </div>
@@ -15,7 +15,7 @@
       v-if="foreignKey"
       class="text-xs text-blue-500 mt-1 flex items-center gap-1"
     >
-      <KeyRound class="w-4 text-gray-400 text-xl" />
+      <Icon name="hugeicons:key-01" class="w-4 text-gray-400 text-xl" />
       <span
         >FK → {{ foreignKey.referenced_table }}.{{
           foreignKey.referenced_column
@@ -26,7 +26,7 @@
 </template>
 
 <script lang="ts" setup>
-import { KeyRound } from 'lucide-vue-next';
+import { Icon } from '#components';
 
 export interface ForeignKeyInfo {
   referenced_table: string;

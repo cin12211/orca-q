@@ -14,6 +14,7 @@ import { Compartment } from '@codemirror/state';
 import { keymap } from '@codemirror/view';
 import { format } from 'sql-formatter';
 import { toast } from 'vue-sonner';
+import { getConnectionParams } from '@/core/helpers/connection-helper';
 import BaseCodeEditor from '~/components/base/code-editor/BaseCodeEditor.vue';
 import {
   shortCutSaveFunction,
@@ -25,7 +26,6 @@ import { pgKeywordCompletion } from '~/components/base/code-editor/utils/pgKeywo
 import QuickQueryErrorPopup from '~/components/modules/quick-query/QuickQueryErrorPopup.vue';
 import FunctionControlBar from '~/components/modules/quick-query/function-control-bar/FunctionControlBar.vue';
 import { useAppContext } from '~/core/contexts/useAppContext';
-import { getConnectionParams } from '~/core/helpers/connection-helper';
 import { useQuickQueryLogs } from '~/core/stores';
 
 const props = defineProps<{

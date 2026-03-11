@@ -1,4 +1,4 @@
-import { getConnectionParams } from '~/core/helpers/connection-helper';
+import { getConnectionParams } from '@/core/helpers/connection-helper';
 import { type Connection } from '~/core/stores';
 import type {
   ExportDatabaseRequest,

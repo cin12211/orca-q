@@ -22,12 +22,12 @@ export const databaseSupports: IDBSupport[] = [
     icon: h(Icon, { name: 'logos:postgresql' }),
     isSupport: true,
   },
-  // {
-  //   type: DatabaseClientType.MYSQL,
-  //   name: 'MySQL',
-  //   icon: h(Icon, { name: 'logos:mysql' }),
-  //   isSupport: false,
-  // },
+  {
+    type: DatabaseClientType.MYSQL,
+    name: 'MySQL',
+    icon: h(Icon, { name: 'logos:mysql' }),
+    isSupport: false,
+  },
 ];
 
 export const getDatabaseSupportByType = (type: DatabaseClientType) => {

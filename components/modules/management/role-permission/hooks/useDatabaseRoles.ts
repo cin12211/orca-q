@@ -1,4 +1,4 @@
-import { getConnectionParams } from '~/core/helpers/connection-helper';
+import { getConnectionParams } from '@/core/helpers/connection-helper';
 import { type Connection } from '~/core/stores';
 import type {
   DatabaseRole,
@@ -356,7 +356,9 @@ export const useRolePermissions = (connection: Ref<Connection | undefined>) => {
 /**
  * Composable for fetching database-level permissions
  */
-export const useDatabasePermissions = (connection: Ref<Connection | undefined>) => {
+export const useDatabasePermissions = (
+  connection: Ref<Connection | undefined>
+) => {
   const isLoading = ref(false);
   const error = ref<string | null>(null);
   const databasePermissions = ref<DatabasePermission[]>([]);
@@ -561,7 +563,9 @@ export const useSchemaObjects = (connection: Ref<Connection | undefined>) => {
 /**
  * Composable for bulk granting permissions
  */
-export const useBulkGrantPermissions = (connection: Ref<Connection | undefined>) => {
+export const useBulkGrantPermissions = (
+  connection: Ref<Connection | undefined>
+) => {
   const isGranting = ref(false);
   const error = ref<string | null>(null);
 

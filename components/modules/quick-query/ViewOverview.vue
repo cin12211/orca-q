@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import { DynamicTable } from '#components';
+import { getConnectionParams } from '@/core/helpers/connection-helper';
 import { useAppContext } from '~/core/contexts/useAppContext';
 import {
   buildMappedColumnsFromKeys,
   buildMappedColumnsFromRows,
 } from '~/core/helpers';
-import { getConnectionParams } from '~/core/helpers/connection-helper';
 
 const VIEW_OVERVIEW_COLUMN_KEYS = [
   'name',

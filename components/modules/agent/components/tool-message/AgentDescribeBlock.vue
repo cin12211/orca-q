@@ -54,7 +54,7 @@ const tableHeight = computed(() => {
 
 <template>
   <!-- <div
-    class="space-y-3 rounded-[1.35rem] border border-border/70 bg-muted/20 p-4"
+    class="space-y-3 rounded-3xl border border-border/70 bg-muted/20 p-4"
   > -->
   <div class="flex items-start justify-between gap-3">
     <div class="space-y-2 min-w-0">

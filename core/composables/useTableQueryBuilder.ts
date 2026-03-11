@@ -1,6 +1,6 @@
 import debounce from 'lodash-es/debounce';
 import { toast } from 'vue-sonner';
-import { DatabaseClientType } from '~/core/constants/database-client-type';
+import { getConnectionParams } from '@/core/helpers/connection-helper';
 import {
   formatWhereClause,
   type FilterSchema,
@@ -12,7 +12,7 @@ import {
   DEFAULT_QUERY_COUNT,
   DEFAULT_QUERY_SIZE,
 } from '~/core/constants';
-import { getConnectionParams } from '../helpers/connection-helper';
+import { DatabaseClientType } from '~/core/constants/database-client-type';
 import { useQuickQueryLogs, type Connection } from '~/core/stores';
 
 export interface OrderBy {

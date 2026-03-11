@@ -1,4 +1,11 @@
-import { reactive, ref, watch, computed } from 'vue';
+import {
+  reactive,
+  ref,
+  watch,
+  computed,
+  toRef,
+  type MaybeRefOrGetter,
+} from 'vue';
 import dayjs from 'dayjs';
 import { DatabaseClientType } from '~/core/constants/database-client-type';
 import { uuidv4 } from '~/core/helpers';
@@ -7,13 +14,17 @@ import { connectionService } from '../services/connection.service';
 import { EConnectionMethod, ESSLMode, ESSHAuthMethod } from '../types';
 
 export function useConnectionForm(props: {
-  open: boolean;
-  editingConnection: Connection | null;
-  workspaceId: string;
+  open: MaybeRefOrGetter<boolean>;
+  editingConnection: MaybeRefOrGetter<Connection | null>;
+  workspaceId: MaybeRefOrGetter<string>;
   onAddNew: (connection: Connection) => void;
   onUpdate: (connection: Connection) => void;
   onClose: () => void;
 }) {
+  const isOpen = toRef(props.open);
+  const editingConnection = toRef(props.editingConnection);
+  const workspaceId = toRef(props.workspaceId);
+
   const step = ref<1 | 2>(1);
   const dbType = ref<DatabaseClientType | null>(DatabaseClientType.POSTGRES);
   const connectionName = ref('');
@@ -45,8 +56,8 @@ export function useConnectionForm(props: {
   });
   const testStatus = ref<'idle' | 'testing' | 'success' | 'error'>('idle');
 
-  const getDefaultPort = () => {
-    switch (dbType.value) {
+  const getDefaultPort = (type: DatabaseClientType | null) => {
+    switch (type) {
       case DatabaseClientType.POSTGRES:
         return '5432';
       case DatabaseClientType.MYSQL:
@@ -65,7 +76,7 @@ export function useConnectionForm(props: {
     connectionString.value = '';
 
     formData.host = '';
-    formData.port = getDefaultPort();
+    formData.port = getDefaultPort(DatabaseClientType.POSTGRES);
     formData.username = '';
     formData.password = '';
     formData.database = '';
@@ -112,7 +123,7 @@ export function useConnectionForm(props: {
       body.stringConnection = connectionString.value;
     } else {
       body.host = formData.host;
-      body.port = formData.port || getDefaultPort();
+      body.port = formData.port || getDefaultPort(dbType.value);
       body.username = formData.username;
       body.password = formData.password;
       body.database = formData.database;
@@ -161,7 +172,7 @@ export function useConnectionForm(props: {
   };
 
   const handleCreateConnection = async () => {
-    const isEdit = props.editingConnection;
+    const isEdit = !!editingConnection.value;
     const isCreate = !isEdit;
 
     if (isCreate) {
@@ -173,19 +184,19 @@ export function useConnectionForm(props: {
     }
 
     const connection: Connection = {
-      workspaceId: props.workspaceId,
-      id: props.editingConnection?.id || uuidv4(),
+      workspaceId: workspaceId.value,
+      id: editingConnection.value?.id || uuidv4(),
       name: connectionName.value,
       type: dbType.value as DatabaseClientType,
       method: connectionMethod.value,
-      createdAt: props.editingConnection?.createdAt || dayjs().toISOString(),
+      createdAt: editingConnection.value?.createdAt || dayjs().toISOString(),
     };
 
     if (connectionMethod.value === EConnectionMethod.STRING) {
       connection.connectionString = connectionString.value;
     } else {
       connection.host = formData.host;
-      connection.port = formData.port || getDefaultPort();
+      connection.port = formData.port || getDefaultPort(dbType.value);
       connection.username = formData.username;
       connection.password = formData.password;
       connection.database = formData.database;
@@ -251,63 +262,60 @@ export function useConnectionForm(props: {
     } else {
       return !!(
         formData.host &&
-        (formData.port || getDefaultPort()) &&
+        (formData.port || getDefaultPort(dbType.value)) &&
         formData.username &&
         formData.database
       );
     }
   });
 
-  // Watch for dbType changes to auto-fill port
+  // Watch for dbType changes to auto-fill port (only for new connections)
   watch(dbType, newType => {
-    if (newType) {
-      formData.port = getDefaultPort();
+    if (newType && !editingConnection.value) {
+      formData.port = getDefaultPort(newType);
     }
   });
 
   // Reset form when modal opens or editing connection changes
   watch(
-    () => [props.open, props.editingConnection],
+    () => [isOpen.value, editingConnection.value],
     () => {
-      if (props.open) {
-        if (props.editingConnection) {
-          connectionName.value = props.editingConnection.name;
-          dbType.value = props.editingConnection.type as DatabaseClientType;
-          connectionMethod.value = props.editingConnection.method;
-          connectionString.value =
-            props.editingConnection.connectionString || '';
+      if (isOpen.value) {
+        if (editingConnection.value) {
+          const conn = editingConnection.value;
+          connectionName.value = conn.name;
+          dbType.value = conn.type as DatabaseClientType;
+          connectionMethod.value = conn.method;
+          connectionString.value = conn.connectionString || '';
 
-          formData.host = props.editingConnection.host || '';
-          formData.port = props.editingConnection.port || '';
-          formData.username = props.editingConnection.username || '';
-          formData.password = props.editingConnection.password || '';
-          formData.database = props.editingConnection.database || '';
+          formData.host = conn.host || '';
+          formData.port = conn.port || '';
+          formData.username = conn.username || '';
+          formData.password = conn.password || '';
+          formData.database = conn.database || '';
 
-          formData.sslEnabled = !!props.editingConnection.ssl;
-          if (props.editingConnection.ssl) {
-            formData.sslMode = props.editingConnection.ssl.mode;
-            formData.sslCA = props.editingConnection.ssl.ca || '';
-            formData.sslCert = props.editingConnection.ssl.cert || '';
-            formData.sslKey = props.editingConnection.ssl.key || '';
+          formData.sslEnabled = !!conn.ssl;
+          if (conn.ssl) {
+            formData.sslMode = conn.ssl.mode;
+            formData.sslCA = conn.ssl.ca || '';
+            formData.sslCert = conn.ssl.cert || '';
+            formData.sslKey = conn.ssl.key || '';
             formData.sslRejectUnauthorized =
-              props.editingConnection.ssl.rejectUnauthorized ?? true;
+              conn.ssl.rejectUnauthorized ?? true;
           }
 
-          formData.sshEnabled = !!props.editingConnection.ssh?.enabled;
-          if (props.editingConnection.ssh) {
-            formData.sshHost = props.editingConnection.ssh.host || '';
-            formData.sshPort = props.editingConnection.ssh.port || 22;
-            formData.sshUsername = props.editingConnection.ssh.username || '';
+          formData.sshEnabled = !!conn.ssh?.enabled;
+          if (conn.ssh) {
+            formData.sshHost = conn.ssh.host || '';
+            formData.sshPort = conn.ssh.port || 22;
+            formData.sshUsername = conn.ssh.username || '';
             formData.sshAuthMethod =
-              props.editingConnection.ssh.authMethod || ESSHAuthMethod.PASSWORD;
-            formData.sshPassword = props.editingConnection.ssh.password || '';
-            formData.sshPrivateKey =
-              props.editingConnection.ssh.privateKey || '';
-            formData.sshStoreInKeychain =
-              props.editingConnection.ssh.storeInKeychain ?? true;
+              conn.ssh.authMethod || ESSHAuthMethod.PASSWORD;
+            formData.sshPassword = conn.ssh.password || '';
+            formData.sshPrivateKey = conn.ssh.privateKey || '';
+            formData.sshStoreInKeychain = conn.ssh.storeInKeychain ?? true;
             formData.sshUseKey =
-              props.editingConnection.ssh.useSshKey ??
-              props.editingConnection.ssh.authMethod === ESSHAuthMethod.KEY;
+              conn.ssh.useSshKey ?? conn.ssh.authMethod === ESSHAuthMethod.KEY;
           }
 
           step.value = 2;
@@ -331,7 +339,7 @@ export function useConnectionForm(props: {
     handleBack,
     handleTestConnection,
     handleCreateConnection,
-    getDefaultPort,
+    getDefaultPort: () => getDefaultPort(dbType.value),
     getConnectionPlaceholder,
     isFormValid,
     resetForm,

@@ -2,7 +2,6 @@
 import { ref } from 'vue';
 import { Tooltip, TooltipContent, TooltipTrigger } from '#components';
 import dayjs from 'dayjs';
-import { EditIcon, Trash2Icon, ExternalLinkIcon } from 'lucide-vue-next';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -77,7 +76,7 @@ const onConnectConnection = (connection: Connection) => {
   >
     <Icon
       class="mx-auto mb-2 size-20! text-muted-foreground"
-      name="lucide:database"
+      name="hugeicons:database"
     />
     <h3 class="text-lg font-medium">No connections yet</h3>
     <p class="text-muted-foreground">
@@ -85,7 +84,7 @@ const onConnectConnection = (connection: Connection) => {
     </p>
 
     <Button size="sm" variant="outline" class="mt-4" @click="emit('create')">
-      <Icon name="lucide:plus" class="size-4!" />
+      <Icon name="hugeicons:plus-sign" class="size-4!" />
       Add Connection
     </Button>
   </div>
@@ -154,18 +153,18 @@ const onConnectConnection = (connection: Connection) => {
           <TableCell class="text-right">
             <div class="flex items-center justify-end gap-1">
               <Button
-                variant="secondary"
+                variant="outline"
                 size="iconMd"
                 @click="$emit('edit', connection)"
               >
-                <EditIcon class="h-3.5 w-3.5" />
+                <Icon name="hugeicons:edit-02" />
               </Button>
               <Button
-                variant="secondary"
+                variant="outline"
                 size="iconMd"
                 @click="openDeleteDialog(connection.id)"
               >
-                <Trash2Icon class="h-3.5 w-3.5" />
+                <Icon name="hugeicons:delete-02" />
               </Button>
 
               <Button
@@ -173,7 +172,7 @@ const onConnectConnection = (connection: Connection) => {
                 size="sm"
                 @click="onConnectConnection(connection)"
               >
-                <ExternalLinkIcon class="h-3.5 w-3.5" />
+                <Icon name="hugeicons:square-arrow-up-right" />
                 Connect
               </Button>
             </div>

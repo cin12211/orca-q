@@ -1,23 +1,18 @@
 import { h } from 'vue';
+import { Icon as NuxtIcon } from '#components';
 import type { Meta, StoryObj } from '@storybook/vue3';
-import { File, Folder, Trash, Copy } from 'lucide-vue-next';
 import BaseContextMenu from './BaseContextMenu.vue';
 import { ContextMenuItemType } from './menuContext.type';
 
 // Mock Icon component
 const Icon = {
   props: ['name'],
-  setup(props: any) {
-    const icons: Record<string, any> = {
-      'lucide:file': File,
-      'lucide:folder': Folder,
-      'lucide:trash': Trash,
-      'lucide:copy': Copy,
-    };
-    return () => {
-      const iconComp = icons[props.name] || File;
-      return h(iconComp, { class: 'size-4' });
-    };
+  setup(props: { name?: string }) {
+    return () =>
+      h(NuxtIcon, {
+        name: props.name || 'hugeicons:file-01',
+        class: 'size-4',
+      });
   },
 };
 
@@ -38,13 +33,13 @@ const mockItems = [
   {
     type: ContextMenuItemType.ACTION,
     title: 'Open',
-    icon: 'lucide:folder',
+    icon: 'hugeicons:folder-01',
     select: () => console.log('Open selected'),
   },
   {
     type: ContextMenuItemType.ACTION,
     title: 'Copy',
-    icon: 'lucide:copy',
+    icon: 'hugeicons:copy-01',
     select: () => console.log('Copy selected'),
   },
   {
@@ -53,7 +48,7 @@ const mockItems = [
   {
     type: ContextMenuItemType.ACTION,
     title: 'Delete',
-    icon: 'lucide:trash',
+    icon: 'hugeicons:delete-02',
     disabled: true,
   },
   {

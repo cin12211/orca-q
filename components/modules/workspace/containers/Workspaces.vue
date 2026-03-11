@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { Search } from 'lucide-vue-next';
 import { ManagementConnectionModal } from '../../connection';
 import CreateWorkspaceModal from '../components/CreateWorkspaceModal.vue';
 import WorkspaceCard from '../components/WorkspaceCard.vue';
@@ -37,7 +36,10 @@ const {
     />
 
     <div class="relative w-full">
-      <Search class="absolute left-2.5 top-1.5 size-6 text-muted-foreground" />
+      <Icon
+        name="hugeicons:search-01"
+        class="absolute left-2.5 -translate-y-1/2 top-1/2 size-4"
+      />
       <Input
         type="text"
         v-model="search"
@@ -65,7 +67,7 @@ const {
         There is nothing here to show, Let's create one
       </div>
       <Button variant="default" size="sm" @click="isOpenCreateWSModal = true">
-        <Icon name="lucide:plus" />
+        <Icon name="hugeicons:plus-sign" />
 
         New Workspace</Button
       >

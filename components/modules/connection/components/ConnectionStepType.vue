@@ -6,17 +6,30 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { DatabaseClientType } from '~/core/constants/database-client-type';
+import type { IDBSupport } from '../constants';
 import DatabaseTypeCard from './DatabaseTypeCard.vue';
 
+interface IDatabaseOption extends IDBSupport {
+  isActive: boolean;
+  onClick: () => void;
+}
+
 const props = defineProps<{
-  databaseOptions: any[];
-  dbType: string | null;
+  databaseOptions: IDatabaseOption[];
+  dbType: DatabaseClientType | null;
 }>();
 
 const emit = defineEmits<{
   (e: 'next'): void;
   (e: 'close'): void;
 }>();
+
+const handleSelect = (option: IDatabaseOption) => {
+  if (option.isSupport) {
+    option.onClick();
+  }
+};
 </script>
 
 <template>
@@ -36,7 +49,8 @@ const emit = defineEmits<{
           :name="option.name"
           :icon="option.icon"
           :selected="option.isActive"
-          @click="option.onClick"
+          @click="() => handleSelect(option)"
+          :isSupport="option.isSupport"
           iconClass="size-14!"
         />
       </div>
@@ -47,7 +61,7 @@ const emit = defineEmits<{
         Cancel
       </Button>
       <Button @click="$emit('next')" :disabled="!dbType" size="sm">
-        Next
+        Next <Icon name="hugeicons:arrow-right-02" />
       </Button>
     </DialogFooter>
   </div>
