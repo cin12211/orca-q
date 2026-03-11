@@ -10,6 +10,7 @@ import dayjs from 'dayjs';
 import { DatabaseClientType } from '~/core/constants/database-client-type';
 import { uuidv4 } from '~/core/helpers';
 import type { Connection } from '~/core/stores';
+import { DEFAULT_DB_PORTS } from '../constants';
 import { connectionService } from '../services/connection.service';
 import { EConnectionMethod, ESSLMode, ESSHAuthMethod } from '../types';
 
@@ -27,7 +28,7 @@ export function useConnectionForm(props: {
 
   const step = ref<1 | 2>(1);
   const dbType = ref<DatabaseClientType | null>(DatabaseClientType.POSTGRES);
-  const connectionName = ref('');
+  const connectionName = ref('my-abc-db:dev');
   const connectionMethod = ref<EConnectionMethod>(EConnectionMethod.STRING);
   const connectionString = ref('');
   const formData = reactive({
@@ -57,21 +58,14 @@ export function useConnectionForm(props: {
   const testStatus = ref<'idle' | 'testing' | 'success' | 'error'>('idle');
 
   const getDefaultPort = (type: DatabaseClientType | null) => {
-    switch (type) {
-      case DatabaseClientType.POSTGRES:
-        return '5432';
-      case DatabaseClientType.MYSQL:
-      case DatabaseClientType.MYSQL2:
-        return '3306';
-      default:
-        return '';
-    }
+    if (!type) return '';
+    return DEFAULT_DB_PORTS[type] || '';
   };
 
   const resetForm = () => {
     step.value = 1;
     dbType.value = DatabaseClientType.POSTGRES;
-    connectionName.value = '';
+    connectionName.value = 'my-abc-db:dev';
     connectionMethod.value = EConnectionMethod.STRING;
     connectionString.value = '';
 

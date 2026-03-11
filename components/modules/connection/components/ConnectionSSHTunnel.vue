@@ -43,7 +43,7 @@ const {
         <span>SSH Tunnel</span>
       </div>
     </AccordionTrigger>
-    <AccordionContent class="space-y-4 pt-4">
+    <AccordionContent class="space-y-4 pt-4 px-1">
       <div class="flex items-center justify-between">
         <Label for="ssh-enabled">Over SSH</Label>
         <Switch id="ssh-enabled" v-model:model-value="formData.sshEnabled" />

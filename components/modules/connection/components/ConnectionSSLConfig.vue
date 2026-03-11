@@ -63,7 +63,7 @@ const {
         <span>SSL Configuration</span>
       </div>
     </AccordionTrigger>
-    <AccordionContent class="space-y-4 pt-4">
+    <AccordionContent class="space-y-4 pt-4 px-1">
       <div class="flex items-center justify-between">
         <Label for="ssl-enabled">Enable SSL</Label>
         <Switch id="ssl-enabled" v-model:model-value="formData.sslEnabled" />

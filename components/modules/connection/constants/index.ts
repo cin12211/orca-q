@@ -30,6 +30,12 @@ export const databaseSupports: IDBSupport[] = [
   },
 ];
 
+export const DEFAULT_DB_PORTS: Record<string, string> = {
+  [DatabaseClientType.POSTGRES]: '5432',
+  [DatabaseClientType.MYSQL]: '3306',
+  [DatabaseClientType.MYSQL2]: '3306',
+};
+
 export const getDatabaseSupportByType = (type: DatabaseClientType) => {
   return databaseSupports.find(e => e.type === type);
 };
