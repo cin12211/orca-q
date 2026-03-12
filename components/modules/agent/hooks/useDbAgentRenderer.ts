@@ -243,28 +243,25 @@ export function useAgentRenderer(messages: ComputedRef<DbAgentMessage[]>) {
 
       if (rawBlocks.length === 0) continue;
 
-      const reasoningBlocks = rawBlocks.filter(b => b.kind === 'reasoning');
-      const otherBlocks = rawBlocks.filter(b => b.kind !== 'reasoning');
       const blocks: AgentBlock[] = [];
 
-      if (reasoningBlocks.length > 0) {
-        const mergedContent = reasoningBlocks
-          .map(b => (b.kind === 'reasoning' ? b.content : ''))
-          .filter(Boolean)
-          .join('\n\n');
+      for (const block of rawBlocks) {
+        const lastBlock = blocks[blocks.length - 1];
 
-        const isStreaming = reasoningBlocks.some(
-          b => b.kind === 'reasoning' && b.isStreaming
-        );
+        if (block.kind === 'reasoning' && lastBlock?.kind === 'reasoning') {
+          const newContent = [lastBlock.content, block.content]
+            .filter(Boolean)
+            .join('\n\n');
 
-        blocks.push({
-          kind: 'reasoning',
-          content: mergedContent,
-          isStreaming,
-        });
+          blocks[blocks.length - 1] = {
+            kind: 'reasoning',
+            content: newContent,
+            isStreaming: lastBlock.isStreaming || block.isStreaming,
+          };
+        } else {
+          blocks.push(block);
+        }
       }
-
-      blocks.push(...otherBlocks);
 
       result.push({
         id: message.id,

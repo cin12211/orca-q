@@ -311,10 +311,12 @@ watch(
     }
 
     return lastMessage.parts
-      .filter(
-        (part): part is { type: 'text'; text: string } => part.type === 'text'
-      )
-      .map(part => part.text)
+      .map(part => {
+        if (part.type === 'text' || part.type === 'reasoning') {
+          return (part as any).text || '';
+        }
+        return JSON.stringify(part);
+      })
       .join('');
   },
   async () => {
@@ -405,6 +407,15 @@ const promptCards = computed(() => {
             </div>
 
             <div class="flex shrink-0 items-center gap-2">
+              <!-- <Button
+                size="sm"
+                variant="ghost"
+                class="h-6.5 text-xs px-2"
+                @click="showAttachmentPanel = !showAttachmentPanel"
+              >
+                Attachment <Icon name="hugeicons:attachment" class="size-3" />
+              </Button> -->
+
               <Button
                 size="sm"
                 variant="outline"
@@ -480,6 +491,23 @@ const promptCards = computed(() => {
                 </div> -->
 
                 <div
+                  v-if="isLoading"
+                  class="flex gap-1 items-center mt-2 text-xs font-medium"
+                >
+                  <div
+                    class="flex size-7 shrink-0 items-center justify-center rounded-2xl border shadow-sm agent-thinking-animation"
+                  >
+                    <img src="public/logo.png" class="w-7 rounded-full" />
+                  </div>
+
+                  <Shimmer>Orca Thinking</Shimmer>
+                  <!-- <ScrambleText
+                    class="text-sm"
+                    :texts="['Orca Thinking', 'Thinking...']"
+                  /> -->
+                </div>
+
+                <div
                   v-if="error"
                   class="mt-4 overflow-hidden rounded-2xl border border-destructive/15 bg-destructive/5 backdrop-blur-sm"
                 >
@@ -505,19 +533,6 @@ const promptCards = computed(() => {
                       </p>
                     </div>
                   </div>
-                </div>
-
-                <div class="flex gap-1 items-center mt-2">
-                  <div
-                    class="flex size-7 shrink-0 items-center justify-center rounded-2xl border shadow-sm agent-thinking-animation"
-                  >
-                    <img src="public/logo.png" class="w-7 rounded-full" />
-                  </div>
-
-                  <ScrambleText
-                    class="text-sm"
-                    :texts="['Orca', 'Thinking...']"
-                  />
                 </div>
               </div>
             </div>
@@ -557,13 +572,19 @@ const promptCards = computed(() => {
         <ResizablePanel
           :min-size="20"
           :max-size="60"
-          :default-size="40"
+          :default-size="30"
           class="h-full relative"
         >
           <ExportPreviewPanel
+            v-if="activeExportPreview"
             :result="activeExportPreview"
             @close="activeExportPreview = null"
           />
+          <!-- <AgentAttachmentPanel
+            v-else-if="showAttachmentPanel"
+            :messages="renderedMessages"
+            @close="showAttachmentPanel = false"
+          /> -->
         </ResizablePanel>
       </template>
     </ResizablePanelGroup>

@@ -42,6 +42,12 @@ const smoothedCode = useSmoothStream(
 
 const lang = computed(() => {
   switch (props.language) {
+    case 'markdown':
+      return 'markdown';
+    case 'csv':
+      return 'csv';
+    case 'json':
+      return 'json';
     case 'javascript':
       return 'js';
     case 'typescript':
@@ -50,7 +56,7 @@ const lang = computed(() => {
     case 'mysql':
       return 'sql';
     default:
-      return props.language;
+      return 'text';
   }
 });
 
@@ -70,7 +76,7 @@ const key = computed(() => `${lang.value}-${colorMode.value}`);
       <span
         class="text-[10px] font-semibold capitalize text-muted-foreground select-none"
       >
-        {{ lang }}
+        {{ props.language }}
       </span>
 
       <Tooltip>
