@@ -199,6 +199,8 @@ export function createDbAgentTools({
       },
     }),
 
+    //TODO: need to enhance this not stable
+    //TODO: duplicate lib for export XLSX
     export_file: tool({
       description:
         'Export structured table rows to CSV, JSON, SQL, or XLSX. Use this after render_table when the user asks to download, export, save, or open the result in Excel or a spreadsheet.',
