@@ -1,5 +1,6 @@
 import { ref } from 'vue';
 import { toast } from 'vue-sonner';
+import { getConnectionParams } from '@/core/helpers/connection-helper';
 import { HASH_INDEX_ID } from '~/components/base/dynamic-table/constants';
 import { cellValueFormatter } from '~/components/base/dynamic-table/utils';
 import { buildUpdateStatements } from '~/components/modules/quick-query/utils';
@@ -9,6 +10,7 @@ import {
 } from '~/components/modules/quick-query/utils/buildDeleteStatements';
 import { buildInsertStatements } from '~/components/modules/quick-query/utils/buildInsertStatements';
 import { copyRowsToClipboard } from '~/core/helpers';
+import { type Connection } from '~/core/stores';
 import type QuickQueryTable from '../quick-query-table/QuickQueryTable.vue';
 
 // Adjust the path as per your project structure
@@ -49,7 +51,7 @@ interface UseQuickQueryMutationOptions {
     sql: string,
     type: 'save' | 'delete'
   ) => Promise<boolean>;
-  connectionString: Ref<string>;
+  connection: Ref<Connection | undefined>;
 }
 
 /**
@@ -76,7 +78,7 @@ export function useQuickQueryMutation(options: UseQuickQueryMutationOptions) {
     focusedCell,
     safeModeEnabled,
     onRequestSafeModeConfirm,
-    connectionString,
+    connection,
   } = options;
 
   const isMutating = ref(false); // Reactive state for mutation loading indicator
@@ -162,11 +164,11 @@ export function useQuickQueryMutation(options: UseQuickQueryMutationOptions) {
     isMutating.value = true;
 
     try {
-      const { queryTime } = await $fetch('/api/execute-bulk-update', {
+      const { queryTime } = await $fetch('/api/tables/bulk-update', {
         method: 'POST',
         body: {
           sqlUpdateStatements: sqlBulkInsertOrUpdateStatements,
-          dbConnectionString: connectionString.value,
+          ...getConnectionParams(connection.value),
         },
         onResponseError({ response }) {
           const errorData = response?._data?.data?.driverError;
@@ -242,11 +244,11 @@ export function useQuickQueryMutation(options: UseQuickQueryMutationOptions) {
     isMutating.value = true;
 
     try {
-      const { queryTime } = await $fetch('/api/execute-bulk-delete', {
+      const { queryTime } = await $fetch('/api/tables/bulk-delete', {
         method: 'POST',
         body: {
           sqlDeleteStatements,
-          dbConnectionString: connectionString.value,
+          ...getConnectionParams(connection.value),
         },
         onResponseError({ response }) {
           const errorData = response?._data?.data?.driverError;

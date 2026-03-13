@@ -17,7 +17,7 @@ const appHeaderConfig: NonNullable<NuxtConfig['app']>['head'] = {
     // Apple PWA
     { name: 'apple-mobile-web-app-capable', content: 'no' },
     { name: 'apple-mobile-web-app-status-bar-style', content: 'default' },
-    { name: 'apple-mobile-web-app-title', content: 'ChiaXien' },
+    { name: 'apple-mobile-web-app-title', content: 'OrcaQ' },
   ],
 
   link: [{ rel: 'manifest', href: '/manifest.json' }],
@@ -54,6 +54,7 @@ export default defineNuxtConfig({
     },
   },
   modules: [
+    // '@nuxt/test-utils/module',
     'shadcn-nuxt',
     '@nuxt/icon',
     '@nuxtjs/color-mode',
@@ -101,4 +102,5 @@ export default defineNuxtConfig({
   app: {
     head: appHeaderConfig,
   },
+  spaLoadingTemplate: true,
 });

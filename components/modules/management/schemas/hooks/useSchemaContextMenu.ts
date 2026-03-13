@@ -27,13 +27,9 @@ export interface SchemaContextMenuOptions {
 export function useSchemaContextMenu(options: SchemaContextMenuOptions) {
   const connectionStore = useManagementConnectionStore();
 
-  const currentConnectionString = computed(
-    () => connectionStore.selectedConnection?.connectionString
-  );
-
   const internalOptions: InternalOptions = {
     ...options,
-    currentConnectionString,
+    connection: toRef(connectionStore, 'selectedConnection'),
   };
 
   // State

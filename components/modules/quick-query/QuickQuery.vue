@@ -6,7 +6,7 @@ import { DEFAULT_QUERY_SIZE, OperatorSet } from '~/core/constants';
 import { uuidv4 } from '~/core/helpers';
 import { useAppLayoutStore } from '~/core/stores/appLayoutStore';
 import { useManagementConnectionStore } from '~/core/stores/managementConnectionStore';
-import { EDatabaseType } from '../connection/constants';
+import { DatabaseClientType } from '~/core/constants/database-client-type';
 import WrapperErdDiagram from '../erd-diagram/WrapperErdDiagram.vue';
 import { buildTableNodeId } from '../erd-diagram/utils';
 import QuickQueryErrorPopup from './QuickQueryErrorPopup.vue';
@@ -106,7 +106,7 @@ const {
   composeWith,
   isFetchingTableData,
 } = useTableQueryBuilder({
-  connectionString,
+  connection: toRef(connectionStore, 'selectedConnection'),
   primaryKeys: primaryKeyColumns,
   columns: columnNames,
   connectionId: computed(() => props.connectionId),
@@ -155,7 +155,7 @@ const {
   focusedCell,
   safeModeEnabled: toRef(appLayoutStore, 'quickQuerySafeModeEnabled'),
   onRequestSafeModeConfirm,
-  connectionString,
+  connection: toRef(connectionStore, 'selectedConnection'),
 });
 
 const { handleSelectColumn, selectedColumnFieldId, resetGridState } =
@@ -487,7 +487,7 @@ const onBackPreviousBreadcrumbByIndex = (index: number) => {
         :initFilters="filters"
         :baseQuery="baseQueryString"
         :columns="columnNames"
-        :dbType="EDatabaseType.PG"
+        :dbType="DatabaseClientType.POSTGRES"
         :composeWith="composeWith"
         @onChangeComposeWith="onChangeComposeWith"
       />
@@ -523,6 +523,7 @@ const onBackPreviousBreadcrumbByIndex = (index: number) => {
         :cellHeaderContextMenu="quickQueryTableRef?.cellHeaderContextMenu"
         :selectedRows="selectedRows"
         :table-name="tableName"
+        :schema-name="schemaName"
         @onClearContextMenu="quickQueryTableRef?.clearCellContextMenu()"
         @onPaginate="onUpdatePagination"
         @onNextPage="onNextPage"

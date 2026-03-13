@@ -23,7 +23,7 @@ export const Default: Story = {
     },
     template: `
       <div class="flex items-center space-x-2">
-        <Switch id="airplane-mode" v-model:checked="checked" />
+        <Switch id="airplane-mode" v-model:model-value="checked" />
         <label for="airplane-mode" class="text-sm font-medium leading-none">Airplane Mode</label>
       </div>
     `,

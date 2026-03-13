@@ -23,13 +23,19 @@ export interface CustomLayoutSizeEntry {
   innerPanels: number[];
 }
 
-export type AIProvider = 'openai' | 'google' | 'anthropic' | 'xai';
+export type AIProvider =
+  | 'openai'
+  | 'google'
+  | 'anthropic'
+  | 'xai'
+  | 'openrouter';
 
 export interface AgentApiKeyConfigs {
   openai: string;
   google: string;
   anthropic: string;
   xai: string;
+  openrouter: string;
 }
 
 const DEFAULT_APP_LAYOUT_SIZE = [25, 50, 25];
@@ -164,6 +170,7 @@ export const useAppLayoutStore = defineStore(
       google: '',
       anthropic: '',
       xai: '',
+      openrouter: '',
     });
 
     const agentSelectedProvider = ref<AIProvider>('google');

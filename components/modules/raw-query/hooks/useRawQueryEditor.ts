@@ -1,48 +1,17 @@
-import { acceptCompletion, startCompletion } from '@codemirror/autocomplete';
-import { PostgreSQL, sql } from '@codemirror/lang-sql';
-import { Compartment } from '@codemirror/state';
-import { EditorView, keymap } from '@codemirror/view';
-import { sqlExtension } from '@marimo-team/codemirror-sql';
-import merge from 'lodash-es/merge';
+import type { EditorView } from '@codemirror/view';
 import type { FieldDef } from 'pg';
 import type BaseCodeEditor from '~/components/base/code-editor/BaseCodeEditor.vue';
-import { SQLDialectSupport } from '~/components/base/code-editor/constants';
-import {
-  currentStatementLineGutterExtension,
-  currentStatementLineHighlightExtension,
-  shortCutExecuteCurrentStatement,
-  sqlAutoCompletion,
-  type SyntaxTreeNodeData,
-} from '~/components/base/code-editor/extensions';
-import {
-  formatStatementSql,
-  getCurrentStatement,
-  getTreeNodes,
-  pgKeywordCompletion,
-  rawQueryEditorFormat,
-  sqlParserConfigField,
-  updateSqlParserConfigEffect,
-} from '~/components/base/code-editor/utils';
-import type { RowData } from '~/components/base/dynamic-table/utils';
-import {
-  convertParameters,
-  uuidv4,
-  type ParsedParametersResult,
-} from '~/core/helpers';
-import { useSchemaStore, type Connection } from '~/core/stores';
-import type { EditorCursor, ExecutedResultItem } from '../interfaces';
-// import { formatStatementSql, rawQueryEditorFormat } from '../utils';
-import { createCteAwareCompletionSource } from '../utils/cteAwareCompletionSource';
-import { mappedSchemaSuggestion } from '../utils/getMappedSchemaSuggestion';
+import type { Connection } from '~/core/stores';
+import { useQueryExecution } from './useQueryExecution';
 import { useRawQueryExplainAnalyzeOptions } from './useRawQueryExplainAnalyzeOptions';
+import { useResultTabs } from './useResultTabs';
+import { useSqlEditorExtensions } from './useSqlEditorExtensions';
 
-const getKeywordDocs = async () => {
-  const keywords = await import(
-    '@marimo-team/codemirror-sql/data/common-keywords.json'
-  );
-  return keywords.default.keywords;
-};
-
+/**
+ * Composition root for the Raw Query editor.
+ * Wires together: result tabs, query execution, SQL editor extensions.
+ * Returns the same public API surface as before — non-breaking change.
+ */
 export function useRawQueryEditor({
   fileVariables,
   connection,
@@ -52,51 +21,8 @@ export function useRawQueryEditor({
   connection: Ref<Connection | undefined>;
   fieldDefs: Ref<FieldDef[]>;
 }) {
-  const schemaStore = useSchemaStore();
-  const { schemasByContext: connectionSchemas, activeSchema } =
-    toRefs(schemaStore);
-
   const codeEditorRef = ref<InstanceType<typeof BaseCodeEditor> | null>(null);
-  const currentRawQueryResult = shallowRef<RowData[]>([]);
-  const rawResponse = shallowRef<
-    | {
-        rows: Record<string, any>[];
-        fields: FieldDef[];
-        queryTime: number;
-      }
-    | {}
-  >({});
 
-  const seqIndex = shallowRef(0);
-
-  //TODO: open when support multiple statements
-  const executedResults = shallowRef<Map<string, ExecutedResultItem>>(
-    new Map()
-  );
-
-  // Track active result tab - new executions will be set as active
-  const activeResultTabId = ref<string | null>(null);
-
-  const queryProcessState = reactive<{
-    isHaveOneExecute: boolean;
-    executeLoading: boolean;
-    queryTime: number; // ms
-    executeErrors:
-      | {
-          message: string;
-          data: Record<string, unknown>;
-        }
-      | undefined;
-    currentStatementQuery: string;
-  }>({
-    isHaveOneExecute: false,
-    executeLoading: false,
-    queryTime: 0, // ms
-    executeErrors: undefined,
-    currentStatementQuery: '',
-  });
-
-  const cursorInfo = ref<EditorCursor>({ line: 1, column: 1 });
   const {
     explainAnalyzeOptionItems,
     serializeMode,
@@ -105,475 +31,53 @@ export function useRawQueryEditor({
     buildExplainAnalyzePrefix,
   } = useRawQueryExplainAnalyzeOptions();
 
-  const defaultSchemaName = computed(
-    () => activeSchema.value?.name || 'public'
-  );
+  const resultTabs = useResultTabs();
 
-  const schemaConfig = computed(() => {
-    return mappedSchemaSuggestion({
-      schemas: connectionSchemas.value,
-      defaultSchemaName: defaultSchemaName.value,
-      fileVariables: fileVariables.value,
-    });
+  const getEditorView = () =>
+    (codeEditorRef.value?.editorView as EditorView | undefined) ?? null;
+
+  const queryExecution = useQueryExecution({
+    getEditorView,
+    connection,
+    fileVariables,
+    fieldDefs,
+    resultTabs,
+    buildExplainAnalyzePrefix,
   });
 
-  //TODO: support nested CTE and alias from multiple schemas
-  /**
-   * Custom completion sources for enhanced SQL autocomplete
-   * These handle alias-based column completion and CTE references
-   * Now supports multiple schemas
-   */
-  // const customCompletionSources = computed<CompletionSource[]>(() => {
-  //   return [
-  //     createAliasCompletionSource(connectionSchemas, defaultSchemaName.value),
-  //     createCTECompletionSource(connectionSchemas),
-  //   ];
-  // });
-
-  const sqlCompartment = new Compartment();
-  const sqlCompletionCompartment = new Compartment();
-  const buildCteAwareCompletionSource = () =>
-    createCteAwareCompletionSource({
-      schemas: connectionSchemas.value,
-      defaultSchemaName: defaultSchemaName.value,
-    });
-
-  const { onHandleFormatCurrentStatement, onHandleFormatCode } =
-    rawQueryEditorFormat({
-      getEditorView: () => codeEditorRef.value?.editorView as EditorView | null,
-    });
-
-  const executeCurrentStatement = async ({
-    currentStatements,
-    treeNodes,
-    queryPrefix,
-  }: {
-    currentStatements: SyntaxTreeNodeData[];
-    treeNodes: SyntaxTreeNodeData[];
-    queryPrefix?: string;
-  }) => {
-    if (!currentStatements.length) {
-      return;
-    }
-
-    // TODO: support multiple statements
-    const currentStatement = currentStatements[0];
-
-    queryProcessState.isHaveOneExecute = true;
-    queryProcessState.currentStatementQuery = currentStatement.text;
-
-    let executeQuery = currentStatement.text;
-
-    const currentStatementTrees: SyntaxTreeNodeData[] = [];
-
-    treeNodes.forEach(item => {
-      if (
-        item.from >= currentStatement.from &&
-        item.to <= currentStatement.to
-      ) {
-        currentStatementTrees.push(item);
-      }
-    });
-
-    // TODO: for show lint error when query
-    // const lintCompartment = new Compartment();
-    // const dynamicDiagnostics = ref<Diagnostic[]>([]);
-    // const createSqlLinter = () => {
-    //   return linter(view => {
-    //     return dynamicDiagnostics.value;
-    //   });
-    // };
-    // const cursorPos = editorView.value?.state.selection.main.head || 0;
-    // const queryWithFormat = formatStatementSql(currentStatement.text);
-    // editorView.value?.dispatch({
-    //   changes: [
-    //     {
-    //       from: currentStatement.from,
-    //       to: currentStatement.to,
-    //       insert: queryWithFormat,
-    //     },
-    //   ],
-    //   selection: { anchor: cursorPos, head: cursorPos },
-    //   annotations: [Transaction.addToHistory.of(true)],
-    // });
-
-    const reversedCurrentStatementTrees = currentStatementTrees.toReversed();
-
-    let parameters: ParsedParametersResult | null = null;
-
-    for (var statement of reversedCurrentStatementTrees) {
-      if (statement.type === 'LineComment') {
-        const convertResult = convertParameters(statement.text);
-
-        if (convertResult.values) {
-          parameters = convertResult;
-          break;
-        }
-      }
-    }
-
-    const fileParameters = convertParameters(fileVariables.value || '');
-
-    let mergeParameters: Record<string, string> =
-      (fileParameters.values as Record<string, string>) || {};
-
-    if (parameters?.values) {
-      mergeParameters = merge(mergeParameters, parameters.values || {});
-    }
-
-    //TODO: bug with formatStatementSql -> this format incorrect for function
-    const fillQueryWithParameters = formatStatementSql(
-      currentStatement.text,
-      mergeParameters
-    );
-
-    executeQuery = fillQueryWithParameters;
-
-    if (queryPrefix) {
-      executeQuery = `${queryPrefix} ${fillQueryWithParameters}`;
-    }
-
-    //TODO: parse AST to get columns
-    //      import { parse, type Statement } from 'pgsql-ast-parser';
-    //     const ast: Statement[] = parse(rawNodeText);
-    //     console.log('🚀 ~ applyASTRules ~ ast:', ast);
-
-    fieldDefs.value = [];
-    currentRawQueryResult.value = [];
-    rawResponse.value = {};
-    queryProcessState.executeLoading = true;
-
-    seqIndex.value++;
-
-    const executedResultItem: ExecutedResultItem = {
-      id: uuidv4(),
-      metadata: {
-        queryTime: 0,
-        statementQuery: executeQuery,
-        executedAt: new Date(),
-        executeErrors: undefined,
-        fieldDefs: undefined,
-        connection: undefined,
-      },
-      result: [],
-      view: queryPrefix?.startsWith('EXPLAIN') ? 'explain' : 'result',
-      seqIndex: seqIndex.value,
-    };
-
-    try {
-      const result = await $fetch('/api/raw-execute', {
-        method: 'POST',
-        body: {
-          dbConnectionString: connection.value?.connectionString,
-          query: executeQuery,
-        },
-      });
-
-      fieldDefs.value = result.fields;
-
-      executedResultItem.metadata.fieldDefs = result.fields;
-      executedResultItem.result = result.rows;
-      executedResultItem.metadata.queryTime = result.queryTime || 0;
-      executedResultItem.metadata.connection = connection.value;
-
-      rawResponse.value = result;
-      currentRawQueryResult.value = result.rows as RowData[];
-      queryProcessState.executeErrors = undefined;
-      queryProcessState.queryTime = result.queryTime || 0;
-    } catch (e: any) {
-      queryProcessState.executeErrors = e.data;
-      executedResultItem.metadata.executeErrors = e.data;
-      executedResultItem.view = 'error';
-
-      // TODO: for show lint error when query
-      // const message = e.data.message;
-      // const errorDetail = JSON.parse(e.data.data);
-      // if (editorView.value && errorDetail) {
-      //   const pos =
-      //     Number(currentStatement.from) + parseInt(errorDetail.position) - 1;
-      //   const diagnostics: Diagnostic[] = [
-      //     {
-      //       from: pos,
-      //       to: pos + 1,
-      //       severity: 'error',
-      //       message,
-      //     },
-      //   ];
-      //   // dynamicDiagnostics.value = diagnostics;
-      //   pushDiagnostics(editorView.value, diagnostics);
-      // }
-    }
-
-    queryProcessState.executeLoading = false;
-
-    // Add to results map at the BEGINNING (new tabs first)
-    const newMap = new Map<string, ExecutedResultItem>();
-    newMap.set(executedResultItem.id, executedResultItem);
-    // Add existing items after the new one
-    executedResults.value.forEach((value, key) => {
-      newMap.set(key, value);
-    });
-    executedResults.value = newMap;
-
-    // Set the new result as active tab
-    activeResultTabId.value = executedResultItem.id;
-  };
-
-  const onExecuteCurrent = () => {
-    if (!codeEditorRef.value?.editorView) {
-      return;
-    }
-
-    const { currentStatements } = getCurrentStatement(
-      codeEditorRef.value?.editorView as EditorView
-    );
-
-    const treeNodes = getTreeNodes(
-      codeEditorRef.value?.editorView as EditorView
-    );
-
-    executeCurrentStatement({
-      currentStatements,
-      treeNodes,
-    });
-  };
-
-  const onExplainAnalyzeCurrent = () => {
-    if (!codeEditorRef.value?.editorView) {
-      return;
-    }
-
-    const { currentStatements } = getCurrentStatement(
-      codeEditorRef.value?.editorView as EditorView
-    );
-
-    const treeNodes = getTreeNodes(
-      codeEditorRef.value?.editorView as EditorView
-    );
-
-    executeCurrentStatement({
-      currentStatements,
-      treeNodes,
-      queryPrefix: buildExplainAnalyzePrefix(),
-    });
-  };
-
-  const extensions = [
-    shortCutExecuteCurrentStatement(executeCurrentStatement),
-
-    keymap.of([
-      {
-        key: 'Mod-s',
-        run: () => {
-          onHandleFormatCurrentStatement();
-          return true;
-        },
-        preventDefault: true,
-      },
-      {
-        key: 'Shift-Alt-f',
-        run: () => {
-          onHandleFormatCode();
-          return true;
-        },
-        preventDefault: true,
-      },
-      {
-        key: 'Mod-e',
-        run: () => {
-          onExplainAnalyzeCurrent();
-          return true;
-        },
-        preventDefault: true,
-      },
-      { key: 'Mod-i', run: startCompletion },
-      { key: 'Tab', run: acceptCompletion },
-    ]),
-
-    sqlCompartment.of(
-      sql({
-        dialect: SQLDialectSupport['PostgreSQL'],
-        upperCaseKeywords: true,
-        keywordCompletion: pgKeywordCompletion,
-        // Use enhanced schema with proper SQLNamespace structure
-        tables: schemaConfig.value.variableCompletions,
-        schema: schemaConfig.value.schema,
-        // Set default schema for direct table completion
-        defaultSchema: schemaConfig.value.defaultSchema,
-      })
-    ),
-    sqlCompletionCompartment.of(
-      PostgreSQL.language.data.of({
-        autocomplete: buildCteAwareCompletionSource(),
-      })
-    ),
-    currentStatementLineHighlightExtension,
-    currentStatementLineGutterExtension,
-    // Enhanced SQL autocompletion with custom sources for aliases and CTEs
-    ...sqlAutoCompletion(),
-    //   {
-    //   override: customCompletionSources.value,
-    // }
-    //TODO: close to slow to usage
-    // lintGutter(),
-    // lintGutter(),
-    // lintCompartment.of(createSqlLinter()),
-    sqlExtension({
-      enableLinting: false,
-      enableGutterMarkers: false,
-      enableHover: true,
-      hoverConfig: {
-        hoverTime: 250,
-        enableKeywords: true,
-        keywords: async () => {
-          const keywords = await getKeywordDocs();
-
-          return keywords;
-        },
-        enableTables: false,
-        enableColumns: false,
-        enableFuzzySearch: false,
-      },
-    }),
-    sqlParserConfigField,
-  ];
-
-  const reloadSqlCompartment = () => {
-    if (!codeEditorRef.value?.editorView) {
-      return;
-    }
-
-    codeEditorRef.value?.editorView.dispatch({
-      effects: [
-        updateSqlParserConfigEffect.of({
-          dialect: PostgreSQL,
-          isEnable: true,
-        }),
-        sqlCompartment.reconfigure(
-          sql({
-            dialect: SQLDialectSupport['PostgreSQL'],
-            upperCaseKeywords: true,
-            keywordCompletion: pgKeywordCompletion,
-            // Use enhanced schema with proper SQLNamespace structure
-            tables: schemaConfig.value.variableCompletions,
-            schema: schemaConfig.value.schema,
-            // Set default schema for direct table completion
-            defaultSchema: schemaConfig.value.defaultSchema,
-          })
-        ),
-        sqlCompletionCompartment.reconfigure(
-          PostgreSQL.language.data.of({
-            autocomplete: buildCteAwareCompletionSource(),
-          })
-        ),
-      ],
-    });
-  };
-
-  // Tab management functions
-  const setActiveResultTab = (tabId: string) => {
-    if (executedResults.value.has(tabId)) {
-      activeResultTabId.value = tabId;
-    }
-  };
-
-  const closeResultTab = (tabId: string) => {
-    const newMap = new Map(executedResults.value);
-    newMap.delete(tabId);
-    executedResults.value = newMap;
-
-    // If closing the active tab, switch to the last remaining tab
-    if (activeResultTabId.value === tabId) {
-      const remainingIds = Array.from(newMap.keys());
-      activeResultTabId.value =
-        remainingIds.length > 0 ? remainingIds[remainingIds.length - 1] : null;
-    }
-  };
-
-  const updateResultTabView = (
-    tabId: string,
-    view: ExecutedResultItem['view']
-  ) => {
-    const tab = executedResults.value.get(tabId);
-    if (tab) {
-      const newMap = new Map(executedResults.value);
-      newMap.set(tabId, { ...tab, view });
-      executedResults.value = newMap;
-    }
-  };
-
-  const closeOtherResultTabs = (keepTabId: string) => {
-    const tabToKeep = executedResults.value.get(keepTabId);
-    if (!tabToKeep) return;
-
-    const newMap = new Map<string, ExecutedResultItem>();
-    newMap.set(keepTabId, tabToKeep);
-    executedResults.value = newMap;
-
-    // Set the kept tab as active
-    activeResultTabId.value = keepTabId;
-  };
-
-  const closeResultTabsToRight = (tabId: string) => {
-    const tabIds = Array.from(executedResults.value.keys());
-    const currentIndex = tabIds.indexOf(tabId);
-
-    if (currentIndex < 0) return;
-
-    // Keep tabs from start to current index (inclusive)
-    const newMap = new Map<string, ExecutedResultItem>();
-    for (let i = 0; i <= currentIndex; i++) {
-      const id = tabIds[i];
-      const tab = executedResults.value.get(id);
-      if (tab) {
-        newMap.set(id, tab);
-      }
-    }
-    executedResults.value = newMap;
-
-    // If active tab was deleted, switch to the current tab
-    if (!newMap.has(activeResultTabId.value || '')) {
-      activeResultTabId.value = tabId;
-    }
-  };
-
-  watch(
-    () => [activeSchema.value?.name, connectionSchemas.value],
-    () => {
-      if (!activeSchema.value?.name) return;
-      reloadSqlCompartment();
-    },
-    {
-      deep: true,
-      immediate: true,
-    }
-  );
+  const sqlEditor = useSqlEditorExtensions({
+    codeEditorRef,
+    fileVariables,
+    onExecuteStatement: queryExecution.executeCurrentStatement,
+    onExplainAnalyzeCurrent: queryExecution.onExplainAnalyzeCurrent,
+  });
 
   return {
     codeEditorRef,
-    currentRawQueryResult,
-    rawResponse,
-    queryProcessState,
-    onExecuteCurrent,
-    extensions,
-    sqlCompartment,
-    cursorInfo,
-    onHandleFormatCode,
-    onHandleFormatCurrentStatement,
-    onExplainAnalyzeCurrent,
+    currentRawQueryResult: queryExecution.currentRawQueryResult,
+    rawResponse: queryExecution.rawResponse,
+    queryProcessState: queryExecution.queryProcessState,
+    onExecuteCurrent: queryExecution.onExecuteCurrent,
+    extensions: sqlEditor.extensions,
+    sqlCompartment: sqlEditor.sqlCompartment,
+    cursorInfo: sqlEditor.cursorInfo,
+    onHandleFormatCode: sqlEditor.onHandleFormatCode,
+    onHandleFormatCurrentStatement: sqlEditor.onHandleFormatCurrentStatement,
+    onExplainAnalyzeCurrent: queryExecution.onExplainAnalyzeCurrent,
     explainAnalyzeOptionItems,
     serializeMode,
     toggleExplainOption,
     setSerializeMode,
-    reloadSqlCompartment,
+    reloadSqlCompartment: sqlEditor.reloadSqlCompartment,
+    cancelStreamingQuery: queryExecution.cancelStreamingQuery,
 
     // Results tab management
-    executedResults,
-    activeResultTabId,
-    setActiveResultTab,
-    closeResultTab,
-    closeOtherResultTabs,
-    closeResultTabsToRight,
-    updateResultTabView,
+    executedResults: resultTabs.executedResults,
+    activeResultTabId: resultTabs.activeResultTabId,
+    setActiveResultTab: resultTabs.setActiveResultTab,
+    closeResultTab: resultTabs.closeResultTab,
+    closeOtherResultTabs: resultTabs.closeOtherResultTabs,
+    closeResultTabsToRight: resultTabs.closeResultTabsToRight,
+    updateResultTabView: resultTabs.updateResultTabView,
   };
 }

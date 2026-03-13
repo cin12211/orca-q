@@ -11,6 +11,7 @@ node_modules
 dist
 dist-ssr
 *.local
+.tsbuildinfo
 
 # Editor directories and files
 .vscode/*
@@ -62,3 +63,11 @@ tsconfig.tsbuildinfo
 npx-package/.output
 *storybook.log
 storybook-static
+
+
+# 
+coverage
+
+# Playwright
+/playwright-report/
+/test-results/

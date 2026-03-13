@@ -17,14 +17,14 @@ import {
   EExtendedField,
   OperatorSet,
 } from '~/core/constants';
-import { EDatabaseType } from '../../connection/constants';
+import { DatabaseClientType } from '~/core/constants/database-client-type';
 import ColumnSelector from '../../selectors/ColumnSelector.vue';
 import OperatorSelector from '../../selectors/OperatorSelector.vue';
 import QuickQueryFilterGuide from './QuickQueryFilterGuide.vue';
 
 const props = defineProps<{
   columns: string[];
-  dbType: EDatabaseType;
+  dbType: DatabaseClientType;
   baseQuery: string;
   initFilters: FilterSchema[];
   composeWith: ComposeOperator;

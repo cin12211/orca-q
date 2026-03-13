@@ -39,6 +39,12 @@ export const useActivityMenu = () => {
     //   isActive:
     //     activityStore.activityActive === ActivityBarItemType.DatabaseExport,
     // },
+    {
+      id: ActivityBarItemType.Agent,
+      title: 'AI Agent',
+      icon: 'hugeicons:robotic',
+      isActive: activityStore.activityActive === ActivityBarItemType.Agent,
+    },
   ]);
 
   const onChangeActivity = (

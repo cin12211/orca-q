@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import Workspaces from '~/components/modules/workspace/Workspaces.vue';
+import { Workspaces } from '~/components/modules/workspace';
 
 definePageMeta({
   layout: 'home',

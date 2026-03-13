@@ -1,6 +1,6 @@
 import debounce from 'lodash-es/debounce';
 import { toast } from 'vue-sonner';
-import { EDatabaseType } from '~/components/modules/connection/constants';
+import { getConnectionParams } from '@/core/helpers/connection-helper';
 import {
   formatWhereClause,
   type FilterSchema,
@@ -12,7 +12,8 @@ import {
   DEFAULT_QUERY_COUNT,
   DEFAULT_QUERY_SIZE,
 } from '~/core/constants';
-import { useQuickQueryLogs } from '~/core/stores';
+import { DatabaseClientType } from '~/core/constants/database-client-type';
+import { useQuickQueryLogs, type Connection } from '~/core/stores';
 
 export interface OrderBy {
   columnName?: string;
@@ -21,7 +22,7 @@ export interface OrderBy {
 
 export const useTableQueryBuilder = ({
   tableName,
-  connectionString,
+  connection,
   primaryKeys,
   columns,
   isPersist = true,
@@ -31,7 +32,7 @@ export const useTableQueryBuilder = ({
   initFilters,
   initComposeWith,
 }: {
-  connectionString: Ref<string>;
+  connection: Ref<Connection | undefined>;
   tableName: string;
   primaryKeys: Ref<string[]>;
   columns: Ref<string[]>;
@@ -73,7 +74,7 @@ export const useTableQueryBuilder = ({
 
     return formatWhereClause({
       columns: columns.value,
-      db: EDatabaseType.PG,
+      db: DatabaseClientType.POSTGRES,
       filters: filters.value,
       composeWith: composeWith.value,
     });
@@ -122,11 +123,11 @@ export const useTableQueryBuilder = ({
     data,
     status: fetchingTableStatus,
     refresh: refreshTableData,
-  } = useFetch('/api/execute', {
+  } = useFetch('/api/query/execute', {
     method: 'POST',
     body: {
       query: queryString,
-      dbConnectionString: connectionString,
+      ...getConnectionParams(connection.value),
     },
     watch: false,
     immediate: false,
@@ -158,11 +159,11 @@ export const useTableQueryBuilder = ({
     refresh: refreshCount,
     data: dataCount,
     status: fetchCountStatus,
-  } = useFetch('/api/execute', {
+  } = useFetch('/api/query/execute', {
     method: 'POST',
     body: {
       query: queryCountString,
-      dbConnectionString: connectionString,
+      ...getConnectionParams(connection.value),
     },
     watch: false,
     immediate: false,

@@ -14,6 +14,7 @@ import { Compartment } from '@codemirror/state';
 import { keymap } from '@codemirror/view';
 import { format } from 'sql-formatter';
 import { toast } from 'vue-sonner';
+import { getConnectionParams } from '@/core/helpers/connection-helper';
 import BaseCodeEditor from '~/components/base/code-editor/BaseCodeEditor.vue';
 import {
   shortCutSaveFunction,
@@ -69,20 +70,19 @@ const mappedSchema = computed(() => {
 
 const sqlCompartment = new Compartment();
 
-const connectionString = computed(() => {
+const connection = computed(() => {
   if (props.connectionId) {
-    return connectionStore.connections.find(c => c.id === props.connectionId)
-      ?.connectionString;
+    return connectionStore.connections.find(c => c.id === props.connectionId);
   }
-  return connectionStore.selectedConnection?.connectionString;
+  return connectionStore.selectedConnection;
 });
 
 const requestBody = computed(() => ({
   functionId: props.functionId,
-  dbConnectionString: connectionString.value,
+  ...getConnectionParams(connection.value),
 }));
 
-const { status } = useFetch('/api/get-one-function', {
+const { status } = useFetch('/api/functions/definition', {
   method: 'POST',
   body: requestBody,
   onResponse: response => {
@@ -101,11 +101,10 @@ const saveFunction = async () => {
   isSaving.value = true;
 
   try {
-    await $fetch('/api/update-function', {
+    await $fetch('/api/functions/update', {
       method: 'POST',
       body: {
-        dbConnectionString:
-          connectionStore.selectedConnection?.connectionString,
+        ...getConnectionParams(connectionStore.selectedConnection),
         functionDefinition: code.value,
       },
       onResponseError: error => {

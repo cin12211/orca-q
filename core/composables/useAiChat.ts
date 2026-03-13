@@ -1,10 +1,26 @@
 import { Chat } from '@ai-sdk/vue';
-import { DefaultChatTransport } from 'ai';
+import { DefaultChatTransport, type ChatInit, type UIMessage } from 'ai';
 import { AI_PROVIDERS } from '~/core/constants/agent';
 import {
   useAppLayoutStore,
   type AIProvider,
 } from '~/core/stores/appLayoutStore';
+
+type ChatTransportBody = object | (() => object | undefined) | undefined;
+
+interface UseAiChatOptions<UI_MESSAGE extends UIMessage = UIMessage> {
+  api?: string;
+  body?: ChatTransportBody;
+  sendAutomaticallyWhen?: ChatInit<UI_MESSAGE>['sendAutomaticallyWhen'];
+}
+
+const resolveTransportBody = (body: ChatTransportBody) => {
+  if (!body) {
+    return undefined;
+  }
+
+  return typeof body === 'function' ? body() : body;
+};
 
 /**
  * Composable for AI chat functionality using Vercel AI SDK
@@ -12,8 +28,12 @@ import {
  * Uses global settings from appLayoutStore for API keys and initial provider/model
  * NOTE: Provider/model selection is LOCAL to this instance - not synced back to global config
  */
-export function useAiChat(sqlContext?: Ref<string | undefined>) {
+export function useAiChat<UI_MESSAGE extends UIMessage = UIMessage>(
+  options?: UseAiChatOptions<UI_MESSAGE>
+) {
   const appLayoutStore = useAppLayoutStore();
+
+  const resolvedOptions: UseAiChatOptions<UI_MESSAGE> = options ?? {};
 
   // Provider and model selection (LOCAL state, initialized from global settings)
   // Changes here do NOT sync back to global config
@@ -44,37 +64,22 @@ export function useAiChat(sqlContext?: Ref<string | undefined>) {
     return !!currentApiKey.value;
   });
 
-  // Build system prompt with SQL context
-  const buildSystemPrompt = () => {
-    const sql = sqlContext?.value;
-    return `You are a helpful SQL assistant for database developers. You help analyze, explain, debug, and optimize SQL queries.
-
-${
-  sql
-    ? `The user is currently working with this SQL query:
-
-\`\`\`sql
-${sql}
-\`\`\`
-
-Please provide helpful insights, explanations, or suggestions based on the user's questions about this query.`
-    : 'The user may ask you questions about SQL queries, database concepts, or need help writing queries.'
-}
-
-Be concise but thorough. Use markdown formatting for code blocks and lists when appropriate.`;
-  };
-
   // Create Chat instance with dynamic transport configuration
-  const chat = new Chat({
+  const chat = new Chat<UI_MESSAGE>({
     transport: new DefaultChatTransport({
-      api: '/api/ai/chat',
-      body: () => ({
-        provider: selectedProvider.value,
-        model: selectedModel.value,
-        apiKey: currentApiKey.value,
-        systemPrompt: buildSystemPrompt(),
-      }),
+      api: resolvedOptions.api ?? '/api/ai/chat',
+      body: () => {
+        const extraBody = resolveTransportBody(resolvedOptions.body);
+
+        return {
+          ...extraBody,
+          provider: selectedProvider.value,
+          model: selectedModel.value,
+          apiKey: currentApiKey.value,
+        };
+      },
     }),
+    sendAutomaticallyWhen: resolvedOptions.sendAutomaticallyWhen,
   });
 
   // Expose chat state as computed refs for reactivity
@@ -98,9 +103,9 @@ Be concise but thorough. Use markdown formatting for code blocks and lists when 
   });
 
   // Send message using the Chat instance
-  const sendMessage = (text: string) => {
+  const sendMessage = async (text: string) => {
     if (!text.trim() || !hasApiKey.value || isLoading.value) return;
-    chat.sendMessage({ text });
+    await chat.sendMessage({ text });
   };
 
   // Clear chat history
@@ -125,6 +130,9 @@ Be concise but thorough. Use markdown formatting for code blocks and lists when 
     // Methods
     sendMessage,
     clearChat,
+    addToolApprovalResponse: chat.addToolApprovalResponse,
+    stopStream: chat.stop,
+    clearError: chat.clearError,
 
     // Constants
     providers: AI_PROVIDERS,
