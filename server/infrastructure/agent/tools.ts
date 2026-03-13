@@ -12,6 +12,7 @@ import { AgentToolName } from '~/components/modules/agent/types';
 import {
   getQualifiedTableName,
   isMutationSql,
+  MAX_EXPORT_LIMIT,
   MAX_RENDER_LIMIT,
   normalizeSql,
 } from './core/sql';
@@ -71,7 +72,8 @@ export function resolveActiveTools(
     return [
       AgentToolName.GenerateQuery,
       AgentToolName.RenderTable,
-      AgentToolName.ExportFile,
+      AgentToolName.ExportQueryResult,
+      AgentToolName.ExportContent,
       AgentToolName.VisualizeTable,
       AgentToolName.ExplainQuery,
       ...(hasSnapshot
@@ -81,14 +83,19 @@ export function resolveActiveTools(
     ];
   }
 
-  // Không có adapter: chỉ schema-based tools
+  // No adapter: schema-only tools + content export is always useful
   return hasSnapshot
     ? [
         AgentToolName.GenerateQuery,
         AgentToolName.DescribeTable,
+        AgentToolName.ExportContent,
         AgentToolName.AskClarification,
       ]
-    : [AgentToolName.GenerateQuery, AgentToolName.AskClarification];
+    : [
+        AgentToolName.GenerateQuery,
+        AgentToolName.ExportContent,
+        AgentToolName.AskClarification,
+      ];
 }
 
 // ─── Tools ────────────────────────────────────────────────────────────────────
@@ -200,22 +207,84 @@ export function createDbAgentTools({
     }),
 
     //TODO: need to enhance this not stable
-    //TODO: duplicate lib for export XLSX
-    export_file: tool({
-      description:
-        'Export structured table rows to CSV, JSON, SQL, or XLSX. Use this after render_table when the user asks to download, export, save, or open the result in Excel or a spreadsheet.',
+    export_query_result: tool({
+      description: [
+        'Re-execute a SQL SELECT query and export the result rows to a downloadable file.',
+        'IMPORTANT: Pass only the `sql` string — do NOT pass row data from render_table.',
+        'The tool fetches rows fresh from the database, so context window stays small.',
+        'Use this after generate_query when the user asks to download/export query results.',
+        '',
+        'Supported formats:',
+        '  csv — spreadsheet (Excel, Google Sheets)',
+        '  tsv — tab-separated (also Excel-compatible)',
+        '  json — JSON array',
+        '  sql — INSERT statements for re-importing',
+        '  xml — XML document',
+      ].join('\n'),
       inputSchema: z.object({
-        data: z.array(z.record(z.string(), z.unknown())),
-        format: z.enum(['csv', 'json', 'sql', 'xlsx']),
+        sql: z
+          .string()
+          .min(1)
+          .describe('The SQL SELECT query to execute and export.'),
+        format: z.enum(['csv', 'tsv', 'json', 'sql', 'xml']),
         filename: z.string().min(1).optional(),
-        tableName: z.string().min(1).optional(),
+        limit: z
+          .number()
+          .int()
+          .min(1)
+          .max(MAX_EXPORT_LIMIT)
+          .default(MAX_EXPORT_LIMIT)
+          .describe('Max rows to export. Defaults to 100 000.'),
+      }),
+      needsApproval: (input: { sql: string }) => isMutationSql(input.sql),
+      execute: async input => {
+        assertDatabaseAdapter(adapter);
+        const sql = normalizeSql(input.sql);
+        const result = (await adapter.rawOut(sql)) as RawQueryResult;
+        const rows = rowsToRecords(result.rows || [], result.fields || []);
+        const limited = rows.slice(0, input.limit);
+        return buildExportFileResult({
+          data: limited,
+          filename: input.filename,
+          format: input.format,
+        });
+      },
+    }),
+
+    export_content: tool({
+      description: [
+        'Export any free-form text content to a downloadable file.',
+        'Use this when the user wants to save something that is NOT a table result:',
+        '  - Chat knowledge, analysis summaries, or reports → format: markdown',
+        '  - A SQL query or migration script → format: sql or txt',
+        '  - Plain notes or output → format: txt',
+        '  - Hand-crafted YAML config → format: yaml',
+        '  - An HTML page → format: html',
+        'The `content` string is written as-is — no parsing or transformation is applied.',
+      ].join('\n'),
+      inputSchema: z.object({
+        content: z
+          .string()
+          .min(1)
+          .describe('The raw text to write into the file.'),
+        format: z.enum([
+          'markdown',
+          'txt',
+          'sql',
+          'json',
+          'yaml',
+          'html',
+          'xml',
+          'csv',
+          'tsv',
+        ]),
+        filename: z.string().min(1).optional(),
       }),
       execute: async input => {
         return buildExportFileResult({
-          data: input.data,
+          content: input.content,
           filename: input.filename,
           format: input.format,
-          tableName: input.tableName,
         });
       },
     }),

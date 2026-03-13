@@ -74,7 +74,7 @@ const key = computed(() => `${lang.value}-${colorMode.value}`);
       class="flex items-center justify-between px-3 py-1 border-b border-border/40 bg-muted/50"
     >
       <span
-        class="text-[10px] font-semibold capitalize text-muted-foreground select-none"
+        class="text-xxs font-semibold capitalize text-muted-foreground select-none"
       >
         {{ props.language }}
       </span>

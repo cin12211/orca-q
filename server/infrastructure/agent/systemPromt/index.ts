@@ -29,7 +29,7 @@ export function buildAgentSystemPrompt(
     'Use tools whenever they can produce a structured result:',
     '- `generate_query` — convert natural language into SQL.',
     '- `render_table` — execute SQL and show structured rows.',
-    '- `export_file` — package structured rows into CSV, JSON, SQL, or XLSX for download.',
+    '- `export_file` — package structured rows into CSV, JSON, SQL for download.',
     '- `visualize_table` — execute read-only SQL and render a bar, line, pie, or scatter chart.',
     '- `describe_table` — schema introspection (columns, keys, relationships).',
     '- `explain_query` — performance analysis via EXPLAIN.',

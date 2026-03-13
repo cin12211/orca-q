@@ -98,7 +98,7 @@ const tableHeight = computed(() => {
         v-for="table in data.relatedTables"
         :key="table"
         variant="outline"
-        class="text-[10px]"
+        class="text-xxs"
       >
         {{ table }}
       </Badge>

@@ -20,7 +20,10 @@ export const AgentToolName = {
   ExplainQuery: 'explain_query',
   DetectAnomaly: 'detect_anomaly',
   DescribeTable: 'describe_table',
-  ExportFile: 'export_file',
+  /** Re-executes SQL on the server and exports rows — no row data in context window */
+  ExportQueryResult: 'export_query_result',
+  /** Exports free-form text (notes, scripts, docs) directly to a file */
+  ExportContent: 'export_content',
   AskClarification: 'askClarification',
 } as const;
 export type AgentToolName = (typeof AgentToolName)[keyof typeof AgentToolName];
@@ -33,7 +36,8 @@ export const DB_AGENT_TOOL_NAMES = [
   AgentToolName.ExplainQuery,
   AgentToolName.DetectAnomaly,
   AgentToolName.DescribeTable,
-  AgentToolName.ExportFile,
+  AgentToolName.ExportQueryResult,
+  AgentToolName.ExportContent,
 ] as const;
 
 export type DbAgentToolName = (typeof DB_AGENT_TOOL_NAMES)[number];
@@ -153,13 +157,28 @@ export interface AgentDescribeTableResult {
   relatedTables: string[];
 }
 
-export type AgentExportFormat = 'csv' | 'json' | 'sql' | 'xlsx';
+export type AgentExportFormat =
+  | 'csv'
+  | 'json'
+  | 'sql'
+  | 'markdown'
+  | 'txt'
+  | 'tsv'
+  | 'xml'
+  | 'yaml'
+  | 'html';
 
-export interface AgentExportFileInput {
-  data: Record<string, unknown>[];
+export interface AgentExportQueryResultInput {
+  sql: string;
   format: AgentExportFormat;
   filename?: string;
-  tableName?: string;
+  limit?: number;
+}
+
+export interface AgentExportContentInput {
+  content: string;
+  format: AgentExportFormat;
+  filename?: string;
 }
 
 export interface AgentExportFilePreview {
@@ -186,7 +205,8 @@ export interface AgentToolInputMap {
   explain_query: AgentExplainQueryInput;
   detect_anomaly: AgentDetectAnomalyInput;
   describe_table: AgentDescribeTableInput;
-  export_file: AgentExportFileInput;
+  export_query_result: AgentExportQueryResultInput;
+  export_content: AgentExportContentInput;
 }
 
 export interface AgentToolResultMap {
@@ -196,7 +216,8 @@ export interface AgentToolResultMap {
   explain_query: AgentExplainQueryResult;
   detect_anomaly: AgentDetectAnomalyResult;
   describe_table: AgentDescribeTableResult;
-  export_file: AgentExportFileResult;
+  export_query_result: AgentExportFileResult;
+  export_content: AgentExportFileResult;
 }
 
 export type DbAgentSchemaSnapshot = Schema;

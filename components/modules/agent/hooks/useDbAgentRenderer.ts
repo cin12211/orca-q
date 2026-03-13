@@ -27,7 +27,8 @@ export const TOOL_COMPONENT_MAP: Record<DbAgentToolName, Component> = {
   explain_query: AgentExplainBlock,
   detect_anomaly: AgentAnomalyBlock,
   describe_table: AgentDescribeBlock,
-  export_file: AgentExportFileBlock,
+  export_query_result: AgentExportFileBlock,
+  export_content: AgentExportFileBlock,
 };
 
 const TOOL_LOADING_LABELS: Record<DbAgentToolName, string> = {
@@ -37,7 +38,8 @@ const TOOL_LOADING_LABELS: Record<DbAgentToolName, string> = {
   explain_query: 'Analyzing query...',
   detect_anomaly: 'Scanning data...',
   describe_table: 'Reading schema...',
-  export_file: 'Preparing export...',
+  export_query_result: 'Fetching & exporting...',
+  export_content: 'Preparing export...',
 };
 
 const isDbAgentToolName = (toolName: string): toolName is DbAgentToolName => {

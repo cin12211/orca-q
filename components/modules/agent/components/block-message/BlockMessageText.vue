@@ -19,11 +19,7 @@ const smoothedContent = useSmoothStream(
 </script>
 
 <template>
-  <p class="whitespace-pre-wrap leading-normal text-[13px]">
+  <p class="whitespace-pre-wrap leading-normal text-xs">
     {{ smoothedContent }}
-    <span
-      v-if="isBlockStreaming && isStreaming && !isUserMessage"
-      class="ml-0.5 inline-block h-3.5 w-1 animate-pulse rounded-xs bg-foreground align-middle"
-    />
   </p>
 </template>

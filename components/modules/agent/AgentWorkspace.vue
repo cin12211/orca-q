@@ -10,9 +10,8 @@ import {
   watch,
 } from 'vue';
 import { ScrambleText } from '#components';
-import Shimmer from '~/components/ai-elements/shimmer/Shimmer.vue';
-import Badge from '~/components/ui/badge/Badge.vue';
 import { type AIProvider } from '~/core/stores/appLayoutStore';
+import AgentAttachmentPanel from './components/AgentAttachmentPanel.vue';
 import AgentChatFooter from './components/AgentChatFooter.vue';
 import AgentMessageBubble from './components/AgentMessageBubble.vue';
 import AgentSetupCard from './components/AgentSetupCard.vue';
@@ -33,6 +32,7 @@ provide('activeExportPreview', activeExportPreview);
 const {
   activeHistory,
   histories,
+  showAttachmentPanel,
   showReasoning,
   saveConversation,
   startNewChat,
@@ -68,6 +68,22 @@ const highlightedResponseId = ref<string | null>(null);
 const currentResponseIndex = ref(0);
 const responseElements = ref<Record<string, HTMLElement | null>>({});
 let highlightTimer: ReturnType<typeof setTimeout> | null = null;
+
+watch(
+  showAttachmentPanel,
+  nextValue => {
+    if (nextValue) {
+      activeExportPreview.value = null;
+    }
+  },
+  { immediate: true }
+);
+
+watch(activeExportPreview, nextValue => {
+  if (nextValue) {
+    showAttachmentPanel.value = false;
+  }
+});
 
 const navigableResponses = computed<ResponseNavigatorItem[]>(() =>
   renderedMessages.value.flatMap(message => {
@@ -392,12 +408,12 @@ const promptCards = computed(() => {
   >
     <ResizablePanelGroup direction="horizontal" class="h-full w-full">
       <ResizablePanel
-        :default-size="activeExportPreview ? 60 : 100"
+        :default-size="activeExportPreview || showAttachmentPanel ? 60 : 100"
         class="h-full relative"
       >
         <div class="absolute inset-0 flex flex-col overflow-hidden">
           <div
-            class="mx-auto shadow-xs flex w-full flex-col gap-4 px-3 py-2 lg:flex-row lg:items-center lg:justify-between"
+            class="mx-auto shadow-xs flex w-full flex-col gap-4 px-3 py-3 lg:flex-row lg:items-center lg:justify-between"
           >
             <div
               class="flex flex-wrap items-center gap-2 truncate text-sm leading-4 font-medium text-foreground"
@@ -407,14 +423,14 @@ const promptCards = computed(() => {
             </div>
 
             <div class="flex shrink-0 items-center gap-2">
-              <!-- <Button
+              <Button
                 size="sm"
                 variant="ghost"
                 class="h-6.5 text-xs px-2"
                 @click="showAttachmentPanel = !showAttachmentPanel"
               >
                 Attachment <Icon name="hugeicons:attachment" class="size-3" />
-              </Button> -->
+              </Button>
 
               <Button
                 size="sm"
@@ -490,21 +506,16 @@ const promptCards = computed(() => {
                   </div>
                 </div> -->
 
-                <div
-                  v-if="isLoading"
-                  class="flex gap-1 items-center mt-2 text-xs font-medium"
-                >
-                  <div
-                    class="flex size-7 shrink-0 items-center justify-center rounded-2xl border shadow-sm agent-thinking-animation"
-                  >
-                    <img src="public/logo.png" class="w-7 rounded-full" />
-                  </div>
+                <div v-if="isLoading" class="flex gap-1 items-center mt-2">
+                  <img
+                    class="size-7"
+                    src="@/assets/logo-8-bits.svg"
+                    alt="Logo"
+                  />
 
-                  <Shimmer>Orca Thinking</Shimmer>
-                  <!-- <ScrambleText
-                    class="text-sm"
-                    :texts="['Orca Thinking', 'Thinking...']"
-                  /> -->
+                  <div class="text-sm font-medium text-muted-foreground">
+                    <Shimmer> Thinking...</Shimmer>
+                  </div>
                 </div>
 
                 <div
@@ -564,7 +575,7 @@ const promptCards = computed(() => {
         </div>
       </ResizablePanel>
 
-      <template v-if="activeExportPreview">
+      <template v-if="activeExportPreview || showAttachmentPanel">
         <ResizableHandle
           with-handle
           class="[&[data-state=hover]]:bg-primary/30! [&[data-state=drag]]:bg-primary/20!"
@@ -580,11 +591,11 @@ const promptCards = computed(() => {
             :result="activeExportPreview"
             @close="activeExportPreview = null"
           />
-          <!-- <AgentAttachmentPanel
+          <AgentAttachmentPanel
             v-else-if="showAttachmentPanel"
             :messages="renderedMessages"
             @close="showAttachmentPanel = false"
-          /> -->
+          />
         </ResizablePanel>
       </template>
     </ResizablePanelGroup>

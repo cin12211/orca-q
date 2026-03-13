@@ -150,7 +150,6 @@ describe('useAgentRenderer', () => {
 
     expect(hasMutationPending.value).toBe(true);
     expect(getComponent('describe_table')).toBe('AgentDescribeBlock');
-    expect(getComponent('export_file')).toBe('AgentExportFileBlock');
   });
 
   it('maps reasoning and streaming text parts', () => {

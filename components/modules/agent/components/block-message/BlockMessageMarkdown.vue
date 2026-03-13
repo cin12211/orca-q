@@ -27,18 +27,13 @@ const renderedHtml = computed(
 
 <template>
   <div data-markdown="" v-html="renderedHtml" />
-
-  <div
-    v-if="isBlockStreaming && isStreaming && !isUserMessage"
-    class="inline-flex h-3.5 w-1.5 animate-pulse rounded-xs bg-foreground"
-  />
 </template>
 
 <style>
 @reference "~/assets/css/tailwind.css";
 
 /* TODO use @plugin "@tailwindcss/typography"; 
-class="prose prose-sm max-w-none prose-p:my-1.5 prose-p:text-[13px] prose-p:leading-normal prose-pre:my-3 prose-pre:rounded-lg prose-pre:bg-slate-950 prose-pre:px-4 prose-pre:py-3 prose-pre:text-slate-100 prose-ul:my-1.5 prose-ul:pl-5 prose-ul:space-y-0.5 prose-ol:my-1.5 prose-headings:mt-3 prose-headings:mb-2 prose-code:bg-muted/50 prose-code:text-foreground prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:text-[12px] prose-code:font-mono dark:prose-invert"
+class="prose prose-sm max-w-none prose-p:my-1.5 prose-p:text-xs prose-p:leading-normal prose-pre:my-3 prose-pre:rounded-lg prose-pre:bg-slate-950 prose-pre:px-4 prose-pre:py-3 prose-pre:text-slate-100 prose-ul:my-1.5 prose-ul:pl-5 prose-ul:space-y-0.5 prose-ol:my-1.5 prose-headings:mt-3 prose-headings:mb-2 prose-code:bg-muted/50 prose-code:text-foreground prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:text-[12px] prose-code:font-mono dark:prose-invert"
 or custom
  */
 

@@ -25,10 +25,10 @@ const getSeverityVariant = (severity: AgentAnomalyIssue['severity']) =>
 <template>
   <div class="space-y-4 rounded-xl border border-border/70 bg-muted/20 p-4">
     <div class="flex flex-wrap items-center gap-2">
-      <Badge variant="secondary" class="text-[10px] tracking-[0.16em]">
+      <Badge variant="secondary" class="text-xxs tracking-[0.16em]">
         Clean Score {{ data.cleanScore }}/100
       </Badge>
-      <Badge variant="outline" class="text-[10px] tracking-[0.16em]">
+      <Badge variant="outline" class="text-xxs tracking-[0.16em]">
         {{ data.scannedRows }} rows scanned
       </Badge>
     </div>
@@ -49,11 +49,11 @@ const getSeverityVariant = (severity: AgentAnomalyIssue['severity']) =>
         <div class="flex flex-wrap items-center gap-2">
           <Badge
             :variant="getSeverityVariant(issue.severity)"
-            class="text-[10px] tracking-[0.16em]"
+            class="text-xxs tracking-[0.16em]"
           >
             {{ issue.severity.toUpperCase() }}
           </Badge>
-          <Badge variant="outline" class="text-[10px] tracking-[0.16em]">
+          <Badge variant="outline" class="text-xxs tracking-[0.16em]">
             {{ issue.type }}
           </Badge>
           <span v-if="issue.column" class="text-xs text-muted-foreground">

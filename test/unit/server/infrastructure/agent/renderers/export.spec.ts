@@ -37,20 +37,6 @@ describe('buildExportFileResult', () => {
     expect(result.content).toContain("'Ada'");
   });
 
-  it('builds XLSX export content as base64', () => {
-    const result = buildExportFileResult({
-      data: rows,
-      format: 'xlsx',
-      filename: 'user export',
-    });
-
-    expect(result.filename).toBe('user-export.xlsx');
-    expect(result.encoding).toBe('base64');
-    expect(result.content.length).toBeGreaterThan(0);
-    expect(result.fileSize).toBeGreaterThan(0);
-    expect(result.preview.rows).toEqual(rows);
-  });
-
   it('returns an error result for empty exports', () => {
     const result = buildExportFileResult({
       data: [],

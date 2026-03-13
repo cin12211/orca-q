@@ -9,10 +9,10 @@ defineProps<{
 <template>
   <div class="space-y-4 rounded-xl border border-border/70 bg-muted/20 p-4">
     <div class="flex flex-wrap items-center gap-2">
-      <Badge variant="secondary" class="text-[10px] tracking-[0.16em]">
+      <Badge variant="secondary" class="text-xxs tracking-[0.16em]">
         {{ data.slowestNode }}
       </Badge>
-      <Badge variant="outline" class="text-[10px] tracking-[0.16em]">
+      <Badge variant="outline" class="text-xxs tracking-[0.16em]">
         Cost {{ data.estimatedCost.toFixed(2) }}
       </Badge>
     </div>

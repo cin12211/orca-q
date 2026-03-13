@@ -21,10 +21,27 @@ const handleOpenPreview = () => {
 };
 
 const formatIcon = computed(() => {
-  if (props.data.format === 'xlsx') return 'lucide:file-spreadsheet';
-  if (props.data.format === 'json') return 'lucide:braces';
-  if (props.data.format === 'sql') return 'lucide:database';
-  return 'lucide:file-text';
+  switch (props.data.format) {
+    case 'json':
+      return 'lucide:braces';
+    case 'sql':
+      return 'lucide:database';
+    case 'markdown':
+      return 'lucide:file-text';
+    case 'xml':
+      return 'lucide:code-xml';
+    case 'yaml':
+      return 'lucide:settings-2';
+    case 'html':
+      return 'lucide:globe';
+    case 'tsv':
+    case 'csv':
+      return 'lucide:table-2';
+    case 'txt':
+      return 'lucide:file';
+    default:
+      return 'lucide:file-text';
+  }
 });
 
 const fileSizeLabel = computed(() => {
@@ -67,11 +84,11 @@ const handleDownload = async () => {
 
         <p
           v-if="props.data.preview.truncated"
-          class="text-[10px] text-muted-foreground truncate shrink-0"
+          class="text-xxs text-muted-foreground truncate shrink-0"
         >
           First {{ props.data.preview.rows.length }} rows
         </p>
-        <p v-else class="text-[10px] text-muted-foreground truncate shrink-0">
+        <p v-else class="text-xxs text-muted-foreground truncate shrink-0">
           size: {{ fileSizeLabel }} • type: {{ props.data.format }}
         </p>
       </div>

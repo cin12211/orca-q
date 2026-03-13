@@ -2,6 +2,8 @@ import type { QueryField } from './types';
 
 export const DEFAULT_RENDER_LIMIT = 100;
 export const MAX_RENDER_LIMIT = 500;
+/** Max rows fetched by export_query_result — higher than render since user is downloading */
+export const MAX_EXPORT_LIMIT = 100_000;
 
 const SELECT_PATTERN = /^(select|with|values|table)\b/i;
 const MUTATION_PATTERN =

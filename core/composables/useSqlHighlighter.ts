@@ -1,5 +1,9 @@
+import html from '@shikijs/langs/html';
 import json from '@shikijs/langs/json';
+import markdown from '@shikijs/langs/markdown';
 import plsql from '@shikijs/langs/plsql';
+import xml from '@shikijs/langs/xml';
+import yaml from '@shikijs/langs/yaml';
 import catppuccinLatte from '@shikijs/themes/catppuccin-latte';
 import catppuccinMocha from '@shikijs/themes/catppuccin-mocha';
 import {
@@ -14,14 +18,22 @@ const LIGHT_THEME = 'catppuccin-latte';
 const DARK_THEME = 'catppuccin-mocha';
 
 // Supported languages
-export type SupportedLanguage = 'sql' | 'json';
+export type SupportedLanguage =
+  | 'sql'
+  | 'json'
+  | 'markdown'
+  | 'xml'
+  | 'yaml'
+  | 'html';
 
 // Map our language names to Shiki language IDs
 const LANGUAGE_MAP: Record<SupportedLanguage, string> = {
   sql: 'plsql',
   json: 'json',
-  //   javascript: 'javascript',
-  //   typescript: 'typescript',
+  markdown: 'markdown',
+  xml: 'xml',
+  yaml: 'yaml',
+  html: 'html',
 };
 
 /**
@@ -54,7 +66,7 @@ export function useCodeHighlighter() {
     try {
       const highlighterInstance = await createHighlighterCore({
         themes: [catppuccinLatte, catppuccinMocha],
-        langs: [plsql, json],
+        langs: [plsql, json, markdown, xml, yaml, html],
         engine: createJavaScriptRegexEngine(),
       });
 

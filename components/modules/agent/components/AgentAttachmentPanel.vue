@@ -1,6 +1,17 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
-import { useCopyToClipboard } from '~/core/composables/useCopyToClipboard';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import BaseEmpty from '~/components/base/BaseEmpty.vue';
 import { useDbAgentAttachments } from '../hooks/useDbAgentAttachments';
 import { useFileDownload } from '../hooks/useFileDownload';
 import type { AgentRenderedMessage } from '../types';
@@ -14,9 +25,6 @@ const props = defineProps<{
 const emit = defineEmits<{
   close: [];
 }>();
-
-const { handleCopyWithKey, isCopied, getCopyIcon, getCopyIconClass } =
-  useCopyToClipboard();
 
 const messagesRef = computed(() => props.messages);
 const { attachments, files, codes, sources } =
@@ -40,7 +48,7 @@ const mapFile = (f: any): AttachmentItem => ({
   name: f.filename,
   description: 'Exported File',
   icon: 'hugeicons:file-02',
-  data: f,
+  data: f.result,
 });
 const mapSource = (s: any): AttachmentItem => ({
   type: 'source',
@@ -79,6 +87,30 @@ const getItemsForCurrentTab = computed(() => {
 const isModalOpen = ref(false);
 const selectedItem = ref<AttachmentItem | null>(null);
 
+const formatBytes = (value?: number) => {
+  if (value === undefined || value === null) return '—';
+  if (value < 1024) return `${value} B`;
+  const units = ['KB', 'MB', 'GB', 'TB'];
+  let size = value / 1024;
+  let unitIndex = 0;
+  while (size >= 1024 && unitIndex < units.length - 1) {
+    size /= 1024;
+    unitIndex += 1;
+  }
+  return `${size.toFixed(size >= 10 ? 0 : 1)} ${units[unitIndex]}`;
+};
+
+const selectedTypeLabel = computed(() => {
+  if (!selectedItem.value) return '';
+  if (selectedItem.value.type === 'file') return 'File';
+  if (selectedItem.value.type === 'code') return 'Code';
+  return 'Link';
+});
+
+const canOpenSource = computed(
+  () => selectedItem.value?.type === 'source' && !!selectedItem.value.data?.url
+);
+
 const openModal = (item: AttachmentItem) => {
   selectedItem.value = item;
   isModalOpen.value = true;
@@ -98,61 +130,59 @@ const handleDownload = async (item: AttachmentItem | null) => {
     a.click();
     URL.revokeObjectURL(url);
   } else if (item.type === 'source') {
-    window.open(item.data.url, '_blank', 'noopener,noreferrer');
+    if (item.data?.url) {
+      window.open(item.data.url, '_blank', 'noopener,noreferrer');
+    }
   }
 };
 </script>
 
 <template>
-  <div class="flex h-full flex-col bg-background/50 backdrop-blur-sm">
-    <div
-      class="flex items-center justify-between border-b px-4 py-3 shadow-sm bg-background/80"
-    >
-      <div class="flex items-center gap-2">
+  <div
+    class="flex h-full flex-col bg-sidebar-primary-foreground/50 z-50 p-2 gap-2"
+  >
+    <div class="flex shrink-0 items-center justify-between gap-2">
+      <div class="flex items-center min-w-0 gap-1 flex-1">
         <Icon name="hugeicons:attachment" class="size-4" />
         <h3 class="text-sm font-semibold text-foreground">Attachments</h3>
-        <Badge
-          v-if="attachments.length"
-          variant="secondary"
-          class="ml-1 px-1.5 h-5 text-[10px]"
-        >
+
+        <p class="text-xs">
           {{ attachments.length }}
-        </Badge>
+        </p>
       </div>
-      <Button
-        variant="ghost"
-        size="icon"
-        class="size-7"
-        @click="emit('close')"
-        title="Close Panel"
-      >
+
+      <Button size="icon" variant="ghost" class="size-7" @click="emit('close')">
         <Icon name="lucide:x" class="size-4" />
       </Button>
     </div>
 
     <div class="flex-1 overflow-hidden flex flex-col min-h-0 relative">
-      <Tabs v-model="activeTab" class="flex-1 flex flex-col h-full w-full">
-        <div class="px-4 py-2 border-b bg-muted/20">
-          <TabsList class="w-full h-8 grid grid-cols-4 bg-muted/50">
-            <TabsTrigger value="all" class="text-xs">All</TabsTrigger>
-            <TabsTrigger value="files" class="text-xs">Files</TabsTrigger>
-            <TabsTrigger value="code" class="text-xs">Code</TabsTrigger>
-            <TabsTrigger value="links" class="text-xs">Links</TabsTrigger>
-          </TabsList>
-        </div>
+      <Tabs v-model="activeTab">
+        <TabsList class="h-8">
+          <TabsTrigger value="all" class="text-xs cursor-pointer"
+            >All</TabsTrigger
+          >
+          <TabsTrigger value="files" class="text-xs cursor-pointer"
+            >Files</TabsTrigger
+          >
+          <TabsTrigger value="code" class="text-xs cursor-pointer"
+            >Code</TabsTrigger
+          >
+          <TabsTrigger value="links" class="text-xs cursor-pointer"
+            >Links</TabsTrigger
+          >
+        </TabsList>
 
-        <div class="flex-1 overflow-y-auto w-full p-4 relative">
+        <div class="flex-1 overflow-y-auto w-full relative">
           <!-- Empty State -->
           <div
             v-if="getItemsForCurrentTab.length === 0"
-            class="absolute inset-0 flex flex-col items-center justify-center text-muted-foreground p-6 text-center"
+            class="absolute inset-0 flex items-center justify-center p-6"
           >
-            <div
-              class="bg-muted size-12 rounded-full flex items-center justify-center mb-4"
-            >
-              <Icon name="hugeicons:folder-minus" class="size-6" />
-            </div>
-            <p class="text-sm font-medium">No items found</p>
+            <BaseEmpty
+              title="No items found"
+              desc="Add an attachment to see it here."
+            />
           </div>
 
           <!-- Tab contents -->
@@ -162,29 +192,25 @@ const handleDownload = async (item: AttachmentItem | null) => {
             :value="tab"
             class="h-full mt-0 focus-visible:ring-0"
           >
-            <div class="space-y-3 pb-8">
+            <div class="space-y-2">
               <template v-for="item in groupedItems[tab]" :key="item.id">
                 <div
-                  class="p-3 border rounded-xl bg-card hover:bg-accent/50 transition-colors flex items-center gap-3 cursor-pointer group"
+                  class="p-2 px-3 border rounded-lg bg-card hover:bg-accent/50 transition-colors flex items-center gap-2 cursor-pointer group"
                   @click="openModal(item)"
                 >
-                  <div
-                    class="bg-primary/10 text-primary p-2 rounded-lg group-hover:bg-primary/20 transition-colors"
-                  >
-                    <Icon :name="item.icon" class="size-4" />
-                  </div>
+                  <Icon :name="item.icon" class="size-5!" />
                   <div class="min-w-0 flex-1">
-                    <p class="text-sm font-medium truncate">{{ item.name }}</p>
+                    <p class="text-xs font-medium truncate">{{ item.name }}</p>
                     <p
-                      class="text-xs text-muted-foreground truncate"
+                      class="text-xxs text-muted-foreground truncate"
                       :class="item.type === 'source' ? 'text-primary/70' : ''"
                     >
                       {{ item.description }}
                     </p>
                   </div>
                   <Icon
-                    name="hugeicons:arrow-right-01"
-                    class="size-4 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground"
+                    name="hugeicons:view"
+                    class="opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground"
                   />
                 </div>
               </template>
@@ -196,44 +222,91 @@ const handleDownload = async (item: AttachmentItem | null) => {
 
     <Dialog :open="isModalOpen" @update:open="isModalOpen = $event">
       <DialogContent
-        class="sm:max-w-[700px] w-[90vw] max-h-[85vh] flex flex-col overflow-hidden"
+        class="max-w-[50vw]! w-full max-h-[70vh] p-0 flex flex-col overflow-hidden"
       >
-        <DialogHeader class="shrink-0 border-b pb-4">
-          <DialogTitle class="flex items-center gap-2 overflow-hidden">
+        <DialogHeader class="p-4 pb-2 text-left">
+          <div class="flex items-center gap-2">
             <Icon
               :name="selectedItem?.icon || 'hugeicons:file-02'"
-              class="size-5 shrink-0"
+              class="size-5!"
             />
-            <span class="truncate">{{ selectedItem?.name }}</span>
-          </DialogTitle>
+            <div class="min-w-0 flex-1">
+              <DialogTitle class="truncate flex items-center gap-2">
+                {{ selectedItem?.name || 'Attachment Preview' }}
+
+                <div class="flex flex-wrap gap-1.5 text-xs">
+                  <Badge variant="secondary" class="h-5 px-1.5">
+                    {{ selectedTypeLabel }}
+                  </Badge>
+                  <Badge
+                    v-if="selectedItem?.type === 'file'"
+                    variant="outline"
+                    class="h-5 px-1.5"
+                  >
+                    {{ selectedItem.data.format || 'file' }}
+                  </Badge>
+                  <Badge
+                    v-if="selectedItem?.type === 'file'"
+                    variant="outline"
+                    class="h-5 px-1.5"
+                  >
+                    {{ formatBytes(selectedItem.data.fileSize) }}
+                  </Badge>
+                  <Badge
+                    v-if="selectedItem?.type === 'code'"
+                    variant="outline"
+                    class="h-5 px-1.5"
+                  >
+                    {{ selectedItem.data.language || 'text' }}
+                  </Badge>
+                  <Badge
+                    v-if="
+                      selectedItem?.type === 'source' &&
+                      selectedItem.data?.mediaType
+                    "
+                    variant="outline"
+                    class="h-5 px-1.5"
+                  >
+                    {{ selectedItem.data.mediaType }}
+                  </Badge>
+                </div>
+              </DialogTitle>
+              <DialogDescription class="text-sm">
+                Preview attachment details and content.
+              </DialogDescription>
+            </div>
+          </div>
         </DialogHeader>
 
-        <div class="flex-1 overflow-y-auto min-h-0 py-4 -mx-6 px-6 relative">
+        <div class="flex-1 overflow-y-auto px-4 space-y-4">
           <template v-if="selectedItem?.type === 'file'">
-            <div
-              class="text-sm bg-muted/50 p-4 rounded-md overflow-x-auto whitespace-pre-wrap font-mono"
-              v-if="selectedItem.data.encoding === 'utf8'"
-            >
-              {{ selectedItem.data.content }}
-            </div>
-            <div
-              v-else
-              class="flex flex-col items-center justify-center p-8 bg-muted/20 rounded-md border border-dashed h-full min-h-[150px]"
-            >
-              <Icon
-                name="hugeicons:file-unknown"
-                class="size-16 text-muted-foreground/50 mb-4"
-              />
-              <p class="text-foreground font-medium">Binary file format</p>
-              <p class="text-sm text-muted-foreground text-center mt-1">
-                Preview is not available for this file type. Please download to
-                view.
-              </p>
+            <div class="space-y-2">
+              <div
+                v-if="selectedItem.data.encoding === 'utf8'"
+                class="text-sm bg-muted/50 p-3 rounded-md overflow-x-auto whitespace-pre-wrap font-mono border"
+              >
+                {{ selectedItem.data.content }}
+              </div>
+              <div
+                v-else
+                class="flex flex-col items-center justify-center p-5 bg-muted/20 rounded-md border border-dashed min-h-[140px]"
+              >
+                <Icon
+                  name="hugeicons:file-unknown"
+                  class="size-12 text-muted-foreground/50 mb-3"
+                />
+                <p class="text-foreground text-sm font-medium">
+                  Binary file format
+                </p>
+                <p class="text-xs text-muted-foreground text-center mt-1">
+                  Preview is not available for this file type. Download to view.
+                </p>
+              </div>
             </div>
           </template>
 
           <template v-else-if="selectedItem?.type === 'code'">
-            <div class="rounded-lg overflow-hidden border">
+            <div class="text-sm">
               <BlockMessageCode
                 :id="selectedItem.data.id"
                 :code="selectedItem.data.code"
@@ -245,14 +318,14 @@ const handleDownload = async (item: AttachmentItem | null) => {
           </template>
 
           <template v-else-if="selectedItem?.type === 'source'">
-            <div class="flex flex-col gap-4 p-4 bg-muted/30 rounded-lg border">
+            <div class="flex flex-col gap-3 p-3 bg-muted/30 rounded-md border">
               <div>
                 <h4
-                  class="text-xs font-semibold text-muted-foreground uppercase mb-1"
+                  class="text-[11px] font-semibold text-muted-foreground uppercase mb-1"
                 >
                   Title
                 </h4>
-                <p class="text-sm font-medium">
+                <p class="text-xs font-medium">
                   {{
                     selectedItem.data.title ||
                     selectedItem.data.filename ||
@@ -262,52 +335,52 @@ const handleDownload = async (item: AttachmentItem | null) => {
               </div>
               <div>
                 <h4
-                  class="text-xs font-semibold text-muted-foreground uppercase mb-1"
+                  class="text-[11px] font-semibold text-muted-foreground uppercase mb-1"
                 >
                   URL
                 </h4>
-                <a
-                  :href="selectedItem.data.url"
-                  target="_blank"
-                  class="text-sm text-primary hover:underline break-all flex items-center gap-1"
+                <p
+                  v-if="selectedItem.data.url"
+                  class="text-xs text-primary break-all flex items-center gap-1"
                 >
-                  {{ selectedItem.data.url }}
+                  <a
+                    :href="selectedItem.data.url"
+                    target="_blank"
+                    class="hover:underline"
+                  >
+                    {{ selectedItem.data.url }}
+                  </a>
                   <Icon
                     name="hugeicons:link-square-02"
                     class="size-3 shrink-0"
                   />
-                </a>
+                </p>
+                <p v-else class="text-xs text-muted-foreground">
+                  No URL provided.
+                </p>
               </div>
             </div>
           </template>
         </div>
 
-        <DialogFooter
-          class="shrink-0 flex sm:justify-between items-center sm:flex-row flex-col-reverse gap-2 border-t pt-4 mt-auto"
-        >
-          <Button
-            variant="outline"
-            @click="isModalOpen = false"
-            class="w-full sm:w-auto"
-          >
+        <DialogFooter class="p-4 flex justify-end pt-0">
+          <Button variant="outline" size="sm" @click="isModalOpen = false">
             Close
           </Button>
-          <div class="flex gap-2 w-full sm:w-auto">
+          <div class="flex gap-2">
             <Button
               v-if="selectedItem?.type === 'source'"
-              class="w-full sm:w-auto"
+              size="sm"
+              :disabled="!canOpenSource"
               @click="handleDownload(selectedItem)"
             >
               Open Link
-              <Icon name="hugeicons:link-square-02" class="size-4 ml-2" />
+              <Icon name="hugeicons:link-square-02" class="size-3 ml-2" />
             </Button>
-            <Button
-              v-else
-              class="w-full sm:w-auto"
-              @click="handleDownload(selectedItem)"
-            >
-              <Icon name="hugeicons:download-04" class="size-4 mr-2" />
+            <Button v-else size="sm" @click="handleDownload(selectedItem)">
               Download
+
+              <Icon name="hugeicons:download-04" class="size-3" />
             </Button>
           </div>
         </DialogFooter>

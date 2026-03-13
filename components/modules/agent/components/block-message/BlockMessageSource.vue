@@ -29,7 +29,7 @@ defineProps<{
       <span v-else class="truncate font-medium text-foreground">
         {{ title || filename || 'Source document' }}
       </span>
-      <span v-if="mediaType" class="ml-2 text-[10px] text-muted-foreground">
+      <span v-if="mediaType" class="ml-2 text-xxs text-muted-foreground">
         {{ mediaType }}
       </span>
     </div>

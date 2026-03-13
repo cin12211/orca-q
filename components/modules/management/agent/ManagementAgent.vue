@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { Tooltip, TooltipContent, TooltipTrigger } from '#components';
+import { useAgentWorkspace } from '~/components/modules/agent/hooks/useDbAgentWorkspace';
 import AgentEmptyState from '~/components/modules/management/agent/components/AgentEmptyState.vue';
 import ManagementAgentHistoryTree from '~/components/modules/management/agent/components/ManagementAgentHistoryTree.vue';
 import { useManagementAgentHistoryTree } from '~/components/modules/management/agent/hooks/useManagementAgentHistoryTree';

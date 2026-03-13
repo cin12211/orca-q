@@ -1,5 +1,5 @@
 import { computed, type ComputedRef } from 'vue';
-import type { AgentRenderedMessage, AgentBlock } from '../types';
+import type { AgentRenderedMessage, AgentExportFileResult } from '../types';
 
 export type AttachmentType = 'file' | 'code' | 'source';
 
@@ -12,7 +12,7 @@ export interface BaseAttachment {
 export interface FileAttachment extends BaseAttachment {
   type: 'file';
   filename: string;
-  data: any; // This would depend on what `export_file` returns
+  result: AgentExportFileResult;
 }
 
 export interface CodeAttachment extends BaseAttachment {
@@ -66,15 +66,19 @@ export function useDbAgentAttachments(
             filename: block.filename,
             mediaType: block.mediaType,
           });
-        } else if (block.kind === 'tool' && block.toolName === 'export_file') {
-          const result = block.result as any;
-          if (result && result.name && result.data) {
+        } else if (
+          block.kind === 'tool' &&
+          (block.toolName === 'export_query_result' ||
+            block.toolName === 'export_content')
+        ) {
+          const result = block.result as AgentExportFileResult;
+          if (result?.filename && result.content !== undefined) {
             results.push({
               id,
               messageId: message.id,
               type: 'file',
-              filename: result.name,
-              data: result.data,
+              filename: result.filename,
+              result,
             });
           }
         }

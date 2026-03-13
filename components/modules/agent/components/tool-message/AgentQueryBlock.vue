@@ -18,7 +18,7 @@ const sqlPreviewId = computed(() => `agent-query-${props.data.sql}`);
 
       <Badge
         :variant="data.isMutation ? 'destructive' : 'secondary'"
-        class="shrink-0 text-[10px]"
+        class="shrink-0 text-xxs"
       >
         {{ data.isMutation ? 'MUTATION' : 'READ ONLY' }}
       </Badge>

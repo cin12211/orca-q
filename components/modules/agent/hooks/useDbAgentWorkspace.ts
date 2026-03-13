@@ -65,6 +65,10 @@ export const useAgentWorkspace = createGlobalState(() => {
     'heraq-agent-active-history',
     null
   );
+  const showAttachmentPanel = useStorage<boolean>(
+    'heraq-agent-attachment-panel-open',
+    false
+  );
   const histories = useStorage<AgentHistorySession[]>(
     'heraq-agent-chat-history',
     []
@@ -220,6 +224,7 @@ export const useAgentWorkspace = createGlobalState(() => {
   );
 
   return {
+    showAttachmentPanel,
     selectedNodeId,
     currentWorkspaceId,
     histories: sortedHistories,

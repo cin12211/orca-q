@@ -13,6 +13,9 @@ const BUNDLED_LANGS = [
   import('@shikijs/langs/bash'),
   import('@shikijs/langs/markdown'),
   import('@shikijs/langs/csv'),
+  import('@shikijs/langs/xml'),
+  import('@shikijs/langs/yaml'),
+  import('@shikijs/langs/html'),
 ];
 
 /**

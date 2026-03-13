@@ -58,7 +58,7 @@ export function useCopyToClipboard(resetDelayMs = 2000) {
    */
   const getCopyIcon = (isCopiedState: boolean = copied.value): string => {
     return isCopiedState
-      ? 'hugeicons:checkmark-circle-01'
+      ? 'hugeicons:checkmark-square-02'
       : 'hugeicons:copy-01';
   };
 

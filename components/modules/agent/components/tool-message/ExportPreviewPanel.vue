@@ -2,6 +2,7 @@
 import { computed } from 'vue';
 import DynamicTable from '~/components/base/dynamic-table/DynamicTable.vue';
 import type { MappedRawColumn } from '~/components/modules/raw-query/interfaces';
+import type { SupportedLanguage } from '~/core/composables/useSqlHighlighter';
 import { formatBytes } from '~/core/helpers';
 import { useFileDownload } from '../../hooks/useFileDownload';
 import type { AgentExportFileResult } from '../../types';
@@ -16,12 +17,22 @@ const emit = defineEmits<{
 
 const { downloadFile } = useFileDownload();
 
-const isTablePreview = computed(
-  () => props.result.format === 'csv' || props.result.format === 'xlsx'
+const TABLE_PREVIEW_FORMATS = new Set(['csv', 'tsv']);
+const isTablePreview = computed(() =>
+  TABLE_PREVIEW_FORMATS.has(props.result.format)
 );
 
-const codeLanguage = computed(() =>
-  props.result.format === 'json' ? 'json' : 'sql'
+const CODE_LANGUAGE_MAP: Partial<Record<string, SupportedLanguage>> = {
+  json: 'json',
+  sql: 'sql',
+  markdown: 'markdown',
+  xml: 'xml',
+  yaml: 'yaml',
+  html: 'html',
+};
+
+const codeLanguage = computed<SupportedLanguage | undefined>(
+  () => CODE_LANGUAGE_MAP[props.result.format]
 );
 
 const previewColumns = computed(() => props.result.preview.columns ?? []);
@@ -59,12 +70,10 @@ const fileSizeLabel = computed(() => {
 
 <template>
   <div
-    class="flex h-full flex-col bg-sidebar-primary-foreground/50 z-50 p-2 pt-1 gap-2"
+    class="flex h-full flex-col bg-sidebar-primary-foreground/50 z-50 p-2 gap-2"
   >
-    <div
-      class="flex shrink-0 items-center justify-between gap-2 border-border/70"
-    >
-      <div class="flex items-center min-w-0 gap-2 flex-1">
+    <div class="flex shrink-0 items-center justify-between gap-2">
+      <div class="flex items-center min-w-0 gap-1 flex-1">
         <Icon
           name="hugeicons:document-attachment"
           class="size-5! shrink-0 text-foreground"
@@ -76,11 +85,11 @@ const fileSizeLabel = computed(() => {
 
           <p
             v-if="result.preview.truncated"
-            class="text-[10px] text-muted-foreground truncate shrink-0"
+            class="text-xxs text-muted-foreground truncate shrink-0"
           >
             First {{ previewRows.length }} rows
           </p>
-          <p v-else class="text-[10px] text-muted-foreground truncate shrink-0">
+          <p v-else class="text-xxs text-muted-foreground truncate shrink-0">
             size: {{ fileSizeLabel }} • type: {{ result.format }}
           </p>
         </div>
