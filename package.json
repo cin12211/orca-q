@@ -32,7 +32,8 @@
     "test:nuxt": "vitest --run --project nuxt",
     "test:e2e": "vitest --run --project e2e",
     "test:coverage": "vitest run --coverage",
-    "test:watch": "vitest --watch"
+    "test:watch": "vitest --watch",
+    "test:playwright": "playwright test"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^3.0.9",
@@ -136,6 +137,7 @@
     "@nuxtjs/i18n": "^9.5.3",
     "@nuxtjs/storybook": "^9.0.1",
     "@nuxtjs/tailwindcss": "^6.13.2",
+    "@playwright/test": "^1.58.2",
     "@storybook/addon-a11y": "^10.2.7",
     "@storybook/addon-docs": "^10.2.7",
     "@tailwindcss/typography": "^0.5.19",
