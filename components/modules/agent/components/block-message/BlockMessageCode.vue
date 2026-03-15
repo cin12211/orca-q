@@ -29,7 +29,13 @@ watch(
   { immediate: true }
 );
 
-const { handleCopyWithKey, isCopied, getCopyTooltip } = useCopyToClipboard();
+const {
+  handleCopyWithKey,
+  isCopied,
+  getCopyIcon,
+  getCopyIconClass,
+  getCopyTooltip,
+} = useCopyToClipboard();
 
 const isCurrentlyStreaming = computed(
   () => !!(props.isBlockStreaming && props.isStreaming)
@@ -54,6 +60,10 @@ const lang = computed(() => {
       return 'ts';
     case 'postgresql':
     case 'mysql':
+    case 'sql':
+    case 'plsql':
+    case 'sqlpl':
+    case 'sqlserver':
       return 'sql';
     default:
       return 'text';
@@ -84,18 +94,23 @@ const key = computed(() => `${lang.value}-${colorMode.value}`);
           <Button
             variant="ghost"
             size="xxs"
-            :class="[
-              'transition-colors duration-200',
-              isCopied(id) ? 'text-emerald-500 dark:text-emerald-400' : '',
-            ]"
+            class="h-6!"
             @click="handleCopyWithKey(id, code)"
           >
-            <span class="flex items-center justify-center p-0.5" v-auto-animate>
+            <span class="flex items-center gap-1 justify-center">
               <Icon
                 :key="isCopied(id) ? 'tick' : 'copy'"
-                :name="isCopied(id) ? 'hugeicons:tick-02' : 'hugeicons:copy-01'"
+                :name="getCopyIcon(isCopied(id))"
                 class="size-3.5"
+                :class="getCopyIconClass(isCopied(id))"
               />
+              <span
+                v-if="isCopied(id)"
+                class="text-[10px] font-medium leading-none"
+                :class="getCopyIconClass(isCopied(id))"
+              >
+                Copied
+              </span>
             </span>
           </Button>
         </TooltipTrigger>

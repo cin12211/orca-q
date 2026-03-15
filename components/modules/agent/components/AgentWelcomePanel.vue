@@ -36,13 +36,7 @@ const emit = defineEmits<{
       </div>
 
       <!-- <div class="mt-5 grid gap-3 sm:grid-cols-3">
-        <Button
-          v-for="prompt in props.promptCards"
-          :key="prompt"
-          variant="outline"
-          class="h-auto min-h-0 justify-start text-foreground font-normal rounded-2xl px-4 py-3 text-left text-sm whitespace-normal"
-          @click="emit('prompt', prompt)"
-        >
+        <Button v-for="prompt in props.promptCards" :key="prompt" variant="outline" class="h-auto min-h-0 justify-start text-foreground font-normal rounded-2xl px-4 py-3 text-left text-sm whitespace-normal" @click="emit('prompt', prompt)">
           {{ prompt }}
         </Button>
       </div> -->

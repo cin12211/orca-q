@@ -189,19 +189,15 @@ const handleQuickAction = async (text: string) => {
       ref="messagesContainer"
       class="flex-1 overflow-y-auto space-y-4 mb-4"
     >
-      <div v-if="messages.length === 0" class="text-center py-8">
-        <Icon
-          name="hugeicons:ai-chat-02"
-          class="size-12 mb-2 opacity-50 mx-auto"
-        />
-        <p class="text-sm text-muted-foreground">
-          Ask me anything about your SQL query
-        </p>
-        <div class="mt-4 flex flex-wrap justify-center gap-2">
+      <BaseEmpty
+        v-if="messages.length === 0"
+        title="Agent Chat"
+        desc="Ask me anything about your SQL query"
+      >
+        <div class="flex flex-wrap justify-center gap-2">
           <Button
             variant="outline"
             size="xs"
-            class="text-xs"
             @click="handleQuickAction('Explain this query')"
           >
             Explain this query
@@ -209,7 +205,6 @@ const handleQuickAction = async (text: string) => {
           <Button
             variant="outline"
             size="xs"
-            class="text-xs"
             @click="handleQuickAction('How can I optimize this query?')"
           >
             Optimize query
@@ -217,7 +212,6 @@ const handleQuickAction = async (text: string) => {
           <Button
             variant="outline"
             size="xs"
-            class="text-xs"
             @click="
               handleQuickAction('What are potential issues with this query?')
             "
@@ -225,7 +219,7 @@ const handleQuickAction = async (text: string) => {
             Find issues
           </Button>
         </div>
-      </div>
+      </BaseEmpty>
 
       <div
         v-for="message in messages"

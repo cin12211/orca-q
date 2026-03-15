@@ -124,9 +124,10 @@ const onFocusNode = (
           {{ data.table }}
           {{ data.schema === 'public' ? '' : `(${data.schema})` }}
         </p>
-        <button
+
+        <Button
           v-if="hasRelations"
-          class="flex-shrink-0 p-1 px-2 h-full rounded hover:bg-primary-foreground/10 transition-colors"
+          size="iconMd"
           :title="
             isExpanded ? 'Collapse related tables' : 'Expand related tables'
           "
@@ -136,9 +137,9 @@ const onFocusNode = (
             :name="
               isExpanded ? 'hugeicons:remove-circle' : 'hugeicons:add-circle'
             "
-            class="w-5 h-5 text-primary-foreground"
+            class="w-5 h-5"
           />
-        </button>
+        </Button>
       </div>
 
       <!-- Columns -->

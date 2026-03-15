@@ -69,7 +69,6 @@ const isDataView = computed(() => {
         v-if="false"
         variant="outline"
         size="xxs"
-        class="text-xs"
         @click="emit('onAddEmptyRow')"
       >
         <Icon name="lucide:plus" class="text-sm"> </Icon>
@@ -126,7 +125,7 @@ const isDataView = computed(() => {
       </Tooltip>
 
       <!-- TODO: Config export to excel or csv -->
-      <!-- <Button variant="outline" size="iconSm" class="h-6">
+      <!-- <Button variant="outline" size="iconSm">
         <Icon name="hugeicons:file-download"> </Icon>
       </Button> -->
     </div>

@@ -58,19 +58,15 @@ const {
         @on-select-workspace="onSelectWorkspace"
       />
     </div>
-    <div
+    <BaseEmpty
       v-else
-      class="flex flex-col items-center justify-center h-full pb-[20vh]"
+      title="No workspaces found"
+      desc="There is nothing here to show. Let's create your first workspace."
     >
-      <div class="text-xl font-medium">There's no workspaces</div>
-      <div class="mb-4 text-muted-foreground">
-        There is nothing here to show, Let's create one
-      </div>
       <Button variant="default" size="sm" @click="isOpenCreateWSModal = true">
         <Icon name="hugeicons:plus-sign" />
-
-        New Workspace</Button
-      >
-    </div>
+        New Workspace
+      </Button>
+    </BaseEmpty>
   </div>
 </template>

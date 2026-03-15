@@ -431,20 +431,14 @@ const promptCards = computed(() => {
 
             <div class="flex shrink-0 items-center gap-2">
               <Button
-                size="sm"
+                size="xs"
                 variant="ghost"
-                class="h-6.5 text-xs px-2"
                 @click="showAttachmentPanel = !showAttachmentPanel"
               >
                 Attachment <Icon name="hugeicons:attachment" class="size-3" />
               </Button>
 
-              <Button
-                size="sm"
-                variant="outline"
-                class="h-6.5 text-xs px-2"
-                @click="handleNewThread"
-              >
+              <Button size="xs" variant="outline" @click="handleNewThread">
                 New Thread <Icon name="hugeicons:plus-sign" class="size-3" />
               </Button>
             </div>

@@ -270,12 +270,7 @@ const onDialogConfirm = async (data: {
           <p class="font-normal text-sm">{{ roleName }}</p>
         </div>
         <div class="ml-auto flex items-center gap-2">
-          <!-- <Button
-            variant="outline"
-            size="xs"
-            :disabled="isLoading || isMutating"
-            @click="onOpenGrantDialog"
-          >
+          <!-- <Button variant="outline" size="xs" :disabled="isLoading || isMutating" @click="onOpenGrantDialog">
             <Icon name="hugeicons:plus-sign" class="size-4 mr-1" />
             Grant Permission
           </Button> -->
@@ -409,12 +404,11 @@ const onDialogConfirm = async (data: {
             <span class="text-sm">Loading databases...</span>
           </div>
 
-          <div
+          <BaseEmpty
             v-else-if="databasePermissions.length === 0"
-            class="text-sm text-muted-foreground"
-          >
-            No database permissions found
-          </div>
+            title="No permissions found"
+            desc="No database permissions were found for this role."
+          />
 
           <div v-else class="space-y-1 flex-1 overflow-y-auto">
             <DatabasePermissionCard
@@ -432,13 +426,12 @@ const onDialogConfirm = async (data: {
       </template>
 
       <!-- Empty State -->
-      <div
+      <BaseEmpty
         v-else
-        class="flex-1 flex flex-col items-center justify-center text-muted-foreground"
-      >
-        <Icon name="hugeicons:shield-01" class="size-16 mb-4 opacity-50" />
-        <p class="text-sm">No permissions data available</p>
-      </div>
+        icon="hugeicons:shield-01"
+        title="No data available"
+        desc="No permissions data is available for the current selection."
+      />
     </div>
 
     <!-- Grant/Revoke Dialog -->

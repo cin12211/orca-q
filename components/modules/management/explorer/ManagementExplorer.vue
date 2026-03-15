@@ -108,7 +108,25 @@ watch(
       </template>
     </ManagementSidebarHeader>
 
+    <BaseEmpty
+      v-if="Object.keys(mappedExplorerFileTreeData).length === 0"
+      title="No files found"
+      desc="Create your first file or folder to get started."
+    >
+      <div class="flex gap-2 justify-center">
+        <Button size="xs" variant="outline" @click="onAddFile">
+          <Icon name="hugeicons:file-add" />
+          New File
+        </Button>
+        <Button size="xs" variant="outline" @click="onAddFolder">
+          <Icon name="hugeicons:folder-add" />
+          New Folder
+        </Button>
+      </div>
+    </BaseEmpty>
+
     <ManagementExplorerTree
+      v-else
       ref="treePanelRef"
       :tree-data="mappedExplorerFileTreeData"
       :storage-key="explorerStorageKey"

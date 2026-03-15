@@ -148,7 +148,7 @@ const handleDownload = async (item: AttachmentItem | null) => {
         </p>
       </div>
 
-      <Button size="icon" variant="ghost" class="size-7" @click="emit('close')">
+      <Button size="iconMd" variant="ghost" @click="emit('close')">
         <Icon name="lucide:x" class="size-4" />
       </Button>
     </div>

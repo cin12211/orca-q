@@ -94,21 +94,15 @@ const handleDownload = async () => {
       </div>
     </div>
 
-    <Button
-      :disabled="!!props.data.error"
-      size="sm"
-      variant="outline"
-      class="h-6.5 text-xs px-2"
-    >
+    <Button :disabled="!!props.data.error" size="xs" variant="outline">
       view <Icon name="lucide:eye" class="size-3" />
     </Button>
 
     <Button
       @click.stop="handleDownload"
       :disabled="!!props.data.error"
-      size="sm"
+      size="xs"
       variant="outline"
-      class="h-6.5 text-xs px-2"
     >
       Download <Icon name="lucide:download" class="size-3" />
     </Button>

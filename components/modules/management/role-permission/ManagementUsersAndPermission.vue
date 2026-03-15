@@ -289,13 +289,11 @@ const onDeleteUser = async (role: DatabaseRole) => {
     </ManagementSidebarHeader>
 
     <!-- No Connection State -->
-    <div
+    <BaseEmpty
       v-if="!connection"
-      class="flex-1 flex flex-col items-center justify-center text-muted-foreground"
-    >
-      <Icon name="hugeicons:plug-socket" class="size-12 mb-2 opacity-50" />
-      <p class="text-sm">Select a connection to view roles</p>
-    </div>
+      title="No selected connection"
+      desc="Select a connection to view roles"
+    />
 
     <!-- Main Content -->
     <template v-else>

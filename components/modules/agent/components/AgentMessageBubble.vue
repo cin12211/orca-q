@@ -193,15 +193,24 @@ const messageText = computed(() => {
           <Tooltip>
             <TooltipTrigger as-child>
               <Button
-                size="iconSm"
+                size="xxs"
                 variant="ghost"
-                class="p-0 size-4!"
+                class="h-4!"
                 @click="handleCopyWithKey(message.id, messageText)"
               >
-                <Icon
-                  :name="getCopyIcon(isCopied(message.id))"
-                  :class="['size-3!', getCopyIconClass(isCopied(message.id))]"
-                />
+                <span class="flex items-center gap-1 justify-center">
+                  <Icon
+                    :name="getCopyIcon(isCopied(message.id))"
+                    class="size-3.5!"
+                    :class="getCopyIconClass(isCopied(message.id))"
+                  />
+                  <span
+                    v-if="isCopied(message.id)"
+                    class="text-[10px] font-medium leading-none"
+                    :class="getCopyIconClass(isCopied(message.id))"
+                    >Copied</span
+                  >
+                </span>
               </Button>
             </TooltipTrigger>
             <TooltipContent>
@@ -214,7 +223,7 @@ const messageText = computed(() => {
               <Button
                 size="iconSm"
                 variant="ghost"
-                class="p-0 size-4!"
+                class="size-4!"
                 @click="emit('edit', messageText)"
               >
                 <Icon name="lucide:pencil" class="size-3!" />

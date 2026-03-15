@@ -163,30 +163,34 @@ const formatFileSize = (bytes: number) => {
 
       <!-- Tabs -->
       <div class="flex border-b">
-        <button
+        <Button
+          size="sm"
+          variant="ghost"
           :class="[
-            'flex items-center gap-2 px-6 py-3 text-sm font-medium transition-colors',
+            'rounded-none border-b-2 px-6 transition-colors',
             activeTab === 'export'
-              ? 'border-b-2 border-primary text-foreground'
-              : 'text-muted-foreground hover:text-foreground',
+              ? 'border-primary text-foreground'
+              : 'border-transparent text-muted-foreground hover:text-foreground',
           ]"
           @click="activeTab = 'export'"
         >
           <Icon name="lucide:download" class="size-4" />
           Export Database
-        </button>
-        <button
+        </Button>
+        <Button
+          size="sm"
+          variant="ghost"
           :class="[
-            'flex items-center gap-2 px-6 py-3 text-sm font-medium transition-colors',
+            'rounded-none border-b-2 px-6 transition-colors',
             activeTab === 'import'
-              ? 'border-b-2 border-primary text-foreground'
-              : 'text-muted-foreground hover:text-foreground',
+              ? 'border-primary text-foreground'
+              : 'border-transparent text-muted-foreground hover:text-foreground',
           ]"
           @click="activeTab = 'import'"
         >
           <Icon name="lucide:upload" class="size-4" />
           Import Database
-        </button>
+        </Button>
       </div>
 
       <!-- Content -->

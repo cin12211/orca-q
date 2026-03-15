@@ -70,24 +70,16 @@ const onConnectConnection = (connection: Connection) => {
 </script>
 
 <template>
-  <div
+  <BaseEmpty
     v-if="connections.length === 0"
-    class="rounded-md border p-10 text-center"
+    title="No connections yet"
+    desc="Click Add Connection to create your first database connection."
   >
-    <Icon
-      class="mx-auto mb-2 size-20! text-muted-foreground"
-      name="hugeicons:database"
-    />
-    <h3 class="text-lg font-medium">No connections yet</h3>
-    <p class="text-muted-foreground">
-      Click "Add Connection" to create your first database connection.
-    </p>
-
-    <Button size="sm" variant="outline" class="mt-4" @click="emit('create')">
+    <Button size="sm" variant="outline" @click="emit('create')">
       <Icon name="hugeicons:plus-sign" class="size-4!" />
       Add Connection
     </Button>
-  </div>
+  </BaseEmpty>
 
   <div v-else class="rounded-md border border-border w-full">
     <Table>

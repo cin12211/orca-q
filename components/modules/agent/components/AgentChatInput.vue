@@ -471,8 +471,9 @@ const internalModel = computed({
 
         <div class="flex items-center gap-3">
           <Button
+            size="iconMd"
             type="button"
-            class="rounded-full shadow size-7 p-0 bg-foreground text-background hover:bg-foreground disabled disabled:bg-muted disabled:text-muted-foreground"
+            class="rounded-full shadow bg-foreground text-background hover:bg-foreground disabled disabled:bg-muted disabled:text-muted-foreground"
             :disabled="(!localInput.trim() && !isLoading) || !hasApiKey"
             @click="handlePrimaryAction"
           >

@@ -305,15 +305,13 @@ const answeredSummary = computed(() =>
         <Button
           v-if="!currentQuestion?.required && !isOnLastQuestion"
           variant="ghost"
-          size="sm"
-          class="text-xs h-7"
+          size="xs"
           @click="handleSkip"
         >
           Skip
         </Button>
         <Button
-          size="sm"
-          class="text-xs h-7"
+          size="xs"
           :disabled="isOnLastQuestion && !canSubmit"
           @click="handleNext"
         >

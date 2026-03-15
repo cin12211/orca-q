@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { Tooltip, TooltipContent, TooltipTrigger } from '#components';
 import { useAgentWorkspace } from '~/components/modules/agent/hooks/useDbAgentWorkspace';
-import AgentEmptyState from '~/components/modules/management/agent/components/AgentEmptyState.vue';
 import ManagementAgentHistoryTree from '~/components/modules/management/agent/components/ManagementAgentHistoryTree.vue';
 import { useManagementAgentHistoryTree } from '~/components/modules/management/agent/hooks/useManagementAgentHistoryTree';
 import { useAppContext } from '~/core/contexts/useAppContext';
@@ -97,13 +96,16 @@ const isHistoryEmpty = computed(() => {
 
     <div class="flex flex-1 flex-col overflow-hidden">
       <div class="flex-1 overflow-y-auto">
-        <AgentEmptyState
+        <BaseEmpty
           v-if="isHistoryEmpty"
           title="No chat history yet"
-          description="Start a new thread to ask about schema design, query plans, reports, or safe mutations."
-          action-label="Start chat"
-          @action="onCreateThread"
-        />
+          desc="Start a new thread to ask everything about your data!"
+        >
+          <Button variant="outline" size="xs" @click="onCreateThread">
+            <Icon name="hugeicons:plus-sign" />
+            Start chat
+          </Button>
+        </BaseEmpty>
 
         <ManagementAgentHistoryTree
           v-else

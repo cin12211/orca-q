@@ -268,18 +268,11 @@ const hasErrors = (tab: ExecutedResultItem) => {
         <LoadingOverlay v-if="executeLoading && activeTabId" visible />
 
         <!-- No results placeholder -->
-        <div
+        <BaseEmpty
           v-if="!activeTab"
-          class="h-full flex items-center justify-center text-muted-foreground"
-        >
-          <div class="text-center">
-            <Icon
-              name="hugeicons:file-empty-02"
-              class="size-12! mb-2 opacity-50"
-            />
-            <p class="text-sm">Execute a query to see results</p>
-          </div>
-        </div>
+          title="No results"
+          desc="Execute a query to see results"
+        />
 
         <!-- Result View -->
         <ResultTabResultView

@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import { toRef } from 'vue';
-
 const props = withDefaults(
   defineProps<{
     id: string;

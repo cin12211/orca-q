@@ -96,6 +96,7 @@ const onFocusNode = (_e: MouseEvent, item: FlattenedTreeFileSystemItem) => {
 
   emit('focusTable', value.id);
 };
+// TODO must enhance use new tree
 </script>
 <template>
   <div

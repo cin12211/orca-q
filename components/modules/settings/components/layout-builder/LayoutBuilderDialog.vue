@@ -356,10 +356,10 @@ const availableSlots = (
             <Label class="text-sm font-medium">Panels</Label>
             <Button
               v-if="panels.length < 3"
-              size="xs"
+              size="xxs"
               variant="outline"
               @click="addPanel"
-              class="cursor-pointer h-6"
+              class="cursor-pointer"
             >
               <Icon name="hugeicons:add-01" class="size-3! mr-0.5" />
               Add
@@ -485,22 +485,22 @@ const availableSlots = (
 
             <div class="flex gap-1 ml-auto">
               <Button
-                size="xs"
+                size="xxs"
                 :variant="
                   innerSplitDirection === 'horizontal' ? 'default' : 'outline'
                 "
                 @click="innerSplitDirection = 'horizontal'"
-                class="cursor-pointer h-6 text-xs"
+                class="cursor-pointer"
               >
                 H
               </Button>
               <Button
-                size="xs"
+                size="xxs"
                 :variant="
                   innerSplitDirection === 'vertical' ? 'default' : 'outline'
                 "
                 @click="innerSplitDirection = 'vertical'"
-                class="cursor-pointer h-6 text-xs"
+                class="cursor-pointer"
               >
                 V
               </Button>
@@ -581,10 +581,10 @@ const availableSlots = (
 
           <Button
             v-if="innerPanels.length < 3"
-            size="xs"
+            size="xxs"
             variant="outline"
             @click="addInnerPanel"
-            class="cursor-pointer h-6 self-start"
+            class="cursor-pointer self-start"
           >
             <Icon name="hugeicons:add-01" class="size-3! mr-0.5" />
             Add Inner Panel

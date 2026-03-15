@@ -57,10 +57,11 @@ const componentProps = computed(() => {
         :is="activeComponent"
         v-bind="componentProps"
       />
-      <Empty v-else>
-        <EmptyTitle> Tab view not found </EmptyTitle>
-        <EmptyDescription> Close this tab and try again </EmptyDescription>
-      </Empty>
+      <BaseEmpty
+        v-else
+        title="Tab view not found"
+        desc="The requested tab could not be found. Please close this tab and try again."
+      />
     </div>
   </div>
 </template>

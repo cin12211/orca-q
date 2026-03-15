@@ -86,7 +86,7 @@ defineEmits<{
               @click="$emit('onFormatCurrentStatement')"
               variant="outline"
               size="xxs"
-              class="rounded-r-none text-xs font-medium"
+              class="rounded-r-none"
             >
               <Icon name="hugeicons:magic-wand-01"> </Icon>
               Format
@@ -143,7 +143,7 @@ defineEmits<{
               @click="$emit('onExplainAnalyzeCurrent')"
               variant="outline"
               size="xs"
-              class="rounded-r-none text-xs font-medium"
+              class="rounded-r-none"
             >
               <Icon name="hugeicons:analytics-up"> </Icon>
               Explain
@@ -222,7 +222,6 @@ defineEmits<{
             @click="$emit('onCancelQuery')"
             variant="outline"
             size="xs"
-            class="text-xs font-medium"
           >
             <Icon name="hugeicons:stop" class="size-4! text-red-500" />
             Cancel query
@@ -232,7 +231,6 @@ defineEmits<{
             @click="$emit('onExecuteCurrent')"
             variant="outline"
             size="xs"
-            class="text-xs font-medium"
           >
             <Icon name="hugeicons:play" />
             Execute current

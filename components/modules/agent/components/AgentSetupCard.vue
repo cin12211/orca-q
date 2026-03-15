@@ -11,9 +11,9 @@ const { openSettings } = useSettingsModal();
 
 <template>
   <div
-    class="mx-auto flex max-w-xl flex-col items-center rounded-3xl border border-border/70 bg-background/90 px-8 py-10 text-center shadow-sm"
+    class="mx-auto flex max-w-xl flex-col items-center rounded-2xl border bg-background/90 px-8 py-10 text-center shadow-sm"
   >
-    <h2 class="text-xl font-semibold tracking-tight">
+    <h2 class="text-xl font-medium tracking-tight">
       <Icon name="lucide:key-round" class="size-4! text-muted-foreground" />
 
       Connect {{ currentProvider.name }}
@@ -25,6 +25,7 @@ const { openSettings } = useSettingsModal();
 
     <Button
       variant="outline"
+      size="sm"
       class="mt-6 rounded-2xl"
       @click="openSettings('Agent')"
     >

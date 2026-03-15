@@ -21,9 +21,9 @@ export const useWSStateStore = defineStore(
   () => {
     const route = useRoute('workspaceId-connectionId');
 
-    const workspaceId = computed(() => route.params.workspaceId);
+    const workspaceId = computed(() => route.params.workspaceId as string);
 
-    const connectionId = computed(() => route.params.connectionId);
+    const connectionId = computed(() => route.params.connectionId as string);
 
     const wsStates = ref<WorkspaceState[]>([]);
 

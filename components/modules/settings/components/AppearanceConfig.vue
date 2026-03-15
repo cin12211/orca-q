@@ -33,7 +33,7 @@ const colorMode = useColorMode();
             @click="colorMode.preference = option.value"
             :aria-label="option.label"
             :aria-pressed="colorMode.preference === option.value"
-            class="text-xs transition-colors"
+            class="transition-colors"
           >
             <Icon :name="option.icon" class="size-3.5!" />
             {{ option.label }}

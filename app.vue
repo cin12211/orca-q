@@ -35,6 +35,7 @@ onBeforeMount(() => {
 });
 
 onMounted(async () => {
+  //TODO: need add guard to check
   // Auto-show changelog if there's a new version
   autoShowIfNewVersion();
 

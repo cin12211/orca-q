@@ -28,7 +28,6 @@
             <Button
               variant="outline"
               size="xxs"
-              class="text-xs"
               @click="qqLogStore.deleteAllLogs"
             >
               <Icon name="lucide:trash" />
@@ -44,7 +43,6 @@
             <Button
               variant="outline"
               size="xxs"
-              class="text-xs"
               @click="qqLogStore.deleteLogsOfTable(props)"
             >
               <Icon name="lucide:trash" />
@@ -57,19 +55,18 @@
         </Tooltip>
 
         <!-- TODO: open when to this feature -->
-        <!-- <Button  variant="outline" size="sm" class="h-6 px-1 gap-1 text-xs">
+        <!-- <Button variant="outline" size="xxs" class="px-1">
           <Icon name="hugeicons:file-download"> </Icon>
           <p class="font-normal">Download logs</p>
         </Button> -->
       </div>
     </div>
 
-    <div
+    <BaseEmpty
       v-if="!logs.length"
-      class="flex h-full items-center justify-center text-muted-foreground"
-    >
-      No logs to display
-    </div>
+      title="No logs found"
+      desc="There are no execution logs to display for this table."
+    />
 
     <Card
       v-else

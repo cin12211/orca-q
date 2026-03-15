@@ -198,7 +198,7 @@ const toggleKeyVisibility = (provider: string) => {
             <Button
               variant="ghost"
               size="sm"
-              class="absolute right-0 top-0 h-8 w-8 p-0"
+              class="absolute right-0 top-0 w-8 p-0"
               @click="toggleKeyVisibility('openai')"
             >
               <Icon
@@ -234,7 +234,7 @@ const toggleKeyVisibility = (provider: string) => {
             <Button
               variant="ghost"
               size="sm"
-              class="absolute right-0 top-0 h-8 w-8 p-0"
+              class="absolute right-0 top-0 w-8 p-0"
               @click="toggleKeyVisibility('google')"
             >
               <Icon
@@ -270,7 +270,7 @@ const toggleKeyVisibility = (provider: string) => {
             <Button
               variant="ghost"
               size="sm"
-              class="absolute right-0 top-0 h-8 w-8 p-0"
+              class="absolute right-0 top-0 w-8 p-0"
               @click="toggleKeyVisibility('anthropic')"
             >
               <Icon
@@ -304,12 +304,7 @@ const toggleKeyVisibility = (provider: string) => {
               placeholder="xai-..."
               class="h-8 pr-8 font-mono text-xs"
             />
-            <Button
-              variant="ghost"
-              size="sm"
-              class="absolute right-0 top-0 h-8 w-8 p-0"
-              @click="toggleKeyVisibility('xai')"
-            >
+            <Button variant="ghost" size="sm" class="absolute right-0 top-0 w-8 p-0" @click="toggleKeyVisibility('xai')">
               <Icon
                 :name="visibleKeys.xai ? 'lucide:eye-off' : 'lucide:eye'"
                 class="size-4"
@@ -343,7 +338,7 @@ const toggleKeyVisibility = (provider: string) => {
             <Button
               variant="ghost"
               size="sm"
-              class="absolute right-0 top-0 h-8 w-8 p-0"
+              class="absolute right-0 top-0 w-8 p-0"
               @click="toggleKeyVisibility('openrouter')"
             >
               <Icon

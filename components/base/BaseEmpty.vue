@@ -4,22 +4,34 @@ import {
   Empty,
   EmptyDescription,
   EmptyHeader,
-  EmptyMedia,
   EmptyTitle,
 } from '@/components/ui/empty';
 
-defineProps<{ title?: string; desc?: string }>();
+withDefaults(
+  defineProps<{
+    title?: string;
+    desc?: string;
+    icon?: string;
+  }>(),
+  {
+    icon: 'icons:not-found',
+  }
+);
 </script>
 
 <template>
-  <Empty>
+  <Empty class="h-full">
     <EmptyHeader>
-      <Icon class="size-32!" name="icons:not-found" />
+      <Icon class="size-32!" :name="icon" />
 
-      <EmptyTitle class="text-foreground">{{ title }}</EmptyTitle>
-      <EmptyDescription>
+      <EmptyTitle v-if="title" class="text-foreground">{{ title }}</EmptyTitle>
+      <EmptyDescription v-if="desc">
         {{ desc }}
       </EmptyDescription>
+
+      <div v-if="$slots.default" class="mt-2">
+        <slot />
+      </div>
     </EmptyHeader>
   </Empty>
 </template>

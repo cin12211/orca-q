@@ -1,12 +1,12 @@
 <script setup lang="ts">
-import type { ReplicationSlotDesiredStatus } from '~/core/types';
 import { DatabaseClientType } from '~/core/constants/database-client-type';
+import { useAppContext } from '~/core/contexts/useAppContext';
+import type { ReplicationSlotDesiredStatus } from '~/core/types';
 import { getDatabaseSupportByType } from '../connection';
 import InstanceInsightsActivitySection from './components/InstanceInsightsActivitySection.vue';
 import InstanceInsightsConfigurationSection from './components/InstanceInsightsConfigurationSection.vue';
 import InstanceInsightsReplicationSection from './components/InstanceInsightsReplicationSection.vue';
 import InstanceInsightsStateSection from './components/InstanceInsightsStateSection.vue';
-import { useAppContext } from '~/core/contexts/useAppContext';
 import { useInstanceInsights } from './hooks/useInstanceInsights';
 import { formatDateTime } from './utils/formatters';
 

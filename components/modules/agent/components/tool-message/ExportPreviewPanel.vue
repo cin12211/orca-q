@@ -95,20 +95,14 @@ const fileSizeLabel = computed(() => {
 
       <div class="flex shrink-0 items-center justify-end gap-1">
         <Button
-          size="sm"
+          size="xs"
           variant="outline"
-          class="h-6.5 text-xs px-2"
           :disabled="!!result.error"
           @click="handleDownload"
         >
           Download <Icon name="lucide:download" class="size-3" />
         </Button>
-        <Button
-          size="icon"
-          variant="ghost"
-          class="size-7"
-          @click="emit('close')"
-        >
+        <Button size="iconMd" variant="ghost" @click="emit('close')">
           <Icon name="lucide:x" class="size-4" />
         </Button>
       </div>
