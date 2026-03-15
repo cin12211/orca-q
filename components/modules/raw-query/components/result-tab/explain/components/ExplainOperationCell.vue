@@ -22,7 +22,7 @@ const data = computed(() => props.params?.data ?? {});
     <!-- Tree connector chars: fixed monospace stack -->
     <span
       v-if="data.treePrefix"
-      class="text-neutral-400 shrink-0 whitespace-pre"
+      class="text-muted-foreground shrink-0 whitespace-pre"
       style="
         font-family:
           ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace !important;

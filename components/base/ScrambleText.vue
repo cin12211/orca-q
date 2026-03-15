@@ -10,8 +10,8 @@ interface Props {
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  duration: 900,
-  speed: 60,
+  duration: 800,
+  speed: 55,
   loop: true,
   loopDelay: 600,
 });

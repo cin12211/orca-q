@@ -7,7 +7,7 @@ defineProps<{
 </script>
 
 <template>
-  <div class="flex items-center gap-2 text-xs text-muted-foreground">
+  <div class="flex items-center gap-2 text-muted-foreground chat-text">
     <Icon name="hugeicons:loading-03" class="size-4 animate-spin" />
     <Shimmer>
       {{ label || 'Generating summary...' }}

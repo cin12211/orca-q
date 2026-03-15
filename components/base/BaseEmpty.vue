@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { Icon } from '#components';
 import {
   Empty,
   EmptyDescription,
@@ -13,11 +14,9 @@ defineProps<{ title?: string; desc?: string }>();
 <template>
   <Empty>
     <EmptyHeader>
-      <EmptyMedia variant="icon">
-        <!-- Empty icon -->
-        <!-- <FolderCode /> -->
-      </EmptyMedia>
-      <EmptyTitle>{{ title }}</EmptyTitle>
+      <Icon class="size-32!" name="icons:not-found" />
+
+      <EmptyTitle class="text-foreground">{{ title }}</EmptyTitle>
       <EmptyDescription>
         {{ desc }}
       </EmptyDescription>

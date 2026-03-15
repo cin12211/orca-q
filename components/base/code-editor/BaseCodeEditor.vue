@@ -23,7 +23,7 @@ import {
   useAppLayoutStore,
   type CodeEditorConfigs,
 } from '~/core/stores/appLayoutStore';
-import { EditorThemeMap } from './constants';
+import { EditorTheme, EditorThemeMap } from './constants';
 import {
   cursorSmooth,
   fontSizeTheme,
@@ -65,6 +65,7 @@ const emit = defineEmits<{
 const code = ref(props.modelValue);
 const editorRef = ref<HTMLElement | null>(null);
 const appLayoutStore = useAppLayoutStore();
+const colorMode = useColorMode();
 let editorView = ref<EditorView | null>(null);
 
 /* ---------------- Compartments ---------------- */
@@ -106,9 +107,22 @@ const staticExtensions: Extension[] = [
   }),
 ];
 
+const resolveEditorTheme = (theme: EditorTheme) => {
+  if (colorMode?.value === 'dark' && theme === EditorTheme.Tomorrow) {
+    return EditorTheme.OrcaDark;
+  }
+
+  if (colorMode?.value !== 'dark' && theme === EditorTheme.OrcaDark) {
+    return EditorTheme.OrcaLight;
+  }
+
+  return theme;
+};
+
 const dynamicExtensions = (cfg: CodeEditorConfigs) => {
+  const resolvedTheme = resolveEditorTheme(cfg.theme);
   return [
-    themeComp.of(EditorThemeMap[cfg.theme]),
+    themeComp.of(EditorThemeMap[resolvedTheme]),
     fontSizeComp.of(fontSizeTheme(cfg.fontSize + 'pt')),
     indentationComp.of(cfg.indentation ? indentationMarkers() : []),
     minimapComp.of(cfg.showMiniMap ? minimapFactory() : []),
@@ -166,13 +180,15 @@ onMounted(() => {
 
 /* ---------------- Reactive reconfigure ---------------- */
 watch(
-  () => appLayoutStore.codeEditorConfigs,
-  cfg => {
+  [() => appLayoutStore.codeEditorConfigs, () => colorMode.value],
+  ([cfg]) => {
     if (!editorView.value) return;
+
+    const resolvedTheme = resolveEditorTheme(cfg.theme);
 
     editorView.value.dispatch({
       effects: [
-        themeComp.reconfigure(EditorThemeMap[cfg.theme]),
+        themeComp.reconfigure(EditorThemeMap[resolvedTheme]),
         fontSizeComp.reconfigure(fontSizeTheme(cfg.fontSize + 'pt')),
         indentationComp.reconfigure(
           cfg.indentation ? indentationMarkers() : []

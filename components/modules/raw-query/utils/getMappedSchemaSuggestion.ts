@@ -141,7 +141,7 @@ export function getColumnTypeIcon(typeName: string): CompletionIcon {
     lowerType.includes('serial') ||
     lowerType.includes('money')
   ) {
-    return CompletionIcon.Numberic;
+    return CompletionIcon.Numeric;
   }
 
   // String types

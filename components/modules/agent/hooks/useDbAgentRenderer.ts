@@ -284,9 +284,23 @@ export function useAgentRenderer(messages: ComputedRef<DbAgentMessage[]>) {
   const getComponent = (toolName: DbAgentToolName): Component | null =>
     TOOL_COMPONENT_MAP[toolName] || null;
 
+  const getLastPartKindMessage = computed(() => {
+    const lastMessage =
+      renderedMessages.value[renderedMessages.value.length - 1];
+
+    if (!lastMessage) return null;
+
+    const lastPart = lastMessage.blocks[lastMessage.blocks.length - 1];
+
+    if (!lastPart) return null;
+
+    return lastPart.kind;
+  });
+
   return {
     renderedMessages,
     hasMutationPending,
     getComponent,
+    getLastPartKindMessage,
   };
 }

@@ -43,9 +43,10 @@ defineProps<{
       <summary class="cursor-pointer px-3 py-2 text-sm font-medium">
         Raw EXPLAIN output
       </summary>
-      <pre class="overflow-x-auto border-t px-3 py-3 text-[12px] leading-6">{{
-        data.rawPlan
-      }}</pre>
+      <pre
+        class="overflow-x-auto border-t px-3 py-3 leading-6 chat-code-text"
+        >{{ data.rawPlan }}</pre
+      >
     </details>
   </div>
 </template>

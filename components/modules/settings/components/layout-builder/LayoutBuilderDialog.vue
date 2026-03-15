@@ -14,63 +14,8 @@ import type {
   LayoutSlot,
 } from '~/components/modules/raw-query/constants';
 import { SLOT_OPTIONS } from '~/components/modules/raw-query/constants';
+import { PRESET_TEMPLATES } from '../../constants';
 import LayoutPreview from './LayoutPreview.vue';
-
-// --- Preset templates for quick start ---
-const PRESET_TEMPLATES: {
-  name: string;
-  layout: Omit<CustomLayoutDefinition, 'id' | 'createdAt'>;
-}[] = [
-  {
-    name: 'Vertical',
-    layout: {
-      name: '',
-      direction: 'vertical',
-      panels: [
-        { slot: 'content', defaultSize: 70, minSize: 30, maxSize: 100 },
-        { slot: 'result', defaultSize: 30, minSize: 0, maxSize: 80 },
-      ],
-      innerSplit: {
-        panelIndex: 0,
-        direction: 'horizontal',
-        panels: [
-          { slot: 'content', defaultSize: 70, minSize: 20, maxSize: 100 },
-          { slot: 'variables', defaultSize: 30, minSize: 0, maxSize: 70 },
-        ],
-      },
-    },
-  },
-  {
-    name: 'Horizontal',
-    layout: {
-      name: '',
-      direction: 'horizontal',
-      panels: [
-        { slot: 'content', defaultSize: 50, minSize: 20, maxSize: 100 },
-        { slot: 'result', defaultSize: 50, minSize: 0, maxSize: 80 },
-      ],
-    },
-  },
-  {
-    name: 'Horizontal + Vars',
-    layout: {
-      name: '',
-      direction: 'horizontal',
-      panels: [
-        { slot: 'content', defaultSize: 60, minSize: 20, maxSize: 100 },
-        { slot: 'result', defaultSize: 40, minSize: 0, maxSize: 80 },
-      ],
-      innerSplit: {
-        panelIndex: 0,
-        direction: 'vertical',
-        panels: [
-          { slot: 'content', defaultSize: 70, minSize: 20, maxSize: 100 },
-          { slot: 'variables', defaultSize: 30, minSize: 0, maxSize: 70 },
-        ],
-      },
-    },
-  },
-];
 
 const props = defineProps<{
   open: boolean;

@@ -72,7 +72,7 @@ const getSeverityVariant = (severity: AgentAnomalyIssue['severity']) =>
             Fix suggestion
           </summary>
           <pre
-            class="overflow-x-auto border-t px-3 py-3 text-[12px] leading-6"
+            class="overflow-x-auto border-t px-3 py-3 leading-6 chat-code-text"
             >{{ issue.fixSql }}</pre
           >
         </details>

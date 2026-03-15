@@ -8,7 +8,7 @@ defineProps<{
   <transition name="fade">
     <div
       v-if="visible"
-      class="absolute inset-0 z-20 flex items-center justify-center rounded loading-overlay-glass"
+      class="absolute inset-0 z-20 flex items-center bg-white/50 dark:bg-black/50 backdrop-blur-xs justify-center rounded"
     >
       <Icon name="hugeicons:loading-03" class="size-6! animate-spin" />
     </div>
@@ -25,11 +25,5 @@ defineProps<{
   opacity: 0;
 }
 
-.loading-overlay-glass {
-  /* From https://css.glass */
-  background: rgba(255, 255, 255, 0.39);
-  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-}
+/* change loading-overlay-glass to bg-white/50 dark:bg-black/50 backdrop-blur-xs */
 </style>

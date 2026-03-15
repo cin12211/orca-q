@@ -178,9 +178,10 @@ const onAskAiToFix = () => {
 </template>
 
 <style scoped>
+/* TODO:use tailwindcss for styling */
 /* Error highlight decoration styles */
 :deep(.error-highlight) {
-  background-color: rgba(239, 68, 68, 0.2);
+  background-color: color-mix(in srgb, rgb(239, 68, 68) 25%, transparent);
   text-decoration: wavy underline;
   text-decoration-color: rgb(239, 68, 68);
   text-underline-offset: 3px;

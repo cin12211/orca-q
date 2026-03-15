@@ -24,6 +24,7 @@ type ModelItem = {
   modelId: string;
 };
 
+// TODO: just base style for selector
 /**
  * build model list
  */
@@ -97,16 +98,14 @@ const currentModelDisplay = computed(() => {
 
 <template>
   <Select v-model="selectedModelFull">
-    <SelectTrigger :class="cn('text-xs px-2 w-full', props.class)">
+    <SelectTrigger :class="cn('text-sm px-2 w-full', props.class)">
       <SelectValue :placeholder="currentModelDisplay" />
     </SelectTrigger>
 
     <SelectContent>
       <template v-for="provider in AI_PROVIDERS" :key="provider.id">
         <SelectGroup>
-          <SelectLabel
-            class="text-xs font-semibold px-2 py-1.5 text-muted-foreground"
-          >
+          <SelectLabel class="h-6">
             {{ provider.name }}
           </SelectLabel>
 
@@ -114,13 +113,15 @@ const currentModelDisplay = computed(() => {
             v-for="model in groupedModels[provider.id]"
             :key="model.value"
             :value="model.value"
-            class="text-xs cursor-pointer"
+            class="text-xs cursor-pointer h-6"
           >
             {{ model.label }}
           </SelectItem>
         </SelectGroup>
 
-        <SelectSeparator class="my-1" />
+        <SelectSeparator
+          v-if="provider.id !== AI_PROVIDERS[AI_PROVIDERS.length - 1].id"
+        />
       </template>
     </SelectContent>
   </Select>

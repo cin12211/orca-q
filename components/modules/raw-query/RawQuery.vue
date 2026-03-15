@@ -193,7 +193,7 @@ onActivated(async () => {
     </template>
 
     <template #variables>
-      <div class="flex flex-col h-full border rounded-md bg-gray-50">
+      <div class="flex flex-col h-full border rounded-md bg-muted">
         <div class="flex items-center gap-1 font-normal text-sm px-2 py-1">
           <Icon name="hugeicons:absolute" />
           Variables

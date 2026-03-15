@@ -59,19 +59,19 @@ export const AI_PROVIDERS: ProviderConfig[] = [
       { id: 'claude-sonnet-4-0', name: 'Claude Sonnet 4.0' },
     ],
   },
-  {
-    id: 'xai',
-    name: 'xAI Grok',
-    keyLabel: 'xAI API Key',
-    keyUrl: 'https://console.x.ai',
-    models: [
-      { id: 'grok-4-fast-reasoning', name: 'Grok 4 Fast Reasoning' },
-      { id: 'grok-4', name: 'Grok 4' },
-      { id: 'grok-3', name: 'Grok 3' },
-      { id: 'grok-3-mini', name: 'Grok 3 Mini' },
-      { id: 'grok-2-vision-1212', name: 'Grok 2 Vision' },
-    ],
-  },
+  // {
+  //   id: 'xai',
+  //   name: 'xAI Grok',
+  //   keyLabel: 'xAI API Key',
+  //   keyUrl: 'https://console.x.ai',
+  //   models: [
+  //     { id: 'grok-4-fast-reasoning', name: 'Grok 4 Fast Reasoning' },
+  //     { id: 'grok-4', name: 'Grok 4' },
+  //     { id: 'grok-3', name: 'Grok 3' },
+  //     { id: 'grok-3-mini', name: 'Grok 3 Mini' },
+  //     { id: 'grok-2-vision-1212', name: 'Grok 2 Vision' },
+  //   ],
+  // },
   {
     id: 'openrouter',
     name: 'Open Router',

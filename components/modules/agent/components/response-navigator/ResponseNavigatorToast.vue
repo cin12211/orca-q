@@ -16,7 +16,7 @@ defineProps<{
   >
     <div
       v-if="message"
-      class="absolute top-1/2 -translate-y-1/2 whitespace-nowrap rounded-full bg-[rgba(40,40,40,0.9)] px-3.5 py-2 text-xs text-white shadow-lg"
+      class="absolute top-1/2 -translate-y-1/2 whitespace-nowrap rounded-full bg-foreground/90 px-3.5 py-2 text-xs text-background shadow-lg"
       :class="position === 'right' ? 'right-full mr-3' : 'left-full ml-3'"
       role="status"
       aria-live="polite"

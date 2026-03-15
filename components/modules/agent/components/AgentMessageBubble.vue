@@ -101,12 +101,12 @@ const messageText = computed(() => {
           v-for="(block, index) in message.blocks"
           :key="`${message.id}-${block.kind}-${index}`"
           :class="[
-            'overflow-hidden text-xs',
+            'overflow-hidden chat-text',
             !isUserMessage && props.highlightedResponseId === message.id
               ? 'ring-1 ring-primary/25 bg-primary/6'
               : '',
             isUserMessage
-              ? 'rounded-xl bg-gray-100 text-foreground p-2 px-3 shadow-none whitespace-pre-wrap ml-auto'
+              ? 'rounded-xl bg-muted text-foreground p-2 px-3 shadow-none whitespace-pre-wrap ml-auto'
               : 'rounded-xl border-none bg-transparent py-2 shadow-none flex flex-col gap-1.5',
           ]"
         >

@@ -1,6 +1,15 @@
 <script setup lang="ts">
 import ModelSelector from '~/components/modules/selectors/ModelSelector.vue';
-import { useAppLayoutStore } from '~/core/stores/appLayoutStore';
+import {
+  DEFAULT_CHAT_UI_CONFIG,
+  type ThinkingStyle,
+  useAppLayoutStore,
+} from '~/core/stores/appLayoutStore';
+import {
+  CHAT_CODE_FONT_SIZES,
+  CHAT_FONT_SIZES,
+  THINKING_STYLE_OPTIONS,
+} from '../constants';
 
 const appLayoutStore = useAppLayoutStore();
 
@@ -20,6 +29,120 @@ const toggleKeyVisibility = (provider: string) => {
 
 <template>
   <div class="h-full flex flex-col overflow-y-auto gap-4">
+    <div>
+      <h4
+        class="text-sm font-medium leading-7 text-primary flex items-center gap-1 mb-2"
+      >
+        <Icon name="hugeicons:chatting-01" class="size-5!" /> Chat UI
+      </h4>
+
+      <div class="flex flex-col space-y-4">
+        <div class="flex items-center justify-between gap-4">
+          <div class="flex flex-col gap-0.5">
+            <p class="text-sm">Font size</p>
+            <p class="text-xs text-muted-foreground">
+              Adjust the base size used for the chat UI
+            </p>
+          </div>
+          <Select
+            :modelValue="appLayoutStore.chatUiConfigs.fontSize"
+            @update:modelValue="
+              appLayoutStore.chatUiConfigs.fontSize = $event as number
+            "
+          >
+            <SelectTrigger size="sm" class="h-6! cursor-pointer">
+              <SelectValue placeholder="Select font size" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectGroup>
+                <SelectItem
+                  class="cursor-pointer h-6!"
+                  v-for="value in CHAT_FONT_SIZES"
+                  :value="value"
+                >
+                  {{ value }} px
+                  {{
+                    value === DEFAULT_CHAT_UI_CONFIG.fontSize ? '(default)' : ''
+                  }}
+                </SelectItem>
+              </SelectGroup>
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div class="flex items-center justify-between gap-4">
+          <div class="flex flex-col gap-0.5">
+            <p class="text-sm">Code font size</p>
+            <p class="text-xs text-muted-foreground">
+              Adjust the base size used for code across chats and diffs
+            </p>
+          </div>
+          <Select
+            :modelValue="appLayoutStore.chatUiConfigs.codeFontSize"
+            @update:modelValue="
+              appLayoutStore.chatUiConfigs.codeFontSize = $event as number
+            "
+          >
+            <SelectTrigger size="sm" class="h-6! cursor-pointer">
+              <SelectValue placeholder="Select code size" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectGroup>
+                <SelectItem
+                  class="cursor-pointer h-6!"
+                  v-for="value in CHAT_CODE_FONT_SIZES"
+                  :value="value"
+                >
+                  {{ value }} px
+                  {{
+                    value === DEFAULT_CHAT_UI_CONFIG.codeFontSize
+                      ? '(default)'
+                      : ''
+                  }}
+                </SelectItem>
+              </SelectGroup>
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div class="flex items-center justify-between gap-4">
+          <div class="flex flex-col gap-0.5">
+            <p class="text-sm">Thinking style</p>
+            <p class="text-xs text-muted-foreground">
+              Choose the animation style used in the chat thinking indicator
+            </p>
+          </div>
+          <Select
+            :modelValue="appLayoutStore.chatUiConfigs.thinkingStyle"
+            @update:modelValue="
+              appLayoutStore.chatUiConfigs.thinkingStyle =
+                $event as ThinkingStyle
+            "
+          >
+            <SelectTrigger size="sm" class="h-6! cursor-pointer">
+              <SelectValue placeholder="Select style" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectGroup>
+                <SelectItem
+                  class="cursor-pointer h-6!"
+                  v-for="option in THINKING_STYLE_OPTIONS"
+                  :value="option.value"
+                >
+                  {{ option.label }}
+                  {{
+                    option.value === DEFAULT_CHAT_UI_CONFIG.thinkingStyle
+                      ? '(default)'
+                      : ''
+                  }}
+                </SelectItem>
+              </SelectGroup>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+    </div>
+
     <!-- Default Provider/Model Selection -->
     <div>
       <h4
@@ -35,10 +158,10 @@ const toggleKeyVisibility = (provider: string) => {
         <ModelSelector
           v-model:provider="appLayoutStore.agentSelectedProvider"
           v-model:model="appLayoutStore.agentSelectedModel"
+          class="h-8!"
         />
       </div>
     </div>
-
     <!-- API Keys Configuration -->
     <div>
       <h4
@@ -161,7 +284,7 @@ const toggleKeyVisibility = (provider: string) => {
         </div>
 
         <!-- xAI -->
-        <div class="flex flex-col gap-1">
+        <!-- <div class="flex flex-col gap-1">
           <div class="flex items-center justify-between">
             <p class="text-sm flex items-center gap-1">
               <Icon name="hugeicons:grok-02" />
@@ -195,7 +318,7 @@ const toggleKeyVisibility = (provider: string) => {
               />
             </Button>
           </div>
-        </div>
+        </div> -->
 
         <!-- OpenRouter -->
         <div class="flex flex-col gap-1">

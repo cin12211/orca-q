@@ -11,7 +11,6 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import BaseEmpty from '~/components/base/BaseEmpty.vue';
 import { useDbAgentAttachments } from '../hooks/useDbAgentAttachments';
 import { useFileDownload } from '../hooks/useFileDownload';
 import type { AgentRenderedMessage } from '../types';
@@ -138,9 +137,7 @@ const handleDownload = async (item: AttachmentItem | null) => {
 </script>
 
 <template>
-  <div
-    class="flex h-full flex-col bg-sidebar-primary-foreground/50 z-50 p-2 gap-2"
-  >
+  <div class="flex h-full flex-col bg-sidebar/50 z-50 p-2 gap-2">
     <div class="flex shrink-0 items-center justify-between gap-2">
       <div class="flex items-center min-w-0 gap-1 flex-1">
         <Icon name="hugeicons:attachment" class="size-4" />
@@ -156,8 +153,8 @@ const handleDownload = async (item: AttachmentItem | null) => {
       </Button>
     </div>
 
-    <div class="flex-1 overflow-hidden flex flex-col min-h-0 relative">
-      <Tabs v-model="activeTab">
+    <div class="flex-1 overflow-hidden flex flex-col min-h-0 relative mt-2">
+      <Tabs v-model="activeTab" class="flex-1 min-h-0">
         <TabsList class="h-8">
           <TabsTrigger value="all" class="text-xs cursor-pointer"
             >All</TabsTrigger
@@ -173,11 +170,11 @@ const handleDownload = async (item: AttachmentItem | null) => {
           >
         </TabsList>
 
-        <div class="flex-1 overflow-y-auto w-full relative">
+        <div class="flex-1 min-h-0 overflow-y-auto w-full relative">
           <!-- Empty State -->
           <div
             v-if="getItemsForCurrentTab.length === 0"
-            class="absolute inset-0 flex items-center justify-center p-6"
+            class="absolute inset-0 flex items-center justify-center p-6 z-10"
           >
             <BaseEmpty
               title="No items found"
@@ -283,7 +280,7 @@ const handleDownload = async (item: AttachmentItem | null) => {
             <div class="space-y-2">
               <div
                 v-if="selectedItem.data.encoding === 'utf8'"
-                class="text-sm bg-muted/50 p-3 rounded-md overflow-x-auto whitespace-pre-wrap font-mono border"
+                class="bg-muted/50 p-3 rounded-md overflow-x-auto whitespace-pre-wrap font-mono border chat-code-text"
               >
                 {{ selectedItem.data.content }}
               </div>

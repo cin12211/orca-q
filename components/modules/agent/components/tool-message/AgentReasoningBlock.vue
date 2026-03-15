@@ -79,7 +79,7 @@ function onLeave(el: Element) {
         class="overflow-hidden transition-[height,opacity] duration-300 ease-in-out"
       >
         <div
-          class="mt-2 border-l-2 border-border pl-3 py-1 text-xs text-foreground/80 opacity-70"
+          class="mt-2 border-l-2 border-border pl-3 py-1 text-foreground/80 opacity-70 chat-text"
         >
           <BlockMessageMarkdown
             :content="smoothedContent"

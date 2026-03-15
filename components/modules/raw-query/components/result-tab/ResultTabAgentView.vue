@@ -255,7 +255,7 @@ const handleQuickAction = async (text: string) => {
           <!-- AI message: render text parts -->
           <div
             v-else
-            class="prose prose-sm dark:prose-invert max-w-none prose-pre:bg-gray-900 prose-pre:text-gray-100"
+            class="prose prose-sm dark:prose-invert max-w-none prose-pre:bg-muted prose-pre:text-foreground"
           >
             <template v-for="(part, pIdx) in message.parts" :key="pIdx">
               <span v-if="part.type === 'text'" class="whitespace-pre-wrap">{{

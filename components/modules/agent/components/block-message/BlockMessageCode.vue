@@ -105,7 +105,7 @@ const key = computed(() => `${lang.value}-${colorMode.value}`);
       </Tooltip>
     </div>
 
-    <div class="overflow-x-auto px-3 py-2">
+    <div class="overflow-x-auto px-3 py-2 chat-code-text">
       <ShikiCachedRenderer
         v-if="highlighter"
         :key="key"

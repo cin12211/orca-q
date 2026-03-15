@@ -49,7 +49,7 @@ const isAccessRightPanel = computed(() => {
 <template>
   <div
     :class="[
-      'w-screen h-9 select-none border-b pr-2 electron-drag-region bg-sidebar!',
+      'w-screen h-9 select-none border-b pr-2 electron-drag-region bg-sidebar-accent!',
       isElectronApp && isPrimarySidebarCollapsed ? 'pl-[4.5rem]' : '',
       isPWAApp && isPrimarySidebarCollapsed ? 'pl-[6rem]' : '',
       isPWAApp && 'h-10.5 header-tab-view-pwa',

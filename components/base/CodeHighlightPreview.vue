@@ -122,13 +122,13 @@ const languageLabel = computed(() => props.language.toUpperCase());
       <!-- Highlighted HTML from Shiki -->
       <div
         v-if="highlightedCode"
-        class="[&>pre]:p-3 [&>pre]:text-xs [&>pre]:font-mono [&>pre]:whitespace-pre [&>pre]:leading-relaxed [&>pre]:m-0 [&>pre]:w-fit [&>pre]:min-w-full [&>pre]:rounded-none"
+        class="[&>pre]:p-3 [&>pre]:font-mono [&>pre]:whitespace-pre [&>pre]:leading-relaxed [&>pre]:m-0 [&>pre]:w-fit [&>pre]:min-w-full [&>pre]:rounded-none chat-code-text"
         v-html="highlightedCode"
       />
       <!-- Fallback plain text -->
       <pre
         v-else
-        class="p-3 text-xs font-mono whitespace-pre leading-relaxed text-foreground/80 m-0 w-fit min-w-full"
+        class="p-3 font-mono whitespace-pre leading-relaxed text-foreground/80 m-0 w-fit min-w-full chat-code-text"
         >{{ code }}</pre
       >
     </div>

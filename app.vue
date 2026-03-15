@@ -4,7 +4,7 @@ import { LoadingOverlay, TooltipProvider } from '#components';
 import { AllCommunityModule, ModuleRegistry } from 'ag-grid-community';
 import { CommandPaletteView } from '@/components/modules/command-palette';
 import ChangelogPopup from './components/modules/changelog/ChangelogPopup.vue';
-import Settings from './components/modules/settings/Settings.vue';
+import Settings from './components/modules/settings';
 import { Toaster } from './components/ui/sonner';
 import { DEFAULT_DEBOUNCE_INPUT } from './core/constants';
 import { useAppContext } from './core/contexts';

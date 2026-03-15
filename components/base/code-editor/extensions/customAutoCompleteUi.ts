@@ -31,7 +31,7 @@ export const CompletionIconMap: Record<CompletionIcon, string> = {
   [CompletionIcon.Method]: Functions,
   [CompletionIcon.Table]: Table,
   [CompletionIcon.Database]: Database,
-  [CompletionIcon.Numberic]: Numberic,
+  [CompletionIcon.Numeric]: Numberic,
   [CompletionIcon.String]: String,
   [CompletionIcon.Calendar]: Calendar,
   [CompletionIcon.Brackets]: Brackets,

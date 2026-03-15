@@ -152,7 +152,7 @@ const hasErrors = (tab: ExecutedResultItem) => {
           cn(
             'border px-1 text-xs font-normal transition-colors',
             currentView === mode.value
-              ? 'bg-gray-100 border-transparent border-r-gray-400'
+              ? 'bg-muted border-transparent border-r-border'
               : 'border-transparent',
             // Error tab styling
             mode.value === 'error' && hasErrors(activeTab)
@@ -204,7 +204,7 @@ const hasErrors = (tab: ExecutedResultItem) => {
                     cn(
                       'h-6! flex gap-0.5 rounded-t-md max-w-44 justify-start! items-center font-normal p-1! hover:[&>div]:opacity-100 transition-all duration-200 border rounded-b-none cursor-pointer relative',
                       tabId === activeTabId
-                        ? 'border-b-transparent bg-background'
+                        ? 'border-b-transparent bg-background dark:bg-accent'
                         : 'border-transparent bg-muted/30'
                     )
                   "

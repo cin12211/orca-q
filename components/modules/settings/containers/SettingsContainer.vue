@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue';
+import { ref, watch, type Component } from 'vue';
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -10,41 +10,27 @@ import {
   DialogContent,
   Icon,
 } from '#components';
-import { Globe, Lock, Paintbrush, Settings } from 'lucide-vue-next';
 import { useSettingsModal } from '~/core/contexts/useSettingsModal';
-import AgentConfig from './AgentConfig.vue';
-import EditorConfig from './EditorConfig.vue';
-import QuickQueryConfig from './QuickQueryConfig.vue';
+import {
+  AgentConfig,
+  AppearanceConfig,
+  EditorConfig,
+  QuickQueryConfig,
+} from '../components';
+import { SETTINGS_NAV_ITEMS } from '../constants';
+import type { SettingsComponentKey } from '../types';
 
-const settingNavs = [
-  // { name: 'Notifications', icon: Bell },
-  // { name: 'Navigation', icon: Menu },
-  // { name: 'Home', icon: Home },
-  {
-    name: 'Editor',
-    icon: h(Icon, { name: 'lucide:scroll-text', class: 'size-4!' }),
-    component: EditorConfig,
-  },
-  {
-    name: 'Quick Query',
-    icon: h(Icon, { name: 'lucide:table-2', class: 'size-4!' }),
-    component: QuickQueryConfig,
-  },
-  {
-    name: 'Agent',
-    icon: h(Icon, { name: 'hugeicons:chat-bot', class: 'size-4!' }),
-    component: AgentConfig,
-  },
-  { name: 'Appearance', icon: Paintbrush, disable: true },
-  // { name: 'Messages & media', icon: MessageCircle },
-  { name: 'Language & region', icon: Globe, disable: true },
-  // { name: 'Accessibility', icon: Keyboard },
-  // { name: 'Mark as read', icon: Check },
-  // { name: 'Audio & video', icon: Video },
-  // { name: 'Connected accounts', icon: Link },
-  { name: 'Privacy & visibility', icon: Lock, disable: true },
-  { name: 'Advanced', icon: Settings, disable: true },
-];
+const SETTINGS_COMPONENTS: Record<SettingsComponentKey, Component> = {
+  EditorConfig,
+  QuickQueryConfig,
+  AgentConfig,
+  AppearanceConfig,
+};
+
+const settingNavs = SETTINGS_NAV_ITEMS.map(item => ({
+  ...item,
+  component: item.componentKey ? SETTINGS_COMPONENTS[item.componentKey] : null,
+}));
 
 // Use composable for global modal control
 const { isSettingsOpen, settingsActiveTab } = useSettingsModal();
@@ -111,7 +97,7 @@ const handleNavClick = async ({
                       ]"
                     >
                       <a>
-                        <component :is="item.icon" />
+                        <Icon :name="item.icon" class="size-4!" />
                         <span>{{ item.name }}</span>
                       </a>
                     </SidebarMenuButton>

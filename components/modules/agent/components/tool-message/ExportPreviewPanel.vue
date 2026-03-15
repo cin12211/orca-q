@@ -69,9 +69,7 @@ const fileSizeLabel = computed(() => {
 </script>
 
 <template>
-  <div
-    class="flex h-full flex-col bg-sidebar-primary-foreground/50 z-50 p-2 gap-2"
-  >
+  <div class="flex h-full flex-col bg-sidebar z-50 p-2 gap-2">
     <div class="flex shrink-0 items-center justify-between gap-2">
       <div class="flex items-center min-w-0 gap-1 flex-1">
         <Icon

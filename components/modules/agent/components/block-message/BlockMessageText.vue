@@ -19,7 +19,7 @@ const smoothedContent = useSmoothStream(
 </script>
 
 <template>
-  <p class="whitespace-pre-wrap leading-normal text-xs">
+  <p class="whitespace-pre-wrap leading-normal chat-text">
     {{ smoothedContent }}
   </p>
 </template>

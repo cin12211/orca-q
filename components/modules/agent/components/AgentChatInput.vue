@@ -397,7 +397,7 @@ const internalModel = computed({
     </div>
 
     <div
-      class="bg-background rounded-3xl border shadow-xs p-3 px-2 pb-2 flex flex-col gap-1 relative z-40"
+      class="dark:bg-sidebar rounded-3xl border shadow-xs p-3 px-2 pb-2 flex flex-col gap-1 relative z-40"
     >
       <div
         v-if="selectedCommandChips.length > 0"
@@ -426,7 +426,7 @@ const internalModel = computed({
         v-model="localInput"
         :disabled="!hasApiKey || isLoading"
         :placeholder="`Ask Orca anythink, / for agent tools`"
-        class="w-full bg-transparent outline-none border-0 shadow-none focus-visible:ring-0 placeholder:text-muted-foreground resize-none px-2 pt-0 min-h-12 max-h-36 text-sm"
+        class="w-full bg-transparent! outline-none border-0 shadow-none focus-visible:ring-0 placeholder:text-muted-foreground resize-none px-2 pt-0 min-h-12 max-h-36 text-sm"
         aria-autocomplete="list"
         :aria-controls="showCommandPalette ? COMMAND_LIST_ID : undefined"
         :aria-describedby="COMMAND_STATUS_ID"
@@ -464,7 +464,7 @@ const internalModel = computed({
             <ModelSelector
               v-model:provider="internalProvider"
               v-model:model="internalModel"
-              class="h-8! border-0 bg-transparent hover:bg-muted rounded-lg shadow-none px-2! text-xs text-muted-foreground hover:text-foreground cursor-pointer"
+              class="h-7! border-0 bg-transparent hover:bg-muted rounded-lg shadow-none px-2! text-xs text-muted-foreground hover:text-foreground cursor-pointer"
             />
           </div>
         </div>

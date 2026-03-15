@@ -66,7 +66,7 @@
 
     <div
       v-if="!logs.length"
-      class="flex h-full items-center justify-center text-zinc-500"
+      class="flex h-full items-center justify-center text-muted-foreground"
     >
       No logs to display
     </div>

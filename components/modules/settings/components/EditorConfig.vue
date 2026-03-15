@@ -239,7 +239,7 @@ const canAddLayout = computed(
       >
         <Icon name="hugeicons:source-code-square" class="size-5!" /> Code Editor
       </h4>
-      <div class="flex flex-col space-y-1">
+      <div class="flex flex-col space-y-4">
         <div class="flex items-center justify-between">
           <p class="text-sm">Font size</p>
           <Select
@@ -291,6 +291,7 @@ const canAddLayout = computed(
                   {{ value === DEFAULT_EDITOR_CONFIG.theme ? '(default)' : '' }}
                 </SelectItem>
 
+                <SelectSeparator />
                 <SelectLabel>Dark Theme</SelectLabel>
                 <SelectItem
                   class="cursor-pointer h-6!"
@@ -298,6 +299,7 @@ const canAddLayout = computed(
                   :value="value"
                 >
                   {{ value }}
+                  {{ value === EditorTheme.OrcaDark ? '(default)' : '' }}
                 </SelectItem>
               </SelectGroup>
             </SelectContent>

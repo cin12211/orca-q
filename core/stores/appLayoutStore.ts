@@ -18,6 +18,14 @@ export interface CodeEditorConfigs {
   indentation: boolean;
 }
 
+export type ThinkingStyle = 'shimmer' | 'scramble';
+
+export interface ChatUiConfigs {
+  fontSize: number;
+  codeFontSize: number;
+  thinkingStyle: ThinkingStyle;
+}
+
 export interface CustomLayoutSizeEntry {
   panels: number[];
   innerPanels: number[];
@@ -45,6 +53,12 @@ const intiAppLayout = [30, 70, 0];
 const initBodyLayout = [100, 0];
 
 const DEFAULT_BODY_LAYOUT_SIZE = [100, 25];
+
+export const DEFAULT_CHAT_UI_CONFIG: ChatUiConfigs = {
+  fontSize: 12,
+  codeFontSize: 12,
+  thinkingStyle: 'shimmer',
+};
 
 // need to refactor code to useAppConfigStore
 export const useAppLayoutStore = defineStore(
@@ -162,6 +176,12 @@ export const useAppLayoutStore = defineStore(
       showMiniMap: DEFAULT_EDITOR_CONFIG.showMiniMap,
       theme: DEFAULT_EDITOR_CONFIG.theme,
       indentation: DEFAULT_EDITOR_CONFIG.indentation,
+    });
+
+    const chatUiConfigs = reactive<ChatUiConfigs>({
+      fontSize: DEFAULT_CHAT_UI_CONFIG.fontSize,
+      codeFontSize: DEFAULT_CHAT_UI_CONFIG.codeFontSize,
+      thinkingStyle: DEFAULT_CHAT_UI_CONFIG.thinkingStyle,
     });
 
     // Agent AI settings
@@ -286,6 +306,7 @@ export const useAppLayoutStore = defineStore(
       editorLayoutSizes,
       editorLayoutInnerVariableSizes,
       codeEditorConfigs,
+      chatUiConfigs,
       agentApiKeyConfigs,
       agentSelectedProvider,
       agentSelectedModel,

@@ -1,26 +1,11 @@
 <script setup lang="ts">
 import type { CustomLayoutDefinition } from '~/components/modules/raw-query/constants';
+import { SLOT_COLORS, SLOT_LABELS } from '../../constants';
 
 const props = defineProps<{
   layout: CustomLayoutDefinition;
   isActive?: boolean;
 }>();
-
-/**
- * Map slot names to visual colors for the preview grid.
- * Using Tailwind bg classes for consistency.
- */
-const SLOT_COLORS: Record<string, string> = {
-  content: 'bg-accent border',
-  variables: 'bg-accent border',
-  result: 'bg-accent border',
-};
-
-const SLOT_LABELS: Record<string, string> = {
-  content: 'Editor',
-  variables: 'Vars',
-  result: 'Result',
-};
 </script>
 
 <template>

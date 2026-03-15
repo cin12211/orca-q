@@ -13,7 +13,7 @@ const emit = defineEmits<{
 </script>
 
 <template>
-  <div :class="['flex items-center justify-between p-1 rounded-md bg-gray-50']">
+  <div :class="['flex items-center justify-between p-1 rounded-md bg-muted']">
     <div class="flex items-center gap-1">
       <Tooltip>
         <TooltipTrigger as-child>

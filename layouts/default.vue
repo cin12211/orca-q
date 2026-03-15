@@ -21,6 +21,11 @@ const appLayoutStore = useAppLayoutStore();
 const { layoutSize, isPrimarySidebarCollapsed, bodySize } =
   toRefs(appLayoutStore);
 
+const chatUiVars = computed(() => ({
+  '--chat-font-size': `${appLayoutStore.chatUiConfigs.fontSize}px`,
+  '--chat-code-font-size': `${appLayoutStore.chatUiConfigs.codeFontSize}px`,
+}));
+
 const isAccessBottomPanel = computed(() => {
   if (route.meta.notAllowBottomPanel) return false;
   return true;
@@ -65,6 +70,7 @@ useHotkeys([
   >
     <div
       class="h-screen w-screen flex flex-col flex-1 max-h-screen overflow-y-auto"
+      :style="chatUiVars"
     >
       <TabViewContainer :primarySideBarWidth="primarySideBarWidth" />
 
@@ -83,6 +89,7 @@ useHotkeys([
           collapsible
           id="default-layout-group-1-panel-1"
           key="primarySideBarPanel"
+          class="bg-sidebar/50 dark:bg-sidebar"
         >
           <PrimarySideBar />
         </ResizablePanel>
@@ -148,6 +155,7 @@ useHotkeys([
           collapsible
           key="secondarySideBarPanel"
           v-show="isAccessRightPanel"
+          class="bg-sidebar"
         >
           <SecondarySideBar />
         </ResizablePanel>

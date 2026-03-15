@@ -38,27 +38,33 @@ or custom
  */
 
 [data-markdown] h1 {
-  @apply mt-0 mb-4 text-3xl font-bold;
+  @apply mt-0 mb-2 text-xl font-semibold;
 }
 
 [data-markdown] h2 {
-  @apply mt-8 mb-3 text-2xl font-semibold;
+  @apply mt-4 mb-2 text-lg font-semibold;
 }
 
 [data-markdown] h3 {
-  @apply mt-6 mb-2 text-xl font-semibold;
+  @apply mt-3 mb-1.5 text-base font-semibold;
 }
 
 [data-markdown] h4 {
-  @apply mt-5 mb-2 text-lg font-semibold;
+  @apply mt-3 mb-1 text-sm font-semibold;
 }
 
 [data-markdown] h5 {
-  @apply mt-4 mb-1 text-base font-semibold;
+  @apply mt-2 mb-1 text-xs font-semibold;
 }
 
 [data-markdown] h6 {
-  @apply mt-4 mb-1 text-sm font-semibold tracking-wider uppercase;
+  @apply mt-2 mb-1 text-[11px] font-semibold tracking-wider uppercase;
+}
+
+/* Base text size */
+[data-markdown] {
+  font-size: var(--chat-font-size, 12px);
+  line-height: 1.5;
 }
 
 /* =========================
@@ -66,7 +72,8 @@ or custom
 ========================= */
 
 [data-markdown] p {
-  @apply mb-1.5 leading-5;
+  @apply mb-1.5;
+  line-height: 1.5;
 }
 
 /* =========================
@@ -82,15 +89,15 @@ or custom
 ========================= */
 
 [data-markdown] ul {
-  @apply mb-4 list-disc pl-6;
+  @apply mb-2 list-disc pl-4;
 }
 
 [data-markdown] ol {
-  @apply mb-4 list-decimal pl-6;
+  @apply mb-2 list-decimal pl-4;
 }
 
 [data-markdown] li {
-  @apply mb-1;
+  @apply mb-0.5;
 }
 
 [data-markdown] li::marker {
@@ -114,7 +121,7 @@ or custom
 ========================= */
 
 [data-markdown] blockquote {
-  @apply text-muted-foreground my-4 border-l-4 pl-4 italic;
+  @apply text-muted-foreground my-2 border-l-2 pl-3 italic;
 }
 
 /* =========================
@@ -122,11 +129,14 @@ or custom
 ========================= */
 
 [data-markdown] code {
-  @apply bg-muted rounded px-1.5 py-0.5 font-mono text-sm;
+  @apply bg-muted rounded px-1.5 py-0.5 font-mono;
+  font-size: var(--chat-code-font-size, 12px);
 }
 
 [data-markdown] pre {
-  @apply bg-muted my-4 overflow-x-auto rounded-lg p-4;
+  @apply bg-muted my-2 overflow-x-auto rounded-lg p-3;
+  font-size: var(--chat-code-font-size, 12px);
+  line-height: 1.5;
 }
 
 [data-markdown] pre code {
@@ -138,7 +148,7 @@ or custom
 ========================= */
 
 [data-markdown] table {
-  @apply my-6 w-full border-collapse text-sm;
+  @apply my-3 w-full border-collapse;
 }
 
 [data-markdown] thead {
@@ -146,11 +156,11 @@ or custom
 }
 
 [data-markdown] th {
-  @apply p-2 text-left font-semibold;
+  @apply p-1.5 text-left font-semibold;
 }
 
 [data-markdown] td {
-  @apply p-2 align-top;
+  @apply p-1.5 align-top;
 }
 
 [data-markdown] tr {
@@ -162,7 +172,7 @@ or custom
 ========================= */
 
 [data-markdown] img {
-  @apply my-4 max-w-full rounded-lg;
+  @apply my-2 max-w-full rounded-lg;
 }
 
 /* =========================
@@ -170,7 +180,7 @@ or custom
 ========================= */
 
 [data-markdown] hr {
-  @apply my-8 border-t;
+  @apply my-4 border-t;
 }
 
 /* =========================

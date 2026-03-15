@@ -10,7 +10,10 @@ import {
   watch,
 } from 'vue';
 import { ScrambleText } from '#components';
-import { type AIProvider } from '~/core/stores/appLayoutStore';
+import {
+  type AIProvider,
+  useAppLayoutStore,
+} from '~/core/stores/appLayoutStore';
 import AgentAttachmentPanel from './components/AgentAttachmentPanel.vue';
 import AgentChatFooter from './components/AgentChatFooter.vue';
 import AgentMessageBubble from './components/AgentMessageBubble.vue';
@@ -38,6 +41,11 @@ const {
   startNewChat,
 } = useAgentWorkspace();
 
+const appLayoutStore = useAppLayoutStore();
+const thinkingStyle = computed(
+  () => appLayoutStore.chatUiConfigs.thinkingStyle
+);
+
 const {
   selectedProvider,
   selectedModel,
@@ -51,7 +59,8 @@ const {
   stopStream,
 } = useAgentChat(showReasoning);
 
-const { renderedMessages, getComponent } = useAgentRenderer(messages);
+const { renderedMessages, getComponent, getLastPartKindMessage } =
+  useAgentRenderer(messages);
 
 const messageInput = ref('');
 const selectedCommandOptions = ref<AgentCommandOptionId[]>([]);
@@ -413,7 +422,7 @@ const promptCards = computed(() => {
       >
         <div class="absolute inset-0 flex flex-col overflow-hidden">
           <div
-            class="mx-auto shadow-xs flex w-full flex-col gap-4 px-3 py-3 lg:flex-row lg:items-center lg:justify-between"
+            class="mx-auto shadow-xs flex w-full flex-col gap-4 px-3 py-2 lg:flex-row lg:items-center lg:justify-between"
           >
             <div
               class="flex flex-wrap items-center gap-2 truncate text-sm leading-4 font-medium text-foreground"
@@ -507,14 +516,20 @@ const promptCards = computed(() => {
                 </div> -->
 
                 <div v-if="isLoading" class="flex gap-1 items-center mt-2">
-                  <img
-                    class="size-7"
-                    src="@/assets/logo-8-bits.svg"
-                    alt="Logo"
-                  />
+                  <Icon class="size-7! text-primary" name="icons:logo-8-bits" />
 
-                  <div class="text-sm font-medium text-muted-foreground">
-                    <Shimmer> Thinking...</Shimmer>
+                  <div class="font-medium text-muted-foreground chat-text">
+                    <Shimmer v-if="thinkingStyle === 'shimmer'">
+                      Thinking...
+                    </Shimmer>
+                    <ScrambleText
+                      v-else
+                      :texts="[
+                        'Thinking...',
+                        'Orca_Thinking',
+                        getLastPartKindMessage || '',
+                      ]"
+                    />
                   </div>
                 </div>
 

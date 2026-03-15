@@ -69,9 +69,10 @@ export default defineNuxtConfig({
   colorMode: {
     preference: 'light',
     fallback: 'light',
+    classSuffix: '',
     globalName: '__NUXT_COLOR_MODE__',
     componentName: 'ColorScheme',
-    storage: 'cookie',
+    storage: 'localStorage',
     storageKey: 'nuxt-color-mode',
   },
   vite: {
@@ -83,8 +84,13 @@ export default defineNuxtConfig({
     clientBundle: {
       scan: true,
     },
-    // collections: ['material-icon-theme', 'hugeicons', 'logos', 'lucide'],
     provider: 'iconify',
+    customCollections: [
+      {
+        prefix: 'icons',
+        dir: './assets/icons',
+      },
+    ],
   },
   imports: {
     autoImport: true,

@@ -15,7 +15,7 @@
       v-if="foreignKey"
       class="text-xs text-blue-500 mt-1 flex items-center gap-1"
     >
-      <Icon name="hugeicons:key-01" class="w-4 text-gray-400 text-xl" />
+      <Icon name="hugeicons:key-01" class="w-4 text-muted-foreground text-xl" />
       <span
         >FK → {{ foreignKey.referenced_table }}.{{
           foreignKey.referenced_column
