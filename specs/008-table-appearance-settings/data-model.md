@@ -8,10 +8,10 @@
 
 ### 1. `TableAppearanceConfigs` (Stored Preference)
 
-Persisted inside `appLayoutStore` via `persist: true` → `localStorage`.
+Persisted inside `appConfigStore` via `persist: true` → `localStorage`.
 
 ```ts
-// core/stores/appLayoutStore.ts
+// core/stores/appConfigStore.ts
 
 export type SpacingPreset = 'compact' | 'default' | 'comfortable';
 
@@ -96,7 +96,7 @@ computedTheme = baseLightOrDark.withParams({
 ## Store Extension Diff (Conceptual)
 
 ```ts
-// core/stores/appLayoutStore.ts — additions only
+// core/stores/appConfigStore.ts — additions only
 
 export type SpacingPreset = 'compact' | 'default' | 'comfortable';
 
@@ -107,7 +107,7 @@ export interface TableAppearanceConfigs {
   accentColorDark: string;
 }
 
-// Inside useAppLayoutStore() setup function:
+// Inside useAppConfigStore() setup function:
 const tableAppearanceConfigs = reactive<TableAppearanceConfigs>({
   ...DEFAULT_TABLE_APPEARANCE_CONFIGS,
 });
@@ -124,4 +124,4 @@ return {
 };
 ```
 
-The `DEFAULT_TABLE_APPEARANCE_CONFIGS` constant is co-located in `core/stores/appLayoutStore.ts` (alongside `DEFAULT_CHAT_UI_CONFIG` which follows the same pattern) or extracted to `components/base/dynamic-table/constants/` and imported — the store import is acceptable since constants may flow upward from a base layer. **The simpler choice is to define the constant in the store file itself**, matching `DEFAULT_CHAT_UI_CONFIG`.
+The `DEFAULT_TABLE_APPEARANCE_CONFIGS` constant is co-located in `core/stores/appConfigStore.ts` (alongside `DEFAULT_CHAT_UI_CONFIG` which follows the same pattern) or extracted to `components/base/dynamic-table/constants/` and imported — the store import is acceptable since constants may flow upward from a base layer. **The simpler choice is to define the constant in the store file itself**, matching `DEFAULT_CHAT_UI_CONFIG`.

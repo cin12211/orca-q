@@ -1,6 +1,6 @@
 import { createPinia, setActivePinia } from 'pinia';
 import type { Meta, StoryObj } from '@storybook/vue3';
-import { useAppLayoutStore } from '~/core/stores/appLayoutStore';
+import { useAppConfigStore } from '~/core/stores/appConfigStore';
 import BaseCodeEditor from './BaseCodeEditor.vue';
 import { EditorTheme } from './constants';
 
@@ -22,7 +22,7 @@ const pinia = createPinia();
 setActivePinia(pinia);
 
 // Mock store state if needed, or rely on default
-const layoutStore = useAppLayoutStore();
+const layoutStore = useAppConfigStore();
 layoutStore.codeEditorConfigs = {
   theme: EditorTheme.Dracula,
   fontSize: 14,

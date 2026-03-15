@@ -7,7 +7,7 @@ import {
   ManagementUsersAndPermission,
   ManagementAgent,
 } from '#components';
-import { useAppLayoutStore } from '~/core/stores/appLayoutStore';
+import { useAppConfigStore } from '~/core/stores/appConfigStore';
 import {
   ActivityBarItemType,
   useActivityBarStore,
@@ -15,7 +15,7 @@ import {
 
 const activityStore = useActivityBarStore();
 
-const layout = useAppLayoutStore();
+const appConfigStore = useAppConfigStore();
 
 const current = shallowRef();
 
@@ -48,7 +48,7 @@ watch(
 </script>
 
 <template>
-  <div class="w-full h-full flex flex-col" v-if="layout.layoutSize[0]">
+  <div class="w-full h-full flex flex-col" v-if="appConfigStore.layoutSize[0]">
     <KeepAlive>
       <component :is="current"></component>
     </KeepAlive>

@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { Switch } from '#components';
-import { useAppLayoutStore } from '~/core/stores/appLayoutStore';
+import { useAppConfigStore } from '~/core/stores/appConfigStore';
 
-const appLayoutStore = useAppLayoutStore();
+const appConfigStore = useAppConfigStore();
 </script>
 
 <template>
@@ -25,9 +25,9 @@ const appLayoutStore = useAppLayoutStore();
           </div>
           <div class="flex items-center space-x-2">
             <Switch
-              v-model="appLayoutStore.quickQuerySafeModeEnabled"
+              v-model="appConfigStore.quickQuerySafeModeEnabled"
               @update:modelValue="
-                appLayoutStore.quickQuerySafeModeEnabled = $event
+                appConfigStore.quickQuerySafeModeEnabled = $event
               "
               id="safe-mode-toggle"
               class="cursor-pointer"

@@ -2,7 +2,7 @@
 import { computed, nextTick, ref, watch } from 'vue';
 import { Tooltip, TooltipContent, TooltipTrigger } from '#components';
 import ModelSelector from '~/components/modules/selectors/ModelSelector.vue';
-import type { AIProvider } from '~/core/stores/appLayoutStore';
+import type { AIProvider } from '~/components/modules/settings/types';
 import {
   AGENT_COMMAND_OPTIONS,
   getAgentCommandOptionsByIds,

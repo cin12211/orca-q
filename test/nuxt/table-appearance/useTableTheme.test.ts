@@ -1,9 +1,7 @@
 import { setActivePinia, createPinia } from 'pinia';
 import { describe, it, expect, beforeEach } from 'vitest';
-import {
-  useAppLayoutStore,
-  DEFAULT_TABLE_APPEARANCE_CONFIGS,
-} from '~/core/stores/appLayoutStore';
+import { DEFAULT_TABLE_APPEARANCE_CONFIGS } from '~/components/modules/settings/constants';
+import { useAppConfigStore } from '~/core/stores/appConfigStore';
 
 describe('useTableTheme — via store integration', () => {
   beforeEach(() => {
@@ -11,13 +9,13 @@ describe('useTableTheme — via store integration', () => {
   });
 
   it('fontSize change is reflected in the store', () => {
-    const store = useAppLayoutStore();
+    const store = useAppConfigStore();
     store.tableAppearanceConfigs.fontSize = 17;
     expect(store.tableAppearanceConfigs.fontSize).toBe(17);
   });
 
   it('dark mode uses accentColorDark', () => {
-    const store = useAppLayoutStore();
+    const store = useAppConfigStore();
     store.tableAppearanceConfigs.accentColorDark = '#abcdef';
 
     // Mirrors logic inside useTableTheme's computed
@@ -30,7 +28,7 @@ describe('useTableTheme — via store integration', () => {
   });
 
   it('light mode uses accentColorLight', () => {
-    const store = useAppLayoutStore();
+    const store = useAppConfigStore();
     store.tableAppearanceConfigs.accentColorLight = '#fedcba';
 
     const isDark = false;

@@ -17,7 +17,7 @@
 **Purpose**: No new project structure needed — this feature is purely additive to the existing Nuxt SPA. This phase covers confirming the implementation boundary before any code is written.
 
 - [x] T001 Verify `components/base/dynamic-table/hooks/useTableTheme.ts` exports a single computed theme and confirm `:theme` binding in `DynamicTable.vue` and `QuickQueryTable.vue`
-- [x] T002 Verify `core/stores/appLayoutStore.ts` structure: confirm `codeEditorConfigs` / `chatUiConfigs` pattern to replicate for `tableAppearanceConfigs`
+- [x] T002 Verify `core/stores/appConfigStore.ts` structure: confirm `codeEditorConfigs` / `chatUiConfigs` pattern to replicate for `tableAppearanceConfigs`
 
 ---
 
@@ -27,9 +27,9 @@
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete.
 
-- [x] T003 Add `SpacingPreset` type union, `TableAppearanceConfigs` interface, `DEFAULT_TABLE_APPEARANCE_CONFIGS` constant, `tableAppearanceConfigs` reactive, and `resetTableAppearance()` action to `core/stores/appLayoutStore.ts`
+- [x] T003 Add `SpacingPreset` type union, `TableAppearanceConfigs` interface, `DEFAULT_TABLE_APPEARANCE_CONFIGS` constant, `tableAppearanceConfigs` reactive, and `resetTableAppearance()` action to `core/stores/appConfigStore.ts`
 - [x] T004 Add `SPACING_PRESET_ROW_HEIGHTS` map and re-export `SpacingPreset` / `DEFAULT_TABLE_APPEARANCE_CONFIGS` in `components/base/dynamic-table/constants/baseTableTheme.ts`
-- [x] T005 Extend `useTableTheme` in `components/base/dynamic-table/hooks/useTableTheme.ts` to read `tableAppearanceConfigs` from `appLayoutStore` and compute the merged AG Grid theme via `.withParams({ fontSize, rowHeight, accentColor })`
+- [x] T005 Extend `useTableTheme` in `components/base/dynamic-table/hooks/useTableTheme.ts` to read `tableAppearanceConfigs` from `appConfigStore` and compute the merged AG Grid theme via `.withParams({ fontSize, rowHeight, accentColor })`
 
 **Checkpoint**: Store, constants, and `useTableTheme` are wired — DynamicTable and QuickQueryTable now consume settings reactively. All downstream story phases can proceed.
 
@@ -43,7 +43,7 @@
 
 ### Implementation for User Story 1
 
-- [x] T006 [US1] Create `components/modules/settings/components/TableAppearanceConfig.vue` with a font size `Slider` (range 10–20, step 1) bound to `appLayoutStore.tableAppearanceConfigs.fontSize` and a read-only numeric display alongside the slider
+- [x] T006 [US1] Create `components/modules/settings/components/TableAppearanceConfig.vue` with a font size `Slider` (range 10–20, step 1) bound to `appConfigStore.tableAppearanceConfigs.fontSize` and a read-only numeric display alongside the slider
 - [x] T007 [US1] Add `TABLE_FONT_SIZE_RANGE` constant (`{ min: 10, max: 20, step: 1, default: 13 }`) to `components/modules/settings/constants/settings.constants.ts`
 - [x] T008 [US1] Add `'TableAppearanceConfig'` to the `SettingsComponentKey` union in `components/modules/settings/types/settings.types.ts`
 - [x] T009 [US1] Add `'Table Appearance'` nav item (icon: `hugeicons:table-02`, `componentKey: 'TableAppearanceConfig'`) to `SETTINGS_NAV_ITEMS` in `components/modules/settings/constants/settings.constants.ts`
@@ -63,7 +63,7 @@
 ### Implementation for User Story 2
 
 - [x] T012 [P] [US2] Add `SPACING_PRESET_OPTIONS` constant (array of `{ label, value: SpacingPreset }` objects) to `components/modules/settings/constants/settings.constants.ts`
-- [x] T013 [US2] Add a row spacing preset toggle group (three buttons: Compact / Default / Comfortable) to `components/modules/settings/components/TableAppearanceConfig.vue` bound to `appLayoutStore.tableAppearanceConfigs.spacingPreset`
+- [x] T013 [US2] Add a row spacing preset toggle group (three buttons: Compact / Default / Comfortable) to `components/modules/settings/components/TableAppearanceConfig.vue` bound to `appConfigStore.tableAppearanceConfigs.spacingPreset`
 
 **Checkpoint**: User Stories 1 and 2 both independently testable. Font size and row spacing coexist without conflict.
 
@@ -78,7 +78,7 @@
 ### Implementation for User Story 3
 
 - [x] T014 [P] [US3] Add two `<input type="color">` pickers (light mode accent / dark mode accent) to `components/modules/settings/components/TableAppearanceConfig.vue`, bound respectively to `accentColorLight` and `accentColorDark` in `tableAppearanceConfigs`
-- [x] T015 [P] [US3] Add a "Reset to Defaults" button in `TableAppearanceConfig.vue` that calls `appLayoutStore.resetTableAppearance()`
+- [x] T015 [P] [US3] Add a "Reset to Defaults" button in `TableAppearanceConfig.vue` that calls `appConfigStore.resetTableAppearance()`
 
 **Checkpoint**: All three core settings (font size, spacing, accent) independently functional. Light/dark modes store separate accent values without bleed.
 
@@ -105,11 +105,11 @@
 **Purpose**: Tests, edge-case hardening, and cleanup that span all user stories.
 
 - [x] T019 [P] Write unit tests for `useTableTheme` merged theme computation in `test/nuxt/table-appearance/useTableTheme.test.ts` — cover: default params produce correct theme, font size change updates `fontSize` param, spacing preset maps to correct `rowHeight`, dark mode selects `accentColorDark`, light mode selects `accentColorLight`
-- [x] T020 [P] Write unit tests for `appLayoutStore` table appearance slice in `test/nuxt/table-appearance/tableAppearanceStore.test.ts` — cover: default shape matches `DEFAULT_TABLE_APPEARANCE_CONFIGS`, each field is individually mutable, `resetTableAppearance()` restores all defaults, Pinia persist plugin serialises the correct keys
+- [x] T020 [P] Write unit tests for `appConfigStore` table appearance slice in `test/nuxt/table-appearance/tableAppearanceStore.test.ts` — cover: default shape matches `DEFAULT_TABLE_APPEARANCE_CONFIGS`, each field is individually mutable, `resetTableAppearance()` restores all defaults, Pinia persist plugin serialises the correct keys
 - [ ] T021 [P] Verify `TableAppearancePreview.vue` applies inline styles correctly: write a component test that asserts the preview's inline `fontSize`, `rowHeight`, and `backgroundColor` styles match given prop values
 - [x] T022 Verify `DynamicTable.vue` and `QuickQueryTable.vue` receive updated `:theme` prop on every `tableAppearanceConfigs` change — add a watcher-style smoke test or manual verification note in the quickstart
 - [x] T023 [P] Confirm `SPACING_PRESET_ROW_HEIGHTS` exports are consistent between `baseTableTheme.ts` and the usage in `useTableTheme.ts` — run `bun vitest run` and confirm zero regressions in existing table-related tests
-- [x] T024 Manually verify the full persistence flow: change all four fields → close browser tab → reopen → confirm all values restored from `localStorage` (key: whatever `persistedstate` assigns to `appLayoutStore`)
+- [x] T024 Manually verify the full persistence flow: change all four fields → close browser tab → reopen → confirm all values restored from `localStorage` (key: whatever `persistedstate` assigns to `appConfigStore`)
 - [x] T025 [P] Verify no cross-mode bleed: set distinct `accentColorLight` and `accentColorDark` → toggle `@nuxtjs/color-mode` → confirm `useTableTheme` selects the correct accent for each mode
 - [x] T026 [P] Verify edge case: font size set to 20 (max) → AG Grid columns do not overflow container; set to 10 (min) → text remains readable; slider cannot exceed bounds
 

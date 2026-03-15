@@ -15,14 +15,12 @@ import { basicSetup } from 'codemirror';
 import { throttle } from 'lodash';
 import debounce from 'lodash/debounce';
 import { cn } from '@/lib/utils';
+import type { CodeEditorConfigs } from '~/components/modules/settings/types';
 import {
   DEFAULT_DEBOUNCE_INPUT,
   DEFAULT_DEBOUNCE_SCROLL,
 } from '~/core/constants';
-import {
-  useAppLayoutStore,
-  type CodeEditorConfigs,
-} from '~/core/stores/appLayoutStore';
+import { useAppConfigStore } from '~/core/stores/appConfigStore';
 import { EditorTheme, EditorThemeMap } from './constants';
 import {
   cursorSmooth,
@@ -64,7 +62,7 @@ const emit = defineEmits<{
 // Reactive code state
 const code = ref(props.modelValue);
 const editorRef = ref<HTMLElement | null>(null);
-const appLayoutStore = useAppLayoutStore();
+const appConfigStore = useAppConfigStore();
 const colorMode = useColorMode();
 let editorView = ref<EditorView | null>(null);
 
@@ -132,7 +130,7 @@ const dynamicExtensions = (cfg: CodeEditorConfigs) => {
 const getExtensions = () => {
   return [
     ...staticExtensions,
-    ...dynamicExtensions(appLayoutStore.codeEditorConfigs),
+    ...dynamicExtensions(appConfigStore.codeEditorConfigs),
   ];
 };
 
@@ -180,7 +178,7 @@ onMounted(() => {
 
 /* ---------------- Reactive reconfigure ---------------- */
 watch(
-  [() => appLayoutStore.codeEditorConfigs, () => colorMode.value],
+  [() => appConfigStore.codeEditorConfigs, () => colorMode.value],
   ([cfg]) => {
     if (!editorView.value) return;
 

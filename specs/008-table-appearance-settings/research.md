@@ -24,9 +24,9 @@
 
 ---
 
-## R-002: Store Architecture — Extend appLayoutStore vs New Store
+## R-002: Store Architecture — Extend appConfigStore vs New Store
 
-**Decision**: Extend `core/stores/appLayoutStore.ts` with a new `tableAppearanceConfigs` reactive object following the identical pattern used for `codeEditorConfigs` and `chatUiConfigs`.
+**Decision**: Extend `core/stores/appConfigStore.ts` with a new `tableAppearanceConfigs` reactive object following the identical pattern used for `codeEditorConfigs` and `chatUiConfigs`.
 
 **Rationale**: The store already handles `persist: true` which automatically serialises to `localStorage` via `pinia-plugin-persistedstate`. All analogous user preference blobs (`codeEditorConfigs`, `chatUiConfigs`) live here. Creating a separate `useTableAppearanceStore` would be premature abstraction for a single config object; the naming convention and pattern are already established.
 
@@ -107,7 +107,7 @@ export interface TableAppearanceConfigs {
 
 ## R-007: Reset to Defaults Action
 
-**Decision**: A `resetTableAppearance()` action in `appLayoutStore` that assigns `DEFAULT_TABLE_APPEARANCE_CONFIGS` back to `tableAppearanceConfigs`. No confirmation dialog — immediate, reversible by adjusting settings again.
+**Decision**: A `resetTableAppearance()` action in `appConfigStore` that assigns `DEFAULT_TABLE_APPEARANCE_CONFIGS` back to `tableAppearanceConfigs`. No confirmation dialog — immediate, reversible by adjusting settings again.
 
 **Rationale**: "Reset" is a low-risk action in a settings panel; it affects only visual appearance, not data. The spec (FR-008) says "a reset action must be available" without requiring confirmation. Matching the pattern used in other settings sections (no dialogs).
 

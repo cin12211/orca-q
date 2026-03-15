@@ -13,9 +13,9 @@ import {
   type ColumnCopyFormat,
   type ExportFormat,
 } from '~/core/helpers/copyData';
-import { useAppLayoutStore } from '~/core/stores/appLayoutStore';
+import { useAppConfigStore } from '~/core/stores/appConfigStore';
 
-const { onShowSecondSidebar } = useAppLayoutStore();
+const { onShowSecondSidebar } = useAppConfigStore();
 
 const props = defineProps<{
   totalSelectedRows: number;

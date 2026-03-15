@@ -1,10 +1,8 @@
 import { Chat } from '@ai-sdk/vue';
 import { DefaultChatTransport, type ChatInit, type UIMessage } from 'ai';
+import type { AIProvider } from '~/components/modules/settings/types';
 import { AI_PROVIDERS } from '~/core/constants/agent';
-import {
-  useAppLayoutStore,
-  type AIProvider,
-} from '~/core/stores/appLayoutStore';
+import { useAppConfigStore } from '~/core/stores/appConfigStore';
 
 type ChatTransportBody = object | (() => object | undefined) | undefined;
 
@@ -25,22 +23,22 @@ const resolveTransportBody = (body: ChatTransportBody) => {
 /**
  * Composable for AI chat functionality using Vercel AI SDK
  * Supports multiple providers: OpenAI, Google, Anthropic, xAI
- * Uses global settings from appLayoutStore for API keys and initial provider/model
+ * Uses global settings from appConfigStore for API keys and initial provider/model
  * NOTE: Provider/model selection is LOCAL to this instance - not synced back to global config
  */
 export function useAiChat<UI_MESSAGE extends UIMessage = UIMessage>(
   options?: UseAiChatOptions<UI_MESSAGE>
 ) {
-  const appLayoutStore = useAppLayoutStore();
+  const appConfigStore = useAppConfigStore();
 
   const resolvedOptions: UseAiChatOptions<UI_MESSAGE> = options ?? {};
 
   // Provider and model selection (LOCAL state, initialized from global settings)
   // Changes here do NOT sync back to global config
   const selectedProvider = ref<AIProvider>(
-    appLayoutStore.agentSelectedProvider
+    appConfigStore.agentSelectedProvider
   );
-  const selectedModel = ref<string>(appLayoutStore.agentSelectedModel);
+  const selectedModel = ref<string>(appConfigStore.agentSelectedModel);
 
   // Get current provider config
   const currentProvider = computed(() => {
@@ -56,7 +54,7 @@ export function useAiChat<UI_MESSAGE extends UIMessage = UIMessage>(
 
   // Get API key for current provider from store (API keys stay in global config)
   const currentApiKey = computed(() => {
-    return appLayoutStore.agentApiKeyConfigs[selectedProvider.value] || '';
+    return appConfigStore.agentApiKeyConfigs[selectedProvider.value] || '';
   });
 
   // Check if has API key for current provider

@@ -8,7 +8,7 @@ import {
   TabViewContainer,
 } from '~/components/modules/app-shell';
 import { DEFAULT_DEBOUNCE_INPUT } from '~/core/constants';
-import { useAppLayoutStore } from '~/core/stores/appLayoutStore';
+import { useAppConfigStore } from '~/core/stores/appConfigStore';
 
 const route = useRoute();
 
@@ -17,13 +17,13 @@ const { width: primarySideBarWidth } = useElementSize(
   primarySideBarPanelRef as MaybeComputedElementRef
 );
 
-const appLayoutStore = useAppLayoutStore();
+const appConfigStore = useAppConfigStore();
 const { layoutSize, isPrimarySidebarCollapsed, bodySize } =
-  toRefs(appLayoutStore);
+  toRefs(appConfigStore);
 
 const chatUiVars = computed(() => ({
-  '--chat-font-size': `${appLayoutStore.chatUiConfigs.fontSize}px`,
-  '--chat-code-font-size': `${appLayoutStore.chatUiConfigs.codeFontSize}px`,
+  '--chat-font-size': `${appConfigStore.chatUiConfigs.fontSize}px`,
+  '--chat-code-font-size': `${appConfigStore.chatUiConfigs.codeFontSize}px`,
 }));
 
 const isAccessBottomPanel = computed(() => {
@@ -41,21 +41,21 @@ useHotkeys([
     key: 'meta+shift+b',
     callback: () => {
       if (isAccessRightPanel.value) {
-        appLayoutStore.onToggleSecondSidebar();
+        appConfigStore.onToggleSecondSidebar();
       }
     },
   },
   {
     key: 'meta+b',
     callback: () => {
-      appLayoutStore.onToggleActivityBarPanel();
+      appConfigStore.onToggleActivityBarPanel();
     },
   },
   {
     key: 'meta+j',
     callback: () => {
       if (isAccessBottomPanel.value) {
-        appLayoutStore.onToggleBottomPanel();
+        appConfigStore.onToggleBottomPanel();
       }
     },
   },
@@ -66,7 +66,7 @@ useHotkeys([
   <ResizablePanelGroup
     direction="horizontal"
     id="default-layout-group-1"
-    @layout="appLayoutStore.onResizeLayout($event)"
+    @layout="appConfigStore.onResizeLayout($event)"
   >
     <div
       class="h-screen w-screen flex flex-col flex-1 max-h-screen overflow-y-auto"
@@ -104,7 +104,7 @@ useHotkeys([
               id="default-layout-body-group"
               direction="vertical"
               v-model="bodySize"
-              @layout="appLayoutStore.onResizeBody"
+              @layout="appConfigStore.onResizeBody"
             >
               <ResizablePanel
                 id="default-layout-body-group-panel-1"

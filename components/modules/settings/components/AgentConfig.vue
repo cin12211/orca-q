@@ -1,17 +1,15 @@
 <script setup lang="ts">
 import ModelSelector from '~/components/modules/selectors/ModelSelector.vue';
-import {
-  DEFAULT_CHAT_UI_CONFIG,
-  type ThinkingStyle,
-  useAppLayoutStore,
-} from '~/core/stores/appLayoutStore';
+import { DEFAULT_CHAT_UI_CONFIG } from '~/components/modules/settings/constants';
+import { ThinkingStyle, AIProvider } from '~/components/modules/settings/types';
+import { useAppConfigStore } from '~/core/stores/appConfigStore';
 import {
   CHAT_CODE_FONT_SIZES,
   CHAT_FONT_SIZES,
   THINKING_STYLE_OPTIONS,
 } from '../constants';
 
-const appLayoutStore = useAppLayoutStore();
+const appConfigStore = useAppConfigStore();
 
 // Toggle visibility for API keys
 const visibleKeys = ref<Record<string, boolean>>({
@@ -45,9 +43,9 @@ const toggleKeyVisibility = (provider: string) => {
             </p>
           </div>
           <Select
-            :modelValue="appLayoutStore.chatUiConfigs.fontSize"
+            :modelValue="appConfigStore.chatUiConfigs.fontSize"
             @update:modelValue="
-              appLayoutStore.chatUiConfigs.fontSize = $event as number
+              appConfigStore.chatUiConfigs.fontSize = $event as number
             "
           >
             <SelectTrigger size="sm" class="h-6! cursor-pointer">
@@ -78,9 +76,9 @@ const toggleKeyVisibility = (provider: string) => {
             </p>
           </div>
           <Select
-            :modelValue="appLayoutStore.chatUiConfigs.codeFontSize"
+            :modelValue="appConfigStore.chatUiConfigs.codeFontSize"
             @update:modelValue="
-              appLayoutStore.chatUiConfigs.codeFontSize = $event as number
+              appConfigStore.chatUiConfigs.codeFontSize = $event as number
             "
           >
             <SelectTrigger size="sm" class="h-6! cursor-pointer">
@@ -113,9 +111,9 @@ const toggleKeyVisibility = (provider: string) => {
             </p>
           </div>
           <Select
-            :modelValue="appLayoutStore.chatUiConfigs.thinkingStyle"
+            :modelValue="appConfigStore.chatUiConfigs.thinkingStyle"
             @update:modelValue="
-              appLayoutStore.chatUiConfigs.thinkingStyle =
+              appConfigStore.chatUiConfigs.thinkingStyle =
                 $event as ThinkingStyle
             "
           >
@@ -156,8 +154,8 @@ const toggleKeyVisibility = (provider: string) => {
           >Default Model</label
         >
         <ModelSelector
-          v-model:provider="appLayoutStore.agentSelectedProvider"
-          v-model:model="appLayoutStore.agentSelectedModel"
+          v-model:provider="appConfigStore.agentSelectedProvider"
+          v-model:model="appConfigStore.agentSelectedModel"
           class="h-8!"
         />
       </div>
@@ -192,7 +190,7 @@ const toggleKeyVisibility = (provider: string) => {
           </div>
           <div class="relative">
             <Input
-              v-model="appLayoutStore.agentApiKeyConfigs.openai"
+              v-model="appConfigStore.agentApiKeyConfigs.openai"
               :type="visibleKeys.openai ? 'text' : 'password'"
               placeholder="sk-..."
               class="h-8 pr-8 font-mono text-xs"
@@ -228,7 +226,7 @@ const toggleKeyVisibility = (provider: string) => {
           </div>
           <div class="relative">
             <Input
-              v-model="appLayoutStore.agentApiKeyConfigs.google"
+              v-model="appConfigStore.agentApiKeyConfigs.google"
               :type="visibleKeys.google ? 'text' : 'password'"
               placeholder="AIza..."
               class="h-8 pr-8 font-mono text-xs"
@@ -264,7 +262,7 @@ const toggleKeyVisibility = (provider: string) => {
           </div>
           <div class="relative">
             <Input
-              v-model="appLayoutStore.agentApiKeyConfigs.anthropic"
+              v-model="appConfigStore.agentApiKeyConfigs.anthropic"
               :type="visibleKeys.anthropic ? 'text' : 'password'"
               placeholder="sk-ant-..."
               class="h-8 pr-8 font-mono text-xs"
@@ -301,7 +299,7 @@ const toggleKeyVisibility = (provider: string) => {
           </div>
           <div class="relative">
             <Input
-              v-model="appLayoutStore.agentApiKeyConfigs.xai"
+              v-model="appConfigStore.agentApiKeyConfigs.xai"
               :type="visibleKeys.xai ? 'text' : 'password'"
               placeholder="xai-..."
               class="h-8 pr-8 font-mono text-xs"
@@ -337,7 +335,7 @@ const toggleKeyVisibility = (provider: string) => {
           </div>
           <div class="relative">
             <Input
-              v-model="appLayoutStore.agentApiKeyConfigs.openrouter"
+              v-model="appConfigStore.agentApiKeyConfigs.openrouter"
               :type="visibleKeys.openrouter ? 'text' : 'password'"
               placeholder="sk-or-..."
               class="h-8 pr-8 font-mono text-xs"

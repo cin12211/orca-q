@@ -1,76 +1,24 @@
 import { defineStore } from 'pinia';
-import { ref, computed } from 'vue';
-import {
-  DEFAULT_EDITOR_CONFIG,
-  type EditorTheme,
-} from '~/components/base/code-editor/constants';
+import { ref, computed, reactive } from 'vue';
+import { DEFAULT_EDITOR_CONFIG } from '~/components/base/code-editor/constants';
 import {
   RawQueryEditorDefaultSize,
   RawQueryEditorLayout,
   MAX_CUSTOM_LAYOUTS,
   type CustomLayoutDefinition,
 } from '~/components/modules/raw-query/constants';
-
-export interface CodeEditorConfigs {
-  theme: EditorTheme;
-  fontSize: number;
-  showMiniMap: boolean;
-  indentation: boolean;
-}
-
-export type ThinkingStyle = 'shimmer' | 'scramble';
-
-export interface ChatUiConfigs {
-  fontSize: number;
-  codeFontSize: number;
-  thinkingStyle: ThinkingStyle;
-}
-
-export interface CustomLayoutSizeEntry {
-  panels: number[];
-  innerPanels: number[];
-}
-
-export type AIProvider =
-  | 'openai'
-  | 'google'
-  | 'anthropic'
-  | 'xai'
-  | 'openrouter';
-
-export interface AgentApiKeyConfigs {
-  openai: string;
-  google: string;
-  anthropic: string;
-  xai: string;
-  openrouter: string;
-}
-
-export interface TableAppearanceConfigs {
-  // Row
-  fontSize: number;
-  rowHeight: number;
-  cellSpacing: number;
-  accentColorLight: string;
-  accentColorDark: string;
-  // Header
-  headerFontSize: number;
-  headerFontWeight: number;
-  headerBackgroundColorLight: string;
-  headerBackgroundColorDark: string;
-}
-
-export const DEFAULT_TABLE_APPEARANCE_CONFIGS: TableAppearanceConfigs = {
-  fontSize: 12,
-  rowHeight: 25,
-  cellSpacing: 2.8,
-  accentColorLight: '#0ea5e9',
-  accentColorDark: '#38bdf8',
-  headerFontSize: 12,
-  headerFontWeight: 700,
-  headerBackgroundColorLight: '',
-  headerBackgroundColorDark: '',
-};
+import {
+  DEFAULT_TABLE_APPEARANCE_CONFIGS,
+  DEFAULT_CHAT_UI_CONFIG,
+} from '~/components/modules/settings/constants';
+import {
+  AIProvider,
+  type CodeEditorConfigs,
+  type ChatUiConfigs,
+  type CustomLayoutSizeEntry,
+  type AgentApiKeyConfigs,
+  type TableAppearanceConfigs,
+} from '~/components/modules/settings/types';
 
 const DEFAULT_APP_LAYOUT_SIZE = [25, 50, 25];
 
@@ -80,15 +28,8 @@ const initBodyLayout = [100, 0];
 
 const DEFAULT_BODY_LAYOUT_SIZE = [100, 25];
 
-export const DEFAULT_CHAT_UI_CONFIG: ChatUiConfigs = {
-  fontSize: 12,
-  codeFontSize: 12,
-  thinkingStyle: 'shimmer',
-};
-
-// need to refactor code to useAppConfigStore
-export const useAppLayoutStore = defineStore(
-  'app-layout-store',
+export const useAppConfigStore = defineStore(
+  'app-config-store',
   () => {
     const layoutSize = ref<number[]>(intiAppLayout);
     const historyLayoutSize = ref<number[]>(intiAppLayout);
@@ -219,7 +160,7 @@ export const useAppLayoutStore = defineStore(
       openrouter: '',
     });
 
-    const agentSelectedProvider = ref<AIProvider>('google');
+    const agentSelectedProvider = ref<AIProvider>(AIProvider.Google);
     const agentSelectedModel = ref<string>('gemini-2.5-flash');
 
     // Quick Query settings

@@ -19,7 +19,7 @@ import {
   TableAppearanceConfig,
 } from '../components';
 import { SETTINGS_NAV_ITEMS } from '../constants';
-import type { SettingsComponentKey } from '../types';
+import { SettingsComponentKey } from '../types';
 
 const SETTINGS_COMPONENTS: Record<SettingsComponentKey, Component> = {
   EditorConfig,

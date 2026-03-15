@@ -8,7 +8,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Slider } from '@/components/ui/slider';
-import { useAppLayoutStore } from '~/core/stores/appLayoutStore';
+import { useAppConfigStore } from '~/core/stores/appConfigStore';
 import {
   HEADER_FONT_WEIGHT_OPTIONS,
   TABLE_FONT_SIZE_OPTIONS,
@@ -17,10 +17,10 @@ import {
 } from '../constants/settings.constants';
 import TableAppearancePreview from './TableAppearancePreview.vue';
 
-const appLayoutStore = useAppLayoutStore();
+const appConfigStore = useAppConfigStore();
 const colorMode = useColorMode();
 
-const configs = computed(() => appLayoutStore.tableAppearanceConfigs);
+const configs = computed(() => appConfigStore.tableAppearanceConfigs);
 
 const previewAccentColor = computed(() =>
   colorMode.value === 'dark'
@@ -77,7 +77,7 @@ const previewHeaderBg = computed(() =>
             :model-value="String(configs.headerFontSize)"
             @update:model-value="
               v =>
-                (appLayoutStore.tableAppearanceConfigs.headerFontSize =
+                (appConfigStore.tableAppearanceConfigs.headerFontSize =
                   Number(v))
             "
           >
@@ -102,7 +102,7 @@ const previewHeaderBg = computed(() =>
             :model-value="String(configs.headerFontWeight)"
             @update:model-value="
               v =>
-                (appLayoutStore.tableAppearanceConfigs.headerFontWeight =
+                (appConfigStore.tableAppearanceConfigs.headerFontWeight =
                   Number(v))
             "
           >
@@ -133,7 +133,7 @@ const previewHeaderBg = computed(() =>
               :value="configs.headerBackgroundColorLight || '#f4f4f5'"
               @input="
                 e =>
-                  (appLayoutStore.tableAppearanceConfigs.headerBackgroundColorLight =
+                  (appConfigStore.tableAppearanceConfigs.headerBackgroundColorLight =
                     (e.target as HTMLInputElement).value)
               "
             />
@@ -150,7 +150,7 @@ const previewHeaderBg = computed(() =>
               :value="configs.headerBackgroundColorDark || '#27272a'"
               @input="
                 e =>
-                  (appLayoutStore.tableAppearanceConfigs.headerBackgroundColorDark =
+                  (appConfigStore.tableAppearanceConfigs.headerBackgroundColorDark =
                     (e.target as HTMLInputElement).value)
               "
             />
@@ -176,7 +176,7 @@ const previewHeaderBg = computed(() =>
           <Select
             :model-value="String(configs.fontSize)"
             @update:model-value="
-              v => (appLayoutStore.tableAppearanceConfigs.fontSize = Number(v))
+              v => (appConfigStore.tableAppearanceConfigs.fontSize = Number(v))
             "
           >
             <SelectTrigger size="sm" class="h-7! w-full cursor-pointer text-xs">
@@ -203,7 +203,7 @@ const previewHeaderBg = computed(() =>
             :model-value="configs.cellSpacing"
             @update:model-value="
               v =>
-                (appLayoutStore.tableAppearanceConfigs.cellSpacing = Number(v))
+                (appConfigStore.tableAppearanceConfigs.cellSpacing = Number(v))
             "
             class="h-7 w-full text-xs text-right"
           />
@@ -230,7 +230,7 @@ const previewHeaderBg = computed(() =>
           :model-value="[configs.rowHeight]"
           @update:model-value="
             v => {
-              if (v) appLayoutStore.tableAppearanceConfigs.rowHeight = v[0];
+              if (v) appConfigStore.tableAppearanceConfigs.rowHeight = v[0];
             }
           "
           class="w-full"
@@ -256,7 +256,7 @@ const previewHeaderBg = computed(() =>
               :value="configs.accentColorLight"
               @input="
                 e =>
-                  (appLayoutStore.tableAppearanceConfigs.accentColorLight = (
+                  (appConfigStore.tableAppearanceConfigs.accentColorLight = (
                     e.target as HTMLInputElement
                   ).value)
               "
@@ -274,7 +274,7 @@ const previewHeaderBg = computed(() =>
               :value="configs.accentColorDark"
               @input="
                 e =>
-                  (appLayoutStore.tableAppearanceConfigs.accentColorDark = (
+                  (appConfigStore.tableAppearanceConfigs.accentColorDark = (
                     e.target as HTMLInputElement
                   ).value)
               "
@@ -294,7 +294,7 @@ const previewHeaderBg = computed(() =>
           variant="outline"
           size="xs"
           class="text-xs font-medium"
-          @click="appLayoutStore.resetTableAppearance()"
+          @click="appConfigStore.resetTableAppearance()"
         >
           Reset to defaults
         </Button>

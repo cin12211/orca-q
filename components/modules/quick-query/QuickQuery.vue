@@ -3,10 +3,10 @@ import QuickQueryTableSummary from '~/components/modules/quick-query/quick-query
 import type { FilterSchema } from '~/components/modules/quick-query/utils';
 import { useTableQueryBuilder } from '~/core/composables/useTableQueryBuilder';
 import { DEFAULT_QUERY_SIZE, OperatorSet } from '~/core/constants';
-import { uuidv4 } from '~/core/helpers';
-import { useAppLayoutStore } from '~/core/stores/appLayoutStore';
-import { useManagementConnectionStore } from '~/core/stores/managementConnectionStore';
 import { DatabaseClientType } from '~/core/constants/database-client-type';
+import { uuidv4 } from '~/core/helpers';
+import { useAppConfigStore } from '~/core/stores/appConfigStore';
+import { useManagementConnectionStore } from '~/core/stores/managementConnectionStore';
 import WrapperErdDiagram from '../erd-diagram/WrapperErdDiagram.vue';
 import { buildTableNodeId } from '../erd-diagram/utils';
 import QuickQueryErrorPopup from './QuickQueryErrorPopup.vue';
@@ -39,7 +39,7 @@ const props = defineProps<{
   virtualTableId?: string;
 }>();
 
-const appLayoutStore = useAppLayoutStore();
+const appConfigStore = useAppConfigStore();
 const connectionStore = useManagementConnectionStore();
 
 const connectionString = computed(() => {
@@ -153,7 +153,7 @@ const {
   quickQueryTableRef,
   refreshCount,
   focusedCell,
-  safeModeEnabled: toRef(appLayoutStore, 'quickQuerySafeModeEnabled'),
+  safeModeEnabled: toRef(appConfigStore, 'quickQuerySafeModeEnabled'),
   onRequestSafeModeConfirm,
   connection: toRef(connectionStore, 'selectedConnection'),
 });
@@ -254,7 +254,7 @@ watch(quickQueryTabView, newQuickQueryTabView => {
   openedQuickQueryTab.value[newQuickQueryTabView] = true;
 
   if (newQuickQueryTabView !== QuickQueryTabView.Data) {
-    appLayoutStore.onCloseBottomPanel();
+    appConfigStore.onCloseBottomPanel();
   }
 });
 
@@ -464,7 +464,7 @@ const onBackPreviousBreadcrumbByIndex = (index: number) => {
             quickQueryFilterRef?.onShowSearch();
           }
         "
-        @onToggleHistoryPanel="appLayoutStore.onToggleBottomPanel"
+        @onToggleHistoryPanel="appConfigStore.onToggleBottomPanel"
         v-model:tabView="quickQueryTabView"
       />
     </div>

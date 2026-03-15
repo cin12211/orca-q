@@ -305,7 +305,7 @@ graph TD
         C[useWSStateStore]
         D[useSchemaStore]
         E[useTabViewsStore]
-        F[appLayoutStore]
+        F[appConfigStore]
     end
 
     subgraph "Persistence"

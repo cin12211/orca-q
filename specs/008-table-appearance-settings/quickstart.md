@@ -20,7 +20,7 @@ All changes are **live** (≤100ms) and **persistent** (survive page reload).
 
 | File                                                                | Role                                                                      |
 | ------------------------------------------------------------------- | ------------------------------------------------------------------------- |
-| `core/stores/appLayoutStore.ts`                                     | Add `tableAppearanceConfigs` + `resetTableAppearance()`                   |
+| `core/stores/appConfigStore.ts`                                     | Add `tableAppearanceConfigs` + `resetTableAppearance()`                   |
 | `components/base/dynamic-table/constants/baseTableTheme.ts`         | Add `SPACING_PRESET_ROW_HEIGHTS` + `DEFAULT_TABLE_APPEARANCE_CONFIGS`     |
 | `components/base/dynamic-table/hooks/useTableTheme.ts`              | Extend to read store and merge params via `withParams()`                  |
 | `components/modules/settings/components/TableAppearanceConfig.vue`  | New settings panel section (slider, presets, color pickers, reset button) |
@@ -35,7 +35,7 @@ All changes are **live** (≤100ms) and **persistent** (survive page reload).
 
 ```
 User drags font size slider in TableAppearanceConfig.vue
-  → updates appLayoutStore.tableAppearanceConfigs.fontSize (reactive)
+  → updates appConfigStore.tableAppearanceConfigs.fontSize (reactive)
   → useTableTheme() computed re-evaluates
   → new AG Grid theme object produced via withParams()
   → DynamicTable + QuickQueryTable receive updated :theme prop
@@ -47,7 +47,7 @@ User drags font size slider in TableAppearanceConfig.vue
 
 ## Implementation Order (Dependencies)
 
-1. **Store** (`appLayoutStore.ts`) — foundation; no dependencies
+1. **Store** (`appConfigStore.ts`) — foundation; no dependencies
 2. **Constants** (`baseTableTheme.ts`) — `SPACING_PRESET_ROW_HEIGHTS`, import `SpacingPreset` type
 3. **`useTableTheme`** — depends on store + constants
 4. **`TableAppearancePreview.vue`** — pure presentational; no hook dependencies
@@ -84,7 +84,7 @@ bun vitest run
 
 | Scenario                               | Behaviour                                                                             |
 | -------------------------------------- | ------------------------------------------------------------------------------------- |
-| `localStorage` corrupted / cleared     | `appLayoutStore` initialises from `DEFAULT_TABLE_APPEARANCE_CONFIGS`; no error shown  |
+| `localStorage` corrupted / cleared     | `appConfigStore` initialises from `DEFAULT_TABLE_APPEARANCE_CONFIGS`; no error shown  |
 | Font size set to max (20px)            | Columns auto-resize via AG Grid built-in column resize; no manual intervention needed |
 | Setting changed while table is loading | Computed theme updates; AG Grid applies it when data rows render                      |
 | Light mode → dark mode switch          | `useTableTheme` selects `accentColorDark`; no cross-mode bleed                        |

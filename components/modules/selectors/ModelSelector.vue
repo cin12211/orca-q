@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { cn } from '@/lib/utils';
+import { AIProvider } from '~/components/modules/settings/types';
 import { AI_PROVIDERS } from '~/core/constants/agent';
-import type { AIProvider } from '~/core/stores/appLayoutStore';
 
 const props = defineProps<{
   provider: AIProvider;

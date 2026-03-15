@@ -695,11 +695,11 @@
         },
         {
           "dynamic": false,
-          "module": "~/core/stores/appLayoutStore",
+          "module": "~/core/stores/appConfigStore",
           "moduleSystem": "es6",
           "exoticallyRequired": false,
           "dependencyTypes": ["unknown"],
-          "resolved": "~/core/stores/appLayoutStore",
+          "resolved": "~/core/stores/appConfigStore",
           "coreModule": false,
           "followable": false,
           "couldNotResolve": true,
@@ -863,7 +863,7 @@
       "valid": true
     },
     {
-      "source": "~/core/stores/appLayoutStore",
+      "source": "~/core/stores/appConfigStore",
       "followable": false,
       "coreModule": false,
       "couldNotResolve": true,
@@ -4071,11 +4071,11 @@
         },
         {
           "dynamic": false,
-          "module": "~/core/stores/appLayoutStore",
+          "module": "~/core/stores/appConfigStore",
           "moduleSystem": "es6",
           "exoticallyRequired": false,
           "dependencyTypes": ["unknown"],
-          "resolved": "~/core/stores/appLayoutStore",
+          "resolved": "~/core/stores/appConfigStore",
           "coreModule": false,
           "followable": false,
           "couldNotResolve": true,
@@ -4338,11 +4338,11 @@
         },
         {
           "dynamic": false,
-          "module": "~/core/stores/appLayoutStore",
+          "module": "~/core/stores/appConfigStore",
           "moduleSystem": "es6",
           "exoticallyRequired": false,
           "dependencyTypes": ["unknown"],
-          "resolved": "~/core/stores/appLayoutStore",
+          "resolved": "~/core/stores/appConfigStore",
           "coreModule": false,
           "followable": false,
           "couldNotResolve": true,
@@ -4800,11 +4800,11 @@
         },
         {
           "dynamic": false,
-          "module": "~/core/stores/appLayoutStore",
+          "module": "~/core/stores/appConfigStore",
           "moduleSystem": "es6",
           "exoticallyRequired": false,
           "dependencyTypes": ["unknown"],
-          "resolved": "~/core/stores/appLayoutStore",
+          "resolved": "~/core/stores/appConfigStore",
           "coreModule": false,
           "followable": false,
           "couldNotResolve": true,
@@ -10405,11 +10405,11 @@
         },
         {
           "dynamic": false,
-          "module": "~/core/stores/appLayoutStore",
+          "module": "~/core/stores/appConfigStore",
           "moduleSystem": "es6",
           "exoticallyRequired": false,
           "dependencyTypes": ["unknown"],
-          "resolved": "~/core/stores/appLayoutStore",
+          "resolved": "~/core/stores/appConfigStore",
           "coreModule": false,
           "followable": false,
           "couldNotResolve": true,
@@ -12157,11 +12157,11 @@
         },
         {
           "dynamic": false,
-          "module": "~/core/stores/appLayoutStore",
+          "module": "~/core/stores/appConfigStore",
           "moduleSystem": "es6",
           "exoticallyRequired": false,
           "dependencyTypes": ["unknown"],
-          "resolved": "~/core/stores/appLayoutStore",
+          "resolved": "~/core/stores/appConfigStore",
           "coreModule": false,
           "followable": false,
           "couldNotResolve": true,
@@ -14170,11 +14170,11 @@
         },
         {
           "dynamic": false,
-          "module": "~/core/stores/appLayoutStore",
+          "module": "~/core/stores/appConfigStore",
           "moduleSystem": "es6",
           "exoticallyRequired": false,
           "dependencyTypes": ["unknown"],
-          "resolved": "~/core/stores/appLayoutStore",
+          "resolved": "~/core/stores/appConfigStore",
           "coreModule": false,
           "followable": false,
           "couldNotResolve": true,
@@ -14299,11 +14299,11 @@
         },
         {
           "dynamic": false,
-          "module": "~/core/stores/appLayoutStore",
+          "module": "~/core/stores/appConfigStore",
           "moduleSystem": "es6",
           "exoticallyRequired": false,
           "dependencyTypes": ["unknown"],
-          "resolved": "~/core/stores/appLayoutStore",
+          "resolved": "~/core/stores/appConfigStore",
           "coreModule": false,
           "followable": false,
           "couldNotResolve": true,
@@ -14468,11 +14468,11 @@
         },
         {
           "dynamic": false,
-          "module": "~/core/stores/appLayoutStore",
+          "module": "~/core/stores/appConfigStore",
           "moduleSystem": "es6",
           "exoticallyRequired": false,
           "dependencyTypes": ["unknown"],
-          "resolved": "~/core/stores/appLayoutStore",
+          "resolved": "~/core/stores/appConfigStore",
           "coreModule": false,
           "followable": false,
           "couldNotResolve": true,
@@ -15651,11 +15651,11 @@
         },
         {
           "dynamic": false,
-          "module": "~/core/stores/appLayoutStore",
+          "module": "~/core/stores/appConfigStore",
           "moduleSystem": "es6",
           "exoticallyRequired": false,
           "dependencyTypes": ["unknown"],
-          "resolved": "~/core/stores/appLayoutStore",
+          "resolved": "~/core/stores/appConfigStore",
           "coreModule": false,
           "followable": false,
           "couldNotResolve": true,
@@ -16307,11 +16307,11 @@
         },
         {
           "dynamic": false,
-          "module": "~/core/stores/appLayoutStore",
+          "module": "~/core/stores/appConfigStore",
           "moduleSystem": "es6",
           "exoticallyRequired": false,
           "dependencyTypes": ["unknown"],
-          "resolved": "~/core/stores/appLayoutStore",
+          "resolved": "~/core/stores/appConfigStore",
           "coreModule": false,
           "followable": false,
           "couldNotResolve": true,
@@ -16513,11 +16513,11 @@
         },
         {
           "dynamic": false,
-          "module": "~/core/stores/appLayoutStore",
+          "module": "~/core/stores/appConfigStore",
           "moduleSystem": "es6",
           "exoticallyRequired": false,
           "dependencyTypes": ["unknown"],
-          "resolved": "~/core/stores/appLayoutStore",
+          "resolved": "~/core/stores/appConfigStore",
           "coreModule": false,
           "followable": false,
           "couldNotResolve": true,
@@ -19097,11 +19097,11 @@
         },
         {
           "dynamic": false,
-          "module": "~/core/stores/appLayoutStore",
+          "module": "~/core/stores/appConfigStore",
           "moduleSystem": "es6",
           "exoticallyRequired": false,
           "dependencyTypes": ["unknown"],
-          "resolved": "~/core/stores/appLayoutStore",
+          "resolved": "~/core/stores/appConfigStore",
           "coreModule": false,
           "followable": false,
           "couldNotResolve": true,
@@ -19303,11 +19303,11 @@
         },
         {
           "dynamic": false,
-          "module": "~/core/stores/appLayoutStore",
+          "module": "~/core/stores/appConfigStore",
           "moduleSystem": "es6",
           "exoticallyRequired": false,
           "dependencyTypes": ["unknown"],
-          "resolved": "~/core/stores/appLayoutStore",
+          "resolved": "~/core/stores/appConfigStore",
           "coreModule": false,
           "followable": false,
           "couldNotResolve": true,
@@ -19350,11 +19350,11 @@
         },
         {
           "dynamic": false,
-          "module": "~/core/stores/appLayoutStore",
+          "module": "~/core/stores/appConfigStore",
           "moduleSystem": "es6",
           "exoticallyRequired": false,
           "dependencyTypes": ["unknown"],
-          "resolved": "~/core/stores/appLayoutStore",
+          "resolved": "~/core/stores/appConfigStore",
           "coreModule": false,
           "followable": false,
           "couldNotResolve": true,
@@ -37820,11 +37820,11 @@
         },
         {
           "dynamic": false,
-          "module": "~/core/stores/appLayoutStore",
+          "module": "~/core/stores/appConfigStore",
           "moduleSystem": "es6",
           "exoticallyRequired": false,
           "dependencyTypes": ["unknown"],
-          "resolved": "~/core/stores/appLayoutStore",
+          "resolved": "~/core/stores/appConfigStore",
           "coreModule": false,
           "followable": false,
           "couldNotResolve": true,
@@ -38467,11 +38467,11 @@
       "dependencies": [
         {
           "dynamic": false,
-          "module": "~/core/stores/appLayoutStore",
+          "module": "~/core/stores/appConfigStore",
           "moduleSystem": "es6",
           "exoticallyRequired": false,
           "dependencyTypes": ["unknown"],
-          "resolved": "~/core/stores/appLayoutStore",
+          "resolved": "~/core/stores/appConfigStore",
           "coreModule": false,
           "followable": false,
           "couldNotResolve": true,
@@ -40271,7 +40271,7 @@
       "valid": true
     },
     {
-      "source": "core/stores/appLayoutStore.ts",
+      "source": "core/stores/appConfigStore.ts",
       "dependencies": [
         {
           "dynamic": false,
@@ -40685,11 +40685,11 @@
         },
         {
           "dynamic": false,
-          "module": "~/core/stores/appLayoutStore",
+          "module": "~/core/stores/appConfigStore",
           "moduleSystem": "es6",
           "exoticallyRequired": false,
           "dependencyTypes": ["unknown"],
-          "resolved": "~/core/stores/appLayoutStore",
+          "resolved": "~/core/stores/appConfigStore",
           "coreModule": false,
           "followable": false,
           "couldNotResolve": true,
@@ -47691,7 +47691,7 @@
       {
         "type": "dependency",
         "from": "components/base/code-editor/BaseCodeEditor.vue",
-        "to": "~/core/stores/appLayoutStore",
+        "to": "~/core/stores/appConfigStore",
         "rule": {
           "severity": "error",
           "name": "not-to-unresolvable"
@@ -47844,7 +47844,7 @@
       {
         "type": "dependency",
         "from": "components/modules/app-shell/activity-bar/hooks/useActivityMenu.ts",
-        "to": "~/core/stores/appLayoutStore",
+        "to": "~/core/stores/appConfigStore",
         "rule": {
           "severity": "error",
           "name": "not-to-unresolvable"
@@ -47970,7 +47970,7 @@
       {
         "type": "dependency",
         "from": "components/modules/app-shell/primary-side-bar/components/PrimarySideBar.vue",
-        "to": "~/core/stores/appLayoutStore",
+        "to": "~/core/stores/appConfigStore",
         "rule": {
           "severity": "error",
           "name": "not-to-unresolvable"
@@ -48069,7 +48069,7 @@
       {
         "type": "dependency",
         "from": "components/modules/app-shell/tab-view-container/components/TabViewContainer.vue",
-        "to": "~/core/stores/appLayoutStore",
+        "to": "~/core/stores/appConfigStore",
         "rule": {
           "severity": "error",
           "name": "not-to-unresolvable"
@@ -49158,7 +49158,7 @@
       {
         "type": "dependency",
         "from": "components/modules/management/schemas/hooks/context-menu/useContextMenuHelpers.ts",
-        "to": "~/core/stores/appLayoutStore",
+        "to": "~/core/stores/appConfigStore",
         "rule": {
           "severity": "error",
           "name": "not-to-unresolvable"
@@ -49680,7 +49680,7 @@
       {
         "type": "dependency",
         "from": "components/modules/quick-query/previewRelationTable/ReferencedTable.vue",
-        "to": "~/core/stores/appLayoutStore",
+        "to": "~/core/stores/appConfigStore",
         "rule": {
           "severity": "error",
           "name": "not-to-unresolvable"
@@ -49725,7 +49725,7 @@
       {
         "type": "dependency",
         "from": "components/modules/quick-query/quick-query-control-bar/QuickQueryControlBar.vue",
-        "to": "~/core/stores/appLayoutStore",
+        "to": "~/core/stores/appConfigStore",
         "rule": {
           "severity": "error",
           "name": "not-to-unresolvable"
@@ -49923,7 +49923,7 @@
       {
         "type": "dependency",
         "from": "components/modules/quick-query/quick-query-table/QuickQueryContextMenu.vue",
-        "to": "~/core/stores/appLayoutStore",
+        "to": "~/core/stores/appConfigStore",
         "rule": {
           "severity": "error",
           "name": "not-to-unresolvable"
@@ -50022,7 +50022,7 @@
       {
         "type": "dependency",
         "from": "components/modules/quick-query/QuickQuery.vue",
-        "to": "~/core/stores/appLayoutStore",
+        "to": "~/core/stores/appConfigStore",
         "rule": {
           "severity": "error",
           "name": "not-to-unresolvable"
@@ -50265,7 +50265,7 @@
       {
         "type": "dependency",
         "from": "components/modules/raw-query/components/RawQueryLayout.vue",
-        "to": "~/core/stores/appLayoutStore",
+        "to": "~/core/stores/appConfigStore",
         "rule": {
           "severity": "error",
           "name": "not-to-unresolvable"
@@ -50634,7 +50634,7 @@
       {
         "type": "dependency",
         "from": "components/modules/raw-query/RawQuery.vue",
-        "to": "~/core/stores/appLayoutStore",
+        "to": "~/core/stores/appConfigStore",
         "rule": {
           "severity": "error",
           "name": "not-to-unresolvable"
@@ -50769,7 +50769,7 @@
       {
         "type": "dependency",
         "from": "components/modules/selectors/ModelSelector.vue",
-        "to": "~/core/stores/appLayoutStore",
+        "to": "~/core/stores/appConfigStore",
         "rule": {
           "severity": "error",
           "name": "not-to-unresolvable"
@@ -50895,7 +50895,7 @@
       {
         "type": "dependency",
         "from": "components/modules/settings/AgentConfig.vue",
-        "to": "~/core/stores/appLayoutStore",
+        "to": "~/core/stores/appConfigStore",
         "rule": {
           "severity": "error",
           "name": "not-to-unresolvable"
@@ -50931,7 +50931,7 @@
       {
         "type": "dependency",
         "from": "components/modules/settings/EditorConfig.vue",
-        "to": "~/core/stores/appLayoutStore",
+        "to": "~/core/stores/appConfigStore",
         "rule": {
           "severity": "error",
           "name": "not-to-unresolvable"
@@ -50976,7 +50976,7 @@
       {
         "type": "dependency",
         "from": "components/modules/settings/QuickQueryConfig.vue",
-        "to": "~/core/stores/appLayoutStore",
+        "to": "~/core/stores/appConfigStore",
         "rule": {
           "severity": "error",
           "name": "not-to-unresolvable"
@@ -53127,7 +53127,7 @@
       {
         "type": "dependency",
         "from": "core/composables/useAiChat.ts",
-        "to": "~/core/stores/appLayoutStore",
+        "to": "~/core/stores/appConfigStore",
         "rule": {
           "severity": "error",
           "name": "not-to-unresolvable"
@@ -53217,7 +53217,7 @@
       {
         "type": "dependency",
         "from": "core/constants/agent.ts",
-        "to": "~/core/stores/appLayoutStore",
+        "to": "~/core/stores/appConfigStore",
         "rule": {
           "severity": "error",
           "name": "not-to-unresolvable"
@@ -53279,7 +53279,7 @@
       },
       {
         "type": "dependency",
-        "from": "core/stores/appLayoutStore.ts",
+        "from": "core/stores/appConfigStore.ts",
         "to": "~/components/base/code-editor/constants",
         "rule": {
           "severity": "error",
@@ -53288,7 +53288,7 @@
       },
       {
         "type": "dependency",
-        "from": "core/stores/appLayoutStore.ts",
+        "from": "core/stores/appConfigStore.ts",
         "to": "~/components/modules/raw-query/constants",
         "rule": {
           "severity": "error",
@@ -53397,7 +53397,7 @@
       {
         "type": "dependency",
         "from": "layouts/default.vue",
-        "to": "~/core/stores/appLayoutStore",
+        "to": "~/core/stores/appConfigStore",
         "rule": {
           "severity": "error",
           "name": "not-to-unresolvable"

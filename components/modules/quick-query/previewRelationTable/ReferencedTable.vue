@@ -7,10 +7,10 @@ import {
   DEFAULT_QUERY_SIZE,
   OperatorSet,
 } from '~/core/constants';
-import { TabViewType } from '~/core/stores';
-import { useAppLayoutStore } from '~/core/stores/appLayoutStore';
-import { useManagementConnectionStore } from '~/core/stores/managementConnectionStore';
 import { DatabaseClientType } from '~/core/constants/database-client-type';
+import { TabViewType } from '~/core/stores';
+import { useAppConfigStore } from '~/core/stores/appConfigStore';
+import { useManagementConnectionStore } from '~/core/stores/managementConnectionStore';
 import WrapperErdDiagram from '../../erd-diagram/WrapperErdDiagram.vue';
 import { buildTableNodeId } from '../../erd-diagram/utils';
 import QuickQueryErrorPopup from '../QuickQueryErrorPopup.vue';
@@ -64,7 +64,7 @@ const emit = defineEmits<{
 const { quickQueryFilterRef, quickQueryTableRef, selectedRows, focusedCell } =
   useQuickQuery();
 
-const appLayoutStore = useAppLayoutStore();
+const appConfigStore = useAppConfigStore();
 const connectionStore = useManagementConnectionStore();
 
 // Safe mode confirmation dialog state
@@ -172,7 +172,7 @@ const {
   refreshCount,
   focusedCell,
   connection,
-  safeModeEnabled: toRef(appLayoutStore, 'quickQuerySafeModeEnabled'),
+  safeModeEnabled: toRef(appConfigStore, 'quickQuerySafeModeEnabled'),
   onRequestSafeModeConfirm,
 });
 

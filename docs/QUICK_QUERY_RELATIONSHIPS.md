@@ -26,7 +26,7 @@ The **Quick Query** module is the central interface for interacting with databas
 | :--------------------- | :-------------------------------------------------------------------------------------------------------------------------------- |
 | **`useTabViewsStore`** | **Primary Source of Truth**. Stores the list of open tabs, their metadata (table name, schema name, type), and the active tab ID. |
 | **`useWSStateStore`**  | Manages the global workspace and connection context. Used by `QuickQuery` to know _which_ database to query.                      |
-| **`appLayoutStore`**   | Controls UI panels (e.g., toggling the history logs bottom panel).                                                                |
+| **`appConfigStore`**   | Controls UI panels (e.g., toggling the history logs bottom panel).                                                                |
 
 ### 3. Component Hierarchy
 

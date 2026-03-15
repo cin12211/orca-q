@@ -54,7 +54,7 @@ export const useTabViewsStore = defineStore('tab-views', () => {
 
 **Files affected:**
 
-- `appLayoutStore.ts` - Uses `reactive()` inline
+- `appConfigStore.ts` - Uses `reactive()` inline
 - `useTabViewsStore.ts` - Uses `ref()` pattern
 - `managementConnectionStore.ts` - Mixed patterns
 

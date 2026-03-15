@@ -1,26 +1,31 @@
-import type { ThinkingStyle } from '~/core/stores/appLayoutStore';
-import type { SettingsNavItem } from '../types';
+import {
+  ThinkingStyle,
+  SettingsComponentKey,
+  type SettingsNavItem,
+  type TableAppearanceConfigs,
+  type ChatUiConfigs,
+} from '../types';
 
 export const SETTINGS_NAV_ITEMS: SettingsNavItem[] = [
   {
     name: 'Appearance',
     icon: 'hugeicons:paint-brush-02',
-    componentKey: 'AppearanceConfig',
+    componentKey: SettingsComponentKey.AppearanceConfig,
   },
   {
     name: 'Editor',
     icon: 'hugeicons:scroll',
-    componentKey: 'EditorConfig',
+    componentKey: SettingsComponentKey.EditorConfig,
   },
   {
     name: 'Quick Query',
     icon: 'hugeicons:grid-table',
-    componentKey: 'QuickQueryConfig',
+    componentKey: SettingsComponentKey.QuickQueryConfig,
   },
   {
     name: 'Agent',
     icon: 'hugeicons:chat-bot',
-    componentKey: 'AgentConfig',
+    componentKey: SettingsComponentKey.AgentConfig,
   },
   { name: 'Language & region', icon: 'hugeicons:globe', disable: true },
   { name: 'Privacy & visibility', icon: 'hugeicons:lock', disable: true },
@@ -71,16 +76,34 @@ export const THEME_MODE_OPTIONS = [
 
 export type ThemeMode = (typeof THEME_MODE_OPTIONS)[number]['value'];
 
+export const DEFAULT_TABLE_APPEARANCE_CONFIGS: TableAppearanceConfigs = {
+  fontSize: 12,
+  rowHeight: 25,
+  cellSpacing: 2.8,
+  accentColorLight: '#2196F3',
+  accentColorDark: '#2196F3',
+  headerFontSize: 12,
+  headerFontWeight: 700,
+  headerBackgroundColorLight: '',
+  headerBackgroundColorDark: '',
+};
+
+export const DEFAULT_CHAT_UI_CONFIG: ChatUiConfigs = {
+  fontSize: 12,
+  codeFontSize: 12,
+  thinkingStyle: ThinkingStyle.Shimmer,
+};
+
 export const THINKING_STYLE_OPTIONS: Array<{
   label: string;
   value: ThinkingStyle;
 }> = [
   {
     label: 'Shimmer',
-    value: 'shimmer',
+    value: ThinkingStyle.Shimmer,
   },
   {
     label: 'Scramble',
-    value: 'scramble',
+    value: ThinkingStyle.Scramble,
   },
 ];

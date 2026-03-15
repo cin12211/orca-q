@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { isElectron, isPWA } from '~/core/helpers';
-import { useAppLayoutStore } from '~/core/stores/appLayoutStore';
+import { useAppConfigStore } from '~/core/stores/appConfigStore';
 import { ActivityBarHorizontal } from '../../activity-bar';
 import TabViews from './TabViews.vue';
 
@@ -10,16 +10,16 @@ const props = defineProps<{
 
 const route = useRoute();
 
-const appLayoutStore = useAppLayoutStore();
+const appConfigStore = useAppConfigStore();
 
 const { isPrimarySidebarCollapsed, isSecondSidebarCollapsed } =
-  toRefs(appLayoutStore);
+  toRefs(appConfigStore);
 
 const isPWAApp = computed(() => isPWA());
 const isElectronApp = computed(() => isElectron());
 
 const minWidth = computed(() => {
-  const widthPercentage = appLayoutStore.layoutSize[0];
+  const widthPercentage = appConfigStore.layoutSize[0];
 
   if (!widthPercentage) {
     return '2.25rem';
@@ -85,7 +85,7 @@ const isAccessRightPanel = computed(() => {
             <Button
               variant="ghost"
               size="iconSm"
-              @click="appLayoutStore.onToggleActivityBarPanel()"
+              @click="appConfigStore.onToggleActivityBarPanel()"
             >
               <Icon
                 name="hugeicons:sidebar-left"
@@ -110,7 +110,7 @@ const isAccessRightPanel = computed(() => {
             v-if="isAccessRightPanel"
             variant="ghost"
             size="iconSm"
-            @click="appLayoutStore.onToggleSecondSidebar()"
+            @click="appConfigStore.onToggleSecondSidebar()"
           >
             <Icon
               name="hugeicons:sidebar-right"

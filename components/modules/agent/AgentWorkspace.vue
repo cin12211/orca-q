@@ -10,10 +10,8 @@ import {
   watch,
 } from 'vue';
 import { ScrambleText } from '#components';
-import {
-  type AIProvider,
-  useAppLayoutStore,
-} from '~/core/stores/appLayoutStore';
+import { AIProvider, ThinkingStyle } from '~/components/modules/settings/types';
+import { useAppConfigStore } from '~/core/stores/appConfigStore';
 import AgentAttachmentPanel from './components/AgentAttachmentPanel.vue';
 import AgentChatFooter from './components/AgentChatFooter.vue';
 import AgentMessageBubble from './components/AgentMessageBubble.vue';
@@ -41,9 +39,9 @@ const {
   startNewChat,
 } = useAgentWorkspace();
 
-const appLayoutStore = useAppLayoutStore();
+const appConfigStore = useAppConfigStore();
 const thinkingStyle = computed(
-  () => appLayoutStore.chatUiConfigs.thinkingStyle
+  () => appConfigStore.chatUiConfigs.thinkingStyle
 );
 
 const {
@@ -519,7 +517,7 @@ const promptCards = computed(() => {
                   <Icon class="size-7! text-primary" name="icons:logo-8-bits" />
 
                   <div class="font-medium text-muted-foreground chat-text">
-                    <Shimmer v-if="thinkingStyle === 'shimmer'">
+                    <Shimmer v-if="thinkingStyle === ThinkingStyle.Shimmer">
                       Thinking...
                     </Shimmer>
                     <ScrambleText

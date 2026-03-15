@@ -104,7 +104,7 @@ shared/
 │   ├── useTabViewsStore.ts    # Tab management
 │   ├── useSchemaStore.ts      # Schema metadata cache
 │   ├── useActivityBarStore.ts # Activity bar state
-│   ├── appLayoutStore.ts      # Layout & settings
+│   ├── appConfigStore.ts      # Layout & settings
 │   ├── erdStore.ts            # ERD diagram state
 │   ├── useExplorerFileStore.ts # SQL file explorer
 │   └── useQuickQueryLogs.ts   # Query history logs

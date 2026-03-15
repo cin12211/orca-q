@@ -1,12 +1,12 @@
 <script setup lang="ts">
 import { Icon, Tooltip, TooltipContent, TooltipTrigger } from '#components';
 import { useSettingsModal } from '~/core/contexts/useSettingsModal';
-import { useAppLayoutStore } from '~/core/stores/appLayoutStore';
+import { useAppConfigStore } from '~/core/stores/appConfigStore';
 import { QuickQueryTabView } from '../constants';
 import QuickPagination from './QuickPagination.vue';
 import RefreshButton from './RefreshButton.vue';
 
-const appLayoutStore = useAppLayoutStore();
+const appConfigStore = useAppConfigStore();
 const { openSettings } = useSettingsModal();
 
 const props = defineProps<{
@@ -220,7 +220,7 @@ const isDataView = computed(() => {
             @click="openSettings('Quick Query')"
           >
             <Icon
-              v-if="appLayoutStore.quickQuerySafeModeEnabled"
+              v-if="appConfigStore.quickQuerySafeModeEnabled"
               name="lucide:shield-check"
               class="size-4!"
             />
@@ -235,7 +235,7 @@ const isDataView = computed(() => {
           <p>
             Safe Mode:
             {{
-              appLayoutStore.quickQuerySafeModeEnabled ? 'Enabled' : 'Disabled'
+              appConfigStore.quickQuerySafeModeEnabled ? 'Enabled' : 'Disabled'
             }}
           </p>
           <p class="text-xs text-muted-foreground">Click to configure</p>

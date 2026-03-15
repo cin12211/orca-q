@@ -509,7 +509,7 @@ graph TD
 
 #### Violations Detected
 
-1. **Core → Components coupling (MEDIUM):** `core/stores/appLayoutStore.ts` imports from `~/components/base/code-editor/constants` and `~/components/modules/raw-query/constants`. This breaks the Core ← Feature dependency rule.
+1. **Core → Components coupling (MEDIUM):** `core/stores/appConfigStore.ts` imports from `~/components/base/code-editor/constants` and `~/components/modules/raw-query/constants`. This breaks the Core ← Feature dependency rule.
 
    - **Impact:** Core kernel is not independently testable without component modules.
    - **Fix:** Extract `EditorTheme`, `RawQueryEditorLayout`, `RawQueryEditorDefaultSize`, and `CustomLayoutDefinition` into `core/constants/` or `core/types/`.
@@ -593,7 +593,7 @@ All state lives in Pinia stores under `core/stores/`, using the **Composition AP
 | `useExplorerFileStore`         | IndexedDB (custom)          | Global         | SQL file tree with content                                         |
 | `useQuickQueryLogs`            | IndexedDB (custom)          | Per-connection | Query execution history                                            |
 | `useErdStore`                  | None                        | Global         | ERD table metadata cache                                           |
-| `useAppLayoutStore`            | localStorage (Pinia plugin) | Global         | Panel sizes, editor config, AI settings, custom layouts, safe mode |
+| `useAppConfigStore`            | localStorage (Pinia plugin) | Global         | Panel sizes, editor config, AI settings, custom layouts, safe mode |
 
 ### Global vs. Local State
 
@@ -751,7 +751,7 @@ shadcn-vue "New York" style with:
 
 ### Token Handling
 
-AI API keys are stored in **localStorage** via Pinia persisted state (`useAppLayoutStore.agentApiKeyConfigs`). This is a **known risk** for web deployments — localStorage is accessible to any JavaScript running on the same origin.
+AI API keys are stored in **localStorage** via Pinia persisted state (`useAppConfigStore.agentApiKeyConfigs`). This is a **known risk** for web deployments — localStorage is accessible to any JavaScript running on the same origin.
 
 ### SSR Security Risks
 
@@ -841,7 +841,7 @@ The architecture is **well-suited for a desktop/local tool** but would need sign
 | -------------------------- | ----- | --------------------------------------------------------------------------------------------------------------- |
 | **Modularity**             | 8/10  | Strong feature module isolation. Minor core→feature coupling violations.                                        |
 | **Type Safety**            | 9/10  | Excellent TypeScript coverage. Typed routes, typed store returns, Zod validation.                               |
-| **Separation of Concerns** | 7/10  | Good overall, but core depends on component-level constants (appLayoutStore).                                   |
+| **Separation of Concerns** | 7/10  | Good overall, but core depends on component-level constants (appConfigStore).                                   |
 | **Server Architecture**    | 8/10  | Clean adapter pattern with factory + base class. LRU caching. Graceful shutdown.                                |
 | **UI Architecture**        | 8/10  | shadcn-vue with proper headless primitive layering. Consistent patterns.                                        |
 | **State Management**       | 7/10  | Well-structured Pinia stores, but dual persistence mechanism (Pinia plugin + custom IndexedDB) adds complexity. |

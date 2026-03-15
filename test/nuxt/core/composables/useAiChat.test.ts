@@ -1,5 +1,6 @@
 import { nextTick, ref } from 'vue';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { AIProvider } from '~/components/modules/settings/types';
 import { useAiChat } from '~/core/composables/useAiChat';
 import { AI_PROVIDERS } from '~/core/constants/agent';
 
@@ -23,7 +24,7 @@ const {
     messages: [] as Array<{ text: string }>,
   },
   storeSeed: {
-    agentSelectedProvider: 'google',
+    agentSelectedProvider: AIProvider.Google,
     agentSelectedModel: 'gemini-2.5-flash',
     agentApiKeyConfigs: {
       openai: '',
@@ -75,8 +76,8 @@ vi.mock('@ai-sdk/vue', () => ({
   },
 }));
 
-vi.mock('~/core/stores/appLayoutStore', () => ({
-  useAppLayoutStore: vi.fn(() => storeSeed),
+vi.mock('~/core/stores/appConfigStore', () => ({
+  useAppConfigStore: vi.fn(() => storeSeed),
 }));
 
 describe('useAiChat', () => {
@@ -87,7 +88,7 @@ describe('useAiChat', () => {
     chatSeed.error = null;
     chatSeed.messages = [];
 
-    storeSeed.agentSelectedProvider = 'google';
+    storeSeed.agentSelectedProvider = AIProvider.Google;
     storeSeed.agentSelectedModel = 'gemini-2.5-flash';
     storeSeed.agentApiKeyConfigs = {
       openai: '',
@@ -99,7 +100,7 @@ describe('useAiChat', () => {
 
   it('initializes selected provider from store', () => {
     const { selectedProvider } = useAiChat();
-    expect(selectedProvider.value).toBe('google');
+    expect(selectedProvider.value).toBe(AIProvider.Google);
   });
 
   it('initializes selected model from store', () => {
@@ -109,7 +110,7 @@ describe('useAiChat', () => {
 
   it('derives current provider config from selected provider', () => {
     const { currentProvider } = useAiChat();
-    expect(currentProvider.value.id).toBe('google');
+    expect(currentProvider.value.id).toBe(AIProvider.Google);
     expect(currentProvider.value.name).toBe('Google Gemini');
   });
 
@@ -127,7 +128,7 @@ describe('useAiChat', () => {
   it('reports hasApiKey false when switching to provider without key', async () => {
     const { selectedProvider, hasApiKey } = useAiChat();
 
-    selectedProvider.value = 'openai';
+    selectedProvider.value = AIProvider.OpenAI;
     await nextTick();
 
     expect(hasApiKey.value).toBe(false);
@@ -153,7 +154,7 @@ describe('useAiChat', () => {
 
   it('sendMessage ignores when api key is missing', async () => {
     const { selectedProvider, sendMessage } = useAiChat();
-    selectedProvider.value = 'openai';
+    selectedProvider.value = AIProvider.OpenAI;
     await nextTick();
 
     sendMessage('Run query');
@@ -174,10 +175,10 @@ describe('useAiChat', () => {
     const { selectedProvider, selectedModel } = useAiChat();
 
     selectedModel.value = 'non-existing-model';
-    selectedProvider.value = 'openai';
+    selectedProvider.value = AIProvider.OpenAI;
     await nextTick();
 
-    const firstOpenAiModel = AI_PROVIDERS.find(p => p.id === 'openai')
+    const firstOpenAiModel = AI_PROVIDERS.find(p => p.id === AIProvider.OpenAI)
       ?.models[0]?.id;
     expect(selectedModel.value).toBe(firstOpenAiModel);
   });
@@ -207,7 +208,7 @@ describe('useAiChat', () => {
     expect(latestChat.instance.transport.api).toBe('/api/ai/agent');
     expect(latestChat.instance.transport.body()).toEqual({
       dbConnectionString: 'postgres://localhost/db',
-      provider: 'google',
+      provider: AIProvider.Google,
       model: 'gemini-2.5-flash',
       apiKey: 'google-key',
     });

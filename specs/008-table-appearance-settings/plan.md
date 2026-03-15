@@ -5,13 +5,13 @@
 
 ## Summary
 
-Add a "Table Appearance" settings section that lets users configure font size, row-height spacing preset, and per-mode accent color for all AG Grid table instances. Changes apply reactively in real time and persist across sessions via the existing Pinia `appLayoutStore` (`persist: true`). The single integration point is the `useTableTheme` composable, which will be extended to merge user preferences on top of the base light/dark themes via AG Grid's `withParams()` API.
+Add a "Table Appearance" settings section that lets users configure font size, row-height spacing preset, and per-mode accent color for all AG Grid table instances. Changes apply reactively in real time and persist across sessions via the existing Pinia `appConfigStore` (`persist: true`). The single integration point is the `useTableTheme` composable, which will be extended to merge user preferences on top of the base light/dark themes via AG Grid's `withParams()` API.
 
 ## Technical Context
 
 **Language/Version**: TypeScript 5 / Vue 3.5 / Nuxt 3 (SPA, `ssr: false`)  
 **Primary Dependencies**: AG Grid v33 (`ag-grid-community`, `ag-grid-vue3`) with `themeBalham`; Pinia (`pinia-plugin-persistedstate`); `@nuxtjs/color-mode`; shadcn-vue UI components; VueUse  
-**Storage**: `localStorage` via Pinia `persist: true` — same mechanism already used for `codeEditorConfigs`, `chatUiConfigs`, `quickQuerySafeModeEnabled` in `appLayoutStore`  
+**Storage**: `localStorage` via Pinia `persist: true` — same mechanism already used for `codeEditorConfigs`, `chatUiConfigs`, `quickQuerySafeModeEnabled` in `appConfigStore`  
 **Testing**: Vitest (unit), Vue Test Utils (component), Playwright (E2E per `playwright.config.ts`)  
 **Target Platform**: Browser (Chromium) + Electron desktop wrapper  
 **Project Type**: Web application (Nuxt SPA)  
@@ -30,9 +30,9 @@ _GATE: Must pass before Phase 0 research. Re-check after Phase 1 design._
 | Layer                                        | This feature's additions                                                    | Verdict |
 | -------------------------------------------- | --------------------------------------------------------------------------- | ------- |
 | `components/` (`TableAppearancePreview.vue`) | Imports `types/`, `constants/` only                                         | ✅      |
-| `components/` (`TableAppearanceConfig.vue`)  | Imports `types/`, `constants/`, `appLayoutStore` via auto-import            | ✅      |
-| `hooks/` (`useTableTheme`)                   | Imports `services/` — N/A; imports `appLayoutStore`, `constants/`, `types/` | ✅      |
-| `core/stores/` (`appLayoutStore`)            | Extended with `tableAppearanceConfigs` — no new external imports            | ✅      |
+| `components/` (`TableAppearanceConfig.vue`)  | Imports `types/`, `constants/`, `appConfigStore` via auto-import            | ✅      |
+| `hooks/` (`useTableTheme`)                   | Imports `services/` — N/A; imports `appConfigStore`, `constants/`, `types/` | ✅      |
+| `core/stores/` (`appConfigStore`)            | Extended with `tableAppearanceConfigs` — no new external imports            | ✅      |
 
 ## Project Structure
 
@@ -51,7 +51,7 @@ specs/008-table-appearance-settings/
 
 ```text
 core/stores/
-└── appLayoutStore.ts                         MODIFY — add TableAppearanceConfigs interface + tableAppearanceConfigs reactive + reset action
+└── appConfigStore.ts                         MODIFY — add TableAppearanceConfigs interface + tableAppearanceConfigs reactive + reset action
 
 components/base/dynamic-table/
 ├── constants/
@@ -75,7 +75,7 @@ test/unit/
     └── tableAppearanceStore.spec.ts          NEW — unit tests for store defaults, reset, persistence shape
 ```
 
-**Structure Decision**: Frontend-only single project. No new modules created — changes extend the existing `settings` module and `dynamic-table` base component following the established module architecture pattern. The `TableAppearanceConfig` component is placed alongside `AppearanceConfig`, `EditorConfig`, etc. in `components/modules/settings/components/`. The store extension follows the exact same pattern as `codeEditorConfigs` and `chatUiConfigs` in `appLayoutStore`.
+**Structure Decision**: Frontend-only single project. No new modules created — changes extend the existing `settings` module and `dynamic-table` base component following the established module architecture pattern. The `TableAppearanceConfig` component is placed alongside `AppearanceConfig`, `EditorConfig`, etc. in `components/modules/settings/components/`. The store extension follows the exact same pattern as `codeEditorConfigs` and `chatUiConfigs` in `appConfigStore`.
 
 ## Complexity Tracking
 

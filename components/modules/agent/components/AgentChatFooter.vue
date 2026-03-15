@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
 import { Icon } from '#components';
-import type { AIProvider } from '~/core/stores/appLayoutStore';
+import type { AIProvider } from '~/components/modules/settings/types';
 import type { AgentCommandOptionId } from '../constants/command-options';
 import AgentChatInput from './AgentChatInput.vue';
 import AgentChatStatusBar from './AgentChatStatusBar.vue';

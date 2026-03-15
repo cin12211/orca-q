@@ -12,10 +12,10 @@ import {
   RawQueryEditorLayout,
   type CustomLayoutDefinition,
 } from '~/components/modules/raw-query/constants';
-import { useAppLayoutStore } from '~/core/stores/appLayoutStore';
+import { useAppConfigStore } from '~/core/stores/appConfigStore';
 import { LayoutBuilderDialog, LayoutPreview } from './layout-builder';
 
-const appLayoutStore = useAppLayoutStore();
+const appConfigStore = useAppConfigStore();
 
 // --- Custom Layout Dialog ---
 const isBuilderOpen = ref(false);
@@ -33,7 +33,7 @@ const openEditDialog = (layout: CustomLayoutDefinition) => {
 
 const onSaveLayout = (layout: CustomLayoutDefinition) => {
   if (editingLayout.value) {
-    const success = appLayoutStore.updateCustomLayout(layout.id, {
+    const success = appConfigStore.updateCustomLayout(layout.id, {
       name: layout.name,
       direction: layout.direction,
       panels: layout.panels,
@@ -42,31 +42,31 @@ const onSaveLayout = (layout: CustomLayoutDefinition) => {
 
     if (!success) return;
   } else {
-    const success = appLayoutStore.addCustomLayout(layout);
+    const success = appConfigStore.addCustomLayout(layout);
     if (!success) return;
   }
 
   // Auto-apply the saved layout
-  appLayoutStore.applyCustomLayout(layout.id);
+  appConfigStore.applyCustomLayout(layout.id);
 };
 
 const onDeleteLayout = (id: string) => {
-  appLayoutStore.deleteCustomLayout(id);
+  appConfigStore.deleteCustomLayout(id);
 };
 
 const isPresetActive = (preset: RawQueryEditorLayout): boolean => {
   return (
-    !appLayoutStore.isUsingCustomLayout &&
-    appLayoutStore.codeEditorLayout === preset
+    !appConfigStore.isUsingCustomLayout &&
+    appConfigStore.codeEditorLayout === preset
   );
 };
 
 const onSelectPreset = (preset: RawQueryEditorLayout) => {
-  appLayoutStore.applyPresetLayout(preset);
+  appConfigStore.applyPresetLayout(preset);
 };
 
 const canAddLayout = computed(
-  () => appLayoutStore.customLayouts.length < MAX_CUSTOM_LAYOUTS
+  () => appConfigStore.customLayouts.length < MAX_CUSTOM_LAYOUTS
 );
 </script>
 <template>
@@ -183,7 +183,7 @@ const canAddLayout = computed(
       </div>
 
       <div
-        v-if="appLayoutStore.customLayouts.length === 0"
+        v-if="appConfigStore.customLayouts.length === 0"
         class="text-sm text-muted-foreground px-1 py-3 text-center border border-dashed rounded-md"
       >
         No custom layouts yet. Click "Add Layout" to create one.
@@ -191,7 +191,7 @@ const canAddLayout = computed(
 
       <div v-else class="grid grid-cols-3 gap-3 px-1">
         <div
-          v-for="layout in appLayoutStore.customLayouts"
+          v-for="layout in appConfigStore.customLayouts"
           :key="layout.id"
           class="flex flex-col gap-1"
         >
@@ -218,12 +218,12 @@ const canAddLayout = computed(
               </Button>
             </div>
           </div>
-          <div @click="appLayoutStore.applyCustomLayout(layout.id)">
+          <div @click="appConfigStore.applyCustomLayout(layout.id)">
             <LayoutPreview
               :layout="layout"
               :isActive="
-                appLayoutStore.isUsingCustomLayout &&
-                appLayoutStore.activeCustomLayoutId === layout.id
+                appConfigStore.isUsingCustomLayout &&
+                appConfigStore.activeCustomLayoutId === layout.id
               "
               class="h-36"
             />
@@ -244,9 +244,9 @@ const canAddLayout = computed(
           <p class="text-sm">Font size</p>
           <Select
             @update:modelValue="
-              appLayoutStore.codeEditorConfigs.fontSize = $event as number
+              appConfigStore.codeEditorConfigs.fontSize = $event as number
             "
-            :modelValue="appLayoutStore.codeEditorConfigs.fontSize"
+            :modelValue="appConfigStore.codeEditorConfigs.fontSize"
           >
             <SelectTrigger size="sm" class="h-6! cursor-pointer">
               <SelectValue placeholder="Select font size" />
@@ -272,9 +272,9 @@ const canAddLayout = computed(
           <p class="text-sm">Theme</p>
           <Select
             @update:modelValue="
-              appLayoutStore.codeEditorConfigs.theme = $event as EditorTheme
+              appConfigStore.codeEditorConfigs.theme = $event as EditorTheme
             "
-            :modelValue="appLayoutStore.codeEditorConfigs.theme"
+            :modelValue="appConfigStore.codeEditorConfigs.theme"
           >
             <SelectTrigger size="sm" class="h-6! cursor-pointer">
               <SelectValue placeholder="Select theme" />
@@ -309,9 +309,9 @@ const canAddLayout = computed(
           <p class="text-sm">Mini map</p>
           <div class="flex items-center space-x-2">
             <Switch
-              v-model="appLayoutStore.codeEditorConfigs.showMiniMap"
+              v-model="appConfigStore.codeEditorConfigs.showMiniMap"
               @update:modelValue="
-                appLayoutStore.codeEditorConfigs.showMiniMap = $event
+                appConfigStore.codeEditorConfigs.showMiniMap = $event
               "
               id="airplane-mode"
               class="cursor-pointer"
@@ -322,9 +322,9 @@ const canAddLayout = computed(
           <p class="text-sm">Indentation</p>
           <div class="flex items-center space-x-2">
             <Switch
-              v-model="appLayoutStore.codeEditorConfigs.indentation"
+              v-model="appConfigStore.codeEditorConfigs.indentation"
               @update:modelValue="
-                appLayoutStore.codeEditorConfigs.indentation = $event
+                appConfigStore.codeEditorConfigs.indentation = $event
               "
               id="airplane-mode"
               class="cursor-pointer"

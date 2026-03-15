@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { EditorView } from '@codemirror/view';
 import BaseCodeEditor from '~/components/base/code-editor/BaseCodeEditor.vue';
-import { useAppLayoutStore } from '~/core/stores/appLayoutStore';
+import { useAppConfigStore } from '~/core/stores/appConfigStore';
 import IntroRawQuery from './components/IntroRawQuery.vue';
 import RawQueryEditorContextMenu from './components/RawQueryEditorContextMenu.vue';
 import RawQueryEditorFooter from './components/RawQueryEditorFooter.vue';
@@ -13,7 +13,7 @@ import { useRawQueryEditor, useRawQueryFileContent } from './hooks';
 import { useRawQueryEditorContextMenu } from './hooks/useRawQueryEditorContextMenu';
 
 const route = useRoute('workspaceId-connectionId-explorer-fileId');
-const appLayoutStore = useAppLayoutStore();
+const appConfigStore = useAppConfigStore();
 const rawQueryFileContent = useRawQueryFileContent();
 const {
   connection,
@@ -136,8 +136,8 @@ onActivated(async () => {
 
 <template>
   <RawQueryLayout
-    :layout="appLayoutStore.codeEditorLayout"
-    :customLayout="appLayoutStore.activeCustomLayout"
+    :layout="appConfigStore.codeEditorLayout"
+    :customLayout="appConfigStore.activeCustomLayout"
   >
     <template #content>
       <div class="flex flex-col h-full p-1">
@@ -148,7 +148,7 @@ onActivated(async () => {
             :connection="connection"
             :workspaceId="route.params.workspaceId"
             :file-variables="fileVariables"
-            :code-editor-layout="appLayoutStore.codeEditorLayout"
+            :code-editor-layout="appConfigStore.codeEditorLayout"
             :currentFileInfo="currentFile"
             @update:update-file-variables="updateFileVariables"
           />

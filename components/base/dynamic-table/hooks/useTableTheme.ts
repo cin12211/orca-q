@@ -1,5 +1,5 @@
 import { computed } from 'vue';
-import { useAppLayoutStore } from '~/core/stores/appLayoutStore';
+import { useAppConfigStore } from '~/core/stores/appConfigStore';
 import { baseTableThemeDark, baseTableThemeLight } from '../constants';
 
 /**
@@ -9,10 +9,10 @@ import { baseTableThemeDark, baseTableThemeLight } from '../constants';
  */
 export function useTableTheme() {
   const colorMode = useColorMode();
-  const appLayoutStore = useAppLayoutStore();
+  const appConfigStore = useAppConfigStore();
 
   return computed(() => {
-    const configs = appLayoutStore.tableAppearanceConfigs;
+    const configs = appConfigStore.tableAppearanceConfigs;
     const isDark = colorMode.value === 'dark';
     const base = isDark ? baseTableThemeDark : baseTableThemeLight;
 
