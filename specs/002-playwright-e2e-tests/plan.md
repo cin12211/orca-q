@@ -5,7 +5,7 @@
 
 ## Summary
 
-Add real-browser end-to-end tests using Playwright that cover the full workspace and connection management flow of the HeraQ application: create workspace, search workspaces, open connection management, add a connection (2-step wizard), and navigate into a workspace. Tests run against the Nuxt dev server (SPA mode, SSR disabled) and use the Page Object Model pattern for maintainability.
+Add real-browser end-to-end tests using Playwright that cover the full workspace and connection management flow of the OrcaQ application: create workspace, search workspaces, open connection management, add a connection (2-step wizard), and navigate into a workspace. Tests run against the Nuxt dev server (SPA mode, SSR disabled) and use the Page Object Model pattern for maintainability.
 
 ## Technical Context
 

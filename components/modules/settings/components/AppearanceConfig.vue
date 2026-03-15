@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { THEME_MODE_OPTIONS } from '../constants';
+import TableAppearanceConfig from './TableAppearanceConfig.vue';
 
 const colorMode = useColorMode();
 </script>
@@ -40,5 +41,9 @@ const colorMode = useColorMode();
         </div>
       </div>
     </div>
+
+    <hr class="border-border" />
+
+    <TableAppearanceConfig />
   </div>
 </template>

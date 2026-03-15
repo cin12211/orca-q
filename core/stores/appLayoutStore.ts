@@ -46,6 +46,32 @@ export interface AgentApiKeyConfigs {
   openrouter: string;
 }
 
+export interface TableAppearanceConfigs {
+  // Row
+  fontSize: number;
+  rowHeight: number;
+  cellSpacing: number;
+  accentColorLight: string;
+  accentColorDark: string;
+  // Header
+  headerFontSize: number;
+  headerFontWeight: number;
+  headerBackgroundColorLight: string;
+  headerBackgroundColorDark: string;
+}
+
+export const DEFAULT_TABLE_APPEARANCE_CONFIGS: TableAppearanceConfigs = {
+  fontSize: 12,
+  rowHeight: 25,
+  cellSpacing: 2.8,
+  accentColorLight: '#0ea5e9',
+  accentColorDark: '#38bdf8',
+  headerFontSize: 12,
+  headerFontWeight: 700,
+  headerBackgroundColorLight: '',
+  headerBackgroundColorDark: '',
+};
+
 const DEFAULT_APP_LAYOUT_SIZE = [25, 50, 25];
 
 const intiAppLayout = [30, 70, 0];
@@ -199,6 +225,15 @@ export const useAppLayoutStore = defineStore(
     // Quick Query settings
     const quickQuerySafeModeEnabled = ref<boolean>(false);
 
+    // Table appearance settings
+    const tableAppearanceConfigs = reactive<TableAppearanceConfigs>({
+      ...DEFAULT_TABLE_APPEARANCE_CONFIGS,
+    });
+
+    const resetTableAppearance = () => {
+      Object.assign(tableAppearanceConfigs, DEFAULT_TABLE_APPEARANCE_CONFIGS);
+    };
+
     // --- Custom Layouts ---
     const customLayouts = ref<CustomLayoutDefinition[]>([]);
     const activeCustomLayoutId = ref<string | null>(null);
@@ -323,6 +358,8 @@ export const useAppLayoutStore = defineStore(
       applyCustomLayout,
       applyPresetLayout,
       updateCustomLayoutSizes,
+      tableAppearanceConfigs,
+      resetTableAppearance,
     };
   },
   {

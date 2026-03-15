@@ -1,6 +1,6 @@
 # Result Tabs & State Management
 
-A cornerstone of the HeraQ `raw-query` module is persisting multiple execution views dynamically without blocking the main thread or wiping state on subsequent executions.
+A cornerstone of the OrcaQ `raw-query` module is persisting multiple execution views dynamically without blocking the main thread or wiping state on subsequent executions.
 
 ## 1. Context Interface
 

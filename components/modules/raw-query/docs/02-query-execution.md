@@ -19,7 +19,7 @@ Variables wrapped securely via `--@param=name:value` or within the `VariableEdit
 The engine must cater for two drastically varying data scales mapping `executeQuery`:
 
 1. **EXPLAIN ANALYZE**: Resolves instantly via standard JSON `$fetch('/api/query/raw-execute')`.
-2. **Standard Execution**: Leverages `executeStreamingQuery` to establish a persistent generic `AbortController` stream fetching NDJSON sequentially to protect HeraQ memory boundaries.
+2. **Standard Execution**: Leverages `executeStreamingQuery` to establish a persistent generic `AbortController` stream fetching NDJSON sequentially to protect OrcaQ memory boundaries.
 
 ## 4. `DatabaseError` Diagnostics Interface
 

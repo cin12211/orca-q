@@ -2,7 +2,8 @@ export type SettingsComponentKey =
   | 'EditorConfig'
   | 'QuickQueryConfig'
   | 'AgentConfig'
-  | 'AppearanceConfig';
+  | 'AppearanceConfig'
+  | 'TableAppearanceConfig';
 
 export type SettingsNavItem = {
   name: string;

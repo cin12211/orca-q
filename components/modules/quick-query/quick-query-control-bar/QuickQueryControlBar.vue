@@ -241,6 +241,22 @@ const isDataView = computed(() => {
           <p class="text-xs text-muted-foreground">Click to configure</p>
         </TooltipContent>
       </Tooltip>
+
+      <!-- Table Appearance Settings shortcut -->
+      <Tooltip>
+        <TooltipTrigger as-child>
+          <Button
+            variant="ghost"
+            size="iconSm"
+            @click="openSettings('Appearance')"
+          >
+            <Icon name="hugeicons:settings-04" class="size-4!" />
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent>
+          <p>Table appearance settings</p>
+        </TooltipContent>
+      </Tooltip>
     </div>
   </div>
 </template>

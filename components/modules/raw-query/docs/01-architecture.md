@@ -1,6 +1,6 @@
 # Raw Query Architecture
 
-The `components/modules/raw-query` module handles the entire interactive SQL statement interface inside HeraQ.
+The `components/modules/raw-query` module handles the entire interactive SQL statement interface inside OrcaQ.
 It follows a strict **"Facade Hook"** architectural pattern to isolate heavy execution business logic from the `vue` display templates.
 
 ## 1. Directory Structure

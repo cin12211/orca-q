@@ -16,6 +16,7 @@ import {
   AppearanceConfig,
   EditorConfig,
   QuickQueryConfig,
+  TableAppearanceConfig,
 } from '../components';
 import { SETTINGS_NAV_ITEMS } from '../constants';
 import type { SettingsComponentKey } from '../types';
@@ -25,6 +26,7 @@ const SETTINGS_COMPONENTS: Record<SettingsComponentKey, Component> = {
   QuickQueryConfig,
   AgentConfig,
   AppearanceConfig,
+  TableAppearanceConfig,
 };
 
 const settingNavs = SETTINGS_NAV_ITEMS.map(item => ({
@@ -107,7 +109,7 @@ const handleNavClick = async ({
             </SidebarGroup>
           </SidebarContent>
         </Sidebar>
-        <main class="flex h-[80vh] py-3 flex-1 flex-col overflow-hidden">
+        <main class="flex h-[80vh] py-3 flex-1 flex-col overflow-y-auto">
           <header
             class="flex h-10 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12"
           >
@@ -123,9 +125,9 @@ const handleNavClick = async ({
               </Breadcrumb>
             </div>
           </header>
-          <div class="flex flex-1 flex-col gap-4 overflow-y-auto p-4 pt-0">
+          <div class="flex flex-1 flex-col gap-4 p-4 mr-4 pr-0 pt-0">
             <div
-              class="aspect-video w-full h-full rounded-xl p-2"
+              class="aspect-video w-full h-full rounded-xl p-2 px-0"
               tabindex="-1"
             >
               <component :is="activeNav" />

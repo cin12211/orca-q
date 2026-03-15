@@ -2,9 +2,20 @@ import {
   colorSchemeDark,
   colorSchemeLight,
   themeBalham,
+  type ButtonStyleParams,
+  type CheckboxStyleParams,
+  type CoreParams,
+  type InputStyleParams,
+  type TabStyleParams,
 } from 'ag-grid-community';
 
-const baseParams = {
+const baseParams: Partial<
+  CoreParams &
+    ButtonStyleParams &
+    CheckboxStyleParams &
+    TabStyleParams &
+    InputStyleParams
+> = {
   borderRadius: 'var(--radius-sm)',
   wrapperBorderRadius: 'var(--radius)',
   checkboxBorderRadius: 5,

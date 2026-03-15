@@ -10,7 +10,7 @@ Complete folder structure and file responsibilities for the OrcaQ database edito
 ## Root Directory Overview
 
 ```
-HeraQ/
+OrcaQ/
 ├── app.vue                    # Root Vue application entry
 ├── error.vue                  # Global error page
 ├── nuxt.config.ts            # Nuxt configuration (web mode)

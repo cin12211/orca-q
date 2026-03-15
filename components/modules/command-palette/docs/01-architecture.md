@@ -1,6 +1,6 @@
 # Command Palette Architecture
 
-The Command Palette is built as a self-contained, modular feature adhering to the HeraQ architecture guidelines.
+The Command Palette is built as a self-contained, modular feature adhering to the OrcaQ architecture guidelines.
 
 ## Directory Structure
 

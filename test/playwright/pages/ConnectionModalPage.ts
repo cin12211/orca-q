@@ -116,6 +116,22 @@ export class ConnectionModalPage {
     await this.advanceToStep2();
   }
 
+  /**
+   * Opens the connection modal and proceeds to step 2.
+   * If clipboard auto-detect skips step 1 automatically, handles both paths.
+   */
+  async openAndReachStep2(dbType = 'PostgreSQL') {
+    await this.clickAddConnection();
+    // Give auto-detect a moment to run
+    await this.page.waitForTimeout(300);
+    const isAlreadyStep2 = await this.step2Heading.isVisible();
+    if (!isAlreadyStep2) {
+      await this.expectStep1();
+      await this.selectDbType(dbType);
+      await this.advanceToStep2();
+    }
+  }
+
   // ── Connection Form tab ───────────────────────────────────────────────────
   get connectionFormTab(): Locator {
     return this.page.getByRole('tab', { name: /connection form/i });

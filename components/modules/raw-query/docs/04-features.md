@@ -1,6 +1,6 @@
 # Features of the Raw Query Module
 
-The `raw-query` module is built to provide a powerful, IDE-like experience for writing, testing, and debugging SQL queries directly within HeraQ. It features several advanced capabilities designed for high performance and developer productivity.
+The `raw-query` module is built to provide a powerful, IDE-like experience for writing, testing, and debugging SQL queries directly within OrcaQ. It features several advanced capabilities designed for high performance and developer productivity.
 
 ## 1. Code Editor Intelligence
 

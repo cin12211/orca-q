@@ -259,6 +259,11 @@ const columnDefs = computed<ColDef[]>(() => {
 
 const tableTheme = useTableTheme();
 
+// Push theme updates to the already-mounted grid so changes take effect without a page reload
+watch(tableTheme, newTheme => {
+  gridApi.value?.updateGridOptions({ theme: newTheme });
+});
+
 const gridOptions = computed(() => {
   const baseOptions: GridOptions = {
     rowClass: 'class-row-border-none',
