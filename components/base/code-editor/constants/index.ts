@@ -17,6 +17,11 @@ import {
   rosePineDawn,
   solarizedLight,
 } from 'thememirror';
+import {
+  oceanBreezeLightTheme,
+  orcaDarkTheme,
+  orcaLightTheme,
+} from '../themes';
 
 export enum EditorTheme {
   AyuLight = 'ayu-light',
@@ -27,6 +32,8 @@ export enum EditorTheme {
   Smoothy = 'smoothy',
   SolarizedLight = 'solarized-light',
   Tomorrow = 'tomorrow',
+  OrcaLight = 'orca-light',
+  OceanBreezeLight = 'orca-breeze-light',
 
   Amy = 'amy',
   Barf = 'barf',
@@ -36,6 +43,7 @@ export enum EditorTheme {
   Cobalt = 'cobalt',
   CoolGlow = 'cool-glow',
   Dracula = 'dracula',
+  OrcaDark = 'orca-dark',
 }
 export const EditorThemeDark: EditorTheme[] = [
   EditorTheme.Amy,
@@ -46,6 +54,7 @@ export const EditorThemeDark: EditorTheme[] = [
   EditorTheme.Cobalt,
   EditorTheme.CoolGlow,
   EditorTheme.Dracula,
+  EditorTheme.OrcaDark,
 ];
 
 export const EditorThemeLight: EditorTheme[] = [
@@ -57,6 +66,8 @@ export const EditorThemeLight: EditorTheme[] = [
   EditorTheme.Smoothy,
   EditorTheme.SolarizedLight,
   EditorTheme.Tomorrow,
+  EditorTheme.OrcaLight,
+  EditorTheme.OceanBreezeLight,
 ];
 
 export const EDITOR_FONT_SIZES = [
@@ -87,6 +98,9 @@ export const EditorThemeMap: Record<EditorTheme, any> = {
   [EditorTheme.Espresso]: espresso,
   [EditorTheme.RosePineDawn]: rosePineDawn,
   [EditorTheme.SolarizedLight]: solarizedLight,
+  [EditorTheme.OrcaDark]: orcaDarkTheme,
+  [EditorTheme.OrcaLight]: orcaLightTheme,
+  [EditorTheme.OceanBreezeLight]: oceanBreezeLightTheme,
 };
 
 export enum CompletionIcon {
@@ -97,7 +111,7 @@ export enum CompletionIcon {
   Method = 'METHOD',
   Table = 'TABLE',
   Database = 'DATABASE',
-  Numberic = 'NUMBERIC',
+  Numeric = 'NUMERIC',
   String = 'STRING',
   Calendar = 'CALENDAR',
   Brackets = 'BRACKETS',

@@ -7,6 +7,7 @@ export enum ActivityBarItemType {
   ErdDiagram = 'ERDiagram',
   UsersRoles = 'UsersRoles',
   DatabaseExport = 'DatabaseExport',
+  Agent = 'Agent',
 }
 
 //TODO: refactor

@@ -1,13 +1,6 @@
 import { ref, computed } from 'vue';
+import { Icon } from '#components';
 import type { Meta, StoryObj } from '@storybook/vue3';
-import {
-  Edit2,
-  Trash2,
-  Share2,
-  Copy,
-  FolderPlus,
-  FilePlus,
-} from 'lucide-vue-next';
 import FileTree from './FileTree.vue';
 import type { FileNode } from './types';
 
@@ -782,7 +775,7 @@ Add custom action buttons that appear on row hover:
     },
   },
   render: args => ({
-    components: { FileTree, Edit2, Trash2, Share2, Copy, FolderPlus, FilePlus },
+    components: { FileTree, Icon },
     setup() {
       const handleAction = (
         action: string,
@@ -806,7 +799,7 @@ Add custom action buttons that appear on row hover:
               onmouseover="this.style.background='rgba(255,255,255,0.1)'"
               onmouseout="this.style.background='transparent'"
             >
-              <Edit2 :size="13" />
+              <Icon name="hugeicons:edit-02" class="size-[13px]" />
             </button>
             <button 
               @click.stop="handleAction('Copy', node.id, node.name)" 
@@ -815,7 +808,7 @@ Add custom action buttons that appear on row hover:
               onmouseover="this.style.background='rgba(255,255,255,0.1)'"
               onmouseout="this.style.background='transparent'"
             >
-              <Copy :size="13" />
+              <Icon name="hugeicons:copy-01" class="size-[13px]" />
             </button>
             <button 
               @click.stop="handleAction('Delete', node.id, node.name)" 
@@ -824,7 +817,7 @@ Add custom action buttons that appear on row hover:
               onmouseover="this.style.background='rgba(239,68,68,0.1)'"
               onmouseout="this.style.background='transparent'"
             >
-              <Trash2 :size="13" />
+              <Icon name="hugeicons:delete-02" class="size-[13px]" />
             </button>
           </div>
         </template>

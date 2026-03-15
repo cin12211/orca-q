@@ -1,11 +1,22 @@
-import { themeBalham } from 'ag-grid-community';
+import {
+  colorSchemeDark,
+  colorSchemeLight,
+  themeBalham,
+  type ButtonStyleParams,
+  type CheckboxStyleParams,
+  type CoreParams,
+  type InputStyleParams,
+  type TabStyleParams,
+} from 'ag-grid-community';
 
-export const baseTableTheme = themeBalham.withParams({
-  backgroundColor: 'var(--background)',
-  // wrapperBorderRadius: 0,
-  // accentColor: 'var(--color-gray-900)',
+const baseParams: Partial<
+  CoreParams &
+    ButtonStyleParams &
+    CheckboxStyleParams &
+    TabStyleParams &
+    InputStyleParams
+> = {
   borderRadius: 'var(--radius-sm)',
-  borderColor: 'var(--input)',
   wrapperBorderRadius: 'var(--radius)',
   checkboxBorderRadius: 5,
   checkboxCheckedBackgroundColor: 'var(--foreground)',
@@ -19,4 +30,26 @@ export const baseTableTheme = themeBalham.withParams({
   wrapperBorder: false,
   spacing: 2.8,
   headerVerticalPaddingScale: 1.25,
-});
+  backgroundColor: 'var(--background)',
+  foregroundColor: 'var(--foreground)',
+  borderColor: 'var(--border)',
+  textColor: 'var(--foreground)',
+};
+
+export const baseTableThemeLight = themeBalham
+  .withPart(colorSchemeLight)
+  .withParams({
+    ...baseParams,
+    headerTextColor: 'var(--muted-foreground)',
+  });
+
+export const baseTableThemeDark = themeBalham
+  .withPart(colorSchemeDark)
+  .withParams({
+    ...baseParams,
+    headerTextColor: 'var(--primary)',
+  });
+
+// Legacy export — kept for backwards compat; resolves to light theme at import time.
+// Prefer useTableTheme() composable for reactive dark/light switching.
+export const baseTableTheme = baseTableThemeLight;

@@ -1,0 +1,69 @@
+import type { EditorTheme } from '~/components/base/code-editor/constants';
+
+export enum SettingsComponentKey {
+  EditorConfig = 'EditorConfig',
+  QuickQueryConfig = 'QuickQueryConfig',
+  AgentConfig = 'AgentConfig',
+  AppearanceConfig = 'AppearanceConfig',
+  TableAppearanceConfig = 'TableAppearanceConfig',
+}
+
+export type SettingsNavItem = {
+  name: string;
+  icon: string;
+  componentKey?: SettingsComponentKey;
+  disable?: boolean;
+};
+
+export enum ThinkingStyle {
+  Shimmer = 'shimmer',
+  Scramble = 'scramble',
+}
+
+export interface CodeEditorConfigs {
+  theme: EditorTheme;
+  fontSize: number;
+  showMiniMap: boolean;
+  indentation: boolean;
+}
+
+export interface ChatUiConfigs {
+  fontSize: number;
+  codeFontSize: number;
+  thinkingStyle: ThinkingStyle;
+}
+
+export interface CustomLayoutSizeEntry {
+  panels: number[];
+  innerPanels: number[];
+}
+
+export enum AIProvider {
+  OpenAI = 'openai',
+  Google = 'google',
+  Anthropic = 'anthropic',
+  XAI = 'xai',
+  OpenRouter = 'openrouter',
+}
+
+export interface AgentApiKeyConfigs {
+  openai: string;
+  google: string;
+  anthropic: string;
+  xai: string;
+  openrouter: string;
+}
+
+export interface TableAppearanceConfigs {
+  // Row
+  fontSize: number;
+  rowHeight: number;
+  cellSpacing: number;
+  accentColorLight: string;
+  accentColorDark: string;
+  // Header
+  headerFontSize: number;
+  headerFontWeight: number;
+  headerBackgroundColorLight: string;
+  headerBackgroundColorDark: string;
+}

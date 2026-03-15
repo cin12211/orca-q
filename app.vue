@@ -2,9 +2,9 @@
 // main.ts (or the entry that mounts Vue)
 import { LoadingOverlay, TooltipProvider } from '#components';
 import { AllCommunityModule, ModuleRegistry } from 'ag-grid-community';
-import CommandPalette from './components/modules/app-shell/CommandPalette.vue';
+import { CommandPaletteView } from '@/components/modules/command-palette';
 import ChangelogPopup from './components/modules/changelog/ChangelogPopup.vue';
-import Settings from './components/modules/settings/Settings.vue';
+import Settings from './components/modules/settings';
 import { Toaster } from './components/ui/sonner';
 import { DEFAULT_DEBOUNCE_INPUT } from './core/constants';
 import { useAppContext } from './core/contexts';
@@ -35,6 +35,7 @@ onBeforeMount(() => {
 });
 
 onMounted(async () => {
+  //TODO: need add guard to check
   // Auto-show changelog if there's a new version
   autoShowIfNewVersion();
 
@@ -65,7 +66,7 @@ onMounted(async () => {
       </NuxtLayout>
     </TooltipProvider>
 
-    <CommandPalette />
+    <CommandPaletteView />
     <Settings />
     <ChangelogPopup />
     <Toaster position="top-right" :close-button="true" />

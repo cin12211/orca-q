@@ -1,12 +1,12 @@
 <script setup lang="ts">
 import { Icon, Tooltip, TooltipContent, TooltipTrigger } from '#components';
 import { useSettingsModal } from '~/core/contexts/useSettingsModal';
-import { useAppLayoutStore } from '~/core/stores/appLayoutStore';
+import { useAppConfigStore } from '~/core/stores/appConfigStore';
 import { QuickQueryTabView } from '../constants';
 import QuickPagination from './QuickPagination.vue';
 import RefreshButton from './RefreshButton.vue';
 
-const appLayoutStore = useAppLayoutStore();
+const appConfigStore = useAppConfigStore();
 const { openSettings } = useSettingsModal();
 
 const props = defineProps<{
@@ -69,7 +69,6 @@ const isDataView = computed(() => {
         v-if="false"
         variant="outline"
         size="xxs"
-        class="text-xs"
         @click="emit('onAddEmptyRow')"
       >
         <Icon name="lucide:plus" class="text-sm"> </Icon>
@@ -126,7 +125,7 @@ const isDataView = computed(() => {
       </Tooltip>
 
       <!-- TODO: Config export to excel or csv -->
-      <!-- <Button variant="outline" size="iconSm" class="h-6">
+      <!-- <Button variant="outline" size="iconSm">
         <Icon name="hugeicons:file-download"> </Icon>
       </Button> -->
     </div>
@@ -220,7 +219,7 @@ const isDataView = computed(() => {
             @click="openSettings('Quick Query')"
           >
             <Icon
-              v-if="appLayoutStore.quickQuerySafeModeEnabled"
+              v-if="appConfigStore.quickQuerySafeModeEnabled"
               name="lucide:shield-check"
               class="size-4!"
             />
@@ -235,10 +234,26 @@ const isDataView = computed(() => {
           <p>
             Safe Mode:
             {{
-              appLayoutStore.quickQuerySafeModeEnabled ? 'Enabled' : 'Disabled'
+              appConfigStore.quickQuerySafeModeEnabled ? 'Enabled' : 'Disabled'
             }}
           </p>
           <p class="text-xs text-muted-foreground">Click to configure</p>
+        </TooltipContent>
+      </Tooltip>
+
+      <!-- Table Appearance Settings shortcut -->
+      <Tooltip>
+        <TooltipTrigger as-child>
+          <Button
+            variant="ghost"
+            size="iconSm"
+            @click="openSettings('Appearance')"
+          >
+            <Icon name="hugeicons:settings-04" class="size-4!" />
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent>
+          <p>Table appearance settings</p>
         </TooltipContent>
       </Tooltip>
     </div>

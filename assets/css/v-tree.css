@@ -109,7 +109,7 @@
 
   /* --- FileTree Container Colors --- */
   --v-tree-bg: transparent;
-  --v-tree-text: oklch(0.985 0 0);
+  --v-tree-text: oklch(0.92 0 0);
 
   /* --- Scrollbar Styles --- */
   --v-tree-scrollbar-thumb: oklch(0.708 0 0 / 0.4);
@@ -121,7 +121,7 @@
   --v-tree-row-selected-bg: oklch(0.985 0 0 / 0.15);
   --v-tree-row-selected-hover-bg: oklch(0.985 0 0 / 0.2);
   --v-tree-row-focus-ring: oklch(0.439 0 0);
-  --v-tree-row-text-color: currentColor;
+  --v-tree-row-text-color: oklch(0.92 0 0);
 
   /* --- Drag & Drop Colors --- */
   --v-tree-indicator-color: oklch(0.985 0 0);

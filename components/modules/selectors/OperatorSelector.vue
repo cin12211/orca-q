@@ -2,9 +2,9 @@
 import { SelectSeparator } from '#components';
 import type { AcceptableValue } from 'reka-ui';
 import { separatorRow, operatorSets } from '~/core/constants';
-import { EDatabaseType } from '../connection/constants';
+import { DatabaseClientType } from '~/core/constants/database-client-type';
 
-const props = defineProps<{ dbType: EDatabaseType; value?: string }>();
+const props = defineProps<{ dbType: DatabaseClientType; value?: string }>();
 
 defineEmits<{
   (e: 'update:value', value: AcceptableValue): void;

@@ -5,7 +5,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import EditorConfig from '../../settings/EditorConfig.vue';
+import EditorConfig from '../../settings/components/EditorConfig.vue';
 
 defineProps<{
   open: Boolean;
@@ -18,7 +18,7 @@ const emit = defineEmits<{
 <template>
   <Dialog class="" :open="!!open" @update:open="emit('update:open', $event)">
     <DialogContent
-      class="w-[40vw] h-[50vh] flex flex-col justify-between min-w-[40vw]"
+      class="w-[50vw] h-[70vh] flex flex-col justify-between min-w-[50vw]"
     >
       <DialogHeader>
         <DialogTitle> Editor configs </DialogTitle>

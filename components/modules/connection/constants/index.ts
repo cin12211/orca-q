@@ -1,14 +1,9 @@
 import type { RendererElement, RendererNode } from 'vue';
 import { Icon } from '#components';
-
-export enum EDatabaseType {
-  PG = `postgres`,
-  MYSQL = 'mysql',
-  // REDIS = 'redis',
-}
+import { DatabaseClientType } from '~/core/constants/database-client-type';
 
 export interface IDBSupport {
-  type: EDatabaseType;
+  type: DatabaseClientType;
   name: string;
   icon: globalThis.VNode<
     RendererNode,
@@ -22,25 +17,25 @@ export interface IDBSupport {
 
 export const databaseSupports: IDBSupport[] = [
   {
-    type: EDatabaseType.PG,
+    type: DatabaseClientType.POSTGRES,
     name: 'PostgreSQL',
     icon: h(Icon, { name: 'logos:postgresql' }),
     isSupport: true,
   },
-  // {
-  //   type: EDatabaseType.MYSQL,
-  //   name: 'MySQL',
-  //   icon: h(Icon, { name: 'logos:mysql' }),
-  //   isSupport: false,
-  // },
-  // {
-  //   type: EDatabaseType.REDIS,
-  //   name: 'Redis',
-  //   icon: h(Icon, { name: 'logos:redis' }),
-  //   isSupport: false,
-  // },
+  {
+    type: DatabaseClientType.MYSQL,
+    name: 'MySQL',
+    icon: h(Icon, { name: 'logos:mysql' }),
+    isSupport: false,
+  },
 ];
 
-export const getDatabaseSupportByType = (type: EDatabaseType) => {
+export const DEFAULT_DB_PORTS: Record<string, string> = {
+  [DatabaseClientType.POSTGRES]: '5432',
+  [DatabaseClientType.MYSQL]: '3306',
+  [DatabaseClientType.MYSQL2]: '3306',
+};
+
+export const getDatabaseSupportByType = (type: DatabaseClientType) => {
   return databaseSupports.find(e => e.type === type);
 };

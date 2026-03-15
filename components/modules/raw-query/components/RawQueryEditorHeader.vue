@@ -41,7 +41,7 @@ const openConfigModal = () => {
   <RawQueryConfigModal v-model:open="isOpenConfigModal" />
 
   <!-- {{ currentFileInfo }} -->
-  <div class="flex items-center justify-between p-1 rounded-md bg-gray-50">
+  <div class="flex items-center justify-between p-1 rounded-md bg-muted">
     <div>
       <Breadcrumb>
         <BreadcrumbList class="gap-0!">

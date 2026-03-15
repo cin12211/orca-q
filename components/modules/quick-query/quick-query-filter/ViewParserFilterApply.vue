@@ -34,12 +34,7 @@ const onGetParser = () => {
     <Tooltip>
       <TooltipTrigger as-child>
         <PopoverTrigger as-child>
-          <Button
-            @click="onGetParser"
-            size="xs"
-            class="text-xs"
-            variant="outline"
-          >
+          <Button @click="onGetParser" size="xs" variant="outline">
             SQL
           </Button>
         </PopoverTrigger>

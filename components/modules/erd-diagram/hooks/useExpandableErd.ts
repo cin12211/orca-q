@@ -1,6 +1,6 @@
 import { computed, ref, watch, type Ref } from 'vue';
 import type { Edge } from '@vue-flow/core';
-import type { TableMetadata } from '~/server/api/get-tables';
+import type { TableMetadata } from '~/core/types';
 import { DEFAULT_VUE_FLOW_LAYOUT_CONFIG } from '../constants';
 import type { MatrixTablePosition, TableNode } from '../type';
 import {

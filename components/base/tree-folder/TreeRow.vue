@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { computed, ref, nextTick, watch } from 'vue';
 import { Icon } from '#components';
-import { ChevronRight, Folder, FolderOpen, File } from 'lucide-vue-next';
 import type { FileNode, DropPosition } from './types';
 
 interface Props {
@@ -119,9 +118,9 @@ const customIcon = computed(() => {
 
 const defaultIcon = computed(() => {
   if (props.node.type === 'folder') {
-    return props.isExpanded ? FolderOpen : Folder;
+    return props.isExpanded ? 'hugeicons:folder-02' : 'hugeicons:folder-01';
   }
-  return File;
+  return 'hugeicons:file-01';
 });
 
 // Row classes
@@ -166,7 +165,7 @@ defineExpose({
       :style="chevronRotation"
       @click.stop="emit('toggle')"
     >
-      <ChevronRight :size="16" />
+      <Icon name="hugeicons:arrow-right-01" class="size-4" />
     </button>
     <div v-else class="tree-row__spacer" />
 
@@ -179,8 +178,8 @@ defineExpose({
     />
     <component
       v-else
-      :is="defaultIcon"
-      :size="16"
+      :is="Icon"
+      :name="defaultIcon"
       class="tree-row__icon"
       :class="node.iconClass"
     />

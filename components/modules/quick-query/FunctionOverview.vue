@@ -1,7 +1,19 @@
 <script setup lang="ts">
 import { DynamicTable } from '#components';
-import type { MappedRawColumn } from '~/components/modules/raw-query/interfaces';
+import { getConnectionParams } from '@/core/helpers/connection-helper';
 import { useAppContext } from '~/core/contexts/useAppContext';
+import {
+  buildMappedColumnsFromKeys,
+  buildMappedColumnsFromRows,
+} from '~/core/helpers';
+
+const FUNCTION_OVERVIEW_COLUMN_KEYS = [
+  'name',
+  'schema',
+  'kind',
+  'owner',
+  'comment',
+] as const;
 
 const props = defineProps<{
   connectionId?: string;
@@ -10,46 +22,33 @@ const props = defineProps<{
 const { connectionStore, wsStateStore } = useAppContext();
 const { schemaId } = toRefs(wsStateStore);
 
-const connectionString = computed(() => {
+const connection = computed(() => {
   if (props.connectionId) {
-    return connectionStore.connections.find(c => c.id === props.connectionId)
-      ?.connectionString;
+    return connectionStore.connections.find(c => c.id === props.connectionId);
   }
-  return connectionStore.selectedConnection?.connectionString;
+  return connectionStore.selectedConnection;
 });
 
 const body = computed(() => {
   return {
-    dbConnectionString: connectionString.value,
+    ...getConnectionParams(connection.value),
     schema: schemaId.value,
   };
 });
 
-const { data, status } = useFetch('/api/get-over-view-function', {
+const { data, status } = useFetch('/api/functions/overview', {
   method: 'POST',
   body,
   watch: [schemaId, body],
 });
 
 const mappedColumns = computed(() => {
-  if (!data.value?.[0]) {
-    return [];
+  const rows = (data.value || []) as Record<string, unknown>[];
+  if (rows.length > 0) {
+    return buildMappedColumnsFromRows(rows);
   }
 
-  const columns: MappedRawColumn[] = [];
-  for (const key of Object.keys(data.value?.[0])) {
-    columns.push({
-      isForeignKey: false,
-      isPrimaryKey: false,
-      originalName: key,
-      queryFieldName: key,
-      tableName: '',
-      canMutate: false,
-      aliasFieldName: key,
-    });
-  }
-
-  return columns;
+  return buildMappedColumnsFromKeys(FUNCTION_OVERVIEW_COLUMN_KEYS);
 });
 </script>
 

@@ -8,8 +8,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '~/components/ui/tooltip';
-import { useCodeHighlighter } from '~/core/composables/useSqlHighlighter';
-import type { SupportedLanguage } from '~/core/composables/useSqlHighlighter';
+import { useCopyToClipboard } from '~/core/composables/useCopyToClipboard';
 
 const props = withDefaults(
   defineProps<{
@@ -43,26 +42,21 @@ const highlightedCode = computed(() => {
 
 const containerStyle = computed(() => {
   return props.maxHeight
-    ? { maxHeight: props.maxHeight, overflowY: 'auto' as const }
+    ? {
+        maxHeight: props.maxHeight,
+        overflowY: 'auto' as const,
+        overflowX: 'auto' as const,
+      }
     : {};
 });
 
 // Copy state
-const isCopied = ref(false);
-let copyTimer: ReturnType<typeof setTimeout> | null = null;
+const { copied, handleCopy, getCopyIcon, getCopyIconClass, getCopyTooltip } =
+  useCopyToClipboard();
 
 const onCopy = async () => {
   if (!props.code) return;
-  try {
-    await navigator.clipboard.writeText(props.code);
-    isCopied.value = true;
-    if (copyTimer) clearTimeout(copyTimer);
-    copyTimer = setTimeout(() => {
-      isCopied.value = false;
-    }, 1500);
-  } catch {
-    // Fallback for environments without clipboard API
-  }
+  await handleCopy(props.code);
 };
 
 const languageLabel = computed(() => props.language.toUpperCase());
@@ -89,26 +83,26 @@ const languageLabel = computed(() => props.language.toUpperCase());
             v-if="showCopyButton"
             variant="ghost"
             size="xxs"
-            :class="[
-              'transition-colors duration-200',
-              isCopied ? 'text-emerald-500 dark:text-emerald-400' : '',
-            ]"
             @click="onCopy"
           >
-            <span
-              class="flex items-center text-xs justify-center p-0.5"
-              v-auto-animate
-            >
+            <span class="flex items-center gap-1 justify-center">
               <Icon
-                :key="isCopied ? 'tick' : 'copy'"
-                :name="isCopied ? 'hugeicons:tick-02' : 'hugeicons:copy-01'"
+                :key="copied ? 'tick' : 'copy'"
+                :name="getCopyIcon(copied)"
                 class="size-3.5"
+                :class="getCopyIconClass(copied)"
               />
+              <span
+                v-if="copied"
+                class="text-[10px] font-medium leading-none"
+                :class="getCopyIconClass(copied)"
+                >Copied</span
+              >
             </span>
           </Button>
         </TooltipTrigger>
         <TooltipContent>
-          <p>{{ isCopied ? 'Copied!' : 'Copy code' }}</p>
+          <p>{{ getCopyTooltip(copied, 'Copy code') }}</p>
         </TooltipContent>
       </Tooltip>
     </div>
@@ -118,13 +112,13 @@ const languageLabel = computed(() => props.language.toUpperCase());
       <!-- Highlighted HTML from Shiki -->
       <div
         v-if="highlightedCode"
-        class="[&>pre]:p-3 [&>pre]:text-xs [&>pre]:font-mono [&>pre]:whitespace-pre [&>pre]:leading-relaxed [&>pre]:m-0 [&>pre]:w-fit [&>pre]:min-w-full [&>pre]:rounded-none"
+        class="[&>pre]:p-3 [&>pre]:font-mono [&>pre]:whitespace-pre [&>pre]:leading-relaxed [&>pre]:m-0 [&>pre]:w-fit [&>pre]:min-w-full [&>pre]:rounded-none chat-code-text"
         v-html="highlightedCode"
       />
       <!-- Fallback plain text -->
       <pre
         v-else
-        class="p-3 text-xs font-mono whitespace-pre leading-relaxed text-foreground/80 m-0 w-fit min-w-full"
+        class="p-3 font-mono whitespace-pre leading-relaxed text-foreground/80 m-0 w-fit min-w-full chat-code-text"
         >{{ code }}</pre
       >
     </div>

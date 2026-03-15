@@ -1,0 +1,2 @@
+- [x] ~~for large conversation just view only 5-10 chat then show [... previous messages]~~
+- [x] use hook is visible to render large componet to enhance perfromance

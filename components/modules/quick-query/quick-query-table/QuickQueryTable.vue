@@ -15,19 +15,21 @@ import type {
 } from 'ag-grid-community';
 import { AgGridVue } from 'ag-grid-vue3';
 import {
-  baseTableTheme,
   DEFAULT_COLUMN_ADDITIONAL_GAP_WIDTH,
   DEFAULT_HASH_INDEX_WIDTH,
   HASH_INDEX_HEADER,
   HASH_INDEX_ID,
 } from '~/components/base/dynamic-table/constants';
-import { useAgGridApi } from '~/components/base/dynamic-table/hooks';
+import {
+  useAgGridApi,
+  useTableTheme,
+} from '~/components/base/dynamic-table/hooks';
 import {
   estimateAllColumnWidths,
   type RowData,
 } from '~/components/base/dynamic-table/utils';
 import { DEFAULT_BUFFER_ROWS, DEFAULT_QUERY_SIZE } from '~/core/constants';
-import type { ForeignKeyMetadata } from '~/server/api/get-schema-meta-data';
+import type { SchemaForeignKeyMetadata as ForeignKeyMetadata } from '~/core/types';
 import AgJsonCellEditor from './AgJsonCellEditor.vue';
 import CustomCellUuid from './CustomCellUuid.vue';
 import CustomHeaderTable from './CustomHeaderTable.vue';
@@ -419,6 +421,13 @@ const columnTypes = ref<{
   },
 });
 
+const tableTheme = useTableTheme();
+
+// Push theme updates to the already-mounted grid so changes take effect without a page reload
+watch(tableTheme, newTheme => {
+  gridApi.value?.updateGridOptions({ theme: newTheme });
+});
+
 const gridOptions = computed(() => {
   const options: GridOptions = {
     components: {
@@ -434,7 +443,7 @@ const gridOptions = computed(() => {
     // },
     getRowStyle: params => {
       if ((params.node.rowIndex || 0) % 2 === 0) {
-        return { background: 'var(--color-neutral-100)' };
+        return { background: 'var(--muted)' };
       }
     },
     rowSelection: {
@@ -445,7 +454,7 @@ const gridOptions = computed(() => {
       enableClickSelection: 'enableSelection',
       copySelectedRows: false,
     },
-    theme: baseTableTheme,
+    theme: tableTheme.value,
     pagination: false,
     undoRedoCellEditing: true,
     undoRedoCellEditingLimit: 25,
@@ -616,13 +625,13 @@ onActivated(async () => {
   user-select: none;
 }
 
-.ag-cell {
-  color: var(--color-black);
+/* .ag-cell {
+  color: var(--foreground);
 }
 
 .dark .ag-cell {
-  color: var(--color-white);
-}
+  color: var(--foreground);
+} */
 
 .ag-root-wrapper {
   border-bottom-left-radius: 0px;

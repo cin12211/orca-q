@@ -267,12 +267,11 @@ watch(
     <!-- TODO: check flow when change connection  -->
     <!-- TODO: check flow when change schema  -->
 
-    <div
+    <BaseEmpty
       v-if="Object.keys(fileTreeData).length === 0"
-      class="flex flex-col items-center h-full justify-center"
-    >
-      No data!
-    </div>
+      title="No tables found"
+      desc="There are no tables available to display in the ERD."
+    />
 
     <FileTree
       ref="fileTreeRef"

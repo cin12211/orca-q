@@ -21,6 +21,7 @@ const props = defineProps<{
   data?: RowData[];
   selectedRows: RowData[];
   tableName?: string;
+  schemaName?: string;
 }>();
 
 const emit = defineEmits<{
@@ -58,7 +59,8 @@ const onCopySelectedRowsData = (format: ExportFormat) => {
   return copyRowsData(
     props.selectedRows || [],
     props.tableName || 'table_data',
-    format
+    format,
+    props.schemaName
   );
 };
 
@@ -66,7 +68,8 @@ const onCopyAllRowsData = (format: ExportFormat) => {
   return copyRowsData(
     props.data || [],
     props.tableName || 'table_data',
-    format
+    format,
+    props.schemaName
   );
 };
 
@@ -75,7 +78,8 @@ const onExportSelectedRows = (format: ExportFormat) => {
     props.selectedRows || [],
     props.tableName || 'table_data',
     format,
-    'selected'
+    'selected',
+    props.schemaName
   );
 };
 
@@ -84,7 +88,8 @@ const onExportAllRows = (format: ExportFormat) => {
     props.data || [],
     props.tableName || 'table_data',
     format,
-    'all'
+    'all',
+    props.schemaName
   );
 };
 
@@ -101,7 +106,12 @@ const copyCurrentCell = () => {
 const copyCurrentRow = () => {
   if (props.cellContextMenu) {
     const data = props.cellContextMenu?.data;
-    copyRowsData([data], props.tableName || 'table_data', 'csv-no-header');
+    copyRowsData(
+      [data],
+      props.tableName || 'table_data',
+      'csv-no-header',
+      props.schemaName
+    );
   }
 };
 

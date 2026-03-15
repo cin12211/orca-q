@@ -20,10 +20,12 @@ export enum TabViewType {
 
   UserPermissions = 'UserPermissions',
   DatabaseTools = 'DatabaseTools',
+  InstanceInsights = 'InstanceInsights',
   Connection = 'Connection',
   Explorer = 'Explorer',
   Schema = 'Schema',
   Export = 'Export',
+  AgentChat = 'AgentChat',
 }
 
 export interface BaseTabMetadata {
@@ -59,12 +61,18 @@ export interface CodeQueryMetadata extends BaseTabMetadata {
   queryId?: string;
 }
 
+export interface AgentChatMetadata extends BaseTabMetadata {
+  type: TabViewType.AgentChat;
+  historyId?: string;
+}
+
 export type TabMetadata =
   | TableDetailMetadata
   | ViewDetailMetadata
   | FunctionDetailMetadata
   | ErdDetailMetadata
   | CodeQueryMetadata
+  | AgentChatMetadata
   | BaseTabMetadata;
 
 export type TabView = {

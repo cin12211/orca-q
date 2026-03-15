@@ -1,4 +1,5 @@
 import { toast } from 'vue-sonner';
+import { getConnectionParams } from '@/core/helpers/connection-helper';
 import {
   generateFunctionCallSQL,
   generateFunctionSelectSQL,
@@ -6,7 +7,7 @@ import {
   generateRenameFunctionSQL,
 } from '~/components/modules/management/schemas/utils/generateFunctionSQL';
 import { TabViewType } from '~/core/stores/useTabViewsStore';
-import type { FunctionSignature } from '~/server/api/get-function-signature';
+import type { FunctionSignature } from '~/core/types';
 import type { ContextMenuState, SchemaContextMenuOptions } from '../types';
 import type { useContextMenuHelpers } from '../useContextMenuHelpers';
 
@@ -43,10 +44,10 @@ export function useFunctionActions(
     await executeWithSafeMode(sql, 'delete', async () => {
       await executeWithLoading(
         async () => {
-          await $fetch('/api/delete-function', {
+          await $fetch('/api/functions/delete', {
             method: 'POST',
             body: {
-              dbConnectionString: options.currentConnectionString.value,
+              ...getConnectionParams(options.connection.value),
               schemaName: getSchemaName(),
               functionName,
             },
@@ -87,10 +88,10 @@ export function useFunctionActions(
     await executeWithSafeMode(sql, 'save', async () => {
       await executeWithLoading(
         async () => {
-          await $fetch('/api/rename-function', {
+          await $fetch('/api/functions/rename', {
             method: 'POST',
             body: {
-              dbConnectionString: options.currentConnectionString.value,
+              ...getConnectionParams(options.connection.value),
               schemaName: getSchemaName(),
               oldName: state.renameDialogValue.value,
               newName,
@@ -115,11 +116,11 @@ export function useFunctionActions(
     await executeWithLoading(
       async () => {
         const signature = await $fetch<FunctionSignature | null>(
-          '/api/get-function-signature',
+          '/api/functions/signature',
           {
             method: 'POST',
             body: {
-              dbConnectionString: options.currentConnectionString.value,
+              ...getConnectionParams(options.connection.value),
               functionId: state.selectedItem.value!.id,
             },
           }
@@ -164,11 +165,11 @@ export function useFunctionActions(
     await executeWithLoading(
       async () => {
         const signature = await $fetch<FunctionSignature | null>(
-          '/api/get-function-signature',
+          '/api/functions/signature',
           {
             method: 'POST',
             body: {
-              dbConnectionString: options.currentConnectionString.value,
+              ...getConnectionParams(options.connection.value),
               functionId: state.selectedItem.value!.id,
             },
           }
@@ -214,10 +215,10 @@ export function useFunctionActions(
     await executeWithLoading(
       async () => {
         showSqlPreview('', 'Function DDL');
-        const def = await $fetch('/api/get-one-function', {
+        const def = await $fetch('/api/functions/definition', {
           method: 'POST',
           body: {
-            dbConnectionString: options.currentConnectionString.value,
+            ...getConnectionParams(options.connection.value),
             functionId: state.selectedItem.value!.id,
           },
         });

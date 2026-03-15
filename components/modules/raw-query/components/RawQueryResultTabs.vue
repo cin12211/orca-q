@@ -55,6 +55,13 @@ const viewModes: { value: ViewMode; label: string }[] = [
   { value: 'agent', label: 'Agent' },
 ];
 
+// Thay vì recompute mỗi lần switch, cache lại result đã format theo từng tab
+const formattedDataCache = new Map<string, Record<string, any>[]>();
+
+const formattedData = shallowRef<Record<string, any>[]>([]);
+
+let rafId: number | null = null;
+
 // Get the active tab data
 const activeTab = computed(() => {
   if (!props.activeTabId) return null;
@@ -79,21 +86,37 @@ const activeTabColumns = computed<MappedRawColumn[]>(() => {
   }));
 });
 
-// Format data for display (map column indices to names using tab's own fieldDefs)
-const formattedData = computed(() => {
-  if (!activeTab.value?.result) return [];
-  const fieldDefs = activeTab.value.metadata.fieldDefs || [];
-  return activeTab.value.result.map((item: RowData) => {
-    const mappedItem: Record<string, any> = {};
-    for (const [key, value] of Object.entries(item)) {
-      const fieldDef = fieldDefs[Number(key)];
-      const columnName = fieldDef?.name || '';
-      if (columnName) {
-        mappedItem[columnName] = value;
+const getFormattedData = (tab: ExecutedResultItem): Record<string, any>[] => {
+  if (formattedDataCache.has(tab.id)) {
+    return formattedDataCache.get(tab.id)!; // instant, no recompute
+  }
+
+  const fieldDefs = tab.metadata.fieldDefs || [];
+  const formatted =
+    tab.result?.map((item: RowData) => {
+      const mappedItem: Record<string, any> = {};
+      for (const [key, value] of Object.entries(item)) {
+        const columnName = fieldDefs[Number(key)]?.name || '';
+        if (columnName) mappedItem[columnName] = value;
       }
-    }
-    return mappedItem;
+      return mappedItem;
+    }) ?? [];
+
+  formattedDataCache.set(tab.id, formatted);
+  return formatted;
+};
+
+watch(activeTab, newTab => {
+  if (rafId) cancelAnimationFrame(rafId);
+
+  rafId = requestAnimationFrame(() => {
+    formattedData.value = newTab ? getFormattedData(newTab) : [];
+    rafId = null;
   });
+});
+
+onUnmounted(() => {
+  if (rafId) cancelAnimationFrame(rafId);
 });
 
 // Switch view mode
@@ -129,7 +152,7 @@ const hasErrors = (tab: ExecutedResultItem) => {
           cn(
             'border px-1 text-xs font-normal transition-colors',
             currentView === mode.value
-              ? 'bg-gray-100 border-transparent border-r-gray-400'
+              ? 'bg-muted border-transparent border-r-border'
               : 'border-transparent',
             // Error tab styling
             mode.value === 'error' && hasErrors(activeTab)
@@ -181,7 +204,7 @@ const hasErrors = (tab: ExecutedResultItem) => {
                     cn(
                       'h-6! flex gap-0.5 rounded-t-md max-w-44 justify-start! items-center font-normal p-1! hover:[&>div]:opacity-100 transition-all duration-200 border rounded-b-none cursor-pointer relative',
                       tabId === activeTabId
-                        ? 'border-b-transparent bg-background'
+                        ? 'border-b-transparent bg-background dark:bg-accent'
                         : 'border-transparent bg-muted/30'
                     )
                   "
@@ -245,18 +268,11 @@ const hasErrors = (tab: ExecutedResultItem) => {
         <LoadingOverlay v-if="executeLoading && activeTabId" visible />
 
         <!-- No results placeholder -->
-        <div
+        <BaseEmpty
           v-if="!activeTab"
-          class="h-full flex items-center justify-center text-muted-foreground"
-        >
-          <div class="text-center">
-            <Icon
-              name="hugeicons:file-empty-02"
-              class="size-12! mb-2 opacity-50"
-            />
-            <p class="text-sm">Execute a query to see results</p>
-          </div>
-        </div>
+          title="No results"
+          desc="Execute a query to see results"
+        />
 
         <!-- Result View -->
         <ResultTabResultView

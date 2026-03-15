@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import { Handle, Position, useVueFlow, type NodeProps } from '@vue-flow/core';
-import type { ColumnMetadata, TableMetadata } from '~/server/api/get-tables';
+import type { ColumnMetadata, TableMetadata } from '~/core/types';
 import { HANDLE_HEIGHT, HANDLE_LEFT, ROW_HEIGHT, ROW_WIDTH } from './constants';
 import type { LabelTableNode } from './type';
 import { buildTableNodeId, focusNodeById, getHandPosition } from './utils';
@@ -111,21 +111,23 @@ const onFocusNode = (
 </script>
 
 <template>
-  <div class="table-node">
-    <div class="flex flex-col rounded-md" :style="{ width: ROW_WIDTH + 'px' }">
+  <div class="table-node text-foreground">
+    <div
+      class="flex flex-col rounded-md bg-card"
+      :style="{ width: ROW_WIDTH + 'px' }"
+    >
       <div
-        class="rounded-t-md box-border p-2 bg-primary/90 flex items-center justify-between gap-2"
+        class="rounded-t-md box-border p-2 bg-primary dark:bg-accent text-primary-foreground dark:text-foreground flex items-center justify-between gap-2"
         :style="{ height: ROW_HEIGHT + 10 + 'px' }"
       >
-        <p
-          class="flex-1 text-center px-2 box-border text-white text-xl truncate"
-        >
+        <p class="flex-1 text-center px-2 box-border text-xl truncate">
           {{ data.table }}
           {{ data.schema === 'public' ? '' : `(${data.schema})` }}
         </p>
-        <button
+
+        <Button
           v-if="hasRelations"
-          class="flex-shrink-0 p-1 px-2 h-full rounded hover:bg-white/20 transition-colors"
+          size="iconMd"
           :title="
             isExpanded ? 'Collapse related tables' : 'Expand related tables'
           "
@@ -135,9 +137,9 @@ const onFocusNode = (
             :name="
               isExpanded ? 'hugeicons:remove-circle' : 'hugeicons:add-circle'
             "
-            class="w-5 h-5 text-white"
+            class="w-5 h-5"
           />
-        </button>
+        </Button>
       </div>
 
       <!-- Columns -->
@@ -145,9 +147,9 @@ const onFocusNode = (
         v-for="row in rows"
         :key="row.name"
         :class="[
-          'grid grid-cols-3 px-2 border-t ',
-          row.isForeign && 'cursor-pointer hover:bg-blue-200/80',
-          (label as LabelTableNode)?.get(row.name) && 'bg-blue-200/40',
+          'grid grid-cols-3 px-2 border-t border-border bg-card transition-colors',
+          row.isForeign && 'cursor-pointer hover:bg-primary/10',
+          (label as LabelTableNode)?.get(row.name) && 'bg-primary/10',
         ]"
         :style="{ height: ROW_HEIGHT + 'px' }"
         @click="onFocusNode(row)"
@@ -157,22 +159,22 @@ const onFocusNode = (
             <Icon
               v-if="row.isPrimary"
               name="hugeicons:key-01"
-              class="w-4 text-yellow-400 text-xl"
+              class="w-4 text-yellow-400 dark:text-yellow-300 text-xl"
             />
             <Icon
               v-else-if="row.isForeign"
               name="hugeicons:key-01"
-              class="min-w-4 text-gray-400 text-xl"
+              class="min-w-4 text-muted-foreground text-xl"
             />
             <Icon
               v-else-if="row.nullable"
               name="hugeicons:diamond"
-              class="min-w-4 text-gray-300"
+              class="min-w-4 text-muted-foreground/60"
             />
             <Icon
               v-else
               name="mynaui:diamond-solid"
-              class="min-w-4 text-gray-300"
+              class="min-w-4 text-muted-foreground/60"
             />
           </div>
           <p class="truncate">{{ row.name }}</p>
@@ -180,7 +182,7 @@ const onFocusNode = (
           <Icon
             v-if="row.isForeign"
             name="hugeicons:link-04"
-            class="min-w-3 text-gray-400"
+            class="min-w-3 text-muted-foreground"
           />
         </div>
         <div class="col-span-1 py-2 truncate text-center text-muted-foreground">

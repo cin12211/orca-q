@@ -1,0 +1,346 @@
+<style>
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  body {
+    min-height: 100vh;
+    transition: background 0.3s;
+  }
+
+  html.dark body {
+    background: #000000;
+  }
+
+  html.light body {
+    background: #ffffff;
+  }
+
+  html.dark svg {
+    color: #ffffff;
+  }
+
+  html.light svg {
+    color: #000000;
+  }
+
+  .spa-loading-friendly {
+    display: block;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+  }
+
+  .noise-wrap {
+    position: relative;
+    display: inline-block;
+    line-height: 0;
+  }
+
+  .spa-logo-dynamic {
+    width: 120px;
+    height: auto;
+    display: block;
+  }
+
+  #noise-canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    image-rendering: pixelated;
+  }
+</style>
+
+<div class="spa-loading-friendly">
+  <div class="noise-wrap">
+    <svg
+      id="logo-svg"
+      class="spa-logo-dynamic"
+      viewBox="0 0 700 700"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <path
+        d="M364.095 539.429H393.286V568.619H364.095L364.095 539.429Z"
+        fill="currentColor"
+      />
+      <path
+        d="M597.619 43.1904H568.429V130.762H597.619V218.333H626.81V276.714H656V451.857H626.81V539.429H597.619V568.619H568.429V597.81H539.238V627H510.048V656.19H422.477V685.381H276.523V656.19H188.952V627H159.762V597.81H130.571V568.619H101.381V539.429H218.143V568.619H364.096V597.81H334.904V627H393.286V597.81H451.667V568.619H480.857V539.429H510.048V451.857H451.667V481.048H276.523V451.857H305.714V422.667H334.904V393.477H364.096V364.286H393.286V305.905H159.762V335.096H130.571V364.286H218.143V393.477H43V276.714H72.1904V218.333H101.381V159.952H130.571V130.762H188.952V101.571H247.333V72.3809H451.667V43.1904H510.048V14H597.619V43.1904ZM276.523 159.952V189.143H218.143V247.523H188.952V276.714H247.333V247.523H305.714V218.333H334.904V189.143H364.096V159.952H276.523Z"
+        fill="currentColor"
+      />
+    </svg>
+
+    <canvas id="noise-canvas"></canvas>
+  </div>
+</div>
+
+<script>
+  (function () {
+    /* ─────────────────────────────────────────────────────────────
+     Parameters
+  ───────────────────────────────────────────────────────────── */
+    const NOISE_DENSITY = 0.4;
+    const NOISE_SPEED = 10;
+    const SCANLINE_OPQ = 1.0;
+    const GLITCH_AMOUNT = 1.0;
+
+    const PHASES = [
+      { name: 'SIGNAL', dur: 20 },
+      { name: 'CLEARING', dur: 160 },
+      { name: 'NOISE', dur: 50 },
+      { name: 'LOSING', dur: 60 },
+    ];
+
+    /* ─────────────────────────────────────────────────────────────
+     Theme — reads class="dark" on <html>
+  ───────────────────────────────────────────────────────────── */
+    const BG_DARK = '#0a0a0a';
+    const BG_LIGHT = '#f0f0f0';
+
+    const PALETTE_DARK = [
+      [0, 0, 0],
+      [0, 0, 0],
+      [0, 0, 0],
+      [0, 0, 0],
+      [255, 255, 255],
+      [255, 255, 255],
+      [0, 255, 220],
+      [0, 255, 220],
+      [0, 255, 220],
+      [220, 0, 0],
+      [220, 0, 0],
+      [255, 0, 100],
+    ];
+    const PALETTE_LIGHT = [
+      [255, 255, 255],
+      [255, 255, 255],
+      [255, 255, 255],
+      [255, 255, 255],
+      [20, 20, 20],
+      [20, 20, 20],
+      [0, 120, 160],
+      [0, 120, 160],
+      [0, 120, 160],
+      [180, 0, 0],
+      [180, 0, 0],
+      [120, 0, 60],
+    ];
+
+    let COLORS = PALETTE_DARK;
+
+    function isDark() {
+      return document.documentElement.classList.contains('dark');
+    }
+
+    function syncTheme() {
+      const dark = isDark();
+      COLORS = dark ? PALETTE_DARK : PALETTE_LIGHT;
+    }
+
+    /* ─────────────────────────────────────────────────────────────
+     SVG → Blob Image (resolves currentColor for canvas)
+
+     ctx.drawImage(svgElement) cannot resolve "currentColor" —
+     the browser doesn't know what color the SVG is rendering as.
+     Solution: serialize the SVG, substitute the real computed
+     color for every "currentColor" occurrence, create a Blob
+     URL, and load it as a plain <img>. THAT image can be passed
+     to ctx.drawImage() and used for destination-in alpha masking.
+  ───────────────────────────────────────────────────────────── */
+    const svgEl = document.getElementById('logo-svg');
+    const canvas = document.getElementById('noise-canvas');
+    const ctx = canvas.getContext('2d');
+
+    let maskImg = null; /* rasterized blob image — used for alpha mask */
+    let animId = null;
+    let phase = 0,
+      t = 0,
+      frame = 0;
+
+    function buildMask(done) {
+      /* Resolve the actual rendered color of the SVG element */
+      const resolvedColor = getComputedStyle(svgEl).color;
+
+      /* Serialize the SVG and substitute currentColor */
+      const serialized = new XMLSerializer().serializeToString(svgEl);
+      const withColor = serialized.replace(/currentColor/g, resolvedColor);
+
+      const blob = new Blob([withColor], { type: 'image/svg+xml' });
+      const url = URL.createObjectURL(blob);
+
+      const img = new Image();
+      img.onload = function () {
+        maskImg = img;
+        URL.revokeObjectURL(url);
+        if (done) done();
+      };
+      img.onerror = function () {
+        URL.revokeObjectURL(url);
+      };
+      img.src = url;
+    }
+
+    /* ─────────────────────────────────────────────────────────────
+     Canvas sizing
+  ───────────────────────────────────────────────────────────── */
+    function initCanvas() {
+      const rect = svgEl.getBoundingClientRect();
+      canvas.width = Math.round(rect.width) || 120;
+      canvas.height = Math.round(rect.height) || 120;
+    }
+
+    /* ─────────────────────────────────────────────────────────────
+     Render loop
+  ───────────────────────────────────────────────────────────── */
+    function tick() {
+      frame++;
+      const skip = Math.max(1, Math.round(6 - NOISE_SPEED * 0.5));
+      if (frame % skip !== 0) {
+        animId = requestAnimationFrame(tick);
+        return;
+      }
+
+      const ph = PHASES[phase];
+      const prog = t / ph.dur;
+      const W = canvas.width;
+      const H = canvas.height;
+      const out = ctx.createImageData(W, H);
+      const od = out.data;
+
+      const doGlitch = Math.random() < GLITCH_AMOUNT * 0.25;
+      const gShift = doGlitch
+        ? Math.floor((Math.random() - 0.5) * 30 * GLITCH_AMOUNT)
+        : 0;
+
+      for (let i = 0; i < W * H; i++) {
+        const px = i * 4;
+        let r = 0,
+          g = 0,
+          b = 0,
+          a = 0;
+        const nc = COLORS[Math.floor(Math.random() * COLORS.length)];
+
+        if (ph.name === 'NOISE') {
+          if (Math.random() < NOISE_DENSITY) {
+            r = nc[0];
+            g = nc[1];
+            b = nc[2];
+            a = 255;
+          }
+        } else if (ph.name === 'CLEARING') {
+          const reveal = Math.pow(prog, 1.6);
+          if (Math.random() > reveal * (1 - NOISE_DENSITY * 0.3)) {
+            r = nc[0];
+            g = nc[1];
+            b = nc[2];
+            a = Math.min(
+              255,
+              Math.round((1 - reveal) * 255 * NOISE_DENSITY * 1.5)
+            );
+          }
+        } else if (ph.name === 'SIGNAL') {
+          if (Math.random() < 0.015 * NOISE_DENSITY) {
+            r = nc[0];
+            g = nc[1];
+            b = nc[2];
+            a = 180;
+          }
+        } else if (ph.name === 'LOSING') {
+          const lose = Math.pow(prog, 1.4);
+          if (Math.random() < lose * NOISE_DENSITY) {
+            r = nc[0];
+            g = nc[1];
+            b = nc[2];
+            a = Math.round(lose * 255);
+          }
+        }
+
+        od[px] = r;
+        od[px + 1] = g;
+        od[px + 2] = b;
+        od[px + 3] = a;
+      }
+
+      /* Glitch row distortion */
+      if (gShift !== 0) {
+        const gr = Math.floor(Math.random() * H);
+        const gh = Math.floor(Math.random() * 10) + 3;
+        for (let gy = gr; gy < Math.min(H, gr + gh); gy++) {
+          for (let gx = 0; gx < W; gx++) {
+            const srcX = Math.max(0, Math.min(W - 1, gx + gShift));
+            const dst = (gy * W + gx) * 4;
+            const src = (gy * W + srcX) * 4;
+            od[dst] = od[src];
+            od[dst + 1] = od[src + 1];
+            od[dst + 2] = od[src + 2];
+            od[dst + 3] = 220;
+          }
+        }
+      }
+
+      ctx.clearRect(0, 0, W, H);
+      ctx.putImageData(out, 0, 0);
+
+      /* Scanlines */
+      ctx.fillStyle = `rgba(0,0,0,${SCANLINE_OPQ * 0.45})`;
+      for (let sy = 0; sy < H; sy += 2) ctx.fillRect(0, sy, W, 1);
+
+      /* Alpha mask: clip noise to SVG shape only.
+       maskImg is the pre-rasterized blob image with resolved color. */
+      if (maskImg) {
+        ctx.globalCompositeOperation = 'destination-in';
+        ctx.drawImage(maskImg, 0, 0, W, H);
+        ctx.globalCompositeOperation = 'source-over';
+      }
+
+      t++;
+      if (t > ph.dur) {
+        t = 0;
+        phase = (phase + 1) % PHASES.length;
+      }
+      animId = requestAnimationFrame(tick);
+    }
+
+    function start() {
+      if (animId) cancelAnimationFrame(animId);
+      phase = 0;
+      t = 0;
+      frame = 0;
+      animId = requestAnimationFrame(tick);
+    }
+
+    /* ─────────────────────────────────────────────────────────────
+     Theme change observer — rebuild mask when currentColor changes
+  ───────────────────────────────────────────────────────────── */
+    new MutationObserver(function () {
+      syncTheme();
+      buildMask(); /* mask color must match new theme */
+    }).observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['class'],
+    });
+
+    /* ─────────────────────────────────────────────────────────────
+     Boot: wait 2 rAF so SVG has real layout dimensions,
+     then build mask and start.
+  ───────────────────────────────────────────────────────────── */
+    requestAnimationFrame(function () {
+      requestAnimationFrame(function () {
+        syncTheme();
+        initCanvas();
+        buildMask(start); /* start() fires only after mask is ready */
+      });
+    });
+
+    window.addEventListener('resize', function () {
+      initCanvas();
+      buildMask();
+    });
+  })();
+</script>

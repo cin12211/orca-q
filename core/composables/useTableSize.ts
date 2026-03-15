@@ -9,7 +9,7 @@ export const useTableSize = ({
 }) => {
   const { connectionStore } = useAppContext();
 
-  const { data, status } = useFetch('/api/get-table-size', {
+  const { data, status } = useFetch('/api/tables/size', {
     method: 'POST',
     body: {
       tableName,

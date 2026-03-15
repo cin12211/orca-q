@@ -143,7 +143,7 @@ watchEffect(onCleanup => {
       :class="[
         'border rounded-t-md transition-all duration-300 ease-out',
         isActive
-          ? 'bg-white shadow-xl border-b-transparent rounded-b-none'
+          ? 'bg-background shadow-xl border-b-transparent rounded-b-none'
           : 'border-transparent',
       ]"
     >
@@ -154,7 +154,7 @@ watchEffect(onCleanup => {
         :class="[
           'h-7! max-w-44 justify-start! font-normal p-2! hover:[&>div]:opacity-100 border border-transparent',
           isActive
-            ? 'bg-white rounded-b-none hover:bg-transparent '
+            ? 'bg-background rounded-b-none hover:bg-transparent '
             : 'hover:bg-primary/10 hover:border-border',
           isDragging ? 'bg-primary/5' : '',
         ]"

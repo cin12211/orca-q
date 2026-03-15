@@ -15,7 +15,7 @@ This document defines the coding standards, naming conventions, and best practic
 | ------------------ | ------------------------------------------ | ------------------------------------------ |
 | **Vue Components** | PascalCase                                 | `QuickQuery.vue`, `BaseCodeEditor.vue`     |
 | **Hook files**     | camelCase with `use` prefix                | `useQuickQueryMutation.ts`                 |
-| **Store files**    | camelCase with `use` prefix or descriptive | `useTabViewsStore.ts`, `appLayoutStore.ts` |
+| **Store files**    | camelCase with `use` prefix or descriptive | `useTabViewsStore.ts`, `appConfigStore.ts` |
 | **Type files**     | kebab-case with `.type.ts` or `.types.ts`  | `database-roles.types.ts`                  |
 | **Constant files** | camelCase or `constants.ts`                | `constants.ts`                             |
 | **Utility files**  | camelCase with descriptive names           | `generateTableSQL.ts`                      |
@@ -38,7 +38,7 @@ All components use the Composition API with `<script setup lang="ts">`:
 ```vue
 <script setup lang="ts">
 // 1. Imports
-import { useAppLayoutStore } from '~/shared/stores/appLayoutStore';
+import { useAppConfigStore } from '~/shared/stores/appConfigStore';
 import type { TabView } from '~/shared/stores/useTabViewsStore';
 
 // 2. Props & Emits
@@ -53,7 +53,7 @@ const emit = defineEmits<{
 }>();
 
 // 3. Stores & Composables
-const appLayoutStore = useAppLayoutStore();
+const appConfigStore = useAppConfigStore();
 const { wsState } = toRefs(useWSStateStore());
 
 // 4. Refs & Reactive State
@@ -297,6 +297,7 @@ const connectionSchema = z.object({
 
 <!-- Child -->
 <script setup>
+
 
 
 const emit = defineEmits<{

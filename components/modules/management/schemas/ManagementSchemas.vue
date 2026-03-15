@@ -251,12 +251,11 @@ watch(
 
     <!-- TODO: check flow when change connection  -->
     <!-- TODO: check flow when change schema  -->
-    <div
+    <BaseEmpty
       v-if="!hasTreeData"
-      class="flex flex-col items-center h-full justify-center"
-    >
-      No data!
-    </div>
+      title="No data found"
+      desc="There is no schemas data available for this connection."
+    />
 
     <!-- Context Menu Wrapper -->
     <BaseContextMenu

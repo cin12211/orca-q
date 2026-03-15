@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { getConnectionParams } from '@/core/helpers/connection-helper';
 import ExportOptionsForm from '~/components/modules/management/export/components/ExportOptionsForm.vue';
 import { useDatabaseExport } from '~/components/modules/management/export/hooks/useDatabaseExport';
 import { useAppContext } from '~/core/contexts/useAppContext';
@@ -55,7 +56,7 @@ const {
   lastExport,
   exportDatabase,
   reset: resetExport,
-} = useDatabaseExport(dbConnectionString);
+} = useDatabaseExport(connectionData.value as any);
 
 // Import state
 const isImporting = ref(false);
@@ -88,7 +89,7 @@ const onFileSelect = (event: Event) => {
 
 // Handle import
 const onImport = async () => {
-  if (!selectedFile.value || !dbConnectionString.value) return;
+  if (!selectedFile.value || !connectionData.value) return;
 
   isImporting.value = true;
   importError.value = null;
@@ -97,7 +98,14 @@ const onImport = async () => {
   try {
     const formData = new FormData();
     formData.append('file', selectedFile.value);
-    formData.append('dbConnectionString', dbConnectionString.value);
+
+    const params = getConnectionParams(connectionData.value);
+    Object.entries(params).forEach(([key, value]) => {
+      if (value !== undefined) {
+        formData.append(key, value.toString());
+      }
+    });
+
     formData.append('options', JSON.stringify(importOptions.value));
 
     const response = await $fetch('/api/database-import/import-database', {
@@ -155,30 +163,34 @@ const formatFileSize = (bytes: number) => {
 
       <!-- Tabs -->
       <div class="flex border-b">
-        <button
+        <Button
+          size="sm"
+          variant="ghost"
           :class="[
-            'flex items-center gap-2 px-6 py-3 text-sm font-medium transition-colors',
+            'rounded-none border-b-2 px-6 transition-colors',
             activeTab === 'export'
-              ? 'border-b-2 border-primary text-foreground'
-              : 'text-muted-foreground hover:text-foreground',
+              ? 'border-primary text-foreground'
+              : 'border-transparent text-muted-foreground hover:text-foreground',
           ]"
           @click="activeTab = 'export'"
         >
           <Icon name="lucide:download" class="size-4" />
           Export Database
-        </button>
-        <button
+        </Button>
+        <Button
+          size="sm"
+          variant="ghost"
           :class="[
-            'flex items-center gap-2 px-6 py-3 text-sm font-medium transition-colors',
+            'rounded-none border-b-2 px-6 transition-colors',
             activeTab === 'import'
-              ? 'border-b-2 border-primary text-foreground'
-              : 'text-muted-foreground hover:text-foreground',
+              ? 'border-primary text-foreground'
+              : 'border-transparent text-muted-foreground hover:text-foreground',
           ]"
           @click="activeTab = 'import'"
         >
           <Icon name="lucide:upload" class="size-4" />
           Import Database
-        </button>
+        </Button>
       </div>
 
       <!-- Content -->
@@ -396,7 +408,7 @@ const formatFileSize = (bytes: number) => {
               @click="onImport"
             >
               <Icon
-                :name="isImporting ? 'lucide:loader' : 'lucide:upload'"
+                :name="isImporting ? 'hugeicons:loading-03' : 'lucide:upload'"
                 :class="['size-4 mr-2', isImporting && 'animate-spin']"
               />
               {{ isImporting ? 'Importing...' : 'Import Database' }}

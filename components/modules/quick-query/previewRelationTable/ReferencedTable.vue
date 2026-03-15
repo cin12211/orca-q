@@ -7,10 +7,10 @@ import {
   DEFAULT_QUERY_SIZE,
   OperatorSet,
 } from '~/core/constants';
+import { DatabaseClientType } from '~/core/constants/database-client-type';
 import { TabViewType } from '~/core/stores';
-import { useAppLayoutStore } from '~/core/stores/appLayoutStore';
+import { useAppConfigStore } from '~/core/stores/appConfigStore';
 import { useManagementConnectionStore } from '~/core/stores/managementConnectionStore';
-import { EDatabaseType } from '../../connection/constants';
 import WrapperErdDiagram from '../../erd-diagram/WrapperErdDiagram.vue';
 import { buildTableNodeId } from '../../erd-diagram/utils';
 import QuickQueryErrorPopup from '../QuickQueryErrorPopup.vue';
@@ -64,7 +64,7 @@ const emit = defineEmits<{
 const { quickQueryFilterRef, quickQueryTableRef, selectedRows, focusedCell } =
   useQuickQuery();
 
-const appLayoutStore = useAppLayoutStore();
+const appConfigStore = useAppConfigStore();
 const connectionStore = useManagementConnectionStore();
 
 // Safe mode confirmation dialog state
@@ -77,11 +77,8 @@ const {
   safeModeDialogType,
 } = useSafeModeDialog();
 
-const connectionString = computed(() => {
-  const connection = connectionStore.connections.find(
-    c => c.id === props.connectionId
-  );
-  return connection?.connectionString || '';
+const connection = computed(() => {
+  return connectionStore.connections.find(c => c.id === props.connectionId);
 });
 
 const {
@@ -122,7 +119,7 @@ const {
   onChangeComposeWith,
   isFetchingTableData,
 } = useTableQueryBuilder({
-  connectionString,
+  connection,
   primaryKeys: primaryKeyColumns,
   columns: columnNames,
   connectionId: computed(() => props.connectionId),
@@ -174,8 +171,8 @@ const {
   quickQueryTableRef,
   refreshCount,
   focusedCell,
-  connectionString,
-  safeModeEnabled: toRef(appLayoutStore, 'quickQuerySafeModeEnabled'),
+  connection,
+  safeModeEnabled: toRef(appConfigStore, 'quickQuerySafeModeEnabled'),
   onRequestSafeModeConfirm,
 });
 
@@ -324,7 +321,7 @@ useHotkeys(
         :initFilters="filters"
         :baseQuery="baseQueryString"
         :columns="columnNames"
-        :dbType="EDatabaseType.PG"
+        :dbType="DatabaseClientType.POSTGRES"
         :composeWith="composeWith"
         @onChangeComposeWith="onChangeComposeWith"
       />
@@ -345,7 +342,7 @@ useHotkeys(
         <StructureTable
           :schema="schemaName"
           :tableName="tableName"
-          :connectionString="connectionString"
+          :connectionId="connectionId"
         />
       </div>
 
@@ -356,6 +353,7 @@ useHotkeys(
         :has-edited-rows="hasEditedRows"
         :selectedRows="selectedRows"
         :table-name="tableName"
+        :schema-name="schemaName"
         isReferencedTable
         @onPaginate="onUpdatePagination"
         @onNextPage="onNextPage"

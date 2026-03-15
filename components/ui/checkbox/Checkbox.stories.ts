@@ -21,7 +21,7 @@ export const Default: Story = {
       const checked = ref(false);
       return { args, checked };
     },
-    template: '<Checkbox v-model:checked="checked" v-bind="args" />',
+    template: '<Checkbox v-model:model-value="checked" v-bind="args" />',
   }),
 };
 
@@ -34,7 +34,7 @@ export const WithText: Story = {
     },
     template: `
       <div class="items-top flex space-x-2">
-        <Checkbox id="terms1" v-model:checked="checked" />
+        <Checkbox id="terms1" v-model:model-value="checked" />
         <div class="grid gap-1.5 leading-none">
           <label
             for="terms1"

@@ -378,13 +378,21 @@ defineExpose({
     <LoadingOverlay v-if="loading" visible />
 
     <!-- Empty State -->
-    <div
+    <BaseEmpty
       v-else-if="!roles.length"
-      class="flex flex-col items-center justify-center py-8 text-muted-foreground"
+      title="No roles found"
+      desc="There are no roles or users available for this connection."
     >
-      <Icon name="hugeicons:user-group" class="size-12 mb-2 opacity-50" />
-      <p class="text-sm">No roles found</p>
-    </div>
+      <Button
+        v-if="canCreateUser"
+        variant="outline"
+        size="sm"
+        @click="onCreateUser"
+      >
+        <Icon name="hugeicons:user-add-01" />
+        Create User
+      </Button>
+    </BaseEmpty>
 
     <!-- Roles Tree using FileTree -->
     <template v-else>

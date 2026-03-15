@@ -23,25 +23,17 @@ import {
 const { wsStateStore, connectionStore } = useAppContext();
 const { connectionId, workspaceId } = toRefs(wsStateStore);
 
-// Get the database connection string from the selected connection
-const dbConnectionString = computed(() => {
-  if (!connectionId.value) return '';
-  const connection = connectionStore.connections.find(
-    c => c.id === connectionId.value
-  );
-  return connection?.connectionString || '';
+const connection = computed(() => {
+  if (!connectionId.value) return undefined;
+  return connectionStore.connections.find(c => c.id === connectionId.value);
 });
 
 const currentDatabaseName = computed(() => {
-  if (!connectionId.value) return '';
-  const connection = connectionStore.connections.find(
-    c => c.id === connectionId.value
-  );
-  if (!connection) return '';
-  if (connection.database) return connection.database;
-  if (connection.connectionString) {
+  if (!connection.value) return '';
+  if (connection.value.database) return connection.value.database;
+  if (connection.value.connectionString) {
     try {
-      const url = new URL(connection.connectionString);
+      const url = new URL(connection.value.connectionString);
       return url.pathname?.replace(/^\//, '') || '';
     } catch {
       return '';
@@ -51,15 +43,11 @@ const currentDatabaseName = computed(() => {
 });
 
 const currentUsername = computed(() => {
-  if (!connectionId.value) return '';
-  const connection = connectionStore.connections.find(
-    c => c.id === connectionId.value
-  );
-  if (!connection) return '';
-  if (connection.username) return connection.username;
-  if (connection.connectionString) {
+  if (!connection.value) return '';
+  if (connection.value.username) return connection.value.username;
+  if (connection.value.connectionString) {
     try {
-      const url = new URL(connection.connectionString);
+      const url = new URL(connection.value.connectionString);
       return url.username || '';
     } catch {
       return '';
@@ -74,7 +62,7 @@ const {
   roles,
   fetchRoles,
   refresh: refreshRoles,
-} = useDatabaseRoles(dbConnectionString);
+} = useDatabaseRoles(connection);
 
 const currentUserRole = computed(() => {
   if (!currentUsername.value) return null;
@@ -82,7 +70,7 @@ const currentUserRole = computed(() => {
 });
 
 const canCreateUser = computed(() => {
-  if (!dbConnectionString.value) return false;
+  if (!connection.value) return false;
   if (!currentUserRole.value) return false;
   return (
     currentUserRole.value.isSuperuser || currentUserRole.value.canCreateRole
@@ -90,7 +78,7 @@ const canCreateUser = computed(() => {
 });
 
 const createUserDisabledReason = computed(() => {
-  if (!dbConnectionString.value) return 'Select a connection to create users';
+  if (!connection.value) return 'Select a connection to create users';
   if (!currentUserRole.value)
     return 'Unable to verify role privileges for this connection';
   if (canCreateUser.value) return 'Create User';
@@ -98,22 +86,22 @@ const createUserDisabledReason = computed(() => {
 });
 
 const { isCreating, isDeleting, createRole, deleteRole } =
-  useRoleMutations(dbConnectionString);
+  useRoleMutations(connection);
 
 const {
   isLoading: isLoadingDatabases,
   databases,
   fetchDatabases,
-} = useDatabases(dbConnectionString);
+} = useDatabases(connection);
 
 const {
   isLoading: isLoadingSchemas,
   schemas,
   fetchSchemas,
-} = useSchemas(dbConnectionString);
+} = useSchemas(connection);
 
 const { isGranting, grantBulkPermissions } =
-  useBulkGrantPermissions(dbConnectionString);
+  useBulkGrantPermissions(connection);
 
 // UI State
 const searchInput = shallowRef('');
@@ -134,7 +122,7 @@ const filteredRoles = computed(() => {
 
 // Fetch roles when connection changes
 watch(
-  () => dbConnectionString.value,
+  () => connection.value,
   async newValue => {
     if (newValue) {
       await fetchRoles();
@@ -287,7 +275,7 @@ const onDeleteUser = async (role: DatabaseRole) => {
               size="iconSm"
               variant="ghost"
               @click="onRefreshRoles"
-              :disabled="isRefreshing || !dbConnectionString"
+              :disabled="isRefreshing || !connection"
             >
               <Icon
                 name="hugeicons:redo"
@@ -301,13 +289,11 @@ const onDeleteUser = async (role: DatabaseRole) => {
     </ManagementSidebarHeader>
 
     <!-- No Connection State -->
-    <div
-      v-if="!dbConnectionString"
-      class="flex-1 flex flex-col items-center justify-center text-muted-foreground"
-    >
-      <Icon name="hugeicons:plug-socket" class="size-12 mb-2 opacity-50" />
-      <p class="text-sm">Select a connection to view roles</p>
-    </div>
+    <BaseEmpty
+      v-if="!connection"
+      title="No selected connection"
+      desc="Select a connection to view roles"
+    />
 
     <!-- Main Content -->
     <template v-else>

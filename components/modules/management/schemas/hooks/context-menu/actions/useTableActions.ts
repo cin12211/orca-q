@@ -1,5 +1,6 @@
 import dayjs from 'dayjs';
 import { toast } from 'vue-sonner';
+import { getConnectionParams } from '@/core/helpers/connection-helper';
 import {
   generateDropTableSQL,
   generateRenameTableSQL,
@@ -46,22 +47,26 @@ export function useTableActions(
     // Browser handles the streaming response with its native download progress
     const form = document.createElement('form');
     form.method = 'POST';
-    form.action = '/api/export-table-data';
+    form.action = '/api/tables/export';
     form.style.display = 'none';
 
+    const params = getConnectionParams(options.connection.value);
     const fields = {
-      dbConnectionString: options.currentConnectionString.value!,
+      ...params,
       schemaName: getSchemaName(),
       tableName,
       format,
     };
 
     for (const [key, value] of Object.entries(fields)) {
-      const input = document.createElement('input');
-      input.type = 'hidden';
-      input.name = key;
-      input.value = value;
-      form.appendChild(input);
+      if (value !== undefined) {
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = key;
+        input.value =
+          typeof value === 'object' ? JSON.stringify(value) : value.toString();
+        form.appendChild(input);
+      }
     }
 
     document.body.appendChild(form);
@@ -94,10 +99,10 @@ export function useTableActions(
     const timestamp = dayjs().format('YYYY-MM-DD_HH-mm');
 
     await downloadStream({
-      url: '/api/export-table-data',
+      url: '/api/tables/export',
       method: 'POST',
       body: {
-        dbConnectionString: options.currentConnectionString.value,
+        ...getConnectionParams(options.connection.value),
         schemaName: getSchemaName(),
         tableName,
         format,
@@ -130,10 +135,10 @@ export function useTableActions(
     await executeWithSafeMode(sql, 'delete', async () => {
       await executeWithLoading(
         async () => {
-          await $fetch('/api/execute', {
+          await $fetch('/api/query/execute', {
             method: 'POST',
             body: {
-              dbConnectionString: options.currentConnectionString.value,
+              ...getConnectionParams(options.connection.value),
               query: sql,
             },
           });
@@ -172,10 +177,10 @@ export function useTableActions(
     await executeWithSafeMode(sql, 'save', async () => {
       await executeWithLoading(
         async () => {
-          await $fetch('/api/execute', {
+          await $fetch('/api/query/execute', {
             method: 'POST',
             body: {
-              dbConnectionString: options.currentConnectionString.value,
+              ...getConnectionParams(options.connection.value),
               query: sql,
             },
           });
@@ -436,10 +441,10 @@ WHERE ${pkCondition};`;
 
     await executeWithLoading(
       async () => {
-        const ddl = await $fetch('/api/get-table-ddl', {
+        const ddl = await $fetch('/api/tables/ddl', {
           method: 'POST',
           body: {
-            dbConnectionString: options.currentConnectionString.value,
+            ...getConnectionParams(options.connection.value),
             schemaName: getSchemaName(),
             tableName: state.selectedItem.value!.name,
           },
