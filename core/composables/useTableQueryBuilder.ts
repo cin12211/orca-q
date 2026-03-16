@@ -142,11 +142,6 @@ export const useTableQueryBuilder = ({
 
       // Log error to history
       addHistoryLog(queryString.value, 0, errorData, errorMessage.value);
-
-      toast(error.response?.statusText, {
-        important: true,
-        description: JSON.stringify(errorData),
-      });
     },
     onResponse: ({ response }) => {
       if (response.ok) {

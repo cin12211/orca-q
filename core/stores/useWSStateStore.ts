@@ -52,7 +52,7 @@ export const useWSStateStore = defineStore(
       wsStates.value = load;
     };
 
-    loadPersistData();
+    // loadPersistData();
 
     const updateWSState = async (wsState: WorkspaceState) => {
       const mappedState = {
@@ -219,6 +219,7 @@ export const useWSStateStore = defineStore(
       setTabViewId,
       tabViewId,
       onCreateNewWSState,
+      loadPersistData,
     };
   },
   {

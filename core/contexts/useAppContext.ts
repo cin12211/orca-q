@@ -50,22 +50,38 @@ export const useAppContext = () => {
   }) => {
     start();
 
-    if (!connectionStore.connections.length) {
-      await connectionStore.loadPersistData();
-    }
-
-    const connectionsByWsId = connectionStore.getConnectionsByWorkspaceId(wsId);
-
-    const connection = connectionsByWsId.find(
-      connection => connection.id === connId
-    );
-
-    if (!connection) {
-      finish();
-      throw new Error('No connection found');
-    }
-
     try {
+      // 1. Ensure stores are hydrated (safety check)
+      if (!connectionStore.connections.length) {
+        await connectionStore.loadPersistData();
+      }
+
+      // 2. Validate Connection existence
+      const connectionsByWsId =
+        connectionStore.getConnectionsByWorkspaceId(wsId);
+      const connection = connectionsByWsId.find(c => c.id === connId);
+
+      if (!connection) {
+        throw new Error(`Connection ${connId} not found in workspace ${wsId}`);
+      }
+
+      // 3. Ensure WorkspaceState exists for this context
+      let currentState = wsStateStore.getStateById({
+        workspaceId: wsId,
+        connectionId: connId,
+      });
+
+      if (!currentState) {
+        console.log(
+          `[useAppContext] Creating missing WSState for ${wsId}/${connId}`
+        );
+        currentState = await wsStateStore.onCreateNewWSState({
+          id: wsId,
+          connectionId: connId,
+        });
+      }
+
+      // 4. Fetch Schemas
       const result = await schemaStore.fetchSchemas({
         connectionId: connId,
         workspaceId: wsId,
@@ -73,27 +89,11 @@ export const useAppContext = () => {
         isRefresh,
       });
 
-      // If we got a result, it means we fetched schemas (or they existed and we used them,
-      // but fetchSchemas returns void if it didn't fetch... actually it returns undefined if early return.
-      // Wait, let's check fetchSchemas return type. It returns object if fetched, undefined if not fetched (existing).
-      // But we need to handle setting the default schema if none is selected.
-
-      const currentState = wsStateStore.getStateById({
-        workspaceId: wsId,
-        connectionId: connId,
-      });
-
       const currentSchema = currentState?.connectionStates?.find(
         connectionState => connectionState.id === connId
       );
 
       if (!currentSchema?.schemaId) {
-        // If no schema selected, select the first one or public
-        // We need to know what schemas are available.
-        // If we fetched new ones, we have them in result.
-        // If we used existing ones, we can look them up.
-
-        // Let's get the schemas for this context from store
         const contextSchemas = (schemaStore.schemas[connId] || []).filter(
           s => s.connectionId === connId && s.workspaceId === wsId
         );
@@ -102,7 +102,6 @@ export const useAppContext = () => {
         let includedPublic = result?.includedPublic;
 
         if (!result) {
-          // Logic if we didn't fetch (already valid)
           const publicSchema = contextSchemas.find(
             s => s.name === PUBLIC_SCHEMA_ID
           );
@@ -123,8 +122,10 @@ export const useAppContext = () => {
         connectionId: connId,
         connection,
       });
-    } catch (e) {
-      console.error(e);
+    } catch (e: any) {
+      console.error('[useAppContext] Connection error:', e);
+      // You could trigger a toast here if sonner is available
+      // toast.error(`Failed to connect: ${e.message}`);
     } finally {
       finish();
     }

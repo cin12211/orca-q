@@ -270,7 +270,7 @@ export const useTabViewsStore = defineStore(
 
     const loadPersistData = async () => {
       if (!connectionId.value || !workspaceId.value) {
-        console.error('connectionId or workspaceId not found');
+        // console.error('connectionId or workspaceId not found');
         return;
       }
 
@@ -281,13 +281,16 @@ export const useTabViewsStore = defineStore(
       tabViews.value = load;
     };
 
-    loadPersistData();
+    // loadPersistData();
 
     watch(
       () => [connectionId.value, workspaceId.value],
-      async () => {
-        await loadPersistData();
-      }
+      async ([connId, wsId]) => {
+        if (connId && wsId) {
+          await loadPersistData();
+        }
+      },
+      { immediate: true }
     );
 
     const onActiveCurrentTab = async (connectionId: string) => {

@@ -65,7 +65,7 @@ export const useWorkspacesStore = defineStore(
       console.timeEnd('loadPersistData');
     };
 
-    loadPersistData();
+    // loadPersistData();
 
     return {
       workspaces,
@@ -74,6 +74,7 @@ export const useWorkspacesStore = defineStore(
       updateWorkspace,
       selectedWorkspace,
       updateLastOpened,
+      loadPersistData,
     };
   },
   {

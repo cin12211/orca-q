@@ -1,11 +1,11 @@
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
-import { DatabaseClientType } from '~/core/constants/database-client-type';
 import {
   EConnectionMethod,
   type ISSLConfig,
   type ISSHConfig,
 } from '~/components/modules/connection';
+import { DatabaseClientType } from '~/core/constants/database-client-type';
 import { useWSStateStore } from './useWSStateStore';
 
 export interface Connection {
@@ -77,7 +77,7 @@ export const useManagementConnectionStore = defineStore(
       connections.value = load;
     };
 
-    loadPersistData();
+    // loadPersistData();
 
     return {
       loadPersistData,

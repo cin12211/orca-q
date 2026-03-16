@@ -469,6 +469,7 @@ onActivated(async () => {
   await nextTick();
 
   const scrollPosition = gridApi.value.getState();
+  // agGridRef.value?.querySelector('.ag-body-viewport')
   const gridBody = document.querySelector('.ag-body-viewport');
 
   if (gridBody) {

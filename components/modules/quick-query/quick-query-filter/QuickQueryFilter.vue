@@ -312,7 +312,7 @@ defineExpose({
 
       <Tooltip>
         <TooltipTrigger as-child>
-          <Button size="xs" variant="outline" @click="onApplyFilter(index)">
+          <Button size="xxs" variant="outline" @click="onApplyFilter(index)">
             Apply
           </Button>
         </TooltipTrigger>
