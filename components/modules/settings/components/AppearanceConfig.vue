@@ -30,7 +30,7 @@ const appConfigStore = useAppConfigStore();
             v-for="option in THEME_MODE_OPTIONS"
             :key="option.value"
             type="button"
-            size="xs"
+            size="xxs"
             :variant="
               colorMode.preference === option.value ? 'default' : 'ghost'
             "
@@ -60,7 +60,7 @@ const appConfigStore = useAppConfigStore();
             v-for="option in SPACE_DISPLAY_OPTIONS"
             :key="option.value"
             type="button"
-            size="xs"
+            size="xxs"
             :variant="
               appConfigStore.spaceDisplay === option.value ? 'default' : 'ghost'
             "
