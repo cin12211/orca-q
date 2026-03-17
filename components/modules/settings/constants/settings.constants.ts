@@ -107,3 +107,11 @@ export const THINKING_STYLE_OPTIONS: Array<{
     value: ThinkingStyle.Scramble,
   },
 ];
+
+export const SPACE_DISPLAY_OPTIONS = [
+  { label: 'Compact', value: 'compact', icon: '' },
+  { label: 'Default', value: 'default', icon: '' },
+  { label: 'Spacious', value: 'spacious', icon: '' },
+] as const;
+
+export const DEFAULT_SPACE_DISPLAY = 'default' as const;

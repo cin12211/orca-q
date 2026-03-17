@@ -67,3 +67,9 @@ export interface TableAppearanceConfigs {
   headerBackgroundColorLight: string;
   headerBackgroundColorDark: string;
 }
+
+export enum SpaceDisplay {
+  Compact = 'compact',
+  Default = 'default',
+  Spacious = 'spacious',
+}

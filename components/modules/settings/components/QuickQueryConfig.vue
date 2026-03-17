@@ -6,7 +6,7 @@ const appConfigStore = useAppConfigStore();
 </script>
 
 <template>
-  <div class="h-full flex flex-col overflow-y-auto gap-2">
+  <div class="h-full flex flex-col overflow-y-auto gap-4">
     <div>
       <h4
         class="text-sm font-medium leading-7 text-primary flex items-center gap-1 mb-2"

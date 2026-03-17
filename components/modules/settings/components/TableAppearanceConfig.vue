@@ -292,7 +292,7 @@ const previewHeaderBg = computed(() =>
       <div class="flex justify-end">
         <Button
           variant="outline"
-          size="sm"
+          size="xs"
           @click="appConfigStore.resetTableAppearance()"
         >
           Reset to defaults

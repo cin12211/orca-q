@@ -149,14 +149,17 @@ const toggleKeyVisibility = (provider: string) => {
         <Icon name="hugeicons:chat-bot" class="size-5!" /> Default Settings
       </h4>
 
-      <div class="px-1">
-        <label class="text-xs text-muted-foreground block mb-2"
-          >Default Model</label
-        >
+      <div class="flex items-center justify-between gap-4">
+        <div class="flex flex-col gap-0.5">
+          <p class="text-sm">Default model</p>
+          <p class="text-xs text-muted-foreground">
+            Model used by the agent when no model is specified
+          </p>
+        </div>
         <ModelSelector
           v-model:provider="appConfigStore.agentSelectedProvider"
           v-model:model="appConfigStore.agentSelectedModel"
-          class="h-8!"
+          class="h-8! w-fit"
         />
       </div>
     </div>
@@ -167,12 +170,12 @@ const toggleKeyVisibility = (provider: string) => {
       >
         <Icon name="lucide:key" class="size-5!" /> API Keys
       </h4>
-      <p class="text-xs text-muted-foreground mb-3 px-1">
+      <p class="text-xs text-muted-foreground mb-3">
         Configure API keys for each provider. Keys are stored locally and never
         sent to our servers.
       </p>
 
-      <div class="flex flex-col space-y-3 px-1">
+      <div class="flex flex-col gap-3">
         <!-- OpenAI -->
         <div class="flex flex-col gap-1">
           <div class="flex items-center justify-between">

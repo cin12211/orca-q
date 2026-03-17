@@ -13,6 +13,7 @@ import {
 } from '~/components/modules/settings/constants';
 import {
   AIProvider,
+  SpaceDisplay,
   type CodeEditorConfigs,
   type ChatUiConfigs,
   type CustomLayoutSizeEntry,
@@ -166,6 +167,9 @@ export const useAppConfigStore = defineStore(
     // Quick Query settings
     const quickQuerySafeModeEnabled = ref<boolean>(false);
 
+    // Space display setting
+    const spaceDisplay = ref<SpaceDisplay>(SpaceDisplay.Default);
+
     // Table appearance settings
     const tableAppearanceConfigs = reactive<TableAppearanceConfigs>({
       ...DEFAULT_TABLE_APPEARANCE_CONFIGS,
@@ -301,6 +305,7 @@ export const useAppConfigStore = defineStore(
       updateCustomLayoutSizes,
       tableAppearanceConfigs,
       resetTableAppearance,
+      spaceDisplay,
     };
   },
   {

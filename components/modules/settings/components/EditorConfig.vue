@@ -70,7 +70,7 @@ const canAddLayout = computed(
 );
 </script>
 <template>
-  <div class="h-full flex flex-col overflow-y-auto gap-2">
+  <div class="h-full flex flex-col overflow-y-auto gap-4">
     <!-- Preset Layouts -->
     <div>
       <h4
@@ -235,13 +235,18 @@ const canAddLayout = computed(
     <!-- Code Editor Settings -->
     <div>
       <h4
-        class="text-sm font-medium leading-7 text-primary flex items-center gap-1 mb-1"
+        class="text-sm font-medium leading-7 text-primary flex items-center gap-1 mb-2"
       >
         <Icon name="hugeicons:source-code-square" class="size-5!" /> Code Editor
       </h4>
-      <div class="flex flex-col space-y-4">
-        <div class="flex items-center justify-between">
-          <p class="text-sm">Font size</p>
+      <div class="flex flex-col gap-3">
+        <div class="flex items-center justify-between gap-4">
+          <div class="flex flex-col gap-0.5">
+            <p class="text-sm">Font size</p>
+            <p class="text-xs text-muted-foreground">
+              Size of the text in the code editor
+            </p>
+          </div>
           <Select
             @update:modelValue="
               appConfigStore.codeEditorConfigs.fontSize = $event as number
@@ -268,8 +273,13 @@ const canAddLayout = computed(
           </Select>
         </div>
 
-        <div class="flex items-center justify-between">
-          <p class="text-sm">Theme</p>
+        <div class="flex items-center justify-between gap-4">
+          <div class="flex flex-col gap-0.5">
+            <p class="text-sm">Theme</p>
+            <p class="text-xs text-muted-foreground">
+              Color theme for syntax highlighting
+            </p>
+          </div>
           <Select
             @update:modelValue="
               appConfigStore.codeEditorConfigs.theme = $event as EditorTheme
@@ -305,8 +315,13 @@ const canAddLayout = computed(
             </SelectContent>
           </Select>
         </div>
-        <div class="flex items-center justify-between">
-          <p class="text-sm">Mini map</p>
+        <div class="flex items-center justify-between gap-4">
+          <div class="flex flex-col gap-0.5">
+            <p class="text-sm">Mini map</p>
+            <p class="text-xs text-muted-foreground">
+              Show a miniature overview of the entire file
+            </p>
+          </div>
           <div class="flex items-center space-x-2">
             <Switch
               v-model="appConfigStore.codeEditorConfigs.showMiniMap"
@@ -318,8 +333,13 @@ const canAddLayout = computed(
             />
           </div>
         </div>
-        <div class="flex items-center justify-between">
-          <p class="text-sm">Indentation</p>
+        <div class="flex items-center justify-between gap-4">
+          <div class="flex flex-col gap-0.5">
+            <p class="text-sm">Indentation</p>
+            <p class="text-xs text-muted-foreground">
+              Show indentation guides in the editor
+            </p>
+          </div>
           <div class="flex items-center space-x-2">
             <Switch
               v-model="appConfigStore.codeEditorConfigs.indentation"

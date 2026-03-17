@@ -75,7 +75,7 @@ const handleNavClick = async ({
 <template>
   <Dialog v-if="isSettingsOpen" v-model:open="isSettingsOpen">
     <DialogContent
-      class="overflow-hidden p-0 max-h-[80vh] md:max-w-[60vw] lg:max-w-[60vw]"
+      class="overflow-hidden p-0 max-h-[85vh] md:max-w-[70vw] lg:max-w-[70vw]"
     >
       <SidebarProvider class="items-start">
         <Sidebar collapsible="none" class="flex">
@@ -109,7 +109,7 @@ const handleNavClick = async ({
             </SidebarGroup>
           </SidebarContent>
         </Sidebar>
-        <main class="flex h-[80vh] py-3 flex-1 flex-col overflow-y-auto">
+        <main class="flex h-[85vh] py-3 flex-1 flex-col overflow-y-auto">
           <header
             class="flex h-10 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12"
           >
