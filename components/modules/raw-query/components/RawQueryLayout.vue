@@ -11,6 +11,7 @@ import {
 const props = defineProps<{
   layout: RawQueryEditorLayout;
   customLayout?: CustomLayoutDefinition | null;
+  showResultPanel?: boolean;
 }>();
 
 defineSlots<{
@@ -242,7 +243,12 @@ const SLOT_WRAPPER_CLASSES: Record<string, string> = {
           </splitpanes>
         </pane>
 
-        <pane :size="resultSize" min-size="0" max-size="80">
+        <pane
+          v-if="props.showResultPanel !== false"
+          :size="resultSize"
+          min-size="0"
+          max-size="80"
+        >
           <div class="flex flex-col flex-1 h-full p-1 pl-0 relative">
             <slot name="result" />
           </div>

@@ -1,6 +1,5 @@
 <script setup lang="ts">
-import { defineAsyncComponent } from 'vue';
-import { Empty } from '#components';
+import { LazyAgentWorkspace } from '#components';
 import { DEFAULT_MAX_KEEP_ALIVE } from '~/core/constants';
 import { useAppContext } from '~/core/contexts';
 import { useManagementConnectionStore } from '~/core/stores/managementConnectionStore';
@@ -10,16 +9,14 @@ definePageMeta({
   keepalive: {
     max: DEFAULT_MAX_KEEP_ALIVE,
   },
+  notAllowBottomPanel: true,
+  notAllowRightPanel: true,
 });
 
 const route = useRoute('workspaceId-connectionId-agent-tabViewId');
 const { tabViewStore } = useAppContext();
 const { tabViews } = storeToRefs(tabViewStore);
 const connectionStore = useManagementConnectionStore();
-
-const AgentWorkspace = defineAsyncComponent(
-  () => import('~/components/modules/agent/AgentWorkspace.vue')
-);
 
 const tabInfo = computed(() =>
   tabViews.value.find(t => t.id === route.params.tabViewId)
@@ -30,7 +27,7 @@ const activeComponent = computed(() => {
 
   switch (tabInfo.value.type) {
     case TabViewType.AgentChat:
-      return AgentWorkspace;
+      return LazyAgentWorkspace;
     default:
       return null;
   }

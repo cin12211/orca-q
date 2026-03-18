@@ -10,6 +10,7 @@ defineProps<{
   storageKey: string;
   treeData: Record<string, FileNode>;
   initExpandedIds: string[];
+  validateRename?: (nodeId: string, newName: string) => true | string;
 }>();
 
 const emit = defineEmits<{
@@ -17,6 +18,8 @@ const emit = defineEmits<{
   (e: 'click-node', nodeId: string): void;
   (e: 'context-node', nodeId: string): void;
   (e: 'delete-history', nodeId: string): void;
+  (e: 'rename-history', nodeId: string, newName: string): void;
+  (e: 'cancel-rename', nodeId: string): void;
   (e: 'new-thread'): void;
 }>();
 
@@ -27,6 +30,7 @@ defineExpose({
   collapseAll: () => treeRef.value?.collapseAll(),
   expandAll: () => treeRef.value?.expandAll(),
   focusItem: (nodeId: string) => treeRef.value?.focusItem(nodeId),
+  startEditing: (nodeId: string) => treeRef.value?.startEditing(nodeId),
   get isExpandedAll() {
     return treeRef.value?.isExpandedAll ?? false;
   },
@@ -51,8 +55,11 @@ defineExpose({
           :init-expanded-ids="initExpandedIds"
           :allow-drag-and-drop="false"
           :allow-sort="false"
+          :validate-rename="validateRename"
           @click="nodeId => emit('click-node', nodeId)"
           @contextmenu="nodeId => emit('context-node', nodeId)"
+          @rename="(nodeId, newName) => emit('rename-history', nodeId, newName)"
+          @cancel-rename="nodeId => emit('cancel-rename', nodeId)"
         >
           <template #actions="{ node }">
             <Tooltip v-if="node.id === historySectionId">
@@ -68,19 +75,38 @@ defineExpose({
               <TooltipContent> New thread </TooltipContent>
             </Tooltip>
 
-            <Tooltip v-else-if="node.id.startsWith('agent-history-')">
-              <TooltipTrigger as-child>
-                <Button
-                  size="iconSm"
-                  variant="ghost"
-                  class="text-muted-foreground hover:text-destructive"
-                  @click.stop="emit('delete-history', node.id)"
-                >
-                  <Icon name="hugeicons:delete-02" class="size-3.5" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent> Delete thread </TooltipContent>
-            </Tooltip>
+            <div
+              v-else-if="node.id.startsWith('agent-history-')"
+              class="flex items-center"
+            >
+              <Tooltip>
+                <TooltipTrigger as-child>
+                  <Button
+                    size="iconSm"
+                    variant="outline"
+                    class="text-muted-foreground hover:text-primary"
+                    @click.stop="treeRef?.startEditing(node.id)"
+                  >
+                    <Icon name="hugeicons:edit-02" class="size-3.5" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent> Rename thread </TooltipContent>
+              </Tooltip>
+
+              <Tooltip>
+                <TooltipTrigger as-child>
+                  <Button
+                    size="iconSm"
+                    variant="ghost"
+                    class="text-muted-foreground hover:text-destructive"
+                    @click.stop="emit('delete-history', node.id)"
+                  >
+                    <Icon name="hugeicons:delete-02" class="size-3.5" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent> Delete thread </TooltipContent>
+              </Tooltip>
+            </div>
           </template>
         </FileTree>
       </div>

@@ -21,11 +21,27 @@ const PRECISION_OIDS = [1700, 1231, 20, 1016] as const;
 export class PostgresAdapter extends BaseDatabaseAdapter {
   constructor(
     connection: string | Knex.Config['connection'],
-    applicationName: string = 'orca-query-server'
+    applicationName: string = 'OrcaQ'
   ) {
+    let connectionConfig: string | Knex.Config['connection'] = connection;
+
+    if (typeof connectionConfig === 'string') {
+      const url = new URL(connectionConfig);
+      url.searchParams.set('application_name', applicationName);
+      connectionConfig = url.toString();
+    } else if (
+      typeof connectionConfig === 'object' &&
+      connectionConfig !== null
+    ) {
+      connectionConfig = {
+        ...(connectionConfig as object),
+        application_name: applicationName,
+      };
+    }
+
     const knexInstance = knex({
       client: DatabaseClientType.POSTGRES,
-      connection,
+      connection: connectionConfig,
       pool: {
         min: 1,
         max: 10,

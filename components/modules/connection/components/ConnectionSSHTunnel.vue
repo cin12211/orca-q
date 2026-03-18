@@ -33,6 +33,8 @@ const {
 } = useFileDrop(content => {
   props.formData.sshPrivateKey = content;
 });
+
+const showSshPassword = ref(false);
 </script>
 
 <template>
@@ -81,12 +83,30 @@ const {
           </div>
           <div class="space-y-2">
             <Label for="ssh-password">Password</Label>
-            <Input
-              id="ssh-password"
-              type="password"
-              placeholder="SSH password (optional if using key)"
-              v-model="formData.sshPassword"
-            />
+            <div class="relative">
+              <Input
+                id="ssh-password"
+                :type="showSshPassword ? 'text' : 'password'"
+                placeholder="SSH password (optional if using key)"
+                v-model="formData.sshPassword"
+                class="pr-8"
+              />
+              <button
+                type="button"
+                class="absolute right-2 top-1/2 h-4 cursor-pointer -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                @click="showSshPassword = !showSshPassword"
+                :aria-label="
+                  showSshPassword ? 'Hide password' : 'Show password'
+                "
+              >
+                <Icon
+                  :name="
+                    showSshPassword ? 'hugeicons:view' : 'hugeicons:view-off'
+                  "
+                  class="size-4!"
+                />
+              </button>
+            </div>
           </div>
         </div>
 
@@ -126,6 +146,10 @@ const {
                 @dragleave="keyDragLeave"
                 @drop="keyDrop"
               />
+              <p class="text-xs text-muted-foreground">
+                Drop a .pem / .key file here, or paste the SSH private key
+                content
+              </p>
             </div>
           </template>
         </div>

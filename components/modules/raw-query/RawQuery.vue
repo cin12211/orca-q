@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { EditorView } from '@codemirror/view';
 import BaseCodeEditor from '~/components/base/code-editor/BaseCodeEditor.vue';
+import { useHotkeys } from '~/core/composables/useHotKeys';
 import { useAppConfigStore } from '~/core/stores/appConfigStore';
 import IntroRawQuery from './components/IntroRawQuery.vue';
 import RawQueryEditorContextMenu from './components/RawQueryEditorContextMenu.vue';
@@ -57,6 +58,23 @@ const { contextMenuItems, onContextMenuOpen } = useRawQueryEditorContextMenu({
   getEditorView: () =>
     codeEditorRef.value?.editorView as EditorView | null | undefined,
 });
+
+const showResultPanel = ref(true);
+
+useHotkeys([
+  {
+    key: 'mod+j',
+    callback: () => {
+      showResultPanel.value = !showResultPanel.value;
+    },
+  },
+  {
+    key: 'ctrl+j',
+    callback: () => {
+      showResultPanel.value = !showResultPanel.value;
+    },
+  },
+]);
 
 watch(fileVariables, () => {
   rawQueryEditor.reloadSqlCompartment();
@@ -138,6 +156,7 @@ onActivated(async () => {
   <RawQueryLayout
     :layout="appConfigStore.codeEditorLayout"
     :customLayout="appConfigStore.activeCustomLayout"
+    :show-result-panel="showResultPanel"
   >
     <template #content>
       <div class="flex flex-col h-full p-1">

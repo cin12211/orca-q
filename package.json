@@ -79,7 +79,6 @@
     "ai": "^6.0.116",
     "class-variance-authority": "^0.7.1",
     "codemirror": "^6.0.2",
-    "connection-string": "^4.4.0",
     "dayjs": "^1.11.13",
     "dt-sql-parser": "^4.3.1",
     "echarts": "^5.6.0",

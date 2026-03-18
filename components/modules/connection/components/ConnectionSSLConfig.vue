@@ -59,7 +59,7 @@ const {
   <AccordionItem value="ssl">
     <AccordionTrigger class="hover:no-underline">
       <div class="flex items-center gap-2">
-        <Icon name="lucide:shield-check" class="size-4 text-primary" />
+        <Icon name="hugeicons:security-check" class="size-4 text-primary" />
         <span>SSL Configuration</span>
       </div>
     </AccordionTrigger>
@@ -101,6 +101,9 @@ const {
               @dragleave="caDragLeave"
               @drop="caDrop"
             />
+            <p class="text-xs text-muted-foreground">
+              Drop a .pem / .crt file here, or paste the CA certificate content
+            </p>
           </div>
 
           <div class="space-y-2">
@@ -117,6 +120,10 @@ const {
               @dragleave="certDragLeave"
               @drop="certDrop"
             />
+            <p class="text-xs text-muted-foreground">
+              Drop a .pem / .crt file here, or paste the client certificate
+              content
+            </p>
           </div>
 
           <div class="space-y-2">
@@ -133,6 +140,9 @@ const {
               @dragleave="keyDragLeave"
               @drop="keyDrop"
             />
+            <p class="text-xs text-muted-foreground">
+              Drop a .pem / .key file here, or paste the private key content
+            </p>
           </div>
         </div>
       </template>

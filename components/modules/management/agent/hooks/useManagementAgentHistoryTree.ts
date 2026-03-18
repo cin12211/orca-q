@@ -1,4 +1,5 @@
 import { refDebounced } from '@vueuse/core';
+import type { ComputedRef } from 'vue';
 import {
   ContextMenuItemType,
   type ContextMenuItem,
@@ -14,6 +15,7 @@ type UseManagementAgentHistoryTreeOptions = {
   expandAll: () => void;
   focusNode: (nodeId: string) => void;
   isExpandedAll: ComputedRef<boolean>;
+  onRename?: (nodeId: string) => void;
 };
 
 const HISTORY_TREE_STORAGE_KEY = 'agent-history-tree';
@@ -49,6 +51,7 @@ export const useManagementAgentHistoryTree = (
     selectNode,
     startNewChat,
     deleteHistory,
+    renameHistory,
     sectionNodeIds,
   } = useAgentWorkspace();
 
@@ -190,6 +193,10 @@ export const useManagementAgentHistoryTree = (
     await openAgentTab(nodeId.replace('agent-history-', ''));
   };
 
+  const onRenameHistory = (historyId: string, nextTitle: string) => {
+    renameHistory(historyId, nextTitle);
+  };
+
   const onTreeContextMenu = (nodeId: string) => {
     if (nodeId === sectionNodeIds.history) {
       contextMenuItems.value = [
@@ -218,6 +225,14 @@ export const useManagementAgentHistoryTree = (
         select: () => {
           selectNode(nodeId);
           void openAgentTab(historyId);
+        },
+      },
+      {
+        title: 'Rename Thread',
+        icon: 'hugeicons:edit-02',
+        type: ContextMenuItemType.ACTION,
+        select: () => {
+          options.onRename?.(nodeId);
         },
       },
       {
@@ -278,6 +293,7 @@ export const useManagementAgentHistoryTree = (
     onClickNode,
     onCreateThread,
     onDeleteHistory,
+    onRenameHistory,
     onToggleCollapseHistory,
     onTreeContextMenu,
     searchInput,

@@ -1,11 +1,14 @@
 import { useTabViewsStore } from '~/core/stores/useTabViewsStore';
-import type { CommandItem, CommandProvider } from '../../types/commandEngine.types';
+import type {
+  CommandItem,
+  CommandProvider,
+} from '../../types/commandEngine.types';
 
 const PREFIX = {
   key: 'tab:',
   label: 'Tabs',
   placeholder: 'Switch to open tab...',
-  icon: 'lucide:panel-top',
+  icon: 'hugeicons:browser',
 } as const;
 
 export function useTabCommands(): CommandProvider {
@@ -26,7 +29,7 @@ export function useTabCommands(): CommandProvider {
         .map(tab => ({
           id: `tab-${tab.id}`,
           label: tab.name,
-          icon: tab.icon || 'lucide:file',
+          icon: tab.icon || 'hugeicons:file-02',
           iconClass: tab.iconClass,
           group: 'Open Tabs',
           execute: async () => {

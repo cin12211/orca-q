@@ -39,6 +39,8 @@ const handleClose = () => {
   setTimeout(resetForm, 300);
 };
 
+const showPassword = ref(false);
+
 const {
   step,
   dbType,
@@ -186,12 +188,32 @@ const databaseOptions = computed(() =>
                     </div>
                     <div class="space-y-2">
                       <Label for="password">Password</Label>
-                      <Input
-                        id="password"
-                        type="password"
-                        placeholder="••••••••"
-                        v-model="formData.password"
-                      />
+                      <div class="relative">
+                        <Input
+                          id="password"
+                          :type="showPassword ? 'text' : 'password'"
+                          placeholder="••••••••"
+                          v-model="formData.password"
+                          class="pr-8"
+                        />
+                        <button
+                          type="button"
+                          class="absolute right-2 top-1/2 h-5 cursor-pointer -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                          @click="showPassword = !showPassword"
+                          :aria-label="
+                            showPassword ? 'Hide password' : 'Show password'
+                          "
+                        >
+                          <Icon
+                            :name="
+                              showPassword
+                                ? 'hugeicons:view'
+                                : 'hugeicons:view-off'
+                            "
+                            class="size-4!"
+                          />
+                        </button>
+                      </div>
                     </div>
                   </div>
 

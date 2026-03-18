@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { useInstanceInsights } from '~/core/composables/useInstanceInsights';
 import { useAppContext } from '~/core/contexts/useAppContext';
 import { useChangelogModal } from '~/core/contexts/useChangelogModal';
 import { useSettingsModal } from '~/core/contexts/useSettingsModal';
@@ -8,6 +9,7 @@ import CurrentPositionPath from './CurrentPositionPath.vue';
 const { tabViewStore, wsStateStore, connectionStore } = useAppContext();
 const { openChangelog } = useChangelogModal();
 const { openSettings } = useSettingsModal();
+const { openInstanceInsights } = useInstanceInsights();
 
 const { activeTab } = toRefs(tabViewStore);
 const { workspaceId, connectionId } = toRefs(wsStateStore);
@@ -25,37 +27,7 @@ const onBackToHome = async () => {
 };
 
 const onOpenInstanceInsights = async () => {
-  if (!workspaceId.value || !connectionId.value) return;
-
-  const selectedConnection = connectionStore.connections.find(
-    connection => connection.id === connectionId.value
-  );
-  const databaseName =
-    selectedConnection?.database ||
-    selectedConnection?.name ||
-    'Instance Insights';
-  const tabId = `instance-insights-${connectionId.value}`;
-
-  await tabViewStore.openTab({
-    workspaceId: workspaceId.value,
-    connectionId: connectionId.value,
-    schemaId: '',
-    id: tabId,
-    name: `${databaseName} - Insights`,
-    icon: 'hugeicons:activity-02',
-    iconClass: 'text-primary',
-    type: TabViewType.InstanceInsights,
-    routeName: 'workspaceId-connectionId-instance-insights',
-    routeParams: {
-      workspaceId: workspaceId.value,
-      connectionId: connectionId.value,
-    },
-    metadata: {
-      type: TabViewType.InstanceInsights,
-    },
-  });
-
-  await tabViewStore.selectTab(tabId);
+  await openInstanceInsights();
 };
 
 const formattedTabType = computed(() => {

@@ -28,11 +28,22 @@ const toggleKeyVisibility = (provider: string) => {
 <template>
   <div class="h-full flex flex-col overflow-y-auto gap-4">
     <div>
-      <h4
-        class="text-sm font-medium leading-7 text-primary flex items-center gap-1 mb-2"
-      >
-        <Icon name="hugeicons:chatting-01" class="size-5!" /> Chat UI
-      </h4>
+      <div class="flex items-center justify-between mb-2">
+        <h4
+          class="text-sm font-medium leading-7 text-primary flex items-center gap-1"
+        >
+          <Icon name="hugeicons:chatting-01" class="size-5!" /> Chat UI
+        </h4>
+        <Button
+          size="xxs"
+          variant="link"
+          @click="appConfigStore.resetChatUiConfigs"
+          class="cursor-pointer"
+        >
+          <Icon name="hugeicons:reload" class="size-3.5! mr-1" />
+          Reset to Defaults
+        </Button>
+      </div>
 
       <div class="flex flex-col space-y-4">
         <div class="flex items-center justify-between gap-4">

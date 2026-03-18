@@ -1,30 +1,45 @@
+import { useInstanceInsights } from '~/core/composables/useInstanceInsights';
 import { useAppContext } from '~/core/contexts/useAppContext';
+import { useChangelogModal } from '~/core/contexts/useChangelogModal';
 import { useSettingsModal } from '~/core/contexts/useSettingsModal';
-import type { CommandItem, CommandProvider } from '../../types/commandEngine.types';
+import type {
+  CommandItem,
+  CommandProvider,
+} from '../../types/commandEngine.types';
 
 const PREFIX = {
   key: '>',
   label: 'Commands',
   placeholder: 'Run a command...',
-  icon: 'lucide:terminal',
+  icon: 'hugeicons:computer-terminal-01',
 } as const;
 
 export function useSystemCommands(): CommandProvider {
   const settingsModal = useSettingsModal();
-  const { connectToConnection, wsStateStore } = useAppContext();
+  const changelogModal = useChangelogModal();
+  const { openInstanceInsights } = useInstanceInsights();
+
+  const { connectToConnection, wsStateStore, tabViewStore, connectionStore } =
+    useAppContext();
 
   /** Static system commands */
   const staticCommands: Omit<CommandItem, 'execute'>[] = [
     {
+      id: 'cmd-settings-appearance',
+      label: 'Settings: Appearance',
+      icon: 'hugeicons:paint-brush-02',
+      group: 'Commands',
+    },
+    {
       id: 'cmd-settings-editor',
       label: 'Settings: Editor',
-      icon: 'lucide:scroll-text',
+      icon: 'hugeicons:file-management',
       group: 'Commands',
     },
     {
       id: 'cmd-settings-quick-query',
       label: 'Settings: Quick Query',
-      icon: 'lucide:table-2',
+      icon: 'hugeicons:database-02',
       group: 'Commands',
     },
     {
@@ -42,13 +57,25 @@ export function useSystemCommands(): CommandProvider {
     {
       id: 'cmd-reload-app',
       label: 'Reload App',
-      icon: 'lucide:refresh-cw',
+      icon: 'hugeicons:refresh',
       group: 'Commands',
     },
     {
       id: 'cmd-close-app',
       label: 'Close App',
-      icon: 'lucide:power',
+      icon: 'hugeicons:logout-circle-01',
+      group: 'Commands',
+    },
+    {
+      id: 'cmd-show-instance-insights',
+      label: 'Instance Insights',
+      icon: 'hugeicons:activity-02',
+      group: 'Commands',
+    },
+    {
+      id: 'cmd-open-whats-new',
+      label: "What's New",
+      icon: 'hugeicons:stars',
       group: 'Commands',
     },
   ];
@@ -56,6 +83,9 @@ export function useSystemCommands(): CommandProvider {
   const buildExecutors = (): Map<string, () => void | Promise<void>> => {
     const map = new Map<string, () => void | Promise<void>>();
 
+    map.set('cmd-settings-appearance', () =>
+      settingsModal.openSettings('Appearance')
+    );
     map.set('cmd-settings-editor', () => settingsModal.openSettings('Editor'));
     map.set('cmd-settings-quick-query', () =>
       settingsModal.openSettings('Quick Query')
@@ -72,6 +102,12 @@ export function useSystemCommands(): CommandProvider {
     });
     map.set('cmd-close-app', () => {
       window.close();
+    });
+    map.set('cmd-show-instance-insights', async () => {
+      await openInstanceInsights();
+    });
+    map.set('cmd-open-whats-new', () => {
+      void changelogModal.openChangelog();
     });
 
     return map;

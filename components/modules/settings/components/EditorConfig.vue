@@ -234,11 +234,23 @@ const canAddLayout = computed(
 
     <!-- Code Editor Settings -->
     <div>
-      <h4
-        class="text-sm font-medium leading-7 text-primary flex items-center gap-1 mb-2"
-      >
-        <Icon name="hugeicons:source-code-square" class="size-5!" /> Code Editor
-      </h4>
+      <div class="flex items-center justify-between mb-2">
+        <h4
+          class="text-sm font-medium leading-7 text-primary flex items-center gap-1"
+        >
+          <Icon name="hugeicons:source-code-square" class="size-5!" /> Code
+          Editor
+        </h4>
+        <Button
+          size="xxs"
+          variant="link"
+          @click="appConfigStore.resetCodeEditorConfigs"
+          class="cursor-pointer"
+        >
+          <Icon name="hugeicons:reload" class="size-3.5! mr-1" />
+          Reset to Defaults
+        </Button>
+      </div>
       <div class="flex flex-col gap-3">
         <div class="flex items-center justify-between gap-4">
           <div class="flex flex-col gap-0.5">

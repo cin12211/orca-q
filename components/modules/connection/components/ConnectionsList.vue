@@ -22,7 +22,8 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { useAppContext } from '~/core/contexts/useAppContext';
-import { useTabViewsStore, type Connection } from '~/core/stores';
+import { parseConnectionString } from '~/core/helpers/parser-connection-string';
+import { type Connection } from '~/core/stores';
 import { getDatabaseSupportByType } from '../constants';
 
 const { tabViewStore, openWorkspaceWithConnection } = useAppContext();
@@ -120,23 +121,43 @@ const onConnectConnection = (connection: Connection) => {
                     v-if="connection.method === 'string'"
                     class="text-muted-foreground truncate"
                   >
-                    {{ connection.connectionString }}
-                    <!-- String connection string -->
+                    {{
+                      parseConnectionString(connection.connectionString || '')
+                        .host
+                    }}{{
+                      parseConnectionString(connection.connectionString || '')
+                        .database
+                        ? `:${parseConnectionString(connection.connectionString || '').database}`
+                        : ''
+                    }}
                   </div>
                   <div v-else class="text-muted-foreground">
-                    {{ connection.host }}:{{ connection.port }}
-                    {{ connection.database ? `/${connection.database}` : '' }}
+                    {{ connection.host
+                    }}{{ connection.database ? `:${connection.database}` : '' }}
                   </div>
                 </div>
               </TooltipTrigger>
               <TooltipContent>
                 <p v-if="connection.method === 'string'">
-                  {{ connection.connectionString }}
-                  <!-- String connection string -->
+                  {{
+                    parseConnectionString(connection.connectionString || '')
+                      .host
+                  }}{{
+                    parseConnectionString(connection.connectionString || '')
+                      .port
+                      ? `:${parseConnectionString(connection.connectionString || '').port}`
+                      : ''
+                  }}{{
+                    parseConnectionString(connection.connectionString || '')
+                      .database
+                      ? `/${parseConnectionString(connection.connectionString || '').database}`
+                      : ''
+                  }}
                 </p>
                 <p v-else>
-                  {{ connection.host }}:{{ connection.port }}
-                  {{ connection.database ? `/${connection.database}` : '' }}
+                  {{ connection.host
+                  }}{{ connection.port ? `:${connection.port}` : ''
+                  }}{{ connection.database ? `/${connection.database}` : '' }}
                 </p>
               </TooltipContent>
             </Tooltip>

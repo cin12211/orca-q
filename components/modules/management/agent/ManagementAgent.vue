@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { Tooltip, TooltipContent, TooltipTrigger } from '#components';
-import { useAgentWorkspace } from '~/components/modules/agent/hooks/useDbAgentWorkspace';
 import ManagementAgentHistoryTree from '~/components/modules/management/agent/components/ManagementAgentHistoryTree.vue';
 import { useManagementAgentHistoryTree } from '~/components/modules/management/agent/hooks/useManagementAgentHistoryTree';
 import { useAppContext } from '~/core/contexts/useAppContext';
@@ -13,6 +12,7 @@ type ManagementAgentHistoryTreeExpose = {
   collapseAll: () => void;
   expandAll: () => void;
   focusItem: (nodeId: string) => void;
+  startEditing: (nodeId: string) => void;
   isExpandedAll: boolean;
 };
 
@@ -31,6 +31,7 @@ const {
   onClickNode,
   onCreateThread,
   onDeleteHistory,
+  onRenameHistory,
   onToggleCollapseHistory,
   onTreeContextMenu,
   searchInput,
@@ -39,6 +40,7 @@ const {
   collapseAll: () => treePanelRef.value?.collapseAll(),
   expandAll: () => treePanelRef.value?.expandAll(),
   isExpandedAll: computed(() => treePanelRef.value?.isExpandedAll ?? false),
+  onRename: nodeId => treePanelRef.value?.startEditing(nodeId),
 });
 
 const isTreeCollapsed = computed(() => !isExpandedAll.value);
@@ -108,7 +110,6 @@ const isHistoryEmpty = computed(() => {
         </BaseEmpty>
 
         <ManagementAgentHistoryTree
-          v-else
           ref="treePanelRef"
           :context-menu-items="contextMenuItems"
           :history-section-id="historySectionId"
@@ -119,6 +120,10 @@ const isHistoryEmpty = computed(() => {
           @context-node="onTreeContextMenu"
           @clear-context-menu="onClearContextMenu"
           @delete-history="onDeleteHistory"
+          @rename-history="
+            (nodeId: string, newName: string) =>
+              onRenameHistory(nodeId.replace('agent-history-', ''), newName)
+          "
           @new-thread="onCreateThread"
         />
       </div>

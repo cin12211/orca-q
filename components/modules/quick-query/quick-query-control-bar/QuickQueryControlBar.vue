@@ -180,7 +180,7 @@ const isDataView = computed(() => {
     </div>
     <div v-else></div>
 
-    <div class="flex items-center gap-2">
+    <div class="flex items-center gap-1">
       <Tabs
         :model-value="tabView"
         @update:model-value="
@@ -220,7 +220,7 @@ const isDataView = computed(() => {
           >
             <Icon
               v-if="appConfigStore.quickQuerySafeModeEnabled"
-              name="lucide:shield-check"
+              name="hugeicons:security-check"
               class="size-4!"
             />
             <Icon

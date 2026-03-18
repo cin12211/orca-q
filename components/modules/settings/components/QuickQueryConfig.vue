@@ -11,7 +11,7 @@ const appConfigStore = useAppConfigStore();
       <h4
         class="text-sm font-medium leading-7 text-primary flex items-center gap-1 mb-2"
       >
-        <Icon name="lucide:shield-check" class="size-5!" /> Safe Mode
+        <Icon name="hugeicons:security-check" class="size-5!" /> Safe Mode
       </h4>
 
       <div class="flex flex-col space-y-3">

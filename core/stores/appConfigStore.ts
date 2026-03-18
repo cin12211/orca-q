@@ -179,6 +179,23 @@ export const useAppConfigStore = defineStore(
       Object.assign(tableAppearanceConfigs, DEFAULT_TABLE_APPEARANCE_CONFIGS);
     };
 
+    const resetCodeEditorConfigs = () => {
+      Object.assign(codeEditorConfigs, {
+        fontSize: DEFAULT_EDITOR_CONFIG.fontSize,
+        showMiniMap: DEFAULT_EDITOR_CONFIG.showMiniMap,
+        theme: DEFAULT_EDITOR_CONFIG.theme,
+        indentation: DEFAULT_EDITOR_CONFIG.indentation,
+      });
+    };
+
+    const resetChatUiConfigs = () => {
+      Object.assign(chatUiConfigs, {
+        fontSize: DEFAULT_CHAT_UI_CONFIG.fontSize,
+        codeFontSize: DEFAULT_CHAT_UI_CONFIG.codeFontSize,
+        thinkingStyle: DEFAULT_CHAT_UI_CONFIG.thinkingStyle,
+      });
+    };
+
     // --- Custom Layouts ---
     const customLayouts = ref<CustomLayoutDefinition[]>([]);
     const activeCustomLayoutId = ref<string | null>(null);
@@ -305,6 +322,8 @@ export const useAppConfigStore = defineStore(
       updateCustomLayoutSizes,
       tableAppearanceConfigs,
       resetTableAppearance,
+      resetCodeEditorConfigs,
+      resetChatUiConfigs,
       spaceDisplay,
     };
   },

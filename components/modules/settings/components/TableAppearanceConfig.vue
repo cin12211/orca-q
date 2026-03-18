@@ -38,18 +38,31 @@ const previewHeaderBg = computed(() =>
 <template>
   <div class="flex flex-col gap-4 pb-4">
     <!-- Section header -->
-    <div>
-      <div class="flex items-center justify-between mb-1">
-        <h4
-          class="text-sm font-medium leading-7 text-primary flex items-center gap-1"
-        >
-          <Icon name="hugeicons:table-02" class="size-5!" /> Table Appearance
-        </h4>
+
+    <div class="flex items-center justify-between">
+      <div>
+        <div class="flex items-center justify-between mb-1">
+          <h4
+            class="text-sm font-medium leading-7 text-primary flex items-center gap-1"
+          >
+            <Icon name="hugeicons:table-02" class="size-5!" /> Table Appearance
+          </h4>
+        </div>
+        <p class="text-xs text-muted-foreground">
+          Customize how data tables look across Quick Query, raw query, and all
+          table views. Changes apply immediately.
+        </p>
       </div>
-      <p class="text-xs text-muted-foreground">
-        Customize how data tables look across Quick Query, raw query, and all
-        table views. Changes apply immediately.
-      </p>
+
+      <Button
+        size="xxs"
+        variant="link"
+        @click="appConfigStore.resetTableAppearance()"
+        class="cursor-pointer"
+      >
+        <Icon name="hugeicons:reload" class="size-3.5! mr-1" />
+        Reset to Defaults
+      </Button>
     </div>
 
     <!-- Live preview -->
@@ -287,16 +300,6 @@ const previewHeaderBg = computed(() =>
             </div>
           </div>
         </div>
-      </div>
-
-      <div class="flex justify-end">
-        <Button
-          variant="outline"
-          size="xs"
-          @click="appConfigStore.resetTableAppearance()"
-        >
-          Reset to defaults
-        </Button>
       </div>
     </div>
   </div>

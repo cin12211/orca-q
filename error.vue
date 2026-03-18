@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { NuxtError } from '#app';
 import figlet from 'figlet';
-import graffiti from 'figlet/importable-fonts/Graffiti.js';
+import Bulbhead from 'figlet/importable-fonts/Bulbhead.js';
 import { Button } from '@/components/ui/button';
 
 const props = defineProps({
@@ -23,13 +23,13 @@ const errorDescription = computed(
 const config = useRuntimeConfig();
 const isDev = computed(() => config.public.isDev);
 
-// Register the Graffiti font with figlet
-figlet.parseFont('Graffiti', graffiti);
+// Register the Bulbhead font with figlet
+figlet.parseFont('Bulbhead', Bulbhead);
 
-// Compute the ASCII representation of the error code using figlet Graffiti style
+// Compute the ASCII representation of the error code using figlet Bulbhead style
 const asciiErrorCode = computed(() => {
   return figlet.textSync(errorCode.value.toString(), {
-    font: 'Graffiti',
+    font: 'Bulbhead',
   });
 });
 </script>

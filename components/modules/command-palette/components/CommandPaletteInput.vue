@@ -45,7 +45,7 @@ watch(
 </script>
 
 <template>
-  <div class="flex items-center border-b px-3" cmdk-input-wrapper>
+  <div class="flex items-center border-b px-2" cmdk-input-wrapper>
     <!-- Prefix badge -->
     <div
       v-if="activePrefix"

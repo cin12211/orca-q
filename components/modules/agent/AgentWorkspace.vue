@@ -37,7 +37,35 @@ const {
   showReasoning,
   saveConversation,
   startNewChat,
+  renameHistory,
 } = useAgentWorkspace();
+
+const isEditingTitle = ref(false);
+const editedTitle = ref('');
+const titleInputRef = ref<HTMLInputElement | null>(null);
+
+const handleStartEditTitle = () => {
+  if (!activeHistory.value) return;
+  editedTitle.value = activeHistory.value.title;
+  isEditingTitle.value = true;
+  nextTick(() => {
+    titleInputRef.value?.focus();
+    titleInputRef.value?.select();
+  });
+};
+
+const handleSaveTitle = () => {
+  if (!activeHistory.value || !isEditingTitle.value) return;
+  const newTitle = editedTitle.value.trim();
+  if (newTitle && newTitle !== activeHistory.value.title) {
+    renameHistory(activeHistory.value.id, newTitle);
+  }
+  isEditingTitle.value = false;
+};
+
+const handleCancelEditTitle = () => {
+  isEditingTitle.value = false;
+};
 
 const appConfigStore = useAppConfigStore();
 const thinkingStyle = computed(
@@ -390,9 +418,12 @@ watch(
   { deep: true }
 );
 
-const firstMessage = computed(
-  () => (messages.value[0].parts[0] as { text: string }).text
-);
+const firstMessage = computed(() => {
+  const msg = messages.value[0];
+  if (!msg || !msg.parts || !msg.parts.length) return 'New Chat';
+  const part = msg.parts[0];
+  return typeof part === 'object' && 'text' in part ? part.text : 'New Chat';
+});
 
 const handleQuizSubmit = async (text: string) => {
   await sendMessage(text);
@@ -420,13 +451,36 @@ const promptCards = computed(() => {
       >
         <div class="absolute inset-0 flex flex-col overflow-hidden">
           <div
-            class="mx-auto shadow-xs flex w-full flex-col gap-4 px-3 py-2 lg:flex-row lg:items-center lg:justify-between"
+            class="mx-auto shadow-xs flex w-full flex-col gap-4 px-3 py-2 lg:flex-row lg:items-center lg:justify-between border-b bg-background/50 backdrop-blur-sm"
           >
             <div
-              class="flex flex-wrap items-center gap-2 truncate text-sm leading-4 font-medium text-foreground"
+              class="flex flex-1 items-center gap-2 min-w-0 text-sm leading-4 font-medium text-foreground"
             >
               <Icon name="hugeicons:chatting-01" class="size-4! shrink-0" />
-              {{ firstMessage }}
+
+              <div v-if="isEditingTitle" class="flex-1 max-w-md">
+                <Input
+                  ref="titleInputRef"
+                  v-model="editedTitle"
+                  class="h-7 text-xs py-0"
+                  @keydown.enter="handleSaveTitle"
+                  @keydown.escape="handleCancelEditTitle"
+                  @blur="handleSaveTitle"
+                />
+              </div>
+              <div
+                v-else
+                class="flex items-center gap-2 truncate group cursor-pointer"
+                @click="handleStartEditTitle"
+              >
+                <span class="truncate text-foreground">{{
+                  activeHistory?.title || firstMessage
+                }}</span>
+                <Icon
+                  name="hugeicons:edit-02"
+                  class="size-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity"
+                />
+              </div>
             </div>
 
             <div class="flex shrink-0 items-center gap-2">

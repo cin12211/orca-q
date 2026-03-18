@@ -201,6 +201,12 @@ export const useAgentWorkspace = createGlobalState(() => {
     }
   };
 
+  const renameHistory = (historyId: string, nextTitle: string) => {
+    histories.value = histories.value.map(history =>
+      history.id === historyId ? { ...history, title: nextTitle } : history
+    );
+  };
+
   watch(
     sortedHistories,
     nextHistories => {
@@ -236,6 +242,7 @@ export const useAgentWorkspace = createGlobalState(() => {
     saveConversation,
     loadConversation,
     deleteHistory,
+    renameHistory,
     sectionNodeIds: SECTION_NODE_IDS,
   };
 });

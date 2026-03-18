@@ -9,3 +9,4 @@ export * from './convertParameters';
 export * from './mapped-columns';
 export * from './deepUnRef';
 export * from './database-error';
+export * from './parser-connection-string';

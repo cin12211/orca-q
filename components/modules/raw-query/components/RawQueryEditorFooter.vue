@@ -142,7 +142,7 @@ defineEmits<{
             <Button
               @click="$emit('onExplainAnalyzeCurrent')"
               variant="outline"
-              size="xs"
+              size="xxs"
               class="rounded-r-none"
             >
               <Icon name="hugeicons:analytics-up"> </Icon>
@@ -221,7 +221,7 @@ defineEmits<{
             v-if="isStreaming || executeLoading"
             @click="$emit('onCancelQuery')"
             variant="outline"
-            size="xs"
+            size="xxs"
           >
             <Icon name="hugeicons:stop" class="size-4! text-red-500" />
             Cancel query
@@ -230,7 +230,7 @@ defineEmits<{
             v-else
             @click="$emit('onExecuteCurrent')"
             variant="outline"
-            size="xs"
+            size="xxs"
           >
             <Icon name="hugeicons:play" />
             Execute current
