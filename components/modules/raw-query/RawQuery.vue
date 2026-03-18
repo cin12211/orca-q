@@ -110,8 +110,7 @@ const onInitCursorPos = (allowScroll: boolean = true) => {
     return;
   }
 
-  const from = currentFile?.value?.cursorPos?.from;
-  0;
+  const from = currentFile?.value?.cursorPos?.from ?? 0;
   const to = currentFile?.value?.cursorPos?.to || 0;
 
   isInitPos.value = true;

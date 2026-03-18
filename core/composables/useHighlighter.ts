@@ -6,6 +6,27 @@ import { createJavaScriptRegexEngine } from 'shiki/engine-javascript.mjs';
 let highlighter: HighlighterCore | null = null;
 let promise: Promise<HighlighterCore> | null = null;
 
+/**
+ * Languages that failed to load at runtime.
+ * Populated by {@link useHighlighter} when `loadLanguage()` rejects.
+ */
+const failedLangs = new Set<string>();
+
+/**
+ * Returns the language identifier that is safe to pass to the highlighter.
+ *
+ * If `lang` could not be loaded (network error, unknown grammar, etc.) this
+ * returns `'text'` so callers always get plain-text rendering instead of an
+ * unhandled Shiki error.
+ *
+ * @example
+ * const hl  = await useHighlighter([lang]);
+ * const out = hl.codeToHtml(code, { lang: getEffectiveLang(lang), theme: '...' });
+ */
+export function getEffectiveLang(lang: string): string {
+  return failedLangs.has(lang) ? 'text' : lang;
+}
+
 const BUNDLED_LANGS = [
   import('@shikijs/langs/sql'),
   import('@shikijs/langs/plsql'),
@@ -16,6 +37,10 @@ const BUNDLED_LANGS = [
   import('@shikijs/langs/xml'),
   import('@shikijs/langs/yaml'),
   import('@shikijs/langs/html'),
+  // JavaScript and TypeScript must be bundled upfront — dynamic string-based
+  // loadLanguage() does not work with createHighlighterCore (no bundled registry).
+  import('@shikijs/langs/javascript'),
+  import('@shikijs/langs/typescript'),
 ];
 
 /**
@@ -33,8 +58,6 @@ const BUNDLED_LANGS = [
 export const useHighlighter = async (
   extraLangs?: string[]
 ): Promise<HighlighterCore> => {
-  const colorMode = useColorMode();
-
   if (!promise) {
     promise = createHighlighterCore({
       langs: BUNDLED_LANGS,
@@ -59,8 +82,11 @@ export const useHighlighter = async (
               lang as Parameters<HighlighterCore['loadLanguage']>[0]
             )
             .catch(() => {
-              // Unknown lang — silently skip, fallback to plain text
-              console.warn(`[useHighlighter] Unknown language: "${lang}"`);
+              // Track the failure so getEffectiveLang() can return 'text' as fallback
+              failedLangs.add(lang);
+              console.warn(
+                `[useHighlighter] Unknown language: "${lang}" — will render as plain text`
+              );
             })
         )
     );

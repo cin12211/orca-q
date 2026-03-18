@@ -159,14 +159,16 @@ export const useTabViewsStore = defineStore(
         });
 
         await onSetTabId(tab.id);
-        // Wait for the next DOM update cycle to ensure the tab is rendered
+        // Scroll the active tab into view in the tab bar without stealing
+        // DOM focus — programmatic .focus() would pull focus away from the
+        // editor (e.g. CodeMirror) in pages like the raw-query explorer.
         await nextTick();
         const tabElement = document.getElementById(tabId);
-        if (tabElement) {
-          tabElement.focus();
-        } else {
-          console.warn(`Tab element with ID ${tabId} not found in the DOM.`);
-        }
+        tabElement?.scrollIntoView({
+          inline: 'nearest',
+          block: 'nearest',
+          behavior: 'auto',
+        });
       } else {
         console.error(`Tab with ID ${tabId} does not exist.`);
         // throw new Error(`Tab with ID ${tabId} does not exist.`);
