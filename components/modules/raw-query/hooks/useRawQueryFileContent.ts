@@ -7,8 +7,11 @@ export function useRawQueryFileContent() {
   const explorerFileStore = useExplorerFileStore();
   const { connectionStore } = useAppContext();
 
-  const fileContents = ref('');
-  const fileVariables = ref('');
+  const cachedContent = explorerFileStore.getFileContentByIdSync(
+    route.params.fileId as string
+  );
+  const fileContents = ref(cachedContent?.contents ?? '');
+  const fileVariables = ref(cachedContent?.variables ?? '');
 
   const fieldDefs = ref<FieldDef[]>([]);
 
@@ -72,14 +75,15 @@ export function useRawQueryFileContent() {
     });
   };
 
-  onMounted(async () => {
+  const isFromCache = cachedContent !== null;
+
+  const loadFileContent = async () => {
     const { contents, variables } = await explorerFileStore.getFileContentById(
       route.params.fileId as string
     );
-
     fileContents.value = contents;
     fileVariables.value = variables;
-  });
+  };
 
   //TODO: for edit inline table after query
   // const mappedColumns = computed<MappedRawColumn[]>(() => {
@@ -102,5 +106,7 @@ export function useRawQueryFileContent() {
     connection,
     connectionsByWsId,
     updateFileCursorPos,
+    loadFileContent,
+    isFromCache,
   };
 }

@@ -1,28 +1,19 @@
 <script setup lang="ts">
-import { useElementSize } from '@vueuse/core';
-import VueJsonPretty from 'vue-json-pretty';
-import 'vue-json-pretty/lib/styles.css';
+import JsonEditorVue from 'json-editor-vue';
 
-defineProps<{
+const props = defineProps<{
   formattedData: Record<string, any>[];
 }>();
-
-const jsonViewRef = useTemplateRef('jsonViewRef');
-const { height } = useElementSize(jsonViewRef);
 </script>
 
 <template>
-  <div
-    ref="jsonViewRef"
-    class="h-full flex flex-col flex-1 overflow-y-auto p-2"
-  >
-    <VueJsonPretty
-      virtual
-      showLineNumber
-      showIcon
-      showLength
-      :height="height"
-      :data="formattedData"
+  <div class="h-full flex flex-col flex-1 overflow-hidden">
+    <JsonEditorVue
+      :modelValue="props.formattedData"
+      :mode="'text' as unknown as undefined"
+      :readOnly="true"
+      :navigationBar="false"
+      class="h-full"
     />
   </div>
 </template>

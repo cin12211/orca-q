@@ -25,6 +25,14 @@ export const useExplorerFileStore = defineStore(
 
     const flatNodes = ref<RowQueryFile[]>([]);
 
+    const contentCache = new Map<
+      string,
+      { contents: string; variables: string }
+    >();
+
+    const getFileContentByIdSync = (fileID: string) =>
+      contentCache.get(fileID) ?? null;
+
     const updateFile = async (file: Partial<RowQueryFile> & { id: string }) => {
       const files = flatNodes.value;
       const index = files.findIndex(f => f.id === file.id);
@@ -36,10 +44,16 @@ export const useExplorerFileStore = defineStore(
     };
 
     const updateFileContent = async (fileContent: RowQueryFileContent) => {
+      // Keep cache in sync so the next synchronous read returns fresh data.
+      contentCache.set(fileContent.id, {
+        contents: fileContent.contents,
+        variables: fileContent.variables,
+      });
       await window.rowQueryFilesApi.updateFileContent(fileContent);
     };
 
     const deleteFiles = async (fileIds: string[]) => {
+      fileIds.forEach(id => contentCache.delete(id));
       flatNodes.value = flatNodes.value.filter(f => !fileIds.includes(f.id));
 
       await Promise.all(
@@ -89,11 +103,16 @@ export const useExplorerFileStore = defineStore(
     };
 
     const getFileContentById = async (fileID: string) => {
-      const contents = await window.rowQueryFilesApi.getFileContentById(fileID);
-      return {
-        contents: contents?.contents || '',
-        variables: contents?.variables || '',
+      if (contentCache.has(fileID)) {
+        return contentCache.get(fileID)!;
+      }
+      const raw = await window.rowQueryFilesApi.getFileContentById(fileID);
+      const result = {
+        contents: raw?.contents || '',
+        variables: raw?.variables || '',
       };
+      contentCache.set(fileID, result);
+      return result;
     };
 
     const initLoadRowQuery = async (workspaceId: string) => {
@@ -144,6 +163,7 @@ export const useExplorerFileStore = defineStore(
 
       getFileById,
       getFileContentById,
+      getFileContentByIdSync,
       treeNodeRef,
     };
   },

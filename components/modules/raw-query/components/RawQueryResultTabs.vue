@@ -55,7 +55,7 @@ const viewModes: { value: ViewMode; label: string }[] = [
   { value: 'agent', label: 'Agent' },
 ];
 
-// Thay vì recompute mỗi lần switch, cache lại result đã format theo từng tab
+// Cache key: tabId + resultLength for case (streaming)
 const formattedDataCache = new Map<string, Record<string, any>[]>();
 
 const formattedData = shallowRef<Record<string, any>[]>([]);
@@ -87,8 +87,11 @@ const activeTabColumns = computed<MappedRawColumn[]>(() => {
 });
 
 const getFormattedData = (tab: ExecutedResultItem): Record<string, any>[] => {
-  if (formattedDataCache.has(tab.id)) {
-    return formattedDataCache.get(tab.id)!; // instant, no recompute
+  const resultLength = tab.result?.length || 0;
+  const cacheKey = `${tab.id}_${resultLength}`;
+
+  if (formattedDataCache.has(cacheKey)) {
+    return formattedDataCache.get(cacheKey)!;
   }
 
   const fieldDefs = tab.metadata.fieldDefs || [];
@@ -102,18 +105,30 @@ const getFormattedData = (tab: ExecutedResultItem): Record<string, any>[] => {
       return mappedItem;
     }) ?? [];
 
-  formattedDataCache.set(tab.id, formatted);
+  formattedDataCache.set(cacheKey, formatted);
+
+  // Clean up old cache entries for this tab to save memory
+  for (const key of formattedDataCache.keys()) {
+    if (key.startsWith(`${tab.id}_`) && key !== cacheKey) {
+      formattedDataCache.delete(key);
+    }
+  }
+
   return formatted;
 };
 
-watch(activeTab, newTab => {
-  if (rafId) cancelAnimationFrame(rafId);
+watch(
+  activeTab,
+  newTab => {
+    if (rafId) cancelAnimationFrame(rafId);
 
-  rafId = requestAnimationFrame(() => {
-    formattedData.value = newTab ? getFormattedData(newTab) : [];
-    rafId = null;
-  });
-});
+    rafId = requestAnimationFrame(() => {
+      formattedData.value = newTab ? getFormattedData(newTab) : [];
+      rafId = null;
+    });
+  },
+  { immediate: true }
+);
 
 onUnmounted(() => {
   if (rafId) cancelAnimationFrame(rafId);

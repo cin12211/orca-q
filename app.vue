@@ -72,4 +72,5 @@ onMounted(async () => {
 
 <style>
 @import url('./assets/global.css');
+@import url('./assets/css/json-editor-overrides.css');
 </style>

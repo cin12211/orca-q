@@ -254,39 +254,6 @@ const canAddLayout = computed(
       <div class="flex flex-col gap-3">
         <div class="flex items-center justify-between gap-4">
           <div class="flex flex-col gap-0.5">
-            <p class="text-sm">Font size</p>
-            <p class="text-xs text-muted-foreground">
-              Size of the text in the code editor
-            </p>
-          </div>
-          <Select
-            @update:modelValue="
-              appConfigStore.codeEditorConfigs.fontSize = $event as number
-            "
-            :modelValue="appConfigStore.codeEditorConfigs.fontSize"
-          >
-            <SelectTrigger size="sm" class="h-6! cursor-pointer">
-              <SelectValue placeholder="Select font size" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectGroup>
-                <SelectItem
-                  class="cursor-pointer h-6!"
-                  v-for="value in EDITOR_FONT_SIZES"
-                  :value="value"
-                >
-                  {{ value }} pt
-                  {{
-                    value === DEFAULT_EDITOR_CONFIG.fontSize ? '(default)' : ''
-                  }}
-                </SelectItem>
-              </SelectGroup>
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div class="flex items-center justify-between gap-4">
-          <div class="flex flex-col gap-0.5">
             <p class="text-sm">Theme</p>
             <p class="text-xs text-muted-foreground">
               Color theme for syntax highlighting
@@ -322,6 +289,39 @@ const canAddLayout = computed(
                 >
                   {{ value }}
                   {{ value === EditorTheme.OrcaDark ? '(default)' : '' }}
+                </SelectItem>
+              </SelectGroup>
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div class="flex items-center justify-between gap-4">
+          <div class="flex flex-col gap-0.5">
+            <p class="text-sm">Font size</p>
+            <p class="text-xs text-muted-foreground">
+              Size of the text in the code editor
+            </p>
+          </div>
+          <Select
+            @update:modelValue="
+              appConfigStore.codeEditorConfigs.fontSize = $event as number
+            "
+            :modelValue="appConfigStore.codeEditorConfigs.fontSize"
+          >
+            <SelectTrigger size="sm" class="h-6! cursor-pointer">
+              <SelectValue placeholder="Select font size" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectGroup>
+                <SelectItem
+                  class="cursor-pointer h-6!"
+                  v-for="value in EDITOR_FONT_SIZES"
+                  :value="value"
+                >
+                  {{ value }} pt
+                  {{
+                    value === DEFAULT_EDITOR_CONFIG.fontSize ? '(default)' : ''
+                  }}
                 </SelectItem>
               </SelectGroup>
             </SelectContent>

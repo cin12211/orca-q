@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { LoadingOverlay } from '#components';
 import type { EditorView } from '@codemirror/view';
 import BaseCodeEditor from '~/components/base/code-editor/BaseCodeEditor.vue';
 import { useHotkeys } from '~/core/composables/useHotKeys';
@@ -45,7 +46,6 @@ const {
   serializeMode,
   currentRawQueryResult,
   queryProcessState,
-  // Results tab management
   executedResults,
   activeResultTabId,
 } = toRefs(rawQueryEditor);
@@ -58,6 +58,8 @@ const { contextMenuItems, onContextMenuOpen } = useRawQueryEditorContextMenu({
   getEditorView: () =>
     codeEditorRef.value?.editorView as EditorView | null | undefined,
 });
+
+const scrollTop = ref(0);
 
 const showResultPanel = ref(true);
 
@@ -102,51 +104,29 @@ const onUpdateCursorInfo = ({
   });
 };
 
-const isInitPos = ref(false);
-const scrollTop = ref(0);
-
-const onInitCursorPos = (allowScroll: boolean = true) => {
-  if (!currentFile.value?.cursorPos || !codeEditorRef.value?.editorView) {
-    return;
-  }
-
-  const from = currentFile?.value?.cursorPos?.from ?? 0;
-  const to = currentFile?.value?.cursorPos?.to || 0;
-
-  isInitPos.value = true;
-  codeEditorRef.value?.setCursorPosition({
-    from,
-    to,
-    allowScroll,
-  });
+const restoreCursorPos = (allowScroll = true) => {
+  if (!currentFile.value?.cursorPos || !codeEditorRef.value?.editorView) return;
+  const from = currentFile.value.cursorPos.from ?? 0;
+  const to = currentFile.value.cursorPos.to || 0;
+  codeEditorRef.value.setCursorPosition({ from, to, allowScroll });
 };
 
-watch(
-  [currentFile, codeEditorRef, isInitPos],
-  async () => {
-    if (isInitPos.value) return;
+const isEditorLoading = ref(!rawQueryFileContent.isFromCache);
 
+onMounted(async () => {
+  if (isEditorLoading.value) {
+    await rawQueryFileContent.loadFileContent();
+    isEditorLoading.value = false;
     await nextTick();
-
-    setTimeout(() => {
-      onInitCursorPos();
-    }, 300);
-  },
-  {
-    deep: true,
-    immediate: true,
-    flush: 'post',
   }
-);
+  restoreCursorPos();
+});
 
 onActivated(async () => {
-  if (isInitPos.value) {
-    setTimeout(() => {
-      onInitCursorPos(false);
-      if (codeEditorRef.value && codeEditorRef.value.editorView) {
-        codeEditorRef.value.editorView.scrollDOM.scrollTop = scrollTop.value;
-      }
-    }, 50);
+  await nextTick();
+  restoreCursorPos(false);
+  if (codeEditorRef.value?.editorView) {
+    codeEditorRef.value.editorView.scrollDOM.scrollTop = scrollTop.value;
   }
 });
 </script>
@@ -175,13 +155,21 @@ onActivated(async () => {
               :context-menu-items="contextMenuItems"
               @update:open="onContextMenuOpen"
             >
+              <div
+                v-if="isEditorLoading"
+                class="h-full relative flex flex-col pointer-events-none select-none"
+                aria-hidden="true"
+              >
+                <LoadingOverlay visible />
+              </div>
+
               <BaseCodeEditor
+                v-else
                 @update:modelValue="updateFileContent"
                 @update:cursorInfo="onUpdateCursorInfo"
                 @update:onScrollTop="scrollTop = $event"
                 :modelValue="fileContents"
                 :extensions="extensions"
-                :disabled="false"
                 ref="codeEditorRef"
               />
             </RawQueryEditorContextMenu>

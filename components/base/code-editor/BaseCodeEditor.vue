@@ -195,7 +195,7 @@ watch(
       ],
     });
   },
-  { deep: true, immediate: true, flush: 'post' }
+  { deep: true, flush: 'post' }
 );
 
 // Watch for external changes to modelValue

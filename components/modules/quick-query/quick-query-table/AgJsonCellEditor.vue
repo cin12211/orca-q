@@ -18,7 +18,6 @@ const localValue: Ref<Record<string, any>> = ref({});
 
 let confirmed = false;
 
-// ==================== ag-Grid ICellEditor required methods ====================
 onMounted(() => {
   const value = props.params.value;
 
@@ -63,15 +62,11 @@ function isCancelAfterEnd(): boolean {
   return !confirmed;
 }
 
-// 3. (Tùy chọn) Nếu muốn ngăn không cho thoát editor khi có lỗi validate
 function isCancelBeforeStart(): boolean {
   return false;
 }
 
-// 4. (Tùy chọn) Cleanup nếu cần
-function afterGuiAttached(): void {
-  // Có thể focus vào JsonEditorVue ở đây
-}
+function afterGuiAttached(): void {}
 
 defineExpose({
   getValue,
@@ -99,11 +94,8 @@ defineExpose({
     </div>
 
     <div class="flex justify-end gap-1 p-2">
-      <Button @click="onCancel" variant="outline" size="xs"> Cancel </Button>
-      <Button @click="onConfirm" size="xs">
-        <Icon name="lucide:check"> </Icon>
-        Oke
-      </Button>
+      <Button @click="onCancel" variant="outline" size="xxs"> Cancel </Button>
+      <Button @click="onConfirm" size="xxs"> Oke </Button>
     </div>
   </div>
 </template>
@@ -111,26 +103,7 @@ defineExpose({
 <style lang="css">
 @reference "@/assets/css/tailwind.css";
 
-.jse-status-bar {
-  display: none !important;
-}
-
 .ag-popup-editor {
   @apply rounded-md shadow;
-}
-
-.jse-menu {
-  @apply rounded-t-md;
-}
-
-.jse-text-mode .jse-contents {
-  @apply rounded-b-md border-b;
-}
-
-.jse-button.jse-group-button.jse-first {
-  @apply rounded-l-sm!;
-}
-.jse-button.jse-group-button.jse-last {
-  @apply rounded-r-sm!;
 }
 </style>

@@ -1,0 +1,371 @@
+:root {
+  /* Typography */
+  --jse-font-family-mono:
+    ui-monospace, 'Cascadia Code', 'Source Code Pro', Menlo, Consolas,
+    'DejaVu Sans Mono', monospace;
+  --jse-font-size-mono: 14px;
+  --jse-font-size: 14px;
+  --jse-font-size-text-mode-search: 80%;
+  --jse-line-height: calc(1em + 6px);
+  --jse-indent-size: calc(1em + 4px);
+  --jse-color-picker-button-size: 1em;
+  --jse-padding: 10px;
+
+  /* Brand / accent */
+  --jse-theme-color: var(--primary);
+  --jse-theme-color-highlight: var(--ring);
+
+  /* Surface */
+  --jse-background-color: var(--background);
+  --jse-text-color: var(--foreground);
+  --jse-text-color-inverse: var(--primary-foreground);
+
+  /* Status */
+  --jse-error-color: var(--destructive);
+  --jse-warning-color: oklch(0.75 0.18 80);
+
+  /* main, menu, modal */
+  --jse-main-border: 1px solid var(--border);
+  --jse-menu-color: var(--jse-text-color-inverse);
+  --jse-menu-button-size: 28px;
+  --jse-modal-background: var(--card);
+  --jse-modal-overlay-background: rgba(0, 0, 0, 0.3);
+  --jse-modal-code-background: var(--muted);
+
+  /* panels: navigation bar, gutter, search box */
+  --jse-panel-background: var(--muted);
+  --jse-panel-color: var(--muted-foreground);
+  --jse-panel-color-readonly: var(--muted-foreground);
+  --jse-panel-border: var(--jse-main-border);
+  --jse-panel-button-color: var(--foreground);
+  --jse-panel-button-background: transparent;
+  --jse-panel-button-color-highlight: var(--foreground);
+  --jse-panel-button-background-highlight: var(--accent);
+
+  /* navigation bar */
+  --jse-navigation-bar-color: var(--muted-foreground);
+  --jse-navigation-bar-background: var(--background);
+  --jse-navigation-bar-background-highlight: var(--accent);
+  --jse-navigation-bar-dropdown-color: var(--muted-foreground);
+
+  /* context menu */
+  --jse-context-menu-background: var(--popover);
+  --jse-context-menu-background-highlight: var(--accent);
+  --jse-context-menu-color: var(--popover-foreground);
+  --jse-context-menu-color-disabled: var(--muted-foreground);
+  --jse-context-menu-separator-color: var(--border);
+  --jse-context-menu-button-background: var(--jse-context-menu-background);
+  --jse-context-menu-button-background-highlight: var(
+    --jse-context-menu-background-highlight
+  );
+  --jse-context-menu-button-color: var(--jse-context-menu-color);
+  --jse-context-menu-button-size: calc(1em + 4px);
+  --jse-context-menu-tip-background: rgba(255, 255, 255, 0.15);
+  --jse-context-menu-tip-color: inherit;
+
+  /* JSON key / value colours — light */
+  --jse-key-color: var(--foreground);
+  --jse-value-color: var(--foreground);
+  --jse-value-color-number: oklch(0.57 0.22 25); /* red-ish */
+  --jse-value-color-boolean: oklch(0.65 0.18 50); /* orange */
+  --jse-value-color-null: oklch(0.48 0.15 265); /* blue */
+  --jse-value-color-string: oklch(0.52 0.15 155); /* green */
+  --jse-value-color-url: oklch(0.52 0.15 155);
+  --jse-delimiter-color: var(--muted-foreground);
+  --jse-edit-outline: 2px solid var(--ring);
+
+  /* hover / selection */
+  --jse-hover-background-color: var(--accent);
+  --jse-selection-background-color: var(--secondary);
+  --jse-selection-background-light-color: var(--muted);
+
+  /* collapsed array section */
+  --jse-collapsed-items-background-color: var(--muted);
+  --jse-collapsed-items-selected-background-color: var(--secondary);
+  --jse-collapsed-items-link-color: var(--muted-foreground);
+  --jse-collapsed-items-link-color-highlight: var(--destructive);
+
+  /* search highlight */
+  --jse-search-match-color: oklch(0.95 0.18 95);
+  --jse-search-match-outline: 1px solid oklch(0.85 0.2 85);
+  --jse-search-match-active-color: oklch(0.88 0.22 80);
+  --jse-search-match-active-outline: 1px solid oklch(0.78 0.2 75);
+
+  /* inline tags */
+  --jse-tag-background: var(--secondary);
+  --jse-tag-color: var(--secondary-foreground);
+
+  /* modal controls */
+  --jse-controls-box-shadow: 0 2px 6px 0 rgba(0, 0, 0, 0.12);
+  --jse-input-background: var(--background);
+  --jse-input-background-readonly: transparent;
+  --jse-input-border: 1px solid var(--input);
+  --jse-input-border-focus: 1px solid var(--ring);
+  --jse-input-radius: calc(var(--radius) - 4px);
+  --jse-button-background: var(--secondary);
+  --jse-button-background-highlight: var(--accent-foreground);
+  --jse-button-color: var(--secondary-foreground);
+  --jse-button-primary-background: var(--primary);
+  --jse-button-primary-background-highlight: var(--ring);
+  --jse-button-primary-background-disabled: var(--muted-foreground);
+  --jse-button-primary-color: var(--primary-foreground);
+  --jse-a-color: var(--primary);
+  --jse-a-color-highlight: var(--ring);
+
+  /* status messages */
+  --jse-message-error-background: var(--destructive);
+  --jse-message-error-color: var(--primary-foreground);
+  --jse-message-warning-background: oklch(0.92 0.15 90);
+  --jse-message-warning-color: var(--foreground);
+  --jse-message-success-background: oklch(0.72 0.17 150);
+  --jse-message-success-color: var(--primary-foreground);
+  --jse-message-info-background: var(--muted);
+  --jse-message-info-color: var(--muted-foreground);
+  --jse-message-action-background: rgba(255, 255, 255, 0.15);
+  --jse-message-action-background-highlight: rgba(255, 255, 255, 0.25);
+
+  /* color picker */
+  --jse-color-picker-background: var(--jse-panel-background);
+  --jse-color-picker-border-box-shadow: var(--border) 0 0 0 1px;
+}
+
+/* ── Dark ──────────────────────────────────────────────────── */
+.dark {
+  /* Brand */
+  --jse-theme-color: var(--accent);
+  --jse-theme-color-highlight: var(--ring);
+
+  --jse-table-header-background: var(--muted);
+
+  /* Surface */
+  --jse-background-color: var(--background);
+  --jse-text-color: var(--primary);
+  --jse-text-color-inverse: var(--primary-foreground);
+
+  /* Status */
+  --jse-error-color: var(--destructive-foreground);
+  --jse-warning-color: oklch(0.82 0.18 80);
+
+  /* main */
+  --jse-main-border: 1px solid var(--border);
+  --jse-menu-color: var(--primary-foreground);
+  --jse-modal-background: var(--card);
+  --jse-modal-code-background: var(--muted);
+
+  /* panels */
+  --jse-panel-background: var(--muted);
+  --jse-panel-color: var(--muted-foreground);
+  --jse-panel-color-readonly: var(--muted-foreground);
+  --jse-panel-border: var(--jse-main-border);
+  --jse-panel-button-color: var(--foreground);
+  --jse-panel-button-background: transparent;
+  --jse-panel-button-color-highlight: var(--foreground);
+  --jse-panel-button-background-highlight: var(--accent);
+
+  /* navigation bar */
+  --jse-navigation-bar-color: var(--muted-foreground);
+  --jse-navigation-bar-background: var(--background);
+  --jse-navigation-bar-background-highlight: var(--accent);
+  --jse-navigation-bar-dropdown-color: var(--muted-foreground);
+
+  /* context menu */
+  --jse-context-menu-background: var(--popover);
+  --jse-context-menu-background-highlight: var(--accent);
+  --jse-context-menu-color: var(--popover-foreground);
+  --jse-context-menu-color-disabled: var(--muted-foreground);
+  --jse-context-menu-separator-color: var(--border);
+  --jse-context-menu-button-background: var(--jse-context-menu-background);
+  --jse-context-menu-button-background-highlight: var(
+    --jse-context-menu-background-highlight
+  );
+  --jse-context-menu-button-color: var(--jse-context-menu-color);
+  --jse-context-menu-tip-background: rgba(255, 255, 255, 0.08);
+
+  /* JSON key / value colours — dark (brighter, softer) */
+  --jse-key-color: var(--foreground);
+  --jse-value-color: var(--foreground);
+  --jse-value-color-number: oklch(0.72 0.2 25); /* soft red */
+  --jse-value-color-boolean: oklch(0.78 0.17 55); /* amber */
+  --jse-value-color-null: oklch(0.68 0.18 265); /* periwinkle */
+  --jse-value-color-string: oklch(0.72 0.15 155); /* mint green */
+  --jse-value-color-url: oklch(0.72 0.15 155);
+  --jse-delimiter-color: var(--muted-foreground);
+  --jse-edit-outline: 2px solid var(--ring);
+
+  /* hover / selection */
+  --jse-hover-background-color: var(--accent);
+  --jse-selection-background-color: var(--secondary);
+  --jse-selection-background-light-color: var(--muted);
+
+  /* collapsed array */
+  --jse-collapsed-items-background-color: var(--muted);
+  --jse-collapsed-items-selected-background-color: var(--secondary);
+  --jse-collapsed-items-link-color: var(--muted-foreground);
+  --jse-collapsed-items-link-color-highlight: var(--destructive-foreground);
+
+  /* search highlight */
+  --jse-search-match-color: oklch(0.45 0.15 90);
+  --jse-search-match-outline: 1px solid oklch(0.55 0.17 85);
+  --jse-search-match-active-color: oklch(0.55 0.2 80);
+  --jse-search-match-active-outline: 1px solid oklch(0.65 0.2 75);
+
+  /* inline tags */
+  --jse-tag-background: var(--secondary);
+  --jse-tag-color: var(--secondary-foreground);
+
+  /* modal controls */
+  --jse-controls-box-shadow: 0 2px 8px 0 rgba(0, 0, 0, 0.4);
+  --jse-input-background: var(--card);
+  --jse-input-background-readonly: transparent;
+  --jse-input-border: 1px solid var(--input);
+  --jse-input-border-focus: 1px solid var(--ring);
+  --jse-input-radius: calc(var(--radius) - 4px);
+  --jse-button-background: var(--secondary);
+  --jse-button-background-highlight: var(--accent-foreground);
+  --jse-button-color: var(--secondary-foreground);
+  --jse-button-primary-background: var(--primary);
+  --jse-button-primary-background-highlight: var(--ring);
+  --jse-button-primary-background-disabled: var(--muted-foreground);
+  --jse-button-primary-color: var(--primary-foreground);
+  --jse-a-color: var(--primary);
+  --jse-a-color-highlight: var(--ring);
+
+  /* status messages */
+  --jse-message-error-background: oklch(0.38 0.14 25);
+  --jse-message-error-color: var(--foreground);
+  --jse-message-warning-background: oklch(0.38 0.12 75);
+  --jse-message-warning-color: var(--foreground);
+  --jse-message-success-background: oklch(0.38 0.12 148);
+  --jse-message-success-color: var(--foreground);
+  --jse-message-info-background: var(--muted);
+  --jse-message-info-color: var(--muted-foreground);
+  --jse-message-action-background: rgba(255, 255, 255, 0.08);
+  --jse-message-action-background-highlight: rgba(255, 255, 255, 0.14);
+
+  /* color picker */
+  --jse-color-picker-background: var(--jse-panel-background);
+  --jse-color-picker-border-box-shadow: var(--border) 0 0 0 1px;
+
+  /* svelte-select */
+  --itemIsActiveBG: var(--primary);
+  --background: var(--card);
+}
+
+/* ================= MAIN CONTAINER ================= */
+
+/* ================= MENU ================= */
+
+.jse-menu {
+  background: var(--jse-background-color) !important;
+  color: var(--jse-menu-color) !important;
+  border-bottom: var(--jse-main-border) !important;
+  border-radius: calc(var(--radius) - 2px) calc(var(--radius) - 2px) 0 0;
+  padding: 2px 0 !important;
+}
+
+/* ================= CONTENT ================= */
+
+.jse-text-mode .jse-contents,
+.jse-tree-mode .jse-contents {
+  background: var(--jse-background-color) !important;
+  color: var(--jse-text-color) !important;
+  border-radius: 0 0 calc(var(--radius) - 2px) calc(var(--radius) - 2px);
+}
+
+/* ================= SCROLLBAR ================= */
+
+.jse-contents {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+
+/* Chrome */
+.jse-contents::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.jse-contents::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 999px;
+}
+
+/* ================= STATUS BAR ================= */
+
+.jse-status-bar {
+  display: none !important;
+}
+
+/* ================= BUTTON ================= */
+
+.jse-button {
+  background: var(--jse-button-background) !important;
+  color: var(--jse-button-color) !important;
+  border: none !important;
+  border-radius: var(--jse-input-radius) !important;
+
+  padding: 4px 8px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+
+  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+/* Hover */
+.jse-button:hover {
+  background: var(--jse-button-background-highlight) !important;
+  color: var(--jse-text-color-inverse) !important;
+}
+
+/* ================= PRIMARY BUTTON ================= */
+
+.jse-button.jse-primary {
+  background: var(--jse-button-primary-background) !important;
+  color: var(--jse-button-primary-color) !important;
+}
+
+.jse-button.jse-primary:hover {
+  background: var(--jse-button-primary-background-highlight) !important;
+  box-shadow: 0 0 0 1px var(--jse-theme-color-highlight);
+}
+
+/* ================= GROUP BUTTON ================= */
+
+.jse-button.jse-group-button.jse-first {
+  border-top-left-radius: var(--jse-input-radius) !important;
+  border-bottom-left-radius: var(--jse-input-radius) !important;
+}
+
+.jse-button.jse-group-button.jse-last {
+  border-top-right-radius: var(--jse-input-radius) !important;
+  border-bottom-right-radius: var(--jse-input-radius) !important;
+}
+
+/* ================= SELECTED ================= */
+
+.jse-button.jse-selected {
+  background: var(--jse-button-primary-background) !important;
+  color: var(--jse-button-primary-color) !important;
+}
+
+/* ================= INPUT / TEXT ================= */
+
+.jse-contents,
+.jse-contents * {
+  font-family: var(--jse-font-family-mono) !important;
+  font-size: var(--jse-font-size-mono) !important;
+}
+
+/* ================= HOVER ROW (TREE MODE) ================= */
+
+.jse-tree-mode tr:hover {
+  background: var(--jse-hover-background-color) !important;
+}
+
+/* ================= SELECTION ================= */
+
+.jse-contents ::selection {
+  background: var(--jse-selection-background-color);
+  color: var(--jse-text-color-inverse);
+}
