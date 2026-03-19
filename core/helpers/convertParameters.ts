@@ -39,6 +39,7 @@ function normalizeToJsonLike(input: string): string {
     .replace(/'/g, '"'); // normalize quotes
 }
 
+// not support read PARAMETERS in new version
 export function convertParameters(str: string): ParsedParametersResult {
   const paramsPart = str.replace(/^-- PARAMETERS:\s*/, '').trim();
 

@@ -5,15 +5,10 @@ import {
   applySqlErrorDiagnostics,
   clearSqlErrorDiagnostics,
   getCurrentStatement,
-  getTreeNodes,
 } from '~/components/base/code-editor/utils';
 import type { RowData } from '~/components/base/dynamic-table/utils';
 import { DatabaseClientType } from '~/core/constants/database-client-type';
-import {
-  convertParameters,
-  uuidv4,
-  type ParsedParametersResult,
-} from '~/core/helpers';
+import { uuidv4 } from '~/core/helpers';
 import type { Connection } from '~/core/stores';
 import type { DatabaseDriverError } from '~/core/types';
 import type { ExecutedResultItem } from '../interfaces';
@@ -79,11 +74,9 @@ export function useQueryExecution({
    */
   const executeCurrentStatement = async ({
     currentStatements,
-    treeNodes,
     queryPrefix,
   }: {
     currentStatements: SyntaxTreeNodeData[];
-    treeNodes: SyntaxTreeNodeData[];
     queryPrefix?: string;
   }) => {
     if (!currentStatements.length) {
@@ -97,32 +90,6 @@ export function useQueryExecution({
     queryProcessState.currentStatementQuery = currentStatement.text;
 
     let executeQuery = currentStatement.text;
-
-    const currentStatementTrees: SyntaxTreeNodeData[] = [];
-
-    treeNodes.forEach(item => {
-      if (
-        item.from >= currentStatement.from &&
-        item.to <= currentStatement.to
-      ) {
-        currentStatementTrees.push(item);
-      }
-    });
-
-    const reversedCurrentStatementTrees = currentStatementTrees.toReversed();
-
-    let parameters: ParsedParametersResult | null = null;
-
-    for (var statement of reversedCurrentStatementTrees) {
-      if (statement.type === 'LineComment') {
-        const convertResult = convertParameters(statement.text);
-
-        if (convertResult.values) {
-          parameters = convertResult;
-          break;
-        }
-      }
-    }
 
     let fileParameters: Record<string, unknown> = {};
 
@@ -237,10 +204,11 @@ export function useQueryExecution({
       query: executeQuery,
       dbConnectionString: connection.value?.connectionString || '',
       params: fileParameters,
-      onMeta: (fields, _command) => {
+      onMeta: (fields, command) => {
         fieldDefs.value = fields;
         executedResultItem.metadata.fieldDefs = fields;
         executedResultItem.metadata.connection = connection.value;
+        executedResultItem.metadata.command = command;
 
         // Refresh tab to show column headers
         resultTabs.refreshResultTab(executedResultItem.id, executedResultItem);
@@ -249,6 +217,7 @@ export function useQueryExecution({
         rowBuffer.push(...batch);
         queryProcessState.streamingRowCount = totalSoFar;
         executedResultItem.result = rowBuffer;
+        executedResultItem.metadata.rowCount = totalSoFar;
         currentRawQueryResult.value = rowBuffer;
         resultTabs.refreshResultTab(executedResultItem.id, executedResultItem);
       },
@@ -260,6 +229,7 @@ export function useQueryExecution({
         queryProcessState.streamingRowCount = rowCount;
 
         executedResultItem.metadata.queryTime = queryTime;
+        executedResultItem.metadata.rowCount = rowCount;
 
         rawResponse.value = {
           rows: executedResultItem.result,
@@ -316,11 +286,9 @@ export function useQueryExecution({
     if (!editorView) return;
 
     const { currentStatements } = getCurrentStatement(editorView);
-    const treeNodes = getTreeNodes(editorView);
 
     executeCurrentStatement({
       currentStatements,
-      treeNodes,
     });
   };
 
@@ -332,11 +300,9 @@ export function useQueryExecution({
     if (!editorView) return;
 
     const { currentStatements } = getCurrentStatement(editorView);
-    const treeNodes = getTreeNodes(editorView);
 
     executeCurrentStatement({
       currentStatements,
-      treeNodes,
       queryPrefix: buildExplainAnalyzePrefix(),
     });
   };

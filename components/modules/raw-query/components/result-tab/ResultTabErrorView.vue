@@ -100,7 +100,11 @@ watch(
 );
 
 const errorDetails = computed(() => {
-  const data = props.activeTab.metadata.executeErrors?.data;
+  const data = {
+    ...(props.activeTab.metadata.executeErrors?.data || {}),
+  } as any;
+
+  delete data?.normalizeError;
   if (!data) return '';
   return typeof data === 'string' ? data : JSON.stringify(data, null, 2);
 });

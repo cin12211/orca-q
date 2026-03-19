@@ -2,7 +2,10 @@ import { buildTableNodeId } from '~/components/modules/erd-diagram/utils';
 import { useSchemaStore } from '~/core/stores/useSchemaStore';
 import { TabViewType, useTabViewsStore } from '~/core/stores/useTabViewsStore';
 import { useWSStateStore } from '~/core/stores/useWSStateStore';
-import type { CommandItem, CommandProvider } from '../../types/commandEngine.types';
+import type {
+  CommandItem,
+  CommandProvider,
+} from '../../types/commandEngine.types';
 
 const PREFIX = {
   key: 'erd:',
@@ -18,7 +21,7 @@ export function useErdCommands(): CommandProvider {
 
   return {
     prefix: PREFIX,
-    includeInGlobal: false,
+    includeInGlobal: true,
     resolve(query: string): CommandItem[] {
       const lowerQuery = query.toLowerCase();
       const schemaName = schemaStore.activeSchema?.name || '';

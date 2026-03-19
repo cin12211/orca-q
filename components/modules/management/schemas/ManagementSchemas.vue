@@ -4,17 +4,21 @@ import type { RouteNameFromPath, RoutePathSchema } from '@typed-router/__paths';
 import BaseContextMenu from '~/components/base/context-menu/BaseContextMenu.vue';
 import FileTree from '~/components/base/tree-folder/FileTree.vue';
 import { useSchemaTreeData } from '~/components/modules/management/schemas/hooks/useSchemaTreeData';
+import { useTabManagement } from '~/core/composables/useTabManagement';
 import { DEFAULT_DEBOUNCE_INPUT } from '~/core/constants';
 import { useAppContext } from '~/core/contexts/useAppContext';
-import { TabViewType } from '~/core/stores/useTabViewsStore';
+import { TabViewType, useTabViewsStore } from '~/core/stores/useTabViewsStore';
 import SafeModeConfirmDialog from '../../quick-query/SafeModeConfirmDialog.vue';
 import { ManagementSidebarHeader } from '../shared';
 import RenameDialog from './dialogs/RenameDialog.vue';
 import SqlPreviewDialog from './dialogs/SqlPreviewDialog.vue';
 import { useSchemaContextMenu } from './hooks/useSchemaContextMenu';
 
-const { schemaStore, connectToConnection, wsStateStore, tabViewStore } =
-  useAppContext();
+const { schemaStore, connectToConnection, wsStateStore } = useAppContext();
+
+const tabViewStore = useTabViewsStore();
+
+const { openSchemaItemTab } = useTabManagement();
 
 const { activeSchema } = toRefs(schemaStore);
 const { connectionId, schemaId, workspaceId } = toRefs(wsStateStore);
@@ -113,50 +117,15 @@ const handleTreeClick = async (nodeId: string) => {
     return;
   }
 
-  let routeName: RouteNameFromPath<RoutePathSchema> | null = null;
-  let routeParams: Record<string, any> | undefined;
-
-  const tabId = `${node.name}-${schemaId.value}`;
-
-  routeName = 'workspaceId-connectionId-quick-query-tabViewId';
-
-  routeParams = {
-    tabViewId: tabId,
-  };
-
-  const virtualTableId =
-    tabViewType === TabViewType.ViewDetail
-      ? String(itemValue?.id ?? node.id ?? '')
-      : undefined;
-
-  if (routeName) {
-    const icon =
-      itemValue?.icon ||
-      node.iconOpen ||
-      node.iconClose ||
-      'hugeicons:grid-table';
-    await tabViewStore.openTab({
-      icon,
-      iconClass: itemValue?.iconClass || node.iconClass,
-      id: tabId,
-      name: node.name,
-      type: tabViewType,
-      routeName,
-      routeParams,
-      connectionId: connectionId.value,
-      schemaId: schemaId.value || '',
-      workspaceId: workspaceId.value || '',
-      metadata: {
-        type: tabViewType,
-        tableName: node.name,
-        virtualTableId,
-        functionId: String(itemValue?.id || ''),
-        treeNodeId: node.id,
-      },
-    });
-
-    await tabViewStore.selectTab(tabId);
-  }
+  await openSchemaItemTab({
+    id: nodeId,
+    name: node.name,
+    type: tabViewType,
+    icon: itemValue?.icon || node.iconOpen || node.iconClose,
+    iconClass: itemValue?.iconClass || node.iconClass,
+    itemValueId: itemValue?.id,
+    treeNodeId: node.id,
+  });
 };
 
 const handleTreeContextMenu = (nodeId: string, event: MouseEvent) => {

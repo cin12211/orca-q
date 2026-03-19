@@ -1,4 +1,4 @@
-import { useInstanceInsights } from '~/core/composables/useInstanceInsights';
+import { useTabManagement } from '~/core/composables/useTabManagement';
 import { useAppContext } from '~/core/contexts/useAppContext';
 import { useChangelogModal } from '~/core/contexts/useChangelogModal';
 import { useSettingsModal } from '~/core/contexts/useSettingsModal';
@@ -17,7 +17,7 @@ const PREFIX = {
 export function useSystemCommands(): CommandProvider {
   const settingsModal = useSettingsModal();
   const changelogModal = useChangelogModal();
-  const { openInstanceInsights } = useInstanceInsights();
+  const { openInstanceInsightsTab } = useTabManagement();
 
   const { connectToConnection, wsStateStore, tabViewStore, connectionStore } =
     useAppContext();
@@ -104,7 +104,7 @@ export function useSystemCommands(): CommandProvider {
       window.close();
     });
     map.set('cmd-show-instance-insights', async () => {
-      await openInstanceInsights();
+      await openInstanceInsightsTab();
     });
     map.set('cmd-open-whats-new', () => {
       void changelogModal.openChangelog();
@@ -115,7 +115,7 @@ export function useSystemCommands(): CommandProvider {
 
   return {
     prefix: PREFIX,
-    includeInGlobal: false,
+    includeInGlobal: true,
     resolve(query: string): CommandItem[] {
       const lowerQuery = query.toLowerCase();
       const executors = buildExecutors();

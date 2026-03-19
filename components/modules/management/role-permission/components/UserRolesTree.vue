@@ -7,6 +7,7 @@ import {
 } from '~/components/base/context-menu/menuContext.type';
 import FileTree from '~/components/base/tree-folder/FileTree.vue';
 import type { FileNode } from '~/components/base/tree-folder/types';
+import { useTabManagement } from '~/core/composables/useTabManagement';
 import { useTabViewsStore, TabViewType } from '~/core/stores/useTabViewsStore';
 import { useWSStateStore } from '~/core/stores/useWSStateStore';
 import type { DatabaseRole } from '~/core/types';
@@ -28,6 +29,7 @@ const props = defineProps<Props>();
 
 const tabViewStore = useTabViewsStore();
 const wsStateStore = useWSStateStore();
+const { openUserPermissionsTab } = useTabManagement();
 const { workspaceId, connectionId, schemaId } = toRefs(wsStateStore);
 
 const fileTreeRef = useTemplateRef<typeof FileTree | null>('fileTreeRef');
@@ -201,29 +203,12 @@ const handleTreeClick = async (nodeId: string) => {
       ? 'text-blue-400'
       : 'text-purple-400';
 
-  await tabViewStore.openTab({
-    workspaceId: workspaceId.value,
-    connectionId: connectionId.value,
-    schemaId: schemaId.value || '',
-    id: tabId,
-    name: `${roleName} Permissions`,
+  await openUserPermissionsTab({
+    roleName: roleName,
     icon: icon,
     iconClass: iconClass,
-    type: TabViewType.UserPermissions,
-    routeName: 'workspaceId-connectionId-user-permissions-roleName',
-    routeParams: {
-      workspaceId: workspaceId.value,
-      connectionId: connectionId.value,
-      roleName: roleName,
-    },
-    metadata: {
-      type: TabViewType.UserPermissions,
-      roleName: roleName,
-      treeNodeId: node.id,
-    },
+    treeNodeId: node.id,
   });
-
-  await tabViewStore.selectTab(tabId);
 };
 
 /**

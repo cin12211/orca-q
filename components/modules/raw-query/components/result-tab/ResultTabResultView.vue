@@ -1,13 +1,17 @@
 <script setup lang="ts">
 import type DynamicTable from '~/components/base/dynamic-table/DynamicTable.vue';
 import type { RowData } from '~/components/base/dynamic-table/utils';
+import { DatabaseClientType } from '~/core/constants/database-client-type';
 import type { ExecutedResultItem, MappedRawColumn } from '../../interfaces';
+import { createCommandResultFactory } from '../../utils';
 import RawQueryContextMenu from '../RawQueryContextMenu.vue';
 
 const props = defineProps<{
   activeTab: ExecutedResultItem;
   activeTabColumns: MappedRawColumn[];
   formattedData: Record<string, any>[];
+  executeLoading: boolean;
+  isStreaming: boolean;
 }>();
 
 const rawQueryTableRef = ref<InstanceType<typeof DynamicTable>>();
@@ -36,11 +40,44 @@ const formattedSelectedRows = computed(() => {
   );
 });
 // TODO: refactor formattedData, formattedSelectedRows to optimize performance
+
+const commandResult = computed(() => {
+  return createCommandResultFactory(
+    props.activeTab.metadata.command || '',
+    props.activeTab.metadata.rowCount || 0,
+    props.activeTab.metadata.connection?.type as DatabaseClientType
+  );
+});
+
+const isMutation = computed(() => commandResult.value.isMutation);
+const mutationMessage = computed(() => commandResult.value.message);
 </script>
 
 <template>
   <div class="h-full w-full">
+    <BaseEmpty
+      v-if="
+        activeTab.result.length === 0 &&
+        isMutation &&
+        !executeLoading &&
+        !isStreaming
+      "
+      :desc="mutationMessage"
+      hiddenIcon
+      class="h-full"
+    />
+
+    <BaseEmpty
+      v-else-if="
+        activeTab.result.length === 0 && !executeLoading && !isStreaming
+      "
+      title="No Results"
+      desc="The query returned no records."
+      class="h-full"
+    />
+
     <RawQueryContextMenu
+      v-else
       :data="formattedData || []"
       :selectedRows="formattedSelectedRows || []"
       :cellContextMenu="rawQueryTableRef?.cellContextMenu"

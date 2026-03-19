@@ -60,6 +60,8 @@ export interface ExecutedResultItem {
       | undefined;
     fieldDefs?: FieldDef[];
     connection?: Connection | undefined;
+    command?: string;
+    rowCount?: number;
   };
   result: RowData[];
   seqIndex: number;

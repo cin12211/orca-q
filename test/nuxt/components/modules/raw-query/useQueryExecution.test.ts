@@ -8,6 +8,13 @@ vi.mock('~/components/modules/raw-query/hooks/useStreamingQuery', () => ({
   executeStreamingQuery: vi.fn(),
 }));
 
+vi.mock('~/components/base/code-editor/utils', () => ({
+  applySqlErrorDiagnostics: vi.fn(),
+  clearSqlErrorDiagnostics: vi.fn(),
+  getCurrentStatement: vi.fn(),
+  getTreeNodes: vi.fn(),
+}));
+
 // Mock $fetch globally
 const mockFetch = vi.fn();
 (global as any).$fetch = mockFetch;
@@ -22,7 +29,10 @@ describe('useQueryExecution', () => {
       addResultTab: vi.fn(),
       refreshResultTab: vi.fn(),
     };
-    getEditorViewMock = vi.fn(() => ({}));
+    getEditorViewMock = vi.fn(() => ({
+      dispatch: vi.fn(),
+      state: {},
+    }));
   });
 
   it('handles normal query execution via streaming', async () => {
@@ -48,7 +58,6 @@ describe('useQueryExecution', () => {
       currentStatements: [
         { text: 'SELECT * FROM users', from: 0, to: 18, type: 'Statement' },
       ],
-      treeNodes: [],
     });
 
     expect(streamingQuery.executeStreamingQuery).toHaveBeenCalled();
@@ -91,7 +100,6 @@ describe('useQueryExecution', () => {
           type: 'Statement',
         },
       ],
-      treeNodes: [],
     });
 
     const callArgs = (streamingQuery.executeStreamingQuery as any).mock
@@ -130,7 +138,6 @@ describe('useQueryExecution', () => {
           type: 'Statement',
         },
       ],
-      treeNodes: [],
     });
 
     const callArgs = (streamingQuery.executeStreamingQuery as any).mock
@@ -165,7 +172,7 @@ describe('useQueryExecution', () => {
       currentStatements: [
         { text: 'SELECT * FROM users', from: 0, to: 18, type: 'Statement' },
       ],
-      treeNodes: [],
+
       queryPrefix: 'EXPLAIN',
     });
 
@@ -203,7 +210,6 @@ describe('useQueryExecution', () => {
           type: 'Statement',
         },
       ],
-      treeNodes: [],
     });
 
     const callArgs = (streamingQuery.executeStreamingQuery as any).mock
@@ -238,9 +244,6 @@ describe('useQueryExecution', () => {
           type: 'Statement',
         },
       ],
-      treeNodes: [
-        { text: '-- { "id": 2 }', from: 0, to: 14, type: 'LineComment' },
-      ] as any,
     });
 
     // Note: useQueryExecution.ts has logic to look for LineComment before the statement

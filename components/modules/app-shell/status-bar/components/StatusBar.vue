@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { useInstanceInsights } from '~/core/composables/useInstanceInsights';
+import { useTabManagement } from '~/core/composables/useTabManagement';
 import { useAppContext } from '~/core/contexts/useAppContext';
 import { useChangelogModal } from '~/core/contexts/useChangelogModal';
 import { useSettingsModal } from '~/core/contexts/useSettingsModal';
@@ -9,7 +9,7 @@ import CurrentPositionPath from './CurrentPositionPath.vue';
 const { tabViewStore, wsStateStore, connectionStore } = useAppContext();
 const { openChangelog } = useChangelogModal();
 const { openSettings } = useSettingsModal();
-const { openInstanceInsights } = useInstanceInsights();
+const { openInstanceInsightsTab } = useTabManagement();
 
 const { activeTab } = toRefs(tabViewStore);
 const { workspaceId, connectionId } = toRefs(wsStateStore);
@@ -27,7 +27,7 @@ const onBackToHome = async () => {
 };
 
 const onOpenInstanceInsights = async () => {
-  await openInstanceInsights();
+  await openInstanceInsightsTab();
 };
 
 const formattedTabType = computed(() => {

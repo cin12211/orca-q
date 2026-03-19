@@ -5,7 +5,7 @@ import { CommandPaletteView } from '@/components/modules/command-palette';
 import ChangelogPopup from './components/modules/changelog/ChangelogPopup.vue';
 import Settings from './components/modules/settings';
 import { Toaster } from './components/ui/sonner';
-import { useSpaceDisplay } from './core/composables/useSpaceDisplay';
+import { useAppearance } from './core/composables/useAppearance';
 import { DEFAULT_DEBOUNCE_INPUT } from './core/constants';
 import { useAppContext } from './core/contexts';
 import { useChangelogModal } from './core/contexts/useChangelogModal';
@@ -22,7 +22,7 @@ const { isLoading } = useLoadingIndicator();
 const { connectToConnection } = useAppContext();
 const { autoShowIfNewVersion } = useChangelogModal();
 
-useSpaceDisplay();
+useAppearance();
 
 const route = useRoute('workspaceId-connectionId');
 

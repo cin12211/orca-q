@@ -24,8 +24,13 @@ export function getSpaceDisplayFontSize(value: SpaceDisplay | string): string {
  * Composable that watches the persisted spaceDisplay preference and applies
  * the corresponding font-size to <html>. Call once in app.vue.
  */
-export function useSpaceDisplay() {
+export function useAppearance() {
   const appConfigStore = useAppConfigStore();
+
+  const chatUiVars = computed(() => ({
+    '--chat-font-size': `${appConfigStore.chatUiConfigs.fontSize}px`,
+    '--chat-code-font-size': `${appConfigStore.chatUiConfigs.codeFontSize}px`,
+  }));
 
   const apply = (value: SpaceDisplay) => {
     if (typeof document === 'undefined') return;
@@ -61,4 +66,8 @@ export function useSpaceDisplay() {
 
   // Apply immediately on mount, then reactively on change
   watch(() => appConfigStore.spaceDisplay, apply, { immediate: true });
+
+  return {
+    chatUiVars,
+  };
 }

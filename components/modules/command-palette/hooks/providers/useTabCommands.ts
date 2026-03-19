@@ -16,7 +16,7 @@ export function useTabCommands(): CommandProvider {
 
   return {
     prefix: PREFIX,
-    includeInGlobal: false,
+    includeInGlobal: true,
     resolve(query: string): CommandItem[] {
       const lowerQuery = query.toLowerCase();
       const activeId = tabViewsStore.activeTab?.id;

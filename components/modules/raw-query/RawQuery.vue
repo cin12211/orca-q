@@ -155,13 +155,7 @@ onActivated(async () => {
               :context-menu-items="contextMenuItems"
               @update:open="onContextMenuOpen"
             >
-              <div
-                v-if="isEditorLoading"
-                class="h-full relative flex flex-col pointer-events-none select-none"
-                aria-hidden="true"
-              >
-                <LoadingOverlay visible />
-              </div>
+              <LoadingOverlay v-if="isEditorLoading" visible />
 
               <BaseCodeEditor
                 v-else
@@ -222,6 +216,7 @@ onActivated(async () => {
         :executed-results="executedResults"
         :active-tab-id="activeResultTabId"
         :execute-loading="queryProcessState.executeLoading"
+        :is-streaming="queryProcessState.isStreaming"
         @update:active-tab="rawQueryEditor.setActiveResultTab"
         @close-tab="rawQueryEditor.closeResultTab"
         @close-other-tabs="rawQueryEditor.closeOtherResultTabs"

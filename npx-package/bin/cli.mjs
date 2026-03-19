@@ -34,15 +34,61 @@ program
       process.exit(1);
     }
 
-    console.log(`
-╔═══════════════════════════════════════════════════════════╗
-║                                                           ║
-║   🐋 OrcaQ - Database Editor                              ║
-║                                                           ║
-║   Starting server on http://${host}:${port}                   
-║                                                           ║
-╚═══════════════════════════════════════════════════════════╝
-`);
+    const colors = {
+      reset: '\x1b[0m',
+      bold: '\x1b[1m',
+      dim: '\x1b[2m',
+      blue: '\x1b[34m',
+      cyan: '\x1b[36m',
+      green: '\x1b[32m',
+      gray: '\x1b[90m',
+    };
+
+    const asciiArt = [
+      "                       'JJ%$%)          ",
+      '               $$$$$$$$$$$$$&           ',
+      '          xxw$$$$$$$$$$$$$$$Bx          ',
+      '        ^$$$$$$$;   $$$$$$$$$$          ',
+      "       l1$$$$&   l1$$$$$$$$$$$['        ",
+      '       x$$$$x  $$$$$$$$$$$$$$$$;        ',
+      '      *$$$$#*********@$$$$$$$$$$x       ',
+      '      *$$$           *$$$$$$$$$$x       ',
+      '      *$$$$$$&      $$$$$$$$$$$$x       ',
+      '                 \\\\h$$$$$$$$$$$$$x       ',
+      '                *$$$$$$&  *$$$$;        ',
+      '                          *$$$$;        ',
+      '        ^$$$$&      $;   $$$$$          ',
+      '          x&$$$$$$Bx txu$$$wj           ',
+      '            x$$$$$$$$$$$$$;             ',
+      '                Y00000{                 ',
+    ];
+
+    const info = [
+      '',
+      '',
+      '',
+      '',
+      '',
+      `${colors.bold}${colors.cyan}    OrcaQ - Database Editor${colors.reset}`,
+      `${colors.dim}    v${packageJson.version}${colors.reset}`,
+      '',
+      `    Starting server on ${colors.green}http://${host}:${port}${colors.reset}`,
+      '',
+      `${colors.gray}    Press Ctrl+C to stop${colors.reset}`,
+      '',
+      '',
+      '',
+      '',
+      '',
+    ];
+
+    console.log('');
+    for (let i = 0; i < asciiArt.length; i++) {
+      process.stdout.write(
+        `${colors.gray}${asciiArt[i]}${colors.reset}${info[i] || ''}\n`
+      );
+    }
+    console.log('');
 
     // Start the Nitro server
     const server = spawn('node', [serverEntry], {

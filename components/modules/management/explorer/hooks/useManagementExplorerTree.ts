@@ -10,10 +10,10 @@ import type {
   FileNode,
   TreePersistenceExtension,
 } from '~/components/base/tree-folder/types';
+import { useTabManagement } from '~/core/composables/useTabManagement';
 import { DEFAULT_DEBOUNCE_INPUT } from '~/core/constants';
 import { uuidv4 } from '~/core/helpers';
 import { useExplorerFileStore } from '~/core/stores';
-import { TabViewType, useTabViewsStore } from '~/core/stores/useTabViewsStore';
 import { useExplorerContextMenu } from './useExplorerContextMenu';
 
 interface UseManagementExplorerTreeOptions {
@@ -68,7 +68,7 @@ export const useManagementExplorerTree = ({
   const route = useRoute('workspaceId-connectionId-explorer-fileId');
 
   const explorerFileStore = useExplorerFileStore();
-  const tabViewStore = useTabViewsStore();
+  const { openCodeQueryTab } = useTabManagement();
 
   const searchInput = shallowRef('');
   const debouncedSearch = refDebounced(searchInput, DEFAULT_DEBOUNCE_INPUT);
@@ -316,26 +316,11 @@ export const useManagementExplorerTree = ({
       return;
     }
 
-    tabViewStore.openTab({
-      icon: item.icon,
+    openCodeQueryTab({
       id: item.id,
       name: item.title,
-      type: TabViewType.CodeQuery,
-      routeName: 'workspaceId-connectionId-explorer-fileId',
-      routeParams: {
-        fileId: item.id,
-      },
-      connectionId: route.params.connectionId,
-      schemaId: '',
-      workspaceId: route.params.workspaceId,
-      metadata: {
-        type: TabViewType.CodeQuery,
-        tableName: item.title,
-        treeNodeId: item.id,
-      },
+      icon: item.icon,
     });
-
-    tabViewStore.selectTab(item.id);
   };
 
   return {

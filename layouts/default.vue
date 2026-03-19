@@ -21,10 +21,7 @@ const appConfigStore = useAppConfigStore();
 const { layoutSize, isPrimarySidebarCollapsed, bodySize } =
   toRefs(appConfigStore);
 
-const chatUiVars = computed(() => ({
-  '--chat-font-size': `${appConfigStore.chatUiConfigs.fontSize}px`,
-  '--chat-code-font-size': `${appConfigStore.chatUiConfigs.codeFontSize}px`,
-}));
+const { chatUiVars } = useAppearance();
 
 const isAccessBottomPanel = computed(() => {
   if (route.meta.notAllowBottomPanel) return false;

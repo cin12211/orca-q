@@ -20,6 +20,7 @@ const props = defineProps<{
   activeTabId: string | null;
   // mappedColumns: MappedRawColumn[];
   executeLoading: boolean;
+  isStreaming: boolean;
 }>();
 
 const emit = defineEmits<{
@@ -295,6 +296,8 @@ const hasErrors = (tab: ExecutedResultItem) => {
           :active-tab="activeTab"
           :active-tab-columns="activeTabColumns"
           :formatted-data="formattedData"
+          :execute-loading="executeLoading"
+          :is-streaming="isStreaming"
           :key="activeTab.id"
         />
 
@@ -307,6 +310,8 @@ const hasErrors = (tab: ExecutedResultItem) => {
         <ResultTabRawView
           v-else-if="activeTab && currentView === 'raw'"
           :formatted-data="formattedData"
+          :execute-loading="executeLoading"
+          :is-streaming="isStreaming"
         />
 
         <!-- Info View -->
