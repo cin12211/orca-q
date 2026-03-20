@@ -61,7 +61,13 @@ const { onSubmit } = useWorkspaceForm({
             <FormControl>
               <Popover>
                 <PopoverTrigger as-child>
-                  <Avatar class="cursor-pointer">
+                  <Avatar
+                    id="tour-workspace-icon"
+                    class="cursor-pointer focus:ring-2 focus:ring-primary focus:outline-none"
+                    tabindex="0"
+                    role="button"
+                    aria-label="Select workspace icon"
+                  >
                     <AvatarFallback>
                       <Icon
                         :name="
@@ -99,6 +105,7 @@ const { onSubmit } = useWorkspaceForm({
             >
             <FormControl>
               <Input
+                id="tour-workspace-name"
                 type="text"
                 placeholder="Workspace name"
                 v-bind="componentField"
@@ -113,6 +120,7 @@ const { onSubmit } = useWorkspaceForm({
             <FormLabel>Description</FormLabel>
             <FormControl>
               <Textarea
+                id="tour-workspace-desc"
                 placeholder="Workspace description ..."
                 v-bind="componentField"
               />
@@ -122,7 +130,7 @@ const { onSubmit } = useWorkspaceForm({
         </FormField>
 
         <DialogFooter class="mt-4">
-          <Button type="submit">
+          <Button id="tour-workspace-create" type="submit">
             {{ workspace ? 'Update' : 'Create' }}
           </Button>
         </DialogFooter>

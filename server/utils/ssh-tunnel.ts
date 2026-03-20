@@ -1,5 +1,5 @@
-import { Client } from 'ssh2';
 import { createServer, type Server } from 'node:net';
+import { Client } from 'ssh2';
 import type { ISSHConfig } from '~/components/modules/connection';
 
 interface TunnelInstance {
@@ -14,7 +14,11 @@ export async function createSshTunnel(
   sshConfig: ISSHConfig,
   dbHost: string,
   dbPort: number
-): Promise<{ localHost: string; localPort: number; close: () => Promise<void> }> {
+): Promise<{
+  localHost: string;
+  localPort: number;
+  close: () => Promise<void>;
+}> {
   const tunnelKey = `${sshConfig.host}:${sshConfig.port}:${sshConfig.username}:${dbHost}:${dbPort}`;
 
   if (activeTunnels.has(tunnelKey)) {

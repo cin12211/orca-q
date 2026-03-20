@@ -22,7 +22,7 @@ export function useFileDrop(onFileRead?: (content: string) => void) {
     const file = files[0];
     const reader = new FileReader();
 
-    reader.onload = (e) => {
+    reader.onload = e => {
       const content = e.target?.result as string;
       if (onFileRead) {
         onFileRead(content);

@@ -10,6 +10,7 @@ const { tabViewStore, wsStateStore, connectionStore } = useAppContext();
 const { openChangelog } = useChangelogModal();
 const { openSettings } = useSettingsModal();
 const { openInstanceInsightsTab } = useTabManagement();
+const config = useRuntimeConfig();
 
 const { activeTab } = toRefs(tabViewStore);
 const { workspaceId, connectionId } = toRefs(wsStateStore);
@@ -98,6 +99,21 @@ const formattedTabType = computed(() => {
       <Tooltip>
         <TooltipTrigger as-child>
           <div
+            class="flex items-center gap-1 rounded hover:bg-muted cursor-pointer"
+            @click="openChangelog"
+          >
+            <Icon name="hugeicons:git-merge" class="size-4!" />
+            <span class="text-xxs text-foreground">{{
+              config.public.version
+            }}</span>
+          </div>
+        </TooltipTrigger>
+        <TooltipContent> Version: {{ config.public.version }} </TooltipContent>
+      </Tooltip>
+
+      <Tooltip>
+        <TooltipTrigger as-child>
+          <div
             class="flex items-center justify-center hover:bg-muted rounded cursor-pointer"
             :class="!canOpenInstanceInsights && 'opacity-50 cursor-not-allowed'"
             @click="onOpenInstanceInsights"
@@ -108,7 +124,7 @@ const formattedTabType = computed(() => {
         <TooltipContent> Instance Insights </TooltipContent>
       </Tooltip>
 
-      <Tooltip>
+      <!-- <Tooltip>
         <TooltipTrigger as-child>
           <div
             class="flex items-center justify-center hover:bg-muted rounded cursor-pointer"
@@ -118,7 +134,7 @@ const formattedTabType = computed(() => {
           </div>
         </TooltipTrigger>
         <TooltipContent> What's New </TooltipContent>
-      </Tooltip>
+      </Tooltip> -->
 
       <Tooltip>
         <TooltipTrigger as-child>

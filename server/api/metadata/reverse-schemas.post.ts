@@ -13,14 +13,17 @@ export default defineEventHandler(async event => {
     type?: DatabaseClientType;
   }>(event);
 
-  const adapter = await createMetadataAdapter(body.type || DatabaseClientType.POSTGRES, {
-    dbConnectionString: body.dbConnectionString,
-    host: body.host,
-    port: body.port,
-    username: body.username,
-    password: body.password,
-    database: body.database,
-  });
+  const adapter = await createMetadataAdapter(
+    body.type || DatabaseClientType.POSTGRES,
+    {
+      dbConnectionString: body.dbConnectionString,
+      host: body.host,
+      port: body.port,
+      username: body.username,
+      password: body.password,
+      database: body.database,
+    }
+  );
 
   const result = await adapter.getReverseSchemas();
   return { result };

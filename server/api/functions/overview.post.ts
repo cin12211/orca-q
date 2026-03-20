@@ -21,14 +21,17 @@ export default defineEventHandler(async event => {
     });
   }
 
-  const adapter = await createFunctionAdapter(body.type || DatabaseClientType.POSTGRES, {
-    dbConnectionString: body.dbConnectionString,
-    host: body.host,
-    port: body.port,
-    username: body.username,
-    password: body.password,
-    database: body.database,
-  });
+  const adapter = await createFunctionAdapter(
+    body.type || DatabaseClientType.POSTGRES,
+    {
+      dbConnectionString: body.dbConnectionString,
+      host: body.host,
+      port: body.port,
+      username: body.username,
+      password: body.password,
+      database: body.database,
+    }
+  );
 
   return await adapter.getOverviewFunctions(body.schema);
 });

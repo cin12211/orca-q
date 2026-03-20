@@ -1,8 +1,8 @@
+import type { ISSLConfig, ISSHConfig } from '~/components/modules/connection';
 import { DatabaseClientType } from '~/core/constants/database-client-type';
+import { createSshTunnel } from '~/server/utils/ssh-tunnel';
 import { createDatabaseAdapter } from './factory';
 import type { IDatabaseAdapter } from './types';
-import type { ISSLConfig, ISSHConfig } from '~/components/modules/connection';
-import { createSshTunnel } from '~/server/utils/ssh-tunnel';
 
 type CachedAdapter = {
   adapter: IDatabaseAdapter;

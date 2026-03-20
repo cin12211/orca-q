@@ -149,6 +149,7 @@ const {
     <CardFooter class="px-4">
       <Select v-model:open="isOpenConnectionSelector">
         <Button
+          :id="`tour-open-workspace-${workspace.id}`"
           ref="dropdownTriggerRef"
           variant="default"
           class="w-full flex items-center justify-between"

@@ -28,7 +28,9 @@ export const SQL_DIALECT_BY_DB_TYPE: Record<string, SQLDialect> = {
  * Resolve the CodeMirror SQLDialect for a given connection type.
  * Falls back to PostgreSQL when the type is not (yet) mapped.
  */
-export function resolveDialect(dbType: DatabaseClientType | undefined): SQLDialect {
+export function resolveDialect(
+  dbType: DatabaseClientType | undefined
+): SQLDialect {
   if (!dbType) return PostgreSQL;
   return SQL_DIALECT_BY_DB_TYPE[dbType] ?? PostgreSQL;
 }

@@ -24,6 +24,7 @@ const emit = defineEmits(['create']);
     <div>
       <Button
         v-if="isShowButtonCreate"
+        id="tour-new-workspace-btn"
         variant="outline"
         size="sm"
         @click="emit('create')"

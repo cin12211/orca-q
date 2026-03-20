@@ -1,0 +1,51 @@
+/* driver.js theme integration */
+.driver-theme-system {
+  background-color: var(--popover) !important;
+  color: var(--popover-foreground) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius) !important;
+}
+
+.driver-theme-system .driver-popover-title {
+  color: var(--foreground) !important;
+  font-weight: 600 !important;
+}
+
+.driver-theme-system .driver-popover-description {
+  color: var(--muted-foreground) !important;
+}
+
+.driver-theme-system .driver-popover-footer button {
+  background-color: var(--background) !important;
+  color: var(--foreground) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: calc(var(--radius) - 2px) !important;
+  text-shadow: none !important;
+  padding: 0.25rem 0.5rem !important;
+  font-size: 0.875rem !important;
+  transition:
+    background-color 0.2s,
+    color 0.2s;
+}
+
+.driver-theme-system .driver-popover-footer button:hover {
+  background-color: var(--accent) !important;
+  color: var(--accent-foreground) !important;
+}
+
+.driver-theme-system .driver-popover-footer .driver-popover-next-btn {
+  background-color: var(--primary) !important;
+  color: var(--primary-foreground) !important;
+  border-color: var(--primary) !important;
+}
+
+.driver-theme-system .driver-popover-footer .driver-popover-next-btn:hover {
+  background-color: var(--primary) !important;
+  color: var(--primary-foreground) !important;
+  opacity: 0.9 !important;
+}
+
+/* Fix arrow coloring to match our background and border */
+div.driver-popover.driver-theme-system .driver-popover-arrow {
+  border-color: var(--popover) !important;
+}

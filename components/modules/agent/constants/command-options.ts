@@ -4,7 +4,8 @@ export const AGENT_COMMAND_OPTIONS = [
     label: 'Generate Query',
     toolName: 'generate_query',
     category: 'SQL',
-    description: 'Turn a natural language request into SQL for the active schema.',
+    description:
+      'Turn a natural language request into SQL for the active schema.',
     insertText: 'Generate SQL for ',
     icon: 'hugeicons:ai-brain-03',
     promptHint:
@@ -15,7 +16,8 @@ export const AGENT_COMMAND_OPTIONS = [
     label: 'Render Table',
     toolName: 'render_table',
     category: 'Execution',
-    description: 'Run a read-only SQL query and show the result rows as a table.',
+    description:
+      'Run a read-only SQL query and show the result rows as a table.',
     insertText: 'Run this query and show the table result for ',
     icon: 'hugeicons:table-01',
     promptHint:
@@ -26,8 +28,10 @@ export const AGENT_COMMAND_OPTIONS = [
     label: 'Visualize Table',
     toolName: 'visualize_table',
     category: 'Charts',
-    description: 'Build a bar, line, pie, or scatter chart from a read-only query.',
-    insertText: 'Visualize this data as a bar, line, pie, or scatter chart for ',
+    description:
+      'Build a bar, line, pie, or scatter chart from a read-only query.',
+    insertText:
+      'Visualize this data as a bar, line, pie, or scatter chart for ',
     icon: 'hugeicons:chart-line-data-01',
     promptHint:
       'The user wants a chart-oriented answer. Prefer visualize_table for read-only SQL, and ask for the chart type only if it is still missing.',
@@ -48,7 +52,8 @@ export const AGENT_COMMAND_OPTIONS = [
     label: 'Explain Query',
     toolName: 'explain_query',
     category: 'Performance',
-    description: 'Analyze a query plan and explain possible performance issues.',
+    description:
+      'Analyze a query plan and explain possible performance issues.',
     insertText: 'Explain why this query is slow: ',
     icon: 'hugeicons:activity-02',
     promptHint:
@@ -59,7 +64,8 @@ export const AGENT_COMMAND_OPTIONS = [
     label: 'Detect Anomaly',
     toolName: 'detect_anomaly',
     category: 'Quality',
-    description: 'Scan for nulls, duplicates, orphaned keys, and outlier values.',
+    description:
+      'Scan for nulls, duplicates, orphaned keys, and outlier values.',
     insertText: 'Detect anomalies in table ',
     icon: 'hugeicons:search-list-01',
     promptHint:

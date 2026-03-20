@@ -1,6 +1,6 @@
+import type { ISSLConfig, ISSHConfig } from '~/components/modules/connection';
 import { DatabaseClientType } from '~/core/constants/database-client-type';
 import { healthCheckConnection } from '~/server/infrastructure/driver/db-connection';
-import type { ISSLConfig, ISSHConfig } from '~/components/modules/connection';
 
 export default defineEventHandler(
   async (event): Promise<{ isConnectedSuccess: boolean }> => {

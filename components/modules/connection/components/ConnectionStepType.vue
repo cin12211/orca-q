@@ -42,7 +42,7 @@ const handleSelect = (option: IDatabaseOption) => {
     </DialogHeader>
 
     <div class="flex-1 overflow-y-auto p-6">
-      <div class="grid grid-cols-3 gap-4 py-4">
+      <div id="tour-database-type-cards" class="grid grid-cols-3 gap-4 py-4">
         <DatabaseTypeCard
           v-for="option in databaseOptions"
           :key="option.type"
@@ -60,7 +60,12 @@ const handleSelect = (option: IDatabaseOption) => {
       <Button variant="outline" @click="$emit('close')" size="sm">
         Cancel
       </Button>
-      <Button @click="$emit('next')" :disabled="!dbType" size="sm">
+      <Button
+        id="tour-database-type-next"
+        @click="$emit('next')"
+        :disabled="!dbType"
+        size="sm"
+      >
         Next <Icon name="hugeicons:arrow-right-02" />
       </Button>
     </DialogFooter>

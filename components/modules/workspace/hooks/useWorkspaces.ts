@@ -1,5 +1,5 @@
-import { computed, ref, shallowRef } from 'vue';
 import { refDebounced } from '@vueuse/core';
+import { computed, ref, shallowRef } from 'vue';
 import { DEFAULT_DEBOUNCE_INPUT } from '~/core/constants';
 import { useAppContext } from '~/core/contexts/useAppContext';
 

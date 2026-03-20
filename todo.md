@@ -85,3 +85,4 @@ HAVING
 - [x] nên tạo 1 hook quản lý tất cả việc mở tab chứ k nên tạo 1 hook chỉ dành riêng cho useInstanceInsights , vì còn nhiều nơi cũng mở tab mà mở tab rất riêng ( ví dụ như ở useManagementExplorerTree ,ManagementSchemas , ManagementSchemas,ManagementUsersAndPermission,...)
 
 - [x] check executeStreamingQuery khi có error
+- [ ] update erd (update in sidebar header icon to hugeicons:workflow-square-10, update for each item -> hugeicons:flow-connection)

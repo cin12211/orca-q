@@ -100,13 +100,18 @@ const databaseOptions = computed(() =>
 
           <div class="flex-1 overflow-y-auto p-4 space-y-4">
             <Tabs v-model="connectionMethod" class="w-full">
-              <TabsList class="grid w-fit grid-cols-2">
-                <TabsTrigger value="string" class="cursor-pointer"
-                  >Connection String</TabsTrigger
-                >
-                <TabsTrigger value="form" class="cursor-pointer"
-                  >Connection Form</TabsTrigger
-                >
+              <TabsList
+                class="grid w-fit grid-cols-2"
+                id="tour-connection-method-tabs"
+              >
+                <TabsTrigger value="string" class="cursor-pointer">
+                  <span id="tour-connection-string-tab">
+                    Connection String
+                  </span>
+                </TabsTrigger>
+                <TabsTrigger value="form" class="cursor-pointer">
+                  <span id="tour-connection-form-tab"> Connection Form </span>
+                </TabsTrigger>
               </TabsList>
 
               <div class="space-y-2 mt-2">
@@ -276,6 +281,7 @@ const databaseOptions = computed(() =>
                 Test
               </Button>
               <Button
+                id="tour-create-update-connection-btn"
                 @click="handleCreateConnection"
                 size="sm"
                 :disabled="testStatus === 'testing' || !isFormValid"

@@ -28,7 +28,9 @@ export class PostgresMetricsAdapter
       params,
       DatabaseClientType.POSTGRES
     );
-    const cacheKey = params.dbConnectionString || `${params.username}@${params.host}:${params.port}/${params.database}`;
+    const cacheKey =
+      params.dbConnectionString ||
+      `${params.username}@${params.host}:${params.port}/${params.database}`;
     return new PostgresMetricsAdapter(adapter, cacheKey);
   }
 

@@ -1,5 +1,5 @@
-import { DatabaseClientType } from '~/core/constants/database-client-type';
 import type { ISSHConfig, ISSLConfig } from '~/components/modules/connection';
+import { DatabaseClientType } from '~/core/constants/database-client-type';
 
 export { DatabaseClientType };
 

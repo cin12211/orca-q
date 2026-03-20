@@ -15,14 +15,17 @@ export default defineEventHandler(async event => {
     tableName: string;
   }>(event);
 
-  const adapter = await createTableAdapter(body.type || DatabaseClientType.POSTGRES, {
-    dbConnectionString: body.dbConnectionString,
-    host: body.host,
-    port: body.port,
-    username: body.username,
-    password: body.password,
-    database: body.database,
-  });
+  const adapter = await createTableAdapter(
+    body.type || DatabaseClientType.POSTGRES,
+    {
+      dbConnectionString: body.dbConnectionString,
+      host: body.host,
+      port: body.port,
+      username: body.username,
+      password: body.password,
+      database: body.database,
+    }
+  );
 
   return await adapter.getTableMeta(body.schema, body.tableName);
 });

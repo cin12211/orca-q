@@ -1,12 +1,12 @@
 // ~/utils/query-generator.ts
 import { z } from 'zod';
-import { DatabaseClientType } from '~/core/constants/database-client-type';
 import {
   ComposeOperator,
   EExtendedField,
   OperatorSet,
   operatorSets,
 } from '~/core/constants';
+import { DatabaseClientType } from '~/core/constants/database-client-type';
 
 /* -------------------------------------------------------------------------- */
 /*                                   Types                                    */

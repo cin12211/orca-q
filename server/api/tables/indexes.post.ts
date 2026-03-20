@@ -1,8 +1,7 @@
 import { defineEventHandler, readBody } from 'h3';
+import type { ISSLConfig, ISSHConfig } from '~/components/modules/connection';
 import { DatabaseClientType } from '~/core/constants/database-client-type';
 import { createTableAdapter } from '~/server/infrastructure/database/adapters/tables';
-
-import type { ISSLConfig, ISSHConfig } from '~/components/modules/connection';
 
 export default defineEventHandler(async event => {
   const body = await readBody<{
@@ -19,7 +18,10 @@ export default defineEventHandler(async event => {
     ssh?: ISSHConfig;
   }>(event);
 
-  const adapter = await createTableAdapter(body.type || DatabaseClientType.POSTGRES, body);
+  const adapter = await createTableAdapter(
+    body.type || DatabaseClientType.POSTGRES,
+    body
+  );
 
   return await adapter.getTableIndexes(body.schema, body.table);
 });

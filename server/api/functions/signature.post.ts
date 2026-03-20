@@ -1,8 +1,7 @@
 import { defineEventHandler, readBody, createError } from 'h3';
+import type { ISSLConfig, ISSHConfig } from '~/components/modules/connection';
 import { DatabaseClientType } from '~/core/constants/database-client-type';
 import { createFunctionAdapter } from '~/server/infrastructure/database/adapters/functions';
-
-import type { ISSLConfig, ISSHConfig } from '~/components/modules/connection';
 
 export default defineEventHandler(async event => {
   const body = await readBody<{
@@ -25,7 +24,10 @@ export default defineEventHandler(async event => {
     });
   }
 
-  const adapter = await createFunctionAdapter(body.type || DatabaseClientType.POSTGRES, body);
+  const adapter = await createFunctionAdapter(
+    body.type || DatabaseClientType.POSTGRES,
+    body
+  );
 
   return await adapter.getFunctionSignature(body.functionId);
 });

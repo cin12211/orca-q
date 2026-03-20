@@ -1,5 +1,6 @@
 import tailwindcss from '@tailwindcss/vite';
 import type { DefineNuxtConfig, NuxtConfig } from 'nuxt/config';
+import pkg from './package.json';
 
 // https://nuxt.com/docs/api/configuration/nuxt-config
 
@@ -44,6 +45,7 @@ export default defineNuxtConfig({
     public: {
       amplitudeApiKey: process.env.NUXT_AMPLITUDE_API_KEY,
       isDev: process.env.NODE_ENV !== 'production',
+      version: pkg.version,
     },
   },
 
