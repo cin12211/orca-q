@@ -10,7 +10,6 @@ import type {
 } from 'ai';
 import type { DatabaseClientType } from '~/core/constants';
 import type { Schema } from '~/core/stores';
-import type { AgentCommandOptionId } from '../constants/command-options';
 
 // ─── Shared tool name enum (FE + BE) ─────────────────────────────────────────
 export const AgentToolName = {
@@ -24,6 +23,12 @@ export const AgentToolName = {
   ExportQueryResult: 'export_query_result',
   /** Exports free-form text (notes, scripts, docs) directly to a file */
   ExportContent: 'export_content',
+  /** Lists available schemas with table names (lightweight) */
+  ListSchemas: 'list_schemas',
+  /** Returns detailed column/key info for a specific table */
+  GetTableSchema: 'get_table_schema',
+  /** Renders an ERD diagram for selected tables */
+  RenderErd: 'render_erd',
   AskClarification: 'askClarification',
 } as const;
 export type AgentToolName = (typeof AgentToolName)[keyof typeof AgentToolName];
@@ -38,6 +43,9 @@ export const DB_AGENT_TOOL_NAMES = [
   AgentToolName.DescribeTable,
   AgentToolName.ExportQueryResult,
   AgentToolName.ExportContent,
+  AgentToolName.ListSchemas,
+  AgentToolName.GetTableSchema,
+  AgentToolName.RenderErd,
 ] as const;
 
 export type DbAgentToolName = (typeof DB_AGENT_TOOL_NAMES)[number];
@@ -198,6 +206,76 @@ export interface AgentExportFileResult {
   error?: string;
 }
 
+// ─── List schemas tool types ──────────────────────────────────────────────────
+export interface AgentListSchemasInput {
+  // no input needed
+}
+
+export interface AgentListSchemasResult {
+  schemas: Array<{
+    schemaName: string;
+    tables: string[];
+    views: string[];
+    functions: string[];
+  }>;
+}
+
+// ─── Get table schema tool types ──────────────────────────────────────────────
+export interface AgentGetTableSchemaInput {
+  schemaName: string;
+  tableName: string;
+}
+
+export interface AgentGetTableSchemaResult {
+  schemaName: string;
+  tableName: string;
+  columns: Array<{
+    name: string;
+    type: string;
+    isPrimaryKey: boolean;
+    isForeignKey: boolean;
+    isNullable: boolean;
+  }>;
+  primaryKeys: string[];
+  foreignKeys: Array<{
+    column: string;
+    referencedSchema: string;
+    referencedTable: string;
+    referencedColumn: string;
+  }>;
+}
+
+// ─── ERD tool types ───────────────────────────────────────────────────────────
+export interface AgentRenderErdInput {
+  tableNames: string[];
+  schemaName: string;
+}
+
+export interface AgentErdNode {
+  id: string;
+  tableName: string;
+  schemaName: string;
+  columns: Array<{
+    name: string;
+    type: string;
+    isPrimaryKey: boolean;
+    isForeignKey: boolean;
+  }>;
+}
+
+export interface AgentErdEdge {
+  id: string;
+  source: string;
+  target: string;
+  sourceColumn: string;
+  targetColumn: string;
+}
+
+export interface AgentRenderErdResult {
+  nodes: AgentErdNode[];
+  edges: AgentErdEdge[];
+}
+
 export interface AgentToolInputMap {
   generate_query: AgentGenerateQueryInput;
   render_table: AgentRenderTableInput;
@@ -207,6 +285,9 @@ export interface AgentToolInputMap {
   describe_table: AgentDescribeTableInput;
   export_query_result: AgentExportQueryResultInput;
   export_content: AgentExportContentInput;
+  list_schemas: AgentListSchemasInput;
+  get_table_schema: AgentGetTableSchemaInput;
+  render_erd: AgentRenderErdInput;
 }
 
 export interface AgentToolResultMap {
@@ -218,6 +299,9 @@ export interface AgentToolResultMap {
   describe_table: AgentDescribeTableResult;
   export_query_result: AgentExportFileResult;
   export_content: AgentExportFileResult;
+  list_schemas: AgentListSchemasResult;
+  get_table_schema: AgentGetTableSchemaResult;
+  render_erd: AgentRenderErdResult;
 }
 
 export type DbAgentSchemaSnapshot = Schema;
@@ -227,7 +311,6 @@ export interface DbAgentRequestBody {
   model: string;
   apiKey: string;
   messages: DbAgentMessage[];
-  selectedCommandOptions?: AgentCommandOptionId[];
   systemPrompt?: string;
   dbConnectionString?: string;
   dbType?: DatabaseClientType;
@@ -271,6 +354,11 @@ export interface AgentCodeBlock {
   code: string;
   language: string;
   isStreaming?: boolean;
+}
+
+export interface AgentMermaidBlock {
+  kind: 'mermaid';
+  code: string;
 }
 
 export interface AgentReasoningBlock {
@@ -335,6 +423,7 @@ export interface AgentQuizBlock {
 export type AgentBlock =
   | AgentTextBlock
   | AgentCodeBlock
+  | AgentMermaidBlock
   | AgentReasoningBlock
   | AgentLoadingBlock
   | AgentErrorBlock

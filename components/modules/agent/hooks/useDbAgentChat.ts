@@ -1,16 +1,30 @@
 import { lastAssistantMessageIsCompleteWithApprovalResponses } from 'ai';
 import { useAiChat } from '~/core/composables/useAiChat';
 import { useAppContext } from '~/core/contexts/useAppContext';
-import type { AgentCommandOptionId } from '../constants/command-options';
+import {
+  getAgentCommandOptionsByIds,
+  type AgentCommandOptionId,
+} from '../constants/command-options';
 import type { DbAgentMessage } from '../types';
 import {
   hasIncompleteDbAgentMessages,
   sanitizeDbAgentMessages,
 } from '../utils/sanitizeDbAgentMessages';
 
+function buildMessageWithCommandHints(
+  text: string,
+  commandOptionIds: AgentCommandOptionId[]
+): string {
+  if (commandOptionIds.length === 0) return text;
+
+  const options = getAgentCommandOptionsByIds(commandOptionIds);
+  const hints = options.map(o => `${o.label}: ${o.promptHint}`).join('\n');
+
+  return `[Tool hints]\n${hints}\n\n${text}`;
+}
+
 export function useAgentChat(sendReasoning?: Ref<boolean>) {
   const { schemaStore, connectionStore } = useAppContext();
-  const selectedCommandOptions = ref<AgentCommandOptionId[]>([]);
 
   const chat = useAiChat<DbAgentMessage>({
     api: '/api/ai/agent',
@@ -18,10 +32,6 @@ export function useAgentChat(sendReasoning?: Ref<boolean>) {
       dbConnectionString: connectionStore.selectedConnection?.connectionString,
       dbType: connectionStore.selectedConnection?.type,
       schemaSnapshots: schemaStore.activeSchemas || [],
-      selectedCommandOptions:
-        selectedCommandOptions.value.length > 0
-          ? [...selectedCommandOptions.value]
-          : undefined,
       sendReasoning: sendReasoning?.value ?? true,
     }),
     sendAutomaticallyWhen: lastAssistantMessageIsCompleteWithApprovalResponses,
@@ -46,13 +56,13 @@ export function useAgentChat(sendReasoning?: Ref<boolean>) {
     nextSelectedCommandOptions: AgentCommandOptionId[] = []
   ) => {
     repairIncompleteMessages();
-    selectedCommandOptions.value = [...nextSelectedCommandOptions];
 
-    try {
-      await chat.sendMessage(text);
-    } finally {
-      selectedCommandOptions.value = [];
-    }
+    const messageText = buildMessageWithCommandHints(
+      text,
+      nextSelectedCommandOptions
+    );
+
+    await chat.sendMessage(messageText);
   };
 
   return {

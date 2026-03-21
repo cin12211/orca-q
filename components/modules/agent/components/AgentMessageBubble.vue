@@ -6,6 +6,7 @@ import {
   BlockMessageText,
   BlockMessageMarkdown,
   BlockMessageCode,
+  BlockMessageMermaid,
   BlockMessageLoading,
   BlockMessageError,
   BlockMessageTool,
@@ -52,6 +53,7 @@ const messageText = computed(() => {
     .map(b => {
       if (b.kind === 'text' || b.kind === 'markdown') return b.content;
       if (b.kind === 'code') return b.code;
+      if (b.kind === 'mermaid') return b.code;
       return '';
     })
     .filter(Boolean)
@@ -73,30 +75,7 @@ const messageText = computed(() => {
         isUserMessage ? 'justify-end' : 'items-start',
       ]"
     >
-      <!-- <div
-        v-if="!isUserMessage"
-        class="mt-1 flex size-8 shrink-0 items-center justify-center rounded-2xl border bg-background/80 text-primary shadow-sm"
-      >
-        <img src="public/logo.png" class="w-7 rounded-full" />
-
-          <Icon name="hugeicons:ai-chat-02" class="size-4" />  
-      </div> -->
-
       <div class="min-w-0 flex-1 overflow-hidden">
-        <!-- TODO hide -->
-        <div
-          v-if="!isUserMessage && false"
-          class="text-xs flex items-center gap-1 font-medium text-muted-foreground"
-        >
-          <div
-            class="flex size-6 shrink-0 items-center justify-center rounded-full border text-primary shadow-sm"
-          >
-            <img src="public/logo.png" class="size-5 rounded-full" />
-          </div>
-
-          <div>Orca</div>
-        </div>
-
         <div
           v-for="(block, index) in message.blocks"
           :key="`${message.id}-${block.kind}-${index}`"
@@ -139,6 +118,12 @@ const messageText = computed(() => {
             :language="block.language || 'text'"
             :is-block-streaming="block.isStreaming"
             :is-streaming="isStreaming"
+          />
+
+          <BlockMessageMermaid
+            v-else-if="block.kind === 'mermaid'"
+            :id="`${message.id}-${index}`"
+            :code="block.code"
           />
 
           <BlockMessageLoading

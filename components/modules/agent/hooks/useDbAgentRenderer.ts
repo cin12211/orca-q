@@ -7,6 +7,7 @@ import {
   AgentExplainBlock,
   AgentAnomalyBlock,
   AgentDescribeBlock,
+  AgentErdBlock,
 } from '../components/tool-message';
 import type {
   AgentBlock,
@@ -29,6 +30,9 @@ export const TOOL_COMPONENT_MAP: Record<DbAgentToolName, Component> = {
   describe_table: AgentDescribeBlock,
   export_query_result: AgentExportFileBlock,
   export_content: AgentExportFileBlock,
+  list_schemas: AgentDescribeBlock,
+  get_table_schema: AgentDescribeBlock,
+  render_erd: AgentErdBlock,
 };
 
 const TOOL_LOADING_LABELS: Record<DbAgentToolName, string> = {
@@ -40,6 +44,9 @@ const TOOL_LOADING_LABELS: Record<DbAgentToolName, string> = {
   describe_table: 'Reading schema...',
   export_query_result: 'Fetching & exporting...',
   export_content: 'Preparing export...',
+  list_schemas: 'Listing schemas...',
+  get_table_schema: 'Reading table schema...',
+  render_erd: 'Building ERD diagram...',
 };
 
 const isDbAgentToolName = (toolName: string): toolName is DbAgentToolName => {
@@ -65,11 +72,14 @@ const textToBlocks = (content: string, isStreaming = false): AgentBlock[] => {
 
     pushTextBlock(blocks, content.slice(lastIndex, startIndex));
 
-    blocks.push({
-      kind: 'code',
-      language: match[1] || 'text',
-      code: match[2]?.trimEnd() || '',
-    });
+    const language = match[1] || 'text';
+    const code = match[2]?.trimEnd() || '';
+
+    if (language === 'mermaid') {
+      blocks.push({ kind: 'mermaid', code });
+    } else {
+      blocks.push({ kind: 'code', language, code });
+    }
 
     lastIndex = startIndex + match[0].length;
   }

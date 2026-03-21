@@ -4,6 +4,9 @@ import type {
   AgentDescribeTableResult,
   AgentExplainQueryResult,
   AgentGenerateQueryResult,
+  AgentGetTableSchemaResult,
+  AgentListSchemasResult,
+  AgentRenderErdResult,
   AgentVisualizeTableResult,
   DbAgentRequestBody,
   DbAgentSchemaSnapshot,
@@ -34,6 +37,8 @@ import {
   assertDatabaseAdapter,
   buildDuplicateCandidates,
   buildSchemaContext,
+  buildSchemaTableList,
+  buildTableSchemaDetail,
   buildTableSummary,
   calculateCleanScore,
   getIssueSeverity,
@@ -77,7 +82,13 @@ export function resolveActiveTools(
       AgentToolName.VisualizeTable,
       AgentToolName.ExplainQuery,
       ...(hasSnapshot
-        ? [AgentToolName.DetectAnomaly, AgentToolName.DescribeTable]
+        ? [
+            AgentToolName.DetectAnomaly,
+            AgentToolName.DescribeTable,
+            AgentToolName.ListSchemas,
+            AgentToolName.GetTableSchema,
+            AgentToolName.RenderErd,
+          ]
         : []),
       AgentToolName.AskClarification,
     ];
@@ -88,6 +99,9 @@ export function resolveActiveTools(
     ? [
         AgentToolName.GenerateQuery,
         AgentToolName.DescribeTable,
+        AgentToolName.ListSchemas,
+        AgentToolName.GetTableSchema,
+        AgentToolName.RenderErd,
         AgentToolName.ExportContent,
         AgentToolName.AskClarification,
       ]
@@ -557,6 +571,141 @@ export function createDbAgentTools({
           .max(5),
       }),
       execute: async () => ({ acknowledged: true }) as const,
+    }),
+
+    list_schemas: tool({
+      description:
+        'List all available database schemas with their table, view, and function names. ' +
+        'Use this to discover what tables exist before calling get_table_schema or generate_query.',
+      inputSchema: z.object({}),
+      execute: async () => {
+        return {
+          schemas: buildSchemaTableList(schemaSnapshots),
+        } satisfies AgentListSchemasResult;
+      },
+    }),
+
+    get_table_schema: tool({
+      description:
+        'Get detailed column, primary key, and foreign key information for a specific table. ' +
+        'Use this before generate_query when you need to know column names and types.',
+      inputSchema: z.object({
+        schemaName: z
+          .string()
+          .min(1)
+          .describe('The schema name, e.g. "public"'),
+        tableName: z.string().min(1).describe('The table name'),
+      }),
+      execute: async input => {
+        return buildTableSchemaDetail(
+          schemaSnapshots,
+          input.schemaName,
+          input.tableName
+        ) satisfies AgentGetTableSchemaResult;
+      },
+    }),
+
+    render_erd: tool({
+      description:
+        'Generate an ERD (Entity Relationship Diagram) showing tables, their columns, and foreign key relationships. ' +
+        'Use this when the user asks to visualize or draw table relationships, schema diagrams, or ERD.',
+      inputSchema: z.object({
+        tableNames: z
+          .array(z.string().min(1))
+          .min(1)
+          .max(20)
+          .describe('Table names to include in the ERD'),
+        schemaName: z
+          .string()
+          .min(1)
+          .describe('The schema name, e.g. "public"'),
+      }),
+      execute: async input => {
+        const snapshot = findSnapshotForTable(
+          schemaSnapshots,
+          input.schemaName
+        );
+        if (!snapshot?.tableDetails) {
+          throw new Error(
+            'Schema metadata is not available for ERD rendering.'
+          );
+        }
+
+        const nodes: AgentRenderErdResult['nodes'] = [];
+        const edges: AgentRenderErdResult['edges'] = [];
+        const includedTableIds = new Set<string>();
+
+        for (const requestedTable of input.tableNames) {
+          const { tableName, detail } = resolveTableDetail(
+            snapshot,
+            requestedTable
+          );
+          const tableId = `${snapshot.name}.${tableName}`;
+
+          if (includedTableIds.has(tableId)) continue;
+          includedTableIds.add(tableId);
+
+          const pkSet = new Set((detail.primary_keys ?? []).map(k => k.column));
+          const fkSet = new Set((detail.foreign_keys ?? []).map(k => k.column));
+
+          nodes.push({
+            id: tableId,
+            tableName,
+            schemaName: snapshot.name,
+            columns: (detail.columns ?? []).map(c => ({
+              name: c.name,
+              type: c.short_type_name || c.type,
+              isPrimaryKey: pkSet.has(c.name),
+              isForeignKey: fkSet.has(c.name),
+            })),
+          });
+
+          for (const fk of detail.foreign_keys ?? []) {
+            const targetId = `${fk.referenced_table_schema}.${fk.referenced_table}`;
+            edges.push({
+              id: `${tableId}.${fk.column}->${targetId}.${fk.referenced_column}`,
+              source: tableId,
+              target: targetId,
+              sourceColumn: fk.column,
+              targetColumn: fk.referenced_column,
+            });
+
+            if (!includedTableIds.has(targetId)) {
+              try {
+                const refSnapshot = findSnapshotForTable(
+                  schemaSnapshots,
+                  fk.referenced_table_schema
+                );
+                const { tableName: refTableName, detail: refDetail } =
+                  resolveTableDetail(refSnapshot, fk.referenced_table);
+                const refPkSet = new Set(
+                  (refDetail.primary_keys ?? []).map(k => k.column)
+                );
+                const refFkSet = new Set(
+                  (refDetail.foreign_keys ?? []).map(k => k.column)
+                );
+
+                includedTableIds.add(targetId);
+                nodes.push({
+                  id: targetId,
+                  tableName: refTableName,
+                  schemaName: fk.referenced_table_schema,
+                  columns: (refDetail.columns ?? []).map(c => ({
+                    name: c.name,
+                    type: c.short_type_name || c.type,
+                    isPrimaryKey: refPkSet.has(c.name),
+                    isForeignKey: refFkSet.has(c.name),
+                  })),
+                });
+              } catch {
+                // Referenced table might be in a different schema not available
+              }
+            }
+          }
+        }
+
+        return { nodes, edges } satisfies AgentRenderErdResult;
+      },
     }),
   };
 }

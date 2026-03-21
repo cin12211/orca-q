@@ -19,6 +19,73 @@ import {
 } from '~/server/infrastructure/agent/tools';
 import { getDatabaseSource } from '~/server/infrastructure/driver/db-connection';
 
+/** Tool names whose output contains large data that should be stripped from context */
+const LARGE_OUTPUT_TOOL_NAMES = new Set([
+  'export_query_result',
+  'export_content',
+  'render_table',
+]);
+
+/**
+ * Strip large tool outputs from messages to reduce context window size.
+ * Keeps metadata (filename, format, rowCount) but removes bulk content/rows.
+ */
+function filterLargeToolOutputs(
+  messages: DbAgentRequestBody['messages']
+): DbAgentRequestBody['messages'] {
+  return messages.map(message => {
+    if (message.role !== 'assistant' || !Array.isArray(message.parts)) {
+      return message;
+    }
+
+    const filteredParts = message.parts.map((part: any) => {
+      const toolName = String(part.type || '').replace(/^tool-/, '');
+
+      if (
+        !LARGE_OUTPUT_TOOL_NAMES.has(toolName) ||
+        part.state !== 'output-available' ||
+        !part.output
+      ) {
+        return part;
+      }
+
+      // Export tools: strip content but keep metadata
+      if (toolName === 'export_query_result' || toolName === 'export_content') {
+        return {
+          ...part,
+          output: {
+            filename: part.output.filename,
+            format: part.output.format,
+            fileSize: part.output.fileSize,
+            mimeType: part.output.mimeType,
+            content: '[exported — content omitted from context]',
+            encoding: part.output.encoding,
+            preview: { columns: [], rows: [], truncated: true },
+          },
+        };
+      }
+
+      // render_table: strip rows but keep columns and rowCount
+      if (toolName === 'render_table') {
+        return {
+          ...part,
+          output: {
+            sql: part.output.sql,
+            columns: part.output.columns,
+            rows: [],
+            rowCount: part.output.rowCount,
+            truncated: true,
+          },
+        };
+      }
+
+      return part;
+    });
+
+    return { ...message, parts: filteredParts };
+  });
+}
+
 function resolveDialect(
   body: DbAgentRequestBody
 ): DbAgentRequestBody['dialect'] {
@@ -65,7 +132,6 @@ export default defineEventHandler(async event => {
     apiKey,
     messages,
     dbConnectionString,
-    selectedCommandOptions,
     sendReasoning,
   } = body;
 
@@ -106,10 +172,7 @@ export default defineEventHandler(async event => {
 
     const agent = new ToolLoopAgent({
       model: providerModel,
-      instructions: buildAgentSystemPrompt(
-        schemaSnapshots,
-        selectedCommandOptions
-      ),
+      instructions: buildAgentSystemPrompt(schemaSnapshots),
       tools,
       stopWhen: ({ steps }) =>
         steps.some(s =>
@@ -122,7 +185,7 @@ export default defineEventHandler(async event => {
 
     return await createAgentUIStreamResponse({
       agent,
-      uiMessages: messages || [],
+      uiMessages: filterLargeToolOutputs(messages || []),
       sendReasoning: sendReasoning ?? true,
       experimental_transform: smoothStream(),
       sendSources: true,

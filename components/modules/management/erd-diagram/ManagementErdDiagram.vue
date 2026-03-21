@@ -55,8 +55,8 @@ const fileTreeData = computed<Record<string, FileNode>>(() => {
       name: tableName,
       type: 'file',
       depth: 1,
-      iconOpen: 'hugeicons:flowchart-01',
-      iconClose: 'hugeicons:flowchart-01',
+      iconOpen: 'hugeicons:flow-connection',
+      iconClose: 'hugeicons:flow-connection',
       data: { tabViewType: TabViewType.DetailERD },
     };
 

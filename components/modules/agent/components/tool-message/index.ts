@@ -1,6 +1,7 @@
 export { default as AgentAnomalyBlock } from './AgentAnomalyBlock.vue';
 export { default as AgentApprovalBlock } from './AgentApprovalBlock.vue';
 export { default as AgentDescribeBlock } from './AgentDescribeBlock.vue';
+export { default as AgentErdBlock } from './AgentErdBlock.vue';
 export { default as AgentExplainBlock } from './AgentExplainBlock.vue';
 export { default as AgentExportFileBlock } from './AgentExportFileBlock.vue';
 export { default as AgentQueryBlock } from './AgentQueryBlock.vue';

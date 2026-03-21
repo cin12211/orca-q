@@ -1,19 +1,10 @@
-import {
-  type AgentCommandOptionId,
-  getAgentCommandOptionsByIds,
-} from '~/components/modules/agent/constants/command-options';
 import { type DbAgentSchemaSnapshot } from '~/components/modules/agent/types';
-import { buildSchemaContext } from '../schema/schema';
+import { buildSchemaSummary } from '../schema/schema';
 
 export function buildAgentSystemPrompt(
-  schemaSnapshots?: DbAgentSchemaSnapshot[],
-  selectedCommandOptions?: AgentCommandOptionId[]
+  schemaSnapshots?: DbAgentSchemaSnapshot[]
 ): string {
-  const resolvedSchema = buildSchemaContext(schemaSnapshots);
-
-  const selectedOptions = selectedCommandOptions?.length
-    ? getAgentCommandOptionsByIds(selectedCommandOptions)
-    : [];
+  const schemaSummary = buildSchemaSummary(schemaSnapshots);
 
   // ─── Sections ──────────────────────────────────────────────────────────────
 
@@ -27,6 +18,8 @@ export function buildAgentSystemPrompt(
   const sectionAvailableTools = [
     '## Available tools',
     'Use tools whenever they can produce a structured result:',
+    '- `list_schemas` — discover available schemas and table names (call this first to learn the database structure).',
+    '- `get_table_schema` — get detailed column, key, and FK info for a specific table.',
     '- `generate_query` — convert natural language into SQL.',
     '- `render_table` — execute SQL and show structured rows.',
     '- `export_file` — package structured rows into CSV, JSON, SQL for download.',
@@ -34,6 +27,16 @@ export function buildAgentSystemPrompt(
     '- `describe_table` — schema introspection (columns, keys, relationships).',
     '- `explain_query` — performance analysis via EXPLAIN.',
     '- `detect_anomaly` — data quality scans (nulls, duplicates, orphan FKs, outliers).',
+    '- `render_erd` — generate an ERD diagram showing table relationships (dont use Mermaid when used render_erd tool).',
+    '',
+    '### Mermaid diagrams',
+    'When the user asks for a diagram, flowchart, sequence diagram, class diagram, state diagram, Gantt chart, or any visual explanation, not for ERD diagrams:',
+    '- Respond with a Mermaid code block (```mermaid ... ```) inline in your message.',
+    '- The frontend renders Mermaid automatically — do NOT describe the syntax, just output the block.',
+    '',
+    '### Mermaid diagrams vs render_erd',
+    '- Use `render_erd` for concrete ERD diagrams that reflect the actual tables, columns, and relationships in the connected database schema.',
+    '- Use Mermaid for abstract diagrams that illustrate concepts, workflows, or relationships that are NOT directly tied to the actual database schema. Examples: flowcharts of decision processes, sequence diagrams of interactions, class diagrams of conceptual entities.',
   ].join('\n');
 
   const sectionConnection = [
@@ -98,18 +101,11 @@ export function buildAgentSystemPrompt(
     '  - Do NOT call `askClarification` to confirm read-only queries — just execute them.',
   ].join('\n');
 
-  const sectionUserIntent = selectedOptions.length
-    ? [
-        '## Current user intent focus',
-        'The user explicitly selected these tool intents before sending the message:',
-        ...selectedOptions.map(o => `- ${o.label}: ${o.promptHint}`),
-        'Honor these hints when they fit the request, but do not invent missing information or bypass any approval rule.',
-      ].join('\n')
-    : null;
-
   const sectionSchema = [
-    '## Database schema (always loaded)',
-    resolvedSchema,
+    '## Database schema (summary)',
+    'Call `list_schemas` and `get_table_schema` for detailed column information.',
+    '',
+    schemaSummary,
   ].join('\n');
 
   // ─── Assemble ──────────────────────────────────────────────────────────────
@@ -122,7 +118,6 @@ export function buildAgentSystemPrompt(
     sectionMutationQueries,
     sectionRules,
     sectionClarification,
-    ...(sectionUserIntent ? [sectionUserIntent] : []),
     sectionSchema,
   ].join('\n\n');
 }

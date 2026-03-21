@@ -323,3 +323,120 @@ export function buildSchemaContext(
 
   return lines.join('\n');
 }
+
+/**
+ * Build a lightweight schema summary listing only schema names and table names.
+ * Used in the system prompt instead of the full schema dump to reduce tokens.
+ */
+export function buildSchemaSummary(
+  schemaSnapshots?: DbAgentSchemaSnapshot[]
+): string {
+  if (!schemaSnapshots?.length) {
+    return 'No schema context is currently loaded. Use `list_schemas` to discover available schemas.';
+  }
+
+  const lines: string[] = [
+    `Connected database has ${schemaSnapshots.length} schema(s):`,
+  ];
+
+  for (const snapshot of schemaSnapshots) {
+    const tableCount = snapshot.tables.length;
+    const viewCount = snapshot.views?.length ?? 0;
+    const fnCount = snapshot.functions?.length ?? 0;
+
+    const parts = [`${tableCount} tables`];
+    if (viewCount > 0) parts.push(`${viewCount} views`);
+    if (fnCount > 0) parts.push(`${fnCount} functions`);
+
+    lines.push(`- "${snapshot.name}": ${parts.join(', ')}`);
+  }
+
+  lines.push('');
+  lines.push(
+    'Use `list_schemas` to see table names, and `get_table_schema` for detailed column/key information.'
+  );
+
+  return lines.join('\n');
+}
+
+/**
+ * Build a lightweight list of schemas with their table names (no column details).
+ */
+export function buildSchemaTableList(
+  schemaSnapshots?: DbAgentSchemaSnapshot[]
+): Array<{
+  schemaName: string;
+  tables: string[];
+  views: string[];
+  functions: string[];
+}> {
+  if (!schemaSnapshots?.length) return [];
+
+  return schemaSnapshots.map(snapshot => ({
+    schemaName: snapshot.name,
+    tables: [...snapshot.tables],
+    views: (snapshot.views ?? []).map(v => v.name),
+    functions: (snapshot.functions ?? []).map(f => f.name),
+  }));
+}
+
+/**
+ * Build detailed table schema for a specific table including columns, PKs, FKs.
+ */
+export function buildTableSchemaDetail(
+  schemaSnapshots: DbAgentSchemaSnapshot[] | undefined,
+  schemaName: string,
+  tableName: string
+): {
+  schemaName: string;
+  tableName: string;
+  columns: Array<{
+    name: string;
+    type: string;
+    isPrimaryKey: boolean;
+    isForeignKey: boolean;
+    isNullable: boolean;
+  }>;
+  primaryKeys: string[];
+  foreignKeys: Array<{
+    column: string;
+    referencedSchema: string;
+    referencedTable: string;
+    referencedColumn: string;
+  }>;
+} {
+  const snapshot = schemaSnapshots?.find(
+    s => s.name.toLowerCase() === schemaName.toLowerCase()
+  );
+
+  if (!snapshot) {
+    throw new Error(`Schema "${schemaName}" not found.`);
+  }
+
+  const { tableName: canonicalName, detail } = resolveTableDetail(
+    snapshot,
+    tableName
+  );
+
+  const pkSet = new Set((detail.primary_keys ?? []).map(k => k.column));
+  const fkSet = new Set((detail.foreign_keys ?? []).map(k => k.column));
+
+  return {
+    schemaName: snapshot.name,
+    tableName: canonicalName,
+    columns: (detail.columns ?? []).map(c => ({
+      name: c.name,
+      type: c.short_type_name || c.type,
+      isPrimaryKey: pkSet.has(c.name),
+      isForeignKey: fkSet.has(c.name),
+      isNullable: c.is_nullable,
+    })),
+    primaryKeys: Array.from(pkSet),
+    foreignKeys: (detail.foreign_keys ?? []).map(fk => ({
+      column: fk.column,
+      referencedSchema: fk.referenced_table_schema,
+      referencedTable: fk.referenced_table,
+      referencedColumn: fk.referenced_column,
+    })),
+  };
+}
