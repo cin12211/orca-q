@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import Shimmer from '~/components/ai-elements/shimmer/Shimmer.vue';
+import Shimmer from '~/components/base/shimmer/Shimmer.vue';
 
 defineProps<{
   label?: string;

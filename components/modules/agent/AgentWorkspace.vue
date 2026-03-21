@@ -10,6 +10,7 @@ import {
   watch,
 } from 'vue';
 import { ScrambleText } from '#components';
+import { Badge } from '@/components/ui/badge';
 import { AIProvider, ThinkingStyle } from '~/components/modules/settings/types';
 import { useAppConfigStore } from '~/core/stores/appConfigStore';
 import AgentAttachmentPanel from './components/AgentAttachmentPanel.vue';
@@ -24,6 +25,7 @@ import type { AgentCommandOptionId } from './constants/command-options';
 import { useAgentChat } from './hooks/useDbAgentChat';
 import { useAgentRenderer } from './hooks/useDbAgentRenderer';
 import { useAgentWorkspace } from './hooks/useDbAgentWorkspace';
+import { useDbAgentAttachments } from './hooks/useDbAgentAttachments';
 import type { DbAgentMessage } from './types';
 import type { AgentExportFileResult } from './types';
 
@@ -438,6 +440,10 @@ const promptCards = computed(() => {
     'Write a query plan for the report I need before generating SQL.',
   ].filter((item): item is string => !!item);
 });
+
+const messagesRef = computed(() => renderedMessages.value);
+const { attachments } = useDbAgentAttachments(messagesRef);
+const attachmentCount = computed(() => attachments.value.length);
 </script>
 
 <template>
@@ -451,7 +457,7 @@ const promptCards = computed(() => {
       >
         <div class="absolute inset-0 flex flex-col overflow-hidden">
           <div
-            class="mx-auto shadow-xs flex w-full flex-col gap-4 px-3 py-2 lg:flex-row lg:items-center lg:justify-between border-b bg-background/50 backdrop-blur-sm"
+            class="mx-auto shadow-xs flex w-full flex-col gap-4 px-3 py-2 lg:flex-row lg:items-center lg:justify-between bg-background/50 backdrop-blur-sm"
           >
             <div
               class="flex flex-1 items-center gap-2 min-w-0 text-sm leading-4 font-medium text-foreground"
@@ -488,8 +494,16 @@ const promptCards = computed(() => {
                 size="xs"
                 variant="ghost"
                 @click="showAttachmentPanel = !showAttachmentPanel"
+                class="relative"
               >
                 Attachment <Icon name="hugeicons:attachment" class="size-3" />
+                <Badge
+                  v-if="attachmentCount > 0"
+                  variant="secondary"
+                  class="absolute -top-1 -right-1 h-4 min-w-4 px-1 text-xxs font-normal"
+                >
+                  {{ attachmentCount }}
+                </Badge>
               </Button>
 
               <Button size="xs" variant="outline" @click="handleNewThread">
