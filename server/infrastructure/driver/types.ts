@@ -10,6 +10,7 @@ export interface RawQueryResult<T = object> {
 }
 
 export interface IDatabaseAdapter {
+  readonly knex: Knex;
   readonly dbType: DatabaseClientType;
   readonly connection: string | Knex.Config['connection'];
 

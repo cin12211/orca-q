@@ -7,11 +7,13 @@ const MYSQL_PLACEHOLDER_MESSAGE =
   'MySQL adapter is a placeholder and not implemented yet.';
 
 export class MysqlAdapter implements IDatabaseAdapter {
+  public knex: Knex;
   readonly dbType = DatabaseClientType.MYSQL;
   readonly connection: string | Knex.Config['connection'];
 
   constructor(connection: string | Knex.Config['connection']) {
     this.connection = connection;
+    this.knex = {} as Knex; // Placeholder, not initialized since methods are not implemented.
   }
 
   async rawQuery<T = any>(_sql: string, _bindings: any[] = []): Promise<T[]> {

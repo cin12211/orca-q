@@ -78,11 +78,11 @@ export const getSchemaMetaDataQuery = `
          SELECT JSON_AGG(
             JSONB_BUILD_OBJECT(
               'name',
-              routine_name,
+              r.routine_name,
               'oId',
               p.oid,
               'type',
-              routine_type,
+              r.routine_type,
               'parameters',
               PG_GET_FUNCTION_ARGUMENTS(p.oid),
               'schema',
@@ -90,11 +90,10 @@ export const getSchemaMetaDataQuery = `
             )
           )
           FROM information_schema.routines r
-          JOIN pg_proc p ON p.proname = r.routine_name
-          JOIN pg_namespace n ON n.oid = p.pronamespace
+          JOIN pg_proc p
+            ON r.specific_name = r.routine_name || '_' || p.oid::text
           WHERE r.routine_schema = nsp.nspname
             AND r.specific_schema NOT IN ('pg_catalog', 'information_schema')
-            AND n.nspname = r.specific_schema
         ) AS functions,
         -- table_details
         (

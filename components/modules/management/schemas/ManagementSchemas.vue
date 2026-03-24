@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { refDebounced } from '@vueuse/core';
-import type { RouteNameFromPath, RoutePathSchema } from '@typed-router/__paths';
 import BaseContextMenu from '~/components/base/context-menu/BaseContextMenu.vue';
 import FileTree from '~/components/base/tree-folder/FileTree.vue';
 import { useSchemaTreeData } from '~/components/modules/management/schemas/hooks/useSchemaTreeData';

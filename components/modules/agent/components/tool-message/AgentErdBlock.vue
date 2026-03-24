@@ -7,7 +7,7 @@ import '@vue-flow/core/dist/theme-default.css';
 import '@vue-flow/minimap/dist/style.css';
 import '@vue-flow/node-resizer/dist/style.css';
 import ErdDiagram from '~/components/modules/erd-diagram/ErdDiagram.vue';
-import ValueNode from '~/components/modules/erd-diagram/ValueNode.vue';
+import ErdTableNode from '~/components/modules/erd-diagram/ErdTableNode.vue';
 import CustomEdge from '~/components/modules/erd-diagram/components/CustomEdge.vue';
 import {
   DEFAULT_ZOOM,
@@ -109,7 +109,7 @@ const toggleFullscreen = () => {
           <CustomEdge v-bind="edgeProps" />
         </template>
         <template #node-value="nodeProps">
-          <ValueNode v-bind="nodeProps" />
+          <ErdTableNode v-bind="nodeProps" />
         </template>
         <Background :size="2" :gap="30" />
       </VueFlow>

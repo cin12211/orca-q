@@ -2,16 +2,16 @@
   <div class="flex flex-1 flex-col h-full">
     <div class="flex flex-1 h-full items-center justify-between">
       <Tabs v-model="tab" class="pt-1">
-        <TabsList class="grid grid-cols-2 h-[1.625rem]!">
+        <TabsList class="h-7!">
           <TabsTrigger
             :value="HistoryLogTabs.All"
-            class="h-5! px-1 font-medium text-xs cursor-pointer text-primary/80"
+            class="h-5! font-medium text-xs cursor-pointer text-primary/80"
           >
             All logs
           </TabsTrigger>
           <TabsTrigger
             :value="HistoryLogTabs.OneTable"
-            class="h-5! px-1 font-medium text-xs cursor-pointer text-primary/80"
+            class="h-5! font-medium text-xs cursor-pointer text-primary/80"
           >
             Only this table
           </TabsTrigger>
@@ -62,11 +62,15 @@
       </div>
     </div>
 
-    <BaseEmpty
+    <div
       v-if="!logs.length"
-      title="No logs found"
-      desc="There are no execution logs to display for this table."
-    />
+      class="flex items-center justify-center h-full w-full"
+    >
+      <BaseEmpty
+        title="No logs found"
+        desc="There are no execution logs to display for this table."
+      />
+    </div>
 
     <Card
       v-else

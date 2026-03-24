@@ -4,7 +4,7 @@ import { DatabaseClientType } from '~/core/constants/database-client-type';
 import type { IDatabaseAdapter, RawQueryResult } from './types';
 
 export abstract class BaseDatabaseAdapter implements IDatabaseAdapter {
-  protected knex: Knex;
+  public knex: Knex;
   public readonly dbType: DatabaseClientType;
   public readonly connection: string | Knex.Config['connection'];
 

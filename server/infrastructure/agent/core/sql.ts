@@ -9,6 +9,7 @@ const SELECT_PATTERN = /^(select|with|values|table)\b/i;
 const MUTATION_PATTERN =
   /^(insert|update|delete|drop|truncate|alter|create|grant|revoke|comment|refresh|vacuum)\b/i;
 
+//TODO: just remove
 const POSTGRES_OID_TYPE_MAP: Record<number, string> = {
   16: 'bool',
   20: 'int8',

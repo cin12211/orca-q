@@ -322,6 +322,7 @@ export const useTabViewsStore = defineStore(
       closeOtherTab,
       closeToTheRight,
       onActiveCurrentTab,
+      loadPersistData,
     };
   },
   {

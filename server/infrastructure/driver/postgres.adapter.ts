@@ -7,11 +7,31 @@ import type { RawQueryResult } from './types';
 
 // Disable pg's automatic type conversions for temporal and precision-sensitive types.
 const RAW = (val: string) => val;
+
 const TEMPORAL_OIDS = [
-  1082, 1083, 1114, 1184, 1266, 1182, 1183, 1115, 1185, 1270,
+  1082, // date
+  1083, // time
+  1114, // timestamp
+  1184, // timestamptz
+  1266, // timetz
+  1182, // date[]
+  1183, // time[]
+  1115, // timestamp[]
+  1185, // timestamptz[]
+  1270, // timetz[]
 ] as const;
-const PRECISION_OIDS = [1700, 1231, 20, 1016] as const;
-[...TEMPORAL_OIDS, ...PRECISION_OIDS].forEach(oid =>
+
+// const PRECISION_OIDS = [
+//   1700, // numeric
+//   1231, // numeric[]
+//   20, // int8 (bigint)
+//   1016, // int8[] (bigint[])
+// ] as const;
+
+[
+  ...TEMPORAL_OIDS,
+  //...PRECISION_OIDS
+].forEach(oid =>
   pg.types.setTypeParser(
     oid as Parameters<typeof pg.types.setTypeParser>[0],
     RAW

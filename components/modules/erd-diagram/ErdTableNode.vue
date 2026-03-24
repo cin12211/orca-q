@@ -6,12 +6,12 @@ import { HANDLE_HEIGHT, HANDLE_LEFT, ROW_HEIGHT, ROW_WIDTH } from './constants';
 import type { LabelTableNode } from './type';
 import { buildTableNodeId, focusNodeById, getHandPosition } from './utils';
 
-export interface ValueNodeProps extends NodeProps<TableMetadata> {
+export interface ErdTableNodeProps extends NodeProps<TableMetadata> {
   isExpanded?: boolean;
   hasRelations?: boolean;
 }
 
-const props = defineProps<ValueNodeProps>();
+const props = defineProps<ErdTableNodeProps>();
 
 const emit = defineEmits<{
   (e: 'expand', tableId: string): void;
@@ -113,7 +113,7 @@ const onFocusNode = (
 <template>
   <div class="table-node text-foreground">
     <div
-      class="flex flex-col rounded-md bg-card"
+      class="flex flex-col rounded-md bg-card overflow-hidden"
       :style="{ width: ROW_WIDTH + 'px' }"
     >
       <div

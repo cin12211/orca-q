@@ -50,8 +50,12 @@ defineEmits<{
 </script>
 <template>
   <div class="h-fit py-1 flex items-center justify-between px-2">
-    <div class="font-normal text-xs text-muted-foreground">
-      Ln {{ cursorInfo.line }}, Col {{ cursorInfo.column }}
+    <div class="flex items-center gap-2">
+      <div class="font-normal text-xs text-muted-foreground">
+        Ln {{ cursorInfo.line }}, Col {{ cursorInfo.column }}
+      </div>
+
+      <RawQueryVariableUsageGuidePopover />
     </div>
 
     <div

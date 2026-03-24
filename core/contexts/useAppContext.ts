@@ -167,6 +167,12 @@ export const useAppContext = () => {
       isRefresh: false,
     });
 
+    // Ensure persisted tabs are loaded, then restore the previously active tab.
+    // The watcher in useTabViewsStore fires asynchronously; we await explicitly
+    // so tab navigation always has the full tab list available.
+    await tabViewStore.loadPersistData();
+    await tabViewStore.onActiveCurrentTab(connId);
+
     await onSuccess?.();
   };
 

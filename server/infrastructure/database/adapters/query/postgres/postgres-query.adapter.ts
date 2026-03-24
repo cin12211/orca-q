@@ -48,7 +48,23 @@ export class PostgresQueryAdapter
     params?: any[] | Record<string, any>
   ): Promise<RawQueryResultWithMetadata> {
     const startTime = performance.now();
-    const result = await this.adapter.rawOut(query, params as any[]);
+
+    const mappingParams: Record<string, any> = {};
+
+    if (params) {
+      for (const [key, value] of Object.entries(params)) {
+        if (Array.isArray(value)) {
+          mappingParams[key] = this.adapter.knex.raw(
+            value.map(() => '?').join(', '),
+            value
+          );
+        } else {
+          mappingParams[key] = value;
+        }
+      }
+    }
+
+    const result = await this.adapter.rawOut(query, mappingParams as any[]);
     const endTime = performance.now();
 
     return {
@@ -70,8 +86,27 @@ export class PostgresQueryAdapter
     res.setHeader('Transfer-Encoding', 'chunked');
     res.setHeader('X-Content-Type-Options', 'nosniff');
 
+    const mappingParams: Record<string, any> = {};
+
+    if (params) {
+      for (const [key, value] of Object.entries(params)) {
+        if (Array.isArray(value)) {
+          mappingParams[key] = this.adapter.knex.raw(
+            value.map(() => '?').join(', '),
+            value
+          );
+        } else {
+          mappingParams[key] = value;
+        }
+      }
+    }
+
     const startTime = performance.now();
-    const { bindings, sql } = this.adapter.getNativeSql(query, params || {});
+    const { bindings, sql } = this.adapter.getNativeSql(
+      query,
+      mappingParams || {}
+    );
+
     const client = await this.adapter.acquireRawConnection();
 
     /** Write a single NDJSON line to the response. */
