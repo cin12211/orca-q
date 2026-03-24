@@ -1,22 +1,21 @@
 <script setup lang="ts">
+import { storeToRefs } from 'pinia';
 import { Select, SelectGroup, SelectItem, SelectTrigger } from '#components';
 import type { AcceptableValue } from 'reka-ui';
 import { cn } from '@/lib/utils';
+import { useWorkspaceConnectionRoute } from '~/core/composables/useWorkspaceConnectionRoute';
 import { useAppContext } from '~/core/contexts/useAppContext';
 import { type Connection } from '~/core/stores';
+import { useManagementConnectionStore } from '~/core/stores/managementConnectionStore';
 import { CreateConnectionModal } from '../connection';
 import { getDatabaseSupportByType } from '../connection';
 
-const {
-  connectionStore,
-  createConnection,
-  wsStateStore,
-  openWorkspaceWithConnection,
-} = useAppContext();
+const { createConnection, openWorkspaceWithConnection } = useAppContext();
+const connectionStore = useManagementConnectionStore();
 
-const { connectionId: activeConnectionId } = toRefs(wsStateStore);
+const { connectionId: activeConnectionId } = useWorkspaceConnectionRoute();
 
-const { selectedConnection } = toRefs(connectionStore);
+const { selectedConnection } = storeToRefs(connectionStore);
 
 const props = defineProps<{ class: string; workspaceId: string }>();
 

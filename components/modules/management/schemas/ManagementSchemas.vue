@@ -1,11 +1,14 @@
 <script setup lang="ts">
 import { refDebounced } from '@vueuse/core';
+import { storeToRefs } from 'pinia';
 import BaseContextMenu from '~/components/base/context-menu/BaseContextMenu.vue';
 import FileTree from '~/components/base/tree-folder/FileTree.vue';
 import { useSchemaTreeData } from '~/components/modules/management/schemas/hooks/useSchemaTreeData';
 import { useTabManagement } from '~/core/composables/useTabManagement';
+import { useWorkspaceConnectionRoute } from '~/core/composables/useWorkspaceConnectionRoute';
 import { DEFAULT_DEBOUNCE_INPUT } from '~/core/constants';
 import { useAppContext } from '~/core/contexts/useAppContext';
+import { useSchemaStore, useWSStateStore } from '~/core/stores';
 import { TabViewType, useTabViewsStore } from '~/core/stores/useTabViewsStore';
 import SafeModeConfirmDialog from '../../quick-query/SafeModeConfirmDialog.vue';
 import { ManagementSidebarHeader } from '../shared';
@@ -13,14 +16,17 @@ import RenameDialog from './dialogs/RenameDialog.vue';
 import SqlPreviewDialog from './dialogs/SqlPreviewDialog.vue';
 import { useSchemaContextMenu } from './hooks/useSchemaContextMenu';
 
-const { schemaStore, connectToConnection, wsStateStore } = useAppContext();
+const { connectToConnection } = useAppContext();
+const schemaStore = useSchemaStore();
+const wsStateStore = useWSStateStore();
 
 const tabViewStore = useTabViewsStore();
 
 const { openSchemaItemTab } = useTabManagement();
 
-const { activeSchema } = toRefs(schemaStore);
-const { connectionId, schemaId, workspaceId } = toRefs(wsStateStore);
+const { activeSchema } = storeToRefs(schemaStore);
+const { connectionId, workspaceId } = useWorkspaceConnectionRoute();
+const { schemaId } = storeToRefs(wsStateStore);
 
 const isRefreshing = ref(false);
 

@@ -1,4 +1,5 @@
-import { useAppContext } from '~/core/contexts';
+import { storeToRefs } from 'pinia';
+import { useSchemaStore } from '~/core/stores';
 
 export const useReferencedTables = ({
   schemaName,
@@ -7,8 +8,8 @@ export const useReferencedTables = ({
   schemaName: string;
   tableName: string;
 }) => {
-  const { schemaStore } = useAppContext();
-  const { activeReservedSchemas } = toRefs(schemaStore);
+  const schemaStore = useSchemaStore();
+  const { activeReservedSchemas } = storeToRefs(schemaStore);
 
   const reverseTables = computed(() => {
     const tables = activeReservedSchemas.value || [];

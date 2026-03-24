@@ -26,7 +26,7 @@ import { parseConnectionString } from '~/core/helpers/parser-connection-string';
 import { type Connection } from '~/core/stores';
 import { getDatabaseSupportByType } from '../constants';
 
-const { tabViewStore, openWorkspaceWithConnection } = useAppContext();
+const { openWorkspaceWithConnection } = useAppContext();
 
 defineProps<{
   connections: Connection[];

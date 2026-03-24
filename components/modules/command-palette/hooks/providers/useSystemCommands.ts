@@ -1,4 +1,5 @@
 import { useTabManagement } from '~/core/composables/useTabManagement';
+import { useWorkspaceConnectionRoute } from '~/core/composables/useWorkspaceConnectionRoute';
 import { useAppContext } from '~/core/contexts/useAppContext';
 import { useChangelogModal } from '~/core/contexts/useChangelogModal';
 import { useSettingsModal } from '~/core/contexts/useSettingsModal';
@@ -18,9 +19,9 @@ export function useSystemCommands(): CommandProvider {
   const settingsModal = useSettingsModal();
   const changelogModal = useChangelogModal();
   const { openInstanceInsightsTab } = useTabManagement();
+  const { workspaceId, connectionId } = useWorkspaceConnectionRoute();
 
-  const { connectToConnection, wsStateStore, tabViewStore, connectionStore } =
-    useAppContext();
+  const { connectToConnection } = useAppContext();
 
   /** Static system commands */
   const staticCommands: Omit<CommandItem, 'execute'>[] = [
@@ -92,8 +93,8 @@ export function useSystemCommands(): CommandProvider {
     );
     map.set('cmd-settings-agent', () => settingsModal.openSettings('Agent'));
     map.set('cmd-reload-schema', async () => {
-      const connId = wsStateStore.connectionId;
-      const wsId = wsStateStore.workspaceId;
+      const connId = connectionId.value;
+      const wsId = workspaceId.value;
       if (!connId || !wsId) return;
       await connectToConnection({ connId, wsId, isRefresh: true });
     });

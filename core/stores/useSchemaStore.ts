@@ -1,6 +1,7 @@
-import { defineStore } from 'pinia';
-import { ref, computed, toRefs } from 'vue';
+import { defineStore, storeToRefs } from 'pinia';
+import { ref, computed } from 'vue';
 import { getConnectionParams } from '@/core/helpers/connection-helper';
+import { useWorkspaceConnectionRoute } from '~/core/composables/useWorkspaceConnectionRoute';
 import type {
   ReservedTableSchemas,
   TableIndex,
@@ -37,7 +38,8 @@ export const useSchemaStore = defineStore(
   'schema-store',
   () => {
     const wsStateStore = useWSStateStore();
-    const { wsState, connectionId, schemaId } = toRefs(wsStateStore);
+    const { connectionId } = useWorkspaceConnectionRoute();
+    const { wsState, schemaId } = storeToRefs(wsStateStore);
 
     const schemas = ref<Record<string, Schema[]>>({});
 

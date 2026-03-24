@@ -5,7 +5,7 @@ import DatabasePermissionCard from '~/components/modules/management/role-permiss
 import GrantRevokeDialog from '~/components/modules/management/role-permission/components/GrantRevokeDialog.vue';
 import RoleAttributesCard from '~/components/modules/management/role-permission/components/RoleAttributesCard.vue';
 import { useDatabasePermissions } from '~/components/modules/management/role-permission/hooks/useDatabaseRoles';
-import { useAppContext } from '~/core/contexts/useAppContext';
+import { useManagementConnectionStore } from '~/core/stores/managementConnectionStore';
 import type {
   RolePermissions,
   ObjectPermission,
@@ -20,7 +20,7 @@ definePageMeta({
 });
 
 const route = useRoute('workspaceId-connectionId-user-permissions-roleName');
-const { connectionStore } = useAppContext();
+const connectionStore = useManagementConnectionStore();
 
 const roleName = computed(() => route.params.roleName as string);
 const connection = computed(() => connectionStore.selectedConnection);

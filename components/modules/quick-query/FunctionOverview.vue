@@ -1,11 +1,13 @@
 <script setup lang="ts">
+import { storeToRefs } from 'pinia';
 import { DynamicTable } from '#components';
 import { getConnectionParams } from '@/core/helpers/connection-helper';
-import { useAppContext } from '~/core/contexts/useAppContext';
 import {
   buildMappedColumnsFromKeys,
   buildMappedColumnsFromRows,
 } from '~/core/helpers';
+import { useWSStateStore } from '~/core/stores';
+import { useManagementConnectionStore } from '~/core/stores/managementConnectionStore';
 
 const FUNCTION_OVERVIEW_COLUMN_KEYS = [
   'name',
@@ -19,8 +21,9 @@ const props = defineProps<{
   connectionId?: string;
 }>();
 
-const { connectionStore, wsStateStore } = useAppContext();
-const { schemaId } = toRefs(wsStateStore);
+const connectionStore = useManagementConnectionStore();
+const wsStateStore = useWSStateStore();
+const { schemaId } = storeToRefs(wsStateStore);
 
 const connection = computed(() => {
   if (props.connectionId) {

@@ -6,9 +6,10 @@ import {
 } from '~/components/base/context-menu/menuContext.type';
 import type { FileNode } from '~/components/base/tree-folder/types';
 import { useAgentWorkspace } from '~/components/modules/agent/hooks/useDbAgentWorkspace';
+import { useWorkspaceConnectionRoute } from '~/core/composables/useWorkspaceConnectionRoute';
 import { DEFAULT_DEBOUNCE_INPUT } from '~/core/constants';
-import { useAppContext } from '~/core/contexts/useAppContext';
-import { TabViewType } from '~/core/stores/useTabViewsStore';
+import { useWSStateStore } from '~/core/stores';
+import { TabViewType, useTabViewsStore } from '~/core/stores/useTabViewsStore';
 
 type UseManagementAgentHistoryTreeOptions = {
   collapseAll: () => void;
@@ -38,8 +39,9 @@ const includeDescendants = (
 export const useManagementAgentHistoryTree = (
   options: UseManagementAgentHistoryTreeOptions
 ) => {
-  const { wsStateStore, tabViewStore } = useAppContext();
-  const { workspaceId, connectionId } = toRefs(wsStateStore);
+  const wsStateStore = useWSStateStore();
+  const tabViewStore = useTabViewsStore();
+  const { workspaceId, connectionId } = useWorkspaceConnectionRoute();
   const searchInput = shallowRef('');
   const debouncedSearch = refDebounced(searchInput, DEFAULT_DEBOUNCE_INPUT);
   const contextMenuItems = ref<ContextMenuItem[]>([]);

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { storeToRefs } from 'pinia';
 import {
   acceptCompletion,
   startCompletion,
@@ -25,17 +26,17 @@ import {
 import { pgKeywordCompletion } from '~/components/base/code-editor/utils/pgKeywordCompletion';
 import QuickQueryErrorPopup from '~/components/modules/quick-query/QuickQueryErrorPopup.vue';
 import FunctionControlBar from '~/components/modules/quick-query/function-control-bar/FunctionControlBar.vue';
-import { useAppContext } from '~/core/contexts/useAppContext';
-import { useQuickQueryLogs } from '~/core/stores';
+import { useQuickQueryLogs, useSchemaStore } from '~/core/stores';
+import { useManagementConnectionStore } from '~/core/stores/managementConnectionStore';
 
 const props = defineProps<{
   functionId: string;
   connectionId?: string;
 }>();
 
-const { connectionStore, schemaStore } = useAppContext();
-const { activeSchema } = toRefs(schemaStore);
-const qqLogStore = useQuickQueryLogs();
+const connectionStore = useManagementConnectionStore();
+const schemaStore = useSchemaStore();
+const { activeSchema } = storeToRefs(schemaStore);
 
 const code = ref('');
 const originalCode = ref('');

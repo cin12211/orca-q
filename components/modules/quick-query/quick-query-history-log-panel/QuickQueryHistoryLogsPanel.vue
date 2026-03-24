@@ -133,6 +133,7 @@
 
 <script setup lang="ts">
 import { useElementSize } from '@vueuse/core';
+import { storeToRefs } from 'pinia';
 import { computed, ref, useTemplateRef } from 'vue';
 import { Tooltip, TooltipContent, TooltipTrigger } from '#components';
 import plsql from '@shikijs/langs/plsql';
@@ -160,14 +161,14 @@ const props = defineProps<{
 const tab = ref<HistoryLogTabs>(HistoryLogTabs.All);
 
 const qqLogStore = useQuickQueryLogs();
-const { getLogsByTableId, qqLogs } = toRefs(qqLogStore);
+const { qqLogs } = storeToRefs(qqLogStore);
 
 const logs = computed(() => {
   if (tab.value === HistoryLogTabs.All) {
     return qqLogs.value;
   }
 
-  return getLogsByTableId.value(props);
+  return qqLogStore.getLogsByTableId(props);
 });
 
 const wrapperRef = useTemplateRef('wrapperRef');

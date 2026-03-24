@@ -1,7 +1,8 @@
-import { defineStore } from 'pinia';
+import { defineStore, storeToRefs } from 'pinia';
 import { ref } from 'vue';
 import { reorder } from '@atlaskit/pragmatic-drag-and-drop/reorder';
 import type { RouteNameFromPath, RoutePathSchema } from '@typed-router/__paths';
+import { useWorkspaceConnectionRoute } from '~/core/composables/useWorkspaceConnectionRoute';
 import { useWSStateStore } from './useWSStateStore';
 
 export enum TabViewType {
@@ -94,7 +95,8 @@ export const useTabViewsStore = defineStore(
   'tab-views',
   () => {
     const wsStateStore = useWSStateStore();
-    const { workspaceId, connectionId, tabViewId } = toRefs(wsStateStore);
+    const { workspaceId, connectionId } = useWorkspaceConnectionRoute();
+    const { tabViewId } = storeToRefs(wsStateStore);
 
     const tabViews = ref<TabView[]>([]);
 
@@ -115,6 +117,103 @@ export const useTabViewsStore = defineStore(
         connectionId: connectionId.value,
         workspaceId: workspaceId.value,
         tabViewId: tabId,
+      });
+    };
+
+    const logMissingTab = (tabId: string) => {
+      console.error(`Tab with ID ${tabId} does not exist.`);
+    };
+
+    const getTabById = (tabId: string) =>
+      tabViews.value.find(tab => tab.id === tabId);
+
+    const getTabIndexById = (tabId: string) =>
+      tabViews.value.findIndex(tab => tab.id === tabId);
+
+    const getDeletePayload = (
+      tab: Pick<TabView, 'connectionId' | 'schemaId' | 'id'>
+    ) => ({
+      connectionId: tab.connectionId,
+      schemaId: tab.schemaId,
+      id: tab.id,
+    });
+
+    const removeTabsFromState = (tabIds: string[]) => {
+      if (!tabIds.length) {
+        return;
+      }
+
+      const tabIdsSet = new Set(tabIds);
+      tabViews.value = tabViews.value.filter(tab => !tabIdsSet.has(tab.id));
+    };
+
+    const navigateToConnectionRoot = async (params?: {
+      workspaceId?: string;
+      connectionId?: string;
+    }) => {
+      const nextWorkspaceId = params?.workspaceId ?? workspaceId.value;
+      const nextConnectionId = params?.connectionId ?? connectionId.value;
+
+      if (!nextWorkspaceId || !nextConnectionId) {
+        return;
+      }
+
+      await navigateTo({
+        name: 'workspaceId-connectionId',
+        params: {
+          workspaceId: nextWorkspaceId,
+          connectionId: nextConnectionId,
+        },
+        replace: true,
+      });
+    };
+
+    const scrollTabIntoView = async (tabId: string) => {
+      await nextTick();
+      const tabElement = document.getElementById(tabId);
+      tabElement?.scrollIntoView({
+        inline: 'nearest',
+        block: 'nearest',
+        behavior: 'auto',
+      });
+    };
+
+    const deletePersistedTab = async (tab: TabView) => {
+      await window.tabViewsApi.delete(getDeletePayload(tab));
+    };
+
+    const deletePersistedTabs = async (tabs: TabView[]) => {
+      if (!tabs.length) {
+        return;
+      }
+
+      await window.tabViewsApi.bulkDelete(tabs.map(getDeletePayload));
+    };
+
+    const getAdjacentTabOnClose = (tabId: string) => {
+      const currentIndex = getTabIndexById(tabId);
+
+      if (currentIndex === -1) {
+        return;
+      }
+
+      return (
+        tabViews.value[currentIndex + 1] ?? tabViews.value[currentIndex - 1]
+      );
+    };
+
+    const navigateAwayFromClosingTab = async (tab: TabView) => {
+      const adjacentTab = getAdjacentTabOnClose(tab.id);
+
+      if (adjacentTab) {
+        await selectTab(adjacentTab.id);
+        return;
+      }
+
+      await onSetTabId(undefined);
+      await navigateToConnectionRoot({
+        workspaceId: tab.workspaceId,
+        connectionId: tab.connectionId,
       });
     };
 
@@ -147,14 +246,15 @@ export const useTabViewsStore = defineStore(
     };
 
     const selectTab = async (tabId: string) => {
-      const tab = tabViews.value?.find(t => t.id === tabId);
+      const tab = getTabById(tabId);
 
       if (tab) {
-        navigateTo({
+        await navigateTo({
           name: tab.routeName,
           params: {
             ...tab.routeParams,
-            workspaceId: workspaceId.value,
+            workspaceId: tab.workspaceId,
+            connectionId: tab.connectionId,
           } as any,
         });
 
@@ -162,65 +262,31 @@ export const useTabViewsStore = defineStore(
         // Scroll the active tab into view in the tab bar without stealing
         // DOM focus — programmatic .focus() would pull focus away from the
         // editor (e.g. CodeMirror) in pages like the raw-query explorer.
-        await nextTick();
-        const tabElement = document.getElementById(tabId);
-        tabElement?.scrollIntoView({
-          inline: 'nearest',
-          block: 'nearest',
-          behavior: 'auto',
-        });
+        await scrollTabIntoView(tabId);
       } else {
-        console.error(`Tab with ID ${tabId} does not exist.`);
+        logMissingTab(tabId);
         // throw new Error(`Tab with ID ${tabId} does not exist.`);
 
-        navigateTo({
-          name: 'workspaceId-connectionId',
-          replace: true,
-        });
+        await navigateToConnectionRoot();
       }
     };
 
     const closeTab = async (tabId: string) => {
-      if (!wsStateStore.schemaId || !connectionId.value) {
-        throw new Error('No schema or connection selected or schema selected');
-      }
+      const tabToClose = getTabById(tabId);
 
-      const index = tabViews.value.findIndex(t => t.id === tabId);
-
-      await window.tabViewsApi.delete({
-        connectionId: connectionId.value,
-        schemaId: wsStateStore.schemaId,
-        id: tabId,
-      });
-
-      if (index !== -1) {
-        const wasActive = activeTab.value?.id === tabId;
-        tabViews.value.splice(index, 1);
-
-        if (tabViews.value.length <= 0) {
-          await onSetTabId(undefined);
-
-          navigateTo({
-            name: 'workspaceId-connectionId',
-            replace: true,
-          });
-          return;
+      if (tabToClose) {
+        // Leave the current route before removing the tab backing it.
+        if (activeTab.value?.id === tabId) {
+          await navigateAwayFromClosingTab(tabToClose);
         }
 
-        if (wasActive) {
-          // Select the next tab, or the previous tab if no next tab exists
-          const nextIndex = index < tabViews.value.length ? index : index - 1;
-
-          await selectTab(tabViews.value[nextIndex].id);
-        }
+        await deletePersistedTab(tabToClose);
+        removeTabsFromState([tabId]);
       } else {
-        console.error(`Tab with ID ${tabId} does not exist.`);
+        logMissingTab(tabId);
         // throw new Error(`Tab with ID ${tabId} does not exist.`);
 
-        navigateTo({
-          name: 'workspaceId-connectionId',
-          replace: true,
-        });
+        await navigateToConnectionRoot();
       }
     };
 
@@ -233,39 +299,35 @@ export const useTabViewsStore = defineStore(
     };
 
     const closeOtherTab = async (tabId: string) => {
-      const removeTabIds = [...tabViews.value]
-        .filter(t => t.id !== tabId)
-        .map(t => {
-          return {
-            connectionId: t.connectionId,
-            schemaId: t.schemaId,
-            id: t.id,
-          };
-        });
+      const currentTab = getTabById(tabId);
 
-      await window.tabViewsApi.bulkDelete(removeTabIds);
+      if (!currentTab) {
+        logMissingTab(tabId);
+        await navigateToConnectionRoot();
+        return;
+      }
 
-      tabViews.value = tabViews.value.filter(t => t.id === tabId);
+      const tabsToRemove = tabViews.value.filter(tab => tab.id !== tabId);
+
+      await deletePersistedTabs(tabsToRemove);
+      removeTabsFromState(tabsToRemove.map(tab => tab.id));
 
       await selectTab(tabId);
     };
 
     const closeToTheRight = async (tabId: string) => {
-      const currentTabIndex = tabViews.value.findIndex(t => t.id === tabId);
+      const currentTabIndex = getTabIndexById(tabId);
 
-      const removeTabIds = [...tabViews.value]
-        .slice(currentTabIndex + 1)
-        .map(t => {
-          return {
-            connectionId: t.connectionId,
-            schemaId: t.schemaId,
-            id: t.id,
-          };
-        });
+      if (currentTabIndex === -1) {
+        logMissingTab(tabId);
+        await navigateToConnectionRoot();
+        return;
+      }
 
-      await window.tabViewsApi.bulkDelete(removeTabIds);
+      const tabsToRemove = tabViews.value.slice(currentTabIndex + 1);
 
-      tabViews.value.splice(currentTabIndex + 1);
+      await deletePersistedTabs(tabsToRemove);
+      removeTabsFromState(tabsToRemove.map(tab => tab.id));
 
       await selectTab(tabId);
     };
@@ -280,7 +342,7 @@ export const useTabViewsStore = defineStore(
         connectionId: connectionId.value,
         workspaceId: workspaceId.value,
       });
-      tabViews.value = load;
+      tabViews.value = load ?? [];
     };
 
     // loadPersistData();
@@ -297,12 +359,9 @@ export const useTabViewsStore = defineStore(
 
     const onActiveCurrentTab = async (connectionId: string) => {
       if (!tabViewId.value) {
-        navigateTo({
-          name: 'workspaceId-connectionId',
-          params: {
-            workspaceId: workspaceId.value || '',
-            connectionId: connectionId,
-          },
+        await navigateToConnectionRoot({
+          workspaceId: workspaceId.value || '',
+          connectionId,
         });
 
         console.error('tabViewId not found');

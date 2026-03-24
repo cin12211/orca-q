@@ -5,8 +5,8 @@ import {
   type ISSLConfig,
   type ISSHConfig,
 } from '~/components/modules/connection';
+import { useWorkspaceConnectionRoute } from '~/core/composables/useWorkspaceConnectionRoute';
 import { DatabaseClientType } from '~/core/constants/database-client-type';
-import { useWSStateStore } from './useWSStateStore';
 
 export interface Connection {
   workspaceId: string;
@@ -29,14 +29,15 @@ export interface Connection {
 export const useManagementConnectionStore = defineStore(
   'management-connection',
   () => {
-    const wsStateStore = useWSStateStore();
-    const { workspaceId, connectionId } = toRefs(wsStateStore);
+    const { workspaceId, connectionId } = useWorkspaceConnectionRoute();
 
     const connections = ref<Connection[]>([]);
 
     const selectedConnection = computed(() => {
       return connections.value.find(
-        connection => connection.id === connectionId.value
+        connection =>
+          connection.id === connectionId.value &&
+          connection.workspaceId === workspaceId.value
       );
     });
 

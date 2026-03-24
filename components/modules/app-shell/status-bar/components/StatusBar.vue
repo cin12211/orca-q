@@ -1,19 +1,21 @@
 <script setup lang="ts">
+import { storeToRefs } from 'pinia';
 import { useTabManagement } from '~/core/composables/useTabManagement';
-import { useAppContext } from '~/core/contexts/useAppContext';
+import { useWorkspaceConnectionRoute } from '~/core/composables/useWorkspaceConnectionRoute';
 import { useChangelogModal } from '~/core/contexts/useChangelogModal';
 import { useSettingsModal } from '~/core/contexts/useSettingsModal';
 import { TabViewType } from '~/core/stores';
+import { useTabViewsStore } from '~/core/stores/useTabViewsStore';
 import CurrentPositionPath from './CurrentPositionPath.vue';
 
-const { tabViewStore, wsStateStore, connectionStore } = useAppContext();
+const tabViewStore = useTabViewsStore();
 const { openChangelog } = useChangelogModal();
 const { openSettings } = useSettingsModal();
 const { openInstanceInsightsTab } = useTabManagement();
 const config = useRuntimeConfig();
 
-const { activeTab } = toRefs(tabViewStore);
-const { workspaceId, connectionId } = toRefs(wsStateStore);
+const { activeTab } = storeToRefs(tabViewStore);
+const { workspaceId, connectionId } = useWorkspaceConnectionRoute();
 
 const canOpenInstanceInsights = computed(
   () => !!workspaceId.value && !!connectionId.value

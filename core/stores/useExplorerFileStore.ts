@@ -5,6 +5,7 @@ import {
   TreeManager,
   type TreeFileSystemItem,
 } from '~/components/base/Tree/treeManagement';
+import { useWorkspaceConnectionRoute } from '~/core/composables/useWorkspaceConnectionRoute';
 
 export type RowQueryFile = TreeFileSystemItem;
 
@@ -17,7 +18,7 @@ export interface RowQueryFileContent {
 export const useExplorerFileStore = defineStore(
   'explorerFile-store',
   () => {
-    const route = useRoute('workspaceId');
+    const { workspaceId } = useWorkspaceConnectionRoute();
 
     const treeNodeRef = ref<InstanceType<typeof TreeManager>>(
       new TreeManager([])
@@ -144,12 +145,12 @@ export const useExplorerFileStore = defineStore(
     };
 
     watch(
-      () => route.params.workspaceId,
-      async workspaceId => {
-        if (!workspaceId) {
+      workspaceId,
+      async currentWorkspaceId => {
+        if (!currentWorkspaceId) {
           return;
         }
-        await initLoadRowQuery(workspaceId as string);
+        await initLoadRowQuery(currentWorkspaceId);
       },
       {
         immediate: true,

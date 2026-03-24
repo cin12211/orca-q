@@ -1,7 +1,7 @@
 import { buildTableNodeId } from '~/components/modules/erd-diagram/utils';
+import { useWorkspaceConnectionRoute } from '~/core/composables/useWorkspaceConnectionRoute';
 import { useSchemaStore } from '~/core/stores/useSchemaStore';
 import { TabViewType, useTabViewsStore } from '~/core/stores/useTabViewsStore';
-import { useWSStateStore } from '~/core/stores/useWSStateStore';
 import type {
   CommandItem,
   CommandProvider,
@@ -17,7 +17,7 @@ const PREFIX = {
 export function useErdCommands(): CommandProvider {
   const schemaStore = useSchemaStore();
   const tabViewsStore = useTabViewsStore();
-  const wsState = useWSStateStore();
+  const { workspaceId, connectionId } = useWorkspaceConnectionRoute();
 
   return {
     prefix: PREFIX,
@@ -48,12 +48,12 @@ export function useErdCommands(): CommandProvider {
                 type: TabViewType.DetailERD,
                 routeName: 'workspaceId-connectionId-erd-tableId',
                 routeParams: {
-                  workspaceId: wsState.workspaceId,
-                  connectionId: wsState.connectionId,
+                  workspaceId: workspaceId.value,
+                  connectionId: connectionId.value,
                   tableId: tableNodeId,
                 },
-                connectionId: wsState.connectionId,
-                workspaceId: wsState.workspaceId,
+                connectionId: connectionId.value,
+                workspaceId: workspaceId.value,
                 schemaId: schemaName,
                 metadata: {
                   type: TabViewType.DetailERD,

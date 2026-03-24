@@ -54,7 +54,7 @@ const emit = defineEmits<{
 
 // 3. Stores & Composables
 const appConfigStore = useAppConfigStore();
-const { wsState } = toRefs(useWSStateStore());
+const { wsState } = storeToRefs(useWSStateStore());
 
 // 4. Refs & Reactive State
 const isLoading = ref(false);
@@ -170,11 +170,11 @@ export const useTabViewsStore = defineStore(
 
 ### Store Dependencies
 
-Use `toRefs()` when accessing store state:
+Use `storeToRefs()` when accessing store state:
 
 ```typescript
 const wsStateStore = useWSStateStore();
-const { workspaceId, connectionId } = toRefs(wsStateStore);
+const { workspaceId, connectionId } = storeToRefs(wsStateStore);
 ```
 
 ---
@@ -300,6 +300,7 @@ const connectionSchema = z.object({
 
 
 
+
 const emit = defineEmits<{
   (e: 'update:filters', filters: Filter[]): void;
 }>();
@@ -350,8 +351,8 @@ const isLoading = ref<boolean>(false);
 // Use computed for derived state
 const hasChanges = computed(() => editedRows.value.length > 0);
 
-// Destructure with toRefs for reactivity
-const { workspaceId } = toRefs(wsStateStore);
+// Destructure with storeToRefs for reactivity
+const { workspaceId } = storeToRefs(wsStateStore);
 ```
 
 ### ❌ DON'T

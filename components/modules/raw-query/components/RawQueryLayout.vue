@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { storeToRefs } from 'pinia';
 import type { Slot } from 'vue';
 import { Pane, Splitpanes } from 'splitpanes';
 import 'splitpanes/dist/splitpanes.css';
@@ -22,7 +23,7 @@ defineSlots<{
 
 const appConfigStore = useAppConfigStore();
 const { editorLayoutSizes, editorLayoutInnerVariableSizes } =
-  toRefs(appConfigStore);
+  storeToRefs(appConfigStore);
 
 const onUpdateEditorLayoutSizes = (
   panes: {

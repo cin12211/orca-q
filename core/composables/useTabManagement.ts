@@ -1,5 +1,7 @@
+import { storeToRefs } from 'pinia';
 import type { RouteNameFromPath, RoutePathSchema } from '@typed-router/__paths';
-import { useAppContext } from '~/core/contexts/useAppContext';
+import { useWorkspaceConnectionRoute } from '~/core/composables/useWorkspaceConnectionRoute';
+import { useManagementConnectionStore } from '~/core/stores/managementConnectionStore';
 import { TabViewType, useTabViewsStore } from '~/core/stores/useTabViewsStore';
 import { useWSStateStore } from '~/core/stores/useWSStateStore';
 
@@ -17,8 +19,9 @@ export interface OpenTabOptions {
 export const useTabManagement = () => {
   const tabViewStore = useTabViewsStore();
   const wsStateStore = useWSStateStore();
-  const { connectionStore } = useAppContext();
-  const { workspaceId, connectionId, schemaId } = toRefs(wsStateStore);
+  const { workspaceId, connectionId } = useWorkspaceConnectionRoute();
+  const connectionStore = useManagementConnectionStore();
+  const { schemaId } = storeToRefs(wsStateStore);
 
   const openTab = async (options: OpenTabOptions) => {
     if (!workspaceId.value || !connectionId.value) {

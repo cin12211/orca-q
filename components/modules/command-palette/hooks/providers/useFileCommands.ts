@@ -1,6 +1,6 @@
+import { useWorkspaceConnectionRoute } from '~/core/composables/useWorkspaceConnectionRoute';
 import { useExplorerFileStore } from '~/core/stores/useExplorerFileStore';
 import { TabViewType, useTabViewsStore } from '~/core/stores/useTabViewsStore';
-import { useWSStateStore } from '~/core/stores/useWSStateStore';
 import type {
   CommandItem,
   CommandProvider,
@@ -21,7 +21,7 @@ const PREFIX = {
 export function useFileCommands(): CommandProvider {
   const explorerFileStore = useExplorerFileStore();
   const tabViewsStore = useTabViewsStore();
-  const wsState = useWSStateStore();
+  const { workspaceId, connectionId } = useWorkspaceConnectionRoute();
 
   return {
     prefix: PREFIX,
@@ -40,7 +40,7 @@ export function useFileCommands(): CommandProvider {
           icon: file.icon || 'hugeicons:document-code',
           group: 'Files',
           execute: async () => {
-            if (!wsState.connectionId || !wsState.workspaceId) return;
+            if (!connectionId.value || !workspaceId.value) return;
 
             await tabViewsStore.openTab({
               id: file.id,
@@ -49,9 +49,9 @@ export function useFileCommands(): CommandProvider {
               type: TabViewType.CodeQuery,
               routeName: 'workspaceId-connectionId-explorer-fileId',
               routeParams: { fileId: file.id },
-              connectionId: wsState.connectionId,
+              connectionId: connectionId.value,
               schemaId: '',
-              workspaceId: wsState.workspaceId,
+              workspaceId: workspaceId.value,
               metadata: {
                 type: TabViewType.CodeQuery,
                 tableName: file.title,

@@ -1,6 +1,6 @@
+import { useWorkspaceConnectionRoute } from '~/core/composables/useWorkspaceConnectionRoute';
 import { useSchemaStore } from '~/core/stores/useSchemaStore';
 import { TabViewType, useTabViewsStore } from '~/core/stores/useTabViewsStore';
-import { useWSStateStore } from '~/core/stores/useWSStateStore';
 import { ViewSchemaEnum } from '~/core/types';
 import type {
   CommandItem,
@@ -18,7 +18,7 @@ const PREFIX = {
 export function useViewCommands(): CommandProvider {
   const schemaStore = useSchemaStore();
   const tabViewsStore = useTabViewsStore();
-  const wsState = useWSStateStore();
+  const { workspaceId, connectionId } = useWorkspaceConnectionRoute();
 
   return {
     prefix: PREFIX,
@@ -55,9 +55,9 @@ export function useViewCommands(): CommandProvider {
                   type: TabViewType.ViewDetail,
                   routeName: 'workspaceId-connectionId-quick-query-tabViewId',
                   routeParams: { tabViewId: tabId },
-                  connectionId: wsState.connectionId,
+                  connectionId: connectionId.value,
                   schemaId: schema.name,
-                  workspaceId: wsState.workspaceId,
+                  workspaceId: workspaceId.value,
                   metadata: {
                     type: TabViewType.ViewDetail,
                     tableName: view.name,

@@ -1,10 +1,12 @@
 import { refDebounced } from '@vueuse/core';
 import { computed, ref, shallowRef } from 'vue';
 import { DEFAULT_DEBOUNCE_INPUT } from '~/core/constants';
-import { useAppContext } from '~/core/contexts/useAppContext';
+import { useWorkspacesStore } from '~/core/stores';
+import { useManagementConnectionStore } from '~/core/stores/managementConnectionStore';
 
 export function useWorkspaces() {
-  const { workspaceStore, connectionStore } = useAppContext();
+  const workspaceStore = useWorkspacesStore();
+  const connectionStore = useManagementConnectionStore();
 
   const search = shallowRef('');
   const workspaceId = ref('');

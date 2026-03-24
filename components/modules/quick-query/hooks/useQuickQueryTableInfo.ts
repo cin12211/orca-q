@@ -1,3 +1,4 @@
+import { storeToRefs } from 'pinia';
 import { TabViewType, useSchemaStore } from '~/core/stores';
 
 export const useQuickQueryTableInfo = ({
@@ -13,7 +14,7 @@ export const useQuickQueryTableInfo = ({
 }) => {
   const schemaStore = useSchemaStore();
 
-  const { schemas } = toRefs(schemaStore);
+  const { schemas } = storeToRefs(schemaStore);
 
   const activeSchema = computed(() => {
     const connectionSchemas = schemas.value[connectionId];

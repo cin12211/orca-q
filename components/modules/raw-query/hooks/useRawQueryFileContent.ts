@@ -1,11 +1,13 @@
 import type { FieldDef } from 'pg';
-import { useAppContext } from '~/core/contexts/useAppContext';
+import { useWorkspaceConnectionRoute } from '~/core/composables/useWorkspaceConnectionRoute';
 import { useExplorerFileStore } from '~/core/stores';
+import { useManagementConnectionStore } from '~/core/stores/managementConnectionStore';
 
 export function useRawQueryFileContent() {
+  const { workspaceId } = useWorkspaceConnectionRoute();
   const route = useRoute('workspaceId-connectionId-explorer-fileId');
   const explorerFileStore = useExplorerFileStore();
-  const { connectionStore } = useAppContext();
+  const connectionStore = useManagementConnectionStore();
 
   const cachedContent = explorerFileStore.getFileContentByIdSync(
     route.params.fileId as string
@@ -22,9 +24,7 @@ export function useRawQueryFileContent() {
   });
 
   const connectionsByWsId = computed(() => {
-    return connectionStore.getConnectionsByWorkspaceId(
-      route.params.workspaceId || ''
-    );
+    return connectionStore.getConnectionsByWorkspaceId(workspaceId.value);
   });
 
   const connection = computed(() => {

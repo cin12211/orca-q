@@ -1,13 +1,13 @@
 <script setup lang="ts">
 import InstanceInsightsPanel from '~/components/modules/instance-insights/InstanceInsightsPanel.vue';
-import { useAppContext } from '~/core/contexts/useAppContext';
+import { useManagementConnectionStore } from '~/core/stores/managementConnectionStore';
 
 definePageMeta({
   keepalive: true,
 });
 
 const route = useRoute();
-const { connectionStore } = useAppContext();
+const connectionStore = useManagementConnectionStore();
 
 const connectionId = computed(() =>
   String(

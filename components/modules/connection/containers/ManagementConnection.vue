@@ -3,6 +3,7 @@ import { ref } from 'vue';
 import { Button } from '@/components/ui/button';
 import { useAppContext } from '~/core/contexts/useAppContext';
 import type { Connection } from '~/core/stores';
+import { useManagementConnectionStore } from '~/core/stores/managementConnectionStore';
 import ConnectionsList from '../components/ConnectionsList.vue';
 import CreateConnectionModal from '../components/CreateConnectionModal.vue';
 
@@ -13,7 +14,8 @@ defineProps<{
 
 const isModalOpen = ref(false);
 
-const { createConnection, connectionStore } = useAppContext();
+const { createConnection } = useAppContext();
+const connectionStore = useManagementConnectionStore();
 
 const editingConnection = ref<Connection | null>(null);
 

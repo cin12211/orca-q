@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { useElementSize, type MaybeComputedElementRef } from '@vueuse/core';
+import { storeToRefs } from 'pinia';
 import {
   ActivityBar,
   PrimarySideBar,
@@ -19,7 +20,7 @@ const { width: primarySideBarWidth } = useElementSize(
 
 const appConfigStore = useAppConfigStore();
 const { layoutSize, isPrimarySidebarCollapsed, bodySize } =
-  toRefs(appConfigStore);
+  storeToRefs(appConfigStore);
 
 const { chatUiVars } = useAppearance();
 

@@ -8,8 +8,8 @@ import {
 import FileTree from '~/components/base/tree-folder/FileTree.vue';
 import type { FileNode } from '~/components/base/tree-folder/types';
 import { useTabManagement } from '~/core/composables/useTabManagement';
+import { useWorkspaceConnectionRoute } from '~/core/composables/useWorkspaceConnectionRoute';
 import { useTabViewsStore, TabViewType } from '~/core/stores/useTabViewsStore';
-import { useWSStateStore } from '~/core/stores/useWSStateStore';
 import type { DatabaseRole } from '~/core/types';
 import { RoleCategory } from '~/core/types';
 import DeleteUserDialog from './DeleteUserDialog.vue';
@@ -28,9 +28,8 @@ interface Props {
 const props = defineProps<Props>();
 
 const tabViewStore = useTabViewsStore();
-const wsStateStore = useWSStateStore();
 const { openUserPermissionsTab } = useTabManagement();
-const { workspaceId, connectionId, schemaId } = toRefs(wsStateStore);
+const { workspaceId, connectionId } = useWorkspaceConnectionRoute();
 
 const fileTreeRef = useTemplateRef<typeof FileTree | null>('fileTreeRef');
 

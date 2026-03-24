@@ -1,11 +1,11 @@
-import type { SchemaMetaData } from '~/core/types';
+import { storeToRefs } from 'pinia';
+import { useWorkspaceConnectionRoute } from '~/core/composables/useWorkspaceConnectionRoute';
 import {
   PUBLIC_SCHEMA_ID,
   useSchemaStore,
   useTabViewsStore,
   useWorkspacesStore,
   useWSStateStore,
-  type Schema,
 } from '../stores';
 import {
   useManagementConnectionStore,
@@ -16,12 +16,12 @@ export const useAppContext = () => {
   const { start, finish } = useAppLoading();
 
   const wsStateStore = useWSStateStore();
+  const { workspaceId, connectionId } = useWorkspaceConnectionRoute();
   const workspaceStore = useWorkspacesStore();
   const connectionStore = useManagementConnectionStore();
   const schemaStore = useSchemaStore();
   const tabViewStore = useTabViewsStore();
-  const { wsState, workspaceId, connectionId, allWsStates } =
-    toRefs(wsStateStore);
+  const { allWsStates } = storeToRefs(wsStateStore);
 
   const createConnection = async (connection: Connection) => {
     await connectionStore.createNewConnection(connection);
@@ -177,16 +177,6 @@ export const useAppContext = () => {
   };
 
   return {
-    // Stores
-    workspaceStore,
-    connectionStore,
-    schemaStore,
-    tabViewStore,
-    wsStateStore,
-
-    // State
-    wsState,
-
     // Actions
     createConnection,
     setSchemaId,

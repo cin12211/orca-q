@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { refDebounced } from '@vueuse/core';
+import { useWorkspaceConnectionRoute } from '~/core/composables/useWorkspaceConnectionRoute';
 import { DEFAULT_DEBOUNCE_INPUT } from '~/core/constants';
-import { useAppContext } from '~/core/contexts/useAppContext';
+import { useManagementConnectionStore } from '~/core/stores/managementConnectionStore';
 import type {
   CreateRoleRequest,
   DatabaseRole,
@@ -20,8 +21,8 @@ import {
   useBulkGrantPermissions,
 } from './hooks/useDatabaseRoles';
 
-const { wsStateStore, connectionStore } = useAppContext();
-const { connectionId, workspaceId } = toRefs(wsStateStore);
+const connectionStore = useManagementConnectionStore();
+const { connectionId, workspaceId } = useWorkspaceConnectionRoute();
 
 const connection = computed(() => {
   if (!connectionId.value) return undefined;

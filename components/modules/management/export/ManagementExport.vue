@@ -1,11 +1,12 @@
 <script setup lang="ts">
 import { useTabManagement } from '~/core/composables/useTabManagement';
-import { useAppContext } from '~/core/contexts/useAppContext';
+import { useWorkspaceConnectionRoute } from '~/core/composables/useWorkspaceConnectionRoute';
+import { useManagementConnectionStore } from '~/core/stores/managementConnectionStore';
 import { ManagementSidebarHeader } from '../shared';
 
-const { wsStateStore, connectionStore } = useAppContext();
+const connectionStore = useManagementConnectionStore();
 const { openDatabaseToolsTab } = useTabManagement();
-const { connectionId, workspaceId } = toRefs(wsStateStore);
+const { connectionId, workspaceId } = useWorkspaceConnectionRoute();
 
 // Get the database connection
 const connectionData = computed(() => {

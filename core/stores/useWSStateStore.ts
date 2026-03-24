@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
 import dayjs from 'dayjs';
+import { useWorkspaceConnectionRoute } from '~/core/composables/useWorkspaceConnectionRoute';
 
 export interface WorkspaceState {
   id: string;
@@ -19,11 +20,7 @@ export interface WorkspaceState {
 export const useWSStateStore = defineStore(
   'workspaces-state',
   () => {
-    const route = useRoute('workspaceId-connectionId');
-
-    const workspaceId = computed(() => route.params.workspaceId as string);
-
-    const connectionId = computed(() => route.params.connectionId as string);
+    const { workspaceId, connectionId } = useWorkspaceConnectionRoute();
 
     const wsStates = ref<WorkspaceState[]>([]);
 
@@ -208,13 +205,11 @@ export const useWSStateStore = defineStore(
     };
 
     return {
-      workspaceId,
       allWsStates: wsStates,
       wsState,
       updateWSState,
       setSchemaId,
       schemaId,
-      connectionId,
       getStateById,
       setTabViewId,
       tabViewId,

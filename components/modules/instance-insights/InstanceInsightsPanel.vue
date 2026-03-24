@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { DatabaseClientType } from '~/core/constants/database-client-type';
-import { useAppContext } from '~/core/contexts/useAppContext';
+import { useManagementConnectionStore } from '~/core/stores/managementConnectionStore';
 import type { ReplicationSlotDesiredStatus } from '~/core/types';
 import { getDatabaseSupportByType } from '../connection';
 import InstanceInsightsActivitySection from './components/InstanceInsightsActivitySection.vue';
@@ -43,7 +43,7 @@ const sections = [
   },
 ] as const;
 
-const { connectionStore } = useAppContext();
+const connectionStore = useManagementConnectionStore();
 
 const connection = computed(() => connectionStore.selectedConnection);
 const {

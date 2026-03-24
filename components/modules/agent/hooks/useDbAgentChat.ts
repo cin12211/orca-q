@@ -1,6 +1,7 @@
 import { lastAssistantMessageIsCompleteWithApprovalResponses } from 'ai';
 import { useAiChat } from '~/core/composables/useAiChat';
-import { useAppContext } from '~/core/contexts/useAppContext';
+import { useSchemaStore } from '~/core/stores';
+import { useManagementConnectionStore } from '~/core/stores/managementConnectionStore';
 import {
   getAgentCommandOptionsByIds,
   type AgentCommandOptionId,
@@ -24,7 +25,8 @@ function buildMessageWithCommandHints(
 }
 
 export function useAgentChat(sendReasoning?: Ref<boolean>) {
-  const { schemaStore, connectionStore } = useAppContext();
+  const schemaStore = useSchemaStore();
+  const connectionStore = useManagementConnectionStore();
 
   const chat = useAiChat<DbAgentMessage>({
     api: '/api/ai/agent',

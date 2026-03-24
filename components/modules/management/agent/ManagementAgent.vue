@@ -2,11 +2,10 @@
 import { Tooltip, TooltipContent, TooltipTrigger } from '#components';
 import ManagementAgentHistoryTree from '~/components/modules/management/agent/components/ManagementAgentHistoryTree.vue';
 import { useManagementAgentHistoryTree } from '~/components/modules/management/agent/hooks/useManagementAgentHistoryTree';
-import { useAppContext } from '~/core/contexts/useAppContext';
+import { useWorkspaceConnectionRoute } from '~/core/composables/useWorkspaceConnectionRoute';
 import { ManagementSidebarHeader } from '../shared';
 
-const { wsStateStore } = useAppContext();
-const { workspaceId } = toRefs(wsStateStore);
+const { workspaceId } = useWorkspaceConnectionRoute();
 
 type ManagementAgentHistoryTreeExpose = {
   collapseAll: () => void;

@@ -1,3 +1,4 @@
+import { storeToRefs } from 'pinia';
 import { acceptCompletion, startCompletion } from '@codemirror/autocomplete';
 import { PostgreSQL, sql } from '@codemirror/lang-sql';
 import { lintGutter } from '@codemirror/lint';
@@ -55,7 +56,7 @@ export function useSqlEditorExtensions({
 }: UseSqlEditorExtensionsParams) {
   const schemaStore = useSchemaStore();
   const { schemasByContext: connectionSchemas, activeSchema } =
-    toRefs(schemaStore);
+    storeToRefs(schemaStore);
 
   const cursorInfo = ref<EditorCursor>({ line: 1, column: 1 });
 

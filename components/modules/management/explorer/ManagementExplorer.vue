@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import ManagementExplorerTree from '~/components/modules/management/explorer/components/ManagementExplorerTree.vue';
 import { useManagementExplorerTree } from '~/components/modules/management/explorer/hooks/useManagementExplorerTree';
-import { useAppContext } from '~/core/contexts/useAppContext';
 import { TabViewType } from '~/core/stores/useTabViewsStore';
+import { useTabViewsStore } from '~/core/stores/useTabViewsStore';
 import { ManagementSidebarHeader } from '../shared';
 
-const { tabViewStore } = useAppContext();
+const tabViewStore = useTabViewsStore();
 
 const treePanelRef = useTemplateRef<InstanceType<
   typeof ManagementExplorerTree

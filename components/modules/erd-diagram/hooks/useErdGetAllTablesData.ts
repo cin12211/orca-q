@@ -1,11 +1,11 @@
 import { toast } from 'vue-sonner';
 import { getConnectionParams } from '@/core/helpers/connection-helper';
-import { useAppContext } from '~/core/contexts';
 import { useErdStore } from '~/core/stores/erdStore';
+import { useManagementConnectionStore } from '~/core/stores/managementConnectionStore';
 import type { TableMetadata } from '~/core/types';
 
 export const useErdQueryTables = () => {
-  const { connectionStore } = useAppContext();
+  const connectionStore = useManagementConnectionStore();
   const erdStore = useErdStore();
 
   if (

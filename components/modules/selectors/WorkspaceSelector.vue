@@ -1,17 +1,15 @@
 <script setup lang="ts">
+import { storeToRefs } from 'pinia';
 import { Select, SelectGroup, SelectItem, SelectTrigger } from '#components';
 import type { AcceptableValue } from 'reka-ui';
 import { cn } from '@/lib/utils';
-import { useAppContext } from '~/core/contexts/useAppContext';
+import { useWorkspaceConnectionRoute } from '~/core/composables/useWorkspaceConnectionRoute';
+import { useWorkspacesStore } from '~/core/stores';
 
-const {
-  workspaceStore,
-  //setActiveWSId,
-  wsStateStore,
-} = useAppContext();
+const workspaceStore = useWorkspacesStore();
 
-const { workspaces, selectedWorkspace } = toRefs(workspaceStore);
-const { workspaceId } = toRefs(wsStateStore);
+const { workspaces, selectedWorkspace } = storeToRefs(workspaceStore);
+const { workspaceId } = useWorkspaceConnectionRoute();
 
 const props = defineProps<{ class?: string }>();
 

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { storeToRefs } from 'pinia';
 import { isElectron, isPWA } from '~/core/helpers';
 import { useAppConfigStore } from '~/core/stores/appConfigStore';
 import { ActivityBarHorizontal } from '../../activity-bar';
@@ -13,7 +14,7 @@ const route = useRoute();
 const appConfigStore = useAppConfigStore();
 
 const { isPrimarySidebarCollapsed, isSecondSidebarCollapsed } =
-  toRefs(appConfigStore);
+  storeToRefs(appConfigStore);
 
 const isPWAApp = computed(() => isPWA());
 const isElectronApp = computed(() => isElectron());

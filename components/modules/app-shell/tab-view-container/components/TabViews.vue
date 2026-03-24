@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { unrefElement } from '@vueuse/core';
+import { storeToRefs } from 'pinia';
 import { shallowRef, watchEffect } from 'vue';
 import {
   ContextMenu,
@@ -21,7 +22,7 @@ import TabViewItem from './TabViewItem.vue';
 
 const tabsStore = useTabViewsStore();
 
-const { tabViews } = toRefs(tabsStore);
+const { tabViews } = storeToRefs(tabsStore);
 
 const elementRef = shallowRef<HTMLElement | null>();
 

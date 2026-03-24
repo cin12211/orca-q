@@ -7,8 +7,8 @@ import {
   LazyViewOverview,
 } from '#components';
 import { DEFAULT_MAX_KEEP_ALIVE } from '~/core/constants';
-import { useAppContext } from '~/core/contexts';
 import { useManagementConnectionStore } from '~/core/stores/managementConnectionStore';
+import { useTabViewsStore } from '~/core/stores/useTabViewsStore';
 import { TabViewType } from '~/core/stores/useTabViewsStore';
 
 definePageMeta({
@@ -18,7 +18,7 @@ definePageMeta({
 });
 
 const route = useRoute('workspaceId-connectionId-quick-query-tabViewId');
-const { tabViewStore } = useAppContext();
+const tabViewStore = useTabViewsStore();
 const { tabViews } = storeToRefs(tabViewStore);
 const connectionStore = useManagementConnectionStore();
 

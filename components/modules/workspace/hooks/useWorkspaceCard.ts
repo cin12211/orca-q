@@ -1,18 +1,20 @@
 import { computed, ref } from 'vue';
 import type { ReferenceElement } from 'reka-ui';
 import { useAppContext } from '~/core/contexts/useAppContext';
-import { type Connection, type Workspace } from '~/core/stores';
+import {
+  type Connection,
+  type Workspace,
+  useWorkspacesStore,
+} from '~/core/stores';
+import { useManagementConnectionStore } from '~/core/stores/managementConnectionStore';
 
 export function useWorkspaceCard(props: {
   workspace: Workspace;
   onSelectWorkspace?: (wsId: string) => void;
 }) {
-  const {
-    workspaceStore,
-    connectionStore,
-    createConnection,
-    openWorkspaceWithConnection,
-  } = useAppContext();
+  const { createConnection, openWorkspaceWithConnection } = useAppContext();
+  const workspaceStore = useWorkspacesStore();
+  const connectionStore = useManagementConnectionStore();
 
   const isOpenEditModal = ref(false);
   const isOpenDeleteModal = ref(false);

@@ -2,9 +2,9 @@ import { toTypedSchema } from '@vee-validate/zod';
 import dayjs from 'dayjs';
 import { useForm } from 'vee-validate';
 import { toast } from 'vue-sonner';
-import { useAppContext } from '~/core/contexts/useAppContext';
 import { uuidv4 } from '~/core/helpers';
 import type { Workspace } from '~/core/stores';
+import { useWorkspacesStore } from '~/core/stores';
 import { DEFAULT_WORKSPACE_ICON } from '../constants';
 import { workspaceSchema } from '../schemas/workspace.schema';
 
@@ -13,7 +13,7 @@ export function useWorkspaceForm(props: {
   workspaceSeq?: number;
   onClose: () => void;
 }) {
-  const { workspaceStore } = useAppContext();
+  const workspaceStore = useWorkspacesStore();
 
   const form = useForm({
     validationSchema: toTypedSchema(workspaceSchema),

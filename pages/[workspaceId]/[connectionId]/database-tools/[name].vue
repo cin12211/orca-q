@@ -2,7 +2,8 @@
 import { getConnectionParams } from '@/core/helpers/connection-helper';
 import ExportOptionsForm from '~/components/modules/management/export/components/ExportOptionsForm.vue';
 import { useDatabaseExport } from '~/components/modules/management/export/hooks/useDatabaseExport';
-import { useAppContext } from '~/core/contexts/useAppContext';
+import { useSchemaStore } from '~/core/stores';
+import { useManagementConnectionStore } from '~/core/stores/managementConnectionStore';
 import type { ExportOptions, ImportOptions } from '~/core/types';
 
 definePageMeta({
@@ -10,7 +11,8 @@ definePageMeta({
 });
 
 const route = useRoute('workspaceId-connectionId-database-tools-name');
-const { connectionStore, schemaStore } = useAppContext();
+const connectionStore = useManagementConnectionStore();
+const schemaStore = useSchemaStore();
 
 const connectionId = computed(() => route.params.connectionId as string);
 

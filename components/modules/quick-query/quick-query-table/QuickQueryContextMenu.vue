@@ -15,7 +15,7 @@ import {
 } from '~/core/helpers/copyData';
 import { useAppConfigStore } from '~/core/stores/appConfigStore';
 
-const { onShowSecondSidebar } = useAppConfigStore();
+const appConfigStore = useAppConfigStore();
 
 const props = defineProps<{
   totalSelectedRows: number;
@@ -295,7 +295,7 @@ const contextMenuItems = computed<ContextMenuItem[]>(() => {
       icon: 'hugeicons:view',
       type: ContextMenuItemType.ACTION,
       select: () => {
-        onShowSecondSidebar();
+        appConfigStore.onShowSecondSidebar();
       },
       condition: !props.isReferencedTable && !!props.cellContextMenu,
     },
