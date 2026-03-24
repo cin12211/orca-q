@@ -86,3 +86,7 @@ HAVING
 
 - [x] check executeStreamingQuery khi có error
 - [x] update erd (update in sidebar header icon to hugeicons:workflow-square-10, update for each item -> hugeicons:flow-connection)
+
+# create rules
+
+- if empty use <BaseEmpty

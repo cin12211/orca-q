@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { refDebounced } from '@vueuse/core';
-import { Textarea } from '#components';
+import { BaseEmpty, Textarea } from '#components';
 import * as z from 'zod';
 import { cellValueFormatter } from '~/components/base/dynamic-table/utils';
 import { mapPgTypeToTsType } from '~/components/modules/quick-query/utils/mapPgTypeToTsType';
@@ -104,34 +104,39 @@ watch(
 </script>
 
 <template>
-  <div class="relative w-full p-1">
-    <div class="absolute left-3 top-2.5 w-4">
-      <Icon name="lucide:search" class="stroke-3!" />
-    </div>
+  <div class="p-2 pb-0">
+    <div class="relative w-full">
+      <div class="absolute left-1.5 top-1.5 w-4">
+        <Icon name="lucide:search" class="stroke-3!" />
+      </div>
 
-    <Input
-      type="text"
-      placeholder="Search fields ..."
-      class="pr-6 pl-6 w-full h-8"
-      v-model="searchInput"
-    />
+      <Input
+        type="text"
+        placeholder="Search fields ..."
+        class="pr-6 pl-6 w-full h-8"
+        v-model="searchInput"
+      />
 
-    <div
-      v-if="searchInput"
-      class="absolute right-3 top-2.5 w-4 cursor-pointer rounded-md hover:bg-accent"
-      @click="searchInput = ''"
-    >
-      <Icon name="lucide:x" class="stroke-3! text-muted-foreground" />
+      <div
+        v-if="searchInput"
+        class="absolute right-2 top-1.5 w-4 cursor-pointer rounded-md hover:bg-accent"
+        @click="searchInput = ''"
+      >
+        <Icon name="lucide:x" class="stroke-3! text-muted-foreground" />
+      </div>
     </div>
   </div>
 
-  <div v-if="isEmpty" class="flex items-center justify-center h-40">
-    No field match!
-  </div>
+  <BaseEmpty
+    v-if="isEmpty"
+    title="No results"
+    desc="No fields match your search."
+  />
+
   <DynamicForm
     v-else
     ref="dynamicForm"
-    class="space-y-1 p-1 overflow-y-auto"
+    class="space-y-1 p-2 overflow-y-auto"
     :fields="configFields"
     :validation-schema="schema"
   />
