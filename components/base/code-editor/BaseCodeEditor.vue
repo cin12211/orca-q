@@ -15,15 +15,13 @@ import { basicSetup } from 'codemirror';
 import { throttle } from 'lodash';
 import debounce from 'lodash/debounce';
 import { cn } from '@/lib/utils';
+import type { CodeEditorConfigs } from '~/components/modules/settings/types';
 import {
   DEFAULT_DEBOUNCE_INPUT,
   DEFAULT_DEBOUNCE_SCROLL,
 } from '~/core/constants';
-import {
-  useAppLayoutStore,
-  type CodeEditorConfigs,
-} from '~/core/stores/appLayoutStore';
-import { EditorThemeMap } from './constants';
+import { useAppConfigStore } from '~/core/stores/appConfigStore';
+import { EditorTheme, EditorThemeMap } from './constants';
 import {
   cursorSmooth,
   fontSizeTheme,
@@ -64,7 +62,8 @@ const emit = defineEmits<{
 // Reactive code state
 const code = ref(props.modelValue);
 const editorRef = ref<HTMLElement | null>(null);
-const appLayoutStore = useAppLayoutStore();
+const appConfigStore = useAppConfigStore();
+const colorMode = useColorMode();
 let editorView = ref<EditorView | null>(null);
 
 /* ---------------- Compartments ---------------- */
@@ -106,9 +105,22 @@ const staticExtensions: Extension[] = [
   }),
 ];
 
+const resolveEditorTheme = (theme: EditorTheme) => {
+  if (colorMode?.value === 'dark' && theme === EditorTheme.Tomorrow) {
+    return EditorTheme.OrcaDark;
+  }
+
+  if (colorMode?.value !== 'dark' && theme === EditorTheme.OrcaDark) {
+    return EditorTheme.OrcaLight;
+  }
+
+  return theme;
+};
+
 const dynamicExtensions = (cfg: CodeEditorConfigs) => {
+  const resolvedTheme = resolveEditorTheme(cfg.theme);
   return [
-    themeComp.of(EditorThemeMap[cfg.theme]),
+    themeComp.of(EditorThemeMap[resolvedTheme]),
     fontSizeComp.of(fontSizeTheme(cfg.fontSize + 'pt')),
     indentationComp.of(cfg.indentation ? indentationMarkers() : []),
     minimapComp.of(cfg.showMiniMap ? minimapFactory() : []),
@@ -118,7 +130,7 @@ const dynamicExtensions = (cfg: CodeEditorConfigs) => {
 const getExtensions = () => {
   return [
     ...staticExtensions,
-    ...dynamicExtensions(appLayoutStore.codeEditorConfigs),
+    ...dynamicExtensions(appConfigStore.codeEditorConfigs),
   ];
 };
 
@@ -166,13 +178,15 @@ onMounted(() => {
 
 /* ---------------- Reactive reconfigure ---------------- */
 watch(
-  () => appLayoutStore.codeEditorConfigs,
-  cfg => {
+  [() => appConfigStore.codeEditorConfigs, () => colorMode.value],
+  ([cfg]) => {
     if (!editorView.value) return;
+
+    const resolvedTheme = resolveEditorTheme(cfg.theme);
 
     editorView.value.dispatch({
       effects: [
-        themeComp.reconfigure(EditorThemeMap[cfg.theme]),
+        themeComp.reconfigure(EditorThemeMap[resolvedTheme]),
         fontSizeComp.reconfigure(fontSizeTheme(cfg.fontSize + 'pt')),
         indentationComp.reconfigure(
           cfg.indentation ? indentationMarkers() : []
@@ -181,7 +195,7 @@ watch(
       ],
     });
   },
-  { deep: true, immediate: true, flush: 'post' }
+  { deep: true, flush: 'post' }
 );
 
 // Watch for external changes to modelValue

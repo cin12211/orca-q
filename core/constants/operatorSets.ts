@@ -1,4 +1,4 @@
-import type { EDatabaseType } from '~/components/modules/connection/constants';
+import { DatabaseClientType } from './database-client-type';
 
 export enum ComposeOperator {
   AND = 'AND',
@@ -51,10 +51,10 @@ export enum OperatorSet {
 export const separatorRow = { value: 'SEPARATOR_ROW' as const, label: '' };
 
 export const operatorSets: Record<
-  Partial<EDatabaseType>,
+  string,
   ({ value: OperatorSet; label: string } | typeof separatorRow)[]
 > = {
-  mysql: [
+  [DatabaseClientType.MYSQL]: [
     { value: OperatorSet.EQUAL, label: '=' },
     { value: OperatorSet.NOT_EQUAL, label: '<>' },
     { value: OperatorSet.LESS, label: '<' },
@@ -85,7 +85,7 @@ export const operatorSets: Record<
     { value: OperatorSet.LIKE_PREFIX, label: 'Has prefix' },
     { value: OperatorSet.LIKE_SUFFIX, label: 'Has suffix' },
   ],
-  postgres: [
+  [DatabaseClientType.POSTGRES]: [
     { value: OperatorSet.EQUAL, label: '=' },
     { value: OperatorSet.NOT_EQUAL, label: '<>' },
     { value: OperatorSet.LESS, label: '<' },

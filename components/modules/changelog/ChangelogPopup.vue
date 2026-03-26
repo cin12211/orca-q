@@ -7,19 +7,21 @@ import {
   DialogHeader,
   DialogTitle,
   Button,
-  ScrollArea,
+  Badge,
 } from '#components';
 import { Sparkles } from 'lucide-vue-next';
-import { marked } from 'marked';
+import BlockMessageMarkdown from '~/components/modules/agent/components/block-message/BlockMessageMarkdown.vue';
 import { useChangelogModal } from '~/core/contexts/useChangelogModal';
 
-const { isChangelogOpen, changelogEntries, isLoading, closeChangelog } =
-  useChangelogModal();
-
-// Convert markdown to HTML
-const renderMarkdown = (content: string): string => {
-  return marked.parse(content, { async: false }) as string;
-};
+const {
+  isChangelogOpen,
+  changelogEntries,
+  isLoading,
+  isLoadingMore,
+  hasMore,
+  closeChangelog,
+  loadMore,
+} = useChangelogModal();
 </script>
 
 <template>
@@ -52,108 +54,117 @@ const renderMarkdown = (content: string): string => {
         </div>
       </DialogHeader>
 
-      <div class="flex-1 -mx-6 px-6 overflow-y-auto">
-        <div class="space-y-8 py-4">
-          <!-- Loading State -->
-          <div v-if="isLoading" class="flex items-center justify-center py-12">
-            <div
-              class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"
-            ></div>
-          </div>
+      <div class="flex-1 -mx-6 px-6 py-4 overflow-y-auto">
+        <!-- Loading State -->
+        <div v-if="isLoading" class="flex items-center justify-center py-12">
+          <div
+            class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"
+          ></div>
+        </div>
 
-          <!-- Changelog Entries -->
-          <template v-else>
+        <!-- Changelog Entries -->
+        <template v-else>
+          <div
+            v-for="(entry, index) in changelogEntries"
+            :key="entry.version"
+            class="relative pl-10 pb-8 last:pb-0 group"
+          >
+            <!-- Timeline line -->
             <div
-              v-for="entry in changelogEntries"
-              :key="entry.version"
-              class="relative"
+              v-if="index !== changelogEntries.length - 1"
+              class="absolute left-[9.5px] top-[14px] bottom-0 w-px bg-border/60 group-hover:bg-primary/30 transition-colors duration-300"
+            />
+
+            <!-- Timeline Node -->
+            <div
+              class="absolute left-0.5 top-[4.5px] size-4 rounded-full border-2 bg-background flex items-center justify-center z-10 transition-all duration-300"
+              :class="[
+                index === 0
+                  ? 'border-primary shadow-[0_0_12px_-2px_theme(colors.primary/30%)] scale-110'
+                  : 'border-muted-foreground/10 group-hover:border-primary/30 group-hover:scale-110',
+              ]"
             >
+              <div
+                class="w-2 h-2 rounded-full transition-all duration-300"
+                :class="[
+                  index === 0
+                    ? 'bg-primary shadow-[0_0_8px_theme(colors.primary/50%)]'
+                    : 'bg-muted-foreground/10 group-hover:bg-primary/30',
+                ]"
+              />
+            </div>
+
+            <!-- Content wrapper -->
+            <div class="relative min-h-[40px]">
               <!-- Version Badge -->
-              <div class="flex items-center gap-3 mb-4">
-                <div
-                  class="px-3 py-1 flex items-center gap-2 rounded-full bg-primary/10 text-primary font-mono text-sm font-medium"
-                >
-                  <Icon name="lucide:git-branch" class="size-5" />
-                  v{{ entry.version }}
-                </div>
-                <span class="text-xs text-muted-foreground">{{
+              <div class="flex items-center gap-2 mb-4">
+                <Badge variant="outline">
+                  <Icon name="hugeicons:git-branch" class="size-4" />
+                  <span class="font-mono text-xs font-semibold"
+                    >v{{ entry.version }}</span
+                  >
+                </Badge>
+
+                <span class="text-xs text-muted-foreground/40">{{
                   entry.date
                 }}</span>
               </div>
 
               <!-- Markdown Content -->
-              <div
-                class="changelog-content prose prose-sm dark:prose-invert max-w-none"
-                v-html="renderMarkdown(entry.content)"
-              />
-
-              <!-- Divider between versions -->
-              <div
-                v-if="
-                  changelogEntries.indexOf(entry) < changelogEntries.length - 1
-                "
-                class="border-t border-border mt-6"
-              />
+              <div class="prose-sm max-w-none">
+                <BlockMessageMarkdown
+                  :content="entry.content"
+                  :is-streaming="false"
+                />
+              </div>
             </div>
+          </div>
 
-            <!-- Empty state -->
-            <div
-              v-if="changelogEntries.length === 0"
-              class="text-center py-8 text-muted-foreground"
+          <!-- Load More -->
+          <div v-if="hasMore" class="relative flex justify-center pb-2 mt-0">
+            <!-- Timeline line continuation -->
+
+            <Button
+              variant="outline"
+              size="sm"
+              :disabled="isLoadingMore"
+              @click="loadMore"
             >
-              <Sparkles class="size-8 mx-auto mb-2 opacity-50" />
-              <p>No updates available</p>
-            </div>
-          </template>
-        </div>
+              <div v-if="isLoadingMore" class="flex items-center gap-2">
+                <div
+                  class="size-3 animate-spin rounded-full border-b-2 border-primary"
+                />
+                <span>Loading updates...</span>
+              </div>
+              <div v-else class="flex items-center gap-2">
+                <Icon
+                  name="hugeicons:arrow-down-01"
+                  class="size-3 group-hover/btn:translate-y-0.5 transition-transform"
+                />
+                <span>View older updates</span>
+              </div>
+            </Button>
+          </div>
+
+          <!-- Empty state -->
+          <BaseEmpty
+            v-if="changelogEntries.length === 0"
+            title="No updates available"
+            desc="You're all up to date!"
+            class="py-12"
+          />
+        </template>
       </div>
 
-      <DialogFooter class="flex-shrink-0 pt-4 border-t">
-        <Button @click="closeChangelog" class="w-full sm:w-auto">
+      <DialogFooter class="flex-shrink-0">
+        <Button @click="closeChangelog" class="w-full sm:w-auto group">
+          <Icon
+            name="hugeicons:thumbs-up"
+            class="size-4 group-hover:scale-110 transition-transform"
+          />
           Got it, thanks!
         </Button>
       </DialogFooter>
     </DialogContent>
   </Dialog>
 </template>
-
-<style>
-@reference "~/assets/css/tailwind.css";
-
-.changelog-content h1 {
-  @apply mt-0 mb-4 text-2xl font-bold;
-}
-
-.changelog-content h2 {
-  @apply mt-6 mb-3 text-xl font-semibold;
-}
-
-.changelog-content h3 {
-  @apply mt-4 mb-2 text-lg font-semibold;
-}
-
-.changelog-content h4 {
-  @apply mt-4 mb-2 text-base font-semibold;
-}
-
-.changelog-content h5 {
-  @apply mt-3 mb-1 text-sm font-bold;
-}
-
-.changelog-content h6 {
-  @apply mt-3 mb-1 text-xs font-bold tracking-wider uppercase;
-}
-
-.changelog-content a {
-  @apply underline hover:text-blue-500;
-}
-
-.changelog-content ul {
-  list-style-type: disc;
-  padding-left: 1.25rem;
-}
-
-.changelog-content li::marker {
-  color: var(--muted-foreground);
-}
-</style>

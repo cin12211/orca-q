@@ -10,7 +10,7 @@ Complete folder structure and file responsibilities for the OrcaQ database edito
 ## Root Directory Overview
 
 ```
-HeraQ/
+OrcaQ/
 ├── app.vue                    # Root Vue application entry
 ├── error.vue                  # Global error page
 ├── nuxt.config.ts            # Nuxt configuration (web mode)
@@ -104,7 +104,7 @@ shared/
 │   ├── useTabViewsStore.ts    # Tab management
 │   ├── useSchemaStore.ts      # Schema metadata cache
 │   ├── useActivityBarStore.ts # Activity bar state
-│   ├── appLayoutStore.ts      # Layout & settings
+│   ├── appConfigStore.ts      # Layout & settings
 │   ├── erdStore.ts            # ERD diagram state
 │   ├── useExplorerFileStore.ts # SQL file explorer
 │   └── useQuickQueryLogs.ts   # Query history logs

@@ -17,14 +17,13 @@ import type { MappedRawColumn } from '~/components/modules/raw-query/interfaces'
 import { DEFAULT_BUFFER_ROWS } from '~/core/constants';
 import DynamicPrimaryKeyHeader from './DynamicPrimaryKeyHeader.vue';
 import {
-  baseTableTheme,
   DEFAULT_COLUMN_ADDITIONAL_GAP_WIDTH,
   DEFAULT_COLUMN_RAW_GAP_WIDTH,
   DEFAULT_HASH_INDEX_WIDTH,
   HASH_INDEX_HEADER,
   HASH_INDEX_ID,
 } from './constants';
-import { useAgGridApi } from './hooks';
+import { useAgGridApi, useTableTheme } from './hooks';
 import {
   type RowData,
   cellValueFormatter,
@@ -258,13 +257,20 @@ const columnDefs = computed<ColDef[]>(() => {
   return colDefs;
 });
 
+const tableTheme = useTableTheme();
+
+// Push theme updates to the already-mounted grid so changes take effect without a page reload
+watch(tableTheme, newTheme => {
+  gridApi.value?.updateGridOptions({ theme: newTheme });
+});
+
 const gridOptions = computed(() => {
   const baseOptions: GridOptions = {
     rowClass: 'class-row-border-none',
     rowBuffer: DEFAULT_BUFFER_ROWS,
     getRowStyle: params => {
       if ((params.node.rowIndex || 0) % 2 === 0) {
-        return { background: 'var(--color-neutral-100)' };
+        return { background: 'var(--muted)' };
       }
     },
     rowSelection: {
@@ -275,7 +281,7 @@ const gridOptions = computed(() => {
       enableClickSelection: 'enableSelection',
       copySelectedRows: false,
     },
-    theme: baseTableTheme,
+    theme: tableTheme.value,
     pagination: false,
     undoRedoCellEditing: true,
     undoRedoCellEditingLimit: 25,
@@ -463,6 +469,7 @@ onActivated(async () => {
   await nextTick();
 
   const scrollPosition = gridApi.value.getState();
+  // agGridRef.value?.querySelector('.ag-body-viewport')
   const gridBody = document.querySelector('.ag-body-viewport');
 
   if (gridBody) {
@@ -500,6 +507,7 @@ defineExpose({
       @row-data-updated="onRowDataUpdated"
       @cellContextMenu="onCellContextMenu"
       @columnHeaderContextMenu="onCellHeaderContextMenu"
+      :suppress-scroll-on-new-data="true"
       :class="props.class"
       :grid-options="gridOptions"
       :columnDefs="columnDefs"
@@ -513,9 +521,5 @@ defineExpose({
 <style>
 .cellCenter .ag-cell-wrapper {
   justify-content: center;
-}
-
-.ag-cell {
-  color: var(--color-black);
 }
 </style>

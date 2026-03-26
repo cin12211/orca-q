@@ -1,4 +1,5 @@
 import { refDebounced } from '@vueuse/core';
+import { storeToRefs } from 'pinia';
 import dayjs from 'dayjs';
 import {
   type TreeFileSystem,
@@ -10,10 +11,11 @@ import type {
   FileNode,
   TreePersistenceExtension,
 } from '~/components/base/tree-folder/types';
+import { useTabManagement } from '~/core/composables/useTabManagement';
+import { useWorkspaceConnectionRoute } from '~/core/composables/useWorkspaceConnectionRoute';
 import { DEFAULT_DEBOUNCE_INPUT } from '~/core/constants';
 import { uuidv4 } from '~/core/helpers';
 import { useExplorerFileStore } from '~/core/stores';
-import { TabViewType, useTabViewsStore } from '~/core/stores/useTabViewsStore';
 import { useExplorerContextMenu } from './useExplorerContextMenu';
 
 interface UseManagementExplorerTreeOptions {
@@ -65,15 +67,14 @@ export const useManagementExplorerTree = ({
   expandAll,
   isExpandedAll,
 }: UseManagementExplorerTreeOptions) => {
-  const route = useRoute('workspaceId-connectionId-explorer-fileId');
-
+  const { workspaceId, connectionId } = useWorkspaceConnectionRoute();
   const explorerFileStore = useExplorerFileStore();
-  const tabViewStore = useTabViewsStore();
+  const { openCodeQueryTab } = useTabManagement();
 
   const searchInput = shallowRef('');
   const debouncedSearch = refDebounced(searchInput, DEFAULT_DEBOUNCE_INPUT);
 
-  const { treeNodeRef } = toRefs(explorerFileStore);
+  const { treeNodeRef } = storeToRefs(explorerFileStore);
   const selectedNodeIds = shallowRef<string[]>([]);
 
   const mappedExplorerFiles = computed(() => {
@@ -88,9 +89,7 @@ export const useManagementExplorerTree = ({
     return mapTreeToFileNodes(mappedExplorerFiles.value);
   });
 
-  const explorerStorageKey = computed(() => {
-    return String(route.params.workspaceId);
-  });
+  const explorerStorageKey = computed(() => String(workspaceId.value));
 
   //TODO: config for case want to sync tree to remote api
   // const explorerTreePersistence = shallowRef<TreePersistenceExtension>(
@@ -108,16 +107,13 @@ export const useManagementExplorerTree = ({
   }) => {
     const parentNode = nodeId ? treeNodeRef.value.findNode(nodeId) : null;
 
-    const connectionId = route.params.connectionId;
-    const workspaceId = route.params.workspaceId;
-
     const defaultFolder = {
       title: '',
       id: uuidv4(),
       icon: 'lucide:folder-open',
       closeIcon: 'lucide:folder',
-      connectionId,
-      workspaceId,
+      connectionId: connectionId.value,
+      workspaceId: workspaceId.value,
       createdAt: dayjs().toISOString(),
       isFolder: true,
       path: '',
@@ -128,8 +124,8 @@ export const useManagementExplorerTree = ({
       title: '',
       id: uuidv4(),
       icon: 'lucide:file',
-      connectionId,
-      workspaceId,
+      connectionId: connectionId.value,
+      workspaceId: workspaceId.value,
       createdAt: dayjs().toISOString(),
       isFolder: false,
       path: '',
@@ -316,26 +312,11 @@ export const useManagementExplorerTree = ({
       return;
     }
 
-    tabViewStore.openTab({
-      icon: item.icon,
+    openCodeQueryTab({
       id: item.id,
       name: item.title,
-      type: TabViewType.CodeQuery,
-      routeName: 'workspaceId-connectionId-explorer-fileId',
-      routeParams: {
-        fileId: item.id,
-      },
-      connectionId: route.params.connectionId,
-      schemaId: '',
-      workspaceId: route.params.workspaceId,
-      metadata: {
-        type: TabViewType.CodeQuery,
-        tableName: item.title,
-        treeNodeId: item.id,
-      },
+      icon: item.icon,
     });
-
-    tabViewStore.selectTab(item.id);
   };
 
   return {

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { useElementSize, type MaybeComputedElementRef } from '@vueuse/core';
+import { storeToRefs } from 'pinia';
 import {
   ActivityBar,
   PrimarySideBar,
@@ -8,7 +9,7 @@ import {
   TabViewContainer,
 } from '~/components/modules/app-shell';
 import { DEFAULT_DEBOUNCE_INPUT } from '~/core/constants';
-import { useAppLayoutStore } from '~/core/stores/appLayoutStore';
+import { useAppConfigStore } from '~/core/stores/appConfigStore';
 
 const route = useRoute();
 
@@ -17,9 +18,11 @@ const { width: primarySideBarWidth } = useElementSize(
   primarySideBarPanelRef as MaybeComputedElementRef
 );
 
-const appLayoutStore = useAppLayoutStore();
+const appConfigStore = useAppConfigStore();
 const { layoutSize, isPrimarySidebarCollapsed, bodySize } =
-  toRefs(appLayoutStore);
+  storeToRefs(appConfigStore);
+
+const { chatUiVars } = useAppearance();
 
 const isAccessBottomPanel = computed(() => {
   if (route.meta.notAllowBottomPanel) return false;
@@ -36,21 +39,21 @@ useHotkeys([
     key: 'meta+shift+b',
     callback: () => {
       if (isAccessRightPanel.value) {
-        appLayoutStore.onToggleSecondSidebar();
+        appConfigStore.onToggleSecondSidebar();
       }
     },
   },
   {
     key: 'meta+b',
     callback: () => {
-      appLayoutStore.onToggleActivityBarPanel();
+      appConfigStore.onToggleActivityBarPanel();
     },
   },
   {
     key: 'meta+j',
     callback: () => {
       if (isAccessBottomPanel.value) {
-        appLayoutStore.onToggleBottomPanel();
+        appConfigStore.onToggleBottomPanel();
       }
     },
   },
@@ -61,10 +64,11 @@ useHotkeys([
   <ResizablePanelGroup
     direction="horizontal"
     id="default-layout-group-1"
-    @layout="appLayoutStore.onResizeLayout($event)"
+    @layout="appConfigStore.onResizeLayout($event)"
   >
     <div
       class="h-screen w-screen flex flex-col flex-1 max-h-screen overflow-y-auto"
+      :style="chatUiVars"
     >
       <TabViewContainer :primarySideBarWidth="primarySideBarWidth" />
 
@@ -83,6 +87,7 @@ useHotkeys([
           collapsible
           id="default-layout-group-1-panel-1"
           key="primarySideBarPanel"
+          class="bg-sidebar/50 dark:bg-sidebar"
         >
           <PrimarySideBar />
         </ResizablePanel>
@@ -97,14 +102,16 @@ useHotkeys([
               id="default-layout-body-group"
               direction="vertical"
               v-model="bodySize"
-              @layout="appLayoutStore.onResizeBody"
+              @layout="appConfigStore.onResizeBody"
             >
               <ResizablePanel
                 id="default-layout-body-group-panel-1"
                 key="default-layout-body-group-panel-1"
               >
                 <div class="flex flex-col overflow-y-auto w-full h-full">
-                  <slot />
+                  <div class="h-full">
+                    <slot />
+                  </div>
                 </div>
               </ResizablePanel>
               <ResizableHandle
@@ -146,6 +153,7 @@ useHotkeys([
           collapsible
           key="secondarySideBarPanel"
           v-show="isAccessRightPanel"
+          class="bg-sidebar"
         >
           <SecondarySideBar />
         </ResizablePanel>

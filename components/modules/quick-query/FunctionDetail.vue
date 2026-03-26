@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { storeToRefs } from 'pinia';
 import {
   acceptCompletion,
   startCompletion,
@@ -14,6 +15,7 @@ import { Compartment } from '@codemirror/state';
 import { keymap } from '@codemirror/view';
 import { format } from 'sql-formatter';
 import { toast } from 'vue-sonner';
+import { getConnectionParams } from '@/core/helpers/connection-helper';
 import BaseCodeEditor from '~/components/base/code-editor/BaseCodeEditor.vue';
 import {
   shortCutSaveFunction,
@@ -24,17 +26,17 @@ import {
 import { pgKeywordCompletion } from '~/components/base/code-editor/utils/pgKeywordCompletion';
 import QuickQueryErrorPopup from '~/components/modules/quick-query/QuickQueryErrorPopup.vue';
 import FunctionControlBar from '~/components/modules/quick-query/function-control-bar/FunctionControlBar.vue';
-import { useAppContext } from '~/core/contexts/useAppContext';
-import { useQuickQueryLogs } from '~/core/stores';
+import { useQuickQueryLogs, useSchemaStore } from '~/core/stores';
+import { useManagementConnectionStore } from '~/core/stores/managementConnectionStore';
 
 const props = defineProps<{
   functionId: string;
   connectionId?: string;
 }>();
 
-const { connectionStore, schemaStore } = useAppContext();
-const { activeSchema } = toRefs(schemaStore);
-const qqLogStore = useQuickQueryLogs();
+const connectionStore = useManagementConnectionStore();
+const schemaStore = useSchemaStore();
+const { activeSchema } = storeToRefs(schemaStore);
 
 const code = ref('');
 const originalCode = ref('');
@@ -69,20 +71,19 @@ const mappedSchema = computed(() => {
 
 const sqlCompartment = new Compartment();
 
-const connectionString = computed(() => {
+const connection = computed(() => {
   if (props.connectionId) {
-    return connectionStore.connections.find(c => c.id === props.connectionId)
-      ?.connectionString;
+    return connectionStore.connections.find(c => c.id === props.connectionId);
   }
-  return connectionStore.selectedConnection?.connectionString;
+  return connectionStore.selectedConnection;
 });
 
 const requestBody = computed(() => ({
   functionId: props.functionId,
-  dbConnectionString: connectionString.value,
+  ...getConnectionParams(connection.value),
 }));
 
-const { status } = useFetch('/api/get-one-function', {
+const { status } = useFetch('/api/functions/definition', {
   method: 'POST',
   body: requestBody,
   onResponse: response => {
@@ -101,11 +102,10 @@ const saveFunction = async () => {
   isSaving.value = true;
 
   try {
-    await $fetch('/api/update-function', {
+    await $fetch('/api/functions/update', {
       method: 'POST',
       body: {
-        dbConnectionString:
-          connectionStore.selectedConnection?.connectionString,
+        ...getConnectionParams(connectionStore.selectedConnection),
         functionDefinition: code.value,
       },
       onResponseError: error => {

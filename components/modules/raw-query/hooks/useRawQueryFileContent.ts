@@ -1,20 +1,19 @@
 import type { FieldDef } from 'pg';
-import { useAppContext } from '~/core/contexts/useAppContext';
-import { useExplorerFileStore, useSchemaStore } from '~/core/stores';
-import type { MappedRawColumn } from '../interfaces';
-import { formatColumnsInfo } from '../utils';
-
-//TODO: create lint check error for sql
-// https://www.npmjs.com/package/node-sql-parser?activeTab=readme
-// https://codemirror.net/examples/lint/
+import { useWorkspaceConnectionRoute } from '~/core/composables/useWorkspaceConnectionRoute';
+import { useExplorerFileStore } from '~/core/stores';
+import { useManagementConnectionStore } from '~/core/stores/managementConnectionStore';
 
 export function useRawQueryFileContent() {
+  const { workspaceId } = useWorkspaceConnectionRoute();
   const route = useRoute('workspaceId-connectionId-explorer-fileId');
   const explorerFileStore = useExplorerFileStore();
-  const { connectionStore } = useAppContext();
+  const connectionStore = useManagementConnectionStore();
 
-  const fileContents = ref('');
-  const fileVariables = ref('');
+  const cachedContent = explorerFileStore.getFileContentByIdSync(
+    route.params.fileId as string
+  );
+  const fileContents = ref(cachedContent?.contents ?? '');
+  const fileVariables = ref(cachedContent?.variables ?? '');
 
   const fieldDefs = ref<FieldDef[]>([]);
 
@@ -25,9 +24,7 @@ export function useRawQueryFileContent() {
   });
 
   const connectionsByWsId = computed(() => {
-    return connectionStore.getConnectionsByWorkspaceId(
-      route.params.workspaceId || ''
-    );
+    return connectionStore.getConnectionsByWorkspaceId(workspaceId.value);
   });
 
   const connection = computed(() => {
@@ -78,14 +75,15 @@ export function useRawQueryFileContent() {
     });
   };
 
-  onMounted(async () => {
+  const isFromCache = cachedContent !== null;
+
+  const loadFileContent = async () => {
     const { contents, variables } = await explorerFileStore.getFileContentById(
       route.params.fileId as string
     );
-
     fileContents.value = contents;
     fileVariables.value = variables;
-  });
+  };
 
   //TODO: for edit inline table after query
   // const mappedColumns = computed<MappedRawColumn[]>(() => {
@@ -108,5 +106,7 @@ export function useRawQueryFileContent() {
     connection,
     connectionsByWsId,
     updateFileCursorPos,
+    loadFileContent,
+    isFromCache,
   };
 }

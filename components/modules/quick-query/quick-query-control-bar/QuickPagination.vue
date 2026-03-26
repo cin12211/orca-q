@@ -72,7 +72,7 @@ const handleGo = () => {
     <Popover v-model:open="popoverOpen">
       <PopoverTrigger as-child>
         <TooltipTrigger as-child>
-          <Button @click="onInitData" variant="outline" size="xs">{{
+          <Button @click="onInitData" variant="outline" size="xxs">{{
             limit
           }}</Button>
         </TooltipTrigger>

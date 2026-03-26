@@ -1,20 +1,28 @@
 <script setup lang="ts">
+import { storeToRefs } from 'pinia';
 import {
   Breadcrumb,
   BreadcrumbItem,
   BreadcrumbList,
   BreadcrumbSeparator,
 } from '#components';
-import { getDatabaseSupportByType } from '~/components/modules/connection/constants';
-import { useAppContext } from '~/core/contexts/useAppContext';
+import { getDatabaseSupportByType } from '~/components/modules/connection';
+import {
+  useSchemaStore,
+  useTabViewsStore,
+  useWorkspacesStore,
+} from '~/core/stores';
+import { useManagementConnectionStore } from '~/core/stores/managementConnectionStore';
 
-const { workspaceStore, connectionStore, tabViewStore, schemaStore } =
-  useAppContext();
+const workspaceStore = useWorkspacesStore();
+const connectionStore = useManagementConnectionStore();
+const tabViewStore = useTabViewsStore();
+const schemaStore = useSchemaStore();
 
-const { selectedWorkspace } = toRefs(workspaceStore);
-const { selectedConnection } = toRefs(connectionStore);
-const { activeSchema } = toRefs(schemaStore);
-const { activeTab } = toRefs(tabViewStore);
+const { selectedWorkspace } = storeToRefs(workspaceStore);
+const { selectedConnection } = storeToRefs(connectionStore);
+const { activeSchema } = storeToRefs(schemaStore);
+const { activeTab } = storeToRefs(tabViewStore);
 
 const isShowSchemaName = computed(
   () => !!activeSchema.value && !!selectedConnection.value

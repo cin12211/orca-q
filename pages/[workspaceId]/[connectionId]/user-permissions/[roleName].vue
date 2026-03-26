@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import { LoadingOverlay } from '#components';
+import { getConnectionParams } from '@/core/helpers/connection-helper';
 import DatabasePermissionCard from '~/components/modules/management/role-permission/components/DatabasePermissionCard.vue';
 import GrantRevokeDialog from '~/components/modules/management/role-permission/components/GrantRevokeDialog.vue';
 import RoleAttributesCard from '~/components/modules/management/role-permission/components/RoleAttributesCard.vue';
 import { useDatabasePermissions } from '~/components/modules/management/role-permission/hooks/useDatabaseRoles';
-import { useAppContext } from '~/core/contexts/useAppContext';
+import { useManagementConnectionStore } from '~/core/stores/managementConnectionStore';
 import type {
   RolePermissions,
   ObjectPermission,
@@ -19,16 +20,16 @@ definePageMeta({
 });
 
 const route = useRoute('workspaceId-connectionId-user-permissions-roleName');
-const { connectionStore } = useAppContext();
+const connectionStore = useManagementConnectionStore();
 
 const roleName = computed(() => route.params.roleName as string);
-const dbConnectionString = computed(
-  () => connectionStore.selectedConnection?.connectionString || ''
-);
+const connection = computed(() => connectionStore.selectedConnection);
 
 // Extract current database name from connection string
 const currentDatabaseName = computed(() => {
-  const connStr = dbConnectionString.value;
+  if (!connection.value) return '';
+  if (connection.value.database) return connection.value.database;
+  const connStr = connection.value.connectionString;
   if (!connStr) return '';
 
   try {
@@ -58,7 +59,7 @@ const roleInfo = ref<{
 const inheritedRoles = ref<RoleInheritanceNode[]>([]);
 
 const fetchRoleInfo = async () => {
-  if (!dbConnectionString.value || !roleName.value) return;
+  if (!connection.value || !roleName.value) return;
 
   try {
     const response = await $fetch<DatabaseRole>(
@@ -66,7 +67,7 @@ const fetchRoleInfo = async () => {
       {
         method: 'POST',
         body: {
-          dbConnectionString: dbConnectionString.value,
+          ...getConnectionParams(connection.value),
           roleName: roleName.value,
         },
       }
@@ -91,7 +92,7 @@ const fetchRoleInfo = async () => {
 };
 const isLoadingInheritance = ref(false);
 const fetchInheritance = async () => {
-  if (!dbConnectionString.value || !roleName.value) return;
+  if (!connection.value || !roleName.value) return;
   isLoadingInheritance.value = true;
   try {
     const response = await $fetch<RoleInheritanceNode[]>(
@@ -99,7 +100,7 @@ const fetchInheritance = async () => {
       {
         method: 'POST',
         body: {
-          dbConnectionString: dbConnectionString.value,
+          ...getConnectionParams(connection.value),
           roleName: roleName.value,
         },
       }
@@ -120,7 +121,7 @@ const permissions = ref<RolePermissions | null>(null);
 const error = ref<string | null>(null);
 
 const fetchPermissions = async () => {
-  if (!dbConnectionString.value || !roleName.value) return;
+  if (!connection.value || !roleName.value) return;
 
   isLoading.value = true;
   error.value = null;
@@ -131,7 +132,7 @@ const fetchPermissions = async () => {
       {
         method: 'POST',
         body: {
-          dbConnectionString: dbConnectionString.value,
+          ...getConnectionParams(connection.value),
           roleName: roleName.value,
         },
       }
@@ -164,7 +165,7 @@ const {
   isLoading: isLoadingDatabases,
   databasePermissions,
   fetchDatabasePermissions,
-} = useDatabasePermissions(dbConnectionString);
+} = useDatabasePermissions(connection);
 
 const expandedDatabases = ref<Set<string>>(new Set());
 
@@ -207,7 +208,7 @@ const onDialogConfirm = async (data: {
   grant: PrivilegeType[];
   revoke: PrivilegeType[];
 }) => {
-  if (!dbConnectionString.value || !roleName.value) return;
+  if (!connection.value || !roleName.value) return;
 
   isMutating.value = true;
 
@@ -220,7 +221,7 @@ const onDialogConfirm = async (data: {
         $fetch<unknown>('/api/database-roles/grant-permission', {
           method: 'POST',
           body: {
-            dbConnectionString: dbConnectionString.value,
+            ...getConnectionParams(connection.value),
             roleName: roleName.value,
             objectType: data.objectType,
             schemaName: data.schemaName,
@@ -237,7 +238,7 @@ const onDialogConfirm = async (data: {
         $fetch<unknown>('/api/database-roles/revoke-permission', {
           method: 'POST',
           body: {
-            dbConnectionString: dbConnectionString.value,
+            ...getConnectionParams(connection.value),
             roleName: roleName.value,
             objectType: data.objectType,
             schemaName: data.schemaName,
@@ -269,12 +270,7 @@ const onDialogConfirm = async (data: {
           <p class="font-normal text-sm">{{ roleName }}</p>
         </div>
         <div class="ml-auto flex items-center gap-2">
-          <!-- <Button
-            variant="outline"
-            size="xs"
-            :disabled="isLoading || isMutating"
-            @click="onOpenGrantDialog"
-          >
+          <!-- <Button variant="outline" size="xs" :disabled="isLoading || isMutating" @click="onOpenGrantDialog">
             <Icon name="hugeicons:plus-sign" class="size-4 mr-1" />
             Grant Permission
           </Button> -->
@@ -285,7 +281,7 @@ const onDialogConfirm = async (data: {
             @click="fetchPermissions"
           >
             <Icon
-              :name="isLoading ? 'lucide:loader' : 'lucide:refresh-cw'"
+              :name="isLoading ? 'hugeicons:loading-03' : 'lucide:refresh-cw'"
               :class="['size-4', isLoading && 'animate-spin']"
             />
           </Button>
@@ -359,7 +355,10 @@ const onDialogConfirm = async (data: {
                   v-if="isLoadingInheritance"
                   class="flex items-center gap-2 text-muted-foreground"
                 >
-                  <Icon name="lucide:loader" class="size-4 animate-spin" />
+                  <Icon
+                    name="hugeicons:loading-03"
+                    class="size-4 animate-spin"
+                  />
                   <span class="text-sm">Loading inheritance...</span>
                 </div>
                 <div
@@ -401,16 +400,15 @@ const onDialogConfirm = async (data: {
             v-if="isLoadingDatabases"
             class="flex items-center gap-2 text-muted-foreground"
           >
-            <Icon name="lucide:loader" class="size-4 animate-spin" />
+            <Icon name="hugeicons:loading-03" class="size-4 animate-spin" />
             <span class="text-sm">Loading databases...</span>
           </div>
 
-          <div
+          <BaseEmpty
             v-else-if="databasePermissions.length === 0"
-            class="text-sm text-muted-foreground"
-          >
-            No database permissions found
-          </div>
+            title="No permissions found"
+            desc="No database permissions were found for this role."
+          />
 
           <div v-else class="space-y-1 flex-1 overflow-y-auto">
             <DatabasePermissionCard
@@ -428,13 +426,12 @@ const onDialogConfirm = async (data: {
       </template>
 
       <!-- Empty State -->
-      <div
+      <BaseEmpty
         v-else
-        class="flex-1 flex flex-col items-center justify-center text-muted-foreground"
-      >
-        <Icon name="hugeicons:shield-01" class="size-16 mb-4 opacity-50" />
-        <p class="text-sm">No permissions data available</p>
-      </div>
+        icon="hugeicons:shield-01"
+        title="No data available"
+        desc="No permissions data is available for the current selection."
+      />
     </div>
 
     <!-- Grant/Revoke Dialog -->

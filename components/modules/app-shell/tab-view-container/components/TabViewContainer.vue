@@ -1,6 +1,7 @@
 <script setup lang="ts">
+import { storeToRefs } from 'pinia';
 import { isElectron, isPWA } from '~/core/helpers';
-import { useAppLayoutStore } from '~/core/stores/appLayoutStore';
+import { useAppConfigStore } from '~/core/stores/appConfigStore';
 import { ActivityBarHorizontal } from '../../activity-bar';
 import TabViews from './TabViews.vue';
 
@@ -10,16 +11,16 @@ const props = defineProps<{
 
 const route = useRoute();
 
-const appLayoutStore = useAppLayoutStore();
+const appConfigStore = useAppConfigStore();
 
 const { isPrimarySidebarCollapsed, isSecondSidebarCollapsed } =
-  toRefs(appLayoutStore);
+  storeToRefs(appConfigStore);
 
 const isPWAApp = computed(() => isPWA());
 const isElectronApp = computed(() => isElectron());
 
 const minWidth = computed(() => {
-  const widthPercentage = appLayoutStore.layoutSize[0];
+  const widthPercentage = appConfigStore.layoutSize[0];
 
   if (!widthPercentage) {
     return '2.25rem';
@@ -49,7 +50,7 @@ const isAccessRightPanel = computed(() => {
 <template>
   <div
     :class="[
-      'w-screen h-9 select-none border-b pr-2 electron-drag-region bg-sidebar!',
+      'w-screen h-9 select-none border-b pr-2 electron-drag-region bg-sidebar-accent/50!',
       isElectronApp && isPrimarySidebarCollapsed ? 'pl-[4.5rem]' : '',
       isPWAApp && isPrimarySidebarCollapsed ? 'pl-[6rem]' : '',
       isPWAApp && 'h-10.5 header-tab-view-pwa',
@@ -85,7 +86,7 @@ const isAccessRightPanel = computed(() => {
             <Button
               variant="ghost"
               size="iconSm"
-              @click="appLayoutStore.onToggleActivityBarPanel()"
+              @click="appConfigStore.onToggleActivityBarPanel()"
             >
               <Icon
                 name="hugeicons:sidebar-left"
@@ -110,7 +111,7 @@ const isAccessRightPanel = computed(() => {
             v-if="isAccessRightPanel"
             variant="ghost"
             size="iconSm"
-            @click="appLayoutStore.onToggleSecondSidebar()"
+            @click="appConfigStore.onToggleSecondSidebar()"
           >
             <Icon
               name="hugeicons:sidebar-right"
@@ -133,6 +134,7 @@ const isAccessRightPanel = computed(() => {
 </template>
 
 <style>
+/*TODO: use to control logic , dont use css env() -> import { useScreenSafeArea } from '@vueuse/core' */
 .header-tab-view-pwa {
   width: calc(
     env(titlebar-area-width, 100vw) + env(titlebar-area-x)

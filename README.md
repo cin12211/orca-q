@@ -1,14 +1,16 @@
 # <img src="https://orca-q.com/images/logo.png" width="32"> OrcaQ - Next Generation database editor
+
 [![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Build Status](https://img.shields.io/badge/build-passing-brightgreen.svg)](TODO)
 [![Version](https://img.shields.io/badge/version-1.0.4-blue.svg)](package.json)
 
 ## Orca Query
+
 <img src="https://orca-q.com/images/editor-preview.png" style="border: 1px solid #ccc; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.2);" >
 
 ## Overview
-**OrcaQ** is a modern desktop application designed for managing, querying, and manipulating data across various database management systems (DBMS) in an intuitive, fast, and secure manner. Built with [Electron](https://www.electronjs.org/), [Vue 3](https://vuejs.org/), [TypeScript](https://www.typescriptlang.org/), and [Vite](https://vitejs.dev/), it targets developers, data engineers, analysts, DBAs, or anyone who needs to work with SQL/PostgreSQL data on the desktop.
 
+**OrcaQ** is a modern desktop application designed for managing, querying, and manipulating data across various database management systems (DBMS) in an intuitive, fast, and secure manner. Built with [Electron](https://www.electronjs.org/), [Vue 3](https://vuejs.org/), [TypeScript](https://www.typescriptlang.org/), and [Vite](https://vitejs.dev/), it targets developers, data engineers, analysts, DBAs, or anyone who needs to work with SQL/PostgreSQL data on the desktop.
 
 ## Features
 
@@ -20,7 +22,6 @@
 - 🔒 **Workspace & Connection Management**: Manage multiple connections and independent workspaces.
 - 🛠️ **Hotkey Support**: Supports shortcuts for faster operations.
 - ⚙️ **Electron Backend**: Leverages Node.js, native modules, and OS integration.
-
 
 ## Installation
 
@@ -86,7 +87,6 @@
 
 > **Note**: Ensure you have the correct Node.js version and necessary dependencies installed to run Electron. See more at [Electron Docs](https://www.electronjs.org/docs/latest/tutorial/quick-start).
 
-
 ## Usage
 
 - **Launch the app**:  
@@ -99,7 +99,6 @@
   Switch to the Raw Query tab to write and execute custom SQL queries.
 - **Manage Layout**:  
   Use the sidebar and hotkeys (`Cmd+Shift+B` on Mac) to show/hide panels.
-
 
 ## Contributing
 
@@ -127,7 +126,6 @@ We welcome all contributions!
 
 **See more**: [CONTRIBUTING.md](CONTRIBUTING.md)
 
-
 ## Roadmap
 
 - [x] Quick Query UI/UX
@@ -139,8 +137,6 @@ We welcome all contributions!
 - [ ] Multi-language support (i18n)
 - [ ] AI query assistant integration
 
-
-
 ## Changelog
 
 See details at [CHANGELOG.md](CHANGELOG.md)
@@ -148,21 +144,15 @@ See details at [CHANGELOG.md](CHANGELOG.md)
 - **1.0.4**: Updated UI, fixed layout bugs, optimized user experience.
 - **1.0.2**: First public release.
 
-
-
 ## Community / Contact
 
 - **Issues**: [GitHub Issues](https://github.com/cin12211/orca-q/issues)
 - **Discussions**: [GitHub Discussions](https://github.com/cin12211/orca-q/discussions)
 - **Email**: taccin03@gmail.com
 
-
-
 ## License
 
 This project is licensed under the [MIT License](LICENSE).
-
-
 
 ## Acknowledgements
 
@@ -175,15 +165,11 @@ This project is licensed under the [MIT License](LICENSE).
 - Icon design: [Figma Community](https://www.figma.com/design/wAm0jjPdhpKsEGXjtUw3tk/macOS-App-Icon-Template--Community-?node-id=102-4&t=B0v343GshmaCBMqU-0)
 - Contributions from the open-source community
 
-
-
 ## ⭐ Stargazers
 
 Many thanks to the kind individuals who leave a star.
 Your support is much appreciated!
 
 [![Stargazers repo roster for @cin12211/orca-q](https://reporoster.com/stars/cin12211/orca-q)](https://github.com/cin12211/orca-q/stargazers)
-
- 
 
 > _Made with ❤️ by the OrcaQ team and open-source contributors._

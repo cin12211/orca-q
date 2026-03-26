@@ -1,8 +1,8 @@
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
 import dayjs from 'dayjs';
+import { useWorkspaceConnectionRoute } from '~/core/composables/useWorkspaceConnectionRoute';
 import { uuidv4 } from '~/core/helpers';
-import { useWSStateStore } from './useWSStateStore';
 
 export interface QuickQueryLog {
   connectionId: string;
@@ -21,8 +21,7 @@ export interface QuickQueryLog {
 export const useQuickQueryLogs = defineStore(
   'quick-query-logs',
   () => {
-    const wsStateStore = useWSStateStore();
-    const { connectionId } = toRefs(wsStateStore);
+    const { workspaceId, connectionId } = useWorkspaceConnectionRoute();
 
     const qqLogs = ref<QuickQueryLog[]>([]);
 
@@ -52,7 +51,7 @@ export const useQuickQueryLogs = defineStore(
         | 'errorMessage'
       >
     ) => {
-      if (!connectionId.value || !wsStateStore.workspaceId) {
+      if (!connectionId.value || !workspaceId.value) {
         console.error('connectionId or schemaId not found');
         return;
       }
@@ -67,7 +66,7 @@ export const useQuickQueryLogs = defineStore(
         ...log,
         logs,
         connectionId: connectionId.value,
-        workspaceId: wsStateStore.workspaceId,
+        workspaceId: workspaceId.value,
         createdAt: dayjs().toISOString(),
         id: uuidv4(),
       };

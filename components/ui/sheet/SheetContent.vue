@@ -16,6 +16,7 @@ import SheetOverlay from './SheetOverlay.vue';
 interface SheetContentProps extends DialogContentProps {
   class?: HTMLAttributes['class'];
   side?: 'top' | 'right' | 'bottom' | 'left';
+  restoreFocus?: boolean;
 }
 
 defineOptions({
@@ -24,10 +25,11 @@ defineOptions({
 
 const props = withDefaults(defineProps<SheetContentProps>(), {
   side: 'right',
+  restoreFocus: false,
 });
 const emits = defineEmits<DialogContentEmits>();
 
-const delegatedProps = reactiveOmit(props, 'class', 'side');
+const delegatedProps = reactiveOmit(props, 'class', 'side', 'restoreFocus');
 
 const forwarded = useForwardPropsEmits(delegatedProps, emits);
 </script>
@@ -37,6 +39,7 @@ const forwarded = useForwardPropsEmits(delegatedProps, emits);
     <SheetOverlay />
     <DialogContent
       data-slot="sheet-content"
+      @close-auto-focus="e => !props.restoreFocus && e.preventDefault()"
       :class="
         cn(
           'bg-background data-[state=open]:animate-in data-[state=closed]:animate-out fixed z-50 flex flex-col gap-4 shadow-lg transition ease-in-out data-[state=closed]:duration-300 data-[state=open]:duration-500',

@@ -7,8 +7,9 @@ import {
 } from '~/components/base/context-menu/menuContext.type';
 import FileTree from '~/components/base/tree-folder/FileTree.vue';
 import type { FileNode } from '~/components/base/tree-folder/types';
+import { useTabManagement } from '~/core/composables/useTabManagement';
+import { useWorkspaceConnectionRoute } from '~/core/composables/useWorkspaceConnectionRoute';
 import { useTabViewsStore, TabViewType } from '~/core/stores/useTabViewsStore';
-import { useWSStateStore } from '~/core/stores/useWSStateStore';
 import type { DatabaseRole } from '~/core/types';
 import { RoleCategory } from '~/core/types';
 import DeleteUserDialog from './DeleteUserDialog.vue';
@@ -27,8 +28,8 @@ interface Props {
 const props = defineProps<Props>();
 
 const tabViewStore = useTabViewsStore();
-const wsStateStore = useWSStateStore();
-const { workspaceId, connectionId, schemaId } = toRefs(wsStateStore);
+const { openUserPermissionsTab } = useTabManagement();
+const { workspaceId, connectionId } = useWorkspaceConnectionRoute();
 
 const fileTreeRef = useTemplateRef<typeof FileTree | null>('fileTreeRef');
 
@@ -201,29 +202,12 @@ const handleTreeClick = async (nodeId: string) => {
       ? 'text-blue-400'
       : 'text-purple-400';
 
-  await tabViewStore.openTab({
-    workspaceId: workspaceId.value,
-    connectionId: connectionId.value,
-    schemaId: schemaId.value || '',
-    id: tabId,
-    name: `${roleName} Permissions`,
+  await openUserPermissionsTab({
+    roleName: roleName,
     icon: icon,
     iconClass: iconClass,
-    type: TabViewType.UserPermissions,
-    routeName: 'workspaceId-connectionId-user-permissions-roleName',
-    routeParams: {
-      workspaceId: workspaceId.value,
-      connectionId: connectionId.value,
-      roleName: roleName,
-    },
-    metadata: {
-      type: TabViewType.UserPermissions,
-      roleName: roleName,
-      treeNodeId: node.id,
-    },
+    treeNodeId: node.id,
   });
-
-  await tabViewStore.selectTab(tabId);
 };
 
 /**
@@ -378,13 +362,21 @@ defineExpose({
     <LoadingOverlay v-if="loading" visible />
 
     <!-- Empty State -->
-    <div
+    <BaseEmpty
       v-else-if="!roles.length"
-      class="flex flex-col items-center justify-center py-8 text-muted-foreground"
+      title="No roles found"
+      desc="There are no roles or users available for this connection."
     >
-      <Icon name="hugeicons:user-group" class="size-12 mb-2 opacity-50" />
-      <p class="text-sm">No roles found</p>
-    </div>
+      <Button
+        v-if="canCreateUser"
+        variant="outline"
+        size="sm"
+        @click="onCreateUser"
+      >
+        <Icon name="hugeicons:user-add-01" />
+        Create User
+      </Button>
+    </BaseEmpty>
 
     <!-- Roles Tree using FileTree -->
     <template v-else>

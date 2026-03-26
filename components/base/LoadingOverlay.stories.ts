@@ -1,13 +1,17 @@
 import { h } from 'vue';
+import { Icon as NuxtIcon } from '#components';
 import type { Meta, StoryObj } from '@storybook/vue3';
-import { Loader2 } from 'lucide-vue-next';
 import LoadingOverlay from './LoadingOverlay.vue';
 
 // Mock Icon component
 const Icon = {
   props: ['name'],
-  setup() {
-    return () => h(Loader2, { class: 'animate-spin' });
+  setup(props: { name?: string }) {
+    return () =>
+      h(NuxtIcon, {
+        name: props.name || 'hugeicons:loading-03',
+        class: 'size-4 animate-spin',
+      });
   },
 };
 

@@ -1,6 +1,7 @@
 import type { FieldDef } from 'pg';
 import type { RowData } from '~/components/base/dynamic-table/utils';
 import type { Connection } from '~/core/stores';
+import type { DatabaseDriverError } from '~/core/types';
 
 export interface MappedRawColumn {
   isPrimaryKey: boolean;
@@ -54,11 +55,13 @@ export interface ExecutedResultItem {
     executeErrors:
       | {
           message: string;
-          data: Record<string, unknown>;
+          data: Partial<DatabaseDriverError>;
         }
       | undefined;
     fieldDefs?: FieldDef[];
     connection?: Connection | undefined;
+    command?: string;
+    rowCount?: number;
   };
   result: RowData[];
   seqIndex: number;

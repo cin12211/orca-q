@@ -110,6 +110,11 @@ export default defineEventHandler(async event => {
 
   // Extract fields from form data
   let dbConnectionString = '';
+  let host = '';
+  let port = '5432';
+  let username = '';
+  let password = '';
+  let database = '';
   let options: ImportOptions = {};
   let fileData: Buffer | null = null;
   let fileName = 'import.dump';
@@ -117,6 +122,16 @@ export default defineEventHandler(async event => {
   for (const field of formData) {
     if (field.name === 'dbConnectionString') {
       dbConnectionString = field.data.toString();
+    } else if (field.name === 'host') {
+      host = field.data.toString();
+    } else if (field.name === 'port') {
+      port = field.data.toString();
+    } else if (field.name === 'username') {
+      username = field.data.toString();
+    } else if (field.name === 'password') {
+      password = field.data.toString();
+    } else if (field.name === 'database') {
+      database = field.data.toString();
     } else if (field.name === 'options') {
       try {
         options = JSON.parse(field.data.toString());
@@ -129,10 +144,10 @@ export default defineEventHandler(async event => {
     }
   }
 
-  if (!dbConnectionString) {
+  if (!dbConnectionString && !host) {
     throw createError({
       statusCode: 400,
-      statusMessage: 'Database connection string is required',
+      statusMessage: 'Database connection details are required',
     });
   }
 
@@ -149,8 +164,26 @@ export default defineEventHandler(async event => {
   try {
     await fs.writeFile(tempFilePath, fileData);
 
-    // Parse connection string
-    const conn = parseConnectionString(dbConnectionString);
+    // Parse connection string or use form details
+    let conn: {
+      host: string;
+      port: string;
+      database: string;
+      username: string;
+      password: string;
+    };
+
+    if (dbConnectionString) {
+      conn = parseConnectionString(dbConnectionString);
+    } else {
+      conn = {
+        host,
+        port,
+        database,
+        username,
+        password,
+      };
+    }
 
     // Set PGPASSWORD environment variable
     const env = {

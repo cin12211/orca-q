@@ -1,13 +1,23 @@
-import { defineStore } from 'pinia';
-import { ref, computed, toRefs } from 'vue';
-import type { ReservedTableSchemas } from '~/server/api/get-reverse-table-schemas';
+import { defineStore, storeToRefs } from 'pinia';
+import { ref, computed } from 'vue';
+import { getConnectionParams } from '@/core/helpers/connection-helper';
+import { useWorkspaceConnectionRoute } from '~/core/composables/useWorkspaceConnectionRoute';
+import type {
+  ReservedTableSchemas,
+  TableIndex,
+  RLSPolicy,
+  TableRule,
+  TableTrigger,
+  ViewMeta,
+} from '~/core/types';
 import type {
   FunctionSchema,
   TableDetailMetadata,
   TableDetails,
   ViewSchema,
   ViewDetails,
-} from '~/server/api/get-schema-meta-data';
+} from '~/core/types';
+import type { Connection } from './managementConnectionStore';
 import { useWSStateStore } from './useWSStateStore';
 
 export interface Schema {
@@ -28,7 +38,8 @@ export const useSchemaStore = defineStore(
   'schema-store',
   () => {
     const wsStateStore = useWSStateStore();
-    const { wsState, connectionId, schemaId } = toRefs(wsStateStore);
+    const { connectionId } = useWorkspaceConnectionRoute();
+    const { wsState, schemaId } = storeToRefs(wsStateStore);
 
     const schemas = ref<Record<string, Schema[]>>({});
 
@@ -37,6 +48,15 @@ export const useSchemaStore = defineStore(
 
     // Store loading state per connection: Record<string (connectionId), boolean>
     const loading = ref<Record<string, boolean>>({});
+
+    // Advanced objects cache: Record<"schema.table", T[]>
+    const indexesMap = ref<Record<string, TableIndex[]>>({});
+    const rlsMap = ref<Record<string, RLSPolicy[]>>({});
+    const rulesMap = ref<Record<string, TableRule[]>>({});
+    const triggersMap = ref<Record<string, TableTrigger[]>>({});
+
+    // View meta cache: Record<"schema.viewName", ViewMeta>
+    const viewMetaMap = ref<Record<string, ViewMeta>>({});
 
     const activeSchema = computed(() => {
       const currentSchemas = schemas.value[connectionId.value] || [];
@@ -74,30 +94,26 @@ export const useSchemaStore = defineStore(
      */
     const fetchReservedSchemas = async ({
       connectionId: connId,
-      dbConnectionString,
+      connection,
     }: {
       connectionId: string;
-      dbConnectionString: string;
+      connection?: Connection;
     }) => {
-      if (!connId || !dbConnectionString) return;
+      if (!connId || (!connection?.connectionString && !connection?.host))
+        return;
 
-      // If we already have reserved schemas for this connection, we might want to skip or refresh
-      // For now, let's allow re-fetching to be safe or add a check if needed.
-      // But typically reserved schemas shouldn't change that often.
-      // Let's implement a simple check: if exists, don't fetch unless we want to force refresh (not implemented yet).
       if (reservedSchemas.value[connId]?.length) return;
 
       try {
-        const result = await $fetch('/api/get-reverse-table-schemas', {
+        const result = await $fetch('/api/metadata/reverse-schemas', {
           method: 'POST',
           body: {
-            dbConnectionString,
+            ...getConnectionParams(connection),
           },
         });
         reservedSchemas.value[connId] = result.result;
       } catch (error) {
         console.error('Failed to fetch reserved schemas:', error);
-        // Optionally handle error state
       }
     };
 
@@ -107,33 +123,34 @@ export const useSchemaStore = defineStore(
     const fetchSchemas = async ({
       connectionId: connId,
       workspaceId: wsId,
-      dbConnectionString,
+      connection,
       isRefresh = false,
     }: {
       connectionId: string;
       workspaceId: string;
-      dbConnectionString: string;
+      connection?: Connection;
       isRefresh?: boolean;
     }) => {
-      if (!connId || !wsId || !dbConnectionString) return;
+      if (
+        !connId ||
+        !wsId ||
+        (!connection?.connectionString && !connection?.host)
+      )
+        return;
 
       if (isRefresh) {
-        // Remove existing schemas for this connection if refreshing
         delete schemas.value[connId];
-        // Also clear reserved schemas if hard refresh? Maybe not necessary as they are separate.
-        // But for consistency let's clear reserved schemas too if we are modifying the structure
         delete reservedSchemas.value[connId];
       } else {
-        // Check if we already have schemas for this connection
         if (schemas.value[connId]?.length) return;
       }
 
       loading.value[connId] = true;
       try {
-        const databaseSource = await $fetch('/api/get-schema-meta-data', {
+        const databaseSource = await $fetch('/api/metadata/meta-data', {
           method: 'POST',
           body: {
-            dbConnectionString,
+            ...getConnectionParams(connection),
           },
         });
 
@@ -208,6 +225,11 @@ export const useSchemaStore = defineStore(
       reservedSchemas, // Expose raw per-connection map
       schemas, // Expose raw per-connection map
       loading, // Expose raw per-connection map
+      indexesMap,
+      rlsMap,
+      rulesMap,
+      triggersMap,
+      viewMetaMap,
 
       // Getters
       activeSchema,

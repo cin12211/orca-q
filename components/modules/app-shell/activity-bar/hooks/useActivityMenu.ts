@@ -1,9 +1,9 @@
 import { ActivityBarItemType, useActivityBarStore } from '~/core/stores';
-import { useAppLayoutStore } from '~/core/stores/appLayoutStore';
+import { useAppConfigStore } from '~/core/stores/appConfigStore';
 
 export const useActivityMenu = () => {
   const activityStore = useActivityBarStore();
-  const appLayoutStore = useAppLayoutStore();
+  const appConfigStore = useAppConfigStore();
 
   const { trackEvent } = useAmplitude();
 
@@ -39,6 +39,12 @@ export const useActivityMenu = () => {
     //   isActive:
     //     activityStore.activityActive === ActivityBarItemType.DatabaseExport,
     // },
+    {
+      id: ActivityBarItemType.Agent,
+      title: 'AI Agent',
+      icon: 'hugeicons:robotic',
+      isActive: activityStore.activityActive === ActivityBarItemType.Agent,
+    },
   ]);
 
   const onChangeActivity = (
@@ -48,7 +54,7 @@ export const useActivityMenu = () => {
     activityStore.setActivityActive(type);
 
     if (isToggleLeftBar) {
-      appLayoutStore.onToggleActivityBarPanel();
+      appConfigStore.onToggleActivityBarPanel();
     }
 
     trackEvent('activity_bar', {

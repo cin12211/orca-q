@@ -1,3 +1,5 @@
+import { getConnectionParams } from '@/core/helpers/connection-helper';
+import { type Connection } from '~/core/stores';
 import type {
   DatabaseRole,
   RolePermissions,
@@ -16,7 +18,7 @@ import type {
 /**
  * Composable for managing database roles data
  */
-export const useDatabaseRoles = (dbConnectionString: Ref<string>) => {
+export const useDatabaseRoles = (connection: Ref<Connection | undefined>) => {
   const isLoading = ref(false);
   const error = ref<string | null>(null);
   const roles = ref<DatabaseRole[]>([]);
@@ -25,8 +27,8 @@ export const useDatabaseRoles = (dbConnectionString: Ref<string>) => {
    * Fetch all database roles
    */
   const fetchRoles = async () => {
-    if (!dbConnectionString.value) {
-      error.value = 'No database connection string provided';
+    if (!connection.value) {
+      error.value = 'No database connection provided';
       return;
     }
 
@@ -38,7 +40,7 @@ export const useDatabaseRoles = (dbConnectionString: Ref<string>) => {
         '/api/database-roles/get-roles',
         {
           method: 'POST',
-          body: { dbConnectionString: dbConnectionString.value },
+          body: { ...getConnectionParams(connection.value) },
         }
       );
 
@@ -91,7 +93,7 @@ export const useDatabaseRoles = (dbConnectionString: Ref<string>) => {
 /**
  * Composable for creating/deleting roles
  */
-export const useRoleMutations = (dbConnectionString: Ref<string>) => {
+export const useRoleMutations = (connection: Ref<Connection | undefined>) => {
   const isCreating = ref(false);
   const isDeleting = ref(false);
   const error = ref<string | null>(null);
@@ -121,8 +123,8 @@ export const useRoleMutations = (dbConnectionString: Ref<string>) => {
   const createRole = async (
     request: Omit<CreateRoleRequest, 'dbConnectionString'>
   ): Promise<GrantRevokeResponse | null> => {
-    if (!dbConnectionString.value) {
-      error.value = 'No database connection string provided';
+    if (!connection.value) {
+      error.value = 'No database connection provided';
       return null;
     }
 
@@ -136,7 +138,7 @@ export const useRoleMutations = (dbConnectionString: Ref<string>) => {
           method: 'POST',
           body: {
             ...request,
-            dbConnectionString: dbConnectionString.value,
+            ...getConnectionParams(connection.value),
           },
         }
       );
@@ -144,7 +146,6 @@ export const useRoleMutations = (dbConnectionString: Ref<string>) => {
       return response;
     } catch (err) {
       const rawMessage =
-        (err as any)?.data?.statusMessage ||
         (err as any)?.data?.message ||
         (err instanceof Error ? err.message : 'Failed to create role');
       const extracted = extractControlPlaneError(rawMessage);
@@ -169,8 +170,8 @@ export const useRoleMutations = (dbConnectionString: Ref<string>) => {
   const deleteRole = async (
     roleName: string
   ): Promise<GrantRevokeResponse | null> => {
-    if (!dbConnectionString.value) {
-      error.value = 'No database connection string provided';
+    if (!connection.value) {
+      error.value = 'No database connection provided';
       return null;
     }
 
@@ -183,7 +184,7 @@ export const useRoleMutations = (dbConnectionString: Ref<string>) => {
         {
           method: 'POST',
           body: {
-            dbConnectionString: dbConnectionString.value,
+            ...getConnectionParams(connection.value),
             roleName,
           },
         }
@@ -212,7 +213,7 @@ export const useRoleMutations = (dbConnectionString: Ref<string>) => {
 /**
  * Composable for managing role permissions
  */
-export const useRolePermissions = (dbConnectionString: Ref<string>) => {
+export const useRolePermissions = (connection: Ref<Connection | undefined>) => {
   const isLoading = ref(false);
   const isMutating = ref(false);
   const error = ref<string | null>(null);
@@ -222,8 +223,8 @@ export const useRolePermissions = (dbConnectionString: Ref<string>) => {
    * Fetch permissions for a specific role
    */
   const fetchPermissions = async (roleName: string) => {
-    if (!dbConnectionString.value || !roleName) {
-      error.value = 'Missing connection string or role name';
+    if (!connection.value || !roleName) {
+      error.value = 'Missing connection or role name';
       return;
     }
 
@@ -236,7 +237,7 @@ export const useRolePermissions = (dbConnectionString: Ref<string>) => {
         {
           method: 'POST',
           body: {
-            dbConnectionString: dbConnectionString.value,
+            ...getConnectionParams(connection.value),
             roleName,
           },
         }
@@ -258,8 +259,8 @@ export const useRolePermissions = (dbConnectionString: Ref<string>) => {
   const grantPermission = async (
     request: Omit<GrantRevokeRequest, 'dbConnectionString'>
   ): Promise<GrantRevokeResponse | null> => {
-    if (!dbConnectionString.value) {
-      error.value = 'No database connection string provided';
+    if (!connection.value) {
+      error.value = 'No database connection provided';
       return null;
     }
 
@@ -273,7 +274,7 @@ export const useRolePermissions = (dbConnectionString: Ref<string>) => {
           method: 'POST',
           body: {
             ...request,
-            dbConnectionString: dbConnectionString.value,
+            ...getConnectionParams(connection.value),
           },
         }
       );
@@ -298,8 +299,8 @@ export const useRolePermissions = (dbConnectionString: Ref<string>) => {
   const revokePermission = async (
     request: Omit<GrantRevokeRequest, 'dbConnectionString'>
   ): Promise<GrantRevokeResponse | null> => {
-    if (!dbConnectionString.value) {
-      error.value = 'No database connection string provided';
+    if (!connection.value) {
+      error.value = 'No database connection provided';
       return null;
     }
 
@@ -313,7 +314,7 @@ export const useRolePermissions = (dbConnectionString: Ref<string>) => {
           method: 'POST',
           body: {
             ...request,
-            dbConnectionString: dbConnectionString.value,
+            ...getConnectionParams(connection.value),
           },
         }
       );
@@ -355,7 +356,9 @@ export const useRolePermissions = (dbConnectionString: Ref<string>) => {
 /**
  * Composable for fetching database-level permissions
  */
-export const useDatabasePermissions = (dbConnectionString: Ref<string>) => {
+export const useDatabasePermissions = (
+  connection: Ref<Connection | undefined>
+) => {
   const isLoading = ref(false);
   const error = ref<string | null>(null);
   const databasePermissions = ref<DatabasePermission[]>([]);
@@ -364,8 +367,8 @@ export const useDatabasePermissions = (dbConnectionString: Ref<string>) => {
    * Fetch database permissions for a role
    */
   const fetchDatabasePermissions = async (roleName: string) => {
-    if (!dbConnectionString.value || !roleName) {
-      error.value = 'Missing connection string or role name';
+    if (!connection.value || !roleName) {
+      error.value = 'Missing connection or role name';
       return;
     }
 
@@ -378,7 +381,7 @@ export const useDatabasePermissions = (dbConnectionString: Ref<string>) => {
         {
           method: 'POST',
           body: {
-            dbConnectionString: dbConnectionString.value,
+            ...getConnectionParams(connection.value),
             roleName,
           },
         }
@@ -407,7 +410,7 @@ export const useDatabasePermissions = (dbConnectionString: Ref<string>) => {
 /**
  * Composable for fetching all databases
  */
-export const useDatabases = (dbConnectionString: Ref<string>) => {
+export const useDatabases = (connection: Ref<Connection | undefined>) => {
   const isLoading = ref(false);
   const error = ref<string | null>(null);
   const databases = ref<DatabaseInfo[]>([]);
@@ -416,8 +419,8 @@ export const useDatabases = (dbConnectionString: Ref<string>) => {
    * Fetch all databases
    */
   const fetchDatabases = async () => {
-    if (!dbConnectionString.value) {
-      error.value = 'No database connection string provided';
+    if (!connection.value) {
+      error.value = 'No database connection provided';
       return;
     }
 
@@ -429,7 +432,7 @@ export const useDatabases = (dbConnectionString: Ref<string>) => {
         '/api/database-roles/get-databases',
         {
           method: 'POST',
-          body: { dbConnectionString: dbConnectionString.value },
+          body: { ...getConnectionParams(connection.value) },
         }
       );
 
@@ -454,7 +457,7 @@ export const useDatabases = (dbConnectionString: Ref<string>) => {
 /**
  * Composable for fetching schemas
  */
-export const useSchemas = (dbConnectionString: Ref<string>) => {
+export const useSchemas = (connection: Ref<Connection | undefined>) => {
   const isLoading = ref(false);
   const error = ref<string | null>(null);
   const schemas = ref<SchemaInfo[]>([]);
@@ -463,8 +466,8 @@ export const useSchemas = (dbConnectionString: Ref<string>) => {
    * Fetch all schemas in the database
    */
   const fetchSchemas = async () => {
-    if (!dbConnectionString.value) {
-      error.value = 'No database connection string provided';
+    if (!connection.value) {
+      error.value = 'No database connection provided';
       return;
     }
 
@@ -476,7 +479,7 @@ export const useSchemas = (dbConnectionString: Ref<string>) => {
         '/api/database-roles/get-schemas',
         {
           method: 'POST',
-          body: { dbConnectionString: dbConnectionString.value },
+          body: { ...getConnectionParams(connection.value) },
         }
       );
 
@@ -501,7 +504,7 @@ export const useSchemas = (dbConnectionString: Ref<string>) => {
 /**
  * Composable for fetching objects in a schema
  */
-export const useSchemaObjects = (dbConnectionString: Ref<string>) => {
+export const useSchemaObjects = (connection: Ref<Connection | undefined>) => {
   const isLoading = ref(false);
   const error = ref<string | null>(null);
   const schemaObjects = ref<SchemaObjects | null>(null);
@@ -510,8 +513,8 @@ export const useSchemaObjects = (dbConnectionString: Ref<string>) => {
    * Fetch objects in a specific schema
    */
   const fetchSchemaObjects = async (schemaName: string) => {
-    if (!dbConnectionString.value || !schemaName) {
-      error.value = 'Missing connection string or schema name';
+    if (!connection.value || !schemaName) {
+      error.value = 'Missing connection or schema name';
       return;
     }
 
@@ -524,7 +527,7 @@ export const useSchemaObjects = (dbConnectionString: Ref<string>) => {
         {
           method: 'POST',
           body: {
-            dbConnectionString: dbConnectionString.value,
+            ...getConnectionParams(connection.value),
             schemaName,
           },
         }
@@ -560,7 +563,9 @@ export const useSchemaObjects = (dbConnectionString: Ref<string>) => {
 /**
  * Composable for bulk granting permissions
  */
-export const useBulkGrantPermissions = (dbConnectionString: Ref<string>) => {
+export const useBulkGrantPermissions = (
+  connection: Ref<Connection | undefined>
+) => {
   const isGranting = ref(false);
   const error = ref<string | null>(null);
 
@@ -570,8 +575,8 @@ export const useBulkGrantPermissions = (dbConnectionString: Ref<string>) => {
   const grantBulkPermissions = async (
     request: Omit<BulkGrantRequest, 'dbConnectionString'>
   ): Promise<BulkGrantResponse | null> => {
-    if (!dbConnectionString.value) {
-      error.value = 'No database connection string provided';
+    if (!connection.value) {
+      error.value = 'No database connection provided';
       return null;
     }
 
@@ -585,7 +590,7 @@ export const useBulkGrantPermissions = (dbConnectionString: Ref<string>) => {
           method: 'POST',
           body: {
             ...request,
-            dbConnectionString: dbConnectionString.value,
+            ...getConnectionParams(connection.value),
           },
         }
       );

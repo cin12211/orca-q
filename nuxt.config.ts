@@ -1,5 +1,6 @@
 import tailwindcss from '@tailwindcss/vite';
 import type { DefineNuxtConfig, NuxtConfig } from 'nuxt/config';
+import pkg from './package.json';
 
 // https://nuxt.com/docs/api/configuration/nuxt-config
 
@@ -17,7 +18,7 @@ const appHeaderConfig: NonNullable<NuxtConfig['app']>['head'] = {
     // Apple PWA
     { name: 'apple-mobile-web-app-capable', content: 'no' },
     { name: 'apple-mobile-web-app-status-bar-style', content: 'default' },
-    { name: 'apple-mobile-web-app-title', content: 'ChiaXien' },
+    { name: 'apple-mobile-web-app-title', content: 'OrcaQ' },
   ],
 
   link: [{ rel: 'manifest', href: '/manifest.json' }],
@@ -43,6 +44,8 @@ export default defineNuxtConfig({
   runtimeConfig: {
     public: {
       amplitudeApiKey: process.env.NUXT_AMPLITUDE_API_KEY,
+      isDev: process.env.NODE_ENV !== 'production',
+      version: pkg.version,
     },
   },
 
@@ -54,6 +57,7 @@ export default defineNuxtConfig({
     },
   },
   modules: [
+    // '@nuxt/test-utils/module',
     'shadcn-nuxt',
     '@nuxt/icon',
     '@nuxtjs/color-mode',
@@ -68,9 +72,10 @@ export default defineNuxtConfig({
   colorMode: {
     preference: 'light',
     fallback: 'light',
+    classSuffix: '',
     globalName: '__NUXT_COLOR_MODE__',
     componentName: 'ColorScheme',
-    storage: 'cookie',
+    storage: 'localStorage',
     storageKey: 'nuxt-color-mode',
   },
   vite: {
@@ -82,8 +87,13 @@ export default defineNuxtConfig({
     clientBundle: {
       scan: true,
     },
-    // collections: ['material-icon-theme', 'hugeicons', 'logos', 'lucide'],
     provider: 'iconify',
+    customCollections: [
+      {
+        prefix: 'icons',
+        dir: './assets/icons',
+      },
+    ],
   },
   imports: {
     autoImport: true,
@@ -101,4 +111,5 @@ export default defineNuxtConfig({
   app: {
     head: appHeaderConfig,
   },
+  spaLoadingTemplate: true,
 });

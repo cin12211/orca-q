@@ -1,7 +1,9 @@
 <script setup lang="ts">
+import { LoadingOverlay } from '#components';
 import type { EditorView } from '@codemirror/view';
 import BaseCodeEditor from '~/components/base/code-editor/BaseCodeEditor.vue';
-import { useAppLayoutStore } from '~/core/stores/appLayoutStore';
+import { useHotkeys } from '~/core/composables/useHotKeys';
+import { useAppConfigStore } from '~/core/stores/appConfigStore';
 import IntroRawQuery from './components/IntroRawQuery.vue';
 import RawQueryEditorContextMenu from './components/RawQueryEditorContextMenu.vue';
 import RawQueryEditorFooter from './components/RawQueryEditorFooter.vue';
@@ -13,7 +15,7 @@ import { useRawQueryEditor, useRawQueryFileContent } from './hooks';
 import { useRawQueryEditorContextMenu } from './hooks/useRawQueryEditorContextMenu';
 
 const route = useRoute('workspaceId-connectionId-explorer-fileId');
-const appLayoutStore = useAppLayoutStore();
+const appConfigStore = useAppConfigStore();
 const rawQueryFileContent = useRawQueryFileContent();
 const {
   connection,
@@ -44,7 +46,6 @@ const {
   serializeMode,
   currentRawQueryResult,
   queryProcessState,
-  // Results tab management
   executedResults,
   activeResultTabId,
 } = toRefs(rawQueryEditor);
@@ -57,6 +58,25 @@ const { contextMenuItems, onContextMenuOpen } = useRawQueryEditorContextMenu({
   getEditorView: () =>
     codeEditorRef.value?.editorView as EditorView | null | undefined,
 });
+
+const scrollTop = ref(0);
+
+const showResultPanel = ref(true);
+
+useHotkeys([
+  {
+    key: 'mod+j',
+    callback: () => {
+      showResultPanel.value = !showResultPanel.value;
+    },
+  },
+  {
+    key: 'ctrl+j',
+    callback: () => {
+      showResultPanel.value = !showResultPanel.value;
+    },
+  },
+]);
 
 watch(fileVariables, () => {
   rawQueryEditor.reloadSqlCompartment();
@@ -84,60 +104,38 @@ const onUpdateCursorInfo = ({
   });
 };
 
-const isInitPos = ref(false);
-const scrollTop = ref(0);
-
-const onInitCursorPos = (allowScroll: boolean = true) => {
-  if (!currentFile.value?.cursorPos || !codeEditorRef.value?.editorView) {
-    return;
-  }
-
-  const from = currentFile?.value?.cursorPos?.from;
-  0;
-  const to = currentFile?.value?.cursorPos?.to || 0;
-
-  isInitPos.value = true;
-  codeEditorRef.value?.setCursorPosition({
-    from,
-    to,
-    allowScroll,
-  });
+const restoreCursorPos = (allowScroll = true) => {
+  if (!currentFile.value?.cursorPos || !codeEditorRef.value?.editorView) return;
+  const from = currentFile.value.cursorPos.from ?? 0;
+  const to = currentFile.value.cursorPos.to || 0;
+  codeEditorRef.value.setCursorPosition({ from, to, allowScroll });
 };
 
-watch(
-  [currentFile, codeEditorRef, isInitPos],
-  async () => {
-    if (isInitPos.value) return;
+const isEditorLoading = ref(!rawQueryFileContent.isFromCache);
 
+onMounted(async () => {
+  if (isEditorLoading.value) {
+    await rawQueryFileContent.loadFileContent();
+    isEditorLoading.value = false;
     await nextTick();
-
-    setTimeout(() => {
-      onInitCursorPos();
-    }, 300);
-  },
-  {
-    deep: true,
-    immediate: true,
-    flush: 'post',
   }
-);
+  restoreCursorPos();
+});
 
 onActivated(async () => {
-  if (isInitPos.value) {
-    setTimeout(() => {
-      onInitCursorPos(false);
-      if (codeEditorRef.value && codeEditorRef.value.editorView) {
-        codeEditorRef.value.editorView.scrollDOM.scrollTop = scrollTop.value;
-      }
-    }, 50);
+  await nextTick();
+  restoreCursorPos(false);
+  if (codeEditorRef.value?.editorView) {
+    codeEditorRef.value.editorView.scrollDOM.scrollTop = scrollTop.value;
   }
 });
 </script>
 
 <template>
   <RawQueryLayout
-    :layout="appLayoutStore.codeEditorLayout"
-    :customLayout="appLayoutStore.activeCustomLayout"
+    :layout="appConfigStore.codeEditorLayout"
+    :customLayout="appConfigStore.activeCustomLayout"
+    :show-result-panel="showResultPanel"
   >
     <template #content>
       <div class="flex flex-col h-full p-1">
@@ -148,7 +146,7 @@ onActivated(async () => {
             :connection="connection"
             :workspaceId="route.params.workspaceId"
             :file-variables="fileVariables"
-            :code-editor-layout="appLayoutStore.codeEditorLayout"
+            :code-editor-layout="appConfigStore.codeEditorLayout"
             :currentFileInfo="currentFile"
             @update:update-file-variables="updateFileVariables"
           />
@@ -157,13 +155,15 @@ onActivated(async () => {
               :context-menu-items="contextMenuItems"
               @update:open="onContextMenuOpen"
             >
+              <LoadingOverlay v-if="isEditorLoading" visible />
+
               <BaseCodeEditor
+                v-else
                 @update:modelValue="updateFileContent"
                 @update:cursorInfo="onUpdateCursorInfo"
                 @update:onScrollTop="scrollTop = $event"
                 :modelValue="fileContents"
                 :extensions="extensions"
-                :disabled="false"
                 ref="codeEditorRef"
               />
             </RawQueryEditorContextMenu>
@@ -174,6 +174,8 @@ onActivated(async () => {
             :execute-loading="queryProcessState.executeLoading"
             :execute-errors="!!queryProcessState.executeErrors"
             :is-have-one-execute="queryProcessState.isHaveOneExecute"
+            :is-streaming="queryProcessState.isStreaming"
+            :streaming-row-count="queryProcessState.streamingRowCount"
             :queryTime="queryProcessState.queryTime"
             :raw-query-results-length="currentRawQueryResult.length"
             :explain-analyze-option-items="explainAnalyzeOptionItems"
@@ -184,13 +186,14 @@ onActivated(async () => {
             @toggle-explain-option="rawQueryEditor.toggleExplainOption"
             @update:serialize-mode="rawQueryEditor.setSerializeMode"
             @on-execute-current="onExecuteCurrent"
+            @on-cancel-query="rawQueryEditor.cancelStreamingQuery"
           />
         </div>
       </div>
     </template>
 
     <template #variables>
-      <div class="flex flex-col h-full border rounded-md bg-gray-50">
+      <div class="flex flex-col h-full border rounded-md bg-muted">
         <div class="flex items-center gap-1 font-normal text-sm px-2 py-1">
           <Icon name="hugeicons:absolute" />
           Variables
@@ -213,6 +216,7 @@ onActivated(async () => {
         :executed-results="executedResults"
         :active-tab-id="activeResultTabId"
         :execute-loading="queryProcessState.executeLoading"
+        :is-streaming="queryProcessState.isStreaming"
         @update:active-tab="rawQueryEditor.setActiveResultTab"
         @close-tab="rawQueryEditor.closeResultTab"
         @close-other-tabs="rawQueryEditor.closeOtherResultTabs"

@@ -1,10 +1,11 @@
 import { toast } from 'vue-sonner';
-import { useAppContext } from '~/core/contexts';
+import { getConnectionParams } from '@/core/helpers/connection-helper';
 import { useErdStore } from '~/core/stores/erdStore';
-import type { TableMetadata } from '~/server/api/get-tables';
+import { useManagementConnectionStore } from '~/core/stores/managementConnectionStore';
+import type { TableMetadata } from '~/core/types';
 
 export const useErdQueryTables = () => {
-  const { connectionStore } = useAppContext();
+  const connectionStore = useManagementConnectionStore();
   const erdStore = useErdStore();
 
   if (
@@ -18,12 +19,11 @@ export const useErdQueryTables = () => {
   }
 
   const { data: tableSchemaResponse, status: tableSchemaStatus } = useFetch(
-    '/api/get-tables',
+    '/api/metadata/erd',
     {
       method: 'POST',
       body: {
-        dbConnectionString:
-          connectionStore.selectedConnection?.connectionString,
+        ...getConnectionParams(connectionStore.selectedConnection),
       },
       onResponseError({ response }) {
         toast(response?.statusText);

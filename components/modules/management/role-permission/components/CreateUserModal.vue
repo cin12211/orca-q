@@ -606,18 +606,16 @@ const stepTitles = ['User Info', 'Database', 'Schemas', 'Objects', 'Review'];
             class="flex items-center justify-center gap-2 py-8 text-muted-foreground"
           >
             <Icon
-              name="lucide:loader"
+              name="hugeicons:loading-03"
               class="size-5 animate-spin text-muted-foreground"
             />
             <p class="text-sm">Loading databases...</p>
           </div>
-          <div
+          <BaseEmpty
             v-else-if="!databases?.length"
-            class="flex flex-col items-center justify-center py-8 text-muted-foreground"
-          >
-            <Icon name="lucide:database" class="size-12 mb-2 opacity-50" />
-            <p class="text-sm">No databases available</p>
-          </div>
+            title="No databases available"
+            desc="No databases were found for this connection."
+          />
         </div>
 
         <!-- Step 3: Schema Permissions -->
@@ -634,7 +632,7 @@ const stepTitles = ['User Info', 'Database', 'Schemas', 'Objects', 'Review'];
             class="flex items-center justify-center gap-2 py-8 text-muted-foreground"
           >
             <Icon
-              name="lucide:loader"
+              name="hugeicons:loading-03"
               class="size-5 animate-spin text-muted-foreground"
             />
             <p class="text-sm">Loading schemas...</p>
@@ -889,12 +887,7 @@ const stepTitles = ['User Info', 'Database', 'Schemas', 'Objects', 'Review'];
               <h4 class="text-sm font-medium">Generated SQL</h4>
               <Tooltip>
                 <TooltipTrigger as-child>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    class="h-7 text-xs"
-                    @click="onCopySQL"
-                  >
+                  <Button variant="ghost" size="xs" @click="onCopySQL">
                     <Icon
                       :name="getCopyIcon(copied)"
                       class="size-3 mr-1"
@@ -953,7 +946,7 @@ const stepTitles = ['User Info', 'Database', 'Schemas', 'Objects', 'Review'];
           >
             <Icon
               v-if="loading"
-              name="lucide:loader"
+              name="hugeicons:loading-03"
               class="size-4 mr-2 animate-spin"
             />
             Create User

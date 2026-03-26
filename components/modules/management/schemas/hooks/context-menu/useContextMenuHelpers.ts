@@ -1,19 +1,21 @@
 import { toRaw, toRef } from 'vue';
 import { toast } from 'vue-sonner';
 import type { FlattenedTreeFileSystemItem } from '~/components/base/Tree';
-import { useAppLayoutStore } from '~/core/stores/appLayoutStore';
+import { useAppConfigStore } from '~/core/stores/appConfigStore';
 import type {
-  ColumnShortMetadata,
+  SchemaColumnMetadata as ColumnShortMetadata,
+  SchemaForeignKeyMetadata as ForeignKeyMetadata,
+  SchemaPrimaryKey as PrimaryKey,
   TableDetailMetadata,
-} from '~/server/api/get-schema-meta-data';
+} from '~/core/types';
 import type { ContextMenuState, SchemaContextMenuOptions } from './types';
 
 export function useContextMenuHelpers(
   options: SchemaContextMenuOptions,
   state: ContextMenuState
 ) {
-  const appLayoutStore = useAppLayoutStore();
-  const safeModeEnabled = toRef(appLayoutStore, 'quickQuerySafeModeEnabled');
+  const appConfigStore = useAppConfigStore();
+  const safeModeEnabled = toRef(appConfigStore, 'quickQuerySafeModeEnabled');
   const safeModeLoading = ref(false);
 
   /**

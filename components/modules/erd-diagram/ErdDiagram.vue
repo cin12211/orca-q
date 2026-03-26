@@ -8,7 +8,7 @@ import '@vue-flow/core/dist/theme-default.css';
 import { MiniMap } from '@vue-flow/minimap';
 import '@vue-flow/minimap/dist/style.css';
 import '@vue-flow/node-resizer/dist/style.css';
-import ValueNode from '~/components/modules/erd-diagram/ValueNode.vue';
+import ErdTableNode from '~/components/modules/erd-diagram/ErdTableNode.vue';
 import {
   DEFAULT_ZOOM,
   DEFAULT_ZOOM_DURATION,
@@ -96,7 +96,7 @@ const onArrangeDiagram = () => {
       <CustomEdge v-bind="edgeProps" />
     </template>
     <template #node-value="nodeProps">
-      <ValueNode
+      <ErdTableNode
         v-bind="nodeProps"
         :isExpanded="
           props.isExpanded?.(

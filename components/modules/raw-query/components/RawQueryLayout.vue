@@ -1,8 +1,9 @@
 <script setup lang="ts">
+import { storeToRefs } from 'pinia';
 import type { Slot } from 'vue';
 import { Pane, Splitpanes } from 'splitpanes';
 import 'splitpanes/dist/splitpanes.css';
-import { useAppLayoutStore } from '~/core/stores/appLayoutStore';
+import { useAppConfigStore } from '~/core/stores/appConfigStore';
 import {
   RawQueryEditorLayout,
   type CustomLayoutDefinition,
@@ -11,6 +12,7 @@ import {
 const props = defineProps<{
   layout: RawQueryEditorLayout;
   customLayout?: CustomLayoutDefinition | null;
+  showResultPanel?: boolean;
 }>();
 
 defineSlots<{
@@ -19,9 +21,9 @@ defineSlots<{
   variables?: Slot;
 }>();
 
-const appLayoutStore = useAppLayoutStore();
+const appConfigStore = useAppConfigStore();
 const { editorLayoutSizes, editorLayoutInnerVariableSizes } =
-  toRefs(appLayoutStore);
+  storeToRefs(appConfigStore);
 
 const onUpdateEditorLayoutSizes = (
   panes: {
@@ -90,7 +92,7 @@ const getCustomPanelSize = (panelIndex: number): number => {
   if (!layoutId)
     return props.customLayout?.panels[panelIndex]?.defaultSize ?? 50;
 
-  const persisted = appLayoutStore.customLayoutSizes[layoutId];
+  const persisted = appConfigStore.customLayoutSizes[layoutId];
   return (
     persisted?.panels[panelIndex] ??
     props.customLayout?.panels[panelIndex]?.defaultSize ??
@@ -106,7 +108,7 @@ const getCustomInnerPanelSize = (panelIndex: number): number => {
       props.customLayout?.innerSplit?.panels[panelIndex]?.defaultSize ?? 50
     );
 
-  const persisted = appLayoutStore.customLayoutSizes[layoutId];
+  const persisted = appConfigStore.customLayoutSizes[layoutId];
   return (
     persisted?.innerPanels[panelIndex] ??
     props.customLayout?.innerSplit?.panels[panelIndex]?.defaultSize ??
@@ -119,7 +121,7 @@ const onCustomResize = (panes: { size: number }[]) => {
   const layoutId = props.customLayout?.id;
   if (!layoutId) return;
 
-  appLayoutStore.updateCustomLayoutSizes(
+  appConfigStore.updateCustomLayoutSizes(
     layoutId,
     panes.map(p => p.size)
   );
@@ -131,11 +133,11 @@ const onCustomInnerResize = (panes: { size: number }[]) => {
   if (!layoutId) return;
 
   const existingPanels =
-    appLayoutStore.customLayoutSizes[layoutId]?.panels ??
+    appConfigStore.customLayoutSizes[layoutId]?.panels ??
     props.customLayout?.panels.map(p => p.defaultSize) ??
     [];
 
-  appLayoutStore.updateCustomLayoutSizes(
+  appConfigStore.updateCustomLayoutSizes(
     layoutId,
     existingPanels,
     panes.map(p => p.size)
@@ -242,7 +244,12 @@ const SLOT_WRAPPER_CLASSES: Record<string, string> = {
           </splitpanes>
         </pane>
 
-        <pane :size="resultSize" min-size="0" max-size="80">
+        <pane
+          v-if="props.showResultPanel !== false"
+          :size="resultSize"
+          min-size="0"
+          max-size="80"
+        >
           <div class="flex flex-col flex-1 h-full p-1 pl-0 relative">
             <slot name="result" />
           </div>

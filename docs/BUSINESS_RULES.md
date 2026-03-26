@@ -66,7 +66,7 @@ interface Connection {
   name: string; // Display name
   connectionString: string; // PostgreSQL URL
   database: string; // Database name (parsed)
-  type: EDatabaseType; // 'postgres' | 'mysql'
+  type: DatabaseClientType; // 'postgres' | 'mysql'
   createdAt: string; // ISO timestamp
 }
 ```
@@ -305,7 +305,7 @@ graph TD
         C[useWSStateStore]
         D[useSchemaStore]
         E[useTabViewsStore]
-        F[appLayoutStore]
+        F[appConfigStore]
     end
 
     subgraph "Persistence"

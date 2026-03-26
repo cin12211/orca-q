@@ -1,23 +1,32 @@
 <script setup lang="ts">
 import { refDebounced } from '@vueuse/core';
-import type { RouteNameFromPath, RoutePathSchema } from '@typed-router/__paths';
+import { storeToRefs } from 'pinia';
 import BaseContextMenu from '~/components/base/context-menu/BaseContextMenu.vue';
 import FileTree from '~/components/base/tree-folder/FileTree.vue';
 import { useSchemaTreeData } from '~/components/modules/management/schemas/hooks/useSchemaTreeData';
+import { useTabManagement } from '~/core/composables/useTabManagement';
+import { useWorkspaceConnectionRoute } from '~/core/composables/useWorkspaceConnectionRoute';
 import { DEFAULT_DEBOUNCE_INPUT } from '~/core/constants';
 import { useAppContext } from '~/core/contexts/useAppContext';
-import { TabViewType } from '~/core/stores/useTabViewsStore';
+import { useSchemaStore, useWSStateStore } from '~/core/stores';
+import { TabViewType, useTabViewsStore } from '~/core/stores/useTabViewsStore';
 import SafeModeConfirmDialog from '../../quick-query/SafeModeConfirmDialog.vue';
 import { ManagementSidebarHeader } from '../shared';
 import RenameDialog from './dialogs/RenameDialog.vue';
 import SqlPreviewDialog from './dialogs/SqlPreviewDialog.vue';
 import { useSchemaContextMenu } from './hooks/useSchemaContextMenu';
 
-const { schemaStore, connectToConnection, wsStateStore, tabViewStore } =
-  useAppContext();
+const { connectToConnection } = useAppContext();
+const schemaStore = useSchemaStore();
+const wsStateStore = useWSStateStore();
 
-const { activeSchema } = toRefs(schemaStore);
-const { connectionId, schemaId, workspaceId } = toRefs(wsStateStore);
+const tabViewStore = useTabViewsStore();
+
+const { openSchemaItemTab } = useTabManagement();
+
+const { activeSchema } = storeToRefs(schemaStore);
+const { connectionId, workspaceId } = useWorkspaceConnectionRoute();
+const { schemaId } = storeToRefs(wsStateStore);
 
 const isRefreshing = ref(false);
 
@@ -113,50 +122,15 @@ const handleTreeClick = async (nodeId: string) => {
     return;
   }
 
-  let routeName: RouteNameFromPath<RoutePathSchema> | null = null;
-  let routeParams: Record<string, any> | undefined;
-
-  const tabId = `${node.name}-${schemaId.value}`;
-
-  routeName = 'workspaceId-connectionId-quick-query-tabViewId';
-
-  routeParams = {
-    tabViewId: tabId,
-  };
-
-  const virtualTableId =
-    tabViewType === TabViewType.ViewDetail
-      ? String(itemValue?.id ?? node.id ?? '')
-      : undefined;
-
-  if (routeName) {
-    const icon =
-      itemValue?.icon ||
-      node.iconOpen ||
-      node.iconClose ||
-      'hugeicons:grid-table';
-    await tabViewStore.openTab({
-      icon,
-      iconClass: itemValue?.iconClass || node.iconClass,
-      id: tabId,
-      name: node.name,
-      type: tabViewType,
-      routeName,
-      routeParams,
-      connectionId: connectionId.value,
-      schemaId: schemaId.value || '',
-      workspaceId: workspaceId.value || '',
-      metadata: {
-        type: tabViewType,
-        tableName: node.name,
-        virtualTableId,
-        functionId: String(itemValue?.id || ''),
-        treeNodeId: node.id,
-      },
-    });
-
-    await tabViewStore.selectTab(tabId);
-  }
+  await openSchemaItemTab({
+    id: nodeId,
+    name: node.name,
+    type: tabViewType,
+    icon: itemValue?.icon || node.iconOpen || node.iconClose,
+    iconClass: itemValue?.iconClass || node.iconClass,
+    itemValueId: itemValue?.id,
+    treeNodeId: node.id,
+  });
 };
 
 const handleTreeContextMenu = (nodeId: string, event: MouseEvent) => {
@@ -251,12 +225,11 @@ watch(
 
     <!-- TODO: check flow when change connection  -->
     <!-- TODO: check flow when change schema  -->
-    <div
+    <BaseEmpty
       v-if="!hasTreeData"
-      class="flex flex-col items-center h-full justify-center"
-    >
-      No data!
-    </div>
+      title="No data found"
+      desc="There is no schemas data available for this connection."
+    />
 
     <!-- Context Menu Wrapper -->
     <BaseContextMenu

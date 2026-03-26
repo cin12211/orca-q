@@ -2,16 +2,16 @@
   <div class="flex flex-1 flex-col h-full">
     <div class="flex flex-1 h-full items-center justify-between">
       <Tabs v-model="tab" class="pt-1">
-        <TabsList class="grid grid-cols-2 h-[1.625rem]!">
+        <TabsList class="h-7!">
           <TabsTrigger
             :value="HistoryLogTabs.All"
-            class="h-5! px-1 font-medium text-xs cursor-pointer text-primary/80"
+            class="h-5! font-medium text-xs cursor-pointer text-primary/80"
           >
             All logs
           </TabsTrigger>
           <TabsTrigger
             :value="HistoryLogTabs.OneTable"
-            class="h-5! px-1 font-medium text-xs cursor-pointer text-primary/80"
+            class="h-5! font-medium text-xs cursor-pointer text-primary/80"
           >
             Only this table
           </TabsTrigger>
@@ -28,7 +28,6 @@
             <Button
               variant="outline"
               size="xxs"
-              class="text-xs"
               @click="qqLogStore.deleteAllLogs"
             >
               <Icon name="lucide:trash" />
@@ -44,7 +43,6 @@
             <Button
               variant="outline"
               size="xxs"
-              class="text-xs"
               @click="qqLogStore.deleteLogsOfTable(props)"
             >
               <Icon name="lucide:trash" />
@@ -57,7 +55,7 @@
         </Tooltip>
 
         <!-- TODO: open when to this feature -->
-        <!-- <Button  variant="outline" size="sm" class="h-6 px-1 gap-1 text-xs">
+        <!-- <Button variant="outline" size="xxs" class="px-1">
           <Icon name="hugeicons:file-download"> </Icon>
           <p class="font-normal">Download logs</p>
         </Button> -->
@@ -66,9 +64,12 @@
 
     <div
       v-if="!logs.length"
-      class="flex h-full items-center justify-center text-zinc-500"
+      class="flex items-center justify-center h-full w-full"
     >
-      No logs to display
+      <BaseEmpty
+        title="No logs found"
+        desc="There are no execution logs to display for this table."
+      />
     </div>
 
     <Card
@@ -132,6 +133,7 @@
 
 <script setup lang="ts">
 import { useElementSize } from '@vueuse/core';
+import { storeToRefs } from 'pinia';
 import { computed, ref, useTemplateRef } from 'vue';
 import { Tooltip, TooltipContent, TooltipTrigger } from '#components';
 import plsql from '@shikijs/langs/plsql';
@@ -159,14 +161,14 @@ const props = defineProps<{
 const tab = ref<HistoryLogTabs>(HistoryLogTabs.All);
 
 const qqLogStore = useQuickQueryLogs();
-const { getLogsByTableId, qqLogs } = toRefs(qqLogStore);
+const { qqLogs } = storeToRefs(qqLogStore);
 
 const logs = computed(() => {
   if (tab.value === HistoryLogTabs.All) {
     return qqLogs.value;
   }
 
-  return getLogsByTableId.value(props);
+  return qqLogStore.getLogsByTableId(props);
 });
 
 const wrapperRef = useTemplateRef('wrapperRef');

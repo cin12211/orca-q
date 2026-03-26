@@ -13,6 +13,10 @@ const LAST_SEEN_VERSION_KEY = 'orcaq-last-seen-version';
 const isChangelogOpen = ref(false);
 const changelogEntries = ref<ChangelogEntry[]>([]);
 const isLoading = ref(false);
+const isLoadingMore = ref(false);
+const hasMore = ref(false);
+const currentBatchIndex = ref(0);
+const BATCH_SIZE = 5;
 
 // Import all changelog markdown files
 const changelogModules = import.meta.glob('../data/changelogs/*.md', {
@@ -113,6 +117,7 @@ export function useChangelogModal() {
   // Open the changelog modal (can be called manually)
   const openChangelog = async () => {
     isLoading.value = true;
+    currentBatchIndex.value = 0;
 
     try {
       const lastSeenVersion = getLastSeenVersion();
@@ -123,10 +128,40 @@ export function useChangelogModal() {
         versionsToShow = [getLatestVersion()];
       }
 
-      changelogEntries.value = await loadChangelogContent(versionsToShow);
+      // If we're opening specifically to see "what's new", we might want to allow "view all"
+      // So we'll fetch the first batch of versions from changelogMeta
+      const allVersions = changelogMeta.map(e => e.version);
+      const initialVersions = allVersions.slice(0, BATCH_SIZE);
+
+      changelogEntries.value = await loadChangelogContent(initialVersions);
+      hasMore.value = allVersions.length > BATCH_SIZE;
+      currentBatchIndex.value = BATCH_SIZE;
+
       isChangelogOpen.value = true;
     } finally {
       isLoading.value = false;
+    }
+  };
+
+  // Load more entries
+  const loadMore = async () => {
+    if (isLoadingMore.value || !hasMore.value) return;
+
+    isLoadingMore.value = true;
+    try {
+      const allVersions = changelogMeta.map(e => e.version);
+      const nextVersions = allVersions.slice(
+        currentBatchIndex.value,
+        currentBatchIndex.value + BATCH_SIZE
+      );
+
+      const newEntries = await loadChangelogContent(nextVersions);
+      changelogEntries.value = [...changelogEntries.value, ...newEntries];
+
+      currentBatchIndex.value += BATCH_SIZE;
+      hasMore.value = allVersions.length > currentBatchIndex.value;
+    } finally {
+      isLoadingMore.value = false;
     }
   };
 
@@ -147,7 +182,10 @@ export function useChangelogModal() {
     isChangelogOpen,
     changelogEntries,
     isLoading,
+    isLoadingMore,
+    hasMore,
     openChangelog,
+    loadMore,
     closeChangelog,
     autoShowIfNewVersion,
     markVersionAsSeen,

@@ -103,7 +103,6 @@ const connectorX = (level: number) =>
 const connectorHorizontalWidth = `${TREE_INDENT_STEP / 2}px`;
 
 const getBarColorClass = (nodeType: string) => {
-  return 'bg-gray-400/90';
   if (nodeType === 'Seq Scan') return 'bg-gray-400 dark:bg-gray-600';
   if (nodeType.includes('Scan')) return 'bg-gray-300 dark:bg-gray-700';
   if (nodeType.includes('Join')) return 'bg-gray-500 dark:bg-gray-500';

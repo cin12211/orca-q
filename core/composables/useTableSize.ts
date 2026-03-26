@@ -1,4 +1,4 @@
-import { useAppContext } from '~/core/contexts/useAppContext';
+import { useManagementConnectionStore } from '~/core/stores/managementConnectionStore';
 
 export const useTableSize = ({
   tableName,
@@ -7,9 +7,9 @@ export const useTableSize = ({
   tableName: string;
   schemaName: string;
 }) => {
-  const { connectionStore } = useAppContext();
+  const connectionStore = useManagementConnectionStore();
 
-  const { data, status } = useFetch('/api/get-table-size', {
+  const { data, status } = useFetch('/api/tables/size', {
     method: 'POST',
     body: {
       tableName,

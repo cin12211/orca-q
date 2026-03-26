@@ -9,12 +9,14 @@ defineEmits(['update:open']);
 
 <template>
   <Dialog :open="!!open" @update:open="$emit('update:open', $event)">
-    <DialogContent class="w-96 min-w-96">
+    <DialogContent class="w-[30vw] min-w-96">
       <DialogHeader class="pb-0">
         <DialogTitle>Query error!</DialogTitle>
       </DialogHeader>
 
-      <DialogDescription class="decoration-wavy underline decoration-red-600">
+      <DialogDescription
+        class="decoration-wavy underline decoration-red-600 overflow-auto max-h-[30vh]"
+      >
         {{ message }}
       </DialogDescription>
 

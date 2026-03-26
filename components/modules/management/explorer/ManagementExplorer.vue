@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import ManagementExplorerTree from '~/components/modules/management/explorer/components/ManagementExplorerTree.vue';
 import { useManagementExplorerTree } from '~/components/modules/management/explorer/hooks/useManagementExplorerTree';
-import { useAppContext } from '~/core/contexts/useAppContext';
 import { TabViewType } from '~/core/stores/useTabViewsStore';
+import { useTabViewsStore } from '~/core/stores/useTabViewsStore';
 import { ManagementSidebarHeader } from '../shared';
 
-const { tabViewStore } = useAppContext();
+const tabViewStore = useTabViewsStore();
 
 const treePanelRef = useTemplateRef<InstanceType<
   typeof ManagementExplorerTree
@@ -108,7 +108,25 @@ watch(
       </template>
     </ManagementSidebarHeader>
 
+    <BaseEmpty
+      v-if="Object.keys(mappedExplorerFileTreeData).length === 0"
+      title="No files found"
+      desc="Create your first file or folder to get started."
+    >
+      <div class="flex gap-2 justify-center">
+        <Button size="xs" variant="outline" @click="onAddFile">
+          <Icon name="hugeicons:file-add" />
+          New File
+        </Button>
+        <Button size="xs" variant="outline" @click="onAddFolder">
+          <Icon name="hugeicons:folder-add" />
+          New Folder
+        </Button>
+      </div>
+    </BaseEmpty>
+
     <ManagementExplorerTree
+      v-else
       ref="treePanelRef"
       :tree-data="mappedExplorerFileTreeData"
       :storage-key="explorerStorageKey"

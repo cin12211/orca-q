@@ -180,7 +180,7 @@ const dbPermissionItems = computed(() => [
               'flex items-center gap-1 px-3 py-1.5 text-xs transition-colors cursor-pointer',
               activeTab === tab.id
                 ? 'border-b-2 border-primary text-foreground'
-                : 'text-muted-foreground hover:text-foreground',
+                : 'text-muted-foreground border-b-2 border-transparent hover:text-foreground',
             ]"
             @click="activeTab = tab.id"
           >

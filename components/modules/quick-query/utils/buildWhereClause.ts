@@ -1,12 +1,12 @@
 // ~/utils/query-generator.ts
 import { z } from 'zod';
-import type { EDatabaseType } from '~/components/modules/connection/constants';
 import {
   ComposeOperator,
   EExtendedField,
   OperatorSet,
   operatorSets,
 } from '~/core/constants';
+import { DatabaseClientType } from '~/core/constants/database-client-type';
 
 /* -------------------------------------------------------------------------- */
 /*                                   Types                                    */
@@ -35,18 +35,18 @@ interface HandleArgs {
   col: string;
   op: string;
   search: string;
-  db: EDatabaseType;
+  db: DatabaseClientType;
   nextPlaceholder: () => string;
 }
 type Handler = (a: HandleArgs) => WhereResult;
 
 // trợ giúp build placeholder
-const makePlaceholder = (db: EDatabaseType) => (i: number) =>
-  db === 'postgres' ? `$${i}` : '?';
+const makePlaceholder = (db: DatabaseClientType) => (i: number) =>
+  db === DatabaseClientType.POSTGRES ? `$${i}` : '?';
 
 // bọc tên cột
-const wrap = (db: EDatabaseType) => (c: string) =>
-  db === 'postgres' ? `"${c}"` : `\`${c}\``;
+const wrap = (db: DatabaseClientType) => (c: string) =>
+  db === DatabaseClientType.POSTGRES ? `"${c}"` : `\`${c}\``;
 
 /* -------------------------------------------------------------------------- */
 /*                           Handler implement‑ations                         */
@@ -79,7 +79,7 @@ const likeHandler: Handler = ({ col, op, search, db, nextPlaceholder }) => {
   const includeNegative = op.toUpperCase().startsWith('NOT');
 
   const ilike = op.toUpperCase().startsWith('ILIKE');
-  const syntax = db === 'postgres' && ilike ? 'ILIKE' : 'LIKE';
+  const syntax = db === DatabaseClientType.POSTGRES && ilike ? 'ILIKE' : 'LIKE';
   let value = search;
 
   if (op.endsWith('%VALUE%')) value = `%${search}%`;
@@ -140,7 +140,7 @@ function buildAnyFieldClause({
 }: {
   search: string;
   columns: readonly string[];
-  db: EDatabaseType;
+  db: DatabaseClientType;
   op: OperatorSet;
   nextPlaceholder: () => string;
 }): WhereResult {
@@ -184,7 +184,7 @@ export function buildWhereClause<
   composeWith = ComposeOperator.AND,
 }: {
   filters: F;
-  db: EDatabaseType;
+  db: DatabaseClientType;
   columns: readonly string[];
   composeWith?: ComposeOperator;
 }): WhereResult {
@@ -280,7 +280,7 @@ export function formatWhereClause<F extends readonly FilterSchema[]>({
   composeWith,
 }: {
   filters: F;
-  db: EDatabaseType;
+  db: DatabaseClientType;
   columns: readonly string[];
   composeWith?: ComposeOperator;
 }): string {
@@ -302,7 +302,7 @@ export function formatWhereClause<F extends readonly FilterSchema[]>({
         : `'${String(v).replace(/'/g, "''")}'`;
 
   /** Postgres: $1, $2 … ・ MySQL: ? */
-  if (db === 'postgres') {
+  if (db === DatabaseClientType.POSTGRES) {
     let out = where;
     params.forEach((p, i) => {
       // \b = word‑boundary → “$1 ”, “$1)” ...

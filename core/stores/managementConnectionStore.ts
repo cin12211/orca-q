@@ -1,14 +1,18 @@
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
-import type { EDatabaseType } from '~/components/modules/connection/constants';
-import type { EConnectionMethod } from '~/components/modules/connection/type';
-import { useWSStateStore } from './useWSStateStore';
+import {
+  EConnectionMethod,
+  type ISSLConfig,
+  type ISSHConfig,
+} from '~/components/modules/connection';
+import { useWorkspaceConnectionRoute } from '~/core/composables/useWorkspaceConnectionRoute';
+import { DatabaseClientType } from '~/core/constants/database-client-type';
 
 export interface Connection {
   workspaceId: string;
   id: string;
   name: string;
-  type: EDatabaseType;
+  type: DatabaseClientType;
   method: EConnectionMethod;
   connectionString?: string;
   host?: string;
@@ -16,6 +20,8 @@ export interface Connection {
   username?: string;
   password?: string;
   database?: string;
+  ssl?: ISSLConfig;
+  ssh?: ISSHConfig;
   createdAt: string;
   updatedAt?: string;
 }
@@ -23,14 +29,15 @@ export interface Connection {
 export const useManagementConnectionStore = defineStore(
   'management-connection',
   () => {
-    const wsStateStore = useWSStateStore();
-    const { workspaceId, connectionId } = toRefs(wsStateStore);
+    const { workspaceId, connectionId } = useWorkspaceConnectionRoute();
 
     const connections = ref<Connection[]>([]);
 
     const selectedConnection = computed(() => {
       return connections.value.find(
-        connection => connection.id === connectionId.value
+        connection =>
+          connection.id === connectionId.value &&
+          connection.workspaceId === workspaceId.value
       );
     });
 
@@ -71,7 +78,7 @@ export const useManagementConnectionStore = defineStore(
       connections.value = load;
     };
 
-    loadPersistData();
+    // loadPersistData();
 
     return {
       loadPersistData,

@@ -1,0 +1,233 @@
+<script setup lang="ts">
+import { computed } from 'vue';
+import { Handle, Position, useVueFlow, type NodeProps } from '@vue-flow/core';
+import type { ColumnMetadata, TableMetadata } from '~/core/types';
+import { HANDLE_HEIGHT, HANDLE_LEFT, ROW_HEIGHT, ROW_WIDTH } from './constants';
+import type { LabelTableNode } from './type';
+import { buildTableNodeId, focusNodeById, getHandPosition } from './utils';
+
+export interface ErdTableNodeProps extends NodeProps<TableMetadata> {
+  isExpanded?: boolean;
+  hasRelations?: boolean;
+}
+
+const props = defineProps<ErdTableNodeProps>();
+
+const emit = defineEmits<{
+  (e: 'expand', tableId: string): void;
+  (e: 'collapse', tableId: string): void;
+}>();
+
+const { findNode, fitView, getViewport } = useVueFlow();
+
+// Compute the node ID for this table
+const nodeId = computed(() =>
+  buildTableNodeId({
+    schemaName: props.data.schema,
+    tableName: props.data.table,
+  })
+);
+
+// Handle expand/collapse button click
+const onToggleExpand = () => {
+  if (props.isExpanded) {
+    emit('collapse', nodeId.value);
+  } else {
+    emit('expand', nodeId.value);
+  }
+};
+
+// --- 1️⃣ Precompute lookup maps (O(1) instead of array.includes)
+const primaryKeySet = computed(
+  () => new Set(props.data.primary_keys.map(item => item.column))
+);
+const foreignKeySet = computed(
+  () => new Set(props.data.foreign_keys.map(item => item.column))
+);
+
+// --- 2️⃣ Precompute rows to render
+const rows = computed<
+  (ColumnMetadata & { isPrimary: boolean; isForeign: boolean })[]
+>(() =>
+  props.data.columns.map(col => ({
+    ...col,
+    isPrimary: primaryKeySet.value.has(col.name),
+    isForeign: foreignKeySet.value.has(col.name),
+  }))
+);
+
+const mapColumnIndex = computed(() => {
+  return new Map<string, number>(
+    rows.value.map((col, index) => [col.name, index + 1])
+  );
+});
+
+// --- 3️⃣ Precompute Handle positions (top coordinates)
+const foreignHandles = computed(() =>
+  props.data.foreign_keys.map(({ column }) => {
+    const colIndex = mapColumnIndex.value.get(column);
+    return {
+      id: column,
+      top: getHandPosition(colIndex),
+    };
+  })
+);
+
+const primaryHandles = computed(() =>
+  props.data.primary_keys.map(({ column }) => {
+    const colIndex = mapColumnIndex.value.get(column);
+    return {
+      id: column,
+      top: getHandPosition(colIndex),
+    };
+  })
+);
+
+const onFocusNode = (
+  row: ColumnMetadata & { isPrimary: boolean; isForeign: boolean }
+) => {
+  if (!row.isForeign) {
+    return;
+  }
+
+  const fkTable = props.data.foreign_keys.find(fk => fk.column === row.name);
+
+  if (!fkTable) {
+    return;
+  }
+
+  const nodeIdToFind = buildTableNodeId({
+    schemaName: fkTable.reference_schema,
+    tableName: fkTable.reference_table,
+  });
+
+  focusNodeById({
+    nodeId: nodeIdToFind,
+    findNode,
+    fitView,
+    getViewport,
+  });
+};
+</script>
+
+<template>
+  <div class="table-node text-foreground">
+    <div
+      class="flex flex-col rounded-md bg-card overflow-hidden"
+      :style="{ width: ROW_WIDTH + 'px' }"
+    >
+      <div
+        class="rounded-t-md box-border p-2 bg-primary dark:bg-accent text-primary-foreground dark:text-foreground flex items-center justify-between gap-2"
+        :style="{ height: ROW_HEIGHT + 10 + 'px' }"
+      >
+        <p class="flex-1 text-center px-2 box-border text-xl truncate">
+          {{ data.table }}
+          {{ data.schema === 'public' ? '' : `(${data.schema})` }}
+        </p>
+
+        <Button
+          v-if="hasRelations"
+          size="iconMd"
+          :title="
+            isExpanded ? 'Collapse related tables' : 'Expand related tables'
+          "
+          @click.stop="onToggleExpand"
+        >
+          <Icon
+            :name="
+              isExpanded ? 'hugeicons:remove-circle' : 'hugeicons:add-circle'
+            "
+            class="w-5 h-5"
+          />
+        </Button>
+      </div>
+
+      <!-- Columns -->
+      <div
+        v-for="row in rows"
+        :key="row.name"
+        :class="[
+          'grid grid-cols-3 px-2 border-t border-border bg-card transition-colors',
+          row.isForeign && 'cursor-pointer hover:bg-primary/10',
+          (label as LabelTableNode)?.get(row.name) && 'bg-primary/10',
+        ]"
+        :style="{ height: ROW_HEIGHT + 'px' }"
+        @click="onFocusNode(row)"
+      >
+        <div class="col-span-2 py-2 truncate flex items-center gap-1">
+          <div class="w-6 flex items-center justify-center">
+            <Icon
+              v-if="row.isPrimary"
+              name="hugeicons:key-01"
+              class="w-4 text-yellow-400 dark:text-yellow-300 text-xl"
+            />
+            <Icon
+              v-else-if="row.isForeign"
+              name="hugeicons:key-01"
+              class="min-w-4 text-muted-foreground text-xl"
+            />
+            <Icon
+              v-else-if="row.nullable"
+              name="hugeicons:diamond"
+              class="min-w-4 text-muted-foreground/60"
+            />
+            <Icon
+              v-else
+              name="mynaui:diamond-solid"
+              class="min-w-4 text-muted-foreground/60"
+            />
+          </div>
+          <p class="truncate">{{ row.name }}</p>
+
+          <Icon
+            v-if="row.isForeign"
+            name="hugeicons:link-04"
+            class="min-w-3 text-muted-foreground"
+          />
+        </div>
+        <div class="col-span-1 py-2 truncate text-center text-muted-foreground">
+          {{ row.type }}
+        </div>
+      </div>
+    </div>
+
+    <!-- Handles -->
+    <Handle
+      v-for="hand in foreignHandles"
+      :key="hand.id"
+      type="source"
+      :id="hand.id"
+      :position="Position.Left"
+      :connectable="false"
+      :style="{
+        top: hand.top + 'px',
+        left: HANDLE_LEFT,
+        height: HANDLE_HEIGHT,
+        opacity: 0,
+      }"
+    />
+    <Handle
+      v-for="hand in primaryHandles"
+      :key="hand.id"
+      type="target"
+      :id="hand.id"
+      :position="Position.Right"
+      :connectable="false"
+      :style="{
+        top: hand.top + 'px',
+        right: HANDLE_LEFT,
+        height: HANDLE_HEIGHT,
+        opacity: 0,
+      }"
+    />
+  </div>
+</template>
+
+<style scoped>
+.table-node {
+  will-change: transform;
+  transform: translateZ(0);
+  contain: content;
+  backface-visibility: hidden;
+}
+</style>

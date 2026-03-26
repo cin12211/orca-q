@@ -239,7 +239,7 @@ Backend API routes (Nuxt server handlers):
   - `useTabViewsStore.ts` - Tab state management
   - `useSchemaStore.ts` - Schema metadata
   - `useActivityBarStore.ts` - Activity bar state
-  - `appLayoutStore.ts` - Layout configuration
+  - `appConfigStore.ts` - Layout configuration
   - `erdStore.ts` - ERD diagram state
   - `useExplorerFileStore.ts` - File explorer state
   - `useQuickQueryLogs.ts` - Query history
@@ -511,7 +511,7 @@ interface Connection {
   name: string;
   connectionString: string;
   database: string;
-  type: EDatabaseType;
+  type: DatabaseClientType;
   createdAt: string;
 }
 ```
@@ -590,7 +590,7 @@ enum ActivityBarItemType {
 - Active activity type
 - Panel visibility
 
-#### 7. **App Layout Store** (`appLayoutStore`)
+#### 7. **App Layout Store** (`appConfigStore`)
 
 **Global layout configuration:**
 

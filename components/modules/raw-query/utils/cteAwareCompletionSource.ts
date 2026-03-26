@@ -9,10 +9,12 @@ import type { EditorState } from '@codemirror/state';
 import type { SyntaxNode } from '@lezer/common';
 import type { Schema } from '~/core/stores';
 import type {
-  ColumnShortMetadata,
-  ForeignKeyMetadata,
+  SchemaColumnMetadata as ColumnShortMetadata,
+  SchemaForeignKeyMetadata as ForeignKeyMetadata,
   TableDetailMetadata,
-} from '~/server/api/get-schema-meta-data';
+  TableDetails,
+  ViewDetails,
+} from '~/core/types';
 import { createColumnCompletion } from './getMappedSchemaSuggestion';
 
 interface CteAwareCompletionSourceConfig {

@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import { useAppContext } from '~/core/contexts/useAppContext';
-import { TabViewType } from '~/core/stores/useTabViewsStore';
-import ConnectionSelector from '../../selectors/ConnectionSelector.vue';
+import { useTabManagement } from '~/core/composables/useTabManagement';
+import { useWorkspaceConnectionRoute } from '~/core/composables/useWorkspaceConnectionRoute';
+import { useManagementConnectionStore } from '~/core/stores/managementConnectionStore';
 import { ManagementSidebarHeader } from '../shared';
 
-const { wsStateStore, connectionStore, tabViewStore } = useAppContext();
-const { connectionId, workspaceId } = toRefs(wsStateStore);
+const connectionStore = useManagementConnectionStore();
+const { openDatabaseToolsTab } = useTabManagement();
+const { connectionId, workspaceId } = useWorkspaceConnectionRoute();
 
 // Get the database connection
 const connectionData = computed(() => {
@@ -24,28 +25,10 @@ const databaseName = computed(
 
 // Open database tools in a new tab
 const openDatabaseTools = async (type: 'export' | 'import') => {
-  if (!workspaceId.value || !connectionId.value) return;
-
-  const tabId = `database-tools-${connectionId.value}`;
-
-  await tabViewStore.openTab({
-    workspaceId: workspaceId.value,
-    connectionId: connectionId.value,
-    schemaId: '',
-    id: tabId,
-    name: `${databaseName.value} - Tools`,
-    icon: 'lucide:database',
-    iconClass: 'text-primary',
-    type: TabViewType.DatabaseTools,
-    routeName: 'workspaceId-connectionId-database-tools-name',
-    routeParams: {
-      workspaceId: workspaceId.value,
-      connectionId: connectionId.value,
-      name: type,
-    },
+  await openDatabaseToolsTab({
+    type,
+    databaseName: databaseName.value,
   });
-
-  await tabViewStore.selectTab(tabId);
 };
 </script>
 

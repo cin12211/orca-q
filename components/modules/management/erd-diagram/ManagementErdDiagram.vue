@@ -1,18 +1,25 @@
 <script setup lang="ts">
 import { refDebounced } from '@vueuse/core';
+import { storeToRefs } from 'pinia';
 import FileTree from '~/components/base/tree-folder/FileTree.vue';
 import type { FileNode } from '~/components/base/tree-folder/types';
+import { useWorkspaceConnectionRoute } from '~/core/composables/useWorkspaceConnectionRoute';
 import { DEFAULT_DEBOUNCE_INPUT } from '~/core/constants';
 import { useAppContext } from '~/core/contexts/useAppContext';
+import { useSchemaStore, useWSStateStore } from '~/core/stores';
 import { TabViewType } from '~/core/stores/useTabViewsStore';
+import { useTabViewsStore } from '~/core/stores/useTabViewsStore';
 import { buildTableNodeId } from '../../erd-diagram/utils';
 import { ERDFolderType } from '../schemas/constants';
 import { ManagementSidebarHeader } from '../shared';
 
-const { schemaStore, connectToConnection, wsStateStore, tabViewStore } =
-  useAppContext();
-const { activeSchema } = toRefs(schemaStore);
-const { connectionId, workspaceId, schemaId } = toRefs(wsStateStore);
+const { connectToConnection } = useAppContext();
+const schemaStore = useSchemaStore();
+const wsStateStore = useWSStateStore();
+const tabViewStore = useTabViewsStore();
+const { activeSchema } = storeToRefs(schemaStore);
+const { connectionId, workspaceId } = useWorkspaceConnectionRoute();
+const { schemaId } = storeToRefs(wsStateStore);
 
 const isRefreshing = ref(false);
 const fileTreeRef = ref<InstanceType<typeof FileTree> | null>(null);
@@ -55,8 +62,8 @@ const fileTreeData = computed<Record<string, FileNode>>(() => {
       name: tableName,
       type: 'file',
       depth: 1,
-      iconOpen: 'hugeicons:flowchart-01',
-      iconClose: 'hugeicons:flowchart-01',
+      iconOpen: 'hugeicons:flow-connection',
+      iconClose: 'hugeicons:flow-connection',
       data: { tabViewType: TabViewType.DetailERD },
     };
 
@@ -267,12 +274,11 @@ watch(
     <!-- TODO: check flow when change connection  -->
     <!-- TODO: check flow when change schema  -->
 
-    <div
+    <BaseEmpty
       v-if="Object.keys(fileTreeData).length === 0"
-      class="flex flex-col items-center h-full justify-center"
-    >
-      No data!
-    </div>
+      title="No tables found"
+      desc="There are no tables available to display in the ERD."
+    />
 
     <FileTree
       ref="fileTreeRef"

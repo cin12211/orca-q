@@ -1,17 +1,35 @@
 .vue-flow__minimap {
   transform: scale(75%);
   transform-origin: top right;
+  background-color: var(--color-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+}
+
+.vue-flow__minimap-mask {
+  fill: var(--color-muted);
+  opacity: 0.4;
+}
+
+.vue-flow__minimap-node {
+  fill: var(--color-primary);
+  stroke: var(--color-border);
 }
 
 .erd-flow {
-  background-color: rgb(251, 251, 251);
+  background-color: var(--color-background);
   height: 100%;
   width: 100%;
 }
 
+/* Background dots/grid adapt to theme */
+.erd-flow .vue-flow__background {
+  color: var(--color-border);
+}
+
 /* node */
 .vue-flow__node {
-  background-color: #f3f4f6;
+  background-color: var(--color-card);
 }
 
 .vue-flow__node-value {

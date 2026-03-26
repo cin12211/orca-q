@@ -1,5 +1,6 @@
 import type { Ref } from 'vue';
 import type { FlattenedTreeFileSystemItem } from '~/components/base/Tree';
+import type { Connection } from '~/core/stores';
 import type { Schema } from '~/core/stores/useSchemaStore';
 import type { TabViewType } from '~/core/stores/useTabViewsStore';
 
@@ -7,7 +8,7 @@ export interface SchemaContextMenuOptions {
   schemaName: Ref<string>;
   activeSchema: Ref<Schema | undefined>;
   onRefreshSchema: () => Promise<void>;
-  currentConnectionString: Ref<string | undefined>;
+  connection: Ref<Connection | undefined>;
 }
 
 export interface ContextMenuState {

@@ -25,27 +25,32 @@ export const copyToClipboard = async (text: string) => {
   }
 };
 
-/** Removes internal AG-Grid properties (like HASH_INDEX_ID) from rows. */
+/**
+ * Removes internal AG-Grid properties (like HASH_INDEX_ID) from rows.
+ * Always creates a shallow copy to avoid mutating the original row objects.
+ * When `withStringifyNested` is true, nested objects/arrays are JSON-serialised
+ * to plain strings — intended for CSV/TSV output only, NOT for SQL export
+ * (SQL must preserve original types so `formatSqlValue` can produce correct literals).
+ */
 export const cleanRows = (
-  rows: Record<string, any>[],
+  rows: Record<string, unknown>[],
   withStringifyNested = false
 ) => {
   return rows.map(row => {
-    const formattedRow: Record<string, string> = row;
+    // Spread to avoid mutating the original row
+    const formattedRow: Record<string, unknown> = { ...row };
 
     if (withStringifyNested) {
-      Object.keys(row).forEach(key => {
-        const value = row[key];
+      Object.keys(formattedRow).forEach(key => {
+        const value = formattedRow[key];
 
         const isObjectType =
-          (typeof value === 'object' ||
-            Object.prototype.toString.call(value) === '[object Object]') &&
-          value !== null;
+          value !== null &&
+          typeof value === 'object' &&
+          !(value instanceof Date);
 
         if (isObjectType) {
           formattedRow[key] = JSON.stringify(value);
-        } else {
-          formattedRow[key] = value;
         }
       });
     }
@@ -57,41 +62,59 @@ export const cleanRows = (
 };
 
 /**
- * Utility for converting a value into its correctly escaped and formatted SQL string.
- * This is reused for both SQL export and SQL list copy.
+ * Converts a raw JS value into a correctly escaped SQL literal string.
+ * Preserves original types — callers must NOT pre-stringify values before
+ * passing them here (i.e. do NOT run rows through `cleanRows(withStringifyNested=true)`).
+ *
+ * Type mapping:
+ *  null / undefined → NULL
+ *  boolean         → TRUE / FALSE  (ANSI SQL; compatible with Postgres, MySQL, SQLite)
+ *  number / bigint → numeric literal (unquoted)
+ *  string          → single-quoted with internal single-quotes escaped
+ *  Date            → ISO datetime string, single-quoted
+ *  object / array  → JSON string, single-quoted
  */
-const formatSqlValue = (v: any): string | number | 'NULL' => {
+const formatSqlValue = (v: unknown): string => {
   if (v === null || v === undefined) return 'NULL';
-  if (typeof v === 'string') return `'${v.replace(/'/g, "''")}'`; // Escape single quotes
-  if (typeof v === 'number' || typeof v === 'bigint')
-    return v as unknown as number;
-  if (typeof v === 'boolean') return !!v ? 1 : 0;
+  if (typeof v === 'boolean') return v ? 'TRUE' : 'FALSE';
+  if (typeof v === 'number' || typeof v === 'bigint') return String(v);
+  if (typeof v === 'string') return `'${v.replace(/'/g, "''")}'`;
   if (v instanceof Date)
     return `'${v.toISOString().slice(0, 19).replace('T', ' ')}'`;
-  // For all other objects (arrays, other objects), JSON stringify and escape
+  // Nested objects / arrays → serialise as JSON string literal
   return `'${JSON.stringify(v).replace(/'/g, "''")}'`;
 };
 
 /**
  * Generates the SQL INSERT statement for a batch of rows.
+ * Expects RAW rows with original value types so that `formatSqlValue` can
+ * produce the correct SQL literals (booleans → TRUE/FALSE, numbers → unquoted, etc.).
+ *
+ * @param schemaName - Optional schema name. When provided the target is
+ *   `"schema"."table"` (ANSI-compatible), otherwise just `"table"`.
  */
 const generateSqlInsert = (
-  rows: Record<string, any>[],
+  rows: Record<string, unknown>[],
   tableName: string,
-  commentPrefix: string
+  commentPrefix: string,
+  schemaName?: string
 ) => {
   if (rows.length === 0) return '';
   const keys = Object.keys(rows[0]);
 
-  const values = rows.map(
+  const qualifiedTable = schemaName
+    ? `"${schemaName}"."${tableName}"`
+    : `"${tableName}"`;
+
+  const valueRows = rows.map(
     row => `(${keys.map(k => formatSqlValue(row[k])).join(', ')})`
   );
 
   const sql =
     `-- ${commentPrefix} ${rows.length} rows on ${new Date().toLocaleString()}\n` +
-    `-- Table: ${tableName}\n\n` +
-    `INSERT INTO "${tableName}" (${keys.map(k => `"${k}"`).join(', ')})\n` +
-    `VALUES\n  ${values.join(',\n  ')};\n`;
+    `-- Table: ${schemaName ? `${schemaName}.` : ''}${tableName}\n\n` +
+    `INSERT INTO ${qualifiedTable} (${keys.map(k => `"${k}"`).join(', ')})\n` +
+    `VALUES\n  ${valueRows.join(',\n  ')};\n`;
   return sql;
 };
 
@@ -101,36 +124,36 @@ const generateSqlInsert = (
  * để đảm bảo việc dán vào Excel/Sheets tạo ra các cột riêng biệt.
  */
 export const copyRowsData = (
-  rows: Record<string, any>[],
+  rows: Record<string, unknown>[],
   tableName: string,
-  format: ExportFormat // Chỉ định rõ ràng format nào cần copy
+  format: ExportFormat,
+  schemaName?: string
 ) => {
   if (!rows.length) return;
 
-  const needNestedFormat =
-    format === 'csv-with-header' || format === 'csv-no-header';
-
-  const cleaned = cleanRows(rows, needNestedFormat);
-
   if (format === 'csv-with-header' || format === 'csv-no-header') {
-    // 💡 SỬ DỤNG TSV CHO CLIPBOARD
+    // Stringify nested objects for CSV/TSV so cells contain readable text
+    const cleaned = cleanRows(rows, true);
     const includeHeader = format === 'csv-with-header';
     const tsv = Papa.unparse(cleaned, {
       header: includeHeader,
-      delimiter: TAB_DELIMITER, // SỬ DỤNG KÝ TỰ TAB (\t)
+      delimiter: TAB_DELIMITER,
     });
     copyToClipboard(tsv);
     return;
   }
 
   if (format === 'json') {
-    // Thêm null, 2 để có định dạng dễ đọc hơn khi dán
+    const cleaned = cleanRows(rows);
     copyToClipboard(JSON.stringify(cleaned));
     return;
   }
 
   if (format === 'sql') {
-    const sql = generateSqlInsert(cleaned, tableName, 'Copied');
+    // Pass raw rows so formatSqlValue can preserve correct SQL types.
+    // Only strip the internal HASH_INDEX_ID key, no other transformation.
+    const rawCleaned = cleanRows(rows);
+    const sql = generateSqlInsert(rawCleaned, tableName, 'Copied', schemaName);
     copyToClipboard(sql);
     return;
   }
@@ -141,17 +164,18 @@ export const copyRowsData = (
  * (Hàm này vẫn tạo file CSV/JSON/SQL tiêu chuẩn như trước)
  */
 export const exportData = (
-  rows: Record<string, any>[],
+  rows: Record<string, unknown>[],
   tableName: string,
   format: ExportFormat,
-  type: 'selected' | 'all'
+  type: 'selected' | 'all',
+  schemaName?: string
 ) => {
   if (!rows.length) return;
 
-  const needNestedFormat =
+  // For SQL export we need raw types; for CSV we stringify nested objects.
+  const isCsvFormat =
     format === 'csv-with-header' || format === 'csv-no-header';
-
-  const clean = cleanRows(rows, needNestedFormat);
+  const clean = cleanRows(rows, isCsvFormat);
   const count = clean.length;
   const prefix =
     type === 'selected' ? `selected_${count}_rows` : `all_${count}_rows`;
@@ -175,8 +199,14 @@ export const exportData = (
     blob = new Blob([json], { type: 'application/json' });
     ext = 'json';
   } else if (format === 'sql') {
-    // ... (logic SQL) ...
-    const sql = generateSqlInsert(clean, tableName, 'Exported');
+    // Use rawCleaned (no nested stringification) to preserve SQL types
+    const rawCleaned = cleanRows(rows);
+    const sql = generateSqlInsert(
+      rawCleaned,
+      tableName,
+      'Exported',
+      schemaName
+    );
     blob = new Blob([sql], { type: 'text/sql' });
     ext = 'sql';
   } else {
@@ -193,32 +223,26 @@ export const exportData = (
  * @param format - 'list' (newline separated) or 'json' (array of values).
  */
 export const copyColumnData = (
-  rows: Record<string, any>[],
+  rows: Record<string, unknown>[],
   colId: string,
   format: ColumnCopyFormat
 ) => {
   if (!colId || !rows.length) return;
 
-  const values = rows.map(r => r[colId]);
+  const rawValues = rows.map(r => r[colId]);
 
-  let result: string;
-  let valuesToCopy: any[] = [];
-
-  values.forEach(v => {
-    let value = v;
-    if (v === null || v === undefined) {
-      value = '';
-    } else if (typeof v === 'object' && !(v instanceof Date) && v !== null) {
-      value = JSON.stringify(v);
-    }
-    valuesToCopy.push(value);
+  // Normalise values for display: null/undefined → '', objects → JSON string
+  const displayValues = rawValues.map(v => {
+    if (v === null || v === undefined) return '';
+    if (typeof v === 'object' && !(v instanceof Date)) return JSON.stringify(v);
+    return v;
   });
 
-  if (format === 'json') {
-    result = JSON.stringify(values, null, 2);
-  } else {
-    result = valuesToCopy.join(NEWLINE_DELIMITER);
-  }
+  const result =
+    format === 'json'
+      ? // Use displayValues so callers get consistent, serialised output
+        JSON.stringify(displayValues, null, 2)
+      : displayValues.join(NEWLINE_DELIMITER);
 
   copyToClipboard(result);
 };

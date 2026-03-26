@@ -1,14 +1,18 @@
 <script setup lang="ts">
+import { storeToRefs } from 'pinia';
 import { Select, SelectGroup, SelectItem, SelectTrigger } from '#components';
 import { cn } from '@/lib/utils';
 import { useAppContext } from '~/core/contexts/useAppContext';
+import { useSchemaStore, useWSStateStore } from '~/core/stores';
 
 const props = defineProps<{ class: string }>();
 
-const { schemaStore, wsStateStore, setSchemaId } = useAppContext();
+const { setSchemaId } = useAppContext();
+const schemaStore = useSchemaStore();
+const wsStateStore = useWSStateStore();
 
-const { activeSchema, schemasByContext } = toRefs(schemaStore);
-const { schemaId } = toRefs(wsStateStore);
+const { activeSchema, schemasByContext } = storeToRefs(schemaStore);
+const { schemaId } = storeToRefs(wsStateStore);
 </script>
 <template>
   <Select

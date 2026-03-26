@@ -61,7 +61,7 @@ if (existsSync(npxOutputDir)) {
 
 // Step 3: Copy .output to npx-package
 log(3, 'Copying .output to npx-package...');
-cpSync(outputDir, npxOutputDir, { recursive: true });
+cpSync(outputDir, npxOutputDir, { recursive: true, dereference: true });
 
 // Step 4: Sync version from main package.json
 log(4, 'Syncing version...');

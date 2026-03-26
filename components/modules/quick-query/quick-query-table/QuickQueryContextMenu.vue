@@ -13,9 +13,9 @@ import {
   type ColumnCopyFormat,
   type ExportFormat,
 } from '~/core/helpers/copyData';
-import { useAppLayoutStore } from '~/core/stores/appLayoutStore';
+import { useAppConfigStore } from '~/core/stores/appConfigStore';
 
-const { onShowSecondSidebar } = useAppLayoutStore();
+const appConfigStore = useAppConfigStore();
 
 const props = defineProps<{
   totalSelectedRows: number;
@@ -26,6 +26,7 @@ const props = defineProps<{
   data?: RowData[];
   selectedRows: Record<string, any>[];
   tableName: string;
+  schemaName?: string;
 }>();
 
 const emit = defineEmits<{
@@ -71,7 +72,8 @@ const onCopySelectedRowsData = (format: ExportFormat) => {
   return copyRowsData(
     props.selectedRows || [],
     props.tableName || 'table_data',
-    format
+    format,
+    props.schemaName
   );
 };
 
@@ -79,7 +81,8 @@ const onCopyAllRowsData = (format: ExportFormat) => {
   return copyRowsData(
     props.data || [],
     props.tableName || 'table_data',
-    format
+    format,
+    props.schemaName
   );
 };
 
@@ -88,7 +91,8 @@ const onExportSelectedRows = (format: ExportFormat) => {
     props.selectedRows || [],
     props.tableName || 'table_data',
     format,
-    'selected'
+    'selected',
+    props.schemaName
   );
 };
 
@@ -97,7 +101,8 @@ const onExportAllRows = (format: ExportFormat) => {
     props.data || [],
     props.tableName || 'table_data',
     format,
-    'all'
+    'all',
+    props.schemaName
   );
 };
 
@@ -114,7 +119,12 @@ const copyCurrentCell = () => {
 const copyCurrentRow = () => {
   if (props.cellContextMenu) {
     const data = props.cellContextMenu?.data;
-    copyRowsData([data], props.tableName || 'table_data', 'csv-no-header');
+    copyRowsData(
+      [data],
+      props.tableName || 'table_data',
+      'csv-no-header',
+      props.schemaName
+    );
   }
 };
 
@@ -285,7 +295,7 @@ const contextMenuItems = computed<ContextMenuItem[]>(() => {
       icon: 'hugeicons:view',
       type: ContextMenuItemType.ACTION,
       select: () => {
-        onShowSecondSidebar();
+        appConfigStore.onShowSecondSidebar();
       },
       condition: !props.isReferencedTable && !!props.cellContextMenu,
     },
