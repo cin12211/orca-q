@@ -9,9 +9,12 @@
  */
 import {
   cpSync,
+  lstatSync,
   rmSync,
   existsSync,
+  readdirSync,
   readFileSync,
+  realpathSync,
   writeFileSync,
 } from 'node:fs';
 import { join, dirname } from 'node:path';
@@ -39,6 +42,29 @@ function error(message) {
   process.exit(1);
 }
 
+function materializeSymlinks(directoryPath) {
+  for (const entry of readdirSync(directoryPath, { withFileTypes: true })) {
+    const entryPath = join(directoryPath, entry.name);
+
+    if (entry.isSymbolicLink()) {
+      const targetPath = realpathSync(entryPath);
+
+      rmSync(entryPath, { recursive: true, force: true });
+      cpSync(targetPath, entryPath, { recursive: true, force: true });
+
+      if (lstatSync(entryPath).isDirectory()) {
+        materializeSymlinks(entryPath);
+      }
+
+      continue;
+    }
+
+    if (entry.isDirectory()) {
+      materializeSymlinks(entryPath);
+    }
+  }
+}
+
 // Step 1: Check if .output exists
 log(1, 'Checking for .output directory...');
 const outputDir = join(projectRoot, '.output');
@@ -63,8 +89,12 @@ if (existsSync(npxOutputDir)) {
 log(3, 'Copying .output to npx-package...');
 cpSync(outputDir, npxOutputDir, { recursive: true, dereference: true });
 
-// Step 4: Sync version from main package.json
-log(4, 'Syncing version...');
+// Step 4: Replace symlinks so npm pack keeps Nitro runtime aliases intact
+log(4, 'Materializing copied symlinks...');
+materializeSymlinks(npxOutputDir);
+
+// Step 5: Sync version from main package.json
+log(5, 'Syncing version...');
 const mainPackageJson = JSON.parse(
   readFileSync(join(projectRoot, 'package.json'), 'utf-8')
 );
@@ -79,7 +109,7 @@ writeFileSync(
 );
 
 // Step 5: Done
-log(5, 'Build complete!');
+log(6, 'Build complete!');
 console.log(`
 ${colors.green}NPX package ready at: ${npxPackageDir}${colors.reset}
 

@@ -1,7 +1,13 @@
-# OrcaQ
+# <img src="https://orca-q.com/images/logo.png" width="32"> OrcaQ - Next Generation database editor
 
-The open source database editor - run locally via npx.
+[![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![Build Status](https://img.shields.io/badge/build-passing-brightgreen.svg)](TODO)
+[![Version](https://img.shields.io/badge/version-1.0.4-blue.svg)](package.json)
 
+## Orca Query
+
+<img src="https://orca-q.com/images/editor-preview.png" style="border: 1px solid #ccc; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.2);" >
+ 
 ## Quick Start
 
 ```bash
