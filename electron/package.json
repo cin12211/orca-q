@@ -1,5 +1,5 @@
 {
-  "name": "OrcaQ",
+  "name": "orcaq",
   "version": "1.0.0",
   "description": "Next generation sql editor",
   "main": "./out/main/index.js",

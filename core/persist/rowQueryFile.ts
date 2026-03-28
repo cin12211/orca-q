@@ -16,6 +16,21 @@ const rowQueryFileContentIDBStore = localforage.createInstance({
   storeName: 'rowQueryFileContents',
 });
 
+export const getAllRowQueryFileContentsFromIDB = async (): Promise<
+  RowQueryFileContent[]
+> => {
+  const keys = await rowQueryFileContentIDBStore.keys();
+  const all: RowQueryFileContent[] = [];
+
+  for (const key of keys) {
+    const item =
+      await rowQueryFileContentIDBStore.getItem<RowQueryFileContent>(key);
+    if (item) all.push(item);
+  }
+
+  return all;
+};
+
 export const rowQueryFileIDBApi: (typeof window)['rowQueryFilesApi'] = {
   getAllFiles: async (): Promise<RowQueryFile[]> => {
     const keys = await rowQueryFileIDBStore.keys();
@@ -90,9 +105,10 @@ export const rowQueryFileIDBApi: (typeof window)['rowQueryFilesApi'] = {
   updateFileContent: async (
     fileContent: RowQueryFileContent
   ): Promise<RowQueryFileContent | null> => {
-    const existing = await rowQueryFileIDBStore.getItem<RowQueryFileContent>(
-      fileContent.id
-    );
+    const existing =
+      await rowQueryFileContentIDBStore.getItem<RowQueryFileContent>(
+        fileContent.id
+      );
 
     if (!existing) return null;
 

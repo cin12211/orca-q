@@ -17,6 +17,7 @@ import {
 import { getReorderDestinationIndex } from '@atlaskit/pragmatic-drag-and-drop-hitbox/util/get-reorder-destination-index';
 import { combine } from '@atlaskit/pragmatic-drag-and-drop/combine';
 import { monitorForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
+import { isTauri } from '~/core/helpers';
 import { useTabViewsStore, type TabView } from '~/core/stores';
 import TabViewItem from './TabViewItem.vue';
 
@@ -96,6 +97,8 @@ watchEffect(onCleanup => {
     dndFunction();
   });
 });
+
+const isTauriRuntime = computed(() => isTauri());
 </script>
 <template>
   <div
@@ -104,6 +107,7 @@ watchEffect(onCleanup => {
       isDragging ? 'bg-purple-50' : '',
     ]"
     ref="elementRef"
+    :data-tauri-drag-region="isTauriRuntime ? '' : undefined"
   >
     <ContextMenu>
       <ContextMenuTrigger>

@@ -9,6 +9,7 @@
     "incremental": true,
     "tsBuildInfoFile": ".tsbuildinfo"
   },
+  "exclude": ["src-tauri/**/*"],
   "vueCompilerOptions": {
     "checkUnknownComponents": true
   }

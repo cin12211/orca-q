@@ -8,6 +8,11 @@ import {
 
 export const SETTINGS_NAV_ITEMS: SettingsNavItem[] = [
   {
+    name: 'Desktop',
+    icon: 'lucide:download',
+    componentKey: SettingsComponentKey.DesktopConfig,
+  },
+  {
     name: 'Appearance',
     icon: 'hugeicons:paint-brush-02',
     componentKey: SettingsComponentKey.AppearanceConfig,

@@ -3,6 +3,7 @@ import localforage from 'localforage';
 import type { Workspace } from '../stores';
 import { connectionIDBApi } from './connectionIDBApi';
 import { quickQueryLogsIDBApi } from './quickQueryLogsIDBApi';
+import { workspaceStateIDBApi } from './workspaceStateIDBApi';
 
 const workspaceIDBStore = localforage.createInstance({
   name: 'workspaceIDB',
@@ -65,7 +66,7 @@ const handleDelete = async (id: string): Promise<Workspace | null> => {
 
   await workspaceIDBStore.removeItem(id);
   await connectionIDBApi.deleteAllByWorkspaceId(id);
-  await workspaceIDBApi.delete(id);
+  await workspaceStateIDBApi.delete(id);
   await quickQueryLogsIDBApi.delete({ workspaceId: id });
 
   return workspace;

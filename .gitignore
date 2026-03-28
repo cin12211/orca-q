@@ -58,9 +58,13 @@ tsconfig.tsbuildinfo
 .electron-build
 .electron-out
 .db
+src-tauri/target
+src-tauri/gen
+src-tauri/binaries
 
 # NPX package build output
 npx-package/.output
+tauri-runtime-dist
 *storybook.log
 storybook-static
 

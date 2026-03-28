@@ -14,6 +14,7 @@ import { useSettingsModal } from '~/core/contexts/useSettingsModal';
 import {
   AgentConfig,
   AppearanceConfig,
+  DesktopConfig,
   EditorConfig,
   QuickQueryConfig,
   TableAppearanceConfig,
@@ -22,6 +23,7 @@ import { SETTINGS_NAV_ITEMS } from '../constants';
 import { SettingsComponentKey } from '../types';
 
 const SETTINGS_COMPONENTS: Record<SettingsComponentKey, Component> = {
+  DesktopConfig,
   EditorConfig,
   QuickQueryConfig,
   AgentConfig,

@@ -1,14 +1,12 @@
 #!/usr/bin/env node
 /**
- * Sync version from main package.json to target package.json files
+ * Sync version from main package.json to related package/config files.
  *
  * This script is automatically run after version bump commands
- * to keep all package.json files in sync.
- *
- * To add more sync targets, simply add paths to the SYNC_TARGETS array.
+ * to keep package and desktop versions aligned.
  */
-import { readFileSync, writeFileSync, existsSync } from 'node:fs';
-import { join, dirname, relative } from 'node:path';
+import { existsSync, readFileSync, writeFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -23,19 +21,16 @@ const colors = {
   reset: '\x1b[0m',
 };
 
-// Define sync targets - add more paths here as needed
-const SYNC_TARGETS = [
+const JSON_VERSION_TARGETS = [
   'npx-package/package.json',
-  // Add more target paths here in the future
-  // 'electron/package.json',
-  // 'packages/cli/package.json',
+  'src-tauri/tauri.conf.json',
 ];
 
 function log(message, color = 'cyan') {
   console.log(`${colors[color]}${message}${colors.reset}`);
 }
 
-function syncVersion(targetPath, version) {
+function syncJsonVersion(targetPath, version) {
   const fullPath = join(projectRoot, targetPath);
 
   if (!existsSync(fullPath)) {
@@ -44,16 +39,55 @@ function syncVersion(targetPath, version) {
   }
 
   try {
-    const packageJson = JSON.parse(readFileSync(fullPath, 'utf-8'));
-    const oldVersion = packageJson.version;
+    const jsonFile = JSON.parse(readFileSync(fullPath, 'utf-8'));
+    const oldVersion = jsonFile.version;
 
     if (oldVersion === version) {
       log(`✓ Already synced: ${targetPath} (${version})`, 'green');
       return true;
     }
 
-    packageJson.version = version;
-    writeFileSync(fullPath, JSON.stringify(packageJson, null, 2) + '\n');
+    jsonFile.version = version;
+    writeFileSync(fullPath, JSON.stringify(jsonFile, null, 2) + '\n');
+
+    log(`✓ Synced: ${targetPath} (${oldVersion} → ${version})`, 'green');
+    return true;
+  } catch (error) {
+    log(`✗ Failed: ${targetPath} - ${error.message}`, 'red');
+    return false;
+  }
+}
+
+function syncCargoVersion(targetPath, version) {
+  const fullPath = join(projectRoot, targetPath);
+
+  if (!existsSync(fullPath)) {
+    log(`⚠ Skipped (not found): ${targetPath}`, 'yellow');
+    return false;
+  }
+
+  try {
+    const cargoToml = readFileSync(fullPath, 'utf-8');
+    const match = cargoToml.match(/^version = "([^"]+)"$/m);
+
+    if (!match) {
+      log(`✗ Failed: ${targetPath} - version field not found`, 'red');
+      return false;
+    }
+
+    const oldVersion = match[1];
+
+    if (oldVersion === version) {
+      log(`✓ Already synced: ${targetPath} (${version})`, 'green');
+      return true;
+    }
+
+    const updatedCargoToml = cargoToml.replace(
+      /^version = "([^"]+)"$/m,
+      `version = "${version}"`
+    );
+
+    writeFileSync(fullPath, updatedCargoToml);
 
     log(`✓ Synced: ${targetPath} (${oldVersion} → ${version})`, 'green');
     return true;
@@ -64,7 +98,6 @@ function syncVersion(targetPath, version) {
 }
 
 try {
-  // Read main package.json
   const mainPackageJsonPath = join(projectRoot, 'package.json');
   const mainPackageJson = JSON.parse(
     readFileSync(mainPackageJsonPath, 'utf-8')
@@ -73,22 +106,25 @@ try {
 
   log(`\n📦 Syncing version: ${version}\n`, 'cyan');
 
-  // Sync to all targets
   let successCount = 0;
   let failCount = 0;
 
-  for (const target of SYNC_TARGETS) {
-    const success = syncVersion(target, version);
+  for (const target of JSON_VERSION_TARGETS) {
+    const success = syncJsonVersion(target, version);
+
     if (success) successCount++;
     else failCount++;
   }
 
-  // Summary
+  const cargoSuccess = syncCargoVersion('src-tauri/Cargo.toml', version);
+
+  if (cargoSuccess) successCount++;
+  else failCount++;
+
+  const totalTargets = JSON_VERSION_TARGETS.length + 1;
+
   log(`\n✨ Version sync complete!`, 'cyan');
-  log(
-    `   Successfully synced: ${successCount}/${SYNC_TARGETS.length}`,
-    'green'
-  );
+  log(`   Successfully synced: ${successCount}/${totalTargets}`, 'green');
 
   if (failCount > 0) {
     log(`   Failed or skipped: ${failCount}`, 'yellow');

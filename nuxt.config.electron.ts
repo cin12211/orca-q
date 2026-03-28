@@ -15,6 +15,19 @@ const shadcnConfig: Parameters<DefineNuxtConfig>[number]['shadcn'] = {
   componentDir: './components/ui',
 };
 
+const componentDirs = [
+  {
+    path: '~/components/base',
+    pathPrefix: false,
+    extensions: ['vue'],
+  },
+  {
+    path: '~/components',
+    pathPrefix: false,
+    extensions: ['vue'],
+  },
+];
+
 export default defineNuxtConfig({
   compatibilityDate: '2024-11-01',
 
@@ -83,11 +96,9 @@ export default defineNuxtConfig({
     autoImport: true,
     dirs: ['core/composables'],
   },
-  components: [
-    { path: '~/components/base', pathPrefix: false },
-
-    '~/components',
-  ],
+  components: {
+    dirs: componentDirs,
+  },
   piniaPluginPersistedstate: {
     storage: 'localStorage',
   },

@@ -7,6 +7,7 @@ import { useSettingsModal } from '~/core/contexts/useSettingsModal';
 import { TabViewType } from '~/core/stores';
 import { useTabViewsStore } from '~/core/stores/useTabViewsStore';
 import CurrentPositionPath from './CurrentPositionPath.vue';
+import TauriUpdateIndicator from './TauriUpdateIndicator.vue';
 
 const tabViewStore = useTabViewsStore();
 const { openChangelog } = useChangelogModal();
@@ -98,6 +99,8 @@ const formattedTabType = computed(() => {
     </div>
 
     <div class="flex items-center gap-3">
+      <TauriUpdateIndicator />
+
       <Tooltip>
         <TooltipTrigger as-child>
           <div

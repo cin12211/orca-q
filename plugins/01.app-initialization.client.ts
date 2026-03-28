@@ -6,7 +6,7 @@ import {
 } from '~/core/stores';
 
 export default defineNuxtPlugin(async nuxtApp => {
-  // 1. Initialize IndexedDB
+  // 1. Initialize the runtime persistence adapter.
   await initIDB();
 
   // 2. Hydrate Essential Stores

@@ -1,5 +1,5 @@
 appId: com.electron.app
-productName: OrcaQ
+productName: orcaq
 directories:
   buildResources: build
 files:
@@ -12,7 +12,7 @@ files:
 asarUnpack:
   - resources/**
 win:
-  executableName: OrcaQ
+  executableName: orcaq
 nsis:
   artifactName: ${name}-${version}-setup.${ext}
   shortcutName: ${productName}

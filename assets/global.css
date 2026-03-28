@@ -31,6 +31,16 @@ body {
   app-region: drag;
 }
 
+*[data-tauri-drag-region] {
+  -webkit-app-region: drag;
+  app-region: drag;
+}
+
+.window-no-drag {
+  -webkit-app-region: no-drag;
+  app-region: no-drag;
+}
+
 button {
   -webkit-app-region: no-drag;
   app-region: no-drag;

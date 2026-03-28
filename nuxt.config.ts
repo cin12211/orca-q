@@ -36,10 +36,59 @@ const shadcnConfig: Parameters<DefineNuxtConfig>[number]['shadcn'] = {
   componentDir: './components/ui',
 };
 
+const devWatchIgnored = [
+  '**/.git/**',
+  '**/node_modules/**',
+  '**/.nuxt/**',
+  '**/.output/**',
+  '**/.data/**',
+  '**/.cache/**',
+  '**/.vite/**',
+  '**/dist/**',
+  '**/coverage/**',
+  '**/playwright-report/**',
+  '**/test-results/**',
+  '**/storybook-static/**',
+  '**/.electron-build/**',
+  '**/.electron-out/**',
+  '**/electron-dist/**',
+  '**/npx-package/.output/**',
+  '**/orcaq-mcp/dist/**',
+  '**/src-tauri/target/**',
+  '**/src-tauri/gen/**',
+];
+
+const componentDirs = [
+  {
+    path: '~/components',
+    pathPrefix: false,
+    extensions: ['vue'],
+  },
+];
+
+const isTauriDev = process.env.NUXT_TAURI_DEV === '1';
+
+const devWatchOptions = {
+  ignored: devWatchIgnored,
+  ...(isTauriDev
+    ? {
+        usePolling: true,
+        interval: 150,
+        binaryInterval: 300,
+      }
+    : {}),
+};
+
 export default defineNuxtConfig({
   compatibilityDate: '2024-11-01',
 
   ssr: false,
+  telemetry: false,
+
+  devServer: {
+    host: '0.0.0.0',
+    port: 3000,
+  },
 
   runtimeConfig: {
     public: {
@@ -50,10 +99,10 @@ export default defineNuxtConfig({
   },
 
   devtools: {
-    enabled: true,
+    enabled: !isTauriDev,
 
     timeline: {
-      enabled: true,
+      enabled: !isTauriDev,
     },
   },
   modules: [
@@ -79,7 +128,13 @@ export default defineNuxtConfig({
     storageKey: 'nuxt-color-mode',
   },
   vite: {
+    clearScreen: false,
+    envPrefix: ['VITE_', 'TAURI_'],
     plugins: [tailwindcss()],
+    server: {
+      strictPort: true,
+      watch: devWatchOptions,
+    },
   },
   shadcn: shadcnConfig,
   icon: {
@@ -99,17 +154,19 @@ export default defineNuxtConfig({
     autoImport: true,
     dirs: ['core/composables'],
   },
-  components: [
-    { path: '~/components', pathPrefix: false },
-    // { path: '~/components/modules', pathPrefix: false },
-
-    // '~/components',
-  ],
+  components: {
+    dirs: componentDirs,
+  },
   piniaPluginPersistedstate: {
     storage: 'localStorage',
   },
   app: {
     head: appHeaderConfig,
   },
+  watch: ['app.vue', 'nuxt.config.ts'],
+  watchers: {
+    chokidar: devWatchOptions,
+  },
+  ignore: ['**/src-tauri/**', '**/electron/**', '**/docs/**'],
   spaLoadingTemplate: true,
 });

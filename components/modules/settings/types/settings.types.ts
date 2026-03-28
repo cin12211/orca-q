@@ -1,6 +1,7 @@
 import type { EditorTheme } from '~/components/base/code-editor/constants';
 
 export enum SettingsComponentKey {
+  DesktopConfig = 'DesktopConfig',
   EditorConfig = 'EditorConfig',
   QuickQueryConfig = 'QuickQueryConfig',
   AgentConfig = 'AgentConfig',
