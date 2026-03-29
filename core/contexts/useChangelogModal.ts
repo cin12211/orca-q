@@ -6,6 +6,7 @@ import {
   getVersionsSince,
   type ChangelogEntry,
 } from '../data/changelogs/changelog';
+import { getPlatformStorage } from '../persist/storage-adapter';
 
 const LAST_SEEN_VERSION_KEY = 'orcaq-last-seen-version';
 
@@ -25,17 +26,17 @@ const changelogModules = import.meta.glob('../data/changelogs/*.md', {
 });
 
 export function useChangelogModal() {
-  // Get the last seen version from localStorage
+  // Get the last seen version from platform storage
   const getLastSeenVersion = (): string | null => {
     if (typeof window === 'undefined') return null;
-    return localStorage.getItem(LAST_SEEN_VERSION_KEY);
+    return getPlatformStorage().getItem(LAST_SEEN_VERSION_KEY);
   };
 
   // Save the current version as seen
   const markVersionAsSeen = () => {
     if (typeof window === 'undefined') return;
     const currentVersion = getLatestVersion();
-    localStorage.setItem(LAST_SEEN_VERSION_KEY, currentVersion);
+    getPlatformStorage().setItem(LAST_SEEN_VERSION_KEY, currentVersion);
   };
 
   // Parse frontmatter from markdown content

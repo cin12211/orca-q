@@ -7,3 +7,5 @@ export * from './useSchemaStore';
 export * from './useWSStateStore';
 export * from './useQuickQueryLogs';
 export * from './useExplorerFileStore';
+export * from './agentStore';
+export * from './appConfigStore';

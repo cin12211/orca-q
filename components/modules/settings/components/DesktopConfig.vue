@@ -158,7 +158,7 @@ onMounted(() => {
       <h4
         class="text-sm font-medium leading-7 text-primary flex items-center gap-1 mb-2"
       >
-        <Icon name="lucide:download" class="size-5!" /> Desktop updates
+        <Icon name="hugeicons:download-04" class="size-5!" /> Desktop updates
       </h4>
 
       <div class="rounded-xl border p-4 flex flex-col gap-4">
@@ -270,7 +270,8 @@ onMounted(() => {
       <h4
         class="text-sm font-medium leading-7 text-primary flex items-center gap-1 mb-2"
       >
-        <Icon name="lucide:folder-open" class="size-5!" /> Data location
+        <Icon name="hugeicons:folder-file-storage" class="size-5!" /> Data
+        location
       </h4>
 
       <div class="rounded-xl border p-4 flex flex-col gap-4">

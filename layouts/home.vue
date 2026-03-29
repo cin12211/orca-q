@@ -18,12 +18,7 @@ const onTitleBarDoubleClick = async () => {
 
 <template>
   <div
-    :class="
-      cn(
-        'w-full h-10.5 select-none pr-2 bg-sidebar flex justify-center',
-        isTauriRuntime ? '' : 'electron-drag-region'
-      )
-    "
+    :class="cn('w-full h-10.5 select-none pr-2 bg-sidebar flex justify-center')"
     v-if="isAppVersion"
     @dblclick="onTitleBarDoubleClick"
   >

@@ -7,7 +7,7 @@ This guide explains the clean extension-based persistence architecture used by `
 Support one `FileTree` API with multiple persistence backends:
 
 - Web app: localStorage
-- Electron app: local persisted storage bridge
+- Desktop app: local persisted storage bridge
 - API sync: pull/push expanded ids
 
 ## Files
@@ -34,8 +34,8 @@ Use `createTreePersistencePlugin(options)` to create a pluggable extension.
 
 It supports:
 
-- mode selection: `auto | web | electron`
-- storage adapters (`webStorage`, `electronStorage`)
+- mode selection: `auto | web | desktop`
+- storage adapters (`webStorage`, `desktopStorage`)
 - API sync (`pullExpandedIds`, `pushExpandedIds`)
 - debounce for push updates (`pushDebounceMs`)
 - async preload (`preload`) and flush (`flush`)
@@ -72,12 +72,11 @@ const persistence = createTreePersistencePlugin({
 
 ## Parent Hydration Pattern (recommended)
 
-`FileTree` load hook is synchronous, so for async backends (Electron/API) preload in parent first:
+`FileTree` load hook is synchronous, so for async backends (API) preload in parent first:
 
 ```ts
 const persistence = createTreePersistencePlugin({
-  mode: 'electron',
-  electronStorage: createElectronStorageAdapter(window.electronStore),
+  webStorage: createWebLocalStorageAdapter(),
   apiSync: {
     pullExpandedIds: key => $fetch(`/api/tree/${key}`),
     pushExpandedIds: (key, ids) =>
@@ -102,18 +101,6 @@ onMounted(async () => {
   :persistence-extension="persistence"
   @update:expanded-ids="expandedIds = $event"
 />
-```
-
-## Electron Adapter
-
-Provide a bridge object that wraps your Electron preload API:
-
-```ts
-const electronAdapter = createElectronStorageAdapter({
-  getItem: key => window.electronApi.storeGet(key),
-  setItem: (key, value) => window.electronApi.storeSet(key, value),
-  removeItem: key => window.electronApi.storeDelete(key),
-});
 ```
 
 ## API Sync Notes

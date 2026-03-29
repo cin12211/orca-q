@@ -11,6 +11,8 @@ pub struct NativePersistState(pub Mutex<()>);
 
 #[derive(Clone, Copy)]
 enum PersistCollection {
+    AppConfig,
+    AgentState,
     Workspaces,
     WorkspaceState,
     Connections,
@@ -23,6 +25,8 @@ enum PersistCollection {
 impl PersistCollection {
     fn file_name(self) -> &'static str {
         match self {
+            Self::AppConfig => "app-config.json",
+            Self::AgentState => "agent-state.json",
             Self::Workspaces => "workspaces.json",
             Self::WorkspaceState => "workspace-state.json",
             Self::Connections => "connections.json",
@@ -39,6 +43,8 @@ impl TryFrom<&str> for PersistCollection {
 
     fn try_from(value: &str) -> Result<Self, Self::Error> {
         match value {
+            "appConfig" => Ok(Self::AppConfig),
+            "agentState" => Ok(Self::AgentState),
             "workspaces" => Ok(Self::Workspaces),
             "workspaceState" => Ok(Self::WorkspaceState),
             "connections" => Ok(Self::Connections),

@@ -1,53 +1,38 @@
-import { isTauri } from '../helpers/environment';
-import { connectionIDBApi } from './connectionIDBApi';
-import { quickQueryLogsIDBApi } from './quickQueryLogsIDBApi';
-import { rowQueryFileIDBApi } from './rowQueryFile';
-import { tabViewsIDBApi } from './tabViewsIDBApi';
-import {
-  connectionTauriApi,
-  migrateIndexedDbPersistToTauriNativeStore,
-  quickQueryLogsTauriApi,
-  rowQueryFilesTauriApi,
-  tabViewsTauriApi,
-  workspaceStateTauriApi,
-  workspaceTauriApi,
-} from './tauriPersistApi';
-import { workspaceIDBApi } from './workspaceIDBApi';
-import { workspaceStateIDBApi } from './workspaceStateIDBApi';
+import { createPersistApis } from './factory';
 
-export const initIDB = async () => {
-  if (window.electron) {
-    return;
-  }
+export type { PersistApis } from './types';
+export type {
+  AppConfigPersistApi,
+  AgentPersistApi,
+  WorkspacePersistApi,
+  WorkspaceStatePersistApi,
+  ConnectionPersistApi,
+  TabViewsPersistApi,
+  QuickQueryLogsPersistApi,
+  RowQueryFilesPersistApi,
+  GetTabViewsByContextProps,
+  DeleteTabViewProps,
+  GetQQueryLogsProps,
+  DeleteQQueryLogsProps,
+} from './types';
 
-  if (isTauri()) {
-    // @ts-ignore (define in dts)
-    window.workspaceApi = workspaceTauriApi;
-    // @ts-ignore (define in dts)
-    window.workspaceStateApi = workspaceStateTauriApi;
-    // @ts-ignore (define in dts)
-    window.quickQueryLogsApi = quickQueryLogsTauriApi;
-    // @ts-ignore (define in dts)
-    window.connectionApi = connectionTauriApi;
-    // @ts-ignore (define in dts)
-    window.tabViewsApi = tabViewsTauriApi;
-    // @ts-ignore (define in dts)
-    window.rowQueryFilesApi = rowQueryFilesTauriApi;
+/**
+ * Wire up the platform persist APIs on `window`.
+ * Schema migrations and platform storage init are handled earlier
+ * by `plugins/01.migration.client.ts`.
+ */
+export const initPersist = async () => {
+  const apis = createPersistApis();
 
-    await migrateIndexedDbPersistToTauriNativeStore();
-    return;
-  }
-
-  // @ts-ignore (define in dts)
-  window.workspaceApi = workspaceIDBApi;
-  // @ts-ignore (define in dts)
-  window.workspaceStateApi = workspaceStateIDBApi;
-  // @ts-ignore (define in dts)
-  window.quickQueryLogsApi = quickQueryLogsIDBApi;
-  // @ts-ignore (define in dts)
-  window.connectionApi = connectionIDBApi;
-  // @ts-ignore (define in dts)
-  window.tabViewsApi = tabViewsIDBApi;
-  // @ts-ignore (define in dts)
-  window.rowQueryFilesApi = rowQueryFileIDBApi;
+  window.appConfigApi = apis.appConfigApi;
+  window.agentApi = apis.agentApi;
+  window.workspaceApi = apis.workspaceApi;
+  window.workspaceStateApi = apis.workspaceStateApi;
+  window.connectionApi = apis.connectionApi;
+  window.tabViewsApi = apis.tabViewsApi;
+  window.quickQueryLogsApi = apis.quickQueryLogsApi;
+  window.rowQueryFilesApi = apis.rowQueryFilesApi;
 };
+
+/** @deprecated Use `initPersist` instead. Alias kept for backward compatibility. */
+export const initIDB = initPersist;

@@ -29,9 +29,8 @@ export interface TreePersistenceApiSyncAdapter {
 }
 
 export interface CreateTreePersistencePluginOptions {
-  mode?: 'auto' | 'web' | 'electron';
+  mode?: 'auto' | 'web';
   webStorage?: TreePersistenceStorageAdapter;
-  electronStorage?: TreePersistenceStorageAdapter;
   apiSync?: TreePersistenceApiSyncAdapter;
   pushDebounceMs?: number;
   preferRemote?: boolean;
@@ -63,35 +62,6 @@ const normalizeExpandedIds = (value: unknown): string[] | null => {
 const cloneExpandedIds = (expandedIds: string[]): string[] => {
   return [...expandedIds];
 };
-
-const isElectronRuntime = (): boolean => {
-  if (typeof window === 'undefined') {
-    return false;
-  }
-
-  const maybeWindow = window as {
-    process?: {
-      versions?: {
-        electron?: string;
-      };
-    };
-    navigator?: {
-      userAgent?: string;
-    };
-  };
-
-  if (maybeWindow.process?.versions?.electron) {
-    return true;
-  }
-
-  return !!maybeWindow.navigator?.userAgent?.includes('Electron');
-};
-
-export interface ElectronStorageBridge {
-  getItem: (key: string) => MaybePromise<string | null>;
-  setItem: (key: string, value: string) => MaybePromise<void>;
-  removeItem?: (key: string) => MaybePromise<void>;
-}
 
 export const createWebLocalStorageAdapter =
   (): TreePersistenceStorageAdapter => ({
@@ -130,33 +100,6 @@ export const createWebLocalStorageAdapter =
     },
   });
 
-export const createElectronStorageAdapter = (
-  bridge: ElectronStorageBridge
-): TreePersistenceStorageAdapter => ({
-  loadExpandedIds: async storageKey => {
-    const value = await bridge.getItem(`${storageKey}_expanded`);
-    if (!value) {
-      return null;
-    }
-
-    try {
-      return normalizeExpandedIds(JSON.parse(value));
-    } catch {
-      return null;
-    }
-  },
-  saveExpandedIds: async (storageKey, expandedIds) => {
-    await bridge.setItem(`${storageKey}_expanded`, JSON.stringify(expandedIds));
-  },
-  clearExpandedIds: async storageKey => {
-    if (!bridge.removeItem) {
-      return;
-    }
-
-    await bridge.removeItem(`${storageKey}_expanded`);
-  },
-});
-
 export const createTreePersistencePlugin = (
   options: CreateTreePersistencePluginOptions = {}
 ): TreePersistencePlugin => {
@@ -170,24 +113,6 @@ export const createTreePersistencePlugin = (
   };
 
   const resolveStorageAdapter = (): TreePersistenceStorageAdapter => {
-    const mode = options.mode ?? 'auto';
-
-    if (mode === 'web') {
-      return options.webStorage ?? createWebLocalStorageAdapter();
-    }
-
-    if (mode === 'electron') {
-      return (
-        options.electronStorage ??
-        options.webStorage ??
-        createWebLocalStorageAdapter()
-      );
-    }
-
-    if (isElectronRuntime() && options.electronStorage) {
-      return options.electronStorage;
-    }
-
     return options.webStorage ?? createWebLocalStorageAdapter();
   };
 

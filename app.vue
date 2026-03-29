@@ -1,7 +1,8 @@
 <script setup lang="ts">
 // main.ts (or the entry that mounts Vue)
-import { LoadingOverlay, TooltipProvider } from '#components';
+import { LoadingOverlay, MigrationScreen, TooltipProvider } from '#components';
 import { CommandPaletteView } from '@/components/modules/command-palette';
+import { useMigrationState } from '~/core/composables/useMigrationState';
 import ChangelogPopup from './components/modules/changelog/ChangelogPopup.vue';
 import Settings from './components/modules/settings';
 import { Toaster } from './components/ui/sonner';
@@ -18,6 +19,7 @@ import { useChangelogModal } from './core/contexts/useChangelogModal';
 
 const appLoading = useAppLoading();
 const { isLoading } = useLoadingIndicator();
+const { isBlocking: isMigrating } = useMigrationState();
 
 const { connectToConnection } = useAppContext();
 const { autoShowIfNewVersion } = useChangelogModal();
@@ -53,6 +55,7 @@ onMounted(async () => {
 
 <template>
   <ClientOnly>
+    <MigrationScreen />
     <LoadingOverlay :visible="isLoading || appLoading.isLoading.value" />
     <NuxtLoadingIndicator
       :color="'repeating-linear-gradient(to right, #ffffff 0%, #000000 100%)'"

@@ -315,6 +315,7 @@ pub fn run() {
     let app = tauri::Builder::default()
         .plugin(tauri_plugin_process::init())
         .plugin(tauri_plugin_shell::init())
+        .plugin(tauri_plugin_store::Builder::default().build())
         .plugin(tauri_plugin_updater::Builder::new().build())
         .manage(NativePersistState::default())
         .manage(RuntimeSidecar::default())

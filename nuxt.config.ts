@@ -49,9 +49,6 @@ const devWatchIgnored = [
   '**/playwright-report/**',
   '**/test-results/**',
   '**/storybook-static/**',
-  '**/.electron-build/**',
-  '**/.electron-out/**',
-  '**/electron-dist/**',
   '**/npx-package/.output/**',
   '**/orcaq-mcp/dist/**',
   '**/src-tauri/target/**',
@@ -167,6 +164,6 @@ export default defineNuxtConfig({
   watchers: {
     chokidar: devWatchOptions,
   },
-  ignore: ['**/src-tauri/**', '**/electron/**', '**/docs/**'],
+  ignore: ['**/src-tauri/**', '**/docs/**'],
   spaLoadingTemplate: true,
 });

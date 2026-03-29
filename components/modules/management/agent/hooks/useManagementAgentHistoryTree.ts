@@ -54,7 +54,7 @@ export const useManagementAgentHistoryTree = (
     startNewChat,
     deleteHistory,
     renameHistory,
-    sectionNodeIds,
+    SECTION_NODE_IDS: sectionNodeIds,
   } = useAgentWorkspace();
 
   watchEffect(() => {

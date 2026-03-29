@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { storeToRefs } from 'pinia';
-import { isElectron, isMacOS, isPWA, isTauri } from '~/core/helpers';
+import { isMacOS, isPWA, isTauri } from '~/core/helpers';
 import { toggleTauriWindowMaximize } from '~/core/platform/tauri-window';
 import { useAppConfigStore } from '~/core/stores/appConfigStore';
 import { ActivityBarHorizontal } from '../../activity-bar';
@@ -22,7 +22,6 @@ const { isPrimarySidebarCollapsed, isSecondSidebarCollapsed } =
   storeToRefs(appConfigStore);
 
 const isPWAApp = computed(() => isPWA());
-const isElectronRuntime = computed(() => isElectron());
 const isTauriRuntime = computed(() => isTauri());
 const isTauriMacWindow = computed(() => isTauri() && isMacOS());
 
@@ -37,9 +36,6 @@ const minWidth = computed(() => {
   //   return `calc( ${props.primarySideBarWidth} - 6rem)`;
   // }
 
-  // if (isElectron()) {
-  //   return `calc( ${props.primarySideBarWidth} - 4.5rem)`;
-  // }
   // if (isAppVersion.value) {
   //   return `calc( ${widthPercentage}% + 1px) `;
   // }
@@ -64,8 +60,7 @@ const onTitleBarDoubleClick = async () => {
   <div
     :class="[
       'w-screen h-9 select-none border-b pr-2 bg-sidebar-accent/50!',
-      isElectronRuntime && 'electron-drag-region',
-      isElectronRuntime && isPrimarySidebarCollapsed ? 'pl-[4.5rem]' : '',
+
       isPWAApp && isPrimarySidebarCollapsed ? 'pl-[6rem]' : '',
       isTauriMacWindow && 'pl-[4.75rem]',
       isPWAApp && 'h-10.5 header-tab-view-pwa',
@@ -92,10 +87,7 @@ const onTitleBarDoubleClick = async () => {
         ></div>
 
         <div
-          :class="[
-            isElectronRuntime ? 'pl-[4.5rem]' : '',
-            'flex justify-center w-full',
-          ]"
+          :class="['flex justify-center w-full']"
           v-if="!isPrimarySidebarCollapsed"
           :data-tauri-drag-region="isTauriRuntime ? '' : undefined"
         >

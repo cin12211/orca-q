@@ -3,9 +3,10 @@ import { Button } from '@/components/ui/button';
 
 defineProps<{
   isShowButtonCreate: boolean;
+  isShowButtonRestore?: boolean;
 }>();
 
-const emit = defineEmits(['create']);
+const emit = defineEmits(['create', 'restore']);
 </script>
 
 <template>
@@ -21,7 +22,17 @@ const emit = defineEmits(['create']);
         Welcome to your workspaces
       </p>
     </div>
-    <div>
+    <div class="flex items-center gap-2 shrink-0">
+      <Button
+        v-if="isShowButtonRestore"
+        type="button"
+        variant="outline"
+        size="sm"
+        @click="emit('restore')"
+      >
+        <Icon name="lucide:upload" />
+        Restore Data
+      </Button>
       <Button
         v-if="isShowButtonCreate"
         id="tour-new-workspace-btn"
@@ -30,9 +41,8 @@ const emit = defineEmits(['create']);
         @click="emit('create')"
       >
         <Icon name="lucide:plus" />
-
-        New Workspace</Button
-      >
+        New Workspace
+      </Button>
     </div>
   </div>
 </template>

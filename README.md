@@ -10,18 +10,18 @@
 
 ## Overview
 
-**OrcaQ** is a modern desktop application designed for managing, querying, and manipulating data across various database management systems (DBMS) in an intuitive, fast, and secure manner. Built with [Electron](https://www.electronjs.org/), [Vue 3](https://vuejs.org/), [TypeScript](https://www.typescriptlang.org/), and [Vite](https://vitejs.dev/), it targets developers, data engineers, analysts, DBAs, or anyone who needs to work with SQL/PostgreSQL data on the desktop.
+**OrcaQ** is a modern database application for managing, querying, and manipulating data across various database management systems (DBMS) in an intuitive, fast, and secure manner. Built with [Nuxt](https://nuxt.com/), [Vue 3](https://vuejs.org/), [TypeScript](https://www.typescriptlang.org/), and [Tauri](https://tauri.app/), it targets developers, data engineers, analysts, DBAs, or anyone who needs to work with SQL/PostgreSQL data on desktop or web.
 
 ## Features
 
-- 🚀 **Cross-platform Desktop App**: Runs smoothly on Windows, macOS, and Linux thanks to Electron.
+- 🚀 **Cross-platform App**: Runs smoothly on Windows, macOS, Linux, and the web.
 - 🖥️ **Modern UI/UX**: Minimalist interface with dark mode support, drag & drop, and flexible sidebar.
 - ⚡ **Quick Query**: Fast data querying with preview, filtering, and dynamic field search.
 - 📝 **Raw SQL Editor**: Write and execute SQL queries with multiple layout modes (vertical/horizontal).
 - 🗂️ **Explorer**: Browse database structures, tables, schemas, and files.
 - 🔒 **Workspace & Connection Management**: Manage multiple connections and independent workspaces.
 - 🛠️ **Hotkey Support**: Supports shortcuts for faster operations.
-- ⚙️ **Electron Backend**: Leverages Node.js, native modules, and OS integration.
+- ⚙️ **Native Desktop Runtime**: Uses Tauri for desktop packaging and OS integration.
 
 ## Installation
 
@@ -82,10 +82,8 @@
 4. **Build for production:**
 
    ```sh
-   npm run app:build
+   npm run app:build:tauri
    ```
-
-> **Note**: Ensure you have the correct Node.js version and necessary dependencies installed to run Electron. See more at [Electron Docs](https://www.electronjs.org/docs/latest/tutorial/quick-start).
 
 ## Usage
 
@@ -156,7 +154,7 @@ This project is licensed under the [MIT License](LICENSE).
 
 ## Acknowledgements
 
-- [Electron](https://www.electronjs.org/) - Build cross-platform desktop apps with JavaScript
+- [Tauri](https://tauri.app/) - Build cross-platform desktop apps with Rust and web technologies
 - [Vue 3](https://vuejs.org/) - Progressive JavaScript framework
 - [Vite](https://vitejs.dev/) - Next Generation Frontend Tooling
 - [TypeScript](https://www.typescriptlang.org/)

@@ -11,9 +11,11 @@ import {
   Icon,
 } from '#components';
 import { useSettingsModal } from '~/core/contexts/useSettingsModal';
+import { isTauri } from '~/core/helpers/environment';
 import {
   AgentConfig,
   AppearanceConfig,
+  BackupRestoreConfig,
   DesktopConfig,
   EditorConfig,
   QuickQueryConfig,
@@ -29,9 +31,12 @@ const SETTINGS_COMPONENTS: Record<SettingsComponentKey, Component> = {
   AgentConfig,
   AppearanceConfig,
   TableAppearanceConfig,
+  BackupRestoreConfig,
 };
 
-const settingNavs = SETTINGS_NAV_ITEMS.map(item => ({
+const settingNavs = SETTINGS_NAV_ITEMS.filter(
+  item => !item.desktopOnly || isTauri()
+).map(item => ({
   ...item,
   component: item.componentKey ? SETTINGS_COMPONENTS[item.componentKey] : null,
 }));
