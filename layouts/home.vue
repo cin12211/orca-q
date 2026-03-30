@@ -1,18 +1,22 @@
 <script setup lang="ts">
 import { cn } from '@/lib/utils';
-import { isDesktopApp, isMacOS, isPWA, isTauri } from '~/core/helpers';
+import { isDesktopApp, isMacOS, isPWA, isTauri, isElectron } from '~/core/helpers';
 import { toggleTauriWindowMaximize } from '~/core/platform/tauri-window';
 
 const isAppVersion = computed(() => isDesktopApp() || isPWA());
 const isTauriRuntime = computed(() => isTauri());
-const isTauriMacWindow = computed(() => isTauri() && isMacOS());
+const isDesktopMacWindow = computed(() => isDesktopApp() && isMacOS());
 
 const onTitleBarDoubleClick = async () => {
-  if (!isTauriMacWindow.value) {
+  if (!isDesktopMacWindow.value) {
     return;
   }
 
-  await toggleTauriWindowMaximize();
+  if (isTauri()) {
+    await toggleTauriWindowMaximize();
+  } else if (isElectron()) {
+    await (window as any).electronAPI.window.maximize();
+  }
 };
 </script>
 
@@ -25,9 +29,10 @@ const onTitleBarDoubleClick = async () => {
     <div
       :class="[
         'flex w-full items-center gap-3 py-2 pr-2',
-        isTauriMacWindow ? 'pl-[4.75rem]' : 'pl-3',
+        isDesktopMacWindow ? 'pl-[4.75rem]' : 'pl-3'
       ]"
       :data-tauri-drag-region="isTauriRuntime ? '' : undefined"
+      :data-electron-drag-region="isElectron() ? '' : undefined"
     >
       <div class="flex items-center space-x-2 pointer-events-none">
         <Avatar class="rounded-2xl">
@@ -60,3 +65,4 @@ const onTitleBarDoubleClick = async () => {
     <slot />
   </div>
 </template>
+

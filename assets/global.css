@@ -30,6 +30,10 @@ body {
   app-region: drag;
 }
 
+*[data-electron-drag-region] {
+  -webkit-app-region: drag;
+}
+
 .window-no-drag {
   -webkit-app-region: no-drag;
   app-region: no-drag;

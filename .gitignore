@@ -77,3 +77,7 @@ coverage
 /test-results/
 
 .playwright-mcp
+
+dist-electron
+dist-electron-build
+electron-runtime

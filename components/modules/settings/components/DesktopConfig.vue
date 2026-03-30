@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { toast } from 'vue-sonner';
 import { useTauriUpdater } from '~/core/composables/useTauriUpdater';
-import { formatBytes, isTauri } from '~/core/helpers';
+import { useElectronUpdater } from '~/core/composables/useElectronUpdater';
+import { formatBytes, isTauri, isElectron } from '~/core/helpers';
 import {
   getDesktopStoragePaths,
   openDesktopStoragePath,
@@ -22,9 +23,10 @@ const {
   checkForUpdates,
   installUpdate,
   restartToApplyUpdate,
-} = useTauriUpdater();
+} = isElectron() ? useElectronUpdater() : useTauriUpdater();
 const isDevBuild = import.meta.dev;
 const isTauriRuntime = isTauri();
+const isElectronRuntime = isElectron();
 const storagePaths = shallowRef<DesktopStoragePaths | null>(null);
 const storageError = ref<string | null>(null);
 const isLoadingStoragePaths = ref(false);
@@ -96,7 +98,7 @@ const webStorageDescription = computed(() => {
 });
 
 const loadStoragePaths = async () => {
-  if (!isTauriRuntime) {
+  if (!isTauriRuntime && !isElectronRuntime) {
     return;
   }
 
@@ -104,7 +106,15 @@ const loadStoragePaths = async () => {
   storageError.value = null;
 
   try {
-    storagePaths.value = await getDesktopStoragePaths();
+    if (isElectronRuntime) {
+      const mainPath = await (window as any).electronAPI.window.getStoragePath();
+      storagePaths.value = {
+        nativeDataPath: mainPath,
+        webStoragePath: 'Maintained by Electron Session internally',
+      };
+    } else {
+      storagePaths.value = await getDesktopStoragePaths();
+    }
   } catch (error) {
     const message =
       error instanceof Error
@@ -121,7 +131,11 @@ const handleOpenStoragePath = async (target: DesktopStorageTarget) => {
   openingStorageTarget.value = target;
 
   try {
-    await openDesktopStoragePath(target);
+    if (isElectronRuntime) {
+      await (window as any).electronAPI.window.openStoragePath();
+    } else {
+      await openDesktopStoragePath(target);
+    }
   } catch (error) {
     const message =
       error instanceof Error ? error.message : 'Failed to open storage folder';
@@ -185,7 +199,7 @@ onMounted(() => {
           v-if="!isSupported"
           class="rounded-lg border border-dashed p-3 text-sm text-muted-foreground"
         >
-          Desktop updater is only available inside the Tauri desktop app.
+          Desktop updater is only available inside the Tauri or Electron desktop app.
         </div>
 
         <template v-else>
@@ -258,7 +272,7 @@ onMounted(() => {
             Last checked: {{ formattedLastCheckedAt }}
           </p>
           <p v-if="lastError">Last error: {{ lastError }}</p>
-          <p v-if="isTauriRuntime && isDevBuild">
+          <p v-if="(isTauriRuntime || isElectronRuntime) && isDevBuild">
             Development mode can check the updater, but install flow is intended
             for packaged releases.
           </p>
@@ -276,10 +290,10 @@ onMounted(() => {
 
       <div class="rounded-xl border p-4 flex flex-col gap-4">
         <div
-          v-if="!isTauriRuntime"
+          v-if="!isTauriRuntime && !isElectronRuntime"
           class="rounded-lg border border-dashed p-3 text-sm text-muted-foreground"
         >
-          Data folders are only available inside the Tauri desktop app.
+          Data folders are only available inside desktop apps.
         </div>
 
         <template v-else>

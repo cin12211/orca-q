@@ -1,6 +1,12 @@
 <script setup lang="ts">
 import { storeToRefs } from 'pinia';
-import { isMacOS, isPWA, isTauri } from '~/core/helpers';
+import {
+  isMacOS,
+  isPWA,
+  isTauri,
+  isElectron,
+  isDesktopApp,
+} from '~/core/helpers';
 import { toggleTauriWindowMaximize } from '~/core/platform/tauri-window';
 import { useAppConfigStore } from '~/core/stores/appConfigStore';
 import { ActivityBarHorizontal } from '../../activity-bar';
@@ -23,13 +29,13 @@ const { isPrimarySidebarCollapsed, isSecondSidebarCollapsed } =
 
 const isPWAApp = computed(() => isPWA());
 const isTauriRuntime = computed(() => isTauri());
-const isTauriMacWindow = computed(() => isTauri() && isMacOS());
+const isDesktopMacWindow = computed(() => isDesktopApp() && isMacOS());
 
 const minWidth = computed(() => {
   return getTabViewMinWidth({
     primarySideBarWidth: props.primarySideBarWidth,
     sidebarWidthPercentage: appConfigStore.layoutSize[0],
-    isTauriMacWindow: isTauriMacWindow.value,
+    isTauriMacWindow: isDesktopMacWindow.value,
   });
 
   // if (isPWA()) {
@@ -48,11 +54,15 @@ const isAccessRightPanel = computed(() => {
 });
 
 const onTitleBarDoubleClick = async () => {
-  if (!isTauriMacWindow.value) {
+  if (!isDesktopMacWindow.value) {
     return;
   }
 
-  await toggleTauriWindowMaximize();
+  if (isTauri()) {
+    await toggleTauriWindowMaximize();
+  } else if (isElectron()) {
+    await (window as any).electronAPI.window.maximize();
+  }
 };
 </script>
 
@@ -62,15 +72,17 @@ const onTitleBarDoubleClick = async () => {
       'w-screen h-9 select-none border-b pr-2 bg-sidebar-accent/50!',
 
       isPWAApp && isPrimarySidebarCollapsed ? 'pl-[6rem]' : '',
-      isTauriMacWindow && 'pl-[4.75rem]',
-      isPWAApp && 'h-10.5 header-tab-view-pwa',
+      isDesktopMacWindow && 'pl-[4.75rem]',
+      isPWAApp && 'h-10.5 header-tab-view-pwa'
     ]"
     @dblclick="onTitleBarDoubleClick"
     data-tauri-drag-region
+    :data-electron-drag-region="isElectron() ? '' : undefined"
   >
     <div
       class="flex justify-between items-center h-full"
       data-tauri-drag-region
+      :data-electron-drag-region="isElectron() ? '' : undefined"
     >
       <div
         class="window-no-drag flex items-center gap-1 h-full px-1"
@@ -90,6 +102,7 @@ const onTitleBarDoubleClick = async () => {
           :class="['flex justify-center w-full']"
           v-if="!isPrimarySidebarCollapsed"
           :data-tauri-drag-region="isTauriRuntime ? '' : undefined"
+          :data-electron-drag-region="isElectron() ? '' : undefined"
         >
           <ActivityBarHorizontal />
         </div>

@@ -34,7 +34,16 @@ export function isMacOS(): boolean {
   return /mac/i.test(navigator.userAgent) || /mac/i.test(navigator.platform);
 }
 
-export const isDesktopApp = (): boolean => isTauri();
+export const isDesktopApp = (): boolean => isTauri() || isElectron();
+
+export function isElectron(): boolean {
+  if (typeof window === 'undefined') {
+    return false;
+  }
+
+  return typeof (window as Window & { electronAPI?: unknown }).electronAPI === 'object';
+}
+
 
 export const isPWA = (): boolean => {
   if (!!('windowControlsOverlay' in navigator)) {

@@ -11,7 +11,7 @@ import {
   Icon,
 } from '#components';
 import { useSettingsModal } from '~/core/contexts/useSettingsModal';
-import { isTauri } from '~/core/helpers/environment';
+import { isDesktopApp } from '~/core/helpers/environment';
 import {
   AgentConfig,
   AppearanceConfig,
@@ -35,7 +35,7 @@ const SETTINGS_COMPONENTS: Record<SettingsComponentKey, Component> = {
 };
 
 const settingNavs = SETTINGS_NAV_ITEMS.filter(
-  item => !item.desktopOnly || isTauri()
+  item => !item.desktopOnly || isDesktopApp()
 ).map(item => ({
   ...item,
   component: item.componentKey ? SETTINGS_COMPONENTS[item.componentKey] : null,

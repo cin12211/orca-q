@@ -1,4 +1,4 @@
-import { isTauri } from '~/core/helpers/environment';
+import { isElectron, isTauri } from '~/core/helpers/environment';
 import {
   agentIDBAdapter,
   appConfigIDBAdapter,
@@ -9,6 +9,16 @@ import {
   workspaceIDBAdapter,
   workspaceStateIDBAdapter,
 } from './adapters/idb';
+import {
+  agentElectronAdapter,
+  appConfigElectronAdapter,
+  connectionElectronAdapter,
+  quickQueryLogsElectronAdapter,
+  rowQueryFilesElectronAdapter,
+  tabViewsElectronAdapter,
+  workspaceElectronAdapter,
+  workspaceStateElectronAdapter,
+} from './adapters/electron';
 import {
   agentTauriAdapter,
   appConfigTauriAdapter,
@@ -47,14 +57,34 @@ function createTauriApis(): PersistApis {
   };
 }
 
+function createElectronApis(): PersistApis {
+  return {
+    appConfigApi: appConfigElectronAdapter,
+    agentApi: agentElectronAdapter,
+    workspaceApi: workspaceElectronAdapter,
+    workspaceStateApi: workspaceStateElectronAdapter,
+    connectionApi: connectionElectronAdapter,
+    tabViewsApi: tabViewsElectronAdapter,
+    quickQueryLogsApi: quickQueryLogsElectronAdapter,
+    rowQueryFilesApi: rowQueryFilesElectronAdapter,
+  };
+}
+
 /**
  * Factory that returns the correct persist implementation
  * based on the current runtime environment.
+ *
+ * Priority: Tauri > Electron > IDB (web)
  */
 export function createPersistApis(): PersistApis {
   if (isTauri()) {
     return createTauriApis();
   }
 
+  if (isElectron()) {
+    return createElectronApis();
+  }
+
   return createIDBApis();
 }
+
