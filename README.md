@@ -87,6 +87,46 @@
 
 > **Note**: Ensure you have the correct Node.js version and necessary dependencies installed to run Electron. See more at [Electron Docs](https://www.electronjs.org/docs/latest/tutorial/quick-start).
 
+### Docker Setup
+
+Run OrcaQ instantly with Docker — no local Node.js or build tools required.
+
+1. **Clone the repository:**
+
+   ```sh
+   git clone https://github.com/cin12211/orca-q.git
+   cd orcaq
+   ```
+
+2. **Configure environment (optional):**
+
+   ```sh
+   cp .env.example .env
+   # Edit .env to add AI provider keys, change ports, etc.
+   ```
+
+3. **Start with Docker Compose:**
+
+   ```sh
+   docker compose up -d
+   ```
+
+4. **Open OrcaQ:**
+
+   Visit [http://localhost:3000](http://localhost:3000)
+
+A demo PostgreSQL database is included for testing. Connect to it inside OrcaQ with:
+
+| Field    | Value              |
+|----------|--------------------|
+| Host     | `postgres-demo`    |
+| Port     | `5432`             |
+| User     | `orcaq`            |
+| Password | `orcaq_demo_pass`  |
+| Database | `orcaq_demo`       |
+
+> **Tip**: The demo PostgreSQL is optional. Remove it from `docker-compose.yml` if you only connect to external databases. OrcaQ is stateless — it connects to your databases at runtime.
+
 ## Usage
 
 - **Launch the app**:  
