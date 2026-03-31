@@ -26,7 +26,7 @@ extraResources:
 publish:
   provider: github
   owner: cin12211
-  repo: orca-q
+  repo: orcaq-test
   releaseType: release
 
 # ─── macOS ───────────────────────────────────────────────────────────────────
