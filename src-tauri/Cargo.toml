@@ -1,6 +1,6 @@
 [package]
 name = "orcaq_tauri"
-version = "1.0.31"
+version = "1.0.35"
 description = "Tauri desktop shell for orcaq"
 authors = ["Cinny"]
 license = "MIT"

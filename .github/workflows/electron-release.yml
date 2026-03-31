@@ -13,6 +13,8 @@ jobs:
   publish-electron:
     name: Build ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
+    env:
+      NODE_OPTIONS: --max-old-space-size=6144
 
     strategy:
       fail-fast: false
@@ -37,7 +39,7 @@ jobs:
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
         with:
-          bun-version: latest
+          bun-version: 1.2.8
 
       - name: Install frontend dependencies
         run: bun install
