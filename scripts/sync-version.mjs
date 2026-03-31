@@ -21,10 +21,7 @@ const colors = {
   reset: '\x1b[0m',
 };
 
-const JSON_VERSION_TARGETS = [
-  'npx-package/package.json',
-  'src-tauri/tauri.conf.json',
-];
+const JSON_VERSION_TARGETS = ['npx-package/package.json'];
 
 function log(message, color = 'cyan') {
   console.log(`${colors[color]}${message}${colors.reset}`);
@@ -58,45 +55,6 @@ function syncJsonVersion(targetPath, version) {
   }
 }
 
-function syncCargoVersion(targetPath, version) {
-  const fullPath = join(projectRoot, targetPath);
-
-  if (!existsSync(fullPath)) {
-    log(`⚠ Skipped (not found): ${targetPath}`, 'yellow');
-    return false;
-  }
-
-  try {
-    const cargoToml = readFileSync(fullPath, 'utf-8');
-    const match = cargoToml.match(/^version = "([^"]+)"$/m);
-
-    if (!match) {
-      log(`✗ Failed: ${targetPath} - version field not found`, 'red');
-      return false;
-    }
-
-    const oldVersion = match[1];
-
-    if (oldVersion === version) {
-      log(`✓ Already synced: ${targetPath} (${version})`, 'green');
-      return true;
-    }
-
-    const updatedCargoToml = cargoToml.replace(
-      /^version = "([^"]+)"$/m,
-      `version = "${version}"`
-    );
-
-    writeFileSync(fullPath, updatedCargoToml);
-
-    log(`✓ Synced: ${targetPath} (${oldVersion} → ${version})`, 'green');
-    return true;
-  } catch (error) {
-    log(`✗ Failed: ${targetPath} - ${error.message}`, 'red');
-    return false;
-  }
-}
-
 try {
   const mainPackageJsonPath = join(projectRoot, 'package.json');
   const mainPackageJson = JSON.parse(
@@ -116,12 +74,7 @@ try {
     else failCount++;
   }
 
-  const cargoSuccess = syncCargoVersion('src-tauri/Cargo.toml', version);
-
-  if (cargoSuccess) successCount++;
-  else failCount++;
-
-  const totalTargets = JSON_VERSION_TARGETS.length + 1;
+  const totalTargets = JSON_VERSION_TARGETS.length;
 
   log(`\n✨ Version sync complete!`, 'cyan');
   log(`   Successfully synced: ${successCount}/${totalTargets}`, 'green');
