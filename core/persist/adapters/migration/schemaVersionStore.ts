@@ -1,13 +1,13 @@
 /**
  * Persists the current schema version number for each collection.
  *
- * Uses localStorage on web, or the Tauri KV store on desktop
+ * Uses localStorage on web, or native KV via platform adapter on desktop
  * (via the same getPlatformStorage() adapter used by Pinia persist).
  *
  * Key pattern: `orcaq-schema-version-{collection}`
  */
 import { getPlatformStorage } from '../../storage-adapter';
-import type { PersistCollection } from '../tauri/primitives';
+import type { PersistCollection } from '../idb/primitives';
 
 const prefix = 'orcaq-schema-version-';
 

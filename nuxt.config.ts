@@ -51,8 +51,6 @@ const devWatchIgnored = [
   '**/storybook-static/**',
   '**/npx-package/.output/**',
   '**/orcaq-mcp/dist/**',
-  '**/src-tauri/target/**',
-  '**/src-tauri/gen/**',
 ];
 
 const componentDirs = [
@@ -63,17 +61,8 @@ const componentDirs = [
   },
 ];
 
-const isTauriDev = process.env.NUXT_TAURI_DEV === '1';
-
 const devWatchOptions = {
   ignored: devWatchIgnored,
-  ...(isTauriDev
-    ? {
-        usePolling: true,
-        interval: 150,
-        binaryInterval: 300,
-      }
-    : {}),
 };
 
 export default defineNuxtConfig({
@@ -96,10 +85,10 @@ export default defineNuxtConfig({
   },
 
   devtools: {
-    enabled: !isTauriDev,
+    enabled: true,
 
     timeline: {
-      enabled: !isTauriDev,
+      enabled: true,
     },
   },
   modules: [
@@ -126,7 +115,7 @@ export default defineNuxtConfig({
   },
   vite: {
     clearScreen: false,
-    envPrefix: ['VITE_', 'TAURI_'],
+    envPrefix: ['VITE_'],
     plugins: [tailwindcss()],
     server: {
       strictPort: true,
@@ -164,6 +153,6 @@ export default defineNuxtConfig({
   watchers: {
     chokidar: devWatchOptions,
   },
-  ignore: ['**/src-tauri/**', '**/docs/**'],
+  ignore: ['**/docs/**'],
   spaLoadingTemplate: true,
 });

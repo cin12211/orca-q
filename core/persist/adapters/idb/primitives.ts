@@ -1,12 +1,34 @@
 /**
- * Generic read-all / write-all helpers for IDB that mirror the Tauri
+ * Generic read-all / write-all helpers for IDB that mirror the
  * `persistGetAll` / `persistReplaceAll` primitives.
  *
  * Each entry maps to the exact same localforage instance as the individual
  * adapter files, so both paths read/write the same IndexedDB stores.
  */
 import localforage from 'localforage';
-import type { PersistCollection } from '../tauri/primitives';
+
+export type PersistCollection =
+  | 'appConfig'
+  | 'agentState'
+  | 'workspaces'
+  | 'workspaceState'
+  | 'connections'
+  | 'tabViews'
+  | 'quickQueryLogs'
+  | 'rowQueryFiles'
+  | 'rowQueryFileContents';
+
+export const PERSIST_COLLECTIONS: PersistCollection[] = [
+  'appConfig',
+  'agentState',
+  'workspaces',
+  'workspaceState',
+  'connections',
+  'tabViews',
+  'quickQueryLogs',
+  'rowQueryFiles',
+  'rowQueryFileContents',
+];
 
 // Mirror the storeName/name pairs from each individual adapter
 const IDB_STORES: Record<PersistCollection, LocalForage> = {

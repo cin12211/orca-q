@@ -1,10 +1,9 @@
 import { ref } from 'vue';
-import { isTauri, isElectron } from '~/core/helpers/environment';
-import { idbGetAll } from '~/core/persist/adapters/idb/primitives';
-import { PERSIST_COLLECTIONS } from '~/core/persist/adapters/tauri/primitives';
-import { persistGetAll } from '~/core/persist/adapters/tauri/primitives';
-import type { PersistCollection } from '~/core/persist/adapters/tauri/primitives';
+import { isElectron } from '~/core/helpers/environment';
 import { persistGetAll as electronPersistGetAll } from '~/core/persist/adapters/electron/primitives';
+import { idbGetAll } from '~/core/persist/adapters/idb/primitives';
+import { PERSIST_COLLECTIONS } from '~/core/persist/adapters/idb/primitives';
+import type { PersistCollection } from '~/core/persist/adapters/idb/primitives';
 import { useAgentStore } from '~/core/stores/agentStore';
 
 export interface BackupData {
@@ -14,18 +13,6 @@ export interface BackupData {
   agent: {
     histories: unknown[];
   };
-}
-
-async function collectTauriData(
-  onStep: (done: number, total: number) => void
-): Promise<Record<PersistCollection, unknown[]>> {
-  const result: Partial<Record<PersistCollection, unknown[]>> = {};
-  for (let i = 0; i < PERSIST_COLLECTIONS.length; i++) {
-    const col = PERSIST_COLLECTIONS[i]!;
-    result[col] = await persistGetAll<unknown>(col);
-    onStep(i + 1, PERSIST_COLLECTIONS.length);
-  }
-  return result as Record<PersistCollection, unknown[]>;
 }
 
 async function collectIdbData(
@@ -68,11 +55,9 @@ export function useDataExport() {
         exportProgress.value = Math.round((done / total) * 85);
       };
 
-      const persist = isTauri()
-        ? await collectTauriData(onStep)
-        : isElectron()
-          ? await collectElectronData(onStep)
-          : await collectIdbData(onStep);
+      const persist = isElectron()
+        ? await collectElectronData(onStep)
+        : await collectIdbData(onStep);
 
       exportProgress.value = 90; // agent step
 

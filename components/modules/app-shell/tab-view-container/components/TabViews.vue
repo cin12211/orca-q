@@ -17,7 +17,7 @@ import {
 import { getReorderDestinationIndex } from '@atlaskit/pragmatic-drag-and-drop-hitbox/util/get-reorder-destination-index';
 import { combine } from '@atlaskit/pragmatic-drag-and-drop/combine';
 import { monitorForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
-import { isTauri, isElectron } from '~/core/helpers';
+import { isElectron } from '~/core/helpers';
 import { useTabViewsStore, type TabView } from '~/core/stores';
 import TabViewItem from './TabViewItem.vue';
 
@@ -98,7 +98,6 @@ watchEffect(onCleanup => {
   });
 });
 
-const isTauriRuntime = computed(() => isTauri());
 const isElectronRuntime = computed(() => isElectron());
 </script>
 <template>
@@ -108,7 +107,6 @@ const isElectronRuntime = computed(() => isElectron());
       isDragging ? 'bg-purple-50' : '',
     ]"
     ref="elementRef"
-    :data-tauri-drag-region="isTauriRuntime ? '' : undefined"
     :data-electron-drag-region="isElectronRuntime ? '' : undefined"
   >
     <ContextMenu>

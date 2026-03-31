@@ -10,11 +10,6 @@ const setNavigator = (value: Navigator | Record<string, unknown>) => {
 };
 
 describe('environment helpers', () => {
-  it('isTauri returns boolean (default false)', () => {
-    const v = env.isTauri();
-    expect(typeof v).toBe('boolean');
-  });
-
   it('isDesktopApp returns boolean', () => {
     const v = env.isDesktopApp();
     expect(typeof v).toBe('boolean');
@@ -34,17 +29,6 @@ describe('environment helpers', () => {
       expect(env.isPWA()).toBe(true);
     } finally {
       setNavigator(origNav);
-    }
-  });
-
-  it('detects Tauri via window global', () => {
-    const origWindow = (globalThis as any).window;
-    try {
-      (globalThis as any).window = { __TAURI__: { core: {} } } as any;
-      expect(env.isTauri()).toBe(true);
-      expect(env.isDesktopApp()).toBe(true);
-    } finally {
-      (globalThis as any).window = origWindow;
     }
   });
 

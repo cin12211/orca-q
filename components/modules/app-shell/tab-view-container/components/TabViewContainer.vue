@@ -1,18 +1,11 @@
 <script setup lang="ts">
 import { storeToRefs } from 'pinia';
-import {
-  isMacOS,
-  isPWA,
-  isTauri,
-  isElectron,
-  isDesktopApp,
-} from '~/core/helpers';
-import { toggleTauriWindowMaximize } from '~/core/platform/tauri-window';
+import { isMacOS, isPWA, isElectron, isDesktopApp } from '~/core/helpers';
 import { useAppConfigStore } from '~/core/stores/appConfigStore';
 import { ActivityBarHorizontal } from '../../activity-bar';
 import {
   getTabViewMinWidth,
-  TAURI_MAC_TITLEBAR_INSET,
+  DESKTOP_MAC_TITLEBAR_INSET,
 } from '../tabViewContainerLayout';
 import TabViews from './TabViews.vue';
 
@@ -28,24 +21,14 @@ const { isPrimarySidebarCollapsed, isSecondSidebarCollapsed } =
   storeToRefs(appConfigStore);
 
 const isPWAApp = computed(() => isPWA());
-const isTauriRuntime = computed(() => isTauri());
 const isDesktopMacWindow = computed(() => isDesktopApp() && isMacOS());
 
 const minWidth = computed(() => {
   return getTabViewMinWidth({
     primarySideBarWidth: props.primarySideBarWidth,
     sidebarWidthPercentage: appConfigStore.layoutSize[0],
-    isTauriMacWindow: isDesktopMacWindow.value,
+    isDesktopMacWindow: isDesktopMacWindow.value,
   });
-
-  // if (isPWA()) {
-  //   return `calc( ${props.primarySideBarWidth} - 6rem)`;
-  // }
-
-  // if (isAppVersion.value) {
-  //   return `calc( ${widthPercentage}% + 1px) `;
-  // }
-  // return `calc( ${widthPercentage}% + 1px) `;
 });
 
 const isAccessRightPanel = computed(() => {
@@ -58,9 +41,7 @@ const onTitleBarDoubleClick = async () => {
     return;
   }
 
-  if (isTauri()) {
-    await toggleTauriWindowMaximize();
-  } else if (isElectron()) {
+  if (isElectron()) {
     await (window as any).electronAPI.window.maximize();
   }
 };
@@ -73,15 +54,13 @@ const onTitleBarDoubleClick = async () => {
 
       isPWAApp && isPrimarySidebarCollapsed ? 'pl-[6rem]' : '',
       isDesktopMacWindow && 'pl-[4.75rem]',
-      isPWAApp && 'h-10.5 header-tab-view-pwa'
+      isPWAApp && 'h-10.5 header-tab-view-pwa',
     ]"
     @dblclick="onTitleBarDoubleClick"
-    data-tauri-drag-region
     :data-electron-drag-region="isElectron() ? '' : undefined"
   >
     <div
       class="flex justify-between items-center h-full"
-      data-tauri-drag-region
       :data-electron-drag-region="isElectron() ? '' : undefined"
     >
       <div
@@ -101,7 +80,6 @@ const onTitleBarDoubleClick = async () => {
         <div
           :class="['flex justify-center w-full']"
           v-if="!isPrimarySidebarCollapsed"
-          :data-tauri-drag-region="isTauriRuntime ? '' : undefined"
           :data-electron-drag-region="isElectron() ? '' : undefined"
         >
           <ActivityBarHorizontal />

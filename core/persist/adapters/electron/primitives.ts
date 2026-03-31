@@ -1,5 +1,5 @@
 /**
- * Electron persist primitives — mirrors tauri/primitives.ts API exactly.
+ * Electron persist primitives.
  * All calls go through window.electronAPI.persist (contextBridge).
  */
 import dayjs from 'dayjs';
@@ -24,17 +24,34 @@ export interface PersistFilter {
 export type PersistMatchMode = 'all' | 'any';
 
 function api() {
-  const electronAPI = (window as Window & { electronAPI?: { persist: unknown } }).electronAPI;
+  const electronAPI = (
+    window as Window & { electronAPI?: { persist: unknown } }
+  ).electronAPI;
   if (!electronAPI?.persist) {
     throw new Error('Electron persist API is not available');
   }
   return electronAPI.persist as {
     getAll: <T>(collection: PersistCollection) => Promise<T[]>;
     getOne: <T>(collection: PersistCollection, id: string) => Promise<T | null>;
-    find: <T>(collection: PersistCollection, filters: PersistFilter[], matchMode?: PersistMatchMode) => Promise<T[]>;
-    upsert: <T>(collection: PersistCollection, id: string, value: T) => Promise<T>;
-    delete: <T>(collection: PersistCollection, filters: PersistFilter[], matchMode?: PersistMatchMode) => Promise<T[]>;
-    replaceAll: <T>(collection: PersistCollection, values: T[]) => Promise<void>;
+    find: <T>(
+      collection: PersistCollection,
+      filters: PersistFilter[],
+      matchMode?: PersistMatchMode
+    ) => Promise<T[]>;
+    upsert: <T>(
+      collection: PersistCollection,
+      id: string,
+      value: T
+    ) => Promise<T>;
+    delete: <T>(
+      collection: PersistCollection,
+      filters: PersistFilter[],
+      matchMode?: PersistMatchMode
+    ) => Promise<T[]>;
+    replaceAll: <T>(
+      collection: PersistCollection,
+      values: T[]
+    ) => Promise<void>;
   };
 }
 
@@ -67,9 +84,12 @@ export const persistDelete = <T>(
 export const persistReplaceAll = <T>(
   collection: PersistCollection,
   values: T[]
-): Promise<void> => api().replaceAll<T>(collection, values.map(v => toRawJSON(v)) as T[]);
+): Promise<void> =>
+  api().replaceAll<T>(collection, values.map(v => toRawJSON(v)) as T[]);
 
-export const sortByCreatedAt = <T extends { createdAt?: string }>(values: T[]): T[] =>
+export const sortByCreatedAt = <T extends { createdAt?: string }>(
+  values: T[]
+): T[] =>
   [...values].sort(
     (a, b) => dayjs(a.createdAt).valueOf() - dayjs(b.createdAt).valueOf()
   );

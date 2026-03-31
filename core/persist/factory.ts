@@ -1,14 +1,4 @@
-import { isElectron, isTauri } from '~/core/helpers/environment';
-import {
-  agentIDBAdapter,
-  appConfigIDBAdapter,
-  connectionIDBAdapter,
-  quickQueryLogsIDBAdapter,
-  rowQueryFilesIDBAdapter,
-  tabViewsIDBAdapter,
-  workspaceIDBAdapter,
-  workspaceStateIDBAdapter,
-} from './adapters/idb';
+import { isElectron } from '~/core/helpers/environment';
 import {
   agentElectronAdapter,
   appConfigElectronAdapter,
@@ -20,15 +10,15 @@ import {
   workspaceStateElectronAdapter,
 } from './adapters/electron';
 import {
-  agentTauriAdapter,
-  appConfigTauriAdapter,
-  connectionTauriAdapter,
-  quickQueryLogsTauriAdapter,
-  rowQueryFilesTauriAdapter,
-  tabViewsTauriAdapter,
-  workspaceTauriAdapter,
-  workspaceStateTauriAdapter,
-} from './adapters/tauri';
+  agentIDBAdapter,
+  appConfigIDBAdapter,
+  connectionIDBAdapter,
+  quickQueryLogsIDBAdapter,
+  rowQueryFilesIDBAdapter,
+  tabViewsIDBAdapter,
+  workspaceIDBAdapter,
+  workspaceStateIDBAdapter,
+} from './adapters/idb';
 import type { PersistApis } from './types';
 
 function createIDBApis(): PersistApis {
@@ -41,19 +31,6 @@ function createIDBApis(): PersistApis {
     tabViewsApi: tabViewsIDBAdapter,
     quickQueryLogsApi: quickQueryLogsIDBAdapter,
     rowQueryFilesApi: rowQueryFilesIDBAdapter,
-  };
-}
-
-function createTauriApis(): PersistApis {
-  return {
-    appConfigApi: appConfigTauriAdapter,
-    agentApi: agentTauriAdapter,
-    workspaceApi: workspaceTauriAdapter,
-    workspaceStateApi: workspaceStateTauriAdapter,
-    connectionApi: connectionTauriAdapter,
-    tabViewsApi: tabViewsTauriAdapter,
-    quickQueryLogsApi: quickQueryLogsTauriAdapter,
-    rowQueryFilesApi: rowQueryFilesTauriAdapter,
   };
 }
 
@@ -74,17 +51,12 @@ function createElectronApis(): PersistApis {
  * Factory that returns the correct persist implementation
  * based on the current runtime environment.
  *
- * Priority: Tauri > Electron > IDB (web)
+ * Priority: Electron > IDB (web)
  */
 export function createPersistApis(): PersistApis {
-  if (isTauri()) {
-    return createTauriApis();
-  }
-
   if (isElectron()) {
     return createElectronApis();
   }
 
   return createIDBApis();
 }
-

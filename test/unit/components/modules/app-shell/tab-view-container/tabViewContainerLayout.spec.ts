@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   getTabViewMinWidth,
-  TAURI_MAC_TITLEBAR_INSET,
+  DESKTOP_MAC_TITLEBAR_INSET,
 } from '@/components/modules/app-shell/tab-view-container/tabViewContainerLayout';
 
 describe('getTabViewMinWidth', () => {
@@ -10,7 +10,7 @@ describe('getTabViewMinWidth', () => {
       getTabViewMinWidth({
         primarySideBarWidth: 320,
         sidebarWidthPercentage: 0,
-        isTauriMacWindow: false,
+        isDesktopMacWindow: false,
       })
     ).toBe('2.25rem');
   });
@@ -20,18 +20,18 @@ describe('getTabViewMinWidth', () => {
       getTabViewMinWidth({
         primarySideBarWidth: 320,
         sidebarWidthPercentage: 30,
-        isTauriMacWindow: false,
+        isDesktopMacWindow: false,
       })
     ).toBe('320px');
   });
 
-  it('subtracts the macOS titlebar inset only for Tauri windows', () => {
+  it('subtracts the macOS titlebar inset for desktop Mac windows', () => {
     expect(
       getTabViewMinWidth({
         primarySideBarWidth: 320,
         sidebarWidthPercentage: 30,
-        isTauriMacWindow: true,
+        isDesktopMacWindow: true,
       })
-    ).toBe(`max(2.25rem, calc(320px - ${TAURI_MAC_TITLEBAR_INSET}))`);
+    ).toBe(`max(2.25rem, calc(320px - ${DESKTOP_MAC_TITLEBAR_INSET}))`);
   });
 });

@@ -1,43 +1,54 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+// ── Module imports ───────────────────────────────────────────────────
+
+import { isElectron } from '~/core/helpers/environment';
+import {
+  persistGetAll as electronPersistGetAll,
+  persistReplaceAll as electronPersistReplaceAll,
+} from '~/core/persist/adapters/electron/primitives';
+import {
+  idbGetAll,
+  idbReplaceAll,
+} from '~/core/persist/adapters/idb/primitives';
+import { runSchemaMigrations } from '~/core/persist/adapters/migration/migrationRunner';
+import { setSchemaVersion } from '~/core/persist/adapters/migration/schemaVersionStore';
+import type { VersionedMigration } from '~/core/persist/adapters/migration/types';
 
 // ── Mocks (hoisted by Vitest before module imports) ──────────────────
 
 vi.mock('~/core/helpers/environment', () => ({
-  isTauri: vi.fn(() => false),
+  isElectron: vi.fn(() => false),
 }));
 
 const mockIdbStorage = new Map<string, unknown[]>();
 vi.mock('~/core/persist/adapters/idb/primitives', () => ({
-  idbGetAll: vi.fn(async (collection: string) => mockIdbStorage.get(collection) ?? []),
+  idbGetAll: vi.fn(
+    async (collection: string) => mockIdbStorage.get(collection) ?? []
+  ),
   idbReplaceAll: vi.fn(async (collection: string, values: unknown[]) => {
     mockIdbStorage.set(collection, values);
   }),
 }));
 
-const mockTauriStorage = new Map<string, unknown[]>();
-vi.mock('~/core/persist/adapters/tauri/primitives', () => ({
-  persistGetAll: vi.fn(async (collection: string) => mockTauriStorage.get(collection) ?? []),
+const mockElectronStorage = new Map<string, unknown[]>();
+vi.mock('~/core/persist/adapters/electron/primitives', () => ({
+  persistGetAll: vi.fn(
+    async (collection: string) => mockElectronStorage.get(collection) ?? []
+  ),
   persistReplaceAll: vi.fn(async (collection: string, values: unknown[]) => {
-    mockTauriStorage.set(collection, values);
+    mockElectronStorage.set(collection, values);
   }),
 }));
 
 const versionMap = new Map<string, number>();
 vi.mock('~/core/persist/adapters/migration/schemaVersionStore', () => ({
-  getSchemaVersion: vi.fn((collection: string) => versionMap.get(collection) ?? 0),
+  getSchemaVersion: vi.fn(
+    (collection: string) => versionMap.get(collection) ?? 0
+  ),
   setSchemaVersion: vi.fn((collection: string, version: number) => {
     versionMap.set(collection, version);
   }),
 }));
-
-// ── Module imports ───────────────────────────────────────────────────
-
-import { isTauri } from '~/core/helpers/environment';
-import { idbGetAll, idbReplaceAll } from '~/core/persist/adapters/idb/primitives';
-import { runSchemaMigrations } from '~/core/persist/adapters/migration/migrationRunner';
-import { setSchemaVersion } from '~/core/persist/adapters/migration/schemaVersionStore';
-import type { VersionedMigration } from '~/core/persist/adapters/migration/types';
-import { persistGetAll, persistReplaceAll } from '~/core/persist/adapters/tauri/primitives';
 
 // ── Helpers ──────────────────────────────────────────────────────────
 
@@ -48,7 +59,7 @@ function mkStep(
   collection: Collection,
   version: number,
   up: (doc: unknown) => unknown,
-  description = `v${version}`,
+  description = `v${version}`
 ): VersionedMigration {
   return { collection, version, description, up };
 }
@@ -57,8 +68,8 @@ function seedIdb(collection: string, docs: unknown[]) {
   mockIdbStorage.set(collection, docs);
 }
 
-function seedTauri(collection: string, docs: unknown[]) {
-  mockTauriStorage.set(collection, docs);
+function seedElectron(collection: string, docs: unknown[]) {
+  mockElectronStorage.set(collection, docs);
 }
 
 // ── Tests — web (IDB) ─────────────────────────────────────────────────
@@ -66,9 +77,9 @@ function seedTauri(collection: string, docs: unknown[]) {
 describe('runSchemaMigrations (web / IDB)', () => {
   beforeEach(() => {
     mockIdbStorage.clear();
-    mockTauriStorage.clear();
+    mockElectronStorage.clear();
     versionMap.clear();
-    vi.mocked(isTauri).mockReturnValue(false);
+    vi.mocked(isElectron).mockReturnValue(false);
   });
 
   afterEach(() => {
@@ -85,8 +96,8 @@ describe('runSchemaMigrations (web / IDB)', () => {
     seedIdb('workspaces', [{ id: 'ws-1', name: 'A' }]);
 
     await runSchemaMigrations([
-      mkStep('workspaces', 1, (doc) => ({ ...(doc as object), _v: 1 })),
-      mkStep('workspaces', 2, (doc) => ({ ...(doc as object), _v: 2 })),
+      mkStep('workspaces', 1, doc => ({ ...(doc as object), _v: 1 })),
+      mkStep('workspaces', 2, doc => ({ ...(doc as object), _v: 2 })),
     ]);
 
     expect(idbGetAll).not.toHaveBeenCalled();
@@ -99,11 +110,16 @@ describe('runSchemaMigrations (web / IDB)', () => {
     seedIdb('workspaces', [{ id: 'ws-1', name: 'Old Name', desc: 'hello' }]);
 
     await runSchemaMigrations([
-      mkStep('workspaces', 2, (doc) => {
-        const d = doc as { desc?: string; [k: string]: unknown };
-        const { desc, ...rest } = d;
-        return { ...rest, description: desc };
-      }, 'Rename desc to description'),
+      mkStep(
+        'workspaces',
+        2,
+        doc => {
+          const d = doc as { desc?: string; [k: string]: unknown };
+          const { desc, ...rest } = d;
+          return { ...rest, description: desc };
+        },
+        'Rename desc to description'
+      ),
     ]);
 
     expect(idbReplaceAll).toHaveBeenCalledOnce();
@@ -118,8 +134,14 @@ describe('runSchemaMigrations (web / IDB)', () => {
 
     const order: number[] = [];
     await runSchemaMigrations([
-      mkStep('connections', 1, (doc) => { order.push(1); return { ...(doc as object), v1: true }; }),
-      mkStep('connections', 2, (doc) => { order.push(2); return { ...(doc as object), v2: true }; }),
+      mkStep('connections', 1, doc => {
+        order.push(1);
+        return { ...(doc as object), v1: true };
+      }),
+      mkStep('connections', 2, doc => {
+        order.push(2);
+        return { ...(doc as object), v2: true };
+      }),
     ]);
 
     expect(order).toEqual([1, 2]);
@@ -149,7 +171,7 @@ describe('runSchemaMigrations (web / IDB)', () => {
     seedIdb('tabViews', []);
 
     await expect(
-      runSchemaMigrations([mkStep('tabViews', 1, (doc) => doc)]),
+      runSchemaMigrations([mkStep('tabViews', 1, doc => doc)])
     ).resolves.toBeUndefined();
     expect(idbReplaceAll).toHaveBeenCalledWith('tabViews', []);
     expect(setSchemaVersion).toHaveBeenCalledWith('tabViews', 1);
@@ -160,8 +182,8 @@ describe('runSchemaMigrations (web / IDB)', () => {
     seedIdb('connections', [{ id: 'conn-1' }]);
 
     await runSchemaMigrations([
-      mkStep('workspaces', 1, (doc) => ({ ...(doc as object), ws: true })),
-      mkStep('connections', 1, (doc) => ({ ...(doc as object), conn: true })),
+      mkStep('workspaces', 1, doc => ({ ...(doc as object), ws: true })),
+      mkStep('connections', 1, doc => ({ ...(doc as object), conn: true })),
     ]);
 
     expect(setSchemaVersion).toHaveBeenCalledWith('workspaces', 1);
@@ -174,10 +196,20 @@ describe('runSchemaMigrations (web / IDB)', () => {
 
     await runSchemaMigrations(
       [
-        mkStep('workspaces', 1, (doc) => ({ ...(doc as object), v1: true }), 'First step'),
-        mkStep('workspaces', 2, (doc) => ({ ...(doc as object), v2: true }), 'Second step'),
+        mkStep(
+          'workspaces',
+          1,
+          doc => ({ ...(doc as object), v1: true }),
+          'First step'
+        ),
+        mkStep(
+          'workspaces',
+          2,
+          doc => ({ ...(doc as object), v2: true }),
+          'Second step'
+        ),
       ],
-      { onStep },
+      { onStep }
     );
 
     expect(onStep).toHaveBeenCalledTimes(2);
@@ -194,32 +226,32 @@ describe('runSchemaMigrations (web / IDB)', () => {
   });
 });
 
-// ── Tests — desktop (Tauri) ───────────────────────────────────────────
+// ── Tests — desktop (Electron) ────────────────────────────────────────
 
-describe('runSchemaMigrations (desktop / Tauri)', () => {
+describe('runSchemaMigrations (desktop / Electron)', () => {
   beforeEach(() => {
     mockIdbStorage.clear();
-    mockTauriStorage.clear();
+    mockElectronStorage.clear();
     versionMap.clear();
-    vi.mocked(isTauri).mockReturnValue(true);
+    vi.mocked(isElectron).mockReturnValue(true);
   });
 
   afterEach(() => {
     vi.clearAllMocks();
   });
 
-  it('uses Tauri primitives when isTauri() is true', async () => {
-    seedTauri('workspaces', [{ id: 'ws-tauri', name: 'Tauri WS' }]);
+  it('uses Electron primitives when isElectron() is true', async () => {
+    seedElectron('workspaces', [{ id: 'ws-electron', name: 'Electron WS' }]);
 
     await runSchemaMigrations([
-      mkStep('workspaces', 1, (doc) => ({ ...(doc as object), migrated: true })),
+      mkStep('workspaces', 1, doc => ({ ...(doc as object), migrated: true })),
     ]);
 
-    expect(persistGetAll).toHaveBeenCalledWith('workspaces');
-    expect(persistReplaceAll).toHaveBeenCalledOnce();
-    const [, written] = vi.mocked(persistReplaceAll).mock.calls[0]!;
+    expect(electronPersistGetAll).toHaveBeenCalledWith('workspaces');
+    expect(electronPersistReplaceAll).toHaveBeenCalledOnce();
+    const [, written] = vi.mocked(electronPersistReplaceAll).mock.calls[0]!;
     expect((written as Record<string, unknown>[])[0]).toMatchObject({
-      id: 'ws-tauri',
+      id: 'ws-electron',
       migrated: true,
     });
     // IDB must NOT be touched

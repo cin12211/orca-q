@@ -1,22 +1,22 @@
-export const TAURI_MAC_TITLEBAR_INSET = '4.75rem';
+export const DESKTOP_MAC_TITLEBAR_INSET = '4.75rem';
 
 type GetTabViewMinWidthParams = {
   primarySideBarWidth: number;
   sidebarWidthPercentage: number | undefined;
-  isTauriMacWindow: boolean;
+  isDesktopMacWindow: boolean;
 };
 
 export function getTabViewMinWidth({
   primarySideBarWidth,
   sidebarWidthPercentage,
-  isTauriMacWindow,
+  isDesktopMacWindow,
 }: GetTabViewMinWidthParams): string {
   if (!sidebarWidthPercentage) {
     return '2.25rem';
   }
 
-  if (isTauriMacWindow) {
-    return `max(2.25rem, calc(${primarySideBarWidth}px - ${TAURI_MAC_TITLEBAR_INSET}))`;
+  if (isDesktopMacWindow) {
+    return `max(2.25rem, calc(${primarySideBarWidth}px - ${DESKTOP_MAC_TITLEBAR_INSET}))`;
   }
 
   return `${primarySideBarWidth}px`;

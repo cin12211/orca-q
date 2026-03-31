@@ -1,4 +1,4 @@
-import type { PersistCollection } from '../tauri/primitives';
+import type { PersistCollection } from '../idb/primitives';
 
 /**
  * A fully self-contained schema migration step.

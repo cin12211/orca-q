@@ -11,13 +11,16 @@
  *   5. Saves the new version and calls `onStep` after each applied step.
  *
  * Works on both platforms:
- *  - Web  → reads/writes via IDB primitives (`idbGetAll` / `idbReplaceAll`)
- *  - Tauri → reads/writes via native persist commands (`persistGetAll` / `persistReplaceAll`)
+ *  - Web      → reads/writes via IDB primitives (`idbGetAll` / `idbReplaceAll`)
+ *  - Electron → reads/writes via native persist commands (contextBridge)
  */
-import { isTauri } from '../../../helpers/environment';
+import { isElectron } from '../../../helpers/environment';
+import {
+  persistGetAll as electronPersistGetAll,
+  persistReplaceAll as electronPersistReplaceAll,
+} from '../electron/primitives';
 import { idbGetAll, idbReplaceAll } from '../idb/primitives';
-import { persistGetAll, persistReplaceAll } from '../tauri/primitives';
-import type { PersistCollection } from '../tauri/primitives';
+import type { PersistCollection } from '../idb/primitives';
 import { getSchemaVersion, setSchemaVersion } from './schemaVersionStore';
 import type { MigrationStepInfo, VersionedMigration } from './types';
 
@@ -30,10 +33,10 @@ type ReplaceAll = <T extends { id: string }>(
 ) => Promise<void>;
 
 function getPlatformOps(): { getAll: GetAll; replaceAll: ReplaceAll } {
-  if (isTauri()) {
+  if (isElectron()) {
     return {
-      getAll: persistGetAll as GetAll,
-      replaceAll: persistReplaceAll as unknown as ReplaceAll,
+      getAll: electronPersistGetAll as GetAll,
+      replaceAll: electronPersistReplaceAll as unknown as ReplaceAll,
     };
   }
   return { getAll: idbGetAll, replaceAll: idbReplaceAll };

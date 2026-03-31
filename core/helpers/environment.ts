@@ -1,23 +1,7 @@
 /**
  * Detect the runtime environment.
- * Provides helpers to identify Tauri and PWA contexts.
+ * Provides helpers to identify PWA and desktop contexts.
  */
-
-export function isTauri(): boolean {
-  if (typeof window === 'undefined') {
-    return false;
-  }
-
-  const tauriWindow = window as Window & {
-    __TAURI__?: unknown;
-    __TAURI_INTERNALS__?: unknown;
-  };
-
-  return (
-    typeof tauriWindow.__TAURI__ === 'object' ||
-    typeof tauriWindow.__TAURI_INTERNALS__ === 'object'
-  );
-}
 
 export function isMacOS(): boolean {
   if (typeof navigator === 'undefined') {
@@ -34,16 +18,18 @@ export function isMacOS(): boolean {
   return /mac/i.test(navigator.userAgent) || /mac/i.test(navigator.platform);
 }
 
-export const isDesktopApp = (): boolean => isTauri() || isElectron();
+export const isDesktopApp = (): boolean => isElectron();
 
 export function isElectron(): boolean {
   if (typeof window === 'undefined') {
     return false;
   }
 
-  return typeof (window as Window & { electronAPI?: unknown }).electronAPI === 'object';
+  return (
+    typeof (window as Window & { electronAPI?: unknown }).electronAPI ===
+    'object'
+  );
 }
-
 
 export const isPWA = (): boolean => {
   if (!!('windowControlsOverlay' in navigator)) {

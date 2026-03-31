@@ -2,9 +2,8 @@
  * Migration plugin — runs BEFORE app-initialization (02.app-initialization.client.ts).
  *
  * Responsibilities:
- *  1. Warm the platform KV cache (Tauri store / localStorage) so schema version
- *     reads are synchronous for the rest of the session.
- *  2. Run all pending schema-version migrations (IDB ↔ Tauri stays in app-init).
+ *  1. Warm the platform KV cache so schema version reads are synchronous.
+ *  2. Run all pending schema-version migrations.
  *  3. Expose migration progress via `useMigrationState` so the `MigrationScreen`
  *     component can show a blocking loading screen while work is in progress.
  *
@@ -13,9 +12,7 @@
  * for edge cases (hot-reload in dev, future deferred-init patterns).
  */
 import { useMigrationState } from '~/core/composables/useMigrationState';
-import { isTauri } from '~/core/helpers/environment';
 import { runSchemaMigrations } from '~/core/persist/adapters/migration';
-import { runPlatformMigration } from '~/core/persist/adapters/migration';
 import { runLegacyStoreMigrations } from '~/core/persist/adapters/migration/legacyStoreMigration';
 import { ALL_MIGRATIONS } from '~/core/persist/adapters/migration/versions';
 import { initPlatformStorage } from '~/core/persist/storage-adapter';
@@ -35,13 +32,6 @@ export default defineNuxtPlugin(async () => {
     await runSchemaMigrations(ALL_MIGRATIONS, {
       onStep: step => migration.progress(step),
     });
-
-    // 4. One-time IDB → Tauri platform migration (desktop only, non-blocking).
-    if (isTauri()) {
-      runPlatformMigration().catch(err =>
-        console.error('[Plugin:migration] Platform migration failed:', err)
-      );
-    }
 
     migration.done();
   } catch (err) {

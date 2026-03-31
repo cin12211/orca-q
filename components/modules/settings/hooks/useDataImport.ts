@@ -1,15 +1,12 @@
 import { ref } from 'vue';
 import type { AgentHistorySession } from '~/components/modules/agent/types';
 import type { BackupData } from '~/components/modules/settings/hooks/useDataExport';
-import { isTauri, isElectron } from '~/core/helpers/environment';
-import { idbReplaceAll } from '~/core/persist/adapters/idb/primitives';
-// Tauri adapters (desktop)
-import {
-  PERSIST_COLLECTIONS,
-  persistReplaceAll,
-} from '~/core/persist/adapters/tauri/primitives';
-import type { PersistCollection } from '~/core/persist/adapters/tauri/primitives';
+import { isElectron } from '~/core/helpers/environment';
 import { persistReplaceAll as electronPersistReplaceAll } from '~/core/persist/adapters/electron/primitives';
+import { idbReplaceAll } from '~/core/persist/adapters/idb/primitives';
+// IDB primitives (shared collections definition)
+import { PERSIST_COLLECTIONS } from '~/core/persist/adapters/idb/primitives';
+import type { PersistCollection } from '~/core/persist/adapters/idb/primitives';
 import { useAgentStore } from '~/core/stores/agentStore';
 import { useAppConfigStore } from '~/core/stores/appConfigStore';
 import { useManagementConnectionStore } from '~/core/stores/managementConnectionStore';
@@ -83,16 +80,7 @@ export function useDataImport() {
       >;
       const collections: PersistCollection[] = [...PERSIST_COLLECTIONS];
 
-      if (isTauri()) {
-        const step = Math.floor(80 / collections.length);
-        for (let i = 0; i < collections.length; i++) {
-          await persistReplaceAll(
-            collections[i]!,
-            persist[collections[i]!] ?? []
-          );
-          progress.value = 10 + step * (i + 1);
-        }
-      } else if (isElectron()) {
+      if (isElectron()) {
         const step = Math.floor(80 / collections.length);
         for (let i = 0; i < collections.length; i++) {
           await electronPersistReplaceAll(

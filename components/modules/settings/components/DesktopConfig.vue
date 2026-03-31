@@ -1,14 +1,12 @@
 <script setup lang="ts">
 import { toast } from 'vue-sonner';
-import { useTauriUpdater } from '~/core/composables/useTauriUpdater';
 import { useElectronUpdater } from '~/core/composables/useElectronUpdater';
-import { formatBytes, isTauri, isElectron } from '~/core/helpers';
-import {
-  getDesktopStoragePaths,
-  openDesktopStoragePath,
-  type DesktopStoragePaths,
-  type DesktopStorageTarget,
-} from '~/core/platform/tauri-storage';
+import { formatBytes, isElectron } from '~/core/helpers';
+
+interface StoragePaths {
+  nativeDataPath: string | null;
+  webStoragePath: string | null;
+}
 
 const {
   isSupported,
@@ -23,14 +21,13 @@ const {
   checkForUpdates,
   installUpdate,
   restartToApplyUpdate,
-} = isElectron() ? useElectronUpdater() : useTauriUpdater();
+} = useElectronUpdater();
 const isDevBuild = import.meta.dev;
-const isTauriRuntime = isTauri();
 const isElectronRuntime = isElectron();
-const storagePaths = shallowRef<DesktopStoragePaths | null>(null);
+const storagePaths = shallowRef<StoragePaths | null>(null);
 const storageError = ref<string | null>(null);
 const isLoadingStoragePaths = ref(false);
-const openingStorageTarget = ref<DesktopStorageTarget | null>(null);
+const isOpeningStoragePath = ref(false);
 
 const formattedLastCheckedAt = computed(() => {
   if (!lastCheckedAt.value) {
@@ -98,7 +95,7 @@ const webStorageDescription = computed(() => {
 });
 
 const loadStoragePaths = async () => {
-  if (!isTauriRuntime && !isElectronRuntime) {
+  if (!isElectronRuntime) {
     return;
   }
 
@@ -106,15 +103,11 @@ const loadStoragePaths = async () => {
   storageError.value = null;
 
   try {
-    if (isElectronRuntime) {
-      const mainPath = await (window as any).electronAPI.window.getStoragePath();
-      storagePaths.value = {
-        nativeDataPath: mainPath,
-        webStoragePath: 'Maintained by Electron Session internally',
-      };
-    } else {
-      storagePaths.value = await getDesktopStoragePaths();
-    }
+    const mainPath = await (window as any).electronAPI.window.getStoragePath();
+    storagePaths.value = {
+      nativeDataPath: mainPath,
+      webStoragePath: 'Maintained by Electron Session internally',
+    };
   } catch (error) {
     const message =
       error instanceof Error
@@ -127,15 +120,11 @@ const loadStoragePaths = async () => {
   }
 };
 
-const handleOpenStoragePath = async (target: DesktopStorageTarget) => {
-  openingStorageTarget.value = target;
+const handleOpenStoragePath = async () => {
+  isOpeningStoragePath.value = true;
 
   try {
-    if (isElectronRuntime) {
-      await (window as any).electronAPI.window.openStoragePath();
-    } else {
-      await openDesktopStoragePath(target);
-    }
+    await (window as any).electronAPI.window.openStoragePath();
   } catch (error) {
     const message =
       error instanceof Error ? error.message : 'Failed to open storage folder';
@@ -145,7 +134,7 @@ const handleOpenStoragePath = async (target: DesktopStorageTarget) => {
       description: 'Could not open the requested folder.',
     });
   } finally {
-    openingStorageTarget.value = null;
+    isOpeningStoragePath.value = false;
   }
 };
 
@@ -199,7 +188,7 @@ onMounted(() => {
           v-if="!isSupported"
           class="rounded-lg border border-dashed p-3 text-sm text-muted-foreground"
         >
-          Desktop updater is only available inside the Tauri or Electron desktop app.
+          Desktop updater is only available inside the Electron desktop app.
         </div>
 
         <template v-else>
@@ -272,7 +261,7 @@ onMounted(() => {
             Last checked: {{ formattedLastCheckedAt }}
           </p>
           <p v-if="lastError">Last error: {{ lastError }}</p>
-          <p v-if="(isTauriRuntime || isElectronRuntime) && isDevBuild">
+          <p v-if="isElectronRuntime && isDevBuild">
             Development mode can check the updater, but install flow is intended
             for packaged releases.
           </p>
@@ -290,7 +279,7 @@ onMounted(() => {
 
       <div class="rounded-xl border p-4 flex flex-col gap-4">
         <div
-          v-if="!isTauriRuntime && !isElectronRuntime"
+          v-if="!isElectronRuntime"
           class="rounded-lg border border-dashed p-3 text-sm text-muted-foreground"
         >
           Data folders are only available inside desktop apps.
@@ -320,10 +309,9 @@ onMounted(() => {
                 size="sm"
                 variant="outline"
                 :disabled="
-                  !storagePaths?.nativeDataPath ||
-                  openingStorageTarget === 'nativeData'
+                  !storagePaths?.nativeDataPath || isOpeningStoragePath
                 "
-                @click="handleOpenStoragePath('nativeData')"
+                @click="handleOpenStoragePath()"
               >
                 Open folder
               </Button>
@@ -352,10 +340,9 @@ onMounted(() => {
                 size="sm"
                 variant="outline"
                 :disabled="
-                  !storagePaths?.webStoragePath ||
-                  openingStorageTarget === 'webStorage'
+                  !storagePaths?.webStoragePath || isOpeningStoragePath
                 "
-                @click="handleOpenStoragePath('webStorage')"
+                @click="handleOpenStoragePath()"
               >
                 Open folder
               </Button>

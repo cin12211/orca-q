@@ -1,8 +1,7 @@
 /**
- * Electron updater composable — mirrors useTauriUpdater interface.
- * Uses window.electronAPI.updater (contextBridge IPC) instead of tauri-plugin-updater.
+ * Electron updater composable.
+ * Uses window.electronAPI.updater (contextBridge IPC).
  */
-
 import { ref, computed } from 'vue';
 import { toast } from 'vue-sonner';
 
@@ -20,16 +19,19 @@ interface DownloadProgress {
 }
 
 const updaterAPI = () => {
-  const api = (window as Window & { electronAPI?: { updater: unknown } }).electronAPI?.updater as {
-    check: () => Promise<UpdateInfo | null>;
-    download: () => Promise<void>;
-    install: () => Promise<void>;
-    onUpdateAvailable: (cb: (info: UpdateInfo) => void) => () => void;
-    onUpToDate: (cb: () => void) => () => void;
-    onProgress: (cb: (progress: DownloadProgress) => void) => () => void;
-    onReady: (cb: (info: UpdateInfo) => void) => () => void;
-    onError: (cb: (msg: string) => void) => () => void;
-  } | undefined;
+  const api = (window as Window & { electronAPI?: { updater: unknown } })
+    .electronAPI?.updater as
+    | {
+        check: () => Promise<UpdateInfo | null>;
+        download: () => Promise<void>;
+        install: () => Promise<void>;
+        onUpdateAvailable: (cb: (info: UpdateInfo) => void) => () => void;
+        onUpToDate: (cb: () => void) => () => void;
+        onProgress: (cb: (progress: DownloadProgress) => void) => () => void;
+        onReady: (cb: (info: UpdateInfo) => void) => () => void;
+        onError: (cb: (msg: string) => void) => () => void;
+      }
+    | undefined;
   return api;
 };
 
@@ -40,9 +42,28 @@ export function useElectronUpdater() {
   const updateInfo = ref<UpdateInfo | null>(null);
 
   const isSupported = ref(!!updaterAPI());
-  const status = ref<'idle'|'checking'|'available'|'up-to-date'|'downloading'|'ready-to-restart'|'restarting'|'error'>('idle');
-  const availableUpdate = ref<{ version: string; date?: string; body?: string; currentVersion: string } | null>(null);
-  const readyToRestartUpdate = ref<{ version: string; date?: string; body?: string; currentVersion: string } | null>(null);
+  const status = ref<
+    | 'idle'
+    | 'checking'
+    | 'available'
+    | 'up-to-date'
+    | 'downloading'
+    | 'ready-to-restart'
+    | 'restarting'
+    | 'error'
+  >('idle');
+  const availableUpdate = ref<{
+    version: string;
+    date?: string;
+    body?: string;
+    currentVersion: string;
+  } | null>(null);
+  const readyToRestartUpdate = ref<{
+    version: string;
+    date?: string;
+    body?: string;
+    currentVersion: string;
+  } | null>(null);
   const lastCheckedAt = ref<number | null>(null);
   const lastError = ref<string | null>(null);
   const downloadTotalBytes = ref<number | null>(null);
@@ -61,14 +82,14 @@ export function useElectronUpdater() {
       const info = await api.check();
       updateInfo.value = info;
       lastCheckedAt.value = Date.now();
-      
+
       if (info) {
         status.value = 'available';
         availableUpdate.value = {
           version: info.version,
           date: info.releaseDate,
           body: info.releaseNotes,
-          currentVersion: 'Current'
+          currentVersion: 'Current',
         };
       } else {
         status.value = 'up-to-date';
@@ -107,7 +128,7 @@ export function useElectronUpdater() {
         version: info.version,
         date: info.releaseDate,
         body: info.releaseNotes,
-        currentVersion: 'Current'
+        currentVersion: 'Current',
       };
       unsubProgress();
       unsubReady();
@@ -167,7 +188,7 @@ export function useElectronUpdater() {
     checkForUpdates,
     startDownload,
     installUpdate,
-    restartToApplyUpdate
+    restartToApplyUpdate,
   };
 }
 
