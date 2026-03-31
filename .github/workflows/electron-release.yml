@@ -40,7 +40,7 @@ jobs:
           bun-version: latest
 
       - name: Install frontend dependencies
-        run: bun install --frozen-lockfile
+        run: bun install
 
       - name: Pre-build (Nuxt generate + Nitro binary + compile TS)
         run: node scripts/electron-before-build.mjs
