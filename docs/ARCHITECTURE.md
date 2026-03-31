@@ -46,7 +46,7 @@ Database Development & Administration tooling. The application targets PostgreSQ
 | **Routing**           | nuxt-typed-router (type-safe route params)                              |
 | **Icons**             | @nuxt/icon with Iconify (Lucide, HugeIcons, Logos, Material Icon Theme) |
 | **Testing**           | Vitest 4 (unit + nuxt environment) + @vue/test-utils                    |
-| **Package Manager**   | pnpm 10                                                                 |
+| **Package Manager**   | Bun 1.2.8                                                               |
 | **Docker**            | Multi-stage Node 22 Alpine image                                        |
 | **Analytics**         | Amplitude                                                               |
 | **Animations**        | GSAP 3, @formkit/auto-animate                                           |
