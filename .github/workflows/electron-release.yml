@@ -51,7 +51,7 @@ jobs:
         run: npx electron-builder --publish always
         env:
           # Required for electron-updater to publish to GitHub Releases
-          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           # Optional: macOS code signing
           # CSC_LINK: ${{ secrets.CSC_LINK }}
           # CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
