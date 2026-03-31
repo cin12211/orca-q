@@ -5,11 +5,18 @@
  *
  * Steps:
  *   1. nuxt generate → .output/public (static SPA)
- *   2. Build Nitro server binary → electron-runtime/orcaq-runtime
- *   3. tsc → compile electron/ TypeScript → dist-electron/
+ *   2. Build Nitro server binary → out/runtime/
+ *   3. tsc → compile electron/ TypeScript → out/electron/
  */
 import { execSync } from 'node:child_process';
-import { existsSync, mkdirSync, copyFileSync, rmSync, readdirSync, statSync } from 'node:fs';
+import {
+  existsSync,
+  mkdirSync,
+  copyFileSync,
+  rmSync,
+  readdirSync,
+  statSync,
+} from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -17,7 +24,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const ROOT = join(__dirname, '..');
 
-const ELECTRON_RUNTIME_DIR = join(ROOT, 'electron-runtime');
+const ELECTRON_RUNTIME_DIR = join(ROOT, 'out', 'runtime');
 
 function log(msg) {
   console.log(`\x1b[36m[electron-build]\x1b[0m ${msg}`);
@@ -32,7 +39,7 @@ function run(cmd, cwd = ROOT) {
 log('Step 1/3: Building Nuxt static SPA and Nitro server...');
 run('bun run nuxt:build-web');
 
-// ─── Step 2: Copy server to electron-runtime ──────────────────────────────
+// ─── Step 2: Copy server to out/runtime ──────────────────────────────────
 log('Step 2/3: Staging Nuxt output into electron runtime...');
 
 if (existsSync(ELECTRON_RUNTIME_DIR)) {
@@ -61,7 +68,7 @@ function copyResolvedDirectory(source, target) {
   }
 }
 
-// Copy the full `.output` (server/ and public/) into electron-runtime/
+// Copy the full `.output` (server/ and public/) into out/runtime/
 // We MUST use copyResolvedDirectory, otherwise macOS codesign fails due to pnpm virtual stores
 copyResolvedDirectory(join(ROOT, '.output'), ELECTRON_RUNTIME_DIR);
 

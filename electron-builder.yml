@@ -3,7 +3,7 @@ productName: orcaq
 copyright: Copyright © 2025–2026 Cinny. All rights reserved.
 
 directories:
-  output: dist-electron-build
+  output: out/packages
   buildResources: build
 
 # Optimize bundle size
@@ -11,16 +11,16 @@ compression: maximum
 
 # Files to bundle into the app
 files:
-  - dist-electron/**/*
-  - "!dist-electron/**/*.d.ts"
-  - "!dist-electron/**/*.map"
+  - out/electron/**/*
+  - '!out/electron/**/*.d.ts'
+  - '!out/electron/**/*.map'
 
 # Bundle the Nitro runtime binary as extra resource
 extraResources:
-  - from: electron-runtime/
+  - from: out/runtime/
     to: runtime/
     filter:
-      - "**"
+      - '**'
 
 # Auto-update: publish to GitHub Releases
 publish:

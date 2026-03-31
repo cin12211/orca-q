@@ -1,5 +1,5 @@
-import path from 'node:path';
 import net from 'node:net';
+import path from 'node:path';
 
 const SIDECAR_HOST = '127.0.0.1';
 const WAIT_TIMEOUT_MS = 20_000;
@@ -61,9 +61,7 @@ export function waitForPort(port: number): Promise<void> {
         socket.destroy();
         if (Date.now() >= deadline) {
           reject(
-            new Error(
-              `Timed out waiting for server at ${SIDECAR_HOST}:${port}`
-            )
+            new Error(`Timed out waiting for server at ${SIDECAR_HOST}:${port}`)
           );
           return;
         }
@@ -74,9 +72,7 @@ export function waitForPort(port: number): Promise<void> {
         socket.destroy();
         if (Date.now() >= deadline) {
           reject(
-            new Error(
-              `Timed out waiting for server at ${SIDECAR_HOST}:${port}`
-            )
+            new Error(`Timed out waiting for server at ${SIDECAR_HOST}:${port}`)
           );
           return;
         }
@@ -99,7 +95,8 @@ export function getRuntimeBinaryPath(): string {
 
   if (process.env.NODE_ENV === 'development') {
     // Dev mode: use the one built by scripts/electron-before-build.mjs
-    return path.join(__dirname, '..', 'electron-runtime', scriptName);
+    // __dirname = out/electron/utils/ → ../../runtime = out/runtime/
+    return path.join(__dirname, '..', '..', 'runtime', scriptName);
   }
 
   // Production: extraResources unpacks to process.resourcesPath/runtime/
