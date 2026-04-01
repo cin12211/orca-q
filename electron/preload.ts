@@ -47,7 +47,8 @@ const electronAPI = {
       collection: PersistCollection,
       filters: PersistFilter[],
       matchMode: PersistMatchMode = 'all'
-    ) => ipcRenderer.invoke('persist:delete', { collection, filters, matchMode }),
+    ) =>
+      ipcRenderer.invoke('persist:delete', { collection, filters, matchMode }),
 
     replaceAll: (
       collection: PersistCollection,
@@ -63,11 +64,12 @@ const electronAPI = {
     onUpdateAvailable: (cb: (info: unknown) => void) => {
       const handler = (_: IpcRendererEvent, info: unknown) => cb(info);
       ipcRenderer.on('updater:update-available', handler);
-      return () => ipcRenderer.removeListener('updater:update-available', handler);
+      return () =>
+        ipcRenderer.removeListener('updater:update-available', handler);
     },
 
-    onUpToDate: (cb: () => void) => {
-      const handler = () => cb();
+    onUpToDate: (cb: (info: unknown) => void) => {
+      const handler = (_: IpcRendererEvent, info: unknown) => cb(info);
       ipcRenderer.on('updater:up-to-date', handler);
       return () => ipcRenderer.removeListener('updater:up-to-date', handler);
     },

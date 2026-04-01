@@ -3,10 +3,15 @@
 import { LoadingOverlay, MigrationScreen, TooltipProvider } from '#components';
 import { CommandPaletteView } from '@/components/modules/command-palette';
 import { useMigrationState } from '~/core/composables/useMigrationState';
+import ElectronUpdateStartupDialog from './components/modules/app-shell/status-bar/components/ElectronUpdateStartupDialog.vue';
 import ChangelogPopup from './components/modules/changelog/ChangelogPopup.vue';
 import Settings from './components/modules/settings';
 import { Toaster } from './components/ui/sonner';
 import { useAppearance } from './core/composables/useAppearance';
+import {
+  checkForElectronUpdatesOnStartup,
+  startElectronBackgroundUpdateChecks,
+} from './core/composables/useElectronUpdater';
 import { DEFAULT_DEBOUNCE_INPUT } from './core/constants';
 import { useAppContext } from './core/contexts';
 import { useChangelogModal } from './core/contexts/useChangelogModal';
@@ -50,6 +55,9 @@ watch(
 onMounted(async () => {
   // Auto-show changelog if there's a new version
   autoShowIfNewVersion();
+
+  await checkForElectronUpdatesOnStartup();
+  startElectronBackgroundUpdateChecks();
 });
 </script>
 
@@ -69,6 +77,7 @@ onMounted(async () => {
     <CommandPaletteView />
     <Settings />
     <ChangelogPopup />
+    <ElectronUpdateStartupDialog />
     <Toaster position="top-right" :close-button="true" />
   </ClientOnly>
 </template>

@@ -1,7 +1,7 @@
 import { app, BrowserWindow, session } from 'electron';
 import path from 'node:path';
 import { registerAllIpcHandlers } from './ipc';
-import { initUpdater, checkForUpdates } from './updater';
+import { initUpdater } from './updater';
 import { spawnSidecar, killSidecar } from './utils/sidecar';
 
 const IS_DEV = process.env.NODE_ENV === 'development';
@@ -82,11 +82,6 @@ async function bootstrap(): Promise<void> {
 
   // Initialize auto-updater after window is created
   initUpdater(mainWindow.webContents);
-
-  // Check for updates 5 seconds after startup (non-blocking)
-  if (!IS_DEV) {
-    setTimeout(() => void checkForUpdates(), 5_000);
-  }
 
   // macOS: re-create window when dock icon is clicked and no windows are open
   app.on('activate', () => {
