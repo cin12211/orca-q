@@ -303,6 +303,8 @@ export function useElectronUpdater() {
 // ─── Startup helpers (called from app.vue onMounted) ─────────────────────────
 
 let _backgroundInterval: ReturnType<typeof setInterval> | null = null;
+let _startupCheckTimeout: ReturnType<typeof setTimeout> | null = null;
+let _startupFocusHandlerRegistered = false;
 
 export async function checkForElectronUpdatesOnStartup(): Promise<void> {
   const api = updaterAPI();
@@ -314,6 +316,42 @@ export async function checkForElectronUpdatesOnStartup(): Promise<void> {
   } catch {
     // Fail silently — update check is non-critical
   }
+}
+
+export function scheduleElectronStartupUpdateCheck(delayMs = 5_000): void {
+  if (!updaterAPI() || import.meta.dev) return;
+
+  if (_startupCheckTimeout) {
+    clearTimeout(_startupCheckTimeout);
+  }
+
+  _startupCheckTimeout = setTimeout(() => {
+    _startupCheckTimeout = null;
+    void checkForElectronUpdatesOnStartup();
+  }, delayMs);
+
+  if (_startupFocusHandlerRegistered) {
+    return;
+  }
+
+  _startupFocusHandlerRegistered = true;
+
+  window.addEventListener(
+    'focus',
+    () => {
+      if (lastCheckedAt.value) {
+        return;
+      }
+
+      if (_startupCheckTimeout) {
+        clearTimeout(_startupCheckTimeout);
+        _startupCheckTimeout = null;
+      }
+
+      void checkForElectronUpdatesOnStartup();
+    },
+    { once: true }
+  );
 }
 
 export function startElectronBackgroundUpdateChecks(

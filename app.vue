@@ -9,7 +9,7 @@ import Settings from './components/modules/settings';
 import { Toaster } from './components/ui/sonner';
 import { useAppearance } from './core/composables/useAppearance';
 import {
-  checkForElectronUpdatesOnStartup,
+  scheduleElectronStartupUpdateCheck,
   startElectronBackgroundUpdateChecks,
 } from './core/composables/useElectronUpdater';
 import { DEFAULT_DEBOUNCE_INPUT } from './core/constants';
@@ -56,7 +56,7 @@ onMounted(async () => {
   // Auto-show changelog if there's a new version
   autoShowIfNewVersion();
 
-  await checkForElectronUpdatesOnStartup();
+  scheduleElectronStartupUpdateCheck();
   startElectronBackgroundUpdateChecks();
 });
 </script>

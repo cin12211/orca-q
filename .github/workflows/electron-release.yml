@@ -15,6 +15,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     env:
       NODE_OPTIONS: --max-old-space-size=6144
+      CSC_IDENTITY_AUTO_DISCOVERY: 'false'
 
     strategy:
       fail-fast: false
@@ -52,9 +53,9 @@ jobs:
         env:
           # Required for electron-updater to publish to GitHub Releases
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          # Optional: macOS code signing
-          # CSC_LINK: ${{ secrets.CSC_LINK }}
-          # CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
+          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+          CSC_LINK: ${{ secrets.CSC_LINK }}
+          CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }}
           # Optional: Windows code signing
           # WIN_CSC_LINK: ${{ secrets.WIN_CSC_LINK }}
           # WIN_CSC_KEY_PASSWORD: ${{ secrets.WIN_CSC_KEY_PASSWORD }}

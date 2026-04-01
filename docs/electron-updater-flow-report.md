@@ -6,6 +6,12 @@ Reviewed the desktop updater flow across Electron main process, preload IPC, ren
 
 ## Findings
 
+### Bug 0: macOS downloaded update failed validation during install
+
+- Error observed: `Code signature ... did not pass validation: code failed to satisfy specified code requirement(s)`.
+- Root cause: the macOS release pipeline was publishing update artifacts without passing `CSC_LINK` and `CSC_KEY_PASSWORD` into the `electron-builder` step.
+- Impact: the update could download successfully, but ShipIt would reject the downloaded `.app` bundle during install.
+
 ### Bug 1: Checking updates could report the same installed version as a new update
 
 - Root cause: the renderer treated any successful `updater:check` response as an available update.
@@ -26,12 +32,13 @@ Reviewed the desktop updater flow across Electron main process, preload IPC, ren
 
 ## Fixes Applied
 
+- Updated the GitHub Actions release workflow so macOS builds receive signing secrets and fail fast if they are missing.
 - Reworked the Electron main-process updater check to resolve availability from `update-available` and `update-not-available` events.
 - Normalized updater payloads to always include the actual current app version.
 - Converted renderer updater state into a singleton composable state shared by all updater surfaces.
 - Registered updater listeners once, up front, to avoid missing lifecycle events.
 - Added a startup update confirmation dialog rendered from the app root.
-- Triggered startup update checks from `app.vue` and started periodic background checks there.
+- Triggered startup update checks from `app.vue` through a delayed scheduler and added a one-time focus retry.
 - Removed the fire-and-forget startup check from the Electron main process to avoid duplicate/racing checks outside renderer control.
 
 ## Files Changed
@@ -41,6 +48,7 @@ Reviewed the desktop updater flow across Electron main process, preload IPC, ren
 - `core/composables/useElectronUpdater.ts`
 - `app.vue`
 - `components/modules/app-shell/status-bar/components/ElectronUpdateStartupDialog.vue`
+- `.github/workflows/electron-release.yml`
 
 ## Verification
 
@@ -54,4 +62,4 @@ Reviewed the desktop updater flow across Electron main process, preload IPC, ren
 ## Residual Risk
 
 - Real download/install still depends on release artifacts and publish metadata being present in GitHub Releases.
-- End-to-end validation requires running a packaged Electron build against an actual release feed.
+- End-to-end validation requires running a packaged Electron build signed with a valid Apple Developer certificate against an actual release feed.

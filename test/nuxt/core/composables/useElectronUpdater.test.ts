@@ -72,6 +72,7 @@ describe('useElectronUpdater', () => {
   beforeEach(() => {
     vi.resetModules();
     vi.clearAllMocks();
+    vi.useRealTimers();
   });
 
   it('marks same-version check as up-to-date instead of available', async () => {
@@ -199,5 +200,66 @@ describe('useElectronUpdater', () => {
 
     expect(second.status.value).toBe('available');
     expect(first.availableUpdate.value?.version).toBe('1.0.41');
+  });
+
+  it('schedules a delayed startup check', async () => {
+    vi.useFakeTimers();
+
+    const updater = createMockUpdaterApi();
+    updater.api.check.mockResolvedValue({
+      status: 'up-to-date',
+      currentVersion: '1.0.40',
+    });
+
+    vi.stubGlobal('window', {
+      electronAPI: {
+        updater: updater.api,
+      },
+      addEventListener: vi.fn(),
+    });
+
+    const { scheduleElectronStartupUpdateCheck } = await loadComposable();
+    scheduleElectronStartupUpdateCheck(5_000);
+
+    expect(updater.api.check).not.toHaveBeenCalled();
+
+    await vi.advanceTimersByTimeAsync(5_000);
+
+    expect(updater.api.check).toHaveBeenCalledTimes(1);
+  });
+
+  it('retries startup check on first window focus before the delay fires', async () => {
+    vi.useFakeTimers();
+
+    const updater = createMockUpdaterApi();
+    updater.api.check.mockResolvedValue({
+      status: 'up-to-date',
+      currentVersion: '1.0.40',
+    });
+
+    let focusHandler: (() => void) | null = null;
+
+    vi.stubGlobal('window', {
+      electronAPI: {
+        updater: updater.api,
+      },
+      addEventListener: vi.fn((event: string, handler: () => void) => {
+        if (event === 'focus') {
+          focusHandler = handler;
+        }
+      }),
+    });
+
+    const { scheduleElectronStartupUpdateCheck } = await loadComposable();
+    scheduleElectronStartupUpdateCheck(5_000);
+
+    expect(focusHandler).not.toBeNull();
+    focusHandler?.();
+
+    expect(updater.api.check).toHaveBeenCalledTimes(1);
+
+    await vi.advanceTimersByTimeAsync(5_000);
+
+    expect(updater.api.check).toHaveBeenCalledTimes(1);
   });
 });
