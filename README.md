@@ -102,30 +102,20 @@ Run OrcaQ instantly with Docker — no local Node.js or build tools required.
 
    ```sh
    cp .env.example .env
-   # Edit .env to add AI provider keys, change ports, etc.
+   # Edit .env to change ports, analytics keys, etc.
    ```
 
 3. **Start with Docker Compose:**
 
    ```sh
-   docker compose up -d
+   docker compose up -d orcaq
    ```
 
 4. **Open OrcaQ:**
 
    Visit [http://localhost:3000](http://localhost:3000)
 
-A demo PostgreSQL database is included for testing. Connect to it inside OrcaQ with:
-
-| Field    | Value              |
-|----------|--------------------|
-| Host     | `postgres-demo`    |
-| Port     | `5432`             |
-| User     | `orcaq`            |
-| Password | `orcaq_demo_pass`  |
-| Database | `orcaq_demo`       |
-
-> **Tip**: The demo PostgreSQL is optional. Remove it from `docker-compose.yml` if you only connect to external databases. OrcaQ is stateless — it connects to your databases at runtime.
+> **Note**: The demo PostgreSQL service is currently commented out in `docker-compose.yml`. OrcaQ is stateless — it connects to your databases at runtime. If you want a local demo database, uncomment the `postgres-demo` service first.
 
 ## Usage
 
