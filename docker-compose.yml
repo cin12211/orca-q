@@ -29,14 +29,8 @@ services:
       - NODE_ENV=production
       - NITRO_HOST=0.0.0.0
       - NITRO_PORT=3000
-      # --- AI Provider Keys (optional — enable AI features) ---
-      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
-      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
-      - GOOGLE_GENERATIVE_AI_API_KEY=${GOOGLE_GENERATIVE_AI_API_KEY:-}
-      - XAI_API_KEY=${XAI_API_KEY:-}
-      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY:-}
-      # --- Analytics (optional) ---
-      - NUXT_AMPLITUDE_API_KEY=${NUXT_AMPLITUDE_API_KEY:-}
+      # --- Analytics (optional — uncomment to enable) ---
+      # - NUXT_AMPLITUDE_API_KEY=${NUXT_AMPLITUDE_API_KEY:-}
     networks:
       - orcaq-net
     healthcheck:
@@ -52,26 +46,26 @@ services:
   # ---------------------------------------------------------------------------
   # Demo PostgreSQL (for testing — remove if connecting to external DBs only)
   # ---------------------------------------------------------------------------
-  postgres-demo:
-    image: postgres:16-alpine
-    container_name: orcaq-postgres-demo
-    restart: unless-stopped
-    ports:
-      - "${POSTGRES_PORT:-5432}:5432"
-    environment:
-      POSTGRES_USER: ${POSTGRES_USER:-orcaq}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-orcaq_demo_pass}
-      POSTGRES_DB: ${POSTGRES_DB:-orcaq_demo}
-    volumes:
-      - pgdata:/var/lib/postgresql/data
-    networks:
-      - orcaq-net
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-orcaq} -d ${POSTGRES_DB:-orcaq_demo}"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 10s
+  # postgres-demo:
+  #   image: postgres:16-alpine
+  #   container_name: orcaq-postgres-demo
+  #   restart: unless-stopped
+  #   ports:
+  #     - "${POSTGRES_PORT:-5432}:5432"
+  #   environment:
+  #     POSTGRES_USER: ${POSTGRES_USER:-orcaq}
+  #     POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-orcaq_demo_pass}
+  #     POSTGRES_DB: ${POSTGRES_DB:-orcaq_demo}
+  #   volumes:
+  #     - pgdata:/var/lib/postgresql/data
+  #   networks:
+  #     - orcaq-net
+  #   healthcheck:
+  #     test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-orcaq} -d ${POSTGRES_DB:-orcaq_demo}"]
+  #     interval: 10s
+  #     timeout: 5s
+  #     retries: 5
+  #     start_period: 10s
 
   # ---------------------------------------------------------------------------
   # (Optional) Nginx reverse proxy — uncomment to enable load balancing
