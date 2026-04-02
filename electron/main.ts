@@ -46,6 +46,17 @@ function createWindow(serverUrl: string): BrowserWindow {
   return win;
 }
 
+function attachMainWindow(win: BrowserWindow): void {
+  mainWindow = win;
+  initUpdater(win.webContents);
+
+  win.on('closed', () => {
+    if (mainWindow === win) {
+      mainWindow = null;
+    }
+  });
+}
+
 async function bootstrap(): Promise<void> {
   // Prevent duplicate instances
   const gotLock = app.requestSingleInstanceLock();
@@ -77,16 +88,14 @@ async function bootstrap(): Promise<void> {
     }
   }
 
-  mainWindow = createWindow(serverUrl);
-  registerAllIpcHandlers(mainWindow);
-
-  // Initialize auto-updater after window is created
-  initUpdater(mainWindow.webContents);
+  const initialWindow = createWindow(serverUrl);
+  attachMainWindow(initialWindow);
+  registerAllIpcHandlers(initialWindow);
 
   // macOS: re-create window when dock icon is clicked and no windows are open
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {
-      mainWindow = createWindow(serverUrl);
+      attachMainWindow(createWindow(serverUrl));
     }
   });
 }

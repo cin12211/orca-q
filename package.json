@@ -5,7 +5,7 @@
   "homepage": "https://orca-q.com/",
   "author": "Cinny",
   "license": "MIT",
-  "version": "1.0.46",
+  "version": "1.0.47",
   "main": "out/electron/main.js",
   "scripts": {
     "dev": "npm run nuxt:dev",

@@ -3,6 +3,9 @@ import { autoUpdater } from 'electron-updater';
 import type { UpdateInfo, ProgressInfo } from 'electron-updater';
 
 let mainWindowWebContents: Electron.WebContents | null = null;
+let detachWebContentsDestroyedListener: (() => void) | null = null;
+let updaterInitialized = false;
+let isQuittingForInstall = false;
 
 interface RendererUpdateInfo {
   version: string;
@@ -62,11 +65,60 @@ function toRendererUpdateInfo(info: UpdateInfo): RendererUpdateInfo {
   };
 }
 
+function sendToRenderer(channel: string, payload: unknown): void {
+  if (isQuittingForInstall) {
+    return;
+  }
+
+  const webContents = mainWindowWebContents;
+  if (!webContents) {
+    return;
+  }
+
+  if (webContents.isDestroyed()) {
+    mainWindowWebContents = null;
+    return;
+  }
+
+  webContents.send(channel, payload);
+}
+
+function bindWebContents(webContents: Electron.WebContents): void {
+  detachWebContentsDestroyedListener?.();
+  mainWindowWebContents = webContents;
+  isQuittingForInstall = false;
+
+  const clearReference = () => {
+    if (mainWindowWebContents === webContents) {
+      mainWindowWebContents = null;
+    }
+
+    if (detachWebContentsDestroyedListener) {
+      detachWebContentsDestroyedListener = null;
+    }
+  };
+
+  webContents.once('destroyed', clearReference);
+  detachWebContentsDestroyedListener = () => {
+    webContents.removeListener('destroyed', clearReference);
+    if (mainWindowWebContents === webContents) {
+      mainWindowWebContents = null;
+    }
+    detachWebContentsDestroyedListener = null;
+  };
+}
+
 /**
  * Initialize the auto-updater and wire it to the renderer via events.
  */
 export function initUpdater(webContents: Electron.WebContents): void {
-  mainWindowWebContents = webContents;
+  bindWebContents(webContents);
+
+  if (updaterInitialized) {
+    return;
+  }
+
+  updaterInitialized = true;
 
   autoUpdater.autoDownload = false;
   autoUpdater.autoInstallOnAppQuit = false;
@@ -74,10 +126,7 @@ export function initUpdater(webContents: Electron.WebContents): void {
   autoUpdater.on('update-available', (info: UpdateInfo) => {
     cachedAvailableUpdate = toRendererUpdateInfo(info);
     cachedReadyUpdate = null;
-    mainWindowWebContents?.send(
-      'updater:update-available',
-      cachedAvailableUpdate
-    );
+    sendToRenderer('updater:update-available', cachedAvailableUpdate);
   });
 
   autoUpdater.on('update-not-available', () => {
@@ -85,23 +134,23 @@ export function initUpdater(webContents: Electron.WebContents): void {
       cachedAvailableUpdate = null;
     }
 
-    mainWindowWebContents?.send('updater:up-to-date', {
+    sendToRenderer('updater:up-to-date', {
       currentVersion: app.getVersion(),
     });
   });
 
   autoUpdater.on('download-progress', (progress: ProgressInfo) => {
-    mainWindowWebContents?.send('updater:progress', progress);
+    sendToRenderer('updater:progress', progress);
   });
 
   autoUpdater.on('update-downloaded', (info: UpdateInfo) => {
     cachedReadyUpdate = toRendererUpdateInfo(info);
     cachedAvailableUpdate = cachedReadyUpdate;
-    mainWindowWebContents?.send('updater:ready', cachedReadyUpdate);
+    sendToRenderer('updater:ready', cachedReadyUpdate);
   });
 
   autoUpdater.on('error', (err: Error) => {
-    mainWindowWebContents?.send('updater:error', err.message);
+    sendToRenderer('updater:error', err.message);
   });
 }
 
@@ -161,6 +210,9 @@ export async function downloadUpdate(): Promise<void> {
 }
 
 export function quitAndInstall(): void {
+  isQuittingForInstall = true;
+  detachWebContentsDestroyedListener?.();
+
   setImmediate(() => {
     app.removeAllListeners('window-all-closed');
     autoUpdater.quitAndInstall(false, true);
