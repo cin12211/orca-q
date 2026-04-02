@@ -93,12 +93,12 @@ const { startTour } = useWorkspaceTour({
     </BaseEmpty>
 
     <Button
-      class="fixed bottom-6 right-6"
+      class="fixed bottom-15 right-4"
       variant="secondary"
       @click="startTour"
       title="Start Tour"
     >
-      <Icon name="hugeicons:book-open-02" /> Quick Tour
+      <Icon name="hugeicons:book-open-02" /> Take a tour
     </Button>
   </div>
 </template>
