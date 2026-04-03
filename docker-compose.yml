@@ -24,24 +24,21 @@ services:
     container_name: orcaq
     restart: unless-stopped
     ports:
-      - "${ORCAQ_PORT:-3000}:3000"
+      - "${ORCAQ_PORT:-9432}:9432"
     environment:
       - NODE_ENV=production
       - NITRO_HOST=0.0.0.0
-      - NITRO_PORT=3000
+      - NITRO_PORT=9432
       # --- Analytics (optional — uncomment to enable) ---
       # - NUXT_AMPLITUDE_API_KEY=${NUXT_AMPLITUDE_API_KEY:-}
     networks:
       - orcaq-net
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000"]
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:9432"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 15s
-    depends_on:
-      postgres-demo:
-        condition: service_healthy
 
   # ---------------------------------------------------------------------------
   # Demo PostgreSQL (for testing — remove if connecting to external DBs only)

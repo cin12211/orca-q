@@ -1,8 +1,15 @@
 # <img src="https://orca-q.com/images/logo.png" width="32"> OrcaQ - Next Generation database editor
 
+<div align="center">
+
 [![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![Build Status](https://img.shields.io/badge/build-passing-brightgreen.svg)](TODO)
-[![Version](https://img.shields.io/badge/version-1.0.4-blue.svg)](package.json)
+[![npx version](https://img.shields.io/npm/v/orcaq?label=npx)](https://www.npmjs.com/package/orcaq)
+[![Downloads](https://img.shields.io/npm/dm/orcaq?label=downloads)](https://www.npmjs.com/package/orcaq)
+[![GitHub stars](https://img.shields.io/github/stars/cin12211/orca-q?style=social)](https://github.com/cin12211/orca-q/stargazers)
+[![GitHub issues](https://img.shields.io/github/issues/cin12211/orca-q)](https://github.com/cin12211/orca-q/issues)
+[![GitHub pull requests](https://img.shields.io/github/issues-pr/cin12211/orca-q)](https://github.com/cin12211/orca-q/pulls)
+
+</div>
 
 ## Orca Query
 
@@ -10,18 +17,17 @@
 
 ## Overview
 
-**OrcaQ** is a modern desktop application designed for managing, querying, and manipulating data across various database management systems (DBMS) in an intuitive, fast, and secure manner. Built with [Electron](https://www.electronjs.org/), [Vue 3](https://vuejs.org/), [TypeScript](https://www.typescriptlang.org/), and [Vite](https://vitejs.dev/), it targets developers, data engineers, analysts, DBAs, or anyone who needs to work with SQL/PostgreSQL data on the desktop.
+**OrcaQ** is a modern database editor for managing, querying, and exploring SQL/PostgreSQL data in a fast, intuitive, and secure way.
 
 ## Features
 
-- 🚀 **Cross-platform Desktop App**: Runs smoothly on Windows, macOS, and Linux thanks to Electron.
 - 🖥️ **Modern UI/UX**: Minimalist interface with dark mode support, drag & drop, and flexible sidebar.
 - ⚡ **Quick Query**: Fast data querying with preview, filtering, and dynamic field search.
 - 📝 **Raw SQL Editor**: Write and execute SQL queries with multiple layout modes (vertical/horizontal).
 - 🗂️ **Explorer**: Browse database structures, tables, schemas, and files.
 - 🔒 **Workspace & Connection Management**: Manage multiple connections and independent workspaces.
 - 🛠️ **Hotkey Support**: Supports shortcuts for faster operations.
-- ⚙️ **Electron Backend**: Leverages Node.js, native modules, and OS integration.
+- 🍎 **Desktop App for macOS**: Currently in development.
 
 ## Installation
 
@@ -58,38 +64,51 @@
    npm run nuxt:build
    ```
 
-### Steps (App setup)
+### NPX Setup
 
-1. **Clone the repository:**
+Run OrcaQ directly with `npx` if you do not want to clone the repository or build Docker images.
 
-   ```sh
-   git clone https://github.com/cin12211/orca-q.git
-   cd orcaq
-   ```
-
-2. **Install dependencies:**
+1. **Run OrcaQ:**
 
    ```sh
-   bun install
+   npx orcaq
    ```
 
-3. **Run in development mode:**
-
-   ```sh
-   npm run dev
-   ```
-
-4. **Build for production:**
-
-   ```sh
-   npm run app:build
-   ```
-
-> **Note**: Ensure you have the correct Node.js version and necessary dependencies installed to run Electron. See more at [Electron Docs](https://www.electronjs.org/docs/latest/tutorial/quick-start).
+   Requires **Node.js >= 18**. By default OrcaQ starts on [http://localhost:9432](http://localhost:9432) and opens your browser automatically.
 
 ### Docker Setup
 
 Run OrcaQ instantly with Docker — no local Node.js or build tools required.
+
+#### Guide 1 — Run with the published Docker image
+
+Use the prebuilt image if you just want to start OrcaQ quickly.
+
+1. **Pull the image:**
+
+   ```sh
+   docker pull cinny09/orcaq:latest
+   ```
+
+2. **Run the container:**
+
+   ```sh
+   docker run -d \
+     --name orcaq \
+     --restart unless-stopped \
+     -p 9432:9432 \
+     cinny09/orcaq:latest
+   ```
+
+3. **Open OrcaQ:**
+
+   Visit [http://localhost:9432](http://localhost:9432)
+
+> **Note**: If you are still using the old image name `cinny09/orca-q`, switch to `cinny09/orcaq`.
+
+#### Guide 2 — Build locally with Docker Compose
+
+Use this if you want to build the image from the current source code.
 
 1. **Clone the repository:**
 
@@ -102,33 +121,21 @@ Run OrcaQ instantly with Docker — no local Node.js or build tools required.
 
    ```sh
    cp .env.example .env
-   # Edit .env to change ports, analytics keys, etc.
+   # Default Docker port is 9432
+   # Edit .env if you want to change it
    ```
 
 3. **Start with Docker Compose:**
 
    ```sh
-   docker compose up -d orcaq
+   docker compose up -d --build orcaq
    ```
 
 4. **Open OrcaQ:**
 
-   Visit [http://localhost:3000](http://localhost:3000)
+   Visit [http://localhost:9432](http://localhost:9432)
 
 > **Note**: The demo PostgreSQL service is currently commented out in `docker-compose.yml`. OrcaQ is stateless — it connects to your databases at runtime. If you want a local demo database, uncomment the `postgres-demo` service first.
-
-## Usage
-
-- **Launch the app**:  
-  Run `npm run dev` to start the application in development mode.
-- **Connect to a database**:  
-  Add a workspace, create a new connection, and enter DB details (PostgreSQL, etc.).
-- **Quick Query**:  
-  Use the Quick Query tab to filter, search, and view table data.
-- **SQL Editing**:  
-  Switch to the Raw Query tab to write and execute custom SQL queries.
-- **Manage Layout**:  
-  Use the sidebar and hotkeys (`Cmd+Shift+B` on Mac) to show/hide panels.
 
 ## Contributing
 
@@ -156,24 +163,6 @@ We welcome all contributions!
 
 **See more**: [CONTRIBUTING.md](CONTRIBUTING.md)
 
-## Roadmap
-
-- [x] Quick Query UI/UX
-- [x] Raw SQL Editor
-- [x] Sidebar/Panel Layout
-- [ ] Support for multiple DBMS (MySQL, SQLite, etc.)
-- [ ] Plugin/Extension system
-- [ ] Export/Import workspace
-- [ ] Multi-language support (i18n)
-- [ ] AI query assistant integration
-
-## Changelog
-
-See details at [CHANGELOG.md](CHANGELOG.md)
-
-- **1.0.4**: Updated UI, fixed layout bugs, optimized user experience.
-- **1.0.2**: First public release.
-
 ## Community / Contact
 
 - **Issues**: [GitHub Issues](https://github.com/cin12211/orca-q/issues)
@@ -195,11 +184,17 @@ This project is licensed under the [MIT License](LICENSE).
 - Icon design: [Figma Community](https://www.figma.com/design/wAm0jjPdhpKsEGXjtUw3tk/macOS-App-Icon-Template--Community-?node-id=102-4&t=B0v343GshmaCBMqU-0)
 - Contributions from the open-source community
 
+## Contributors
+
+Many thanks to everyone who has contributed to OrcaQ.
+
+<a href="https://github.com/cin12211/orca-q/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=cin12211/orca-q" />
+</a>
+
 ## ⭐ Stargazers
 
 Many thanks to the kind individuals who leave a star.
 Your support is much appreciated!
-
-[![Stargazers repo roster for @cin12211/orca-q](https://reporoster.com/stars/cin12211/orca-q)](https://github.com/cin12211/orca-q/stargazers)
 
 > _Made with ❤️ by the OrcaQ team and open-source contributors._

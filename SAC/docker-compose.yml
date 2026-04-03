@@ -14,19 +14,19 @@ services:
       - app3
 
   app1:
-    image: cinny09/orca-q
+    image: cinny09/orcaq
     container_name: app1
     expose:
-      - "3000"
+      - "9432"
 
   app2:
-    image: cinny09/orca-q
+    image: cinny09/orcaq
     container_name: app2
     expose:
-      - "3000"
+      - "9432"
 
   app3:
-    image: cinny09/orca-q
+    image: cinny09/orcaq
     container_name: app3
     expose:
-      - "3000"
+      - "9432"
