@@ -254,7 +254,7 @@ export const useTableQueryBuilder = ({
   };
 
   watch(
-    [filters, pagination, orderBy, isShowFilters],
+    [filters, pagination, orderBy, isShowFilters, composeWith],
     debounce(() => {
       if (!isPersist) {
         return;

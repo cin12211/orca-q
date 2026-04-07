@@ -1,18 +1,23 @@
 import { mockNuxtImport } from '@nuxt/test-utils/runtime';
 import { ref } from 'vue';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { useTableQueryBuilder } from '~/core/composables/useTableQueryBuilder';
-import { ComposeOperator } from '~/core/constants';
+import { ComposeOperator, DEFAULT_DEBOUNCE_INPUT } from '~/core/constants';
 
 vi.mock('~/components/modules/quick-query/utils', () => ({
   formatWhereClause: vi.fn(() => 'WHERE "id" = 1'),
 }));
 
-vi.mock('~/core/stores', () => ({
-  useQuickQueryLogs: vi.fn(() => ({
-    createLog: vi.fn(),
-  })),
-}));
+vi.mock('~/core/stores', async importOriginal => {
+  const actual = await importOriginal<typeof import('~/core/stores')>();
+
+  return {
+    ...actual,
+    useQuickQueryLogs: vi.fn(() => ({
+      createLog: vi.fn(),
+    })),
+  };
+});
 
 const { useFetchMock, refreshTableDataMock, refreshCountMock } = vi.hoisted(
   () => ({
@@ -27,9 +32,11 @@ mockNuxtImport('useFetch', () => useFetchMock);
 const createComposable = ({
   primaryKeys = ['id'],
   columns = ['id', 'name'],
+  isPersist = false,
 }: {
   primaryKeys?: string[];
   columns?: string[];
+  isPersist?: boolean;
 } = {}) => {
   useFetchMock.mockReset();
 
@@ -53,13 +60,19 @@ const createComposable = ({
     schemaName: 'public',
     workspaceId: ref('ws-1'),
     connectionId: ref('conn-1'),
-    isPersist: false,
+    isPersist,
   });
 };
 
 describe('useTableQueryBuilder', () => {
   beforeEach(() => {
+    vi.useFakeTimers();
     vi.clearAllMocks();
+    localStorage.clear();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
   });
 
   it('builds base query string from schema and table', () => {
@@ -148,5 +161,32 @@ describe('useTableQueryBuilder', () => {
     composable.pagination.offset = 100;
 
     expect(composable.isAllowPreviousPage.value).toBe(true);
+  });
+
+  it('persists composeWith updates when it is the only changed state', async () => {
+    localStorage.setItem(
+      'ws-1-conn-1-public-users',
+      JSON.stringify({
+        filters: [],
+        pagination: {
+          limit: 100,
+          offset: 0,
+        },
+        orderBy: {},
+        isShowFilters: false,
+        composeWith: ComposeOperator.AND,
+      })
+    );
+
+    const composable = createComposable({ isPersist: true });
+
+    composable.onChangeComposeWith(ComposeOperator.OR);
+    await vi.advanceTimersByTimeAsync(DEFAULT_DEBOUNCE_INPUT + 1);
+
+    expect(
+      JSON.parse(localStorage.getItem('ws-1-conn-1-public-users') || '{}')
+    ).toMatchObject({
+      composeWith: ComposeOperator.OR,
+    });
   });
 });

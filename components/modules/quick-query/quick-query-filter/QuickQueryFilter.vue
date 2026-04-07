@@ -76,7 +76,8 @@ const remove = (index: number) => {
 const onAddFilter = (index: number) => {
   insert(index + 1, {
     isSelect: true,
-    fieldName: EExtendedField.RawQuery,
+    fieldName: EExtendedField.AnyField,
+    operator: OperatorSet.LIKE_CONTAINS,
   });
 };
 
@@ -104,6 +105,7 @@ const getParserApplyFilter = () => {
     columns: props.columns,
     db: props.dbType,
     filters: fields.value,
+    composeWith: props.composeWith,
   })};`;
 };
 
@@ -112,6 +114,7 @@ const getParserAllFilter = () => {
     columns: props.columns,
     db: props.dbType,
     filters: fields.value.map(filter => ({ ...filter, isSelect: true })),
+    composeWith: props.composeWith,
   })};`;
 };
 
