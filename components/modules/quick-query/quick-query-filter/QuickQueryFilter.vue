@@ -1,22 +1,12 @@
 <script setup lang="ts">
 import { Icon, Tooltip, TooltipContent, TooltipTrigger } from '#components';
-import { toTypedSchema } from '@vee-validate/zod';
-import debounce from 'lodash-es/debounce';
-import { useFieldArray, useForm } from 'vee-validate';
-import { z } from 'zod';
 import {
-  filterSchema,
   formatWhereClause,
   getPlaceholderSearchByOperator,
   type FilterSchema,
 } from '~/components/modules/quick-query/utils';
 import type { Input } from '~/components/ui/input';
-import {
-  ComposeOperator,
-  DEFAULT_DEBOUNCE_INPUT,
-  EExtendedField,
-  OperatorSet,
-} from '~/core/constants';
+import { ComposeOperator, EExtendedField, OperatorSet } from '~/core/constants';
 import { DatabaseClientType } from '~/core/constants/database-client-type';
 import ColumnSelector from '../../selectors/ColumnSelector.vue';
 import OperatorSelector from '../../selectors/OperatorSelector.vue';
@@ -43,34 +33,45 @@ const quickQueryFilterRef = ref<HTMLElement>();
 const filterSearchRefs =
   useTemplateRef<InstanceType<typeof Input>[]>('filterSearchRefs');
 
-const formFiltersSchema = z.object({
-  filters: filterSchema.array(),
-});
+const fields = computed(() => props.initFilters || []);
 
-type FormFiltersSchema = {
-  filters: FilterSchema[];
+const getNextFilters = () => fields.value.map(filter => ({ ...filter }));
+
+const emitFilters = (nextFilters: FilterSchema[]) => {
+  emit('onUpdateFilters', nextFilters);
 };
 
-useForm<FormFiltersSchema>({
-  validationSchema: toTypedSchema(formFiltersSchema),
-  initialValues: {
-    filters: props.initFilters || [],
-  },
-  keepValuesOnUnmount: false,
-});
+const updateFilter = (index: number, patch: Partial<FilterSchema>) => {
+  const nextFilters = getNextFilters();
+  const row = nextFilters[index];
 
-const { remove, fields, insert, update } =
-  useFieldArray<FilterSchema>('filters');
-
-watch(
-  fields,
-  debounce(() => {
-    emit('onUpdateFilters', fields.value.map(f => f.value) || []);
-  }, DEFAULT_DEBOUNCE_INPUT),
-  {
-    deep: true,
+  if (!row) {
+    return;
   }
-);
+
+  nextFilters[index] = {
+    ...row,
+    ...patch,
+  };
+
+  emitFilters(nextFilters);
+};
+
+const insert = (index: number, filter: FilterSchema) => {
+  const nextFilters = getNextFilters();
+
+  nextFilters.splice(index, 0, { ...filter });
+
+  emitFilters(nextFilters);
+};
+
+const remove = (index: number) => {
+  const nextFilters = getNextFilters();
+
+  nextFilters.splice(index, 1);
+
+  emitFilters(nextFilters);
+};
 
 const onAddFilter = (index: number) => {
   insert(index + 1, {
@@ -80,18 +81,18 @@ const onAddFilter = (index: number) => {
 };
 
 const updateFieldName = (index: number, newFieldName: string) => {
-  const row = fields.value?.[index]?.value;
+  const row = fields.value?.[index];
   const isRowQuery = row?.fieldName === EExtendedField.RawQuery;
   const isEmptyOperator = !row?.operator;
 
   if (isRowQuery && isEmptyOperator) {
-    update(index, {
+    updateFilter(index, {
       ...row,
       fieldName: newFieldName,
       operator: OperatorSet.LIKE_CONTAINS,
     });
   } else {
-    update(index, {
+    updateFilter(index, {
       ...row,
       fieldName: newFieldName,
     });
@@ -102,7 +103,7 @@ const getParserApplyFilter = () => {
   return `${props.baseQuery} ${formatWhereClause({
     columns: props.columns,
     db: props.dbType,
-    filters: fields.value.map(f => f.value) || [],
+    filters: fields.value,
   })};`;
 };
 
@@ -110,7 +111,7 @@ const getParserAllFilter = () => {
   return `${props.baseQuery} ${formatWhereClause({
     columns: props.columns,
     db: props.dbType,
-    filters: fields.value.map(f => ({ ...f.value, isSelect: true })) || [],
+    filters: fields.value.map(filter => ({ ...filter, isSelect: true })),
   })};`;
 };
 
@@ -125,9 +126,9 @@ const onExecuteSearch = (isWithoutQuery: boolean = false) => {
 };
 
 const onApplyFilter = (index: number) => {
-  const row = fields.value?.[index]?.value;
+  const row = fields.value?.[index];
   if (!row?.isSelect) {
-    update(index, {
+    updateFilter(index, {
       ...row,
       isSelect: true,
     });
@@ -137,17 +138,20 @@ const onApplyFilter = (index: number) => {
 };
 
 const onApplyAllFilter = () => {
-  fields.value.forEach((row, index) => {
-    update(index, {
-      ...row.value,
+  emitFilters(
+    fields.value.map(row => ({
+      ...row,
       isSelect: true,
-    });
-  });
+    }))
+  );
 
   onExecuteSearch();
 };
 
 const onRemoveFilter = async (index: number) => {
+  const row = fields.value?.[index];
+  const shouldApplyAfterRemove = !!row?.isSelect;
+
   remove(index);
 
   await nextTick();
@@ -156,8 +160,31 @@ const onRemoveFilter = async (index: number) => {
     focusSearchByIndex(index - 1);
   }
 
-  emit('onUpdateFilters', fields.value.map(f => f.value) || []);
-  onExecuteSearch();
+  if (shouldApplyAfterRemove) {
+    onExecuteSearch();
+  }
+};
+
+const getSearchInputValue = (value?: FilterSchema['search']) => {
+  if (value === null || value === undefined) {
+    return '';
+  }
+
+  return String(value);
+};
+
+const updateSearchValue = (index: number, value: string) => {
+  updateFilter(index, {
+    search: value,
+  });
+};
+
+const updateFilterSelection = async (index: number, isSelected: boolean) => {
+  updateFilter(index, {
+    isSelect: isSelected,
+  });
+
+  await onExecuteSearch();
 };
 
 const focusSearchByIndex = (index: number) => {
@@ -199,7 +226,7 @@ useHotkeys(
       callback: async () => {
         const currenFocusIndex = getCurrentFocusInput();
 
-        if (currenFocusIndex === undefined) {
+        if (currenFocusIndex === undefined || currenFocusIndex < 0) {
           return;
         }
 
@@ -225,7 +252,7 @@ useHotkeys(
       callback: async () => {
         const currenFocusIndex = getCurrentFocusInput();
 
-        if (currenFocusIndex === undefined) {
+        if (currenFocusIndex === undefined || currenFocusIndex < 0) {
           return;
         }
 
@@ -260,15 +287,20 @@ defineExpose({
     ref="quickQueryFilterRef"
     v-if="isShowFilters"
     :class="['h-fit space-y-1', fields.length && 'pb-2']"
-    @keyup.enter="() => onExecuteSearch()"
   >
     <!-- <TransitionGroup name="fade"> -->
     <div
       class="flex gap-1 items-center"
-      v-for="({ key, value }, index) in fields"
-      :key="key"
+      v-for="(value, index) in fields"
+      :key="index"
     >
-      <Checkbox v-model:model-value="value.isSelect" />
+      <Checkbox
+        :model-value="value.isSelect"
+        @click.stop
+        @keydown.enter.stop.prevent
+        @keyup.enter.stop
+        @update:model-value="updateFilterSelection(index, !!$event)"
+      />
 
       <ColumnSelector
         :columns="columns"
@@ -290,7 +322,12 @@ defineExpose({
       <OperatorSelector
         v-if="value.fieldName !== EExtendedField.RawQuery"
         :db-type="dbType"
-        v-model:value="value.operator"
+        :value="value.operator"
+        @update:value="
+          updateFilter(index, {
+            operator: $event == null ? undefined : String($event),
+          })
+        "
         @update:open="
           isOpen => {
             if (!isOpen) {
@@ -303,11 +340,13 @@ defineExpose({
       <!-- https://www.shadcn-vue.com/docs/components/combobox -->
       <!-- TODO: need to apply auto suggesions for row query, this help user show columns name, only trigger show in the first or near 'and' or 'or' key word -->
       <Input
-        v-model:model-value="value.search"
+        :model-value="getSearchInputValue(value.search)"
         type="text"
         :placeholder="getPlaceholderSearchByOperator(value.operator || '')"
         class="w-full h-6 px-2"
         ref="filterSearchRefs"
+        @keyup.enter.stop="() => onExecuteSearch()"
+        @update:model-value="updateSearchValue(index, String($event))"
       />
 
       <Tooltip>

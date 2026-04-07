@@ -1,8 +1,7 @@
 <script setup lang="ts">
 import QuickQueryTableSummary from '~/components/modules/quick-query/quick-query-table-summary/QuickQueryTableSummary.vue';
-import type { FilterSchema } from '~/components/modules/quick-query/utils';
 import { useTableQueryBuilder } from '~/core/composables/useTableQueryBuilder';
-import { DEFAULT_QUERY_SIZE, OperatorSet } from '~/core/constants';
+import { DEFAULT_QUERY_SIZE } from '~/core/constants';
 import { DatabaseClientType } from '~/core/constants/database-client-type';
 import { uuidv4 } from '~/core/helpers';
 import { useAppConfigStore } from '~/core/stores/appConfigStore';
@@ -13,9 +12,11 @@ import QuickQueryErrorPopup from './QuickQueryErrorPopup.vue';
 import SafeModeConfirmDialog from './SafeModeConfirmDialog.vue';
 import { QuickQueryTabView } from './constants';
 import {
+  useQuickQueryContextCellFilter,
   useQuickQuery,
   useQuickQueryMutation,
   useQuickQueryTableInfo,
+  useQuickQueryTabs,
   useReferencedTables,
   useSafeModeDialog,
 } from './hooks';
@@ -163,12 +164,12 @@ const { handleSelectColumn, selectedColumnFieldId, resetGridState } =
     quickQueryTableRef,
   });
 
-const quickQueryTabView = ref<QuickQueryTabView>(QuickQueryTabView.Data);
-
-const openedQuickQueryTab = ref({
-  [QuickQueryTabView.Data]: true,
-  [QuickQueryTabView.Structure]: false,
-  [QuickQueryTabView.Erd]: false,
+const { quickQueryTabView, openedQuickQueryTab } = useQuickQueryTabs({
+  onTabChanged: newQuickQueryTabView => {
+    if (newQuickQueryTabView !== QuickQueryTabView.Data) {
+      appConfigStore.onCloseBottomPanel();
+    }
+  },
 });
 
 const isActiveTeleport = ref(true);
@@ -223,39 +224,16 @@ const onOpenForwardReferencedTableModal = ({
   });
 };
 
-const onAddFilterByContextCell = async () => {
-  const cellContextMenu = quickQueryTableRef.value?.cellContextMenu;
-  if (cellContextMenu) {
-    const columnName = cellContextMenu.colDef.field || '';
-    const cellValue = cellContextMenu.value;
-
-    const filter: FilterSchema = {
-      fieldName: columnName,
-      isSelect: true,
-      operator: OperatorSet.EQUAL,
-      search: cellValue as string,
-    };
-    quickQueryFilterRef.value?.insert(filters.value.length, filter);
-
-    quickQueryFilterRef?.value?.onShowSearch();
-
-    filters.value.push(filter);
-
-    onApplyNewFilter();
-  }
-};
+const { onAddFilterByContextCell } = useQuickQueryContextCellFilter({
+  quickQueryFilterRef,
+  quickQueryTableRef,
+  filters,
+  onApplyNewFilter,
+});
 
 const { isHaveRelationByFieldName } = useReferencedTables({
   schemaName: schemaName.value,
   tableName: tableName.value,
-});
-
-watch(quickQueryTabView, newQuickQueryTabView => {
-  openedQuickQueryTab.value[newQuickQueryTabView] = true;
-
-  if (newQuickQueryTabView !== QuickQueryTabView.Data) {
-    appConfigStore.onCloseBottomPanel();
-  }
 });
 
 const isSkipShortcut = computed(
