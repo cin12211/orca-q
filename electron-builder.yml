@@ -6,6 +6,8 @@ directories:
   output: out/packages
   buildResources: build
 
+forceCodeSigning: true
+
 # Optimize bundle size
 compression: maximum
 
