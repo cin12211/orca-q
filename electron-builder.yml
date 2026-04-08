@@ -33,6 +33,12 @@ publish:
 mac:
   category: public.app-category.developer-tools
   icon: assets/logos/icon.icns
+  hardenedRuntime: true
+  gatekeeperAssess: false
+  notarize: true
+  preAutoEntitlements: true
+  entitlements: build/entitlements.mac.plist
+  entitlementsInherit: build/entitlements.mac.inherit.plist
   target:
     - target: dmg
       arch:
@@ -42,12 +48,6 @@ mac:
       arch:
         - arm64
         - x64
-  # Uncomment when Apple Developer certs are configured:
-  # hardenedRuntime: true
-  # entitlements: build/entitlements.mac.plist
-  # entitlementsInherit: build/entitlements.mac.plist
-  # gatekeeperAssess: false
-  # identity: null  # Remove when using real cert
 
 dmg:
   contents:

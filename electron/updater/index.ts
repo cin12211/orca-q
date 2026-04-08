@@ -31,6 +31,55 @@ type UpdaterCheckResult =
 let cachedAvailableUpdate: RendererUpdateInfo | null = null;
 let cachedReadyUpdate: RendererUpdateInfo | null = null;
 
+const updaterLogger = {
+  debug(message: string) {
+    console.debug(`[electron-updater] ${message}`);
+  },
+  info(message: string) {
+    console.info(`[electron-updater] ${message}`);
+  },
+  warn(message: string) {
+    console.warn(`[electron-updater] ${message}`);
+  },
+  error(message: string) {
+    console.error(`[electron-updater] ${message}`);
+  },
+};
+
+function formatLogDetails(details?: Record<string, unknown>): string {
+  if (!details) {
+    return '';
+  }
+
+  try {
+    return ` ${JSON.stringify(details)}`;
+  } catch {
+    return '';
+  }
+}
+
+function serializeError(error: unknown): Record<string, unknown> {
+  if (error instanceof Error) {
+    return {
+      name: error.name,
+      message: error.message,
+      stack: error.stack,
+    };
+  }
+
+  return {
+    message: String(error),
+  };
+}
+
+function logUpdater(
+  level: 'debug' | 'info' | 'warn' | 'error',
+  message: string,
+  details?: Record<string, unknown>
+): void {
+  updaterLogger[level](`${message}${formatLogDetails(details)}`);
+}
+
 function normalizeReleaseNotes(
   releaseNotes: UpdateInfo['releaseNotes']
 ): string | undefined {
@@ -84,6 +133,7 @@ function sendToRenderer(
     return;
   }
 
+  logUpdater('debug', 'Sending updater event to renderer', { channel });
   webContents.send(channel, payload);
 }
 
@@ -92,6 +142,7 @@ function forwardUpdaterError(message: string): void {
   // native ShipIt validation/install flow. We must surface that back to the UI
   // or the app appears to ignore the restart action entirely.
   isQuittingForInstall = false;
+  logUpdater('error', 'Forwarding updater error to renderer', { message });
   sendToRenderer('updater:error', message, { allowDuringInstall: true });
 }
 
@@ -127,21 +178,41 @@ export function initUpdater(webContents: Electron.WebContents): void {
   bindWebContents(webContents);
 
   if (updaterInitialized) {
+    logUpdater('debug', 'Updater already initialized, rebound renderer only');
     return;
   }
 
   updaterInitialized = true;
 
+  autoUpdater.logger = updaterLogger;
   autoUpdater.autoDownload = false;
   autoUpdater.autoInstallOnAppQuit = false;
 
+  logUpdater('info', 'Initialized updater bridge', {
+    autoDownload: autoUpdater.autoDownload,
+    autoInstallOnAppQuit: autoUpdater.autoInstallOnAppQuit,
+    currentVersion: app.getVersion(),
+  });
+
+  autoUpdater.on('checking-for-update', () => {
+    logUpdater('info', 'checking-for-update');
+  });
+
   autoUpdater.on('update-available', (info: UpdateInfo) => {
+    logUpdater('info', 'update-available', {
+      version: info.version,
+      releaseDate: info.releaseDate,
+    });
     cachedAvailableUpdate = toRendererUpdateInfo(info);
     cachedReadyUpdate = null;
     sendToRenderer('updater:update-available', cachedAvailableUpdate);
   });
 
-  autoUpdater.on('update-not-available', () => {
+  autoUpdater.on('update-not-available', (info: UpdateInfo) => {
+    logUpdater('info', 'update-not-available', {
+      version: info.version,
+      currentVersion: app.getVersion(),
+    });
     if (!cachedReadyUpdate) {
       cachedAvailableUpdate = null;
     }
@@ -152,22 +223,40 @@ export function initUpdater(webContents: Electron.WebContents): void {
   });
 
   autoUpdater.on('download-progress', (progress: ProgressInfo) => {
+    logUpdater('debug', 'download-progress', {
+      percent: progress.percent,
+      transferred: progress.transferred,
+      total: progress.total,
+      bytesPerSecond: progress.bytesPerSecond,
+    });
     sendToRenderer('updater:progress', progress);
   });
 
   autoUpdater.on('update-downloaded', (info: UpdateInfo) => {
+    logUpdater('info', 'update-downloaded', {
+      version: info.version,
+      releaseDate: info.releaseDate,
+    });
     cachedReadyUpdate = toRendererUpdateInfo(info);
     cachedAvailableUpdate = cachedReadyUpdate;
     sendToRenderer('updater:ready', cachedReadyUpdate);
   });
 
   autoUpdater.on('error', (err: Error) => {
+    logUpdater('error', 'updater-error', serializeError(err));
     forwardUpdaterError(err.message);
   });
 }
 
 export async function checkForUpdates(): Promise<UpdaterCheckResult> {
+  logUpdater('info', 'checkForUpdates() requested', {
+    hasCachedReadyUpdate: !!cachedReadyUpdate,
+  });
+
   if (cachedReadyUpdate) {
+    logUpdater('info', 'checkForUpdates() returned cached ready update', {
+      version: cachedReadyUpdate.version,
+    });
     return {
       status: 'ready',
       updateInfo: cachedReadyUpdate,
@@ -178,6 +267,9 @@ export async function checkForUpdates(): Promise<UpdaterCheckResult> {
     return await new Promise<UpdaterCheckResult>((resolve, reject) => {
       const onAvailable = (info: UpdateInfo) => {
         cleanup();
+        logUpdater('info', 'checkForUpdates() resolved available', {
+          version: info.version,
+        });
         resolve({
           status: 'available',
           updateInfo: toRendererUpdateInfo(info),
@@ -186,6 +278,9 @@ export async function checkForUpdates(): Promise<UpdaterCheckResult> {
 
       const onNotAvailable = () => {
         cleanup();
+        logUpdater('info', 'checkForUpdates() resolved up-to-date', {
+          currentVersion: app.getVersion(),
+        });
         resolve({
           status: 'up-to-date',
           currentVersion: app.getVersion(),
@@ -194,6 +289,7 @@ export async function checkForUpdates(): Promise<UpdaterCheckResult> {
 
       const onError = (error: Error) => {
         cleanup();
+        logUpdater('error', 'checkForUpdates() received error event', serializeError(error));
         reject(error);
       };
 
@@ -209,24 +305,43 @@ export async function checkForUpdates(): Promise<UpdaterCheckResult> {
 
       void autoUpdater.checkForUpdates().catch(error => {
         cleanup();
+        logUpdater('error', 'checkForUpdates() promise rejected', serializeError(error));
         reject(error);
       });
     });
   } catch (error) {
+    logUpdater('error', 'checkForUpdates() failed', serializeError(error));
     throw error;
   }
 }
 
 export async function downloadUpdate(): Promise<void> {
-  await autoUpdater.downloadUpdate();
+  logUpdater('info', 'downloadUpdate() requested', {
+    version:
+      cachedAvailableUpdate?.version ?? cachedReadyUpdate?.version ?? 'unknown',
+  });
+
+  try {
+    const files = await autoUpdater.downloadUpdate();
+    logUpdater('info', 'downloadUpdate() completed', {
+      downloadedFiles: files,
+    });
+  } catch (error) {
+    logUpdater('error', 'downloadUpdate() failed', serializeError(error));
+    throw error;
+  }
 }
 
 export function quitAndInstall(): void {
   isQuittingForInstall = true;
+  logUpdater('info', 'quitAndInstall() requested', {
+    version: cachedReadyUpdate?.version ?? cachedAvailableUpdate?.version ?? null,
+  });
 
   setImmediate(() => {
     try {
       app.removeAllListeners('window-all-closed');
+      logUpdater('info', 'Calling autoUpdater.quitAndInstall()');
       autoUpdater.quitAndInstall(false, true);
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
