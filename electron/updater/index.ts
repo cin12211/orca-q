@@ -65,8 +65,12 @@ function toRendererUpdateInfo(info: UpdateInfo): RendererUpdateInfo {
   };
 }
 
-function sendToRenderer(channel: string, payload: unknown): void {
-  if (isQuittingForInstall) {
+function sendToRenderer(
+  channel: string,
+  payload: unknown,
+  options?: { allowDuringInstall?: boolean }
+): void {
+  if (isQuittingForInstall && !options?.allowDuringInstall) {
     return;
   }
 
@@ -81,6 +85,14 @@ function sendToRenderer(channel: string, payload: unknown): void {
   }
 
   webContents.send(channel, payload);
+}
+
+function forwardUpdaterError(message: string): void {
+  // macOS may emit a late updater error after quitAndInstall() begins the
+  // native ShipIt validation/install flow. We must surface that back to the UI
+  // or the app appears to ignore the restart action entirely.
+  isQuittingForInstall = false;
+  sendToRenderer('updater:error', message, { allowDuringInstall: true });
 }
 
 function bindWebContents(webContents: Electron.WebContents): void {
@@ -150,7 +162,7 @@ export function initUpdater(webContents: Electron.WebContents): void {
   });
 
   autoUpdater.on('error', (err: Error) => {
-    sendToRenderer('updater:error', err.message);
+    forwardUpdaterError(err.message);
   });
 }
 
@@ -211,10 +223,14 @@ export async function downloadUpdate(): Promise<void> {
 
 export function quitAndInstall(): void {
   isQuittingForInstall = true;
-  detachWebContentsDestroyedListener?.();
 
   setImmediate(() => {
-    app.removeAllListeners('window-all-closed');
-    autoUpdater.quitAndInstall(false, true);
+    try {
+      app.removeAllListeners('window-all-closed');
+      autoUpdater.quitAndInstall(false, true);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      forwardUpdaterError(message);
+    }
   });
 }

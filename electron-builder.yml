@@ -80,6 +80,7 @@ nsis:
 linux:
   icon: assets/logos/
   category: Development
+  maintainer: Cinny <chinhkhacnguyen29@gmail.com>
   target:
     - target: AppImage
       arch:

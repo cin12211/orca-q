@@ -121,4 +121,46 @@ describe('electron updater bridge', () => {
       releaseNotes: 'Regression fix',
     });
   });
+
+  it('forwards install-time updater errors after quitAndInstall starts', async () => {
+    const mockApp = {
+      getVersion: vi.fn(() => '1.0.46'),
+      removeAllListeners: vi.fn(),
+    };
+    const mockAutoUpdater = createMockAutoUpdater();
+
+    vi.doMock('electron', () => ({
+      app: mockApp,
+    }));
+    vi.doMock('electron-updater', () => ({
+      autoUpdater: mockAutoUpdater,
+    }));
+
+    const { initUpdater, quitAndInstall } = await loadUpdaterModule();
+    const webContents = createMockWebContents();
+
+    initUpdater(webContents as unknown as Electron.WebContents);
+    quitAndInstall();
+    await new Promise(resolve => setImmediate(resolve));
+
+    mockAutoUpdater.emit('error', new Error('ShipIt validation failed'));
+
+    expect(webContents.send).toHaveBeenCalledWith(
+      'updater:error',
+      'ShipIt validation failed'
+    );
+
+    mockAutoUpdater.emit('update-available', {
+      version: '1.0.47',
+      releaseDate: '2026-04-02T00:00:00.000Z',
+      releaseNotes: 'Retry works',
+    });
+
+    expect(webContents.send).toHaveBeenCalledWith('updater:update-available', {
+      version: '1.0.47',
+      currentVersion: '1.0.46',
+      releaseDate: '2026-04-02T00:00:00.000Z',
+      releaseNotes: 'Retry works',
+    });
+  });
 });

@@ -3,9 +3,13 @@
   "productName": "orcaq",
   "description": "The open source | Next Generation database editor",
   "homepage": "https://orca-q.com/",
-  "author": "Cinny",
+  "author": {
+    "name": "Cinny",
+    "email": "chinhkhacnguyen29@gmail.com",
+    "url": "https://github.com/cin12211"
+  },
   "license": "MIT",
-  "version": "1.0.49",
+  "version": "1.0.50",
   "main": "out/electron/main.js",
   "scripts": {
     "dev": "npm run nuxt:dev",

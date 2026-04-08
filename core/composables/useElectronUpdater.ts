@@ -86,7 +86,12 @@ const downloadedBytes = ref<number | null>(null);
 const startupPromptOpen = ref(false);
 let listenersInitialized = false;
 
-const isBusy = computed(() => isChecking.value || isDownloading.value);
+const isBusy = computed(
+  () =>
+    isChecking.value ||
+    isDownloading.value ||
+    status.value === 'restarting'
+);
 
 function toResolvedUpdateInfo(info: UpdateInfo): ResolvedUpdateInfo {
   return {
@@ -273,8 +278,11 @@ export function useElectronUpdater() {
   };
 
   const restartToApplyUpdate = async (): Promise<void> => {
+    const api = updaterAPI();
+    if (!api) return;
+
     status.value = 'restarting';
-    await updaterAPI()?.install();
+    await api.install();
   };
 
   const dismissStartupPrompt = () => {
