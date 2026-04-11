@@ -5,6 +5,10 @@ import { CommandPaletteView } from '@/components/modules/command-palette';
 import { useMigrationState } from '~/core/composables/useMigrationState';
 import ElectronUpdateStartupDialog from './components/modules/app-shell/status-bar/components/ElectronUpdateStartupDialog.vue';
 import ChangelogPopup from './components/modules/changelog/ChangelogPopup.vue';
+import {
+  StrictModeConfirmDialog,
+  useStrictModeGuardState,
+} from './components/modules/environment-tag';
 import Settings from './components/modules/settings';
 import { Toaster } from './components/ui/sonner';
 import { useAppearance } from './core/composables/useAppearance';
@@ -21,6 +25,13 @@ import { useChangelogModal } from './core/contexts/useChangelogModal';
 // AG-Grid Module registration load in plugins/00.ag-grid.client.ts
 
 // Analytics initialization load in plugins/03.analytics.client.ts
+
+const {
+  strictModeDialogOpen,
+  activeStrictModeTags,
+  confirmStrictModeDialog,
+  cancelStrictModeDialog,
+} = useStrictModeGuardState();
 
 const appLoading = useAppLoading();
 const { isLoading } = useLoadingIndicator();
@@ -78,6 +89,12 @@ onMounted(async () => {
     <Settings />
     <ChangelogPopup />
     <ElectronUpdateStartupDialog />
+    <StrictModeConfirmDialog
+      :open="strictModeDialogOpen"
+      :strict-tags="activeStrictModeTags"
+      @confirm="confirmStrictModeDialog"
+      @cancel="cancelStrictModeDialog"
+    />
     <Toaster position="top-right" :close-button="true" />
   </ClientOnly>
 </template>

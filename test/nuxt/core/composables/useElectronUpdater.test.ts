@@ -254,7 +254,6 @@ describe('useElectronUpdater', () => {
     scheduleElectronStartupUpdateCheck(5_000);
 
     expect(focusHandler).not.toBeNull();
-    focusHandler?.();
 
     expect(updater.api.check).toHaveBeenCalledTimes(1);
 

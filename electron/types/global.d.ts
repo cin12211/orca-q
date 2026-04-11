@@ -12,7 +12,8 @@ type PersistCollection =
   | 'tabViews'
   | 'quickQueryLogs'
   | 'rowQueryFiles'
-  | 'rowQueryFileContents';
+  | 'rowQueryFileContents'
+  | 'environment-tags';
 
 interface PersistFilter {
   field: string;
@@ -35,12 +36,32 @@ interface ElectronDownloadProgress {
 }
 
 interface ElectronPersistAPI {
-  getAll: <T = Record<string, unknown>>(collection: PersistCollection) => Promise<T[]>;
-  getOne: <T = Record<string, unknown>>(collection: PersistCollection, id: string) => Promise<T | null>;
-  find: <T = Record<string, unknown>>(collection: PersistCollection, filters: PersistFilter[], matchMode?: PersistMatchMode) => Promise<T[]>;
-  upsert: <T = Record<string, unknown>>(collection: PersistCollection, id: string, value: T) => Promise<T>;
-  delete: <T = Record<string, unknown>>(collection: PersistCollection, filters: PersistFilter[], matchMode?: PersistMatchMode) => Promise<T[]>;
-  replaceAll: <T = Record<string, unknown>>(collection: PersistCollection, values: T[]) => Promise<void>;
+  getAll: <T = Record<string, unknown>>(
+    collection: PersistCollection
+  ) => Promise<T[]>;
+  getOne: <T = Record<string, unknown>>(
+    collection: PersistCollection,
+    id: string
+  ) => Promise<T | null>;
+  find: <T = Record<string, unknown>>(
+    collection: PersistCollection,
+    filters: PersistFilter[],
+    matchMode?: PersistMatchMode
+  ) => Promise<T[]>;
+  upsert: <T = Record<string, unknown>>(
+    collection: PersistCollection,
+    id: string,
+    value: T
+  ) => Promise<T>;
+  delete: <T = Record<string, unknown>>(
+    collection: PersistCollection,
+    filters: PersistFilter[],
+    matchMode?: PersistMatchMode
+  ) => Promise<T[]>;
+  replaceAll: <T = Record<string, unknown>>(
+    collection: PersistCollection,
+    values: T[]
+  ) => Promise<void>;
 }
 
 interface ElectronUpdaterAPI {

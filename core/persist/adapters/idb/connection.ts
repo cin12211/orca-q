@@ -1,5 +1,6 @@
 import dayjs from 'dayjs';
 import localforage from 'localforage';
+import { toRawJSON } from '~/core/helpers';
 import type { Connection } from '../../../stores';
 import type { ConnectionPersistApi } from '../../types';
 import { quickQueryLogsIDBAdapter } from './quick-query-logs';
@@ -32,11 +33,11 @@ export const connectionIDBAdapter: ConnectionPersistApi = {
   },
 
   create: async connection => {
-    const entry: Connection = {
+    const entry: Connection = toRawJSON({
       ...connection,
       createdAt: dayjs().toISOString(),
       updatedAt: dayjs().toISOString(),
-    };
+    });
     await store.setItem(entry.id, entry);
     return entry;
   },
@@ -45,11 +46,11 @@ export const connectionIDBAdapter: ConnectionPersistApi = {
     const existing = await store.getItem<Connection>(connection.id);
     if (!existing) return null;
 
-    const updated: Connection = {
+    const updated: Connection = toRawJSON({
       ...existing,
       ...connection,
       updatedAt: dayjs().toISOString(),
-    };
+    });
     await store.setItem(updated.id, updated);
     return updated;
   },

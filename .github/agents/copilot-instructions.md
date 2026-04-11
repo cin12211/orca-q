@@ -4,6 +4,9 @@ Auto-generated from all feature plans. Last updated: 2026-03-15
 
 ## Active Technologies
 
+- TypeScript 5.x + Nuxt 3 (SPA), Vue 3 Composition API, Pinia, VeeValidate v4 + Zod, shadcn-vue, Tailwind CSS 4, localforage, Electron IPC (013-connection-env-tags)
+- Dual-platform: localforage → IndexedDB (web) | Electron IPC → native store (desktop). New collection `environment-tags` added to both. (013-connection-env-tags)
+
 - TypeScript 5.x · Vue 3.5.13 · Nuxt 3.16.2 + CodeMirror 6 (`@codemirror/view`, `@codemirror/state`), VueUse (useStorage, useKeyModifier), Hugeicons (already integrated via `nuxt-icon`/`@iconify`), `marked` (markdown rendering), Tailwind CSS v4, shadcn-vue component library (`components/ui/`), Pinia (stores) (010-ui-ux-enhancements)
 - localStorage via VueUse `useStorage` for agent thread history and app config (spaceDisplay). No server-side storage changes. (010-ui-ux-enhancements)
 
@@ -46,6 +49,8 @@ bun nuxt:build     # Production build
 - AG Grid theme changes: `themeBalham.withPart(...).withParams(...)` — no grid destruction needed
 
 ## Recent Changes
+
+- 013-connection-env-tags: Added TypeScript 5.x + Nuxt 3 (SPA), Vue 3 Composition API, Pinia, VeeValidate v4 + Zod, shadcn-vue, Tailwind CSS 4, localforage, Electron IPC
 
 - 010-ui-ux-enhancements: Added TypeScript 5.x · Vue 3.5.13 · Nuxt 3.16.2 + CodeMirror 6 (`@codemirror/view`, `@codemirror/state`), VueUse (useStorage, useKeyModifier), Hugeicons (already integrated via `nuxt-icon`/`@iconify`), `marked` (markdown rendering), Tailwind CSS v4, shadcn-vue component library (`components/ui/`), Pinia (stores)
 

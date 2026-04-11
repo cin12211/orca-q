@@ -34,6 +34,11 @@ export const SETTINGS_NAV_ITEMS: SettingsNavItem[] = [
     desktopOnly: true,
   },
   {
+    name: 'Environment Tags',
+    icon: 'hugeicons:tag-01',
+    componentKey: SettingsComponentKey.EnvironmentTagsConfig,
+  },
+  {
     name: 'Backup & Restore',
     icon: 'lucide:hard-drive-download',
     componentKey: SettingsComponentKey.BackupRestoreConfig,

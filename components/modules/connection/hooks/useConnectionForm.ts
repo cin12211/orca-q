@@ -7,6 +7,7 @@ import {
   type MaybeRefOrGetter,
 } from 'vue';
 import dayjs from 'dayjs';
+import { useEnvironmentTagStore } from '@/components/modules/environment-tag';
 import { DatabaseClientType } from '~/core/constants/database-client-type';
 import { uuidv4 } from '~/core/helpers';
 import type { Connection } from '~/core/stores';
@@ -28,7 +29,7 @@ export function useConnectionForm(props: {
 
   const step = ref<1 | 2>(1);
   const dbType = ref<DatabaseClientType | null>(DatabaseClientType.POSTGRES);
-  const connectionName = ref('my-abc-db:dev');
+  const connectionName = ref('my-abc-db');
   const connectionMethod = ref<EConnectionMethod>(EConnectionMethod.STRING);
   const connectionString = ref('');
   const formData = reactive({
@@ -55,17 +56,25 @@ export function useConnectionForm(props: {
     sshStoreInKeychain: true,
     sshUseKey: false,
   });
+  const tagIds = ref<string[]>([]);
   const testStatus = ref<'idle' | 'testing' | 'success' | 'error'>('idle');
+
+  const tagStore = useEnvironmentTagStore();
 
   const getDefaultPort = (type: DatabaseClientType | null) => {
     if (!type) return '';
     return DEFAULT_DB_PORTS[type] || '';
   };
 
+  const getDefaultTagIds = (): string[] => {
+    const devTag = tagStore.tags.find(t => t.name === 'dev');
+    return devTag ? [devTag.id] : [];
+  };
+
   const resetForm = () => {
     step.value = 1;
     dbType.value = DatabaseClientType.POSTGRES;
-    connectionName.value = 'my-abc-db:dev';
+    connectionName.value = 'my-abc-db';
     connectionMethod.value = EConnectionMethod.STRING;
     connectionString.value = '';
 
@@ -92,6 +101,7 @@ export function useConnectionForm(props: {
     formData.sshStoreInKeychain = true;
     formData.sshUseKey = false;
 
+    tagIds.value = getDefaultTagIds();
     testStatus.value = 'idle';
   };
 
@@ -184,6 +194,7 @@ export function useConnectionForm(props: {
       type: dbType.value as DatabaseClientType,
       method: connectionMethod.value,
       createdAt: editingConnection.value?.createdAt || dayjs().toISOString(),
+      tagIds: [...tagIds.value],
     };
 
     if (connectionMethod.value === EConnectionMethod.STRING) {
@@ -270,52 +281,56 @@ export function useConnectionForm(props: {
     }
   });
 
-  // Reset form when modal opens or editing connection changes
+  // Load form when modal opens — watches isOpen only so mid-session changes to
+  // editingConnection (e.g. reactive store updates) never reset the user's
+  // in-progress tag selection.
   watch(
-    () => [isOpen.value, editingConnection.value],
-    () => {
-      if (isOpen.value) {
-        if (editingConnection.value) {
-          const conn = editingConnection.value;
-          connectionName.value = conn.name;
-          dbType.value = conn.type as DatabaseClientType;
-          connectionMethod.value = conn.method;
-          connectionString.value = conn.connectionString || '';
+    isOpen,
+    open => {
+      if (!open) return;
 
-          formData.host = conn.host || '';
-          formData.port = conn.port || '';
-          formData.username = conn.username || '';
-          formData.password = conn.password || '';
-          formData.database = conn.database || '';
+      if (editingConnection.value) {
+        const conn = editingConnection.value;
+        connectionName.value = conn.name;
+        dbType.value = conn.type as DatabaseClientType;
+        connectionMethod.value = conn.method;
+        connectionString.value = conn.connectionString || '';
 
-          formData.sslEnabled = !!conn.ssl;
-          if (conn.ssl) {
-            formData.sslMode = conn.ssl.mode;
-            formData.sslCA = conn.ssl.ca || '';
-            formData.sslCert = conn.ssl.cert || '';
-            formData.sslKey = conn.ssl.key || '';
-            formData.sslRejectUnauthorized =
-              conn.ssl.rejectUnauthorized ?? true;
-          }
+        formData.host = conn.host || '';
+        formData.port = conn.port || '';
+        formData.username = conn.username || '';
+        formData.password = conn.password || '';
+        formData.database = conn.database || '';
 
-          formData.sshEnabled = !!conn.ssh?.enabled;
-          if (conn.ssh) {
-            formData.sshHost = conn.ssh.host || '';
-            formData.sshPort = conn.ssh.port || 22;
-            formData.sshUsername = conn.ssh.username || '';
-            formData.sshAuthMethod =
-              conn.ssh.authMethod || ESSHAuthMethod.PASSWORD;
-            formData.sshPassword = conn.ssh.password || '';
-            formData.sshPrivateKey = conn.ssh.privateKey || '';
-            formData.sshStoreInKeychain = conn.ssh.storeInKeychain ?? true;
-            formData.sshUseKey =
-              conn.ssh.useSshKey ?? conn.ssh.authMethod === ESSHAuthMethod.KEY;
-          }
-
-          step.value = 2;
-        } else {
-          resetForm();
+        formData.sslEnabled = !!conn.ssl;
+        if (conn.ssl) {
+          formData.sslMode = conn.ssl.mode;
+          formData.sslCA = conn.ssl.ca || '';
+          formData.sslCert = conn.ssl.cert || '';
+          formData.sslKey = conn.ssl.key || '';
+          formData.sslRejectUnauthorized = conn.ssl.rejectUnauthorized ?? true;
         }
+
+        formData.sshEnabled = !!conn.ssh?.enabled;
+        if (conn.ssh) {
+          formData.sshHost = conn.ssh.host || '';
+          formData.sshPort = conn.ssh.port || 22;
+          formData.sshUsername = conn.ssh.username || '';
+          formData.sshAuthMethod =
+            conn.ssh.authMethod || ESSHAuthMethod.PASSWORD;
+          formData.sshPassword = conn.ssh.password || '';
+          formData.sshPrivateKey = conn.ssh.privateKey || '';
+          formData.sshStoreInKeychain = conn.ssh.storeInKeychain ?? true;
+          formData.sshUseKey =
+            conn.ssh.useSshKey ?? conn.ssh.authMethod === ESSHAuthMethod.KEY;
+        }
+
+        // Defensive copy — prevents reactive proxy from being shared with the
+        // store, so picker mutations stay isolated until the user saves.
+        tagIds.value = [...(conn.tagIds ?? [])];
+        step.value = 2;
+      } else {
+        resetForm();
       }
     },
     { immediate: true }
@@ -328,6 +343,7 @@ export function useConnectionForm(props: {
     connectionMethod,
     connectionString,
     formData,
+    tagIds,
     testStatus,
     handleNext,
     handleBack,

@@ -1,4 +1,4 @@
-import { ref } from 'vue';
+import { isProxy, ref } from 'vue';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { useConnectionForm } from '~/components/modules/connection/hooks/useConnectionForm';
 import { EConnectionMethod } from '~/components/modules/connection/types';
@@ -14,6 +14,12 @@ vi.mock('~/components/modules/connection/services/connection.service', () => ({
   connectionService: {
     healthCheck: (...args: any[]) => mockHealthCheck(...args),
   },
+}));
+
+vi.mock('@/components/modules/environment-tag', () => ({
+  useEnvironmentTagStore: () => ({
+    tags: [],
+  }),
 }));
 
 // ---------------------------------------------------------------------------
@@ -363,6 +369,31 @@ describe('useConnectionForm', () => {
     expect(connection.workspaceId).toBe('ws-123');
     expect(connection.id).toBeDefined();
     expect(connection.createdAt).toBeDefined();
+  });
+
+  it('handleCreateConnection clones tagIds into a plain array', async () => {
+    mockHealthCheck.mockResolvedValue({ isConnectedSuccess: true });
+
+    const onAddNew = vi.fn();
+
+    const {
+      connectionMethod,
+      connectionString,
+      connectionName,
+      tagIds,
+      handleCreateConnection,
+    } = createForm({ onAddNew });
+
+    connectionMethod.value = EConnectionMethod.STRING;
+    connectionString.value = 'postgresql://user:pass@localhost:5432/mydb';
+    connectionName.value = 'tagged-db';
+    tagIds.value = ['tag-dev', 'tag-prod'];
+
+    await handleCreateConnection();
+
+    const connection = onAddNew.mock.calls[0][0];
+    expect(connection.tagIds).toEqual(['tag-dev', 'tag-prod']);
+    expect(isProxy(connection.tagIds)).toBe(false);
   });
 
   it('handleCreateConnection does NOT call onAddNew when health check fails', async () => {

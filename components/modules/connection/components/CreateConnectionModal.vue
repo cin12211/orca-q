@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import { Icon } from '#components';
+import { EnvTagPicker } from '@/components/modules/environment-tag';
 import { Accordion } from '@/components/ui/accordion';
 import { Button } from '@/components/ui/button';
 import {
@@ -48,6 +49,7 @@ const {
   connectionMethod,
   connectionString,
   formData,
+  tagIds,
   testStatus,
   handleNext,
   handleBack,
@@ -114,19 +116,32 @@ const databaseOptions = computed(() =>
                 </TabsTrigger>
               </TabsList>
 
-              <div class="space-y-2 mt-2">
-                <Label for="connection-name" class="flex items-center gap-2">
-                  <Icon
-                    name="hugeicons:database"
-                    class="h-3.5 w-3.5 text-muted-foreground"
+              <div class="grid grid-cols-3 gap-3 mt-2">
+                <div class="col-span-2 space-y-2">
+                  <Label for="connection-name" class="flex items-center gap-2">
+                    <Icon
+                      name="hugeicons:database"
+                      class="h-3.5 w-3.5 text-muted-foreground"
+                    />
+                    Connection Name <span class="text-destructive">*</span>
+                  </Label>
+                  <Input
+                    id="connection-name"
+                    placeholder="My Database Connection"
+                    v-model="connectionName"
                   />
-                  Connection Name <span class="text-destructive">*</span>
-                </Label>
-                <Input
-                  id="connection-name"
-                  placeholder="My Database Connection"
-                  v-model="connectionName"
-                />
+                </div>
+
+                <div class="col-span-1 space-y-2">
+                  <Label class="flex items-center gap-2">
+                    <Icon
+                      name="hugeicons:tag-01"
+                      class="h-3.5 w-3.5 text-muted-foreground"
+                    />
+                    Environment Tags
+                  </Label>
+                  <EnvTagPicker v-model="tagIds" />
+                </div>
               </div>
 
               <TabsContent value="string" class="space-y-4 pt-4">

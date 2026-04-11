@@ -3,6 +3,7 @@ import {
   agentElectronAdapter,
   appConfigElectronAdapter,
   connectionElectronAdapter,
+  environmentTagElectronAdapter,
   quickQueryLogsElectronAdapter,
   rowQueryFilesElectronAdapter,
   tabViewsElectronAdapter,
@@ -13,6 +14,7 @@ import {
   agentIDBAdapter,
   appConfigIDBAdapter,
   connectionIDBAdapter,
+  environmentTagIDBAdapter,
   quickQueryLogsIDBAdapter,
   rowQueryFilesIDBAdapter,
   tabViewsIDBAdapter,
@@ -31,6 +33,7 @@ function createIDBApis(): PersistApis {
     tabViewsApi: tabViewsIDBAdapter,
     quickQueryLogsApi: quickQueryLogsIDBAdapter,
     rowQueryFilesApi: rowQueryFilesIDBAdapter,
+    environmentTagApi: environmentTagIDBAdapter,
   };
 }
 
@@ -44,6 +47,7 @@ function createElectronApis(): PersistApis {
     tabViewsApi: tabViewsElectronAdapter,
     quickQueryLogsApi: quickQueryLogsElectronAdapter,
     rowQueryFilesApi: rowQueryFilesElectronAdapter,
+    environmentTagApi: environmentTagElectronAdapter,
   };
 }
 

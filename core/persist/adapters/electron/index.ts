@@ -1,6 +1,7 @@
 export { agentElectronAdapter } from './agent';
 export { appConfigElectronAdapter } from './app-config';
 export { connectionElectronAdapter } from './connection';
+export { environmentTagElectronAdapter } from './environmentTag';
 export { quickQueryLogsElectronAdapter } from './quick-query-logs';
 export { rowQueryFilesElectronAdapter } from './row-query-files';
 export { tabViewsElectronAdapter } from './tab-views';

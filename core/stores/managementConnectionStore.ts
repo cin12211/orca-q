@@ -22,6 +22,7 @@ export interface Connection {
   database?: string;
   ssl?: ISSLConfig;
   ssh?: ISSHConfig;
+  tagIds?: string[];
   createdAt: string;
   updatedAt?: string;
 }
@@ -46,18 +47,33 @@ export const useManagementConnectionStore = defineStore(
     );
 
     const createNewConnection = async (connection: Connection) => {
-      connections.value.push(connection);
-
-      await window.connectionApi.create(connection);
+      const created = await window.connectionApi.create(connection);
+      connections.value.push(created);
     };
 
     const updateConnection = async (connection: Connection) => {
-      await window.connectionApi.update(connection);
-      await loadPersistData();
+      const result = await window.connectionApi.update(connection);
 
-      // connections.value = connections.value.map(c =>
-      //   c.id === connection.id ? connection : c
-      // );
+      if (result) {
+        // Happy path: entry existed in IDB — update the reactive array in-place
+        const idx = connections.value.findIndex(c => c.id === connection.id);
+        if (idx !== -1) {
+          connections.value.splice(idx, 1, result);
+        } else {
+          connections.value.push(result);
+        }
+      } else {
+        // Fallback: entry was not present in IDB yet (only in memory) — create it
+        const created = await window.connectionApi.create(connection);
+        if (created) {
+          const idx = connections.value.findIndex(c => c.id === connection.id);
+          if (idx !== -1) {
+            connections.value.splice(idx, 1, created);
+          } else {
+            connections.value.push(created);
+          }
+        }
+      }
     };
 
     const onDeleteConnection = async (id: string) => {

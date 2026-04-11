@@ -102,6 +102,30 @@ export interface AgentPersistApi {
   delete(): Promise<void>;
 }
 
+export interface EnvironmentTagPersistApi {
+  getAll(): Promise<
+    import('~/components/modules/environment-tag/types/environmentTag.types').EnvironmentTag[]
+  >;
+  getOne(
+    id: string
+  ): Promise<
+    | import('~/components/modules/environment-tag/types/environmentTag.types').EnvironmentTag
+    | null
+  >;
+  create(
+    tag: import('~/components/modules/environment-tag/types/environmentTag.types').EnvironmentTag
+  ): Promise<
+    import('~/components/modules/environment-tag/types/environmentTag.types').EnvironmentTag
+  >;
+  update(
+    tag: import('~/components/modules/environment-tag/types/environmentTag.types').EnvironmentTag
+  ): Promise<
+    | import('~/components/modules/environment-tag/types/environmentTag.types').EnvironmentTag
+    | null
+  >;
+  delete(id: string): Promise<void>;
+}
+
 // ── Aggregated persist layer ─────────────────────────────────────────
 
 export interface PersistApis {
@@ -113,4 +137,5 @@ export interface PersistApis {
   tabViewsApi: TabViewsPersistApi;
   quickQueryLogsApi: QuickQueryLogsPersistApi;
   rowQueryFilesApi: RowQueryFilesPersistApi;
+  environmentTagApi: EnvironmentTagPersistApi;
 }

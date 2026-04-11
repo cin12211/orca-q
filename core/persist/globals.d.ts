@@ -7,6 +7,7 @@ import type {
   TabViewsPersistApi,
   QuickQueryLogsPersistApi,
   RowQueryFilesPersistApi,
+  EnvironmentTagPersistApi,
 } from './types';
 
 declare global {
@@ -19,5 +20,6 @@ declare global {
     tabViewsApi: TabViewsPersistApi;
     quickQueryLogsApi: QuickQueryLogsPersistApi;
     rowQueryFilesApi: RowQueryFilesPersistApi;
+    environmentTagApi: EnvironmentTagPersistApi;
   }
 }

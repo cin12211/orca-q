@@ -1,3 +1,4 @@
+import { useEnvironmentTagStore } from '@/components/modules/environment-tag';
 import { initPersist } from '~/core/persist';
 import {
   useAgentStore,
@@ -20,6 +21,7 @@ export default defineNuxtPlugin(async () => {
   const workspaceStore = useWorkspacesStore();
   const connectionStore = useManagementConnectionStore();
   const wsStateStore = useWSStateStore();
+  const envTagStore = useEnvironmentTagStore();
 
   try {
     await Promise.all([
@@ -28,6 +30,7 @@ export default defineNuxtPlugin(async () => {
       workspaceStore.loadPersistData(),
       connectionStore.loadPersistData(),
       wsStateStore.loadPersistData(),
+      envTagStore.loadTags(),
     ]);
     console.log('[Init Plugin] Essential stores hydrated.');
   } catch (error) {

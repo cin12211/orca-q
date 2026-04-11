@@ -31,17 +31,10 @@
  * ─────────────────────────────────────────────────────────────────────
  */
 import type { VersionedMigration } from '../types';
-
 // ── Import migration steps here ──────────────────────────────────────
-// (uncomment each step when the corresponding schema change ships)
-//
-// import workspaceV2 from './workspaces/v002-rename-desc';
-// import connectionV2 from './connections/v002-add-color';
+import connectionV2 from './connections/v002-add-tag-ids';
 
 // ── Master list ──────────────────────────────────────────────────────
 // The runner auto-groups by collection and sorts by version.
 
-export const ALL_MIGRATIONS: VersionedMigration[] = [
-  // workspaceV2,
-  // connectionV2,
-];
+export const ALL_MIGRATIONS: VersionedMigration[] = [connectionV2];

@@ -10,6 +10,7 @@ import {
   DialogContent,
   Icon,
 } from '#components';
+import { TagManagementContainer } from '@/components/modules/environment-tag';
 import { useSettingsModal } from '~/core/contexts/useSettingsModal';
 import { isDesktopApp } from '~/core/helpers/environment';
 import {
@@ -32,6 +33,7 @@ const SETTINGS_COMPONENTS: Record<SettingsComponentKey, Component> = {
   AppearanceConfig,
   TableAppearanceConfig,
   BackupRestoreConfig,
+  EnvironmentTagsConfig: TagManagementContainer,
 };
 
 const settingNavs = SETTINGS_NAV_ITEMS.filter(

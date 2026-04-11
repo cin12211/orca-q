@@ -3,6 +3,11 @@ import { ref } from 'vue';
 import { Tooltip, TooltipContent, TooltipTrigger } from '#components';
 import dayjs from 'dayjs';
 import {
+  EnvTagBadge,
+  useEnvironmentTagStore,
+  useStrictModeGuard,
+} from '@/components/modules/environment-tag';
+import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -27,6 +32,8 @@ import { type Connection } from '~/core/stores';
 import { getDatabaseSupportByType } from '../constants';
 
 const { openWorkspaceWithConnection } = useAppContext();
+const tagStore = useEnvironmentTagStore();
+const { checkAndConfirm } = useStrictModeGuard();
 
 defineProps<{
   connections: Connection[];
@@ -55,7 +62,10 @@ const confirmDelete = () => {
   }
 };
 
-const onConnectConnection = (connection: Connection) => {
+const onConnectConnection = async (connection: Connection) => {
+  const ok = await checkAndConfirm(connection);
+  if (!ok) return;
+
   openWorkspaceWithConnection({
     connId: connection.id,
     wsId: connection.workspaceId,
@@ -89,6 +99,7 @@ const onConnectConnection = (connection: Connection) => {
           <TableHead>Name</TableHead>
           <!-- <TableHead>Type</TableHead> -->
           <TableHead>Connection Details</TableHead>
+          <TableHead>Tags</TableHead>
           <!-- <TableHead>Created</TableHead> -->
           <TableHead class="text-right">Actions</TableHead>
         </TableRow>
@@ -163,6 +174,15 @@ const onConnectConnection = (connection: Connection) => {
             </Tooltip>
           </TableCell>
           <!-- <TableCell>{{ formatDate(connection.createdAt) }}</TableCell> -->
+          <TableCell>
+            <div class="flex flex-wrap gap-1">
+              <EnvTagBadge
+                v-for="tag in tagStore.getTagsByIds(connection.tagIds ?? [])"
+                :key="tag.id"
+                :tag="tag"
+              />
+            </div>
+          </TableCell>
           <TableCell class="text-right">
             <div class="flex items-center justify-end gap-1">
               <Button

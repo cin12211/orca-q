@@ -16,7 +16,8 @@ export type PersistCollection =
   | 'tabViews'
   | 'quickQueryLogs'
   | 'rowQueryFiles'
-  | 'rowQueryFileContents';
+  | 'rowQueryFileContents'
+  | 'environment-tags';
 
 export const PERSIST_COLLECTIONS: PersistCollection[] = [
   'appConfig',
@@ -28,6 +29,7 @@ export const PERSIST_COLLECTIONS: PersistCollection[] = [
   'quickQueryLogs',
   'rowQueryFiles',
   'rowQueryFileContents',
+  'environment-tags',
 ];
 
 // Mirror the storeName/name pairs from each individual adapter
@@ -67,6 +69,10 @@ const IDB_STORES: Record<PersistCollection, LocalForage> = {
   rowQueryFileContents: localforage.createInstance({
     name: 'rowQueryFileContentIDBStore',
     storeName: 'rowQueryFileContents',
+  }),
+  'environment-tags': localforage.createInstance({
+    name: 'environmentTagIDB',
+    storeName: 'environmentTags',
   }),
 };
 

@@ -2,6 +2,11 @@
 import { storeToRefs } from 'pinia';
 import { Select, SelectGroup, SelectItem, SelectTrigger } from '#components';
 import type { AcceptableValue } from 'reka-ui';
+import {
+  EnvTagBadge,
+  useEnvironmentTagStore,
+  useStrictModeGuard,
+} from '@/components/modules/environment-tag';
 import { cn } from '@/lib/utils';
 import { useWorkspaceConnectionRoute } from '~/core/composables/useWorkspaceConnectionRoute';
 import { useAppContext } from '~/core/contexts/useAppContext';
@@ -12,6 +17,8 @@ import { getDatabaseSupportByType } from '../connection';
 
 const { createConnection, openWorkspaceWithConnection } = useAppContext();
 const connectionStore = useManagementConnectionStore();
+const tagStore = useEnvironmentTagStore();
+const { checkAndConfirm } = useStrictModeGuard();
 
 const { connectionId: activeConnectionId } = useWorkspaceConnectionRoute();
 
@@ -26,6 +33,12 @@ const onChangeConnection = async (connectionId: AcceptableValue) => {
     typeof connectionId === 'string' &&
     connectionId !== activeConnectionId.value
   ) {
+    const connection = connectionsByWsId.value.find(c => c.id === connectionId);
+    if (connection) {
+      const ok = await checkAndConfirm(connection);
+      if (!ok) return;
+    }
+
     await openWorkspaceWithConnection({
       connId: connectionId,
       wsId: props.workspaceId,
@@ -105,7 +118,17 @@ const connectionsByWsId = computed(() => {
               :is="getDatabaseSupportByType(connection.type)?.icon"
               class="size-4!"
             />
-            {{ connection.name }}
+            <span class="truncate">{{ connection.name }}</span>
+            <div
+              v-if="(connection.tagIds ?? []).length"
+              class="flex items-center gap-1 ml-auto flex-shrink-0"
+            >
+              <EnvTagBadge
+                v-for="tag in tagStore.getTagsByIds(connection.tagIds ?? [])"
+                :key="tag.id"
+                :tag="tag"
+              />
+            </div>
           </div>
         </SelectItem>
       </SelectGroup>

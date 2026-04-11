@@ -14,7 +14,8 @@ export type PersistCollection =
   | 'tabViews'
   | 'quickQueryLogs'
   | 'rowQueryFiles'
-  | 'rowQueryFileContents';
+  | 'rowQueryFileContents'
+  | 'environment-tags';
 
 export interface PersistFilter {
   field: string;

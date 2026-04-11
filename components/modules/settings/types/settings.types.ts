@@ -8,6 +8,7 @@ export enum SettingsComponentKey {
   AppearanceConfig = 'AppearanceConfig',
   TableAppearanceConfig = 'TableAppearanceConfig',
   BackupRestoreConfig = 'BackupRestoreConfig',
+  EnvironmentTagsConfig = 'EnvironmentTagsConfig',
 }
 
 export type SettingsNavItem = {

@@ -10,6 +10,7 @@ export type {
   TabViewsPersistApi,
   QuickQueryLogsPersistApi,
   RowQueryFilesPersistApi,
+  EnvironmentTagPersistApi,
   GetTabViewsByContextProps,
   DeleteTabViewProps,
   GetQQueryLogsProps,
@@ -32,6 +33,7 @@ export const initPersist = async () => {
   window.tabViewsApi = apis.tabViewsApi;
   window.quickQueryLogsApi = apis.quickQueryLogsApi;
   window.rowQueryFilesApi = apis.rowQueryFilesApi;
+  window.environmentTagApi = apis.environmentTagApi;
 };
 
 /** @deprecated Use `initPersist` instead. Alias kept for backward compatibility. */

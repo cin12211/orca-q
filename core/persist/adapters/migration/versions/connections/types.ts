@@ -20,3 +20,10 @@ export interface ConnectionV1 {
   createdAt: string;
   updatedAt?: string;
 }
+
+/**
+ * v2 — adds tagIds array for environment tag support
+ */
+export interface ConnectionV2 extends ConnectionV1 {
+  tagIds: string[];
+}
