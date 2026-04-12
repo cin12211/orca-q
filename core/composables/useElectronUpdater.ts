@@ -4,6 +4,10 @@
  */
 import { ref, computed } from 'vue';
 import { toast } from 'vue-sonner';
+import {
+  persistGetOne,
+  persistUpsert,
+} from '~/core/persist/adapters/electron/primitives';
 
 interface UpdateInfo {
   version: string;
@@ -65,6 +69,10 @@ const isChecking = ref(false);
 const isDownloading = ref(false);
 const downloadProgress = ref(0);
 const updateInfo = ref<UpdateInfo | null>(null);
+// T004 — skip-version + stall detection state
+const skippedVersion = ref<string | null>(null);
+const isDownloadStalled = ref(false);
+let _stallTimer: ReturnType<typeof setTimeout> | null = null;
 
 const isSupported = ref(false);
 const status = ref<
@@ -87,11 +95,21 @@ const startupPromptOpen = ref(false);
 let listenersInitialized = false;
 
 const isBusy = computed(
-  () =>
-    isChecking.value ||
-    isDownloading.value ||
-    status.value === 'restarting'
+  () => isChecking.value || isDownloading.value || status.value === 'restarting'
 );
+
+// T005 — clear stall timer and reset stall state
+function clearStallTimer(): void {
+  if (_stallTimer !== null) {
+    clearTimeout(_stallTimer);
+    _stallTimer = null;
+  }
+}
+
+function resetStall(): void {
+  clearStallTimer();
+  isDownloadStalled.value = false;
+}
 
 function toResolvedUpdateInfo(info: UpdateInfo): ResolvedUpdateInfo {
   return {
@@ -117,6 +135,8 @@ function setReadyUpdate(info: UpdateInfo): void {
   readyToRestartUpdate.value = resolved;
   isDownloading.value = false;
   status.value = 'ready-to-restart';
+  // T022 — clear stall timer when download completes naturally
+  resetStall();
 }
 
 function initializeUpdaterListeners(): void {
@@ -164,6 +184,7 @@ function initializeUpdaterListeners(): void {
     }
   });
 
+  // T005 — stall detection: restart 30s timer on each progress event
   api.onProgress(progress => {
     isDownloading.value = true;
     status.value = 'downloading';
@@ -171,20 +192,21 @@ function initializeUpdaterListeners(): void {
     downloadTotalBytes.value = progress.total;
     downloadedBytes.value = progress.transferred;
     lastError.value = null;
+
+    // Reset stall on any progress
+    clearStallTimer();
+    isDownloadStalled.value = false;
+    _stallTimer = setTimeout(() => {
+      if (status.value === 'downloading') {
+        isDownloadStalled.value = true;
+      }
+    }, 30_000);
   });
 
   api.onReady(info => {
     setReadyUpdate(info);
     startupPromptOpen.value = false;
-
-    toast.success(`orcaq ${info.version} is ready to install`, {
-      description: 'Restart the app to apply the update.',
-      duration: Infinity,
-      action: {
-        label: 'Restart now',
-        onClick: () => api.install(),
-      },
-    });
+    // T021 — persistent toast removed; status bar indicator + startup dialog now own restart-ready UX
   });
 
   api.onError(msg => {
@@ -192,6 +214,8 @@ function initializeUpdaterListeners(): void {
     status.value = 'error';
     lastError.value = msg;
     console.error('[electron-updater] Download error:', msg);
+    // T022 — clear stall timer on error
+    resetStall();
     toast.error('Update failed', { description: msg });
   });
 }
@@ -220,7 +244,22 @@ export function useElectronUpdater() {
         setAvailableUpdate(result.updateInfo);
 
         if (options?.promptIfAvailable) {
-          startupPromptOpen.value = true;
+          // T010–T011 — skip-version check (T029: uses persistGetOne from primitives layer)
+          // Suppress dialog if the available version exactly matches the persisted skip.
+          // (FR-003: any other version string falls through and shows the dialog.)
+          try {
+            const record = await persistGetOne<{ version: string }>(
+              'appConfig',
+              'updater-skipped-version'
+            );
+            skippedVersion.value = record?.version ?? null;
+          } catch {
+            skippedVersion.value = null;
+          }
+
+          if (result.updateInfo.version !== skippedVersion.value) {
+            startupPromptOpen.value = true;
+          }
         }
 
         return result.updateInfo;
@@ -271,6 +310,8 @@ export function useElectronUpdater() {
   };
 
   const installUpdate = async (): Promise<void> => {
+    // T023 — close dialog immediately when download begins (FR-005)
+    startupPromptOpen.value = false;
     // electron-updater download happens first, then it is ready-to-restart
     if (status.value === 'available' || status.value === 'error') {
       await startDownload();
@@ -289,6 +330,39 @@ export function useElectronUpdater() {
     startupPromptOpen.value = false;
   };
 
+  // T006 — skip this version: persist + close prompt (T028: uses persistUpsert from primitives layer)
+  const skipVersion = async (version: string): Promise<void> => {
+    startupPromptOpen.value = false;
+    try {
+      await persistUpsert<{ version: string }>(
+        'appConfig',
+        'updater-skipped-version',
+        { version }
+      );
+      skippedVersion.value = version;
+    } catch {
+      // Silently treat as Later on persist failure (A2 resolution)
+    }
+  };
+
+  // T007 — cancel UI-level download
+  const cancelDownload = (): void => {
+    // T022 — clear stall timer on cancel
+    clearStallTimer();
+    isDownloadStalled.value = false;
+    isDownloading.value = false;
+    status.value = 'available';
+    downloadProgress.value = 0;
+  };
+
+  // T008 — retry a stalled download
+  const retryDownload = async (): Promise<void> => {
+    // T022 — clear stall timer on retry
+    clearStallTimer();
+    isDownloadStalled.value = false;
+    await startDownload();
+  };
+
   return {
     isSupported,
     status,
@@ -299,12 +373,18 @@ export function useElectronUpdater() {
     lastError,
     downloadTotalBytes,
     downloadedBytes,
+    downloadProgress,
+    isDownloadStalled,
     checkForUpdates,
     startDownload,
     installUpdate,
     restartToApplyUpdate,
     startupPromptOpen,
     dismissStartupPrompt,
+    // T009 — new API exposed
+    skipVersion,
+    cancelDownload,
+    retryDownload,
   };
 }
 

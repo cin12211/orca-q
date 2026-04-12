@@ -14,8 +14,12 @@ const {
   lastError,
   downloadTotalBytes,
   downloadedBytes,
+  downloadProgress,
+  isDownloadStalled,
   installUpdate,
   restartToApplyUpdate,
+  cancelDownload,
+  retryDownload,
 } = useElectronUpdater();
 
 const displayUpdate = computed(
@@ -55,15 +59,21 @@ const downloadProgressLabel = computed(() => {
   return `${formatBytes(downloadedBytes.value)} downloaded`;
 });
 
+// T015 — stall state included in icon selection
 const indicatorIcon = computed(() => {
   if (readyToRestartUpdate.value) return 'hugeicons:package-delivered';
+  if (status.value === 'downloading' && isDownloadStalled.value)
+    return 'hugeicons:alert-circle';
   if (status.value === 'downloading') return 'hugeicons:download-04';
   if (status.value === 'error') return 'hugeicons:alert-circle';
   return 'hugeicons:arrow-up-01';
 });
 
+// T016 — stall state gets yellow colour
 const indicatorClass = computed(() => {
   if (status.value === 'error') return 'text-destructive';
+  if (status.value === 'downloading' && isDownloadStalled.value)
+    return 'text-yellow-500';
   if (readyToRestartUpdate.value) return 'text-green-500';
   return 'text-blue-500';
 });
@@ -80,11 +90,17 @@ const indicatorClass = computed(() => {
           >
             <Icon :name="indicatorIcon" class="size-3.5!" />
             <span class="text-xxs font-medium leading-none">
-              {{
-                readyToRestartUpdate
-                  ? 'Restart to update'
-                  : `v${displayUpdate?.version}`
-              }}
+              <template v-if="readyToRestartUpdate">Restart to update</template>
+              <!-- T013/T014: show % when downloading, 'stalled' when stalled -->
+              <template
+                v-else-if="status === 'downloading' && isDownloadStalled"
+              >
+                v{{ displayUpdate?.version }} · stalled
+              </template>
+              <template v-else-if="status === 'downloading'">
+                v{{ displayUpdate?.version }} · {{ downloadProgress }}%
+              </template>
+              <template v-else>v{{ displayUpdate?.version }}</template>
             </span>
           </button>
         </TooltipTrigger>
@@ -129,6 +145,22 @@ const indicatorClass = computed(() => {
         Downloading: {{ downloadProgressLabel }}
       </p>
 
+      <!-- T017: Progress bar when actively downloading -->
+      <div
+        v-if="status === 'downloading'"
+        class="h-1.5 w-full overflow-hidden rounded-full bg-muted"
+      >
+        <div
+          class="h-full rounded-full bg-blue-500 transition-all duration-300"
+          :style="{ width: `${downloadProgress}%` }"
+        />
+      </div>
+
+      <!-- T018: Stall message + Cancel/Retry buttons -->
+      <p v-if="isDownloadStalled" class="text-xs text-yellow-500">
+        Download appears to have stalled. You can retry or cancel.
+      </p>
+
       <p
         v-if="lastError && status === 'error'"
         class="text-xs text-destructive"
@@ -141,8 +173,22 @@ const indicatorClass = computed(() => {
       </p>
 
       <div class="flex gap-2">
+        <!-- T019: Cancel + Retry when stalled -->
+        <template v-if="status === 'downloading' && isDownloadStalled">
+          <Button
+            size="sm"
+            variant="outline"
+            class="flex-1"
+            @click="cancelDownload()"
+          >
+            Cancel
+          </Button>
+          <Button size="sm" class="flex-1" @click="retryDownload()">
+            Retry
+          </Button>
+        </template>
         <Button
-          v-if="readyToRestartUpdate"
+          v-else-if="readyToRestartUpdate"
           size="sm"
           class="flex-1"
           :disabled="isBusy"

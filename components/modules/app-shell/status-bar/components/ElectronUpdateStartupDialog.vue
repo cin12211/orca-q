@@ -19,6 +19,7 @@ const {
   isBusy,
   installUpdate,
   restartToApplyUpdate,
+  skipVersion,
 } = useElectronUpdater();
 
 const displayUpdate = computed(
@@ -38,7 +39,7 @@ const handlePrimaryAction = async () => {
 </script>
 
 <template>
-  <AlertDialog :open="startupPromptOpen">
+  <AlertDialog :open="startupPromptOpen" v-if="startupPromptOpen">
     <AlertDialogContent class="border">
       <AlertDialogHeader>
         <AlertDialogTitle>
@@ -69,6 +70,15 @@ const handlePrimaryAction = async () => {
       </AlertDialogHeader>
 
       <AlertDialogFooter>
+        <!-- T012: Skip this version — leftmost, only on the download prompt (not restart-ready) -->
+        <AlertDialogCancel
+          v-if="!isRestartPrompt"
+          class="text-muted-foreground mr-auto border-0 bg-transparent shadow-none hover:bg-transparent"
+          :disabled="isBusy"
+          @click="displayUpdate && skipVersion(displayUpdate.version)"
+        >
+          Skip this version
+        </AlertDialogCancel>
         <AlertDialogCancel class="border" @click="dismissStartupPrompt()">
           Later
         </AlertDialogCancel>

@@ -72,6 +72,22 @@ function serializeError(error: unknown): Record<string, unknown> {
   };
 }
 
+/**
+ * T030 — Detect errors caused by a GitHub release tag existing
+ * but the CI build not yet having uploaded the platform YAML metadata file
+ * (e.g. latest-mac.yml, latest.yml, latest-linux.yml).
+ *
+ * In this case electron-updater emits an error with a message like:
+ *   “Cannot find latest-mac.yml GitHub release asset …”
+ *   or an HTTP 404 referencing a .yml URL.
+ *
+ * These must be silently suppressed — the user is never shown an error UI.
+ */
+function isPendingBuildError(err: Error): boolean {
+  const msg = err.message;
+  return msg.includes('.yml') && /404|not found|cannot find/i.test(msg);
+}
+
 function logUpdater(
   level: 'debug' | 'info' | 'warn' | 'error',
   message: string,
@@ -243,6 +259,16 @@ export function initUpdater(webContents: Electron.WebContents): void {
   });
 
   autoUpdater.on('error', (err: Error) => {
+    // T032 — suppress pending-build errors: GitHub has a new tag but CI hasn't
+    // finished uploading the .yml release assets. Do not forward to renderer.
+    if (isPendingBuildError(err)) {
+      logUpdater(
+        'warn',
+        'Suppressed pending-build updater error (yml not found)',
+        serializeError(err)
+      );
+      return;
+    }
     logUpdater('error', 'updater-error', serializeError(err));
     forwardUpdaterError(err.message);
   });
@@ -289,7 +315,22 @@ export async function checkForUpdates(): Promise<UpdaterCheckResult> {
 
       const onError = (error: Error) => {
         cleanup();
-        logUpdater('error', 'checkForUpdates() received error event', serializeError(error));
+        // T031 — suppress pending-build errors: resolve as up-to-date instead of
+        // rejecting. GitHub has a release tag but CI hasn't published the .yml assets.
+        if (isPendingBuildError(error)) {
+          logUpdater(
+            'warn',
+            'checkForUpdates() suppressed pending-build error (yml not found)',
+            serializeError(error)
+          );
+          resolve({ status: 'up-to-date', currentVersion: app.getVersion() });
+          return;
+        }
+        logUpdater(
+          'error',
+          'checkForUpdates() received error event',
+          serializeError(error)
+        );
         reject(error);
       };
 
@@ -305,7 +346,11 @@ export async function checkForUpdates(): Promise<UpdaterCheckResult> {
 
       void autoUpdater.checkForUpdates().catch(error => {
         cleanup();
-        logUpdater('error', 'checkForUpdates() promise rejected', serializeError(error));
+        logUpdater(
+          'error',
+          'checkForUpdates() promise rejected',
+          serializeError(error)
+        );
         reject(error);
       });
     });
@@ -335,7 +380,8 @@ export async function downloadUpdate(): Promise<void> {
 export function quitAndInstall(): void {
   isQuittingForInstall = true;
   logUpdater('info', 'quitAndInstall() requested', {
-    version: cachedReadyUpdate?.version ?? cachedAvailableUpdate?.version ?? null,
+    version:
+      cachedReadyUpdate?.version ?? cachedAvailableUpdate?.version ?? null,
   });
 
   setImmediate(() => {
