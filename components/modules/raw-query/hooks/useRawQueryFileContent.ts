@@ -4,7 +4,8 @@ import { useExplorerFileStore } from '~/core/stores';
 import { useManagementConnectionStore } from '~/core/stores/managementConnectionStore';
 
 export function useRawQueryFileContent() {
-  const { workspaceId } = useWorkspaceConnectionRoute();
+  const { workspaceId, connectionId: openedConnectionId } =
+    useWorkspaceConnectionRoute();
   const route = useRoute('workspaceId-connectionId-explorer-fileId');
   const explorerFileStore = useExplorerFileStore();
   const connectionStore = useManagementConnectionStore();
@@ -13,7 +14,8 @@ export function useRawQueryFileContent() {
     route.params.fileId as string
   );
   const fileContents = ref(cachedContent?.contents ?? '');
-  const fileVariables = ref(cachedContent?.variables ?? '');
+  const fileVariables = ref('');
+  const selectedConnectionId = ref('');
 
   const fieldDefs = ref<FieldDef[]>([]);
 
@@ -23,23 +25,44 @@ export function useRawQueryFileContent() {
     );
   });
 
+  watch(
+    () => currentFile.value?.variables,
+    variables => {
+      fileVariables.value = variables || '';
+    },
+    {
+      immediate: true,
+    }
+  );
+
   const connectionsByWsId = computed(() => {
     return connectionStore.getConnectionsByWorkspaceId(workspaceId.value);
   });
 
-  const connection = computed(() => {
+  const currentOpenedConnection = computed(() => {
     return connectionsByWsId.value.find(
-      connection => connection.id === currentFile.value?.connectionId
+      connection => connection.id === openedConnectionId.value
     );
   });
 
-  const updateFileConnection = async (connectionId: string) => {
-    if (!currentFile.value?.id) return;
+  watch(
+    [() => route.params.fileId, openedConnectionId],
+    () => {
+      selectedConnectionId.value = openedConnectionId.value;
+    },
+    {
+      immediate: true,
+    }
+  );
 
-    await explorerFileStore.updateFile({
-      id: currentFile.value.id,
-      connectionId,
-    });
+  const connection = computed(() => {
+    return connectionsByWsId.value.find(
+      connection => connection.id === selectedConnectionId.value
+    );
+  });
+
+  const updateSelectedConnection = (connectionId: string) => {
+    selectedConnectionId.value = connectionId;
   };
 
   const updateFileCursorPos = (cursorPos: { from: number; to: number }) => {
@@ -59,7 +82,6 @@ export function useRawQueryFileContent() {
     explorerFileStore.updateFileContent({
       contents: fileContentsValue,
       id: currentFile.value.id,
-      variables: fileVariables.value || '',
     });
   };
 
@@ -68,8 +90,7 @@ export function useRawQueryFileContent() {
 
     fileVariables.value = fileVariablesValue;
 
-    explorerFileStore.updateFileContent({
-      contents: fileContents.value,
+    explorerFileStore.updateFile({
       id: currentFile.value.id,
       variables: fileVariablesValue,
     });
@@ -78,11 +99,11 @@ export function useRawQueryFileContent() {
   const isFromCache = cachedContent !== null;
 
   const loadFileContent = async () => {
-    const { contents, variables } = await explorerFileStore.getFileContentById(
+    const { contents } = await explorerFileStore.getFileContentById(
       route.params.fileId as string
     );
     fileContents.value = contents;
-    fileVariables.value = variables;
+    fileVariables.value = currentFile.value?.variables || '';
   };
 
   //TODO: for edit inline table after query
@@ -100,10 +121,12 @@ export function useRawQueryFileContent() {
     fileContents,
     fileVariables,
     currentFile,
-    updateFileConnection,
+    selectedConnectionId,
+    updateSelectedConnection,
     updateFileContent,
     updateFileVariables,
     connection,
+    currentOpenedConnection,
     connectionsByWsId,
     updateFileCursorPos,
     loadFileContent,

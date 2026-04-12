@@ -12,8 +12,12 @@ export type RowQueryFile = TreeFileSystemItem;
 export interface RowQueryFileContent {
   id: string;
   contents: string;
-  variables: string;
 }
+
+const sanitizeRowQueryFile = <T extends { connectionId?: string }>(file: T) => {
+  const { connectionId: _connectionId, ...sanitized } = file;
+  return sanitized as Omit<T, 'connectionId'> & { connectionId?: never };
+};
 
 export const useExplorerFileStore = defineStore(
   'explorerFile-store',
@@ -26,10 +30,7 @@ export const useExplorerFileStore = defineStore(
 
     const flatNodes = ref<RowQueryFile[]>([]);
 
-    const contentCache = new Map<
-      string,
-      { contents: string; variables: string }
-    >();
+    const contentCache = new Map<string, { contents: string }>();
 
     const getFileContentByIdSync = (fileID: string) =>
       contentCache.get(fileID) ?? null;
@@ -39,16 +40,20 @@ export const useExplorerFileStore = defineStore(
       const index = files.findIndex(f => f.id === file.id);
       if (index === -1) return;
 
-      Object.assign(files[index], file, { updatedAt: dayjs().toString() });
+      const sanitizedFile = sanitizeRowQueryFile(file);
 
-      await window.rowQueryFilesApi.updateFile(file);
+      Object.assign(files[index], sanitizedFile, {
+        updatedAt: dayjs().toString(),
+      });
+      delete files[index].connectionId;
+
+      await window.rowQueryFilesApi.updateFile(sanitizedFile);
     };
 
     const updateFileContent = async (fileContent: RowQueryFileContent) => {
       // Keep cache in sync so the next synchronous read returns fresh data.
       contentCache.set(fileContent.id, {
         contents: fileContent.contents,
-        variables: fileContent.variables,
       });
       await window.rowQueryFilesApi.updateFileContent(fileContent);
     };
@@ -65,13 +70,17 @@ export const useExplorerFileStore = defineStore(
     };
 
     const addNode = async (file: TreeFileSystemItem) => {
-      flatNodes.value.push(file);
+      const sanitizedFile = sanitizeRowQueryFile(file) as TreeFileSystemItem;
+      flatNodes.value.push(sanitizedFile);
 
-      return await window.rowQueryFilesApi.createFiles(file);
+      return await window.rowQueryFilesApi.createFiles(sanitizedFile);
     };
 
     const updateNodes = async (files: TreeFileSystemItem[]) => {
-      const mapFile = new Map(files.map(item => [item.id, item]));
+      const sanitizedFiles = files.map(file => {
+        return sanitizeRowQueryFile(file) as TreeFileSystemItem;
+      });
+      const mapFile = new Map(sanitizedFiles.map(item => [item.id, item]));
 
       flatNodes.value = flatNodes.value.map(f => {
         const file = mapFile.get(f.id);
@@ -87,7 +96,7 @@ export const useExplorerFileStore = defineStore(
       });
 
       return await Promise.all(
-        files.map(async file => {
+        sanitizedFiles.map(async file => {
           const newFile = {
             ...file,
             updateAt: dayjs().toString(),
@@ -110,20 +119,21 @@ export const useExplorerFileStore = defineStore(
       const raw = await window.rowQueryFilesApi.getFileContentById(fileID);
       const result = {
         contents: raw?.contents || '',
-        variables: raw?.variables || '',
       };
       contentCache.set(fileID, result);
       return result;
     };
 
     const initLoadRowQuery = async (workspaceId: string) => {
-      const filesValue = await window.rowQueryFilesApi.getFilesByContext({
-        workspaceId,
-      });
+      const filesValue = (
+        await window.rowQueryFilesApi.getFilesByContext({
+          workspaceId,
+        })
+      ).map(file => sanitizeRowQueryFile(file) as RowQueryFile);
 
-      flatNodes.value = filesValue || [];
+      flatNodes.value = filesValue;
 
-      const tree = new TreeManager(filesValue || [], {
+      const tree = new TreeManager(filesValue, {
         onDelete: async nodes => {
           await deleteFiles(nodes.map(item => item.id));
         },

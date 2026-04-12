@@ -1,10 +1,12 @@
 <script setup lang="ts">
 import { LoadingOverlay } from '#components';
 import type { EditorView } from '@codemirror/view';
+import { useEnvironmentTagStore } from '@/components/modules/environment-tag';
 import BaseCodeEditor from '~/components/base/code-editor/BaseCodeEditor.vue';
 import { useHotkeys } from '~/core/composables/useHotKeys';
 import { useAppConfigStore } from '~/core/stores/appConfigStore';
 import IntroRawQuery from './components/IntroRawQuery.vue';
+import RawQueryConnectionConfirmDialog from './components/RawQueryConnectionConfirmDialog.vue';
 import RawQueryEditorContextMenu from './components/RawQueryEditorContextMenu.vue';
 import RawQueryEditorFooter from './components/RawQueryEditorFooter.vue';
 import RawQueryEditorHeader from './components/RawQueryEditorHeader.vue';
@@ -16,13 +18,16 @@ import { useRawQueryEditorContextMenu } from './hooks/useRawQueryEditorContextMe
 
 const route = useRoute('workspaceId-connectionId-explorer-fileId');
 const appConfigStore = useAppConfigStore();
+const tagStore = useEnvironmentTagStore();
 const rawQueryFileContent = useRawQueryFileContent();
 const {
   connection,
   currentFile,
+  currentOpenedConnection,
   fileContents,
   fileVariables,
-  updateFileConnection,
+  selectedConnectionId,
+  updateSelectedConnection,
   updateFileContent,
   updateFileVariables,
   connectionsByWsId,
@@ -33,6 +38,7 @@ const rawQueryEditor = useRawQueryEditor({
   connection,
   fieldDefs,
   fileVariables,
+  beforeExecute: () => requestConnectionExecutionConfirm(),
 });
 const {
   cursorInfo,
@@ -62,6 +68,57 @@ const { contextMenuItems, onContextMenuOpen } = useRawQueryEditorContextMenu({
 const scrollTop = ref(0);
 
 const showResultPanel = ref(true);
+const isConnectionExecutionConfirmOpen = ref(false);
+const executionConfirmTargetConnectionName = ref('');
+const executionConfirmCurrentConnectionName = ref('');
+let resolveConnectionExecutionConfirm: ((value: boolean) => void) | null = null;
+
+const isCurrentConnectionStrictMode = computed(() => {
+  if (!currentOpenedConnection.value) {
+    return false;
+  }
+
+  return tagStore
+    .getTagsByIds(currentOpenedConnection.value.tagIds ?? [])
+    .some(tag => tag.strictMode);
+});
+
+const requestConnectionExecutionConfirm = () => {
+  const selectedConnection = connection.value;
+  const currentConnection = currentOpenedConnection.value;
+
+  if (
+    !selectedConnection ||
+    !currentConnection ||
+    selectedConnection.id === currentConnection.id
+  ) {
+    return Promise.resolve(true);
+  }
+
+  if (isConnectionExecutionConfirmOpen.value) {
+    return Promise.resolve(false);
+  }
+
+  executionConfirmTargetConnectionName.value = selectedConnection.name;
+  executionConfirmCurrentConnectionName.value = currentConnection.name;
+  isConnectionExecutionConfirmOpen.value = true;
+
+  return new Promise<boolean>(resolve => {
+    resolveConnectionExecutionConfirm = resolve;
+  });
+};
+
+const onConfirmConnectionExecution = () => {
+  isConnectionExecutionConfirmOpen.value = false;
+  resolveConnectionExecutionConfirm?.(true);
+  resolveConnectionExecutionConfirm = null;
+};
+
+const onCancelConnectionExecution = () => {
+  isConnectionExecutionConfirmOpen.value = false;
+  resolveConnectionExecutionConfirm?.(false);
+  resolveConnectionExecutionConfirm = null;
+};
 
 useHotkeys([
   {
@@ -129,9 +186,24 @@ onActivated(async () => {
     codeEditorRef.value.editorView.scrollDOM.scrollTop = scrollTop.value;
   }
 });
+
+onBeforeUnmount(() => {
+  if (resolveConnectionExecutionConfirm) {
+    resolveConnectionExecutionConfirm(false);
+    resolveConnectionExecutionConfirm = null;
+  }
+});
 </script>
 
 <template>
+  <RawQueryConnectionConfirmDialog
+    :open="isConnectionExecutionConfirmOpen"
+    :target-connection-name="executionConfirmTargetConnectionName"
+    :current-connection-name="executionConfirmCurrentConnectionName"
+    @confirm="onConfirmConnectionExecution"
+    @cancel="onCancelConnectionExecution"
+  />
+
   <RawQueryLayout
     :layout="appConfigStore.codeEditorLayout"
     :customLayout="appConfigStore.activeCustomLayout"
@@ -141,9 +213,11 @@ onActivated(async () => {
       <div class="flex flex-col h-full p-1">
         <div class="flex flex-col h-full border rounded-md">
           <RawQueryEditorHeader
-            @update:connectionId="updateFileConnection"
+            @update:connectionId="updateSelectedConnection"
             :connections="connectionsByWsId"
             :connection="connection"
+            :selected-connection-id="selectedConnectionId"
+            :disable-connection-switch="isCurrentConnectionStrictMode"
             :workspaceId="route.params.workspaceId"
             :file-variables="fileVariables"
             :code-editor-layout="appConfigStore.codeEditorLayout"

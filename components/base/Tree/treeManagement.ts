@@ -21,6 +21,7 @@ export interface TreeFileSystemItemPersistent {
   parentId?: string;
   isFolder: boolean;
   cursorPos?: { from: number; to: number };
+  variables?: string;
   name?: string;
   parameters?: string;
 }
@@ -117,6 +118,7 @@ export class TreeManager {
         parentId,
         isFolder,
         cursorPos,
+        variables,
       } = n;
       out.push({
         id,
@@ -131,6 +133,7 @@ export class TreeManager {
         parentId,
         isFolder,
         cursorPos,
+        variables,
       });
       n.children?.forEach(pushNode);
     };
