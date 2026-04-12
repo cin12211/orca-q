@@ -17,9 +17,12 @@ const {
   availableUpdate,
   readyToRestartUpdate,
   isBusy,
+  status,
+  downloadProgress,
   installUpdate,
   restartToApplyUpdate,
   skipVersion,
+  cancelDownload,
 } = useElectronUpdater();
 
 const displayUpdate = computed(
@@ -66,13 +69,37 @@ const handlePrimaryAction = async () => {
           <p v-if="displayUpdate?.body" class="whitespace-pre-wrap text-xs">
             {{ displayUpdate.body }}
           </p>
+
+          <!-- T037: In-dialog progress when download is in flight -->
+          <div
+            v-if="status === 'downloading' && !isRestartPrompt"
+            class="flex flex-col gap-1.5 pt-1"
+          >
+            <div class="h-1.5 w-full overflow-hidden rounded-full bg-muted">
+              <div
+                class="h-full rounded-full bg-green-500 transition-all duration-300"
+                :style="{ width: `${downloadProgress}%` }"
+              />
+            </div>
+            <p class="text-xs text-muted-foreground">{{ downloadProgress }}%</p>
+          </div>
         </AlertDialogDescription>
       </AlertDialogHeader>
 
       <AlertDialogFooter>
-        <!-- T012: Skip this version — leftmost, only on the download prompt (not restart-ready) -->
+        <!-- T038: While downloading — "Cancel" (keeps dialog open, resets to available) replaces Skip -->
+        <Button
+          v-if="status === 'downloading' && !isRestartPrompt"
+          type="button"
+          variant="outline"
+          class="mr-auto"
+          @click="cancelDownload()"
+        >
+          Cancel
+        </Button>
+        <!-- T012: Skip this version — leftmost, only on the download prompt (not restart-ready, not downloading) -->
         <AlertDialogCancel
-          v-if="!isRestartPrompt"
+          v-else-if="!isRestartPrompt"
           class="text-muted-foreground mr-auto border-0 bg-transparent shadow-none hover:bg-transparent"
           :disabled="isBusy"
           @click="displayUpdate && skipVersion(displayUpdate.version)"
@@ -87,7 +114,13 @@ const handlePrimaryAction = async () => {
           :disabled="isBusy"
           @click="handlePrimaryAction"
         >
-          {{ isRestartPrompt ? 'Restart now' : 'Download update' }}
+          {{
+            status === 'downloading'
+              ? 'Downloading…'
+              : isRestartPrompt
+                ? 'Restart now'
+                : 'Download update'
+          }}
         </AlertDialogAction>
       </AlertDialogFooter>
     </AlertDialogContent>

@@ -21,6 +21,7 @@ const {
   checkForUpdates,
   installUpdate,
   restartToApplyUpdate,
+  downloadProgress,
 } = useElectronUpdater();
 const isDevBuild = import.meta.dev;
 const isElectronRuntime = isElectron();
@@ -249,10 +250,20 @@ onMounted(() => {
           </div>
 
           <div
-            v-if="downloadProgressLabel"
-            class="rounded-lg border border-dashed p-3 text-xs text-muted-foreground"
+            v-if="status === 'downloading'"
+            class="rounded-lg border border-dashed p-3 flex flex-col gap-2 text-xs text-muted-foreground"
           >
-            Download progress: {{ downloadProgressLabel }}
+            <div class="flex items-center justify-between">
+              <span>Download progress</span>
+              <span>{{ downloadProgress }}%</span>
+            </div>
+            <div class="h-1.5 w-full overflow-hidden rounded-full bg-muted">
+              <div
+                class="h-full rounded-full bg-green-500 transition-all duration-300"
+                :style="{ width: `${downloadProgress}%` }"
+              />
+            </div>
+            <p v-if="downloadProgressLabel">{{ downloadProgressLabel }}</p>
           </div>
         </template>
 

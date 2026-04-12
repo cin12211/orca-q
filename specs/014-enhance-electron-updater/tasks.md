@@ -147,6 +147,36 @@
 
 ---
 
+---
+
+## Phase 8: Bug Fixes — Progress in Dialog & Restart Action (Revision 2026-04-12)
+
+**Context**: Two behavioral issues found after initial implementation:
+
+1. **BUG-1 — Progress in startup dialog**: When the user clicks "Download update" in `ElectronUpdateStartupDialog`, the dialog closes immediately (T023 behavior), pushing users to the status bar to see progress. Users want to see download progress **within the dialog itself** — the dialog should stay open, show a live progress bar, and auto-transition to the restart-ready state when the download completes.
+
+2. **BUG-2 — Restart from status bar indicator**: The `ElectronUpdateIndicator` trigger button shows tooltip "ready — click to restart" in `ready-to-restart` state, but clicking opens a Popover instead of triggering restart. The "Restart & install" button inside the Popover is the actual action point — two clicks instead of the implied one. Users report the indicator "does nothing" when clicked.
+
+**⚠️ T023 is reverted by T034.** FR-005 ("no blocking dialog while downloading") no longer applies to the startup dialog — the startup dialog is now the **designated progress surface** for downloads initiated from it. The status bar indicator remains the non-blocking surface for all other download triggers.
+
+### Bug 1: Progress within ElectronUpdateStartupDialog
+
+- [x] T034 In `core/composables/useElectronUpdater.ts` inside `installUpdate()`, remove the line `startupPromptOpen.value = false` — the startup dialog must remain open after the user clicks "Download update" so it can display in-dialog progress. **Reverts T023.**
+- [x] T035 In `core/composables/useElectronUpdater.ts` inside the `api.onReady()` listener in `initializeUpdaterListeners()`, remove the line `startupPromptOpen.value = false` — when download completes while the dialog is open, the dialog must stay open and auto-transition to the restart-ready variant (driven by `readyToRestartUpdate` becoming truthy via `setReadyUpdate()`); when the dialog was already closed (user clicked "Later"), `startupPromptOpen.value` is already `false` so this removal is a no-op for that path.
+- [x] T036 [P] In `components/modules/app-shell/status-bar/components/ElectronUpdateStartupDialog.vue`, add `downloadProgress`, `status`, and `cancelDownload` to the `useElectronUpdater()` destructure at the top of `<script setup>`.
+- [x] T037 In `components/modules/app-shell/status-bar/components/ElectronUpdateStartupDialog.vue`, add a progress section **inside `<AlertDialogDescription>`** visible only when `status === 'downloading'` and `!isRestartPrompt`: render a `<Progress :value="downloadProgress" class="h-1.5 w-full mt-2" />` bar followed by a `<p class="text-xs text-muted-foreground">{{ downloadProgress }}%</p>` label. Wrap both in `<div v-if="status === 'downloading' && !isRestartPrompt" class="flex flex-col gap-1.5">`.
+- [x] T038 In `components/modules/app-shell/status-bar/components/ElectronUpdateStartupDialog.vue`, update the `<AlertDialogFooter>` for the `!isRestartPrompt` branch when `status === 'downloading'`: (1) replace the "Skip this version" `<AlertDialogCancel>` with a "Cancel" cancel-button calling `cancelDownload()` and using `as="button"` (no dismiss — dialog stays open and reverts to available state so user can re-choose); (2) change the primary `<AlertDialogAction>` label to `'Downloading…'` when `status === 'downloading'` (it is already disabled via `isBusy`). Use a conditional in the button text: `{{ status === 'downloading' ? 'Downloading…' : (isRestartPrompt ? 'Restart now' : 'Download update') }}`.
+
+**Checkpoint Bug 1**: Clicking "Download update" in the startup dialog keeps the dialog open → progress bar and percentage appear and update live → when download completes the dialog auto-switches to "ready to install" restart-ready variant → clicking "Restart now" applies the update. "Later" closes the dialog at any point; "Cancel" resets to available state within the dialog.
+
+### Bug 2: Direct restart action from ElectronUpdateIndicator
+
+- [x] T039 In `components/modules/app-shell/status-bar/components/ElectronUpdateIndicator.vue`, refactor the root template: wrap both the Popover and the direct-action button in a `<template v-if="hasIndicator">`, then render a `<Tooltip>` + direct `<button @click="restartToApplyUpdate()" :disabled="isBusy">` (no Popover) when `readyToRestartUpdate` is set (`v-if="readyToRestartUpdate"`), and keep the existing `<Popover>` structure in a `v-else` for all other states. The direct-action button reuses the same classes (`indicatorClass`), icon (`indicatorIcon`), and label ("Restart to update") as before. The `popoverOpen` ref and `<PopoverContent>` are untouched — they remain for the non-restart states.
+
+**Checkpoint Bug 2**: Clicking the green "Restart to update" status bar button while in `ready-to-restart` state directly calls `restartToApplyUpdate()` — the app restarts immediately without requiring a secondary click inside a Popover.
+
+---
+
 ## Dependencies
 
 ```
@@ -162,12 +192,19 @@ US4: T030 must complete before T031 and T032 (helper must exist before it can be
 T031 + T032 are independent of each other after T030.
 T033 is documentation-only and fully parallel.
 
+Bug fixes (Phase 8):
+  BUG-1: T034 + T035 must complete before T037 + T038 (composable must not close dialog before UI is updated)
+  T036 is parallel to T034 + T035 (different file: the component)
+  T037 must complete before T038 (progress UI must exist before footer is updated)
+  BUG-2: T039 is fully independent (single file, no composable changes)
+
 Parallel opportunities per story:
   Corrections: T028 + T029 parallel after T027
   US1: T010+T011 sequential, T012 single-file atomic edit
   US2: T013, T017, T018 can run in single component edit pass
   Polish: T022, T023, T025 are all in different files — run in parallel
   US4: T031 + T032 + T033 parallel after T030
+  Phase 8: T036 + T039 parallel; T034 + T035 parallel; T037 after T034+T035; T038 after T037
 ```
 
 ## Implementation Strategy
@@ -180,7 +217,9 @@ Parallel opportunities per story:
 
 **Increment 4 (this revision):** Phase 7 (US4 pending-build error suppression). Main process only, zero renderer changes.
 
-**Total task count**: 33
+**Increment 5 (this revision):** Phase 8 (Bug fixes — progress in dialog + direct restart action). Two targeted fixes; no new dependencies.
+
+**Total task count**: 39
 **Correction tasks**: 3 (T027–T029 — all in `core/composables/useElectronUpdater.ts`)
 **US1 tasks**: 3 (T010–T012)
 **US2 tasks**: 6 (T013–T018)
@@ -188,14 +227,15 @@ Parallel opportunities per story:
 **US4 tasks**: 4 (T030–T033 — all in `electron/updater/index.ts` + spec.md)
 **Foundational tasks**: 9 (T001–T009)
 **Polish tasks**: 5 (T022–T026)
-**Parallel opportunities**: T002+T003 (setup), T028+T029 (corrections), T013 (US2 import), T022+T023+T025 (polish), T031+T032+T033 (US4)
+**Bug fix tasks**: 6 (T034–T039 — composable + two components)
+**Parallel opportunities**: T002+T003 (setup), T028+T029 (corrections), T013 (US2 import), T022+T023+T025 (polish), T031+T032+T033 (US4), T036+T039 (Phase 8 parallel)
 
 ## Format Validation
 
 All tasks follow the required checklist format:
 
-- ✅ All start with `- [ ]` or `- [X]`
-- ✅ All have sequential Task IDs (T001–T033)
+- ✅ All start with `- [ ]` or `- [x]`
+- ✅ All have sequential Task IDs (T001–T039)
 - ✅ `[P]` marker present only on parallelizable tasks
 - ✅ `[USx]` label present on all user story phase tasks
 - ✅ All include exact file paths

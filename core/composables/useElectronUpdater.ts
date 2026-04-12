@@ -205,7 +205,7 @@ function initializeUpdaterListeners(): void {
 
   api.onReady(info => {
     setReadyUpdate(info);
-    startupPromptOpen.value = false;
+    // T035 — do NOT close dialog; if open, it auto-transitions to restart-ready variant via readyToRestartUpdate
     // T021 — persistent toast removed; status bar indicator + startup dialog now own restart-ready UX
   });
 
@@ -310,8 +310,7 @@ export function useElectronUpdater() {
   };
 
   const installUpdate = async (): Promise<void> => {
-    // T023 — close dialog immediately when download begins (FR-005)
-    startupPromptOpen.value = false;
+    // T034 — dialog stays open so user sees in-dialog progress (reverts T023)
     // electron-updater download happens first, then it is ready-to-restart
     if (status.value === 'available' || status.value === 'error') {
       await startDownload();
