@@ -36,7 +36,7 @@ const onTitleBarDoubleClick = async () => {
 
         <p class="text-xl font-medium">orcaq</p>
       </div>
-      {{ 'show 1.0.54 → 1.0.55' }}
+      {{ 'show 1.0.55 → 1.0.56' }}
     </div>
   </div>
 
