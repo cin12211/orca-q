@@ -102,9 +102,9 @@ const indicatorClass = computed(() => {
     </Tooltip>
 
     <!-- All other states: popover with details -->
-    <Popover v-else v-model:open="popoverOpen">
-      <PopoverTrigger as-child>
-        <Tooltip>
+    <Tooltip v-else>
+      <Popover v-model:open="popoverOpen">
+        <PopoverTrigger as-child>
           <TooltipTrigger as-child>
             <button
               class="flex items-center gap-1 px-1 rounded hover:bg-muted cursor-pointer transition-colors"
@@ -126,98 +126,104 @@ const indicatorClass = computed(() => {
           <TooltipContent>
             v{{ availableUpdate?.version }} available
           </TooltipContent>
-        </Tooltip>
-      </PopoverTrigger>
+        </PopoverTrigger>
 
-      <PopoverContent
-        class="w-80 p-4 flex flex-col gap-3"
-        align="end"
-        side="top"
-      >
-        <div class="flex flex-col gap-1">
-          <p class="text-sm font-medium">
-            Update {{ availableUpdate?.version }} is available
-          </p>
-
-          <p class="text-xs text-muted-foreground">
-            Current version: {{ displayUpdate?.currentVersion }}
-          </p>
-
-          <p v-if="formattedPublishedAt" class="text-xs text-muted-foreground">
-            Published: {{ formattedPublishedAt }}
-          </p>
-        </div>
-
-        <p
-          v-if="displayUpdate?.body"
-          class="text-xs text-muted-foreground whitespace-pre-wrap border rounded-md p-2 bg-muted/30 max-h-32 overflow-y-auto"
+        <PopoverContent
+          class="w-80 p-4 flex flex-col gap-3"
+          align="end"
+          side="top"
         >
-          {{ displayUpdate.body }}
-        </p>
+          <div class="flex flex-col gap-1">
+            <p class="text-sm font-medium">
+              Update {{ availableUpdate?.version }} is available
+            </p>
 
-        <p v-if="downloadProgressLabel" class="text-xs text-muted-foreground">
-          Downloading: {{ downloadProgressLabel }}
-        </p>
+            <p class="text-xs text-muted-foreground">
+              Current version: {{ displayUpdate?.currentVersion }}
+            </p>
 
-        <!-- T017: Progress bar when actively downloading -->
-        <div
-          v-if="status === 'downloading'"
-          class="h-1.5 w-full overflow-hidden rounded-full bg-muted"
-        >
-          <div
-            class="h-full rounded-full bg-blue-500 transition-all duration-300"
-            :style="{ width: `${downloadProgress}%` }"
-          />
-        </div>
-
-        <!-- T018: Stall message + Cancel/Retry buttons -->
-        <p v-if="isDownloadStalled" class="text-xs text-yellow-500">
-          Download appears to have stalled. You can retry or cancel.
-        </p>
-
-        <p
-          v-if="lastError && status === 'error'"
-          class="text-xs text-destructive"
-        >
-          {{ lastError }}
-        </p>
-
-        <p v-if="formattedLastCheckedAt" class="text-xs text-muted-foreground">
-          Last checked: {{ formattedLastCheckedAt }}
-        </p>
-
-        <div class="flex gap-2">
-          <!-- T019: Cancel + Retry when stalled -->
-          <template v-if="status === 'downloading' && isDownloadStalled">
-            <Button
-              size="sm"
-              variant="outline"
-              class="flex-1"
-              @click="cancelDownload()"
+            <p
+              v-if="formattedPublishedAt"
+              class="text-xs text-muted-foreground"
             >
-              Cancel
-            </Button>
-            <Button size="sm" class="flex-1" @click="retryDownload()">
-              Retry
-            </Button>
-          </template>
-          <Button
-            v-else
-            size="sm"
-            class="flex-1"
-            :disabled="isBusy || status === 'downloading'"
-            @click="installUpdate()"
+              Published: {{ formattedPublishedAt }}
+            </p>
+          </div>
+
+          <p
+            v-if="displayUpdate?.body"
+            class="text-xs text-muted-foreground whitespace-pre-wrap border rounded-md p-2 bg-muted/30 max-h-32 overflow-y-auto"
           >
-            {{
-              status === 'downloading'
-                ? 'Downloading…'
-                : status === 'error'
-                  ? 'Retry download'
-                  : 'Download update'
-            }}
-          </Button>
-        </div>
-      </PopoverContent>
-    </Popover>
+            {{ displayUpdate.body }}
+          </p>
+
+          <p v-if="downloadProgressLabel" class="text-xs text-muted-foreground">
+            Downloading: {{ downloadProgressLabel }}
+          </p>
+
+          <!-- T017: Progress bar when actively downloading -->
+          <div
+            v-if="status === 'downloading'"
+            class="h-1.5 w-full overflow-hidden rounded-full bg-muted"
+          >
+            <div
+              class="h-full rounded-full bg-blue-500 transition-all duration-300"
+              :style="{ width: `${downloadProgress}%` }"
+            />
+          </div>
+
+          <!-- T018: Stall message + Cancel/Retry buttons -->
+          <p v-if="isDownloadStalled" class="text-xs text-yellow-500">
+            Download appears to have stalled. You can retry or cancel.
+          </p>
+
+          <p
+            v-if="lastError && status === 'error'"
+            class="text-xs text-destructive"
+          >
+            {{ lastError }}
+          </p>
+
+          <p
+            v-if="formattedLastCheckedAt"
+            class="text-xs text-muted-foreground"
+          >
+            Last checked: {{ formattedLastCheckedAt }}
+          </p>
+
+          <div class="flex gap-2">
+            <!-- T019: Cancel + Retry when stalled -->
+            <template v-if="status === 'downloading' && isDownloadStalled">
+              <Button
+                size="sm"
+                variant="outline"
+                class="flex-1"
+                @click="cancelDownload()"
+              >
+                Cancel
+              </Button>
+              <Button size="sm" class="flex-1" @click="retryDownload()">
+                Retry
+              </Button>
+            </template>
+            <Button
+              v-else
+              size="sm"
+              class="flex-1"
+              :disabled="isBusy || status === 'downloading'"
+              @click="installUpdate()"
+            >
+              {{
+                status === 'downloading'
+                  ? 'Downloading…'
+                  : status === 'error'
+                    ? 'Retry download'
+                    : 'Download update'
+              }}
+            </Button>
+          </div>
+        </PopoverContent>
+      </Popover>
+    </Tooltip>
   </template>
 </template>
