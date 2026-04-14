@@ -3,7 +3,7 @@ set -e
 
 # Read version from package.json
 VERSION=$(node -p "require('./package.json').version")
-IMAGE="cinny09/orca-q"
+IMAGE="cinny09/orcaq"
 
 echo "Building version: $VERSION"
 

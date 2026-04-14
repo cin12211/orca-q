@@ -12,16 +12,48 @@ import { DatabaseClientType } from '~/core/constants/database-client-type';
 /*                                   Types                                    */
 /* -------------------------------------------------------------------------- */
 
+export type FilterSearchValue = string | number | boolean | null;
+
 export const filterSchema = z.object({
   isSelect: z.boolean().optional(),
   fieldName: z.string(),
   operator: z.string().optional(),
-  search: z.string().optional(),
+  search: z
+    .preprocess(
+      value => normalizeFilterSearchValue(value),
+      z.union([z.string(), z.number(), z.boolean(), z.null()])
+    )
+    .optional(),
 });
 
 export type FilterSchema = z.infer<typeof filterSchema>;
 
-export interface WhereResult<P extends unknown[] = (string | number | null)[]> {
+export const normalizeFilterSearchValue = (
+  value: unknown
+): FilterSearchValue | undefined => {
+  if (value === undefined) {
+    return undefined;
+  }
+
+  if (
+    value === null ||
+    typeof value === 'string' ||
+    typeof value === 'number' ||
+    typeof value === 'boolean'
+  ) {
+    return value;
+  }
+
+  if (typeof value === 'bigint') {
+    return value.toString();
+  }
+
+  return JSON.stringify(value);
+};
+
+export interface WhereResult<
+  P extends unknown[] = (string | number | boolean | null)[],
+> {
   where: string;
   params: P;
 }
@@ -34,11 +66,19 @@ export interface WhereResult<P extends unknown[] = (string | number | null)[]> {
 interface HandleArgs {
   col: string;
   op: string;
-  search: string;
+  search: FilterSearchValue;
   db: DatabaseClientType;
   nextPlaceholder: () => string;
 }
 type Handler = (a: HandleArgs) => WhereResult;
+
+const getFilterSearchText = (value: FilterSearchValue): string => {
+  if (value === null || value === undefined) {
+    return '';
+  }
+
+  return String(value);
+};
 
 // trợ giúp build placeholder
 const makePlaceholder = (db: DatabaseClientType) => (i: number) =>
@@ -58,7 +98,7 @@ const nullHandler: Handler = ({ col, op }) => ({
 });
 
 const inHandler: Handler = ({ col, op, search, nextPlaceholder }) => {
-  const list = search
+  const list = getFilterSearchText(search)
     .split(',')
     .map(v => v.trim())
     .filter(Boolean);
@@ -70,7 +110,7 @@ const inHandler: Handler = ({ col, op, search, nextPlaceholder }) => {
 
 const betweenHandler: Handler = ({ col, op, search }) => {
   return {
-    where: `${col} ${op} ${search}`,
+    where: `${col} ${op} ${getFilterSearchText(search)}`,
     params: [],
   };
 };
@@ -80,7 +120,7 @@ const likeHandler: Handler = ({ col, op, search, db, nextPlaceholder }) => {
 
   const ilike = op.toUpperCase().startsWith('ILIKE');
   const syntax = db === DatabaseClientType.POSTGRES && ilike ? 'ILIKE' : 'LIKE';
-  let value = search;
+  let value = getFilterSearchText(search);
 
   if (op.endsWith('%VALUE%')) value = `%${search}%`;
   else if (op.endsWith('%VALUE')) value = `%${search}`;
@@ -138,7 +178,7 @@ function buildAnyFieldClause({
   op,
   nextPlaceholder,
 }: {
-  search: string;
+  search: FilterSearchValue;
   columns: readonly string[];
   db: DatabaseClientType;
   op: OperatorSet;
@@ -148,7 +188,7 @@ function buildAnyFieldClause({
   const handler = handlerMap[op];
 
   const ors: string[] = [];
-  const params: (string | number | null)[] = [];
+  const params: (string | number | boolean | null)[] = [];
 
   columns.forEach(colName => {
     const col = wrapCol(colName);
@@ -189,7 +229,7 @@ export function buildWhereClause<
   composeWith?: ComposeOperator;
 }): WhereResult {
   const pieces: string[] = [];
-  const params: (string | number | null)[] = [];
+  const params: (string | number | boolean | null)[] = [];
 
   let placeholderCount = 1;
 
@@ -218,7 +258,7 @@ export function buildWhereClause<
     /* Any field → OR qua mọi cột */
     if (f.fieldName === EExtendedField.AnyField) {
       const result = buildAnyFieldClause({
-        search: f.search || '',
+        search: f.search ?? '',
         columns,
         db,
         op: f.operator as OperatorSet,
@@ -294,12 +334,16 @@ export function formatWhereClause<F extends readonly FilterSchema[]>({
   if (!where) return '';
 
   // simple literal‑encoder – good enough for logs
-  const lit = (v: string | number | null) =>
+  const lit = (v: string | number | boolean | null) =>
     v === null
       ? 'NULL'
-      : typeof v === 'number'
-        ? String(v)
-        : `'${String(v).replace(/'/g, "''")}'`;
+      : typeof v === 'boolean'
+        ? v
+          ? 'TRUE'
+          : 'FALSE'
+        : typeof v === 'number'
+          ? String(v)
+          : `'${String(v).replace(/'/g, "''")}'`;
 
   /** Postgres: $1, $2 … ・ MySQL: ? */
   if (db === DatabaseClientType.POSTGRES) {

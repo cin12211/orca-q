@@ -14,6 +14,8 @@ const { openChangelog } = useChangelogModal();
 const { openSettings } = useSettingsModal();
 const { openInstanceInsightsTab } = useTabManagement();
 const config = useRuntimeConfig();
+const ggFormLink = config.public.ggFormLink;
+const githubLink = config.public.githubLink;
 
 const { activeTab } = storeToRefs(tabViewStore);
 const { workspaceId, connectionId } = useWorkspaceConnectionRoute();
@@ -103,8 +105,34 @@ const formattedTabType = computed(() => {
 
       <Tooltip>
         <TooltipTrigger as-child>
+          <a :href="ggFormLink" target="_blank">
+            <div
+              class="flex items-center gap-0.5 justify-center hover:bg-muted rounded cursor-pointer"
+            >
+              <Icon name="hugeicons:chat-feedback-01" class="size-4!" />
+              <span class="text-xxs text-foreground"> Feedback </span>
+            </div>
+          </a>
+        </TooltipTrigger>
+        <TooltipContent> Give me Feedback </TooltipContent>
+      </Tooltip>
+      <Tooltip>
+        <TooltipTrigger as-child>
+          <a :href="githubLink" target="_blank">
+            <div
+              class="flex items-center justify-center hover:bg-muted rounded cursor-pointer"
+            >
+              <Icon name="hugeicons:github" class="size-4!" />
+            </div>
+          </a>
+        </TooltipTrigger>
+        <TooltipContent> Star us on GitHub ⭐️ </TooltipContent>
+      </Tooltip>
+
+      <Tooltip>
+        <TooltipTrigger as-child>
           <div
-            class="flex items-center gap-1 rounded hover:bg-muted cursor-pointer"
+            class="flex items-center gap-0.5 rounded hover:bg-muted cursor-pointer"
             @click="openChangelog"
           >
             <Icon name="hugeicons:git-merge" class="size-4!" />

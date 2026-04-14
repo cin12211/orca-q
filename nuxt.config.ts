@@ -79,6 +79,9 @@ export default defineNuxtConfig({
   runtimeConfig: {
     public: {
       amplitudeApiKey: process.env.NUXT_AMPLITUDE_API_KEY,
+      ggFormLink: process.env.NUXT_GG_FORM_LINK,
+      githubLink:
+        process.env.NUXT_GITHUB_LINK ?? 'https://github.com/cin12211/orca-q',
       isDev: process.env.NODE_ENV !== 'production',
       version: pkg.version,
     },

@@ -79,3 +79,4 @@ coverage
 .playwright-mcp
 
 out/
+.gitnexus

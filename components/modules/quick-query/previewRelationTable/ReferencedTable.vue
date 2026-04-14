@@ -2,11 +2,7 @@
 import { LoadingOverlay } from '#components';
 import type { FilterSchema } from '~/components/modules/quick-query/utils';
 import { useTableQueryBuilder } from '~/core/composables/useTableQueryBuilder';
-import {
-  ComposeOperator,
-  DEFAULT_QUERY_SIZE,
-  OperatorSet,
-} from '~/core/constants';
+import { ComposeOperator, DEFAULT_QUERY_SIZE } from '~/core/constants';
 import { DatabaseClientType } from '~/core/constants/database-client-type';
 import { TabViewType } from '~/core/stores';
 import { useAppConfigStore } from '~/core/stores/appConfigStore';
@@ -17,9 +13,11 @@ import QuickQueryErrorPopup from '../QuickQueryErrorPopup.vue';
 import SafeModeConfirmDialog from '../SafeModeConfirmDialog.vue';
 import { QuickQueryTabView } from '../constants';
 import {
+  useQuickQueryContextCellFilter,
   useQuickQuery,
   useQuickQueryMutation,
   useQuickQueryTableInfo,
+  useQuickQueryTabs,
   useReferencedTables,
   useSafeModeDialog,
 } from '../hooks';
@@ -176,43 +174,18 @@ const {
   onRequestSafeModeConfirm,
 });
 
-const quickQueryTabView = ref<QuickQueryTabView>(QuickQueryTabView.Data);
+const { quickQueryTabView, openedQuickQueryTab } = useQuickQueryTabs();
 
-const onAddFilterByContextCell = async () => {
-  const cellContextMenu = quickQueryTableRef.value?.cellContextMenu;
-  if (cellContextMenu) {
-    const columnName = cellContextMenu.colDef.field || '';
-    const cellValue = cellContextMenu.value;
-
-    const filter: FilterSchema = {
-      fieldName: columnName,
-      isSelect: true,
-      operator: OperatorSet.EQUAL,
-      search: cellValue as string,
-    };
-    quickQueryFilterRef.value?.insert(filters.value.length, filter);
-
-    quickQueryFilterRef?.value?.onShowSearch();
-
-    filters.value.push(filter);
-
-    onApplyNewFilter();
-  }
-};
+const { onAddFilterByContextCell } = useQuickQueryContextCellFilter({
+  quickQueryFilterRef,
+  quickQueryTableRef,
+  filters,
+  onApplyNewFilter,
+});
 
 const { isHaveRelationByFieldName } = useReferencedTables({
   schemaName: props.schemaName,
   tableName: props.tableName,
-});
-
-const openedQuickQueryTab = ref({
-  [QuickQueryTabView.Data]: true,
-  [QuickQueryTabView.Structure]: false,
-  [QuickQueryTabView.Erd]: false,
-});
-
-watch(quickQueryTabView, newQuickQueryTabView => {
-  openedQuickQueryTab.value[newQuickQueryTabView] = true;
 });
 
 useHotkeys(
