@@ -33,8 +33,16 @@
 import type { VersionedMigration } from '../types';
 // ── Import migration steps here ──────────────────────────────────────
 import connectionV2 from './connections/v002-add-tag-ids';
+import rowQueryFileContentsV1 from './rowQueryFileContents/v001-remove-variables';
+import rowQueryFilesV1 from './rowQueryFiles/v001-remove-connection-id';
+import rowQueryFilesV2 from './rowQueryFiles/v002-add-variables';
 
 // ── Master list ──────────────────────────────────────────────────────
 // The runner auto-groups by collection and sorts by version.
 
-export const ALL_MIGRATIONS: VersionedMigration[] = [connectionV2];
+export const ALL_MIGRATIONS: VersionedMigration[] = [
+  connectionV2,
+  rowQueryFileContentsV1,
+  rowQueryFilesV1,
+  rowQueryFilesV2,
+];
