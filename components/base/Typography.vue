@@ -7,11 +7,11 @@ const typographyVariants = cva(
   {
     variants: {
       type: {
-        h1: 'text-4xl     ',
-        h2: 'text-3xl     ',
-        h3: 'mt-8 text-2xl    ',
-        p: 'leading-7  ',
-        blockquote: '  italic',
+        h1: 'text-4xl',
+        h2: 'text-3xl',
+        h3: 'mt-8 text-2xl',
+        p: 'leading-7',
+        blockquote: 'italic',
       },
       font: {
         normal: 'font-normal',
@@ -38,13 +38,13 @@ const typographyVariants = cva(
   }
 );
 
-type ButtonVariants = VariantProps<typeof typographyVariants>;
+type TypographyVariants = VariantProps<typeof typographyVariants>;
 
 // Define props with VariantProps from CVA
 interface Props {
   type?: 'h1' | 'h2' | 'h3' | 'p' | 'blockquote';
-  font?: ButtonVariants['font'];
-  size?: ButtonVariants['size'];
+  font?: TypographyVariants['font'];
+  size?: TypographyVariants['size'];
 }
 
 const props = defineProps<Props>();

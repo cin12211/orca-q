@@ -17,6 +17,11 @@ const contentStore = localforage.createInstance({
   storeName: 'rowQueryFileContents',
 });
 
+const sanitizeRowQueryFile = <T extends { connectionId?: string }>(file: T) => {
+  const { connectionId: _connectionId, ...sanitized } = file;
+  return sanitized as Omit<T, 'connectionId'> & { connectionId?: never };
+};
+
 export const getAllRowQueryFileContentsFromIDB = async (): Promise<
   RowQueryFileContent[]
 > => {
@@ -35,7 +40,15 @@ export const rowQueryFilesIDBAdapter: RowQueryFilesPersistApi = {
     const keys = await fileStore.keys();
     for (const key of keys) {
       const item = await fileStore.getItem<RowQueryFile>(key);
-      if (item) all.push(item);
+      if (item) {
+        const sanitizedItem = sanitizeRowQueryFile(item) as RowQueryFile;
+
+        if (item.connectionId !== undefined) {
+          await fileStore.setItem(sanitizedItem.id, sanitizedItem);
+        }
+
+        all.push(sanitizedItem);
+      }
     }
     return all.sort(
       (a, b) => dayjs(a.createdAt).valueOf() - dayjs(b.createdAt).valueOf()
@@ -53,7 +66,11 @@ export const rowQueryFilesIDBAdapter: RowQueryFilesPersistApi = {
 
   createFiles: async fileValue => {
     const file: RowQueryFile = toRawJSON({
-      ...fileValue,
+      ...sanitizeRowQueryFile(fileValue),
+      variables:
+        fileValue.isFolder || typeof fileValue.variables === 'string'
+          ? fileValue.variables
+          : '',
       createdAt: fileValue.createdAt || dayjs().toISOString(),
     });
 
@@ -66,7 +83,6 @@ export const rowQueryFilesIDBAdapter: RowQueryFilesPersistApi = {
       const fileContent: RowQueryFileContent = {
         id: file.id,
         contents: '',
-        variables: '',
       };
       await contentStore.setItem(file.id, fileContent);
     }
@@ -79,8 +95,8 @@ export const rowQueryFilesIDBAdapter: RowQueryFilesPersistApi = {
     if (!existing) return null;
 
     const updated: RowQueryFile = toRawJSON<RowQueryFile>({
-      ...existing,
-      ...fileValue,
+      ...sanitizeRowQueryFile(existing),
+      ...sanitizeRowQueryFile(fileValue),
     });
     await fileStore.setItem(fileValue.id, updated);
     return updated;

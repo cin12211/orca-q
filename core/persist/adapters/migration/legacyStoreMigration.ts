@@ -1,3 +1,4 @@
+import { isElectron } from '../../../helpers/environment';
 import { createPersistApis } from '../../factory';
 import { getPlatformStorage } from '../../storage-adapter';
 import {
@@ -6,10 +7,52 @@ import {
   normalizeAgentState,
   normalizeAppConfigState,
 } from '../../store-state';
+import {
+  persistGetAll as electronPersistGetAll,
+  persistReplaceAll as electronPersistReplaceAll,
+} from '../electron/primitives';
+import { idbGetAll, idbReplaceAll } from '../idb/primitives';
 
 const LEGACY_APP_CONFIG_MIGRATION_FLAG = 'orcaq-legacy-app-config-migrated-v1';
 const LEGACY_AGENT_STATE_MIGRATION_FLAG =
   'orcaq-legacy-agent-state-migrated-v1';
+const ROW_QUERY_VARIABLES_MIGRATION_FLAG =
+  'orcaq-row-query-variables-migrated-v1';
+
+type RowQueryFileLegacy = {
+  id: string;
+  variables?: string;
+  [key: string]: unknown;
+};
+
+type RowQueryFileContentLegacy = {
+  id: string;
+  contents?: string;
+  variables?: string;
+  [key: string]: unknown;
+};
+
+type GetAll = <T>(
+  collection: 'rowQueryFiles' | 'rowQueryFileContents'
+) => Promise<T[]>;
+type ReplaceAll = <T extends { id: string }>(
+  collection: 'rowQueryFiles' | 'rowQueryFileContents',
+  values: T[]
+) => Promise<void>;
+
+const getPersistOps = (): { getAll: GetAll; replaceAll: ReplaceAll } => {
+  if (isElectron()) {
+    return {
+      getAll: electronPersistGetAll as GetAll,
+      replaceAll: electronPersistReplaceAll as ReplaceAll,
+    };
+  }
+
+  return {
+    getAll: idbGetAll as GetAll,
+    replaceAll: idbReplaceAll as ReplaceAll,
+  };
+};
 
 const parseJson = <T>(value: string | null): T | null => {
   if (!value) return null;
@@ -135,7 +178,61 @@ async function migrateLegacyAgentState(): Promise<void> {
   markMigrationDone(LEGACY_AGENT_STATE_MIGRATION_FLAG);
 }
 
+async function migrateRowQueryVariablesToFileMetadata(): Promise<void> {
+  if (isMigrationDone(ROW_QUERY_VARIABLES_MIGRATION_FLAG)) {
+    return;
+  }
+
+  const { getAll, replaceAll } = getPersistOps();
+  const rowQueryFiles = await getAll<RowQueryFileLegacy>('rowQueryFiles');
+  const rowQueryFileContents = await getAll<RowQueryFileContentLegacy>(
+    'rowQueryFileContents'
+  );
+
+  const hasLegacyVariables = rowQueryFileContents.some(
+    content => typeof content.variables === 'string'
+  );
+
+  if (!hasLegacyVariables) {
+    markMigrationDone(ROW_QUERY_VARIABLES_MIGRATION_FLAG);
+    return;
+  }
+
+  const variablesByFileId = new Map(
+    rowQueryFileContents
+      .filter(
+        (
+          content
+        ): content is RowQueryFileContentLegacy & { variables: string } =>
+          typeof content.variables === 'string'
+      )
+      .map(content => [content.id, content.variables])
+  );
+
+  const migratedFiles = rowQueryFiles.map(file => {
+    const migratedVariables =
+      typeof file.variables === 'string'
+        ? file.variables
+        : variablesByFileId.get(file.id) || '';
+
+    return {
+      ...file,
+      variables: migratedVariables,
+    };
+  });
+
+  const migratedContents = rowQueryFileContents.map(content => {
+    const { variables: _variables, ...rest } = content;
+    return rest;
+  });
+
+  await replaceAll('rowQueryFiles', migratedFiles);
+  await replaceAll('rowQueryFileContents', migratedContents);
+  markMigrationDone(ROW_QUERY_VARIABLES_MIGRATION_FLAG);
+}
+
 export async function runLegacyStoreMigrations(): Promise<void> {
   await migrateLegacyAppConfig();
   await migrateLegacyAgentState();
+  await migrateRowQueryVariablesToFileMetadata();
 }

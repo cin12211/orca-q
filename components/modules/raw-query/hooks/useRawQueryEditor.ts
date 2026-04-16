@@ -16,10 +16,12 @@ export function useRawQueryEditor({
   fileVariables,
   connection,
   fieldDefs,
+  beforeExecute,
 }: {
   fileVariables: Ref<string>;
   connection: Ref<Connection | undefined>;
   fieldDefs: Ref<FieldDef[]>;
+  beforeExecute?: () => Promise<boolean>;
 }) {
   const codeEditorRef = ref<InstanceType<typeof BaseCodeEditor> | null>(null);
 
@@ -43,6 +45,7 @@ export function useRawQueryEditor({
     fieldDefs,
     resultTabs,
     buildExplainAnalyzePrefix,
+    beforeExecute,
   });
 
   const sqlEditor = useSqlEditorExtensions({
