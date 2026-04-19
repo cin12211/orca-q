@@ -1,4 +1,4 @@
-import type { TabView } from '../../../stores';
+import type { TabView } from '../../../types/entities';
 import type {
   DeleteTabViewProps,
   GetTabViewsByContextProps,
@@ -18,7 +18,10 @@ export const tabViewsElectronAdapter: TabViewsPersistApi = {
     return persistGetAll<TabView>('tabViews');
   },
 
-  getByContext: async ({ workspaceId, connectionId }: GetTabViewsByContextProps) => {
+  getByContext: async ({
+    workspaceId,
+    connectionId,
+  }: GetTabViewsByContextProps) => {
     return persistFind<TabView>(
       'tabViews',
       [
@@ -44,15 +47,19 @@ export const tabViewsElectronAdapter: TabViewsPersistApi = {
   delete: async (props: DeleteTabViewProps) => {
     const filters: PersistFilter[] = [];
     if (props.id) filters.push({ field: 'id', value: props.id });
-    if (props.connectionId) filters.push({ field: 'connectionId', value: props.connectionId });
-    if (props.schemaId) filters.push({ field: 'schemaId', value: props.schemaId });
+    if (props.connectionId)
+      filters.push({ field: 'connectionId', value: props.connectionId });
+    if (props.schemaId)
+      filters.push({ field: 'schemaId', value: props.schemaId });
 
     const deleted = await persistDelete<TabView>('tabViews', filters, 'all');
     return deleted[0] || null;
   },
 
   bulkDelete: async propsArray => {
-    const groups = await Promise.all(propsArray.map(props => tabViewsElectronAdapter.delete(props)));
+    const groups = await Promise.all(
+      propsArray.map(props => tabViewsElectronAdapter.delete(props))
+    );
     return groups.filter(Boolean) as TabView[];
   },
 };

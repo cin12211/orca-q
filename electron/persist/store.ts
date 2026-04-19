@@ -1,4 +1,17 @@
-import Store from 'electron-store';
+import {
+  workspaceSQLiteStorage,
+  connectionSQLiteStorage,
+  workspaceStateSQLiteStorage,
+  tabViewSQLiteStorage,
+  quickQueryLogSQLiteStorage,
+  rowQueryFileSQLiteFileAdapter,
+  rowQueryFileSQLiteContentAdapter,
+  environmentTagSQLiteStorage,
+  appConfigSQLiteStorage,
+  agentStateSQLiteStorage,
+  queryBuilderStateSQLiteStorage,
+  migrationStateSQLiteStorage,
+} from './entities';
 
 export type PersistCollection =
   | 'appConfig'
@@ -9,7 +22,10 @@ export type PersistCollection =
   | 'tabViews'
   | 'quickQueryLogs'
   | 'rowQueryFiles'
-  | 'rowQueryFileContents';
+  | 'rowQueryFileContents'
+  | 'environment-tags'
+  | 'query_builder_states'
+  | 'migrationState';
 
 export type RecordValue = Record<string, unknown>;
 
@@ -20,45 +36,39 @@ export interface PersistFilter {
 
 export type PersistMatchMode = 'all' | 'any';
 
-const COLLECTION_FILE_NAMES: Record<PersistCollection, string> = {
-  appConfig: 'app-config',
-  agentState: 'agent-state',
-  workspaces: 'workspaces',
-  workspaceState: 'workspace-state',
-  connections: 'connections',
-  tabViews: 'tab-views',
-  quickQueryLogs: 'quick-query-logs',
-  rowQueryFiles: 'row-query-files',
-  rowQueryFileContents: 'row-query-file-contents',
-};
+// Minimal adapter interface used internally by generic store functions
+interface StorageAdapter {
+  getMany(): Promise<RecordValue[]>;
+  getOne(id: string): Promise<RecordValue | null>;
+  upsert(entity: RecordValue): Promise<RecordValue>;
+  delete(id: string): Promise<RecordValue | null>;
+}
 
-type CollectionStore = Store<{ records: RecordValue[] }>;
-
-// Cache store instances to avoid unnecessary re-creation
-const storeCache = new Map<PersistCollection, CollectionStore>();
-
-function getStore(collection: PersistCollection): CollectionStore {
-  if (!storeCache.has(collection)) {
-    // electron-store v11 uses a different constructor approach
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const store = new (Store as any)({
-      name: COLLECTION_FILE_NAMES[collection],
-      defaults: { records: [] },
-    }) as CollectionStore;
-    storeCache.set(collection, store);
+function getAdapter(collection: PersistCollection): StorageAdapter | null {
+  switch (collection) {
+    case 'workspaces':
+      return workspaceSQLiteStorage as unknown as StorageAdapter;
+    case 'workspaceState':
+      return workspaceStateSQLiteStorage as unknown as StorageAdapter;
+    case 'connections':
+      return connectionSQLiteStorage as unknown as StorageAdapter;
+    case 'tabViews':
+      return tabViewSQLiteStorage as unknown as StorageAdapter;
+    case 'quickQueryLogs':
+      return quickQueryLogSQLiteStorage as unknown as StorageAdapter;
+    case 'rowQueryFiles':
+      return rowQueryFileSQLiteFileAdapter as unknown as StorageAdapter;
+    case 'rowQueryFileContents':
+      return rowQueryFileSQLiteContentAdapter as unknown as StorageAdapter;
+    case 'environment-tags':
+      return environmentTagSQLiteStorage as unknown as StorageAdapter;
+    case 'query_builder_states':
+      return queryBuilderStateSQLiteStorage as unknown as StorageAdapter;
+    case 'migrationState':
+      return migrationStateSQLiteStorage as unknown as StorageAdapter;
+    default:
+      return null;
   }
-  return storeCache.get(collection)!;
-}
-
-function getRecords(collection: PersistCollection): RecordValue[] {
-  const store = getStore(collection);
-  // electron-store v11: use store.store.records or store.get('records')
-  return (store as unknown as { store: { records: RecordValue[] } }).store.records ?? [];
-}
-
-function setRecords(collection: PersistCollection, records: RecordValue[]): void {
-  const store = getStore(collection);
-  (store as unknown as { store: { records: RecordValue[] } }).store = { records };
 }
 
 function matchesFilters(
@@ -67,82 +77,134 @@ function matchesFilters(
   matchMode: PersistMatchMode
 ): boolean {
   if (filters.length === 0) return false;
-
-  const results = filters.map(f => {
-    const val = record[f.field];
-    return JSON.stringify(val) === JSON.stringify(f.value);
-  });
-
+  const results = filters.map(
+    f => JSON.stringify(record[f.field]) === JSON.stringify(f.value)
+  );
   return matchMode === 'all' ? results.every(Boolean) : results.some(Boolean);
 }
 
-// ─── Public API (mirrors persist.rs commands exactly) ────────────────────────
+// ─── Public API (mirrors existing function signatures exactly) ────────────────
 
-export function persistGetAll(collection: PersistCollection): RecordValue[] {
-  return getRecords(collection);
+export async function persistGetAll(
+  collection: PersistCollection
+): Promise<RecordValue[]> {
+  if (collection === 'appConfig')
+    return [(await appConfigSQLiteStorage.get()) as unknown as RecordValue];
+  if (collection === 'agentState')
+    return [(await agentStateSQLiteStorage.get()) as unknown as RecordValue];
+  if (collection === 'migrationState') {
+    const record = await migrationStateSQLiteStorage.get();
+    return record ? [record as unknown as RecordValue] : [];
+  }
+  return getAdapter(collection)!.getMany();
 }
 
-export function persistGetOne(
+export async function persistGetOne(
   collection: PersistCollection,
   id: string
-): RecordValue | null {
-  return getRecords(collection).find(r => r['id'] === id) ?? null;
+): Promise<RecordValue | null> {
+  if (collection === 'appConfig')
+    return appConfigSQLiteStorage.get() as unknown as Promise<RecordValue>;
+  if (collection === 'agentState')
+    return agentStateSQLiteStorage.get() as unknown as Promise<RecordValue>;
+  return getAdapter(collection)!.getOne(id);
 }
 
-export function persistFind(
+export async function persistFind(
   collection: PersistCollection,
   filters: PersistFilter[],
   matchMode: PersistMatchMode
-): RecordValue[] {
-  return getRecords(collection).filter(r => matchesFilters(r, filters, matchMode));
+): Promise<RecordValue[]> {
+  const all = await persistGetAll(collection);
+  return all.filter(r => matchesFilters(r, filters, matchMode));
 }
 
-export function persistUpsert(
+export async function persistUpsert(
   collection: PersistCollection,
   id: string,
   value: RecordValue
-): RecordValue {
-  const records = getRecords(collection);
-  const normalized = { ...value, id };
-  const index = records.findIndex(r => r['id'] === id);
-
-  if (index >= 0) {
-    records[index] = normalized;
-  } else {
-    records.push(normalized);
+): Promise<RecordValue> {
+  if (collection === 'appConfig') {
+    await appConfigSQLiteStorage.save(value as never);
+    return { ...value, id };
   }
-
-  setRecords(collection, records);
-  return normalized;
+  if (collection === 'agentState') {
+    await agentStateSQLiteStorage.save(value as never);
+    return { ...value, id };
+  }
+  return getAdapter(collection)!.upsert({ ...value, id });
 }
 
-export function persistDelete(
+export async function persistDelete(
   collection: PersistCollection,
   filters: PersistFilter[],
   matchMode: PersistMatchMode
-): RecordValue[] {
-  const records = getRecords(collection);
-  const deleted: RecordValue[] = [];
-  const retained: RecordValue[] = [];
+): Promise<RecordValue[]> {
+  const all = await persistGetAll(collection);
+  const matching = all.filter(r => matchesFilters(r, filters, matchMode));
+  if (matching.length === 0) return [];
 
-  for (const record of records) {
-    if (matchesFilters(record, filters, matchMode)) {
-      deleted.push(record);
-    } else {
-      retained.push(record);
-    }
+  if (collection === 'appConfig') {
+    await appConfigSQLiteStorage.deleteConfig();
+    return matching;
+  }
+  if (collection === 'agentState') {
+    await agentStateSQLiteStorage.deleteState();
+    return matching;
   }
 
-  if (deleted.length > 0) {
-    setRecords(collection, retained);
-  }
-
-  return deleted;
+  const adapter = getAdapter(collection)!;
+  await Promise.all(matching.map(r => adapter.delete(r['id'] as string)));
+  return matching;
 }
 
-export function persistReplaceAll(
+export async function persistReplaceAll(
   collection: PersistCollection,
   values: RecordValue[]
-): void {
-  setRecords(collection, values);
+): Promise<void> {
+  if (collection === 'appConfig') {
+    if (values.length > 0)
+      await appConfigSQLiteStorage.save(values[0] as never);
+    return;
+  }
+  if (collection === 'agentState') {
+    if (values.length > 0)
+      await agentStateSQLiteStorage.save(values[0] as never);
+    return;
+  }
+  if (collection === 'migrationState') {
+    if (values.length > 0)
+      await migrationStateSQLiteStorage.save(
+        ((values[0] as Record<string, unknown>)['names'] as string[]) ?? []
+      );
+    else await migrationStateSQLiteStorage.clear();
+    return;
+  }
+  if (collection === 'environment-tags') {
+    await environmentTagSQLiteStorage.replaceAll(values as never);
+    return;
+  }
+
+  // Generic: clear all, then upsert each
+  const adapter = getAdapter(collection)!;
+  const existing = await adapter.getMany();
+  await Promise.all(existing.map(r => adapter.delete(r['id'] as string)));
+  await Promise.all(values.map(v => adapter.upsert(v)));
+}
+
+export async function persistGetAllPaginated(
+  collection: PersistCollection,
+  page: number,
+  pageSize: number
+): Promise<{
+  data: RecordValue[];
+  total: number;
+  page: number;
+  pageSize: number;
+}> {
+  const all = await persistGetAll(collection);
+  const total = all.length;
+  const start = (page - 1) * pageSize;
+  const data = all.slice(start, start + pageSize);
+  return { data, total, page, pageSize };
 }

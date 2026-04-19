@@ -11,6 +11,7 @@ import {
   isBackupJsonFile,
   useDataImport,
 } from '../../hooks/useDataImport';
+import IncompatibleBackupDialog from './IncompatibleBackupDialog.vue';
 
 type RestoreDataPanelLayout = 'modal' | 'inline';
 type SuccessActionMode = 'reset' | 'emit';
@@ -26,7 +27,7 @@ const props = withDefaults(
     layout: 'inline',
     successActionLabel: 'Dismiss',
     successActionMode: 'reset',
-    jsonPlaceholder: '{"version":1,"persist":{...}}',
+    jsonPlaceholder: '{"persist":{...}}',
   }
 );
 
@@ -37,6 +38,8 @@ const {
   error,
   success,
   progress,
+  showIncompatibleDialog,
+  incompatibleMigrations,
   importFromFile,
   importFromText,
   reset,
@@ -404,4 +407,9 @@ defineExpose({
       <span>{{ error }}</span>
     </div>
   </div>
+
+  <IncompatibleBackupDialog
+    v-model:open="showIncompatibleDialog"
+    :unknown-migrations="incompatibleMigrations"
+  />
 </template>

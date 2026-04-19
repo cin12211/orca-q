@@ -2,6 +2,8 @@ appId: com.cinny.orcaq
 productName: orcaq
 copyright: Copyright © 2025–2026 Cinny. All rights reserved.
 
+nativeRebuilder: sequential
+
 directories:
   output: out/packages
   buildResources: build

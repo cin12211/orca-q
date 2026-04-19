@@ -11,10 +11,9 @@
  * pg_dump output format
  * - plain: Plain SQL script (.sql)
  * - custom: Custom compressed format (.dump) - supports pg_restore
- * - directory: Directory format - enables parallel dump
  * - tar: Tar archive format (.tar)
  */
-export type ExportFormat = 'plain' | 'custom' | 'directory' | 'tar';
+export type ExportFormat = 'plain' | 'custom' | 'tar';
 
 /**
  * Export scope options
@@ -51,9 +50,6 @@ export interface ExportOptions {
 
   /** Add CREATE DATABASE statement */
   createDb?: boolean;
-
-  /** Number of parallel jobs (directory format only) */
-  jobs?: number;
 }
 
 // ============================================================================

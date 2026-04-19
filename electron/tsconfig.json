@@ -3,9 +3,17 @@
     "target": "ES2022",
     "module": "CommonJS",
     "moduleResolution": "node",
-    "lib": ["ES2022"],
-    "outDir": "../out/electron",
-    "rootDir": ".",
+    "lib": [
+      "ES2022"
+    ],
+    "outDir": "../out",
+    "rootDir": "..",
+    "baseUrl": "..",
+    "paths": {
+      "~/*": [
+        "./*"
+      ]
+    },
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
@@ -13,6 +21,10 @@
     "sourceMap": true,
     "declaration": false
   },
-  "include": ["./**/*.ts"],
-  "exclude": ["node_modules"]
+  "include": [
+    "./**/*.ts"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
 }

@@ -17,8 +17,11 @@ export type PersistCollection =
   | 'quickQueryLogs'
   | 'rowQueryFiles'
   | 'rowQueryFileContents'
-  | 'environment-tags';
+  | 'environment-tags'
+  | 'migrationState';
 
+// QB state is intentionally excluded: it uses localStorage directly (not IDB),
+// so it is not part of the app data export/import flow.
 export const PERSIST_COLLECTIONS: PersistCollection[] = [
   'appConfig',
   'agentState',
@@ -30,6 +33,7 @@ export const PERSIST_COLLECTIONS: PersistCollection[] = [
   'rowQueryFiles',
   'rowQueryFileContents',
   'environment-tags',
+  'migrationState',
 ];
 
 // Mirror the storeName/name pairs from each individual adapter
@@ -73,6 +77,10 @@ const IDB_STORES: Record<PersistCollection, LocalForage> = {
   'environment-tags': localforage.createInstance({
     name: 'environmentTagIDB',
     storeName: 'environmentTags',
+  }),
+  migrationState: localforage.createInstance({
+    name: 'migrationStateIDB',
+    storeName: 'migrationState',
   }),
 };
 

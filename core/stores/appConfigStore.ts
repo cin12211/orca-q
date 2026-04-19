@@ -25,6 +25,7 @@ import {
   normalizeAppConfigState,
   type AppConfigPersistedState,
 } from '~/core/persist/store-state';
+import { createStorageApis } from '~/core/storage';
 
 const DEFAULT_APP_LAYOUT_SIZE = [25, 50, 25];
 
@@ -35,6 +36,7 @@ const initBodyLayout = [100, 0];
 const DEFAULT_BODY_LAYOUT_SIZE = [100, 25];
 
 export const useAppConfigStore = defineStore('app-config-store', () => {
+  const storageApis = createStorageApis();
   const isHydratingPersist = ref(false);
   const hasLoadedPersist = ref(false);
 
@@ -335,14 +337,14 @@ export const useAppConfigStore = defineStore('app-config-store', () => {
   };
 
   const persistState = useDebounceFn(async (state: AppConfigPersistedState) => {
-    await window.appConfigApi.save(state);
+    await storageApis.appConfigStorage.save(state);
   }, 120);
 
   const loadPersistData = async () => {
     isHydratingPersist.value = true;
 
     try {
-      const persisted = await window.appConfigApi.get();
+      const persisted = await storageApis.appConfigStorage.get();
       if (persisted) {
         applyPersistedState(persisted);
       }

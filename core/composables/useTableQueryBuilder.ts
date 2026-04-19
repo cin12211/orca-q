@@ -13,6 +13,7 @@ import {
   DEFAULT_QUERY_SIZE,
 } from '~/core/constants';
 import { DatabaseClientType } from '~/core/constants/database-client-type';
+import { LocalStorageManager } from '~/core/persist/LocalStorageManager';
 import { useQuickQueryLogs, type Connection } from '~/core/stores';
 
 export interface OrderBy {
@@ -250,7 +251,12 @@ export const useTableQueryBuilder = ({
   };
 
   const getPersistedKey = () => {
-    return `${workspaceId?.value}-${connectionId?.value}-${schemaName}-${tableName}`;
+    return LocalStorageManager.queryBuilderKey(
+      workspaceId?.value ?? '',
+      connectionId?.value ?? '',
+      schemaName,
+      tableName
+    );
   };
 
   watch(
@@ -266,8 +272,8 @@ export const useTableQueryBuilder = ({
         persistedKey,
         JSON.stringify({
           filters: filters.value,
-          pagination,
-          orderBy,
+          pagination: { ...pagination },
+          orderBy: { ...orderBy },
           isShowFilters: isShowFilters.value,
           composeWith: composeWith.value,
         })
@@ -292,7 +298,16 @@ export const useTableQueryBuilder = ({
 
     const persistedKey = getPersistedKey();
 
-    const persistedState = localStorage.getItem(persistedKey);
+    const raw = localStorage.getItem(persistedKey);
+    const persistedState = raw
+      ? (JSON.parse(raw) as {
+          filters?: typeof filters.value;
+          pagination?: { limit: number; offset: number };
+          orderBy?: { columnName?: string; order?: 'ASC' | 'DESC' };
+          isShowFilters?: boolean;
+          composeWith?: typeof composeWith.value;
+        })
+      : null;
 
     if (persistedState) {
       const {
@@ -301,7 +316,7 @@ export const useTableQueryBuilder = ({
         orderBy: _orderBy,
         isShowFilters: _isShowFilters,
         composeWith: _composeWith,
-      } = JSON.parse(persistedState);
+      } = persistedState;
 
       if (_orderBy) {
         orderBy.columnName = _orderBy.columnName;

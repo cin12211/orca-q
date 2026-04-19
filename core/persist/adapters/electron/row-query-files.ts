@@ -1,9 +1,9 @@
 import dayjs from 'dayjs';
-import { toRawJSON } from '~/core/helpers';
+import { toRawJSON } from '~/core/helpers/jsonFormat';
 import type {
   RowQueryFile,
   RowQueryFileContent,
-} from '../../../stores/useExplorerFileStore';
+} from '../../../types/entities';
 import type { RowQueryFilesPersistApi } from '../../types';
 import {
   persistDelete,

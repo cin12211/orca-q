@@ -1,6 +1,8 @@
 import { app, BrowserWindow, session } from 'electron';
 import path from 'node:path';
 import { registerAllIpcHandlers } from './ipc';
+import { getDB } from './persist/db';
+import { runMigrations } from './persist/migration/runner';
 import { initUpdater } from './updater';
 import { spawnSidecar, killSidecar } from './utils/sidecar';
 
@@ -87,6 +89,8 @@ async function bootstrap(): Promise<void> {
       return;
     }
   }
+
+  await runMigrations(getDB());
 
   const initialWindow = createWindow(serverUrl);
   attachMainWindow(initialWindow);

@@ -9,7 +9,7 @@ import type {
   UserModelMessage,
 } from 'ai';
 import type { DatabaseClientType } from '~/core/constants';
-import type { Schema } from '~/core/stores';
+import type { Schema } from '~/core/types';
 
 // ─── Shared tool name enum (FE + BE) ─────────────────────────────────────────
 export const AgentToolName = {

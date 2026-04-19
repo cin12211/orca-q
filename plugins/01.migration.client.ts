@@ -3,7 +3,7 @@
  *
  * Responsibilities:
  *  1. Warm the platform KV cache so schema version reads are synchronous.
- *  2. Run all pending schema-version migrations.
+ *  2. Run all pending migrations via the unified class-based runner.
  *  3. Expose migration progress via `useMigrationState` so the `MigrationScreen`
  *     component can show a blocking loading screen while work is in progress.
  *
@@ -12,9 +12,7 @@
  * for edge cases (hot-reload in dev, future deferred-init patterns).
  */
 import { useMigrationState } from '~/core/composables/useMigrationState';
-import { runSchemaMigrations } from '~/core/persist/adapters/migration';
-import { runLegacyStoreMigrations } from '~/core/persist/adapters/migration/legacyStoreMigration';
-import { ALL_MIGRATIONS } from '~/core/persist/adapters/migration/versions';
+import { runMigrations } from '~/core/persist/migration';
 import { initPlatformStorage } from '~/core/persist/storage-adapter';
 
 export default defineNuxtPlugin(async () => {
@@ -25,18 +23,16 @@ export default defineNuxtPlugin(async () => {
     // 1. Warm the KV cache so storage reads are synchronous from this point on.
     await initPlatformStorage();
 
-    // 2. Copy legacy store data into the new persist collections once.
-    await runLegacyStoreMigrations();
-
-    // 3. Apply any pending schema migrations.
-    await runSchemaMigrations(ALL_MIGRATIONS, {
-      onStep: step => migration.progress(step),
+    // 2. Run all migrations (schema + legacy store) via the unified class-based runner.
+    await runMigrations({
+      onStep: name =>
+        migration.progress({ collection: name, version: 0, description: name }),
     });
 
     migration.done();
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
-    console.error('[Plugin:migration] Schema migration failed:', message);
+    console.error('[Plugin:migration] Migration failed:', message);
     migration.fail(message);
     // Do NOT rethrow — let the app mount so the error state is visible.
   }

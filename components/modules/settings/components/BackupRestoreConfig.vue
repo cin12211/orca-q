@@ -69,7 +69,7 @@ const { isExporting, exportProgress, exportData } = useDataExport();
 
       <RestoreDataPanel
         layout="inline"
-        json-placeholder='Paste your backup JSON here…  {"version":1,"persist":{...}}'
+        json-placeholder='Paste your backup JSON here…  {"persist":{...}}'
       />
     </div>
 

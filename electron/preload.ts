@@ -12,7 +12,9 @@ type PersistCollection =
   | 'tabViews'
   | 'quickQueryLogs'
   | 'rowQueryFiles'
-  | 'rowQueryFileContents';
+  | 'rowQueryFileContents'
+  | 'environment-tags'
+  | 'query_builder_states';
 
 interface PersistFilter {
   field: string;
@@ -54,6 +56,17 @@ const electronAPI = {
       collection: PersistCollection,
       values: Record<string, unknown>[]
     ) => ipcRenderer.invoke('persist:replace-all', { collection, values }),
+
+    getAllPaginated: (
+      collection: PersistCollection,
+      page: number,
+      pageSize: number
+    ) =>
+      ipcRenderer.invoke('persist:get-all-paginated', {
+        collection,
+        page,
+        pageSize,
+      }),
   },
 
   updater: {

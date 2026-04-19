@@ -1,5 +1,5 @@
 import dayjs from 'dayjs';
-import type { Connection } from '../../../stores';
+import type { Connection } from '../../../types/entities';
 import type { ConnectionPersistApi } from '../../types';
 import {
   persistDelete,
@@ -39,7 +39,10 @@ export const connectionElectronAdapter: ConnectionPersistApi = {
   },
 
   update: async connection => {
-    const existing = await persistGetOne<Connection>('connections', connection.id);
+    const existing = await persistGetOne<Connection>(
+      'connections',
+      connection.id
+    );
     if (!existing) return null;
 
     const updated: Connection = {
@@ -58,8 +61,16 @@ export const connectionElectronAdapter: ConnectionPersistApi = {
     );
 
     if (deleted.length) {
-      await persistDelete('tabViews', [{ field: 'connectionId', value: id }], 'all');
-      await persistDelete('quickQueryLogs', [{ field: 'connectionId', value: id }], 'all');
+      await persistDelete(
+        'tabViews',
+        [{ field: 'connectionId', value: id }],
+        'all'
+      );
+      await persistDelete(
+        'quickQueryLogs',
+        [{ field: 'connectionId', value: id }],
+        'all'
+      );
     }
 
     return deleted[0] || null;

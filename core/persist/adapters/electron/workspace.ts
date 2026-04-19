@@ -1,5 +1,5 @@
 import dayjs from 'dayjs';
-import type { Workspace } from '../../../stores';
+import type { Workspace } from '../../../types/entities';
 import type { WorkspacePersistApi } from '../../types';
 import {
   persistDelete,
@@ -52,8 +52,16 @@ export const workspaceElectronAdapter: WorkspacePersistApi = {
     const workspace = deleted[0] || null;
     if (!workspace) return null;
 
-    await persistDelete('connections', [{ field: 'workspaceId', value: id }], 'all');
-    await persistDelete('tabViews', [{ field: 'workspaceId', value: id }], 'all');
+    await persistDelete(
+      'connections',
+      [{ field: 'workspaceId', value: id }],
+      'all'
+    );
+    await persistDelete(
+      'tabViews',
+      [{ field: 'workspaceId', value: id }],
+      'all'
+    );
     await rowQueryFilesElectronAdapter.deleteFileByWorkspaceId({ wsId: id });
     await workspaceStateElectronAdapter.delete(id);
     await quickQueryLogsElectronAdapter.delete({ workspaceId: id });

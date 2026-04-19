@@ -1,5 +1,5 @@
 import dayjs from 'dayjs';
-import type { WorkspaceState } from '../../../stores/useWSStateStore';
+import type { WorkspaceState } from '../../../types/entities';
 import type { WorkspaceStatePersistApi } from '../../types';
 import {
   persistDelete,
@@ -22,7 +22,10 @@ export const workspaceStateElectronAdapter: WorkspaceStatePersistApi = {
   },
 
   update: async wsState => {
-    const current = await persistGetOne<WorkspaceState>('workspaceState', wsState.id);
+    const current = await persistGetOne<WorkspaceState>(
+      'workspaceState',
+      wsState.id
+    );
     if (!current) return null;
 
     const entry: WorkspaceState = {

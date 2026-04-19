@@ -1,4 +1,7 @@
+import { LocalStorageManager, LocalStorageKey } from './LocalStorageManager';
 import { createPersistApis } from './factory';
+
+export { LocalStorageManager, LocalStorageKey };
 
 export type { PersistApis } from './types';
 export type {

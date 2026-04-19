@@ -1,10 +1,7 @@
-import type { Connection, TabView, Workspace } from '../stores';
-import type {
-  RowQueryFile,
-  RowQueryFileContent,
-} from '../stores/useExplorerFileStore';
-import type { QuickQueryLog } from '../stores/useQuickQueryLogs';
-import type { WorkspaceState } from '../stores/useWSStateStore';
+import type { Connection, TabView, Workspace } from '../types/entities';
+import type { RowQueryFile, RowQueryFileContent } from '../types/entities';
+import type { QuickQueryLog } from '../types/entities';
+import type { WorkspaceState } from '../types/entities';
 import type {
   AgentPersistedState,
   AppConfigPersistedState,
@@ -101,6 +98,10 @@ export interface AgentPersistApi {
   save(state: AgentPersistedState): Promise<AgentPersistedState>;
   delete(): Promise<void>;
 }
+
+// ── QueryBuilderState ────────────────────────────────────────────────
+// QB state is persisted directly in localStorage by useTableQueryBuilder.
+// No API layer needed.
 
 export interface EnvironmentTagPersistApi {
   getAll(): Promise<

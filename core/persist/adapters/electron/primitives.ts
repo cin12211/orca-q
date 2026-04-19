@@ -3,7 +3,7 @@
  * All calls go through window.electronAPI.persist (contextBridge).
  */
 import dayjs from 'dayjs';
-import { toRawJSON } from '~/core/helpers';
+import { toRawJSON } from '~/core/helpers/jsonFormat';
 
 export type PersistCollection =
   | 'appConfig'
@@ -15,7 +15,8 @@ export type PersistCollection =
   | 'quickQueryLogs'
   | 'rowQueryFiles'
   | 'rowQueryFileContents'
-  | 'environment-tags';
+  | 'environment-tags'
+  | 'migrationState';
 
 export interface PersistFilter {
   field: string;

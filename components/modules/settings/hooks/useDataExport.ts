@@ -4,16 +4,8 @@ import { persistGetAll as electronPersistGetAll } from '~/core/persist/adapters/
 import { idbGetAll } from '~/core/persist/adapters/idb/primitives';
 import { PERSIST_COLLECTIONS } from '~/core/persist/adapters/idb/primitives';
 import type { PersistCollection } from '~/core/persist/adapters/idb/primitives';
-import { useAgentStore } from '~/core/stores/agentStore';
-
-export interface BackupData {
-  version: number;
-  exportedAt: string;
-  persist: Record<PersistCollection, unknown[]>;
-  agent: {
-    histories: unknown[];
-  };
-}
+import { getApplied } from '~/core/persist/migration';
+import { createBackupData, snapshotLocalStorage } from './backupData';
 
 async function collectIdbData(
   onStep: (done: number, total: number) => void
@@ -47,9 +39,7 @@ export function useDataExport() {
     isExporting.value = true;
     exportProgress.value = 0;
     try {
-      const agentStore = useAgentStore();
-
-      // Collections = N steps, agent = 1 step, serialize+download = 1 step
+      // Collections = N steps, serialize+download = 1 step
       const onStep = (done: number, total: number) => {
         // 0–85% for data collection
         exportProgress.value = Math.round((done / total) * 85);
@@ -59,16 +49,13 @@ export function useDataExport() {
         ? await collectElectronData(onStep)
         : await collectIdbData(onStep);
 
-      exportProgress.value = 90; // agent step
+      exportProgress.value = 90;
 
-      const backup: BackupData = {
-        version: 1,
-        exportedAt: new Date().toISOString(),
+      const backup = createBackupData(
         persist,
-        agent: {
-          histories: JSON.parse(JSON.stringify(agentStore.histories.value)),
-        },
-      };
+        await getApplied(),
+        snapshotLocalStorage()
+      );
 
       const json = JSON.stringify(backup, null, 2);
       const blob = new Blob([json], { type: 'application/json' });

@@ -3,6 +3,7 @@ import { ref } from 'vue';
 import { reorder } from '@atlaskit/pragmatic-drag-and-drop/reorder';
 import type { RouteNameFromPath, RoutePathSchema } from '@typed-router/__paths';
 import { useWorkspaceConnectionRoute } from '~/core/composables/useWorkspaceConnectionRoute';
+import { createStorageApis } from '~/core/storage';
 import { useWSStateStore } from './useWSStateStore';
 
 export enum TabViewType {
@@ -94,6 +95,7 @@ export type TabView = {
 export const useTabViewsStore = defineStore(
   'tab-views',
   () => {
+    const storageApis = createStorageApis();
     const wsStateStore = useWSStateStore();
     const { workspaceId, connectionId } = useWorkspaceConnectionRoute();
     const { tabViewId } = storeToRefs(wsStateStore);
@@ -179,7 +181,7 @@ export const useTabViewsStore = defineStore(
     };
 
     const deletePersistedTab = async (tab: TabView) => {
-      await window.tabViewsApi.delete(getDeletePayload(tab));
+      await storageApis.tabViewStorage.deleteByProps(getDeletePayload(tab));
     };
 
     const deletePersistedTabs = async (tabs: TabView[]) => {
@@ -187,7 +189,9 @@ export const useTabViewsStore = defineStore(
         return;
       }
 
-      await window.tabViewsApi.bulkDelete(tabs.map(getDeletePayload));
+      await storageApis.tabViewStorage.bulkDeleteByProps(
+        tabs.map(getDeletePayload)
+      );
     };
 
     const getAdjacentTabOnClose = (tabId: string) => {
@@ -240,7 +244,7 @@ export const useTabViewsStore = defineStore(
       if (!tabExists) {
         tabViews.value.push(tabTmp);
 
-        await window.tabViewsApi.create(tabTmp);
+        await storageApis.tabViewStorage.create(tabTmp);
         await onSetTabId(tab.id);
       }
     };
@@ -338,11 +342,11 @@ export const useTabViewsStore = defineStore(
         return;
       }
 
-      const load = await window.tabViewsApi.getByContext({
+      const load = await storageApis.tabViewStorage.getByContext({
         connectionId: connectionId.value,
         workspaceId: workspaceId.value,
       });
-      tabViews.value = load ?? [];
+      tabViews.value = (load ?? []) as TabView[];
     };
 
     // loadPersistData();

@@ -7,6 +7,7 @@ import {
 } from '~/components/modules/connection';
 import { useWorkspaceConnectionRoute } from '~/core/composables/useWorkspaceConnectionRoute';
 import { DatabaseClientType } from '~/core/constants/database-client-type';
+import { createStorageApis } from '~/core/storage';
 
 export interface Connection {
   workspaceId: string;
@@ -30,6 +31,7 @@ export interface Connection {
 export const useManagementConnectionStore = defineStore(
   'management-connection',
   () => {
+    const storageApis = createStorageApis();
     const { workspaceId, connectionId } = useWorkspaceConnectionRoute();
 
     const connections = ref<Connection[]>([]);
@@ -47,12 +49,12 @@ export const useManagementConnectionStore = defineStore(
     );
 
     const createNewConnection = async (connection: Connection) => {
-      const created = await window.connectionApi.create(connection);
+      const created = await storageApis.connectionStorage.create(connection);
       connections.value.push(created);
     };
 
     const updateConnection = async (connection: Connection) => {
-      const result = await window.connectionApi.update(connection);
+      const result = await storageApis.connectionStorage.update(connection);
 
       if (result) {
         // Happy path: entry existed in IDB — update the reactive array in-place
@@ -64,7 +66,7 @@ export const useManagementConnectionStore = defineStore(
         }
       } else {
         // Fallback: entry was not present in IDB yet (only in memory) — create it
-        const created = await window.connectionApi.create(connection);
+        const created = await storageApis.connectionStorage.create(connection);
         if (created) {
           const idx = connections.value.findIndex(c => c.id === connection.id);
           if (idx !== -1) {
@@ -77,7 +79,7 @@ export const useManagementConnectionStore = defineStore(
     };
 
     const onDeleteConnection = async (id: string) => {
-      await window.connectionApi.delete(id);
+      await storageApis.connectionStorage.delete(id);
       await loadPersistData();
 
       // connections.value = connections.value.filter(c => c.id !== id);
@@ -90,7 +92,7 @@ export const useManagementConnectionStore = defineStore(
     };
 
     const loadPersistData = async () => {
-      const load = await window.connectionApi.getAll();
+      const load = await storageApis.connectionStorage.getAll();
       connections.value = load;
     };
 

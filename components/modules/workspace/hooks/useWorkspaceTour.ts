@@ -5,6 +5,7 @@ import { driver } from 'driver.js';
 import 'driver.js/dist/driver.css';
 import { useChangelogModal } from '~/core/contexts/useChangelogModal';
 import { uuidv4 } from '~/core/helpers';
+import { LocalStorageKey } from '~/core/persist/LocalStorageManager';
 import { getPlatformStorage } from '~/core/persist/storage-adapter';
 import { DEFAULT_WORKSPACE_ICON } from '../constants';
 
@@ -22,7 +23,7 @@ export function useWorkspaceTour({
   onSelectWorkspace: (id: string) => void;
 }) {
   const hasSeenTour = useStorage(
-    'orcaq-has-seen-tour',
+    LocalStorageKey.HAS_SEEN_TOUR,
     false,
     getPlatformStorage()
   );

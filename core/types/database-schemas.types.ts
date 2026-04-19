@@ -62,3 +62,15 @@ export interface SchemaMetaData {
   table_details: TableDetails | null;
   view_details: ViewDetails | null;
 }
+
+export interface Schema {
+  id: string;
+  connectionId: string;
+  workspaceId: string;
+  name: string;
+  tableDetails?: TableDetails | null;
+  tables: string[];
+  views: ViewSchema[];
+  viewDetails?: ViewDetails | null;
+  functions: FunctionSchema[];
+}

@@ -3,6 +3,7 @@ import {
   persistDelete,
   persistFind,
   persistGetAll,
+  persistGetAllPaginated,
   persistGetOne,
   persistReplaceAll,
   persistUpsert,
@@ -20,8 +21,10 @@ export function registerPersistHandlers(): void {
 
   ipcMain.handle(
     'persist:get-one',
-    (_event, { collection, id }: { collection: PersistCollection; id: string }) =>
-      persistGetOne(collection, id)
+    (
+      _event,
+      { collection, id }: { collection: PersistCollection; id: string }
+    ) => persistGetOne(collection, id)
   );
 
   ipcMain.handle(
@@ -84,5 +87,21 @@ export function registerPersistHandlers(): void {
         values: Record<string, unknown>[];
       }
     ) => persistReplaceAll(collection, values)
+  );
+
+  ipcMain.handle(
+    'persist:get-all-paginated',
+    (
+      _event,
+      {
+        collection,
+        page,
+        pageSize,
+      }: {
+        collection: PersistCollection;
+        page: number;
+        pageSize: number;
+      }
+    ) => persistGetAllPaginated(collection, page, pageSize)
   );
 }

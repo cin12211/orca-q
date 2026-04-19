@@ -12,6 +12,7 @@ import type {
 } from '~/core/types';
 import type {
   FunctionSchema,
+  Schema,
   TableDetailMetadata,
   TableDetails,
   ViewSchema,
@@ -20,17 +21,7 @@ import type {
 import type { Connection } from './managementConnectionStore';
 import { useWSStateStore } from './useWSStateStore';
 
-export interface Schema {
-  id: string;
-  connectionId: string;
-  workspaceId: string;
-  name: string;
-  tableDetails?: TableDetails | null;
-  tables: string[];
-  views: ViewSchema[];
-  viewDetails?: ViewDetails | null;
-  functions: FunctionSchema[];
-}
+export type { Schema };
 
 export const PUBLIC_SCHEMA_ID = 'public';
 

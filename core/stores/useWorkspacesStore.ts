@@ -2,6 +2,7 @@ import { defineStore } from 'pinia';
 import { ref } from 'vue';
 import dayjs from 'dayjs';
 import { useWorkspaceConnectionRoute } from '~/core/composables/useWorkspaceConnectionRoute';
+import { createStorageApis } from '~/core/storage';
 
 export interface Workspace {
   id: string;
@@ -16,6 +17,7 @@ export interface Workspace {
 export const useWorkspacesStore = defineStore(
   'workspaces',
   () => {
+    const storageApis = createStorageApis();
     const { workspaceId } = useWorkspaceConnectionRoute();
 
     const workspaces = ref<Workspace[]>([]);
@@ -27,13 +29,13 @@ export const useWorkspacesStore = defineStore(
     });
 
     const createWorkspace = async (workspace: Workspace) => {
-      await window.workspaceApi.create(workspace);
+      await storageApis.workspaceStorage.create(workspace);
 
       workspaces.value.push(workspace);
     };
 
     const updateWorkspace = async (workspace: Workspace) => {
-      await window.workspaceApi.update(workspace);
+      await storageApis.workspaceStorage.update(workspace);
       await loadPersistData();
     };
 
@@ -52,13 +54,13 @@ export const useWorkspacesStore = defineStore(
     };
 
     const deleteWorkspace = async (workspaceId: string) => {
-      await window.workspaceApi.delete(workspaceId);
+      await storageApis.workspaceStorage.delete(workspaceId);
       await loadPersistData();
     };
 
     const loadPersistData = async () => {
       console.time('loadPersistData');
-      const load = await window.workspaceApi.getAll();
+      const load = await storageApis.workspaceStorage.getAll();
 
       workspaces.value = load;
       console.timeEnd('loadPersistData');

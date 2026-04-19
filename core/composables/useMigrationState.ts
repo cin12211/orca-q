@@ -1,5 +1,5 @@
 import { computed, ref } from 'vue';
-import type { MigrationStepInfo } from '../persist/adapters/migration/types';
+import type { MigrationStepInfo } from '../persist/migration';
 
 export type MigrationPhase = 'pending' | 'running' | 'done' | 'error';
 

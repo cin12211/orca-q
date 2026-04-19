@@ -3,6 +3,7 @@ import { ref } from 'vue';
 import dayjs from 'dayjs';
 import { useWorkspaceConnectionRoute } from '~/core/composables/useWorkspaceConnectionRoute';
 import { uuidv4 } from '~/core/helpers';
+import { createStorageApis } from '~/core/storage';
 
 export interface QuickQueryLog {
   connectionId: string;
@@ -21,6 +22,7 @@ export interface QuickQueryLog {
 export const useQuickQueryLogs = defineStore(
   'quick-query-logs',
   () => {
+    const storageApis = createStorageApis();
     const { workspaceId, connectionId } = useWorkspaceConnectionRoute();
 
     const qqLogs = ref<QuickQueryLog[]>([]);
@@ -70,7 +72,7 @@ export const useQuickQueryLogs = defineStore(
         createdAt: dayjs().toISOString(),
         id: uuidv4(),
       };
-      await window.quickQueryLogsApi.create(logTmp);
+      await storageApis.quickQueryLogStorage.create(logTmp);
       qqLogs.value.push(logTmp);
     };
 
@@ -86,7 +88,7 @@ export const useQuickQueryLogs = defineStore(
         return;
       }
 
-      await window.quickQueryLogsApi.delete({
+      await storageApis.quickQueryLogStorage.delete({
         connectionId: connectionId.value,
         tableName,
         schemaName,
@@ -101,14 +103,14 @@ export const useQuickQueryLogs = defineStore(
         return;
       }
 
-      await window.quickQueryLogsApi.delete({
+      await storageApis.quickQueryLogStorage.delete({
         connectionId: connectionId.value,
       });
       await loadPersistData(connectionId.value);
     };
 
     const loadPersistData = async (connectionId: string) => {
-      const load = await window.quickQueryLogsApi.getByContext({
+      const load = await storageApis.quickQueryLogStorage.getByContext({
         connectionId: connectionId,
       });
 

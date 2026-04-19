@@ -1,7 +1,9 @@
 import type { FieldDef } from 'pg';
-import type { RowData } from '~/components/base/dynamic-table/utils';
-import type { Connection } from '~/core/stores';
 import type { DatabaseDriverError } from '~/core/types';
+import type { Connection } from '~/core/types/entities';
+
+// Defined inline to avoid importing from dynamic-table utils which has browser API dependencies
+type RowData = { [key: string]: unknown };
 
 export interface MappedRawColumn {
   isPrimaryKey: boolean;

@@ -9,6 +9,7 @@ import {
   normalizeAgentState,
   type AgentPersistedState,
 } from '~/core/persist/store-state';
+import { createStorageApis } from '~/core/storage';
 
 // ── Private helpers ──────────────────────────────────────────────────
 
@@ -56,6 +57,7 @@ const sanitizeHistorySession = (
 // ── Global singleton state ───────────────────────────────────────────
 
 export const useAgentStore = createGlobalState(() => {
+  const storageApis = createStorageApis();
   const isHydratingPersist = ref(false);
   const hasLoadedPersist = ref(false);
 
@@ -204,14 +206,14 @@ export const useAgentStore = createGlobalState(() => {
   };
 
   const persistState = useDebounceFn(async (state: AgentPersistedState) => {
-    await window.agentApi.save(state);
+    await storageApis.agentStorage.save(state);
   }, 120);
 
   const loadPersistData = async () => {
     isHydratingPersist.value = true;
 
     try {
-      const persisted = await window.agentApi.get();
+      const persisted = await storageApis.agentStorage.get();
       if (persisted) {
         applyPersistedState(persisted);
       }

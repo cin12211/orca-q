@@ -52,12 +52,12 @@ bun nuxt:build     # Production build
 - AG Grid theme changes: `themeBalham.withPart(...).withParams(...)` — no grid destruction needed
 
 ## Recent Changes
+- 021-standardize-storage-layer: Added TypeScript 5.x
 
 - 014-enhance-electron-updater: Added TypeScript 5.x (Electron main process + Nuxt 3 / Vue 3 renderer) + Electron 30+, electron-updater 6.x, Vue 3 Composition API, Pinia, shadcn-vue component library, vue-sonner (toast)
 
 - 013-connection-env-tags: Added TypeScript 5.x + Nuxt 3 (SPA), Vue 3 Composition API, Pinia, VeeValidate v4 + Zod, shadcn-vue, Tailwind CSS 4, localforage, Electron IPC
 
-- 010-ui-ux-enhancements: Added TypeScript 5.x · Vue 3.5.13 · Nuxt 3.16.2 + CodeMirror 6 (`@codemirror/view`, `@codemirror/state`), VueUse (useStorage, useKeyModifier), Hugeicons (already integrated via `nuxt-icon`/`@iconify`), `marked` (markdown rendering), Tailwind CSS v4, shadcn-vue component library (`components/ui/`), Pinia (stores)
 
 <!-- MANUAL ADDITIONS START -->
 <!-- MANUAL ADDITIONS END -->

@@ -1,6 +1,6 @@
 import type { DatabaseError } from 'pg';
 import { DatabaseClientType } from '~/core/constants/database-client-type';
-import type { NormalizationError } from '~/core/helpers';
+import type { NormalizationError } from '~/core/helpers/database-error';
 
 export interface QueryResult {
   result: Record<string, unknown>[];
