@@ -9,7 +9,7 @@
     "url": "https://github.com/cin12211"
   },
   "license": "MIT",
-  "version": "1.0.62",
+  "version": "1.0.63",
   "main": "out/electron/main.js",
   "scripts": {
     "dev": "npm run nuxt:dev",
@@ -45,6 +45,7 @@
     "test:playwright": "playwright test"
   },
   "dependencies": {
+    "better-sqlite3": "^12.9.0",
     "electron-store": "^11.0.2",
     "electron-updater": "^6.8.3"
   },
@@ -121,7 +122,6 @@
     "ag-grid-vue3": "^33.2.4",
     "ai": "^6.0.116",
     "autoprefixer": "^10.4.21",
-    "better-sqlite3": "^12.9.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "codemirror": "^6.0.2",
