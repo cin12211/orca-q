@@ -1,20 +1,6 @@
 import { contextBridge, ipcRenderer } from 'electron';
 import type { IpcRendererEvent } from 'electron';
-
-// ─── Types shared with renderer ───────────────────────────────────────────────
-
-type PersistCollection =
-  | 'appConfig'
-  | 'agentState'
-  | 'workspaces'
-  | 'workspaceState'
-  | 'connections'
-  | 'tabViews'
-  | 'quickQueryLogs'
-  | 'rowQueryFiles'
-  | 'rowQueryFileContents'
-  | 'environment-tags'
-  | 'query_builder_states';
+import type { ElectronPersistCollection as PersistCollection } from '~/core/storage/idbRegistry';
 
 interface PersistFilter {
   field: string;
@@ -56,6 +42,11 @@ const electronAPI = {
       collection: PersistCollection,
       values: Record<string, unknown>[]
     ) => ipcRenderer.invoke('persist:replace-all', { collection, values }),
+
+    mergeAll: (
+      collection: PersistCollection,
+      values: Record<string, unknown>[]
+    ) => ipcRenderer.invoke('persist:merge-all', { collection, values }),
 
     getAllPaginated: (
       collection: PersistCollection,

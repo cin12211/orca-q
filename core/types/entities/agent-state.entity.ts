@@ -1,2 +1,2 @@
-// Full shape defined in core/persist/store-state.ts (normalizeAgentState)
-export type { AgentPersistedState } from '~/core/persist/store-state';
+// Full shape defined in core/persist/normalize.ts (normalizeAgentState)
+export type { AgentPersistedState } from '~/core/persist/normalize';

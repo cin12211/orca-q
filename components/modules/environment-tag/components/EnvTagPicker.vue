@@ -7,7 +7,7 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 import { Separator } from '@/components/ui/separator';
-import { useEnvironmentTagStore } from '../hooks/useEnvironmentTagStore';
+import { useEnvironmentTagStore } from '~/core/stores';
 import type { EnvironmentTag } from '../types/environmentTag.types';
 import CreateEnvTagDialog from './CreateEnvTagDialog.vue';
 import EnvTagColorDot from './EnvTagColorDot.vue';

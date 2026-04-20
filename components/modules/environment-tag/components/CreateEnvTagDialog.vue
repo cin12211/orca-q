@@ -11,8 +11,8 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
+import { useEnvironmentTagStore } from '~/core/stores';
 import { TAG_COLOR_OPTIONS } from '../constants/TAG_COLOR_OPTIONS';
-import { useEnvironmentTagStore } from '../hooks/useEnvironmentTagStore';
 import { createEnvTagSchema } from '../schemas/envTag.schema';
 import { TagColor } from '../types/environmentTag.enums';
 import type { EnvironmentTag } from '../types/environmentTag.types';

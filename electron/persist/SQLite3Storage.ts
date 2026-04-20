@@ -1,5 +1,5 @@
 import type Database from 'better-sqlite3';
-import { BaseStorage } from '../../core/storage/base/BaseStorage';
+import { BaseStorage } from './base/BaseStorage';
 
 export abstract class SQLite3Storage<
   T extends { id: string },
@@ -75,17 +75,24 @@ export abstract class SQLite3Storage<
 
   async upsert(entity: T): Promise<T> {
     const row = this.toRow(entity);
-    const cols = Object.keys(row);
-    const placeholders = cols.map(() => '?').join(', ');
-    const updates = cols
-      .filter(c => c !== 'id')
-      .map(c => `${c} = excluded.${c}`);
+    // Coerce undefined → null so every bind slot gets a concrete value.
+    // Use named parameters (:col) and pass `row` as an object so
+    // better-sqlite3 can never mistake a plain-object value for a
+    // named-parameters binding object (which would silently bind 0
+    // params and cause "Too few parameter values were provided").
+    const sanitized: Record<string, unknown> = {};
+    for (const [k, v] of Object.entries(row)) {
+      sanitized[k] = v === undefined ? null : v;
+    }
+    const cols = Object.keys(sanitized);
+    const placeholders = cols.map(c => `:${c}`).join(', ');
+    const updates = cols.filter(c => c !== 'id').map(c => `${c} = :${c}`);
     this.db
       .prepare(
         `INSERT INTO ${this.tableName} (${cols.join(', ')}) VALUES (${placeholders})
          ON CONFLICT(id) DO UPDATE SET ${updates.join(', ')}`
       )
-      .run(...Object.values(row));
+      .run(sanitized);
     return entity;
   }
 

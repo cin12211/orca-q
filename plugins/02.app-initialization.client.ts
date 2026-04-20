@@ -1,8 +1,7 @@
-import { useEnvironmentTagStore } from '@/components/modules/environment-tag';
-import { initPersist } from '~/core/persist';
 import {
-  useAgentStore,
   useAppConfigStore,
+  useAgentStore,
+  useEnvironmentTagStore,
   useWorkspacesStore,
   useManagementConnectionStore,
   useWSStateStore,
@@ -10,12 +9,9 @@ import {
 
 export default defineNuxtPlugin(async () => {
   // Platform storage and schema migrations are handled by 01.migration.client.ts.
-  // This plugin only wires up the persist APIs and hydrates essential stores.
+  // This plugin only hydrates essential stores.
 
-  // 1. Initialize the runtime persistence adapter (creates window.*Api).
-  await initPersist();
-
-  // 2. Hydrate Essential Stores — required for any route to function properly.
+  // 1. Hydrate Essential Stores — required for any route to function properly.
   const appConfigStore = useAppConfigStore();
   const agentStore = useAgentStore();
   const workspaceStore = useWorkspacesStore();

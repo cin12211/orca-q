@@ -19,7 +19,7 @@ Analysis of all attached stores to identify which need persistent data:
 | `useExplorerFileStore` | Custom API (`window.rowQueryFilesApi`) | `RowQueryFile`, `RowQueryFileContent` |
 | `appConfigStore` | Custom API (inferred) | `AppConfig` (single-record blob) |
 | `agentStore` | Custom API (`agentApi`) | `AgentState` (with embedded `histories`) |
-| `useTableQueryBuilder` | `localStorage` directly — **must migrate** | `QueryBuilderState` |
+| `useTableQueryBuilder` | `localStorage` directly — **keep as UI-only state** | `QueryBuilderState` |
 | `managementExplorerStore` | `pinia-plugin-persistedstate` | No change required |
 | `useActivityBarStore` | `pinia-plugin-persistedstate` | No change required |
 | `erdStore` | `persist: false` | None |
@@ -74,7 +74,7 @@ Each of the 9 entities that need persistence has a dedicated storage class exten
 
 1. **Given** `WorkspaceStorage` exists, **When** I call `getAll()`, **Then** all workspaces are returned sorted by `createdAt` ascending.
 2. **Given** `ConnectionStorage` exists, **When** I call `getByWorkspaceId(wsId)`, **Then** only connections belonging to that workspace are returned.
-3. **Given** `QueryBuilderStateStorage` exists (replacing the current `localStorage` usage), **When** I call `save(state)`, **Then** the state is persisted to IndexedDB; `load(key)` retrieves it in a new session.
+3. **Given** Quick Query state remains renderer-only UI state, **When** I apply filters or pagination in `useTableQueryBuilder`, **Then** the state is persisted under a stable localStorage key and restored in a new session without routing through backup collections or Electron SQLite.
 4. **Given** `AppConfigStorage` and `AgentStateStorage` exist as single-record stores, **When** `get()` is called on a fresh install, **Then** they return a normalised default state instead of `null`.
 5. **Given** `RowQueryFileStorage` exists, **When** `deleteFile({ id })` is called, **Then** both the file record and its content record are deleted atomically.
 
@@ -134,7 +134,7 @@ All Pinia stores and composables that currently reference `localStorage`, raw In
 
 - What happens when a storage read is called before the storage layer is initialised? → Must return `null` / empty array gracefully, never throw.
 - What happens when IndexedDB is unavailable (private browsing, storage quota exceeded)? → Storage operations must fail silently with a console warning; the app must remain functional in a degraded (non-persisting) mode.
-- What happens when a `QueryBuilderState` key exists in `localStorage` but not yet in IndexedDB (migration scenario)? → The migrated storage must read from `localStorage` once, write to IndexedDB, then remove the `localStorage` entry.
+- What happens when Query Builder state exists in localStorage during import/export? → It remains a local UI concern and is only transferred through the backup's `localStorage` snapshot, never through persisted collections or Electron SQLite.
 - What happens when `AppConfig` or `AgentState` records are missing or partially corrupted? → A `normalise*` function must reconstruct defaults for any missing fields before returning.
 - What happens on Electron if SQLite is unavailable (native addon not loading)? → App must log the error and fall back to IDB-backed storage, never crashing at startup.
 
@@ -159,6 +159,8 @@ All Pinia stores and composables that currently reference `localStorage`, raw In
 - **FR-013**: The Electron app MUST migrate existing data from the prior persistence mechanism to SQLite on first run with the new codebase, archiving old files.
 - **FR-014**: `AppConfigStorage` and `AgentStateStorage` MUST return a normalised default state when no record exists, never returning `null` to callers.
 - **FR-015**: All storage operations MUST be safe to call before the backing store is fully initialised — they MUST queue or resolve gracefully rather than throwing.
+- **FR-016**: Electron restore/import MUST expose a `persist:merge-all` IPC contract before the renderer restore flow runs so merge-based backup import can complete without missing-handler errors.
+- **FR-017**: `QueryBuilderState` MUST remain localStorage-backed UI state on both web and Electron renderer, and MUST NOT be modeled as an Electron persist collection or SQLite table.
 
 ### Key Entities
 

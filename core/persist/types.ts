@@ -126,17 +126,3 @@ export interface EnvironmentTagPersistApi {
   >;
   delete(id: string): Promise<void>;
 }
-
-// ── Aggregated persist layer ─────────────────────────────────────────
-
-export interface PersistApis {
-  appConfigApi: AppConfigPersistApi;
-  agentApi: AgentPersistApi;
-  workspaceApi: WorkspacePersistApi;
-  workspaceStateApi: WorkspaceStatePersistApi;
-  connectionApi: ConnectionPersistApi;
-  tabViewsApi: TabViewsPersistApi;
-  quickQueryLogsApi: QuickQueryLogsPersistApi;
-  rowQueryFilesApi: RowQueryFilesPersistApi;
-  environmentTagApi: EnvironmentTagPersistApi;
-}

@@ -50,7 +50,7 @@
 
 ## Phase 1: Setup
 
-- [ ] T001 Confirm `query_builder_states` is NOT listed in `PERSIST_COLLECTIONS` in `core/persist/adapters/idb/primitives.ts` — add inline comment `// QB state not exported: uses localStorage directly` next to the collection list
+- [X] T001 Confirm `query_builder_states` is NOT listed in `PERSIST_COLLECTIONS` in `core/persist/adapters/idb/primitives.ts` — add inline comment `// QB state not exported: uses localStorage directly` next to the collection list
 
 ---
 
@@ -58,7 +58,7 @@
 
 **Purpose**: The composable is the only consumer of `queryBuilderStateApi`. Replace with direct localStorage reads/writes using `LocalStorageKey.QUERY_BUILDER_STATE` prefix (from feature 028). For now use inline string key until feature 028 lands.
 
-- [ ] T002 Update `core/composables/useTableQueryBuilder.ts` — replace both usages of `window.queryBuilderStateApi` with direct `localStorage`:
+- [X] T002 Update `core/composables/useTableQueryBuilder.ts` — replace both usages of `window.queryBuilderStateApi` with direct `localStorage`:
   - `save` call: `localStorage.setItem(persistedKey, JSON.stringify({ filters: filters.value, pagination: { ...pagination }, orderBy: { ...orderBy }, isShowFilters: isShowFilters.value, composeWith: composeWith.value }))` — use spread to strip Proxy
   - `load` call: `const raw = localStorage.getItem(persistedKey); const persistedState = raw ? JSON.parse(raw) : null;`
   - Remove the `async/await` from both operations (localStorage is sync)
@@ -73,32 +73,32 @@
 
 ### US1 — Delete dead files
 
-- [ ] T003 [P] [US1] Delete `core/persist/adapters/idb/query-builder-state.ts`
-- [ ] T004 [P] [US1] Delete `core/persist/adapters/electron/query-builder-state.ts`
-- [ ] T005 [P] [US1] Delete `core/storage/entities/QueryBuilderStateStorage.ts`
-- [ ] T006 [P] [US1] Delete `core/persist/migration/versions/MigrateLegacyQueryBuilderState1740477873008.ts`
-- [ ] T007 [P] [US1] Delete `test/unit/core/storage/entities/QueryBuilderStateStorage.spec.ts`
+- [X] T003 [P] [US1] Delete `core/persist/adapters/idb/query-builder-state.ts`
+- [X] T004 [P] [US1] Delete `core/persist/adapters/electron/query-builder-state.ts`
+- [X] T005 [P] [US1] Delete `core/storage/entities/QueryBuilderStateStorage.ts`
+- [X] T006 [P] [US1] Delete `core/persist/migration/versions/MigrateLegacyQueryBuilderState1740477873008.ts`
+- [X] T007 [P] [US1] Delete `test/unit/core/storage/entities/QueryBuilderStateStorage.spec.ts`
 
 ### US1 — Remove from index/barrel files
 
-- [ ] T008 [P] [US1] Remove QB export from `core/persist/adapters/idb/index.ts` — delete line `export { queryBuilderStateIDBAdapter } from './query-builder-state';`
-- [ ] T009 [P] [US1] Remove QB export from `core/persist/adapters/electron/index.ts` — delete line `export { queryBuilderStateElectronAdapter } from './query-builder-state';`
-- [ ] T010 [P] [US1] Remove QB export from `core/storage/entities/index.ts` — delete line `export { queryBuilderStateStorage } from './QueryBuilderStateStorage';`
+- [X] T008 [P] [US1] Remove QB export from `core/persist/adapters/idb/index.ts` — delete line `export { queryBuilderStateIDBAdapter } from './query-builder-state';`
+- [X] T009 [P] [US1] Remove QB export from `core/persist/adapters/electron/index.ts` — delete line `export { queryBuilderStateElectronAdapter } from './query-builder-state';`
+- [X] T010 [P] [US1] Remove QB export from `core/storage/entities/index.ts` — delete line `export { queryBuilderStateStorage } from './QueryBuilderStateStorage';`
 
 ### US1 — Remove from factories
 
-- [ ] T011 [P] [US1] Update `core/persist/factory.ts` — remove `queryBuilderStateElectronAdapter` import, remove `queryBuilderStateIDBAdapter` import, remove `queryBuilderStateApi` from both `createIDBApis()` and `createElectronApis()` return objects; remove from `PersistApis` type usage
-- [ ] T012 [P] [US1] Update `core/storage/factory.ts` — remove `queryBuilderStateElectronAdapter` import, remove `queryBuilderStateStorage` import, remove `queryBuilderStateStorage` from `createIDBStorageApis()` return, remove `queryBuilderStateStorage` from `createElectronStorageApis()` return
+- [X] T011 [P] [US1] Update `core/persist/factory.ts` — remove `queryBuilderStateElectronAdapter` import, remove `queryBuilderStateIDBAdapter` import, remove `queryBuilderStateApi` from both `createIDBApis()` and `createElectronApis()` return objects; remove from `PersistApis` type usage
+- [X] T012 [P] [US1] Update `core/storage/factory.ts` — remove `queryBuilderStateElectronAdapter` import, remove `queryBuilderStateStorage` import, remove `queryBuilderStateStorage` from `createIDBStorageApis()` return, remove `queryBuilderStateStorage` from `createElectronStorageApis()` return
 
 ### US1 — Remove from type definitions
 
-- [ ] T013 [P] [US1] Update `core/persist/types.ts` — remove `QueryBuilderStatePersistApi` interface and `QueryBuilderPersistedState` interface entirely
-- [ ] T014 [P] [US1] Update `core/storage/types.ts` — remove `QueryBuilderStateStorageApi` interface and `queryBuilderStateStorage` field from `StorageApis`
-- [ ] T015 [P] [US1] Update `core/persist/globals.d.ts` — remove `queryBuilderStateApi: QueryBuilderStatePersistApi` from `Window` declaration; remove the `QueryBuilderStatePersistApi` import if present
+- [X] T013 [P] [US1] Update `core/persist/types.ts` — remove `QueryBuilderStatePersistApi` interface and `QueryBuilderPersistedState` interface entirely
+- [X] T014 [P] [US1] Update `core/storage/types.ts` — remove `QueryBuilderStateStorageApi` interface and `queryBuilderStateStorage` field from `StorageApis`
+- [X] T015 [P] [US1] Update `core/persist/globals.d.ts` — remove `queryBuilderStateApi: QueryBuilderStatePersistApi` from `Window` declaration; remove the `QueryBuilderStatePersistApi` import if present
 
 ### US1 — Remove migration registration
 
-- [ ] T016 [US1] Update `core/persist/migration/index.ts` — remove `MigrateLegacyQueryBuilderState1740477873008` import and entry from `ALL_MIGRATIONS` array
+- [X] T016 [US1] Update `core/persist/migration/index.ts` — remove `MigrateLegacyQueryBuilderState1740477873008` import and entry from `ALL_MIGRATIONS` array
 
 ---
 

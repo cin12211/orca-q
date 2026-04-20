@@ -6,7 +6,6 @@ import {
 } from './MigrationRunner';
 import { AddTagIdsToConnections1740477873001 } from './versions/AddTagIdsToConnections1740477873001';
 import { AddVariablesToRowQueryFiles1740477873003 } from './versions/AddVariablesToRowQueryFiles1740477873003';
-import { MigrateLegacyAgentState1740477873006 } from './versions/MigrateLegacyAgentState1740477873006';
 import { MigrateLegacyAppConfig1740477873005 } from './versions/MigrateLegacyAppConfig1740477873005';
 import { MigrateRowQueryVariablesToFileMetadata1740477873007 } from './versions/MigrateRowQueryVariablesToFileMetadata1740477873007';
 import { RemoveConnectionIdFromRowQueryFiles1740477873002 } from './versions/RemoveConnectionIdFromRowQueryFiles1740477873002';
@@ -18,7 +17,6 @@ export const ALL_MIGRATIONS: Migration[] = [
   new AddVariablesToRowQueryFiles1740477873003(),
   new RemoveVariablesFromRowQueryFileContents1740477873004(),
   new MigrateLegacyAppConfig1740477873005(),
-  new MigrateLegacyAgentState1740477873006(),
   new MigrateRowQueryVariablesToFileMetadata1740477873007(),
 ];
 

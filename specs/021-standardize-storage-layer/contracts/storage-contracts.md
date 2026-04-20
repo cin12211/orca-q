@@ -255,15 +255,15 @@ interface AgentStateStorageApi {
 }
 ```
 
-### 4.10 `QueryBuilderStateStorageApi`
+### 4.10 QueryBuilderState (outside `StorageApis`)
 
-```ts
-interface QueryBuilderStateStorageApi {
-  load(key: string): Promise<QueryBuilderState | null>;  // checks IDB then localStorage
-  save(state: QueryBuilderState): Promise<void>;
-  remove(key: string): Promise<void>;
-}
+`QueryBuilderState` is intentionally excluded from `StorageApis`. It remains renderer-local UI state managed directly in `useTableQueryBuilder` through `localStorage`, using the composite key:
+
+```text
+{workspaceId}-{connectionId}-{schemaName}-{tableName}
 ```
+
+The backup system carries this state only through the `localStorage` snapshot payload, not through persisted collections or Electron IPC tables.
 
 ---
 
@@ -282,7 +282,6 @@ export interface StorageApis {
   environmentTagStorage: EnvironmentTagStorageApi;
   appConfigStorage: AppConfigStorageApi;
   agentStorage: AgentStateStorageApi;
-  queryBuilderStateStorage: QueryBuilderStateStorageApi;
 }
 ```
 
@@ -318,6 +317,4 @@ isElectron()
 
 ## 7. IPC Bridge (Electron — unchanged)
 
-The existing `core/persist/adapters/electron/primitives.ts` IPC bridge is **not changed** by this spec. The Electron renderer uses the same `window.electronAPI.persist.*` IPC calls. What changes is the Electron **main process** side (`electron/persist/store.ts`) which replaces `electron-store` with SQLite.
-
-The IPC channel names and signatures remain identical to preserve backward compatibility.
+The existing Electron IPC bridge remains the entry point, but the narrowed persist contract now explicitly includes `persist:merge-all` for merge-based backup restore. The renderer uses `window.electronAPI.persist.mergeAll(...)`, the preload type surface mirrors that method, and the main process registers the handler during bootstrap before restore/import can run.

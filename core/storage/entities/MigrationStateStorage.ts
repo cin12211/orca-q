@@ -1,4 +1,5 @@
 import type { MigrationState } from '~/core/types/entities/migration-state.entity';
+import { MIGRATION_STATE_IDB } from '../idbRegistry';
 import { IDBStorage } from '../base/IDBStorage';
 
 type MigrationStateRecord = MigrationState;
@@ -8,7 +9,7 @@ class MigrationStateStorage extends IDBStorage<MigrationStateRecord> {
   private static readonly KEY = 'applied-migrations' as const;
 
   constructor() {
-    super({ dbName: 'migrationStateIDB', storeName: 'migrationState' });
+    super(MIGRATION_STATE_IDB);
   }
 
   async get(): Promise<MigrationState | null> {

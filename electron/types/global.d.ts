@@ -4,16 +4,7 @@
  */
 
 type PersistCollection =
-  | 'appConfig'
-  | 'agentState'
-  | 'workspaces'
-  | 'workspaceState'
-  | 'connections'
-  | 'tabViews'
-  | 'quickQueryLogs'
-  | 'rowQueryFiles'
-  | 'rowQueryFileContents'
-  | 'environment-tags';
+  import('~/core/storage/idbRegistry').ElectronPersistCollection;
 
 interface PersistFilter {
   field: string;
@@ -59,6 +50,10 @@ interface ElectronPersistAPI {
     matchMode?: PersistMatchMode
   ) => Promise<T[]>;
   replaceAll: <T = Record<string, unknown>>(
+    collection: PersistCollection,
+    values: T[]
+  ) => Promise<void>;
+  mergeAll: <T = Record<string, unknown>>(
     collection: PersistCollection,
     values: T[]
   ) => Promise<void>;

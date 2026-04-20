@@ -59,11 +59,17 @@ The existing `core/persist/adapters/electron/*.ts` are IPC proxies that call `wi
 
 **Note on Kysely**: Evaluated on a prior branch (`016-electron-sqlite-kysely`). Decided against including it here to reduce the dependency surface. Raw `better-sqlite3` with the `SQLite3Storage` base class provides equivalent type safety for this use case.
 
-### 2.3 QueryBuilderState Migration: localStorage → IDB
+### 2.3 QueryBuilderState Parity: stay in localStorage
 
-**Decision**: One-time migration in `QueryBuilderStateStorage.load(key)`.  
-**Rationale**: `useTableQueryBuilder` currently writes filter/pagination state directly to `localStorage`. Users who haven't refreshed will have data in `localStorage`. On first read after migration, the storage class checks `localStorage`, writes to IDB, then deletes the `localStorage` entry.  
-**Implementation**: `QueryBuilderStateStorage.load(key)` checks both IDB and localStorage; on IDB miss, tries localStorage, migrates if found.
+**Decision**: Keep Query Builder state in renderer localStorage on both web and Electron.  
+**Rationale**: This state is UI-scoped, keyed by workspace/connection/schema/table, and should behave the same way across browser and desktop. It does not belong in backup persist collections or Electron SQLite.  
+**Implementation**: `useTableQueryBuilder` reads and writes localStorage directly using `LocalStorageManager.queryBuilderKey(...)`. Backup import/export only touches it through the `localStorage` snapshot payload.
+
+### 2.4 Electron Restore Contract: `persist:merge-all`
+
+**Decision**: Electron restore/import depends on a first-class `persist:merge-all` IPC channel exposed through preload and registered during the same main-process bootstrap path as other persist handlers.  
+**Rationale**: Restore/import is merge-based rather than replace-all. The renderer must be able to invoke the contract deterministically and fail with a clear error if the preload bridge is unavailable.  
+**Implementation**: `electron/preload.ts`, `electron/types/global.d.ts`, `core/persist/adapters/electron/primitives.ts`, `electron/ipc/persist.ts`, and `electron/main.ts` all share the same narrowed `ElectronPersistCollection` surface.
 
 ### 2.4 Electron electron-store → SQLite Migration
 
@@ -135,4 +141,4 @@ The same pattern applies to SQLite: a single row with `id = 'app-config'` holds 
 | Class naming? | `BaseStorage`, `IDBStorage`, `SQLite3Storage`, entity classes without suffix for IDB |
 | Backward compat with existing adapters? | Keep `core/persist/` unchanged; `core/storage/` is the new interface; migrate gradually |
 | Electron IPC needed? | Existing IPC bridge unchanged; SQLite runs in main process only |
-| QueryBuilderState key format? | `{workspaceId}-{connectionId}-{schemaName}-{tableName}` (same as current localStorage key) |
+| QueryBuilderState key format? | `{workspaceId}-{connectionId}-{schemaName}-{tableName}` via `LocalStorageManager.queryBuilderKey(...)` |

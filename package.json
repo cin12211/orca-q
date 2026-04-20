@@ -25,7 +25,7 @@
     "electron:pack": "node scripts/electron-before-build.mjs && electron-builder --dir",
     "npx:build": "npm run nuxt:build-web && node scripts/build-npx.mjs",
     "npx:pack": "cd npx-package && npm pack",
-    "typecheck": "nuxt typecheck",
+    "typecheck": "NODE_OPTIONS=--max-old-space-size=8192 nuxt typecheck",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "prepare": "husky",

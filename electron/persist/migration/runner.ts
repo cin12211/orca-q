@@ -3,12 +3,12 @@ import { up as v001 } from './versions/v001-initial-schema';
 
 interface Migration {
   version: number;
-  up: (db: Database.Database) => void | Promise<void>;
+  up: (db: Database.Database) => void;
 }
 
 const MIGRATIONS: Migration[] = [{ version: 1, up: v001 }];
 
-export async function runMigrations(db: Database.Database): Promise<void> {
+export function runMigrations(db: Database.Database): void {
   // Ensure migration tracking table exists
   db.exec(`
     CREATE TABLE IF NOT EXISTS _schema_versions (
@@ -27,13 +27,13 @@ export async function runMigrations(db: Database.Database): Promise<void> {
   for (const migration of MIGRATIONS) {
     if (migration.version <= currentVersion) continue;
 
-    const runMigration = db.transaction(async () => {
-      await migration.up(db);
+    const runMigration = db.transaction(() => {
+      migration.up(db);
       db.prepare(
         `INSERT OR REPLACE INTO _schema_versions (table_name, version, applied_at) VALUES ('app', ?, ?)`
       ).run(migration.version, new Date().toISOString());
     });
 
-    await runMigration();
+    runMigration();
   }
 }

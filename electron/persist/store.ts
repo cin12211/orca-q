@@ -1,3 +1,5 @@
+import type { ElectronPersistCollection } from '~/core/storage/idbRegistry';
+import { getDB } from './db';
 import {
   workspaceSQLiteStorage,
   connectionSQLiteStorage,
@@ -9,23 +11,10 @@ import {
   environmentTagSQLiteStorage,
   appConfigSQLiteStorage,
   agentStateSQLiteStorage,
-  queryBuilderStateSQLiteStorage,
   migrationStateSQLiteStorage,
 } from './entities';
 
-export type PersistCollection =
-  | 'appConfig'
-  | 'agentState'
-  | 'workspaces'
-  | 'workspaceState'
-  | 'connections'
-  | 'tabViews'
-  | 'quickQueryLogs'
-  | 'rowQueryFiles'
-  | 'rowQueryFileContents'
-  | 'environment-tags'
-  | 'query_builder_states'
-  | 'migrationState';
+export type PersistCollection = ElectronPersistCollection;
 
 export type RecordValue = Record<string, unknown>;
 
@@ -62,8 +51,6 @@ function getAdapter(collection: PersistCollection): StorageAdapter | null {
       return rowQueryFileSQLiteContentAdapter as unknown as StorageAdapter;
     case 'environment-tags':
       return environmentTagSQLiteStorage as unknown as StorageAdapter;
-    case 'query_builder_states':
-      return queryBuilderStateSQLiteStorage as unknown as StorageAdapter;
     case 'migrationState':
       return migrationStateSQLiteStorage as unknown as StorageAdapter;
     default:
@@ -185,11 +172,49 @@ export async function persistReplaceAll(
     return;
   }
 
-  // Generic: clear all, then upsert each
+  // Generic: clear all, then upsert each.
+  // FK constraints are temporarily disabled because collections are restored
+  // one at a time (e.g. workspaces before connections). Deleting parent rows
+  // while child rows still exist would fail with FOREIGN KEY constraint failed.
+  // Better-sqlite3 methods are synchronous, so the awaits here only yield to
+  // the microtask queue — no other IPC handler can interleave between OFF/ON.
   const adapter = getAdapter(collection)!;
-  const existing = await adapter.getMany();
-  await Promise.all(existing.map(r => adapter.delete(r['id'] as string)));
-  await Promise.all(values.map(v => adapter.upsert(v)));
+  const db = getDB();
+  db.pragma('foreign_keys = OFF');
+  try {
+    const existing = await adapter.getMany();
+    await Promise.all(existing.map(r => adapter.delete(r['id'] as string)));
+    await Promise.all(values.map(v => adapter.upsert(v)));
+  } finally {
+    db.pragma('foreign_keys = ON');
+  }
+}
+
+export async function persistMergeAll(
+  collection: PersistCollection,
+  values: RecordValue[]
+): Promise<void> {
+  if (values.length === 0) {
+    return;
+  }
+
+  if (collection === 'appConfig') {
+    await appConfigSQLiteStorage.save(values[0] as never);
+    return;
+  }
+  if (collection === 'agentState') {
+    await agentStateSQLiteStorage.save(values[0] as never);
+    return;
+  }
+  if (collection === 'migrationState') {
+    await migrationStateSQLiteStorage.save(
+      ((values[0] as Record<string, unknown>)['names'] as string[]) ?? []
+    );
+    return;
+  }
+
+  const adapter = getAdapter(collection)!;
+  await Promise.all(values.map(value => adapter.upsert(value)));
 }
 
 export async function persistGetAllPaginated(

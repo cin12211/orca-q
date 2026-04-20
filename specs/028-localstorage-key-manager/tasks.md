@@ -37,7 +37,7 @@ localStorage keys are currently scattered as raw strings across multiple files:
 
 ## Phase 1: Setup
 
-- [ ] T001 Check if `core/persist/index.ts` exists; if not, create it as a barrel exporting from `storage-adapter.ts` and the new `LocalStorageManager.ts`
+- [X] T001 Check if `core/persist/index.ts` exists; if not, create it as a barrel exporting from `storage-adapter.ts` and the new `LocalStorageManager.ts`
 
 ---
 
@@ -45,7 +45,7 @@ localStorage keys are currently scattered as raw strings across multiple files:
 
 **Purpose**: Create the `LocalStorageManager` — all consumer updates depend on this.
 
-- [ ] T002 Create `core/persist/LocalStorageManager.ts` with:
+- [X] T002 Create `core/persist/LocalStorageManager.ts` with:
 
   ```ts
   import { getPlatformStorage } from './storage-adapter';
@@ -119,26 +119,26 @@ localStorage keys are currently scattered as raw strings across multiple files:
 
 ### US1 — Static key consumers
 
-- [ ] T003 [P] [US1] Update `core/contexts/useChangelogModal.ts` — import `{ LocalStorageManager, LocalStorageKey }` from `~/core/persist/LocalStorageManager`; replace `const LAST_SEEN_VERSION_KEY = 'orcaq-last-seen-version'` constant and all `getPlatformStorage().getItem/setItem(LAST_SEEN_VERSION_KEY, ...)` calls with `LocalStorageManager.get(LocalStorageKey.LAST_SEEN_VERSION)` / `LocalStorageManager.set(LocalStorageKey.LAST_SEEN_VERSION, currentVersion)`; remove `getPlatformStorage` import if no longer used
+- [X] T003 [P] [US1] Update `core/contexts/useChangelogModal.ts` — import `{ LocalStorageManager, LocalStorageKey }` from `~/core/persist/LocalStorageManager`; replace `const LAST_SEEN_VERSION_KEY = 'orcaq-last-seen-version'` constant and all `getPlatformStorage().getItem/setItem(LAST_SEEN_VERSION_KEY, ...)` calls with `LocalStorageManager.get(LocalStorageKey.LAST_SEEN_VERSION)` / `LocalStorageManager.set(LocalStorageKey.LAST_SEEN_VERSION, currentVersion)`; remove `getPlatformStorage` import if no longer used
 
-- [ ] T004 [P] [US1] Update `components/modules/workspace/hooks/useWorkspaceTour.ts` — replace the raw string `'orcaq-has-seen-tour'` in the `useStorage(...)` call with `LocalStorageKey.HAS_SEEN_TOUR`; import `{ LocalStorageKey }` from `~/core/persist/LocalStorageManager`; keep `getPlatformStorage()` as-is (still passed to `useStorage`)
+- [X] T004 [P] [US1] Update `components/modules/workspace/hooks/useWorkspaceTour.ts` — replace the raw string `'orcaq-has-seen-tour'` in the `useStorage(...)` call with `LocalStorageKey.HAS_SEEN_TOUR`; import `{ LocalStorageKey }` from `~/core/persist/LocalStorageManager`; keep `getPlatformStorage()` as-is (still passed to `useStorage`)
 
-- [ ] T005 [P] [US1] Update `components/modules/management/agent/hooks/useManagementAgentHistoryTree.ts` — replace `const HISTORY_TREE_STORAGE_KEY = 'agent-history-tree'` with import of `LocalStorageKey` and use `LocalStorageKey.AGENT_HISTORY_TREE` in its place; remove the local const
+- [X] T005 [P] [US1] Update `components/modules/management/agent/hooks/useManagementAgentHistoryTree.ts` — replace `const HISTORY_TREE_STORAGE_KEY = 'agent-history-tree'` with import of `LocalStorageKey` and use `LocalStorageKey.AGENT_HISTORY_TREE` in its place; remove the local const
 
 ### US1 — Dynamic key consumer (QB state — after feature 027)
 
-- [ ] T006 [P] [US1] Update `core/composables/useTableQueryBuilder.ts` — import `{ LocalStorageManager }` from `~/core/persist/LocalStorageManager`; replace `getPersistedKey()` body with `return LocalStorageManager.queryBuilderKey(workspaceId?.value ?? '', connectionId?.value ?? '', schemaName, tableName);`; keep the `getPersistedKey` helper function shape
+- [X] T006 [P] [US1] Update `core/composables/useTableQueryBuilder.ts` — import `{ LocalStorageManager }` from `~/core/persist/LocalStorageManager`; replace `getPersistedKey()` body with `return LocalStorageManager.queryBuilderKey(workspaceId?.value ?? '', connectionId?.value ?? '', schemaName, tableName);`; keep the `getPersistedKey` helper function shape
 
 ### US1 — Export from barrel
 
-- [ ] T007 [P] [US1] Update/create `core/persist/index.ts` — add exports: `export { LocalStorageManager, LocalStorageKey } from './LocalStorageManager';`
+- [X] T007 [P] [US1] Update/create `core/persist/index.ts` — add exports: `export { LocalStorageManager, LocalStorageKey } from './LocalStorageManager';`
 
 ---
 
 ## Phase 4: Polish & Cross-Cutting Concerns
 
 - [ ] T008 Run `bun typecheck` — verify exit 0
-- [ ] T009 [P] Verify no raw string key literals remain outside `LocalStorageManager.ts`: run `grep -rn "orcaq-last-seen-version\|orcaq-has-seen-tour\|agent-history-tree" core/ components/ --include="*.ts" --include="*.vue"` — expect only 0 results outside the manager file
+- [X] T009 [P] Verify no raw string key literals remain outside `LocalStorageManager.ts`: run `grep -rn "orcaq-last-seen-version\|orcaq-has-seen-tour\|agent-history-tree" core/ components/ --include="*.ts" --include="*.vue"` — expect only 0 results outside the manager file
 
 ---
 

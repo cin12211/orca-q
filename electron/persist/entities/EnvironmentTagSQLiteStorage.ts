@@ -41,14 +41,18 @@ class EnvironmentTagSQLiteStorage extends SQLite3Storage<EnvironmentTag> {
     const replaceTransaction = this.db.transaction(() => {
       deleteAll.run();
       for (const tag of tags) {
-        const row = this.toRow(tag);
-        const cols = Object.keys(row);
-        const placeholders = cols.map(() => '?').join(', ');
+        const rawRow = this.toRow(tag);
+        const sanitized: Record<string, unknown> = {};
+        for (const [k, v] of Object.entries(rawRow)) {
+          sanitized[k] = v === undefined ? null : v;
+        }
+        const cols = Object.keys(sanitized);
+        const placeholders = cols.map(c => `:${c}`).join(', ');
         this.db
           .prepare(
             `INSERT INTO ${this.tableName} (${cols.join(', ')}) VALUES (${placeholders})`
           )
-          .run(...Object.values(row));
+          .run(sanitized);
       }
     });
     replaceTransaction();

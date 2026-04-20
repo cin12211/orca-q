@@ -7,10 +7,10 @@ import {
   type MaybeRefOrGetter,
 } from 'vue';
 import dayjs from 'dayjs';
-import { useEnvironmentTagStore } from '@/components/modules/environment-tag';
 import { DatabaseClientType } from '~/core/constants/database-client-type';
 import { uuidv4 } from '~/core/helpers';
 import type { Connection } from '~/core/stores';
+import { useEnvironmentTagStore } from '~/core/stores';
 import { DEFAULT_DB_PORTS } from '../constants';
 import { connectionService } from '../services/connection.service';
 import { EConnectionMethod, ESSLMode, ESSHAuthMethod } from '../types';

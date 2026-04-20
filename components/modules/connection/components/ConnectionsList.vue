@@ -99,7 +99,7 @@ const onConnectConnection = async (connection: Connection) => {
           <TableHead>Name</TableHead>
           <!-- <TableHead>Type</TableHead> -->
           <TableHead>Connection Details</TableHead>
-          <TableHead>Tags</TableHead>
+          <TableHead>Tag Envs</TableHead>
           <!-- <TableHead>Created</TableHead> -->
           <TableHead class="text-right">Actions</TableHead>
         </TableRow>

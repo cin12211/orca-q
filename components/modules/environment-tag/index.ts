@@ -11,7 +11,7 @@ export {
 } from './constants/TAG_COLOR_OPTIONS';
 
 // Store (hook)
-export { useEnvironmentTagStore } from './hooks/useEnvironmentTagStore';
+export { useEnvironmentTagStore } from '~/core/stores';
 
 // Guard hook + state (for root app wiring)
 export {

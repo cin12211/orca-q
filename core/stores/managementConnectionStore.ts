@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia';
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 import {
   EConnectionMethod,
   type ISSLConfig,
@@ -108,8 +108,5 @@ export const useManagementConnectionStore = defineStore(
       currentConnectionString,
       connections,
     };
-  },
-  {
-    persist: false,
   }
 );

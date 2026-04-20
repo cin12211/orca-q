@@ -14,7 +14,7 @@ export function up(db: Database.Database): void {
 
     CREATE TABLE IF NOT EXISTS connections (
       id                TEXT PRIMARY KEY,
-      workspace_id      TEXT NOT NULL REFERENCES workspaces(id),
+      workspace_id      TEXT REFERENCES workspaces(id),
       name              TEXT NOT NULL,
       type              TEXT NOT NULL,
       method            TEXT NOT NULL,
@@ -42,7 +42,7 @@ export function up(db: Database.Database): void {
 
     CREATE TABLE IF NOT EXISTS tab_views (
       id            TEXT PRIMARY KEY,
-      workspace_id  TEXT NOT NULL REFERENCES workspaces(id),
+      workspace_id  TEXT REFERENCES workspaces(id),
       connection_id TEXT NOT NULL,
       schema_id     TEXT NOT NULL,
       tab_index     INTEGER NOT NULL,
@@ -73,10 +73,10 @@ export function up(db: Database.Database): void {
 
     CREATE TABLE IF NOT EXISTS row_query_files (
       id           TEXT PRIMARY KEY,
-      workspace_id TEXT NOT NULL REFERENCES workspaces(id),
+      workspace_id TEXT REFERENCES workspaces(id),
       parent_id    TEXT,
       title        TEXT NOT NULL,
-      type         TEXT NOT NULL CHECK(type IN ('file','folder')),
+      type         TEXT,
       created_at   TEXT NOT NULL,
       updated_at   TEXT
     );
@@ -106,21 +106,6 @@ export function up(db: Database.Database): void {
       id   TEXT PRIMARY KEY,
       data TEXT NOT NULL
     );
-
-    CREATE TABLE IF NOT EXISTS query_builder_states (
-      id              TEXT PRIMARY KEY,
-      workspace_id    TEXT NOT NULL,
-      connection_id   TEXT NOT NULL,
-      schema_name     TEXT NOT NULL,
-      table_name      TEXT NOT NULL,
-      filters         TEXT NOT NULL,
-      pagination      TEXT NOT NULL,
-      order_by        TEXT NOT NULL,
-      is_show_filters INTEGER NOT NULL DEFAULT 0,
-      compose_with    TEXT NOT NULL,
-      updated_at      TEXT NOT NULL
-    );
-    CREATE INDEX IF NOT EXISTS idx_qbs_ctx ON query_builder_states(workspace_id, connection_id);
 
     CREATE TABLE IF NOT EXISTS migration_state (
       id   TEXT PRIMARY KEY,

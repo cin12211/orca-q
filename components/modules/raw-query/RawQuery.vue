@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { LoadingOverlay } from '#components';
 import type { EditorView } from '@codemirror/view';
-import { useEnvironmentTagStore } from '@/components/modules/environment-tag';
 import BaseCodeEditor from '~/components/base/code-editor/BaseCodeEditor.vue';
 import { useHotkeys } from '~/core/composables/useHotKeys';
 import { useAppConfigStore } from '~/core/stores/appConfigStore';
+import { useEnvironmentTagStore } from '~/core/stores';
 import IntroRawQuery from './components/IntroRawQuery.vue';
 import RawQueryConnectionConfirmDialog from './components/RawQueryConnectionConfirmDialog.vue';
 import RawQueryEditorContextMenu from './components/RawQueryEditorContextMenu.vue';

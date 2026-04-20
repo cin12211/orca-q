@@ -1,5 +1,6 @@
 import { normalizeAgentState } from '~/core/persist/store-state';
 import type { AgentPersistedState } from '~/core/types/entities';
+import { AGENT_STATE_IDB } from '../idbRegistry';
 import { IDBStorage } from '../base/IDBStorage';
 
 interface AgentStateRecord {
@@ -12,7 +13,7 @@ class AgentStateStorage extends IDBStorage<AgentStateRecord> {
   private static readonly KEY = 'agent-state';
 
   constructor() {
-    super({ dbName: 'agentStateIDB', storeName: 'agent_state' });
+    super(AGENT_STATE_IDB);
   }
 
   async get(): Promise<AgentPersistedState> {

@@ -12,16 +12,16 @@ const { isExporting, exportProgress, exportData } = useDataExport();
       <h4
         class="text-sm font-medium leading-7 text-primary flex items-center gap-1 mb-2"
       >
-        <Icon name="hugeicons:file-export" class="size-5!" /> Backup Data
+        <Icon name="hugeicons:file-export" class="size-5!" /> Create Backup
       </h4>
 
       <div class="flex items-start justify-between gap-4">
         <div class="flex flex-col gap-0.5">
-          <p class="text-sm">Download all data</p>
+          <p class="text-sm">Save a copy of everything</p>
           <p class="text-xs text-muted-foreground">
-            Exports all workspaces, connections, query files, logs, and agent
-            chat history to a single JSON file. Use this to transfer your data
-            to another device or platform.
+            Download one backup file that includes your workspaces,
+            connections, queries, chat history, and app settings. Keep it safe
+            so you can restore later or move your setup to another device.
           </p>
         </div>
         <Button
@@ -38,14 +38,14 @@ const { isExporting, exportProgress, exportData } = useDataExport();
             class="size-4!"
             :class="{ 'animate-spin': isExporting }"
           />
-          {{ isExporting ? 'Backing up…' : 'Download Backup' }}
+          {{ isExporting ? 'Creating backup…' : 'Download Backup' }}
         </Button>
       </div>
 
       <!-- Export progress bar -->
       <div v-if="isExporting" class="mt-3 space-y-1.5">
         <div class="flex justify-between text-xs text-muted-foreground">
-          <span>Collecting data…</span>
+          <span>Preparing your backup…</span>
           <span>{{ exportProgress }}%</span>
         </div>
         <div class="h-1.5 rounded-full bg-muted overflow-hidden">
@@ -64,12 +64,19 @@ const { isExporting, exportProgress, exportData } = useDataExport();
       <h4
         class="text-sm font-medium leading-7 text-primary flex items-center gap-1 mb-2"
       >
-        <Icon name="hugeicons:file-import" class="size-5!" /> Restore Data
+        <Icon name="hugeicons:file-import" class="size-5!" /> Restore from
+        Backup
       </h4>
+
+      <p class="text-xs text-muted-foreground mb-3">
+        Paste a backup file below to bring your data back in. Existing items
+        with the same ID will be updated, missing items will be added, and
+        anything not in the backup will stay as it is.
+      </p>
 
       <RestoreDataPanel
         layout="inline"
-        json-placeholder='Paste your backup JSON here…  {"persist":{...}}'
+        json-placeholder='Paste your backup JSON here… for example: {"persist":{...}}'
       />
     </div>
 
@@ -79,13 +86,19 @@ const { isExporting, exportProgress, exportData } = useDataExport();
     <div
       class="rounded-lg border border-border bg-muted/40 p-4 text-xs text-muted-foreground space-y-2"
     >
-      <p class="font-medium text-foreground text-sm">What is included?</p>
+      <p class="font-medium text-foreground text-sm">
+        What is included in this backup?
+      </p>
       <ul class="list-disc list-inside space-y-1">
         <li>All workspaces and their settings</li>
-        <li>All connections (credentials are included — keep the file safe)</li>
+        <li>
+          All connections, including credentials, so treat this file like a
+          password
+        </li>
         <li>All query files and their SQL content</li>
-        <li>Quick query execution logs</li>
+        <li>Quick query run history</li>
         <li>Agent chat history</li>
+        <li>App settings, migration history, and compatible local UI state</li>
       </ul>
     </div>
   </div>

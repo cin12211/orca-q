@@ -1,5 +1,6 @@
 import { normalizeAppConfigState } from '~/core/persist/store-state';
 import type { AppConfigPersistedState } from '~/core/types/entities';
+import { APP_CONFIG_IDB } from '../idbRegistry';
 import { IDBStorage } from '../base/IDBStorage';
 
 interface AppConfigRecord {
@@ -12,7 +13,7 @@ class AppConfigStorage extends IDBStorage<AppConfigRecord> {
   private static readonly KEY = 'app-config';
 
   constructor() {
-    super({ dbName: 'appConfigIDB', storeName: 'app_config' });
+    super(APP_CONFIG_IDB);
   }
 
   async get(): Promise<AppConfigPersistedState> {

@@ -2,52 +2,32 @@ import { ref } from 'vue';
 import { isElectron } from '~/core/helpers/environment';
 import { persistGetAll as electronPersistGetAll } from '~/core/persist/adapters/electron/primitives';
 import { idbGetAll } from '~/core/persist/adapters/idb/primitives';
-import { PERSIST_COLLECTIONS } from '~/core/persist/adapters/idb/primitives';
-import type { PersistCollection } from '~/core/persist/adapters/idb/primitives';
 import { getApplied } from '~/core/persist/migration';
-import { createBackupData, snapshotLocalStorage } from './backupData';
-
-async function collectIdbData(
-  onStep: (done: number, total: number) => void
-): Promise<Record<PersistCollection, unknown[]>> {
-  const result: Partial<Record<PersistCollection, unknown[]>> = {};
-  for (let i = 0; i < PERSIST_COLLECTIONS.length; i++) {
-    const collection = PERSIST_COLLECTIONS[i]!;
-    result[collection] = await idbGetAll<unknown>(collection);
-    onStep(i + 1, PERSIST_COLLECTIONS.length);
-  }
-  return result as Record<PersistCollection, unknown[]>;
-}
-
-async function collectElectronData(
-  onStep: (done: number, total: number) => void
-): Promise<Record<PersistCollection, unknown[]>> {
-  const result: Partial<Record<PersistCollection, unknown[]>> = {};
-  for (let i = 0; i < PERSIST_COLLECTIONS.length; i++) {
-    const col = PERSIST_COLLECTIONS[i]!;
-    result[col] = await electronPersistGetAll<unknown>(col);
-    onStep(i + 1, PERSIST_COLLECTIONS.length);
-  }
-  return result as Record<PersistCollection, unknown[]>;
-}
+import { type PersistCollection } from '~/core/storage/idbRegistry';
+import {
+  collectBackupPersistData,
+  createBackupData,
+  snapshotLocalStorage,
+} from './backupData';
 
 export function useDataExport() {
   const isExporting = ref(false);
-  const exportProgress = ref(0); // 0–100
+  const exportProgress = ref(0);
 
   const exportData = async () => {
     isExporting.value = true;
     exportProgress.value = 0;
     try {
-      // Collections = N steps, serialize+download = 1 step
       const onStep = (done: number, total: number) => {
-        // 0–85% for data collection
         exportProgress.value = Math.round((done / total) * 85);
       };
 
-      const persist = isElectron()
-        ? await collectElectronData(onStep)
-        : await collectIdbData(onStep);
+      const loadCollection = isElectron()
+        ? (collection: PersistCollection) =>
+            electronPersistGetAll<unknown>(collection)
+        : (collection: PersistCollection) => idbGetAll<unknown>(collection);
+
+      const persist = await collectBackupPersistData(loadCollection, onStep);
 
       exportProgress.value = 90;
 

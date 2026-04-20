@@ -1,4 +1,4 @@
-import { createPersistApis } from '~/core/persist/factory';
+import { appConfigStorage } from '~/core/storage/entities/AppConfigStorage';
 import { getPlatformStorage } from '~/core/persist/storage-adapter';
 import {
   LEGACY_APP_CONFIG_STORAGE_KEY,
@@ -12,8 +12,7 @@ export class MigrateLegacyAppConfig1740477873005 extends Migration {
   public async up(): Promise<void> {
     const storage = getPlatformStorage();
 
-    const apis = createPersistApis();
-    const existing = await apis.appConfigApi.get();
+    const existing = await appConfigStorage.getOne('app-config');
     if (existing) {
       // Already migrated or no legacy data — just clean up the legacy key
       storage.removeItem(LEGACY_APP_CONFIG_STORAGE_KEY);
@@ -24,7 +23,7 @@ export class MigrateLegacyAppConfig1740477873005 extends Migration {
     if (raw) {
       try {
         const parsed = JSON.parse(raw);
-        await apis.appConfigApi.save(normalizeAppConfigState(parsed));
+        await appConfigStorage.save(normalizeAppConfigState(parsed));
         storage.removeItem(LEGACY_APP_CONFIG_STORAGE_KEY);
       } catch {
         // Non-fatal — leave legacy key in place for manual recovery

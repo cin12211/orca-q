@@ -2,87 +2,26 @@
  * Generic read-all / write-all helpers for IDB that mirror the
  * `persistGetAll` / `persistReplaceAll` primitives.
  *
- * Each entry maps to the exact same localforage instance as the individual
- * adapter files, so both paths read/write the same IndexedDB stores.
+ * Each entry maps to the same registry used by browser entity storages,
+ * so IDB collection names live in exactly one place.
  */
 import localforage from 'localforage';
+import {
+  PERSIST_COLLECTIONS,
+  PERSIST_IDB_STORES,
+  type PersistCollection,
+} from '~/core/storage/idbRegistry';
 
-export type PersistCollection =
-  | 'appConfig'
-  | 'agentState'
-  | 'workspaces'
-  | 'workspaceState'
-  | 'connections'
-  | 'tabViews'
-  | 'quickQueryLogs'
-  | 'rowQueryFiles'
-  | 'rowQueryFileContents'
-  | 'environment-tags'
-  | 'migrationState';
-
-// QB state is intentionally excluded: it uses localStorage directly (not IDB),
-// so it is not part of the app data export/import flow.
-export const PERSIST_COLLECTIONS: PersistCollection[] = [
-  'appConfig',
-  'agentState',
-  'workspaces',
-  'workspaceState',
-  'connections',
-  'tabViews',
-  'quickQueryLogs',
-  'rowQueryFiles',
-  'rowQueryFileContents',
-  'environment-tags',
-  'migrationState',
-];
-
-// Mirror the storeName/name pairs from each individual adapter
-const IDB_STORES: Record<PersistCollection, LocalForage> = {
-  appConfig: localforage.createInstance({
-    name: 'appConfigIDB',
-    storeName: 'appConfig',
-  }),
-  agentState: localforage.createInstance({
-    name: 'agentStateIDB',
-    storeName: 'agentState',
-  }),
-  workspaces: localforage.createInstance({
-    name: 'workspaceIDB',
-    storeName: 'workspaces',
-  }),
-  workspaceState: localforage.createInstance({
-    name: 'workspaceStateIDB',
-    storeName: 'workspaceState',
-  }),
-  connections: localforage.createInstance({
-    name: 'connectionStoreIDB',
-    storeName: 'connectionStore',
-  }),
-  tabViews: localforage.createInstance({
-    name: 'tabViewsIDB',
-    storeName: 'tabViews',
-  }),
-  quickQueryLogs: localforage.createInstance({
-    name: 'quickQueryLogsIDB',
-    storeName: 'quickQueryLogs',
-  }),
-  rowQueryFiles: localforage.createInstance({
-    name: 'rowQueryFileIDBStore',
-    storeName: 'rowQueryFiles',
-  }),
-  rowQueryFileContents: localforage.createInstance({
-    name: 'rowQueryFileContentIDBStore',
-    storeName: 'rowQueryFileContents',
-  }),
-  'environment-tags': localforage.createInstance({
-    name: 'environmentTagIDB',
-    storeName: 'environmentTags',
-  }),
-  migrationState: localforage.createInstance({
-    name: 'migrationStateIDB',
-    storeName: 'migrationState',
-  }),
-};
+const IDB_STORES = Object.fromEntries(
+  PERSIST_COLLECTIONS.map(collection => [
+    collection,
+    localforage.createInstance({
+      name: PERSIST_IDB_STORES[collection].dbName,
+      storeName: PERSIST_IDB_STORES[collection].storeName,
+      driver: localforage.INDEXEDDB,
+    }),
+  ])
+) as Record<PersistCollection, LocalForage>;
 
 /** Read all records from an IDB collection. */
 export async function idbGetAll<T>(
@@ -90,11 +29,14 @@ export async function idbGetAll<T>(
 ): Promise<T[]> {
   const store = IDB_STORES[collection];
   const keys = await store.keys();
+
   const results: T[] = [];
   for (const key of keys) {
-    const item = await store.getItem<T>(key);
+    const item = await store.getItem<T>(key.toString());
+
     if (item !== null) results.push(item);
   }
+
   return results;
 }
 
@@ -108,6 +50,17 @@ export async function idbReplaceAll<T extends { id: string }>(
 ): Promise<void> {
   const store = IDB_STORES[collection];
   await store.clear();
+  for (const item of values) {
+    await store.setItem(item.id, item);
+  }
+}
+
+/** Merge records into an IDB collection without deleting unrelated entries. */
+export async function idbMergeAll<T extends { id: string }>(
+  collection: PersistCollection,
+  values: T[]
+): Promise<void> {
+  const store = IDB_STORES[collection];
   for (const item of values) {
     await store.setItem(item.id, item);
   }

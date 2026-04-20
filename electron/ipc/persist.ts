@@ -4,6 +4,7 @@ import {
   persistFind,
   persistGetAll,
   persistGetAllPaginated,
+  persistMergeAll,
   persistGetOne,
   persistReplaceAll,
   persistUpsert,
@@ -87,6 +88,20 @@ export function registerPersistHandlers(): void {
         values: Record<string, unknown>[];
       }
     ) => persistReplaceAll(collection, values)
+  );
+
+  ipcMain.handle(
+    'persist:merge-all',
+    (
+      _event,
+      {
+        collection,
+        values,
+      }: {
+        collection: PersistCollection;
+        values: Record<string, unknown>[];
+      }
+    ) => persistMergeAll(collection, values)
   );
 
   ipcMain.handle(

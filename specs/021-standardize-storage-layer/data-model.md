@@ -208,7 +208,7 @@ Each entity class creates a `localforage` instance. Convention: `name = '{Entity
 | EnvironmentTag | `environmentTagIDB` | `environment_tags` |
 | AppConfig | `appConfigIDB` | `app_config` |
 | AgentState | `agentStateIDB` | `agent_state` |
-| QueryBuilderState | `queryBuilderStateIDB` | `query_builder_states` |
+| QueryBuilderState | renderer `localStorage` | not modeled in backup collections or SQLite |
 
 ---
 
@@ -362,24 +362,15 @@ CREATE TABLE IF NOT EXISTS agent_state (
 );
 ```
 
-### 3.11 `query_builder_states`
+### 3.11 QueryBuilderState (renderer localStorage only)
 
-```sql
-CREATE TABLE IF NOT EXISTS query_builder_states (
-  id            TEXT PRIMARY KEY,   -- {workspaceId}-{connectionId}-{schemaName}-{tableName}
-  workspace_id  TEXT NOT NULL,
-  connection_id TEXT NOT NULL,
-  schema_name   TEXT NOT NULL,
-  table_name    TEXT NOT NULL,
-  filters       TEXT NOT NULL,      -- JSON array
-  pagination    TEXT NOT NULL,      -- JSON object { limit, offset }
-  order_by      TEXT NOT NULL,      -- JSON object { columnName?, order? }
-  is_show_filters INTEGER NOT NULL DEFAULT 0,
-  compose_with  TEXT NOT NULL,
-  updated_at    TEXT NOT NULL
-);
-CREATE INDEX IF NOT EXISTS idx_qbs_ctx ON query_builder_states(workspace_id, connection_id);
+`QueryBuilderState` remains renderer-local UI state keyed by:
+
+```text
+{workspaceId}-{connectionId}-{schemaName}-{tableName}
 ```
+
+It is not part of the backup persist collections, has no IDB store, and has no Electron SQLite table.
 
 ### 3.12 `_schema_versions` (migration tracking)
 
@@ -440,10 +431,7 @@ BaseStorage<T>
     │     + get(): Promise<AgentPersistedState>
     │     + save(state): Promise<void>
     │     + delete(): Promise<void>
-    └── QueryBuilderStateStorage extends IDBStorage<QueryBuilderState>
-          + load(key): Promise<QueryBuilderState | null>   ← includes localStorage migration
-          + save(state): Promise<void>
-          + remove(key): Promise<void>
+    └── QueryBuilder persistence stays in renderer localStorage
 
     SQLite3Storage<T> extends BaseStorage<T>
        (better-sqlite3, synchronous in main process)
@@ -465,8 +453,7 @@ export interface StorageApis {
   environmentTagStorage: EnvironmentTagStorage;
   appConfigStorage: AppConfigStorage;
   agentStorage: AgentStateStorage;
-  queryBuilderStateStorage: QueryBuilderStateStorage;
 }
 ```
 
-> **Note**: On Electron, `createStorageApis()` returns the same `StorageApis` interface, but backed by the IPC-proxy adapters (existing `core/persist/adapters/electron/`). The SQLite storage runs in the main process and is accessed via the existing IPC bridge. Direct SQLite access from the renderer is never used.
+> **Note**: On Electron, `createStorageApis()` returns the same `StorageApis` interface, but backed by the IPC-proxy adapters (existing `core/persist/adapters/electron/`). The SQLite storage runs in the main process and is accessed via the existing IPC bridge. Query Builder state intentionally stays outside this interface and remains renderer-local localStorage state.

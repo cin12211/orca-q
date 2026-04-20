@@ -1,7 +1,7 @@
 import { ref } from 'vue';
 import type { Connection } from '~/core/stores';
+import { useEnvironmentTagStore } from '~/core/stores';
 import type { EnvironmentTag } from '../types/environmentTag.types';
-import { useEnvironmentTagStore } from './useEnvironmentTagStore';
 
 const strictModeDialogOpen = ref(false);
 const activeStrictModeTags = ref<EnvironmentTag[]>([]);

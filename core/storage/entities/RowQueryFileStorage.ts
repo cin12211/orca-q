@@ -1,11 +1,15 @@
 import type { RowQueryFile, RowQueryFileContent } from '~/core/types/entities';
+import {
+  ROW_QUERY_FILE_CONTENT_IDB,
+  ROW_QUERY_FILE_IDB,
+} from '../idbRegistry';
 import { IDBStorage } from '../base/IDBStorage';
 
 class RowQueryFileIDB extends IDBStorage<RowQueryFile> {
   readonly name = 'rowQueryFile';
 
   constructor() {
-    super({ dbName: 'rowQueryFileIDB', storeName: 'row_query_files' });
+    super(ROW_QUERY_FILE_IDB);
   }
 }
 
@@ -13,10 +17,7 @@ class RowQueryFileContentIDB extends IDBStorage<RowQueryFileContent> {
   readonly name = 'rowQueryFileContent';
 
   constructor() {
-    super({
-      dbName: 'rowQueryFileContentIDB',
-      storeName: 'row_query_file_contents',
-    });
+    super(ROW_QUERY_FILE_CONTENT_IDB);
   }
 
   // No timestamps for content records

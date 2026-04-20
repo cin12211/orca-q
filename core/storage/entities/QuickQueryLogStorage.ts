@@ -1,12 +1,13 @@
 import type { DeleteQQueryLogsProps } from '~/core/persist/types';
 import type { QuickQueryLog } from '~/core/types/entities';
+import { QUICK_QUERY_LOG_IDB } from '../idbRegistry';
 import { IDBStorage } from '../base/IDBStorage';
 
 class QuickQueryLogStorage extends IDBStorage<QuickQueryLog> {
   readonly name = 'quickQueryLog';
 
   constructor() {
-    super({ dbName: 'quickQueryLogIDB', storeName: 'quick_query_logs' });
+    super(QUICK_QUERY_LOG_IDB);
   }
 
   async getAll(): Promise<QuickQueryLog[]> {

@@ -1,11 +1,12 @@
 import type { Connection } from '~/core/types/entities';
+import { CONNECTION_IDB } from '../idbRegistry';
 import { IDBStorage } from '../base/IDBStorage';
 
 class ConnectionStorage extends IDBStorage<Connection> {
   readonly name = 'connection';
 
   constructor() {
-    super({ dbName: 'connectionIDB', storeName: 'connections' });
+    super(CONNECTION_IDB);
   }
 
   async getAll(): Promise<Connection[]> {

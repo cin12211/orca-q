@@ -12,6 +12,7 @@ export abstract class IDBStorage<
     this.store = localforage.createInstance({
       name: options.dbName,
       storeName: options.storeName,
+      driver: localforage.INDEXEDDB,
     });
   }
 

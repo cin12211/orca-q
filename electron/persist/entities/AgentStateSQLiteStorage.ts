@@ -1,8 +1,10 @@
-import { normalizeAgentState } from '../../../core/persist/store-state';
-import type { AgentPersistedState } from '../../../core/types/entities';
 import { SQLite3Storage } from '../SQLite3Storage';
 import { getDB } from '../db';
 import type { AgentStateRow } from '../schema';
+import {
+  normalizeAgentState,
+  type AgentPersistedState,
+} from '../utils/normalizeState';
 
 interface AgentStateRecord {
   id: string;

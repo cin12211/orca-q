@@ -2,6 +2,10 @@
 import { Icon, Select, SelectContent, SelectItem } from '#components';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
+import {
+  EnvTagBadge,
+  useEnvironmentTagStore,
+} from '@/components/modules/environment-tag';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -20,6 +24,8 @@ import CreateWorkspaceModal from './CreateWorkspaceModal.vue';
 import DeleteWorkspaceModal from './DeleteWorkspaceModal.vue';
 
 dayjs.extend(relativeTime);
+
+const tagStore = useEnvironmentTagStore();
 
 const props = defineProps<{
   workspace: Workspace;
@@ -186,14 +192,27 @@ const {
               class="cursor-pointer"
               :value="connection.id"
               v-for="connection in connections"
+              :key="connection.id"
               @select="onOpenWorkspaceWithConnection(connection.id)"
             >
-              <div class="flex items-center gap-2">
+              <div class="flex items-center gap-2 min-w-0">
                 <component
                   :is="getDatabaseSupportByType(connection.type)?.icon"
-                  class="size-4!"
+                  class="size-4! shrink-0"
                 />
-                {{ connection.name }}
+                <span class="truncate">{{ connection.name }}</span>
+                <div
+                  v-if="(connection.tagIds ?? []).length"
+                  class="flex items-center gap-1 ml-auto flex-shrink-0"
+                >
+                  <EnvTagBadge
+                    v-for="tag in tagStore.getTagsByIds(
+                      connection.tagIds ?? []
+                    )"
+                    :key="tag.id"
+                    :tag="tag"
+                  />
+                </div>
               </div>
             </SelectItem>
           </SelectGroup>

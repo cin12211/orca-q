@@ -144,26 +144,31 @@ export class OrderSQLiteStorage extends SQLite3Storage<Order> {
 
 ---
 
-## QueryBuilderState — Migration from localStorage
+## QueryBuilderState — localStorage parity with web
 
-`QueryBuilderStateStorage.load(key)` automatically migrates from `localStorage`:
+`useTableQueryBuilder` keeps its state in renderer localStorage on both web and Electron:
 
 ```ts
-async load(key: string): Promise<QueryBuilderState | null> {
-  // 1. Try IDB first
-  const fromIDB = await this.getOne(key);
-  if (fromIDB) return fromIDB;
+const persistedKey = LocalStorageManager.queryBuilderKey(
+  workspaceId,
+  connectionId,
+  schemaName,
+  tableName
+);
 
-  // 2. Fall back to localStorage (one-time migration)
-  const raw = localStorage.getItem(key);
-  if (!raw) return null;
-
-  const parsed = JSON.parse(raw) as QueryBuilderState;
-  await this.upsert({ ...parsed, id: key });  // write to IDB
-  localStorage.removeItem(key);               // remove from localStorage
-  return parsed;
-}
+localStorage.setItem(
+  persistedKey,
+  JSON.stringify({
+    filters,
+    pagination,
+    orderBy,
+    isShowFilters,
+    composeWith,
+  })
+);
 ```
+
+This state is excluded from backup persist collections and from Electron SQLite.
 
 ---
 
@@ -222,7 +227,6 @@ core/
     │   ├── EnvironmentTagStorage.ts
     │   ├── AppConfigStorage.ts
     │   ├── AgentStateStorage.ts
-    │   ├── QueryBuilderStateStorage.ts  ← includes localStorage migration
     │   └── index.ts
     ├── factory.ts               ← createStorageApis()
     ├── types.ts                 ← StorageApis interface
@@ -235,7 +239,7 @@ electron/persist/
 ├── entities/
 │   ├── WorkspaceSQLiteStorage.ts
 │   ├── ConnectionSQLiteStorage.ts
-│   └── ... (9 total)
+│   └── ... (8 persisted collections + single-record blobs)
 ├── migration/
 │   ├── runner.ts                ← runMigrations(db)
 │   └── versions/
@@ -243,3 +247,13 @@ electron/persist/
 │       └── v002-migrate-electron-store.ts
 └── store.ts                     ← REWRITTEN: routes to SQLite entities
 ```
+
+---
+
+## Manual Validation: Backup Export And Merge Restore
+
+1. Create a workspace, at least one connection, one query file, and change a UI preference that writes to local storage.
+2. Export a backup from the Settings → Backup Data panel and verify the JSON includes `persist`, `schemaVersion`, and `localStorage`.
+3. Modify the running app with extra data that does not exist in the exported file, then import the original backup.
+4. Confirm the warning dialog appears before restore, matching IDs are updated from the backup, unrelated current records still exist afterward, and no `persist:merge-all` handler error appears.
+5. Confirm local UI keys missing from the backup remain intact, while keys present in the backup are updated.

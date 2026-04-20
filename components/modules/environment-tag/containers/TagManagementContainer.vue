@@ -11,10 +11,10 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
+import { useEnvironmentTagStore } from '~/core/stores';
 import { useManagementConnectionStore } from '~/core/stores/managementConnectionStore';
 import CreateEnvTagDialog from '../components/CreateEnvTagDialog.vue';
 import EnvTagBadge from '../components/EnvTagBadge.vue';
-import { useEnvironmentTagStore } from '../hooks/useEnvironmentTagStore';
 
 const store = useEnvironmentTagStore();
 const connectionStore = useManagementConnectionStore();

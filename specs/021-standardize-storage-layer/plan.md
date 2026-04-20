@@ -5,7 +5,7 @@
 
 ## Summary
 
-Introduce a typed class hierarchy (`BaseStorage → IDBStorage → entity classes`) that replaces the current boilerplate-heavy plain-object adapters. Create 9 entity TypeScript interfaces in `core/types/entities/`. Build `core/storage/` as a new infrastructure layer with IDB implementations. For Electron, replace `electron-store` with `better-sqlite3` via an abstract `SQLite3Storage` base and 9 entity SQLite classes. Wire everything through a `createStorageApis()` factory. Migrate stores and composables to use the factory (P3).
+Introduce a typed class hierarchy (`BaseStorage → IDBStorage → entity classes`) that replaces the current boilerplate-heavy plain-object adapters. Create 9 entity TypeScript interfaces in `core/types/entities/`. Build `core/storage/` as a new infrastructure layer with IDB implementations. For Electron, replace `electron-store` with `better-sqlite3` via an abstract `SQLite3Storage` base and 9 SQLite-backed persist collections. Keep Query Builder state as renderer-local localStorage UI state, and treat `persist:merge-all` as a required Electron restore contract for backup import.
 
 ## Technical Context
 
@@ -86,7 +86,6 @@ core/storage/
 │   ├── EnvironmentTagStorage.ts    ← + replaceAll
 │   ├── AppConfigStorage.ts         ← single-record: get() / save() returns normalised state
 │   ├── AgentStateStorage.ts        ← single-record: get() / save()
-│   ├── QueryBuilderStateStorage.ts ← localStorage migration on first load
 │   └── index.ts
 ├── factory.ts                      ← createStorageApis(): StorageApis
 ├── types.ts                        ← StorageApis interface
@@ -107,7 +106,6 @@ electron/persist/
 │   ├── EnvironmentTagSQLiteStorage.ts
 │   ├── AppConfigSQLiteStorage.ts      ← single-row blob
 │   ├── AgentStateSQLiteStorage.ts     ← single-row blob
-│   ├── QueryBuilderStateSQLiteStorage.ts
 │   └── index.ts
 ├── migration/
 │   ├── runner.ts                   ← runMigrations(db): run pending versions in order
@@ -117,24 +115,24 @@ electron/persist/
 └── store.ts                        ← REWRITTEN: routes to SQLite entities (removes electron-store)
 
 # ── UPDATED: Electron IPC + preload ─────────────────────────────────────────
-electron/ipc/persist.ts             ← add 'persist:get-all-paginated' handler
-electron/preload.ts                 ← add persistGetAllPaginated to contextBridge
+electron/ipc/persist.ts             ← add 'persist:merge-all' and paginated handlers
+electron/preload.ts                 ← expose mergeAll + persistGetAllPaginated to contextBridge
 electron/main.ts                    ← call runMigrations(getDB()) before createWindow()
 
 # ── UPDATED: Web IDB adapters ────────────────────────────────────────────────
 # (Deprecated gradually; imports updated to use core/types/entities/)
 core/persist/adapters/electron/*.ts ← update entity type imports to ~/core/types/entities
 core/persist/types.ts               ← update entity type imports to ~/core/types/entities
-core/persist/factory.ts             ← add queryBuilderStateApi (P1)
+core/persist/factory.ts             ← keep persisted collection APIs aligned with Electron IPC
 
 # ── UPDATED: Composables + stores (P2/P3) ───────────────────────────────────
-core/composables/useTableQueryBuilder.ts  ← use QueryBuilderStateStorage (remove localStorage)
+core/composables/useTableQueryBuilder.ts  ← keep localStorage path explicit
 core/stores/*.ts                          ← migrate to createStorageApis() (P3, incremental)
 
 # ── NEW: Tests ───────────────────────────────────────────────────────────────
 test/unit/core/storage/base/IDBStorage.spec.ts
 test/unit/core/storage/entities/WorkspaceStorage.spec.ts
-test/unit/core/storage/entities/QueryBuilderStateStorage.spec.ts  ← localStorage migration
+test/unit/components/modules/settings/backupData.test.ts          ← backup normalization + localStorage merge helpers
 ```
 
 **Structure Decision**: Single-project, web-first with Electron as a runtime variant. New `core/storage/` folder is separate from `core/persist/` to preserve backward compatibility and allow gradual migration. SQLite code lives exclusively in `electron/persist/` to enforce the browser safety boundary.

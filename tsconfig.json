@@ -5,15 +5,9 @@
   "compilerOptions": {
     "useDefineForClassFields": true, // Default true if target is "ES2022" or "ESNext"
     "experimentalDecorators": true,
-    "types": [
-      "./core/persist/globals.d.ts"
-    ],
     "incremental": true,
     "tsBuildInfoFile": ".tsbuildinfo"
   },
-  "exclude": [
-    "src-tauri/**/*"
-  ],
   "vueCompilerOptions": {
     "checkUnknownComponents": true
   }

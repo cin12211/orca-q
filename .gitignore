@@ -80,3 +80,5 @@ coverage
 
 out/
 .gitnexus
+
+.sqlite3

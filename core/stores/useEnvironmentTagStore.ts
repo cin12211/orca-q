@@ -1,24 +1,33 @@
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
 import dayjs from 'dayjs';
+import { DEFAULT_ENV_TAGS } from '~/components/modules/environment-tag/constants/DEFAULT_ENV_TAGS';
+import type { TagColor } from '~/components/modules/environment-tag/types/environmentTag.enums';
+import type { EnvironmentTag } from '~/components/modules/environment-tag/types/environmentTag.types';
 import { uuidv4 } from '~/core/helpers';
-import { DEFAULT_ENV_TAGS } from '../constants/DEFAULT_ENV_TAGS';
-import { environmentTagService } from '../services/environmentTag.service';
-import type { TagColor } from '../types/environmentTag.enums';
-import type { EnvironmentTag } from '../types/environmentTag.types';
+import { createStorageApis } from '~/core/storage';
+import { useManagementConnectionStore } from './managementConnectionStore';
+
+type ConnectionTaggable = {
+  id: string;
+  tagIds?: string[];
+};
 
 export const useEnvironmentTagStore = defineStore('environment-tag', () => {
+  const storageApis = createStorageApis();
+  const connectionStore = useManagementConnectionStore();
+
   const tags = ref<EnvironmentTag[]>([]);
   const isLoading = ref(false);
 
   const loadTags = async () => {
     isLoading.value = true;
     try {
-      const all = await environmentTagService.getAll();
+      const all = await storageApis.environmentTagStorage.getAll();
       if (all.length === 0) {
-        // Seed the 5 default tags on first launch
+        // Seed the 5 default tags on first launch.
         for (const defaultTag of DEFAULT_ENV_TAGS) {
-          await environmentTagService.create(defaultTag);
+          await storageApis.environmentTagStorage.create(defaultTag);
         }
         tags.value = [...DEFAULT_ENV_TAGS];
       } else {
@@ -41,41 +50,33 @@ export const useEnvironmentTagStore = defineStore('environment-tag', () => {
       strictMode: payload.strictMode,
       createdAt: dayjs().toISOString(),
     };
-    const created = await environmentTagService.create(tag);
+    const created = await storageApis.environmentTagStorage.create(tag);
     tags.value = [...tags.value, created];
     return created;
   };
 
   const updateTag = async (tag: EnvironmentTag): Promise<EnvironmentTag> => {
-    const result = await environmentTagService.update(tag);
+    const result = await storageApis.environmentTagStorage.update(tag);
     if (result) {
       const idx = tags.value.findIndex(t => t.id === tag.id);
-      if (idx !== -1) tags.value.splice(idx, 1, result);
+      if (idx !== -1) {
+        tags.value.splice(idx, 1, result);
+      }
     }
     return result ?? tag;
   };
 
-  /**
-   * Delete a tag and cascade: remove its ID from all connections.
-   * Cascade is handled in the store to avoid a direct service-layer dependency
-   * between the environment-tag service and the connection service.
-   */
   const deleteTag = async (id: string) => {
-    await environmentTagService.delete(id);
+    await storageApis.environmentTagStorage.delete(id);
     tags.value = tags.value.filter(t => t.id !== id);
 
-    // Cascade: remove orphaned tagId from all connections
-    const { useManagementConnectionStore } = await import(
-      '~/core/stores/managementConnectionStore'
-    );
-    const connectionStore = useManagementConnectionStore();
-    const affected = connectionStore.connections.filter(c =>
-      c.tagIds?.includes(id)
+    const affected = connectionStore.connections.filter(
+      (c: ConnectionTaggable) => c.tagIds?.includes(id)
     );
     for (const conn of affected) {
       const updated = {
         ...conn,
-        tagIds: (conn.tagIds ?? []).filter(tid => tid !== id),
+        tagIds: (conn.tagIds ?? []).filter((tid: string) => tid !== id),
       };
       await connectionStore.updateConnection(updated);
     }

@@ -9,3 +9,4 @@ export * from './useQuickQueryLogs';
 export * from './useExplorerFileStore';
 export * from './agentStore';
 export * from './appConfigStore';
+export * from './useEnvironmentTagStore';

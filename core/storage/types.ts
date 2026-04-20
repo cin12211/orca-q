@@ -92,6 +92,7 @@ export interface RowQueryFileStorageApi {
 
 export interface EnvironmentTagStorageApi {
   getAll(): Promise<EnvironmentTag[]>;
+  getOne(id: string): Promise<EnvironmentTag | null>;
   create(tag: EnvironmentTag): Promise<EnvironmentTag>;
   update(tag: EnvironmentTag): Promise<EnvironmentTag | null>;
   delete(id: string): Promise<EnvironmentTag | null>;

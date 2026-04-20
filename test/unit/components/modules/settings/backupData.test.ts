@@ -1,12 +1,16 @@
 import { describe, expect, it } from 'vitest';
 import {
+  createEmptyPersistData,
   createBackupData,
   getBackupSchemaVersion,
   isBackupData,
+  mergeLocalStorageSnapshot,
+  normalizeBackupPersistData,
   restoreLocalStorageSnapshot,
   snapshotLocalStorage,
+  summarizeBackupData,
 } from '~/components/modules/settings/hooks/backupData';
-import type { PersistCollection } from '~/core/persist/adapters/idb/primitives';
+import type { PersistCollection } from '~/core/storage/idbRegistry';
 
 function createPersist(): Record<PersistCollection, unknown[]> {
   return {
@@ -56,6 +60,46 @@ describe('backupData helpers', () => {
     expect(getBackupSchemaVersion(backup)).toEqual(['legacy-name']);
   });
 
+  it('normalizes missing persist collections to empty arrays', () => {
+    expect(
+      normalizeBackupPersistData({ workspaces: [{ id: 'ws-1' }] })
+    ).toEqual({
+      ...createEmptyPersistData(),
+      workspaces: [{ id: 'ws-1' }],
+    });
+  });
+
+  it('summarizes persisted collection and local storage counts', () => {
+    const backup = createBackupData(
+      {
+        ...createPersist(),
+        workspaces: [{ id: 'ws-1' }],
+        connections: [{ id: 'conn-1' }, { id: 'conn-2' }],
+      },
+      ['v1'],
+      { sidebar: 'open', theme: 'dark' }
+    );
+
+    expect(summarizeBackupData(backup)).toEqual({
+      collections: [
+        { collection: 'appConfig', count: 0 },
+        { collection: 'agentState', count: 0 },
+        { collection: 'workspaces', count: 1 },
+        { collection: 'workspaceState', count: 0 },
+        { collection: 'connections', count: 2 },
+        { collection: 'tabViews', count: 0 },
+        { collection: 'quickQueryLogs', count: 0 },
+        { collection: 'rowQueryFiles', count: 0 },
+        { collection: 'rowQueryFileContents', count: 0 },
+        { collection: 'environment-tags', count: 0 },
+        { collection: 'migrationState', count: 0 },
+      ],
+      totalCollections: 2,
+      totalRecords: 3,
+      localStorageKeys: 2,
+    });
+  });
+
   it('snapshots every localStorage key/value pair', () => {
     const storage = {
       length: 2,
@@ -85,5 +129,20 @@ describe('backupData helpers', () => {
     restoreLocalStorageSnapshot({ alpha: '1', beta: '2' }, storage);
 
     expect(calls).toEqual(['clear', 'set:alpha=1', 'set:beta=2']);
+  });
+
+  it('merges localStorage snapshot values without clearing existing keys', () => {
+    const calls: string[] = [];
+    const storage = {
+      setItem: (key: string, value: string) => {
+        calls.push(`set:${key}=${value}`);
+      },
+      getItem: () => null,
+      removeItem: () => {},
+    };
+
+    mergeLocalStorageSnapshot({ alpha: '1', beta: '2' }, storage);
+
+    expect(calls).toEqual(['set:alpha=1', 'set:beta=2']);
   });
 });

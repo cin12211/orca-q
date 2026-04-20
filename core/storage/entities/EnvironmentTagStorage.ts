@@ -1,11 +1,12 @@
 import type { EnvironmentTag } from '~/core/types/entities';
+import { ENVIRONMENT_TAG_IDB } from '../idbRegistry';
 import { IDBStorage } from '../base/IDBStorage';
 
 class EnvironmentTagStorage extends IDBStorage<EnvironmentTag> {
   readonly name = 'environmentTag';
 
   constructor() {
-    super({ dbName: 'environmentTagIDB', storeName: 'environment_tags' });
+    super(ENVIRONMENT_TAG_IDB);
   }
 
   async getAll(): Promise<EnvironmentTag[]> {

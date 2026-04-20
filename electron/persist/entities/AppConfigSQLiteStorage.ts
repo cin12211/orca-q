@@ -1,9 +1,10 @@
-import path from 'node:path';
-import { normalizeAppConfigState } from '../../../core/persist/store-state';
-import type { AppConfigPersistedState } from '../../../core/types/entities';
 import { SQLite3Storage } from '../SQLite3Storage';
 import { getDB } from '../db';
 import type { AppConfigRow } from '../schema';
+import {
+  normalizeAppConfigState,
+  type AppConfigPersistedState,
+} from '../utils/normalizeState';
 
 interface AppConfigRecord {
   id: string;
