@@ -1,10 +1,8 @@
+import type { AppConfigPersistedState } from '~/core/types/entities';
 import { SQLite3Storage } from '../SQLite3Storage';
-import { getDB } from '../db';
+import { getKnex } from '../knex-db';
 import type { AppConfigRow } from '../schema';
-import {
-  normalizeAppConfigState,
-  type AppConfigPersistedState,
-} from '../utils/normalizeState';
+import { normalizeAppConfigState } from '../utils/normalizeState';
 
 interface AppConfigRecord {
   id: string;
@@ -46,9 +44,9 @@ class AppConfigSQLiteStorage extends SQLite3Storage<AppConfigRecord> {
     return entity;
   }
 
-  protected override addDefaultOrder(sql: string): string {
-    return sql;
+  protected override getOrderByColumn(): string | null {
+    return null;
   }
 }
 
-export const appConfigSQLiteStorage = new AppConfigSQLiteStorage(getDB());
+export const appConfigSQLiteStorage = new AppConfigSQLiteStorage(getKnex());

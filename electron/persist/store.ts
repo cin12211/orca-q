@@ -1,5 +1,4 @@
 import type { ElectronPersistCollection } from '~/core/storage/idbRegistry';
-import { getDB } from './db';
 import {
   workspaceSQLiteStorage,
   connectionSQLiteStorage,
@@ -13,6 +12,7 @@ import {
   agentStateSQLiteStorage,
   migrationStateSQLiteStorage,
 } from './entities';
+import { getKnex } from './knex-db';
 
 export type PersistCollection = ElectronPersistCollection;
 
@@ -58,6 +58,31 @@ function getAdapter(collection: PersistCollection): StorageAdapter | null {
   }
 }
 
+function requireAdapter(collection: PersistCollection): StorageAdapter {
+  const adapter = getAdapter(collection);
+  if (adapter) return adapter;
+  throw new Error(
+    `No SQLite adapter registered for collection "${collection}"`
+  );
+}
+
+function getRecordId(record: RecordValue): string {
+  return String(record['id']);
+}
+
+async function withForeignKeysDisabled<T>(
+  adapter: StorageAdapter,
+  run: (adapter: StorageAdapter) => Promise<T>
+): Promise<T> {
+  const knex = getKnex();
+  await knex.raw('PRAGMA foreign_keys = OFF');
+  try {
+    return await run(adapter);
+  } finally {
+    await knex.raw('PRAGMA foreign_keys = ON');
+  }
+}
+
 function matchesFilters(
   record: RecordValue,
   filters: PersistFilter[],
@@ -83,7 +108,7 @@ export async function persistGetAll(
     const record = await migrationStateSQLiteStorage.get();
     return record ? [record as unknown as RecordValue] : [];
   }
-  return getAdapter(collection)!.getMany();
+  return requireAdapter(collection).getMany();
 }
 
 export async function persistGetOne(
@@ -94,7 +119,7 @@ export async function persistGetOne(
     return appConfigSQLiteStorage.get() as unknown as Promise<RecordValue>;
   if (collection === 'agentState')
     return agentStateSQLiteStorage.get() as unknown as Promise<RecordValue>;
-  return getAdapter(collection)!.getOne(id);
+  return requireAdapter(collection).getOne(id);
 }
 
 export async function persistFind(
@@ -119,7 +144,7 @@ export async function persistUpsert(
     await agentStateSQLiteStorage.save(value as never);
     return { ...value, id };
   }
-  return getAdapter(collection)!.upsert({ ...value, id });
+  return requireAdapter(collection).upsert({ ...value, id });
 }
 
 export async function persistDelete(
@@ -140,8 +165,10 @@ export async function persistDelete(
     return matching;
   }
 
-  const adapter = getAdapter(collection)!;
-  await Promise.all(matching.map(r => adapter.delete(r['id'] as string)));
+  const adapter = requireAdapter(collection);
+  await Promise.all(
+    matching.map(record => adapter.delete(getRecordId(record)))
+  );
   return matching;
 }
 
@@ -176,18 +203,14 @@ export async function persistReplaceAll(
   // FK constraints are temporarily disabled because collections are restored
   // one at a time (e.g. workspaces before connections). Deleting parent rows
   // while child rows still exist would fail with FOREIGN KEY constraint failed.
-  // Better-sqlite3 methods are synchronous, so the awaits here only yield to
-  // the microtask queue — no other IPC handler can interleave between OFF/ON.
-  const adapter = getAdapter(collection)!;
-  const db = getDB();
-  db.pragma('foreign_keys = OFF');
-  try {
-    const existing = await adapter.getMany();
-    await Promise.all(existing.map(r => adapter.delete(r['id'] as string)));
-    await Promise.all(values.map(v => adapter.upsert(v)));
-  } finally {
-    db.pragma('foreign_keys = ON');
-  }
+  const adapter = requireAdapter(collection);
+  await withForeignKeysDisabled(adapter, async currentAdapter => {
+    const existing = await currentAdapter.getMany();
+    await Promise.all(
+      existing.map(record => currentAdapter.delete(getRecordId(record)))
+    );
+    await Promise.all(values.map(value => currentAdapter.upsert(value)));
+  });
 }
 
 export async function persistMergeAll(
@@ -213,7 +236,7 @@ export async function persistMergeAll(
     return;
   }
 
-  const adapter = getAdapter(collection)!;
+  const adapter = requireAdapter(collection);
   await Promise.all(values.map(value => adapter.upsert(value)));
 }
 

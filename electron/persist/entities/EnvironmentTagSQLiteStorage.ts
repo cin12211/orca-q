@@ -1,6 +1,6 @@
-import type { EnvironmentTag } from '../../../core/types/entities';
+import type { EnvironmentTag } from '~/core/types/entities';
 import { SQLite3Storage } from '../SQLite3Storage';
-import { getDB } from '../db';
+import { getKnex } from '../knex-db';
 import type { EnvironmentTagRow } from '../schema';
 
 class EnvironmentTagSQLiteStorage extends SQLite3Storage<EnvironmentTag> {
@@ -12,10 +12,10 @@ class EnvironmentTagSQLiteStorage extends SQLite3Storage<EnvironmentTag> {
       id: tag.id,
       name: tag.name,
       color: tag.color,
-      strict_mode: tag.strictMode ? 1 : 0,
-      is_system: tag.isSystem ? 1 : 0,
-      created_at: tag.createdAt,
-      updated_at: tag.updatedAt ?? null,
+      strictMode: tag.strictMode ? 1 : 0,
+      isSystem: tag.isSystem ? 1 : 0,
+      createdAt: tag.createdAt,
+      updatedAt: tag.updatedAt ?? null,
     };
   }
 
@@ -25,10 +25,10 @@ class EnvironmentTagSQLiteStorage extends SQLite3Storage<EnvironmentTag> {
       id: r.id,
       name: r.name,
       color: r.color as EnvironmentTag['color'],
-      strictMode: Boolean(r.strict_mode),
-      isSystem: Boolean(r.is_system),
-      createdAt: r.created_at,
-      updatedAt: r.updated_at ?? undefined,
+      strictMode: Boolean(r.strictMode),
+      isSystem: Boolean(r.isSystem),
+      createdAt: r.createdAt,
+      updatedAt: r.updatedAt ?? undefined,
     };
   }
 
@@ -37,28 +37,15 @@ class EnvironmentTagSQLiteStorage extends SQLite3Storage<EnvironmentTag> {
   }
 
   async replaceAll(tags: EnvironmentTag[]): Promise<void> {
-    const deleteAll = this.db.prepare(`DELETE FROM ${this.tableName}`);
-    const replaceTransaction = this.db.transaction(() => {
-      deleteAll.run();
+    await this.db.transaction(async trx => {
+      await trx(this.tableName).delete();
       for (const tag of tags) {
-        const rawRow = this.toRow(tag);
-        const sanitized: Record<string, unknown> = {};
-        for (const [k, v] of Object.entries(rawRow)) {
-          sanitized[k] = v === undefined ? null : v;
-        }
-        const cols = Object.keys(sanitized);
-        const placeholders = cols.map(c => `:${c}`).join(', ');
-        this.db
-          .prepare(
-            `INSERT INTO ${this.tableName} (${cols.join(', ')}) VALUES (${placeholders})`
-          )
-          .run(sanitized);
+        await trx(this.tableName).insert(this.normalizeRow(this.toRow(tag)));
       }
     });
-    replaceTransaction();
   }
 }
 
 export const environmentTagSQLiteStorage = new EnvironmentTagSQLiteStorage(
-  getDB()
+  getKnex()
 );

@@ -1,4 +1,4 @@
-import type Database from 'better-sqlite3';
+import type { Knex } from 'knex';
 import { BaseStorage } from './base/BaseStorage';
 
 export abstract class SQLite3Storage<
@@ -7,7 +7,7 @@ export abstract class SQLite3Storage<
   abstract override readonly name: string;
   abstract readonly tableName: string;
 
-  constructor(protected readonly db: Database.Database) {
+  constructor(protected readonly db: Knex) {
     super();
   }
 
@@ -15,40 +15,34 @@ export abstract class SQLite3Storage<
   abstract fromRow(row: Record<string, unknown>): T;
 
   async getOne(id: string): Promise<T | null> {
-    const row = this.db
-      .prepare(`SELECT * FROM ${this.tableName} WHERE id = ?`)
-      .get(id) as Record<string, unknown> | undefined;
+    const row = await this.db(this.tableName)
+      .where({ id })
+      .first<Record<string, unknown> | undefined>();
     return row ? this.fromRow(row) : null;
   }
 
   async getMany(filters?: Partial<T>): Promise<T[]> {
-    if (!filters || Object.keys(filters).length === 0) {
-      const sql = this.addDefaultOrder(`SELECT * FROM ${this.tableName}`);
-      const rows = this.db.prepare(sql).all() as Record<string, unknown>[];
-      return rows.map(r => this.fromRow(r));
+    const orderByColumn = this.getOrderByColumn();
+    const entries = filters
+      ? Object.entries(filters).filter(([, v]) => v !== undefined)
+      : [];
+
+    let query = this.db(this.tableName).select('*');
+
+    if (entries.length > 0) {
+      const row = this.toRow(filters as T);
+      const where: Record<string, unknown> = {};
+      for (const [k] of entries) {
+        where[k] = row[k];
+      }
+      query = query.where(where);
     }
 
-    const entries = Object.entries(filters).filter(([, v]) => v !== undefined);
-    if (entries.length === 0) {
-      const sql = this.addDefaultOrder(`SELECT * FROM ${this.tableName}`);
-      const rows = this.db.prepare(sql).all() as Record<string, unknown>[];
-      return rows.map(r => this.fromRow(r));
+    if (orderByColumn) {
+      query = query.orderBy(orderByColumn, this.getOrderDirection());
     }
 
-    // Build WHERE clause from camelCase filter keys → snake_case column names
-    const row = this.toRow(filters as T);
-    const conditions = entries.map(([k]) => {
-      const snakeKey = this.camelToSnake(k);
-      return `${snakeKey} = ?`;
-    });
-    const values = entries.map(([k]) => row[this.camelToSnake(k)]);
-    const sql = this.addDefaultOrder(
-      `SELECT * FROM ${this.tableName} WHERE ${conditions.join(' AND ')}`
-    );
-    const rows = this.db.prepare(sql).all(...values) as Record<
-      string,
-      unknown
-    >[];
+    const rows = (await query) as Record<string, unknown>[];
     return rows.map(r => this.fromRow(r));
   }
 
@@ -69,35 +63,26 @@ export abstract class SQLite3Storage<
   async delete(id: string): Promise<T | null> {
     const existing = await this.getOne(id);
     if (!existing) return null;
-    this.db.prepare(`DELETE FROM ${this.tableName} WHERE id = ?`).run(id);
+    await this.db(this.tableName).where({ id }).del();
     return existing;
   }
 
   async upsert(entity: T): Promise<T> {
-    const row = this.toRow(entity);
-    // Coerce undefined → null so every bind slot gets a concrete value.
-    // Use named parameters (:col) and pass `row` as an object so
-    // better-sqlite3 can never mistake a plain-object value for a
-    // named-parameters binding object (which would silently bind 0
-    // params and cause "Too few parameter values were provided").
-    const sanitized: Record<string, unknown> = {};
-    for (const [k, v] of Object.entries(row)) {
-      sanitized[k] = v === undefined ? null : v;
-    }
-    const cols = Object.keys(sanitized);
-    const placeholders = cols.map(c => `:${c}`).join(', ');
-    const updates = cols.filter(c => c !== 'id').map(c => `${c} = :${c}`);
-    this.db
-      .prepare(
-        `INSERT INTO ${this.tableName} (${cols.join(', ')}) VALUES (${placeholders})
-         ON CONFLICT(id) DO UPDATE SET ${updates.join(', ')}`
-      )
-      .run(sanitized);
+    const row = this.normalizeRow(this.toRow(entity));
+    await this.db(this.tableName).insert(row).onConflict('id').merge();
     return entity;
   }
 
-  protected addDefaultOrder(sql: string): string {
-    return `${sql} ORDER BY created_at ASC`;
+  /**
+   * Returns the logical camelCase column name to order by,
+   * or null if no ordering should be applied.
+   */
+  protected getOrderByColumn(): string | null {
+    return 'createdAt';
+  }
+
+  protected getOrderDirection(): 'asc' | 'desc' {
+    return 'asc';
   }
 
   protected applyTimestamps(entity: T): T {
@@ -109,7 +94,11 @@ export abstract class SQLite3Storage<
     };
   }
 
-  private camelToSnake(s: string): string {
-    return s.replace(/[A-Z]/g, letter => `_${letter.toLowerCase()}`);
+  protected normalizeRow(
+    row: Record<string, unknown>
+  ): Record<string, unknown> {
+    return Object.fromEntries(
+      Object.entries(row).map(([key, value]) => [key, value ?? null])
+    );
   }
 }

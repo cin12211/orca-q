@@ -1,6 +1,6 @@
-import type { Workspace } from '../../../core/types/entities';
+import type { Workspace } from '~/core/types/entities';
 import { SQLite3Storage } from '../SQLite3Storage';
-import { getDB } from '../db';
+import { getKnex } from '../knex-db';
 import type { WorkspaceRow } from '../schema';
 
 class WorkspaceSQLiteStorage extends SQLite3Storage<Workspace> {
@@ -13,9 +13,9 @@ class WorkspaceSQLiteStorage extends SQLite3Storage<Workspace> {
       icon: w.icon,
       name: w.name,
       desc: w.desc ?? null,
-      last_opened: w.lastOpened ?? null,
-      created_at: w.createdAt,
-      updated_at: w.updatedAt ?? null,
+      lastOpened: w.lastOpened ?? null,
+      createdAt: w.createdAt,
+      updatedAt: w.updatedAt ?? null,
     };
   }
 
@@ -26,9 +26,9 @@ class WorkspaceSQLiteStorage extends SQLite3Storage<Workspace> {
       icon: r.icon,
       name: r.name,
       desc: r.desc ?? undefined,
-      lastOpened: r.last_opened ?? undefined,
-      createdAt: r.created_at,
-      updatedAt: r.updated_at ?? undefined,
+      lastOpened: r.lastOpened ?? undefined,
+      createdAt: r.createdAt,
+      updatedAt: r.updatedAt ?? undefined,
     };
   }
 
@@ -37,4 +37,4 @@ class WorkspaceSQLiteStorage extends SQLite3Storage<Workspace> {
   }
 }
 
-export const workspaceSQLiteStorage = new WorkspaceSQLiteStorage(getDB());
+export const workspaceSQLiteStorage = new WorkspaceSQLiteStorage(getKnex());

@@ -1,14 +1,21 @@
+import type { ETreeFileSystemStatus } from '~/components/base/Tree';
+
 // RowQueryFile shares shape with TreeFileSystemItem (file-tree component)
 export interface RowQueryFile {
   id: string;
   workspaceId: string;
-  parentId?: string;
   title: string;
   type: 'file' | 'folder';
+  icon: string;
+  parentId?: string;
+  isFolder?: boolean;
+  closeIcon?: string;
+  variables?: string;
   createdAt: string;
+  path?: string;
   updatedAt?: string;
-  connectionId?: string; // stripped before persist (deprecated field)
-  [key: string]: unknown;
+  status?: ETreeFileSystemStatus;
+  cursorPos?: { from: number; to: number };
 }
 
 export interface RowQueryFileContent {

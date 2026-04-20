@@ -1,39 +1,42 @@
-import type Database from 'better-sqlite3';
+import type { Knex } from 'knex';
+import type { SchemaVersionRow } from '../schema/schema-versions';
+import { createTableIfMissing } from '../schema/shared';
 import { up as v001 } from './versions/v001-initial-schema';
 
 interface Migration {
   version: number;
-  up: (db: Database.Database) => void;
+  up: (knex: Knex) => Promise<void>;
 }
 
 const MIGRATIONS: Migration[] = [{ version: 1, up: v001 }];
 
-export function runMigrations(db: Database.Database): void {
+export async function runMigrations(knex: Knex): Promise<void> {
   // Ensure migration tracking table exists
-  db.exec(`
-    CREATE TABLE IF NOT EXISTS _schema_versions (
-      table_name TEXT PRIMARY KEY,
-      version    INTEGER NOT NULL DEFAULT 0,
-      applied_at TEXT NOT NULL
-    )
-  `);
+  await createTableIfMissing(knex, '_schema_versions', t => {
+    t.text('table_name').primary();
+    t.integer('version').notNullable().defaultTo(0);
+    t.text('applied_at').notNullable();
+  });
 
-  const row = db
-    .prepare(`SELECT version FROM _schema_versions WHERE table_name = 'app'`)
-    .get() as { version: number } | undefined;
+  const row = await knex('_schema_versions')
+    .where({ tableName: 'app' })
+    .first<SchemaVersionRow | undefined>();
 
   const currentVersion = row?.version ?? 0;
 
   for (const migration of MIGRATIONS) {
     if (migration.version <= currentVersion) continue;
 
-    const runMigration = db.transaction(() => {
-      migration.up(db);
-      db.prepare(
-        `INSERT OR REPLACE INTO _schema_versions (table_name, version, applied_at) VALUES ('app', ?, ?)`
-      ).run(migration.version, new Date().toISOString());
+    await knex.transaction(async trx => {
+      await migration.up(trx);
+      await trx('_schema_versions')
+        .insert({
+          tableName: 'app',
+          version: migration.version,
+          appliedAt: new Date().toISOString(),
+        })
+        .onConflict('tableName')
+        .merge();
     });
-
-    runMigration();
   }
 }

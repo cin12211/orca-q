@@ -42,6 +42,7 @@ const devWatchIgnored = [
   '**/.nuxt/**',
   '**/.output/**',
   '**/.data/**',
+  '**/.sqlite3/**',
   '**/.cache/**',
   '**/.vite/**',
   '**/dist/**',
@@ -156,6 +157,6 @@ export default defineNuxtConfig({
   watchers: {
     chokidar: devWatchOptions,
   },
-  ignore: ['**/docs/**'],
+  ignore: ['**/docs/**', '**/.sqlite3/**'],
   spaLoadingTemplate: true,
 });

@@ -116,10 +116,15 @@ export interface RowQueryFile {
   parentId?: string;
   title: string;
   type: 'file' | 'folder';
+  isFolder: boolean;        // persisted — required to reconstruct folder nodes
+  icon: string;             // persisted — file-tree display icon class
+  closeIcon?: string;       // persisted — optional close icon class
+  variables?: string;       // persisted — template variables
   createdAt: string;
+  path?: string;            // persisted — optional file path
   updatedAt?: string;
-  connectionId?: string; // stripped before persist (deprecated field)
-  [key: string]: unknown;
+  status?: ETreeFileSystemStatus; // UI-ONLY — MUST NOT be persisted in SQLite or IDB
+  cursorPos?: { from: number; to: number }; // persisted — restores editor cursor position
 }
 
 export interface RowQueryFileContent {
@@ -127,6 +132,8 @@ export interface RowQueryFileContent {
   contents: string;
 }
 ```
+
+> **Persistence boundary**: `status` is a transient UI state value (`ETreeFileSystemStatus`) that reflects runtime tree node state. It MUST NOT be written to SQLite columns or IDB records — set it only after loading from storage.
 
 ### 1.7 `environment-tag.entity.ts`
 

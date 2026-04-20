@@ -1,11 +1,11 @@
-import type { MigrationState } from '../../../core/types/entities/migration-state.entity';
+import type { MigrationState } from '~/core/types/entities';
 import { SQLite3Storage } from '../SQLite3Storage';
-import { getDB } from '../db';
+import { getKnex } from '../knex-db';
+import type { MigrationStateRow } from '../schema';
 
-interface MigrationStateRecord {
-  id: string;
-  names: string[];
-}
+// Alias the entity directly — no separate record shape needed.
+// Mirrors the IDB counterpart: core/storage/entities/MigrationStateStorage.ts
+type MigrationStateRecord = MigrationState;
 
 class MigrationStateSQLiteStorage extends SQLite3Storage<MigrationStateRecord> {
   readonly name = 'migrationStateSQLite';
@@ -17,16 +17,15 @@ class MigrationStateSQLiteStorage extends SQLite3Storage<MigrationStateRecord> {
   }
 
   fromRow(row: Record<string, unknown>): MigrationStateRecord {
+    const r = row as unknown as MigrationStateRow;
     return {
-      id: row['id'] as string,
-      names: JSON.parse(row['data'] as string) as string[],
+      id: 'applied-migrations',
+      names: JSON.parse(r.data) as string[],
     };
   }
 
   async get(): Promise<MigrationState | null> {
-    const record = await this.getOne(MigrationStateSQLiteStorage.KEY);
-    if (!record) return null;
-    return { id: 'applied-migrations', names: record.names };
+    return this.getOne(MigrationStateSQLiteStorage.KEY);
   }
 
   async save(names: string[]): Promise<void> {
@@ -44,11 +43,11 @@ class MigrationStateSQLiteStorage extends SQLite3Storage<MigrationStateRecord> {
     return entity;
   }
 
-  protected override addDefaultOrder(sql: string): string {
-    return sql;
+  protected override getOrderByColumn(): string | null {
+    return null;
   }
 }
 
 export const migrationStateSQLiteStorage = new MigrationStateSQLiteStorage(
-  getDB()
+  getKnex()
 );

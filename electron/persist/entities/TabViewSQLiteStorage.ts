@@ -1,7 +1,7 @@
+import type { TabView } from '~/core/types/entities';
 import type { DeleteTabViewProps } from '../../../core/persist/types';
-import type { TabView } from '../../../core/types/entities';
 import { SQLite3Storage } from '../SQLite3Storage';
-import { getDB } from '../db';
+import { getKnex } from '../knex-db';
 import type { TabViewRow } from '../schema';
 
 class TabViewSQLiteStorage extends SQLite3Storage<TabView> {
@@ -11,16 +11,16 @@ class TabViewSQLiteStorage extends SQLite3Storage<TabView> {
   toRow(tv: TabView): Record<string, unknown> {
     return {
       id: tv.id,
-      workspace_id: tv.workspaceId,
-      connection_id: tv.connectionId,
-      schema_id: tv.schemaId,
-      tab_index: tv.index,
+      workspaceId: tv.workspaceId,
+      connectionId: tv.connectionId,
+      schemaId: tv.schemaId,
+      index: tv.index,
       name: tv.name,
       icon: tv.icon,
-      icon_class: tv.iconClass ?? null,
+      iconClass: tv.iconClass ?? null,
       type: tv.type,
-      route_name: tv.routeName,
-      route_params: tv.routeParams ? JSON.stringify(tv.routeParams) : null,
+      routeName: tv.routeName,
+      routeParams: tv.routeParams ? JSON.stringify(tv.routeParams) : null,
       metadata: tv.metadata ? JSON.stringify(tv.metadata) : null,
     };
   }
@@ -29,23 +29,23 @@ class TabViewSQLiteStorage extends SQLite3Storage<TabView> {
     const r = row as unknown as TabViewRow;
     return {
       id: r.id,
-      workspaceId: r.workspace_id,
-      connectionId: r.connection_id,
-      schemaId: r.schema_id,
-      index: Number(r.tab_index),
+      workspaceId: r.workspaceId,
+      connectionId: r.connectionId,
+      schemaId: r.schemaId,
+      index: Number(r.index),
       name: r.name,
       icon: r.icon,
-      iconClass: r.icon_class ?? undefined,
+      iconClass: r.iconClass ?? undefined,
       type: r.type as TabView['type'],
-      routeName: r.route_name,
-      routeParams: r.route_params ? JSON.parse(r.route_params) : undefined,
+      routeName: r.routeName,
+      routeParams: r.routeParams ? JSON.parse(r.routeParams) : undefined,
       metadata: r.metadata ? JSON.parse(r.metadata) : undefined,
     };
   }
 
-  // tab_views has no created_at column
-  protected override addDefaultOrder(sql: string): string {
-    return `${sql} ORDER BY tab_index ASC`;
+  // tab_views has no createdAt field
+  protected override getOrderByColumn(): string | null {
+    return 'index';
   }
 
   async getAll(): Promise<TabView[]> {
@@ -56,11 +56,9 @@ class TabViewSQLiteStorage extends SQLite3Storage<TabView> {
     workspaceId: string;
     connectionId: string;
   }): Promise<TabView[]> {
-    const rows = this.db
-      .prepare(
-        `SELECT * FROM tab_views WHERE workspace_id = ? AND connection_id = ? ORDER BY tab_index ASC`
-      )
-      .all(ctx.workspaceId, ctx.connectionId) as Record<string, unknown>[];
+    const rows = (await this.db(this.tableName)
+      .where({ workspaceId: ctx.workspaceId, connectionId: ctx.connectionId })
+      .orderBy('index', 'asc')) as Record<string, unknown>[];
     return rows.map(r => this.fromRow(r));
   }
 
@@ -85,4 +83,4 @@ class TabViewSQLiteStorage extends SQLite3Storage<TabView> {
   }
 }
 
-export const tabViewSQLiteStorage = new TabViewSQLiteStorage(getDB());
+export const tabViewSQLiteStorage = new TabViewSQLiteStorage(getKnex());

@@ -149,3 +149,117 @@ Task: "Delete electron/persist/entities/QueryBuilderStateSQLiteStorage.ts and re
 ## Format Validation
 
 - All tasks use the required checklist format: checkbox, task ID, optional `[P]`, optional `[US#]`, and exact file paths.
+
+---
+
+---
+
+# Tasks: RowQueryFile — Full Field Persistence in Electron SQLite
+
+**Generated**: 2026-04-20  
+**Input**: `RowQueryFile` entity in `core/types/entities/row-query-file.entity.ts` contains fields (`isFolder`, `icon`, `closeIcon`, `path`, `cursorPos`) that are not saved to the `row_query_files` SQLite table in the Electron persist layer. Electron restarts cannot fully reconstruct file-tree items because those columns are absent from the schema and are not mapped in `RowQueryFileSQLiteStorage`.  
+**Spec**: [spec.md](./spec.md) | **Data Model**: [data-model.md](./data-model.md) | **Plan**: [plan.md](./plan.md)
+
+**Tests**: No dedicated test-first tasks — implementation-focused request.
+
+---
+
+## Phase 6: Foundational — Clarify Persistence Boundary
+
+**Purpose**: Record the authoritative decision on which `RowQueryFile` fields are persisted in SQLite versus UI-only, before any schema or code changes.
+
+**⚠️ CRITICAL**: Complete before any schema or storage class work starts.
+
+- [X] T015 Update `specs/021-standardize-storage-layer/data-model.md` section 1.6 to list `isFolder`, `icon`, `closeIcon?`, `path?`, and `cursorPos?` as explicit persistable fields alongside the existing fields, and add a note that `status` (`ETreeFileSystemStatus`) is UI-only and MUST NOT be persisted in SQLite or IDB
+
+**Checkpoint**: The persistence boundary is documented — schema and storage work can now begin.
+
+---
+
+## Phase 7: User Story 3 — RowQueryFile Full Field Persistence (Priority: P2)
+
+**Goal**: All persistable fields of the `RowQueryFile` TypeScript entity — `isFolder`, `icon`, `closeIcon`, `path`, and `cursorPos` — survive a round-trip through Electron SQLite so the file tree can be fully reconstructed after an app restart without losing icon, folder flag, path, or cursor position.
+
+**Independent Test**: Upsert a `RowQueryFile` with `isFolder: true`, `icon: 'i-custom-icon'`, `closeIcon: 'i-x'`, `path: '/queries/test.sql'`, and `cursorPos: { from: 10, to: 20 }` via `rowQueryFileSQLiteStorage.createFiles(file)`, then call `rowQueryFileSQLiteStorage.getAllFiles()` and confirm all five fields are present on the returned record with their original values.
+
+### Implementation for User Story 3
+
+- [X] T016 [US3] Update `electron/persist/schema/row-query-files.ts` — extend `RowQueryFileRow` type to include `isFolder` (`number`), `icon` (`string`), `closeIcon` (`string | null`), `path` (`string | null`), and `cursorPos` (`string | null`); add matching `.integer('is_folder')`, `.text('icon')`, `.text('close_icon').nullable()`, `.text('path').nullable()`, and `.text('cursor_pos').nullable()` columns to `createRowQueryFilesTable()` so fresh installs get the full schema
+
+- [~] T017 [US3] ~~Create `electron/persist/migration/versions/v002-rqf-missing-fields.ts`~~ — **SUPERSEDED**: app has not shipped; no existing databases exist. New columns were added directly to `createRowQueryFilesTable()` in v001, so no migration file is needed.
+
+- [~] T018 [US3] ~~Register the v002 migration in `electron/persist/migration/runner.ts`~~ — **SUPERSEDED**: v002 file was removed; v001 is the sole migration and already includes the new columns.
+
+- [X] T019 [US3] Update `electron/persist/entities/RowQueryFileSQLiteStorage.ts` — in `toRow()` add `isFolder`, `icon`, `closeIcon`, `path`, and `cursorPos` (JSON-stringified object or `null`); in `fromRow()` parse them back with safe fallbacks (`isFolder: Number(r.isFolder) === 1`, `icon: r.icon ?? ''`, `closeIcon: r.closeIcon ?? undefined`, `path: r.path ?? undefined`, `cursorPos: r.cursorPos ? JSON.parse(r.cursorPos) : undefined`)
+
+**Checkpoint**: User Story 3 is independently testable — a fresh Electron boot loads a full file-tree record with all five new fields intact.
+
+---
+
+## Phase 8: Polish & Cross-Cutting Concerns
+
+**Purpose**: Verify the schema change is type-safe and the migration path works for both new and existing installs.
+
+- [X] T020 [P] Run `vue-tsc --noEmit` from the project root and confirm zero TypeScript errors introduced by the schema type and storage class changes in `electron/persist/schema/row-query-files.ts` and `electron/persist/entities/RowQueryFileSQLiteStorage.ts`
+
+---
+
+## Dependencies & Execution Order (RowQueryFile work)
+
+- **Phase 6**: Must complete before Phase 7.
+- **T016 and T017**: Can run in parallel (different files, no shared state).
+- **T018**: Depends on T017 (imports the new migration file).
+- **T019**: Depends on T016 (uses the updated `RowQueryFileRow` type).
+- **T020**: Depends on T016, T017, T018, T019 all being complete.
+
+---
+
+## Parallel Opportunities
+
+```bash
+# T016 and T017 touch different files — run in parallel:
+Task: "Update electron/persist/schema/row-query-files.ts RowQueryFileRow type and createRowQueryFilesTable()"
+Task: "Create electron/persist/migration/versions/v002-rqf-missing-fields.ts"
+```
+
+---
+
+## Implementation Strategy
+
+### MVP First
+
+1. Complete Phase 6 (T015) — document the boundary.
+2. Run T016 + T017 in parallel.
+3. Apply T018 (register migration).
+4. Apply T019 (update storage class mapping).
+5. Verify with T020.
+
+### Key Decisions
+
+| Field | SQLite column | Type | Notes |
+|---|---|---|---|
+| `isFolder` | `is_folder` | `INTEGER` (0/1) | Required — needed to reconstruct folder nodes |
+| `icon` | `icon` | `TEXT NOT NULL` | Required — file-tree display |
+| `closeIcon` | `close_icon` | `TEXT NULL` | Optional — file-tree display |
+| `path` | `path` | `TEXT NULL` | Optional — may be undefined for in-memory files |
+| `cursorPos` | `cursor_pos` | `TEXT NULL` | JSON-encoded `{ from, to }` — restores editor position |
+| `status` | _(not persisted)_ | — | UI-only (`ETreeFileSystemStatus`) — omit from SQLite |
+
+> **Migration note**: App not yet delivered — no v002 migration file needed. New columns are part of the v001 initial schema in `createRowQueryFilesTable()`. If a migration is needed in future (after first release), create `v002-rqf-missing-fields.ts` using `hasColumn` guards.
+
+---
+
+## Task Summary (RowQueryFile work)
+
+- **Total new tasks**: 6
+- **Foundational**: 1 task (T015)
+- **User Story 3**: 4 tasks (T016–T019)
+- **Polish**: 1 task (T020)
+
+## Independent Test Criteria
+
+- **US3**: A `RowQueryFile` round-trips through `rowQueryFileSQLiteStorage` with all five new fields (`isFolder`, `icon`, `closeIcon`, `path`, `cursorPos`) intact on the returned record.
+
+## Format Validation
+
+- All tasks use the required checklist format: checkbox, task ID, optional `[P]`, optional `[US#]`, and exact file paths.

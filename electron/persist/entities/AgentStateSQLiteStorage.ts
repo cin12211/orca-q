@@ -1,10 +1,8 @@
+import type { AgentPersistedState } from '~/core/types/entities';
 import { SQLite3Storage } from '../SQLite3Storage';
-import { getDB } from '../db';
+import { getKnex } from '../knex-db';
 import type { AgentStateRow } from '../schema';
-import {
-  normalizeAgentState,
-  type AgentPersistedState,
-} from '../utils/normalizeState';
+import { normalizeAgentState } from '../utils/normalizeState';
 
 interface AgentStateRecord {
   id: string;
@@ -48,9 +46,9 @@ class AgentStateSQLiteStorage extends SQLite3Storage<AgentStateRecord> {
     return entity;
   }
 
-  protected override addDefaultOrder(sql: string): string {
-    return sql;
+  protected override getOrderByColumn(): string | null {
+    return null;
   }
 }
 
-export const agentStateSQLiteStorage = new AgentStateSQLiteStorage(getDB());
+export const agentStateSQLiteStorage = new AgentStateSQLiteStorage(getKnex());

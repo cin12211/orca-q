@@ -1,9 +1,6 @@
-import type {
-  RowQueryFile,
-  RowQueryFileContent,
-} from '../../../core/types/entities';
+import type { RowQueryFile, RowQueryFileContent } from '~/core/types/entities';
 import { SQLite3Storage } from '../SQLite3Storage';
-import { getDB } from '../db';
+import { getKnex } from '../knex-db';
 import type { RowQueryFileContentRow, RowQueryFileRow } from '../schema';
 
 class RowQueryFileSQLiteStorage extends SQLite3Storage<RowQueryFile> {
@@ -13,12 +10,18 @@ class RowQueryFileSQLiteStorage extends SQLite3Storage<RowQueryFile> {
   toRow(f: RowQueryFile): Record<string, unknown> {
     return {
       id: f.id,
-      workspace_id: f.workspaceId,
-      parent_id: f.parentId ?? null,
+      workspaceId: f.workspaceId,
+      parentId: f.parentId ?? null,
       title: f.title,
       type: f.type,
-      created_at: f.createdAt,
-      updated_at: f.updatedAt ?? null,
+      isFolder: f.isFolder ? 1 : 0,
+      icon: f.icon,
+      closeIcon: f.closeIcon ?? null,
+      variables: f.variables ?? '',
+      path: f.path ?? null,
+      cursorPos: f.cursorPos != null ? JSON.stringify(f.cursorPos) : null,
+      createdAt: f.createdAt,
+      updatedAt: f.updatedAt ?? null,
     };
   }
 
@@ -26,12 +29,18 @@ class RowQueryFileSQLiteStorage extends SQLite3Storage<RowQueryFile> {
     const r = row as unknown as RowQueryFileRow;
     return {
       id: r.id,
-      workspaceId: r.workspace_id,
-      parentId: r.parent_id ?? undefined,
+      workspaceId: r.workspaceId,
+      parentId: r.parentId ?? undefined,
       title: r.title,
       type: r.type,
-      createdAt: r.created_at,
-      updatedAt: r.updated_at ?? undefined,
+      isFolder: Number(r.isFolder) === 1,
+      icon: r.icon ?? '',
+      closeIcon: r.closeIcon ?? undefined,
+      variables: r.variables ?? '',
+      path: r.path ?? undefined,
+      cursorPos: r.cursorPos ? JSON.parse(r.cursorPos) : undefined,
+      createdAt: r.createdAt,
+      updatedAt: r.updatedAt ?? undefined,
     };
   }
 }
@@ -56,16 +65,16 @@ class RowQueryFileContentSQLiteStorage extends SQLite3Storage<RowQueryFileConten
     return entity;
   }
 
-  protected override addDefaultOrder(sql: string): string {
-    return sql; // no order needed
+  protected override getOrderByColumn(): string | null {
+    return null; // no order needed
   }
 }
 
 export const rowQueryFileSQLiteFileAdapter = new RowQueryFileSQLiteStorage(
-  getDB()
+  getKnex()
 );
 export const rowQueryFileSQLiteContentAdapter =
-  new RowQueryFileContentSQLiteStorage(getDB());
+  new RowQueryFileContentSQLiteStorage(getKnex());
 
 const fileDb = rowQueryFileSQLiteFileAdapter;
 const contentDb = rowQueryFileSQLiteContentAdapter;
