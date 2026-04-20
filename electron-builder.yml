@@ -16,8 +16,11 @@ compression: maximum
 # Files to bundle into the app
 files:
   - out/electron/**/*
+  - out/core/**/*
   - '!out/electron/**/*.d.ts'
   - '!out/electron/**/*.map'
+  - '!out/core/**/*.d.ts'
+  - '!out/core/**/*.map'
 
 # Bundle the Nitro runtime binary as extra resource
 extraResources:
