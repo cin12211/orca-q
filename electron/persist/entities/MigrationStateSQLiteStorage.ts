@@ -1,4 +1,4 @@
-import type { MigrationState } from '~/core/types/entities';
+import type { MigrationState } from '~/core/types/entities/migration-state.entity';
 import { SQLite3Storage } from '../SQLite3Storage';
 import { getKnex } from '../knex-db';
 import type { MigrationStateRow } from '../schema';

@@ -1,5 +1,5 @@
 import type { Knex } from 'knex';
-import type { Workspace } from '~/core/types/entities';
+import type { Workspace } from '~/core/types/entities/workspace.entity';
 import { createTableIfMissing, type ToSQLiteRow } from './shared';
 
 export type WorkspaceRow = ToSQLiteRow<Workspace>;

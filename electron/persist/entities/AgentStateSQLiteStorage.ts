@@ -1,4 +1,4 @@
-import type { AgentPersistedState } from '~/core/types/entities';
+import type { AgentPersistedState } from '~/core/types/entities/agent-state.entity';
 import { SQLite3Storage } from '../SQLite3Storage';
 import { getKnex } from '../knex-db';
 import type { AgentStateRow } from '../schema';

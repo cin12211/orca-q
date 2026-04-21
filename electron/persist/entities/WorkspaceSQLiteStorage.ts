@@ -1,4 +1,4 @@
-import type { Workspace } from '~/core/types/entities';
+import type { Workspace } from '~/core/types/entities/workspace.entity';
 import { SQLite3Storage } from '../SQLite3Storage';
 import { getKnex } from '../knex-db';
 import type { WorkspaceRow } from '../schema';

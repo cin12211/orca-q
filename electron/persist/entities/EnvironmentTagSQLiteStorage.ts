@@ -1,4 +1,4 @@
-import type { EnvironmentTag } from '~/core/types/entities';
+import type { EnvironmentTag } from '~/core/types/entities/environment-tag.entity';
 import { SQLite3Storage } from '../SQLite3Storage';
 import { getKnex } from '../knex-db';
 import type { EnvironmentTagRow } from '../schema';

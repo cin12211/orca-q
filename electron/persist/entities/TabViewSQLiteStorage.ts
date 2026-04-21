@@ -1,8 +1,8 @@
-import type { TabView } from '~/core/types/entities';
-import type { DeleteTabViewProps } from '../../../core/persist/types';
+import type { TabView } from '~/core/types/entities/tab-view.entity';
 import { SQLite3Storage } from '../SQLite3Storage';
 import { getKnex } from '../knex-db';
 import type { TabViewRow } from '../schema';
+import type { DeleteTabViewProps } from '../types';
 
 class TabViewSQLiteStorage extends SQLite3Storage<TabView> {
   readonly name = 'tabViewSQLite';

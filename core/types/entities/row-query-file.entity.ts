@@ -1,4 +1,4 @@
-import type { ETreeFileSystemStatus } from '~/components/base/Tree';
+export type RowQueryFileStatus = 'edit' | 'onlyView';
 
 // RowQueryFile shares shape with TreeFileSystemItem (file-tree component)
 export interface RowQueryFile {
@@ -15,7 +15,7 @@ export interface RowQueryFile {
   createdAt: string;
   path?: string;
   updatedAt?: string;
-  status?: ETreeFileSystemStatus;
+  status?: RowQueryFileStatus;
   cursorPos?: { from: number; to: number };
 }
 

@@ -1,4 +1,19 @@
-import type { TagColor } from '~/components/modules/environment-tag/types/environmentTag.enums';
+export enum TagColor {
+  Red = 'red',
+  Orange = 'orange',
+  Amber = 'amber',
+  Yellow = 'yellow',
+  Lime = 'lime',
+  Green = 'green',
+  Teal = 'teal',
+  Cyan = 'cyan',
+  Blue = 'blue',
+  Indigo = 'indigo',
+  Violet = 'violet',
+  Purple = 'purple',
+  Pink = 'pink',
+  Rose = 'rose',
+}
 
 export interface EnvironmentTag {
   id: string;

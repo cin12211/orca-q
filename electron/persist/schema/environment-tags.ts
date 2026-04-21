@@ -1,5 +1,5 @@
 import type { Knex } from 'knex';
-import type { EnvironmentTag } from '~/core/types/entities';
+import type { EnvironmentTag } from '~/core/types/entities/environment-tag.entity';
 import { createTableIfMissing, type ToSQLiteRow } from './shared';
 
 export type EnvironmentTagRow = ToSQLiteRow<EnvironmentTag>;

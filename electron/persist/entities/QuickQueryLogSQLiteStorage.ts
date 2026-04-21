@@ -1,8 +1,8 @@
-import type { QuickQueryLog } from '~/core/types/entities';
-import type { DeleteQQueryLogsProps } from '../../../core/persist/types';
+import type { QuickQueryLog } from '~/core/types/entities/quick-query-log.entity';
 import { SQLite3Storage } from '../SQLite3Storage';
 import { getKnex } from '../knex-db';
 import type { QuickQueryLogRow } from '../schema';
+import type { DeleteQQueryLogsProps } from '../types';
 
 class QuickQueryLogSQLiteStorage extends SQLite3Storage<QuickQueryLog> {
   readonly name = 'quickQueryLogSQLite';

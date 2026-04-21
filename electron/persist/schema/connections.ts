@@ -1,5 +1,5 @@
 import type { Knex } from 'knex';
-import type { Connection } from '~/core/types/entities';
+import type { Connection } from '~/core/types/entities/connection.entity';
 import { createTableIfMissing, type ToSQLiteRow } from './shared';
 
 export type ConnectionRow = ToSQLiteRow<Connection>;

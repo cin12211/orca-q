@@ -1,5 +1,8 @@
 import type { Knex } from 'knex';
-import type { RowQueryFile, RowQueryFileContent } from '~/core/types/entities';
+import type {
+  RowQueryFile,
+  RowQueryFileContent,
+} from '~/core/types/entities/row-query-file.entity';
 import { createTableIfMissing, type ToSQLiteRow } from './shared';
 
 export type RowQueryFileRow = ToSQLiteRow<
