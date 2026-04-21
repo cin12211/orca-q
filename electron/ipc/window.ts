@@ -1,13 +1,31 @@
-import { ipcMain, app, BrowserWindow, shell } from 'electron';
+import { ipcMain, app, shell, session, type BrowserWindow } from 'electron';
 import path from 'node:path';
+import { clearPersistedUserData } from '../persist/store';
 import { checkForUpdates, downloadUpdate, quitAndInstall } from '../updater';
 
-export function registerWindowHandlers(mainWindow: BrowserWindow): void {
+function getStoragePath(): string {
+  return path.join(app.getPath('appData'), 'orcaq');
+}
+
+export function registerWindowHandlers(
+  getMainWindow: () => BrowserWindow | null,
+  onDataMutation?: () => void
+): void {
   ipcMain.handle('window:minimize', () => {
+    const mainWindow = getMainWindow();
+    if (!mainWindow) {
+      return;
+    }
+
     mainWindow.minimize();
   });
 
   ipcMain.handle('window:maximize', () => {
+    const mainWindow = getMainWindow();
+    if (!mainWindow) {
+      return;
+    }
+
     if (mainWindow.isMaximized()) {
       mainWindow.unmaximize();
     } else {
@@ -16,16 +34,43 @@ export function registerWindowHandlers(mainWindow: BrowserWindow): void {
   });
 
   ipcMain.handle('window:close', () => {
+    const mainWindow = getMainWindow();
+    if (!mainWindow) {
+      return;
+    }
+
     mainWindow.close();
   });
 
   ipcMain.handle('window:get-storage-path', () => {
-    return path.join(app.getPath('appData'), 'orcaq');
+    return getStoragePath();
   });
 
   ipcMain.handle('window:open-storage-path', async () => {
-    const storagePath = path.join(app.getPath('appData'), 'orcaq');
-    await shell.openPath(storagePath);
+    await shell.openPath(getStoragePath());
+  });
+
+  ipcMain.handle('window:reset-all-data', async () => {
+    await clearPersistedUserData();
+    await session.defaultSession.clearStorageData();
+    onDataMutation?.();
+  });
+
+  ipcMain.handle('window:reveal-app-in-finder', () => {
+    shell.showItemInFolder(app.getPath('exe'));
+  });
+
+  ipcMain.handle('window:open-applications-folder', async () => {
+    const defaultApplicationsPath =
+      process.platform === 'darwin'
+        ? '/Applications'
+        : path.dirname(app.getPath('exe'));
+
+    await shell.openPath(defaultApplicationsPath);
+  });
+
+  ipcMain.handle('window:quit-app', () => {
+    app.quit();
   });
 }
 

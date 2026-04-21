@@ -202,7 +202,7 @@ export const useAgentStore = createGlobalState(() => {
     draftShowReasoning.value = normalized.draftShowReasoning;
     activeHistoryId.value = normalized.activeHistoryId;
     showAttachmentPanel.value = normalized.showAttachmentPanel;
-    histories.value = normalized.histories;
+    histories.value = normalized.histories as unknown as AgentHistorySession[];
   };
 
   const persistState = useDebounceFn(async (state: AgentPersistedState) => {

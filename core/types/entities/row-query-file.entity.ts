@@ -7,6 +7,7 @@ export interface RowQueryFile {
   title: string;
   type: 'file' | 'folder';
   icon: string;
+  connectionId?: string;
   parentId?: string;
   isFolder?: boolean;
   closeIcon?: string;

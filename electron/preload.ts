@@ -103,6 +103,13 @@ const electronAPI = {
     close: () => ipcRenderer.invoke('window:close'),
     getStoragePath: () => ipcRenderer.invoke('window:get-storage-path'),
     openStoragePath: () => ipcRenderer.invoke('window:open-storage-path'),
+    resetAllData: () => ipcRenderer.invoke('window:reset-all-data'),
+
+    onOpenSettings: (cb: () => void) => {
+      const handler = () => cb();
+      ipcRenderer.on('window:open-settings', handler);
+      return () => ipcRenderer.removeListener('window:open-settings', handler);
+    },
   },
 };
 

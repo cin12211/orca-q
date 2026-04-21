@@ -19,6 +19,7 @@ import {
 import { DEFAULT_DEBOUNCE_INPUT } from './core/constants';
 import { useAppContext } from './core/contexts';
 import { useChangelogModal } from './core/contexts/useChangelogModal';
+import { useSettingsModal } from './core/contexts/useSettingsModal';
 
 // initIDB() init in plugins/01.app-initialization.client.ts
 
@@ -39,6 +40,8 @@ const { isBlocking: isMigrating } = useMigrationState();
 
 const { connectToConnection } = useAppContext();
 const { autoShowIfNewVersion } = useChangelogModal();
+const { openSettings } = useSettingsModal();
+let removeOpenSettingsListener: (() => void) | undefined;
 
 useAppearance();
 
@@ -67,8 +70,18 @@ onMounted(async () => {
   // Auto-show changelog if there's a new version
   autoShowIfNewVersion();
 
+  removeOpenSettingsListener = window.electronAPI?.window.onOpenSettings?.(
+    () => {
+      openSettings();
+    }
+  );
+
   scheduleElectronStartupUpdateCheck();
   startElectronBackgroundUpdateChecks();
+});
+
+onBeforeUnmount(() => {
+  removeOpenSettingsListener?.();
 });
 </script>
 

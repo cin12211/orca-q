@@ -16,7 +16,6 @@ const onTitleBarDoubleClick = async () => {
 
 const isAppVersion = computed(() => isElectron() || isPWA());
 const config = useRuntimeConfig();
-const ggFormLink = config.public.ggFormLink;
 const githubLink = config.public.githubLink;
 </script>
 
@@ -40,7 +39,7 @@ const githubLink = config.public.githubLink;
 
         <p class="text-xl font-medium">orcaq</p>
       </div>
-      {{ 'show 1.0.61 → 1.0.62' }}
+      {{ '1.0.65' }}
     </div>
   </div>
 
@@ -69,12 +68,6 @@ const githubLink = config.public.githubLink;
       <AvatarImage src="https://github.com/unovue.png" alt="@unovue" />
       <AvatarFallback>CN</AvatarFallback>
     </Avatar> -->
-
-      <Button class="fixed bottom-4 right-4 z-10" variant="secondary">
-        <a :href="ggFormLink" target="_blank">
-          <Icon name="hugeicons:chat-feedback-01" /> Give me Feedback
-        </a>
-      </Button>
     </div>
 
     <slot />

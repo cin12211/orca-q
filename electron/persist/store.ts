@@ -33,6 +33,16 @@ interface StorageAdapter {
   delete(id: string): Promise<RecordValue | null>;
 }
 
+const CLEARABLE_SQLITE_COLLECTIONS: PersistCollection[] = [
+  'rowQueryFileContents',
+  'rowQueryFiles',
+  'quickQueryLogs',
+  'tabViews',
+  'workspaceState',
+  'connections',
+  'workspaces',
+];
+
 function getAdapter(collection: PersistCollection): StorageAdapter | null {
   switch (collection) {
     case 'workspaces':
@@ -255,4 +265,28 @@ export async function persistGetAllPaginated(
   const start = (page - 1) * pageSize;
   const data = all.slice(start, start + pageSize);
   return { data, total, page, pageSize };
+}
+
+export async function clearPersistedUserData(): Promise<void> {
+  const knex = getKnex();
+
+  await knex.raw('PRAGMA foreign_keys = OFF');
+
+  try {
+    for (const collection of CLEARABLE_SQLITE_COLLECTIONS) {
+      const adapter = requireAdapter(collection);
+      const existing = await adapter.getMany();
+
+      for (const record of existing) {
+        await adapter.delete(getRecordId(record));
+      }
+    }
+
+    await environmentTagSQLiteStorage.replaceAll([]);
+    await migrationStateSQLiteStorage.clear();
+    await appConfigSQLiteStorage.deleteConfig();
+    await agentStateSQLiteStorage.deleteState();
+  } finally {
+    await knex.raw('PRAGMA foreign_keys = ON');
+  }
 }

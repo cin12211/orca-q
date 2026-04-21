@@ -3,8 +3,8 @@ import { LoadingOverlay } from '#components';
 import type { EditorView } from '@codemirror/view';
 import BaseCodeEditor from '~/components/base/code-editor/BaseCodeEditor.vue';
 import { useHotkeys } from '~/core/composables/useHotKeys';
-import { useAppConfigStore } from '~/core/stores/appConfigStore';
 import { useEnvironmentTagStore } from '~/core/stores';
+import { useAppConfigStore } from '~/core/stores/appConfigStore';
 import IntroRawQuery from './components/IntroRawQuery.vue';
 import RawQueryConnectionConfirmDialog from './components/RawQueryConnectionConfirmDialog.vue';
 import RawQueryEditorContextMenu from './components/RawQueryEditorContextMenu.vue';
@@ -17,6 +17,10 @@ import { useRawQueryEditor, useRawQueryFileContent } from './hooks';
 import { useRawQueryEditorContextMenu } from './hooks/useRawQueryEditorContextMenu';
 
 const route = useRoute('workspaceId-connectionId-explorer-fileId');
+const workspaceId = computed(() => {
+  const value = route.params.workspaceId;
+  return Array.isArray(value) ? (value[0] ?? '') : (value ?? '');
+});
 const appConfigStore = useAppConfigStore();
 const tagStore = useEnvironmentTagStore();
 const rawQueryFileContent = useRawQueryFileContent();
@@ -218,7 +222,7 @@ onBeforeUnmount(() => {
             :connection="connection"
             :selected-connection-id="selectedConnectionId"
             :disable-connection-switch="isCurrentConnectionStrictMode"
-            :workspaceId="route.params.workspaceId"
+            :workspaceId="workspaceId"
             :file-variables="fileVariables"
             :code-editor-layout="appConfigStore.codeEditorLayout"
             :currentFileInfo="currentFile"

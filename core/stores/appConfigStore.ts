@@ -331,7 +331,7 @@ export const useAppConfigStore = defineStore('app-config-store', () => {
     quickQuerySafeModeEnabled.value = normalized.quickQuerySafeModeEnabled;
     spaceDisplay.value = normalized.spaceDisplay;
     Object.assign(tableAppearanceConfigs, normalized.tableAppearanceConfigs);
-    customLayouts.value = normalized.customLayouts;
+    customLayouts.value = normalized.customLayouts as CustomLayoutDefinition[];
     activeCustomLayoutId.value = normalized.activeCustomLayoutId;
     customLayoutSizes.value = normalized.customLayoutSizes;
   };

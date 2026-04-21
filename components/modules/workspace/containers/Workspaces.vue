@@ -28,6 +28,9 @@ const { startTour } = useWorkspaceTour({
 });
 
 const isOpenRestoreDataModal = ref(false);
+
+const config = useRuntimeConfig();
+const ggFormLink = config.public.ggFormLink;
 </script>
 
 <template>
@@ -110,8 +113,14 @@ const isOpenRestoreDataModal = ref(false);
       </div>
     </BaseEmpty>
 
+    <Button class="fixed bottom-4 right-4 z-10" variant="secondary">
+      <a :href="ggFormLink" target="_blank">
+        <Icon name="hugeicons:chat-feedback-01" /> Give me Feedback
+      </a>
+    </Button>
+
     <Button
-      class="fixed bottom-15 right-4"
+      class="fixed bottom-19 right-4"
       variant="secondary"
       @click="startTour"
       title="Start Tour"

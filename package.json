@@ -9,7 +9,7 @@
     "url": "https://github.com/cin12211"
   },
   "license": "MIT",
-  "version": "1.0.64",
+  "version": "1.0.65",
   "main": "out/electron/main.js",
   "scripts": {
     "dev": "npm run nuxt:dev",
@@ -18,7 +18,7 @@
     "nuxt:build-web": "nuxt build",
     "nuxt:generate": "nuxt generate",
     "postinstall": "electron-rebuild -f -w better-sqlite3",
-    "electron:dev": "concurrently -n nuxt,electron -c cyan,yellow \"nuxt dev\" \"wait-on http://localhost:3000 && cross-env NODE_ENV=development ELECTRON_DEV_SERVER_URL=http://localhost:3000 electron out/electron/main.js\"",
+    "electron:dev": "node scripts/electron-compile-dev.mjs && concurrently -n nuxt,electron -c cyan,yellow \"nuxt dev\" \"wait-on http://localhost:3000 out/electron/main.js && cross-env NODE_ENV=development ELECTRON_DEV_SERVER_URL=http://localhost:3000 electron out/electron/main.js\"",
     "electron:compile": "tsc -p electron/tsconfig.json",
     "electron:build": "node scripts/electron-before-build.mjs && electron-builder",
     "electron:build:mac-m": "node scripts/electron-before-build.mjs && electron-builder --mac --arm64",
