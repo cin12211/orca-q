@@ -17,6 +17,8 @@ export async function createConnectionsTable(knex: Knex): Promise<void> {
     t.text('username').nullable();
     t.text('password').nullable();
     t.text('database').nullable();
+    t.text('service_name').nullable();
+    t.text('file_path').nullable();
     t.text('ssl').nullable();
     t.text('ssh').nullable();
     t.text('tag_ids').nullable();

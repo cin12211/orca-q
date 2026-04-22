@@ -37,6 +37,7 @@ dist
 
 # Node dependencies
 node_modules
+build
 
 # Logs
 logs
@@ -82,3 +83,8 @@ out/
 .gitnexus
 
 .sqlite3
+
+# Package manager lockfiles (generated locally in some workflows)
+package-lock.json
+yarn.lock
+pnpm-lock.yaml

@@ -69,6 +69,7 @@ interface ElectronWindowAPI {
   minimize: () => Promise<void>;
   maximize: () => Promise<void>;
   close: () => Promise<void>;
+  pickSqliteFile: () => Promise<string | null>;
   getStoragePath: () => Promise<string>;
   openStoragePath: () => Promise<void>;
   resetAllData: () => Promise<void>;

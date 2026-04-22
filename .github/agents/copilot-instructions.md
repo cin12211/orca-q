@@ -4,6 +4,9 @@ Auto-generated from all feature plans. Last updated: 2026-03-15
 
 ## Active Technologies
 
+- TypeScript ~5.6, Node >=18, Vue 3.5, Nuxt 3.16, Electron 41 + Nuxt 3 SPA + Nitro server routes, Pinia 3, Knex 3.1, `pg`, `sqlite3`, `better-sqlite3`, plus new runtime drivers `mysql2` and `oracledb` (030-add-multi-db-support)
+- IndexedDB via `localforage` for browser persistence, Electron SQLite (`better-sqlite3`) for app persistence, external DB sessions via Knex driver adapters, local filesystem path access for desktop SQLite files (030-add-multi-db-support)
+
 - TypeScript 5.x (Electron main process + Nuxt 3 / Vue 3 renderer) + Electron 30+, electron-updater 6.x, Vue 3 Composition API, Pinia, shadcn-vue component library, vue-sonner (toast) (014-enhance-electron-updater)
 - electron-store (Electron main process) accessed from renderer via existing contextBridge IPC persist layer (`appConfig` collection) (014-enhance-electron-updater)
 
@@ -52,12 +55,11 @@ bun nuxt:build     # Production build
 - AG Grid theme changes: `themeBalham.withPart(...).withParams(...)` — no grid destruction needed
 
 ## Recent Changes
+
+- 030-add-multi-db-support: Added TypeScript ~5.6, Node >=18, Vue 3.5, Nuxt 3.16, Electron 41 + Nuxt 3 SPA + Nitro server routes, Pinia 3, Knex 3.1, `pg`, `sqlite3`, `better-sqlite3`, plus new runtime drivers `mysql2` and `oracledb`
 - 021-standardize-storage-layer: Added TypeScript 5.x
 
 - 014-enhance-electron-updater: Added TypeScript 5.x (Electron main process + Nuxt 3 / Vue 3 renderer) + Electron 30+, electron-updater 6.x, Vue 3 Composition API, Pinia, shadcn-vue component library, vue-sonner (toast)
-
-- 013-connection-env-tags: Added TypeScript 5.x + Nuxt 3 (SPA), Vue 3 Composition API, Pinia, VeeValidate v4 + Zod, shadcn-vue, Tailwind CSS 4, localforage, Electron IPC
-
 
 <!-- MANUAL ADDITIONS START -->
 <!-- MANUAL ADDITIONS END -->

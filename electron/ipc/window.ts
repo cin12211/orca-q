@@ -1,4 +1,12 @@
-import { ipcMain, app, shell, session, type BrowserWindow } from 'electron';
+import {
+  ipcMain,
+  app,
+  shell,
+  session,
+  dialog,
+  type BrowserWindow,
+  type OpenDialogOptions,
+} from 'electron';
 import path from 'node:path';
 import { clearPersistedUserData } from '../persist/store';
 import { checkForUpdates, downloadUpdate, quitAndInstall } from '../updater';
@@ -40,6 +48,33 @@ export function registerWindowHandlers(
     }
 
     mainWindow.close();
+  });
+
+  ipcMain.handle('window:pick-sqlite-file', async () => {
+    const mainWindow = getMainWindow();
+    const options: OpenDialogOptions = {
+      title: 'Select SQLite Database File',
+      properties: ['openFile'],
+      filters: [
+        {
+          name: 'SQLite Databases',
+          extensions: ['sqlite', 'sqlite3', 'db', 'db3'],
+        },
+        {
+          name: 'All Files',
+          extensions: ['*'],
+        },
+      ],
+    };
+    const result = mainWindow
+      ? await dialog.showOpenDialog(mainWindow, options)
+      : await dialog.showOpenDialog(options);
+
+    if (result.canceled) {
+      return null;
+    }
+
+    return result.filePaths[0] || null;
   });
 
   ipcMain.handle('window:get-storage-path', () => {

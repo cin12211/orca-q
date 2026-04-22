@@ -20,6 +20,7 @@ export interface ParsedConnection {
 const DEFAULT_PORTS: Record<DatabaseClientType, number> = {
   [DatabaseClientType.POSTGRES]: 5432,
   [DatabaseClientType.MYSQL]: 3306,
+  [DatabaseClientType.MARIADB]: 3306,
   [DatabaseClientType.MYSQL2]: 3306,
   [DatabaseClientType.MSSQL]: 1433,
   [DatabaseClientType.ORACLE]: 1521,
@@ -200,7 +201,9 @@ const SCHEME_MAP: Record<string, DatabaseClientType> = {
   pg: DatabaseClientType.POSTGRES,
   mysql: DatabaseClientType.MYSQL,
   mysql2: DatabaseClientType.MYSQL,
-  mariadb: DatabaseClientType.MYSQL,
+  mariadb: DatabaseClientType.MARIADB,
+  oracle: DatabaseClientType.ORACLE,
+  oracledb: DatabaseClientType.ORACLE,
   //   mongodb: DatabaseClientType.MONGODB,
   //   'mongodb+srv': DatabaseClientType.MONGODB,
   //   redis: DatabaseClientType.REDIS,

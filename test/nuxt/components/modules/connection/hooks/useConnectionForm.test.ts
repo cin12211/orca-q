@@ -1,4 +1,4 @@
-import { isProxy, ref } from 'vue';
+import { isProxy, nextTick, ref } from 'vue';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { useConnectionForm } from '~/components/modules/connection/hooks/useConnectionForm';
 import { EConnectionMethod } from '~/components/modules/connection/types';
@@ -53,6 +53,19 @@ function createForm(overrides?: {
   });
 }
 
+function setElectronWindowApi(overrides?: {
+  pickSqliteFile?: ReturnType<typeof vi.fn>;
+}) {
+  Object.defineProperty(window, 'electronAPI', {
+    configurable: true,
+    value: {
+      window: {
+        pickSqliteFile: overrides?.pickSqliteFile || vi.fn(),
+      },
+    },
+  });
+}
+
 // ---------------------------------------------------------------------------
 // Tests
 // ---------------------------------------------------------------------------
@@ -60,6 +73,10 @@ function createForm(overrides?: {
 describe('useConnectionForm', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    Object.defineProperty(window, 'electronAPI', {
+      configurable: true,
+      value: undefined,
+    });
   });
 
   // -- Initial state -------------------------------------------------------
@@ -82,6 +99,15 @@ describe('useConnectionForm', () => {
   it('defaults connection method to STRING', () => {
     const { connectionMethod } = createForm();
     expect(connectionMethod.value).toBe(EConnectionMethod.STRING);
+  });
+
+  it('switches to FILE connection method for SQLite connections', async () => {
+    const { dbType, connectionMethod } = createForm();
+
+    dbType.value = DatabaseClientType.SQLITE3;
+    await nextTick();
+
+    expect(connectionMethod.value).toBe(EConnectionMethod.FILE);
   });
 
   it('default connection name is set', () => {
@@ -157,6 +183,7 @@ describe('useConnectionForm', () => {
       'postgresql://user:pass@localhost:5432/testdb'
     );
     expect(body.type).toBe(DatabaseClientType.POSTGRES);
+    expect(body.method).toBe(EConnectionMethod.STRING);
   });
 
   it('sets testStatus to "error" when health check returns isConnectedSuccess: false', async () => {
@@ -204,6 +231,47 @@ describe('useConnectionForm', () => {
     expect(body.password).toBe('secret');
     expect(body.database).toBe('mydb');
     expect(body.stringConnection).toBeUndefined();
+    expect(body.method).toBe(EConnectionMethod.FORM);
+  });
+
+  it('sends serviceName for Oracle form connections', async () => {
+    mockHealthCheck.mockResolvedValue({ isConnectedSuccess: true });
+
+    const { connectionMethod, formData, dbType, handleTestConnection } =
+      createForm();
+
+    connectionMethod.value = EConnectionMethod.FORM;
+    dbType.value = DatabaseClientType.ORACLE;
+    formData.host = 'oracle.internal';
+    formData.port = '1521';
+    formData.username = 'admin';
+    formData.password = 'secret';
+    formData.serviceName = 'ORCLPDB1';
+
+    await handleTestConnection();
+
+    const body = mockHealthCheck.mock.calls[0][0];
+    expect(body.serviceName).toBe('ORCLPDB1');
+    expect(body.database).toBeUndefined();
+  });
+
+  it('sends filePath for SQLite file connections', async () => {
+    mockHealthCheck.mockResolvedValue({ isConnectedSuccess: true });
+    setElectronWindowApi();
+
+    const { connectionMethod, formData, dbType, handleTestConnection } =
+      createForm();
+
+    dbType.value = DatabaseClientType.SQLITE3;
+    await nextTick();
+    connectionMethod.value = EConnectionMethod.FILE;
+    formData.filePath = '/tmp/app.sqlite';
+
+    await handleTestConnection();
+
+    const body = mockHealthCheck.mock.calls[0][0];
+    expect(body.method).toBe(EConnectionMethod.FILE);
+    expect(body.filePath).toBe('/tmp/app.sqlite');
   });
 
   // -- resetForm ------------------------------------------------------------
@@ -321,6 +389,30 @@ describe('useConnectionForm', () => {
     formData.database = 'mydb';
 
     expect(isFormValid.value).toBe(true);
+  });
+
+  it('isFormValid is true for FILE method when filePath is provided', async () => {
+    setElectronWindowApi();
+
+    const { isFormValid, formData, connectionName, dbType } = createForm();
+
+    dbType.value = DatabaseClientType.SQLITE3;
+    await nextTick();
+    connectionName.value = 'local-sqlite';
+    formData.filePath = '/tmp/app.sqlite';
+
+    expect(isFormValid.value).toBe(true);
+  });
+
+  it('isFormValid is false for FILE method outside Electron', async () => {
+    const { isFormValid, formData, connectionName, dbType } = createForm();
+
+    dbType.value = DatabaseClientType.SQLITE3;
+    await nextTick();
+    connectionName.value = 'local-sqlite';
+    formData.filePath = '/tmp/app.sqlite';
+
+    expect(isFormValid.value).toBe(false);
   });
 
   it('isFormValid is false when connectionName is empty (STRING method)', () => {
@@ -475,5 +567,119 @@ describe('useConnectionForm', () => {
     expect(mockHealthCheck).not.toHaveBeenCalled();
     expect(onUpdate).toHaveBeenCalledOnce();
     expect(onAddNew).not.toHaveBeenCalled();
+  });
+
+  it('stores serviceName when creating an Oracle form connection', async () => {
+    mockHealthCheck.mockResolvedValue({ isConnectedSuccess: true });
+
+    const onAddNew = vi.fn();
+
+    const {
+      connectionMethod,
+      formData,
+      connectionName,
+      dbType,
+      handleCreateConnection,
+    } = createForm({ onAddNew, workspaceId: 'ws-123' });
+
+    dbType.value = DatabaseClientType.ORACLE;
+    connectionMethod.value = EConnectionMethod.FORM;
+    connectionName.value = 'oracle-prod';
+    formData.host = 'oracle.internal';
+    formData.port = '1521';
+    formData.username = 'admin';
+    formData.password = 'secret';
+    formData.serviceName = 'ORCLPDB1';
+
+    await handleCreateConnection();
+
+    const connection = onAddNew.mock.calls[0][0];
+    expect(connection.type).toBe(DatabaseClientType.ORACLE);
+    expect(connection.serviceName).toBe('ORCLPDB1');
+    expect(connection.database).toBeUndefined();
+    expect(connection.connectionString).toBe(
+      'oracledb://admin:secret@oracle.internal:1521/ORCLPDB1'
+    );
+  });
+
+  it('stores the MariaDB connection string scheme for form connections', async () => {
+    mockHealthCheck.mockResolvedValue({ isConnectedSuccess: true });
+
+    const onAddNew = vi.fn();
+
+    const {
+      connectionMethod,
+      formData,
+      connectionName,
+      dbType,
+      handleCreateConnection,
+    } = createForm({ onAddNew, workspaceId: 'ws-123' });
+
+    dbType.value = DatabaseClientType.MARIADB;
+    await nextTick();
+    connectionMethod.value = EConnectionMethod.FORM;
+    connectionName.value = 'maria-prod';
+    formData.host = 'maria.internal';
+    formData.port = '3306';
+    formData.username = 'admin';
+    formData.password = 'secret';
+    formData.database = 'heraq';
+
+    await handleCreateConnection();
+
+    const connection = onAddNew.mock.calls[0][0];
+    expect(connection.type).toBe(DatabaseClientType.MARIADB);
+    expect(connection.connectionString).toBe(
+      'mariadb://admin:secret@maria.internal:3306/heraq'
+    );
+  });
+
+  it('stores filePath and sqlite connection string for SQLite file connections', async () => {
+    mockHealthCheck.mockResolvedValue({ isConnectedSuccess: true });
+    setElectronWindowApi();
+
+    const onAddNew = vi.fn();
+
+    const {
+      connectionMethod,
+      formData,
+      connectionName,
+      dbType,
+      handleCreateConnection,
+    } = createForm({ onAddNew, workspaceId: 'ws-123' });
+
+    dbType.value = DatabaseClientType.SQLITE3;
+    await nextTick();
+    connectionMethod.value = EConnectionMethod.FILE;
+    connectionName.value = 'local-db';
+    formData.filePath = '/tmp/app.sqlite';
+
+    await handleCreateConnection();
+
+    const connection = onAddNew.mock.calls[0][0];
+    expect(connection.type).toBe(DatabaseClientType.SQLITE3);
+    expect(connection.filePath).toBe('/tmp/app.sqlite');
+    expect(connection.connectionString).toBe('sqlite3:///tmp/app.sqlite');
+  });
+
+  it('reports a desktop-only error when testing SQLite outside Electron', async () => {
+    const {
+      dbType,
+      formData,
+      handleTestConnection,
+      testErrorMessage,
+      testStatus,
+    } = createForm();
+
+    dbType.value = DatabaseClientType.SQLITE3;
+    await nextTick();
+    formData.filePath = '/tmp/app.sqlite';
+
+    const result = await handleTestConnection();
+
+    expect(result).toBe(false);
+    expect(testStatus.value).toBe('error');
+    expect(testErrorMessage.value).toContain('desktop app');
+    expect(mockHealthCheck).not.toHaveBeenCalled();
   });
 });

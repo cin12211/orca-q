@@ -28,7 +28,9 @@ vi.mock('@/components/base/code-editor/utils/diagnostic-lint', () => ({
 // ─────────────────────────────────────────────────────────────────────────────
 describe('getDialectStyle', () => {
   it('01 — POSTGRES returns positional', () => {
-    expect(getDialectStyle(DatabaseClientType.POSTGRES)).toBe('positional');
+    expect(getDialectStyle(DatabaseClientType.POSTGRES)).toBe(
+      'postgres-positional'
+    );
   });
 
   it('02 — MYSQL returns question-mark', () => {
@@ -53,8 +55,10 @@ describe('getDialectStyle', () => {
     expect(getDialectStyle(DatabaseClientType.MSSQL)).toBe('question-mark');
   });
 
-  it('07 — ORACLE returns question-mark', () => {
-    expect(getDialectStyle(DatabaseClientType.ORACLE)).toBe('question-mark');
+  it('07 — ORACLE returns oracle-positional', () => {
+    expect(getDialectStyle(DatabaseClientType.ORACLE)).toBe(
+      'oracle-positional'
+    );
   });
 });
 
@@ -173,14 +177,14 @@ describe('substituteParams — question-mark placeholders', () => {
     ).toBe('SELECT ?');
   });
 
-  it('22 — ORACLE replaces with ?', () => {
+  it('22 — ORACLE replaces with :N binds', () => {
     expect(
       substituteParams(
         'SELECT :val FROM dual',
         { val: 42 },
         DatabaseClientType.ORACLE
       )
-    ).toBe('SELECT ? FROM dual');
+    ).toBe('SELECT :1 FROM dual');
   });
 });
 
@@ -260,8 +264,8 @@ describe('substituteParams — edge cases', () => {
 // substituteParams — SubstituteParamsOptions extensibility
 // ─────────────────────────────────────────────────────────────────────────────
 describe('substituteParams — options override (extensibility)', () => {
-  it('31 — style: positional forces $N even for MySQL client', () => {
-    const opts: SubstituteParamsOptions = { style: 'positional' };
+  it('31 — style: postgres-positional forces $N even for MySQL client', () => {
+    const opts: SubstituteParamsOptions = { style: 'postgres-positional' };
     expect(
       substituteParams(
         'WHERE a = :a AND b = :b',
@@ -298,7 +302,7 @@ describe('substituteParams — options override (extensibility)', () => {
 
   it('34 — startIndex and style can be combined independently', () => {
     const opts: SubstituteParamsOptions = {
-      style: 'positional',
+      style: 'postgres-positional',
       startIndex: 3,
     };
     expect(
@@ -648,7 +652,7 @@ describe('substituteParams — ORACLE extended (5 scenarios)', () => {
   it('66 — SELECT from dual with single param', () => {
     expect(
       substituteParams('SELECT :val AS n FROM dual', { val: 42 }, ora)
-    ).toBe('SELECT ? AS n FROM dual');
+    ).toBe('SELECT :1 AS n FROM dual');
   });
 
   it('67 — ROWNUM guard + WHERE param', () => {
@@ -658,7 +662,7 @@ describe('substituteParams — ORACLE extended (5 scenarios)', () => {
         { status: 'active', rows: 50 },
         ora
       )
-    ).toBe('SELECT * FROM t WHERE status = ? AND ROWNUM <= ?');
+    ).toBe('SELECT * FROM t WHERE status = :1 AND ROWNUM <= :2');
   });
 
   it('68 — NVL with two params', () => {
@@ -668,7 +672,7 @@ describe('substituteParams — ORACLE extended (5 scenarios)', () => {
         { val: null, default: 0 },
         ora
       )
-    ).toBe('SELECT NVL(?, ?) AS result FROM dual');
+    ).toBe('SELECT NVL(:1, :2) AS result FROM dual');
   });
 
   it('69 — INSERT with 4 columns', () => {
@@ -678,7 +682,7 @@ describe('substituteParams — ORACLE extended (5 scenarios)', () => {
         { id: 1, name: 'ann', dept: 'eng', sal: 5000 },
         ora
       )
-    ).toBe('INSERT INTO employees (id,name,dept,sal) VALUES (?,?,?,?)');
+    ).toBe('INSERT INTO employees (id,name,dept,sal) VALUES (:1,:2,:3,:4)');
   });
 
   it('70 — multi-param UPDATE', () => {
@@ -688,6 +692,6 @@ describe('substituteParams — ORACLE extended (5 scenarios)', () => {
         { bal: 1000, upd: 'now', aid: 99 },
         ora
       )
-    ).toBe('UPDATE accts SET bal = ?, updated = ? WHERE acct_id = ?');
+    ).toBe('UPDATE accts SET bal = :1, updated = :2 WHERE acct_id = :3');
   });
 });

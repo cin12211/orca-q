@@ -93,21 +93,38 @@ function resolveDialect(
     return body.dialect;
   }
 
-  if (body.dbType === DatabaseClientType.MYSQL) {
-    return 'mysql';
+  switch (body.dbType) {
+    case DatabaseClientType.MYSQL:
+    case DatabaseClientType.MYSQL2:
+    case DatabaseClientType.MARIADB:
+      return 'mysql';
+    case DatabaseClientType.ORACLE:
+      return 'oracle';
+    case DatabaseClientType.SQLITE3:
+    case DatabaseClientType.BETTER_SQLITE3:
+      return 'sqlite';
+    default:
+      return 'postgresql';
   }
-
-  return 'postgresql';
 }
 
 function resolveDatabaseClientType(
   body: DbAgentRequestBody
 ): DatabaseClientType {
-  if (body.dbType === DatabaseClientType.MYSQL) {
-    return DatabaseClientType.MYSQL;
+  switch (body.dbType) {
+    case DatabaseClientType.MYSQL:
+    case DatabaseClientType.MYSQL2:
+      return DatabaseClientType.MYSQL;
+    case DatabaseClientType.MARIADB:
+      return DatabaseClientType.MARIADB;
+    case DatabaseClientType.ORACLE:
+      return DatabaseClientType.ORACLE;
+    case DatabaseClientType.SQLITE3:
+    case DatabaseClientType.BETTER_SQLITE3:
+      return DatabaseClientType.SQLITE3;
+    default:
+      return DatabaseClientType.POSTGRES;
   }
-
-  return DatabaseClientType.POSTGRES;
 }
 
 function resolveSchemaSnapshots(

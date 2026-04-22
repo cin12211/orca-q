@@ -49,7 +49,7 @@ export const DB_AGENT_TOOL_NAMES = [
 ] as const;
 
 export type DbAgentToolName = (typeof DB_AGENT_TOOL_NAMES)[number];
-export type DbAgentDialect = 'postgresql' | 'mysql' | 'sqlite';
+export type DbAgentDialect = 'postgresql' | 'mysql' | 'sqlite' | 'oracle';
 export type AgentChartType = 'bar' | 'line' | 'pie' | 'scatter';
 
 export interface AgentGenerateQueryInput {

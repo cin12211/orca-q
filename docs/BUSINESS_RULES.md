@@ -39,17 +39,29 @@ interface Workspace {
 
 ## 2. Connection Rules
 
-### Connection String Requirements
+### Connection Requirements
 
-- Must be a valid PostgreSQL connection string
-- Format: `postgresql://user:password@host:port/database`
-- Validated before save
+- Supported connection types: `postgres`, `mysql`, `mariadb`, `oracledb`, `sqlite3`
+- Network databases support `string` and `form` methods
+- SQLite uses the `file` method and is only exposed in the desktop runtime
+- Oracle structured-form connections use `serviceName` instead of `database`
+- Connection payloads are validated before save or health check
+
+### Connection String Formats
+
+- PostgreSQL: `postgresql://user:password@host:port/database`
+- MySQL: `mysql://user:password@host:port/database`
+- MariaDB: `mariadb://user:password@host:port/database`
+- Oracle: `oracledb://user:password@host:port/serviceName`
+- SQLite: `sqlite3:///absolute/path/to/database.sqlite`
 
 ### Health Check
 
 - Health check performed on connection test
 - Failed connections show error but are still saved
 - Connection status is not persisted (checked on-demand)
+- Failed health checks can return actionable driver messages, including missing SQLite file errors
+- A failed re-test must not delete or mutate an already saved connection record
 
 ### Per-Workspace Isolation
 
@@ -64,9 +76,11 @@ interface Connection {
   id: string; // UUID
   workspaceId: string; // Parent workspace
   name: string; // Display name
-  connectionString: string; // PostgreSQL URL
-  database: string; // Database name (parsed)
-  type: DatabaseClientType; // 'postgres' | 'mysql'
+  connectionString: string; // Dialect-specific URL or SQLite URI
+  database?: string; // Database name for network engines
+  serviceName?: string; // Oracle structured target
+  filePath?: string; // Absolute SQLite file path
+  type: DatabaseClientType; // 'postgres' | 'mysql' | 'mariadb' | 'oracledb' | 'sqlite3'
   createdAt: string; // ISO timestamp
 }
 ```
@@ -161,9 +175,9 @@ All executed queries are logged with:
 ```typescript
 interface QueryError {
   message: string; // User-friendly message
-  detail?: string; // PostgreSQL error detail
+  detail?: string; // Driver-specific error detail
   position?: number; // Character position in query
-  hint?: string; // PostgreSQL hint
+  hint?: string; // Driver-specific hint when available
 }
 ```
 
@@ -325,12 +339,18 @@ graph TD
 
 ## Business Rules Quick Reference
 
-| Rule              | Constraint                             |
-| ----------------- | -------------------------------------- |
-| Workspace name    | Required, non-empty                    |
-| Connection string | Valid PostgreSQL URL                   |
-| Tab uniqueness    | One tab per table/schema combo         |
-| Query execution   | Must have valid connection             |
-| Data mutation     | Requires primary key for UPDATE/DELETE |
-| Safe mode         | Optional confirmation before mutations |
-| Export            | Streaming for datasets > 10K rows      |
+| Rule             | Constraint                             |
+| ---------------- | -------------------------------------- |
+| Workspace name   | Required, non-empty                    |
+| Connection input | Valid type-specific URL or SQLite file |
+| Tab uniqueness   | One tab per table/schema combo         |
+| Query execution  | Must have valid connection             |
+| Data mutation    | Requires primary key for UPDATE/DELETE |
+| Safe mode        | Optional confirmation before mutations |
+| Export           | Streaming for datasets > 10K rows      |
+
+### Capability Boundaries
+
+- PostgreSQL remains the only engine with full support across advanced roles, metrics, and instance-insights workflows
+- MySQL, MariaDB, Oracle, and SQLite are intentionally limited to connection management, raw query, AI dialect selection, and minimum schema or table browsing until more adapters are implemented
+- Browser builds must never expose the SQLite file-picker workflow

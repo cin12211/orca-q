@@ -84,18 +84,35 @@ export const COMMAND_CATEGORIES: Record<string, CommandCategory> = {
   CHECKPOINT: 'SYSTEM',
 };
 
+const COMMAND_PREFIXES = Object.keys(COMMAND_CATEGORIES).sort(
+  (left, right) => right.length - left.length
+);
+
+const resolveCommandKeyword = (command: string): string => {
+  const normalized = command.toUpperCase().trim().replace(/;$/, '');
+
+  for (const prefix of COMMAND_PREFIXES) {
+    if (normalized === prefix || normalized.startsWith(`${prefix} `)) {
+      return prefix;
+    }
+  }
+
+  return normalized.split(/\s+/)[0] || normalized;
+};
+
 // ─────────────────────────────────────────────
 // Shared helpers
 // ─────────────────────────────────────────────
 export const isMutationCommand = (command: string): boolean => {
   const cmd = command.toUpperCase().trim();
+  const commandKey = resolveCommandKeyword(cmd);
 
-  const isQuery = ['SELECT', 'VALUES', 'SHOW', 'EXPLAIN', 'TABLE'].some(
-    q => cmd === q || cmd.startsWith(q + ' ')
+  const isQuery = ['SELECT', 'VALUES', 'SHOW', 'EXPLAIN', 'TABLE'].includes(
+    commandKey
   );
   if (isQuery) return false;
 
-  const category = COMMAND_CATEGORIES[cmd];
+  const category = COMMAND_CATEGORIES[commandKey];
 
   if (
     [
@@ -107,7 +124,7 @@ export const isMutationCommand = (command: string): boolean => {
       'MERGE',
       'CALL',
       'DO',
-    ].includes(cmd)
+    ].includes(commandKey)
   )
     return true;
 
@@ -124,16 +141,11 @@ export const isMutationCommand = (command: string): boolean => {
       'VACUUM',
       'REINDEX',
       'CLUSTER',
-    ].includes(cmd)
+    ].includes(commandKey)
   )
     return true;
 
-  if (
-    cmd.startsWith('CREATE') ||
-    cmd.startsWith('DROP') ||
-    cmd.startsWith('ALTER')
-  )
-    return true;
+  if (['CREATE', 'DROP', 'ALTER'].includes(commandKey)) return true;
 
   return false;
 };
@@ -157,10 +169,12 @@ export const getMutationMessage = (
 // ─────────────────────────────────────────────
 abstract class BaseCommandResultHandler {
   protected readonly cmd: string;
+  protected readonly commandKey: string;
   protected readonly rowCount: number;
 
   constructor(command: string, rowCount: number) {
     this.cmd = command.toUpperCase().trim();
+    this.commandKey = resolveCommandKeyword(this.cmd);
     this.rowCount = rowCount;
   }
 
@@ -173,7 +187,7 @@ abstract class BaseCommandResultHandler {
   }
 
   protected getCategory(): CommandCategory | 'UNKNOWN' {
-    return COMMAND_CATEGORIES[this.cmd] ?? 'UNKNOWN';
+    return COMMAND_CATEGORIES[this.commandKey] ?? 'UNKNOWN';
   }
 
   build(): CommandResult {
@@ -191,7 +205,7 @@ abstract class BaseCommandResultHandler {
 // ─────────────────────────────────────────────
 class PostgresCommandResultHandler extends BaseCommandResultHandler {
   protected override isMutation(): boolean {
-    if (['VACUUM', 'ANALYZE', 'REINDEX', 'CLUSTER'].includes(this.cmd))
+    if (['VACUUM', 'ANALYZE', 'REINDEX', 'CLUSTER'].includes(this.commandKey))
       return true;
     return super.isMutation();
   }
@@ -199,12 +213,12 @@ class PostgresCommandResultHandler extends BaseCommandResultHandler {
 
 class MysqlCommandResultHandler extends BaseCommandResultHandler {
   protected override isMutation(): boolean {
-    if (this.cmd.startsWith('OPTIMIZE')) return true;
+    if (this.commandKey === 'OPTIMIZE') return true;
     return super.isMutation();
   }
 
   protected override getMessage(isMutation: boolean): string {
-    if (this.cmd === 'TRUNCATE' || this.cmd.startsWith('TRUNCATE ')) {
+    if (this.commandKey === 'TRUNCATE') {
       return 'TRUNCATE successful.';
     }
     return super.getMessage(isMutation);
@@ -215,12 +229,12 @@ class Mysql2CommandResultHandler extends MysqlCommandResultHandler {}
 
 class Sqlite3CommandResultHandler extends BaseCommandResultHandler {
   protected override isMutation(): boolean {
-    if (this.cmd.startsWith('TRUNCATE')) return true;
+    if (this.commandKey === 'TRUNCATE') return true;
     return super.isMutation();
   }
 
   protected override getMessage(isMutation: boolean): string {
-    if (this.cmd === 'INSERT') {
+    if (this.commandKey === 'INSERT') {
       return `INSERT successful. Last insert row id: ${this.rowCount}.`;
     }
     return super.getMessage(isMutation);
@@ -231,7 +245,7 @@ class BetterSqlite3CommandResultHandler extends Sqlite3CommandResultHandler {}
 
 class MssqlCommandResultHandler extends BaseCommandResultHandler {
   protected override getMessage(isMutation: boolean): string {
-    if (this.cmd === 'MERGE') {
+    if (this.commandKey === 'MERGE') {
       return `MERGE successful. ${this.rowCount} rows affected.`;
     }
     return super.getMessage(isMutation);
@@ -240,10 +254,10 @@ class MssqlCommandResultHandler extends BaseCommandResultHandler {
 
 class OracleCommandResultHandler extends BaseCommandResultHandler {
   protected override getMessage(isMutation: boolean): string {
-    if (this.cmd === 'TRUNCATE' || this.cmd.startsWith('TRUNCATE ')) {
+    if (this.commandKey === 'TRUNCATE') {
       return 'TRUNCATE successful.';
     }
-    if (this.cmd === 'MERGE') {
+    if (this.commandKey === 'MERGE') {
       return `MERGE successful. ${this.rowCount} rows affected.`;
     }
     return super.getMessage(isMutation);
@@ -258,6 +272,7 @@ const HANDLER_REGISTRY: Record<
   new (command: string, rowCount: number) => BaseCommandResultHandler
 > = {
   [DatabaseClientType.POSTGRES]: PostgresCommandResultHandler,
+  [DatabaseClientType.MARIADB]: MysqlCommandResultHandler,
   [DatabaseClientType.MYSQL]: MysqlCommandResultHandler,
   [DatabaseClientType.MYSQL2]: Mysql2CommandResultHandler,
   [DatabaseClientType.SQLITE3]: Sqlite3CommandResultHandler,

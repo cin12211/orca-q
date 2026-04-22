@@ -76,8 +76,17 @@
 
   /* hover / selection */
   --jse-hover-background-color: var(--accent);
-  --jse-selection-background-color: var(--secondary);
-  --jse-selection-background-light-color: var(--muted);
+  --jse-selection-background-color: color-mix(
+    in oklch,
+    var(--primary) 18%,
+    transparent
+  );
+  --jse-selection-background-light-color: color-mix(
+    in oklch,
+    var(--primary) 12%,
+    transparent
+  );
+  --jse-selection-text-color: var(--foreground);
 
   /* collapsed array section */
   --jse-collapsed-items-background-color: var(--muted);
@@ -194,8 +203,17 @@
 
   /* hover / selection */
   --jse-hover-background-color: var(--accent);
-  --jse-selection-background-color: var(--secondary);
-  --jse-selection-background-light-color: var(--muted);
+  --jse-selection-background-color: color-mix(
+    in oklch,
+    var(--primary) 28%,
+    transparent
+  );
+  --jse-selection-background-light-color: color-mix(
+    in oklch,
+    var(--primary) 18%,
+    transparent
+  );
+  --jse-selection-text-color: var(--foreground);
 
   /* collapsed array */
   --jse-collapsed-items-background-color: var(--muted);
@@ -366,6 +384,6 @@
 /* ================= SELECTION ================= */
 
 .jse-contents ::selection {
-  background: var(--jse-selection-background-color);
-  color: var(--jse-text-color-inverse);
+  background: var(--jse-selection-background-color) !important;
+  color: var(--jse-selection-text-color) !important;
 }

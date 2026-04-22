@@ -159,6 +159,7 @@ export function useQueryExecution({
           method: 'POST',
           body: {
             dbConnectionString: connection.value?.connectionString,
+            type: connection.value?.type,
             query: executeQuery,
             params: fileParameters,
           },
@@ -212,6 +213,7 @@ export function useQueryExecution({
     const { abort } = executeStreamingQuery({
       query: executeQuery,
       dbConnectionString: connection.value?.connectionString || '',
+      type: connection.value?.type,
       params: fileParameters,
       onMeta: (fields, command) => {
         fieldDefs.value = fields;

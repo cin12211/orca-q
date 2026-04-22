@@ -22,6 +22,8 @@ export abstract class BaseDomainAdapter {
       username: params.username,
       password: params.password,
       database: params.database,
+      serviceName: params.serviceName,
+      filePath: params.filePath,
       ssl: params.ssl,
       ssh: params.ssh,
     });

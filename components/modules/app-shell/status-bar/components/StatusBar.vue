@@ -73,13 +73,13 @@ const formattedTabType = computed(() => {
 </script>
 <template>
   <div
-    class="w-full h-6 min-h-6 shadow px-2 flex items-center justify-between bg-sidebar-accent"
+    class="w-full h-6 min-h-6 shadow px-2 flex items-center justify-between gap-2 bg-sidebar-accent"
   >
-    <div class="flex items-center gap-3 h-full">
+    <div class="flex min-w-0 flex-1 items-center gap-3 h-full overflow-hidden">
       <Tooltip>
         <TooltipTrigger as-child>
           <div
-            class="flex items-center h-full gap-0.5 hover:bg-muted px-1 rounded cursor-pointer"
+            class="flex flex-shrink-0 items-center h-full gap-0.5 hover:bg-muted px-1 rounded cursor-pointer"
             @click="onBackToHome"
           >
             <Icon name="hugeicons:home-06" class="size-4!" />
@@ -89,10 +89,15 @@ const formattedTabType = computed(() => {
         <TooltipContent> Back to Home </TooltipContent>
       </Tooltip>
 
-      <CurrentPositionPath />
+      <div class="min-w-0 overflow-hidden">
+        <CurrentPositionPath />
+      </div>
     </div>
 
-    <div class="text-muted-foreground text-xs" v-if="activeTab">
+    <div
+      class="min-w-0 flex-1 truncate text-center text-muted-foreground text-xs"
+      v-if="activeTab"
+    >
       {{ formattedTabType }}:
       <p class="text-foreground inline">
         {{ activeTab?.schemaId ? `${activeTab?.schemaId}.` : ''
@@ -100,7 +105,7 @@ const formattedTabType = computed(() => {
       </p>
     </div>
 
-    <div class="flex items-center gap-3">
+    <div class="flex flex-shrink-0 items-center gap-3">
       <ElectronUpdateIndicator />
 
       <Tooltip>

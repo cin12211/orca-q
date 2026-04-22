@@ -1,32 +1,10 @@
 import { defineStore } from 'pinia';
 import { computed, ref } from 'vue';
-import {
-  EConnectionMethod,
-  type ISSLConfig,
-  type ISSHConfig,
-} from '~/components/modules/connection';
 import { useWorkspaceConnectionRoute } from '~/core/composables/useWorkspaceConnectionRoute';
-import { DatabaseClientType } from '~/core/constants/database-client-type';
 import { createStorageApis } from '~/core/storage';
+import type { Connection } from '~/core/types/entities/connection.entity';
 
-export interface Connection {
-  workspaceId: string;
-  id: string;
-  name: string;
-  type: DatabaseClientType;
-  method: EConnectionMethod;
-  connectionString?: string;
-  host?: string;
-  port?: string;
-  username?: string;
-  password?: string;
-  database?: string;
-  ssl?: ISSLConfig;
-  ssh?: ISSHConfig;
-  tagIds?: string[];
-  createdAt: string;
-  updatedAt?: string;
-}
+export type { Connection } from '~/core/types/entities/connection.entity';
 
 export const useManagementConnectionStore = defineStore(
   'management-connection',

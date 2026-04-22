@@ -15,9 +15,11 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { DatabaseClientType } from '~/core/constants/database-client-type';
 import type { Connection } from '~/core/stores';
 import { databaseSupports } from '../constants';
 import { useConnectionForm } from '../hooks/useConnectionForm';
+import { EConnectionMethod } from '../types';
 import ConnectionSSHTunnel from './ConnectionSSHTunnel.vue';
 import ConnectionSSLConfig from './ConnectionSSLConfig.vue';
 import ConnectionStatusSection from './ConnectionStatusSection.vue';
@@ -51,13 +53,20 @@ const {
   formData,
   tagIds,
   testStatus,
+  testErrorMessage,
   handleNext,
   handleBack,
   handleTestConnection,
   handleCreateConnection,
   getDefaultPort,
   getConnectionPlaceholder,
+  availableConnectionMethods,
+  structuredTargetLabel,
+  structuredTargetPlaceholder,
+  canUseNetworkOptions,
+  canPickSqliteFile,
   isFormValid,
+  pickSqliteFile,
   resetForm,
 } = useConnectionForm({
   open: () => props.open,
@@ -75,6 +84,21 @@ const databaseOptions = computed(() =>
     onClick: () => (dbType.value = e.type),
   }))
 );
+
+const structuredTargetModel = computed({
+  get: () =>
+    dbType.value === DatabaseClientType.ORACLE
+      ? formData.serviceName
+      : formData.database,
+  set: value => {
+    if (dbType.value === DatabaseClientType.ORACLE) {
+      formData.serviceName = value;
+      return;
+    }
+
+    formData.database = value;
+  },
+});
 </script>
 
 <template>
@@ -103,16 +127,31 @@ const databaseOptions = computed(() =>
           <div class="flex-1 overflow-y-auto p-4 space-y-4">
             <Tabs v-model="connectionMethod" class="w-full">
               <TabsList
-                class="grid w-fit grid-cols-2"
+                class="grid w-fit"
+                :style="{
+                  gridTemplateColumns: `repeat(${availableConnectionMethods.length}, minmax(0, 1fr))`,
+                }"
                 id="tour-connection-method-tabs"
               >
-                <TabsTrigger value="string" class="cursor-pointer">
-                  <span id="tour-connection-string-tab">
+                <TabsTrigger
+                  v-for="method in availableConnectionMethods"
+                  :key="method"
+                  :value="method"
+                  class="cursor-pointer"
+                >
+                  <span
+                    v-if="method === EConnectionMethod.STRING"
+                    id="tour-connection-string-tab"
+                  >
                     Connection String
                   </span>
-                </TabsTrigger>
-                <TabsTrigger value="form" class="cursor-pointer">
-                  <span id="tour-connection-form-tab"> Connection Form </span>
+                  <span
+                    v-else-if="method === EConnectionMethod.FORM"
+                    id="tour-connection-form-tab"
+                  >
+                    Connection Form
+                  </span>
+                  <span v-else>Database File</span>
                 </TabsTrigger>
               </TabsList>
 
@@ -238,18 +277,19 @@ const databaseOptions = computed(() =>
                   </div>
 
                   <div class="space-y-2">
-                    <Label for="database"
-                      >Database <span class="text-destructive">*</span></Label
+                    <Label for="structured-target"
+                      >{{ structuredTargetLabel }}
+                      <span class="text-destructive">*</span></Label
                     >
                     <Input
-                      id="database"
-                      placeholder="my_database"
-                      v-model="formData.database"
+                      id="structured-target"
+                      :placeholder="structuredTargetPlaceholder"
+                      v-model="structuredTargetModel"
                     />
                   </div>
                 </div>
 
-                <div class="space-y-4">
+                <div v-if="canUseNetworkOptions" class="space-y-4">
                   <Accordion
                     type="single"
                     collapsible
@@ -267,9 +307,49 @@ const databaseOptions = computed(() =>
                   </Accordion>
                 </div>
               </TabsContent>
+
+              <TabsContent value="file" class="space-y-4 pt-4">
+                <div class="space-y-2">
+                  <Label for="file-path" class="flex items-center gap-2">
+                    <Icon
+                      name="hugeicons:file-01"
+                      class="h-3.5 w-3.5 text-muted-foreground"
+                    />
+                    SQLite File <span class="text-destructive">*</span>
+                  </Label>
+                  <div class="flex gap-2">
+                    <Input
+                      id="file-path"
+                      placeholder="/Users/you/data/app.sqlite"
+                      v-model="formData.filePath"
+                      :readonly="canPickSqliteFile"
+                    />
+                    <Button
+                      v-if="canPickSqliteFile"
+                      type="button"
+                      variant="outline"
+                      @click="pickSqliteFile"
+                    >
+                      Browse
+                    </Button>
+                  </div>
+                  <p class="text-xs text-muted-foreground">
+                    <template v-if="canPickSqliteFile">
+                      Choose a local SQLite database file from the desktop app.
+                    </template>
+                    <template v-else>
+                      SQLite file connections are available only in the desktop
+                      app.
+                    </template>
+                  </p>
+                </div>
+              </TabsContent>
             </Tabs>
 
-            <ConnectionStatusSection :test-status="testStatus" />
+            <ConnectionStatusSection
+              :test-status="testStatus"
+              :error-message="testErrorMessage"
+            />
           </div>
 
           <DialogFooter

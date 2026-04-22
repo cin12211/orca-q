@@ -11,6 +11,7 @@
 export enum DatabaseClientType {
   POSTGRES = 'postgres',
   MYSQL = 'mysql',
+  MARIADB = 'mariadb',
   MYSQL2 = 'mysql2',
   SQLITE3 = 'sqlite3',
   BETTER_SQLITE3 = 'better-sqlite3',

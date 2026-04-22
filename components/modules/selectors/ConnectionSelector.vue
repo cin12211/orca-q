@@ -67,6 +67,12 @@ const onOpenAddConnectionModal = () => {
 const connectionsByWsId = computed(() => {
   return connectionStore.getConnectionsByWorkspaceId(props.workspaceId);
 });
+
+const selectedConnectionTags = computed(() => {
+  return selectedConnection.value
+    ? tagStore.getTagsByIds(selectedConnection.value.tagIds ?? [])
+    : [];
+});
 </script>
 <template>
   <CreateConnectionModal
@@ -82,16 +88,29 @@ const connectionsByWsId = computed(() => {
     :model-value="activeConnectionId"
     v-model:open="open"
   >
-    <SelectTrigger :class="cn(props.class, 'w-48 cursor-pointer')" size="sm">
+    <SelectTrigger
+      :class="cn(props.class, 'w-48 min-w-0 cursor-pointer')"
+      size="sm"
+    >
       <div
-        class="flex items-center gap-2 w-44 truncate"
+        class="flex min-w-0 flex-1 items-center gap-2 overflow-hidden"
         v-if="selectedConnection"
       >
         <component
           :is="getDatabaseSupportByType(selectedConnection.type)?.icon"
-          class="size-4! min-w-4!"
+          class="size-4! min-w-4! flex-shrink-0"
         />
-        {{ selectedConnection?.name }}
+        <span class="min-w-0 truncate">{{ selectedConnection?.name }}</span>
+        <div
+          v-if="selectedConnectionTags.length"
+          class="flex max-w-[45%] flex-shrink-0 items-center gap-1 overflow-hidden"
+        >
+          <EnvTagBadge
+            v-for="tag in selectedConnectionTags"
+            :key="tag.id"
+            :tag="tag"
+          />
+        </div>
       </div>
       <div class="opacity-50" v-else>Select connection</div>
     </SelectTrigger>

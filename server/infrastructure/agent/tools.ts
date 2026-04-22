@@ -136,7 +136,7 @@ export function createDbAgentTools({
         // schema override per-call nếu agent muốn pass schema cụ thể
         schema: z.string().optional(),
         dialect: z
-          .enum(['postgresql', 'mysql', 'sqlite'])
+          .enum(['postgresql', 'mysql', 'sqlite', 'oracle'])
           .default('postgresql'),
       }),
       execute: async input => {

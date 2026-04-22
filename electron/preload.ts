@@ -101,6 +101,7 @@ const electronAPI = {
     minimize: () => ipcRenderer.invoke('window:minimize'),
     maximize: () => ipcRenderer.invoke('window:maximize'),
     close: () => ipcRenderer.invoke('window:close'),
+    pickSqliteFile: () => ipcRenderer.invoke('window:pick-sqlite-file'),
     getStoragePath: () => ipcRenderer.invoke('window:get-storage-path'),
     openStoragePath: () => ipcRenderer.invoke('window:open-storage-path'),
     resetAllData: () => ipcRenderer.invoke('window:reset-all-data'),

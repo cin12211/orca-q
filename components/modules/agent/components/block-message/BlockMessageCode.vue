@@ -60,6 +60,7 @@ const lang = computed(() => {
       return 'ts';
     case 'postgresql':
     case 'mysql':
+    case 'oracle':
     case 'sql':
     case 'plsql':
     case 'sqlpl':

@@ -7,3 +7,6 @@ export type {
   DatabaseQueryAdapterParams,
 } from './types';
 export { PostgresQueryAdapter } from './postgres/postgres-query.adapter';
+export { MysqlQueryAdapter } from './mysql/mysql-query.adapter';
+export { OracleQueryAdapter } from './oracle/oracle-query.adapter';
+export { SqliteQueryAdapter } from './sqlite/sqlite-query.adapter';

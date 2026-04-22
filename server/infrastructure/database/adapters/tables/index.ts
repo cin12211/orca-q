@@ -7,3 +7,6 @@ export type {
   DatabaseTableAdapterParams,
 } from './types';
 export { PostgresTableAdapter } from './postgres/postgres-table.adapter';
+export { MysqlTableAdapter } from './mysql/mysql-table.adapter';
+export { OracleTableAdapter } from './oracle/oracle-table.adapter';
+export { SqliteTableAdapter } from './sqlite/sqlite-table.adapter';

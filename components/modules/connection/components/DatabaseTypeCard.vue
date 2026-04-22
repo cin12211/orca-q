@@ -10,6 +10,7 @@ defineProps<{
   selected: boolean;
   isSupport: boolean;
   iconClass?: string;
+  unsupportedLabel?: string;
 }>();
 </script>
 
@@ -55,7 +56,7 @@ defineProps<{
           variant="secondary"
           class="text-[9px] px-1.5 py-0 h-3.5 uppercase tracking-widest font-bold opacity-60"
         >
-          Soon
+          {{ unsupportedLabel || 'Soon' }}
         </Badge>
       </div>
     </CardContent>

@@ -3,6 +3,7 @@ import { Icon } from '#components';
 
 const props = defineProps<{
   testStatus: 'idle' | 'testing' | 'success' | 'error';
+  errorMessage?: string;
 }>();
 </script>
 
@@ -28,6 +29,11 @@ const props = defineProps<{
     class="flex items-center gap-2 rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-600 dark:border-red-900 dark:bg-red-950/50 dark:text-red-400"
   >
     <Icon name="hugeicons:cancel-01" class="shrink-0 size-4" />
-    <span>Connection failed. Please check your details and try again.</span>
+    <span>
+      {{
+        props.errorMessage ||
+        'Connection failed. Please check your details and try again.'
+      }}
+    </span>
   </div>
 </template>

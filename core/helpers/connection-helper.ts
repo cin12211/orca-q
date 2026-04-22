@@ -10,6 +10,8 @@ export function getConnectionParams(connection?: Connection) {
     username: connection.username,
     password: connection.password,
     database: connection.database,
+    serviceName: connection.serviceName,
+    filePath: connection.filePath,
     type: connection.type,
     ssl: connection.ssl,
     ssh: connection.ssh,

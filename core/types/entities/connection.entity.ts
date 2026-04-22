@@ -3,6 +3,7 @@ import { DatabaseClientType } from '~/core/constants/database-client-type';
 export enum EConnectionMethod {
   STRING = 'string',
   FORM = 'form',
+  FILE = 'file',
 }
 
 export enum ESSLMode {
@@ -50,6 +51,8 @@ export interface Connection {
   username?: string;
   password?: string;
   database?: string;
+  serviceName?: string;
+  filePath?: string;
   ssl?: ISSLConfig;
   ssh?: ISSHConfig;
   tagIds?: string[];

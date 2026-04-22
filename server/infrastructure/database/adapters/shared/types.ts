@@ -3,13 +3,15 @@ import { DatabaseClientType } from '~/core/constants/database-client-type';
 
 export { DatabaseClientType };
 
+const DB_TYPE_ALIASES: Partial<Record<DatabaseClientType, DatabaseClientType>> =
+  {
+    [DatabaseClientType.MYSQL2]: DatabaseClientType.MYSQL,
+  };
+
 export function normalizeSupportedDatabaseType(
   dbType: DatabaseClientType
 ): DatabaseClientType {
-  if (Object.values(DatabaseClientType).includes(dbType)) {
-    return dbType;
-  }
-  return DatabaseClientType.POSTGRES;
+  return DB_TYPE_ALIASES[dbType] ?? dbType;
 }
 
 export interface BaseDatabaseAdapterParams {
@@ -19,6 +21,8 @@ export interface BaseDatabaseAdapterParams {
   username?: string;
   password?: string;
   database?: string;
+  serviceName?: string;
+  filePath?: string;
   ssl?: ISSLConfig;
   ssh?: ISSHConfig;
 }
