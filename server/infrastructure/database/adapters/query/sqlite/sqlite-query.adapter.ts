@@ -27,6 +27,32 @@ function createSyntheticFields(columnNames: string[]): DatabaseField[] {
   }));
 }
 
+/**
+ * Serialize a single SQLite row (named object) for JSON transport.
+ * Node.js Buffer values (BLOB columns) are converted to hex strings so they
+ * survive JSON.stringify without turning into {"type":"Buffer","data":[...]} objects.
+ */
+function serializeSqliteRow(
+  row: Record<string, unknown>
+): Record<string, unknown> {
+  const out: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(row)) {
+    out[key] = Buffer.isBuffer(value)
+      ? (value as Buffer).toString('hex')
+      : value;
+  }
+  return out;
+}
+
+function arrayRowsToObjects(
+  rows: unknown[][],
+  fields: DatabaseField[]
+): Record<string, unknown>[] {
+  return rows.map(row =>
+    Object.fromEntries(fields.map((field, index) => [field.name, row[index]]))
+  );
+}
+
 export class SqliteQueryAdapter
   extends BaseDomainAdapter
   implements IDatabaseQueryAdapter
@@ -80,15 +106,14 @@ export class SqliteQueryAdapter
     const nativeBindings = Array.from(nativeSql.bindings ?? []) as any[];
 
     const { result, queryTime } = await this.withTiming(() =>
-      this.adapter.rawOut<Record<string, unknown>>(
-        nativeSql.sql,
-        nativeBindings
-      )
+      this.adapter.rawOut<unknown[]>(nativeSql.sql, nativeBindings)
     );
 
+    const fields = (result.fields ?? []) as DatabaseField[];
+
     return {
-      rows: result.rows as Record<string, unknown>[],
-      fields: result.fields ?? [],
+      rows: arrayRowsToObjects(result.rows, fields).map(serializeSqliteRow),
+      fields,
       queryTime,
     };
   }
@@ -129,7 +154,9 @@ export class SqliteQueryAdapter
       ) {
         writeLine({
           type: 'rows',
-          data: result.rows.slice(index, index + STREAM_BATCH_SIZE),
+          data: result.rows
+            .slice(index, index + STREAM_BATCH_SIZE)
+            .map(serializeSqliteRow),
         });
       }
 

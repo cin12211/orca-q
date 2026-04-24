@@ -1,4 +1,11 @@
-import { MariaSQL, MySQL, PostgreSQL, SQLDialect } from '@codemirror/lang-sql';
+import {
+  MariaSQL,
+  MySQL,
+  PLSQL,
+  PostgreSQL,
+  SQLDialect,
+  SQLite,
+} from '@codemirror/lang-sql';
 import {
   tomorrow,
   barf,
@@ -98,4 +105,6 @@ export const SQLDialectSupport = {
   PostgreSQL: PostgreSQLCustom,
   MySQL,
   MariaSQL,
+  SQLite,
+  PLSQL,
 };

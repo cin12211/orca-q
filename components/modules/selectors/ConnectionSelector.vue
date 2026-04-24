@@ -13,12 +13,17 @@ import { useAppContext } from '~/core/contexts/useAppContext';
 import { type Connection } from '~/core/stores';
 import { useManagementConnectionStore } from '~/core/stores/managementConnectionStore';
 import { CreateConnectionModal } from '../connection';
-import { getDatabaseSupportByType } from '../connection';
+import {
+  getDatabaseSupportByType,
+  isSqlite3ConnectionsEnabled,
+  isSqliteConnectionDisabled,
+} from '../connection';
 
 const { createConnection, openWorkspaceWithConnection } = useAppContext();
 const connectionStore = useManagementConnectionStore();
 const tagStore = useEnvironmentTagStore();
 const { checkAndConfirm } = useStrictModeGuard();
+const config = useRuntimeConfig();
 
 const { connectionId: activeConnectionId } = useWorkspaceConnectionRoute();
 
@@ -27,6 +32,9 @@ const { selectedConnection } = storeToRefs(connectionStore);
 const props = defineProps<{ class: string; workspaceId: string }>();
 
 const open = ref(false);
+const sqlite3ConnectionsEnabled = computed(() =>
+  isSqlite3ConnectionsEnabled(config.public.sqlite3ConnectionsEnabled)
+);
 
 const onChangeConnection = async (connectionId: AcceptableValue) => {
   if (
@@ -34,6 +42,12 @@ const onChangeConnection = async (connectionId: AcceptableValue) => {
     connectionId !== activeConnectionId.value
   ) {
     const connection = connectionsByWsId.value.find(c => c.id === connectionId);
+    if (
+      connection &&
+      isSqliteConnectionDisabled(connection, sqlite3ConnectionsEnabled.value)
+    ) {
+      return;
+    }
     if (connection) {
       const ok = await checkAndConfirm(connection);
       if (!ok) return;
@@ -130,6 +144,9 @@ const selectedConnectionTags = computed(() => {
         <SelectItem
           class="cursor-pointer"
           :value="connection.id"
+          :disabled="
+            isSqliteConnectionDisabled(connection, sqlite3ConnectionsEnabled)
+          "
           v-for="connection in connectionsByWsId"
         >
           <div class="flex items-center gap-2">
@@ -148,6 +165,17 @@ const selectedConnectionTags = computed(() => {
                 :tag="tag"
               />
             </div>
+            <span
+              v-if="
+                isSqliteConnectionDisabled(
+                  connection,
+                  sqlite3ConnectionsEnabled
+                )
+              "
+              class="ml-auto text-xs text-muted-foreground"
+            >
+              Disabled
+            </span>
           </div>
         </SelectItem>
       </SelectGroup>

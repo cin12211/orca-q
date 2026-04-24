@@ -235,7 +235,7 @@ class Sqlite3CommandResultHandler extends BaseCommandResultHandler {
 
   protected override getMessage(isMutation: boolean): string {
     if (this.commandKey === 'INSERT') {
-      return `INSERT successful. Last insert row id: ${this.rowCount}.`;
+      return `INSERT successful. ${this.rowCount} row(s) affected.`;
     }
     return super.getMessage(isMutation);
   }

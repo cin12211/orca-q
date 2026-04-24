@@ -66,6 +66,10 @@ const devWatchOptions = {
   ignored: devWatchIgnored,
 };
 
+const sqlite3ConnectionsEnabled =
+  process.env.NUXT_PUBLIC_SQLITE3_CONNECTIONS_ENABLED !== 'false' &&
+  process.env.NUXT_PUBLIC_SQLITE3_CONNECTIONS_ENABLED !== '0';
+
 export default defineNuxtConfig({
   compatibilityDate: '2024-11-01',
 
@@ -84,6 +88,7 @@ export default defineNuxtConfig({
       githubLink:
         process.env.NUXT_GITHUB_LINK ?? 'https://github.com/cin12211/orca-q',
       isDev: process.env.NODE_ENV !== 'production',
+      sqlite3ConnectionsEnabled,
       version: pkg.version,
     },
   },

@@ -23,22 +23,7 @@ const onSelectedRowsChange = (rows: unknown[]) => {
   selectedRows.value = rows as Record<string, any>[];
 };
 
-const formattedSelectedRows = computed(() => {
-  const fieldDefs = props.activeTab?.metadata.fieldDefs || [];
-  return (
-    selectedRows.value?.map?.(item => {
-      const mappedItem: Record<string, any> = {};
-      for (const [key, value] of Object.entries(item)) {
-        const fieldDef = fieldDefs[Number(key)];
-        const columnName = fieldDef?.name || '';
-        if (columnName) {
-          mappedItem[columnName] = value;
-        }
-      }
-      return mappedItem;
-    }) || []
-  );
-});
+const formattedSelectedRows = computed(() => selectedRows.value || []);
 // TODO: refactor formattedData, formattedSelectedRows to optimize performance
 
 const commandResult = computed(() => {
@@ -87,12 +72,12 @@ const mutationMessage = computed(() => commandResult.value.message);
       <DynamicTable
         ref="rawQueryTableRef"
         :columns="activeTabColumns"
-        :data="(activeTab.result as RowData[]) || []"
+        :data="formattedData || []"
         :selectedRows="selectedRows"
         @on-selected-rows="onSelectedRowsChange"
         class="h-full"
         skip-re-column-size
-        columnKeyBy="index"
+        columnKeyBy="field"
       />
     </RawQueryContextMenu>
   </div>

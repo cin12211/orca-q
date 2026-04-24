@@ -31,11 +31,16 @@ import { useAppContext } from '~/core/contexts/useAppContext';
 import { parseConnectionString } from '~/core/helpers/parser-connection-string';
 import { type Connection } from '~/core/stores';
 import { EConnectionMethod } from '~/core/types/entities/connection.entity';
-import { getDatabaseSupportByType } from '../constants';
+import {
+  getDatabaseSupportByType,
+  isSqlite3ConnectionsEnabled,
+  isSqliteConnectionDisabled,
+} from '../constants';
 
 const { openWorkspaceWithConnection } = useAppContext();
 const tagStore = useEnvironmentTagStore();
 const { checkAndConfirm } = useStrictModeGuard();
+const config = useRuntimeConfig();
 
 const props = defineProps<{
   connections: Connection[];
@@ -49,6 +54,9 @@ const emit = defineEmits<{
 
 const deleteId = ref<string | null>(null);
 const fallbackDatabaseIcon = h(Icon, { name: 'hugeicons:database' });
+const sqlite3ConnectionsEnabled = computed(() =>
+  isSqlite3ConnectionsEnabled(config.public.sqlite3ConnectionsEnabled)
+);
 
 const formatDate = (date: Date) => {
   return dayjs(date).format('DD/MM/YYYY HH:mm');
@@ -134,6 +142,10 @@ const confirmDelete = () => {
 };
 
 const onConnectConnection = async (connection: Connection) => {
+  if (isSqliteConnectionDisabled(connection, sqlite3ConnectionsEnabled.value)) {
+    return;
+  }
+
   const ok = await checkAndConfirm(connection);
   if (!ok) return;
 
@@ -238,10 +250,23 @@ const onConnectConnection = async (connection: Connection) => {
               <Button
                 variant="default"
                 size="sm"
+                :disabled="
+                  isSqliteConnectionDisabled(
+                    item.connection,
+                    sqlite3ConnectionsEnabled
+                  )
+                "
                 @click="onConnectConnection(item.connection)"
               >
                 <Icon name="hugeicons:square-arrow-up-right" />
-                Connect
+                {{
+                  isSqliteConnectionDisabled(
+                    item.connection,
+                    sqlite3ConnectionsEnabled
+                  )
+                    ? 'Disabled'
+                    : 'Connect'
+                }}
               </Button>
             </div>
           </TableCell>

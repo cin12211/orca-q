@@ -212,9 +212,64 @@ Task: "Create server/infrastructure/driver/sqlite.adapter.ts with Knex + sqlite3
 
 ---
 
+## Phase 8: Multi-DB Bug Fixes — Quick Query & Raw Query (Post-Verification)
+
+**Purpose**: Fix P1 crashes and Postgres-centric hardcoding discovered during T038 verification. Tasks cover Quick Query table browsing/filtering, raw query result format, CodeMirror dialect loading, error normalization, and a SQLite mutation message bug.
+
+**⚠️ P1 blockers (T046–T048)**: Quick Query table browsing and filter apply are broken for MySQL/MariaDB/Oracle/SQLite because the query builder, operator list, and WHERE clause generator all assume PostgreSQL. Fix these before anything else in this phase.
+
+### P1: Quick Query SQL & Filter Fixes
+
+- [x] T046 Fix `core/composables/useTableQueryBuilder.ts` so `baseQueryString` uses DB-appropriate identifier quoting for `schemaName` and `tableName`, `whereClauses` passes `connection.value?.type` instead of the hardcoded `DatabaseClientType.POSTGRES` to `formatWhereClause`, and `queryString` wraps `orderColumn` with the same DB-aware quoting instead of always using PostgreSQL double-quotes
+- [x] T047 [P] Add `operatorSets` entries for `DatabaseClientType.MARIADB`, `DatabaseClientType.SQLITE3`, and `DatabaseClientType.ORACLEDB` in `core/constants/operatorSets.ts`; add a null-safe `operators` computed guard in `components/modules/selectors/OperatorSelector.vue` so an unknown `dbType` falls back gracefully instead of rendering nothing; and guard the `operatorSets[db]?.map()` call in `components/modules/quick-query/utils/buildWhereClause.ts` so a missing entry does not throw at runtime
+- [x] T048 [P] Fix `components/modules/quick-query/utils/buildWhereClause.ts` so `wrap()` uses double-quote quoting for `ORACLEDB` (instead of backticks) while keeping backtick quoting for MySQL/MariaDB/SQLite, and fix `likeHandler()` to avoid the `::TEXT` PostgreSQL cast for all non-Postgres dialects — use plain column reference for MySQL/MariaDB/SQLite and an explicit `TO_CHAR(col)` or direct column reference for Oracle
+
+### P2: Raw Query SQLite3 Result Format
+
+- [x] T049 [US3] Investigate and fix the SQLite3 raw query result format issue: ensure `fields` is populated for empty SELECT result sets in `server/infrastructure/database/adapters/query/sqlite/sqlite-query.adapter.ts` and `server/infrastructure/driver/sqlite.adapter.ts`; verify BLOB columns (Node.js `Buffer`) are serialized to a safe JSON representation before the NDJSON response is written; and confirm the non-streaming `/api/query/raw-execute` path returns a `fields` array that the client-side dynamic table can use to render column headers even when rows are empty
+
+### P3: Dialect, Error Normalization & Result Message Fixes
+
+- [x] T050 [P] Extend `components/base/code-editor/constants/index.ts` to import `SQLite` and `PLSQL` from `@codemirror/lang-sql` and add them to `SQLDialectSupport` (use `SQLite` for `sqlite3`, `PLSQL` for `oracledb`); then add the missing `MARIADB → MariaSQL`, `SQLITE3 → SQLite`, and `ORACLEDB → PLSQL` entries to `SQL_DIALECT_BY_DB_TYPE` in `components/base/code-editor/states/sqlParserConfig.ts` — refer to `@codemirror/lang-sql` exported dialect list (`PostgreSQL`, `MySQL`, `MariaSQL`, `SQLite`, `PLSQL`, `MSSQL`, `StandardSQL`) when deciding per-DB mapping
+- [x] T051 [P] Add `DatabaseClientType.MARIADB` and `DatabaseClientType.ORACLEDB` normalization cases to the `switch` in `core/helpers/database-error.ts`: reuse the existing `normalizeMysqlError` logic for MariaDB and write a minimal `normalizeOracleError` that maps `error.errorNum` / `error.message` to the `NormalizationError` shape so Oracle query errors show accurate hints in editor diagnostics
+- [x] T052 [P] Fix `components/modules/raw-query/utils/commandType.ts` `Sqlite3CommandResultHandler.getMessage()`: the `rowCount` field contains `result.changes` (rows affected), not the last-inserted row ID — change the `INSERT` branch message from `INSERT successful. Last insert row id: ${this.rowCount}` to `INSERT successful. ${this.rowCount} row(s) affected.`
+- [x] T053 Update `components/modules/raw-query/hooks/useSqlEditorExtensions.ts` to accept an optional `connection: Ref<Connection | undefined>` parameter and use `resolveDialect(connection?.value?.type)` (from `components/base/code-editor/states/sqlParserConfig.ts`) in place of the hardcoded `SQLDialectSupport['PostgreSQL']` inside both the initial `sqlCompartment.of(sql({...}))` setup and the `reloadSqlCompartment()` reconfigure dispatch; also pass `connection` from `components/modules/raw-query/hooks/useRawQueryEditor.ts` when calling `useSqlEditorExtensions`; add a `watch` on `connection.value?.type` to trigger `reloadSqlCompartment()` automatically when the active connection's DB type changes
+
+---
+
+## Dependencies & Execution Order
+
+### Phase Dependencies
+
+- **Phase 1 (Setup)**: Starts immediately
+- **Phase 2 (Foundational)**: Depends on Phase 1 and blocks all user stories
+- **Phase 3 (US1)**: Depends on Phase 2 and is the MVP increment
+- **Phase 4 (US2)**: Depends on Phase 2; safest to sequence after US1 because the Oracle form work touches the same connection-module files
+- **Phase 5 (US3)**: Depends on Phase 2; safest to sequence after US1 for the same reason, while Electron-only tasks can proceed in parallel once the foundational contract is done
+- **Phase 6 (Polish)**: Depends on the desired story phases being complete
+- **Phase 7 (Remaining Adapter Coverage Backlog)**: Depends on the relevant story phases and can be deferred until advanced adapter parity is intentionally pulled into scope
+- **Phase 8 (Bug Fixes)**: Depends on Phase 3–5 being complete; T046–T048 are P1 blockers for Quick Query; T050 must complete before T053
+
+### User Story Dependencies
+
+- **US1 (P1)**: Can start immediately after the foundational phase
+- **US2 (P2)**: Can start after the foundational phase, but shares the connection form and picker surfaces with US1
+- **US3 (P3)**: Can start after the foundational phase, but shares the connection form and picker surfaces with US1 while also adding Electron-only work
+
+### Parallel Opportunities (Phase 8)
+
+- T046, T047, T048 are all safe to start in parallel — they touch different files (composable, constants, utility)
+- T050 and T051 are independent of each other and of T046–T048
+- T052 is independent of all other Phase 8 tasks
+- T053 depends on T050 (needs the updated `SQL_DIALECT_BY_DB_TYPE` map and `SQLDialectSupport` entries before `resolveDialect` returns correct values for new DB types)
+- T049 is independent of all other Phase 8 tasks
+
+---
+
 ## Notes
 
 - Tasks marked **[P]** touch different files or independent layers and are safe to parallelize
 - User stories are grouped independently, but the connection picker and form are shared surfaces, so single-threaded execution should still follow priority order
 - The first release is intentionally capability-based: core connection, query, and minimum browsing are in scope; advanced Postgres-only admin features remain explicitly unsupported until dedicated adapters exist
 - Phase 7 was added from a live source audit of `adapter not yet implemented` placeholders under `server/infrastructure/database/adapters/` so the remaining gaps stay visible as explicit follow-up work
+- Phase 8 was added from T038 verification findings: Quick Query and Raw Query had Postgres-centric hardcoding and missing operator/dialect/error-normalization coverage for the four newly supported database types

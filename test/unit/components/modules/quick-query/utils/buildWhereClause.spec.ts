@@ -287,7 +287,7 @@ describe('buildWhereClause', () => {
         OperatorSet.ILIKE,
         DatabaseClientType.MYSQL,
         'John',
-        'WHERE `name`::TEXT  LIKE ?',
+        'WHERE `name`  LIKE ?',
         ['%John%'],
       ],
       [
@@ -378,7 +378,7 @@ describe('buildWhereClause', () => {
       });
 
       expect(result).toEqual({
-        where: 'WHERE `name`::TEXT  LIKE ?',
+        where: 'WHERE `name`  LIKE ?',
         params: ['%John%'],
       });
     });

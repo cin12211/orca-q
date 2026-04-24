@@ -8,12 +8,6 @@ import {
   ContextMenuItem,
   ContextMenuShortcut,
   ContextMenuTrigger,
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
   Tooltip,
   TooltipContent,
   TooltipTrigger,
@@ -32,6 +26,7 @@ import { useWorkspaceConnectionRoute } from '~/core/composables/useWorkspaceConn
 import { isElectron } from '~/core/helpers';
 import { useTabViewsStore, type TabView } from '~/core/stores';
 import TabViewItem from './TabViewItem.vue';
+import TabViewOpenActions from './TabViewOpenActions.vue';
 
 const tabsStore = useTabViewsStore();
 const { openStarterSqlTab, openNewSqlFileTab, openInstanceInsightsTab } =
@@ -231,75 +226,13 @@ const isElectronRuntime = computed(() => isElectron());
             v-if="!isDockedTabActions"
             class="flex h-full shrink-0 items-center bg-sidebar-accent/50 pl-1 pr-1"
           >
-            <div class="flex items-center">
-              <Tooltip>
-                <TooltipTrigger as-child>
-                  <Button
-                    variant="outline"
-                    size="xxs"
-                    class="rounded-r-none border-r-0 pr-0"
-                    :disabled="!canOpenWorkspaceTabs"
-                    aria-label="New SQL file"
-                    @click="openNewSqlFileTab"
-                  >
-                    <Icon name="hugeicons:plus-sign" class="size-4 min-w-4" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>New SQL file</TooltipContent>
-              </Tooltip>
-
-              <DropdownMenu>
-                <DropdownMenuTrigger as-child>
-                  <Button
-                    variant="outline"
-                    size="xxs"
-                    class="rounded-l-none border-l-0 pl-0 pr-1"
-                    :disabled="!canOpenWorkspaceTabs"
-                    aria-label="Open tab options"
-                  >
-                    <Icon name="hugeicons:arrow-down-01" class="size-3!" />
-                  </Button>
-                </DropdownMenuTrigger>
-
-                <DropdownMenuContent align="end" class="min-w-52">
-                  <DropdownMenuLabel class="py-0">Open tab</DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-
-                  <DropdownMenuItem
-                    class="h-8 cursor-pointer"
-                    @select="openNewSqlFileTab"
-                  >
-                    <Icon
-                      name="hugeicons:document-code"
-                      class="size-4 min-w-4 mr-2"
-                    />
-                    New SQL file
-                  </DropdownMenuItem>
-
-                  <DropdownMenuItem
-                    class="h-8 cursor-pointer"
-                    @select="onOpenSchemaBrowser"
-                  >
-                    <Icon
-                      name="hugeicons:database"
-                      class="size-4 min-w-4 mr-2"
-                    />
-                    Schema browser
-                  </DropdownMenuItem>
-
-                  <DropdownMenuItem
-                    class="h-8 cursor-pointer"
-                    @select="openInstanceInsightsTab"
-                  >
-                    <Icon
-                      name="hugeicons:activity-02"
-                      class="size-4 min-w-4 mr-2"
-                    />
-                    Instance insights
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
+            <TabViewOpenActions
+              :disabled="!canOpenWorkspaceTabs"
+              @open-starter-sql="openStarterSqlTab"
+              @open-new-sql-file="openNewSqlFileTab"
+              @open-schema-browser="onOpenSchemaBrowser"
+              @open-instance-insights="openInstanceInsightsTab"
+            />
           </div>
         </div>
       </div>
@@ -309,72 +242,13 @@ const isElectronRuntime = computed(() => isElectron());
           v-if="isDockedTabActions"
           class="flex h-full shrink-0 items-center bg-sidebar-accent/50 pl-1 pr-1"
         >
-          <div class="flex items-center">
-            <Tooltip>
-              <TooltipTrigger as-child>
-                <Button
-                  variant="outline"
-                  size="xxs"
-                  class="rounded-r-none border-r-0 pr-0"
-                  :disabled="!canOpenWorkspaceTabs"
-                  aria-label="New SQL file"
-                  @click="openNewSqlFileTab"
-                >
-                  <Icon name="hugeicons:plus-sign" class="size-4 min-w-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>New SQL file</TooltipContent>
-            </Tooltip>
-
-            <DropdownMenu>
-              <DropdownMenuTrigger as-child>
-                <Button
-                  variant="outline"
-                  size="xxs"
-                  class="rounded-l-none border-l-0 pl-0 pr-1"
-                  :disabled="!canOpenWorkspaceTabs"
-                  aria-label="Open tab options"
-                >
-                  <Icon name="hugeicons:arrow-down-01" class="size-3!" />
-                </Button>
-              </DropdownMenuTrigger>
-
-              <DropdownMenuContent align="end" class="min-w-52">
-                <DropdownMenuLabel class="py-0">Open tab</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-
-                <DropdownMenuItem
-                  class="h-8 cursor-pointer"
-                  @select="openNewSqlFileTab"
-                >
-                  <Icon
-                    name="hugeicons:document-code"
-                    class="size-4 min-w-4 mr-2"
-                  />
-                  New SQL file
-                </DropdownMenuItem>
-
-                <DropdownMenuItem
-                  class="h-8 cursor-pointer"
-                  @select="onOpenSchemaBrowser"
-                >
-                  <Icon name="hugeicons:database" class="size-4 min-w-4 mr-2" />
-                  Schema browser
-                </DropdownMenuItem>
-
-                <DropdownMenuItem
-                  class="h-8 cursor-pointer"
-                  @select="openInstanceInsightsTab"
-                >
-                  <Icon
-                    name="hugeicons:activity-02"
-                    class="size-4 min-w-4 mr-2"
-                  />
-                  Instance insights
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
+          <TabViewOpenActions
+            :disabled="!canOpenWorkspaceTabs"
+            @open-starter-sql="openStarterSqlTab"
+            @open-new-sql-file="openNewSqlFileTab"
+            @open-schema-browser="onOpenSchemaBrowser"
+            @open-instance-insights="openInstanceInsightsTab"
+          />
         </div>
       </div>
     </div>
@@ -384,22 +258,7 @@ const isElectronRuntime = computed(() => isElectron());
       aria-hidden="true"
       class="pointer-events-none invisible absolute flex h-full shrink-0 items-center bg-sidebar-accent/50 pl-1 pr-1"
     >
-      <div class="flex items-center">
-        <Button
-          variant="outline"
-          size="xxs"
-          class="rounded-r-none border-r-0 pr-0"
-        >
-          <Icon name="hugeicons:plus-sign" class="size-4 min-w-4" />
-        </Button>
-        <Button
-          variant="outline"
-          size="xxs"
-          class="rounded-l-none border-l-0 pl-0 pr-1"
-        >
-          <Icon name="hugeicons:arrow-down-01" class="size-3!" />
-        </Button>
-      </div>
+      <TabViewOpenActions measure-only />
     </div>
   </div>
 </template>

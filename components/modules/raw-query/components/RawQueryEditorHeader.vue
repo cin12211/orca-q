@@ -63,7 +63,7 @@ const openConfigModal = () => {
           <Button
             @click="openAddVariableModal"
             variant="outline"
-            size="xs"
+            size="xxs"
             class="relative"
           >
             <Icon

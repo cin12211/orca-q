@@ -191,11 +191,15 @@ export class SqliteAdapter extends BaseDatabaseAdapter {
       trimmedQuery.startsWith('EXPLAIN');
 
     if (isSelectLike) {
-      const rows = await this.all<Record<string, unknown>>(sql, bindings);
+      const namedRows = await this.all<Record<string, unknown>>(sql, bindings);
+      const fields = createSyntheticFields(namedRows[0]);
+
+      // Convert named objects → positional arrays (same contract as Postgres rowMode:'array')
+      const rows = namedRows.map(row => fields.map(f => row[f.name])) as T[];
 
       return {
-        rows: rows as T[],
-        fields: createSyntheticFields(rows[0]),
+        rows,
+        fields,
         rowCount: rows.length,
         command: inferSqliteCommand(sql),
       };

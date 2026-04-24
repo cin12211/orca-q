@@ -8,7 +8,11 @@ import { cn } from '@/lib/utils';
 import { useAppContext } from '~/core/contexts/useAppContext';
 import { type Connection } from '~/core/stores';
 import { CreateConnectionModal } from '../connection';
-import { getDatabaseSupportByType } from '../connection';
+import {
+  getDatabaseSupportByType,
+  isSqlite3ConnectionsEnabled,
+  isSqliteConnectionDisabled,
+} from '../connection';
 
 const emit = defineEmits<{
   (e: 'update:connectionId', connectionId: string): void;
@@ -27,8 +31,12 @@ const open = ref(false);
 
 const { createConnection } = useAppContext();
 const tagStore = useEnvironmentTagStore();
+const config = useRuntimeConfig();
 
 const isModalCreateConnectionOpen = ref(false);
+const sqlite3ConnectionsEnabled = computed(() =>
+  isSqlite3ConnectionsEnabled(config.public.sqlite3ConnectionsEnabled)
+);
 
 const handleAddConnection = (connection: Connection) => {
   createConnection(connection);
@@ -47,6 +55,13 @@ const isStrictModeConnection = (connection: Connection) => {
   return getConnectionTags(connection).some(tag => tag.strictMode);
 };
 
+const isConnectionDisabled = (connection: Connection) => {
+  return (
+    isStrictModeConnection(connection) ||
+    isSqliteConnectionDisabled(connection, sqlite3ConnectionsEnabled.value)
+  );
+};
+
 const onChangeConnection = (connectionId: string) => {
   if (props.disabled) {
     return;
@@ -56,7 +71,7 @@ const onChangeConnection = (connectionId: string) => {
     connection => connection.id === connectionId
   );
 
-  if (!targetConnection || isStrictModeConnection(targetConnection)) {
+  if (!targetConnection || isConnectionDisabled(targetConnection)) {
     return;
   }
 
@@ -108,7 +123,7 @@ const onChangeConnection = (connectionId: string) => {
         <SelectItem
           class="cursor-pointer"
           :value="connection.id"
-          :disabled="isStrictModeConnection(connection)"
+          :disabled="isConnectionDisabled(connection)"
           v-for="connection in connections"
         >
           <div class="flex items-center gap-2 w-full">
@@ -128,10 +143,17 @@ const onChangeConnection = (connectionId: string) => {
               />
             </div>
             <span
-              v-if="isStrictModeConnection(connection)"
+              v-if="isConnectionDisabled(connection)"
               class="text-xs text-muted-foreground"
             >
-              Not allowed
+              {{
+                isSqliteConnectionDisabled(
+                  connection,
+                  sqlite3ConnectionsEnabled
+                )
+                  ? 'Disabled'
+                  : 'Not allowed'
+              }}
             </span>
           </div>
         </SelectItem>

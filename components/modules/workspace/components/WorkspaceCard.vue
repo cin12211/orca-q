@@ -18,6 +18,8 @@ import { type Workspace } from '~/core/stores';
 import {
   CreateConnectionModal,
   getDatabaseSupportByType,
+  isSqlite3ConnectionsEnabled,
+  isSqliteConnectionDisabled,
 } from '../../connection';
 import { useWorkspaceCard } from '../hooks/useWorkspaceCard';
 import CreateWorkspaceModal from './CreateWorkspaceModal.vue';
@@ -26,6 +28,10 @@ import DeleteWorkspaceModal from './DeleteWorkspaceModal.vue';
 dayjs.extend(relativeTime);
 
 const tagStore = useEnvironmentTagStore();
+const config = useRuntimeConfig();
+const sqlite3ConnectionsEnabled = computed(() =>
+  isSqlite3ConnectionsEnabled(config.public.sqlite3ConnectionsEnabled)
+);
 
 const props = defineProps<{
   workspace: Workspace;
@@ -193,6 +199,12 @@ const {
               :value="connection.id"
               v-for="connection in connections"
               :key="connection.id"
+              :disabled="
+                isSqliteConnectionDisabled(
+                  connection,
+                  sqlite3ConnectionsEnabled
+                )
+              "
               @select="onOpenWorkspaceWithConnection(connection.id)"
             >
               <div class="flex items-center gap-2 min-w-0">
@@ -213,6 +225,17 @@ const {
                     :tag="tag"
                   />
                 </div>
+                <span
+                  v-if="
+                    isSqliteConnectionDisabled(
+                      connection,
+                      sqlite3ConnectionsEnabled
+                    )
+                  "
+                  class="ml-auto text-xs text-muted-foreground"
+                >
+                  Disabled
+                </span>
               </div>
             </SelectItem>
           </SelectGroup>

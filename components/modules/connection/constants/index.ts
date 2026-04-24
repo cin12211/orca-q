@@ -1,7 +1,6 @@
 import type { RendererElement, RendererNode } from 'vue';
 import { Icon } from '#components';
 import { DatabaseClientType } from '~/core/constants/database-client-type';
-import { isElectron } from '~/core/helpers/environment';
 
 export interface IDBSupport {
   type: DatabaseClientType;
@@ -17,8 +16,6 @@ export interface IDBSupport {
   isBeta?: boolean;
   unsupportedLabel?: string;
 }
-
-const isElectronRuntime = isElectron();
 
 export const databaseSupports: IDBSupport[] = [
   {
@@ -52,9 +49,8 @@ export const databaseSupports: IDBSupport[] = [
     type: DatabaseClientType.SQLITE3,
     name: 'SQLite',
     icon: h(Icon, { name: 'file-icons:sqlite' }),
-    isSupport: isElectronRuntime,
+    isSupport: true,
     isBeta: true,
-    unsupportedLabel: isElectronRuntime ? undefined : 'Desktop only',
   },
   {
     type: DatabaseClientType.MONGODB,
@@ -102,4 +98,17 @@ export const DEFAULT_DB_PORTS: Record<string, string> = {
 
 export const getDatabaseSupportByType = (type: DatabaseClientType) => {
   return databaseSupports.find(e => e.type === type);
+};
+
+export const isSqlite3ConnectionsEnabled = (value: unknown) => {
+  return value !== false && value !== 'false' && value !== '0';
+};
+
+export const isSqliteConnectionDisabled = (
+  connection: { type: DatabaseClientType | string },
+  sqlite3ConnectionsEnabled: boolean
+) => {
+  return (
+    connection.type === DatabaseClientType.SQLITE3 && !sqlite3ConnectionsEnabled
+  );
 };

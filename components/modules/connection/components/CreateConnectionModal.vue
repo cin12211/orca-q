@@ -17,7 +17,11 @@ import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { DatabaseClientType } from '~/core/constants/database-client-type';
 import type { Connection } from '~/core/stores';
-import { databaseSupports } from '../constants';
+import {
+  databaseSupports,
+  isSqlite3ConnectionsEnabled,
+  isSqliteConnectionDisabled,
+} from '../constants';
 import { useConnectionForm } from '../hooks/useConnectionForm';
 import { EConnectionMethod } from '../types';
 import ConnectionSSHTunnel from './ConnectionSSHTunnel.vue';
@@ -43,6 +47,10 @@ const handleClose = () => {
 };
 
 const showPassword = ref(false);
+const config = useRuntimeConfig();
+const sqlite3ConnectionsEnabled = computed(() =>
+  isSqlite3ConnectionsEnabled(config.public.sqlite3ConnectionsEnabled)
+);
 
 const {
   step,
@@ -78,11 +86,20 @@ const {
 });
 
 const databaseOptions = computed(() =>
-  databaseSupports.map(e => ({
-    ...e,
-    isActive: dbType.value === e.type,
-    onClick: () => (dbType.value = e.type),
-  }))
+  databaseSupports.map(e => {
+    const isSqliteDisabled = isSqliteConnectionDisabled(
+      e,
+      sqlite3ConnectionsEnabled.value
+    );
+
+    return {
+      ...e,
+      isSupport: isSqliteDisabled ? false : e.isSupport,
+      unsupportedLabel: isSqliteDisabled ? 'Disabled' : e.unsupportedLabel,
+      isActive: dbType.value === e.type,
+      onClick: () => (dbType.value = e.type),
+    };
+  })
 );
 
 const structuredTargetModel = computed({
@@ -337,9 +354,12 @@ const structuredTargetModel = computed({
                     <template v-if="canPickSqliteFile">
                       Choose a local SQLite database file from the desktop app.
                     </template>
+                    <template v-else-if="sqlite3ConnectionsEnabled">
+                      Enter a SQLite file path that this app runtime can read.
+                      In hosted web deployments, this path is on the server.
+                    </template>
                     <template v-else>
-                      SQLite file connections are available only in the desktop
-                      app.
+                      SQLite file connections are disabled in this deployment.
                     </template>
                   </p>
                 </div>

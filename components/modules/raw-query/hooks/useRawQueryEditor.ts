@@ -51,6 +51,7 @@ export function useRawQueryEditor({
   const sqlEditor = useSqlEditorExtensions({
     codeEditorRef,
     fileVariables,
+    connection,
     onExecuteStatement: queryExecution.executeCurrentStatement,
     onExplainAnalyzeCurrent: queryExecution.onExplainAnalyzeCurrent,
   });

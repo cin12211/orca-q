@@ -84,8 +84,23 @@ export const useTableQueryBuilder = ({
       : 'NULLS LAST';
   });
 
+  // Returns a quoting function appropriate for the active connection's DB type.
+  // MySQL and MariaDB use backtick quoting; all others (Postgres, Oracle, SQLite) use double-quotes.
+  const quoteIdent = computed(() => {
+    const dbType = connection.value?.type;
+    if (
+      dbType === DatabaseClientType.MYSQL ||
+      dbType === DatabaseClientType.MYSQL2 ||
+      dbType === DatabaseClientType.MARIADB
+    ) {
+      return (name: string) => `\`${name}\``;
+    }
+    return (name: string) => `"${name}"`;
+  });
+
   const baseQueryString = computed(() => {
-    return `${DEFAULT_QUERY} "${schemaName}"."${tableName}"`;
+    const q = quoteIdent.value;
+    return `${DEFAULT_QUERY} ${q(schemaName)}.${q(tableName)}`;
   });
 
   const whereClauses = computed(() => {
@@ -96,7 +111,9 @@ export const useTableQueryBuilder = ({
 
     return formatWhereClause({
       columns: columns.value,
-      db: DatabaseClientType.POSTGRES,
+      db:
+        (connection.value?.type as DatabaseClientType) ||
+        DatabaseClientType.POSTGRES,
       filters: filters.value,
       composeWith: composeWith.value,
     });
@@ -107,9 +124,10 @@ export const useTableQueryBuilder = ({
     const resolvedOrder = orderBy?.order || 'ASC';
     const orderColumn =
       orderBy?.columnName || primaryKeys.value[0] || columns.value[0];
+    const q = quoteIdent.value;
 
     if (orderColumn) {
-      orderClauses = `ORDER BY "${orderColumn}" ${resolvedOrder}`;
+      orderClauses = `ORDER BY ${q(orderColumn)} ${resolvedOrder}`;
 
       if (nullOrderClause.value) {
         orderClauses = `${orderClauses} ${nullOrderClause.value}`;
@@ -119,11 +137,12 @@ export const useTableQueryBuilder = ({
     const limitClause = `LIMIT ${pagination.limit}`;
     const offsetClause = `OFFSET ${pagination.offset}`;
 
-    return `${DEFAULT_QUERY} "${schemaName}"."${tableName}" ${whereClauses.value || ''} ${orderClauses} ${limitClause} ${offsetClause}`;
+    return `${DEFAULT_QUERY} ${q(schemaName)}.${q(tableName)} ${whereClauses.value || ''} ${orderClauses} ${limitClause} ${offsetClause}`;
   });
 
   const queryCountString = computed(() => {
-    return `${DEFAULT_QUERY_COUNT} "${schemaName}"."${tableName}" ${whereClauses.value || ''}`;
+    const q = quoteIdent.value;
+    return `${DEFAULT_QUERY_COUNT} ${q(schemaName)}.${q(tableName)} ${whereClauses.value || ''}`;
   });
 
   const addHistoryLog = (
