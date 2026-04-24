@@ -9,7 +9,7 @@
     "url": "https://github.com/cin12211"
   },
   "license": "MIT",
-  "version": "1.0.66",
+  "version": "1.0.67",
   "main": "out/electron/main.js",
   "scripts": {
     "dev": "npm run nuxt:dev",
@@ -48,6 +48,7 @@
     "better-sqlite3": "^12.9.0",
     "electron-store": "^11.0.2",
     "electron-updater": "^6.8.3",
+    "knex": "^3.1.0",
     "mysql2": "^3.22.2",
     "oracledb": "^6.10.0"
   },
@@ -147,7 +148,6 @@
     "husky": "^9.1.7",
     "json-editor-vue": "^0.18.1",
     "klona": "^2.0.6",
-    "knex": "^3.1.0",
     "lint-staged": "^15.5.1",
     "localforage": "^1.10.0",
     "lodash-es": "^4.17.21",
