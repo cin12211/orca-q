@@ -54,6 +54,12 @@ export enum SpaceDisplay {
   Spacious = 'spacious',
 }
 
+export enum NullOrderPreference {
+  Unset = 'unset',
+  NullsFirst = 'nulls-first',
+  NullsLast = 'nulls-last',
+}
+
 // ── Shared interfaces ─────────────────────────────────────────────────────────
 
 export interface CodeEditorConfigs {
@@ -81,6 +87,7 @@ export interface TableAppearanceConfigs {
   fontSize: number;
   rowHeight: number;
   cellSpacing: number;
+  nullOrderPreference: NullOrderPreference;
   accentColorLight: string;
   accentColorDark: string;
   headerFontSize: number;
@@ -193,6 +200,7 @@ const DEFAULT_TABLE_APPEARANCE_CONFIGS = {
   fontSize: 12,
   rowHeight: 25,
   cellSpacing: 2.8,
+  nullOrderPreference: NullOrderPreference.Unset,
   accentColorLight: '#2196F3',
   accentColorDark: '#2196F3',
   headerFontSize: 12,

@@ -11,6 +11,7 @@ import type {
 } from '~/core/types';
 import { FunctionSchemaEnum, ViewSchemaEnum } from '~/core/types';
 import { BaseDomainAdapter } from '../../shared';
+import { resolveMetadataTypeAlias } from '../type-alias.constants';
 import type {
   DatabaseMetadataAdapterParams,
   IDatabaseMetadataAdapter,
@@ -200,10 +201,14 @@ export class MysqlMetadataAdapter
                 column.table_name === table.table_name
             )
             .map(column => ({
+              raw_type_name: column.column_type,
               name: column.column_name,
               ordinal_position: column.ordinal_position,
               type: column.column_type,
-              short_type_name: column.data_type,
+              short_type_name: resolveMetadataTypeAlias(
+                this.dbType,
+                column.column_type
+              ),
               is_nullable: column.is_nullable === 'YES',
               default_value: column.column_default,
             }));
@@ -250,10 +255,14 @@ export class MysqlMetadataAdapter
                 column.table_name === view.table_name
             )
             .map(column => ({
+              raw_type_name: column.column_type,
               name: column.column_name,
               ordinal_position: column.ordinal_position,
               type: column.column_type,
-              short_type_name: column.data_type,
+              short_type_name: resolveMetadataTypeAlias(
+                this.dbType,
+                column.column_type
+              ),
               is_nullable: column.is_nullable === 'YES',
               default_value: column.column_default,
             }));

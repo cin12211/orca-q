@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   formatFunctionDDL,
+  generateRoutineUpdateSQL,
   generateDeleteSQL,
   generateDeleteUsingSQL,
   generateDropFunctionSQL,
@@ -21,6 +22,7 @@ import {
   generateUpdateFromSQL,
   generateUpdateSQL,
   generateViewSelectSQL,
+  getRoutineDefinitionType,
   getFormatParameters,
 } from '~/components/modules/management/schemas/utils';
 
@@ -100,6 +102,35 @@ describe('schema SQL utils', () => {
       ['   ', ''],
     ])('formats function DDL case %#', (input, expected) => {
       expect(formatFunctionDDL(input)).toBe(expected);
+    });
+  });
+
+  describe('generateRoutineUpdateSQL', () => {
+    it.each([
+      [
+        'CREATE OR REPLACE FUNCTION test() RETURNS void AS $$ $$ LANGUAGE sql',
+        'CREATE OR REPLACE FUNCTION test() RETURNS void AS $$ $$ LANGUAGE sql;',
+      ],
+      [
+        '  CREATE OR REPLACE PROCEDURE sync_data() LANGUAGE sql AS $$ $$;  ',
+        'CREATE OR REPLACE PROCEDURE sync_data() LANGUAGE sql AS $$ $$;',
+      ],
+      ['', ''],
+    ])('normalizes routine update SQL case %#', (input, expected) => {
+      expect(generateRoutineUpdateSQL(input)).toBe(expected);
+    });
+  });
+
+  describe('getRoutineDefinitionType', () => {
+    it.each([
+      [
+        'CREATE OR REPLACE FUNCTION test() RETURNS void AS $$ $$ LANGUAGE sql;',
+        'FUNCTION',
+      ],
+      ['create procedure sync_data() language sql as $$ $$;', 'PROCEDURE'],
+      ['ALTER FUNCTION test() RENAME TO test2;', null],
+    ])('detects routine definition types case %#', (input, expected) => {
+      expect(getRoutineDefinitionType(input)).toBe(expected);
     });
   });
 

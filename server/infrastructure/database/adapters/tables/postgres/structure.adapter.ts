@@ -1,6 +1,8 @@
 import { createError } from 'h3';
+import { DatabaseClientType } from '~/core/constants/database-client-type';
 import type { TableSize, TableStructure } from '~/core/types';
 import type { IDatabaseAdapter } from '~/server/infrastructure/driver';
+import { resolveMetadataTypeAlias } from '../../metadata/type-alias.constants';
 
 export class PostgresTableStructureAdapter {
   constructor(private readonly adapter: IDatabaseAdapter) {}
@@ -12,29 +14,7 @@ export class PostgresTableStructureAdapter {
     const query = `
       SELECT
         a.attname AS column_name,
-        CASE
-          WHEN format_type(a.atttypid, a.atttypmod) LIKE 'character varying%' 
-              THEN REPLACE(format_type(a.atttypid, a.atttypmod), 'character varying', 'varchar')
-          WHEN format_type(a.atttypid, a.atttypmod) LIKE 'character%' 
-              THEN REPLACE(format_type(a.atttypid, a.atttypmod), 'character', 'char')
-          WHEN format_type(a.atttypid, a.atttypmod) = 'double precision' THEN 'float8'
-          WHEN format_type(a.atttypid, a.atttypmod) = 'integer' THEN 'int4'
-          WHEN format_type(a.atttypid, a.atttypmod) = 'smallint' THEN 'int2'
-          WHEN format_type(a.atttypid, a.atttypmod) = 'bigint' THEN 'int8'
-          WHEN format_type(a.atttypid, a.atttypmod) = 'real' THEN 'float4'
-          WHEN format_type(a.atttypid, a.atttypmod) = 'serial' THEN 'serial4'
-          WHEN format_type(a.atttypid, a.atttypmod) = 'smallserial' THEN 'serial2'
-          WHEN format_type(a.atttypid, a.atttypmod) = 'bigserial' THEN 'serial8'
-          WHEN format_type(a.atttypid, a.atttypmod) LIKE 'bit varying%' 
-              THEN REPLACE(format_type(a.atttypid, a.atttypmod), 'bit varying', 'varbit')
-          WHEN format_type(a.atttypid, a.atttypmod) = 'boolean' THEN 'bool'
-          WHEN format_type(a.atttypid, a.atttypmod) LIKE 'numeric%' 
-          THEN REPLACE(format_type(a.atttypid, a.atttypmod), 'numeric', 'decimal')
-          WHEN format_type(a.atttypid, a.atttypmod) = 'timestamp with time zone' THEN 'timestamptz'
-          WHEN format_type(a.atttypid, a.atttypmod) = 'timestamp without time zone' THEN 'timestamp'
-          WHEN format_type(a.atttypid, a.atttypmod) = 'time with time zone' THEN 'timetz'
-          ELSE format_type(a.atttypid, a.atttypmod)
-        END as data_type,
+        format_type(a.atttypid, a.atttypmod) AS raw_type_name,
         NOT a.attnotnull AS is_nullable,
         PG_GET_EXPR(d.adbin, d.adrelid) AS default_value,
         COALESCE(fk_info.fk_text, '') AS foreign_keys,
@@ -90,7 +70,23 @@ export class PostgresTableStructureAdapter {
       ORDER BY
         a.attnum
     `;
-    return this.adapter.rawQuery(query, [tableName, schema]);
+
+    const rows = await this.adapter.rawQuery<
+      Omit<TableStructure, 'data_type'> & { raw_type_name: string }
+    >(query, [tableName, schema]);
+
+    return rows.map(row => {
+      const shortType = resolveMetadataTypeAlias(
+        DatabaseClientType.POSTGRES,
+        row.raw_type_name
+      );
+
+      return {
+        ...row,
+        short_type_name: shortType,
+        data_type: shortType,
+      };
+    });
   }
 
   async getTableSize(schema: string, tableName: string): Promise<TableSize> {

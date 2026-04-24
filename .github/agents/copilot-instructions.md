@@ -4,6 +4,9 @@ Auto-generated from all feature plans. Last updated: 2026-03-15
 
 ## Active Technologies
 
+- TypeScript 5.6, Vue 3.5, Nuxt 3.16, Node 18+, Electron 41 + Nuxt 3, Vue 3, Pinia, Electron, AG Grid, existing SQL/parser utilities (`dt-sql-parser`, `pgsql-ast-parser`), database drivers (`pg`, `mysql2`, `sqlite3`, `oracledb`) (031-enhance-query-workbench)
+- Persisted workspace, tab, and app-config state through Electron/IndexedDB APIs; metadata and execution sourced from existing PostgreSQL/MySQL/MariaDB/SQLite/Oracle adapters (031-enhance-query-workbench)
+
 - TypeScript ~5.6, Node >=18, Vue 3.5, Nuxt 3.16, Electron 41 + Nuxt 3 SPA + Nitro server routes, Pinia 3, Knex 3.1, `pg`, `sqlite3`, `better-sqlite3`, plus new runtime drivers `mysql2` and `oracledb` (030-add-multi-db-support)
 - IndexedDB via `localforage` for browser persistence, Electron SQLite (`better-sqlite3`) for app persistence, external DB sessions via Knex driver adapters, local filesystem path access for desktop SQLite files (030-add-multi-db-support)
 
@@ -56,10 +59,10 @@ bun nuxt:build     # Production build
 
 ## Recent Changes
 
+- 031-enhance-query-workbench: Added TypeScript 5.6, Vue 3.5, Nuxt 3.16, Node 18+, Electron 41 + Nuxt 3, Vue 3, Pinia, Electron, AG Grid, existing SQL/parser utilities (`dt-sql-parser`, `pgsql-ast-parser`), database drivers (`pg`, `mysql2`, `sqlite3`, `oracledb`)
+
 - 030-add-multi-db-support: Added TypeScript ~5.6, Node >=18, Vue 3.5, Nuxt 3.16, Electron 41 + Nuxt 3 SPA + Nitro server routes, Pinia 3, Knex 3.1, `pg`, `sqlite3`, `better-sqlite3`, plus new runtime drivers `mysql2` and `oracledb`
 - 021-standardize-storage-layer: Added TypeScript 5.x
-
-- 014-enhance-electron-updater: Added TypeScript 5.x (Electron main process + Nuxt 3 / Vue 3 renderer) + Electron 30+, electron-updater 6.x, Vue 3 Composition API, Pinia, shadcn-vue component library, vue-sonner (toast)
 
 <!-- MANUAL ADDITIONS START -->
 <!-- MANUAL ADDITIONS END -->

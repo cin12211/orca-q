@@ -24,7 +24,7 @@ const tabViewStore = useTabViewsStore();
 
 const { openSchemaItemTab } = useTabManagement();
 
-const { activeSchema } = storeToRefs(schemaStore);
+const { activeSchema, activeLoadSession } = storeToRefs(schemaStore);
 const { connectionId, workspaceId } = useWorkspaceConnectionRoute();
 const { schemaId } = storeToRefs(wsStateStore);
 
@@ -42,6 +42,82 @@ const { fileTreeData, defaultFolderOpenId } = useSchemaTreeData(
 );
 
 const hasTreeData = computed(() => Object.keys(fileTreeData.value).length > 0);
+
+const loadSessionState = computed(
+  () => activeLoadSession.value?.status || 'idle'
+);
+
+const loadSessionIcon = computed(() => {
+  switch (loadSessionState.value) {
+    case 'loading':
+    case 'waiting':
+      return 'hugeicons:loading-03';
+    case 'completed':
+      return 'lucide:circle-check-big';
+    case 'failed':
+      return 'lucide:triangle-alert';
+    default:
+      return 'hugeicons:database';
+  }
+});
+
+const loadSessionTitle = computed(() => {
+  switch (loadSessionState.value) {
+    case 'loading':
+      return 'Loading schemas';
+    case 'waiting':
+      return 'Still loading schemas';
+    case 'completed':
+      return 'Schemas ready';
+    case 'failed':
+      return 'Schema load failed';
+    default:
+      return '';
+  }
+});
+
+const loadSessionMessage = computed(() => {
+  if (!activeLoadSession.value) {
+    return '';
+  }
+
+  if (loadSessionState.value === 'failed') {
+    return (
+      activeLoadSession.value.errorMessage ||
+      activeLoadSession.value.statusMessage ||
+      'Failed to load schemas for this connection.'
+    );
+  }
+
+  return activeLoadSession.value.statusMessage || '';
+});
+
+const showLoadSessionBanner = computed(
+  () => !!activeLoadSession.value && loadSessionState.value !== 'idle'
+);
+
+const emptyStateTitle = computed(() => {
+  if (loadSessionState.value === 'failed') {
+    return 'Schema load failed';
+  }
+
+  if (
+    loadSessionState.value === 'loading' ||
+    loadSessionState.value === 'waiting'
+  ) {
+    return 'Loading schemas';
+  }
+
+  return 'No data found';
+});
+
+const emptyStateDescription = computed(() => {
+  if (loadSessionMessage.value) {
+    return loadSessionMessage.value;
+  }
+
+  return 'There is no schemas data available for this connection.';
+});
 
 const onRefreshSchema = async () => {
   if (!connectionId.value) {
@@ -223,12 +299,50 @@ watch(
       </template>
     </ManagementSidebarHeader>
 
+    <div
+      v-if="showLoadSessionBanner"
+      class="mx-2 mb-2 rounded-md border bg-background/80 px-3 py-2"
+    >
+      <div class="flex items-start gap-2">
+        <Icon
+          :name="loadSessionIcon"
+          :class="[
+            'size-4 min-w-4 mt-0.5',
+            (loadSessionState === 'loading' ||
+              loadSessionState === 'waiting') &&
+              'animate-spin',
+            loadSessionState === 'completed' && 'text-emerald-500',
+            loadSessionState === 'failed' && 'text-destructive',
+          ]"
+        />
+        <div class="min-w-0">
+          <p class="text-xs font-medium">
+            {{ loadSessionTitle }}
+            <span
+              v-if="
+                loadSessionState === 'completed' &&
+                activeLoadSession?.schemaCount !== undefined
+              "
+              class="text-muted-foreground font-normal"
+            >
+              • {{ activeLoadSession.schemaCount }} schema{{
+                activeLoadSession.schemaCount === 1 ? '' : 's'
+              }}
+            </span>
+          </p>
+          <p class="text-xs text-muted-foreground break-words">
+            {{ loadSessionMessage }}
+          </p>
+        </div>
+      </div>
+    </div>
+
     <!-- TODO: check flow when change connection  -->
     <!-- TODO: check flow when change schema  -->
     <BaseEmpty
       v-if="!hasTreeData"
-      title="No data found"
-      desc="There is no schemas data available for this connection."
+      :title="emptyStateTitle"
+      :desc="emptyStateDescription"
     />
 
     <!-- Context Menu Wrapper -->

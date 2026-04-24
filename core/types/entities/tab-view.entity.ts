@@ -17,14 +17,26 @@ export enum TabViewType {
   InstanceInsights = 'InstanceInsights',
   Connection = 'Connection',
   Explorer = 'Explorer',
-  Schema = 'Schema',
   Export = 'Export',
   AgentChat = 'AgentChat',
+}
+
+export enum WorkspaceTabOpenAction {
+  SqlShortcut = 'sql-shortcut',
+  NewSqlFile = 'new-sql-file',
+  InstanceInsights = 'instance-insights',
+}
+
+export enum WorkspaceSqlFileSource {
+  Existing = 'existing',
+  Starter = 'starter',
+  ManualCreate = 'manual-create',
 }
 
 export interface BaseTabMetadata {
   type: TabViewType;
   treeNodeId?: string;
+  openAction?: WorkspaceTabOpenAction;
   [key: string]: any;
 }
 
@@ -53,6 +65,7 @@ export interface CodeQueryMetadata extends BaseTabMetadata {
   type: TabViewType.CodeQuery;
   tableName?: string;
   queryId?: string;
+  fileSource?: WorkspaceSqlFileSource;
 }
 
 export interface AgentChatMetadata extends BaseTabMetadata {

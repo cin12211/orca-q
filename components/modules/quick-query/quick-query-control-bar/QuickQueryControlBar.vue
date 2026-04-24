@@ -1,5 +1,19 @@
 <script setup lang="ts">
-import { Icon, Tooltip, TooltipContent, TooltipTrigger } from '#components';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuLabel,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+  Icon,
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '#components';
+import { NULL_ORDER_OPTIONS } from '~/components/modules/settings/constants/settings.constants';
+import { NullOrderPreference } from '~/components/modules/settings/types';
 import { useSettingsModal } from '~/core/contexts/useSettingsModal';
 import { useAppConfigStore } from '~/core/stores/appConfigStore';
 import { QuickQueryTabView } from '../constants';
@@ -39,6 +53,16 @@ const quickQueryControlBarRef = ref<HTMLElement>();
 
 const isDataView = computed(() => {
   return props.tabView === QuickQueryTabView.Data;
+});
+
+const currentNullOrderLabel = computed(() => {
+  return (
+    NULL_ORDER_OPTIONS.find(
+      option =>
+        option.value ===
+        appConfigStore.tableAppearanceConfigs.nullOrderPreference
+    )?.label || 'Unset'
+  );
 });
 </script>
 
@@ -242,6 +266,36 @@ const isDataView = computed(() => {
       </Tooltip>
 
       <!-- Table Appearance Settings shortcut -->
+      <DropdownMenu>
+        <DropdownMenuTrigger as-child>
+          <Button variant="ghost" size="xxs">
+            <Icon name="hugeicons:arrow-up-down" class="size-4!" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" class="min-w-44">
+          <DropdownMenuLabel class="py-0">Null ordering</DropdownMenuLabel>
+          <DropdownMenuSeparator />
+          <DropdownMenuRadioGroup
+            :model-value="
+              appConfigStore.tableAppearanceConfigs.nullOrderPreference
+            "
+            @update:model-value="
+              appConfigStore.tableAppearanceConfigs.nullOrderPreference =
+                $event as NullOrderPreference
+            "
+          >
+            <DropdownMenuRadioItem
+              v-for="option in NULL_ORDER_OPTIONS"
+              :key="option.value"
+              :value="option.value"
+              class="h-7 cursor-pointer"
+            >
+              {{ option.label }}
+            </DropdownMenuRadioItem>
+          </DropdownMenuRadioGroup>
+        </DropdownMenuContent>
+      </DropdownMenu>
+
       <Tooltip>
         <TooltipTrigger as-child>
           <Button

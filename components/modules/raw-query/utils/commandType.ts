@@ -243,6 +243,8 @@ class Sqlite3CommandResultHandler extends BaseCommandResultHandler {
 
 class BetterSqlite3CommandResultHandler extends Sqlite3CommandResultHandler {}
 
+class GenericCommandResultHandler extends BaseCommandResultHandler {}
+
 class MssqlCommandResultHandler extends BaseCommandResultHandler {
   protected override getMessage(isMutation: boolean): string {
     if (this.commandKey === 'MERGE') {
@@ -275,7 +277,10 @@ const HANDLER_REGISTRY: Record<
   [DatabaseClientType.MARIADB]: MysqlCommandResultHandler,
   [DatabaseClientType.MYSQL]: MysqlCommandResultHandler,
   [DatabaseClientType.MYSQL2]: Mysql2CommandResultHandler,
+  [DatabaseClientType.MONGODB]: GenericCommandResultHandler,
+  [DatabaseClientType.REDIS]: GenericCommandResultHandler,
   [DatabaseClientType.SQLITE3]: Sqlite3CommandResultHandler,
+  [DatabaseClientType.SNOWFLAKE]: GenericCommandResultHandler,
   [DatabaseClientType.BETTER_SQLITE3]: BetterSqlite3CommandResultHandler,
   [DatabaseClientType.MSSQL]: MssqlCommandResultHandler,
   [DatabaseClientType.ORACLE]: OracleCommandResultHandler,

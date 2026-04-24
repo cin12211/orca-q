@@ -122,7 +122,7 @@ export const useManagementExplorerTree = ({
     const defaultFile = {
       title: '',
       id: uuidv4(),
-      icon: 'lucide:file',
+      icon: 'hugeicons:file-01',
       workspaceId: workspaceId.value,
       createdAt: dayjs().toISOString(),
       isFolder: false,

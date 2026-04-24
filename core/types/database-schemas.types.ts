@@ -5,6 +5,7 @@ export interface SchemaColumnMetadata {
   ordinal_position: number;
   type: string;
   short_type_name: string;
+  raw_type_name?: string;
   is_nullable: boolean;
   default_value: string | null;
 }

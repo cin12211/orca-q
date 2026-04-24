@@ -1,6 +1,7 @@
 import {
   ThinkingStyle,
   SettingsComponentKey,
+  NullOrderPreference,
   type SettingsNavItem,
   type TableAppearanceConfigs,
   type ChatUiConfigs,
@@ -40,7 +41,7 @@ export const SETTINGS_NAV_ITEMS: SettingsNavItem[] = [
   },
   {
     name: 'Backup & Restore',
-    icon: 'lucide:hard-drive-download',
+    icon: 'hugeicons:file-management',
     componentKey: SettingsComponentKey.BackupRestoreConfig,
   },
   // { name: 'Language & region', icon: 'hugeicons:globe', disable: true },
@@ -81,13 +82,24 @@ export const HEADER_FONT_WEIGHT_OPTIONS: Array<{
   { label: 'Black', value: 900 },
 ];
 
+export const NULL_ORDER_OPTIONS: Array<{
+  label: string;
+  value: NullOrderPreference;
+}> = [
+  { label: 'Unset', value: NullOrderPreference.Unset },
+  { label: 'Nulls First', value: NullOrderPreference.NullsFirst },
+  { label: 'Nulls Last', value: NullOrderPreference.NullsLast },
+];
+
+export const DEFAULT_NULL_ORDER_PREFERENCE = NullOrderPreference.Unset;
+
 export const CHAT_FONT_SIZES = [10, 11, 12, 13, 14, 15, 16];
 export const CHAT_CODE_FONT_SIZES = [10, 11, 12, 13, 14, 15, 16];
 
 export const THEME_MODE_OPTIONS = [
-  { label: 'Light', value: 'light', icon: 'lucide:sun' },
-  { label: 'Dark', value: 'dark', icon: 'lucide:moon' },
-  { label: 'System', value: 'system', icon: 'lucide:monitor' },
+  { label: 'Light', value: 'light', icon: 'hugeicons:sun-03' },
+  { label: 'Dark', value: 'dark', icon: 'hugeicons:moon-02' },
+  { label: 'System', value: 'system', icon: 'hugeicons:solar-system' },
 ] as const;
 
 export type ThemeMode = (typeof THEME_MODE_OPTIONS)[number]['value'];
@@ -96,6 +108,7 @@ export const DEFAULT_TABLE_APPEARANCE_CONFIGS: TableAppearanceConfigs = {
   fontSize: 12,
   rowHeight: 25,
   cellSpacing: 2.8,
+  nullOrderPreference: DEFAULT_NULL_ORDER_PREFERENCE,
   accentColorLight: '#2196F3',
   accentColorDark: '#2196F3',
   headerFontSize: 12,

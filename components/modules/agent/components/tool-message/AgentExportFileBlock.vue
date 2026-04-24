@@ -20,6 +20,7 @@ const handleOpenPreview = () => {
   }
 };
 
+//TODO: fix convert to use hugeicons
 const formatIcon = computed(() => {
   switch (props.data.format) {
     case 'json':

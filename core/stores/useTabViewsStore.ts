@@ -25,7 +25,6 @@ export enum TabViewType {
   InstanceInsights = 'InstanceInsights',
   Connection = 'Connection',
   Explorer = 'Explorer',
-  Schema = 'Schema',
   Export = 'Export',
   AgentChat = 'AgentChat',
 }
@@ -249,6 +248,13 @@ export const useTabViewsStore = defineStore(
       }
     };
 
+    const ensureTab = async (tab: Omit<TabView, 'index'>) => {
+      await openTab(tab);
+      await selectTab(tab.id);
+
+      return getTabById(tab.id);
+    };
+
     const selectTab = async (tabId: string) => {
       const tab = getTabById(tabId);
 
@@ -379,6 +385,7 @@ export const useTabViewsStore = defineStore(
       activeTab,
       isLoading,
       openTab,
+      ensureTab,
       closeTab,
       selectTab,
       moveTabTo,

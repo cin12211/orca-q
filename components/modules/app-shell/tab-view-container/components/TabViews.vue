@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { unrefElement } from '@vueuse/core';
+import { unrefElement, useElementSize } from '@vueuse/core';
 import { storeToRefs } from 'pinia';
 import { shallowRef, watchEffect, computed, ref } from 'vue';
 import {
@@ -8,6 +8,15 @@ import {
   ContextMenuItem,
   ContextMenuShortcut,
   ContextMenuTrigger,
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
 } from '#components';
 import { autoScrollForElements } from '@atlaskit/pragmatic-drag-and-drop-auto-scroll/element';
 import {
@@ -17,19 +26,51 @@ import {
 import { getReorderDestinationIndex } from '@atlaskit/pragmatic-drag-and-drop-hitbox/util/get-reorder-destination-index';
 import { combine } from '@atlaskit/pragmatic-drag-and-drop/combine';
 import { monitorForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
+import { useCommandPalette } from '~/components/modules/command-palette';
+import { useTabManagement } from '~/core/composables/useTabManagement';
+import { useWorkspaceConnectionRoute } from '~/core/composables/useWorkspaceConnectionRoute';
 import { isElectron } from '~/core/helpers';
 import { useTabViewsStore, type TabView } from '~/core/stores';
 import TabViewItem from './TabViewItem.vue';
 
 const tabsStore = useTabViewsStore();
+const { openStarterSqlTab, openNewSqlFileTab, openInstanceInsightsTab } =
+  useTabManagement();
+const { openCommandPalette } = useCommandPalette();
+const { workspaceId, connectionId } = useWorkspaceConnectionRoute();
 
 const { tabViews } = storeToRefs(tabsStore);
 
 const elementRef = shallowRef<HTMLElement | null>();
+const tabBarBodyRef = shallowRef<HTMLElement | null>();
+const tabsTrackRef = shallowRef<HTMLElement | null>();
+const actionsMeasureRef = shallowRef<HTMLElement | null>();
 
 const isDragging = ref(false);
 
 const currentTabMenuContext = ref<TabView | null>();
+
+const { width: tabBarBodyWidth } = useElementSize(tabBarBodyRef);
+const { width: tabsTrackWidth } = useElementSize(tabsTrackRef);
+const { width: actionsMeasureWidth } = useElementSize(actionsMeasureRef);
+
+const canOpenWorkspaceTabs = computed(
+  () => !!workspaceId.value && !!connectionId.value
+);
+
+const isDockedTabActions = computed(() => {
+  if (!tabBarBodyWidth.value || !actionsMeasureWidth.value) {
+    return false;
+  }
+
+  return (
+    tabsTrackWidth.value + actionsMeasureWidth.value > tabBarBodyWidth.value
+  );
+});
+
+const onOpenSchemaBrowser = () => {
+  openCommandPalette();
+};
 
 const isHaveRightItem = computed(() => {
   if (!currentTabMenuContext.value) {
@@ -103,58 +144,263 @@ const isElectronRuntime = computed(() => isElectron());
 <template>
   <div
     :class="[
-      'w-full flex items-end h-full space-x-2 mx-1 -mb-0.5 overflow-x-auto hidden-scroll-container relative',
+      'w-full flex items-end h-full gap-2 mx-1 -mb-0.5 min-w-0 relative',
       isDragging ? 'bg-purple-50' : '',
     ]"
-    ref="elementRef"
     :data-electron-drag-region="isElectronRuntime ? '' : undefined"
   >
-    <ContextMenu>
-      <ContextMenuTrigger>
-        <div v-auto-animate="{ duration: 120 }" class="flex items-end">
-          <TabViewItem
-            v-for="tab in tabViews"
-            :key="tab.id"
-            :tab="tab"
-            :isActive="tab.id === tabsStore.activeTab?.id"
-            :selectTab="tabsStore.selectTab"
-            :closeTab="tabsStore.closeTab"
-            :onRightClickItem="
-              () => {
-                currentTabMenuContext = tab;
-              }
-            "
-          />
+    <div
+      class="flex h-full shrink-0 items-center gap-1 bg-sidebar-accent/50 pr-1"
+      v-if="false"
+    >
+      <Tooltip>
+        <TooltipTrigger as-child>
+          <Button
+            variant="outline"
+            size="xxs"
+            class="text-xxs"
+            :disabled="!canOpenWorkspaceTabs"
+            @click="openStarterSqlTab"
+          >
+            <!-- <Icon name="hugeicons:sql" class="size-4 min-w-4" /> -->
+            SQL
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent>Open or reuse sample.sql</TooltipContent>
+      </Tooltip>
+    </div>
+
+    <div ref="tabBarBodyRef" class="flex h-full min-w-0 flex-1 items-end">
+      <div
+        ref="elementRef"
+        class="min-w-0 flex-1 overflow-x-auto hidden-scroll-container h-full"
+      >
+        <div class="flex min-w-max items-end h-full">
+          <ContextMenu>
+            <ContextMenuTrigger as-child>
+              <div
+                ref="tabsTrackRef"
+                v-auto-animate="{ duration: 120 }"
+                class="flex items-end"
+              >
+                <TabViewItem
+                  v-for="tab in tabViews"
+                  :key="tab.id"
+                  :tab="tab"
+                  :isActive="tab.id === tabsStore.activeTab?.id"
+                  :selectTab="tabsStore.selectTab"
+                  :closeTab="tabsStore.closeTab"
+                  :onRightClickItem="
+                    () => {
+                      currentTabMenuContext = tab;
+                    }
+                  "
+                />
+              </div>
+            </ContextMenuTrigger>
+
+            <ContextMenuContent
+              hideWhenDetached
+              class="w-56"
+              v-if="currentTabMenuContext"
+            >
+              <ContextMenuItem
+                @select="tabsStore.closeTab(currentTabMenuContext.id)"
+              >
+                Close
+                <ContextMenuShortcut>⌘W</ContextMenuShortcut>
+              </ContextMenuItem>
+              <ContextMenuItem
+                @select="tabsStore.closeOtherTab(currentTabMenuContext.id)"
+              >
+                Close other
+                <ContextMenuShortcut>⌘AO</ContextMenuShortcut>
+              </ContextMenuItem>
+
+              <ContextMenuItem
+                :disabled="!isHaveRightItem"
+                @select="tabsStore.closeToTheRight(currentTabMenuContext.id)"
+              >
+                Close to the right
+                <ContextMenuShortcut>⌘AX</ContextMenuShortcut>
+              </ContextMenuItem>
+            </ContextMenuContent>
+          </ContextMenu>
+
+          <div
+            v-if="!isDockedTabActions"
+            class="flex h-full shrink-0 items-center bg-sidebar-accent/50 pl-1 pr-1"
+          >
+            <div class="flex items-center">
+              <Tooltip>
+                <TooltipTrigger as-child>
+                  <Button
+                    variant="outline"
+                    size="xxs"
+                    class="rounded-r-none border-r-0 pr-0"
+                    :disabled="!canOpenWorkspaceTabs"
+                    aria-label="New SQL file"
+                    @click="openNewSqlFileTab"
+                  >
+                    <Icon name="hugeicons:plus-sign" class="size-4 min-w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>New SQL file</TooltipContent>
+              </Tooltip>
+
+              <DropdownMenu>
+                <DropdownMenuTrigger as-child>
+                  <Button
+                    variant="outline"
+                    size="xxs"
+                    class="rounded-l-none border-l-0 pl-0 pr-1"
+                    :disabled="!canOpenWorkspaceTabs"
+                    aria-label="Open tab options"
+                  >
+                    <Icon name="hugeicons:arrow-down-01" class="size-3!" />
+                  </Button>
+                </DropdownMenuTrigger>
+
+                <DropdownMenuContent align="end" class="min-w-52">
+                  <DropdownMenuLabel class="py-0">Open tab</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+
+                  <DropdownMenuItem
+                    class="h-8 cursor-pointer"
+                    @select="openNewSqlFileTab"
+                  >
+                    <Icon
+                      name="hugeicons:document-code"
+                      class="size-4 min-w-4 mr-2"
+                    />
+                    New SQL file
+                  </DropdownMenuItem>
+
+                  <DropdownMenuItem
+                    class="h-8 cursor-pointer"
+                    @select="onOpenSchemaBrowser"
+                  >
+                    <Icon
+                      name="hugeicons:database"
+                      class="size-4 min-w-4 mr-2"
+                    />
+                    Schema browser
+                  </DropdownMenuItem>
+
+                  <DropdownMenuItem
+                    class="h-8 cursor-pointer"
+                    @select="openInstanceInsightsTab"
+                  >
+                    <Icon
+                      name="hugeicons:activity-02"
+                      class="size-4 min-w-4 mr-2"
+                    />
+                    Instance insights
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          </div>
         </div>
+      </div>
 
-        <ContextMenuContent
-          hideWhenDetached
-          class="w-56"
-          v-if="currentTabMenuContext"
+      <div class="flex min-w-max items-end h-full">
+        <div
+          v-if="isDockedTabActions"
+          class="flex h-full shrink-0 items-center bg-sidebar-accent/50 pl-1 pr-1"
         >
-          <ContextMenuItem
-            @select="tabsStore.closeTab(currentTabMenuContext.id)"
-          >
-            Close
-            <ContextMenuShortcut>⌘W</ContextMenuShortcut>
-          </ContextMenuItem>
-          <ContextMenuItem
-            @select="tabsStore.closeOtherTab(currentTabMenuContext.id)"
-          >
-            Close other
-            <ContextMenuShortcut>⌘AO</ContextMenuShortcut>
-          </ContextMenuItem>
+          <div class="flex items-center">
+            <Tooltip>
+              <TooltipTrigger as-child>
+                <Button
+                  variant="outline"
+                  size="xxs"
+                  class="rounded-r-none border-r-0 pr-0"
+                  :disabled="!canOpenWorkspaceTabs"
+                  aria-label="New SQL file"
+                  @click="openNewSqlFileTab"
+                >
+                  <Icon name="hugeicons:plus-sign" class="size-4 min-w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>New SQL file</TooltipContent>
+            </Tooltip>
 
-          <ContextMenuItem
-            :disabled="!isHaveRightItem"
-            @select="tabsStore.closeToTheRight(currentTabMenuContext.id)"
-          >
-            Close to the right
-            <ContextMenuShortcut>⌘AX</ContextMenuShortcut>
-          </ContextMenuItem>
-        </ContextMenuContent>
-      </ContextMenuTrigger>
-    </ContextMenu>
+            <DropdownMenu>
+              <DropdownMenuTrigger as-child>
+                <Button
+                  variant="outline"
+                  size="xxs"
+                  class="rounded-l-none border-l-0 pl-0 pr-1"
+                  :disabled="!canOpenWorkspaceTabs"
+                  aria-label="Open tab options"
+                >
+                  <Icon name="hugeicons:arrow-down-01" class="size-3!" />
+                </Button>
+              </DropdownMenuTrigger>
+
+              <DropdownMenuContent align="end" class="min-w-52">
+                <DropdownMenuLabel class="py-0">Open tab</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+
+                <DropdownMenuItem
+                  class="h-8 cursor-pointer"
+                  @select="openNewSqlFileTab"
+                >
+                  <Icon
+                    name="hugeicons:document-code"
+                    class="size-4 min-w-4 mr-2"
+                  />
+                  New SQL file
+                </DropdownMenuItem>
+
+                <DropdownMenuItem
+                  class="h-8 cursor-pointer"
+                  @select="onOpenSchemaBrowser"
+                >
+                  <Icon name="hugeicons:database" class="size-4 min-w-4 mr-2" />
+                  Schema browser
+                </DropdownMenuItem>
+
+                <DropdownMenuItem
+                  class="h-8 cursor-pointer"
+                  @select="openInstanceInsightsTab"
+                >
+                  <Icon
+                    name="hugeicons:activity-02"
+                    class="size-4 min-w-4 mr-2"
+                  />
+                  Instance insights
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div
+      ref="actionsMeasureRef"
+      aria-hidden="true"
+      class="pointer-events-none invisible absolute flex h-full shrink-0 items-center bg-sidebar-accent/50 pl-1 pr-1"
+    >
+      <div class="flex items-center">
+        <Button
+          variant="outline"
+          size="xxs"
+          class="rounded-r-none border-r-0 pr-0"
+        >
+          <Icon name="hugeicons:plus-sign" class="size-4 min-w-4" />
+        </Button>
+        <Button
+          variant="outline"
+          size="xxs"
+          class="rounded-l-none border-l-0 pl-0 pr-1"
+        >
+          <Icon name="hugeicons:arrow-down-01" class="size-3!" />
+        </Button>
+      </div>
+    </div>
   </div>
 </template>
 

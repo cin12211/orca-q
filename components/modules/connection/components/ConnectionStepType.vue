@@ -51,6 +51,7 @@ const handleSelect = (option: IDatabaseOption) => {
           :selected="option.isActive"
           @click="() => handleSelect(option)"
           :isSupport="option.isSupport"
+          :isBeta="option.isBeta"
           :unsupported-label="option.unsupportedLabel"
           iconClass="size-14!"
         />

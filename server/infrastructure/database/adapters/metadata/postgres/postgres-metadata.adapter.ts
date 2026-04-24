@@ -5,6 +5,7 @@ import type {
   ReservedTableSchemas,
 } from '~/core/types';
 import { BaseDomainAdapter } from '../../shared';
+import { resolveMetadataTypeAlias } from '../type-alias.constants';
 import type {
   IDatabaseMetadataAdapter,
   DatabaseMetadataAdapterParams,
@@ -14,6 +15,57 @@ import {
   getErdDataQuery,
   getReverseSchemasQuery,
 } from './constants';
+
+const normalizeSchemaColumns = <
+  TColumn extends {
+    type: string;
+    raw_type_name?: string;
+    short_type_name?: string;
+  },
+>(
+  columns: TColumn[] | undefined
+) =>
+  (columns || []).map(column => {
+    const rawType = column.raw_type_name || column.type;
+
+    return {
+      ...column,
+      raw_type_name: rawType,
+      short_type_name: resolveMetadataTypeAlias(
+        DatabaseClientType.POSTGRES,
+        rawType
+      ),
+    };
+  });
+
+const normalizeDetails = <
+  TDetails extends Record<
+    string,
+    {
+      columns: Array<{
+        type: string;
+        raw_type_name?: string;
+        short_type_name?: string;
+      }>;
+    }
+  >,
+>(
+  details: TDetails | null | undefined
+) => {
+  if (!details) {
+    return details ?? null;
+  }
+
+  return Object.fromEntries(
+    Object.entries(details).map(([name, detail]) => [
+      name,
+      {
+        ...detail,
+        columns: normalizeSchemaColumns(detail.columns),
+      },
+    ])
+  ) as TDetails;
+};
 
 export class PostgresMetadataAdapter
   extends BaseDomainAdapter
@@ -32,7 +84,16 @@ export class PostgresMetadataAdapter
   }
 
   async getSchemaMetaData(): Promise<SchemaMetaData[]> {
-    return await this.adapter.rawQuery(getSchemaMetaDataQuery, []);
+    const metadata = await this.adapter.rawQuery<SchemaMetaData>(
+      getSchemaMetaDataQuery,
+      []
+    );
+
+    return metadata.map(schema => ({
+      ...schema,
+      table_details: normalizeDetails(schema.table_details),
+      view_details: normalizeDetails(schema.view_details),
+    }));
   }
 
   async getErdData(): Promise<DatabaseMetadata> {

@@ -58,11 +58,18 @@ export interface AgentApiKeyConfigs {
   openrouter: string;
 }
 
+export enum NullOrderPreference {
+  Unset = 'unset',
+  NullsFirst = 'nulls-first',
+  NullsLast = 'nulls-last',
+}
+
 export interface TableAppearanceConfigs {
   // Row
   fontSize: number;
   rowHeight: number;
   cellSpacing: number;
+  nullOrderPreference: NullOrderPreference;
   accentColorLight: string;
   accentColorDark: string;
   // Header

@@ -5,6 +5,7 @@ import {
   formatWhereClause,
   type FilterSchema,
 } from '~/components/modules/quick-query/utils';
+import { NullOrderPreference } from '~/components/modules/settings/types';
 import {
   ComposeOperator,
   DEFAULT_DEBOUNCE_INPUT,
@@ -15,6 +16,7 @@ import {
 import { DatabaseClientType } from '~/core/constants/database-client-type';
 import { LocalStorageManager } from '~/core/persist/LocalStorageManager';
 import { useQuickQueryLogs, type Connection } from '~/core/stores';
+import { useAppConfigStore } from '~/core/stores/appConfigStore';
 
 export interface OrderBy {
   columnName?: string;
@@ -44,6 +46,7 @@ export const useTableQueryBuilder = ({
   initFilters?: FilterSchema[];
   initComposeWith?: ComposeOperator;
 }) => {
+  const appConfigStore = useAppConfigStore();
   const qqLogStore = useQuickQueryLogs();
 
   const openErrorModal = ref(false);
@@ -62,6 +65,24 @@ export const useTableQueryBuilder = ({
   const isShowFilters = ref(false);
 
   const composeWith = ref<ComposeOperator>(ComposeOperator.AND);
+
+  const nullOrderClause = computed(() => {
+    const preference =
+      appConfigStore.tableAppearanceConfigs.nullOrderPreference;
+    const dbType = connection.value?.type;
+
+    if (
+      preference === NullOrderPreference.Unset ||
+      (dbType !== DatabaseClientType.POSTGRES &&
+        dbType !== DatabaseClientType.ORACLE)
+    ) {
+      return '';
+    }
+
+    return preference === NullOrderPreference.NullsFirst
+      ? 'NULLS FIRST'
+      : 'NULLS LAST';
+  });
 
   const baseQueryString = computed(() => {
     return `${DEFAULT_QUERY} "${schemaName}"."${tableName}"`;
@@ -83,14 +104,15 @@ export const useTableQueryBuilder = ({
 
   const queryString = computed(() => {
     let orderClauses = '';
+    const resolvedOrder = orderBy?.order || 'ASC';
+    const orderColumn =
+      orderBy?.columnName || primaryKeys.value[0] || columns.value[0];
 
-    if (orderBy?.columnName && orderBy?.order) {
-      orderClauses = `ORDER BY "${orderBy.columnName}" ${orderBy.order}`;
-    } else {
-      if (primaryKeys.value[0]) {
-        orderClauses = `ORDER BY "${primaryKeys.value[0]}" ASC`;
-      } else {
-        orderClauses = `ORDER BY "${columns.value[0]}" ASC`;
+    if (orderColumn) {
+      orderClauses = `ORDER BY "${orderColumn}" ${resolvedOrder}`;
+
+      if (nullOrderClause.value) {
+        orderClauses = `${orderClauses} ${nullOrderClause.value}`;
       }
     }
 

@@ -9,6 +9,7 @@ import type {
 } from '~/core/types';
 import { ViewSchemaEnum } from '~/core/types';
 import { BaseDomainAdapter } from '../../shared';
+import { resolveMetadataTypeAlias } from '../type-alias.constants';
 import type {
   DatabaseMetadataAdapterParams,
   IDatabaseMetadataAdapter,
@@ -117,10 +118,14 @@ export class SqliteMetadataAdapter
               table.name,
               {
                 columns: columns.map(column => ({
+                  raw_type_name: column.type,
                   name: column.name,
                   ordinal_position: column.cid + 1,
                   type: column.type,
-                  short_type_name: column.type,
+                  short_type_name: resolveMetadataTypeAlias(
+                    this.dbType,
+                    column.type
+                  ),
                   is_nullable: column.notnull === 0,
                   default_value: column.dflt_value,
                 })),
@@ -150,10 +155,14 @@ export class SqliteMetadataAdapter
               view.name,
               {
                 columns: columns.map(column => ({
+                  raw_type_name: column.type,
                   name: column.name,
                   ordinal_position: column.cid + 1,
                   type: column.type,
-                  short_type_name: column.type,
+                  short_type_name: resolveMetadataTypeAlias(
+                    this.dbType,
+                    column.type
+                  ),
                   is_nullable: column.notnull === 0,
                   default_value: column.dflt_value,
                 })),

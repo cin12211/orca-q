@@ -52,8 +52,14 @@ const getConnectionStringScheme = (type: DatabaseClientType | null) => {
       return 'postgresql';
     case DatabaseClientType.MARIADB:
       return 'mariadb';
+    case DatabaseClientType.MONGODB:
+      return 'mongodb';
     case DatabaseClientType.ORACLE:
       return 'oracledb';
+    case DatabaseClientType.REDIS:
+      return 'redis';
+    case DatabaseClientType.SNOWFLAKE:
+      return 'snowflake';
     case DatabaseClientType.MYSQL:
     case DatabaseClientType.MYSQL2:
       return 'mysql';
@@ -410,8 +416,14 @@ export function useConnectionForm(props: {
         return 'mysql://username:password@localhost:3306/database';
       case DatabaseClientType.MARIADB:
         return 'mariadb://username:password@localhost:3306/database';
+      case DatabaseClientType.MONGODB:
+        return 'mongodb://username:password@localhost:27017/database';
       case DatabaseClientType.ORACLE:
         return 'oracledb://username:password@localhost:1521/ORCLPDB1';
+      case DatabaseClientType.REDIS:
+        return 'redis://username:password@localhost:6379';
+      case DatabaseClientType.SNOWFLAKE:
+        return 'snowflake://username:password@account.snowflakecomputing.com:443/database';
       case DatabaseClientType.SQLITE3:
         return '/Users/you/data/app.sqlite';
       default:

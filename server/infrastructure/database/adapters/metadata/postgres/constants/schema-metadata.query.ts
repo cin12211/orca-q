@@ -44,20 +44,9 @@ export const getSchemaMetaDataQuery = `
                     'name', a.attname,
                     'ordinal_position', a.attnum,
                     'type', format_type(a.atttypid, a.atttypmod),
+                    'raw_type_name', format_type(a.atttypid, a.atttypmod),
                     'is_nullable', NOT a.attnotnull,
-                    'short_type_name',
-                      CASE
-                        WHEN format_type(a.atttypid, a.atttypmod) LIKE 'character varying%'
-                          THEN REPLACE(format_type(a.atttypid, a.atttypmod), 'character varying', 'varchar')
-                        WHEN format_type(a.atttypid, a.atttypmod) = 'integer' THEN 'int4'
-                        WHEN format_type(a.atttypid, a.atttypmod) = 'bigint' THEN 'int8'
-                        WHEN format_type(a.atttypid, a.atttypmod) = 'boolean' THEN 'bool'
-                        WHEN format_type(a.atttypid, a.atttypmod) LIKE 'numeric%'
-                          THEN REPLACE(format_type(a.atttypid, a.atttypmod), 'numeric', 'decimal')
-                        WHEN format_type(a.atttypid, a.atttypmod) = 'timestamp without time zone' THEN 'timestamp'
-                        WHEN format_type(a.atttypid, a.atttypmod) = 'timestamp with time zone' THEN 'timestamptz'
-                        ELSE format_type(a.atttypid, a.atttypmod)
-                      END
+                    'short_type_name', format_type(a.atttypid, a.atttypmod)
                   )
                   ORDER BY a.attnum
                 )
@@ -107,32 +96,10 @@ export const getSchemaMetaDataQuery = `
                     'name', a.attname,
                     'ordinal_position', a.attnum,
                     'type', format_type(a.atttypid, a.atttypmod),
+                    'raw_type_name', format_type(a.atttypid, a.atttypmod),
                     'is_nullable', NOT a.attnotnull,
                     'default_value', pg_get_expr(d.adbin, d.adrelid),
-                    'short_type_name',
-                    CASE
-                      WHEN format_type(a.atttypid, a.atttypmod) LIKE 'character varying%' 
-                          THEN REPLACE(format_type(a.atttypid, a.atttypmod), 'character varying', 'varchar')
-                      WHEN format_type(a.atttypid, a.atttypmod) LIKE 'character%' 
-                          THEN REPLACE(format_type(a.atttypid, a.atttypmod), 'character', 'char')
-                      WHEN format_type(a.atttypid, a.atttypmod) = 'double precision' THEN 'float8'
-                      WHEN format_type(a.atttypid, a.atttypmod) = 'integer' THEN 'int4'
-                      WHEN format_type(a.atttypid, a.atttypmod) = 'smallint' THEN 'int2'
-                      WHEN format_type(a.atttypid, a.atttypmod) = 'bigint' THEN 'int8'
-                      WHEN format_type(a.atttypid, a.atttypmod) = 'real' THEN 'float4'
-                      WHEN format_type(a.atttypid, a.atttypmod) = 'serial' THEN 'serial4'
-                      WHEN format_type(a.atttypid, a.atttypmod) = 'smallserial' THEN 'serial2'
-                      WHEN format_type(a.atttypid, a.atttypmod) = 'bigserial' THEN 'serial8'
-                      WHEN format_type(a.atttypid, a.atttypmod) LIKE 'bit varying%' 
-                          THEN REPLACE(format_type(a.atttypid, a.atttypmod), 'bit varying', 'varbit')
-                      WHEN format_type(a.atttypid, a.atttypmod) = 'boolean' THEN 'bool'
-                      WHEN format_type(a.atttypid, a.atttypmod) LIKE 'numeric%' 
-                      THEN REPLACE(format_type(a.atttypid, a.atttypmod), 'numeric', 'decimal')
-                      WHEN format_type(a.atttypid, a.atttypmod) = 'timestamp with time zone' THEN 'timestamptz'
-                      WHEN format_type(a.atttypid, a.atttypmod) = 'timestamp without time zone' THEN 'timestamp'
-                      WHEN format_type(a.atttypid, a.atttypmod) = 'time with time zone' THEN 'timetz'
-                      ELSE format_type(a.atttypid, a.atttypmod)
-                    END -- short type with length, user-friendly 
+                    'short_type_name', format_type(a.atttypid, a.atttypmod)
                   )
                 )
                 FROM pg_attribute a

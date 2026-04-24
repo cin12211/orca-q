@@ -17,17 +17,18 @@ export interface ParsedConnection {
 // Helpers
 // ─────────────────────────────────────────────
 
-const DEFAULT_PORTS: Record<DatabaseClientType, number> = {
+const DEFAULT_PORTS: Partial<Record<DatabaseClientType, number>> = {
   [DatabaseClientType.POSTGRES]: 5432,
   [DatabaseClientType.MYSQL]: 3306,
   [DatabaseClientType.MARIADB]: 3306,
   [DatabaseClientType.MYSQL2]: 3306,
+  [DatabaseClientType.MONGODB]: 27017,
+  [DatabaseClientType.REDIS]: 6379,
   [DatabaseClientType.MSSQL]: 1433,
   [DatabaseClientType.ORACLE]: 1521,
   [DatabaseClientType.BETTER_SQLITE3]: 0, // No port for SQLite
   [DatabaseClientType.SQLITE3]: 0,
-  //   [DatabaseClientType.MONGODB]: 27017,
-  //   [DatabaseClientType.REDIS]: 6379,
+  [DatabaseClientType.SNOWFLAKE]: 443,
 };
 
 function parseQueryString(raw: string): Record<string, string> {
@@ -72,7 +73,7 @@ function parseUri(raw: string, type: DatabaseClientType): ParsedConnection {
   const rawHost = url.hostname || 'localhost';
   const host = rawHost.split(',')[0].trim();
 
-  const port = url.port ? parseInt(url.port, 10) : DEFAULT_PORTS[type];
+  const port = url.port ? parseInt(url.port, 10) : (DEFAULT_PORTS[type] ?? 0);
 
   // Strip leading slash
   const database =
@@ -130,7 +131,7 @@ function parseSqlServer(raw: string): ParsedConnection {
 
   // SQL Server supports  host\INSTANCE  or  host,port
   let host = serverRaw;
-  let port = DEFAULT_PORTS[DatabaseClientType.MSSQL];
+  let port = DEFAULT_PORTS[DatabaseClientType.MSSQL] ?? 1433;
 
   const commaIdx = serverRaw.lastIndexOf(',');
   if (commaIdx !== -1) {
@@ -204,11 +205,12 @@ const SCHEME_MAP: Record<string, DatabaseClientType> = {
   mariadb: DatabaseClientType.MARIADB,
   oracle: DatabaseClientType.ORACLE,
   oracledb: DatabaseClientType.ORACLE,
-  //   mongodb: DatabaseClientType.MONGODB,
-  //   'mongodb+srv': DatabaseClientType.MONGODB,
-  //   redis: DatabaseClientType.REDIS,
-  //   rediss: DatabaseClientType.REDIS, // TLS variant
-  //   redis6: DatabaseClientType.REDIS,
+  mongodb: DatabaseClientType.MONGODB,
+  'mongodb+srv': DatabaseClientType.MONGODB,
+  redis: DatabaseClientType.REDIS,
+  rediss: DatabaseClientType.REDIS,
+  redis6: DatabaseClientType.REDIS,
+  snowflake: DatabaseClientType.SNOWFLAKE,
 };
 
 // ─────────────────────────────────────────────

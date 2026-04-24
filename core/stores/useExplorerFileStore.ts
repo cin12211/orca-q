@@ -6,6 +6,7 @@ import {
   type TreeFileSystemItem,
 } from '~/components/base/Tree/treeManagement';
 import { useWorkspaceConnectionRoute } from '~/core/composables/useWorkspaceConnectionRoute';
+import { uuidv4 } from '~/core/helpers';
 import { createStorageApis } from '~/core/storage';
 
 export type RowQueryFile = TreeFileSystemItem;
@@ -14,6 +15,10 @@ export interface RowQueryFileContent {
   id: string;
   contents: string;
 }
+
+const STARTER_SQL_FILE_NAME = 'sample.sql';
+const NEW_SQL_FILE_BASE_NAME = 'new-file';
+const RAW_QUERY_FILE_ICON = 'lucide:file';
 
 const sanitizeRowQueryFile = <T extends { connectionId?: string }>(file: T) => {
   const { connectionId: _connectionId, ...sanitized } = file;
@@ -120,6 +125,81 @@ export const useExplorerFileStore = defineStore(
       return flatNodes.value.find(f => f.id === fileID);
     };
 
+    const getFileByTitle = (title: string) => {
+      return flatNodes.value.find(
+        file =>
+          !file.isFolder && file.title.toLowerCase() === title.toLowerCase()
+      );
+    };
+
+    const buildGeneratedSqlFileName = (index: number) => {
+      return index <= 1
+        ? `${NEW_SQL_FILE_BASE_NAME}.sql`
+        : `${NEW_SQL_FILE_BASE_NAME}-${index}.sql`;
+    };
+
+    const getNextGeneratedSqlFileName = () => {
+      const fileNames = new Set(
+        flatNodes.value
+          .filter(file => !file.isFolder)
+          .map(file => file.title.toLowerCase())
+      );
+
+      let nextIndex = 1;
+      let candidate = buildGeneratedSqlFileName(nextIndex);
+
+      while (fileNames.has(candidate.toLowerCase())) {
+        nextIndex += 1;
+        candidate = buildGeneratedSqlFileName(nextIndex);
+      }
+
+      return candidate;
+    };
+
+    const createRawQueryFile = async ({
+      title,
+      parentId = null,
+    }: {
+      title: string;
+      parentId?: string | null;
+    }) => {
+      if (!workspaceId.value) {
+        return null;
+      }
+
+      const item: TreeFileSystemItem = {
+        title,
+        id: uuidv4(),
+        icon: RAW_QUERY_FILE_ICON,
+        workspaceId: workspaceId.value,
+        createdAt: dayjs().toISOString(),
+        isFolder: false,
+        variables: '',
+        path: '',
+        children: undefined,
+        parentId: parentId ?? undefined,
+      };
+
+      treeNodeRef.value.insertNode(parentId, item);
+      treeNodeRef.value.sortByTitle();
+
+      return getFileById(item.id) ?? item;
+    };
+
+    const ensureStarterSqlFile = async () => {
+      const existing = getFileByTitle(STARTER_SQL_FILE_NAME);
+
+      if (existing) {
+        return existing;
+      }
+
+      return createRawQueryFile({ title: STARTER_SQL_FILE_NAME });
+    };
+
+    const createNextSqlFile = async () => {
+      return createRawQueryFile({ title: getNextGeneratedSqlFileName() });
+    };
+
     const getFileContentById = async (fileID: string) => {
       if (contentCache.has(fileID)) {
         return contentCache.get(fileID)!;
@@ -182,8 +262,13 @@ export const useExplorerFileStore = defineStore(
       updateFileContent,
 
       getFileById,
+      getFileByTitle,
       getFileContentById,
       getFileContentByIdSync,
+      getNextGeneratedSqlFileName,
+      createRawQueryFile,
+      ensureStarterSqlFile,
+      createNextSqlFile,
       treeNodeRef,
     };
   },

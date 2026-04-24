@@ -21,7 +21,13 @@ const DEFAULT_PORTS: Partial<Record<DatabaseClientType, number>> = {
   [DatabaseClientType.MYSQL]: 3306,
   [DatabaseClientType.MARIADB]: 3306,
   [DatabaseClientType.MYSQL2]: 3306,
+  [DatabaseClientType.MONGODB]: 27017,
+  [DatabaseClientType.REDIS]: 6379,
+  [DatabaseClientType.MSSQL]: 1433,
   [DatabaseClientType.ORACLE]: 1521,
+  [DatabaseClientType.SNOWFLAKE]: 443,
+  [DatabaseClientType.BETTER_SQLITE3]: 0,
+  [DatabaseClientType.SQLITE3]: 0,
 };
 
 // Cleanup every 1 minute

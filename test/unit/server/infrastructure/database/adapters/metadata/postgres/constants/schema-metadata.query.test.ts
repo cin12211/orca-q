@@ -40,4 +40,11 @@ describe('getSchemaMetaDataQuery', () => {
       'WHERE r.routine_schema = nsp.nspname'
     );
   });
+
+  it('returns raw_type_name instead of keeping alias CASE logic in SQL', () => {
+    expect(getSchemaMetaDataQuery).toContain("'raw_type_name'");
+    expect(getSchemaMetaDataQuery).not.toContain(
+      'END -- short type with length, user-friendly'
+    );
+  });
 });

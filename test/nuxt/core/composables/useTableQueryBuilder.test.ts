@@ -1,8 +1,12 @@
 import { mockNuxtImport } from '@nuxt/test-utils/runtime';
+import { createPinia, setActivePinia } from 'pinia';
 import { ref } from 'vue';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { NullOrderPreference } from '~/components/modules/settings/types';
 import { useTableQueryBuilder } from '~/core/composables/useTableQueryBuilder';
 import { ComposeOperator, DEFAULT_DEBOUNCE_INPUT } from '~/core/constants';
+import { DatabaseClientType } from '~/core/constants/database-client-type';
+import { useAppConfigStore } from '~/core/stores/appConfigStore';
 
 vi.mock('~/components/modules/quick-query/utils', () => ({
   formatWhereClause: vi.fn(() => 'WHERE "id" = 1'),
@@ -33,10 +37,12 @@ const createComposable = ({
   primaryKeys = ['id'],
   columns = ['id', 'name'],
   isPersist = false,
+  connectionType = DatabaseClientType.POSTGRES,
 }: {
   primaryKeys?: string[];
   columns?: string[];
   isPersist?: boolean;
+  connectionType?: DatabaseClientType;
 } = {}) => {
   useFetchMock.mockReset();
 
@@ -53,7 +59,7 @@ const createComposable = ({
     });
 
   return useTableQueryBuilder({
-    connection: ref('postgres://localhost:5432/db') as any,
+    connection: ref({ type: connectionType } as any),
     tableName: 'users',
     primaryKeys: ref(primaryKeys),
     columns: ref(columns),
@@ -68,6 +74,7 @@ describe('useTableQueryBuilder', () => {
   beforeEach(() => {
     vi.useFakeTimers();
     vi.clearAllMocks();
+    setActivePinia(createPinia());
     localStorage.clear();
   });
 
@@ -104,6 +111,30 @@ describe('useTableQueryBuilder', () => {
     });
 
     expect(composable.queryString.value).toContain('ORDER BY "name" ASC');
+  });
+
+  it('appends NULLS LAST when the global preference is enabled for postgres', () => {
+    const store = useAppConfigStore();
+    store.tableAppearanceConfigs.nullOrderPreference =
+      NullOrderPreference.NullsLast;
+
+    const composable = createComposable();
+
+    expect(composable.queryString.value).toContain(
+      'ORDER BY "id" ASC NULLS LAST'
+    );
+  });
+
+  it('does not append explicit null ordering for unsupported database families', () => {
+    const store = useAppConfigStore();
+    store.tableAppearanceConfigs.nullOrderPreference =
+      NullOrderPreference.NullsFirst;
+
+    const composable = createComposable({
+      connectionType: DatabaseClientType.MYSQL,
+    });
+
+    expect(composable.queryString.value).not.toContain('NULLS FIRST');
   });
 
   it('has empty where clause when filter UI is hidden', () => {

@@ -11,6 +11,7 @@ import type {
 } from '~/core/types';
 import { FunctionSchemaEnum, ViewSchemaEnum } from '~/core/types';
 import { BaseDomainAdapter } from '../../shared';
+import { resolveMetadataTypeAlias } from '../type-alias.constants';
 import type {
   DatabaseMetadataAdapterParams,
   IDatabaseMetadataAdapter,
@@ -283,10 +284,14 @@ export class OracleMetadataAdapter
                 column.table_name === table.table_name
             )
             .map(column => ({
+              raw_type_name: formatOracleType(column),
               name: column.column_name,
               ordinal_position: column.column_id,
               type: formatOracleType(column),
-              short_type_name: column.data_type,
+              short_type_name: resolveMetadataTypeAlias(
+                this.dbType,
+                formatOracleType(column)
+              ),
               is_nullable: column.nullable === 'Y',
               default_value: column.data_default,
             }));
@@ -333,10 +338,14 @@ export class OracleMetadataAdapter
                 column.table_name === view.view_name
             )
             .map(column => ({
+              raw_type_name: formatOracleType(column),
               name: column.column_name,
               ordinal_position: column.column_id,
               type: formatOracleType(column),
-              short_type_name: column.data_type,
+              short_type_name: resolveMetadataTypeAlias(
+                this.dbType,
+                formatOracleType(column)
+              ),
               is_nullable: column.nullable === 'Y',
               default_value: column.data_default,
             }));
