@@ -32,6 +32,7 @@ const props = defineProps<{
   currentTotalRows: number;
   totalSelectedRows: number;
   hasEditedRows: boolean;
+  pendingChangesCount: number;
   tabView: QuickQueryTabView;
   isViewVirtualTable?: boolean;
 }>();
@@ -44,6 +45,7 @@ const emit = defineEmits<{
   (e: 'onShowFilter'): void;
   (e: 'onSaveData'): void;
   (e: 'onAddEmptyRow'): void;
+  (e: 'onDiscardChanges'): void;
   (e: 'onDeleteRows'): void;
   (e: 'onToggleHistoryPanel'): void;
   (e: 'update:tabView', value: QuickQueryTabView): void;
@@ -88,17 +90,6 @@ const currentNullOrderLabel = computed(() => {
 
       <RefreshButton @on-refresh="emit('onRefresh')" />
 
-      <!-- TODO: Open when doing good ux -->
-      <Button
-        v-if="false"
-        variant="outline"
-        size="xxs"
-        @click="emit('onAddEmptyRow')"
-      >
-        <Icon name="lucide:plus" class="text-sm"> </Icon>
-        Row
-      </Button>
-
       <Tooltip>
         <TooltipTrigger as-child>
           <Button
@@ -115,23 +106,59 @@ const currentNullOrderLabel = computed(() => {
         </TooltipContent>
       </Tooltip>
 
-      <p class="font-normal text-xs text-primary/60" v-if="totalSelectedRows">
-        Selected
-      </p>
-      <p class="font-normal text-sm text-primary" v-if="totalSelectedRows">
-        {{ totalSelectedRows }}
-      </p>
+      <Tooltip v-if="!isViewVirtualTable">
+        <TooltipTrigger as-child>
+          <Button
+            variant="outline"
+            class="font-normal"
+            size="xxs"
+            @click="emit('onAddEmptyRow')"
+          >
+            <Icon name="hugeicons:plus-sign"> </Icon> Row
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent>
+          <p>Add new record</p>
+        </TooltipContent>
+      </Tooltip>
 
       <Tooltip v-if="hasEditedRows && !isViewVirtualTable">
         <TooltipTrigger as-child>
-          <Button variant="outline" size="xxs" @click="emit('onSaveData')">
+          <Button
+            variant="outline"
+            size="xxs"
+            class="relative overflow-visible"
+            @click="emit('onSaveData')"
+          >
             <Icon name="lucide:save"> </Icon>
+            <span
+              v-if="pendingChangesCount"
+              class="absolute -right-1.5 -top-1.5 min-w-4 rounded-full bg-green-700 px-1 text-xxs font-medium leading-4 text-white"
+            >
+              {{ pendingChangesCount }}
+            </span>
             <ContextMenuShortcut>⌘S</ContextMenuShortcut>
-            <!-- Save -->
           </Button>
         </TooltipTrigger>
         <TooltipContent>
           <p>Save changes</p>
+        </TooltipContent>
+      </Tooltip>
+
+      <Tooltip v-if="hasEditedRows && !isViewVirtualTable">
+        <TooltipTrigger as-child>
+          <Button
+            variant="outline"
+            size="xxs"
+            class="font-normal"
+            @click="emit('onDiscardChanges')"
+          >
+            <Icon name="hugeicons:undo-02"> </Icon>
+            Discard
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent>
+          <p>Discard changes</p>
         </TooltipContent>
       </Tooltip>
 
@@ -144,9 +171,16 @@ const currentNullOrderLabel = computed(() => {
           </Button>
         </TooltipTrigger>
         <TooltipContent>
-          <p>Delete selected rows</p>
+          <p>Delete {{ totalSelectedRows }} selected rows</p>
         </TooltipContent>
       </Tooltip>
+
+      <p class="font-normal text-xs text-primary/60" v-if="totalSelectedRows">
+        Selected
+      </p>
+      <p class="font-normal text-sm text-primary" v-if="totalSelectedRows">
+        {{ totalSelectedRows }}
+      </p>
 
       <!-- TODO: Config export to excel or csv -->
       <!-- <Button variant="outline" size="iconSm">

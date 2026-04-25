@@ -39,7 +39,7 @@ const githubLink = config.public.githubLink;
 
         <p class="text-xl font-medium">orcaq</p>
       </div>
-      {{ '1.0.65' }}
+      {{ '1.0.68' }}
     </div>
   </div>
 

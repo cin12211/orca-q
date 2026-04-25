@@ -56,6 +56,7 @@ bun nuxt:build     # Production build
 - Pinia stores use setup-function style (`defineStore('id', () => { ... }, { persist: true })`)
 - All theme updates via `useTableTheme()` composable — never import `baseTableTheme` directly in components
 - AG Grid theme changes: `themeBalham.withPart(...).withParams(...)` — no grid destruction needed
+- Icon library: Hugeicons via `nuxt-icon`/`@iconify` (already integrated) (prefer use hugeicons icons set)
 
 ## Recent Changes
 

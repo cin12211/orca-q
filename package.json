@@ -9,7 +9,7 @@
     "url": "https://github.com/cin12211"
   },
   "license": "MIT",
-  "version": "1.0.67",
+  "version": "1.0.68",
   "main": "out/electron/main.js",
   "scripts": {
     "dev": "npm run nuxt:dev",

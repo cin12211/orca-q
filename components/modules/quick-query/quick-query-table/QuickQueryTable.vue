@@ -96,7 +96,11 @@ onClickOutside(agGridRef, event => {
 });
 
 const editedCells = ref<
-  { rowId: number; changedData: { [key: string]: unknown } }[]
+  {
+    rowId: number;
+    changedData: { [key: string]: unknown };
+    isNewRow?: boolean;
+  }[]
 >([]);
 
 /* reactive state ---------------------------------------------------- */
@@ -183,9 +187,15 @@ const onCellValueChanged = (event: CellValueChangedEvent) => {
         return cell;
       });
     } else {
-      editedCells.value = editedCells.value.map(cell => {
-        if (cell.rowId === rowId) {
-          const newChangedData = cell.changedData;
+      editedCells.value = editedCells.value
+        .map(cell => {
+          if (cell.rowId !== rowId) {
+            return cell;
+          }
+
+          const newChangedData = {
+            ...cell.changedData,
+          };
 
           delete newChangedData[fieldId];
 
@@ -193,9 +203,10 @@ const onCellValueChanged = (event: CellValueChangedEvent) => {
             ...cell,
             changedData: newChangedData,
           };
-        }
-        return cell;
-      });
+        })
+        .filter(cell => {
+          return cell.isNewRow || Object.keys(cell.changedData).length > 0;
+        });
     }
   }
 };
@@ -381,7 +392,7 @@ const columnTypes = ref<{
       const originalRowData = props.data[rowId];
 
       if (originalRowData === undefined) {
-        return { backgroundColor: 'var(--color-green-200)' };
+        return { backgroundColor: 'var(--color-green-100)' };
       }
 
       const style: { backgroundColor?: string; color?: string } = {};

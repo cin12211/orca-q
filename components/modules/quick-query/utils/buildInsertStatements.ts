@@ -12,6 +12,10 @@ export function buildInsertStatements({
     throw new Error('Invalid input: tableName, insertData object are required');
   }
 
+  if (!Object.keys(insertData).length) {
+    return `INSERT INTO "${schemaName}"."${tableName}" DEFAULT VALUES`;
+  }
+
   const columnsClause = Object.entries(insertData)
     .map(([column]) => {
       return `"${column}"`;
