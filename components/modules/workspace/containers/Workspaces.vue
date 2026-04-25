@@ -113,14 +113,14 @@ const ggFormLink = config.public.ggFormLink;
       </div>
     </BaseEmpty>
 
-    <Button class="fixed bottom-4 right-4 z-10" variant="secondary">
+    <Button class="fixed bottom-0 right-4 z-10" variant="secondary">
       <a :href="ggFormLink" target="_blank">
         <Icon name="hugeicons:chat-feedback-01" /> Give me Feedback
       </a>
     </Button>
 
     <Button
-      class="fixed bottom-19 right-4"
+      class="fixed bottom-16 right-4"
       variant="secondary"
       @click="startTour"
       title="Start Tour"

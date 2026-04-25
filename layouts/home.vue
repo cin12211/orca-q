@@ -3,6 +3,7 @@ import { cn } from '@/lib/utils';
 import { isDesktopApp, isMacOS, isPWA, isElectron } from '~/core/helpers';
 
 const isDesktopMacWindow = computed(() => isDesktopApp() && isMacOS());
+const config = useRuntimeConfig();
 
 const onTitleBarDoubleClick = async () => {
   if (!isDesktopMacWindow.value) {
@@ -15,7 +16,6 @@ const onTitleBarDoubleClick = async () => {
 };
 
 const isAppVersion = computed(() => isElectron() || isPWA());
-const config = useRuntimeConfig();
 const githubLink = config.public.githubLink;
 </script>
 
@@ -39,7 +39,7 @@ const githubLink = config.public.githubLink;
 
         <p class="text-xl font-medium">orcaq</p>
       </div>
-      {{ '1.0.68' }}
+      v{{ config.public.version }}
     </div>
   </div>
 
