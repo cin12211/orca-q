@@ -23,7 +23,7 @@ ENV PATH="$BUN_INSTALL/bin:$PATH"
 
 # Copy and install dependencies with Bun
 COPY bun.lock package.json ecosystem.config.js ./
-RUN bun install --frozen-lockfile
+RUN bun install --frozen-lockfile --ignore-scripts
 
 # Copy app code and build
 COPY . .
