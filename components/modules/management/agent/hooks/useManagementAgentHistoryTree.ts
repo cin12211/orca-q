@@ -8,6 +8,7 @@ import type { FileNode } from '~/components/base/tree-folder/types';
 import { useAgentWorkspace } from '~/components/modules/agent/hooks/useDbAgentWorkspace';
 import { useWorkspaceConnectionRoute } from '~/core/composables/useWorkspaceConnectionRoute';
 import { DEFAULT_DEBOUNCE_INPUT } from '~/core/constants';
+import { LocalStorageKey } from '~/core/persist/LocalStorageManager';
 import { useWSStateStore } from '~/core/stores';
 import { TabViewType, useTabViewsStore } from '~/core/stores/useTabViewsStore';
 
@@ -18,8 +19,6 @@ type UseManagementAgentHistoryTreeOptions = {
   isExpandedAll: ComputedRef<boolean>;
   onRename?: (nodeId: string) => void;
 };
-
-const HISTORY_TREE_STORAGE_KEY = 'agent-history-tree';
 
 const includeDescendants = (
   source: Record<string, FileNode>,
@@ -54,7 +53,7 @@ export const useManagementAgentHistoryTree = (
     startNewChat,
     deleteHistory,
     renameHistory,
-    sectionNodeIds,
+    SECTION_NODE_IDS: sectionNodeIds,
   } = useAgentWorkspace();
 
   watchEffect(() => {
@@ -289,7 +288,7 @@ export const useManagementAgentHistoryTree = (
     defaultExpandedNodeIds: [sectionNodeIds.history],
     filteredHistoryTreeData,
     historySectionId: sectionNodeIds.history,
-    historyStorageKey: HISTORY_TREE_STORAGE_KEY,
+    historyStorageKey: LocalStorageKey.AGENT_HISTORY_TREE,
     isExpandedAll: options.isExpandedAll,
     onClearContextMenu,
     onClickNode,

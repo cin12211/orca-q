@@ -1,8 +1,12 @@
 <script setup lang="ts">
 import { storeToRefs } from 'pinia';
-import { isElectron, isPWA } from '~/core/helpers';
+import { isMacOS, isPWA, isElectron, isDesktopApp } from '~/core/helpers';
 import { useAppConfigStore } from '~/core/stores/appConfigStore';
 import { ActivityBarHorizontal } from '../../activity-bar';
+import {
+  getTabViewMinWidth,
+  DESKTOP_MAC_TITLEBAR_INSET,
+} from '../tabViewContainerLayout';
 import TabViews from './TabViews.vue';
 
 const props = defineProps<{
@@ -17,48 +21,50 @@ const { isPrimarySidebarCollapsed, isSecondSidebarCollapsed } =
   storeToRefs(appConfigStore);
 
 const isPWAApp = computed(() => isPWA());
-const isElectronApp = computed(() => isElectron());
+const isDesktopMacWindow = computed(() => isDesktopApp() && isMacOS());
 
 const minWidth = computed(() => {
-  const widthPercentage = appConfigStore.layoutSize[0];
-
-  if (!widthPercentage) {
-    return '2.25rem';
-  }
-
-  return `${props.primarySideBarWidth}px`;
-
-  // if (isPWA()) {
-  //   return `calc( ${props.primarySideBarWidth} - 6rem)`;
-  // }
-
-  // if (isElectron()) {
-  //   return `calc( ${props.primarySideBarWidth} - 4.5rem)`;
-  // }
-  // if (isAppVersion.value) {
-  //   return `calc( ${widthPercentage}% + 1px) `;
-  // }
-  // return `calc( ${widthPercentage}% + 1px) `;
+  return getTabViewMinWidth({
+    primarySideBarWidth: props.primarySideBarWidth,
+    sidebarWidthPercentage: appConfigStore.layoutSize[0],
+    isDesktopMacWindow: isDesktopMacWindow.value,
+  });
 });
 
 const isAccessRightPanel = computed(() => {
   if (route.meta.notAllowRightPanel) return false;
   return true;
 });
+
+const onTitleBarDoubleClick = async () => {
+  if (!isDesktopMacWindow.value) {
+    return;
+  }
+
+  if (isElectron()) {
+    await (window as any).electronAPI.window.maximize();
+  }
+};
 </script>
 
 <template>
   <div
     :class="[
-      'w-screen h-9 select-none border-b pr-2 electron-drag-region bg-sidebar-accent/50!',
-      isElectronApp && isPrimarySidebarCollapsed ? 'pl-[4.5rem]' : '',
+      'w-screen h-9 select-none border-b pr-2 bg-sidebar-accent/50!',
+
       isPWAApp && isPrimarySidebarCollapsed ? 'pl-[6rem]' : '',
+      isDesktopMacWindow && 'pl-[4.75rem]',
       isPWAApp && 'h-10.5 header-tab-view-pwa',
     ]"
+    @dblclick="onTitleBarDoubleClick"
+    :data-electron-drag-region="isElectron() ? '' : undefined"
   >
-    <div class="flex justify-between items-center h-full">
+    <div
+      class="flex justify-between items-center h-full"
+      :data-electron-drag-region="isElectron() ? '' : undefined"
+    >
       <div
-        class="flex items-center gap-1 h-full px-1"
+        class="window-no-drag flex items-center gap-1 h-full px-1"
         :style="{
           minWidth,
           justifyContent: !isPrimarySidebarCollapsed
@@ -72,11 +78,9 @@ const isAccessRightPanel = computed(() => {
         ></div>
 
         <div
-          :class="[
-            isElectronApp ? 'pl-[4.5rem]' : '',
-            'flex justify-center w-full',
-          ]"
+          :class="['flex justify-center w-full']"
           v-if="!isPrimarySidebarCollapsed"
+          :data-electron-drag-region="isElectron() ? '' : undefined"
         >
           <ActivityBarHorizontal />
         </div>
@@ -105,30 +109,26 @@ const isAccessRightPanel = computed(() => {
 
       <TabViews />
 
-      <Tooltip>
-        <TooltipTrigger as-child>
-          <Button
-            v-if="isAccessRightPanel"
-            variant="ghost"
-            size="iconSm"
-            @click="appConfigStore.onToggleSecondSidebar()"
-          >
-            <Icon
-              name="hugeicons:sidebar-right"
-              class="size-5!"
-              v-if="isSecondSidebarCollapsed"
-            />
-            <Icon name="hugeicons:sidebar-right-01" class="size-5!" v-else />
-
-            <!-- <PanelRightOpen
-          class="size-4"
-          v-if="isSecondarySideBarPanelCollapsed"
-        />
-        <PanelRightClose class="size-4" v-else /> -->
-          </Button>
-        </TooltipTrigger>
-        <TooltipContent> Toggle Sidebar </TooltipContent>
-      </Tooltip>
+      <div class="window-no-drag flex items-center gap-2">
+        <Tooltip>
+          <TooltipTrigger as-child>
+            <Button
+              v-if="isAccessRightPanel"
+              variant="ghost"
+              size="iconSm"
+              @click="appConfigStore.onToggleSecondSidebar()"
+            >
+              <Icon
+                name="hugeicons:sidebar-right"
+                class="size-5!"
+                v-if="isSecondSidebarCollapsed"
+              />
+              <Icon name="hugeicons:sidebar-right-01" class="size-5!" v-else />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent> Toggle Sidebar </TooltipContent>
+        </Tooltip>
+      </div>
     </div>
   </div>
 </template>

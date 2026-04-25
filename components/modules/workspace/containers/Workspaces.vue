@@ -1,6 +1,8 @@
 <script setup lang="ts">
+import { ref } from 'vue';
 import { ManagementConnectionModal } from '../../connection';
 import CreateWorkspaceModal from '../components/CreateWorkspaceModal.vue';
+import RestoreDataModal from '../components/RestoreDataModal.vue';
 import WorkspaceCard from '../components/WorkspaceCard.vue';
 import WorkspaceHeader from '../components/WorkspaceHeader.vue';
 import { useWorkspaceTour } from '../hooks/useWorkspaceTour';
@@ -24,6 +26,11 @@ const { startTour } = useWorkspaceTour({
   workspaceStore,
   onSelectWorkspace,
 });
+
+const isOpenRestoreDataModal = ref(false);
+
+const config = useRuntimeConfig();
+const ggFormLink = config.public.ggFormLink;
 </script>
 
 <template>
@@ -32,6 +39,8 @@ const { startTour } = useWorkspaceTour({
     :workspaceSeq="workspaceStore.workspaces.length"
     v-if="isOpenCreateWSModal"
   />
+
+  <RestoreDataModal v-model:open="isOpenRestoreDataModal" />
 
   <ManagementConnectionModal
     v-model:open="isOpenSelectConnectionModal"
@@ -44,20 +53,24 @@ const { startTour } = useWorkspaceTour({
   >
     <WorkspaceHeader
       @create="isOpenCreateWSModal = true"
+      @restore="isOpenRestoreDataModal = true"
       :is-show-button-create="!!mappedWorkspaces.length"
+      :is-show-button-restore="!!mappedWorkspaces.length"
     />
 
-    <div class="relative w-full">
-      <Icon
-        name="hugeicons:search-01"
-        class="absolute left-2.5 -translate-y-1/2 top-1/2 size-4"
-      />
-      <Input
-        type="text"
-        v-model="search"
-        placeholder="Search workspaces..."
-        class="pl-10 w-full"
-      />
+    <div class="flex items-center gap-2">
+      <div class="relative flex-1">
+        <Icon
+          name="hugeicons:search-01"
+          class="absolute left-2.5 -translate-y-1/2 top-1/2 size-4"
+        />
+        <Input
+          type="text"
+          v-model="search"
+          placeholder="Search workspaces..."
+          class="pl-10 w-full"
+        />
+      </div>
     </div>
 
     <div
@@ -85,6 +98,14 @@ const { startTour } = useWorkspaceTour({
           <Icon name="hugeicons:plus-sign" />
           New Workspace
         </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          @click="isOpenRestoreDataModal = true"
+        >
+          <Icon name="lucide:upload" />
+          Restore Data
+        </Button>
         <Button variant="secondary" size="sm" @click="startTour">
           <Icon name="hugeicons:book-open-02" />
           Take a tour
@@ -92,8 +113,14 @@ const { startTour } = useWorkspaceTour({
       </div>
     </BaseEmpty>
 
+    <Button class="fixed bottom-0 right-4 z-10" variant="secondary">
+      <a :href="ggFormLink" target="_blank">
+        <Icon name="hugeicons:chat-feedback-01" /> Give me Feedback
+      </a>
+    </Button>
+
     <Button
-      class="fixed bottom-15 right-4"
+      class="fixed bottom-16 right-4"
       variant="secondary"
       @click="startTour"
       title="Start Tour"

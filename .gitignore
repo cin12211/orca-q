@@ -37,6 +37,7 @@ dist
 
 # Node dependencies
 node_modules
+build
 
 # Logs
 logs
@@ -58,9 +59,13 @@ tsconfig.tsbuildinfo
 .electron-build
 .electron-out
 .db
+src-tauri/target
+src-tauri/gen
+src-tauri/binaries
 
 # NPX package build output
 npx-package/.output
+tauri-runtime-dist
 *storybook.log
 storybook-static
 
@@ -73,4 +78,13 @@ coverage
 /test-results/
 
 .playwright-mcp
+
+out/
 .gitnexus
+
+.sqlite3
+
+# Package manager lockfiles (generated locally in some workflows)
+package-lock.json
+yarn.lock
+pnpm-lock.yaml

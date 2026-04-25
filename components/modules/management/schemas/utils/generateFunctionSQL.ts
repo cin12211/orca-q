@@ -3,6 +3,33 @@
  * Used by the schema context menu to generate SQL statements.
  */
 
+export type RoutineDefinitionType = 'FUNCTION' | 'PROCEDURE';
+
+const ROUTINE_DEFINITION_PATTERN =
+  /^create(?:\s+or\s+replace)?\s+(function|procedure)\b/i;
+
+export function getRoutineDefinitionType(
+  functionDef: string
+): RoutineDefinitionType | null {
+  const match = functionDef.trim().match(ROUTINE_DEFINITION_PATTERN);
+
+  if (!match) {
+    return null;
+  }
+
+  return match[1].toUpperCase() as RoutineDefinitionType;
+}
+
+export function generateRoutineUpdateSQL(functionDef: string): string {
+  const trimmed = functionDef.trim();
+
+  if (!trimmed) {
+    return '';
+  }
+
+  return `${trimmed.replace(/;+\s*$/, '')};`;
+}
+
 /**
  * Generate a CALL statement for a function/procedure.
  * @param schemaName - The schema containing the function

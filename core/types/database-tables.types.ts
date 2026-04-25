@@ -14,6 +14,7 @@ export interface ColumnMetadata {
   name: string;
   ordinal_position: number;
   short_type_name?: string;
+  raw_type_name?: string;
   type: string;
   character_maximum_length: number | null;
   precision: { precision: number; scale: number } | null;
@@ -83,6 +84,8 @@ export interface DatabaseMetadata {
 export interface TableStructure {
   column_name: string;
   data_type: string;
+  short_type_name?: string;
+  raw_type_name?: string;
   is_nullable: 'YES' | 'NO';
   default_value: string | null;
   foreign_keys: string; // example: " -> other_table(column)"

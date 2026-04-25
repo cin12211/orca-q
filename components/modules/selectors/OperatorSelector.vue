@@ -11,7 +11,12 @@ defineEmits<{
   (e: 'update:open', value: boolean): void;
 }>();
 
-const operators = computed(() => operatorSets[props.dbType]);
+// Fall back to MySQL operator set when the dbType has no dedicated entry
+// (e.g. an unseen DB type added in future) to avoid rendering an empty list.
+const operators = computed(
+  () =>
+    operatorSets[props.dbType] ?? operatorSets[DatabaseClientType.MYSQL] ?? []
+);
 </script>
 
 <template>

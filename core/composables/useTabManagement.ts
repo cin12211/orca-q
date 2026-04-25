@@ -2,8 +2,13 @@ import { storeToRefs } from 'pinia';
 import type { RouteNameFromPath, RoutePathSchema } from '@typed-router/__paths';
 import { useWorkspaceConnectionRoute } from '~/core/composables/useWorkspaceConnectionRoute';
 import { useManagementConnectionStore } from '~/core/stores/managementConnectionStore';
+import { useExplorerFileStore } from '~/core/stores/useExplorerFileStore';
 import { TabViewType, useTabViewsStore } from '~/core/stores/useTabViewsStore';
 import { useWSStateStore } from '~/core/stores/useWSStateStore';
+import {
+  WorkspaceSqlFileSource,
+  WorkspaceTabOpenAction,
+} from '~/core/types/entities';
 
 export interface OpenTabOptions {
   id: string;
@@ -19,6 +24,7 @@ export interface OpenTabOptions {
 export const useTabManagement = () => {
   const tabViewStore = useTabViewsStore();
   const wsStateStore = useWSStateStore();
+  const explorerFileStore = useExplorerFileStore();
   const { workspaceId, connectionId } = useWorkspaceConnectionRoute();
   const connectionStore = useManagementConnectionStore();
   const { schemaId } = storeToRefs(wsStateStore);
@@ -28,7 +34,7 @@ export const useTabManagement = () => {
       return;
     }
 
-    await tabViewStore.openTab({
+    await tabViewStore.ensureTab({
       icon: options.icon || 'hugeicons:grid-table',
       iconClass: options.iconClass,
       id: options.id,
@@ -48,14 +54,13 @@ export const useTabManagement = () => {
         type: options.type,
       },
     });
-
-    await tabViewStore.selectTab(options.id);
   };
 
   const openCodeQueryTab = async (params: {
     id: string;
     name: string;
     icon?: string;
+    metadata?: Record<string, any>;
   }) => {
     await openTab({
       id: params.id,
@@ -69,6 +74,43 @@ export const useTabManagement = () => {
       metadata: {
         tableName: params.name,
         treeNodeId: params.id,
+        ...params.metadata,
+      },
+    });
+  };
+
+  const openStarterSqlTab = async () => {
+    const file = await explorerFileStore.ensureStarterSqlFile();
+
+    if (!file) {
+      return;
+    }
+
+    await openCodeQueryTab({
+      id: file.id,
+      name: file.title,
+      icon: file.icon,
+      metadata: {
+        fileSource: WorkspaceSqlFileSource.Starter,
+        openAction: WorkspaceTabOpenAction.SqlShortcut,
+      },
+    });
+  };
+
+  const openNewSqlFileTab = async () => {
+    const file = await explorerFileStore.createNextSqlFile();
+
+    if (!file) {
+      return;
+    }
+
+    await openCodeQueryTab({
+      id: file.id,
+      name: file.title,
+      icon: file.icon,
+      metadata: {
+        fileSource: WorkspaceSqlFileSource.ManualCreate,
+        openAction: WorkspaceTabOpenAction.NewSqlFile,
       },
     });
   };
@@ -161,7 +203,7 @@ export const useTabManagement = () => {
         connectionId: connectionId.value,
       },
       metadata: {
-        type: TabViewType.InstanceInsights,
+        openAction: WorkspaceTabOpenAction.InstanceInsights,
       },
     });
   };
@@ -188,6 +230,8 @@ export const useTabManagement = () => {
   return {
     openTab,
     openCodeQueryTab,
+    openStarterSqlTab,
+    openNewSqlFileTab,
     openSchemaItemTab,
     openUserPermissionsTab,
     openInstanceInsightsTab,

@@ -10,6 +10,8 @@ defineProps<{
   currentFileInfo?: RowQueryFile;
   fileVariables: string;
   workspaceId: string;
+  selectedConnectionId: string;
+  disableConnectionSwitch: boolean;
   connections: Connection[];
   connection?: Connection;
   codeEditorLayout: RawQueryEditorLayout;
@@ -61,7 +63,7 @@ const openConfigModal = () => {
           <Button
             @click="openAddVariableModal"
             variant="outline"
-            size="xs"
+            size="xxs"
             class="relative"
           >
             <Icon
@@ -80,16 +82,21 @@ const openConfigModal = () => {
       <Tooltip>
         <TooltipTrigger as-child>
           <PureConnectionSelector
-            :connectionId="currentFileInfo?.connectionId || ''"
+            :connectionId="selectedConnectionId"
             @update:connectionId="$emit('update:connectionId', $event)"
             :connections="connections"
             :connection="connection"
+            :disabled="disableConnectionSwitch"
             class="w-16 h-6! px-1.5"
             :workspaceId="workspaceId"
           />
         </TooltipTrigger>
         <TooltipContent>
-          <p>Select connection</p>
+          <p v-if="disableConnectionSwitch">
+            Connection switch is locked because the current connection has a
+            strict mode tag
+          </p>
+          <p v-else>Select connection</p>
         </TooltipContent>
       </Tooltip>
 

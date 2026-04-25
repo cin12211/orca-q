@@ -32,6 +32,114 @@ export function stripSqlComments(sql: string) {
   return sql.replace(/\/\*[\s\S]*?\*\//g, '').replace(/--.*$/gm, '');
 }
 
+function replaceSqlComments(
+  sql: string,
+  replacer: (comment: string) => string
+) {
+  let index = 0;
+  let nextSql = '';
+
+  while (index < sql.length) {
+    const current = sql[index];
+    const next = sql[index + 1];
+
+    if (current === "'") {
+      nextSql += current;
+      index += 1;
+
+      while (index < sql.length) {
+        const quotedChar = sql[index];
+        nextSql += quotedChar;
+
+        if (quotedChar === "'" && sql[index + 1] === "'") {
+          nextSql += sql[index + 1];
+          index += 2;
+          continue;
+        }
+
+        index += 1;
+
+        if (quotedChar === "'") {
+          break;
+        }
+      }
+
+      continue;
+    }
+
+    if (current === '"') {
+      nextSql += current;
+      index += 1;
+
+      while (index < sql.length) {
+        const quotedChar = sql[index];
+        nextSql += quotedChar;
+
+        if (quotedChar === '"' && sql[index + 1] === '"') {
+          nextSql += sql[index + 1];
+          index += 2;
+          continue;
+        }
+
+        index += 1;
+
+        if (quotedChar === '"') {
+          break;
+        }
+      }
+
+      continue;
+    }
+
+    if (current === '-' && next === '-') {
+      const start = index;
+      index += 2;
+
+      while (index < sql.length && sql[index] !== '\n') {
+        index += 1;
+      }
+
+      nextSql += replacer(sql.slice(start, index));
+      continue;
+    }
+
+    if (current === '/' && next === '*') {
+      const start = index;
+      index += 2;
+
+      while (index < sql.length) {
+        if (sql[index] === '*' && sql[index + 1] === '/') {
+          index += 2;
+          break;
+        }
+
+        index += 1;
+      }
+
+      nextSql += replacer(sql.slice(start, index));
+      continue;
+    }
+
+    nextSql += current;
+    index += 1;
+  }
+
+  return nextSql;
+}
+
+const COMMENT_NAMED_BIND_PATTERN =
+  /(^|[^A-Za-z0-9_:]):([A-Za-z_][A-Za-z0-9_]*)/g;
+
+export function maskNamedBindParametersInComments(sql: string) {
+  return replaceSqlComments(sql, comment =>
+    comment.replace(
+      COMMENT_NAMED_BIND_PATTERN,
+      (_, prefix: string, name: string) =>
+        `${prefix}__heraq_comment_bind_${name}__`
+    )
+  );
+}
+
 export function stripMarkdownCodeFence(sql: string) {
   const trimmed = sql.trim();
   const match = trimmed.match(/^```(?:sql)?\s*([\s\S]*?)```$/i);

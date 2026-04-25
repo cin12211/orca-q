@@ -25,6 +25,10 @@ export class DatabaseDriverNormalizerError {
         return this.normalizeMysqlError(fallbackMessage);
       case DatabaseClientType.SQLITE3:
         return this.normalizeSqliteError(fallbackMessage);
+      case DatabaseClientType.MARIADB:
+        return this.normalizeMysqlError(fallbackMessage);
+      case DatabaseClientType.ORACLE:
+        return this.normalizeOracleError(fallbackMessage);
       default:
         return { message: fallbackMessage };
     }
@@ -66,6 +70,15 @@ export class DatabaseDriverNormalizerError {
       message: this.rawError.message || fallbackMessage,
       hint: this.rawError.code
         ? `Error Code: ${this.rawError.code}`
+        : undefined,
+    };
+  }
+
+  private normalizeOracleError(fallbackMessage: string): NormalizationError {
+    return {
+      message: this.rawError.message || fallbackMessage,
+      hint: this.rawError.errorNum
+        ? `ORA-${String(this.rawError.errorNum).padStart(5, '0')}`
         : undefined,
     };
   }

@@ -64,6 +64,22 @@ export class ConnectionModalPage {
     return this.page.locator('#connection-string');
   }
 
+  get databaseFileTab(): Locator {
+    return this.page.getByRole('tab', { name: /database file/i });
+  }
+
+  get structuredTargetInput(): Locator {
+    return this.page.locator('#structured-target');
+  }
+
+  get filePathInput(): Locator {
+    return this.page.locator('#file-path');
+  }
+
+  get browseSqliteButton(): Locator {
+    return this.page.getByRole('button', { name: /^browse$/i });
+  }
+
   get testButton(): Locator {
     return this.page.getByRole('button', { name: /^test$/i });
   }
@@ -86,6 +102,39 @@ export class ConnectionModalPage {
 
   async fillConnectionString(connectionString: string) {
     await this.connectionStringInput.fill(connectionString);
+  }
+
+  async expectConnectionStringPlaceholder(value: string | RegExp) {
+    await expect(this.connectionStringInput).toHaveAttribute(
+      'placeholder',
+      value
+    );
+  }
+
+  async expectPortPlaceholder(value: string | RegExp) {
+    await expect(this.portInput).toHaveAttribute('placeholder', value);
+  }
+
+  async expectStructuredTargetLabel(text: string | RegExp) {
+    await expect(this.page.getByText(text)).toBeVisible();
+  }
+
+  async expectDatabaseFileTabOnly() {
+    await expect(this.databaseFileTab).toBeVisible();
+    await expect(
+      this.page.getByRole('tab', { name: /connection string/i })
+    ).toHaveCount(0);
+    await expect(
+      this.page.getByRole('tab', { name: /connection form/i })
+    ).toHaveCount(0);
+  }
+
+  async expectFilePathValue(value: string | RegExp) {
+    await expect(this.filePathInput).toHaveValue(value);
+  }
+
+  async clickBrowseSqliteFile() {
+    await this.browseSqliteButton.click();
   }
 
   async clickTestConnection() {

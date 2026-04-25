@@ -19,7 +19,6 @@ import type { ExportDatabaseRequest, ExportFormat } from '~/core/types';
 const formatMap: Record<ExportFormat, FormatEnum> = {
   plain: FormatEnum.Plain,
   custom: FormatEnum.Custom,
-  directory: FormatEnum.Directory,
   tar: FormatEnum.Tar,
 };
 
@@ -34,8 +33,6 @@ const getFileExtension = (format: ExportFormat): string => {
       return '.dump';
     case 'tar':
       return '.tar';
-    case 'directory':
-      return ''; // Directory doesn't have extension
     default:
       return '.sql';
   }
@@ -71,6 +68,14 @@ export default defineEventHandler(async event => {
     throw createError({
       statusCode: 400,
       statusMessage: 'Database connection details are required',
+    });
+  }
+
+  if ((options as { format?: string }).format === 'directory') {
+    throw createError({
+      statusCode: 400,
+      statusMessage:
+        'Directory exports are not supported. Use plain, custom, or tar backups.',
     });
   }
 
@@ -135,17 +140,9 @@ export default defineEventHandler(async event => {
       dumpOptions.create = true;
     }
 
-    // Compression (for custom/directory formats)
-    if (
-      options.compressLevel !== undefined &&
-      (options.format === 'custom' || options.format === 'directory')
-    ) {
+    // Compression (for custom format)
+    if (options.compressLevel !== undefined && options.format === 'custom') {
       dumpOptions.compress = options.compressLevel;
-    }
-
-    // Parallel jobs (directory format only)
-    if (options.format === 'directory' && options.jobs) {
-      dumpOptions.jobs = options.jobs;
     }
 
     // Execute pg_dump

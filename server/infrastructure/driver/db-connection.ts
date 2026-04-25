@@ -1,5 +1,9 @@
-import type { ISSLConfig, ISSHConfig } from '~/components/modules/connection';
 import { DatabaseClientType } from '~/core/constants/database-client-type';
+import {
+  EConnectionMethod,
+  type ISSLConfig,
+  type ISSHConfig,
+} from '~/core/types/entities/connection.entity';
 import { createSshTunnel } from '~/server/utils/ssh-tunnel';
 import { createDatabaseAdapter } from './factory';
 import type { IDatabaseAdapter } from './types';
@@ -12,6 +16,19 @@ type CachedAdapter = {
 
 const adapterCache = new Map<string, CachedAdapter>();
 const LRU_TIMEOUT = 5 * 60 * 1000; // 5 minutes
+const DEFAULT_PORTS: Partial<Record<DatabaseClientType, number>> = {
+  [DatabaseClientType.POSTGRES]: 5432,
+  [DatabaseClientType.MYSQL]: 3306,
+  [DatabaseClientType.MARIADB]: 3306,
+  [DatabaseClientType.MYSQL2]: 3306,
+  [DatabaseClientType.MONGODB]: 27017,
+  [DatabaseClientType.REDIS]: 6379,
+  [DatabaseClientType.MSSQL]: 1433,
+  [DatabaseClientType.ORACLE]: 1521,
+  [DatabaseClientType.SNOWFLAKE]: 443,
+  [DatabaseClientType.BETTER_SQLITE3]: 0,
+  [DatabaseClientType.SQLITE3]: 0,
+};
 
 // Cleanup every 1 minute
 function cleanupIdleAdapters() {
@@ -71,6 +88,108 @@ process.on('exit', async () => {
   await shutdownAllAdapters();
 });
 
+function getDefaultPort(type: DatabaseClientType) {
+  return DEFAULT_PORTS[type] ?? 5432;
+}
+
+async function resolveHealthCheckConnection({
+  url,
+  type,
+  method,
+  host,
+  port,
+  username,
+  password,
+  database,
+  serviceName,
+  filePath,
+  ssl,
+  ssh,
+}: {
+  url: string;
+  type: DatabaseClientType;
+  method: EConnectionMethod;
+  host?: string;
+  port?: string;
+  username?: string;
+  password?: string;
+  database?: string;
+  serviceName?: string;
+  filePath?: string;
+  ssl?: ISSLConfig;
+  ssh?: ISSHConfig;
+}) {
+  let sshTunnelClose: (() => Promise<void>) | undefined;
+
+  if (method === EConnectionMethod.STRING) {
+    if (!url) {
+      throw new Error(
+        'Missing connection string for string-based health check.'
+      );
+    }
+
+    return {
+      connection: url,
+      sshTunnelClose,
+    };
+  }
+
+  if (method === EConnectionMethod.FILE) {
+    if (!filePath) {
+      throw new Error('Missing file path for file-based health check.');
+    }
+
+    return {
+      connection: {
+        filename: filePath,
+      },
+      sshTunnelClose,
+    };
+  }
+
+  if (!host) {
+    throw new Error('Missing host for form-based health check.');
+  }
+
+  let finalHost = host;
+  let finalPort = parseInt(port || `${getDefaultPort(type)}`, 10);
+
+  if (ssh?.enabled) {
+    const tunnel = await createSshTunnel(ssh, host, finalPort);
+    finalHost = tunnel.localHost;
+    finalPort = tunnel.localPort;
+    sshTunnelClose = tunnel.close;
+  }
+
+  const connection: Record<string, unknown> = {
+    host: finalHost,
+    port: finalPort,
+    user: username,
+    password,
+  };
+
+  if (serviceName) {
+    connection.database = serviceName;
+    connection.serviceName = serviceName;
+  } else if (database) {
+    connection.database = database;
+  }
+
+  if (ssl?.mode && ssl.mode !== 'disable') {
+    connection.ssl = {
+      rejectUnauthorized: ssl.rejectUnauthorized ?? true,
+      ca: ssl.ca,
+      cert: ssl.cert,
+      key: ssl.key,
+    };
+  }
+
+  return {
+    connection,
+    sshTunnelClose,
+  };
+}
+
 export const getDatabaseSource = async ({
   dbConnectionString,
   type,
@@ -79,6 +198,8 @@ export const getDatabaseSource = async ({
   username,
   password,
   database,
+  serviceName,
+  filePath,
   ssl,
   ssh,
 }: {
@@ -89,6 +210,8 @@ export const getDatabaseSource = async ({
   username?: string;
   password?: string;
   database?: string;
+  serviceName?: string;
+  filePath?: string;
   ssl?: ISSLConfig;
   ssh?: ISSHConfig;
 }): Promise<IDatabaseAdapter> => {
@@ -97,10 +220,17 @@ export const getDatabaseSource = async ({
   let finalConnection: string | any = dbConnectionString;
   let cacheKey = `${dbType}://${dbConnectionString}`;
   let sshTunnelClose: (() => Promise<void>) | undefined;
+  const targetName = serviceName || database || '';
 
-  if (!dbConnectionString && host) {
+  if (!dbConnectionString && filePath) {
+    finalConnection = {
+      filename: filePath,
+    };
+
+    cacheKey = `${dbType}://${filePath}`;
+  } else if (!dbConnectionString && host) {
     let finalHost = host;
-    let finalPort = parseInt(port || '5432', 10);
+    let finalPort = parseInt(port || `${getDefaultPort(dbType)}`, 10);
 
     if (ssh?.enabled) {
       const tunnel = await createSshTunnel(ssh, host, finalPort);
@@ -109,13 +239,23 @@ export const getDatabaseSource = async ({
       sshTunnelClose = tunnel.close;
     }
 
-    finalConnection = {
-      host: finalHost,
-      port: finalPort,
-      user: username,
-      password,
-      database,
-    };
+    if (dbType === DatabaseClientType.ORACLE) {
+      finalConnection = {
+        user: username,
+        password,
+        connectString: `${finalHost}:${finalPort}/${targetName}`,
+        serviceName: targetName,
+        database: targetName,
+      };
+    } else {
+      finalConnection = {
+        host: finalHost,
+        port: finalPort,
+        user: username,
+        password,
+        database: targetName,
+      };
+    }
 
     if (ssl?.mode && ssl.mode !== 'disable') {
       finalConnection.ssl = {
@@ -126,7 +266,7 @@ export const getDatabaseSource = async ({
       };
     }
 
-    cacheKey = `${dbType}://${username}@${host}:${port}/${database}${ssh?.enabled ? '-ssh' : ''}${ssl?.mode ? `-${ssl.mode}` : ''}`;
+    cacheKey = `${dbType}://${username}@${host}:${finalPort}/${targetName}${ssh?.enabled ? '-ssh' : ''}${ssl?.mode ? `-${ssl.mode}` : ''}`;
   }
 
   let cached = adapterCache.get(cacheKey);
@@ -149,66 +289,64 @@ export const getDatabaseSource = async ({
 
 export async function healthCheckConnection({
   url,
-  type = DatabaseClientType.POSTGRES,
+  type,
+  method,
   host,
   port,
   username,
   password,
   database,
+  serviceName,
+  filePath,
   ssl,
   ssh,
 }: {
   url: string;
-  type?: DatabaseClientType;
+  type: DatabaseClientType;
+  method: EConnectionMethod;
   host?: string;
   port?: string;
   username?: string;
   password?: string;
   database?: string;
+  serviceName?: string;
+  filePath?: string;
   ssl?: ISSLConfig;
   ssh?: ISSHConfig;
-}) {
+}): Promise<{ isConnectedSuccess: boolean; message?: string }> {
   let sshTunnelClose: (() => Promise<void>) | undefined;
+
   try {
-    let finalConnection: string | any = url;
+    const resolvedConnection = await resolveHealthCheckConnection({
+      url,
+      type,
+      method,
+      host,
+      port,
+      username,
+      password,
+      database,
+      serviceName,
+      filePath,
+      ssl,
+      ssh,
+    });
+    const { connection } = resolvedConnection;
+    sshTunnelClose = resolvedConnection.sshTunnelClose;
 
-    if (!url && host) {
-      let finalHost = host;
-      let finalPort = parseInt(port || '5432', 10);
-
-      if (ssh?.enabled) {
-        const tunnel = await createSshTunnel(ssh, host, finalPort);
-        finalHost = tunnel.localHost;
-        finalPort = tunnel.localPort;
-        sshTunnelClose = tunnel.close;
-      }
-
-      finalConnection = {
-        host: finalHost,
-        port: finalPort,
-        user: username,
-        password,
-        database,
-      };
-
-      if (ssl?.mode && ssl.mode !== 'disable') {
-        finalConnection.ssl = {
-          rejectUnauthorized: ssl.rejectUnauthorized ?? true,
-          ca: ssl.ca,
-          cert: ssl.cert,
-          key: ssl.key,
-        };
-      }
-    }
-
-    const adapter = createDatabaseAdapter(type, finalConnection);
+    const adapter = createDatabaseAdapter(type, connection);
     const isConnected = await adapter.healthCheck();
     await adapter.destroy();
     if (sshTunnelClose) await sshTunnelClose();
-    return isConnected;
-  } catch (error) {
+    return {
+      isConnectedSuccess: isConnected,
+    };
+  } catch (error: any) {
     console.error('Database connection failed:', error);
     if (sshTunnelClose) await sshTunnelClose();
-    return false;
+    return {
+      isConnectedSuccess: false,
+      message: error?.message || 'Database connection failed',
+    };
   }
 }

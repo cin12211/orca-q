@@ -65,6 +65,7 @@ export interface StreamingQueryCallbacks {
 export function executeStreamingQuery({
   query,
   dbConnectionString,
+  type,
   params,
   onMeta,
   onRows,
@@ -73,6 +74,7 @@ export function executeStreamingQuery({
 }: {
   query: string;
   dbConnectionString: string;
+  type?: string;
   params?: Record<string, unknown>;
 } & StreamingQueryCallbacks) {
   const controller = new AbortController();
@@ -86,6 +88,7 @@ export function executeStreamingQuery({
         body: JSON.stringify({
           query,
           dbConnectionString,
+          type,
           params: params || {},
         }),
         signal: controller.signal,

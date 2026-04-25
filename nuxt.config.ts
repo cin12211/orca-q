@@ -36,16 +36,59 @@ const shadcnConfig: Parameters<DefineNuxtConfig>[number]['shadcn'] = {
   componentDir: './components/ui',
 };
 
+const devWatchIgnored = [
+  '**/.git/**',
+  '**/node_modules/**',
+  '**/.nuxt/**',
+  '**/.output/**',
+  '**/.data/**',
+  '**/.sqlite3/**',
+  '**/.cache/**',
+  '**/.vite/**',
+  '**/dist/**',
+  '**/coverage/**',
+  '**/playwright-report/**',
+  '**/test-results/**',
+  '**/storybook-static/**',
+  '**/npx-package/.output/**',
+  '**/orcaq-mcp/dist/**',
+];
+
+const componentDirs = [
+  {
+    path: '~/components',
+    pathPrefix: false,
+    extensions: ['vue'],
+  },
+];
+
+const devWatchOptions = {
+  ignored: devWatchIgnored,
+};
+
+const sqlite3ConnectionsEnabled =
+  process.env.NUXT_PUBLIC_SQLITE3_CONNECTIONS_ENABLED !== 'false' &&
+  process.env.NUXT_PUBLIC_SQLITE3_CONNECTIONS_ENABLED !== '0';
+
 export default defineNuxtConfig({
   compatibilityDate: '2024-11-01',
 
   ssr: false,
+  telemetry: false,
+
+  devServer: {
+    host: '0.0.0.0',
+    port: 3000,
+  },
 
   runtimeConfig: {
     public: {
       amplitudeApiKey: process.env.NUXT_AMPLITUDE_API_KEY,
       ggFormLink: process.env.NUXT_GG_FORM_LINK,
+      githubLink:
+        process.env.NUXT_GITHUB_LINK ?? 'https://github.com/cin12211/orca-q',
       isDev: process.env.NODE_ENV !== 'production',
+      sqlite3ConnectionsEnabled,
       version: pkg.version,
     },
   },
@@ -80,7 +123,13 @@ export default defineNuxtConfig({
     storageKey: 'nuxt-color-mode',
   },
   vite: {
+    clearScreen: false,
+    envPrefix: ['VITE_'],
     plugins: [tailwindcss()],
+    server: {
+      strictPort: true,
+      watch: devWatchOptions,
+    },
   },
   shadcn: shadcnConfig,
   icon: {
@@ -100,17 +149,19 @@ export default defineNuxtConfig({
     autoImport: true,
     dirs: ['core/composables'],
   },
-  components: [
-    { path: '~/components', pathPrefix: false },
-    // { path: '~/components/modules', pathPrefix: false },
-
-    // '~/components',
-  ],
+  components: {
+    dirs: componentDirs,
+  },
   piniaPluginPersistedstate: {
     storage: 'localStorage',
   },
   app: {
     head: appHeaderConfig,
   },
+  watch: ['app.vue', 'nuxt.config.ts'],
+  watchers: {
+    chokidar: devWatchOptions,
+  },
+  ignore: ['**/docs/**', '**/.sqlite3/**'],
   spaLoadingTemplate: true,
 });

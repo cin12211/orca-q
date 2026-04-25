@@ -1,5 +1,6 @@
 import { computed, ref } from 'vue';
 import type { ReferenceElement } from 'reka-ui';
+import { useStrictModeGuard } from '@/components/modules/environment-tag';
 import { useAppContext } from '~/core/contexts/useAppContext';
 import {
   type Connection,
@@ -15,6 +16,7 @@ export function useWorkspaceCard(props: {
   const { createConnection, openWorkspaceWithConnection } = useAppContext();
   const workspaceStore = useWorkspacesStore();
   const connectionStore = useManagementConnectionStore();
+  const { checkAndConfirm } = useStrictModeGuard();
 
   const isOpenEditModal = ref(false);
   const isOpenDeleteModal = ref(false);
@@ -41,6 +43,12 @@ export function useWorkspaceCard(props: {
 
   const onOpenWorkspaceWithConnection = async (connectionId: string) => {
     isOpenConnectionSelector.value = false;
+
+    const connection = connections.value.find(c => c.id === connectionId);
+    if (connection) {
+      const ok = await checkAndConfirm(connection);
+      if (!ok) return;
+    }
 
     await openWorkspaceWithConnection({
       connId: connectionId,

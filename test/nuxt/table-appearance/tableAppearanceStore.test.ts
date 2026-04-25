@@ -1,6 +1,7 @@
 import { setActivePinia, createPinia } from 'pinia';
 import { describe, it, expect, beforeEach } from 'vitest';
 import { DEFAULT_TABLE_APPEARANCE_CONFIGS } from '~/components/modules/settings/constants';
+import { NullOrderPreference } from '~/components/modules/settings/types';
 import { useAppConfigStore } from '~/core/stores/appConfigStore';
 
 describe('appConfigStore — tableAppearanceConfigs', () => {
@@ -19,6 +20,9 @@ describe('appConfigStore — tableAppearanceConfigs', () => {
     );
     expect(store.tableAppearanceConfigs.accentColorDark).toBe(
       DEFAULT_TABLE_APPEARANCE_CONFIGS.accentColorDark
+    );
+    expect(store.tableAppearanceConfigs.nullOrderPreference).toBe(
+      DEFAULT_TABLE_APPEARANCE_CONFIGS.nullOrderPreference
     );
   });
 
@@ -52,6 +56,8 @@ describe('appConfigStore — tableAppearanceConfigs', () => {
     store.tableAppearanceConfigs.fontSize = 20;
     store.tableAppearanceConfigs.accentColorLight = '#ff0000';
     store.tableAppearanceConfigs.accentColorDark = '#00ff00';
+    store.tableAppearanceConfigs.nullOrderPreference =
+      NullOrderPreference.NullsLast;
 
     store.resetTableAppearance();
 
@@ -65,14 +71,23 @@ describe('appConfigStore — tableAppearanceConfigs', () => {
     expect(store.tableAppearanceConfigs.accentColorDark).toBe(
       DEFAULT_TABLE_APPEARANCE_CONFIGS.accentColorDark
     );
+    expect(store.tableAppearanceConfigs.nullOrderPreference).toBe(
+      DEFAULT_TABLE_APPEARANCE_CONFIGS.nullOrderPreference
+    );
   });
 
   it('DEFAULT_TABLE_APPEARANCE_CONFIGS has all required shape keys', () => {
     const keys = [
       'fontSize',
-      'spacingPreset',
+      'rowHeight',
+      'cellSpacing',
       'accentColorLight',
       'accentColorDark',
+      'nullOrderPreference',
+      'headerFontSize',
+      'headerFontWeight',
+      'headerBackgroundColorLight',
+      'headerBackgroundColorDark',
     ] as const;
     for (const key of keys) {
       expect(DEFAULT_TABLE_APPEARANCE_CONFIGS).toHaveProperty(key);

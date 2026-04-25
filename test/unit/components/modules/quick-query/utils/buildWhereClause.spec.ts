@@ -5,11 +5,7 @@ import {
   getPlaceholderSearchByOperator,
   normalizeFilterSearchValue,
 } from '~/components/modules/quick-query/utils';
-import {
-  ComposeOperator,
-  EExtendedField,
-  OperatorSet,
-} from '~/core/constants';
+import { ComposeOperator, EExtendedField, OperatorSet } from '~/core/constants';
 import { DatabaseClientType } from '~/core/constants/database-client-type';
 
 const createFilter = (
@@ -291,7 +287,7 @@ describe('buildWhereClause', () => {
         OperatorSet.ILIKE,
         DatabaseClientType.MYSQL,
         'John',
-        'WHERE `name`::TEXT  LIKE ?',
+        'WHERE `name`  LIKE ?',
         ['%John%'],
       ],
       [
@@ -382,7 +378,7 @@ describe('buildWhereClause', () => {
       });
 
       expect(result).toEqual({
-        where: 'WHERE `name`::TEXT  LIKE ?',
+        where: 'WHERE `name`  LIKE ?',
         params: ['%John%'],
       });
     });

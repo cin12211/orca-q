@@ -142,7 +142,7 @@ const tree = {
     const defaultFile: TreeFileSystemItem = {
       title,
       id: title,
-      icon: 'lucide:file',
+      icon: 'hugeicons:file-01',
       paths: [...(paths || []), title],
       status: ETreeFileSystemStatus.edit,
       connectionId,

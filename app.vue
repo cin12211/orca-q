@@ -1,14 +1,25 @@
 <script setup lang="ts">
 // main.ts (or the entry that mounts Vue)
-import { LoadingOverlay, TooltipProvider } from '#components';
+import { LoadingOverlay, MigrationScreen, TooltipProvider } from '#components';
 import { CommandPaletteView } from '@/components/modules/command-palette';
+import { useMigrationState } from '~/core/composables/useMigrationState';
+import ElectronUpdateStartupDialog from './components/modules/app-shell/status-bar/components/ElectronUpdateStartupDialog.vue';
 import ChangelogPopup from './components/modules/changelog/ChangelogPopup.vue';
+import {
+  StrictModeConfirmDialog,
+  useStrictModeGuardState,
+} from './components/modules/environment-tag';
 import Settings from './components/modules/settings';
 import { Toaster } from './components/ui/sonner';
 import { useAppearance } from './core/composables/useAppearance';
+import {
+  scheduleElectronStartupUpdateCheck,
+  startElectronBackgroundUpdateChecks,
+} from './core/composables/useElectronUpdater';
 import { DEFAULT_DEBOUNCE_INPUT } from './core/constants';
 import { useAppContext } from './core/contexts';
 import { useChangelogModal } from './core/contexts/useChangelogModal';
+import { useSettingsModal } from './core/contexts/useSettingsModal';
 
 // initIDB() init in plugins/01.app-initialization.client.ts
 
@@ -16,11 +27,21 @@ import { useChangelogModal } from './core/contexts/useChangelogModal';
 
 // Analytics initialization load in plugins/03.analytics.client.ts
 
+const {
+  strictModeDialogOpen,
+  activeStrictModeTags,
+  confirmStrictModeDialog,
+  cancelStrictModeDialog,
+} = useStrictModeGuardState();
+
 const appLoading = useAppLoading();
 const { isLoading } = useLoadingIndicator();
+const { isBlocking: isMigrating } = useMigrationState();
 
 const { connectToConnection } = useAppContext();
 const { autoShowIfNewVersion } = useChangelogModal();
+const { openSettings } = useSettingsModal();
+let removeOpenSettingsListener: (() => void) | undefined;
 
 useAppearance();
 
@@ -48,11 +69,25 @@ watch(
 onMounted(async () => {
   // Auto-show changelog if there's a new version
   autoShowIfNewVersion();
+
+  removeOpenSettingsListener = window.electronAPI?.window.onOpenSettings?.(
+    () => {
+      openSettings();
+    }
+  );
+
+  scheduleElectronStartupUpdateCheck();
+  startElectronBackgroundUpdateChecks();
+});
+
+onBeforeUnmount(() => {
+  removeOpenSettingsListener?.();
 });
 </script>
 
 <template>
   <ClientOnly>
+    <MigrationScreen />
     <LoadingOverlay :visible="isLoading || appLoading.isLoading.value" />
     <NuxtLoadingIndicator
       :color="'repeating-linear-gradient(to right, #ffffff 0%, #000000 100%)'"
@@ -66,6 +101,13 @@ onMounted(async () => {
     <CommandPaletteView />
     <Settings />
     <ChangelogPopup />
+    <ElectronUpdateStartupDialog />
+    <StrictModeConfirmDialog
+      :open="strictModeDialogOpen"
+      :strict-tags="activeStrictModeTags"
+      @confirm="confirmStrictModeDialog"
+      @cancel="cancelStrictModeDialog"
+    />
     <Toaster position="top-right" :close-button="true" />
   </ClientOnly>
 </template>

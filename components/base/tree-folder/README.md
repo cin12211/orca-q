@@ -13,7 +13,7 @@ A blazingly fast VS Code-style file tree component for Vue 3, capable of renderi
 - **📦 NPM Ready**: Static CSS classes, framework-agnostic styling
 - **🔄 Smart Auto-Expand**: Folders automatically expand when hovering during drag (500ms)
 - **💾 State Persistence**: Automatic save/restore of expansion state
-- **🧩 Pluggable Persistence**: Optional extension pattern for web, Electron, and API sync
+- **🧩 Pluggable Persistence**: Optional extension pattern for web, local desktop, and API sync
 - **♿ Accessible**: Keyboard navigation and ARIA support
 - **🌓 Dark Mode**: Built-in dark mode support via CSS variables
 - **⚡ Optimized**: `shallowRef`, `v-memo`, CSS containment

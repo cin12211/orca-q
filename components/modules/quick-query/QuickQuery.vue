@@ -130,9 +130,11 @@ watch(
 const {
   isMutating,
   onAddEmptyRow,
+  onDiscardChanges,
   onDeleteRows,
   onSaveData,
   hasEditedRows,
+  pendingChangesCount,
   onCopyRows,
   onPasteRows,
   onRefresh,
@@ -429,11 +431,13 @@ const onBackPreviousBreadcrumbByIndex = (index: number) => {
         :currentTotalRows="data?.length || 0"
         :offset="pagination.offset"
         :has-edited-rows="hasEditedRows"
+        :pending-changes-count="pendingChangesCount"
         :isViewVirtualTable="isVirtualTable"
         @onPaginate="onUpdatePagination"
         @onNextPage="onNextPage"
         @onPreviousPage="onPreviousPage"
         @onRefresh="onRefresh"
+        @onDiscardChanges="onDiscardChanges"
         @onSaveData="onSaveData"
         @onDeleteRows="onDeleteRows"
         @onAddEmptyRow="onAddEmptyRow"

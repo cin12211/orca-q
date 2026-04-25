@@ -1,5 +1,6 @@
 node_modules
 dist
+build
 .output
 coverage
 .nuxt
@@ -8,4 +9,7 @@ coverage
 src-tauri
 tailwind.config.ts
 bun.lock
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
 .env

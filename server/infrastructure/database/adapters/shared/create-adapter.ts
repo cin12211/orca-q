@@ -8,6 +8,21 @@ type AdapterFactories<
   TParams extends BaseDatabaseAdapterParams,
 > = Partial<Record<DatabaseClientType, (params: TParams) => Promise<TAdapter>>>;
 
+function getDatabaseLabel(dbType: DatabaseClientType): string {
+  switch (dbType) {
+    case DatabaseClientType.MYSQL:
+      return 'MySQL';
+    case DatabaseClientType.MARIADB:
+      return 'MariaDB';
+    case DatabaseClientType.ORACLE:
+      return 'Oracle';
+    case DatabaseClientType.SQLITE3:
+      return 'SQLite';
+    default:
+      return dbType;
+  }
+}
+
 export async function createDomainAdapter<
   TAdapter,
   TParams extends BaseDatabaseAdapterParams,
@@ -27,14 +42,28 @@ export async function createDomainAdapter<
   if (normalizedDbType === DatabaseClientType.MYSQL) {
     throw createError({
       statusCode: 501,
-      statusMessage: `MySQL ${adapterName} adapter not yet implemented`,
+      statusMessage: `${getDatabaseLabel(normalizedDbType)} ${adapterName} support is not available`,
+    });
+  }
+
+  if (normalizedDbType === DatabaseClientType.MARIADB) {
+    throw createError({
+      statusCode: 501,
+      statusMessage: `${getDatabaseLabel(normalizedDbType)} ${adapterName} support is not available`,
+    });
+  }
+
+  if (normalizedDbType === DatabaseClientType.ORACLE) {
+    throw createError({
+      statusCode: 501,
+      statusMessage: `${getDatabaseLabel(normalizedDbType)} ${adapterName} support is not available`,
     });
   }
 
   if (normalizedDbType === DatabaseClientType.SQLITE3) {
     throw createError({
       statusCode: 501,
-      statusMessage: `SQLite ${adapterName} adapter not yet implemented`,
+      statusMessage: `${getDatabaseLabel(normalizedDbType)} ${adapterName} support is not available`,
     });
   }
 

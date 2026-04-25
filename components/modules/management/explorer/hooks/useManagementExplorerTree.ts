@@ -67,7 +67,7 @@ export const useManagementExplorerTree = ({
   expandAll,
   isExpandedAll,
 }: UseManagementExplorerTreeOptions) => {
-  const { workspaceId, connectionId } = useWorkspaceConnectionRoute();
+  const { workspaceId } = useWorkspaceConnectionRoute();
   const explorerFileStore = useExplorerFileStore();
   const { openCodeQueryTab } = useTabManagement();
 
@@ -112,7 +112,6 @@ export const useManagementExplorerTree = ({
       id: uuidv4(),
       icon: 'lucide:folder-open',
       closeIcon: 'lucide:folder',
-      connectionId: connectionId.value,
       workspaceId: workspaceId.value,
       createdAt: dayjs().toISOString(),
       isFolder: true,
@@ -123,11 +122,11 @@ export const useManagementExplorerTree = ({
     const defaultFile = {
       title: '',
       id: uuidv4(),
-      icon: 'lucide:file',
-      connectionId: connectionId.value,
+      icon: 'hugeicons:file-01',
       workspaceId: workspaceId.value,
       createdAt: dayjs().toISOString(),
       isFolder: false,
+      variables: '',
       path: '',
       children: undefined,
     };

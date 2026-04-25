@@ -23,6 +23,12 @@ interface PaginationInfo {
   limit: number;
 }
 
+interface EditedCellChange {
+  rowId: number;
+  changedData: Record<string, unknown>;
+  isNewRow?: boolean;
+}
+
 /**
  * Options interface for the useQuickQueryMutation hook.
  */
@@ -107,24 +113,35 @@ export function useQuickQueryMutation(options: UseQuickQueryMutationOptions) {
     }
   };
 
+  const getEditedCells = (): EditedCellChange[] => {
+    return (quickQueryTableRef.value?.editedCells ?? []) as EditedCellChange[];
+  };
+
+  const getPendingEditedRows = () => {
+    return getEditedCells().filter(cell => {
+      return cell.isNewRow || Object.keys(cell.changedData).length > 0;
+    });
+  };
+
   /**
    * Saves changes made to table data, performing bulk inserts or updates.
    */
   const onSaveData = async () => {
-    if (!data.value || !quickQueryTableRef.value?.editedCells?.length) {
+    const editedCells = getPendingEditedRows();
+
+    if (!data.value || !editedCells.length) {
       toast.info('No changes to save.');
       return;
     }
 
-    const editedCells = quickQueryTableRef.value?.editedCells;
     const sqlBulkInsertOrUpdateStatements: string[] = [];
 
     editedCells.forEach(cell => {
       const haveDifferent = !!Object.keys(cell.changedData).length;
       const rowData = data.value?.[cell.rowId]; // Get existing row data if it's an update
 
-      const isUpdateStatement = haveDifferent && rowData;
-      const isInsertStatement = haveDifferent && !rowData; // Identify as new row if rowData is absent
+      const isUpdateStatement = haveDifferent && rowData && !cell.isNewRow;
+      const isInsertStatement = cell.isNewRow || (!rowData && haveDifferent);
 
       if (isUpdateStatement) {
         const sqlUpdateStatement = buildUpdateStatements({
@@ -304,26 +321,46 @@ export function useQuickQueryMutation(options: UseQuickQueryMutationOptions) {
       addIndex,
     });
 
+    const editedCells = getEditedCells();
+
+    if (!quickQueryTableRef.value?.editedCells) {
+      return;
+    }
+
+    quickQueryTableRef.value.editedCells = [
+      ...editedCells,
+      {
+        rowId: addIndex,
+        changedData: {},
+        isNewRow: true,
+      },
+    ];
+
     // Set focus and select the newly added row for immediate editing
     gridApi.setFocusedCell(addIndex, columnNames.value[0]);
     const currentAddedRow = gridApi.getRowNode(addIndex.toString()); // Row ID is its index string
     if (currentAddedRow) {
       gridApi.deselectAll();
       currentAddedRow.setSelected(true);
-      toast.message('Empty row added. Please fill in data and save.');
     }
   };
 
+  const onDiscardChanges = () => {
+    if (!quickQueryTableRef.value || !getPendingEditedRows().length) {
+      return;
+    }
+
+    quickQueryTableRef.value.editedCells = [];
+    onRefresh();
+    toast.info('Changes discarded.');
+  };
+
+  const pendingChangesCount = computed(() => {
+    return getPendingEditedRows().length;
+  });
+
   const hasEditedRows = computed(() => {
-    let totalEditedRows = 0;
-
-    quickQueryTableRef.value?.editedCells.forEach(cell => {
-      if (Object.keys(cell.changedData).length) {
-        totalEditedRows++;
-      }
-    });
-
-    return !!totalEditedRows;
+    return pendingChangesCount.value > 0;
   });
 
   const onCopyRows = () => {
@@ -382,10 +419,12 @@ export function useQuickQueryMutation(options: UseQuickQueryMutationOptions) {
 
   return {
     onAddEmptyRow,
+    onDiscardChanges,
     onDeleteRows,
     onSaveData,
     isMutating, // Expose the mutation loading state
     hasEditedRows,
+    pendingChangesCount,
     onCopyRows,
     onPasteRows,
     onRefresh,

@@ -1,34 +1,15 @@
 import { defineStore } from 'pinia';
-import { ref } from 'vue';
-import {
-  EConnectionMethod,
-  type ISSLConfig,
-  type ISSHConfig,
-} from '~/components/modules/connection';
+import { computed, ref } from 'vue';
 import { useWorkspaceConnectionRoute } from '~/core/composables/useWorkspaceConnectionRoute';
-import { DatabaseClientType } from '~/core/constants/database-client-type';
+import { createStorageApis } from '~/core/storage';
+import type { Connection } from '~/core/types/entities/connection.entity';
 
-export interface Connection {
-  workspaceId: string;
-  id: string;
-  name: string;
-  type: DatabaseClientType;
-  method: EConnectionMethod;
-  connectionString?: string;
-  host?: string;
-  port?: string;
-  username?: string;
-  password?: string;
-  database?: string;
-  ssl?: ISSLConfig;
-  ssh?: ISSHConfig;
-  createdAt: string;
-  updatedAt?: string;
-}
+export type { Connection } from '~/core/types/entities/connection.entity';
 
 export const useManagementConnectionStore = defineStore(
   'management-connection',
   () => {
+    const storageApis = createStorageApis();
     const { workspaceId, connectionId } = useWorkspaceConnectionRoute();
 
     const connections = ref<Connection[]>([]);
@@ -46,22 +27,37 @@ export const useManagementConnectionStore = defineStore(
     );
 
     const createNewConnection = async (connection: Connection) => {
-      connections.value.push(connection);
-
-      await window.connectionApi.create(connection);
+      const created = await storageApis.connectionStorage.create(connection);
+      connections.value.push(created);
     };
 
     const updateConnection = async (connection: Connection) => {
-      await window.connectionApi.update(connection);
-      await loadPersistData();
+      const result = await storageApis.connectionStorage.update(connection);
 
-      // connections.value = connections.value.map(c =>
-      //   c.id === connection.id ? connection : c
-      // );
+      if (result) {
+        // Happy path: entry existed in IDB — update the reactive array in-place
+        const idx = connections.value.findIndex(c => c.id === connection.id);
+        if (idx !== -1) {
+          connections.value.splice(idx, 1, result);
+        } else {
+          connections.value.push(result);
+        }
+      } else {
+        // Fallback: entry was not present in IDB yet (only in memory) — create it
+        const created = await storageApis.connectionStorage.create(connection);
+        if (created) {
+          const idx = connections.value.findIndex(c => c.id === connection.id);
+          if (idx !== -1) {
+            connections.value.splice(idx, 1, created);
+          } else {
+            connections.value.push(created);
+          }
+        }
+      }
     };
 
     const onDeleteConnection = async (id: string) => {
-      await window.connectionApi.delete(id);
+      await storageApis.connectionStorage.delete(id);
       await loadPersistData();
 
       // connections.value = connections.value.filter(c => c.id !== id);
@@ -74,7 +70,7 @@ export const useManagementConnectionStore = defineStore(
     };
 
     const loadPersistData = async () => {
-      const load = await window.connectionApi.getAll();
+      const load = await storageApis.connectionStorage.getAll();
       connections.value = load;
     };
 
@@ -90,8 +86,5 @@ export const useManagementConnectionStore = defineStore(
       currentConnectionString,
       connections,
     };
-  },
-  {
-    persist: false,
   }
 );

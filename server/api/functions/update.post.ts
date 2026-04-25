@@ -1,4 +1,8 @@
 import { defineEventHandler, readBody, createError } from 'h3';
+import {
+  generateRoutineUpdateSQL,
+  getRoutineDefinitionType,
+} from '~/components/modules/management/schemas/utils';
 import { DatabaseClientType } from '~/core/constants/database-client-type';
 import { createFunctionAdapter } from '~/server/infrastructure/database/adapters/functions';
 
@@ -15,15 +19,14 @@ export default defineEventHandler(async event => {
     });
   }
 
-  const trimmedDefinition = body.functionDefinition.trim().toUpperCase();
-  const isValidFunctionDefinition =
-    trimmedDefinition.startsWith('CREATE') &&
-    trimmedDefinition.includes('FUNCTION');
+  const updateSql = generateRoutineUpdateSQL(body.functionDefinition);
+  const routineType = getRoutineDefinitionType(updateSql);
 
-  if (!isValidFunctionDefinition) {
+  if (!routineType) {
     throw createError({
       statusCode: 400,
-      message: 'Statement must be a valid CREATE FUNCTION',
+      message:
+        'Statement must be a valid CREATE OR REPLACE FUNCTION or PROCEDURE',
     });
   }
 
@@ -31,5 +34,5 @@ export default defineEventHandler(async event => {
     dbConnectionString: body.dbConnectionString,
   });
 
-  return await adapter.updateFunction(body.functionDefinition);
+  return await adapter.updateFunction(updateSql);
 });

@@ -22,6 +22,10 @@ export interface SqlParserConfig {
 export const SQL_DIALECT_BY_DB_TYPE: Record<string, SQLDialect> = {
   [DatabaseClientType.POSTGRES]: SQLDialectSupport.PostgreSQL,
   [DatabaseClientType.MYSQL]: SQLDialectSupport.MySQL,
+  [DatabaseClientType.MYSQL2]: SQLDialectSupport.MySQL,
+  [DatabaseClientType.MARIADB]: SQLDialectSupport.MariaSQL,
+  [DatabaseClientType.SQLITE3]: SQLDialectSupport.SQLite,
+  [DatabaseClientType.ORACLE]: SQLDialectSupport.PLSQL,
 } as const;
 
 /**

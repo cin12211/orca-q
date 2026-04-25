@@ -12,6 +12,7 @@ import type {
 } from '~/core/types';
 import type {
   FunctionSchema,
+  Schema,
   TableDetailMetadata,
   TableDetails,
   ViewSchema,
@@ -20,19 +21,27 @@ import type {
 import type { Connection } from './managementConnectionStore';
 import { useWSStateStore } from './useWSStateStore';
 
-export interface Schema {
-  id: string;
-  connectionId: string;
-  workspaceId: string;
-  name: string;
-  tableDetails?: TableDetails | null;
-  tables: string[];
-  views: ViewSchema[];
-  viewDetails?: ViewDetails | null;
-  functions: FunctionSchema[];
-}
+export type { Schema };
 
 export const PUBLIC_SCHEMA_ID = 'public';
+const SCHEMA_LOAD_WAIT_TIMEOUT_MS = 5000;
+
+export type SchemaLoadStatus =
+  | 'idle'
+  | 'loading'
+  | 'waiting'
+  | 'completed'
+  | 'failed';
+
+export interface SchemaLoadSession {
+  connectionId: string;
+  status: SchemaLoadStatus;
+  startedAt?: string;
+  updatedAt: string;
+  statusMessage?: string;
+  schemaCount?: number;
+  errorMessage?: string;
+}
 
 export const useSchemaStore = defineStore(
   'schema-store',
@@ -48,6 +57,7 @@ export const useSchemaStore = defineStore(
 
     // Store loading state per connection: Record<string (connectionId), boolean>
     const loading = ref<Record<string, boolean>>({});
+    const schemaLoadSessions = ref<Record<string, SchemaLoadSession>>({});
 
     // Advanced objects cache: Record<"schema.table", T[]>
     const indexesMap = ref<Record<string, TableIndex[]>>({});
@@ -88,6 +98,32 @@ export const useSchemaStore = defineStore(
     const isLoading = computed(() => {
       return loading.value[connectionId.value] || false;
     });
+
+    const activeLoadSession = computed(() => {
+      if (!connectionId.value) {
+        return undefined;
+      }
+
+      return schemaLoadSessions.value[connectionId.value];
+    });
+
+    const upsertSchemaLoadSession = (
+      connId: string,
+      next: Omit<SchemaLoadSession, 'connectionId' | 'updatedAt'>
+    ) => {
+      const existing = schemaLoadSessions.value[connId];
+      const startedAt =
+        next.startedAt ??
+        existing?.startedAt ??
+        (next.status === 'idle' ? undefined : new Date().toISOString());
+
+      schemaLoadSessions.value[connId] = {
+        connectionId: connId,
+        ...next,
+        startedAt,
+        updatedAt: new Date().toISOString(),
+      };
+    };
 
     /**
      * Fetch reserved table schemas (reverse engineering info)
@@ -142,10 +178,41 @@ export const useSchemaStore = defineStore(
         delete schemas.value[connId];
         delete reservedSchemas.value[connId];
       } else {
-        if (schemas.value[connId]?.length) return;
+        if (schemas.value[connId]?.length) {
+          upsertSchemaLoadSession(connId, {
+            status: 'completed',
+            schemaCount: schemas.value[connId]?.length ?? 0,
+            statusMessage: 'Schemas are ready.',
+          });
+          return;
+        }
       }
 
       loading.value[connId] = true;
+      const startedAt = new Date().toISOString();
+
+      upsertSchemaLoadSession(connId, {
+        status: 'loading',
+        startedAt,
+        statusMessage: 'Loading schemas...',
+        errorMessage: undefined,
+        schemaCount: undefined,
+      });
+
+      const waitingTimer = setTimeout(() => {
+        if (!loading.value[connId]) {
+          return;
+        }
+
+        upsertSchemaLoadSession(connId, {
+          status: 'waiting',
+          startedAt,
+          statusMessage: 'Still loading schemas for this connection...',
+          errorMessage: undefined,
+          schemaCount: undefined,
+        });
+      }, SCHEMA_LOAD_WAIT_TIMEOUT_MS);
+
       try {
         const databaseSource = await $fetch('/api/metadata/meta-data', {
           method: 'POST',
@@ -183,15 +250,37 @@ export const useSchemaStore = defineStore(
 
         schemas.value[connId] = newSchemas;
 
+        upsertSchemaLoadSession(connId, {
+          status: 'completed',
+          startedAt,
+          schemaCount: newSchemas.length,
+          statusMessage:
+            newSchemas.length > 0
+              ? `Loaded ${newSchemas.length} schema${newSchemas.length === 1 ? '' : 's'}.`
+              : 'No schemas were returned for this connection.',
+          errorMessage: undefined,
+        });
+
         return {
           schemas: newSchemas,
           includedPublic,
           firstSchemaName: databaseSource[0]?.name,
         };
       } catch (error) {
+        const message =
+          error instanceof Error ? error.message : 'Failed to load schemas.';
+
+        upsertSchemaLoadSession(connId, {
+          status: 'failed',
+          startedAt,
+          statusMessage: 'Failed to load schemas.',
+          errorMessage: message,
+          schemaCount: undefined,
+        });
         console.error('Failed to fetch schemas:', error);
         throw error;
       } finally {
+        clearTimeout(waitingTimer);
         loading.value[connId] = false;
       }
     };
@@ -225,6 +314,7 @@ export const useSchemaStore = defineStore(
       reservedSchemas, // Expose raw per-connection map
       schemas, // Expose raw per-connection map
       loading, // Expose raw per-connection map
+      schemaLoadSessions,
       indexesMap,
       rlsMap,
       rulesMap,
@@ -237,6 +327,7 @@ export const useSchemaStore = defineStore(
       schemasByContext,
       activeReservedSchemas, // New convenience getter
       isLoading, // New convenience getter
+      activeLoadSession,
 
       // Actions
       fetchSchemas,

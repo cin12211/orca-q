@@ -14,13 +14,16 @@ import {
   sqlAutoCompletion,
   type SyntaxTreeNodeData,
 } from '~/components/base/code-editor/extensions';
+import { resolveDialect } from '~/components/base/code-editor/states/sqlParserConfig';
 import {
   pgKeywordCompletion,
   rawQueryEditorFormat,
   sqlParserConfigField,
   updateSqlParserConfigEffect,
 } from '~/components/base/code-editor/utils';
+import { DatabaseClientType } from '~/core/constants/database-client-type';
 import { useSchemaStore } from '~/core/stores';
+import type { Connection } from '~/core/stores';
 import type { EditorCursor } from '../interfaces';
 import { createCteAwareCompletionSource } from '../utils/cteAwareCompletionSource';
 import { mappedSchemaSuggestion } from '../utils/getMappedSchemaSuggestion';
@@ -35,6 +38,8 @@ const getKeywordDocs = async () => {
 interface UseSqlEditorExtensionsParams {
   codeEditorRef: Ref<InstanceType<typeof BaseCodeEditor> | null>;
   fileVariables: Ref<string>;
+  /** Active workspace connection — used to resolve the correct SQL dialect. */
+  connection?: Ref<Connection | undefined>;
   /** Callback wired to useQueryExecution.executeCurrentStatement */
   onExecuteStatement: (params: {
     currentStatements: SyntaxTreeNodeData[];
@@ -51,6 +56,7 @@ interface UseSqlEditorExtensionsParams {
 export function useSqlEditorExtensions({
   codeEditorRef,
   fileVariables,
+  connection,
   onExecuteStatement,
   onExplainAnalyzeCurrent,
 }: UseSqlEditorExtensionsParams) {
@@ -124,16 +130,20 @@ export function useSqlEditorExtensions({
 
     sqlCompartment.of(
       sql({
-        dialect: SQLDialectSupport['PostgreSQL'],
+        dialect: resolveDialect(connection?.value?.type),
         upperCaseKeywords: true,
-        keywordCompletion: pgKeywordCompletion,
+        keywordCompletion:
+          !connection?.value?.type ||
+          connection.value.type === DatabaseClientType.POSTGRES
+            ? pgKeywordCompletion
+            : undefined,
         tables: schemaConfig.value.variableCompletions,
         schema: schemaConfig.value.schema,
         defaultSchema: schemaConfig.value.defaultSchema,
       })
     ),
     sqlCompletionCompartment.of(
-      PostgreSQL.language.data.of({
+      resolveDialect(connection?.value?.type).language.data.of({
         autocomplete: buildCteAwareCompletionSource(),
       })
     ),
@@ -167,24 +177,29 @@ export function useSqlEditorExtensions({
     const editorView = getEditorView();
     if (!editorView) return;
 
+    const dialect = resolveDialect(connection?.value?.type);
+    const isPostgres =
+      !connection?.value?.type ||
+      connection.value.type === DatabaseClientType.POSTGRES;
+
     editorView.dispatch({
       effects: [
         updateSqlParserConfigEffect.of({
-          dialect: PostgreSQL,
+          dialect,
           isEnable: true,
         }),
         sqlCompartment.reconfigure(
           sql({
-            dialect: SQLDialectSupport['PostgreSQL'],
+            dialect,
             upperCaseKeywords: true,
-            keywordCompletion: pgKeywordCompletion,
+            keywordCompletion: isPostgres ? pgKeywordCompletion : undefined,
             tables: schemaConfig.value.variableCompletions,
             schema: schemaConfig.value.schema,
             defaultSchema: schemaConfig.value.defaultSchema,
           })
         ),
         sqlCompletionCompartment.reconfigure(
-          PostgreSQL.language.data.of({
+          dialect.language.data.of({
             autocomplete: buildCteAwareCompletionSource(),
           })
         ),
@@ -204,6 +219,16 @@ export function useSqlEditorExtensions({
       immediate: true,
     }
   );
+
+  // Auto-reload when the active connection's DB type changes (e.g. switching workspaces)
+  if (connection) {
+    watch(
+      () => connection.value?.type,
+      () => {
+        reloadSqlCompartment();
+      }
+    );
+  }
 
   return {
     extensions,

@@ -310,7 +310,7 @@ const formatFileSize = (bytes: number) => {
                   <p class="text-xs mt-1">Supports .sql, .dump, .tar files</p>
                 </div>
                 <div v-else class="flex items-center justify-center gap-3">
-                  <Icon name="lucide:file" class="size-8 text-primary" />
+                  <Icon name="hugeicons:file-01" class="size-8 text-primary" />
                   <div class="text-left">
                     <p class="text-sm font-medium">{{ selectedFile.name }}</p>
                     <p class="text-xs text-muted-foreground">

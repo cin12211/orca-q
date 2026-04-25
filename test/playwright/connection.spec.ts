@@ -96,4 +96,125 @@ test.describe('US5 — Add Connection Wizard Step 1', () => {
       page.getByRole('tab', { name: /connection string/i })
     ).toBeVisible();
   });
+
+  test('step 1 exposes MySQL, MariaDB, Oracle, and browser-gated SQLite options', async ({
+    page,
+  }) => {
+    const connectionModal = new ConnectionModalPage(page);
+
+    await connectionModal.clickAddConnection();
+    await connectionModal.expectStep1();
+
+    await expect(page.getByText('MySQL', { exact: true })).toBeVisible();
+    await expect(page.getByText('MariaDB', { exact: true })).toBeVisible();
+    await expect(page.getByText('Oracle', { exact: true })).toBeVisible();
+    await expect(page.getByText('SQLite', { exact: true })).toBeVisible();
+    await expect(page.getByText('Desktop only', { exact: true })).toBeVisible();
+  });
+
+  test('MySQL selection uses a MySQL connection string placeholder', async ({
+    page,
+  }) => {
+    const connectionModal = new ConnectionModalPage(page);
+
+    await connectionModal.completeStep1('MySQL');
+    await connectionModal.expectConnectionStringPlaceholder(/mysql:\/\//i);
+  });
+
+  test('MariaDB selection uses a MariaDB connection string placeholder', async ({
+    page,
+  }) => {
+    const connectionModal = new ConnectionModalPage(page);
+
+    await connectionModal.completeStep1('MariaDB');
+    await connectionModal.expectConnectionStringPlaceholder(/mariadb:\/\//i);
+  });
+
+  test('Oracle selection exposes service-name form fields and Oracle defaults', async ({
+    page,
+  }) => {
+    const connectionModal = new ConnectionModalPage(page);
+
+    await connectionModal.completeStep1('Oracle');
+    await connectionModal.selectConnectionFormTab();
+
+    await connectionModal.expectStructuredTargetLabel(/service name/i);
+    await connectionModal.expectPortPlaceholder('1521');
+  });
+
+  test('browser runtime keeps SQLite unavailable even after another selection', async ({
+    page,
+  }) => {
+    const connectionModal = new ConnectionModalPage(page);
+
+    await connectionModal.clickAddConnection();
+    await connectionModal.expectStep1();
+    await connectionModal.selectDbType('MySQL');
+    await connectionModal.selectDbType('SQLite');
+    await connectionModal.advanceToStep2();
+
+    await connectionModal.expectConnectionStringPlaceholder(/mysql:\/\//i);
+    await expect(connectionModal.databaseFileTab).toHaveCount(0);
+  });
+});
+
+test.describe('US5 — Electron-Gated SQLite UI', () => {
+  test.beforeEach(async ({ page }, testInfo) => {
+    await page.addInitScript(() => {
+      window.electronAPI = {
+        persist: {
+          getAll: async () => [],
+          getOne: async () => null,
+          find: async () => [],
+          upsert: async (_collection, _id, value) => value,
+          delete: async () => [],
+          replaceAll: async () => undefined,
+          mergeAll: async () => undefined,
+        },
+        updater: {
+          check: async () => null,
+          download: async () => undefined,
+          install: async () => undefined,
+          onUpdateAvailable: () => () => undefined,
+          onUpToDate: () => () => undefined,
+          onProgress: () => () => undefined,
+          onReady: () => () => undefined,
+          onError: () => () => undefined,
+        },
+        window: {
+          minimize: async () => undefined,
+          maximize: async () => undefined,
+          close: async () => undefined,
+          pickSqliteFile: async () => '/tmp/playwright-sqlite.sqlite',
+          getStoragePath: async () => '/tmp',
+          openStoragePath: async () => undefined,
+          resetAllData: async () => undefined,
+          onOpenSettings: () => () => undefined,
+        },
+      } as typeof window.electronAPI;
+    });
+
+    const workspaceName = `SQLite Workspace ${Date.now()}-${testInfo.retry}`;
+    const workspacesPage = new WorkspacesPage(page);
+    await workspacesPage.goto();
+    await workspacesPage.createWorkspace(workspaceName);
+    await workspacesPage.openWorkspace(workspaceName);
+  });
+
+  test('Electron runtime exposes the SQLite file tab and picker flow', async ({
+    page,
+  }) => {
+    const connectionModal = new ConnectionModalPage(page);
+
+    await connectionModal.clickAddConnection();
+    await connectionModal.expectStep1();
+    await connectionModal.selectDbType('SQLite');
+    await connectionModal.advanceToStep2();
+
+    await connectionModal.expectDatabaseFileTabOnly();
+    await expect(connectionModal.browseSqliteButton).toBeVisible();
+
+    await connectionModal.clickBrowseSqliteFile();
+    await connectionModal.expectFilePathValue('/tmp/playwright-sqlite.sqlite');
+  });
 });

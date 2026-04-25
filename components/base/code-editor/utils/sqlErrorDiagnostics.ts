@@ -19,8 +19,11 @@ export interface ApplySqlErrorDiagnosticsOptions {
 // substituteParams — browser-safe replacement for knex .raw().toSQL().toNative()
 // ─────────────────────────────────────────────────────────────────────────────
 
-/** The two placeholder styles supported across all drivers. */
-export type SqlDialectStyle = 'positional' | 'question-mark';
+/** The placeholder styles supported across the currently supported drivers. */
+export type SqlDialectStyle =
+  | 'postgres-positional'
+  | 'oracle-positional'
+  | 'question-mark';
 
 /**
  * Options for {@link substituteParams}.
@@ -30,8 +33,9 @@ export interface SubstituteParamsOptions {
   /**
    * Override the placeholder style.
    * When omitted the style is derived from `clientType`:
-   * - `DatabaseClientType.POSTGRES` → `'positional'`  (`$1`, `$2`, …)
-   * - all other clients              → `'question-mark'` (`?`)
+   * - `DatabaseClientType.POSTGRES` → `'postgres-positional'` (`$1`, `$2`, …)
+   * - `DatabaseClientType.ORACLE`   → `'oracle-positional'` (`:1`, `:2`, …)
+   * - all other clients             → `'question-mark'` (`?`)
    */
   style?: SqlDialectStyle;
   /**
@@ -48,9 +52,15 @@ export interface SubstituteParamsOptions {
 export function getDialectStyle(
   clientType: DatabaseClientType
 ): SqlDialectStyle {
-  return clientType === DatabaseClientType.POSTGRES
-    ? 'positional'
-    : 'question-mark';
+  if (clientType === DatabaseClientType.POSTGRES) {
+    return 'postgres-positional';
+  }
+
+  if (clientType === DatabaseClientType.ORACLE) {
+    return 'oracle-positional';
+  }
+
+  return 'question-mark';
 }
 
 /**
@@ -58,7 +68,7 @@ export function getDialectStyle(
  * placeholders — browser-safe, no Node.js dependencies.
  *
  * Behaviour matches Knex's `.raw().toSQL().toNative()`:
- * - `:name` → `$N` for PostgreSQL, `?` for all other clients.
+ * - `:name` → `$N` for PostgreSQL, `:N` for Oracle, `?` for all other clients.
  * - The same named parameter used multiple times gets its own slot each time.
  * - Parameters inside **single-quoted string literals** (`'…'`) are skipped.
  * - Parameters inside **double-quoted identifiers** (`"…"`) are skipped.
@@ -123,7 +133,13 @@ export function substituteParams(
       }
 
       if (name in params) {
-        result += style === 'positional' ? `$${paramIndex++}` : '?';
+        if (style === 'postgres-positional') {
+          result += `$${paramIndex++}`;
+        } else if (style === 'oracle-positional') {
+          result += `:${paramIndex++}`;
+        } else {
+          result += '?';
+        }
       } else {
         // Unknown param — preserve verbatim
         result += sql.slice(colonPos, i);
@@ -167,7 +183,10 @@ function mapErrorPosition(
     }
 
     // Handle named → positional placeholder (:name → $1 / ?)
-    if (origChar === ':' && (runChar === '$' || runChar === '?')) {
+    if (
+      origChar === ':' &&
+      (runChar === '$' || runChar === '?' || runChar === ':')
+    ) {
       while (
         origIdx < originalSql.length &&
         /[:a-zA-Z0-9_]/.test(originalSql[origIdx])
@@ -180,6 +199,13 @@ function mapErrorPosition(
         while (
           runIdx < runningSql.length &&
           /[$0-9]/.test(runningSql[runIdx])
+        ) {
+          runIdx++;
+        }
+      } else if (runChar === ':') {
+        while (
+          runIdx < runningSql.length &&
+          /[:0-9]/.test(runningSql[runIdx])
         ) {
           runIdx++;
         }

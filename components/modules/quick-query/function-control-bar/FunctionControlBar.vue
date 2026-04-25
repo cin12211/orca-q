@@ -7,6 +7,7 @@ const props = defineProps<{
 }>();
 
 const emit = defineEmits<{
+  (e: 'onPreview'): void;
   (e: 'onSave'): void;
   (e: 'onDiscard'): void;
 }>();
@@ -15,6 +16,25 @@ const emit = defineEmits<{
 <template>
   <div :class="['flex items-center justify-between p-1 rounded-md bg-muted']">
     <div class="flex items-center gap-1">
+      <Tooltip v-if="hasChanges">
+        <TooltipTrigger as-child>
+          <div>
+            <Button
+              variant="outline"
+              size="xxs"
+              :disabled="isSaving"
+              @click="emit('onPreview')"
+            >
+              <Icon name="lucide:file-search" class="size-4" />
+              Preview changes
+            </Button>
+          </div>
+        </TooltipTrigger>
+        <TooltipContent>
+          <p>Preview SQL changes before saving</p>
+        </TooltipContent>
+      </Tooltip>
+
       <Tooltip>
         <TooltipTrigger as-child>
           <div>
@@ -30,12 +50,13 @@ const emit = defineEmits<{
                 class="size-4 animate-spin"
               />
               <Icon v-else name="lucide:save" class="size-4" />
+              Save
               <ContextMenuShortcut>⌘S</ContextMenuShortcut>
             </Button>
           </div>
         </TooltipTrigger>
         <TooltipContent>
-          <p>Save function to database</p>
+          <p>Save routine changes</p>
           <p v-if="!hasChanges" class="text-xs text-muted-foreground">
             No changes to save
           </p>

@@ -1,7 +1,16 @@
 import type { Knex } from 'knex';
 import type { Readable } from 'node:stream';
 import { DatabaseClientType } from '~/core/constants/database-client-type';
+import { maskNamedBindParametersInComments } from '~/server/infrastructure/agent/core/sql';
 import type { IDatabaseAdapter, RawQueryResult } from './types';
+
+const normalizeBindableSql = (sql: string, bindings: unknown) => {
+  if (!bindings || Array.isArray(bindings) || typeof bindings !== 'object') {
+    return sql;
+  }
+
+  return maskNamedBindParametersInComments(sql);
+};
 
 export abstract class BaseDatabaseAdapter implements IDatabaseAdapter {
   public knex: Knex;
@@ -19,14 +28,17 @@ export abstract class BaseDatabaseAdapter implements IDatabaseAdapter {
   }
 
   async rawQuery<T = any>(sql: string, bindings: any[] = []): Promise<T[]> {
-    return this._rawQuery(sql, bindings);
+    return this._rawQuery(
+      normalizeBindableSql(sql, bindings),
+      bindings as any[]
+    );
   }
 
   async rawOut<T = any>(
     sql: string,
     bindings: any[] = []
   ): Promise<RawQueryResult<T>> {
-    return this._rawOut(sql, bindings);
+    return this._rawOut(normalizeBindableSql(sql, bindings), bindings as any[]);
   }
 
   streamQuery(
@@ -46,7 +58,7 @@ export abstract class BaseDatabaseAdapter implements IDatabaseAdapter {
   }
 
   public getNativeSql(sql: string, bindings: Knex.RawBinding) {
-    return this._getNativeSql(sql, bindings);
+    return this._getNativeSql(normalizeBindableSql(sql, bindings), bindings);
   }
 
   async healthCheck(): Promise<boolean> {

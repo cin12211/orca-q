@@ -17,7 +17,19 @@
 
 ## Overview
 
-**OrcaQ** is a modern database editor for managing, querying, and exploring SQL/PostgreSQL data in a fast, intuitive, and secure way.
+**OrcaQ** is a modern database editor for managing, querying, and exploring PostgreSQL, MySQL, MariaDB, Oracle, and desktop SQLite data in a fast, intuitive, and secure way.
+
+## Supported Databases
+
+| Database   | Connection Methods  | Core Workflows                                                  | Notes                                                             |
+| ---------- | ------------------- | --------------------------------------------------------------- | ----------------------------------------------------------------- |
+| PostgreSQL | String, form        | Connection test, raw query, schema browse, advanced admin tools | Broadest feature coverage                                         |
+| MySQL      | String, form        | Connection test, raw query, minimum metadata and table browsing | Advanced roles, metrics, and instance insights remain unsupported |
+| MariaDB    | String, form        | Connection test, raw query, minimum metadata and table browsing | Uses a distinct persisted `mariadb` type                          |
+| Oracle     | String, form        | Connection test, raw query, minimum metadata and table browsing | Structured form uses `serviceName`                                |
+| SQLite     | File (desktop only) | Connection test, raw query, minimum metadata and table browsing | File picker is available only in the Electron app                 |
+
+Advanced database-administration features are still intentionally PostgreSQL-first unless a database-specific adapter exists.
 
 ## Features
 
@@ -26,8 +38,9 @@
 - 📝 **Raw SQL Editor**: Write and execute SQL queries with multiple layout modes (vertical/horizontal).
 - 🗂️ **Explorer**: Browse database structures, tables, schemas, and files.
 - 🔒 **Workspace & Connection Management**: Manage multiple connections and independent workspaces.
+- 🗄️ **Multi-Database Support**: PostgreSQL, MySQL, MariaDB, Oracle, and desktop-only SQLite file connections.
 - 🛠️ **Hotkey Support**: Supports shortcuts for faster operations.
-- 🍎 **Desktop App for macOS**: Currently in development.
+- 🍎 **Desktop App for macOS**: Includes the SQLite file-picker workflow for local database files.
 
 ## Installation
 
@@ -75,6 +88,8 @@ Run OrcaQ directly with `npx` if you do not want to clone the repository or buil
    ```
 
    Requires **Node.js >= 18**. By default OrcaQ starts on [http://localhost:9432](http://localhost:9432) and opens your browser automatically.
+
+> **Note**: The browser and `npx` flows do not expose SQLite file connections. That workflow is available only in the Electron desktop app.
 
 ### Docker Setup
 
@@ -175,7 +190,7 @@ This project is licensed under the [MIT License](LICENSE).
 
 ## Acknowledgements
 
-- [Electron](https://www.electronjs.org/) - Build cross-platform desktop apps with JavaScript
+- [Tauri](https://tauri.app/) - Build cross-platform desktop apps with Rust and web technologies
 - [Vue 3](https://vuejs.org/) - Progressive JavaScript framework
 - [Vite](https://vitejs.dev/) - Next Generation Frontend Tooling
 - [TypeScript](https://www.typescriptlang.org/)

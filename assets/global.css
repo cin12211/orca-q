@@ -25,10 +25,18 @@ body {
   opacity: 0.6;
 }
 
-/* config allow drag app */
-.electron-drag-region {
+*[data-tauri-drag-region] {
   -webkit-app-region: drag;
   app-region: drag;
+}
+
+*[data-electron-drag-region] {
+  -webkit-app-region: drag;
+}
+
+.window-no-drag {
+  -webkit-app-region: no-drag;
+  app-region: no-drag;
 }
 
 button {

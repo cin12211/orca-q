@@ -6,6 +6,12 @@ import type {
 } from '~/core/types';
 import type { BaseDatabaseAdapterParams } from '../shared';
 
+export type {
+  MetadataTypeAliasDatabaseFamily,
+  MetadataTypeAliasMatchKind,
+  MetadataTypeAliasRule,
+} from './type-alias.constants';
+
 export type DatabaseMetadataAdapterParams = BaseDatabaseAdapterParams;
 
 export interface IDatabaseMetadataAdapter {

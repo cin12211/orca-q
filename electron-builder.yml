@@ -1,0 +1,97 @@
+appId: com.cinny.orcaq
+productName: orcaq
+copyright: Copyright © 2025–2026 Cinny. All rights reserved.
+
+nativeRebuilder: sequential
+
+directories:
+  output: out/packages
+  buildResources: build
+
+forceCodeSigning: true
+
+# Optimize bundle size
+compression: maximum
+
+# Files to bundle into the app
+files:
+  - out/electron/**/*
+  - out/core/**/*
+  - '!out/electron/**/*.d.ts'
+  - '!out/electron/**/*.map'
+  - '!out/core/**/*.d.ts'
+  - '!out/core/**/*.map'
+
+# Bundle the Nitro runtime binary as extra resource
+extraResources:
+  - from: out/runtime/
+    to: runtime/
+    filter:
+      - '**'
+
+# Auto-update: publish to GitHub Releases
+publish:
+  provider: github
+  owner: cin12211
+  repo: orca-q
+  releaseType: release
+
+# ─── macOS ───────────────────────────────────────────────────────────────────
+mac:
+  category: public.app-category.developer-tools
+  icon: assets/logos/icon.icns
+  hardenedRuntime: true
+  gatekeeperAssess: false
+  notarize: true
+  preAutoEntitlements: true
+  entitlements: build/entitlements.mac.plist
+  entitlementsInherit: build/entitlements.mac.inherit.plist
+  target:
+    - target: dmg
+      arch:
+        - arm64
+        - x64
+    - target: zip
+      arch:
+        - arm64
+        - x64
+
+dmg:
+  contents:
+    - x: 130
+      y: 220
+    - x: 410
+      y: 220
+      type: link
+      path: /Applications
+
+# ─── Windows ────────────────────────────────────────────────────────────────
+win:
+  icon: assets/logos/icon.ico
+  target:
+    - target: nsis
+      arch:
+        - x64
+  # Uncomment when Windows EV cert is configured:
+  # certificateSubjectName: "Your Company Name"
+  # signingHashAlgorithms:
+  #   - sha256
+
+nsis:
+  oneClick: true
+  perMachine: false
+  allowToChangeInstallationDirectory: false
+  deleteAppDataOnUninstall: false
+
+# ─── Linux ───────────────────────────────────────────────────────────────────
+linux:
+  icon: assets/logos/
+  category: Development
+  maintainer: Cinny <chinhkhacnguyen29@gmail.com>
+  target:
+    - target: AppImage
+      arch:
+        - x64
+    - target: deb
+      arch:
+        - x64

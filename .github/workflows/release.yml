@@ -1,16 +1,65 @@
-name: Build and Release
+name: Tag Release Pipeline
 
 on:
+  workflow_dispatch:
   push:
-    branches:
-      - main
     tags:
       - 'v*'
 
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.ref_name || github.run_id }}
+  cancel-in-progress: false
+
 jobs:
-  docker-build-push:
-    name: Build and Push Docker Image
+  prepare-release:
+    name: Resolve release metadata
     runs-on: ubuntu-latest
+    outputs:
+      tag: ${{ steps.release.outputs.tag }}
+      version: ${{ steps.release.outputs.version }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Resolve tag and validate version
+        id: release
+        shell: bash
+        run: |
+          TAG="${GITHUB_REF_NAME}"
+
+          if [[ ! "$TAG" =~ ^v[0-9].* ]]; then
+            echo "Invalid release tag: $TAG"
+            exit 1
+          fi
+
+          VERSION="${TAG#v}"
+          PACKAGE_VERSION="$(node -p "require('./package.json').version")"
+
+          echo "Detected tag: $TAG"
+          echo "Detected version: $VERSION"
+          echo "package.json version: $PACKAGE_VERSION"
+
+          if [ "$PACKAGE_VERSION" != "$VERSION" ]; then
+            echo "package.json version must match tag version."
+            exit 1
+          fi
+
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+  docker-build-push:
+    name: Build and push Docker image
+    runs-on: ubuntu-latest
+    needs: prepare-release
 
     steps:
       - name: Checkout code
@@ -25,52 +74,61 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Extract version from package.json
-        id: package-version
-        run: echo "VERSION=$(node -p "require('./package.json').version")" >> $GITHUB_OUTPUT
-
       - name: Build and push Docker image
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           context: .
           file: ./Dockerfile
           push: true
           tags: |
-            ${{ secrets.DOCKERHUB_USERNAME }}/orcaq:${{ steps.package-version.outputs.VERSION }}
+            ${{ secrets.DOCKERHUB_USERNAME }}/orcaq:${{ needs.prepare-release.outputs.version }}
             ${{ secrets.DOCKERHUB_USERNAME }}/orcaq:latest
+          labels: |
+            org.opencontainers.image.version=${{ needs.prepare-release.outputs.version }}
+            org.opencontainers.image.revision=${{ github.sha }}
+            org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
           cache-from: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/orcaq:buildcache
           cache-to: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/orcaq:buildcache,mode=max
 
-      - name: Image digest
-        run: echo "Docker image pushed successfully with tags ${{ steps.package-version.outputs.VERSION }} and latest"
+      - name: Docker release summary
+        run: echo "Docker image pushed: ${{ secrets.DOCKERHUB_USERNAME }}/orcaq:${{ needs.prepare-release.outputs.version }}"
 
   npx-package-build-publish:
-    name: Build and Publish NPX Package
+    name: Build and publish NPX package
     runs-on: ubuntu-latest
+    needs: prepare-release
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Install Bun
-        uses: oven-sh/setup-bun@v1
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
-          bun-version: latest
+          node-version: 20
+          registry-url: https://registry.npmjs.org
+
+      - name: Install Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.2.8
 
       - name: Install dependencies
         run: bun install --frozen-lockfile
 
-      - name: Build Nuxt web app
-        run: bun run nuxt:build-web
+      - name: Build NPX package bundle
+        run: npm run npx:build
 
-      - name: Build NPX package
-        run: node scripts/build-npx.mjs
+      - name: Verify generated package version
+        shell: bash
+        run: |
+          NPX_VERSION="$(node -p "require('./npx-package/package.json').version")"
+          echo "npx-package version: $NPX_VERSION"
 
-      - name: Set up Node.js for npm publish
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          registry-url: 'https://registry.npmjs.org'
+          if [ "$NPX_VERSION" != "${{ needs.prepare-release.outputs.version }}" ]; then
+            echo "npx-package version does not match release version."
+            exit 1
+          fi
 
       - name: Publish to npm
         working-directory: npx-package
@@ -78,9 +136,5 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
-      - name: Extract version
-        id: package-version
-        run: echo "VERSION=$(node -p "require('./package.json').version")" >> $GITHUB_OUTPUT
-
-      - name: Success message
-        run: echo "NPX package orcaq@${{ steps.package-version.outputs.VERSION }} published successfully to npm"
+      - name: NPM release summary
+        run: echo "Published npm package orcaq@${{ needs.prepare-release.outputs.version }}"

@@ -1,10 +1,8 @@
 import { mockNuxtImport } from '@nuxt/test-utils/runtime';
 import { mount } from '@vue/test-utils';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import {
-  ComposeOperator,
-  OperatorSet,
-} from '~/core/constants';
+import QuickQueryFilter from '~/components/modules/quick-query/quick-query-filter/QuickQueryFilter.vue';
+import { ComposeOperator, OperatorSet } from '~/core/constants';
 import { DatabaseClientType } from '~/core/constants/database-client-type';
 
 const { useHotkeysMock } = vi.hoisted(() => ({
@@ -47,8 +45,6 @@ vi.mock(
     };
   }
 );
-
-import QuickQueryFilter from '~/components/modules/quick-query/quick-query-filter/QuickQueryFilter.vue';
 
 const mountFilter = (
   props: Partial<InstanceType<typeof QuickQueryFilter>['$props']> = {}

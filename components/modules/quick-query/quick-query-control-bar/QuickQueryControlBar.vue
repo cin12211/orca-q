@@ -1,5 +1,19 @@
 <script setup lang="ts">
-import { Icon, Tooltip, TooltipContent, TooltipTrigger } from '#components';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuLabel,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+  Icon,
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '#components';
+import { NULL_ORDER_OPTIONS } from '~/components/modules/settings/constants/settings.constants';
+import { NullOrderPreference } from '~/components/modules/settings/types';
 import { useSettingsModal } from '~/core/contexts/useSettingsModal';
 import { useAppConfigStore } from '~/core/stores/appConfigStore';
 import { QuickQueryTabView } from '../constants';
@@ -18,6 +32,7 @@ const props = defineProps<{
   currentTotalRows: number;
   totalSelectedRows: number;
   hasEditedRows: boolean;
+  pendingChangesCount: number;
   tabView: QuickQueryTabView;
   isViewVirtualTable?: boolean;
 }>();
@@ -30,6 +45,7 @@ const emit = defineEmits<{
   (e: 'onShowFilter'): void;
   (e: 'onSaveData'): void;
   (e: 'onAddEmptyRow'): void;
+  (e: 'onDiscardChanges'): void;
   (e: 'onDeleteRows'): void;
   (e: 'onToggleHistoryPanel'): void;
   (e: 'update:tabView', value: QuickQueryTabView): void;
@@ -39,6 +55,16 @@ const quickQueryControlBarRef = ref<HTMLElement>();
 
 const isDataView = computed(() => {
   return props.tabView === QuickQueryTabView.Data;
+});
+
+const currentNullOrderLabel = computed(() => {
+  return (
+    NULL_ORDER_OPTIONS.find(
+      option =>
+        option.value ===
+        appConfigStore.tableAppearanceConfigs.nullOrderPreference
+    )?.label || 'Unset'
+  );
 });
 </script>
 
@@ -64,17 +90,6 @@ const isDataView = computed(() => {
 
       <RefreshButton @on-refresh="emit('onRefresh')" />
 
-      <!-- TODO: Open when doing good ux -->
-      <Button
-        v-if="false"
-        variant="outline"
-        size="xxs"
-        @click="emit('onAddEmptyRow')"
-      >
-        <Icon name="lucide:plus" class="text-sm"> </Icon>
-        Row
-      </Button>
-
       <Tooltip>
         <TooltipTrigger as-child>
           <Button
@@ -91,23 +106,59 @@ const isDataView = computed(() => {
         </TooltipContent>
       </Tooltip>
 
-      <p class="font-normal text-xs text-primary/60" v-if="totalSelectedRows">
-        Selected
-      </p>
-      <p class="font-normal text-sm text-primary" v-if="totalSelectedRows">
-        {{ totalSelectedRows }}
-      </p>
+      <Tooltip v-if="!isViewVirtualTable">
+        <TooltipTrigger as-child>
+          <Button
+            variant="outline"
+            class="font-normal"
+            size="xxs"
+            @click="emit('onAddEmptyRow')"
+          >
+            <Icon name="hugeicons:plus-sign"> </Icon> Row
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent>
+          <p>Add new record</p>
+        </TooltipContent>
+      </Tooltip>
 
       <Tooltip v-if="hasEditedRows && !isViewVirtualTable">
         <TooltipTrigger as-child>
-          <Button variant="outline" size="xxs" @click="emit('onSaveData')">
+          <Button
+            variant="outline"
+            size="xxs"
+            class="relative overflow-visible"
+            @click="emit('onSaveData')"
+          >
             <Icon name="lucide:save"> </Icon>
+            <span
+              v-if="pendingChangesCount"
+              class="absolute -right-1.5 -top-1.5 min-w-4 rounded-full bg-green-700 px-1 text-xxs font-medium leading-4 text-white"
+            >
+              {{ pendingChangesCount }}
+            </span>
             <ContextMenuShortcut>⌘S</ContextMenuShortcut>
-            <!-- Save -->
           </Button>
         </TooltipTrigger>
         <TooltipContent>
           <p>Save changes</p>
+        </TooltipContent>
+      </Tooltip>
+
+      <Tooltip v-if="hasEditedRows && !isViewVirtualTable">
+        <TooltipTrigger as-child>
+          <Button
+            variant="outline"
+            size="xxs"
+            class="font-normal"
+            @click="emit('onDiscardChanges')"
+          >
+            <Icon name="hugeicons:undo-02"> </Icon>
+            Discard
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent>
+          <p>Discard changes</p>
         </TooltipContent>
       </Tooltip>
 
@@ -120,9 +171,16 @@ const isDataView = computed(() => {
           </Button>
         </TooltipTrigger>
         <TooltipContent>
-          <p>Delete selected rows</p>
+          <p>Delete {{ totalSelectedRows }} selected rows</p>
         </TooltipContent>
       </Tooltip>
+
+      <p class="font-normal text-xs text-primary/60" v-if="totalSelectedRows">
+        Selected
+      </p>
+      <p class="font-normal text-sm text-primary" v-if="totalSelectedRows">
+        {{ totalSelectedRows }}
+      </p>
 
       <!-- TODO: Config export to excel or csv -->
       <!-- <Button variant="outline" size="iconSm">
@@ -242,6 +300,36 @@ const isDataView = computed(() => {
       </Tooltip>
 
       <!-- Table Appearance Settings shortcut -->
+      <DropdownMenu>
+        <DropdownMenuTrigger as-child>
+          <Button variant="ghost" size="xxs">
+            <Icon name="hugeicons:arrow-up-down" class="size-4!" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" class="min-w-44">
+          <DropdownMenuLabel class="py-0">Null ordering</DropdownMenuLabel>
+          <DropdownMenuSeparator />
+          <DropdownMenuRadioGroup
+            :model-value="
+              appConfigStore.tableAppearanceConfigs.nullOrderPreference
+            "
+            @update:model-value="
+              appConfigStore.tableAppearanceConfigs.nullOrderPreference =
+                $event as NullOrderPreference
+            "
+          >
+            <DropdownMenuRadioItem
+              v-for="option in NULL_ORDER_OPTIONS"
+              :key="option.value"
+              :value="option.value"
+              class="h-7 cursor-pointer"
+            >
+              {{ option.label }}
+            </DropdownMenuRadioItem>
+          </DropdownMenuRadioGroup>
+        </DropdownMenuContent>
+      </DropdownMenu>
+
       <Tooltip>
         <TooltipTrigger as-child>
           <Button

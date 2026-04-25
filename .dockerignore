@@ -36,6 +36,7 @@ dist
 
 # Node dependencies
 node_modules
+build
 
 # Logs
 logs
@@ -57,3 +58,7 @@ tsconfig.tsbuildinfo
 .electron-build
 .electron-out
 .db
+.git
+Dockerfile*
+.dockerignore
+coverage

@@ -5,6 +5,7 @@ import {
   formatWhereClause,
   type FilterSchema,
 } from '~/components/modules/quick-query/utils';
+import { NullOrderPreference } from '~/components/modules/settings/types';
 import {
   ComposeOperator,
   DEFAULT_DEBOUNCE_INPUT,
@@ -13,7 +14,9 @@ import {
   DEFAULT_QUERY_SIZE,
 } from '~/core/constants';
 import { DatabaseClientType } from '~/core/constants/database-client-type';
+import { LocalStorageManager } from '~/core/persist/LocalStorageManager';
 import { useQuickQueryLogs, type Connection } from '~/core/stores';
+import { useAppConfigStore } from '~/core/stores/appConfigStore';
 
 export interface OrderBy {
   columnName?: string;
@@ -43,6 +46,7 @@ export const useTableQueryBuilder = ({
   initFilters?: FilterSchema[];
   initComposeWith?: ComposeOperator;
 }) => {
+  const appConfigStore = useAppConfigStore();
   const qqLogStore = useQuickQueryLogs();
 
   const openErrorModal = ref(false);
@@ -62,8 +66,41 @@ export const useTableQueryBuilder = ({
 
   const composeWith = ref<ComposeOperator>(ComposeOperator.AND);
 
+  const nullOrderClause = computed(() => {
+    const preference =
+      appConfigStore.tableAppearanceConfigs.nullOrderPreference;
+    const dbType = connection.value?.type;
+
+    if (
+      preference === NullOrderPreference.Unset ||
+      (dbType !== DatabaseClientType.POSTGRES &&
+        dbType !== DatabaseClientType.ORACLE)
+    ) {
+      return '';
+    }
+
+    return preference === NullOrderPreference.NullsFirst
+      ? 'NULLS FIRST'
+      : 'NULLS LAST';
+  });
+
+  // Returns a quoting function appropriate for the active connection's DB type.
+  // MySQL and MariaDB use backtick quoting; all others (Postgres, Oracle, SQLite) use double-quotes.
+  const quoteIdent = computed(() => {
+    const dbType = connection.value?.type;
+    if (
+      dbType === DatabaseClientType.MYSQL ||
+      dbType === DatabaseClientType.MYSQL2 ||
+      dbType === DatabaseClientType.MARIADB
+    ) {
+      return (name: string) => `\`${name}\``;
+    }
+    return (name: string) => `"${name}"`;
+  });
+
   const baseQueryString = computed(() => {
-    return `${DEFAULT_QUERY} "${schemaName}"."${tableName}"`;
+    const q = quoteIdent.value;
+    return `${DEFAULT_QUERY} ${q(schemaName)}.${q(tableName)}`;
   });
 
   const whereClauses = computed(() => {
@@ -74,7 +111,9 @@ export const useTableQueryBuilder = ({
 
     return formatWhereClause({
       columns: columns.value,
-      db: DatabaseClientType.POSTGRES,
+      db:
+        (connection.value?.type as DatabaseClientType) ||
+        DatabaseClientType.POSTGRES,
       filters: filters.value,
       composeWith: composeWith.value,
     });
@@ -82,25 +121,28 @@ export const useTableQueryBuilder = ({
 
   const queryString = computed(() => {
     let orderClauses = '';
+    const resolvedOrder = orderBy?.order || 'ASC';
+    const orderColumn =
+      orderBy?.columnName || primaryKeys.value[0] || columns.value[0];
+    const q = quoteIdent.value;
 
-    if (orderBy?.columnName && orderBy?.order) {
-      orderClauses = `ORDER BY "${orderBy.columnName}" ${orderBy.order}`;
-    } else {
-      if (primaryKeys.value[0]) {
-        orderClauses = `ORDER BY "${primaryKeys.value[0]}" ASC`;
-      } else {
-        orderClauses = `ORDER BY "${columns.value[0]}" ASC`;
+    if (orderColumn) {
+      orderClauses = `ORDER BY ${q(orderColumn)} ${resolvedOrder}`;
+
+      if (nullOrderClause.value) {
+        orderClauses = `${orderClauses} ${nullOrderClause.value}`;
       }
     }
 
     const limitClause = `LIMIT ${pagination.limit}`;
     const offsetClause = `OFFSET ${pagination.offset}`;
 
-    return `${DEFAULT_QUERY} "${schemaName}"."${tableName}" ${whereClauses.value || ''} ${orderClauses} ${limitClause} ${offsetClause}`;
+    return `${DEFAULT_QUERY} ${q(schemaName)}.${q(tableName)} ${whereClauses.value || ''} ${orderClauses} ${limitClause} ${offsetClause}`;
   });
 
   const queryCountString = computed(() => {
-    return `${DEFAULT_QUERY_COUNT} "${schemaName}"."${tableName}" ${whereClauses.value || ''}`;
+    const q = quoteIdent.value;
+    return `${DEFAULT_QUERY_COUNT} ${q(schemaName)}.${q(tableName)} ${whereClauses.value || ''}`;
   });
 
   const addHistoryLog = (
@@ -250,7 +292,14 @@ export const useTableQueryBuilder = ({
   };
 
   const getPersistedKey = () => {
-    return `${workspaceId?.value}-${connectionId?.value}-${schemaName}-${tableName}`;
+    // Query Builder state is UI-only and intentionally bypasses the backup /
+    // Electron persist contract. It stays in renderer localStorage on all platforms.
+    return LocalStorageManager.queryBuilderKey(
+      workspaceId?.value ?? '',
+      connectionId?.value ?? '',
+      schemaName,
+      tableName
+    );
   };
 
   watch(
@@ -266,8 +315,8 @@ export const useTableQueryBuilder = ({
         persistedKey,
         JSON.stringify({
           filters: filters.value,
-          pagination,
-          orderBy,
+          pagination: { ...pagination },
+          orderBy: { ...orderBy },
           isShowFilters: isShowFilters.value,
           composeWith: composeWith.value,
         })
@@ -292,7 +341,16 @@ export const useTableQueryBuilder = ({
 
     const persistedKey = getPersistedKey();
 
-    const persistedState = localStorage.getItem(persistedKey);
+    const raw = localStorage.getItem(persistedKey);
+    const persistedState = raw
+      ? (JSON.parse(raw) as {
+          filters?: typeof filters.value;
+          pagination?: { limit: number; offset: number };
+          orderBy?: { columnName?: string; order?: 'ASC' | 'DESC' };
+          isShowFilters?: boolean;
+          composeWith?: typeof composeWith.value;
+        })
+      : null;
 
     if (persistedState) {
       const {
@@ -301,7 +359,7 @@ export const useTableQueryBuilder = ({
         orderBy: _orderBy,
         isShowFilters: _isShowFilters,
         composeWith: _composeWith,
-      } = JSON.parse(persistedState);
+      } = persistedState;
 
       if (_orderBy) {
         orderBy.columnName = _orderBy.columnName;

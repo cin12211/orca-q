@@ -9,7 +9,7 @@ import type {
   UserModelMessage,
 } from 'ai';
 import type { DatabaseClientType } from '~/core/constants';
-import type { Schema } from '~/core/stores';
+import type { Schema } from '~/core/types';
 
 // ─── Shared tool name enum (FE + BE) ─────────────────────────────────────────
 export const AgentToolName = {
@@ -49,7 +49,7 @@ export const DB_AGENT_TOOL_NAMES = [
 ] as const;
 
 export type DbAgentToolName = (typeof DB_AGENT_TOOL_NAMES)[number];
-export type DbAgentDialect = 'postgresql' | 'mysql' | 'sqlite';
+export type DbAgentDialect = 'postgresql' | 'mysql' | 'sqlite' | 'oracle';
 export type AgentChartType = 'bar' | 'line' | 'pie' | 'scatter';
 
 export interface AgentGenerateQueryInput {

@@ -271,13 +271,13 @@ Backend API routes (Nuxt server handlers):
 - `error-handler.ts` - Global error handling
 - `pinia-orm.client.ts` - Pinia ORM setup
 
-#### `/electron` - Electron Desktop App
+#### `/src-tauri` - Tauri Desktop App
 
-Separate Electron application wrapper (standalone package)
+Desktop application wrapper and native runtime
 
 #### `/scripts` - Build Scripts
 
-- `build-app.sh` - Application build script
+- `tauri-before-build.mjs` - Tauri build preparation script
 - `build-npx.mjs` - NPX package builder
 - `sync-version.mjs` - Version synchronization
 
@@ -1982,7 +1982,7 @@ npm run dev
 npm run nuxt:build-web
 
 # Build for production (desktop)
-npm run app:build
+npm run app:build:tauri
 ```
 
 ### Code Quality Tools

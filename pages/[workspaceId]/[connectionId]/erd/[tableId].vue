@@ -7,8 +7,12 @@ definePageMeta({
 });
 
 const route = useRoute('workspaceId-connectionId-erd-tableId');
+const tableId = computed(() => {
+  const value = route.params.tableId as string;
+  return value;
+});
 </script>
 
 <template>
-  <WrapperErdDiagram :tableId="route.params.tableId" />
+  <WrapperErdDiagram :tableId="tableId" />
 </template>

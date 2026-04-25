@@ -8,6 +8,7 @@ import {
 import { cn } from '@/lib/utils';
 import type { RowData } from '~/components/base/dynamic-table/utils';
 import type { ExecutedResultItem, MappedRawColumn } from '../interfaces';
+import { normalizeResultRows } from '../utils';
 import ResultTabAgentView from './result-tab/ResultTabAgentView.vue';
 import ResultTabErrorView from './result-tab/ResultTabErrorView.vue';
 import ResultTabInfoView from './result-tab/ResultTabInfoView.vue';
@@ -96,15 +97,7 @@ const getFormattedData = (tab: ExecutedResultItem): Record<string, any>[] => {
   }
 
   const fieldDefs = tab.metadata.fieldDefs || [];
-  const formatted =
-    tab.result?.map((item: RowData) => {
-      const mappedItem: Record<string, any> = {};
-      for (const [key, value] of Object.entries(item)) {
-        const columnName = fieldDefs[Number(key)]?.name || '';
-        if (columnName) mappedItem[columnName] = value;
-      }
-      return mappedItem;
-    }) ?? [];
+  const formatted = normalizeResultRows(tab.result || [], fieldDefs);
 
   formattedDataCache.set(cacheKey, formatted);
 

@@ -2,6 +2,7 @@ import { defineStore } from 'pinia';
 import { ref } from 'vue';
 import dayjs from 'dayjs';
 import { useWorkspaceConnectionRoute } from '~/core/composables/useWorkspaceConnectionRoute';
+import { createStorageApis } from '~/core/storage';
 
 export interface WorkspaceState {
   id: string;
@@ -20,6 +21,7 @@ export interface WorkspaceState {
 export const useWSStateStore = defineStore(
   'workspaces-state',
   () => {
+    const storageApis = createStorageApis();
     const { workspaceId, connectionId } = useWorkspaceConnectionRoute();
 
     const wsStates = ref<WorkspaceState[]>([]);
@@ -38,14 +40,14 @@ export const useWSStateStore = defineStore(
         updatedAt: dayjs().toISOString(),
       };
 
-      await window.workspaceStateApi.create(wsStateTmp);
+      await storageApis.workspaceStateStorage.create(wsStateTmp);
       await loadPersistData();
 
       return wsStateTmp;
     };
 
     const loadPersistData = async () => {
-      const load = await window.workspaceStateApi.getAll();
+      const load = await storageApis.workspaceStateStorage.getAll();
       wsStates.value = load;
     };
 
@@ -62,7 +64,7 @@ export const useWSStateStore = defineStore(
           };
         }),
       };
-      await window.workspaceStateApi.update(mappedState);
+      await storageApis.workspaceStateStorage.update(mappedState);
       await loadPersistData();
     };
 

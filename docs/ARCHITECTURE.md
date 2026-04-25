@@ -4,7 +4,7 @@
 > **Product:** OrcaQ
 > **Version:** 1.0.26  
 > **Author:** Principal Frontend Architect (reverse-engineered from source)  
-> **Last Updated:** 2026-03-02
+> **Last Updated:** 2026-04-22
 
 ---
 
@@ -16,7 +16,7 @@ OrcaQ is an **open-source, next-generation database editor** — a desktop and w
 
 ### Business Domain
 
-Database Development & Administration tooling. The application targets PostgreSQL as its primary database engine (with MySQL adapter scaffolding in place but not yet fully implemented).
+Database Development & Administration tooling. The application now supports PostgreSQL, MySQL, MariaDB, Oracle, and desktop-only SQLite file connections. PostgreSQL still has the broadest administration surface, while the newer engines currently focus on the core connection, query, and structure-browsing workflows.
 
 ### Target Users
 
@@ -40,13 +40,13 @@ Database Development & Administration tooling. The application targets PostgreSQ
 | **ERD Visualization** | Vue Flow (wrapper over reactflow)                                       |
 | **Charts**            | ECharts 5 via vue-echarts                                               |
 | **AI Integration**    | Vercel AI SDK 6 (OpenAI, Google Gemini, Anthropic Claude, xAI Grok)     |
-| **Database Driver**   | Knex.js (replacing TypeORM; `pg` native driver for PostgreSQL)          |
+| **Database Driver**   | Knex.js with `pg`, `mysql2`, `oracledb`, and `sqlite3` driver bindings  |
 | **Desktop Wrapper**   | Electron (via electron-vite, separate `electron/` project)              |
 | **D&D**               | Atlassian Pragmatic Drag & Drop                                         |
 | **Routing**           | nuxt-typed-router (type-safe route params)                              |
 | **Icons**             | @nuxt/icon with Iconify (Lucide, HugeIcons, Logos, Material Icon Theme) |
 | **Testing**           | Vitest 4 (unit + nuxt environment) + @vue/test-utils                    |
-| **Package Manager**   | pnpm 10                                                                 |
+| **Package Manager**   | Bun 1.2.8                                                               |
 | **Docker**            | Multi-stage Node 22 Alpine image                                        |
 | **Analytics**         | Amplitude                                                               |
 | **Animations**        | GSAP 3, @formkit/auto-animate                                           |
@@ -79,7 +79,7 @@ Pages → Components/Modules → Core (stores, composables, types, helpers)
                                     ↓
                          Infrastructure (adapters, drivers)
                                     ↓
-                          Database Engine (PostgreSQL/MySQL)
+                          Database Engine (PostgreSQL/MySQL/MariaDB/Oracle/SQLite)
 ```
 
 Pages are thin routing shells. Feature modules encapsulate UI + hooks. Core provides shared state and business logic. Server API is a stateless BFF. Infrastructure implements the Adapter pattern for multi-database support.
@@ -267,6 +267,13 @@ Interactive Entity-Relationship Diagram:
 
 **Dependencies:** `core/stores/managementConnectionStore`, `core/contexts/useAppContext`
 
+**Supported connection matrix:**
+
+- PostgreSQL: full connection, query, schema browsing, and advanced admin workflows
+- MySQL / MariaDB / Oracle: connection, health check, raw query, AI dialect selection, and minimum metadata or table browsing
+- SQLite: desktop-only file-based connections with raw query and minimum metadata or table browsing
+- Advanced administration areas such as roles, metrics, and instance insights remain explicitly PostgreSQL-first unless an engine-specific adapter exists
+
 ### 4.9 Feature: Management (`components/modules/management/`)
 
 **Layer: Feature**
@@ -338,7 +345,9 @@ Reusable selector components: `ConnectionSelector`, `SchemaSelector`, `ColumnSel
 - `types.ts` — `IDatabaseAdapter` interface, `DatabaseType` union
 - `base.adapter.ts` — `BaseDatabaseAdapter` abstract class (Knex-based)
 - `postgres.adapter.ts` — PostgreSQL implementation
-- `mysql.adapter.ts` — MySQL implementation (stub)
+- `mysql.adapter.ts` — MySQL and MariaDB implementation via `mysql2`
+- `oracle.adapter.ts` — Oracle implementation via `oracledb`
+- `sqlite.adapter.ts` — SQLite file-based implementation
 - `factory.ts` — `createDatabaseAdapter()` factory function
 - `db-connection.ts` — LRU connection cache with 5-min TTL, graceful shutdown
 
@@ -346,7 +355,7 @@ Reusable selector components: `ConnectionSelector`, `SchemaSelector`, `ColumnSel
 
 - `shared/` — `BaseDomainAdapter`, `createDomainAdapter()`, types
 - Per-domain adapters: `query/`, `metadata/`, `tables/`, `views/`, `functions/`, `database-roles/`, `metrics/`, `instance-insights/`
-- Each has: `types.ts` (interface), `*.factory.ts` (factory), `postgres/` (implementation)
+- Each has: `types.ts` (interface), `*.factory.ts` (factory), and engine-specific implementations where supported (`postgres/`, `mysql/`, `oracle/`, `sqlite/`)
 
 ---
 
@@ -861,7 +870,7 @@ The architecture is **well-suited for a desktop/local tool** but would need sign
 ### Long-Term Risks
 
 1. **Scalability ceiling:** The in-process LRU adapter cache and IndexedDB persistence won't scale beyond a single user/instance. A SaaS pivot requires fundamental data architecture changes.
-2. **Vendor lock-in to PostgreSQL:** While the adapter pattern exists, only PostgreSQL is implemented. MySQL and SQLite stubs exist but are non-functional. The UI (quick-query, raw-query) hardcodes PostgreSQL SQL dialects in several places.
+2. **Capability skew across database engines:** PostgreSQL still has the widest feature coverage. MySQL, MariaDB, Oracle, and SQLite now support the core workflows, but advanced administration surfaces intentionally remain unavailable until engine-specific adapters are implemented.
 3. **Bundle size growth:** AG Grid, CodeMirror, ECharts, Vue Flow, and GSAP are all heavy libraries. As features grow, initial load time will increase without aggressive code splitting.
 4. **Single-developer architecture:** The codebase shows signs of a single-architect vision — consistent patterns, but limited test coverage and no contribution guidelines for module ownership suggest scaling the development team will require explicit onboarding documentation.
 

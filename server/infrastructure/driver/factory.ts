@@ -1,7 +1,9 @@
 import type { Knex } from 'knex';
 import { DatabaseClientType } from '~/core/constants/database-client-type';
 import { MysqlAdapter } from './mysql.adapter';
+import { OracleAdapter } from './oracle.adapter';
 import { PostgresAdapter } from './postgres.adapter';
+import { SqliteAdapter } from './sqlite.adapter';
 import type { IDatabaseAdapter } from './types';
 
 type AdapterFactory = (
@@ -11,9 +13,10 @@ type AdapterFactory = (
 const ADAPTER_FACTORIES: Partial<Record<DatabaseClientType, AdapterFactory>> = {
   [DatabaseClientType.POSTGRES]: connection => new PostgresAdapter(connection),
   [DatabaseClientType.MYSQL]: connection => new MysqlAdapter(connection),
-  [DatabaseClientType.SQLITE3]: () => {
-    throw new Error("Database type 'sqlite3' is not supported yet.");
-  },
+  [DatabaseClientType.MARIADB]: connection =>
+    new MysqlAdapter(connection, DatabaseClientType.MARIADB),
+  [DatabaseClientType.ORACLE]: connection => new OracleAdapter(connection),
+  [DatabaseClientType.SQLITE3]: connection => new SqliteAdapter(connection),
 };
 
 export function createDatabaseAdapter(

@@ -23,14 +23,12 @@ const noPrivileges = ref(false);
 const clean = ref(false);
 const createDb = ref(false);
 const compressLevel = ref(6);
-const jobs = ref(4);
 
 // Format options
 const formatOptions = [
   { value: 'plain', label: 'Plain SQL (.sql)', icon: 'lucide:file-text' },
   { value: 'custom', label: 'Custom (.dump)', icon: 'lucide:archive' },
   { value: 'tar', label: 'Tar Archive (.tar)', icon: 'lucide:package' },
-  { value: 'directory', label: 'Directory (parallel)', icon: 'lucide:folder' },
 ];
 
 // Scope options
@@ -40,11 +38,7 @@ const scopeOptions = [
   { value: 'data-only', label: 'Data only (no schema)' },
 ];
 
-const showCompression = computed(
-  () => format.value === 'custom' || format.value === 'directory'
-);
-
-const showParallel = computed(() => format.value === 'directory');
+const showCompression = computed(() => format.value === 'custom');
 
 const onSubmit = () => {
   const options: ExportOptions = {
@@ -62,10 +56,6 @@ const onSubmit = () => {
 
   if (showCompression.value) {
     options.compressLevel = compressLevel.value;
-  }
-
-  if (showParallel.value) {
-    options.jobs = jobs.value;
   }
 
   emit('submit', options);
@@ -146,7 +136,7 @@ const onSubmit = () => {
       </p>
     </div>
 
-    <!-- Compression (for custom/directory) -->
+    <!-- Compression (for custom) -->
     <div v-if="showCompression" class="space-y-2">
       <Label>Compression Level (0-9)</Label>
       <div class="flex items-center gap-3">
@@ -160,12 +150,6 @@ const onSubmit = () => {
         <!-- @update:model-value="(val: number[]) => (compressLevel = val[0])" -->
         <span class="text-sm font-mono w-6">{{ compressLevel }}</span>
       </div>
-    </div>
-
-    <!-- Parallel Jobs (for directory) -->
-    <div v-if="showParallel" class="space-y-2">
-      <Label>Parallel Jobs</Label>
-      <Input v-model.number="jobs" type="number" min="1" max="16" />
     </div>
 
     <!-- Additional Options -->

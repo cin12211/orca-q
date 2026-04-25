@@ -1,11 +1,14 @@
 import type { EditorTheme } from '~/components/base/code-editor/constants';
 
 export enum SettingsComponentKey {
+  DesktopConfig = 'DesktopConfig',
   EditorConfig = 'EditorConfig',
   QuickQueryConfig = 'QuickQueryConfig',
   AgentConfig = 'AgentConfig',
   AppearanceConfig = 'AppearanceConfig',
   TableAppearanceConfig = 'TableAppearanceConfig',
+  BackupRestoreConfig = 'BackupRestoreConfig',
+  EnvironmentTagsConfig = 'EnvironmentTagsConfig',
 }
 
 export type SettingsNavItem = {
@@ -13,6 +16,7 @@ export type SettingsNavItem = {
   icon: string;
   componentKey?: SettingsComponentKey;
   disable?: boolean;
+  desktopOnly?: boolean;
 };
 
 export enum ThinkingStyle {
@@ -54,11 +58,18 @@ export interface AgentApiKeyConfigs {
   openrouter: string;
 }
 
+export enum NullOrderPreference {
+  Unset = 'unset',
+  NullsFirst = 'nulls-first',
+  NullsLast = 'nulls-last',
+}
+
 export interface TableAppearanceConfigs {
   // Row
   fontSize: number;
   rowHeight: number;
   cellSpacing: number;
+  nullOrderPreference: NullOrderPreference;
   accentColorLight: string;
   accentColorDark: string;
   // Header

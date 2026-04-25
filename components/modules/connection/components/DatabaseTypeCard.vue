@@ -9,7 +9,9 @@ defineProps<{
   icon: Component;
   selected: boolean;
   isSupport: boolean;
+  isBeta?: boolean;
   iconClass?: string;
+  unsupportedLabel?: string;
 }>();
 </script>
 
@@ -50,13 +52,22 @@ defineProps<{
         >
           {{ name }}
         </span>
-        <Badge
-          v-if="!isSupport"
-          variant="secondary"
-          class="text-[9px] px-1.5 py-0 h-3.5 uppercase tracking-widest font-bold opacity-60"
-        >
-          Soon
-        </Badge>
+        <div class="flex items-center justify-center gap-1.5 min-h-3.5">
+          <Badge
+            v-if="isBeta"
+            variant="outline"
+            class="text-[9px] px-1.5 py-0 h-3.5 uppercase tracking-widest font-bold border-amber-500/40 text-amber-600"
+          >
+            Beta
+          </Badge>
+          <Badge
+            v-if="!isSupport"
+            variant="secondary"
+            class="text-[9px] px-1.5 py-0 h-3.5 uppercase tracking-widest font-bold opacity-60"
+          >
+            {{ unsupportedLabel || 'Soon' }}
+          </Badge>
+        </div>
       </div>
     </CardContent>
   </Card>

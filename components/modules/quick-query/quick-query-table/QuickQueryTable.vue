@@ -30,6 +30,7 @@ import {
 } from '~/components/base/dynamic-table/utils';
 import { DEFAULT_BUFFER_ROWS, DEFAULT_QUERY_SIZE } from '~/core/constants';
 import type { SchemaForeignKeyMetadata as ForeignKeyMetadata } from '~/core/types';
+import { normalizeEditedCellValue } from '../utils/normalizeEditedCellValue';
 import AgJsonCellEditor from './AgJsonCellEditor.vue';
 import CustomCellUuid from './CustomCellUuid.vue';
 import CustomHeaderTable from './CustomHeaderTable.vue';
@@ -95,7 +96,11 @@ onClickOutside(agGridRef, event => {
 });
 
 const editedCells = ref<
-  { rowId: number; changedData: { [key: string]: unknown } }[]
+  {
+    rowId: number;
+    changedData: { [key: string]: unknown };
+    isNewRow?: boolean;
+  }[]
 >([]);
 
 /* reactive state ---------------------------------------------------- */
@@ -152,15 +157,11 @@ const onCellValueChanged = (event: CellValueChangedEvent) => {
       cell => cell.rowId === rowId
     );
 
-    let formatNewValue = isObjectColumn ? JSON.stringify(newValue) : newValue;
-
-    if (!formatNewValue) {
-      formatNewValue = null;
-    }
-
-    if (isBoolenColumn) {
-      formatNewValue = !!formatNewValue;
-    }
+    const formatNewValue = normalizeEditedCellValue({
+      fieldType,
+      isObjectColumn,
+      value: newValue,
+    });
 
     if (haveDifferent && !haveEditedCellRecord) {
       editedCells.value.push({
@@ -186,9 +187,15 @@ const onCellValueChanged = (event: CellValueChangedEvent) => {
         return cell;
       });
     } else {
-      editedCells.value = editedCells.value.map(cell => {
-        if (cell.rowId === rowId) {
-          const newChangedData = cell.changedData;
+      editedCells.value = editedCells.value
+        .map(cell => {
+          if (cell.rowId !== rowId) {
+            return cell;
+          }
+
+          const newChangedData = {
+            ...cell.changedData,
+          };
 
           delete newChangedData[fieldId];
 
@@ -196,9 +203,10 @@ const onCellValueChanged = (event: CellValueChangedEvent) => {
             ...cell,
             changedData: newChangedData,
           };
-        }
-        return cell;
-      });
+        })
+        .filter(cell => {
+          return cell.isNewRow || Object.keys(cell.changedData).length > 0;
+        });
     }
   }
 };
@@ -384,7 +392,7 @@ const columnTypes = ref<{
       const originalRowData = props.data[rowId];
 
       if (originalRowData === undefined) {
-        return { backgroundColor: 'var(--color-green-200)' };
+        return { backgroundColor: 'var(--color-green-100)' };
       }
 
       const style: { backgroundColor?: string; color?: string } = {};

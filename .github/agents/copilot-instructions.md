@@ -4,6 +4,18 @@ Auto-generated from all feature plans. Last updated: 2026-03-15
 
 ## Active Technologies
 
+- TypeScript 5.6, Vue 3.5, Nuxt 3.16, Node 18+, Electron 41 + Nuxt 3, Vue 3, Pinia, Electron, AG Grid, existing SQL/parser utilities (`dt-sql-parser`, `pgsql-ast-parser`), database drivers (`pg`, `mysql2`, `sqlite3`, `oracledb`) (031-enhance-query-workbench)
+- Persisted workspace, tab, and app-config state through Electron/IndexedDB APIs; metadata and execution sourced from existing PostgreSQL/MySQL/MariaDB/SQLite/Oracle adapters (031-enhance-query-workbench)
+
+- TypeScript ~5.6, Node >=18, Vue 3.5, Nuxt 3.16, Electron 41 + Nuxt 3 SPA + Nitro server routes, Pinia 3, Knex 3.1, `pg`, `sqlite3`, `better-sqlite3`, plus new runtime drivers `mysql2` and `oracledb` (030-add-multi-db-support)
+- IndexedDB via `localforage` for browser persistence, Electron SQLite (`better-sqlite3`) for app persistence, external DB sessions via Knex driver adapters, local filesystem path access for desktop SQLite files (030-add-multi-db-support)
+
+- TypeScript 5.x (Electron main process + Nuxt 3 / Vue 3 renderer) + Electron 30+, electron-updater 6.x, Vue 3 Composition API, Pinia, shadcn-vue component library, vue-sonner (toast) (014-enhance-electron-updater)
+- electron-store (Electron main process) accessed from renderer via existing contextBridge IPC persist layer (`appConfig` collection) (014-enhance-electron-updater)
+
+- TypeScript 5.x + Nuxt 3 (SPA), Vue 3 Composition API, Pinia, VeeValidate v4 + Zod, shadcn-vue, Tailwind CSS 4, localforage, Electron IPC (013-connection-env-tags)
+- Dual-platform: localforage → IndexedDB (web) | Electron IPC → native store (desktop). New collection `environment-tags` added to both. (013-connection-env-tags)
+
 - TypeScript 5.x · Vue 3.5.13 · Nuxt 3.16.2 + CodeMirror 6 (`@codemirror/view`, `@codemirror/state`), VueUse (useStorage, useKeyModifier), Hugeicons (already integrated via `nuxt-icon`/`@iconify`), `marked` (markdown rendering), Tailwind CSS v4, shadcn-vue component library (`components/ui/`), Pinia (stores) (010-ui-ux-enhancements)
 - localStorage via VueUse `useStorage` for agent thread history and app config (spaceDisplay). No server-side storage changes. (010-ui-ux-enhancements)
 
@@ -44,12 +56,14 @@ bun nuxt:build     # Production build
 - Pinia stores use setup-function style (`defineStore('id', () => { ... }, { persist: true })`)
 - All theme updates via `useTableTheme()` composable — never import `baseTableTheme` directly in components
 - AG Grid theme changes: `themeBalham.withPart(...).withParams(...)` — no grid destruction needed
+- Icon library: Hugeicons via `nuxt-icon`/`@iconify` (already integrated) (prefer use hugeicons icons set)
 
 ## Recent Changes
 
-- 010-ui-ux-enhancements: Added TypeScript 5.x · Vue 3.5.13 · Nuxt 3.16.2 + CodeMirror 6 (`@codemirror/view`, `@codemirror/state`), VueUse (useStorage, useKeyModifier), Hugeicons (already integrated via `nuxt-icon`/`@iconify`), `marked` (markdown rendering), Tailwind CSS v4, shadcn-vue component library (`components/ui/`), Pinia (stores)
+- 031-enhance-query-workbench: Added TypeScript 5.6, Vue 3.5, Nuxt 3.16, Node 18+, Electron 41 + Nuxt 3, Vue 3, Pinia, Electron, AG Grid, existing SQL/parser utilities (`dt-sql-parser`, `pgsql-ast-parser`), database drivers (`pg`, `mysql2`, `sqlite3`, `oracledb`)
 
-- **008-table-appearance-settings**: Table appearance settings (font size, row spacing, accent color per mode). Extends `appLayoutStore` with `tableAppearanceConfigs`, extends `useTableTheme()` to merge user prefs via AG Grid `withParams()`, adds `TableAppearanceConfig.vue` + live preview to settings panel.
+- 030-add-multi-db-support: Added TypeScript ~5.6, Node >=18, Vue 3.5, Nuxt 3.16, Electron 41 + Nuxt 3 SPA + Nitro server routes, Pinia 3, Knex 3.1, `pg`, `sqlite3`, `better-sqlite3`, plus new runtime drivers `mysql2` and `oracledb`
+- 021-standardize-storage-layer: Added TypeScript 5.x
 
 <!-- MANUAL ADDITIONS START -->
 <!-- MANUAL ADDITIONS END -->

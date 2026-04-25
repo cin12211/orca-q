@@ -12,6 +12,22 @@ Complete reference for all Nuxt server API endpoints.
 All endpoints use **POST** method and accept JSON body.  
 Base path: `/api/`
 
+Most connection-aware endpoints are now **type-aware**. For non-PostgreSQL requests, include `type` explicitly and provide the engine-specific target field:
+
+- `database` for PostgreSQL, MySQL, and MariaDB form payloads
+- `serviceName` for Oracle form payloads
+- `filePath` for SQLite file payloads
+
+### Supported Database Capability Matrix
+
+| Database   | Core API Workflows                                                                     | Advanced API Workflows                                                     |
+| ---------- | -------------------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
+| PostgreSQL | Health check, query execution, metadata, tables, AI, roles, metrics, instance insights | Fully supported                                                            |
+| MySQL      | Health check, query execution, metadata, tables, AI dialect handling                   | Roles, metrics, and instance insights return explicit unsupported behavior |
+| MariaDB    | Health check, query execution, metadata, tables, AI dialect handling                   | Roles, metrics, and instance insights return explicit unsupported behavior |
+| Oracle     | Health check, query execution, metadata, tables, AI dialect handling                   | Roles, metrics, and instance insights return explicit unsupported behavior |
+| SQLite     | Health check, query execution, metadata, tables, AI dialect handling                   | Desktop-only connection flow; advanced admin workflows remain unsupported  |
+
 | Category            | Endpoints |
 | ------------------- | --------- |
 | Query Execution     | 4         |
@@ -611,7 +627,20 @@ Test database connection.
 
 ```typescript
 {
-  connectionString: string;
+  type: 'postgres' | 'mysql' | 'mariadb' | 'oracledb' | 'sqlite3';
+  method: 'string' | 'form' | 'file';
+  stringConnection?: string;
+  host?: string;
+  port?: string;
+  username?: string;
+  password?: string;
+  database?: string;
+  serviceName?: string;
+  filePath?: string;
+  ssl?: {
+    mode?: string;
+    enabled?: boolean;
+  };
 }
 ```
 
@@ -619,14 +648,15 @@ Test database connection.
 
 ```typescript
 {
-  success: boolean;
-  message: string;
-  details?: {
-    version: string;
-    database: string;
-  };
+  isConnectedSuccess: boolean;
+  message?: string;
 }
 ```
+
+**Notes:**
+
+- SQLite health checks can return actionable file-path errors when the selected file is missing or unreadable
+- Oracle form payloads must use `serviceName`; MySQL and MariaDB use `database`
 
 ---
 

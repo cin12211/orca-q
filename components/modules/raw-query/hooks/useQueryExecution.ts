@@ -22,6 +22,7 @@ interface UseQueryExecutionParams {
   fieldDefs: Ref<FieldDef[]>;
   resultTabs: ResultTabsReturn;
   buildExplainAnalyzePrefix: () => string;
+  beforeExecute?: () => Promise<boolean>;
 }
 
 /**
@@ -35,6 +36,7 @@ export function useQueryExecution({
   fieldDefs,
   resultTabs,
   buildExplainAnalyzePrefix,
+  beforeExecute,
 }: UseQueryExecutionParams) {
   const currentRawQueryResult = shallowRef<RowData[]>([]);
   const rawResponse = shallowRef<
@@ -85,6 +87,13 @@ export function useQueryExecution({
 
     // TODO: support multiple statements
     const currentStatement = currentStatements[0];
+
+    if (beforeExecute) {
+      const canExecute = await beforeExecute();
+      if (!canExecute) {
+        return;
+      }
+    }
 
     queryProcessState.isHaveOneExecute = true;
     queryProcessState.currentStatementQuery = currentStatement.text;
@@ -150,6 +159,7 @@ export function useQueryExecution({
           method: 'POST',
           body: {
             dbConnectionString: connection.value?.connectionString,
+            type: connection.value?.type,
             query: executeQuery,
             params: fileParameters,
           },
@@ -203,6 +213,7 @@ export function useQueryExecution({
     const { abort } = executeStreamingQuery({
       query: executeQuery,
       dbConnectionString: connection.value?.connectionString || '',
+      type: connection.value?.type,
       params: fileParameters,
       onMeta: (fields, command) => {
         fieldDefs.value = fields;

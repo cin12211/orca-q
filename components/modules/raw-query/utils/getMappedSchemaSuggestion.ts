@@ -1,4 +1,3 @@
-import { render, h } from 'vue';
 import type { Completion } from '@codemirror/autocomplete';
 import type { SQLNamespace } from '@codemirror/lang-sql';
 import { CompletionIcon } from '~/components/base/code-editor/constants';
@@ -11,8 +10,6 @@ import type {
   TableDetails,
   ViewDetails,
 } from '~/core/types';
-import SuggestionTableInfo from '../components/SuggestionTableInfo.vue';
-import SuggetionColumnInfo from '../components/SuggetionColumnInfo.vue';
 
 /**
  * Hierarchical schema structure for SQL completion
@@ -79,20 +76,54 @@ export function createTableInfoTooltip(
   schemaName?: string
 ): HTMLElement {
   const container = document.createElement('div');
+  container.className = 'gap-1 flex flex-col text-sm min-w-[20rem]';
 
   const pkColumns = tableInfo.primary_keys?.map(pk => pk.column) || [];
   const fkColumns = tableInfo.foreign_keys?.map(fk => fk.column) || [];
 
-  // Use Vue's render function to mount the SuggestionTableInfo component
-  const vnode = h(SuggestionTableInfo, {
-    tableName,
-    columns: tableInfo.columns,
-    pkColumns,
-    fkColumns,
-    schemaName,
-  });
+  const title = document.createElement('div');
+  title.className = 'font-medium text-sm mb-1';
+  title.textContent = `${tableName} (${schemaName || 'public'})`;
+  container.appendChild(title);
 
-  render(vnode, container);
+  const columnsSummary = document.createElement('div');
+  columnsSummary.className = 'text-xs text-muted-foreground';
+  columnsSummary.textContent = `Columns: ${tableInfo.columns.length}`;
+  container.appendChild(columnsSummary);
+
+  if (pkColumns.length > 0) {
+    const pkSummary = document.createElement('div');
+    pkSummary.className = 'text-xs text-muted-foreground';
+    pkSummary.textContent = `Primary Keys: ${pkColumns.join(', ')}`;
+    container.appendChild(pkSummary);
+  }
+
+  if (fkColumns.length > 0) {
+    const fkSummary = document.createElement('div');
+    fkSummary.className = 'text-xs text-muted-foreground';
+    fkSummary.textContent = `Foreign Keys: ${fkColumns.join(', ')}`;
+    container.appendChild(fkSummary);
+  }
+
+  const columnsList = document.createElement('div');
+  columnsList.className = 'mt-1 text-xs max-h-[12rem] overflow-auto';
+
+  for (const column of tableInfo.columns) {
+    const row = document.createElement('div');
+    row.className = pkColumns.includes(column.name)
+      ? 'py-0.5 font-semibold'
+      : 'py-0.5';
+    row.append(document.createTextNode(`${column.name}: `));
+
+    const type = document.createElement('span');
+    type.className = 'text-muted-foreground';
+    type.textContent = column.short_type_name;
+    row.appendChild(type);
+
+    columnsList.appendChild(row);
+  }
+
+  container.appendChild(columnsList);
 
   return container;
 }
@@ -109,17 +140,38 @@ export function createColumnInfoTooltip(
   schemaName?: string
 ): HTMLElement {
   const container = document.createElement('div');
+  container.className = 'gap-1 flex flex-col text-sm min-w-[10rem]';
 
-  // Use Vue's render function to mount the SuggetionColumnInfo component
-  const vnode = h(SuggetionColumnInfo, {
-    columnName,
-    dataType,
-    tableName: schemaName ? `${schemaName}.${tableName}` : tableName,
-    isPrimaryKey,
-    foreignKey,
-  });
+  const title = document.createElement('div');
+  title.className = 'font-medium text-sm mb-1';
+  title.textContent = columnName;
+  container.appendChild(title);
 
-  render(vnode, container);
+  const type = document.createElement('div');
+  type.className = 'text-xs text-muted-foreground';
+  type.textContent = `Type: ${dataType}`;
+  container.appendChild(type);
+
+  const table = document.createElement('div');
+  table.className = 'text-xs text-muted-foreground';
+  table.textContent = `Table: ${schemaName ? `${schemaName}.${tableName}` : tableName}`;
+  container.appendChild(table);
+
+  if (isPrimaryKey) {
+    const primaryKey = document.createElement('div');
+    primaryKey.className =
+      'text-xs text-yellow-500 mt-1 flex items-center gap-1';
+    primaryKey.textContent = 'Primary Key';
+    container.appendChild(primaryKey);
+  }
+
+  if (foreignKey) {
+    const foreignKeyInfo = document.createElement('div');
+    foreignKeyInfo.className =
+      'text-xs text-blue-500 mt-1 flex items-center gap-1';
+    foreignKeyInfo.textContent = `FK -> ${foreignKey.referenced_table}.${foreignKey.referenced_column}`;
+    container.appendChild(foreignKeyInfo);
+  }
 
   return container;
 }

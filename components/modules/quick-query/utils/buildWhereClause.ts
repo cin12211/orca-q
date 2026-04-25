@@ -85,8 +85,11 @@ const makePlaceholder = (db: DatabaseClientType) => (i: number) =>
   db === DatabaseClientType.POSTGRES ? `$${i}` : '?';
 
 // bọc tên cột
+// Oracle and Postgres use double-quote quoting; MySQL/MariaDB/SQLite use backticks.
 const wrap = (db: DatabaseClientType) => (c: string) =>
-  db === DatabaseClientType.POSTGRES ? `"${c}"` : `\`${c}\``;
+  db === DatabaseClientType.POSTGRES || db === DatabaseClientType.ORACLE
+    ? `"${c}"`
+    : `\`${c}\``;
 
 /* -------------------------------------------------------------------------- */
 /*                           Handler implement‑ations                         */
@@ -126,9 +129,10 @@ const likeHandler: Handler = ({ col, op, search, db, nextPlaceholder }) => {
   else if (op.endsWith('%VALUE')) value = `%${search}`;
   else if (op.endsWith('VALUE%')) value = `${search}%`;
 
-  // TODO: fix this for all database
+  // Only Postgres supports the ::TEXT cast syntax; other databases use the column directly.
+  const castCol = db === DatabaseClientType.POSTGRES ? `${col}::TEXT` : col;
   return {
-    where: `${col}::TEXT ${includeNegative ? ' NOT ' : ' '}${syntax} ${nextPlaceholder()}`,
+    where: `${castCol} ${includeNegative ? ' NOT ' : ' '}${syntax} ${nextPlaceholder()}`,
     params: [value],
   };
 };
@@ -244,11 +248,13 @@ export function buildWhereClause<
     params.push(...p);
   };
 
-  // allowed operators theo DB (compile‑time)
+  // allowed operators theo DB — fall back to MySQL set when DB type not in map
   const allowedOps = new Set(
-    operatorSets[db as keyof typeof operatorSets].map(o =>
-      o.value.toUpperCase()
-    )
+    (
+      operatorSets[db as keyof typeof operatorSets] ??
+      operatorSets[DatabaseClientType.MYSQL] ??
+      []
+    ).map(o => o.value.toUpperCase())
   );
 
   filters.forEach(raw => {

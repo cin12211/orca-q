@@ -1,8 +1,16 @@
 <script setup lang="ts">
-defineProps<{
-  open: Boolean;
-  message: string;
-}>();
+withDefaults(
+  defineProps<{
+    open: boolean;
+    title?: string;
+    message: string;
+    actionLabel?: string;
+  }>(),
+  {
+    title: 'Query error!',
+    actionLabel: 'OK',
+  }
+);
 
 defineEmits(['update:open']);
 </script>
@@ -11,7 +19,7 @@ defineEmits(['update:open']);
   <Dialog :open="!!open" @update:open="$emit('update:open', $event)">
     <DialogContent class="w-[30vw] min-w-96">
       <DialogHeader class="pb-0">
-        <DialogTitle>Query error!</DialogTitle>
+        <DialogTitle>{{ title }}</DialogTitle>
       </DialogHeader>
 
       <DialogDescription
@@ -22,7 +30,7 @@ defineEmits(['update:open']);
 
       <DialogFooter class="pt-0">
         <Button @click="$emit('update:open', false)" class="w-full">
-          Oke
+          {{ actionLabel }}
         </Button>
       </DialogFooter>
     </DialogContent>

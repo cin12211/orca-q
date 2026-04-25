@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import { Icon } from '#components';
+import { EnvTagPicker } from '@/components/modules/environment-tag';
 import { Accordion } from '@/components/ui/accordion';
 import { Button } from '@/components/ui/button';
 import {
@@ -14,9 +15,15 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { DatabaseClientType } from '~/core/constants/database-client-type';
 import type { Connection } from '~/core/stores';
-import { databaseSupports } from '../constants';
+import {
+  databaseSupports,
+  isSqlite3ConnectionsEnabled,
+  isSqliteConnectionDisabled,
+} from '../constants';
 import { useConnectionForm } from '../hooks/useConnectionForm';
+import { EConnectionMethod } from '../types';
 import ConnectionSSHTunnel from './ConnectionSSHTunnel.vue';
 import ConnectionSSLConfig from './ConnectionSSLConfig.vue';
 import ConnectionStatusSection from './ConnectionStatusSection.vue';
@@ -40,6 +47,10 @@ const handleClose = () => {
 };
 
 const showPassword = ref(false);
+const config = useRuntimeConfig();
+const sqlite3ConnectionsEnabled = computed(() =>
+  isSqlite3ConnectionsEnabled(config.public.sqlite3ConnectionsEnabled)
+);
 
 const {
   step,
@@ -48,14 +59,22 @@ const {
   connectionMethod,
   connectionString,
   formData,
+  tagIds,
   testStatus,
+  testErrorMessage,
   handleNext,
   handleBack,
   handleTestConnection,
   handleCreateConnection,
   getDefaultPort,
   getConnectionPlaceholder,
+  availableConnectionMethods,
+  structuredTargetLabel,
+  structuredTargetPlaceholder,
+  canUseNetworkOptions,
+  canPickSqliteFile,
   isFormValid,
+  pickSqliteFile,
   resetForm,
 } = useConnectionForm({
   open: () => props.open,
@@ -67,12 +86,36 @@ const {
 });
 
 const databaseOptions = computed(() =>
-  databaseSupports.map(e => ({
-    ...e,
-    isActive: dbType.value === e.type,
-    onClick: () => (dbType.value = e.type),
-  }))
+  databaseSupports.map(e => {
+    const isSqliteDisabled = isSqliteConnectionDisabled(
+      e,
+      sqlite3ConnectionsEnabled.value
+    );
+
+    return {
+      ...e,
+      isSupport: isSqliteDisabled ? false : e.isSupport,
+      unsupportedLabel: isSqliteDisabled ? 'Disabled' : e.unsupportedLabel,
+      isActive: dbType.value === e.type,
+      onClick: () => (dbType.value = e.type),
+    };
+  })
 );
+
+const structuredTargetModel = computed({
+  get: () =>
+    dbType.value === DatabaseClientType.ORACLE
+      ? formData.serviceName
+      : formData.database,
+  set: value => {
+    if (dbType.value === DatabaseClientType.ORACLE) {
+      formData.serviceName = value;
+      return;
+    }
+
+    formData.database = value;
+  },
+});
 </script>
 
 <template>
@@ -101,32 +144,60 @@ const databaseOptions = computed(() =>
           <div class="flex-1 overflow-y-auto p-4 space-y-4">
             <Tabs v-model="connectionMethod" class="w-full">
               <TabsList
-                class="grid w-fit grid-cols-2"
+                class="grid w-fit"
+                :style="{
+                  gridTemplateColumns: `repeat(${availableConnectionMethods.length}, minmax(0, 1fr))`,
+                }"
                 id="tour-connection-method-tabs"
               >
-                <TabsTrigger value="string" class="cursor-pointer">
-                  <span id="tour-connection-string-tab">
+                <TabsTrigger
+                  v-for="method in availableConnectionMethods"
+                  :key="method"
+                  :value="method"
+                  class="cursor-pointer"
+                >
+                  <span
+                    v-if="method === EConnectionMethod.STRING"
+                    id="tour-connection-string-tab"
+                  >
                     Connection String
                   </span>
-                </TabsTrigger>
-                <TabsTrigger value="form" class="cursor-pointer">
-                  <span id="tour-connection-form-tab"> Connection Form </span>
+                  <span
+                    v-else-if="method === EConnectionMethod.FORM"
+                    id="tour-connection-form-tab"
+                  >
+                    Connection Form
+                  </span>
+                  <span v-else>Database File</span>
                 </TabsTrigger>
               </TabsList>
 
-              <div class="space-y-2 mt-2">
-                <Label for="connection-name" class="flex items-center gap-2">
-                  <Icon
-                    name="hugeicons:database"
-                    class="h-3.5 w-3.5 text-muted-foreground"
+              <div class="grid grid-cols-3 gap-3 mt-2">
+                <div class="col-span-2 space-y-2">
+                  <Label for="connection-name" class="flex items-center gap-2">
+                    <Icon
+                      name="hugeicons:database"
+                      class="h-3.5 w-3.5 text-muted-foreground"
+                    />
+                    Connection Name <span class="text-destructive">*</span>
+                  </Label>
+                  <Input
+                    id="connection-name"
+                    placeholder="My Database Connection"
+                    v-model="connectionName"
                   />
-                  Connection Name <span class="text-destructive">*</span>
-                </Label>
-                <Input
-                  id="connection-name"
-                  placeholder="My Database Connection"
-                  v-model="connectionName"
-                />
+                </div>
+
+                <div class="col-span-1 space-y-2">
+                  <Label class="flex items-center gap-2">
+                    <Icon
+                      name="hugeicons:tag-01"
+                      class="h-3.5 w-3.5 text-muted-foreground"
+                    />
+                    Environment Tags
+                  </Label>
+                  <EnvTagPicker v-model="tagIds" />
+                </div>
               </div>
 
               <TabsContent value="string" class="space-y-4 pt-4">
@@ -223,18 +294,19 @@ const databaseOptions = computed(() =>
                   </div>
 
                   <div class="space-y-2">
-                    <Label for="database"
-                      >Database <span class="text-destructive">*</span></Label
+                    <Label for="structured-target"
+                      >{{ structuredTargetLabel }}
+                      <span class="text-destructive">*</span></Label
                     >
                     <Input
-                      id="database"
-                      placeholder="my_database"
-                      v-model="formData.database"
+                      id="structured-target"
+                      :placeholder="structuredTargetPlaceholder"
+                      v-model="structuredTargetModel"
                     />
                   </div>
                 </div>
 
-                <div class="space-y-4">
+                <div v-if="canUseNetworkOptions" class="space-y-4">
                   <Accordion
                     type="single"
                     collapsible
@@ -252,9 +324,52 @@ const databaseOptions = computed(() =>
                   </Accordion>
                 </div>
               </TabsContent>
+
+              <TabsContent value="file" class="space-y-4 pt-4">
+                <div class="space-y-2">
+                  <Label for="file-path" class="flex items-center gap-2">
+                    <Icon
+                      name="hugeicons:file-01"
+                      class="h-3.5 w-3.5 text-muted-foreground"
+                    />
+                    SQLite File <span class="text-destructive">*</span>
+                  </Label>
+                  <div class="flex gap-2">
+                    <Input
+                      id="file-path"
+                      placeholder="/Users/you/data/app.sqlite"
+                      v-model="formData.filePath"
+                      :readonly="canPickSqliteFile"
+                    />
+                    <Button
+                      v-if="canPickSqliteFile"
+                      type="button"
+                      variant="outline"
+                      @click="pickSqliteFile"
+                    >
+                      Browse
+                    </Button>
+                  </div>
+                  <p class="text-xs text-muted-foreground">
+                    <template v-if="canPickSqliteFile">
+                      Choose a local SQLite database file from the desktop app.
+                    </template>
+                    <template v-else-if="sqlite3ConnectionsEnabled">
+                      Enter a SQLite file path that this app runtime can read.
+                      In hosted web deployments, this path is on the server.
+                    </template>
+                    <template v-else>
+                      SQLite file connections are disabled in this deployment.
+                    </template>
+                  </p>
+                </div>
+              </TabsContent>
             </Tabs>
 
-            <ConnectionStatusSection :test-status="testStatus" />
+            <ConnectionStatusSection
+              :test-status="testStatus"
+              :error-message="testErrorMessage"
+            />
           </div>
 
           <DialogFooter
