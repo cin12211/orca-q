@@ -5,6 +5,8 @@ on:
   push:
     tags:
       - 'v*'
+    branches:
+      - main
 
 permissions:
   contents: read
@@ -91,7 +93,7 @@ jobs:
           cache-to: type=registry,ref=${{ secrets.DOCKERHUB_USERNAME }}/orcaq:buildcache,mode=max
 
       - name: Docker release summary
-        run: echo "Docker image pushed: ${{ secrets.DOCKERHUB_USERNAME }}/orcaq:${{ needs.prepare-release.outputs.version }}"
+        run: echo "Docker image pushed ${{ secrets.DOCKERHUB_USERNAME }}/orcaq:${{ needs.prepare-release.outputs.version }}"
 
   npx-package-build-publish:
     name: Build and publish NPX package
@@ -106,7 +108,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          registry-url: https://registry.npmjs.org
+          registry-url: 'https://registry.npmjs.org'
 
       - name: Install Bun
         uses: oven-sh/setup-bun@v2
