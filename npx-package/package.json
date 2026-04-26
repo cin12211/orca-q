@@ -7,7 +7,7 @@
   "homepage": "https://orca-q.com/",
   "repository": {
     "type": "git",
-    "url": "https://github.com/cin12211/orca-q.git"
+    "url": "git+https://github.com/cin12211/orca-q.git"
   },
   "bugs": {
     "url": "https://github.com/cin12211/orca-q/issues"
