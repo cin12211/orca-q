@@ -117,7 +117,7 @@ jobs:
 
       - name: Publish to npm
         working-directory: npx-package
-        run: npm publish
+        run: npm publish --provenance
 
       - name: NPM release summary
         run: echo "Published npm package orcaq@${{ needs.prepare-release.outputs.version }}"
