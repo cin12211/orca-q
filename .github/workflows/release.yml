@@ -36,25 +36,9 @@ jobs:
         id: release
         shell: bash
         run: |
-          TAG="${GITHUB_REF_NAME}"
+          VERSION="$(node -p "require('./package.json').version")"
 
-          if [[ ! "$TAG" =~ ^v[0-9].* ]]; then
-            echo "Invalid release tag: $TAG"
-            exit 1
-          fi
-
-          VERSION="${TAG#v}"
-          PACKAGE_VERSION="$(node -p "require('./package.json').version")"
-
-          echo "Detected tag: $TAG"
           echo "Detected version: $VERSION"
-          echo "package.json version: $PACKAGE_VERSION"
-
-          if [ "$PACKAGE_VERSION" != "$VERSION" ]; then
-            echo "package.json version must match tag version."
-            exit 1
-          fi
-
           echo "tag=$TAG" >> "$GITHUB_OUTPUT"
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
 
