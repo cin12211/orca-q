@@ -3,7 +3,7 @@ import {
   ManagementErdDiagram,
   ManagementExplorer,
   ManagementSchemas,
-  ManagementExport,
+  ManagementDatabaseTools,
   ManagementUsersAndPermission,
   ManagementAgent,
 } from '#components';
@@ -34,8 +34,8 @@ watch(
     if (activityStore.activityActive === ActivityBarItemType.UsersRoles) {
       current.value = ManagementUsersAndPermission;
     }
-    if (activityStore.activityActive === ActivityBarItemType.DatabaseExport) {
-      current.value = ManagementExport;
+    if (activityStore.activityActive === ActivityBarItemType.DatabaseTools) {
+      current.value = ManagementDatabaseTools;
     }
     if (activityStore.activityActive === ActivityBarItemType.Agent) {
       current.value = ManagementAgent;

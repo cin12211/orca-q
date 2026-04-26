@@ -1,19 +1,12 @@
 /**
- * Database Export Types
- * Used for PostgreSQL database export functionality
+ * Database backup/import types shared by server jobs and the UI.
  */
 
 // ============================================================================
 // Export Configuration Types
 // ============================================================================
 
-/**
- * pg_dump output format
- * - plain: Plain SQL script (.sql)
- * - custom: Custom compressed format (.dump) - supports pg_restore
- * - tar: Tar archive format (.tar)
- */
-export type ExportFormat = 'plain' | 'custom' | 'tar';
+export type ExportFormat = 'native' | 'plain' | 'custom' | 'tar';
 
 /**
  * Export scope options
@@ -21,10 +14,11 @@ export type ExportFormat = 'plain' | 'custom' | 'tar';
 export type ExportScope = 'full' | 'schema-only' | 'data-only';
 
 /**
- * Export options for pg_dump
+ * Export options shared by all supported database families.
+ * Some options apply only when the selected native tool supports them.
  */
 export interface ExportOptions {
-  /** Output format */
+  /** Output format. Use native for the recommended vendor-specific artifact. */
   format: ExportFormat;
 
   /** Export scope (full, schema-only, data-only) */
@@ -52,6 +46,52 @@ export interface ExportOptions {
   createDb?: boolean;
 }
 
+export type DatabaseTransferOperation = 'export' | 'import';
+
+export type DatabaseTransferJobStatus =
+  | 'queued'
+  | 'running'
+  | 'completed'
+  | 'error';
+
+export type DatabaseTransferJobStage =
+  | 'queued'
+  | 'preparing'
+  | 'starting'
+  | 'dumping'
+  | 'restoring'
+  | 'downloading'
+  | 'finalizing'
+  | 'completed'
+  | 'error';
+
+export interface DatabaseTransferJobSnapshot {
+  jobId: string;
+  operation: DatabaseTransferOperation;
+  status: DatabaseTransferJobStatus;
+  stage: DatabaseTransferJobStage;
+  databaseType: string;
+  tool: string;
+  progress: number | null;
+  message: string;
+  bytesProcessed?: number;
+  bytesTotal?: number;
+  startedAt: string;
+  completedAt?: string;
+  duration?: number;
+  downloadReady?: boolean;
+  downloadFileName?: string;
+  downloadUrl?: string;
+  warnings?: string[];
+  error?: string;
+}
+
+export interface StartDatabaseTransferResponse {
+  jobId: string;
+  statusUrl: string;
+  downloadUrl?: string;
+}
+
 // ============================================================================
 // API Request/Response Types
 // ============================================================================
@@ -65,37 +105,19 @@ export interface ExportDatabaseRequest {
   options: ExportOptions;
 }
 
-/**
- * Response for database export (streaming)
- */
-export interface ExportDatabaseResponse {
-  success: boolean;
-  fileName: string;
-  fileSize?: number;
-  duration?: number;
-  error?: string;
-}
+export type ExportDatabaseResponse = StartDatabaseTransferResponse;
 
-/**
- * Export progress event
- */
-export interface ExportProgress {
-  status: 'starting' | 'dumping' | 'compressing' | 'complete' | 'error';
-  progress?: number; // 0-100
-  message?: string;
-}
+export type ExportProgress = DatabaseTransferJobSnapshot;
 
 // ============================================================================
 // Import Configuration Types
 // ============================================================================
 
-/**
- * Import format - matches pg_restore supported formats
- */
-export type ImportFormat = 'plain' | 'custom' | 'tar';
+export type ImportFormat = 'native' | 'plain' | 'custom' | 'tar';
 
 /**
- * Import options for pg_restore
+ * Import options. Unsupported flags are ignored by database families that do
+ * not expose matching native restore switches.
  */
 export interface ImportOptions {
   /** Target schema (optional - defaults to original) */
@@ -135,12 +157,4 @@ export interface ImportDatabaseRequest {
   // File is sent as multipart form data
 }
 
-/**
- * Response for database import
- */
-export interface ImportDatabaseResponse {
-  success: boolean;
-  message: string;
-  duration?: number;
-  error?: string;
-}
+export type ImportDatabaseResponse = StartDatabaseTransferResponse;

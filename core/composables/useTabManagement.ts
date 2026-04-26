@@ -1,5 +1,5 @@
 import { storeToRefs } from 'pinia';
-import type { RouteNameFromPath, RoutePathSchema } from '@typed-router/__paths';
+import type { RoutesNamesList } from '@typed-router/__routes';
 import { useWorkspaceConnectionRoute } from '~/core/composables/useWorkspaceConnectionRoute';
 import { useManagementConnectionStore } from '~/core/stores/managementConnectionStore';
 import { useExplorerFileStore } from '~/core/stores/useExplorerFileStore';
@@ -16,7 +16,7 @@ export interface OpenTabOptions {
   icon?: string;
   iconClass?: string;
   type: TabViewType;
-  routeName: RouteNameFromPath<RoutePathSchema>;
+  routeName: RoutesNamesList;
   routeParams?: Record<string, any>;
   metadata?: any;
 }
@@ -208,23 +208,60 @@ export const useTabManagement = () => {
     });
   };
 
+  const openSchemaDiffTab = async () => {
+    if (!workspaceId.value || !connectionId.value) return;
+
+    const selectedConnection = connectionStore.connections.find(
+      c => c.id === connectionId.value
+    );
+
+    const databaseName =
+      selectedConnection?.database || selectedConnection?.name || 'Schema Diff';
+
+    const tabId = `schema-diff-${connectionId.value}`;
+
+    await openTab({
+      id: tabId,
+      name: `${databaseName} · Schema Diff`,
+      icon: 'hugeicons:git-compare',
+      iconClass: 'text-primary',
+      type: TabViewType.SchemaDiff,
+      routeName: 'workspaceId-connectionId-database-tools-schema-diff',
+      routeParams: {
+        workspaceId: workspaceId.value,
+        connectionId: connectionId.value,
+      },
+      metadata: {
+        toolType: 'schema-diff',
+        module: 'database-tools',
+      },
+    });
+  };
+
   const openDatabaseToolsTab = async (params: {
-    type: 'export' | 'import';
     databaseName: string;
+    type?: 'export' | 'import';
   }) => {
     if (!workspaceId.value || !connectionId.value) return;
 
     const tabId = `database-tools-${connectionId.value}`;
-    // await openTab({
-    //   id: tabId,
-    //   name: `${params.databaseName} - Tools`,
-    //   icon: 'hugeicons:wrench',
-    //   type: TabViewType.DatabaseTools,
-    //   routeName: 'workspaceId-connectionId-management-export',
-    //   routeParams: {
-    //     name: params.type,
-    //   },
-    // });
+    const toolTab = params.type ?? 'export';
+
+    await openTab({
+      id: tabId,
+      name: `${params.databaseName} · Backup & Restore`,
+      icon: 'hugeicons:database-import',
+      type: TabViewType.DatabaseTools,
+      routeName: 'workspaceId-connectionId-database-tools-backup-restore-name',
+      routeParams: {
+        name: toolTab,
+      },
+      metadata: {
+        toolType: 'backup-restore',
+        backupRestoreTab: toolTab,
+        module: 'database-tools',
+      },
+    });
   };
 
   return {
@@ -235,6 +272,7 @@ export const useTabManagement = () => {
     openSchemaItemTab,
     openUserPermissionsTab,
     openInstanceInsightsTab,
+    openSchemaDiffTab,
     openDatabaseToolsTab,
   };
 };

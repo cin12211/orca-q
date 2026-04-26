@@ -25,6 +25,7 @@ const props = defineProps<{
   disabled?: boolean;
   connections: Connection[];
   connection?: Connection;
+  skipStrictModeConnections?: boolean;
 }>();
 
 const open = ref(false);
@@ -57,7 +58,7 @@ const isStrictModeConnection = (connection: Connection) => {
 
 const isConnectionDisabled = (connection: Connection) => {
   return (
-    isStrictModeConnection(connection) ||
+    (!props.skipStrictModeConnections && isStrictModeConnection(connection)) ||
     isSqliteConnectionDisabled(connection, sqlite3ConnectionsEnabled.value)
   );
 };
@@ -77,6 +78,12 @@ const onChangeConnection = (connectionId: string) => {
 
   emit('update:connectionId', connectionId);
 };
+
+const selectedConnectionTags = computed(() => {
+  return props.connection
+    ? tagStore.getTagsByIds(props.connection.tagIds ?? [])
+    : [];
+});
 </script>
 <template>
   <CreateConnectionModal
@@ -94,7 +101,7 @@ const onChangeConnection = (connectionId: string) => {
     v-model:open="open"
   >
     <SelectTrigger
-      :class="cn(props.class, ' w-fit max-w-[12rem] cursor-pointer')"
+      :class="cn('cursor-pointer font-normal', props.class)"
       :disabled="disabled"
       size="sm"
     >
@@ -103,7 +110,18 @@ const onChangeConnection = (connectionId: string) => {
           :is="getDatabaseSupportByType(connection.type)?.icon"
           class="size-4! min-w-4!"
         />
-        {{ connection?.name }}
+        <span class="truncate">{{ connection?.name }}</span>
+
+        <div
+          v-if="selectedConnectionTags.length"
+          class="flex flex-shrink-0 items-center gap-1 overflow-hidden"
+        >
+          <EnvTagBadge
+            v-for="tag in selectedConnectionTags"
+            :key="tag.id"
+            :tag="tag"
+          />
+        </div>
       </div>
       <div class="opacity-50" v-else>Select connection</div>
     </SelectTrigger>

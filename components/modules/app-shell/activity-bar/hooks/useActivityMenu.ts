@@ -32,13 +32,13 @@ export const useActivityMenu = () => {
       icon: 'hugeicons:user-shield-01',
       isActive: activityStore.activityActive === ActivityBarItemType.UsersRoles,
     },
-    // {
-    //   id: ActivityBarItemType.DatabaseExport,
-    //   title: 'Export Database',
-    //   icon: 'hugeicons:file-export',
-    //   isActive:
-    //     activityStore.activityActive === ActivityBarItemType.DatabaseExport,
-    // },
+    {
+      id: ActivityBarItemType.DatabaseTools,
+      title: 'Database Tools',
+      icon: 'hugeicons:block-game',
+      isActive:
+        activityStore.activityActive === ActivityBarItemType.DatabaseTools,
+    },
     {
       id: ActivityBarItemType.Agent,
       title: 'AI Agent',

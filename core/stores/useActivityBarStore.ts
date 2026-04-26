@@ -6,7 +6,7 @@ export enum ActivityBarItemType {
   Schemas = 'Schemas',
   ErdDiagram = 'ERDiagram',
   UsersRoles = 'UsersRoles',
-  DatabaseExport = 'DatabaseExport',
+  DatabaseTools = 'DatabaseTools',
   Agent = 'Agent',
 }
 

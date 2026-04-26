@@ -15,6 +15,7 @@ export enum TabViewType {
   UserPermissions = 'UserPermissions',
   DatabaseTools = 'DatabaseTools',
   InstanceInsights = 'InstanceInsights',
+  SchemaDiff = 'SchemaDiff',
   Connection = 'Connection',
   Explorer = 'Explorer',
   Export = 'Export',
