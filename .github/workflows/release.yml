@@ -100,6 +100,9 @@ jobs:
 
       - name: Install dependencies
         run: bun install --frozen-lockfile
+        
+      - name: Update npm to latest version for OIDC support
+        run: npm install -g npm@latest
 
       - name: Build NPX package bundle
         run: npm run npx:build
