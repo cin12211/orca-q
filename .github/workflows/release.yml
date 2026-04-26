@@ -3,8 +3,6 @@ name: Tag Release Pipeline
 on:
   workflow_dispatch:
   push:
-    tags:
-      - 'v*'
     branches:
       - main
 
