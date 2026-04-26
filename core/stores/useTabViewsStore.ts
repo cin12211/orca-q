@@ -1,7 +1,7 @@
 import { defineStore, storeToRefs } from 'pinia';
 import { ref } from 'vue';
 import { reorder } from '@atlaskit/pragmatic-drag-and-drop/reorder';
-import type { RouteNameFromPath, RoutePathSchema } from '@typed-router/__paths';
+import type { RoutesNamesList } from '@typed-router/__routes';
 import { useWorkspaceConnectionRoute } from '~/core/composables/useWorkspaceConnectionRoute';
 import { createStorageApis } from '~/core/storage';
 import { useWSStateStore } from './useWSStateStore';
@@ -23,6 +23,7 @@ export enum TabViewType {
   UserPermissions = 'UserPermissions',
   DatabaseTools = 'DatabaseTools',
   InstanceInsights = 'InstanceInsights',
+  SchemaDiff = 'SchemaDiff',
   Connection = 'Connection',
   Explorer = 'Explorer',
   Export = 'Export',
@@ -86,7 +87,7 @@ export type TabView = {
   icon: string;
   iconClass?: string;
   type: TabViewType;
-  routeName: RouteNameFromPath<RoutePathSchema>;
+  routeName: RoutesNamesList;
   routeParams?: Record<string, string | number>;
   metadata?: TabMetadata;
 };

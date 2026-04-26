@@ -1,101 +1,11 @@
-/**
- * API: Import Database
- * Uses pg_restore or psql to import PostgreSQL database backup
- */
-import { exec } from 'node:child_process';
-import { promises as fs } from 'node:fs';
-import { tmpdir } from 'node:os';
-import { join } from 'node:path';
-import { promisify } from 'node:util';
-import type { ImportOptions } from '~/core/types';
-
-const execAsync = promisify(exec);
-
-/**
- * Parse connection string to individual components
- */
-const parseConnectionString = (connString: string) => {
-  const url = new URL(connString);
-  return {
-    host: url.hostname,
-    port: url.port || '5432',
-    database: url.pathname.slice(1),
-    username: url.username,
-    password: url.password,
-  };
-};
-
-/**
- * Determine file type from extension
- */
-const getFileType = (filename: string): 'plain' | 'custom' | 'tar' => {
-  const ext = filename.toLowerCase().split('.').pop();
-  switch (ext) {
-    case 'sql':
-      return 'plain';
-    case 'tar':
-      return 'tar';
-    case 'dump':
-    default:
-      return 'custom';
-  }
-};
-
-/**
- * Build pg_restore command arguments
- */
-const buildRestoreArgs = (
-  filePath: string,
-  conn: ReturnType<typeof parseConnectionString>,
-  options: ImportOptions
-): string[] => {
-  const args: string[] = [
-    '-h',
-    conn.host,
-    '-p',
-    conn.port,
-    '-U',
-    conn.username,
-    '-d',
-    conn.database,
-  ];
-
-  if (options.noOwner) args.push('--no-owner');
-  if (options.noPrivileges) args.push('--no-privileges');
-  if (options.clean) args.push('--clean');
-  if (options.createDb) args.push('--create');
-  if (options.dataOnly) args.push('--data-only');
-  if (options.schemaOnly) args.push('--schema-only');
-  if (options.exitOnError) args.push('--exit-on-error');
-  if (options.jobs && options.jobs > 1) {
-    args.push('-j', String(options.jobs));
-  }
-
-  args.push(filePath);
-
-  return args;
-};
-
-/**
- * Build psql command arguments for plain SQL files
- */
-const buildPsqlArgs = (
-  filePath: string,
-  conn: ReturnType<typeof parseConnectionString>
-): string[] => {
-  return [
-    '-h',
-    conn.host,
-    '-p',
-    conn.port,
-    '-U',
-    conn.username,
-    '-d',
-    conn.database,
-    '-f',
-    filePath,
-  ];
-};
+import type { ISSLConfig, ISSHConfig } from '~/components/modules/connection';
+import { DatabaseClientType } from '~/core/constants/database-client-type';
+import type {
+  ImportOptions,
+  StartDatabaseTransferResponse,
+} from '~/core/types';
+import { createDatabaseHttpError } from '~/server/infrastructure/database/adapters/shared/error';
+import { startNativeImportJob } from '~/server/infrastructure/database/backup/native-backup-jobs';
 
 export default defineEventHandler(async event => {
   // Read multipart form data
@@ -115,9 +25,13 @@ export default defineEventHandler(async event => {
   let username = '';
   let password = '';
   let database = '';
+  let serviceName = '';
+  let filePath = '';
+  let type: DatabaseClientType | undefined;
   let options: ImportOptions = {};
   let fileData: Buffer | null = null;
-  let fileName = 'import.dump';
+  let ssl: ISSLConfig | undefined;
+  let ssh: ISSHConfig | undefined;
 
   for (const field of formData) {
     if (field.name === 'dbConnectionString') {
@@ -132,19 +46,43 @@ export default defineEventHandler(async event => {
       password = field.data.toString();
     } else if (field.name === 'database') {
       database = field.data.toString();
+    } else if (field.name === 'serviceName') {
+      serviceName = field.data.toString();
+    } else if (field.name === 'filePath') {
+      filePath = field.data.toString();
+    } else if (field.name === 'type') {
+      type = field.data.toString() as DatabaseClientType;
     } else if (field.name === 'options') {
       try {
         options = JSON.parse(field.data.toString());
       } catch {
         options = {};
       }
+    } else if (field.name === 'ssl') {
+      try {
+        ssl = JSON.parse(field.data.toString()) as ISSLConfig;
+      } catch {
+        ssl = undefined;
+      }
+    } else if (field.name === 'ssh') {
+      try {
+        ssh = JSON.parse(field.data.toString()) as ISSHConfig;
+      } catch {
+        ssh = undefined;
+      }
     } else if (field.name === 'file' && field.filename) {
       fileData = field.data;
-      fileName = field.filename;
     }
   }
 
-  if (!dbConnectionString && !host) {
+  if (!type) {
+    throw createError({
+      statusCode: 400,
+      statusMessage: 'Database type is required for import.',
+    });
+  }
+
+  if (!dbConnectionString && !host && !filePath) {
     throw createError({
       statusCode: 400,
       statusMessage: 'Database connection details are required',
@@ -158,110 +96,32 @@ export default defineEventHandler(async event => {
     });
   }
 
-  // Save file to temp directory
-  const tempFilePath = join(tmpdir(), `import_${Date.now()}_${fileName}`);
+  const safeUploadName = (
+    formData.find(field => field.name === 'file')?.filename || 'backup.sql'
+  ).replace(/[^a-zA-Z0-9._-]+/g, '-');
 
   try {
-    await fs.writeFile(tempFilePath, fileData);
-
-    // Parse connection string or use form details
-    let conn: {
-      host: string;
-      port: string;
-      database: string;
-      username: string;
-      password: string;
-    };
-
-    if (dbConnectionString) {
-      conn = parseConnectionString(dbConnectionString);
-    } else {
-      conn = {
-        host,
-        port,
-        database,
-        username,
-        password,
-      };
-    }
-
-    // Set PGPASSWORD environment variable
-    const env = {
-      ...process.env,
-      PGPASSWORD: conn.password,
-    };
-
-    const startTime = Date.now();
-    const fileType = getFileType(fileName);
-
-    let command: string;
-    let args: string[];
-
-    if (fileType === 'plain') {
-      // Use psql for plain SQL files
-      args = buildPsqlArgs(tempFilePath, conn);
-      command = `psql ${args.join(' ')}`;
-    } else {
-      // Use pg_restore for custom and tar formats
-      args = buildRestoreArgs(tempFilePath, conn, options);
-      command = `pg_restore ${args.join(' ')}`;
-    }
-
-    try {
-      await execAsync(command, { env, maxBuffer: 50 * 1024 * 1024 }); // 50MB buffer
-    } catch (execError: any) {
-      // pg_restore may return non-zero exit code even on partial success
-      // Check if it's a critical error
-      const stderr = execError.stderr || '';
-      const stdout = execError.stdout || '';
-
-      // If exitOnError is set and there's an error, throw
-      if (options.exitOnError && stderr) {
-        throw new Error(stderr);
-      }
-
-      // Log warning but continue if there's some output
-      if (stderr && !stdout) {
-        console.warn('pg_restore warning:', stderr);
-      }
-    }
-
-    const duration = Date.now() - startTime;
-
-    // Clean up temp file
-    try {
-      await fs.unlink(tempFilePath);
-    } catch {
-      // Ignore cleanup errors
-    }
-
-    return {
-      success: true,
-      message: `Database restored successfully in ${(duration / 1000).toFixed(1)}s`,
-      duration,
-    };
+    return (await startNativeImportJob({
+      dbConnectionString,
+      host,
+      port,
+      username,
+      password,
+      database,
+      serviceName,
+      filePath,
+      type,
+      options,
+      ssl,
+      ssh,
+      fileData,
+      uploadFileName: `${Date.now()}-${safeUploadName}`,
+    })) satisfies StartDatabaseTransferResponse;
   } catch (error) {
-    // Clean up temp file on error
-    try {
-      await fs.unlink(tempFilePath);
-    } catch {
-      // Ignore cleanup errors
+    if (error && typeof error === 'object' && 'statusCode' in error) {
+      throw error;
     }
 
-    const errorMessage =
-      error instanceof Error ? error.message : 'Unknown error occurred';
-
-    // Check for common errors
-    if (errorMessage.includes('pg_restore') || errorMessage.includes('psql')) {
-      throw createError({
-        statusCode: 500,
-        statusMessage: `Restore error: ${errorMessage}. Make sure pg_restore/psql is installed.`,
-      });
-    }
-
-    throw createError({
-      statusCode: 500,
-      statusMessage: `Import failed: ${errorMessage}`,
-    });
+    throw createDatabaseHttpError(type, error);
   }
 });

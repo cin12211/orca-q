@@ -93,9 +93,14 @@ onBeforeUnmount(() => {
       :color="'repeating-linear-gradient(to right, #ffffff 0%, #000000 100%)'"
     />
     <TooltipProvider :delay-duration="DEFAULT_DEBOUNCE_INPUT">
-      <NuxtLayout>
-        <NuxtPage />
-      </NuxtLayout>
+      <div class="flex h-screen w-screen flex-col overflow-hidden">
+        <DownloadBanner />
+        <div class="flex-1 min-h-0">
+          <NuxtLayout>
+            <NuxtPage />
+          </NuxtLayout>
+        </div>
+      </div>
     </TooltipProvider>
 
     <CommandPaletteView />

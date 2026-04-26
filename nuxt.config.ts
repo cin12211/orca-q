@@ -90,6 +90,11 @@ export default defineNuxtConfig({
       isDev: process.env.NODE_ENV !== 'production',
       sqlite3ConnectionsEnabled,
       version: pkg.version,
+      showDownloadBanner:
+        process.env.NUXT_PUBLIC_SHOW_DOWNLOAD_BANNER === 'true',
+      downloadLink:
+        process.env.NUXT_PUBLIC_DOWNLOAD_LINK ??
+        'https://github.com/cin12211/orca-q/releases',
     },
   },
 

@@ -8,6 +8,8 @@ export enum LocalStorageKey {
   HAS_SEEN_TOUR = 'orcaq-has-seen-tour',
   /** Expanded node IDs for the agent history sidebar tree. Value: JSON string[]. */
   AGENT_HISTORY_TREE = 'agent-history-tree',
+  /** Whether the download banner has been dismissed. Value: 'true'|'false'. */
+  DOWNLOAD_BANNER_DISMISSED = 'orcaq_download_banner_dismissed',
 }
 
 /** Manages all localStorage interactions with typed keys and dynamic key builders. */

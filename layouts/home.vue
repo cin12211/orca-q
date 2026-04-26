@@ -43,7 +43,7 @@ const githubLink = config.public.githubLink;
     </div>
   </div>
 
-  <div class="h-screen overflow-y-auto flex flex-col">
+  <div class="h-full overflow-y-auto flex flex-col">
     <div
       v-if="!isAppVersion"
       class="flex items-center justify-between border-b border-border py-2 px-2"

@@ -1,3 +1,4 @@
+import bash from '@shikijs/langs/bash';
 import html from '@shikijs/langs/html';
 import json from '@shikijs/langs/json';
 import markdown from '@shikijs/langs/markdown';
@@ -24,7 +25,8 @@ export type SupportedLanguage =
   | 'markdown'
   | 'xml'
   | 'yaml'
-  | 'html';
+  | 'html'
+  | 'bash';
 
 // Map our language names to Shiki language IDs
 const LANGUAGE_MAP: Record<SupportedLanguage, string> = {
@@ -34,6 +36,7 @@ const LANGUAGE_MAP: Record<SupportedLanguage, string> = {
   xml: 'xml',
   yaml: 'yaml',
   html: 'html',
+  bash: 'bash',
 };
 
 /**
@@ -66,7 +69,7 @@ export function useCodeHighlighter() {
     try {
       const highlighterInstance = await createHighlighterCore({
         themes: [catppuccinLatte, catppuccinMocha],
-        langs: [plsql, json, markdown, xml, yaml, html],
+        langs: [plsql, json, markdown, xml, yaml, html, bash],
         engine: createJavaScriptRegexEngine(),
       });
 

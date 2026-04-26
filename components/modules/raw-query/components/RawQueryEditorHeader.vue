@@ -87,7 +87,7 @@ const openConfigModal = () => {
             :connections="connections"
             :connection="connection"
             :disabled="disableConnectionSwitch"
-            class="w-16 h-6! px-1.5"
+            class="w-fit h-6! px-1.5"
             :workspaceId="workspaceId"
           />
         </TooltipTrigger>

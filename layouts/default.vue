@@ -67,7 +67,7 @@ useHotkeys([
     @layout="appConfigStore.onResizeLayout($event)"
   >
     <div
-      class="h-screen w-screen flex flex-col flex-1 max-h-screen overflow-y-auto"
+      class="h-full w-screen flex flex-col flex-1 max-h-screen overflow-y-auto"
       :style="chatUiVars"
     >
       <TabViewContainer :primarySideBarWidth="primarySideBarWidth" />

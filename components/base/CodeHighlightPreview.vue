@@ -1,6 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue';
-import { vAutoAnimate } from '@formkit/auto-animate/vue';
+import { computed } from 'vue';
 import type { DecorationItem } from 'shiki';
 import { Button } from '~/components/ui/button';
 import {
