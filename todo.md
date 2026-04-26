@@ -94,3 +94,4 @@ i want to create js consant to maping data type not stick in query, check in all
 [x] add setting gloabl for table allow user setting sort null first , null last or null unset, show in gloal setting and qucik query bar
 [ ] in raw quick query -> function , when i updat function / procidure somehow i got error , but i copy to raw query -> this worked fine -> need to check why this happen
 [ ] enhance load schema if database have multiple schema (use wait 20- 50s)
+[ ] làm lại chuẩn chị docs, hướng dẫn cho agents 
