@@ -3,7 +3,7 @@
 </div>
 
 <div align="center">
-  <h2>OrcaQ - Next Generation database editor.</h2>
+  <h3>OrcaQ - Next Generation database editor.</h3>
 </div>
 
 <div align="center">
