@@ -27,12 +27,13 @@
 
 ## Installation
 
-#### <img src="https://api.iconify.design/streamline-plump-color:computer-pc-desktop.svg" width="22" alt="Desktop App icon" /> Desktop App
+#### <img src="https://api.iconify.design/hugeicons:laptop.svg" width="22" alt="Desktop App icon" /> Desktop App
+
+The recommended to experience the full capabilities
 
 Download the latest build from [GitHub Releases](https://github.com/cin12211/orca-q/releases/latest).
 
-- Recommended if you need SQLite file connections, auto-update, recent connections, or multi-window support
-- Current release artifacts: `macOS` (`.dmg`, `.zip`) and `Linux` (`.AppImage`, `.deb`)
+**Available for:** `macOS` (`.dmg`, `.zip`) · `Linux` (`.AppImage`, `.deb`) · `Windows` comming soon.
 
 #### <img src="https://api.iconify.design/logos:npm-icon.svg" width="22" alt="NPX icon" /> NPX
 
