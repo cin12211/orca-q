@@ -17,11 +17,13 @@
 
 </div>
 
-<img src="https://orca-q.com/images/editor-preview.png" style="border: 1px solid #ccc; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.2);" >
+
 
 ## Overview
 
 **OrcaQ** is a modern database editor for managing, querying, and exploring PostgreSQL, MySQL, MariaDB, Oracle, and desktop SQLite data in a fast, intuitive, and secure way.
+
+<img src="https://orca-q.com/images/editor-preview.png" style="border: 1px solid #ccc; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.2);" >
 
 ## Installation
 
