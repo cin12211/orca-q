@@ -2,13 +2,9 @@
 <img src="https://orca-q.com/images/logo.png" align="center" width="200"> 
 </div>
 
-
 <div align="center">
-
-# OrcaQ - Next Generation database editor
-
+  <h2>OrcaQ - Next Generation database editor.</h2>
 </div>
-
 
 <div align="center">
 
