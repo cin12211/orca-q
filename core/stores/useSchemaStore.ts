@@ -2,6 +2,7 @@ import { defineStore, storeToRefs } from 'pinia';
 import { ref, computed } from 'vue';
 import { getConnectionParams } from '@/core/helpers/connection-helper';
 import { useWorkspaceConnectionRoute } from '~/core/composables/useWorkspaceConnectionRoute';
+import { isSqlFamilyConnection } from '~/core/constants/connection-capabilities';
 import type {
   ReservedTableSchemas,
   TableIndex,
@@ -25,6 +26,25 @@ export type { Schema };
 
 export const PUBLIC_SCHEMA_ID = 'public';
 const SCHEMA_LOAD_WAIT_TIMEOUT_MS = 5000;
+
+function hasConnectionTransport(connection?: Connection) {
+  if (!connection) {
+    return false;
+  }
+
+  return Boolean(
+    connection.connectionString ||
+      connection.host ||
+      connection.filePath ||
+      (connection.providerKind && connection.managedSqlite)
+  );
+}
+
+function supportsSchemaMetadata(connection?: Connection) {
+  return (
+    hasConnectionTransport(connection) && isSqlFamilyConnection(connection)
+  );
+}
 
 export type SchemaLoadStatus =
   | 'idle'
@@ -135,8 +155,7 @@ export const useSchemaStore = defineStore(
       connectionId: string;
       connection?: Connection;
     }) => {
-      if (!connId || (!connection?.connectionString && !connection?.host))
-        return;
+      if (!connId || !supportsSchemaMetadata(connection)) return;
 
       if (reservedSchemas.value[connId]?.length) return;
 
@@ -167,12 +186,16 @@ export const useSchemaStore = defineStore(
       connection?: Connection;
       isRefresh?: boolean;
     }) => {
-      if (
-        !connId ||
-        !wsId ||
-        (!connection?.connectionString && !connection?.host)
-      )
+      if (!connId || !wsId || !supportsSchemaMetadata(connection)) {
+        upsertSchemaLoadSession(connId, {
+          status: 'idle',
+          statusMessage:
+            'Schema metadata is only available for SQL connections.',
+          errorMessage: undefined,
+          schemaCount: undefined,
+        });
         return;
+      }
 
       if (isRefresh) {
         delete schemas.value[connId];

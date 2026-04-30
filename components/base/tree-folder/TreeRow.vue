@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, nextTick, watch } from 'vue';
+import { computed, nextTick, ref, watch } from 'vue';
 import { Icon } from '#components';
 import type { FileNode, DropPosition } from './types';
 
@@ -324,6 +324,7 @@ defineExpose({
 
 .tree-row__name {
   flex: 1;
+  min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;

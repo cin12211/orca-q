@@ -15,11 +15,13 @@ import { useSqlEditorExtensions } from './useSqlEditorExtensions';
 export function useRawQueryEditor({
   fileVariables,
   connection,
+  redisDatabaseIndex,
   fieldDefs,
   beforeExecute,
 }: {
   fileVariables: Ref<string>;
   connection: Ref<Connection | undefined>;
+  redisDatabaseIndex?: Ref<number>;
   fieldDefs: Ref<FieldDef[]>;
   beforeExecute?: () => Promise<boolean>;
 }) {
@@ -41,6 +43,7 @@ export function useRawQueryEditor({
   const queryExecution = useQueryExecution({
     getEditorView,
     connection,
+    redisDatabaseIndex,
     fileVariables,
     fieldDefs,
     resultTabs,

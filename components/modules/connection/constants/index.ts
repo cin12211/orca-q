@@ -15,6 +15,7 @@ export interface IDBSupport {
   isSupport: boolean;
   isBeta?: boolean;
   unsupportedLabel?: string;
+  description?: string;
 }
 
 export const databaseSupports: IDBSupport[] = [
@@ -23,6 +24,7 @@ export const databaseSupports: IDBSupport[] = [
     name: 'PostgreSQL',
     icon: h(Icon, { name: 'logos:postgresql' }),
     isSupport: true,
+    description: 'Relational SQL workflows',
   },
   {
     type: DatabaseClientType.MYSQL,
@@ -30,6 +32,7 @@ export const databaseSupports: IDBSupport[] = [
     icon: h(Icon, { name: 'logos:mysql' }),
     isSupport: true,
     isBeta: true,
+    description: 'Relational SQL workflows',
   },
   {
     type: DatabaseClientType.MARIADB,
@@ -37,6 +40,7 @@ export const databaseSupports: IDBSupport[] = [
     icon: h(Icon, { name: 'logos:mariadb-icon' }),
     isSupport: true,
     isBeta: true,
+    description: 'Relational SQL workflows',
   },
   {
     type: DatabaseClientType.ORACLE,
@@ -44,6 +48,7 @@ export const databaseSupports: IDBSupport[] = [
     icon: h(Icon, { name: 'simple-icons:oracle', class: 'text-red-500' }),
     isSupport: true,
     isBeta: true,
+    description: 'Relational SQL workflows',
   },
   {
     type: DatabaseClientType.SQLITE3,
@@ -51,20 +56,15 @@ export const databaseSupports: IDBSupport[] = [
     icon: h(Icon, { name: 'file-icons:sqlite' }),
     isSupport: true,
     isBeta: true,
-  },
-  {
-    type: DatabaseClientType.MONGODB,
-    name: 'MongoDB',
-    icon: h(Icon, { name: 'logos:mongodb-icon' }),
-    isSupport: false,
-    unsupportedLabel: 'Coming soon',
+    description: 'Local file, Cloudflare D1, Turso',
   },
   {
     type: DatabaseClientType.REDIS,
     name: 'Redis',
     icon: h(Icon, { name: 'logos:redis' }),
-    isSupport: false,
-    unsupportedLabel: 'Coming soon',
+    isSupport: true,
+    isBeta: true,
+    description: 'Browser, workbench, analysis',
   },
   {
     type: DatabaseClientType.MSSQL,
@@ -87,7 +87,6 @@ export const DEFAULT_DB_PORTS: Record<string, string> = {
   [DatabaseClientType.MYSQL]: '3306',
   [DatabaseClientType.MARIADB]: '3306',
   [DatabaseClientType.MYSQL2]: '3306',
-  [DatabaseClientType.MONGODB]: '27017',
   [DatabaseClientType.REDIS]: '6379',
   [DatabaseClientType.MSSQL]: '1433',
   [DatabaseClientType.ORACLE]: '1521',

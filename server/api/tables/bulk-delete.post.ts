@@ -1,10 +1,25 @@
 import { defineEventHandler, readBody, createError } from 'h3';
 import { DatabaseClientType } from '~/core/constants/database-client-type';
+import type {
+  EConnectionProviderKind,
+  IManagedSqliteConfig,
+} from '~/core/types/entities/connection.entity';
 import { createTableAdapter } from '~/server/infrastructure/database/adapters/tables';
 
 export default defineEventHandler(async event => {
-  const body = await readBody(event);
-  const { sqlDeleteStatements, dbConnectionString } = body;
+  const body = await readBody<{
+    sqlDeleteStatements: string[];
+    dbConnectionString: string;
+    host?: string;
+    port?: string;
+    username?: string;
+    password?: string;
+    database?: string;
+    type?: DatabaseClientType;
+    providerKind?: EConnectionProviderKind;
+    managedSqlite?: IManagedSqliteConfig;
+  }>(event);
+  const { sqlDeleteStatements } = body;
 
   if (!sqlDeleteStatements?.length || !Array.isArray(sqlDeleteStatements)) {
     throw createError({
@@ -25,8 +40,9 @@ export default defineEventHandler(async event => {
     }
   }
 
-  const adapter = await createTableAdapter(DatabaseClientType.POSTGRES, {
-    dbConnectionString,
-  });
+  const adapter = await createTableAdapter(
+    body.type || DatabaseClientType.POSTGRES,
+    body
+  );
   return await adapter.executeBulkDelete(sqlDeleteStatements);
 });

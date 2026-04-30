@@ -38,7 +38,7 @@ const items = [
       :key="item.kbd"
       class="flex items-center gap-1.5"
     >
-      <Kbd class="text-[10px]">{{ item.kbd }}</Kbd>
+      <Kbd class="text-xxs">{{ item.kbd }}</Kbd>
       <span>{{ item.tooltipLabel }}</span>
     </div>
   </div>

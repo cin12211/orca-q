@@ -2,6 +2,10 @@ import { defineEventHandler, readBody } from 'h3';
 import type { ISSLConfig, ISSHConfig } from '~/components/modules/connection';
 import { DatabaseClientType } from '~/core/constants/database-client-type';
 import type { RawQueryResultWithMetadata } from '~/core/types';
+import type {
+  EConnectionProviderKind,
+  IManagedSqliteConfig,
+} from '~/core/types/entities/connection.entity';
 import { createQueryAdapter } from '~/server/infrastructure/database/adapters/query';
 import { createDatabaseHttpError } from '~/server/infrastructure/database/adapters/shared/error';
 
@@ -16,7 +20,11 @@ export default defineEventHandler(
         username?: string;
         password?: string;
         database?: string;
+        serviceName?: string;
+        filePath?: string;
         type?: DatabaseClientType;
+        providerKind?: EConnectionProviderKind;
+        managedSqlite?: IManagedSqliteConfig;
         params: any[] | Record<string, any>;
         ssl?: ISSLConfig;
         ssh?: ISSHConfig;
@@ -31,6 +39,10 @@ export default defineEventHandler(
           username: body.username,
           password: body.password,
           database: body.database,
+          serviceName: body.serviceName,
+          filePath: body.filePath,
+          providerKind: body.providerKind,
+          managedSqlite: body.managedSqlite,
           ssl: body.ssl,
           ssh: body.ssh,
         }

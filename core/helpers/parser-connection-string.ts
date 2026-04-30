@@ -1,7 +1,19 @@
 import { DatabaseClientType } from '../constants';
+import {
+  resolveConnectionFamily,
+  resolveConnectionProviderKind,
+} from '../constants/connection-capabilities';
+import {
+  EConnectionFamily,
+  EConnectionMethod,
+  EConnectionProviderKind,
+  EManagedSqliteProvider,
+} from '../types/entities/connection.entity';
 
 export interface ParsedConnection {
   type: DatabaseClientType;
+  providerKind: EConnectionProviderKind;
+  family: EConnectionFamily;
   host: string;
   port: number;
   username?: string;
@@ -22,7 +34,6 @@ const DEFAULT_PORTS: Partial<Record<DatabaseClientType, number>> = {
   [DatabaseClientType.MYSQL]: 3306,
   [DatabaseClientType.MARIADB]: 3306,
   [DatabaseClientType.MYSQL2]: 3306,
-  [DatabaseClientType.MONGODB]: 27017,
   [DatabaseClientType.REDIS]: 6379,
   [DatabaseClientType.MSSQL]: 1433,
   [DatabaseClientType.ORACLE]: 1521,
@@ -53,23 +64,26 @@ function maskPassword(connStr: string, password?: string): string {
 }
 
 // ─────────────────────────────────────────────
-// URI-based parsers  (PostgreSQL · MySQL · MongoDB · Redis)
+// URI-based parsers  (PostgreSQL · MySQL · Redis)
 // ─────────────────────────────────────────────
 
 /**
  * Parses URI-style connection strings:
  *   scheme://[user[:password]@]host[:port][/database][?options]
  *
- * Handles mongodb+srv, postgres aliases, mysql2, rediss, etc.
+ * Handles postgres aliases, mysql2, rediss, etc.
  */
-function parseUri(raw: string, type: DatabaseClientType): ParsedConnection {
+function parseUri(
+  raw: string,
+  type: DatabaseClientType,
+  providerKindHint?: EConnectionProviderKind
+): ParsedConnection {
   // Normalise to a URL the built-in parser can handle
   const url = new URL(raw);
 
   const username = url.username ? decodeURIComponent(url.username) : undefined;
   const password = url.password ? decodeURIComponent(url.password) : undefined;
 
-  // MongoDB can have multiple hosts (replica set) – use the first
   const rawHost = url.hostname || 'localhost';
   const host = rawHost.split(',')[0].trim();
 
@@ -82,9 +96,33 @@ function parseUri(raw: string, type: DatabaseClientType): ParsedConnection {
       : undefined;
 
   const options = parseQueryString(url.search.slice(1));
+  const providerKind = resolveConnectionProviderKind({
+    type,
+    method: providerKindHint
+      ? EConnectionMethod.MANAGED
+      : EConnectionMethod.STRING,
+    providerKind: providerKindHint,
+    managedSqlite:
+      providerKindHint === EConnectionProviderKind.TURSO
+        ? { provider: EManagedSqliteProvider.TURSO }
+        : undefined,
+  });
+  const family = resolveConnectionFamily({
+    type,
+    method: providerKindHint
+      ? EConnectionMethod.MANAGED
+      : EConnectionMethod.STRING,
+    providerKind,
+    managedSqlite:
+      providerKind === EConnectionProviderKind.TURSO
+        ? { provider: EManagedSqliteProvider.TURSO }
+        : undefined,
+  });
 
   return {
     type,
+    providerKind,
+    family,
     host,
     port,
     username,
@@ -180,8 +218,12 @@ function parseSqlServer(raw: string): ParsedConnection {
     if (!knownKeys.has(k)) options[k] = v;
   }
 
+  const providerKind = EConnectionProviderKind.DIRECT_SQL;
+
   return {
     type: DatabaseClientType.MSSQL,
+    providerKind,
+    family: EConnectionFamily.SQL,
     host,
     port,
     username,
@@ -196,21 +238,62 @@ function parseSqlServer(raw: string): ParsedConnection {
 // Scheme → DbType map
 // ─────────────────────────────────────────────
 
-const SCHEME_MAP: Record<string, DatabaseClientType> = {
-  postgresql: DatabaseClientType.POSTGRES,
-  postgres: DatabaseClientType.POSTGRES,
-  pg: DatabaseClientType.POSTGRES,
-  mysql: DatabaseClientType.MYSQL,
-  mysql2: DatabaseClientType.MYSQL,
-  mariadb: DatabaseClientType.MARIADB,
-  oracle: DatabaseClientType.ORACLE,
-  oracledb: DatabaseClientType.ORACLE,
-  mongodb: DatabaseClientType.MONGODB,
-  'mongodb+srv': DatabaseClientType.MONGODB,
-  redis: DatabaseClientType.REDIS,
-  rediss: DatabaseClientType.REDIS,
-  redis6: DatabaseClientType.REDIS,
-  snowflake: DatabaseClientType.SNOWFLAKE,
+const SCHEME_MAP: Record<
+  string,
+  { type: DatabaseClientType; providerKind?: EConnectionProviderKind }
+> = {
+  postgresql: {
+    type: DatabaseClientType.POSTGRES,
+    providerKind: EConnectionProviderKind.DIRECT_SQL,
+  },
+  postgres: {
+    type: DatabaseClientType.POSTGRES,
+    providerKind: EConnectionProviderKind.DIRECT_SQL,
+  },
+  pg: {
+    type: DatabaseClientType.POSTGRES,
+    providerKind: EConnectionProviderKind.DIRECT_SQL,
+  },
+  mysql: {
+    type: DatabaseClientType.MYSQL,
+    providerKind: EConnectionProviderKind.DIRECT_SQL,
+  },
+  mysql2: {
+    type: DatabaseClientType.MYSQL,
+    providerKind: EConnectionProviderKind.DIRECT_SQL,
+  },
+  mariadb: {
+    type: DatabaseClientType.MARIADB,
+    providerKind: EConnectionProviderKind.DIRECT_SQL,
+  },
+  oracle: {
+    type: DatabaseClientType.ORACLE,
+    providerKind: EConnectionProviderKind.DIRECT_SQL,
+  },
+  oracledb: {
+    type: DatabaseClientType.ORACLE,
+    providerKind: EConnectionProviderKind.DIRECT_SQL,
+  },
+  redis: {
+    type: DatabaseClientType.REDIS,
+    providerKind: EConnectionProviderKind.REDIS_DIRECT,
+  },
+  rediss: {
+    type: DatabaseClientType.REDIS,
+    providerKind: EConnectionProviderKind.REDIS_DIRECT,
+  },
+  redis6: {
+    type: DatabaseClientType.REDIS,
+    providerKind: EConnectionProviderKind.REDIS_DIRECT,
+  },
+  snowflake: {
+    type: DatabaseClientType.SNOWFLAKE,
+    providerKind: EConnectionProviderKind.DIRECT_SQL,
+  },
+  libsql: {
+    type: DatabaseClientType.SQLITE3,
+    providerKind: EConnectionProviderKind.TURSO,
+  },
 };
 
 // ─────────────────────────────────────────────
@@ -219,7 +302,7 @@ const SCHEME_MAP: Record<string, DatabaseClientType> = {
 
 /**
  * Detects and parses a connection string for:
- * PostgreSQL · MySQL · MongoDB · Redis · SQL Server
+ * PostgreSQL · MySQL · Redis · SQL Server
  *
  * @param connectionString - The raw connection string
  * @returns A structured {@link ParsedConnection} object
@@ -239,14 +322,14 @@ export function parseConnectionString(
   const schemeMatch = raw.match(/^([a-z][a-z0-9+\-.]*):/i);
   if (schemeMatch) {
     const scheme = schemeMatch[1].toLowerCase();
-    const dbType = SCHEME_MAP[scheme];
-    if (!dbType) {
+    const resolution = SCHEME_MAP[scheme];
+    if (!resolution) {
       throw new Error(
         `Unsupported scheme "${scheme}". ` +
           `Supported: ${Object.keys(SCHEME_MAP).join(', ')}.`
       );
     }
-    return parseUri(raw, dbType);
+    return parseUri(raw, resolution.type, resolution.providerKind);
   }
 
   // ── ADO.NET / key=value style → SQL Server ─────────────────────────────────

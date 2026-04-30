@@ -16,7 +16,7 @@ OrcaQ is an **open-source, next-generation database editor** — a desktop and w
 
 ### Business Domain
 
-Database Development & Administration tooling. The application now supports PostgreSQL, MySQL, MariaDB, Oracle, and desktop-only SQLite file connections. PostgreSQL still has the broadest administration surface, while the newer engines currently focus on the core connection, query, and structure-browsing workflows.
+Database Development & Administration tooling. The application supports PostgreSQL, MySQL, MariaDB, Oracle, local SQLite files, managed SQLite providers (Cloudflare D1 and Turso), and Redis. PostgreSQL still has the broadest administration surface, managed SQLite stays on the SQL browsing/query path, and Redis runs through family-specific panels instead of the relational shell.
 
 ### Target Users
 
@@ -40,7 +40,7 @@ Database Development & Administration tooling. The application now supports Post
 | **ERD Visualization** | Vue Flow (wrapper over reactflow)                                       |
 | **Charts**            | ECharts 5 via vue-echarts                                               |
 | **AI Integration**    | Vercel AI SDK 6 (OpenAI, Google Gemini, Anthropic Claude, xAI Grok)     |
-| **Database Driver**   | Knex.js with `pg`, `mysql2`, `oracledb`, and `sqlite3` driver bindings  |
+| **Database Driver**   | Knex.js with `pg`, `mysql2`, `oracledb`, and `sqlite3`, plus `@libsql/client`, `redis`, and Cloudflare D1 HTTP transport |
 | **Desktop Wrapper**   | Electron (via electron-vite, separate `electron/` project)              |
 | **D&D**               | Atlassian Pragmatic Drag & Drop                                         |
 | **Routing**           | nuxt-typed-router (type-safe route params)                              |
@@ -83,6 +83,10 @@ Pages → Components/Modules → Core (stores, composables, types, helpers)
 ```
 
 Pages are thin routing shells. Feature modules encapsulate UI + hooks. Core provides shared state and business logic. Server API is a stateless BFF. Infrastructure implements the Adapter pattern for multi-database support.
+
+### Connection Families
+
+OrcaQ now treats connection type and provider kind as a capability problem instead of a flat driver list. D1 and Turso resolve to the `sql` family and reuse SQL explorer/query modules with provider-aware transport. Redis resolves to a dedicated family with its own sidebar panels, routes, and unavailable-state rules so it never falls back to PostgreSQL-oriented flows.
 
 ### Separation of Concerns
 

@@ -66,6 +66,8 @@ export function executeStreamingQuery({
   query,
   dbConnectionString,
   type,
+  providerKind,
+  managedSqlite,
   params,
   onMeta,
   onRows,
@@ -75,6 +77,8 @@ export function executeStreamingQuery({
   query: string;
   dbConnectionString: string;
   type?: string;
+  providerKind?: string;
+  managedSqlite?: Record<string, unknown>;
   params?: Record<string, unknown>;
 } & StreamingQueryCallbacks) {
   const controller = new AbortController();
@@ -89,6 +93,8 @@ export function executeStreamingQuery({
           query,
           dbConnectionString,
           type,
+          providerKind,
+          managedSqlite,
           params: params || {},
         }),
         signal: controller.signal,

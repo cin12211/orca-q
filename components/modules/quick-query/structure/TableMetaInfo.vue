@@ -89,13 +89,13 @@ const onRetry = () => {
 
     <div v-else-if="data" class="space-y-1.5">
       <div class="flex items-center gap-1 flex-wrap">
-        <Badge variant="secondary" class="h-5 px-1.5 text-[10px]">
+        <Badge variant="secondary" class="h-5 px-1.5 text-xxs">
           {{ typeLabel }}
         </Badge>
         <span
           class="inline-flex items-center gap-1 rounded-md border bg-muted/20 px-1.5 py-0.5"
         >
-          <span class="text-[10px] text-muted-foreground"> Owner </span>
+          <span class="text-xxs text-muted-foreground"> Owner </span>
           <span class="text-[11px] font-mono leading-none text-foreground">
             {{ data.owner || '—' }}
           </span>
@@ -108,7 +108,7 @@ const onRetry = () => {
           :key="item.label"
           class="inline-flex items-center gap-1 rounded-md border bg-muted/20 px-1.5 py-0.5"
         >
-          <span class="text-[10px] text-muted-foreground">
+          <span class="text-xxs text-muted-foreground">
             {{ item.label }}
           </span>
           <span

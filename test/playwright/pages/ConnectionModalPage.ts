@@ -68,6 +68,10 @@ export class ConnectionModalPage {
     return this.page.getByRole('tab', { name: /database file/i });
   }
 
+  get managedSqliteTab(): Locator {
+    return this.page.getByRole('tab', { name: /managed sqlite/i });
+  }
+
   get structuredTargetInput(): Locator {
     return this.page.locator('#structured-target');
   }
@@ -78,6 +82,42 @@ export class ConnectionModalPage {
 
   get browseSqliteButton(): Locator {
     return this.page.getByRole('button', { name: /^browse$/i });
+  }
+
+  get d1ProviderButton(): Locator {
+    return this.page.getByRole('button', { name: /cloudflare d1/i });
+  }
+
+  get tursoProviderButton(): Locator {
+    return this.page.getByRole('button', { name: /^turso/i });
+  }
+
+  get d1AccountIdInput(): Locator {
+    return this.page.locator('#d1-account-id');
+  }
+
+  get d1DatabaseIdInput(): Locator {
+    return this.page.locator('#d1-database-id');
+  }
+
+  get d1DatabaseNameInput(): Locator {
+    return this.page.locator('#d1-database-name');
+  }
+
+  get d1ApiTokenInput(): Locator {
+    return this.page.locator('#d1-api-token');
+  }
+
+  get tursoUrlInput(): Locator {
+    return this.page.locator('#turso-url');
+  }
+
+  get tursoAuthTokenInput(): Locator {
+    return this.page.locator('#turso-auth-token');
+  }
+
+  get tursoBranchNameInput(): Locator {
+    return this.page.locator('#turso-branch-name');
   }
 
   get testButton(): Locator {
@@ -100,6 +140,11 @@ export class ConnectionModalPage {
     await this.page.getByRole('tab', { name: /connection string/i }).click();
   }
 
+  async selectManagedSqliteTab() {
+    await this.managedSqliteTab.click();
+    await expect(this.d1AccountIdInput.or(this.tursoUrlInput)).toBeVisible();
+  }
+
   async fillConnectionString(connectionString: string) {
     await this.connectionStringInput.fill(connectionString);
   }
@@ -116,7 +161,11 @@ export class ConnectionModalPage {
   }
 
   async expectStructuredTargetLabel(text: string | RegExp) {
-    await expect(this.page.getByText(text)).toBeVisible();
+    await expect(
+      this.page.locator('label[for="structured-target"]').filter({
+        hasText: text,
+      })
+    ).toBeVisible();
   }
 
   async expectDatabaseFileTabOnly() {
@@ -133,6 +182,39 @@ export class ConnectionModalPage {
     await expect(this.filePathInput).toHaveValue(value);
   }
 
+  async fillManagedD1Credentials(opts: {
+    accountId: string;
+    databaseId: string;
+    apiToken: string;
+    databaseName?: string;
+  }) {
+    await this.selectManagedSqliteTab();
+    await this.d1ProviderButton.click();
+    await this.d1AccountIdInput.fill(opts.accountId);
+    await this.d1DatabaseIdInput.fill(opts.databaseId);
+
+    if (opts.databaseName) {
+      await this.d1DatabaseNameInput.fill(opts.databaseName);
+    }
+
+    await this.d1ApiTokenInput.fill(opts.apiToken);
+  }
+
+  async fillManagedTursoCredentials(opts: {
+    url: string;
+    authToken: string;
+    branchName?: string;
+  }) {
+    await this.selectManagedSqliteTab();
+    await this.tursoProviderButton.click();
+    await this.tursoUrlInput.fill(opts.url);
+    await this.tursoAuthTokenInput.fill(opts.authToken);
+
+    if (opts.branchName) {
+      await this.tursoBranchNameInput.fill(opts.branchName);
+    }
+  }
+
   async clickBrowseSqliteFile() {
     await this.browseSqliteButton.click();
   }
@@ -147,6 +229,15 @@ export class ConnectionModalPage {
     });
   }
 
+  async expectSqlFamilyLanding() {
+    await expect(
+      this.page.getByText('No table is open', { exact: true })
+    ).toBeVisible({ timeout: 30_000 });
+    await expect(
+      this.page.getByText('No Redis workspace tab is open', { exact: true })
+    ).toHaveCount(0);
+  }
+
   async expectConnectionError() {
     await expect(this.page.getByText('Connection failed.')).toBeVisible({
       timeout: 15_000,
@@ -155,6 +246,22 @@ export class ConnectionModalPage {
 
   async clickCreate() {
     await this.createButton.click();
+  }
+
+  connectionRow(name: string): Locator {
+    return this.page.locator('tr').filter({ hasText: name }).first();
+  }
+
+  connectButtonForConnection(name: string): Locator {
+    return this.connectionRow(name).getByRole('button', { name: /connect/i });
+  }
+
+  async expectConnectionRow(name: string) {
+    await expect(this.connectionRow(name)).toBeVisible();
+  }
+
+  async connectConnection(name: string) {
+    await this.connectButtonForConnection(name).click();
   }
 
   // ── Full add connection flow (step 1 → step 2) ────────────────────────────

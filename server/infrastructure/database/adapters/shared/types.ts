@@ -1,5 +1,9 @@
 import type { ISSHConfig, ISSLConfig } from '~/components/modules/connection';
 import { DatabaseClientType } from '~/core/constants/database-client-type';
+import type {
+  EConnectionProviderKind,
+  IManagedSqliteConfig,
+} from '~/core/types/entities/connection.entity';
 
 export { DatabaseClientType };
 
@@ -23,6 +27,8 @@ export interface BaseDatabaseAdapterParams {
   database?: string;
   serviceName?: string;
   filePath?: string;
+  providerKind?: EConnectionProviderKind;
+  managedSqlite?: IManagedSqliteConfig;
   ssl?: ISSLConfig;
   ssh?: ISSHConfig;
 }

@@ -14,14 +14,17 @@ import type {
   DatabaseMetadataAdapterParams,
   IDatabaseMetadataAdapter,
 } from '../types';
+import {
+  buildTableDetailFromCreateSql,
+  escapeSqliteIdentifier,
+  isD1Connection,
+  parseViewColumnsFromCreateSql,
+  quoteSqliteString,
+} from './sqlite-create-sql.parser';
 
-function escapeSqliteIdentifier(identifier: string) {
-  return `"${identifier.replace(/"/g, '""')}"`;
-}
-
-function quoteSqliteString(value: string) {
-  return `'${value.replace(/'/g, "''")}'`;
-}
+// ---------------------------------------------------------------------------
+// Row types returned by SQLite PRAGMA statements
+// ---------------------------------------------------------------------------
 
 interface SqliteDatabaseRow {
   seq: number;
@@ -52,6 +55,8 @@ interface SqliteForeignKeyRow {
   to: string;
 }
 
+// ---------------------------------------------------------------------------
+
 export class SqliteMetadataAdapter
   extends BaseDomainAdapter
   implements IDatabaseMetadataAdapter
@@ -70,7 +75,29 @@ export class SqliteMetadataAdapter
   }
 
   private async getDatabases() {
-    return this.adapter.rawQuery<SqliteDatabaseRow>('PRAGMA database_list');
+    try {
+      return await this.adapter.rawQuery<SqliteDatabaseRow>(
+        'PRAGMA database_list'
+      );
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : String(error ?? '');
+
+      if (
+        isD1Connection(this.adapter.connection) &&
+        /SQLITE_AUTH/i.test(message)
+      ) {
+        return [
+          {
+            seq: 0,
+            name: 'main',
+            file: '',
+          },
+        ];
+      }
+
+      throw error;
+    }
   }
 
   private async getSchemaObjects(schema: string) {
@@ -109,6 +136,17 @@ export class SqliteMetadataAdapter
       const table_details = Object.fromEntries(
         await Promise.all(
           tables.map(async table => {
+            if (isD1Connection(this.adapter.connection)) {
+              return [
+                table.name,
+                buildTableDetailFromCreateSql(
+                  database.name,
+                  table.name,
+                  table.sql
+                ),
+              ];
+            }
+
             const [columns, foreignKeys] = await Promise.all([
               this.getTableInfo(database.name, table.name),
               this.getForeignKeys(database.name, table.name),
@@ -149,6 +187,17 @@ export class SqliteMetadataAdapter
       const view_details = Object.fromEntries(
         await Promise.all(
           views.map(async view => {
+            if (isD1Connection(this.adapter.connection)) {
+              return [
+                view.name,
+                parseViewColumnsFromCreateSql(
+                  view.sql,
+                  database.name,
+                  view.name
+                ),
+              ];
+            }
+
             const columns = await this.getTableInfo(database.name, view.name);
 
             return [

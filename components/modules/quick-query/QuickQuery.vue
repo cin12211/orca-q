@@ -50,6 +50,10 @@ const connectionString = computed(() => {
   return connection?.connectionString || '';
 });
 
+const currentDbType = computed(
+  () => connectionStore.selectedConnection?.type || DatabaseClientType.POSTGRES
+);
+
 const tableName = computed(() => props.tableName);
 const schemaName = computed(() => props.schemaName);
 
@@ -469,7 +473,7 @@ const onBackPreviousBreadcrumbByIndex = (index: number) => {
         :initFilters="filters"
         :baseQuery="baseQueryString"
         :columns="columnNames"
-        :dbType="DatabaseClientType.POSTGRES"
+        :dbType="currentDbType"
         :composeWith="composeWith"
         @onChangeComposeWith="onChangeComposeWith"
       />

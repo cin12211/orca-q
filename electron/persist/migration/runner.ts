@@ -2,13 +2,17 @@ import type { Knex } from 'knex';
 import type { SchemaVersionRow } from '../schema/schema-versions';
 import { createTableIfMissing } from '../schema/shared';
 import { up as v001 } from './versions/v001-initial-schema';
+import { up as v002 } from './versions/v002-expand-connections-for-managed-and-nosql';
 
 interface Migration {
   version: number;
   up: (knex: Knex) => Promise<void>;
 }
 
-const MIGRATIONS: Migration[] = [{ version: 1, up: v001 }];
+const MIGRATIONS: Migration[] = [
+  { version: 1, up: v001 },
+  { version: 2, up: v002 },
+];
 
 export async function runMigrations(knex: Knex): Promise<void> {
   // Ensure migration tracking table exists

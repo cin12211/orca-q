@@ -17,6 +17,18 @@ export default defineConfig({
       name: 'chromium',
       use: { ...devices['Desktop Chrome'] },
     },
+    {
+      name: 'chromium-families',
+      testMatch: [
+        /.*connection\.spec\.ts/,
+        /.*connection-form\.spec\.ts/,
+        /.*connection-form-live\.spec\.ts/,
+        /.*connection-credentials\.spec\.ts/,
+        /.*workspace\.spec\.ts/,
+        /.*redis-workspace\.spec\.ts/,
+      ],
+      use: { ...devices['Desktop Chrome'] },
+    },
   ],
   webServer: {
     command: 'bun nuxt:dev',

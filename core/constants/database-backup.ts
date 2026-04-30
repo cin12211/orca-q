@@ -113,8 +113,6 @@ export function getDatabaseClientLabel(type?: DatabaseClientType | null) {
       return 'Oracle';
     case DatabaseClientType.MSSQL:
       return 'SQL Server';
-    case DatabaseClientType.MONGODB:
-      return 'MongoDB';
     case DatabaseClientType.REDIS:
       return 'Redis';
     case DatabaseClientType.SNOWFLAKE:

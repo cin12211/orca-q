@@ -79,6 +79,10 @@ const connection = computed(() => {
   return connectionStore.connections.find(c => c.id === props.connectionId);
 });
 
+const currentDbType = computed(
+  () => connection.value?.type || DatabaseClientType.POSTGRES
+);
+
 const {
   columnNames,
   foreignKeys,
@@ -298,7 +302,7 @@ useHotkeys(
         :initFilters="filters"
         :baseQuery="baseQueryString"
         :columns="columnNames"
-        :dbType="DatabaseClientType.POSTGRES"
+        :dbType="currentDbType"
         :composeWith="composeWith"
         @onChangeComposeWith="onChangeComposeWith"
       />

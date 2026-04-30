@@ -101,7 +101,7 @@ const toggleFullscreen = () => {
                 />
                 <span
                   v-if="isCopied(id)"
-                  class="text-[10px] font-medium leading-none"
+                  class="text-xxs font-medium leading-none"
                 >
                   Copied
                 </span>

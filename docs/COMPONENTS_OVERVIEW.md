@@ -172,8 +172,16 @@ Feature-specific modules containing related components, hooks, and logic.
 | **management-explorer**    | `/modules/management-explorer/`    | 1     | SQL file explorer         |
 | **management-export**      | `/modules/management-export/`      | 3     | Database export tools     |
 | **management-erd-diagram** | `/modules/management-erd-diagram/` | 1     | ERD panel wrapper         |
+| **management/redis-browser** | `/modules/management/redis-browser/` | 3+  | Redis key browser, filters, and key tree |
+| **redis-workspace**        | `/modules/redis-workspace/`        | 5+    | Redis value editor, workbench, analysis, and safeguards |
 | **changelog**              | `/modules/changelog/`              | 1     | Version changelog display |
 | **selectors**              | `/modules/selectors/`              | 7     | Custom select components  |
+
+### Connection Family Notes
+
+- SQL family modules continue to own quick-query, raw-query, ERD, roles, schema diff, and instance insights.
+- Managed SQLite providers (Cloudflare D1 and Turso) reuse the SQL-family modules but carry provider-aware runtime metadata.
+- Redis uses dedicated workspace and management modules rather than thin wrappers around the SQL components.
 
 ---
 

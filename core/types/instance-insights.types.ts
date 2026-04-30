@@ -142,3 +142,166 @@ export interface InstanceActionResponse {
 }
 
 export type ReplicationSlotDesiredStatus = 'on' | 'off';
+
+export interface RedisOverviewMetrics {
+  redisVersion: string;
+  mode: string;
+  uptimeSeconds: number;
+  connectedClients: number;
+  usedMemory: number;
+  usedMemoryHuman: string;
+  totalKeys: number;
+  hitRate: number;
+  opsPerSec: number;
+  evictedKeys: number;
+  expiredKeys: number;
+  rejectedConnections: number;
+}
+
+export interface RedisPrefixMetric {
+  prefix: string;
+  keyCount: number;
+  memoryBytes: number;
+}
+
+export interface RedisBigKeyMetric {
+  key: string;
+  type: string;
+  ttl: number;
+  memoryBytes: number;
+}
+
+export interface RedisMemoryInsight {
+  usedMemory: number;
+  usedMemoryHuman: string;
+  usedMemoryPeak: number;
+  usedMemoryPeakHuman: string;
+  memoryFragmentationRatio: number;
+  maxmemory: number;
+  maxmemoryHuman: string;
+  maxmemoryPolicy: string;
+  topPrefixesByMemory: RedisPrefixMetric[];
+  bigKeys: RedisBigKeyMetric[];
+  warnings: string[];
+}
+
+export interface RedisSlowlogEntry {
+  id: string;
+  timestamp: string;
+  durationMicros: number;
+  command: string;
+  clientAddr: string | null;
+  clientName: string | null;
+}
+
+export interface RedisCommandStat {
+  command: string;
+  calls: number;
+  usecPerCall: number;
+}
+
+export interface RedisClientSummary {
+  id: string;
+  addr: string;
+  name: string;
+  ageSeconds: number;
+  idleSeconds: number;
+  db: number;
+  cmd: string;
+  flags: string;
+}
+
+export interface RedisPerformanceInsight {
+  instantaneousOpsPerSec: number;
+  totalCommandsProcessed: number;
+  latencyDoctor: string | null;
+  slowlog: RedisSlowlogEntry[];
+  commandStats: RedisCommandStat[];
+  blockedClients: number;
+  longRunningLuaScripts: RedisClientSummary[];
+}
+
+export interface RedisKeyspaceDbInsight {
+  database: string;
+  keyCount: number;
+  expires: number;
+  avgTtl: number;
+}
+
+export interface RedisKeyTypeDistribution {
+  type: string;
+  count: number;
+}
+
+export interface RedisKeyspaceInsight {
+  databases: RedisKeyspaceDbInsight[];
+  expiredKeyCount: number;
+  avgTtl: number;
+  keyTypeDistribution: RedisKeyTypeDistribution[];
+  topPrefixes: Array<Pick<RedisPrefixMetric, 'prefix' | 'keyCount'>>;
+  keysWithoutTtl: number;
+  hotKeysNote: string;
+  sampledKeys: number;
+}
+
+export interface RedisClientWarning {
+  clientId: string;
+  reason: string;
+}
+
+export interface RedisClientInsight {
+  connectedClients: number;
+  clients: RedisClientSummary[];
+  suspiciousClients: RedisClientWarning[];
+}
+
+export interface RedisPersistenceInsight {
+  rdbEnabled: boolean;
+  lastSaveStatus: string | null;
+  lastSaveTime: string | null;
+  aofEnabled: boolean;
+  aofRewriteInProgress: boolean;
+  aofLastRewriteStatus: string | null;
+  lastBgsaveError: string | null;
+  changesSinceLastSave: number;
+  warnings: string[];
+}
+
+export interface RedisReplicaSummary {
+  id: string;
+  addr: string;
+  state: string;
+  lag: number | null;
+  offset: string | null;
+}
+
+export interface RedisReplicationInsight {
+  role: string;
+  connectedReplicas: number;
+  replicas: RedisReplicaSummary[];
+  replicationLag: number | null;
+  masterLinkStatus: string | null;
+  sentinelMasters: number | null;
+  clusterEnabled: boolean;
+  clusterState: string | null;
+  clusterSlotsAssigned: number | null;
+  clusterKnownNodes: number | null;
+}
+
+export interface RedisConfigEntry {
+  name: string;
+  value: string;
+}
+
+export interface RedisInstanceInsights {
+  capturedAt: string;
+  databaseIndex: number;
+  overview: RedisOverviewMetrics;
+  memory: RedisMemoryInsight;
+  performance: RedisPerformanceInsight;
+  keyspace: RedisKeyspaceInsight;
+  clients: RedisClientInsight;
+  persistence: RedisPersistenceInsight;
+  replication: RedisReplicationInsight;
+  config: RedisConfigEntry[];
+}

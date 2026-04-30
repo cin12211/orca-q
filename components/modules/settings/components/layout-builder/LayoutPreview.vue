@@ -31,7 +31,7 @@ const props = defineProps<{
         <div
           v-for="(innerPanel, iIdx) in layout.innerSplit.panels"
           :key="`inner-${iIdx}`"
-          class="flex items-center justify-center rounded-sm text-[10px] font-medium text-muted-foreground"
+          class="flex items-center justify-center rounded-sm text-xxs font-medium text-muted-foreground"
           :class="SLOT_COLORS[innerPanel.slot]"
           :style="{ flex: `${innerPanel.defaultSize} 0 0%` }"
         >
@@ -42,7 +42,7 @@ const props = defineProps<{
       <!-- Regular panel -->
       <div
         v-else
-        class="flex items-center justify-center rounded-sm text-[10px] font-medium text-muted-foreground"
+        class="flex items-center justify-center rounded-sm text-xxs font-medium text-muted-foreground"
         :class="SLOT_COLORS[panel.slot]"
         :style="{ flex: `${panel.defaultSize} 0 0%` }"
       >

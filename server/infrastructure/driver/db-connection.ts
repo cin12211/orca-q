@@ -1,11 +1,24 @@
+import {
+  resolveConnectionFamily,
+  resolveConnectionProviderKind,
+} from '~/core/constants/connection-capabilities';
 import { DatabaseClientType } from '~/core/constants/database-client-type';
 import {
+  EConnectionFamily,
   EConnectionMethod,
+  EConnectionProviderKind,
+  type IManagedSqliteConfig,
   type ISSLConfig,
   type ISSHConfig,
 } from '~/core/types/entities/connection.entity';
+import { assertSupportedConnectionRuntime } from '~/server/infrastructure/nosql';
+import { pingRedisConnection } from '~/server/infrastructure/nosql/redis/redis.client';
 import { createSshTunnel } from '~/server/utils/ssh-tunnel';
 import { createDatabaseAdapter } from './factory';
+import {
+  createManagedSqliteConnectionString,
+  isManagedSqliteProviderKind,
+} from './managed-sqlite';
 import type { IDatabaseAdapter } from './types';
 
 type CachedAdapter = {
@@ -21,7 +34,6 @@ const DEFAULT_PORTS: Partial<Record<DatabaseClientType, number>> = {
   [DatabaseClientType.MYSQL]: 3306,
   [DatabaseClientType.MARIADB]: 3306,
   [DatabaseClientType.MYSQL2]: 3306,
-  [DatabaseClientType.MONGODB]: 27017,
   [DatabaseClientType.REDIS]: 6379,
   [DatabaseClientType.MSSQL]: 1433,
   [DatabaseClientType.ORACLE]: 1521,
@@ -92,6 +104,35 @@ function getDefaultPort(type: DatabaseClientType) {
   return DEFAULT_PORTS[type] ?? 5432;
 }
 
+function resolveRuntimeContext(input: {
+  type: DatabaseClientType;
+  method: EConnectionMethod;
+  providerKind?: EConnectionProviderKind;
+  family?: EConnectionFamily;
+  managedSqlite?: IManagedSqliteConfig;
+}) {
+  const providerKind = resolveConnectionProviderKind({
+    type: input.type,
+    method: input.method,
+    providerKind: input.providerKind,
+    managedSqlite: input.managedSqlite,
+  });
+
+  const family =
+    input.family ??
+    resolveConnectionFamily({
+      type: input.type,
+      method: input.method,
+      providerKind,
+      managedSqlite: input.managedSqlite,
+    });
+
+  return {
+    providerKind,
+    family,
+  };
+}
+
 async function resolveHealthCheckConnection({
   url,
   type,
@@ -103,6 +144,9 @@ async function resolveHealthCheckConnection({
   database,
   serviceName,
   filePath,
+  providerKind,
+  family,
+  managedSqlite,
   ssl,
   ssh,
 }: {
@@ -116,10 +160,23 @@ async function resolveHealthCheckConnection({
   database?: string;
   serviceName?: string;
   filePath?: string;
+  providerKind?: EConnectionProviderKind;
+  family?: EConnectionFamily;
+  managedSqlite?: IManagedSqliteConfig;
   ssl?: ISSLConfig;
   ssh?: ISSHConfig;
 }) {
   let sshTunnelClose: (() => Promise<void>) | undefined;
+
+  const runtimeContext = resolveRuntimeContext({
+    type,
+    method,
+    providerKind,
+    family,
+    managedSqlite,
+  });
+
+  assertSupportedConnectionRuntime(runtimeContext);
 
   if (method === EConnectionMethod.STRING) {
     if (!url) {
@@ -143,6 +200,31 @@ async function resolveHealthCheckConnection({
       connection: {
         filename: filePath,
       },
+      sshTunnelClose,
+    };
+  }
+
+  if (method === EConnectionMethod.MANAGED) {
+    if (
+      !runtimeContext.providerKind ||
+      !isManagedSqliteProviderKind(runtimeContext.providerKind)
+    ) {
+      throw new Error(
+        'Managed SQLite health checks require a managed provider kind.'
+      );
+    }
+
+    if (!managedSqlite) {
+      throw new Error(
+        'Managed SQLite health checks require provider credentials.'
+      );
+    }
+
+    return {
+      connection: createManagedSqliteConnectionString(
+        runtimeContext.providerKind,
+        managedSqlite
+      ),
       sshTunnelClose,
     };
   }
@@ -200,6 +282,9 @@ export const getDatabaseSource = async ({
   database,
   serviceName,
   filePath,
+  providerKind,
+  family,
+  managedSqlite,
   ssl,
   ssh,
 }: {
@@ -212,10 +297,45 @@ export const getDatabaseSource = async ({
   database?: string;
   serviceName?: string;
   filePath?: string;
+  providerKind?: EConnectionProviderKind;
+  family?: EConnectionFamily;
+  managedSqlite?: IManagedSqliteConfig;
   ssl?: ISSLConfig;
   ssh?: ISSHConfig;
 }): Promise<IDatabaseAdapter> => {
-  const dbType = type ?? DatabaseClientType.POSTGRES;
+  if (!type) {
+    throw new Error('Database type is required to resolve a database adapter.');
+  }
+
+  const dbType = type;
+
+  const method = filePath
+    ? EConnectionMethod.FILE
+    : providerKind && isManagedSqliteProviderKind(providerKind)
+      ? EConnectionMethod.MANAGED
+      : managedSqlite &&
+          isManagedSqliteProviderKind(
+            resolveConnectionProviderKind({
+              type: dbType,
+              method: EConnectionMethod.MANAGED,
+              providerKind,
+              managedSqlite,
+            })
+          )
+        ? EConnectionMethod.MANAGED
+        : dbConnectionString
+          ? EConnectionMethod.STRING
+          : EConnectionMethod.FORM;
+
+  const runtimeContext = resolveRuntimeContext({
+    type: dbType,
+    method,
+    providerKind,
+    family,
+    managedSqlite,
+  });
+
+  assertSupportedConnectionRuntime(runtimeContext);
 
   let finalConnection: string | any = dbConnectionString;
   let cacheKey = `${dbType}://${dbConnectionString}`;
@@ -228,6 +348,16 @@ export const getDatabaseSource = async ({
     };
 
     cacheKey = `${dbType}://${filePath}`;
+  } else if (
+    method === EConnectionMethod.MANAGED &&
+    runtimeContext.providerKind &&
+    managedSqlite
+  ) {
+    finalConnection = createManagedSqliteConnectionString(
+      runtimeContext.providerKind,
+      managedSqlite
+    );
+    cacheKey = `${runtimeContext.providerKind}://${finalConnection}`;
   } else if (!dbConnectionString && host) {
     let finalHost = host;
     let finalPort = parseInt(port || `${getDefaultPort(dbType)}`, 10);
@@ -276,7 +406,10 @@ export const getDatabaseSource = async ({
     return cached.adapter;
   }
 
-  const newAdapter = createDatabaseAdapter(dbType, finalConnection);
+  const newAdapter = createDatabaseAdapter(dbType, finalConnection, {
+    providerKind: runtimeContext.providerKind,
+    managedSqlite,
+  });
 
   adapterCache.set(cacheKey, {
     adapter: newAdapter,
@@ -298,6 +431,9 @@ export async function healthCheckConnection({
   database,
   serviceName,
   filePath,
+  providerKind,
+  family,
+  managedSqlite,
   ssl,
   ssh,
 }: {
@@ -311,12 +447,41 @@ export async function healthCheckConnection({
   database?: string;
   serviceName?: string;
   filePath?: string;
+  providerKind?: EConnectionProviderKind;
+  family?: EConnectionFamily;
+  managedSqlite?: IManagedSqliteConfig;
   ssl?: ISSLConfig;
   ssh?: ISSHConfig;
 }): Promise<{ isConnectedSuccess: boolean; message?: string }> {
   let sshTunnelClose: (() => Promise<void>) | undefined;
 
   try {
+    const runtimeContext = resolveRuntimeContext({
+      type,
+      method,
+      providerKind,
+      family,
+      managedSqlite,
+    });
+
+    if (runtimeContext.family === EConnectionFamily.REDIS) {
+      const isConnected = await pingRedisConnection({
+        method,
+        url,
+        host,
+        port,
+        username,
+        password,
+        database,
+        ssl,
+        ssh,
+      });
+
+      return {
+        isConnectedSuccess: isConnected,
+      };
+    }
+
     const resolvedConnection = await resolveHealthCheckConnection({
       url,
       type,
@@ -328,13 +493,19 @@ export async function healthCheckConnection({
       database,
       serviceName,
       filePath,
+      providerKind,
+      family,
+      managedSqlite,
       ssl,
       ssh,
     });
     const { connection } = resolvedConnection;
     sshTunnelClose = resolvedConnection.sshTunnelClose;
 
-    const adapter = createDatabaseAdapter(type, connection);
+    const adapter = createDatabaseAdapter(type, connection, {
+      providerKind: runtimeContext.providerKind,
+      managedSqlite,
+    });
     const isConnected = await adapter.healthCheck();
     await adapter.destroy();
     if (sshTunnelClose) await sshTunnelClose();

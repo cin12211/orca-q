@@ -120,7 +120,7 @@ const onToggleSlotStatus = (params: {
         </div>
 
         <div v-if="dashboard?.version" class="flex items-center gap-1.5 mt-0.5">
-          <Badge variant="outline" class="text-[10px] h-5 px-1.5 font-normal">
+          <Badge variant="outline" class="text-xxs h-5 px-1.5 font-normal">
             PostgreSQL {{ dashboard.version }}
           </Badge>
         </div>

@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { Tooltip, TooltipContent, TooltipTrigger } from '#components';
+import RedisDBSelector from '~/components/modules/selectors/RedisDBSelector.vue';
 import { type Connection, type RowQueryFile } from '~/core/stores';
+import type { RedisDatabaseOption } from '~/core/types/redis-workspace.types';
 import PureConnectionSelector from '../../selectors/PureConnectionSelector.vue';
 import { RawQueryEditorLayout } from '../constants';
 import AddVariableModal from './AddVariableModal.vue';
@@ -14,11 +16,16 @@ defineProps<{
   disableConnectionSwitch: boolean;
   connections: Connection[];
   connection?: Connection;
+  isRedisConnection?: boolean;
+  isSupportVariable?: boolean;
+  redisDatabases?: RedisDatabaseOption[];
+  redisDatabaseIndex?: number;
   codeEditorLayout: RawQueryEditorLayout;
 }>();
 
 defineEmits<{
   (e: 'update:connectionId', connectionId: string): void;
+  (e: 'update:redisDatabaseIndex', databaseIndex: number): void;
   (e: 'update:updateFileVariables', fileVariablesValue: string): Promise<void>;
 }>();
 
@@ -58,7 +65,12 @@ const openConfigModal = () => {
     </div>
 
     <div class="flex gap-2 items-center">
-      <Tooltip v-if="codeEditorLayout === RawQueryEditorLayout.horizontal">
+      <Tooltip
+        v-if="
+          isSupportVariable &&
+          codeEditorLayout === RawQueryEditorLayout.horizontal
+        "
+      >
         <TooltipTrigger as-child>
           <Button
             @click="openAddVariableModal"
@@ -99,6 +111,16 @@ const openConfigModal = () => {
           <p v-else>Select connection</p>
         </TooltipContent>
       </Tooltip>
+
+      <RedisDBSelector
+        v-if="isRedisConnection"
+        compact
+        trigger-id="raw-query-redis-db-index"
+        trigger-class="bg-background"
+        :databases="redisDatabases || []"
+        :database-index="redisDatabaseIndex ?? 0"
+        @update:database-index="$emit('update:redisDatabaseIndex', $event)"
+      />
 
       <Tooltip>
         <TooltipTrigger as-child>

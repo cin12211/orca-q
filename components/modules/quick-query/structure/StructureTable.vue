@@ -198,7 +198,7 @@ const columnsTableHeight = computed(() => {
               <Badge
                 v-if="rlsState"
                 :variant="rlsState.enabled ? 'default' : 'secondary'"
-                class="h-5 px-1.5 text-[10px]"
+                class="h-5 px-1.5 text-xxs"
               >
                 {{ rlsState.enabled ? 'Enabled' : 'Disabled' }}
               </Badge>

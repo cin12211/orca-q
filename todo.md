@@ -95,3 +95,18 @@ i want to create js consant to maping data type not stick in query, check in all
 [ ] in raw quick query -> function , when i updat function / procidure somehow i got error , but i copy to raw query -> this worked fine -> need to check why this happen
 [ ] enhance load schema if database have multiple schema (use wait 20- 50s)
 [ ] làm lại chuẩn chị docs, hướng dẫn cho agents 
+
+# Redis issue
+- [ ] fix 'No keys matched the current filter.' just use empty component + update guilde for agents when use this case
+- [ ] RedisDBSelector just move to selector component + fix hieght for fix size in components/modules/raw-query/components/RawQueryEditorHeader.vue = h-6
+- [ ] redis raw query just hidden formator button , eplanin query -> this not support , disable Variables not support in redis raw query
+- [ ] brower key tree just update icon for key type ( ưu tiên dùng icon hugeicons)
+- [ ] brower key item thì thông tin đi kèm k cần ở dạng bagde có border đầu chỉ cần show text (áp dụng cho cả tree , list), với dạng list thì làm lại cho là vẫn dùng tree để hiển thị cho đồng bộ nhưng sẽ flatent ra
+- [ ] view detail key update TTL (seconds) field input i want reduce hieght of input (just update <Input> component just update for this compoent for have size default , small , xs, large)
+- [ ] key detail if not found or is remove just show BaseEmpty with icon "icons:404" 
+- [ ] Redis Pub/Sub just update width for Live Messages = 2/3 width (current is 3/4) 
+- [ ] Redis Pub/Sub Clear all button not work
+
+- [ ] in components/modules/instance-insights/RedisInstanceInsightsPanel.vue fix this  BaseNotice not define , just split componet this componet to big
+- [ ] redis detail key can't update ttl
+- [ ]

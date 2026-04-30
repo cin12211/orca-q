@@ -11,6 +11,7 @@ export async function createConnectionsTable(knex: Knex): Promise<void> {
     t.text('name').nullable();
     t.text('type').nullable();
     t.text('method').nullable();
+    t.text('provider_kind').nullable();
     t.text('connection_string').nullable();
     t.text('host').nullable();
     t.text('port').nullable();
@@ -19,6 +20,7 @@ export async function createConnectionsTable(knex: Knex): Promise<void> {
     t.text('database').nullable();
     t.text('service_name').nullable();
     t.text('file_path').nullable();
+    t.text('managed_sqlite').nullable();
     t.text('ssl').nullable();
     t.text('ssh').nullable();
     t.text('tag_ids').nullable();

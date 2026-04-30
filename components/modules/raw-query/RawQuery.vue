@@ -2,7 +2,9 @@
 import { LoadingOverlay } from '#components';
 import type { EditorView } from '@codemirror/view';
 import BaseCodeEditor from '~/components/base/code-editor/BaseCodeEditor.vue';
+import { useRedisWorkspace } from '~/components/modules/redis-workspace/hooks/useRedisWorkspace';
 import { useHotkeys } from '~/core/composables/useHotKeys';
+import { DatabaseClientType } from '~/core/constants/database-client-type';
 import { useEnvironmentTagStore } from '~/core/stores';
 import { useAppConfigStore } from '~/core/stores/appConfigStore';
 import IntroRawQuery from './components/IntroRawQuery.vue';
@@ -15,6 +17,15 @@ import RawQueryResultTabs from './components/RawQueryResultTabs.vue';
 import VariableEditor from './components/VariableEditor.vue';
 import { useRawQueryEditor, useRawQueryFileContent } from './hooks';
 import { useRawQueryEditorContextMenu } from './hooks/useRawQueryEditorContextMenu';
+
+const props = withDefaults(
+  defineProps<{
+    isSupportVariable?: boolean;
+  }>(),
+  {
+    isSupportVariable: true,
+  }
+);
 
 const route = useRoute('workspaceId-connectionId-explorer-fileId');
 const workspaceId = computed(() => {
@@ -38,10 +49,49 @@ const {
   fieldDefs,
 } = toRefs(rawQueryFileContent);
 
+const isRedisConnection = computed(
+  () => connection.value?.type === DatabaseClientType.REDIS
+);
+const isFormatSupported = computed(() => !isRedisConnection.value);
+const isSqliteConnection = computed(() =>
+  [DatabaseClientType.SQLITE3, DatabaseClientType.BETTER_SQLITE3].includes(
+    connection.value?.type as DatabaseClientType
+  )
+);
+const isVariableSupported = computed(
+  () =>
+    props.isSupportVariable &&
+    !isRedisConnection.value &&
+    !isSqliteConnection.value
+);
+const isExplainSupported = computed(
+  () => connection.value?.type === DatabaseClientType.POSTGRES
+);
+const effectiveFileVariables = ref('');
+
+watchEffect(() => {
+  effectiveFileVariables.value = isVariableSupported.value
+    ? fileVariables.value
+    : '';
+});
+
+const redisConnection = computed(() =>
+  isRedisConnection.value ? connection.value : undefined
+);
+const redisWorkspace = useRedisWorkspace({
+  connection: redisConnection,
+  mode: 'meta',
+});
+
+const updateRedisDatabaseIndex = (value: number) => {
+  redisWorkspace.selectedDatabaseIndex.value = value;
+};
+
 const rawQueryEditor = useRawQueryEditor({
   connection,
+  redisDatabaseIndex: redisWorkspace.selectedDatabaseIndex,
   fieldDefs,
-  fileVariables,
+  fileVariables: effectiveFileVariables,
   beforeExecute: () => requestConnectionExecutionConfirm(),
 });
 const {
@@ -65,6 +115,8 @@ const { contextMenuItems, onContextMenuOpen } = useRawQueryEditorContextMenu({
   onExplainAnalyzeCurrent: rawQueryEditor.onExplainAnalyzeCurrent,
   onHandleFormatCurrentStatement: rawQueryEditor.onHandleFormatCurrentStatement,
   onHandleFormatCode: rawQueryEditor.onHandleFormatCode,
+  isSupportFormat: isFormatSupported,
+  isExplainSupported,
   getEditorView: () =>
     codeEditorRef.value?.editorView as EditorView | null | undefined,
 });
@@ -139,7 +191,7 @@ useHotkeys([
   },
 ]);
 
-watch(fileVariables, () => {
+watch(effectiveFileVariables, () => {
   rawQueryEditor.reloadSqlCompartment();
 });
 
@@ -222,10 +274,15 @@ onBeforeUnmount(() => {
             :connection="connection"
             :selected-connection-id="selectedConnectionId"
             :disable-connection-switch="isCurrentConnectionStrictMode"
+            :is-redis-connection="isRedisConnection"
+            :redis-databases="redisWorkspace.databases.value"
+            :redis-database-index="redisWorkspace.selectedDatabaseIndex.value"
             :workspaceId="workspaceId"
             :file-variables="fileVariables"
             :code-editor-layout="appConfigStore.codeEditorLayout"
             :currentFileInfo="currentFile"
+            :is-support-variable="isVariableSupported"
+            @update:redis-database-index="updateRedisDatabaseIndex"
             @update:update-file-variables="updateFileVariables"
           />
           <div class="h-full flex flex-col overflow-y-auto">
@@ -258,6 +315,9 @@ onBeforeUnmount(() => {
             :raw-query-results-length="currentRawQueryResult.length"
             :explain-analyze-option-items="explainAnalyzeOptionItems"
             :serialize-mode="serializeMode"
+            :is-support-format="isFormatSupported"
+            :is-support-variable="isVariableSupported"
+            :is-explain-supported="isExplainSupported"
             @on-format-current-statement="onHandleFormatCurrentStatement"
             @on-format-all="onHandleFormatCode"
             @on-explain-analyze-current="onExplainAnalyzeCurrent"
@@ -278,7 +338,17 @@ onBeforeUnmount(() => {
         </div>
 
         <div class="h-full flex flex-col overflow-y-auto">
+          <BaseEmpty
+            v-if="!isVariableSupported"
+            title="Variables not supported"
+            desc="Variables are not available for Redis and SQLite connections."
+            icon="icons:ghost"
+          />
+
           <VariableEditor
+            v-else
+            :variables="fileVariables"
+            @update:variables="updateFileVariables"
             @updateVariables="updateFileVariables"
             :file-variables="fileVariables"
           />

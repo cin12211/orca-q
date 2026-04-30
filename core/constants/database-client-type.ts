@@ -13,7 +13,6 @@ export enum DatabaseClientType {
   MYSQL = 'mysql',
   MARIADB = 'mariadb',
   MYSQL2 = 'mysql2',
-  MONGODB = 'mongodb',
   REDIS = 'redis',
   SQLITE3 = 'sqlite3',
   SNOWFLAKE = 'snowflake',
@@ -21,3 +20,16 @@ export enum DatabaseClientType {
   MSSQL = 'mssql',
   ORACLE = 'oracledb',
 }
+
+export const SQL_DATABASE_CLIENT_TYPES = [
+  DatabaseClientType.POSTGRES,
+  DatabaseClientType.MYSQL,
+  DatabaseClientType.MARIADB,
+  DatabaseClientType.MYSQL2,
+  DatabaseClientType.SQLITE3,
+  DatabaseClientType.BETTER_SQLITE3,
+  DatabaseClientType.MSSQL,
+  DatabaseClientType.ORACLE,
+] as const;
+
+export const NOSQL_DATABASE_CLIENT_TYPES = [DatabaseClientType.REDIS] as const;

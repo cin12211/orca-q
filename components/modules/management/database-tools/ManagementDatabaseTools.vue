@@ -2,6 +2,7 @@
 import { useTabManagement } from '~/core/composables/useTabManagement';
 import { useWorkspaceConnectionRoute } from '~/core/composables/useWorkspaceConnectionRoute';
 import { useManagementConnectionStore } from '~/core/stores/managementConnectionStore';
+import { EConnectionProviderKind } from '~/core/types/entities/connection.entity';
 import { ManagementSidebarHeader } from '../shared';
 
 const connectionStore = useManagementConnectionStore();
@@ -21,6 +22,28 @@ const databaseName = computed(
   () =>
     connectionData.value?.database || connectionData.value?.name || 'database'
 );
+
+const isManagedSqliteLimited = computed(() => {
+  return (
+    connectionData.value?.providerKind ===
+      EConnectionProviderKind.CLOUDFLARE_D1 ||
+    connectionData.value?.providerKind === EConnectionProviderKind.TURSO
+  );
+});
+
+const unavailableReason = computed(() => {
+  if (
+    connectionData.value?.providerKind === EConnectionProviderKind.CLOUDFLARE_D1
+  ) {
+    return 'Cloudflare D1 stays on the SQL path, but backup, instance insight, and schema diff are not available for the managed provider transport.';
+  }
+
+  if (connectionData.value?.providerKind === EConnectionProviderKind.TURSO) {
+    return 'Turso stays on the SQL path, but backup, instance insight, and schema diff are not available for the managed provider transport.';
+  }
+
+  return '';
+});
 
 // Open database tools in a new tab
 const openDatabaseTools = async () => {
@@ -52,6 +75,7 @@ const openDatabaseTools = async () => {
         <!-- Dump & Restore -->
         <button
           class="w-full flex items-center gap-3 rounded-lg border bg-background p-3 text-left transition-colors hover:bg-muted/20 cursor-pointer"
+          :disabled="isManagedSqliteLimited"
           @click="openDatabaseTools()"
         >
           <Button size="iconMd" variant="outline">
@@ -73,7 +97,7 @@ const openDatabaseTools = async () => {
         <!-- Instance Insight -->
         <button
           class="w-full flex items-center gap-3 rounded-lg border bg-background p-3 text-left transition-colors hover:bg-muted/20 disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
-          :disabled="!hasConnection"
+          :disabled="!hasConnection || isManagedSqliteLimited"
           @click="openInstanceInsightsTab({ databaseName })"
         >
           <Button size="iconMd" variant="outline">
@@ -95,7 +119,7 @@ const openDatabaseTools = async () => {
         <!-- Schema Diff -->
         <button
           class="w-full flex items-center gap-3 rounded-lg border bg-background p-3 text-left transition-colors hover:bg-muted/20 disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
-          :disabled="!hasConnection"
+          :disabled="!hasConnection || isManagedSqliteLimited"
           @click="openSchemaDiffTab()"
         >
           <Button size="iconMd" variant="outline">
@@ -113,6 +137,10 @@ const openDatabaseTools = async () => {
             class="size-4 text-muted-foreground"
           />
         </button>
+
+        <BaseNotice v-if="isManagedSqliteLimited" variant="secondary">
+          {{ unavailableReason }}
+        </BaseNotice>
       </div>
     </div>
   </div>

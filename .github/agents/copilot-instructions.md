@@ -4,6 +4,9 @@ Auto-generated from all feature plans. Last updated: 2026-03-15
 
 ## Active Technologies
 
+- TypeScript 5.6, Vue 3.5, Nuxt 3.16, Node 18+, Electron 41 + Nuxt 3 SPA + Nitro server routes, Pinia, existing SQL stack (`knex`, `pg`, `mysql2`, `sqlite3`, `oracledb`), plus new runtime clients `@libsql/client` for Turso and `redis` for Redis; Cloudflare D1 uses server-side HTTP/fetch against the Cloudflare D1 query API (033-expand-db-support)
+- Existing IndexedDB/Electron persistence for workspaces, connections, and tabs; SQL sessions through existing adapter/cache flow; managed SQLite provider state on saved connections; Redis session state through dedicated server clients and persisted UI filters (033-expand-db-support)
+
 - TypeScript 5.6, Vue 3.5, Nuxt 3.16, Node 18+, Electron 41 + Nuxt 3, Vue 3, Pinia, Electron, AG Grid, existing SQL/parser utilities (`dt-sql-parser`, `pgsql-ast-parser`), database drivers (`pg`, `mysql2`, `sqlite3`, `oracledb`) (031-enhance-query-workbench)
 - Persisted workspace, tab, and app-config state through Electron/IndexedDB APIs; metadata and execution sourced from existing PostgreSQL/MySQL/MariaDB/SQLite/Oracle adapters (031-enhance-query-workbench)
 
@@ -60,10 +63,11 @@ bun nuxt:build     # Production build
 
 ## Recent Changes
 
+- 033-expand-db-support: Added TypeScript 5.6, Vue 3.5, Nuxt 3.16, Node 18+, Electron 41 + Nuxt 3 SPA + Nitro server routes, Pinia, existing SQL stack (`knex`, `pg`, `mysql2`, `sqlite3`, `oracledb`), plus new runtime clients `@libsql/client` for Turso and `redis` for Redis; Cloudflare D1 uses server-side HTTP/fetch against the Cloudflare D1 query API
+
 - 031-enhance-query-workbench: Added TypeScript 5.6, Vue 3.5, Nuxt 3.16, Node 18+, Electron 41 + Nuxt 3, Vue 3, Pinia, Electron, AG Grid, existing SQL/parser utilities (`dt-sql-parser`, `pgsql-ast-parser`), database drivers (`pg`, `mysql2`, `sqlite3`, `oracledb`)
 
 - 030-add-multi-db-support: Added TypeScript ~5.6, Node >=18, Vue 3.5, Nuxt 3.16, Electron 41 + Nuxt 3 SPA + Nitro server routes, Pinia 3, Knex 3.1, `pg`, `sqlite3`, `better-sqlite3`, plus new runtime drivers `mysql2` and `oracledb`
-- 021-standardize-storage-layer: Added TypeScript 5.x
 
 <!-- MANUAL ADDITIONS START -->
 <!-- MANUAL ADDITIONS END -->

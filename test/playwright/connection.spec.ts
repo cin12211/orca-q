@@ -1,6 +1,9 @@
 import { test, expect } from '@playwright/test';
+import { getRedisFixtureConfig } from '../support/nosql-fixtures';
 import { ConnectionModalPage } from './pages/ConnectionModalPage';
 import { WorkspacesPage } from './pages/WorkspacesPage';
+
+const redisFixture = getRedisFixtureConfig();
 
 test.describe('US4 — Connection Management Modal', () => {
   test.beforeEach(async ({ page }) => {
@@ -97,7 +100,7 @@ test.describe('US5 — Add Connection Wizard Step 1', () => {
     ).toBeVisible();
   });
 
-  test('step 1 exposes MySQL, MariaDB, Oracle, and browser-gated SQLite options', async ({
+  test('step 1 exposes SQL, managed SQLite, and Redis options', async ({
     page,
   }) => {
     const connectionModal = new ConnectionModalPage(page);
@@ -109,7 +112,7 @@ test.describe('US5 — Add Connection Wizard Step 1', () => {
     await expect(page.getByText('MariaDB', { exact: true })).toBeVisible();
     await expect(page.getByText('Oracle', { exact: true })).toBeVisible();
     await expect(page.getByText('SQLite', { exact: true })).toBeVisible();
-    await expect(page.getByText('Desktop only', { exact: true })).toBeVisible();
+    await expect(page.getByText('Redis', { exact: true })).toBeVisible();
   });
 
   test('MySQL selection uses a MySQL connection string placeholder', async ({
@@ -142,19 +145,51 @@ test.describe('US5 — Add Connection Wizard Step 1', () => {
     await connectionModal.expectPortPlaceholder('1521');
   });
 
-  test('browser runtime keeps SQLite unavailable even after another selection', async ({
+  test('browser runtime exposes SQLite database file and managed provider tabs', async ({
     page,
   }) => {
     const connectionModal = new ConnectionModalPage(page);
 
-    await connectionModal.clickAddConnection();
-    await connectionModal.expectStep1();
-    await connectionModal.selectDbType('MySQL');
-    await connectionModal.selectDbType('SQLite');
-    await connectionModal.advanceToStep2();
+    await connectionModal.completeStep1('SQLite');
 
-    await connectionModal.expectConnectionStringPlaceholder(/mysql:\/\//i);
-    await expect(connectionModal.databaseFileTab).toHaveCount(0);
+    await expect(connectionModal.databaseFileTab).toBeVisible();
+    await expect(connectionModal.managedSqliteTab).toBeVisible();
+    await connectionModal.selectManagedSqliteTab();
+    await expect(connectionModal.d1AccountIdInput).toBeVisible();
+  });
+
+  test('stale SQL-only activity state falls back to the Redis browser under Explorer after connect', async ({
+    page,
+  }) => {
+    const workspacesPage = new WorkspacesPage(page);
+    const connectionModal = new ConnectionModalPage(page);
+    const workspaceName = `Redis Fallback Workspace ${Date.now()}`;
+    const connectionName = 'Redis Fallback Connection';
+
+    await workspacesPage.goto();
+    await page.evaluate(() => {
+      localStorage.setItem(
+        'activity-bar',
+        JSON.stringify({ activityActive: 'ERDiagram' })
+      );
+    });
+    await workspacesPage.createWorkspace(workspaceName);
+    await workspacesPage.openWorkspace(workspaceName);
+
+    await connectionModal.completeStep1('Redis');
+    await connectionModal.fillConnectionName(connectionName);
+    await connectionModal.selectConnectionStringTab();
+    await connectionModal.fillConnectionString(redisFixture.url);
+    await connectionModal.clickCreate();
+    await connectionModal.expectConnectionRow(connectionName);
+    await connectionModal.connectConnection(connectionName);
+
+    await expect(page.getByText('Redis Browser', { exact: true })).toBeVisible({
+      timeout: 30_000,
+    });
+    await expect(
+      page.getByText('No Redis workspace tab is open', { exact: true })
+    ).toBeVisible();
   });
 });
 
@@ -211,7 +246,8 @@ test.describe('US5 — Electron-Gated SQLite UI', () => {
     await connectionModal.selectDbType('SQLite');
     await connectionModal.advanceToStep2();
 
-    await connectionModal.expectDatabaseFileTabOnly();
+    await expect(connectionModal.databaseFileTab).toBeVisible();
+    await expect(connectionModal.managedSqliteTab).toBeVisible();
     await expect(connectionModal.browseSqliteButton).toBeVisible();
 
     await connectionModal.clickBrowseSqliteFile();

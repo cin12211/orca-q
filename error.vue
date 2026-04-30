@@ -74,7 +74,7 @@ const asciiErrorCode = computed(() => {
         <!-- ASCII Error Code -->
         <div class="flex justify-center">
           <pre
-            class="ascii-code font-mono text-[10px] sm:text-xs md:text-sm font-bold text-primary/50 leading-none"
+            class="ascii-code font-mono text-xxs sm:text-xs md:text-sm font-bold text-primary/50 leading-none"
             >{{ asciiErrorCode }}
           </pre>
         </div>

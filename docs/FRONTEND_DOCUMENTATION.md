@@ -1940,7 +1940,7 @@ export default defineConfig({
 
 #### High Priority
 
-1. **Multi-database Support** (MySQL, SQLite, MongoDB)
+1. **Multi-database Support** (MySQL, SQLite, Redis)
 2. **Collaboration Features** (share queries, team workspaces)
 3. **Query Builder UI** (drag-and-drop query construction)
 4. **Data Visualization** (charts from query results)

@@ -1,5 +1,17 @@
+import {
+  getConnectionCapabilityProfile,
+  resolveConnectionFamily,
+  resolveConnectionProviderKind,
+} from '~/core/constants/connection-capabilities';
 import { DatabaseClientType } from '~/core/constants/database-client-type';
-import type { EConnectionMethod, ISSHConfig, ISSLConfig } from '../types';
+import {
+  EConnectionFamily,
+  EConnectionMethod,
+  EConnectionProviderKind,
+  type IManagedSqliteConfig,
+  type ISSHConfig,
+  type ISSLConfig,
+} from '../types';
 
 export type ConnectionHealthCheckBody =
   | {
@@ -23,7 +35,49 @@ export type ConnectionHealthCheckBody =
       type: DatabaseClientType.SQLITE3;
       method: EConnectionMethod.FILE;
       filePath: string;
+    }
+  | {
+      type: DatabaseClientType.SQLITE3;
+      method: EConnectionMethod.MANAGED;
+      providerKind:
+        | EConnectionProviderKind.CLOUDFLARE_D1
+        | EConnectionProviderKind.TURSO;
+      managedSqlite: IManagedSqliteConfig;
     };
+
+export type ResolvedConnectionHealthCheckBody = ConnectionHealthCheckBody & {
+  providerKind: EConnectionProviderKind;
+  family: EConnectionFamily;
+};
+
+export function resolveConnectionHealthCheckBody(
+  body: ConnectionHealthCheckBody
+): ResolvedConnectionHealthCheckBody {
+  const providerKind = resolveConnectionProviderKind({
+    type: body.type,
+    method: body.method,
+    providerKind: 'providerKind' in body ? body.providerKind : undefined,
+    managedSqlite: 'managedSqlite' in body ? body.managedSqlite : undefined,
+  });
+  const family = resolveConnectionFamily({
+    type: body.type,
+    method: body.method,
+    providerKind,
+    managedSqlite: 'managedSqlite' in body ? body.managedSqlite : undefined,
+  });
+
+  return {
+    ...body,
+    providerKind,
+    family,
+  };
+}
+
+export function getConnectionHealthCheckCapabilities(
+  body: ConnectionHealthCheckBody
+) {
+  return getConnectionCapabilityProfile(resolveConnectionHealthCheckBody(body));
+}
 
 export const connectionService = {
   healthCheck: (body: ConnectionHealthCheckBody) =>
@@ -31,7 +85,7 @@ export const connectionService = {
       '/api/managment-connection/health-check',
       {
         method: 'POST',
-        body,
+        body: resolveConnectionHealthCheckBody(body),
       }
     ),
 };

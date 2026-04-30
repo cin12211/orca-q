@@ -23,7 +23,7 @@ import {
   isSqliteConnectionDisabled,
 } from '../constants';
 import { useConnectionForm } from '../hooks/useConnectionForm';
-import { EConnectionMethod } from '../types';
+import { EConnectionMethod, EManagedSqliteProvider } from '../types';
 import ConnectionSSHTunnel from './ConnectionSSHTunnel.vue';
 import ConnectionSSLConfig from './ConnectionSSLConfig.vue';
 import ConnectionStatusSection from './ConnectionStatusSection.vue';
@@ -59,6 +59,7 @@ const {
   connectionMethod,
   connectionString,
   formData,
+  managedSqlite,
   tagIds,
   testStatus,
   testErrorMessage,
@@ -121,7 +122,7 @@ const structuredTargetModel = computed({
 <template>
   <Dialog :open="open" @update:open="$emit('update:open', $event)">
     <DialogContent
-      class="max-w-[50vw]! w-full h-[60vh]! max-h-[90vh] p-0 flex flex-col overflow-hidden"
+      class="max-w-[60vw]! w-full h-[60vh]! max-h-[90vh] p-0 flex flex-col overflow-hidden"
     >
       <template v-if="step === 1">
         <ConnectionStepType
@@ -167,6 +168,9 @@ const structuredTargetModel = computed({
                     id="tour-connection-form-tab"
                   >
                     Connection Form
+                  </span>
+                  <span v-else-if="method === EConnectionMethod.MANAGED">
+                    Managed SQLite
                   </span>
                   <span v-else>Database File</span>
                 </TabsTrigger>
@@ -363,6 +367,155 @@ const structuredTargetModel = computed({
                     </template>
                   </p>
                 </div>
+              </TabsContent>
+
+              <TabsContent value="managed" class="space-y-6 pt-2">
+                <div class="space-y-3">
+                  <Label>SQLite Provider</Label>
+                  <div class="grid grid-cols-2 gap-2">
+                    <Button
+                      type="button"
+                      :variant="
+                        managedSqlite.provider ===
+                        EManagedSqliteProvider.CLOUDFLARE_D1
+                          ? 'default'
+                          : 'outline'
+                      "
+                      class="justify-start h-auto py-3"
+                      @click="
+                        managedSqlite.provider =
+                          EManagedSqliteProvider.CLOUDFLARE_D1
+                      "
+                    >
+                      <div class="text-left">
+                        <div class="font-medium">
+                          <Icon
+                            name="devicon:cloudflare"
+                            class="h-4 w-4 inline-block"
+                          />
+                          Cloudflare D1
+                        </div>
+                        <div class="text-xs opacity-80">
+                          Remote SQLite over the Cloudflare API
+                        </div>
+                      </div>
+                    </Button>
+                    <Button
+                      type="button"
+                      :variant="
+                        managedSqlite.provider === EManagedSqliteProvider.TURSO
+                          ? 'default'
+                          : 'outline'
+                      "
+                      class="justify-start h-auto py-3"
+                      @click="
+                        managedSqlite.provider = EManagedSqliteProvider.TURSO
+                      "
+                    >
+                      <div class="text-left">
+                        <div class="font-medium">
+                          <Icon
+                            name="simple-icons:turso"
+                            class="text-[#4ff8d2]"
+                          />
+                          Turso
+                        </div>
+                        <div class="text-xs opacity-80">
+                          libSQL endpoint with optional branch routing
+                        </div>
+                      </div>
+                    </Button>
+                  </div>
+                </div>
+
+                <div
+                  v-if="
+                    managedSqlite.provider ===
+                    EManagedSqliteProvider.CLOUDFLARE_D1
+                  "
+                  class="grid grid-cols-2 gap-3"
+                >
+                  <div class="space-y-2">
+                    <Label for="d1-account-id"
+                      >Account ID <span class="text-destructive">*</span></Label
+                    >
+                    <Input
+                      id="d1-account-id"
+                      v-model="managedSqlite.accountId"
+                      placeholder="Cloudflare account ID"
+                    />
+                  </div>
+                  <div class="space-y-2">
+                    <Label for="d1-database-id"
+                      >Database ID
+                      <span class="text-destructive">*</span></Label
+                    >
+                    <Input
+                      id="d1-database-id"
+                      v-model="managedSqlite.databaseId"
+                      placeholder="D1 database ID"
+                    />
+                  </div>
+                  <div class="col-span-2 space-y-2">
+                    <Label for="d1-database-name">Database Name</Label>
+                    <Input
+                      id="d1-database-name"
+                      v-model="managedSqlite.databaseName"
+                      placeholder="Optional display name"
+                    />
+                  </div>
+                  <div class="col-span-2 space-y-2">
+                    <Label for="d1-api-token"
+                      >API Token <span class="text-destructive">*</span></Label
+                    >
+                    <Input
+                      id="d1-api-token"
+                      type="password"
+                      v-model="managedSqlite.apiToken"
+                      placeholder="Cloudflare API token"
+                    />
+                  </div>
+                </div>
+
+                <div v-else class="grid grid-cols-2 gap-3">
+                  <div class="col-span-2 space-y-2">
+                    <Label for="turso-url"
+                      >Database URL
+                      <span class="text-destructive">*</span></Label
+                    >
+                    <Input
+                      id="turso-url"
+                      v-model="managedSqlite.url"
+                      placeholder="libsql://your-db.turso.io"
+                      class="font-mono text-sm"
+                    />
+                  </div>
+                  <div class="col-span-2 space-y-2">
+                    <Label for="turso-auth-token"
+                      >Auth Token <span class="text-destructive">*</span></Label
+                    >
+                    <Input
+                      id="turso-auth-token"
+                      type="password"
+                      v-model="managedSqlite.authToken"
+                      placeholder="Turso auth token"
+                    />
+                  </div>
+                  <div class="col-span-2 space-y-2">
+                    <Label for="turso-branch-name">Branch</Label>
+                    <Input
+                      id="turso-branch-name"
+                      v-model="managedSqlite.branchName"
+                      placeholder="main"
+                    />
+                  </div>
+                </div>
+
+                <p class="text-xs text-muted-foreground">
+                  Managed SQLite providers stay on the SQL-family workspace
+                  after validation, but use provider-specific transport under
+                  the hood.
+                </p>
               </TabsContent>
             </Tabs>
 

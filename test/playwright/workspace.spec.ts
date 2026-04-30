@@ -2,6 +2,21 @@ import { test, expect } from '@playwright/test';
 import { WorkspacesPage } from './pages/WorkspacesPage';
 
 test.describe('US1 — Workspace List Page', () => {
+  test('renders with stale persisted activity state from another connection family', async ({
+    page,
+  }) => {
+    const workspacesPage = new WorkspacesPage(page);
+    await workspacesPage.goto();
+    await page.evaluate(() => {
+      localStorage.setItem(
+        'activity-bar',
+        JSON.stringify({ activityActive: 'UsersRoles' })
+      );
+    });
+    await page.reload();
+    await workspacesPage.expectEmptyState();
+  });
+
   test('renders empty state when no workspaces exist', async ({ page }) => {
     const workspacesPage = new WorkspacesPage(page);
     await workspacesPage.goto();
@@ -100,7 +115,9 @@ test.describe('US3 — Search / Filter Workspaces', () => {
     const workspacesPage = new WorkspacesPage(page);
     await workspacesPage.searchWorkspaces('zzz-no-match-zzz');
 
-    await expect(page.getByText("There's no workspaces")).toBeVisible();
+    await expect(
+      page.getByText('No workspaces found', { exact: true })
+    ).toBeVisible();
     await workspacesPage.expectNoWorkspaceCard('Alpha Project');
     await workspacesPage.expectNoWorkspaceCard('Beta Analytics');
   });

@@ -9,7 +9,7 @@
     "url": "https://github.com/cin12211"
   },
   "license": "MIT",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "main": "out/electron/main.js",
   "scripts": {
     "dev": "npm run nuxt:dev",
@@ -42,15 +42,24 @@
     "test:e2e": "vitest --run --project e2e",
     "test:coverage": "vitest run --coverage",
     "test:watch": "vitest --watch",
-    "test:playwright": "playwright test"
+    "test:playwright": "playwright test",
+    "test:fixtures:nosql:start": "bash scripts/test-services/start-nosql-fixtures.sh",
+    "test:fixtures:nosql:stop": "bash scripts/test-services/stop-nosql-fixtures.sh",
+    "test:families:nuxt": "vitest --run --project nuxt test/nuxt/components/modules/redis-workspace/useRedisWorkspace.test.ts test/nuxt/components/modules/management/redis-browser/ManagementRedisBrowser.test.ts",
+    "test:families:unit": "vitest --run --project unit test/unit/server/api/managment-connection/health-check.spec.ts test/unit/server/infrastructure/driver/factory.spec.ts test/unit/server/infrastructure/nosql/index.spec.ts test/unit/server/api/redis/browser.spec.ts test/unit/server/api/redis/workbench.spec.ts",
+    "test:families:e2e": "vitest --run --project e2e test/e2e/connection.test.ts",
+    "test:families:playwright": "playwright test --project chromium-families",
+    "test:families:all": "npm run test:families:nuxt && npm run test:families:unit && npm run test:families:e2e && npm run test:families:playwright"
   },
   "dependencies": {
+    "@libsql/client": "^0.15.15",
     "better-sqlite3": "^12.9.0",
     "electron-store": "^11.0.2",
     "electron-updater": "^6.8.3",
     "knex": "^3.1.0",
     "mysql2": "^3.22.2",
-    "oracledb": "^6.10.0"
+    "oracledb": "^6.10.0",
+    "redis": "^5.9.0"
   },
   "devDependencies": {
     "@ai-sdk/anthropic": "^3.0.9",

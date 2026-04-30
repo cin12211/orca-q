@@ -16,9 +16,31 @@ export interface RowQueryFileContent {
   contents: string;
 }
 
-const STARTER_SQL_FILE_NAME = 'sample.sql';
-const NEW_SQL_FILE_BASE_NAME = 'new-file';
 const RAW_QUERY_FILE_ICON = 'lucide:file';
+
+export interface QueryFileNamingConfig {
+  starterFileName: string;
+  newFileBaseName: string;
+  starterContents?: string;
+  extension?: string;
+}
+
+export const DEFAULT_SQL_QUERY_FILE_CONFIG: QueryFileNamingConfig = {
+  starterFileName: 'sample.sql',
+  newFileBaseName: 'new-file',
+  extension: '.sql',
+};
+
+export const buildGeneratedQueryFileName = (
+  config: QueryFileNamingConfig,
+  index: number
+) => {
+  const extension = config.extension ?? '';
+
+  return index <= 1
+    ? `${config.newFileBaseName}${extension}`
+    : `${config.newFileBaseName}-${index}${extension}`;
+};
 
 const sanitizeRowQueryFile = <T extends { connectionId?: string }>(file: T) => {
   const { connectionId: _connectionId, ...sanitized } = file;
@@ -132,13 +154,9 @@ export const useExplorerFileStore = defineStore(
       );
     };
 
-    const buildGeneratedSqlFileName = (index: number) => {
-      return index <= 1
-        ? `${NEW_SQL_FILE_BASE_NAME}.sql`
-        : `${NEW_SQL_FILE_BASE_NAME}-${index}.sql`;
-    };
-
-    const getNextGeneratedSqlFileName = () => {
+    const getNextGeneratedQueryFileName = (
+      config: QueryFileNamingConfig = DEFAULT_SQL_QUERY_FILE_CONFIG
+    ) => {
       const fileNames = new Set(
         flatNodes.value
           .filter(file => !file.isFolder)
@@ -146,11 +164,11 @@ export const useExplorerFileStore = defineStore(
       );
 
       let nextIndex = 1;
-      let candidate = buildGeneratedSqlFileName(nextIndex);
+      let candidate = buildGeneratedQueryFileName(config, nextIndex);
 
       while (fileNames.has(candidate.toLowerCase())) {
         nextIndex += 1;
-        candidate = buildGeneratedSqlFileName(nextIndex);
+        candidate = buildGeneratedQueryFileName(config, nextIndex);
       }
 
       return candidate;
@@ -186,18 +204,41 @@ export const useExplorerFileStore = defineStore(
       return getFileById(item.id) ?? item;
     };
 
-    const ensureStarterSqlFile = async () => {
-      const existing = getFileByTitle(STARTER_SQL_FILE_NAME);
+    const ensureStarterQueryFile = async (
+      config: QueryFileNamingConfig = DEFAULT_SQL_QUERY_FILE_CONFIG
+    ) => {
+      const existing = getFileByTitle(config.starterFileName);
 
       if (existing) {
         return existing;
       }
 
-      return createRawQueryFile({ title: STARTER_SQL_FILE_NAME });
+      const file = await createRawQueryFile({ title: config.starterFileName });
+
+      if (file && config.starterContents) {
+        await updateFileContent({
+          id: file.id,
+          contents: config.starterContents,
+        });
+      }
+
+      return file;
+    };
+
+    const createNextQueryFile = async (
+      config: QueryFileNamingConfig = DEFAULT_SQL_QUERY_FILE_CONFIG
+    ) => {
+      return createRawQueryFile({
+        title: getNextGeneratedQueryFileName(config),
+      });
+    };
+
+    const ensureStarterSqlFile = async () => {
+      return ensureStarterQueryFile(DEFAULT_SQL_QUERY_FILE_CONFIG);
     };
 
     const createNextSqlFile = async () => {
-      return createRawQueryFile({ title: getNextGeneratedSqlFileName() });
+      return createNextQueryFile(DEFAULT_SQL_QUERY_FILE_CONFIG);
     };
 
     const getFileContentById = async (fileID: string) => {
@@ -265,7 +306,9 @@ export const useExplorerFileStore = defineStore(
       getFileByTitle,
       getFileContentById,
       getFileContentByIdSync,
-      getNextGeneratedSqlFileName,
+      getNextGeneratedQueryFileName,
+      ensureStarterQueryFile,
+      createNextQueryFile,
       createRawQueryFile,
       ensureStarterSqlFile,
       createNextSqlFile,

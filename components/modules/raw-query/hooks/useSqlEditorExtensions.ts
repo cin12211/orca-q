@@ -1,15 +1,15 @@
 import { storeToRefs } from 'pinia';
 import { acceptCompletion, startCompletion } from '@codemirror/autocomplete';
-import { PostgreSQL, sql } from '@codemirror/lang-sql';
+import { sql } from '@codemirror/lang-sql';
 import { lintGutter } from '@codemirror/lint';
 import { Compartment } from '@codemirror/state';
 import { EditorView, keymap } from '@codemirror/view';
 import { sqlExtension } from '@marimo-team/codemirror-sql';
 import type BaseCodeEditor from '~/components/base/code-editor/BaseCodeEditor.vue';
-import { SQLDialectSupport } from '~/components/base/code-editor/constants';
 import {
   currentStatementLineGutterExtension,
   currentStatementLineHighlightExtension,
+  redis,
   shortCutExecuteCurrentStatement,
   sqlAutoCompletion,
   type SyntaxTreeNodeData,
@@ -72,6 +72,13 @@ export function useSqlEditorExtensions({
   const defaultSchemaName = computed(
     () => activeSchema.value?.name || 'public'
   );
+  const isRedisConnection = computed(
+    () => connection?.value?.type === DatabaseClientType.REDIS
+  );
+  const isFormatSupported = computed(() => !isRedisConnection.value);
+  const isExplainSupported = computed(
+    () => connection?.value?.type === DatabaseClientType.POSTGRES
+  );
 
   const schemaConfig = computed(() => {
     return mappedSchemaSuggestion({
@@ -83,6 +90,62 @@ export function useSqlEditorExtensions({
 
   const sqlCompartment = new Compartment();
   const sqlCompletionCompartment = new Compartment();
+  const sqlHoverCompartment = new Compartment();
+
+  const buildSqlLanguageExtension = () =>
+    sql({
+      dialect: resolveDialect(connection?.value?.type),
+      upperCaseKeywords: true,
+      keywordCompletion:
+        !connection?.value?.type ||
+        connection.value.type === DatabaseClientType.POSTGRES
+          ? pgKeywordCompletion
+          : undefined,
+      tables: schemaConfig.value.variableCompletions,
+      schema: schemaConfig.value.schema,
+      defaultSchema: schemaConfig.value.defaultSchema,
+    });
+
+  const buildLanguageExtension = () => {
+    if (isRedisConnection.value) {
+      return redis();
+    }
+
+    return buildSqlLanguageExtension();
+  };
+
+  const buildCompletionExtension = () => {
+    if (isRedisConnection.value) {
+      return [];
+    }
+
+    return resolveDialect(connection?.value?.type).language.data.of({
+      autocomplete: buildCteAwareCompletionSource(),
+    });
+  };
+
+  const buildHoverExtension = () => {
+    if (isRedisConnection.value) {
+      return [];
+    }
+
+    return sqlExtension({
+      enableLinting: false,
+      enableGutterMarkers: false,
+      enableHover: true,
+      hoverConfig: {
+        hoverTime: 250,
+        enableKeywords: true,
+        keywords: async () => {
+          const keywords = await getKeywordDocs();
+          return keywords;
+        },
+        enableTables: false,
+        enableColumns: false,
+        enableFuzzySearch: false,
+      },
+    });
+  };
 
   const buildCteAwareCompletionSource = () =>
     createCteAwareCompletionSource({
@@ -90,10 +153,28 @@ export function useSqlEditorExtensions({
       defaultSchemaName: defaultSchemaName.value,
     });
 
-  const { onHandleFormatCurrentStatement, onHandleFormatCode } =
-    rawQueryEditorFormat({
-      getEditorView: () => getEditorView(),
-    });
+  const {
+    onHandleFormatCurrentStatement: onHandleFormatCurrentStatementSql,
+    onHandleFormatCode: onHandleFormatCodeSql,
+  } = rawQueryEditorFormat({
+    getEditorView: () => getEditorView(),
+  });
+
+  const onHandleFormatCurrentStatement = () => {
+    if (!isFormatSupported.value) {
+      return;
+    }
+
+    onHandleFormatCurrentStatementSql();
+  };
+
+  const onHandleFormatCode = () => {
+    if (!isFormatSupported.value) {
+      return;
+    }
+
+    onHandleFormatCodeSql();
+  };
 
   // --- Extensions array ---
   const extensions = [
@@ -119,6 +200,10 @@ export function useSqlEditorExtensions({
       {
         key: 'Mod-e',
         run: () => {
+          if (!isExplainSupported.value) {
+            return true;
+          }
+
           onExplainAnalyzeCurrent();
           return true;
         },
@@ -128,45 +213,13 @@ export function useSqlEditorExtensions({
       { key: 'Tab', run: acceptCompletion },
     ]),
 
-    sqlCompartment.of(
-      sql({
-        dialect: resolveDialect(connection?.value?.type),
-        upperCaseKeywords: true,
-        keywordCompletion:
-          !connection?.value?.type ||
-          connection.value.type === DatabaseClientType.POSTGRES
-            ? pgKeywordCompletion
-            : undefined,
-        tables: schemaConfig.value.variableCompletions,
-        schema: schemaConfig.value.schema,
-        defaultSchema: schemaConfig.value.defaultSchema,
-      })
-    ),
-    sqlCompletionCompartment.of(
-      resolveDialect(connection?.value?.type).language.data.of({
-        autocomplete: buildCteAwareCompletionSource(),
-      })
-    ),
+    sqlCompartment.of(buildLanguageExtension()),
+    sqlCompletionCompartment.of(buildCompletionExtension()),
     currentStatementLineHighlightExtension,
     currentStatementLineGutterExtension,
     ...sqlAutoCompletion(),
     lintGutter(),
-    sqlExtension({
-      enableLinting: false,
-      enableGutterMarkers: false,
-      enableHover: true,
-      hoverConfig: {
-        hoverTime: 250,
-        enableKeywords: true,
-        keywords: async () => {
-          const keywords = await getKeywordDocs();
-          return keywords;
-        },
-        enableTables: false,
-        enableColumns: false,
-        enableFuzzySearch: false,
-      },
-    }),
+    sqlHoverCompartment.of(buildHoverExtension()),
     sqlParserConfigField,
   ];
 
@@ -178,31 +231,18 @@ export function useSqlEditorExtensions({
     if (!editorView) return;
 
     const dialect = resolveDialect(connection?.value?.type);
-    const isPostgres =
-      !connection?.value?.type ||
-      connection.value.type === DatabaseClientType.POSTGRES;
+    const statementMode = isRedisConnection.value ? 'line' : 'sql';
 
     editorView.dispatch({
       effects: [
         updateSqlParserConfigEffect.of({
           dialect,
-          isEnable: true,
+          isEnable: !isRedisConnection.value,
+          statementMode,
         }),
-        sqlCompartment.reconfigure(
-          sql({
-            dialect,
-            upperCaseKeywords: true,
-            keywordCompletion: isPostgres ? pgKeywordCompletion : undefined,
-            tables: schemaConfig.value.variableCompletions,
-            schema: schemaConfig.value.schema,
-            defaultSchema: schemaConfig.value.defaultSchema,
-          })
-        ),
-        sqlCompletionCompartment.reconfigure(
-          dialect.language.data.of({
-            autocomplete: buildCteAwareCompletionSource(),
-          })
-        ),
+        sqlCompartment.reconfigure(buildLanguageExtension()),
+        sqlCompletionCompartment.reconfigure(buildCompletionExtension()),
+        sqlHoverCompartment.reconfigure(buildHoverExtension()),
       ],
     });
   };
@@ -229,6 +269,18 @@ export function useSqlEditorExtensions({
       }
     );
   }
+
+  watch(
+    () => codeEditorRef.value?.editorView,
+    editorView => {
+      if (!editorView) {
+        return;
+      }
+
+      reloadSqlCompartment();
+    },
+    { immediate: true }
+  );
 
   return {
     extensions,

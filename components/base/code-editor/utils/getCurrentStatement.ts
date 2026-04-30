@@ -34,6 +34,59 @@ function getStatementTree(view: EditorView, upto: number, dialect: SQLDialect) {
   return dialect.language.parser.parse(view.state.doc.toString());
 }
 
+const isCommentLine = (text: string) => text.trimStart().startsWith('#');
+
+const createLineStatement = (
+  view: EditorView,
+  from: number,
+  to: number
+): SyntaxTreeNodeData | null => {
+  const text = view.state.doc.sliceString(from, to);
+  const trimmedStartLength = text.length - text.trimStart().length;
+  const trimmedEndLength = text.trimEnd().length;
+  const normalizedText = text.trim();
+
+  if (!normalizedText || isCommentLine(text)) {
+    return null;
+  }
+
+  return {
+    type: 'LineStatement',
+    from: from + trimmedStartLength,
+    to: from + trimmedEndLength,
+    text: normalizedText,
+  };
+};
+
+const getLineStatements = (view: EditorView) => {
+  const selection = view.state.selection.main;
+  const { from, to, empty } = selection;
+
+  if (empty) {
+    const line = view.state.doc.lineAt(from);
+    const statement = createLineStatement(view, line.from, line.to);
+
+    return {
+      currentStatements: statement ? [statement] : [],
+    };
+  }
+
+  const startLine = view.state.doc.lineAt(from).number;
+  const endLine = view.state.doc.lineAt(Math.max(to - 1, from)).number;
+  const currentStatements: SyntaxTreeNodeData[] = [];
+
+  for (let lineNumber = startLine; lineNumber <= endLine; lineNumber++) {
+    const line = view.state.doc.line(lineNumber);
+    const statement = createLineStatement(view, line.from, line.to);
+
+    if (statement) {
+      currentStatements.push(statement);
+    }
+  }
+
+  return { currentStatements };
+};
+
 /**
  * Find the statement currently under the user's position in the code editor.
  * @param view The CodeMirror view.
@@ -44,6 +97,10 @@ export const getCurrentStatement = (view: EditorView) => {
   const selection = view.state.selection.main;
   const { from, to, empty } = selection;
   const parserConfig = view.state.field(sqlParserConfigField);
+
+  if (parserConfig.statementMode === 'line') {
+    return getLineStatements(view);
+  }
 
   const tree = parserConfig.isEnable
     ? getStatementTree(view, view.state.doc.length, parserConfig.dialect)

@@ -26,8 +26,18 @@ function quoteSqliteString(value: string) {
   return `'${value.replace(/'/g, "''")}'`;
 }
 
+function resolveSqliteSchema(schema?: string) {
+  if (!schema || schema === 'public') {
+    return 'main';
+  }
+
+  return schema;
+}
+
 function buildQualifiedTable(schema: string, tableName: string) {
-  return `${escapeSqliteIdentifier(schema)}.${escapeSqliteIdentifier(tableName)}`;
+  const resolvedSchema = resolveSqliteSchema(schema);
+
+  return `${escapeSqliteIdentifier(resolvedSchema)}.${escapeSqliteIdentifier(tableName)}`;
 }
 
 interface SqliteTableInfoRow {
@@ -67,31 +77,37 @@ export class SqliteTableAdapter
   }
 
   private async getTableInfo(schema: string, tableName: string) {
+    const resolvedSchema = resolveSqliteSchema(schema);
+
     return this.adapter.rawQuery<SqliteTableInfoRow>(
-      `PRAGMA ${escapeSqliteIdentifier(schema)}.table_info(${quoteSqliteString(tableName)})`
+      `PRAGMA ${escapeSqliteIdentifier(resolvedSchema)}.table_info(${quoteSqliteString(tableName)})`
     );
   }
 
   private async getForeignKeys(schema: string, tableName: string) {
+    const resolvedSchema = resolveSqliteSchema(schema);
+
     return this.adapter.rawQuery<SqliteForeignKeyRow>(
-      `PRAGMA ${escapeSqliteIdentifier(schema)}.foreign_key_list(${quoteSqliteString(tableName)})`
+      `PRAGMA ${escapeSqliteIdentifier(resolvedSchema)}.foreign_key_list(${quoteSqliteString(tableName)})`
     );
   }
 
   async getOverviewTables(schema: string): Promise<TableOverviewMetadata[]> {
+    const resolvedSchema = resolveSqliteSchema(schema);
+
     return this.adapter.rawQuery<TableOverviewMetadata>(
       `
         SELECT
           name,
-          ${quoteSqliteString(schema)} AS schema,
+          ${quoteSqliteString(resolvedSchema)} AS schema,
           'TABLE' AS kind,
-          ${quoteSqliteString(schema)} AS owner,
+          ${quoteSqliteString(resolvedSchema)} AS owner,
           NULL AS estimated_row,
           '0 B' AS total_size,
           '0 B' AS data_size,
           '0 B' AS index_size,
           NULL AS comment
-        FROM ${escapeSqliteIdentifier(schema)}.sqlite_master
+        FROM ${escapeSqliteIdentifier(resolvedSchema)}.sqlite_master
         WHERE type = 'table'
           AND name NOT LIKE 'sqlite_%'
         ORDER BY name
@@ -154,10 +170,12 @@ export class SqliteTableAdapter
   }
 
   async getTableDdl(schema: string, tableName: string): Promise<string> {
+    const resolvedSchema = resolveSqliteSchema(schema);
+
     const [row] = await this.adapter.rawQuery<{ sql: string | null }>(
       `
         SELECT sql
-        FROM ${escapeSqliteIdentifier(schema)}.sqlite_master
+        FROM ${escapeSqliteIdentifier(resolvedSchema)}.sqlite_master
         WHERE type = 'table'
           AND name = ?
       `,
@@ -237,13 +255,15 @@ export class SqliteTableAdapter
     schema: string,
     tableName: string
   ): Promise<TableTrigger[]> {
+    const resolvedSchema = resolveSqliteSchema(schema);
+
     const rows = await this.adapter.rawQuery<{
       name: string;
       sql: string | null;
     }>(
       `
         SELECT name, sql
-        FROM ${escapeSqliteIdentifier(schema)}.sqlite_master
+        FROM ${escapeSqliteIdentifier(resolvedSchema)}.sqlite_master
         WHERE type = 'trigger'
           AND tbl_name = ?
         ORDER BY name

@@ -41,11 +41,13 @@ interface Workspace {
 
 ### Connection Requirements
 
-- Supported connection types: `postgres`, `mysql`, `mariadb`, `oracledb`, `sqlite3`
-- Network databases support `string` and `form` methods
-- SQLite uses the `file` method and is only exposed in the desktop runtime
+- Supported connection types: `postgres`, `mysql`, `mariadb`, `oracledb`, `sqlite3`, `redis`
+- Network SQL databases support `string` and `form` methods
+- Managed SQLite uses the `managed` method for Cloudflare D1 and Turso while staying on the SQL family path
+- Local SQLite uses the `file` method and is only exposed in the desktop runtime
 - Oracle structured-form connections use `serviceName` instead of `database`
 - Connection payloads are validated before save or health check
+- Connection family drives visible tabs, sidebar panels, empty states, and unsupported-feature fallbacks
 
 ### Connection String Formats
 
@@ -61,7 +63,14 @@ interface Workspace {
 - Failed connections show error but are still saved
 - Connection status is not persisted (checked on-demand)
 - Failed health checks can return actionable driver messages, including missing SQLite file errors
+- Failed health checks for D1/Turso and Redis must preserve provider-aware error context instead of falling back to PostgreSQL defaults
 - A failed re-test must not delete or mutate an already saved connection record
+
+### Family Gating Rules
+
+- D1 and Turso stay on `sqlite3` but resolve to the `sql` family.
+- Redis hides SQL-only surfaces such as `Schemas`, `ERD`, `UsersRoles`, schema diff, and SQL backup/restore.
+- Provider-limited SQL tools for D1/Turso must show a clear unavailable state instead of redirecting the session away from the SQL family.
 
 ### Per-Workspace Isolation
 
