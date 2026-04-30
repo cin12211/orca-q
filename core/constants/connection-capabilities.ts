@@ -106,7 +106,7 @@ export const CONNECTION_CAPABILITY_REGISTRY: Record<
     family: EConnectionFamily.REDIS,
     visibleActivityItems: ['Explorer', 'Schemas', 'DatabaseTools', 'Agent'],
     allowedTabTypes: [...REDIS_TAB_TYPES],
-    defaultActivityItem: 'Explorer',
+    defaultActivityItem: 'Schemas',
     primaryQuerySurface: 'raw-query',
     supportsRawSql: false,
     supportsQueryFiles: true,

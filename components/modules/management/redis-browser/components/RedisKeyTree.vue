@@ -204,7 +204,6 @@ defineExpose({
       <BaseEmpty
         title="No keys found"
         desc="No keys matched the current filter. Try adjusting the search or key pattern."
-        icon="hugeicons:database-sync-01"
       />
     </div>
 

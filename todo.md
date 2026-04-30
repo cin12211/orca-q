@@ -2,9 +2,9 @@
 [x] enhance show env tags in connection , need to show more in ConnectionSelector when user selected connection need show env tags in value selected connection, current show only connection selected icon , name (remember after update need check ui for case content connection name is long)
 show in StatusBar > CurrentPositionPath
 [x] error when user update value 0 -> when parser -> null -> show error ( in quick query)
-[ ] in raw quick query -> function , when i updat function / procidure somehow i got error , but i copy to raw query -> this worked fine -> need to check why this happen
-[ ] in raw query when i comment code in where this include variable :varname then i run query i got error can not paser sql -> need to check this case and fix
-[ ] fix query get and format data in query statsment like `'short_type_name',
+[x] in raw quick query -> function , when i updat function / procidure somehow i got error , but i copy to raw query -> this worked fine -> need to check why this happen
+[x] in raw query when i comment code in where this include variable :varname then i run query i got error can not paser sql -> need to check this case and fix
+[x] fix query get and format data in query statsment like `'short_type_name',
                     CASE
                       WHEN format_type(a.atttypid, a.atttypmod) LIKE 'character varying%' 
                           THEN REPLACE(format_type(a.atttypid, a.atttypmod), 'character varying', 'varchar')
@@ -92,21 +92,29 @@ i want to create js consant to maping data type not stick in query, check in all
 [x] in tabsViewContainer just crate button 'sql' in the firstly tab if user click just open new raw query file with name 'sample.sql' open this file , if this file not exist just create then open
 [x] in tabsViewContainer just add button + plus tab -> just show mini option 1 create new raw file -> clieck create new file with name = new-file ,new-file-1 ,.. if case exit . option 2 is schema browser , option 3 is open instance insight
 [x] add setting gloabl for table allow user setting sort null first , null last or null unset, show in gloal setting and qucik query bar
-[ ] in raw quick query -> function , when i updat function / procidure somehow i got error , but i copy to raw query -> this worked fine -> need to check why this happen
-[ ] enhance load schema if database have multiple schema (use wait 20- 50s)
-[ ] làm lại chuẩn chị docs, hướng dẫn cho agents 
+[x] in raw quick query -> function , when i updat function / procidure somehow i got error , but i copy to raw query -> this worked fine -> need to check why this happen
+[x] enhance load schema if database have multiple schema (use wait 20- 50s)
+[x] làm lại chuẩn chị docs, hướng dẫn cho agents
 
 # Redis issue
-- [ ] fix 'No keys matched the current filter.' just use empty component + update guilde for agents when use this case
-- [ ] RedisDBSelector just move to selector component + fix hieght for fix size in components/modules/raw-query/components/RawQueryEditorHeader.vue = h-6
-- [ ] redis raw query just hidden formator button , eplanin query -> this not support , disable Variables not support in redis raw query
-- [ ] brower key tree just update icon for key type ( ưu tiên dùng icon hugeicons)
-- [ ] brower key item thì thông tin đi kèm k cần ở dạng bagde có border đầu chỉ cần show text (áp dụng cho cả tree , list), với dạng list thì làm lại cho là vẫn dùng tree để hiển thị cho đồng bộ nhưng sẽ flatent ra
-- [ ] view detail key update TTL (seconds) field input i want reduce hieght of input (just update <Input> component just update for this compoent for have size default , small , xs, large)
-- [ ] key detail if not found or is remove just show BaseEmpty with icon "icons:404" 
-- [ ] Redis Pub/Sub just update width for Live Messages = 2/3 width (current is 3/4) 
-- [ ] Redis Pub/Sub Clear all button not work
 
-- [ ] in components/modules/instance-insights/RedisInstanceInsightsPanel.vue fix this  BaseNotice not define , just split componet this componet to big
-- [ ] redis detail key can't update ttl
-- [ ]
+- [x] fix 'No keys matched the current filter.' just use empty component + update guilde for agents when use this case
+- [x] RedisDBSelector just move to selector component + fix hieght for fix size in components/modules/raw-query/components/RawQueryEditorHeader.vue = h-6
+- [x] redis raw query just hidden formator button , eplanin query -> this not support , disable Variables not support in redis raw query
+- [x] brower key tree just update icon for key type ( ưu tiên dùng icon hugeicons)
+- [x] brower key item thì thông tin đi kèm k cần ở dạng bagde có border đầu chỉ cần show text (áp dụng cho cả tree , list), với dạng list thì làm lại cho là vẫn dùng tree để hiển thị cho đồng bộ nhưng sẽ flatent ra
+- [x] view detail key update TTL (seconds) field input i want reduce hieght of input (just update <Input> component just update for this compoent for have size default , small , xs, large)
+- [x] key detail if not found or is remove just show BaseEmpty with icon "icons:404"
+- [x] Redis Pub/Sub just update width for Live Messages = 2/3 width (current is 3/4)
+- [x] Redis Pub/Sub Clear all button not work
+
+- [x] in components/modules/instance-insights/RedisInstanceInsightsPanel.vue fix this BaseNotice not define , just split componet this componet to big
+- [x] redis detail key can't update ttl
+
+- [ ] mariadb , mysql, oracle, sqlite ẩn agent
+- [ ] mariadb , mysql, oracle, sqlite check lại phần Backup & Restore
+- [ ] mariadb , mysql, oracle, sqlite check lại phần instance insight (vì chưa define, tôi cần bạn reserch để cho define cụ thể hơn)
+- [ ] task đồng bộ ui Header theo task docs/header-style-normalization-report.md
+- [ ] khi quick query containt -> check hết k phân biệt hoa hay thường
+- [ ] update ở setting cho phép setting để user có thểm xem data ở type date format timezone với date custome ( giờ hiện lại local or múi giời tuỳ chọn)
+- [ ] update ở raw query khi user xoá file mà tab đang mở sẽ tự động đóng tab đó đi (khi xoá file xoá -> tab đó bị xoá -> nếu tab đó đang mở sẽ tự động đóng)

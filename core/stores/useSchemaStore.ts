@@ -42,7 +42,9 @@ function hasConnectionTransport(connection?: Connection) {
 
 function supportsSchemaMetadata(connection?: Connection) {
   return (
-    hasConnectionTransport(connection) && isSqlFamilyConnection(connection)
+    hasConnectionTransport(connection) &&
+    !!connection &&
+    isSqlFamilyConnection(connection)
   );
 }
 

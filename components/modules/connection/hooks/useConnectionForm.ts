@@ -31,6 +31,10 @@ type FormHealthCheckBody = Extract<
   { method: EConnectionMethod.FORM }
 >;
 type FormConnectionPayload = Omit<FormHealthCheckBody, 'type' | 'method'>;
+type ManagedConnectionProviderKind = Extract<
+  ConnectionHealthCheckBody,
+  { method: EConnectionMethod.MANAGED }
+>['providerKind'];
 
 const NETWORK_CONNECTION_METHODS = new Set([
   EConnectionMethod.STRING,
@@ -62,7 +66,7 @@ const createManagedSqliteState = (): IManagedSqliteConfig => ({
 
 const getManagedSqliteProviderKind = (
   provider: EManagedSqliteProvider
-): EConnectionProviderKind => {
+): ManagedConnectionProviderKind => {
   return provider === EManagedSqliteProvider.TURSO
     ? EConnectionProviderKind.TURSO
     : EConnectionProviderKind.CLOUDFLARE_D1;

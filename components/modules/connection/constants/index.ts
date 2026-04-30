@@ -82,6 +82,13 @@ export const databaseSupports: IDBSupport[] = [
   },
 ];
 
+const DATABASE_SUPPORT_TYPE_ALIASES: Partial<
+  Record<DatabaseClientType, DatabaseClientType>
+> = {
+  [DatabaseClientType.MYSQL2]: DatabaseClientType.MYSQL,
+  [DatabaseClientType.BETTER_SQLITE3]: DatabaseClientType.SQLITE3,
+};
+
 export const DEFAULT_DB_PORTS: Record<string, string> = {
   [DatabaseClientType.POSTGRES]: '5432',
   [DatabaseClientType.MYSQL]: '3306',
@@ -96,7 +103,8 @@ export const DEFAULT_DB_PORTS: Record<string, string> = {
 };
 
 export const getDatabaseSupportByType = (type: DatabaseClientType) => {
-  return databaseSupports.find(e => e.type === type);
+  const normalizedType = DATABASE_SUPPORT_TYPE_ALIASES[type] ?? type;
+  return databaseSupports.find(e => e.type === normalizedType);
 };
 
 export const isSqlite3ConnectionsEnabled = (value: unknown) => {

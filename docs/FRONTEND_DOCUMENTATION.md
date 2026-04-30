@@ -1169,8 +1169,7 @@ const onSubmit = handleSubmit(values => {
 #### 2. **Auto-Form Generation**
 
 ```vue
-<!-- /components/ui/auto-form -->
-<AutoForm :schema="connectionSchema" @submit="onSubmit" />
+
 ```
 
 **Features:**

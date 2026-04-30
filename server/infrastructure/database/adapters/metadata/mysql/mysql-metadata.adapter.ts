@@ -97,7 +97,7 @@ export class MysqlMetadataAdapter
       await Promise.all([
         this.adapter.rawQuery<{ schema_name: string }>(
           `
-            SELECT schema_name
+            SELECT schema_name AS schema_name
             FROM information_schema.schemata
             WHERE schema_name NOT IN (${EXCLUDED_SCHEMA_PLACEHOLDERS})
             ORDER BY schema_name
@@ -106,7 +106,12 @@ export class MysqlMetadataAdapter
         ),
         this.adapter.rawQuery<MysqlTableRow>(
           `
-            SELECT table_schema, table_name, table_type, table_rows, table_comment
+            SELECT
+              table_schema AS table_schema,
+              table_name AS table_name,
+              table_type AS table_type,
+              table_rows AS table_rows,
+              table_comment AS table_comment
             FROM information_schema.tables
             WHERE table_schema NOT IN (${EXCLUDED_SCHEMA_PLACEHOLDERS})
             ORDER BY table_schema, table_name
@@ -116,14 +121,14 @@ export class MysqlMetadataAdapter
         this.adapter.rawQuery<MysqlColumnRow>(
           `
             SELECT
-              table_schema,
-              table_name,
-              column_name,
-              ordinal_position,
-              column_type,
-              data_type,
-              is_nullable,
-              column_default
+              table_schema AS table_schema,
+              table_name AS table_name,
+              column_name AS column_name,
+              ordinal_position AS ordinal_position,
+              column_type AS column_type,
+              data_type AS data_type,
+              is_nullable AS is_nullable,
+              column_default AS column_default
             FROM information_schema.columns
             WHERE table_schema NOT IN (${EXCLUDED_SCHEMA_PLACEHOLDERS})
             ORDER BY table_schema, table_name, ordinal_position
@@ -132,7 +137,10 @@ export class MysqlMetadataAdapter
         ),
         this.adapter.rawQuery<MysqlPrimaryKeyRow>(
           `
-            SELECT table_schema, table_name, column_name
+            SELECT
+              table_schema AS table_schema,
+              table_name AS table_name,
+              column_name AS column_name
             FROM information_schema.key_column_usage
             WHERE constraint_name = 'PRIMARY'
               AND table_schema NOT IN (${EXCLUDED_SCHEMA_PLACEHOLDERS})
@@ -143,12 +151,12 @@ export class MysqlMetadataAdapter
         this.adapter.rawQuery<MysqlForeignKeyRow>(
           `
             SELECT
-              table_schema,
-              table_name,
-              column_name,
-              referenced_table_schema,
-              referenced_table_name,
-              referenced_column_name
+              table_schema AS table_schema,
+              table_name AS table_name,
+              column_name AS column_name,
+              referenced_table_schema AS referenced_table_schema,
+              referenced_table_name AS referenced_table_name,
+              referenced_column_name AS referenced_column_name
             FROM information_schema.key_column_usage
             WHERE referenced_table_name IS NOT NULL
               AND table_schema NOT IN (${EXCLUDED_SCHEMA_PLACEHOLDERS})
@@ -158,7 +166,10 @@ export class MysqlMetadataAdapter
         ),
         this.adapter.rawQuery<MysqlRoutineRow>(
           `
-            SELECT routine_schema, routine_name, routine_type
+            SELECT
+              routine_schema AS routine_schema,
+              routine_name AS routine_name,
+              routine_type AS routine_type
             FROM information_schema.routines
             WHERE routine_schema NOT IN (${EXCLUDED_SCHEMA_PLACEHOLDERS})
             ORDER BY routine_schema, routine_name

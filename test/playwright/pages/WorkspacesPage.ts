@@ -1,11 +1,12 @@
 import type { Page, Locator } from '@playwright/test';
 import { expect } from '@playwright/test';
+import { getLatestVersion } from '../../../core/data/changelogs/changelog';
 
 // The key used by useChangelogModal to track the last-seen version.
 // Setting it before page load reduces churn, while explicit dismissal below
 // keeps tests stable across version bumps.
 const CHANGELOG_KEY = 'orcaq-last-seen-version';
-const CHANGELOG_SEEN_VERSION = '1.1.1';
+const CHANGELOG_SEEN_VERSION = getLatestVersion();
 const PERSISTED_IDB_NAMES = [
   'appConfigIDB',
   'agentStateIDB',
@@ -75,10 +76,14 @@ export class WorkspacesPage {
 
   async goto() {
     await this.page.context().clearCookies();
-    await this.page.goto('/');
+
+    // The Nuxt dev server can keep the splash template mounted while late assets
+    // finish loading; DOM readiness is enough for the test storage reset flow.
+    await this.page.goto('/', { waitUntil: 'domcontentloaded' });
     await this.resetClientStorage();
-    await this.page.reload();
+    await this.page.reload({ waitUntil: 'domcontentloaded' });
     await this.dismissChangelogIfVisible();
+    await expect(this.headerCreateButton).toBeVisible({ timeout: 30_000 });
   }
 
   // ── Empty state ──────────────────────────────────────────────────────────

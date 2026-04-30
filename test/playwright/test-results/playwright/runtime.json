@@ -1,0 +1,51 @@
+{
+  "generatedAt": "2026-04-30T04:51:46.896Z",
+  "baseURL": "http://localhost:3000",
+  "projects": [
+    "common",
+    "postgres",
+    "mysql",
+    "mariadb",
+    "oracle",
+    "redis",
+    "sqlite"
+  ],
+  "liveConnections": {
+    "postgres": false,
+    "oracle": false,
+    "d1": false,
+    "turso": false
+  },
+  "fixtures": {
+    "postgres": {
+      "engine": "postgres",
+      "host": "127.0.0.1",
+      "port": 5432,
+      "database": "pagila",
+      "username": "heraq",
+      "source": "default-local"
+    },
+    "mysql": {
+      "engine": "mysql",
+      "host": "127.0.0.1",
+      "port": 3306,
+      "database": "sakila",
+      "username": "heraq",
+      "source": "default-local"
+    },
+    "mariadb": {
+      "engine": "mariadb",
+      "host": "127.0.0.1",
+      "port": 3307,
+      "database": "sakila",
+      "username": "heraq",
+      "source": "default-local"
+    },
+    "redis": {
+      "host": "127.0.0.1",
+      "port": 6379,
+      "database": 0,
+      "source": "default-local"
+    }
+  }
+}

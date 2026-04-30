@@ -1,4 +1,4 @@
-FROM node:22-alpine AS builder
+FROM node:22-alpine3.22 AS builder
 
 WORKDIR /app
 
@@ -30,9 +30,19 @@ COPY . .
 RUN bun run nuxt:build-web
 
 # 2. Runtime (Node 22 only)
-FROM node:22-alpine AS runner
+FROM node:22-alpine3.22 AS runner
 
 WORKDIR /app
+
+# Native backup jobs shell out to database client CLIs at runtime:
+# - PostgreSQL: pg_dump / pg_restore / psql
+# - MySQL/MariaDB: mysqldump / mysql
+# - SQLite: sqlite3
+RUN apk add --no-cache \
+  postgresql17-client \
+  mariadb-client \
+  sqlite
+
 COPY --from=builder /app/.output .output
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/package.json .

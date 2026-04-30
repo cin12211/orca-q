@@ -1,11 +1,16 @@
+import { DatabaseClientType } from '~/core/constants/database-client-type';
+import { qualifySqlTableName, quoteSqlIdentifier } from './sqlIdentifier';
+
 export function buildInsertStatements({
   schemaName,
   tableName,
   insertData,
+  dbType,
 }: {
   schemaName: string;
   tableName: string;
   insertData: Record<string, any>;
+  dbType?: DatabaseClientType | string;
 }): string {
   // Validate inputs
   if (!tableName || !insertData) {
@@ -13,12 +18,12 @@ export function buildInsertStatements({
   }
 
   if (!Object.keys(insertData).length) {
-    return `INSERT INTO "${schemaName}"."${tableName}" DEFAULT VALUES`;
+    return `INSERT INTO ${qualifySqlTableName({ schemaName, tableName, dbType })} DEFAULT VALUES`;
   }
 
   const columnsClause = Object.entries(insertData)
     .map(([column]) => {
-      return `"${column}"`;
+      return quoteSqlIdentifier(column, dbType);
     })
     .join(', ');
 
@@ -36,7 +41,7 @@ export function buildInsertStatements({
     .join(', ');
 
   // Construct final query
-  const query = `INSERT INTO "${schemaName}"."${tableName}" (${columnsClause}) VALUES (${valuesClause})`;
+  const query = `INSERT INTO ${qualifySqlTableName({ schemaName, tableName, dbType })} (${columnsClause}) VALUES (${valuesClause})`;
 
   return query;
 }

@@ -1,6 +1,7 @@
 import type { FieldDef } from 'pg';
 import type { RowData } from '~/components/base/dynamic-table/utils';
 import type { DatabaseDriverError } from '~/core/types';
+import type { IManagedSqliteConfig } from '~/core/types/entities/connection.entity';
 import type { ExecutedResultItem } from '../interfaces';
 
 /**
@@ -78,7 +79,7 @@ export function executeStreamingQuery({
   dbConnectionString: string;
   type?: string;
   providerKind?: string;
-  managedSqlite?: Record<string, unknown>;
+  managedSqlite?: IManagedSqliteConfig;
   params?: Record<string, unknown>;
 } & StreamingQueryCallbacks) {
   const controller = new AbortController();

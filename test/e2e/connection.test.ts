@@ -5,8 +5,10 @@ import { join } from 'node:path';
 import { describe, it, expect } from 'vitest';
 import {
   getD1LiveConnection,
+  getOracleLiveConnection,
   getTursoLiveConnection,
   hasD1LiveConnection,
+  hasOracleLiveConnection,
   hasTursoLiveConnection,
 } from '../support/live-connections';
 import { getRedisFixtureConfig } from '../support/nosql-fixtures';
@@ -15,6 +17,7 @@ describe('Database Connection E2E', async () => {
   await setup();
 
   const connectionString = process.env.PG_CONNECTION;
+  const oracleConnection = getOracleLiveConnection();
   const redisFixture = getRedisFixtureConfig();
 
   it('should successfully test a valid PostgreSQL connection string', async () => {
@@ -83,6 +86,50 @@ describe('Database Connection E2E', async () => {
     });
 
     expect(response).toEqual({ isConnectedSuccess: false });
+  });
+
+  it('should successfully test a valid Oracle connection string when live credentials are configured', async () => {
+    if (!hasOracleLiveConnection() || !oracleConnection.url) {
+      console.warn(
+        'Oracle live credentials not found in environment, skipping test.'
+      );
+      return;
+    }
+
+    const response = await $fetch('/api/managment-connection/health-check', {
+      method: 'POST',
+      body: {
+        type: 'oracledb',
+        method: 'string',
+        stringConnection: oracleConnection.url,
+      },
+    });
+
+    expect(response).toEqual({ isConnectedSuccess: true });
+  });
+
+  it('should successfully test a valid Oracle connection using form details when live credentials are configured', async () => {
+    if (!hasOracleLiveConnection()) {
+      console.warn(
+        'Oracle live credentials not found in environment, skipping test.'
+      );
+      return;
+    }
+
+    const response = await $fetch('/api/managment-connection/health-check', {
+      method: 'POST',
+      body: {
+        host: oracleConnection.host,
+        port: `${oracleConnection.port ?? 1521}`,
+        username: oracleConnection.username,
+        password: oracleConnection.password,
+        serviceName: oracleConnection.serviceName,
+        type: 'oracledb',
+        method: 'form',
+      },
+    });
+
+    expect(response).toEqual({ isConnectedSuccess: true });
   });
 
   it.each([

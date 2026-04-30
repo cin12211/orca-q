@@ -62,7 +62,7 @@ const {
       <div class="space-y-1">
         <div class="flex items-center gap-2">
           <Icon name="hugeicons:activity-02" class="size-5 text-primary" />
-          <h2 class="text-lg font-medium">Redis Instance Insight</h2>
+          <h2 class="text-base font-medium">Redis Instance Insight</h2>
         </div>
 
         <div class="flex items-center gap-1 text-sm text-muted-foreground">
@@ -70,7 +70,7 @@ const {
             v-if="dbType === DatabaseClientType.REDIS"
             :is="'hugeicons:database-sync-01'"
           />
-          <span class="font-medium text-foreground">{{ databaseName }}</span>
+          <span class="font-normal text-foreground">{{ databaseName }}</span>
           <Badge variant="outline" class="text-xxs h-5 px-1.5 font-normal">
             DB {{ databaseIndex }}
           </Badge>
@@ -98,7 +98,7 @@ const {
         </div>
 
         <Button
-          size="sm"
+          size="xs"
           variant="outline"
           :disabled="isLoading || isActionLoading"
           @click="refresh"
@@ -133,7 +133,7 @@ const {
 
       <div
         v-else
-        class="flex-1 overflow-y-auto rounded-lg border bg-background p-3"
+        class="flex-1 overflow-y-auto rounded-lg border bg-background p-3 mt-2"
       >
         <RedisOverviewSection
           v-show="activeSection === 'overview'"

@@ -19,7 +19,7 @@ import { createColumnCompletion } from './getMappedSchemaSuggestion';
 
 interface CteAwareCompletionSourceConfig {
   schemas: Schema[] | null | undefined;
-  defaultSchemaName: string;
+  defaultSchemaName?: string;
 }
 
 interface ResolvedTableDetails {
@@ -220,7 +220,7 @@ function resolveColumnsByTableReference({
 }: {
   tableReference: string;
   schemas: Schema[] | null | undefined;
-  defaultSchemaName: string;
+  defaultSchemaName?: string;
 }): ResolvedTableDetails | null {
   if (!schemas?.length) {
     return null;
@@ -260,7 +260,9 @@ function resolveColumnsByTableReference({
     }
   }
 
-  const normalizedDefaultSchema = normalizeIdentifier(defaultSchemaName);
+  const normalizedDefaultSchema = defaultSchemaName
+    ? normalizeIdentifier(defaultSchemaName)
+    : undefined;
   if (normalizedDefaultSchema) {
     const defaultSchema = schemas.find(
       schema => normalizeIdentifier(schema.name) === normalizedDefaultSchema

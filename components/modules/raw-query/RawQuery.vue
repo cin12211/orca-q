@@ -47,7 +47,7 @@ const {
   updateFileVariables,
   connectionsByWsId,
   fieldDefs,
-} = toRefs(rawQueryFileContent);
+} = rawQueryFileContent;
 
 const isRedisConnection = computed(
   () => connection.value?.type === DatabaseClientType.REDIS
@@ -108,7 +108,7 @@ const {
   queryProcessState,
   executedResults,
   activeResultTabId,
-} = toRefs(rawQueryEditor);
+} = rawQueryEditor;
 
 const { contextMenuItems, onContextMenuOpen } = useRawQueryEditorContextMenu({
   onExecuteCurrent: rawQueryEditor.onExecuteCurrent,

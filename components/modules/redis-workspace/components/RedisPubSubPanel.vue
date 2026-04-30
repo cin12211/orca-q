@@ -370,6 +370,7 @@ onBeforeUnmount(() => {
             <div class="space-y-2">
               <Label for="redis-pubsub-target">Target</Label>
               <Input
+                size="sm"
                 id="redis-pubsub-target"
                 v-model="target"
                 placeholder="orders.events or orders.*"
@@ -383,14 +384,14 @@ onBeforeUnmount(() => {
 
             <div class="flex flex-wrap gap-2">
               <Button
-                size="sm"
+                size="xs"
                 :disabled="subscribing"
                 @click="subscribeToTarget"
               >
                 Add target
               </Button>
               <Button
-                size="sm"
+                size="xs"
                 variant="outline"
                 :disabled="!sessionId"
                 @click="unsubscribeFromTarget(undefined)"
@@ -451,6 +452,7 @@ onBeforeUnmount(() => {
           <div class="space-y-2">
             <Label for="redis-pubsub-channel">Channel</Label>
             <Input
+              size="sm"
               id="redis-pubsub-channel"
               v-model="publishChannel"
               placeholder="orders.events"

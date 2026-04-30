@@ -102,7 +102,7 @@ const onToggleSlotStatus = (params: {
       <div class="space-y-1">
         <div class="flex items-center gap-2">
           <Icon name="hugeicons:database" class="size-5 text-primary" />
-          <h2 class="text-lg font-medium">Instance Insights</h2>
+          <h2 class="text-base font-medium">Instance Insights</h2>
         </div>
 
         <div class="text-sm text-muted-foreground flex items-center gap-0.5">

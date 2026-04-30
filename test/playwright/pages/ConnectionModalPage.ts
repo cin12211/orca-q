@@ -3,6 +3,7 @@ import { expect } from '@playwright/test';
 
 export class ConnectionModalPage {
   readonly page: Page;
+  readonly strictConfirmPhrase = 'this is prod';
 
   constructor(page: Page) {
     this.page = page;
@@ -48,12 +49,16 @@ export class ConnectionModalPage {
 
   async advanceToStep2() {
     await this.nextButton.click();
-    await expect(this.page.getByText('Connection Details')).toBeVisible();
+    await this.expectStep2();
   }
 
   // ── Step 2: Connection credentials ────────────────────────────────────────
   get step2Heading(): Locator {
-    return this.page.getByText('Connection Details');
+    return this.page
+      .getByRole('dialog')
+      .filter({ has: this.page.locator('#connection-name') })
+      .getByText('Connection Details', { exact: true })
+      .first();
   }
 
   get connectionNameInput(): Locator {
@@ -128,8 +133,51 @@ export class ConnectionModalPage {
     return this.page.getByRole('button', { name: /^create$/i });
   }
 
+  get environmentTagsButton(): Locator {
+    return this.page
+      .getByText('Environment Tags', { exact: true })
+      .locator('xpath=ancestor::div[contains(@class,"space-y-2")][1]')
+      .getByRole('button')
+      .first();
+  }
+
+  get unselectedEnvironmentTagsButton(): Locator {
+    return this.page.getByRole('button', { name: /assign tags/i }).first();
+  }
+
+  get sqlShellOpenActionButton(): Locator {
+    return this.page.getByRole('button', { name: 'New SQL file' }).first();
+  }
+
+  get addNewTagButton(): Locator {
+    return this.page.getByRole('button', { name: /add new tag/i }).first();
+  }
+
+  get createTagDialog(): Locator {
+    return this.page
+      .getByRole('dialog')
+      .filter({ hasText: 'Create New Tag' })
+      .first();
+  }
+
+  get strictWarningDialog(): Locator {
+    return this.page
+      .getByRole('dialog')
+      .filter({ hasText: 'Production Environment Warning' })
+      .first();
+  }
+
+  environmentTagOption(name: string): Locator {
+    return this.page
+      .locator('[role="option"]')
+      .filter({ hasText: new RegExp(`^${name}$`, 'i') })
+      .locator('button')
+      .first();
+  }
+
   async expectStep2() {
     await expect(this.step2Heading).toBeVisible();
+    await expect(this.connectionNameInput).toBeVisible();
   }
 
   async fillConnectionName(name: string) {
@@ -230,9 +278,10 @@ export class ConnectionModalPage {
   }
 
   async expectSqlFamilyLanding() {
-    await expect(
-      this.page.getByText('No table is open', { exact: true })
-    ).toBeVisible({ timeout: 30_000 });
+    await expect(this.modalHeading).not.toBeVisible({ timeout: 30_000 });
+    await expect(this.sqlShellOpenActionButton).toBeVisible({
+      timeout: 30_000,
+    });
     await expect(
       this.page.getByText('No Redis workspace tab is open', { exact: true })
     ).toHaveCount(0);
@@ -245,7 +294,73 @@ export class ConnectionModalPage {
   }
 
   async clickCreate() {
+    await expect(this.createButton).toBeEnabled({ timeout: 30_000 });
     await this.createButton.click();
+  }
+
+  async assignNewEnvironmentTag(options: {
+    name: string;
+    strictMode?: boolean;
+  }) {
+    await this.openEnvironmentTagPicker();
+    await expect(this.addNewTagButton).toBeVisible({ timeout: 30_000 });
+    await this.addNewTagButton.click();
+
+    await expect(this.createTagDialog).toBeVisible({ timeout: 30_000 });
+    await this.page.locator('#new-tag-name').fill(options.name);
+
+    if (options.strictMode) {
+      const strictModeSwitch = this.createTagDialog.getByRole('switch').first();
+      const isEnabled = await strictModeSwitch.evaluate(element => {
+        const ariaChecked = element.getAttribute('aria-checked');
+        const dataState = element.getAttribute('data-state');
+
+        return ariaChecked === 'true' || dataState === 'checked';
+      });
+
+      if (!isEnabled) {
+        await strictModeSwitch.click();
+      }
+    }
+
+    await this.createTagDialog
+      .getByRole('button', { name: /create tag/i })
+      .click();
+
+    await expect(this.createTagDialog).not.toBeVisible({ timeout: 30_000 });
+    await expect(this.environmentTagsButton).toContainText(options.name, {
+      timeout: 30_000,
+    });
+
+    await this.page.keyboard.press('Escape');
+    await expect(this.addNewTagButton).toHaveCount(0);
+  }
+
+  async openEnvironmentTagPicker() {
+    await this.expectStep2();
+
+    const trigger = (await this.unselectedEnvironmentTagsButton
+      .isVisible()
+      .catch(() => false))
+      ? this.unselectedEnvironmentTagsButton
+      : this.environmentTagsButton;
+
+    await expect(trigger).toBeVisible({ timeout: 30_000 });
+    await trigger.scrollIntoViewIfNeeded();
+    await trigger.click();
+  }
+
+  async selectEnvironmentTag(name: string) {
+    await this.openEnvironmentTagPicker();
+    await expect(this.environmentTagOption(name)).toBeVisible({
+      timeout: 30_000,
+    });
+    await this.environmentTagOption(name).click();
+    await expect(this.environmentTagsButton).toContainText(name, {
+      timeout: 30_000,
+    });
+    await this.page.keyboard.press('Escape');
+    await expect(this.addNewTagButton).toHaveCount(0);
   }
 
   connectionRow(name: string): Locator {
@@ -262,6 +377,25 @@ export class ConnectionModalPage {
 
   async connectConnection(name: string) {
     await this.connectButtonForConnection(name).click();
+  }
+
+  async expectStrictWarning() {
+    await expect(this.strictWarningDialog).toBeVisible({ timeout: 30_000 });
+    await expect(
+      this.strictWarningDialog.getByText('Production Environment Warning', {
+        exact: true,
+      })
+    ).toBeVisible();
+    await expect(this.page.locator('#strict-confirm-input')).toBeVisible();
+  }
+
+  async confirmStrictConnection() {
+    await this.page
+      .locator('#strict-confirm-input')
+      .fill(this.strictConfirmPhrase);
+    await this.strictWarningDialog
+      .getByRole('button', { name: 'Connect', exact: true })
+      .click();
   }
 
   // ── Full add connection flow (step 1 → step 2) ────────────────────────────
@@ -317,7 +451,7 @@ export class ConnectionModalPage {
   }
 
   get databaseInput(): Locator {
-    return this.page.locator('#database');
+    return this.structuredTargetInput;
   }
 
   async fillFormCredentials(opts: {

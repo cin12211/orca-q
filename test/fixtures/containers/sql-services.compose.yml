@@ -1,0 +1,55 @@
+services:
+  postgres:
+    image: docker.io/library/postgres:16-alpine
+    ports:
+      - '${HERAQ_POSTGRES_PORT:-5432}:5432'
+    environment:
+      POSTGRES_DB: '${HERAQ_POSTGRES_DATABASE:-pagila}'
+      POSTGRES_USER: '${HERAQ_POSTGRES_USER:-heraq}'
+      POSTGRES_PASSWORD: '${HERAQ_POSTGRES_PASSWORD:-heraq}'
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB']
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  mysql:
+    image: docker.io/library/mysql:8.4
+    ports:
+      - '${HERAQ_MYSQL_PORT:-3306}:3306'
+    environment:
+      MYSQL_DATABASE: '${HERAQ_MYSQL_DATABASE:-sakila}'
+      MYSQL_USER: '${HERAQ_MYSQL_USER:-heraq}'
+      MYSQL_PASSWORD: '${HERAQ_MYSQL_PASSWORD:-heraq}'
+      MYSQL_ROOT_PASSWORD: '${HERAQ_MYSQL_ROOT_PASSWORD:-root}'
+    command:
+      - '--mysql-native-password=ON'
+      - '--mysqlx=0'
+    healthcheck:
+      test:
+        [
+          'CMD-SHELL',
+          'mysqladmin ping -h 127.0.0.1 -u$$MYSQL_USER -p$$MYSQL_PASSWORD --silent',
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+
+  mariadb:
+    image: docker.io/library/mariadb:11.4
+    ports:
+      - '${HERAQ_MARIADB_PORT:-3307}:3306'
+    environment:
+      MARIADB_DATABASE: '${HERAQ_MARIADB_DATABASE:-sakila}'
+      MARIADB_USER: '${HERAQ_MARIADB_USER:-heraq}'
+      MARIADB_PASSWORD: '${HERAQ_MARIADB_PASSWORD:-heraq}'
+      MARIADB_ROOT_PASSWORD: '${HERAQ_MARIADB_ROOT_PASSWORD:-root}'
+    healthcheck:
+      test:
+        [
+          'CMD-SHELL',
+          'mariadb-admin ping -h 127.0.0.1 -u$$MARIADB_USER -p$$MARIADB_PASSWORD --silent',
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 30

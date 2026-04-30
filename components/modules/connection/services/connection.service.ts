@@ -50,6 +50,11 @@ export type ResolvedConnectionHealthCheckBody = ConnectionHealthCheckBody & {
   family: EConnectionFamily;
 };
 
+type ManagedConnectionHealthCheckBody = Extract<
+  ConnectionHealthCheckBody,
+  { method: EConnectionMethod.MANAGED }
+>;
+
 export function resolveConnectionHealthCheckBody(
   body: ConnectionHealthCheckBody
 ): ResolvedConnectionHealthCheckBody {
@@ -65,6 +70,15 @@ export function resolveConnectionHealthCheckBody(
     providerKind,
     managedSqlite: 'managedSqlite' in body ? body.managedSqlite : undefined,
   });
+
+  if (body.method === EConnectionMethod.MANAGED) {
+    return {
+      ...body,
+      providerKind:
+        providerKind as ManagedConnectionHealthCheckBody['providerKind'],
+      family,
+    };
+  }
 
   return {
     ...body,

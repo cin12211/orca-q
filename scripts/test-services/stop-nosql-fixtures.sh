@@ -5,6 +5,8 @@ set -euo pipefail
 script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 repo_root="$(cd "${script_dir}/../.." && pwd)"
 compose_file="${repo_root}/test/fixtures/containers/nosql-services.compose.yml"
+compose_project="${HERAQ_REDIS_FIXTURE_PROJECT:-heraq-redis-fixture}"
+legacy_compose_project="${HERAQ_FIXTURE_LEGACY_PROJECT:-containers}"
 
 resolve_compose_cmd() {
   if command -v podman >/dev/null 2>&1 && podman compose version >/dev/null 2>&1; then
@@ -31,4 +33,8 @@ compose_cmd=()
 resolve_compose_cmd
 
 echo "Stopping Redis fixture with: ${compose_cmd[*]}"
-"${compose_cmd[@]}" -f "${compose_file}" down --volumes --remove-orphans
+"${compose_cmd[@]}" -p "${compose_project}" -f "${compose_file}" down --volumes --remove-orphans
+
+if [ "${legacy_compose_project}" != "${compose_project}" ]; then
+  "${compose_cmd[@]}" -p "${legacy_compose_project}" -f "${compose_file}" down --volumes --remove-orphans >/dev/null 2>&1 || true
+fi

@@ -166,16 +166,16 @@ Feature-specific modules containing related components, hooks, and logic.
 
 ### Other Modules
 
-| Module                     | Location                           | Files | Purpose                   |
-| -------------------------- | ---------------------------------- | ----- | ------------------------- |
-| **management-users**       | `/modules/management-users/`       | 5     | User permissions & roles  |
-| **management-explorer**    | `/modules/management-explorer/`    | 1     | SQL file explorer         |
-| **management-export**      | `/modules/management-export/`      | 3     | Database export tools     |
-| **management-erd-diagram** | `/modules/management-erd-diagram/` | 1     | ERD panel wrapper         |
-| **management/redis-browser** | `/modules/management/redis-browser/` | 3+  | Redis key browser, filters, and key tree |
-| **redis-workspace**        | `/modules/redis-workspace/`        | 5+    | Redis value editor, workbench, analysis, and safeguards |
-| **changelog**              | `/modules/changelog/`              | 1     | Version changelog display |
-| **selectors**              | `/modules/selectors/`              | 7     | Custom select components  |
+| Module                       | Location                             | Files | Purpose                                                 |
+| ---------------------------- | ------------------------------------ | ----- | ------------------------------------------------------- |
+| **management-users**         | `/modules/management-users/`         | 5     | User permissions & roles                                |
+| **management-explorer**      | `/modules/management-explorer/`      | 1     | SQL file explorer                                       |
+| **management-export**        | `/modules/management-export/`        | 3     | Database export tools                                   |
+| **management-erd-diagram**   | `/modules/management-erd-diagram/`   | 1     | ERD panel wrapper                                       |
+| **management/redis-browser** | `/modules/management/redis-browser/` | 3+    | Redis key browser, filters, and key tree                |
+| **redis-workspace**          | `/modules/redis-workspace/`          | 5+    | Redis value editor, workbench, analysis, and safeguards |
+| **changelog**                | `/modules/changelog/`                | 1     | Version changelog display                               |
+| **selectors**                | `/modules/selectors/`                | 7     | Custom select components                                |
 
 ### Connection Family Notes
 
@@ -193,7 +193,6 @@ Headless UI components from shadcn-vue library.
 | ------------- | ----- | ---------------------------- |
 | accordion     | 5     | Collapsible content sections |
 | alert-dialog  | 10    | Modal confirmations          |
-| auto-form     | 16    | Dynamic form generation      |
 | avatar        | 4     | User avatars                 |
 | breadcrumb    | 8     | Navigation breadcrumbs       |
 | button        | 2     | Primary button variants      |

@@ -70,7 +70,7 @@ export function useSqlEditorExtensions({
     codeEditorRef.value?.editorView as EditorView | null;
 
   const defaultSchemaName = computed(
-    () => activeSchema.value?.name || 'public'
+    () => activeSchema.value?.name || connectionSchemas.value?.[0]?.name
   );
   const isRedisConnection = computed(
     () => connection?.value?.type === DatabaseClientType.REDIS

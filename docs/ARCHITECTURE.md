@@ -27,29 +27,29 @@ Database Development & Administration tooling. The application supports PostgreS
 
 ### Technical Stack
 
-| Layer                 | Technology                                                              |
-| --------------------- | ----------------------------------------------------------------------- |
-| **Framework**         | Nuxt 3.16+ (Vue 3.5+)                                                   |
-| **Language**          | TypeScript 5.6                                                          |
-| **Rendering**         | SPA mode (`ssr: false`)                                                 |
-| **State Management**  | Pinia 3 + pinia-plugin-persistedstate                                   |
-| **UI Library**        | shadcn-vue 2.0 (New York style) + Reka UI primitives                    |
-| **Styling**           | Tailwind CSS 4 via `@tailwindcss/vite`                                  |
-| **Data Grid**         | AG Grid Community 33 + TanStack Vue Table 8                             |
-| **Code Editor**       | CodeMirror 6 (vue-codemirror)                                           |
-| **ERD Visualization** | Vue Flow (wrapper over reactflow)                                       |
-| **Charts**            | ECharts 5 via vue-echarts                                               |
-| **AI Integration**    | Vercel AI SDK 6 (OpenAI, Google Gemini, Anthropic Claude, xAI Grok)     |
+| Layer                 | Technology                                                                                                               |
+| --------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| **Framework**         | Nuxt 3.16+ (Vue 3.5+)                                                                                                    |
+| **Language**          | TypeScript 5.6                                                                                                           |
+| **Rendering**         | SPA mode (`ssr: false`)                                                                                                  |
+| **State Management**  | Pinia 3 + pinia-plugin-persistedstate                                                                                    |
+| **UI Library**        | shadcn-vue 2.0 (New York style) + Reka UI primitives                                                                     |
+| **Styling**           | Tailwind CSS 4 via `@tailwindcss/vite`                                                                                   |
+| **Data Grid**         | AG Grid Community 33 + TanStack Vue Table 8                                                                              |
+| **Code Editor**       | CodeMirror 6 (vue-codemirror)                                                                                            |
+| **ERD Visualization** | Vue Flow (wrapper over reactflow)                                                                                        |
+| **Charts**            | ECharts 5 via vue-echarts                                                                                                |
+| **AI Integration**    | Vercel AI SDK 6 (OpenAI, Google Gemini, Anthropic Claude, xAI Grok)                                                      |
 | **Database Driver**   | Knex.js with `pg`, `mysql2`, `oracledb`, and `sqlite3`, plus `@libsql/client`, `redis`, and Cloudflare D1 HTTP transport |
-| **Desktop Wrapper**   | Electron (via electron-vite, separate `electron/` project)              |
-| **D&D**               | Atlassian Pragmatic Drag & Drop                                         |
-| **Routing**           | nuxt-typed-router (type-safe route params)                              |
-| **Icons**             | @nuxt/icon with Iconify (Lucide, HugeIcons, Logos, Material Icon Theme) |
-| **Testing**           | Vitest 4 (unit + nuxt environment) + @vue/test-utils                    |
-| **Package Manager**   | Bun 1.2.8                                                               |
-| **Docker**            | Multi-stage Node 22 Alpine image                                        |
-| **Analytics**         | Amplitude                                                               |
-| **Animations**        | GSAP 3, @formkit/auto-animate                                           |
+| **Desktop Wrapper**   | Electron (via electron-vite, separate `electron/` project)                                                               |
+| **D&D**               | Atlassian Pragmatic Drag & Drop                                                                                          |
+| **Routing**           | nuxt-typed-router (type-safe route params)                                                                               |
+| **Icons**             | @nuxt/icon with Iconify (Lucide, HugeIcons, Logos, Material Icon Theme)                                                  |
+| **Testing**           | Vitest 4 (unit + nuxt environment) + @vue/test-utils                                                                     |
+| **Package Manager**   | Bun 1.2.8                                                                                                                |
+| **Docker**            | Multi-stage Node 22 Alpine image                                                                                         |
+| **Analytics**         | Amplitude                                                                                                                |
+| **Animations**        | GSAP 3, @formkit/auto-animate                                                                                            |
 
 ### Rendering Mode
 
@@ -163,7 +163,7 @@ OrcaQ now treats connection type and provider kind as a capability problem inste
 
 **Layer: UI**
 
-30+ shadcn-vue components: Accordion, Alert, AlertDialog, AutoForm, Avatar, Badge, Breadcrumb, Button, Calendar, Card, Checkbox, Collapsible, Command, ContextMenu, Dialog, DropdownMenu, Empty, Form, Input, Kbd, Label, Popover, RadioGroup, Resizable, ScrollArea, Select, Separator, Sheet, Sidebar, Skeleton, Slider, Sonner, Switch, Table, Tabs, Textarea, Tooltip.
+30+ shadcn-vue components: Accordion, Alert, AlertDialog, Avatar, Badge, Breadcrumb, Button, Calendar, Card, Checkbox, Collapsible, Command, ContextMenu, Dialog, DropdownMenu, Empty, Form, Input, Kbd, Label, Popover, RadioGroup, Resizable, ScrollArea, Select, Separator, Sheet, Sidebar, Skeleton, Slider, Sonner, Switch, Table, Tabs, Textarea, Tooltip.
 
 **Dependencies:** `lib/utils.ts` (cn helper), Reka UI primitives, class-variance-authority  
 **Public API:** Each component exports from its own directory
@@ -694,7 +694,7 @@ Pages are extremely thin — typically just `definePageMeta` + a single feature 
 
 ### Form Architecture
 
-Forms use **Vee-Validate 4** with **Zod** schemas (`@vee-validate/zod`). The `components/ui/auto-form/` provides an auto-generated form component based on Zod schema definitions.
+Forms use **Vee-Validate 4** with **Zod** schemas (`@vee-validate/zod`).
 
 Connection creation uses a manual multi-step form with `reactive()` state.
 
