@@ -1,3 +1,5 @@
+import { DatabaseClientType } from '~/core/constants/database-client-type';
+
 export interface SessionSummaryMetrics {
   total: number;
   active: number;
@@ -142,6 +144,123 @@ export interface InstanceActionResponse {
 }
 
 export type ReplicationSlotDesiredStatus = 'on' | 'off';
+
+export type InstanceInsightsSectionId =
+  | 'overview'
+  | 'sessions-locks'
+  | 'configuration'
+  | 'replication'
+  | 'memory-limits'
+  | 'data-guard'
+  | 'storage-health'
+  | 'integrity';
+
+export type InstanceInsightsActionState =
+  | 'supported'
+  | 'unsupported'
+  | 'conditional';
+
+export type InstanceInsightsSectionStatus =
+  | 'ready'
+  | 'unsupported'
+  | 'unavailable';
+
+export type InstanceInsightsTone =
+  | 'default'
+  | 'success'
+  | 'warning'
+  | 'danger'
+  | 'info';
+
+export type InstanceInsightsCheckStatus = 'pass' | 'warn' | 'fail' | 'info';
+
+export type InstanceInsightsTableValue = string | number | boolean | null;
+
+export interface InstanceInsightsMetricCard {
+  id: string;
+  label: string;
+  value: string;
+  helperText?: string | null;
+  tone?: InstanceInsightsTone;
+}
+
+export interface InstanceInsightsDetailItem {
+  label: string;
+  value: string;
+  helperText?: string | null;
+  tone?: InstanceInsightsTone;
+}
+
+export interface InstanceInsightsTableColumn {
+  key: string;
+  label: string;
+}
+
+export interface InstanceInsightsTable {
+  id: string;
+  title: string;
+  description?: string | null;
+  emptyMessage?: string | null;
+  columns: InstanceInsightsTableColumn[];
+  rows: Record<string, InstanceInsightsTableValue>[];
+}
+
+export interface InstanceInsightsCheck {
+  id: string;
+  label: string;
+  detail: string;
+  status: InstanceInsightsCheckStatus;
+  tone?: InstanceInsightsTone;
+}
+
+export interface InstanceInsightsActionCapability {
+  id: string;
+  label: string;
+  state: InstanceInsightsActionState;
+  description?: string | null;
+  reason?: string | null;
+}
+
+export interface InstanceInsightsCapabilities {
+  supportsSessionInspection: boolean;
+  supportsLockInspection: boolean;
+  supportsConfiguration: boolean;
+  supportsReplication: boolean;
+  supportsDataGuard: boolean;
+  supportsStorageHealth: boolean;
+  supportsIntegrityChecks: boolean;
+  supportsMemoryLimits: boolean;
+  supportsCancelQuery: boolean;
+  supportsTerminateConnection: boolean;
+  supportsReplicationActions: boolean;
+}
+
+export interface InstanceInsightsSection {
+  id: InstanceInsightsSectionId;
+  title: string;
+  subtitle: string;
+  status: InstanceInsightsSectionStatus;
+  statusMessage?: string | null;
+  capturedAt: string;
+  cards?: InstanceInsightsMetricCard[];
+  details?: InstanceInsightsDetailItem[];
+  tables?: InstanceInsightsTable[];
+  checks?: InstanceInsightsCheck[];
+  actions?: InstanceInsightsActionCapability[];
+  searchable?: boolean;
+  searchPlaceholder?: string | null;
+}
+
+export interface InstanceInsightsView {
+  dbType: DatabaseClientType;
+  title: string;
+  databaseName: string | null;
+  version: string | null;
+  capturedAt: string;
+  capabilities: InstanceInsightsCapabilities;
+  actions: InstanceInsightsActionCapability[];
+  sections: InstanceInsightsSection[];
+}
 
 export interface RedisOverviewMetrics {
   redisVersion: string;

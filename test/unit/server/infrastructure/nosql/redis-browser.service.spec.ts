@@ -105,6 +105,60 @@ describe('updateRedisKeyValue', () => {
     expect(closeMock).toHaveBeenCalled();
   });
 
+  it('continues scanning until it collects the full key list for the browser response', async () => {
+    clientMock.scan
+      .mockResolvedValueOnce({
+        cursor: 12,
+        keys: ['orders:1'],
+      })
+      .mockResolvedValueOnce({
+        cursor: 0,
+        keys: ['feature:enabled'],
+      });
+    clientMock.type.mockImplementation(async (key: string) =>
+      key === 'orders:1' ? 'string' : 'set'
+    );
+    clientMock.ttl.mockResolvedValue(-1);
+    clientMock.sendCommand.mockImplementation(async (args: string[]) => {
+      if (args[0] === 'MEMORY' && args[1] === 'USAGE') {
+        return args[2] === 'orders:1' ? 1024 : 512;
+      }
+
+      return null;
+    });
+
+    const result = await listRedisKeys(
+      {
+        method: EConnectionMethod.STRING,
+        url: 'redis://127.0.0.1:6379/0',
+      },
+      {
+        count: 150,
+      }
+    );
+
+    expect(clientMock.scan).toHaveBeenCalledTimes(2);
+    expect(result).toEqual({
+      cursor: '0',
+      keys: [
+        {
+          key: 'orders:1',
+          type: 'string',
+          ttl: -1,
+          memoryUsage: 1024,
+          memoryUsageHuman: '1.0 KB',
+        },
+        {
+          key: 'feature:enabled',
+          type: 'set',
+          ttl: -1,
+          memoryUsage: 512,
+          memoryUsageHuman: '512 B',
+        },
+      ],
+    });
+  });
+
   it('preserves the current TTL when saving a string without an explicit TTL change', async () => {
     await updateRedisKeyValue(
       {

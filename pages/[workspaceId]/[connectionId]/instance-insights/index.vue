@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { storeToRefs } from 'pinia';
 import InstanceInsightsPanel from '~/components/modules/instance-insights/InstanceInsightsPanel.vue';
+import MultiDbInstanceInsightsPanel from '~/components/modules/instance-insights/MultiDbInstanceInsightsPanel.vue';
 import RedisInstanceInsightsPanel from '~/components/modules/instance-insights/RedisInstanceInsightsPanel.vue';
 import { useRedisWorkspace } from '~/components/modules/redis-workspace/hooks/useRedisWorkspace';
 import { DatabaseClientType } from '~/core/constants/database-client-type';
@@ -85,6 +86,13 @@ watch(
     />
 
     <InstanceInsightsPanel
+      v-else-if="dbType === DatabaseClientType.POSTGRES"
+      :db-connection-string="dbConnectionString"
+      :database-name="databaseName"
+      :db-type="dbType"
+    />
+
+    <MultiDbInstanceInsightsPanel
       v-else
       :db-connection-string="dbConnectionString"
       :database-name="databaseName"

@@ -4,7 +4,7 @@ set -euo pipefail
 
 script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 repo_root="$(cd "${script_dir}/../.." && pwd)"
-fixture_profile="${HERAQ_FIXTURE_PROFILE:-all}"
+fixture_profile="${ORCAQ_FIXTURE_PROFILE:-${HERAQ_FIXTURE_PROFILE:-all}}"
 
 while [ "$#" -gt 0 ]; do
   case "$1" in
@@ -54,7 +54,7 @@ run_fixture_script() {
 cleanup() {
   local exit_code="$1"
 
-  if [ "${HERAQ_KEEP_FIXTURES:-0}" = "1" ]; then
+  if [ "${ORCAQ_KEEP_FIXTURES:-${HERAQ_KEEP_FIXTURES:-0}}" = "1" ]; then
     return 0
   fi
 

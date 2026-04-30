@@ -179,7 +179,7 @@ describe('Database Connection E2E', async () => {
   });
 
   it('should successfully test a valid SQLite file connection', async () => {
-    const tempDirectory = await mkdtemp(join(tmpdir(), 'heraq-sqlite-'));
+    const tempDirectory = await mkdtemp(join(tmpdir(), 'orcaq-sqlite-'));
     const filePath = join(tempDirectory, 'app.sqlite');
 
     await writeFile(filePath, '');
@@ -206,7 +206,7 @@ describe('Database Connection E2E', async () => {
       body: {
         type: 'sqlite3',
         method: 'file',
-        filePath: '/tmp/heraq-missing-test.sqlite',
+        filePath: '/tmp/orcaq-missing-test.sqlite',
       },
     });
 

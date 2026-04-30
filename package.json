@@ -72,6 +72,7 @@
     "test:fixtures:redis:seed": "bash scripts/test-services/seed-nosql-fixtures.sh",
     "test:fixtures:redis:stop": "bash scripts/test-services/stop-nosql-fixtures.sh",
     "test:fixtures:sql:start": "bash scripts/test-services/start-sql-fixtures.sh",
+    "test:fixtures:sql:seed": "bash scripts/test-services/seed-sql-fixtures.sh",
     "test:fixtures:sql:stop": "bash scripts/test-services/stop-sql-fixtures.sh",
     "test:sample-data:init": "bash scripts/test-services/prepare-sample-data.sh",
     "test:fixtures:db:start": "bash scripts/test-services/start-all-db-fixtures.sh",

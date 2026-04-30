@@ -5,16 +5,18 @@ set -euo pipefail
 script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 repo_root="$(cd "${script_dir}/../.." && pwd)"
 compose_file="${repo_root}/test/fixtures/containers/nosql-services.compose.yml"
-compose_project="${HERAQ_REDIS_FIXTURE_PROJECT:-heraq-redis-fixture}"
-legacy_compose_project="${HERAQ_FIXTURE_LEGACY_PROJECT:-containers}"
+compose_project="${ORCAQ_REDIS_FIXTURE_PROJECT:-${HERAQ_REDIS_FIXTURE_PROJECT:-heraq-redis-fixture}}"
+legacy_compose_project="${ORCAQ_FIXTURE_LEGACY_PROJECT:-${HERAQ_FIXTURE_LEGACY_PROJECT:-containers}}"
+
+export HERAQ_REDIS_PORT="${ORCAQ_REDIS_PORT:-${HERAQ_REDIS_PORT:-6379}}"
 
 resolve_compose_cmd() {
-  if command -v podman >/dev/null 2>&1 && podman compose version >/dev/null 2>&1; then
+  if command -v podman >/dev/null 2>&1 && podman info >/dev/null 2>&1 && podman compose version >/dev/null 2>&1; then
     compose_cmd=(podman compose)
     return 0
   fi
 
-  if command -v docker >/dev/null 2>&1 && docker compose version >/dev/null 2>&1; then
+  if command -v docker >/dev/null 2>&1 && docker info >/dev/null 2>&1 && docker compose version >/dev/null 2>&1; then
     compose_cmd=(docker compose)
     return 0
   fi

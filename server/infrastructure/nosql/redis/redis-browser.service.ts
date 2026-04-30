@@ -387,13 +387,37 @@ export async function listRedisKeys(
   }
 ) {
   return withSelectedDatabase(input, async client => {
-    const scanResult = await client.scan(options?.cursor || '0', {
-      MATCH: options?.keyPattern || '*',
-      COUNT: options?.count || 100,
-    });
+    const scanPattern = options?.keyPattern || '*';
+    const requestedKeyCount = Math.max(options?.count ?? 500, 100);
+    const scanBatchCount = Math.min(requestedKeyCount, 200);
+    const collectedKeys: string[] = [];
+    const seenKeys = new Set<string>();
+    let cursor = options?.cursor || '0';
+
+    do {
+      const scanResult = await client.scan(cursor, {
+        MATCH: scanPattern,
+        COUNT: scanBatchCount,
+      });
+
+      cursor = `${scanResult.cursor}`;
+
+      for (const key of scanResult.keys) {
+        if (seenKeys.has(key)) {
+          continue;
+        }
+
+        seenKeys.add(key);
+        collectedKeys.push(key);
+
+        if (collectedKeys.length >= requestedKeyCount) {
+          break;
+        }
+      }
+    } while (cursor !== '0' && collectedKeys.length < requestedKeyCount);
 
     const keys = await Promise.all(
-      scanResult.keys.map(async key => {
+      collectedKeys.map(async key => {
         const [type, ttl, memoryUsage] = await Promise.all([
           client.type(key),
           client.ttl(key),
@@ -411,7 +435,7 @@ export async function listRedisKeys(
     );
 
     return {
-      cursor: `${scanResult.cursor}`,
+      cursor,
       keys: keys as RedisKeyListItem[],
     };
   });

@@ -5,6 +5,12 @@ defineFixtureSqlWorkspaceFlowTests({
   title: 'MariaDB',
   dbTypeLabel: 'MariaDB',
   fixture: getMariaDbFixtureConfig(),
+  instanceInsightsTabs: [
+    'Overview',
+    'Sessions & Locks',
+    'Configuration',
+    'Replication',
+  ],
   rawQuery: 'select title from film order by film_id limit 1;',
   rawQueryAssertions: ['ACADEMY DINOSAUR'],
   tableName: 'film',

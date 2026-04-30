@@ -34,16 +34,34 @@ function encodeAuthSegment(value) {
 }
 
 function buildRedisUrl() {
-  const host = readEnv('HERAQ_REDIS_HOST', 'REDIS_HOST') || '127.0.0.1';
-  const port = parseInteger(readEnv('HERAQ_REDIS_PORT', 'REDIS_PORT'), 6379, 1);
+  const host =
+    readEnv('ORCAQ_REDIS_HOST', 'HERAQ_REDIS_HOST', 'REDIS_HOST') ||
+    '127.0.0.1';
+  const port = parseInteger(
+    readEnv('ORCAQ_REDIS_PORT', 'HERAQ_REDIS_PORT', 'REDIS_PORT'),
+    6379,
+    1
+  );
   const database = parseInteger(
-    readEnv('HERAQ_REDIS_DATABASE', 'REDIS_DATABASE'),
+    readEnv('ORCAQ_REDIS_DATABASE', 'HERAQ_REDIS_DATABASE', 'REDIS_DATABASE'),
     0,
     0
   );
-  const username = readEnv('HERAQ_REDIS_USERNAME', 'REDIS_USERNAME');
-  const password = readEnv('HERAQ_REDIS_PASSWORD', 'REDIS_PASSWORD');
-  const explicitUrl = readEnv('HERAQ_REDIS_URL', 'REDIS_URL');
+  const username = readEnv(
+    'ORCAQ_REDIS_USERNAME',
+    'HERAQ_REDIS_USERNAME',
+    'REDIS_USERNAME'
+  );
+  const password = readEnv(
+    'ORCAQ_REDIS_PASSWORD',
+    'HERAQ_REDIS_PASSWORD',
+    'REDIS_PASSWORD'
+  );
+  const explicitUrl = readEnv(
+    'ORCAQ_REDIS_URL',
+    'HERAQ_REDIS_URL',
+    'REDIS_URL'
+  );
 
   if (explicitUrl) {
     return explicitUrl;
@@ -65,35 +83,43 @@ function buildCounts() {
   return {
     ...sampleConfig.counts,
     cachePageCount: parseInteger(
-      process.env.HERAQ_REDIS_SAMPLE_CACHE_PAGES,
+      process.env.ORCAQ_REDIS_SAMPLE_CACHE_PAGES ||
+        process.env.HERAQ_REDIS_SAMPLE_CACHE_PAGES,
       sampleConfig.counts.cachePageCount
     ),
     orderHashCount: parseInteger(
-      process.env.HERAQ_REDIS_SAMPLE_ORDER_HASHES,
+      process.env.ORCAQ_REDIS_SAMPLE_ORDER_HASHES ||
+        process.env.HERAQ_REDIS_SAMPLE_ORDER_HASHES,
       sampleConfig.counts.orderHashCount
     ),
     sessionHashCount: parseInteger(
-      process.env.HERAQ_REDIS_SAMPLE_SESSION_HASHES,
+      process.env.ORCAQ_REDIS_SAMPLE_SESSION_HASHES ||
+        process.env.HERAQ_REDIS_SAMPLE_SESSION_HASHES,
       sampleConfig.counts.sessionHashCount
     ),
     leaderboardEntryCount: parseInteger(
-      process.env.HERAQ_REDIS_SAMPLE_LEADERBOARD_ENTRIES,
+      process.env.ORCAQ_REDIS_SAMPLE_LEADERBOARD_ENTRIES ||
+        process.env.HERAQ_REDIS_SAMPLE_LEADERBOARD_ENTRIES,
       sampleConfig.counts.leaderboardEntryCount
     ),
     streamEntryCount: parseInteger(
-      process.env.HERAQ_REDIS_SAMPLE_STREAM_ENTRIES,
+      process.env.ORCAQ_REDIS_SAMPLE_STREAM_ENTRIES ||
+        process.env.HERAQ_REDIS_SAMPLE_STREAM_ENTRIES,
       sampleConfig.counts.streamEntryCount
     ),
   };
 }
 
 function getRedisSampleConfig() {
-  return JSON.parse(
-    readFileSync(
-      path.resolve(process.cwd(), 'data/redis-sample-data.json'),
-      'utf8'
-    )
-  );
+  const sampleFile =
+    process.env.ORCAQ_REDIS_SAMPLE_FILE ||
+    process.env.HERAQ_REDIS_SAMPLE_FILE ||
+    path.resolve(
+      process.cwd(),
+      'test/fixtures/datasets/redis/redis-sample-data.json'
+    );
+
+  return JSON.parse(readFileSync(sampleFile, 'utf8'));
 }
 
 async function seedCoreKeys(client) {
@@ -298,7 +324,7 @@ async function main() {
   try {
     const summary = await seedRedisSampleData(client);
     console.log(
-      `Redis sample data ready: ${summary.keyCount} keys seeded in DB ${readEnv('HERAQ_REDIS_DATABASE', 'REDIS_DATABASE') || '0'}.`
+      `Redis sample data ready: ${summary.keyCount} keys seeded in DB ${readEnv('ORCAQ_REDIS_DATABASE', 'HERAQ_REDIS_DATABASE', 'REDIS_DATABASE') || '0'}.`
     );
   } finally {
     await client.quit();

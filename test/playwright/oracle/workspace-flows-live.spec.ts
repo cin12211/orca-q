@@ -124,7 +124,15 @@ test.describe('Oracle workspace flows', () => {
   test('loads Oracle instance insights from Database Tools', async ({
     page,
   }) => {
-    await expectInstanceInsightsFromSidebar(page);
+    await expectInstanceInsightsFromSidebar(page, {
+      expectedTabs: [
+        'Overview',
+        'Sessions & Locks',
+        'Memory & Limits',
+        'Configuration',
+        'Data Guard',
+      ],
+    });
   });
 
   test('opens multiple Oracle table tabs and lists schema tables in ERD', async ({

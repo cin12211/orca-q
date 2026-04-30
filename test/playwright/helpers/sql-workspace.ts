@@ -17,6 +17,7 @@ export type FixtureSqlWorkspaceFlowOptions = {
   title: string;
   dbTypeLabel: string;
   fixture: SqlFixtureConfig;
+  instanceInsightsTabs?: string[];
   rawQuery: string;
   rawQueryAssertions: string[];
   tableName: string;
@@ -75,7 +76,7 @@ const EXPLORER_ACTION_BUTTON_INDEX = {
 const DEFAULT_QUICK_QUERY_TABLE_NAME = 'actor';
 const DEFAULT_QUICK_QUERY_RELATION_TABLE_NAME = 'film_actor';
 const DEFAULT_NULL_ORDER_TABLE_NAME = 'address';
-const DEFAULT_NULL_ORDER_COLUMN_NAME = 'address2';
+const DEFAULT_NULL_ORDER_COLUMN_NAME = 'postal_code';
 
 export async function setPersistedSqlActivityBar(
   page: Page,
@@ -762,9 +763,16 @@ export async function editQuickQueryCell(
     value: string;
     rowIndex?: number;
     rowText?: string;
+    selectedRow?: boolean;
   }
 ) {
-  const cell = quickQueryCell(page, options);
+  const cell = options.selectedRow
+    ? quickQueryGrid(page)
+        .locator('.ag-row-selected')
+        .last()
+        .locator(`.ag-cell[col-id="${options.columnName}"]`)
+        .first()
+    : quickQueryCell(page, options);
 
   await expect(cell).toBeVisible({ timeout: 30_000 });
   await cell.dblclick();
@@ -787,7 +795,22 @@ export async function expectQuickQueryErdTab(
     relatedTableName: string;
   }
 ) {
-  await page.getByRole('tab', { name: 'ERD' }).click();
+  const erdTab = page.getByRole('tab', { name: 'ERD' });
+  const blockingOverlay = page.locator(
+    '.absolute.inset-0.z-20.flex.items-center.bg-white\\/50'
+  );
+
+  await expect(erdTab).toBeVisible({ timeout: 30_000 });
+  await expect
+    .poll(async () => {
+      if (await blockingOverlay.isVisible().catch(() => false)) {
+        return false;
+      }
+
+      await erdTab.click();
+      return (await erdTab.getAttribute('aria-selected')) === 'true';
+    })
+    .toBe(true);
 
   await expect(
     page
@@ -1023,8 +1046,20 @@ export async function openDatabaseToolsSidebar(page: Page) {
   });
 }
 
-export async function expectInstanceInsightsFromSidebar(page: Page) {
+export async function expectInstanceInsightsFromSidebar(
+  page: Page,
+  options: {
+    expectedTabs?: string[];
+  } = {}
+) {
   await openDatabaseToolsSidebar(page);
+
+  const expectedTabs = options.expectedTabs || [
+    'Activity',
+    'State',
+    'Config',
+    'Replication',
+  ];
 
   const instanceInsightCard = page
     .getByRole('button', { name: /^Instance Insight/i })
@@ -1037,10 +1072,13 @@ export async function expectInstanceInsightsFromSidebar(page: Page) {
   await expect(
     page.getByText('Instance Insights', { exact: true })
   ).toBeVisible();
-  await expect(page.getByRole('tab', { name: 'Activity' })).toBeVisible();
-  await expect(page.getByRole('tab', { name: 'State' })).toBeVisible();
-  await expect(page.getByRole('tab', { name: 'Config' })).toBeVisible();
-  await expect(page.getByRole('tab', { name: 'Replication' })).toBeVisible();
+
+  for (const tabName of expectedTabs) {
+    await expect(
+      page.getByRole('tab', { name: tabName, exact: true })
+    ).toBeVisible();
+  }
+
   await expect(page.getByRole('button', { name: 'Refresh All' })).toBeVisible();
   await expect(page.getByText('Auto refresh', { exact: true })).toBeVisible();
 }
@@ -1330,25 +1368,17 @@ export function defineFixtureSqlWorkspaceFlowTests(
       await setQuickQuerySafeMode(page, true);
       await page.getByRole('button', { name: 'Row', exact: true }).click();
 
-      await expect
-        .poll(() => getLastVisibleQuickQueryRowIndex(page), {
-          timeout: 30_000,
-        })
-        .not.toBeUndefined();
-
-      const newRowIndex = await getLastVisibleQuickQueryRowIndex(page);
-
-      if (newRowIndex === undefined) {
-        throw new Error('Expected a new quick query row to be visible.');
-      }
+      await expect(
+        quickQueryGrid(page).locator('.ag-row-selected').last()
+      ).toBeVisible({ timeout: 30_000 });
 
       await editQuickQueryCell(page, {
-        rowIndex: newRowIndex,
+        selectedRow: true,
         columnName: 'first_name',
         value: insertFirstName,
       });
       await editQuickQueryCell(page, {
-        rowIndex: newRowIndex,
+        selectedRow: true,
         columnName: 'last_name',
         value: uniqueLastName,
       });
@@ -1360,7 +1390,7 @@ export function defineFixtureSqlWorkspaceFlowTests(
       ).toBeVisible({ timeout: 30_000 });
       await page.getByRole('button', { name: 'Save', exact: true }).click();
       await expect(
-        page.getByText('Data saved successfully!', { exact: true })
+        page.getByText('Data saved successfully!', { exact: true }).last()
       ).toBeVisible({ timeout: 30_000 });
       await refreshQuickQueryTable(page);
 
@@ -1380,7 +1410,7 @@ export function defineFixtureSqlWorkspaceFlowTests(
       ).toBeVisible({ timeout: 30_000 });
       await page.getByRole('button', { name: 'Save', exact: true }).click();
       await expect(
-        page.getByText('Data saved successfully!', { exact: true })
+        page.getByText('Data saved successfully!', { exact: true }).last()
       ).toBeVisible({ timeout: 30_000 });
       await refreshQuickQueryTable(page);
       await expect(quickQueryRowByText(page, uniqueLastName)).toContainText(
@@ -1423,7 +1453,7 @@ export function defineFixtureSqlWorkspaceFlowTests(
       await sortQuickQueryColumn(page, nullOrderColumnName, 3);
 
       await setQuickQueryNullOrder(page, 'Nulls Last');
-      await sortQuickQueryColumn(page, nullOrderColumnName, 3);
+      await sortQuickQueryColumn(page, nullOrderColumnName);
 
       if (options.fixture.engine === 'postgres') {
         await expect
@@ -1437,7 +1467,9 @@ export function defineFixtureSqlWorkspaceFlowTests(
     test('loads SQL instance insights from Database Tools', async ({
       page,
     }) => {
-      await expectInstanceInsightsFromSidebar(page);
+      await expectInstanceInsightsFromSidebar(page, {
+        expectedTabs: options.instanceInsightsTabs,
+      });
     });
 
     test('opens Database Tools launchers for the SQL family', async ({

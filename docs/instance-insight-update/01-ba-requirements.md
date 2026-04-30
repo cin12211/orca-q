@@ -39,11 +39,13 @@ Define lại `Instance Insights` theo hướng:
 - giữ experience chung ở level product
 - nhưng có define riêng theo từng DB type
 - mỗi DB type có tab, metric, source query, capability, fallback behavior riêng
+- có follow-up path rõ ràng cho SQL Server
 
 ## Non-Goals
 
 - Không redesign toàn bộ tab shell ở phase này
-- Không implement MSSQL / Snowflake / Redis trong scope này
+- Không implement Snowflake / Redis trong scope này
+- SQL Server không nằm trong wave delivery đầu tiên, nhưng phải được track như follow-up scope
 - Không chuẩn hoá charting/visualization nâng cao ở phase đầu
 - Không build cluster-level insights cho Oracle RAC hay MySQL Group Replication phase 1
 
@@ -73,6 +75,7 @@ Với SQLite, feature này phải được hiểu là `database/file insights`, 
 ### Shared scope
 
 - define product behavior cho MySQL, MariaDB, Oracle, SQLite
+- track follow-up requirement cho SQL Server
 - define tab model cho từng DB type
 - define metric groups
 - define capability/fallback behavior
@@ -101,6 +104,11 @@ Với SQLite, feature này phải được hiểu là `database/file insights`, 
   - storage health
   - configuration
   - integrity
+- SQL Server
+  - overview
+  - sessions & locks
+  - configuration
+  - availability / HA
 
 ## Out Of Scope
 
@@ -161,6 +169,8 @@ Người dùng có thể mở `Instance Insights` từ các DB type supported tr
 - MariaDB
 - Oracle
 - SQLite
+
+SQL Server là follow-up delivery sau khi runtime support được xác nhận.
 
 ### FR2. Context-aware tabs
 
@@ -276,3 +286,7 @@ Deliver SQLite insights.
 ### Epic 4
 
 Deliver Oracle instance insights.
+
+### Epic 5
+
+Enable SQL Server runtime support and deliver SQL Server instance insights.

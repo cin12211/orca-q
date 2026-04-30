@@ -6,6 +6,7 @@ import type {
   InstanceInsightsDashboard,
   InstanceInsightsReplication,
   InstanceInsightsState,
+  InstanceInsightsView,
   ReplicationSlotDesiredStatus,
 } from '~/core/types';
 import type { IDatabaseInstanceInsightsAdapter } from '../types';
@@ -40,6 +41,10 @@ export abstract class BaseUnsupportedInstanceInsightsAdapter
         operation,
       },
     });
+  }
+
+  async getView(): Promise<InstanceInsightsView> {
+    return this.unsupported('loading instance insights');
   }
 
   async getDashboard(): Promise<InstanceInsightsDashboard> {

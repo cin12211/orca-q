@@ -59,6 +59,12 @@ function readEnv(...names: string[]) {
   return undefined;
 }
 
+function buildPrefixedEnvNames(prefixes: string[], suffixes: string[]) {
+  return prefixes.flatMap(prefix =>
+    suffixes.map(suffix => `${prefix}_${suffix}`)
+  );
+}
+
 function hasAnyEnv(names: string[]) {
   return names.some(name => Boolean(process.env[name]?.trim()));
 }
@@ -120,28 +126,32 @@ function buildSqlUrl(config: {
 
 function buildSqlFixtureConfig(input: {
   engine: SqlFixtureEngine;
-  envPrefix: string;
+  envPrefixes: string[];
   defaultPort: number;
   defaultDatabase: string;
   defaultUsername: string;
   defaultPassword: string;
 }) {
-  const host = readEnv(`${input.envPrefix}_HOST`) || '127.0.0.1';
+  const host =
+    readEnv(...buildPrefixedEnvNames(input.envPrefixes, ['HOST'])) ||
+    '127.0.0.1';
   const port = parseInteger(
-    readEnv(`${input.envPrefix}_PORT`),
+    readEnv(...buildPrefixedEnvNames(input.envPrefixes, ['PORT'])),
     input.defaultPort,
-    `${input.envPrefix}_PORT`
+    `${input.envPrefixes[0]}_PORT`
   );
   const database =
-    readEnv(`${input.envPrefix}_DATABASE`, `${input.envPrefix}_DB`) ||
+    readEnv(...buildPrefixedEnvNames(input.envPrefixes, ['DATABASE', 'DB'])) ||
     input.defaultDatabase;
   const username =
-    readEnv(`${input.envPrefix}_USER`, `${input.envPrefix}_USERNAME`) ||
-    input.defaultUsername;
+    readEnv(
+      ...buildPrefixedEnvNames(input.envPrefixes, ['USER', 'USERNAME'])
+    ) || input.defaultUsername;
   const password =
-    readEnv(`${input.envPrefix}_PASSWORD`) || input.defaultPassword;
+    readEnv(...buildPrefixedEnvNames(input.envPrefixes, ['PASSWORD'])) ||
+    input.defaultPassword;
   const url =
-    readEnv(`${input.envPrefix}_URL`) ||
+    readEnv(...buildPrefixedEnvNames(input.envPrefixes, ['URL'])) ||
     buildSqlUrl({
       engine: input.engine,
       host,
@@ -159,16 +169,18 @@ function buildSqlFixtureConfig(input: {
     username,
     password,
     url,
-    source: hasAnyEnv([
-      `${input.envPrefix}_URL`,
-      `${input.envPrefix}_HOST`,
-      `${input.envPrefix}_PORT`,
-      `${input.envPrefix}_DATABASE`,
-      `${input.envPrefix}_DB`,
-      `${input.envPrefix}_USER`,
-      `${input.envPrefix}_USERNAME`,
-      `${input.envPrefix}_PASSWORD`,
-    ])
+    source: hasAnyEnv(
+      buildPrefixedEnvNames(input.envPrefixes, [
+        'URL',
+        'HOST',
+        'PORT',
+        'DATABASE',
+        'DB',
+        'USER',
+        'USERNAME',
+        'PASSWORD',
+      ])
+    )
       ? 'env'
       : 'default-local',
   } satisfies SqlFixtureConfig;
@@ -177,7 +189,7 @@ function buildSqlFixtureConfig(input: {
 export function getPostgresFixtureConfig() {
   return buildSqlFixtureConfig({
     engine: 'postgres',
-    envPrefix: 'HERAQ_POSTGRES',
+    envPrefixes: ['ORCAQ_POSTGRES', 'HERAQ_POSTGRES'],
     defaultPort: 5432,
     defaultDatabase: 'pagila',
     defaultUsername: 'heraq',
@@ -188,7 +200,7 @@ export function getPostgresFixtureConfig() {
 export function getMysqlFixtureConfig() {
   return buildSqlFixtureConfig({
     engine: 'mysql',
-    envPrefix: 'HERAQ_MYSQL',
+    envPrefixes: ['ORCAQ_MYSQL', 'HERAQ_MYSQL'],
     defaultPort: 3306,
     defaultDatabase: 'sakila',
     defaultUsername: 'heraq',
@@ -199,7 +211,7 @@ export function getMysqlFixtureConfig() {
 export function getMariaDbFixtureConfig() {
   return buildSqlFixtureConfig({
     engine: 'mariadb',
-    envPrefix: 'HERAQ_MARIADB',
+    envPrefixes: ['ORCAQ_MARIADB', 'HERAQ_MARIADB'],
     defaultPort: 3307,
     defaultDatabase: 'sakila',
     defaultUsername: 'heraq',
@@ -216,22 +228,32 @@ export function getSqlFixtureCatalog() {
 }
 
 export function getRedisFixtureConfig(): RedisFixtureConfig {
-  const host = readEnv('HERAQ_REDIS_HOST', 'REDIS_HOST') || '127.0.0.1';
+  const host =
+    readEnv('ORCAQ_REDIS_HOST', 'HERAQ_REDIS_HOST', 'REDIS_HOST') ||
+    '127.0.0.1';
   const port = parseInteger(
-    readEnv('HERAQ_REDIS_PORT', 'REDIS_PORT'),
+    readEnv('ORCAQ_REDIS_PORT', 'HERAQ_REDIS_PORT', 'REDIS_PORT'),
     6379,
-    'HERAQ_REDIS_PORT'
+    'ORCAQ_REDIS_PORT'
   );
   const database = parseInteger(
-    readEnv('HERAQ_REDIS_DATABASE', 'REDIS_DATABASE'),
+    readEnv('ORCAQ_REDIS_DATABASE', 'HERAQ_REDIS_DATABASE', 'REDIS_DATABASE'),
     0,
-    'HERAQ_REDIS_DATABASE',
+    'ORCAQ_REDIS_DATABASE',
     0
   );
-  const username = readEnv('HERAQ_REDIS_USERNAME', 'REDIS_USERNAME');
-  const password = readEnv('HERAQ_REDIS_PASSWORD', 'REDIS_PASSWORD');
+  const username = readEnv(
+    'ORCAQ_REDIS_USERNAME',
+    'HERAQ_REDIS_USERNAME',
+    'REDIS_USERNAME'
+  );
+  const password = readEnv(
+    'ORCAQ_REDIS_PASSWORD',
+    'HERAQ_REDIS_PASSWORD',
+    'REDIS_PASSWORD'
+  );
   const url =
-    readEnv('HERAQ_REDIS_URL', 'REDIS_URL') ||
+    readEnv('ORCAQ_REDIS_URL', 'HERAQ_REDIS_URL', 'REDIS_URL') ||
     buildRedisUrl({
       host,
       port,
@@ -248,6 +270,12 @@ export function getRedisFixtureConfig(): RedisFixtureConfig {
     password,
     url,
     source: hasAnyEnv([
+      'ORCAQ_REDIS_URL',
+      'ORCAQ_REDIS_HOST',
+      'ORCAQ_REDIS_PORT',
+      'ORCAQ_REDIS_DATABASE',
+      'ORCAQ_REDIS_USERNAME',
+      'ORCAQ_REDIS_PASSWORD',
       'HERAQ_REDIS_URL',
       'HERAQ_REDIS_HOST',
       'HERAQ_REDIS_PORT',
@@ -302,28 +330,41 @@ export function getManagedSqliteLiveConnections() {
 }
 
 export function getOracleLiveConnection(): OracleLiveConnection {
-  const host = readEnv('HERAQ_ORACLE_HOST', 'ORACLE_HOST');
-  const portValue = readEnv('HERAQ_ORACLE_PORT', 'ORACLE_PORT');
+  const host = readEnv('ORCAQ_ORACLE_HOST', 'HERAQ_ORACLE_HOST', 'ORACLE_HOST');
+  const portValue = readEnv(
+    'ORCAQ_ORACLE_PORT',
+    'HERAQ_ORACLE_PORT',
+    'ORACLE_PORT'
+  );
   const username = readEnv(
+    'ORCAQ_ORACLE_USER',
+    'ORCAQ_ORACLE_USERNAME',
     'HERAQ_ORACLE_USER',
     'HERAQ_ORACLE_USERNAME',
     'ORACLE_USER',
     'ORACLE_USERNAME'
   );
-  const password = readEnv('HERAQ_ORACLE_PASSWORD', 'ORACLE_PASSWORD');
+  const password = readEnv(
+    'ORCAQ_ORACLE_PASSWORD',
+    'HERAQ_ORACLE_PASSWORD',
+    'ORACLE_PASSWORD'
+  );
   const serviceName = readEnv(
+    'ORCAQ_ORACLE_SERVICE_NAME',
     'HERAQ_ORACLE_SERVICE_NAME',
     'ORACLE_SERVICE_NAME'
   );
   const url =
     readEnv(
       'ORACLE_CONNECTION',
+      'ORCAQ_ORACLE_URL',
+      'ORCAQ_ORACLE_CONNECTION_STRING',
       'HERAQ_ORACLE_URL',
       'HERAQ_ORACLE_CONNECTION_STRING',
       'ORACLE_URL'
     ) ||
     (host && username && password && serviceName
-      ? `oracledb://${encodeAuthSegment(username)}:${encodeAuthSegment(password)}@${host}:${parseInteger(portValue, 1521, 'HERAQ_ORACLE_PORT')}/${encodeURIComponent(serviceName)}`
+      ? `oracledb://${encodeAuthSegment(username)}:${encodeAuthSegment(password)}@${host}:${parseInteger(portValue, 1521, 'ORCAQ_ORACLE_PORT')}/${encodeURIComponent(serviceName)}`
       : undefined);
 
   let parsedUrl: URL | undefined;
@@ -343,7 +384,7 @@ export function getOracleLiveConnection(): OracleLiveConnection {
         ? parseInteger(
             portValue || parsedUrl?.port,
             1521,
-            portValue ? 'HERAQ_ORACLE_PORT' : 'ORACLE_CONNECTION'
+            portValue ? 'ORCAQ_ORACLE_PORT' : 'ORACLE_CONNECTION'
           )
         : undefined,
     username: username || parsedUrl?.username || undefined,
@@ -355,6 +396,14 @@ export function getOracleLiveConnection(): OracleLiveConnection {
     url,
     source: hasAnyEnv([
       'ORACLE_CONNECTION',
+      'ORCAQ_ORACLE_URL',
+      'ORCAQ_ORACLE_CONNECTION_STRING',
+      'ORCAQ_ORACLE_HOST',
+      'ORCAQ_ORACLE_PORT',
+      'ORCAQ_ORACLE_USER',
+      'ORCAQ_ORACLE_USERNAME',
+      'ORCAQ_ORACLE_PASSWORD',
+      'ORCAQ_ORACLE_SERVICE_NAME',
       'HERAQ_ORACLE_URL',
       'HERAQ_ORACLE_CONNECTION_STRING',
       'ORACLE_URL',

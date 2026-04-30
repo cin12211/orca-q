@@ -7,6 +7,7 @@ import type {
   InstanceInsightsDashboard,
   InstanceInsightsReplication,
   InstanceInsightsState,
+  InstanceInsightsView,
   InstanceLockRow,
   InstancePreparedTransactionRow,
   InstanceSessionRow,
@@ -15,6 +16,16 @@ import type {
 } from '~/core/types';
 import type { IDatabaseAdapter } from '~/server/infrastructure/driver';
 import { BaseDomainAdapter, createDatabaseHttpError } from '../../shared';
+import {
+  createActionCapability,
+  createInsightsCapabilities,
+  createTable,
+  formatBytes,
+  formatDateTime,
+  formatDurationSeconds,
+  formatNumber,
+  formatPercent,
+} from '../shared/view-helpers';
 import type {
   IDatabaseInstanceInsightsAdapter,
   InstanceInsightsAdapterParams,
@@ -66,6 +77,271 @@ export class PostgresInstanceInsightsAdapter
       adapter,
       cacheKey,
     });
+  }
+
+  async getView(): Promise<InstanceInsightsView> {
+    const [dashboard, state, configuration, replication] = await Promise.all([
+      this.getDashboard(),
+      this.getState(),
+      this.getConfiguration(),
+      this.getReplication(),
+    ]);
+
+    const sessionActions = [
+      createActionCapability({
+        id: 'cancel-query',
+        label: 'Cancel Query',
+        state: 'supported',
+        description: 'Cancel the selected backend query.',
+      }),
+      createActionCapability({
+        id: 'terminate-connection',
+        label: 'Terminate Connection',
+        state: 'supported',
+        description: 'Terminate the selected backend connection.',
+      }),
+    ];
+
+    const replicationActions = [
+      createActionCapability({
+        id: 'drop-replication-slot',
+        label: 'Drop Replication Slot',
+        state: 'supported',
+        description: 'Drop stale replication slots from SQL context.',
+      }),
+      createActionCapability({
+        id: 'toggle-slot-status',
+        label: 'Toggle Slot Status',
+        state: 'conditional',
+        description:
+          'Turning logical slots on is supported, while physical slot activation depends on replica clients.',
+      }),
+    ];
+
+    return {
+      dbType: this.dbType,
+      title: 'Instance Insights',
+      databaseName: null,
+      version: dashboard.version || null,
+      capturedAt: dashboard.capturedAt,
+      capabilities: createInsightsCapabilities({
+        supportsSessionInspection: true,
+        supportsLockInspection: true,
+        supportsConfiguration: true,
+        supportsReplication: true,
+        supportsCancelQuery: true,
+        supportsTerminateConnection: true,
+        supportsReplicationActions: true,
+      }),
+      actions: [...sessionActions, ...replicationActions],
+      sections: [
+        {
+          id: 'overview',
+          title: 'Overview',
+          subtitle: 'PostgreSQL activity and workload summary',
+          status: 'ready',
+          capturedAt: dashboard.capturedAt,
+          cards: [
+            {
+              id: 'version',
+              label: 'Version',
+              value: dashboard.version || '-',
+            },
+            {
+              id: 'sessions-total',
+              label: 'Total Sessions',
+              value: formatNumber(dashboard.sessions.total),
+              helperText: `Active ${formatNumber(dashboard.sessions.active)} · Idle ${formatNumber(dashboard.sessions.idle)}`,
+              tone: dashboard.sessions.exceedsThreshold ? 'warning' : 'default',
+            },
+            {
+              id: 'tps',
+              label: 'TPS',
+              value: formatNumber(dashboard.transactions.tps, 2),
+              helperText: `Commits ${formatNumber(dashboard.transactions.commitsPerSec, 2)}/s · Rollbacks ${formatNumber(dashboard.transactions.rollbacksPerSec, 2)}/s`,
+            },
+            {
+              id: 'buffer-hit-ratio',
+              label: 'Buffer Hit Ratio',
+              value: formatPercent(dashboard.blockIO.bufferHitRatio, 2),
+              helperText: `Reads ${formatNumber(dashboard.blockIO.readsPerSec, 2)}/s · Hits ${formatNumber(dashboard.blockIO.hitsPerSec, 2)}/s`,
+            },
+          ],
+          details: [
+            {
+              label: 'Sampling Interval',
+              value: `${formatNumber(dashboard.intervalSeconds)}s`,
+            },
+            {
+              label: 'Connection Usage',
+              value: `${formatPercent(dashboard.sessions.usagePercent, 2)} of max_connections`,
+              tone: dashboard.sessions.exceedsThreshold ? 'warning' : 'default',
+            },
+            {
+              label: 'Total Tuples Returned',
+              value: formatNumber(dashboard.tuples.totalReturned),
+            },
+            {
+              label: 'Total Tuples Fetched',
+              value: formatNumber(dashboard.tuples.totalFetched),
+            },
+          ],
+        },
+        {
+          id: 'sessions-locks',
+          title: 'Sessions & Locks',
+          subtitle: 'Active sessions, locks, and prepared transactions',
+          status: 'ready',
+          capturedAt: state.capturedAt,
+          actions: sessionActions,
+          tables: [
+            createTable({
+              id: 'postgres-sessions',
+              title: 'Sessions',
+              emptyMessage: 'No active sessions were returned.',
+              rows: state.sessions.map(row => ({
+                pid: row.pid,
+                user: row.user,
+                application: row.application,
+                client: row.client,
+                state: row.state,
+                wait_event: row.waitEvent,
+                blocking_pids: row.blockingPids.join(', '),
+                backend_start: formatDateTime(row.backendStart),
+                transaction_start: formatDateTime(row.transactionStart),
+                query_start: formatDateTime(row.queryStart),
+                duration: formatDurationSeconds(row.durationSeconds),
+                sql: row.sql,
+              })),
+            }),
+            createTable({
+              id: 'postgres-locks',
+              title: 'Locks',
+              emptyMessage: 'No locks are currently visible.',
+              rows: state.locks.map(row => ({
+                pid: row.pid,
+                lock_type: row.lockType,
+                target_relation: row.targetRelation,
+                mode: row.mode,
+                granted: row.granted,
+                state: row.state,
+                user: row.user,
+                sql: row.sql,
+              })),
+            }),
+            createTable({
+              id: 'postgres-prepared-transactions',
+              title: 'Prepared Transactions',
+              emptyMessage: 'No prepared transactions were returned.',
+              rows: state.preparedTransactions.map(row => ({
+                transaction: row.transaction,
+                gid: row.gid,
+                prepared: formatDateTime(row.prepared),
+                owner: row.owner,
+                database: row.database,
+              })),
+            }),
+          ],
+        },
+        {
+          id: 'configuration',
+          title: 'Configuration',
+          subtitle: 'Searchable PostgreSQL settings visibility',
+          status: 'ready',
+          capturedAt: configuration.capturedAt,
+          searchable: true,
+          searchPlaceholder: 'Search setting name, category, or description...',
+          cards: [
+            {
+              id: 'configuration-total',
+              label: 'Settings Returned',
+              value: formatNumber(configuration.rows.length),
+              helperText: `Total catalog rows ${formatNumber(configuration.total)}`,
+            },
+          ],
+          tables: [
+            createTable({
+              id: 'postgres-configuration',
+              title: 'Settings',
+              emptyMessage: 'No configuration settings were returned.',
+              rows: configuration.rows.map(row => ({
+                name: row.name,
+                category: row.category,
+                value: row.value,
+                unit: row.unit,
+                pending_restart: row.pendingRestart,
+                description: row.description,
+              })),
+            }),
+          ],
+        },
+        {
+          id: 'replication',
+          title: 'Replication',
+          subtitle: 'Replication clients and slot pressure',
+          status: 'ready',
+          capturedAt: replication.capturedAt,
+          statusMessage: replication.staleSlotWarning,
+          actions: replicationActions,
+          cards: [
+            {
+              id: 'replication-clients',
+              label: 'Replication Clients',
+              value: formatNumber(replication.replicationStats.length),
+            },
+            {
+              id: 'replication-slots',
+              label: 'Replication Slots',
+              value: formatNumber(replication.replicationSlots.length),
+            },
+            {
+              id: 'inactive-slots',
+              label: 'Inactive Slots',
+              value: formatNumber(
+                replication.replicationSlots.filter(slot => !slot.active).length
+              ),
+            },
+          ],
+          tables: [
+            createTable({
+              id: 'postgres-replication-stats',
+              title: 'Replication Stats',
+              emptyMessage: 'No replication clients are currently visible.',
+              rows: replication.replicationStats.map(row => ({
+                pid: row.pid,
+                client_addr: row.clientAddr,
+                application_name: row.applicationName,
+                state: row.state,
+                sync_state: row.syncState,
+                reply_time: formatDateTime(row.replyTime),
+                write_lag: row.writeLag,
+                flush_lag: row.flushLag,
+                replay_lag: row.replayLag,
+                sent_lsn: row.sentLsn,
+                write_lsn: row.writeLsn,
+                flush_lsn: row.flushLsn,
+                replay_lsn: row.replayLsn,
+              })),
+            }),
+            createTable({
+              id: 'postgres-replication-slots',
+              title: 'Replication Slots',
+              emptyMessage: 'No replication slots are currently visible.',
+              rows: replication.replicationSlots.map(row => ({
+                slot_name: row.slotName,
+                slot_type: row.slotType,
+                active: row.active,
+                active_pid: row.activePid,
+                restart_lsn: row.restartLsn,
+                confirmed_flush_lsn: row.confirmedFlushLsn,
+                retained_wal: formatBytes(row.retainedBytes),
+                temporary: row.temporary,
+              })),
+            }),
+          ],
+        },
+      ],
+    };
   }
 
   async getDashboard(): Promise<InstanceInsightsDashboard> {

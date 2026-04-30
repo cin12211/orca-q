@@ -7,6 +7,12 @@ services:
       POSTGRES_DB: '${HERAQ_POSTGRES_DATABASE:-pagila}'
       POSTGRES_USER: '${HERAQ_POSTGRES_USER:-heraq}'
       POSTGRES_PASSWORD: '${HERAQ_POSTGRES_PASSWORD:-heraq}'
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./sql-init/postgres/00-bootstrap.sh:/docker-entrypoint-initdb.d/00-bootstrap.sh:ro
+      - ../datasets/postgres/postgres-sakila-schema.sql:/docker-entrypoint-initdb.d/10-schema.sql:ro
+      - ../datasets/postgres/postgres-sakila-insert-data-using-copy.sql:/docker-entrypoint-initdb.d/20-data.sql:ro
+      - ./sql-init/postgres/99-grants.sh:/docker-entrypoint-initdb.d/99-grants.sh:ro
     healthcheck:
       test: ['CMD-SHELL', 'pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB']
       interval: 5s
@@ -22,6 +28,11 @@ services:
       MYSQL_USER: '${HERAQ_MYSQL_USER:-heraq}'
       MYSQL_PASSWORD: '${HERAQ_MYSQL_PASSWORD:-heraq}'
       MYSQL_ROOT_PASSWORD: '${HERAQ_MYSQL_ROOT_PASSWORD:-root}'
+    volumes:
+      - mysql-data:/var/lib/mysql
+      - ../datasets/mysql/mysql-sakila-schema.sql:/docker-entrypoint-initdb.d/10-schema.sql:ro
+      - ../datasets/mysql/mysql-sakila-insert-data.sql:/docker-entrypoint-initdb.d/20-data.sql:ro
+      - ./sql-init/mysql/99-grants.sh:/docker-entrypoint-initdb.d/99-grants.sh:ro
     command:
       - '--mysql-native-password=ON'
       - '--mysqlx=0'
@@ -44,6 +55,11 @@ services:
       MARIADB_USER: '${HERAQ_MARIADB_USER:-heraq}'
       MARIADB_PASSWORD: '${HERAQ_MARIADB_PASSWORD:-heraq}'
       MARIADB_ROOT_PASSWORD: '${HERAQ_MARIADB_ROOT_PASSWORD:-root}'
+    volumes:
+      - mariadb-data:/var/lib/mysql
+      - ../datasets/mysql/mysql-sakila-schema.sql:/docker-entrypoint-initdb.d/10-schema.sql:ro
+      - ../datasets/mysql/mysql-sakila-insert-data.sql:/docker-entrypoint-initdb.d/20-data.sql:ro
+      - ./sql-init/mysql/99-grants.sh:/docker-entrypoint-initdb.d/99-grants.sh:ro
     healthcheck:
       test:
         [
@@ -53,3 +69,8 @@ services:
       interval: 5s
       timeout: 5s
       retries: 30
+
+volumes:
+  postgres-data:
+  mysql-data:
+  mariadb-data:

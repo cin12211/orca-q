@@ -33,6 +33,8 @@ Code references:
   - Define riêng cho Oracle
 - `db-sqlite.md`
   - Define riêng cho SQLite
+- `db-sql-server.md`
+  - Define riêng cho SQL Server và note follow-up scope
 
 ## Recommended Delivery Order
 
@@ -40,6 +42,7 @@ Code references:
 2. MariaDB
 3. SQLite
 4. Oracle
+5. SQL Server
 
 Lý do:
 
@@ -47,3 +50,4 @@ Lý do:
 - MariaDB gần MySQL nhưng cần tách source surfaces
 - SQLite cần đổi product mental model
 - Oracle có nhiều phụ thuộc quyền truy cập và surface riêng
+- SQL Server nên follow sau khi runtime support nền được bật ở tầng driver/adapters

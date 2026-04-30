@@ -5,6 +5,7 @@ import {
   hasD1LiveConnection,
   hasTursoLiveConnection,
 } from '../../support/db-fixtures';
+import { expectInstanceInsightsFromSidebar } from '../helpers/sql-workspace';
 import { ConnectionModalPage } from '../pages/ConnectionModalPage';
 import { WorkspacesPage } from '../pages/WorkspacesPage';
 
@@ -59,6 +60,14 @@ test.describe('US7 — Managed SQLite Live Flow', () => {
     await connectionModal.expectConnectionRow(connectionName);
     await connectionModal.connectConnection(connectionName);
     await connectionModal.expectSqlFamilyLanding();
+    await expectInstanceInsightsFromSidebar(page, {
+      expectedTabs: [
+        'Overview',
+        'Storage Health',
+        'Configuration',
+        'Integrity',
+      ],
+    });
   });
 
   test('Turso managed connection test succeeds when live credentials are configured', async ({
@@ -108,5 +117,13 @@ test.describe('US7 — Managed SQLite Live Flow', () => {
     await connectionModal.expectConnectionRow(connectionName);
     await connectionModal.connectConnection(connectionName);
     await connectionModal.expectSqlFamilyLanding();
+    await expectInstanceInsightsFromSidebar(page, {
+      expectedTabs: [
+        'Overview',
+        'Storage Health',
+        'Configuration',
+        'Integrity',
+      ],
+    });
   });
 });

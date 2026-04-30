@@ -78,7 +78,6 @@ coverage
 /test-results/
 test/fixtures/datasets/.tmp/
 test/fixtures/datasets/archives/
-test/fixtures/datasets/downloads/
 
 .playwright-mcp
 

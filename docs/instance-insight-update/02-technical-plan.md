@@ -55,6 +55,7 @@ Thay vì một contract duy nhất, tạo:
 - `MariaDbInstanceInsightsContract`
 - `OracleInstanceInsightsContract`
 - `SqliteInsightsContract`
+- `SqlServerInstanceInsightsContract`
 
 Mỗi contract có:
 
@@ -95,6 +96,7 @@ Ví dụ:
 - `MariaDbInstanceInsightsPanel.vue`
 - `OracleInstanceInsightsPanel.vue`
 - `SqliteInsightsPanel.vue`
+- `SqlServerInstanceInsightsPanel.vue`
 
 ### 4. Server adapter structure
 
@@ -109,6 +111,7 @@ Preferred shape:
 - `getMemoryAndLimits()`
 - `getStorageHealth()`
 - `runIntegrityCheck()`
+- `getAvailability()`
 
 DB nào không support thì không implement capability đó.
 
@@ -188,6 +191,21 @@ DB nào không support thì không implement capability đó.
 - define minimum privileges early
 - start single-instance first
 
+## Phase 5: SQL Server
+
+### Deliverables
+
+- SQL Server runtime support in driver layer
+- SQL Server domain adapters
+- SQL Server insights panel
+- overview, sessions/locks, config, availability
+
+### Notes
+
+- this phase is not only an `instance insights` task
+- current codebase exposes `DatabaseClientType.MSSQL` in enum/parser/UI surfaces, but does not expose active SQL Server runtime adapter support
+- package/runtime dependency and adapter-factory work must be completed first
+
 ## API / Adapter Refactor Recommendation
 
 ### Option A: Keep current endpoint names and vary payload by db type
@@ -227,7 +245,7 @@ Use a discriminated union with `dbType`.
 
 Example design direction:
 
-- `InstanceInsightsPayload = Postgres | Mysql | MariaDb | Oracle | Sqlite`
+- `InstanceInsightsPayload = Postgres | Mysql | MariaDb | Oracle | Sqlite | SqlServer`
 
 Use section-specific payloads:
 
@@ -248,6 +266,7 @@ Use section-specific payloads:
 - `components/modules/instance-insights/mariadb/*`
 - `components/modules/instance-insights/oracle/*`
 - `components/modules/instance-insights/sqlite/*`
+- `components/modules/instance-insights/sql-server/*`
 
 ### Server
 
@@ -256,6 +275,7 @@ Use section-specific payloads:
 - `server/infrastructure/database/adapters/instance-insights/mariadb/*`
 - `server/infrastructure/database/adapters/instance-insights/oracle/*`
 - `server/infrastructure/database/adapters/instance-insights/sqlite/*`
+- `server/infrastructure/database/adapters/instance-insights/sql-server/*`
 
 ## Testing Strategy
 
@@ -283,6 +303,7 @@ Use section-specific payloads:
 - MariaDB fixture with replication optional
 - Oracle environment with enough visibility into `V$` views
 - SQLite sample db files
+- SQL Server environment with DMV access and, if possible, an Always On test topology
 
 ## Risk Register
 
@@ -362,3 +383,15 @@ Implement Oracle overview and sessions.
 ### Story 10
 
 Implement Oracle memory/limits, config, and Data Guard.
+
+### Story 11
+
+Enable SQL Server driver/runtime support in database adapter layer.
+
+### Story 12
+
+Implement SQL Server overview and sessions/locks.
+
+### Story 13
+
+Implement SQL Server configuration and availability insights.

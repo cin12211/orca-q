@@ -12,7 +12,10 @@ const redisPubSubChannel = 'orders.events';
 const redisPubSubPayload = '{"event":"order.created","source":"e2e"}';
 const redisSampleData = JSON.parse(
   readFileSync(
-    path.resolve(process.cwd(), 'data/redis-sample-data.json'),
+    path.resolve(
+      process.cwd(),
+      'test/fixtures/datasets/redis/redis-sample-data.json'
+    ),
     'utf8'
   )
 ) as {
