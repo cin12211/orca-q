@@ -167,13 +167,15 @@ const onRestoreCancelled = () => {
     />
 
     <!-- Header -->
-    <div>
-      <h2 class="text-base font-medium">Backup &amp; Restore</h2>
-      <p class="text-xs text-muted-foreground">
-        {{ databaseName }}
+    <ToolPageHeader
+      icon="hugeicons:database-import"
+      title="Backup &amp; Restore"
+    >
+      <template #context>
+        <span class="font-medium text-foreground">{{ databaseName }}</span>
         <span class="text-muted-foreground/60">· {{ connectionLabel }}</span>
-      </p>
-    </div>
+      </template>
+    </ToolPageHeader>
 
     <!-- Tab bar -->
     <div class="flex items-center justify-between gap-2">

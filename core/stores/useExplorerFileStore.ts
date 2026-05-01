@@ -8,6 +8,7 @@ import {
 import { useWorkspaceConnectionRoute } from '~/core/composables/useWorkspaceConnectionRoute';
 import { uuidv4 } from '~/core/helpers';
 import { createStorageApis } from '~/core/storage';
+import { useTabViewsStore } from './useTabViewsStore';
 
 export type RowQueryFile = TreeFileSystemItem;
 
@@ -52,6 +53,7 @@ export const useExplorerFileStore = defineStore(
   () => {
     const storageApis = createStorageApis();
     const { workspaceId } = useWorkspaceConnectionRoute();
+    const tabViewsStore = useTabViewsStore();
 
     const treeNodeRef = ref<InstanceType<typeof TreeManager>>(
       new TreeManager([])
@@ -88,6 +90,8 @@ export const useExplorerFileStore = defineStore(
     };
 
     const deleteFiles = async (fileIds: string[]) => {
+      await tabViewsStore.closeTabsByIds(fileIds);
+
       fileIds.forEach(id => contentCache.delete(id));
       flatNodes.value = flatNodes.value.filter(f => !fileIds.includes(f.id));
 

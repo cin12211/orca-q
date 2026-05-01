@@ -56,28 +56,15 @@ const {
 
 <template>
   <div class="flex h-full flex-col gap-3 overflow-hidden p-3">
-    <div
-      class="flex flex-col gap-3 rounded-lg border bg-background p-3 lg:flex-row lg:items-start lg:justify-between"
-    >
-      <div class="space-y-1">
-        <div class="flex items-center gap-2">
-          <Icon name="hugeicons:activity-02" class="size-5 text-primary" />
-          <h2 class="text-base font-medium">Redis Instance Insight</h2>
-        </div>
+    <ToolPageHeader icon="hugeicons:activity-02" title="Instance Insights">
+      <template #context>
+        <component
+          v-if="dbType === DatabaseClientType.REDIS"
+          :is="'hugeicons:database-sync-01'"
+        />
+      </template>
 
-        <div class="flex items-center gap-1 text-sm text-muted-foreground">
-          <component
-            v-if="dbType === DatabaseClientType.REDIS"
-            :is="'hugeicons:database-sync-01'"
-          />
-          <span class="font-normal text-foreground">{{ databaseName }}</span>
-          <Badge variant="outline" class="text-xxs h-5 px-1.5 font-normal">
-            DB {{ databaseIndex }}
-          </Badge>
-        </div>
-      </div>
-
-      <div class="flex flex-wrap items-center gap-2">
+      <template #actions>
         <RedisDBSelector
           compact
           trigger-id="redis-instance-insights-db-index"
@@ -98,16 +85,16 @@ const {
         </div>
 
         <Button
-          size="xs"
+          size="xxs"
           variant="outline"
           :disabled="isLoading || isActionLoading"
           @click="refresh"
         >
-          <Icon name="hugeicons:redo" class="size-4" />
+          <Icon name="hugeicons:redo" class="size-3.5!" />
           Refresh
         </Button>
-      </div>
-    </div>
+      </template>
+    </ToolPageHeader>
 
     <Tabs v-model="activeSection" class="flex flex-1 min-h-0 flex-col gap-0">
       <TabsList class="h-8 max-w-full justify-start! shrink-0 overflow-x-auto">

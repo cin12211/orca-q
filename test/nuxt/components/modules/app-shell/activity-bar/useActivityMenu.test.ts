@@ -115,4 +115,32 @@ describe('useActivityMenu', () => {
       ActivityBarItemType.DatabaseTools,
     ]);
   });
+
+  it('hides the agent activity item for a MySQL connection', () => {
+    routeMock.params.workspaceId = 'ws-mysql';
+    routeMock.params.connectionId = 'conn-mysql';
+
+    const connectionStore = useManagementConnectionStore();
+    connectionStore.connections = [
+      {
+        id: 'conn-mysql',
+        workspaceId: 'ws-mysql',
+        name: 'MySQL Fixture',
+        type: DatabaseClientType.MYSQL,
+        method: EConnectionMethod.STRING,
+        connectionString: 'mysql://root@127.0.0.1:3306/mysql',
+        createdAt: '2026-05-01T00:00:00.000Z',
+      },
+    ];
+
+    const { activity } = useActivityMenu();
+
+    expect(activity.value.map(item => item.id)).toEqual([
+      ActivityBarItemType.Explorer,
+      ActivityBarItemType.Schemas,
+      ActivityBarItemType.ErdDiagram,
+      ActivityBarItemType.UsersRoles,
+      ActivityBarItemType.DatabaseTools,
+    ]);
+  });
 });

@@ -52,7 +52,7 @@ const openInstanceInsights = async () => {
             <Icon name="hugeicons:activity-02" />
           </Button>
           <div class="flex-1">
-            <p class="text-sm font-medium">Redis Instance Insight</p>
+            <p class="text-sm font-medium">Instance Insights</p>
             <p class="text-xs text-muted-foreground">
               Monitor Redis overview, memory, clients, persistence, and
               replication.

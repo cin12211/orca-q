@@ -46,8 +46,8 @@ export const databaseSupports: IDBSupport[] = [
     type: DatabaseClientType.ORACLE,
     name: 'Oracle',
     icon: h(Icon, { name: 'simple-icons:oracle', class: 'text-red-500' }),
-    isSupport: true,
-    isBeta: true,
+    isSupport: false,
+    unsupportedLabel: 'Coming soon',
     description: 'Relational SQL workflows',
   },
   {

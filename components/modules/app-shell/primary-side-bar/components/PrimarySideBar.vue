@@ -10,7 +10,6 @@ import {
   ManagementRedisTools,
 } from '#components';
 import {
-  type ConnectionActivityItem,
   getConnectionCapabilityProfile,
   resolveConnectionFamily,
 } from '~/core/constants/connection-capabilities';
@@ -21,24 +20,12 @@ import {
   ActivityBarItemType,
   useActivityBarStore,
 } from '~/core/stores/useActivityBarStore';
+import { EConnectionFamily } from '~/core/types/entities/connection.entity';
 import {
-  EConnectionFamily,
-  EConnectionMethod,
-} from '~/core/types/entities/connection.entity';
-
-const ACTIVITY_ITEM_MAP: Record<ConnectionActivityItem, ActivityBarItemType> = {
-  Explorer: ActivityBarItemType.Explorer,
-  Schemas: ActivityBarItemType.Schemas,
-  ERDiagram: ActivityBarItemType.ErdDiagram,
-  UsersRoles: ActivityBarItemType.UsersRoles,
-  DatabaseTools: ActivityBarItemType.DatabaseTools,
-  Agent: ActivityBarItemType.Agent,
-};
-
-const DEFAULT_CONNECTION_CONTEXT = {
-  type: DatabaseClientType.POSTGRES,
-  method: EConnectionMethod.STRING,
-};
+  ACTIVITY_ITEM_MAP,
+  DEFAULT_CONNECTION_CONTEXT,
+} from '../../activity-bar/constants/activityBarVisibility';
+import { getVisibleActivityItems } from '../../activity-bar/utils/getVisibleActivityItems';
 
 type SidebarPlaceholderCopy = {
   eyebrow: string;
@@ -57,9 +44,17 @@ const capabilityProfile = computed(() =>
   )
 );
 
+const selectedConnectionType = computed(
+  () =>
+    managementConnectionStore.selectedConnection?.type as
+      | DatabaseClientType
+      | undefined
+);
+
 const visibleActivityItems = computed(() =>
-  capabilityProfile.value.visibleActivityItems.map(
-    item => ACTIVITY_ITEM_MAP[item]
+  getVisibleActivityItems(
+    capabilityProfile.value.visibleActivityItems,
+    selectedConnectionType.value
   )
 );
 

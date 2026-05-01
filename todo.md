@@ -110,11 +110,11 @@ i want to create js consant to maping data type not stick in query, check in all
 
 - [x] in components/modules/instance-insights/RedisInstanceInsightsPanel.vue fix this BaseNotice not define , just split componet this componet to big
 - [x] redis detail key can't update ttl
-
-- [ ] mariadb , mysql, oracle, sqlite ẩn agent
+- [x] mariadb , mysql, oracle, sqlite ẩn agent (codex)
+- [x] task đồng bộ ui Header theo task docs/header-style-normalization-report.md (codex)
+- [x] update ở raw query khi user xoá file mà tab đang mở sẽ tự động đóng tab đó đi (khi xoá file xoá -> tab đó bị xoá -> nếu tab đó đang mở sẽ tự động đóng)
+- [x] disable oracle db k cho user connect (báo là comming soon) ( chưa work well)
+- [ ] nhiều khi connect mà bị lỗi bị kẹt luôn ở màn hình loading overlay -> k làm đc gì cả -> cần fix lỗi này
+- [ ] update ở setting cho phép setting để user có thểm xem data ở type date format timezone với date custome ( giờ hiện lại local or múi giời tuỳ chọn)
 - [ ] mariadb , mysql, oracle, sqlite check lại phần Backup & Restore
 - [ ] mariadb , mysql, oracle, sqlite check lại phần instance insight (vì chưa define, tôi cần bạn reserch để cho define cụ thể hơn)
-- [ ] task đồng bộ ui Header theo task docs/header-style-normalization-report.md
-- [ ] khi quick query containt -> check hết k phân biệt hoa hay thường
-- [ ] update ở setting cho phép setting để user có thểm xem data ở type date format timezone với date custome ( giờ hiện lại local or múi giời tuỳ chọn)
-- [ ] update ở raw query khi user xoá file mà tab đang mở sẽ tự động đóng tab đó đi (khi xoá file xoá -> tab đó bị xoá -> nếu tab đó đang mở sẽ tự động đóng)

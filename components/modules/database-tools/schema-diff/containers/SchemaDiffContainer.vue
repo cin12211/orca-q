@@ -53,12 +53,11 @@ const displayTab = ref<'diff' | 'sql'>('diff');
 <template>
   <div class="flex h-full flex-col gap-4 overflow-hidden p-4">
     <!-- Header -->
-    <div>
-      <h2 class="text-base font-medium">Schema Diff</h2>
-      <p class="text-xs text-muted-foreground">
-        Compare schemas between two database connections and generate sync SQL.
-      </p>
-    </div>
+    <ToolPageHeader
+      icon="hugeicons:git-compare"
+      title="Schema Diff"
+      description="Compare schemas between two database connections and generate sync SQL."
+    />
 
     <!-- Connection selector -->
     <SchemaDiffConnectionSelector

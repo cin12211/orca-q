@@ -248,6 +248,68 @@ export const useTabViewsStore = defineStore(
       }
     };
 
+    const getAdjacentRemainingTab = (
+      tabId: string,
+      removedTabIds: Set<string>
+    ) => {
+      const currentIndex = getTabIndexById(tabId);
+
+      if (currentIndex === -1) {
+        return;
+      }
+
+      for (
+        let index = currentIndex + 1;
+        index < tabViews.value.length;
+        index++
+      ) {
+        const candidate = tabViews.value[index];
+        if (!removedTabIds.has(candidate.id)) {
+          return candidate;
+        }
+      }
+
+      for (let index = currentIndex - 1; index >= 0; index--) {
+        const candidate = tabViews.value[index];
+        if (!removedTabIds.has(candidate.id)) {
+          return candidate;
+        }
+      }
+    };
+
+    const closeTabsByIds = async (tabIds: string[]) => {
+      const uniqueTabIds = [...new Set(tabIds)];
+      const tabsToRemove = uniqueTabIds
+        .map(tabId => getTabById(tabId))
+        .filter(Boolean) as TabView[];
+
+      if (!tabsToRemove.length) {
+        return;
+      }
+
+      const removedTabIds = new Set(tabsToRemove.map(tab => tab.id));
+
+      if (activeTab.value && removedTabIds.has(activeTab.value.id)) {
+        const adjacentTab = getAdjacentRemainingTab(
+          activeTab.value.id,
+          removedTabIds
+        );
+
+        if (adjacentTab) {
+          await selectTab(adjacentTab.id);
+        } else {
+          await onSetTabId(undefined);
+          await navigateToConnectionRoot({
+            workspaceId: tabsToRemove[0].workspaceId,
+            connectionId: tabsToRemove[0].connectionId,
+          });
+        }
+      }
+
+      await deletePersistedTabs(tabsToRemove);
+      removeTabsFromState(tabsToRemove.map(tab => tab.id));
+    };
+
     const moveTabTo = (startIndex: number, finishIndex: number) => {
       tabViews.value = reorder({
         list: tabViews.value,
@@ -335,6 +397,7 @@ export const useTabViewsStore = defineStore(
       openTab,
       ensureTab,
       closeTab,
+      closeTabsByIds,
       selectTab,
       moveTabTo,
       closeOtherTab,

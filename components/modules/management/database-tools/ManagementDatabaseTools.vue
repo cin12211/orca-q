@@ -94,7 +94,7 @@ const openDatabaseTools = async () => {
           />
         </button>
 
-        <!-- Instance Insight -->
+        <!-- Instance Insights -->
         <button
           class="w-full flex items-center gap-3 rounded-lg border bg-background p-3 text-left transition-colors hover:bg-muted/20 disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
           :disabled="!hasConnection || isManagedSqliteLimited"
@@ -105,7 +105,7 @@ const openDatabaseTools = async () => {
           </Button>
 
           <div class="flex-1">
-            <p class="text-sm font-medium">Instance Insight</p>
+            <p class="text-sm font-medium">Instance Insights</p>
             <p class="text-xs text-muted-foreground">
               Monitor activity &amp; health
             </p>

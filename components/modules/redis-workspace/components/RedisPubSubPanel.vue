@@ -308,18 +308,14 @@ onBeforeUnmount(() => {
 
 <template>
   <div class="flex h-full flex-col gap-4 overflow-hidden p-4">
-    <div
-      class="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between"
+    <ToolPageHeader
+      icon="hugeicons:radio"
+      title="Pub/Sub"
+      description="Subscribe to a channel or pattern, publish test events, and watch live messages without leaving the detail flow."
     >
-      <div class="space-y-1">
-        <div class="text-sm font-semibold">Redis Pub/Sub</div>
-        <div class="text-xs text-muted-foreground">
-          Subscribe to a channel or pattern, publish test events, and watch live
-          messages without leaving the detail flow.
-        </div>
-      </div>
+      <template #context> </template>
 
-      <div class="flex flex-wrap items-center gap-2">
+      <template #actions>
         <RedisDBSelector
           compact
           trigger-id="redis-pubsub-db-index"
@@ -330,17 +326,16 @@ onBeforeUnmount(() => {
         />
 
         <Button
-          variant="ghost"
-          size="sm"
-          class="h-7 px-2 text-xs"
+          variant="outline"
+          size="xxs"
           :disabled="loadingOverview"
           @click="refreshPubSub"
         >
           <Icon name="hugeicons:redo" class="size-3.5! min-w-3.5" />
           Refresh
         </Button>
-      </div>
-    </div>
+      </template>
+    </ToolPageHeader>
 
     <div class="flex flex-wrap items-center gap-2">
       <Badge
