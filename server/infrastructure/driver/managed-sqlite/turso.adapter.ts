@@ -1,4 +1,4 @@
-import { createClient, type Client } from '@libsql/client';
+import { createClient, type Client } from '@libsql/client/http';
 import type { Knex } from 'knex';
 import { Readable } from 'node:stream';
 import { DatabaseClientType } from '~/core/constants/database-client-type';
