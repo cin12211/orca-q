@@ -204,7 +204,7 @@ const onRestoreCancelled = () => {
     <div class="flex-1 overflow-y-auto rounded-lg border bg-background p-4">
       <!-- Unsupported alert with install instructions -->
       <BackupRestoreUnsupportedAlert
-        v-if="!nativeBackupSupported || true"
+        v-if="!nativeBackupSupported"
         :support-message="supportMessage"
         :connection-type="connectionType"
       />
