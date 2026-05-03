@@ -1,4 +1,4 @@
-import { ref } from 'vue';
+import { ref, shallowRef } from 'vue';
 import { isElectron } from '~/core/helpers/environment';
 import { persistMergeAll as electronPersistMergeAll } from '~/core/persist/adapters/electron/primitives';
 import { idbMergeAll } from '~/core/persist/adapters/idb/primitives';
@@ -80,7 +80,7 @@ export function useDataImport() {
   const showIncompatibleDialog = ref(false);
   const incompatibleMigrations = ref<string[]>([]);
   const showImportWarningDialog = ref(false);
-  const pendingBackupData = ref<BackupData | null>(null);
+  const pendingBackupData = shallowRef<BackupData | null>(null);
   const pendingBackupSummary = ref<BackupSummary | null>(null);
 
   const clearPendingImport = () => {
