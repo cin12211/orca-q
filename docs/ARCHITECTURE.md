@@ -16,7 +16,7 @@ OrcaQ is an **open-source, next-generation database editor** — a desktop and w
 
 ### Business Domain
 
-Database Development & Administration tooling. The application now supports PostgreSQL, MySQL, MariaDB, Oracle, and desktop-only SQLite file connections. PostgreSQL still has the broadest administration surface, while the newer engines currently focus on the core connection, query, and structure-browsing workflows.
+Database Development & Administration tooling. The application supports PostgreSQL, MySQL, MariaDB, Oracle, local SQLite files, managed SQLite providers (Cloudflare D1 and Turso), and Redis. PostgreSQL still has the broadest administration surface, managed SQLite stays on the SQL browsing/query path, and Redis runs through family-specific panels instead of the relational shell.
 
 ### Target Users
 
@@ -27,29 +27,29 @@ Database Development & Administration tooling. The application now supports Post
 
 ### Technical Stack
 
-| Layer                 | Technology                                                              |
-| --------------------- | ----------------------------------------------------------------------- |
-| **Framework**         | Nuxt 3.16+ (Vue 3.5+)                                                   |
-| **Language**          | TypeScript 5.6                                                          |
-| **Rendering**         | SPA mode (`ssr: false`)                                                 |
-| **State Management**  | Pinia 3 + pinia-plugin-persistedstate                                   |
-| **UI Library**        | shadcn-vue 2.0 (New York style) + Reka UI primitives                    |
-| **Styling**           | Tailwind CSS 4 via `@tailwindcss/vite`                                  |
-| **Data Grid**         | AG Grid Community 33 + TanStack Vue Table 8                             |
-| **Code Editor**       | CodeMirror 6 (vue-codemirror)                                           |
-| **ERD Visualization** | Vue Flow (wrapper over reactflow)                                       |
-| **Charts**            | ECharts 5 via vue-echarts                                               |
-| **AI Integration**    | Vercel AI SDK 6 (OpenAI, Google Gemini, Anthropic Claude, xAI Grok)     |
-| **Database Driver**   | Knex.js with `pg`, `mysql2`, `oracledb`, and `sqlite3` driver bindings  |
-| **Desktop Wrapper**   | Electron (via electron-vite, separate `electron/` project)              |
-| **D&D**               | Atlassian Pragmatic Drag & Drop                                         |
-| **Routing**           | nuxt-typed-router (type-safe route params)                              |
-| **Icons**             | @nuxt/icon with Iconify (Lucide, HugeIcons, Logos, Material Icon Theme) |
-| **Testing**           | Vitest 4 (unit + nuxt environment) + @vue/test-utils                    |
-| **Package Manager**   | Bun 1.2.8                                                               |
-| **Docker**            | Multi-stage Node 22 Alpine image                                        |
-| **Analytics**         | Amplitude                                                               |
-| **Animations**        | GSAP 3, @formkit/auto-animate                                           |
+| Layer                 | Technology                                                                                                               |
+| --------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| **Framework**         | Nuxt 3.16+ (Vue 3.5+)                                                                                                    |
+| **Language**          | TypeScript 5.6                                                                                                           |
+| **Rendering**         | SPA mode (`ssr: false`)                                                                                                  |
+| **State Management**  | Pinia 3 + pinia-plugin-persistedstate                                                                                    |
+| **UI Library**        | shadcn-vue 2.0 (New York style) + Reka UI primitives                                                                     |
+| **Styling**           | Tailwind CSS 4 via `@tailwindcss/vite`                                                                                   |
+| **Data Grid**         | AG Grid Community 33 + TanStack Vue Table 8                                                                              |
+| **Code Editor**       | CodeMirror 6 (vue-codemirror)                                                                                            |
+| **ERD Visualization** | Vue Flow (wrapper over reactflow)                                                                                        |
+| **Charts**            | ECharts 5 via vue-echarts                                                                                                |
+| **AI Integration**    | Vercel AI SDK 6 (OpenAI, Google Gemini, Anthropic Claude, xAI Grok)                                                      |
+| **Database Driver**   | Knex.js with `pg`, `mysql2`, `oracledb`, and `sqlite3`, plus `@libsql/client`, `redis`, and Cloudflare D1 HTTP transport |
+| **Desktop Wrapper**   | Electron (via electron-vite, separate `electron/` project)                                                               |
+| **D&D**               | Atlassian Pragmatic Drag & Drop                                                                                          |
+| **Routing**           | nuxt-typed-router (type-safe route params)                                                                               |
+| **Icons**             | @nuxt/icon with Iconify (Lucide, HugeIcons, Logos, Material Icon Theme)                                                  |
+| **Testing**           | Vitest 4 (unit + nuxt environment) + @vue/test-utils                                                                     |
+| **Package Manager**   | Bun 1.2.8                                                                                                                |
+| **Docker**            | Multi-stage Node 22 Alpine image                                                                                         |
+| **Analytics**         | Amplitude                                                                                                                |
+| **Animations**        | GSAP 3, @formkit/auto-animate                                                                                            |
 
 ### Rendering Mode
 
@@ -83,6 +83,10 @@ Pages → Components/Modules → Core (stores, composables, types, helpers)
 ```
 
 Pages are thin routing shells. Feature modules encapsulate UI + hooks. Core provides shared state and business logic. Server API is a stateless BFF. Infrastructure implements the Adapter pattern for multi-database support.
+
+### Connection Families
+
+OrcaQ now treats connection type and provider kind as a capability problem instead of a flat driver list. D1 and Turso resolve to the `sql` family and reuse SQL explorer/query modules with provider-aware transport. Redis resolves to a dedicated family with its own sidebar panels, routes, and unavailable-state rules so it never falls back to PostgreSQL-oriented flows.
 
 ### Separation of Concerns
 
@@ -159,7 +163,7 @@ Pages are thin routing shells. Feature modules encapsulate UI + hooks. Core prov
 
 **Layer: UI**
 
-30+ shadcn-vue components: Accordion, Alert, AlertDialog, AutoForm, Avatar, Badge, Breadcrumb, Button, Calendar, Card, Checkbox, Collapsible, Command, ContextMenu, Dialog, DropdownMenu, Empty, Form, Input, Kbd, Label, Popover, RadioGroup, Resizable, ScrollArea, Select, Separator, Sheet, Sidebar, Skeleton, Slider, Sonner, Switch, Table, Tabs, Textarea, Tooltip.
+30+ shadcn-vue components: Accordion, Alert, AlertDialog, Avatar, Badge, Breadcrumb, Button, Calendar, Card, Checkbox, Collapsible, Command, ContextMenu, Dialog, DropdownMenu, Empty, Form, Input, Kbd, Label, Popover, RadioGroup, Resizable, ScrollArea, Select, Separator, Sheet, Sidebar, Skeleton, Slider, Sonner, Switch, Table, Tabs, Textarea, Tooltip.
 
 **Dependencies:** `lib/utils.ts` (cn helper), Reka UI primitives, class-variance-authority  
 **Public API:** Each component exports from its own directory
@@ -690,7 +694,7 @@ Pages are extremely thin — typically just `definePageMeta` + a single feature 
 
 ### Form Architecture
 
-Forms use **Vee-Validate 4** with **Zod** schemas (`@vee-validate/zod`). The `components/ui/auto-form/` provides an auto-generated form component based on Zod schema definitions.
+Forms use **Vee-Validate 4** with **Zod** schemas (`@vee-validate/zod`).
 
 Connection creation uses a manual multi-step form with `reactive()` state.
 

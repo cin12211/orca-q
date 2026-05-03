@@ -71,7 +71,7 @@ const languageLabel = computed(() => props.language.toUpperCase());
     >
       <!-- Language label -->
       <span
-        class="text-[10px] font-semibold tracking-widest uppercase text-muted-foreground select-none"
+        class="text-xxs font-semibold tracking-widest uppercase text-muted-foreground select-none"
       >
         {{ languageLabel }}
       </span>
@@ -93,7 +93,7 @@ const languageLabel = computed(() => props.language.toUpperCase());
               />
               <span
                 v-if="copied"
-                class="text-[10px] font-medium leading-none"
+                class="text-xxs font-medium leading-none"
                 :class="getCopyIconClass(copied)"
                 >Copied</span
               >

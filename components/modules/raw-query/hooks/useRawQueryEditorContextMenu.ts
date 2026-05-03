@@ -11,6 +11,8 @@ interface EditorContextMenuActions {
   onExplainAnalyzeCurrent: () => void;
   onHandleFormatCurrentStatement: () => void;
   onHandleFormatCode: () => void;
+  isSupportFormat?: Ref<boolean>;
+  isExplainSupported?: Ref<boolean>;
   // Accepts any EditorView-like object (including readonly refs)
   getEditorView: () => EditorView | null | undefined;
 }
@@ -113,31 +115,39 @@ export function useRawQueryEditorContextMenu(
         select: actions.onExecuteCurrent,
         disabled: noStatement,
       },
-      {
-        type: ContextMenuItemType.ACTION,
-        title: 'Analyze Query',
-        icon: 'hugeicons:analytics-01',
-        shortcut: '⌘E',
-        select: actions.onExplainAnalyzeCurrent,
-        disabled: noStatement,
-      },
+      ...(actions.isExplainSupported?.value
+        ? [
+            {
+              type: ContextMenuItemType.ACTION,
+              title: 'Analyze Query',
+              icon: 'hugeicons:analytics-01',
+              shortcut: '⌘E',
+              select: actions.onExplainAnalyzeCurrent,
+              disabled: noStatement,
+            } satisfies ContextMenuItem,
+          ]
+        : []),
       { type: ContextMenuItemType.SEPARATOR },
-      {
-        type: ContextMenuItemType.ACTION,
-        title: 'Format Current',
-        icon: 'hugeicons:magic-wand-01',
-        shortcut: '⌘S',
-        select: actions.onHandleFormatCurrentStatement,
-        disabled: noStatement,
-      },
-      {
-        type: ContextMenuItemType.ACTION,
-        title: 'Format All',
-        icon: 'hugeicons:text-align-left',
-        shortcut: '⇧⌥F',
-        select: actions.onHandleFormatCode,
-        disabled: noContent,
-      },
+      ...(actions.isSupportFormat?.value
+        ? [
+            {
+              type: ContextMenuItemType.ACTION,
+              title: 'Format Current',
+              icon: 'hugeicons:magic-wand-01',
+              shortcut: '⌘S',
+              select: actions.onHandleFormatCurrentStatement,
+              disabled: noStatement,
+            } satisfies ContextMenuItem,
+            {
+              type: ContextMenuItemType.ACTION,
+              title: 'Format All',
+              icon: 'hugeicons:text-align-left',
+              shortcut: '⇧⌥F',
+              select: actions.onHandleFormatCode,
+              disabled: noContent,
+            } satisfies ContextMenuItem,
+          ]
+        : []),
       { type: ContextMenuItemType.SEPARATOR },
       {
         type: ContextMenuItemType.ACTION,

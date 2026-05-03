@@ -1,0 +1,158 @@
+{
+  "counts": {
+    "cachePageCount": 60,
+    "orderHashCount": 30,
+    "sessionHashCount": 25,
+    "leaderboardEntryCount": 80,
+    "streamEntryCount": 120
+  },
+  "core": {
+    "ordersString": {
+      "key": "orders:1",
+      "value": "draft"
+    },
+    "ordersHash": {
+      "key": "orders:2",
+      "value": {
+        "status": "paid",
+        "customer": "cinny",
+        "priority": "high",
+        "total": "42.50",
+        "currency": "USD"
+      }
+    },
+    "ordersQueue": {
+      "key": "orders:queue",
+      "value": ["orders:1", "orders:2", "orders:3", "orders:4"]
+    },
+    "theme": {
+      "key": "app:config:theme",
+      "value": "dark"
+    },
+    "dashboardCache": {
+      "key": "cache:json:dashboard",
+      "ttlSeconds": 600,
+      "value": {
+        "version": 3,
+        "widgets": ["orders", "revenue", "latency"],
+        "generatedAt": "2026-04-29T00:00:00.000Z"
+      }
+    },
+    "processedCounter": {
+      "key": "counter:orders:processed",
+      "initial": 128,
+      "incrementBy": 12
+    },
+    "otp": {
+      "key": "session:temp:otp",
+      "value": "938201",
+      "ttlSeconds": 120
+    },
+    "bitmap": {
+      "key": "bitmap:feature-flags",
+      "bits": [1, 5, 9]
+    },
+    "bitfield": {
+      "key": "bitfield:ratelimit",
+      "entries": [
+        { "type": "u8", "offset": 0, "value": 12 },
+        { "type": "u8", "offset": 8, "value": 8 },
+        { "type": "u8", "offset": 16, "value": 31 }
+      ]
+    },
+    "customerHash": {
+      "key": "customer:1001",
+      "value": {
+        "name": "Ada",
+        "email": "ada@example.com",
+        "tier": "gold",
+        "region": "apac",
+        "status": "active"
+      }
+    },
+    "inventoryHash": {
+      "key": "inventory:sku:100",
+      "value": {
+        "sku": "SKU-100",
+        "name": "keyboard",
+        "quantity": "58",
+        "warehouse": "hcm",
+        "restockLevel": "15"
+      }
+    },
+    "emailQueue": {
+      "key": "queue:emails",
+      "prefix": "email-job-",
+      "count": 60
+    },
+    "orderTimeline": {
+      "key": "timeline:orders:1001",
+      "prefix": "event-",
+      "count": 24
+    },
+    "orderTags": {
+      "key": "tags:order:1001",
+      "value": ["express", "paid", "fragile", "gift"]
+    },
+    "enabledFeatures": {
+      "key": "feature:enabled",
+      "value": [
+        "redis-browser",
+        "redis-tools",
+        "stream-inspector",
+        "ttl-editor",
+        "json-preview"
+      ]
+    },
+    "apacMembers": {
+      "key": "team:region:apac",
+      "prefix": "member-",
+      "count": 18
+    },
+    "recentOrders": {
+      "key": "index:recent-orders",
+      "count": 40,
+      "memberPrefix": "orders:",
+      "scoreStart": 1715000000,
+      "scoreStep": 1
+    },
+    "dailyLeaderboard": {
+      "key": "leaderboard:daily",
+      "count": 80,
+      "memberPrefix": "user:",
+      "scoreStart": 1000,
+      "scoreStep": -7
+    },
+    "warehousesGeo": {
+      "key": "geo:warehouses",
+      "members": [
+        {
+          "member": "warehouse:hcm",
+          "longitude": 106.70098,
+          "latitude": 10.77689
+        },
+        {
+          "member": "warehouse:hn",
+          "longitude": 105.85444,
+          "latitude": 21.02851
+        },
+        {
+          "member": "warehouse:dn",
+          "longitude": 108.20217,
+          "latitude": 16.05441
+        },
+        {
+          "member": "warehouse:sg",
+          "longitude": 106.62966,
+          "latitude": 10.8231
+        }
+      ]
+    },
+    "ordersStream": {
+      "key": "stream:orders"
+    },
+    "auditStream": {
+      "key": "stream:audit"
+    }
+  }
+}

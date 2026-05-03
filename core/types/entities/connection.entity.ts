@@ -4,6 +4,25 @@ export enum EConnectionMethod {
   STRING = 'string',
   FORM = 'form',
   FILE = 'file',
+  MANAGED = 'managed',
+}
+
+export enum EConnectionProviderKind {
+  DIRECT_SQL = 'direct-sql',
+  SQLITE_FILE = 'sqlite-file',
+  CLOUDFLARE_D1 = 'cloudflare-d1',
+  TURSO = 'turso',
+  REDIS_DIRECT = 'redis-direct',
+}
+
+export enum EConnectionFamily {
+  SQL = 'sql',
+  REDIS = 'redis',
+}
+
+export enum EManagedSqliteProvider {
+  CLOUDFLARE_D1 = 'cloudflare-d1',
+  TURSO = 'turso',
 }
 
 export enum ESSLMode {
@@ -39,12 +58,24 @@ export interface ISSHConfig {
   useSshKey?: boolean;
 }
 
+export interface IManagedSqliteConfig {
+  provider: EManagedSqliteProvider;
+  accountId?: string;
+  databaseId?: string;
+  databaseName?: string;
+  apiToken?: string;
+  url?: string;
+  authToken?: string;
+  branchName?: string;
+}
+
 export interface Connection {
   id: string;
   workspaceId: string;
   name: string;
   type: DatabaseClientType;
   method: EConnectionMethod;
+  providerKind?: EConnectionProviderKind;
   connectionString?: string;
   host?: string;
   port?: string;
@@ -53,6 +84,7 @@ export interface Connection {
   database?: string;
   serviceName?: string;
   filePath?: string;
+  managedSqlite?: IManagedSqliteConfig;
   ssl?: ISSLConfig;
   ssh?: ISSHConfig;
   tagIds?: string[];

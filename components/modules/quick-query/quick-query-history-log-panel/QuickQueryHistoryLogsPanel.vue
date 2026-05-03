@@ -108,11 +108,11 @@
                 :ref="measureElement"
               >
                 <div class="pb-2 leading-relaxed text-xs">
-                  <span class="text-[10px]"
+                  <span class="text-xxs"
                     >[{{ formatDate(logs[virtualRow.index].createdAt) }}]
                   </span>
 
-                  <span class="text-[10px]">
+                  <span class="text-xxs">
                     :
                     {{ formatQueryTime(logs[virtualRow.index].queryTime || 0) }}
                   </span>

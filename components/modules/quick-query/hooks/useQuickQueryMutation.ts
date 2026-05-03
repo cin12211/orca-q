@@ -150,6 +150,7 @@ export function useQuickQueryMutation(options: UseQuickQueryMutationOptions) {
           update: cell.changedData,
           pKeys: primaryKeys.value,
           pKeyValue: rowData,
+          dbType: connection.value?.type,
         });
         sqlBulkInsertOrUpdateStatements.push(sqlUpdateStatement);
       } else if (isInsertStatement) {
@@ -157,6 +158,7 @@ export function useQuickQueryMutation(options: UseQuickQueryMutationOptions) {
           tableName: tableName,
           schemaName: schemaName,
           insertData: cell.changedData,
+          dbType: connection.value?.type,
         });
         sqlBulkInsertOrUpdateStatements.push(sqlInsertStatement);
       }
@@ -234,6 +236,7 @@ export function useQuickQueryMutation(options: UseQuickQueryMutationOptions) {
         schemaName: schemaName,
         pKeys: primaryKeys.value,
         pKeyValue: row,
+        dbType: connection.value?.type,
       });
       sqlDeleteStatements.push(sqlDeleteStatement);
     });

@@ -137,7 +137,7 @@ onMounted(() => {
             <Icon name="hugeicons:table-01" class="size-3.5 shrink-0" />
             <span class="flex-1 truncate">{{ table.name }}</span>
             <span
-              class="ml-auto shrink-0 rounded px-1.5 py-0.5 text-[10px] font-medium capitalize"
+              class="ml-auto shrink-0 rounded px-1.5 py-0.5 text-xxs font-medium capitalize"
               :class="badgeVariant[table.status]"
               >{{ table.status }}</span
             >
@@ -158,7 +158,7 @@ onMounted(() => {
                 class="size-3 shrink-0 opacity-60"
               />
               <span class="flex-1 truncate text-xs">{{ col.name }}</span>
-              <span class="shrink-0 text-[10px] text-muted-foreground">
+              <span class="shrink-0 text-xxs text-muted-foreground">
                 <template v-if="col.status === 'added'">
                   {{ col.source?.type }}
                 </template>
@@ -209,11 +209,9 @@ onMounted(() => {
         >
           <Icon name="hugeicons:eye" class="size-3.5 shrink-0" />
           <span class="flex-1 truncate">{{ view.name }}</span>
-          <span class="ml-2 shrink-0 text-[10px] text-muted-foreground"
-            >view</span
-          >
+          <span class="ml-2 shrink-0 text-xxs text-muted-foreground">view</span>
           <span
-            class="ml-auto shrink-0 rounded px-1.5 py-0.5 text-[10px] font-medium capitalize"
+            class="ml-auto shrink-0 rounded px-1.5 py-0.5 text-xxs font-medium capitalize"
             :class="badgeVariant[view.status]"
             >{{ view.status }}</span
           >
@@ -228,11 +226,9 @@ onMounted(() => {
         >
           <Icon name="hugeicons:function-of-x" class="size-3.5 shrink-0" />
           <span class="flex-1 truncate">{{ fn.name }}</span>
-          <span class="ml-2 shrink-0 text-[10px] text-muted-foreground"
-            >fn</span
-          >
+          <span class="ml-2 shrink-0 text-xxs text-muted-foreground">fn</span>
           <span
-            class="ml-auto shrink-0 rounded px-1.5 py-0.5 text-[10px] font-medium capitalize"
+            class="ml-auto shrink-0 rounded px-1.5 py-0.5 text-xxs font-medium capitalize"
             :class="badgeVariant[fn.status]"
             >{{ fn.status }}</span
           >

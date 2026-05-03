@@ -10,6 +10,7 @@ import { SQLDialectSupport } from '../constants';
 export interface SqlParserConfig {
   dialect: SQLDialect;
   isEnable: boolean;
+  statementMode: 'sql' | 'line';
 }
 
 // ---------------------------------------------------------------------------
@@ -51,7 +52,11 @@ export const updateSqlParserConfigEffect =
 // ---------------------------------------------------------------------------
 
 export const sqlParserConfigField = StateField.define<SqlParserConfig>({
-  create: () => ({ dialect: PostgreSQL, isEnable: true }),
+  create: () => ({
+    dialect: PostgreSQL,
+    isEnable: true,
+    statementMode: 'sql',
+  }),
 
   update(current, transaction) {
     for (const effect of transaction.effects) {

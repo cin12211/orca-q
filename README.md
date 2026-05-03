@@ -21,7 +21,7 @@
 
 ## Overview
 
-**OrcaQ** is a modern database editor for managing, querying, and exploring PostgreSQL, MySQL, MariaDB, Oracle, and desktop SQLite data in a fast, intuitive, and secure way.
+**OrcaQ** is a modern database editor for managing, querying, and exploring PostgreSQL, MySQL, MariaDB, Oracle, local and managed SQLite, and Redis data in a fast, intuitive, and secure way.
 
 <img src="https://orca-q.com/images/editor-preview.png" style="border: 1px solid #ccc; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.2);" >
 
@@ -81,8 +81,8 @@ Open [http://localhost:9432](http://localhost:9432).
 | <img src="https://api.iconify.design/devicon:mysql.svg" width="16" alt="MySQL" /> MySQL | String, form | Connection test, raw query, minimum metadata and table browsing | Advanced roles, metrics, and instance insights remain unsupported |
 | <img src="https://api.iconify.design/devicon:mariadb.svg" width="16" alt="MariaDB" /> MariaDB | String, form | Connection test, raw query, minimum metadata and table browsing | Uses a distinct persisted `mariadb` type |
 | <img src="https://api.iconify.design/logos:oracle.svg" width="16" alt="Oracle" /> Oracle | String, form | Connection test, raw query, minimum metadata and table browsing | Structured form uses `serviceName` |
-| <img src="https://api.iconify.design/devicon:sqlite.svg" width="16" alt="SQLite" /> SQLite | File (desktop only) | Connection test, raw query, minimum metadata and table browsing | File picker is available only in the Electron app |
-
+| <img src="https://api.iconify.design/devicon:sqlite.svg" width="16" alt="SQLite" /> SQLite | File (desktop only), managed | Connection test, raw query, metadata and table browsing | Local files stay desktop-only; Cloudflare D1 and Turso reuse the SQL family path |
+| Redis | String, form | Connection test, key browser, type-aware value inspection, workbench, analysis | SQL-only panels stay hidden for Redis sessions |
 Advanced database-administration features are still intentionally PostgreSQL-first unless a database-specific adapter exists.
 
 ## Features
@@ -99,6 +99,7 @@ Advanced database-administration features are still intentionally PostgreSQL-fir
 - **File Explorer**: Manage SQL files and folders in a tree view with nested folders, rename/delete actions, search, and drag-and-drop organization.
 - **Quick Query**: Explore table data in a grid with pagination, sorting, filters, inline editing, bulk actions, related-table previews, query logs, and metadata tabs.
 - **Raw SQL Editor**: Write and run multi-statement SQL with CodeMirror, autocomplete, formatting, variables, EXPLAIN analysis, result tabs, and persisted query files.
+- **Redis Workspace**: Browse keys, inspect string/hash/list/set/zset values, run commands in a workbench, and surface read-only or ACL-limited states clearly.
 
 ### <img src="https://api.iconify.design/hugeicons:tools.svg" width="20" alt="Tools icon" /> Database Tools
 
@@ -107,6 +108,7 @@ Advanced database-administration features are still intentionally PostgreSQL-fir
 - **Instance Insights**: Monitor PostgreSQL activity, sessions, locks, replication, and configuration from a built-in database health dashboard.
 - **Schema Diff**: Compare two schemas across connections and generate migration SQL with a safe mode that reduces destructive output.
 - **Backup & Restore**: Run native export/import workflows with format options, scope selection, compression, and job progress tracking.
+- **Family-aware shell**: Activity bar items, primary sidebar panels, tabs, and route fallbacks adapt to SQL and Redis families instead of assuming a relational session.
 
 ### <img src="https://api.iconify.design/material-symbols:auto-awesome-outline-rounded.svg" width="20" alt="AI icon" /> AI & Productivity
 

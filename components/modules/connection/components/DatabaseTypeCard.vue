@@ -7,6 +7,7 @@ import { cn } from '~/lib/utils';
 defineProps<{
   name: string;
   icon: Component;
+  description?: string;
   selected: boolean;
   isSupport: boolean;
   isBeta?: boolean;
@@ -52,6 +53,12 @@ defineProps<{
         >
           {{ name }}
         </span>
+        <p
+          v-if="description"
+          class="text-xxs leading-4 text-muted-foreground px-2"
+        >
+          {{ description }}
+        </p>
         <div class="flex items-center justify-center gap-1.5 min-h-3.5">
           <Badge
             v-if="isBeta"

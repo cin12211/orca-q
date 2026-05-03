@@ -311,7 +311,7 @@ export function createColumnCompletion({
  */
 export function mappedSchemaSuggestion({
   schemas,
-  defaultSchemaName = 'public',
+  defaultSchemaName,
   fileVariables,
 }: {
   schemas: Schema[] | null | undefined;
@@ -436,10 +436,15 @@ export function mappedSchemaSuggestion({
     }
   }
 
+  const resolvedDefaultSchema =
+    (defaultSchemaName && hierarchicalSchema[defaultSchemaName]
+      ? defaultSchemaName
+      : undefined) || Object.keys(hierarchicalSchema)[0];
+
   return {
     schema: hierarchicalSchema,
     variableCompletions,
-    defaultSchema: defaultSchemaName,
+    defaultSchema: resolvedDefaultSchema,
   };
 }
 

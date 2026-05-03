@@ -1,7 +1,11 @@
 import { isProxy, nextTick, ref } from 'vue';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { useConnectionForm } from '~/components/modules/connection/hooks/useConnectionForm';
-import { EConnectionMethod } from '~/components/modules/connection/types';
+import {
+  EConnectionMethod,
+  EConnectionProviderKind,
+  EManagedSqliteProvider,
+} from '~/components/modules/connection/types';
 import { DatabaseClientType } from '~/core/constants/database-client-type';
 
 // ---------------------------------------------------------------------------
@@ -108,6 +112,18 @@ describe('useConnectionForm', () => {
     await nextTick();
 
     expect(connectionMethod.value).toBe(EConnectionMethod.FILE);
+  });
+
+  it('offers FILE and MANAGED methods for SQLite connections', async () => {
+    const { dbType, availableConnectionMethods } = createForm();
+
+    dbType.value = DatabaseClientType.SQLITE3;
+    await nextTick();
+
+    expect(availableConnectionMethods.value).toEqual([
+      EConnectionMethod.FILE,
+      EConnectionMethod.MANAGED,
+    ]);
   });
 
   it('default connection name is set', () => {
@@ -274,6 +290,82 @@ describe('useConnectionForm', () => {
     expect(body.filePath).toBe('/tmp/app.sqlite');
   });
 
+  it('sends managed SQLite payloads for Cloudflare D1 validation', async () => {
+    mockHealthCheck.mockResolvedValue({ isConnectedSuccess: true });
+
+    const { connectionMethod, dbType, managedSqlite, handleTestConnection } =
+      createForm();
+
+    dbType.value = DatabaseClientType.SQLITE3;
+    await nextTick();
+    connectionMethod.value = EConnectionMethod.MANAGED;
+    managedSqlite.provider = EManagedSqliteProvider.CLOUDFLARE_D1;
+    managedSqlite.accountId = 'cf-account';
+    managedSqlite.databaseId = 'd1-db';
+    managedSqlite.apiToken = 'cf-token';
+
+    await handleTestConnection();
+
+    const body = mockHealthCheck.mock.calls[0][0];
+    expect(body.type).toBe(DatabaseClientType.SQLITE3);
+    expect(body.method).toBe(EConnectionMethod.MANAGED);
+    expect(body.providerKind).toBe(EConnectionProviderKind.CLOUDFLARE_D1);
+    expect(body.managedSqlite).toMatchObject({
+      provider: EManagedSqliteProvider.CLOUDFLARE_D1,
+      accountId: 'cf-account',
+      databaseId: 'd1-db',
+      apiToken: 'cf-token',
+    });
+  });
+
+  it('sends managed SQLite payloads for Turso validation', async () => {
+    mockHealthCheck.mockResolvedValue({ isConnectedSuccess: true });
+
+    const { connectionMethod, dbType, managedSqlite, handleTestConnection } =
+      createForm();
+
+    dbType.value = DatabaseClientType.SQLITE3;
+    await nextTick();
+    connectionMethod.value = EConnectionMethod.MANAGED;
+    managedSqlite.provider = EManagedSqliteProvider.TURSO;
+    managedSqlite.url = 'libsql://hera.turso.io';
+    managedSqlite.authToken = 'turso-token';
+    managedSqlite.branchName = 'preview';
+
+    await handleTestConnection();
+
+    const body = mockHealthCheck.mock.calls[0][0];
+    expect(body.type).toBe(DatabaseClientType.SQLITE3);
+    expect(body.method).toBe(EConnectionMethod.MANAGED);
+    expect(body.providerKind).toBe(EConnectionProviderKind.TURSO);
+    expect(body.managedSqlite).toMatchObject({
+      provider: EManagedSqliteProvider.TURSO,
+      url: 'libsql://hera.turso.io',
+      authToken: 'turso-token',
+      branchName: 'preview',
+    });
+  });
+
+  it('sends Redis connection strings without SQL-only fields', async () => {
+    mockHealthCheck.mockResolvedValue({ isConnectedSuccess: true });
+
+    const { connectionMethod, connectionString, dbType, handleTestConnection } =
+      createForm();
+
+    dbType.value = DatabaseClientType.REDIS;
+    connectionMethod.value = EConnectionMethod.STRING;
+    connectionString.value = 'redis://127.0.0.1:6379/0';
+
+    await handleTestConnection();
+
+    const body = mockHealthCheck.mock.calls[0][0];
+    expect(body.type).toBe(DatabaseClientType.REDIS);
+    expect(body.method).toBe(EConnectionMethod.STRING);
+    expect(body.stringConnection).toBe('redis://127.0.0.1:6379/0');
+    expect(body.database).toBeUndefined();
+    expect(body.serviceName).toBeUndefined();
+  });
+
   // -- resetForm ------------------------------------------------------------
 
   it('resetForm resets step to 1', () => {
@@ -411,6 +503,47 @@ describe('useConnectionForm', () => {
     await nextTick();
     connectionName.value = 'local-sqlite';
     formData.filePath = '/tmp/app.sqlite';
+
+    expect(isFormValid.value).toBe(false);
+  });
+
+  it('isFormValid is true for managed D1 connections with required fields', async () => {
+    const {
+      isFormValid,
+      connectionName,
+      dbType,
+      connectionMethod,
+      managedSqlite,
+    } = createForm();
+
+    dbType.value = DatabaseClientType.SQLITE3;
+    await nextTick();
+    connectionMethod.value = EConnectionMethod.MANAGED;
+    connectionName.value = 'hera-d1';
+    managedSqlite.provider = EManagedSqliteProvider.CLOUDFLARE_D1;
+    managedSqlite.accountId = 'cf-account';
+    managedSqlite.databaseId = 'd1-db';
+    managedSqlite.apiToken = 'cf-token';
+
+    expect(isFormValid.value).toBe(true);
+  });
+
+  it('isFormValid is false for managed Turso connections without auth token', async () => {
+    const {
+      isFormValid,
+      connectionName,
+      dbType,
+      connectionMethod,
+      managedSqlite,
+    } = createForm();
+
+    dbType.value = DatabaseClientType.SQLITE3;
+    await nextTick();
+    connectionMethod.value = EConnectionMethod.MANAGED;
+    connectionName.value = 'hera-turso';
+    managedSqlite.provider = EManagedSqliteProvider.TURSO;
+    managedSqlite.url = 'libsql://hera.turso.io';
+    managedSqlite.authToken = '';
 
     expect(isFormValid.value).toBe(false);
   });
@@ -660,6 +793,82 @@ describe('useConnectionForm', () => {
     expect(connection.type).toBe(DatabaseClientType.SQLITE3);
     expect(connection.filePath).toBe('/tmp/app.sqlite');
     expect(connection.connectionString).toBe('sqlite3:///tmp/app.sqlite');
+  });
+
+  it('stores managed D1 connection metadata when creating a connection', async () => {
+    mockHealthCheck.mockResolvedValue({ isConnectedSuccess: true });
+
+    const onAddNew = vi.fn();
+
+    const {
+      connectionMethod,
+      connectionName,
+      dbType,
+      managedSqlite,
+      handleCreateConnection,
+    } = createForm({ onAddNew, workspaceId: 'ws-123' });
+
+    dbType.value = DatabaseClientType.SQLITE3;
+    await nextTick();
+    connectionMethod.value = EConnectionMethod.MANAGED;
+    connectionName.value = 'd1-prod';
+    managedSqlite.provider = EManagedSqliteProvider.CLOUDFLARE_D1;
+    managedSqlite.accountId = 'cf-account';
+    managedSqlite.databaseId = 'd1-db';
+    managedSqlite.databaseName = 'hera';
+    managedSqlite.apiToken = 'cf-token';
+
+    await handleCreateConnection();
+
+    const connection = onAddNew.mock.calls[0][0];
+    expect(connection.type).toBe(DatabaseClientType.SQLITE3);
+    expect(connection.method).toBe(EConnectionMethod.MANAGED);
+    expect(connection.providerKind).toBe(EConnectionProviderKind.CLOUDFLARE_D1);
+    expect(connection.managedSqlite).toMatchObject({
+      provider: EManagedSqliteProvider.CLOUDFLARE_D1,
+      accountId: 'cf-account',
+      databaseId: 'd1-db',
+      databaseName: 'hera',
+      apiToken: 'cf-token',
+    });
+    expect(connection.connectionString).toBeUndefined();
+  });
+
+  it('stores managed Turso connection metadata when creating a connection', async () => {
+    mockHealthCheck.mockResolvedValue({ isConnectedSuccess: true });
+
+    const onAddNew = vi.fn();
+
+    const {
+      connectionMethod,
+      connectionName,
+      dbType,
+      managedSqlite,
+      handleCreateConnection,
+    } = createForm({ onAddNew, workspaceId: 'ws-123' });
+
+    dbType.value = DatabaseClientType.SQLITE3;
+    await nextTick();
+    connectionMethod.value = EConnectionMethod.MANAGED;
+    connectionName.value = 'turso-prod';
+    managedSqlite.provider = EManagedSqliteProvider.TURSO;
+    managedSqlite.url = 'libsql://hera.turso.io';
+    managedSqlite.authToken = 'turso-token';
+    managedSqlite.branchName = 'main';
+
+    await handleCreateConnection();
+
+    const connection = onAddNew.mock.calls[0][0];
+    expect(connection.type).toBe(DatabaseClientType.SQLITE3);
+    expect(connection.method).toBe(EConnectionMethod.MANAGED);
+    expect(connection.providerKind).toBe(EConnectionProviderKind.TURSO);
+    expect(connection.managedSqlite).toMatchObject({
+      provider: EManagedSqliteProvider.TURSO,
+      url: 'libsql://hera.turso.io',
+      authToken: 'turso-token',
+      branchName: 'main',
+    });
+    expect(connection.connectionString).toBeUndefined();
   });
 
   it('reports a desktop-only error when testing SQLite outside Electron', async () => {

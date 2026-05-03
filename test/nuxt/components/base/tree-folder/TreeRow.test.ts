@@ -55,6 +55,38 @@ describe('TreeRow', () => {
     expect(wrapper.text()).toContain('index.ts');
   });
 
+  it('renders custom row actions through the actions slot', () => {
+    const wrapper = mount(TreeRow, {
+      props: {
+        node: fileNode,
+        isSelected: false,
+        isExpanded: false,
+        isFocused: false,
+      },
+      slots: {
+        actions: () => h('button', { class: 'test-action' }, 'Inspect'),
+      },
+      global: {
+        stubs: {
+          Icon: defineComponent({
+            name: 'Icon',
+            props: {
+              name: {
+                type: String,
+                default: '',
+              },
+            },
+            setup(iconProps) {
+              return () => h('i', { 'data-icon': iconProps.name });
+            },
+          }),
+        },
+      },
+    });
+
+    expect(wrapper.find('.test-action').text()).toBe('Inspect');
+  });
+
   it('renders chevron button for folder nodes', () => {
     const wrapper = mountRow({ node: folderNode });
 

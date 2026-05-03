@@ -1,5 +1,11 @@
 import { DatabaseClientType } from '~/core/constants/database-client-type';
 import {
+  EConnectionFamily,
+  EConnectionProviderKind,
+  EManagedSqliteProvider,
+  type IManagedSqliteConfig,
+} from '~/core/types/entities/connection.entity';
+import {
   EConnectionMethod,
   type ISSLConfig,
   type ISSHConfig,
@@ -19,6 +25,9 @@ export default defineEventHandler(
       serviceName?: string;
       filePath?: string;
       type?: DatabaseClientType;
+      providerKind?: EConnectionProviderKind;
+      family?: EConnectionFamily;
+      managedSqlite?: IManagedSqliteConfig;
       ssl?: ISSLConfig;
       ssh?: ISSHConfig;
     } = await readBody(event);
@@ -38,6 +47,9 @@ export default defineEventHandler(
       serviceName: body.serviceName,
       filePath: body.filePath,
       type: body.type,
+      providerKind: body.providerKind,
+      family: body.family,
+      managedSqlite: body.managedSqlite,
       ssl: body.ssl,
       ssh: body.ssh,
     });

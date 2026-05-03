@@ -69,7 +69,7 @@ const onSortChanged = () => {
       </Icon>
       {{ props.params.displayName }}
 
-      <p class="text-[10px]!">
+      <p class="text-xxs!">
         {{ props.params.dataType }}
       </p>
     </span>

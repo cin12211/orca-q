@@ -39,7 +39,7 @@ const data = computed(() => props.params?.data ?? {});
     <!-- Context annotation: Smaller, minimalist secondary text -->
     <span
       v-if="data.contextLabel"
-      class="text-[10px] pl-0.5 text-muted-foreground truncate shrink min-w-0"
+      class="text-xxs pl-0.5 text-muted-foreground truncate shrink min-w-0"
     >
       {{ data.contextLabel }}
     </span>

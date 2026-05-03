@@ -17,13 +17,24 @@ import {
   connectionService,
   type ConnectionHealthCheckBody,
 } from '../services/connection.service';
-import { EConnectionMethod, ESSLMode, ESSHAuthMethod } from '../types';
+import {
+  EConnectionMethod,
+  EConnectionProviderKind,
+  EManagedSqliteProvider,
+  ESSLMode,
+  ESSHAuthMethod,
+  type IManagedSqliteConfig,
+} from '../types';
 
 type FormHealthCheckBody = Extract<
   ConnectionHealthCheckBody,
   { method: EConnectionMethod.FORM }
 >;
 type FormConnectionPayload = Omit<FormHealthCheckBody, 'type' | 'method'>;
+type ManagedConnectionProviderKind = Extract<
+  ConnectionHealthCheckBody,
+  { method: EConnectionMethod.MANAGED }
+>['providerKind'];
 
 const NETWORK_CONNECTION_METHODS = new Set([
   EConnectionMethod.STRING,
@@ -36,10 +47,29 @@ const getSupportedConnectionMethods = (
   if (!type) return [];
 
   if (type === DatabaseClientType.SQLITE3) {
-    return [EConnectionMethod.FILE];
+    return [EConnectionMethod.FILE, EConnectionMethod.MANAGED];
   }
 
   return [EConnectionMethod.STRING, EConnectionMethod.FORM];
+};
+
+const createManagedSqliteState = (): IManagedSqliteConfig => ({
+  provider: EManagedSqliteProvider.CLOUDFLARE_D1,
+  accountId: '',
+  databaseId: '',
+  databaseName: '',
+  apiToken: '',
+  url: '',
+  authToken: '',
+  branchName: '',
+});
+
+const getManagedSqliteProviderKind = (
+  provider: EManagedSqliteProvider
+): ManagedConnectionProviderKind => {
+  return provider === EManagedSqliteProvider.TURSO
+    ? EConnectionProviderKind.TURSO
+    : EConnectionProviderKind.CLOUDFLARE_D1;
 };
 
 const getStructuredTargetKey = (type: DatabaseClientType | null) => {
@@ -52,8 +82,6 @@ const getConnectionStringScheme = (type: DatabaseClientType | null) => {
       return 'postgresql';
     case DatabaseClientType.MARIADB:
       return 'mariadb';
-    case DatabaseClientType.MONGODB:
-      return 'mongodb';
     case DatabaseClientType.ORACLE:
       return 'oracledb';
     case DatabaseClientType.REDIS:
@@ -122,6 +150,7 @@ export function useConnectionForm(props: {
     sshStoreInKeychain: true,
     sshUseKey: false,
   });
+  const managedSqlite = reactive(createManagedSqliteState());
   const tagIds = ref<string[]>([]);
   const testStatus = ref<'idle' | 'testing' | 'success' | 'error'>('idle');
   const testErrorMessage = ref('');
@@ -218,6 +247,25 @@ export function useConnectionForm(props: {
     return payload;
   };
 
+  const buildManagedSqlitePayload = () => {
+    if (managedSqlite.provider === EManagedSqliteProvider.TURSO) {
+      return {
+        provider: EManagedSqliteProvider.TURSO,
+        url: managedSqlite.url,
+        authToken: managedSqlite.authToken,
+        branchName: managedSqlite.branchName,
+      } satisfies IManagedSqliteConfig;
+    }
+
+    return {
+      provider: EManagedSqliteProvider.CLOUDFLARE_D1,
+      accountId: managedSqlite.accountId,
+      databaseId: managedSqlite.databaseId,
+      databaseName: managedSqlite.databaseName,
+      apiToken: managedSqlite.apiToken,
+    } satisfies IManagedSqliteConfig;
+  };
+
   const buildGeneratedConnectionString = () => {
     const scheme = getConnectionStringScheme(dbType.value);
     const port = formData.port || getDefaultPort(dbType.value);
@@ -259,6 +307,15 @@ export function useConnectionForm(props: {
       };
     }
 
+    if (connectionMethod.value === EConnectionMethod.MANAGED) {
+      return {
+        type: DatabaseClientType.SQLITE3,
+        method: EConnectionMethod.MANAGED,
+        providerKind: getManagedSqliteProviderKind(managedSqlite.provider),
+        managedSqlite: buildManagedSqlitePayload(),
+      };
+    }
+
     return {
       type,
       method: EConnectionMethod.FORM,
@@ -297,6 +354,8 @@ export function useConnectionForm(props: {
     formData.sshPrivateKey = '';
     formData.sshStoreInKeychain = true;
     formData.sshUseKey = false;
+
+    Object.assign(managedSqlite, createManagedSqliteState());
 
     tagIds.value = getDefaultTagIds();
     testStatus.value = 'idle';
@@ -384,6 +443,12 @@ export function useConnectionForm(props: {
       connection.connectionString = buildSqliteConnectionString(
         formData.filePath
       );
+      connection.providerKind = EConnectionProviderKind.SQLITE_FILE;
+    } else if (connectionMethod.value === EConnectionMethod.MANAGED) {
+      connection.providerKind = getManagedSqliteProviderKind(
+        managedSqlite.provider
+      );
+      connection.managedSqlite = buildManagedSqlitePayload();
     } else {
       const payload = buildFormConnectionPayload();
 
@@ -416,8 +481,6 @@ export function useConnectionForm(props: {
         return 'mysql://username:password@localhost:3306/database';
       case DatabaseClientType.MARIADB:
         return 'mariadb://username:password@localhost:3306/database';
-      case DatabaseClientType.MONGODB:
-        return 'mongodb://username:password@localhost:27017/database';
       case DatabaseClientType.ORACLE:
         return 'oracledb://username:password@localhost:1521/ORCLPDB1';
       case DatabaseClientType.REDIS:
@@ -462,6 +525,18 @@ export function useConnectionForm(props: {
       return isElectronRuntime.value && !!formData.filePath;
     }
 
+    if (connectionMethod.value === EConnectionMethod.MANAGED) {
+      if (managedSqlite.provider === EManagedSqliteProvider.TURSO) {
+        return !!(managedSqlite.url && managedSqlite.authToken);
+      }
+
+      return !!(
+        managedSqlite.accountId &&
+        managedSqlite.databaseId &&
+        managedSqlite.apiToken
+      );
+    }
+
     if (usesServiceName.value) {
       return !!(
         formData.host &&
@@ -501,6 +576,7 @@ export function useConnectionForm(props: {
       formData.sshEnabled = false;
     } else {
       formData.filePath = '';
+      Object.assign(managedSqlite, createManagedSqliteState());
 
       if (newType !== DatabaseClientType.ORACLE) {
         formData.serviceName = '';
@@ -517,6 +593,10 @@ export function useConnectionForm(props: {
   watch(connectionMethod, method => {
     if (method !== EConnectionMethod.FILE) {
       formData.filePath = '';
+    }
+
+    if (method !== EConnectionMethod.MANAGED) {
+      Object.assign(managedSqlite, createManagedSqliteState());
     }
 
     testStatus.value = 'idle';
@@ -541,6 +621,10 @@ export function useConnectionForm(props: {
         formData.database = conn.database || '';
         formData.serviceName = conn.serviceName || '';
         formData.filePath = conn.filePath || '';
+        Object.assign(managedSqlite, {
+          ...createManagedSqliteState(),
+          ...(conn.managedSqlite ?? {}),
+        });
 
         formData.sslEnabled = !!conn.ssl;
         if (conn.ssl) {
@@ -581,6 +665,7 @@ export function useConnectionForm(props: {
     connectionMethod,
     connectionString,
     formData,
+    managedSqlite,
     tagIds,
     testStatus,
     testErrorMessage,

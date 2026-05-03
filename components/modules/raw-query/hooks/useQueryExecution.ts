@@ -18,12 +18,74 @@ import { executeStreamingQuery } from './useStreamingQuery';
 interface UseQueryExecutionParams {
   getEditorView: () => EditorView | null;
   connection: Ref<Connection | undefined>;
+  redisDatabaseIndex?: Ref<number>;
   fileVariables: Ref<string>;
   fieldDefs: Ref<FieldDef[]>;
   resultTabs: ResultTabsReturn;
   buildExplainAnalyzePrefix: () => string;
   beforeExecute?: () => Promise<boolean>;
 }
+
+type RedisCommandResponse = {
+  command?: string[];
+  result: unknown;
+};
+
+const isPlainObject = (value: unknown): value is Record<string, unknown> => {
+  if (value === null || typeof value !== 'object') {
+    return false;
+  }
+
+  const prototype = Object.getPrototypeOf(value);
+  return prototype === Object.prototype || prototype === null;
+};
+
+const toFieldDefs = (fieldNames: string[]) =>
+  fieldNames.map(name => ({ name }) as FieldDef);
+
+const normalizeRedisResult = (
+  value: unknown
+): {
+  rows: RowData[];
+  fields: FieldDef[];
+} => {
+  if (Array.isArray(value)) {
+    if (value.every(item => isPlainObject(item))) {
+      const rows = value as RowData[];
+      const fieldNames = Array.from(
+        new Set(
+          rows.flatMap(row => Object.keys(row as Record<string, unknown>))
+        )
+      );
+
+      return {
+        rows,
+        fields: toFieldDefs(fieldNames),
+      };
+    }
+
+    return {
+      rows: value.map((item, index) => ({
+        index,
+        value: item,
+      })),
+      fields: toFieldDefs(['index', 'value']),
+    };
+  }
+
+  if (isPlainObject(value)) {
+    const rows = [value as RowData];
+    return {
+      rows,
+      fields: toFieldDefs(Object.keys(value)),
+    };
+  }
+
+  return {
+    rows: [{ value }],
+    fields: toFieldDefs(['value']),
+  };
+};
 
 /**
  * Handles the full SQL query execution lifecycle:
@@ -32,6 +94,7 @@ interface UseQueryExecutionParams {
 export function useQueryExecution({
   getEditorView,
   connection,
+  redisDatabaseIndex,
   fileVariables,
   fieldDefs,
   resultTabs,
@@ -109,8 +172,10 @@ export function useQueryExecution({
     }
 
     let executedResultView: ExecutedResultItem['view'] = 'result';
+    const isRedisConnection =
+      connection.value?.type === DatabaseClientType.REDIS;
 
-    if (queryPrefix) {
+    if (queryPrefix && !isRedisConnection) {
       executeQuery = `${queryPrefix} ${executeQuery}`;
       if (queryPrefix.startsWith('EXPLAIN')) {
         executedResultView = 'explain';
@@ -153,6 +218,78 @@ export function useQueryExecution({
 
     const rowBuffer: RowData[] = []; // accumulator, không reactive
 
+    if (isRedisConnection) {
+      try {
+        const startedAt = Date.now();
+        const redisResponse = await $fetch<RedisCommandResponse>(
+          '/api/redis/workbench/execute',
+          {
+            method: 'POST',
+            body: {
+              method: connection.value?.method,
+              stringConnection: connection.value?.connectionString,
+              host: connection.value?.host,
+              port: connection.value?.port,
+              username: connection.value?.username,
+              password: connection.value?.password,
+              database: connection.value?.database,
+              databaseIndex: redisDatabaseIndex?.value,
+              ssl: connection.value?.ssl,
+              ssh: connection.value?.ssh,
+              command: executeQuery,
+            },
+          }
+        );
+
+        const normalizedResult = normalizeRedisResult(redisResponse.result);
+        const queryTime = Date.now() - startedAt;
+
+        fieldDefs.value = normalizedResult.fields;
+        executedResultItem.metadata.fieldDefs = normalizedResult.fields;
+        executedResultItem.metadata.connection = connection.value;
+        executedResultItem.metadata.command =
+          redisResponse.command?.[0] ||
+          executeQuery.trim().split(/\s+/)[0]?.toUpperCase() ||
+          'REDIS';
+        executedResultItem.metadata.queryTime = queryTime;
+        executedResultItem.metadata.rowCount = normalizedResult.rows.length;
+        executedResultItem.result = normalizedResult.rows;
+
+        rawResponse.value = {
+          rows: normalizedResult.rows,
+          fields: normalizedResult.fields,
+          queryTime,
+        };
+        currentRawQueryResult.value = normalizedResult.rows;
+        queryProcessState.executeLoading = false;
+        queryProcessState.isStreaming = false;
+        queryProcessState.streamingRowCount = normalizedResult.rows.length;
+        queryProcessState.queryTime = queryTime;
+        queryProcessState.executeErrors = undefined;
+
+        resultTabs.refreshResultTab(executedResultItem.id, executedResultItem);
+      } catch (error: any) {
+        const message =
+          error?.data?.message ||
+          error?.message ||
+          'Failed to execute Redis command.';
+
+        queryProcessState.executeLoading = false;
+        queryProcessState.isStreaming = false;
+        queryProcessState.executeErrors = {
+          message,
+          data: error?.data || { message },
+        };
+        executedResultItem.metadata.executeErrors =
+          queryProcessState.executeErrors;
+        executedResultItem.view = 'error';
+
+        resultTabs.refreshResultTab(executedResultItem.id, executedResultItem);
+      }
+
+      return;
+    }
+
     if (queryPrefix && executedResultView === 'explain') {
       try {
         const result = await $fetch('/api/query/raw-execute', {
@@ -160,6 +297,8 @@ export function useQueryExecution({
           body: {
             dbConnectionString: connection.value?.connectionString,
             type: connection.value?.type,
+            providerKind: connection.value?.providerKind,
+            managedSqlite: connection.value?.managedSqlite,
             query: executeQuery,
             params: fileParameters,
           },
@@ -214,6 +353,8 @@ export function useQueryExecution({
       query: executeQuery,
       dbConnectionString: connection.value?.connectionString || '',
       type: connection.value?.type,
+      providerKind: connection.value?.providerKind,
+      managedSqlite: connection.value?.managedSqlite,
       params: fileParameters,
       onMeta: (fields, command) => {
         fieldDefs.value = fields;

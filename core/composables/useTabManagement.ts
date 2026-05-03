@@ -21,6 +21,18 @@ export interface OpenTabOptions {
   metadata?: any;
 }
 
+export function resolveRouteNameForTabType(type: TabViewType): RoutesNamesList {
+  switch (type) {
+    case TabViewType.AgentChat:
+      return 'workspaceId-connectionId-agent-tabViewId';
+    case TabViewType.RedisBrowser:
+    case TabViewType.RedisPubSub:
+      return 'workspaceId-connectionId-redis-tabViewId' as RoutesNamesList;
+    default:
+      return 'workspaceId-connectionId-quick-query-tabViewId';
+  }
+}
+
 export const useTabManagement = () => {
   const tabViewStore = useTabViewsStore();
   const wsStateStore = useWSStateStore();
@@ -136,7 +148,7 @@ export const useTabManagement = () => {
       icon: params.icon,
       iconClass: params.iconClass,
       type: params.type,
-      routeName: 'workspaceId-connectionId-quick-query-tabViewId',
+      routeName: resolveRouteNameForTabType(params.type),
       routeParams: {
         tabViewId: tabId,
       },
@@ -146,6 +158,30 @@ export const useTabManagement = () => {
         functionId: String(params.itemValueId || ''),
         treeNodeId: params.treeNodeId,
       },
+    });
+  };
+
+  const openRedisTab = async (params: {
+    id: string;
+    name: string;
+    type:
+      | TabViewType.RedisBrowser
+      | TabViewType.RedisPubSub;
+    icon?: string;
+    iconClass?: string;
+    metadata?: Record<string, any>;
+  }) => {
+    await openTab({
+      id: params.id,
+      name: params.name,
+      icon: params.icon || 'hugeicons:database-sync-01',
+      iconClass: params.iconClass,
+      type: params.type,
+      routeName: resolveRouteNameForTabType(params.type),
+      routeParams: {
+        tabViewId: params.id,
+      },
+      metadata: params.metadata,
     });
   };
 
@@ -176,6 +212,7 @@ export const useTabManagement = () => {
 
   const openInstanceInsightsTab = async (params?: {
     databaseName?: string;
+    databaseIndex?: number;
   }) => {
     if (!workspaceId.value || !connectionId.value) return;
 
@@ -204,6 +241,7 @@ export const useTabManagement = () => {
       },
       metadata: {
         openAction: WorkspaceTabOpenAction.InstanceInsights,
+        databaseIndex: params?.databaseIndex,
       },
     });
   };
@@ -270,6 +308,7 @@ export const useTabManagement = () => {
     openStarterSqlTab,
     openNewSqlFileTab,
     openSchemaItemTab,
+    openRedisTab,
     openUserPermissionsTab,
     openInstanceInsightsTab,
     openSchemaDiffTab,

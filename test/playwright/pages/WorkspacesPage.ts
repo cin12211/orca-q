@@ -1,10 +1,25 @@
 import type { Page, Locator } from '@playwright/test';
 import { expect } from '@playwright/test';
+import { getLatestVersion } from '../../../core/data/changelogs/changelog';
 
 // The key used by useChangelogModal to track the last-seen version.
-// Setting it before page load prevents the "What's New" dialog from opening.
+// Setting it before page load reduces churn, while explicit dismissal below
+// keeps tests stable across version bumps.
 const CHANGELOG_KEY = 'orcaq-last-seen-version';
-const CHANGELOG_SEEN_VERSION = '1.0.25';
+const CHANGELOG_SEEN_VERSION = getLatestVersion();
+const PERSISTED_IDB_NAMES = [
+  'appConfigIDB',
+  'agentStateIDB',
+  'workspaceIDB',
+  'workspaceStateIDB',
+  'connectionStoreIDB',
+  'tabViewsIDB',
+  'quickQueryLogsIDB',
+  'rowQueryFileIDBStore',
+  'rowQueryFileContentIDBStore',
+  'environmentTagIDB',
+  'migrationStateIDB',
+];
 
 export class WorkspacesPage {
   readonly page: Page;
@@ -13,18 +28,67 @@ export class WorkspacesPage {
     this.page = page;
   }
 
-  async goto() {
-    // Suppress the changelog dialog so it doesn't block aria-modal interactions
-    await this.page.addInitScript(
-      ({ key, version }) => localStorage.setItem(key, version),
-      { key: CHANGELOG_KEY, version: CHANGELOG_SEEN_VERSION }
+  private async dismissChangelogIfVisible() {
+    const changelogButton = this.page.getByRole('dialog').getByRole('button', {
+      name: /got it, thanks!|thanks/i,
+    });
+
+    const isVisible = await changelogButton
+      .waitFor({ state: 'visible', timeout: 1500 })
+      .then(() => true)
+      .catch(() => false);
+
+    if (!isVisible) {
+      return;
+    }
+
+    await changelogButton.click();
+    await expect(changelogButton).not.toBeVisible({ timeout: 5000 });
+  }
+
+  private async resetClientStorage() {
+    await this.page.evaluate(
+      async ({ changelogKey, changelogVersion, dbNames }) => {
+        localStorage.clear();
+        sessionStorage.clear();
+
+        await Promise.all(
+          dbNames.map(
+            dbName =>
+              new Promise<void>(resolve => {
+                const request = indexedDB.deleteDatabase(dbName);
+                request.onsuccess = () => resolve();
+                request.onerror = () => resolve();
+                request.onblocked = () => resolve();
+              })
+          )
+        );
+
+        localStorage.setItem(changelogKey, changelogVersion);
+      },
+      {
+        changelogKey: CHANGELOG_KEY,
+        changelogVersion: CHANGELOG_SEEN_VERSION,
+        dbNames: PERSISTED_IDB_NAMES,
+      }
     );
-    await this.page.goto('/');
+  }
+
+  async goto() {
+    await this.page.context().clearCookies();
+
+    // The Nuxt dev server can keep the splash template mounted while late assets
+    // finish loading; DOM readiness is enough for the test storage reset flow.
+    await this.page.goto('/', { waitUntil: 'domcontentloaded' });
+    await this.resetClientStorage();
+    await this.page.reload({ waitUntil: 'domcontentloaded' });
+    await this.dismissChangelogIfVisible();
+    await expect(this.headerCreateButton).toBeVisible({ timeout: 30_000 });
   }
 
   // ── Empty state ──────────────────────────────────────────────────────────
   get emptyStateText(): Locator {
-    return this.page.getByText("There's no workspaces");
+    return this.page.getByText('No workspaces found', { exact: true });
   }
 
   get emptyStateButton(): Locator {
@@ -85,6 +149,8 @@ export class WorkspacesPage {
 
   // ── Create Workspace Modal ────────────────────────────────────────────────
   async clickNewWorkspace() {
+    await this.dismissChangelogIfVisible();
+
     // Click whichever "New Workspace" button is visible (empty state or header)
     await this.page
       .locator('button')

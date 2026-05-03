@@ -277,7 +277,6 @@ const HANDLER_REGISTRY: Record<
   [DatabaseClientType.MARIADB]: MysqlCommandResultHandler,
   [DatabaseClientType.MYSQL]: MysqlCommandResultHandler,
   [DatabaseClientType.MYSQL2]: Mysql2CommandResultHandler,
-  [DatabaseClientType.MONGODB]: GenericCommandResultHandler,
   [DatabaseClientType.REDIS]: GenericCommandResultHandler,
   [DatabaseClientType.SQLITE3]: Sqlite3CommandResultHandler,
   [DatabaseClientType.SNOWFLAKE]: GenericCommandResultHandler,

@@ -84,6 +84,21 @@ const selectedConnectionTags = computed(() => {
     ? tagStore.getTagsByIds(props.connection.tagIds ?? [])
     : [];
 });
+
+const getConnectionSupportIcon = (connection?: Connection) => {
+  return connection ? getDatabaseSupportByType(connection.type)?.icon : null;
+};
+
+const getConnectionSupportIconType = (connection?: Connection) => {
+  return getConnectionSupportIcon(connection)?.type;
+};
+
+const getConnectionSupportIconProps = (connection?: Connection) => {
+  return (getConnectionSupportIcon(connection)?.props ?? {}) as Record<
+    string,
+    unknown
+  >;
+};
 </script>
 <template>
   <CreateConnectionModal
@@ -107,7 +122,9 @@ const selectedConnectionTags = computed(() => {
     >
       <div class="flex items-center gap-2 truncate" v-if="connection">
         <component
-          :is="getDatabaseSupportByType(connection.type)?.icon"
+          v-if="getConnectionSupportIconType(connection)"
+          :is="getConnectionSupportIconType(connection)"
+          v-bind="getConnectionSupportIconProps(connection)"
           class="size-4! min-w-4!"
         />
         <span class="truncate">{{ connection?.name }}</span>
@@ -146,7 +163,9 @@ const selectedConnectionTags = computed(() => {
         >
           <div class="flex items-center gap-2 w-full">
             <component
-              :is="getDatabaseSupportByType(connection.type)?.icon"
+              v-if="getConnectionSupportIconType(connection)"
+              :is="getConnectionSupportIconType(connection)"
+              v-bind="getConnectionSupportIconProps(connection)"
               class="size-4!"
             />
             <span class="truncate">{{ connection.name }}</span>

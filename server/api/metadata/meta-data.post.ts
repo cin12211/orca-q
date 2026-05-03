@@ -2,6 +2,10 @@ import { defineEventHandler, readBody } from 'h3';
 import type { ISSLConfig, ISSHConfig } from '~/components/modules/connection';
 import { DatabaseClientType } from '~/core/constants/database-client-type';
 import type { SchemaMetaData } from '~/core/types';
+import type {
+  EConnectionProviderKind,
+  IManagedSqliteConfig,
+} from '~/core/types/entities/connection.entity';
 import { createMetadataAdapter } from '~/server/infrastructure/database/adapters/metadata';
 
 interface RequestBody {
@@ -12,6 +16,8 @@ interface RequestBody {
   password?: string;
   database?: string;
   type?: DatabaseClientType;
+  providerKind?: EConnectionProviderKind;
+  managedSqlite?: IManagedSqliteConfig;
   ssl?: ISSLConfig;
   ssh?: ISSHConfig;
 }
@@ -28,6 +34,8 @@ export default defineEventHandler(async (event): Promise<SchemaMetaData[]> => {
       username: body.username,
       password: body.password,
       database: body.database,
+      providerKind: body.providerKind,
+      managedSqlite: body.managedSqlite,
       ssl: body.ssl,
       ssh: body.ssh,
     }

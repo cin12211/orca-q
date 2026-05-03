@@ -22,6 +22,21 @@ export const useActivityBarStore = defineStore(
       activityActive.value = type;
     };
 
+    const ensureActivityVisible = (
+      visibleItems: ActivityBarItemType[],
+      fallback: ActivityBarItemType
+    ) => {
+      const nextFallback = visibleItems.includes(fallback)
+        ? fallback
+        : (visibleItems[0] ?? fallback);
+
+      if (!visibleItems.includes(activityActive.value)) {
+        activityActive.value = nextFallback;
+      }
+
+      return activityActive.value;
+    };
+
     const schemasExpandedState = ref<string[]>(['Tables']);
     const schemaCurrentScrollTop = ref(0);
 
@@ -42,6 +57,7 @@ export const useActivityBarStore = defineStore(
     return {
       activityActive,
       setActivityActive,
+      ensureActivityVisible,
       schemasExpandedState,
       schemaCurrentScrollTop,
       explorerExpandedState,

@@ -4,92 +4,39 @@ import { reorder } from '@atlaskit/pragmatic-drag-and-drop/reorder';
 import type { RoutesNamesList } from '@typed-router/__routes';
 import { useWorkspaceConnectionRoute } from '~/core/composables/useWorkspaceConnectionRoute';
 import { createStorageApis } from '~/core/storage';
+import {
+  TabViewType,
+  type AgentChatMetadata,
+  type BaseTabMetadata,
+  type CodeQueryMetadata,
+  type ErdDetailMetadata,
+  type FunctionDetailMetadata,
+  type RedisBrowserMetadata,
+  type RedisPubSubMetadata,
+  type TableDetailMetadata,
+  type TabMetadata as SharedTabMetadata,
+  type TabView as SharedTabView,
+  type ViewDetailMetadata,
+} from '~/core/types/entities/tab-view.entity';
 import { useWSStateStore } from './useWSStateStore';
 
-export enum TabViewType {
-  AllERD = 'AllERD',
-  DetailERD = 'DetailERD',
-  TableOverview = 'TableOverview',
-  TableDetail = 'tableDetail',
+export { TabViewType };
+export type {
+  AgentChatMetadata,
+  BaseTabMetadata,
+  CodeQueryMetadata,
+  ErdDetailMetadata,
+  FunctionDetailMetadata,
+  RedisBrowserMetadata,
+  RedisPubSubMetadata,
+  TableDetailMetadata,
+  ViewDetailMetadata,
+};
 
-  FunctionsOverview = 'FunctionsOverview',
-  FunctionsDetail = 'FunctionsDetail',
+export type TabMetadata = SharedTabMetadata;
 
-  ViewOverview = 'ViewOverview',
-  ViewDetail = 'ViewDetail',
-
-  CodeQuery = 'CodeQuery',
-
-  UserPermissions = 'UserPermissions',
-  DatabaseTools = 'DatabaseTools',
-  InstanceInsights = 'InstanceInsights',
-  SchemaDiff = 'SchemaDiff',
-  Connection = 'Connection',
-  Explorer = 'Explorer',
-  Export = 'Export',
-  AgentChat = 'AgentChat',
-}
-
-export interface BaseTabMetadata {
-  type: TabViewType;
-  treeNodeId?: string;
-  [key: string]: any;
-}
-
-export interface TableDetailMetadata extends BaseTabMetadata {
-  type: TabViewType.TableDetail;
-  tableName: string;
-}
-
-export interface ViewDetailMetadata extends BaseTabMetadata {
-  type: TabViewType.ViewDetail;
-  virtualTableId: string;
-  viewName: string;
-}
-
-export interface FunctionDetailMetadata extends BaseTabMetadata {
-  type: TabViewType.FunctionsDetail;
-  functionId: string;
-}
-
-export interface ErdDetailMetadata extends BaseTabMetadata {
-  type: TabViewType.DetailERD | TabViewType.AllERD;
-  tableName?: string;
-}
-
-export interface CodeQueryMetadata extends BaseTabMetadata {
-  type: TabViewType.CodeQuery;
-  tableName?: string;
-  queryId?: string;
-}
-
-export interface AgentChatMetadata extends BaseTabMetadata {
-  type: TabViewType.AgentChat;
-  historyId?: string;
-}
-
-export type TabMetadata =
-  | TableDetailMetadata
-  | ViewDetailMetadata
-  | FunctionDetailMetadata
-  | ErdDetailMetadata
-  | CodeQueryMetadata
-  | AgentChatMetadata
-  | BaseTabMetadata;
-
-export type TabView = {
-  workspaceId: string;
-  connectionId: string;
-  schemaId: string;
-  id: string; // tabviewID = tableName + schemaId
-  index: number;
-  name: string;
-  icon: string;
-  iconClass?: string;
-  type: TabViewType;
+export type TabView = Omit<SharedTabView, 'routeName'> & {
   routeName: RoutesNamesList;
-  routeParams?: Record<string, string | number>;
-  metadata?: TabMetadata;
 };
 
 export const useTabViewsStore = defineStore(
@@ -301,6 +248,68 @@ export const useTabViewsStore = defineStore(
       }
     };
 
+    const getAdjacentRemainingTab = (
+      tabId: string,
+      removedTabIds: Set<string>
+    ) => {
+      const currentIndex = getTabIndexById(tabId);
+
+      if (currentIndex === -1) {
+        return;
+      }
+
+      for (
+        let index = currentIndex + 1;
+        index < tabViews.value.length;
+        index++
+      ) {
+        const candidate = tabViews.value[index];
+        if (!removedTabIds.has(candidate.id)) {
+          return candidate;
+        }
+      }
+
+      for (let index = currentIndex - 1; index >= 0; index--) {
+        const candidate = tabViews.value[index];
+        if (!removedTabIds.has(candidate.id)) {
+          return candidate;
+        }
+      }
+    };
+
+    const closeTabsByIds = async (tabIds: string[]) => {
+      const uniqueTabIds = [...new Set(tabIds)];
+      const tabsToRemove = uniqueTabIds
+        .map(tabId => getTabById(tabId))
+        .filter(Boolean) as TabView[];
+
+      if (!tabsToRemove.length) {
+        return;
+      }
+
+      const removedTabIds = new Set(tabsToRemove.map(tab => tab.id));
+
+      if (activeTab.value && removedTabIds.has(activeTab.value.id)) {
+        const adjacentTab = getAdjacentRemainingTab(
+          activeTab.value.id,
+          removedTabIds
+        );
+
+        if (adjacentTab) {
+          await selectTab(adjacentTab.id);
+        } else {
+          await onSetTabId(undefined);
+          await navigateToConnectionRoot({
+            workspaceId: tabsToRemove[0].workspaceId,
+            connectionId: tabsToRemove[0].connectionId,
+          });
+        }
+      }
+
+      await deletePersistedTabs(tabsToRemove);
+      removeTabsFromState(tabsToRemove.map(tab => tab.id));
+    };
+
     const moveTabTo = (startIndex: number, finishIndex: number) => {
       tabViews.value = reorder({
         list: tabViews.value,
@@ -388,6 +397,7 @@ export const useTabViewsStore = defineStore(
       openTab,
       ensureTab,
       closeTab,
+      closeTabsByIds,
       selectTab,
       moveTabTo,
       closeOtherTab,

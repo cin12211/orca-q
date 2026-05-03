@@ -23,7 +23,7 @@ export default defineConfig(async () => {
         },
         {
           test: {
-            name: 'e2e',
+            name: 'integration',
             include: ['test/e2e/**/*.{test,spec}.ts'],
             environment: 'node',
             env: loadEnv('e2e', process.cwd(), ''),

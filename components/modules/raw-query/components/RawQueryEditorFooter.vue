@@ -35,6 +35,9 @@ defineProps<{
   isRawViewMode?: boolean;
   explainAnalyzeOptionItems: ExplainAnalyzeOptionItem[];
   serializeMode: ExplainAnalyzeSerializeMode;
+  isSupportFormat?: boolean;
+  isSupportVariable?: boolean;
+  isExplainSupported?: boolean;
 }>();
 
 defineEmits<{
@@ -55,7 +58,7 @@ defineEmits<{
         Ln {{ cursorInfo.line }}, Col {{ cursorInfo.column }}
       </div>
 
-      <RawQueryVariableUsageGuidePopover />
+      <RawQueryVariableUsageGuidePopover v-if="isSupportVariable" />
     </div>
 
     <div
@@ -83,7 +86,7 @@ defineEmits<{
     </div>
 
     <div class="flex gap-1">
-      <Tooltip>
+      <Tooltip v-if="isSupportFormat">
         <TooltipTrigger>
           <div class="flex items-center">
             <Button
@@ -140,7 +143,7 @@ defineEmits<{
         </TooltipContent>
       </Tooltip>
 
-      <Tooltip>
+      <Tooltip v-if="isExplainSupported">
         <TooltipTrigger>
           <div class="flex items-center">
             <Button

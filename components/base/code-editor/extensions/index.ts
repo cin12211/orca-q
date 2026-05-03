@@ -9,5 +9,6 @@ export * from './sqlLinter';
 export * from './cursorSmooth';
 export * from './minimapFactory';
 export * from './fontSizeTheme';
+export * from './redisLanguage';
 export * from './shortCutExplainCurrentStatement';
 export * from './shortCutFormatOnSave';

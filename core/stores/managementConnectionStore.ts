@@ -26,6 +26,14 @@ export const useManagementConnectionStore = defineStore(
       () => selectedConnection?.value?.connectionString
     );
 
+    const currentConnectionProviderKind = computed(
+      () => selectedConnection.value?.providerKind
+    );
+
+    const currentManagedSqlite = computed(
+      () => selectedConnection.value?.managedSqlite
+    );
+
     const createNewConnection = async (connection: Connection) => {
       const created = await storageApis.connectionStorage.create(connection);
       connections.value.push(created);
@@ -84,6 +92,8 @@ export const useManagementConnectionStore = defineStore(
       getConnectionsByWorkspaceId,
       selectedConnection,
       currentConnectionString,
+      currentConnectionProviderKind,
+      currentManagedSqlite,
       connections,
     };
   }

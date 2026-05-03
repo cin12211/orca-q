@@ -23,12 +23,20 @@ import { monitorForElements } from '@atlaskit/pragmatic-drag-and-drop/element/ad
 import { useCommandPalette } from '~/components/modules/command-palette';
 import { useTabManagement } from '~/core/composables/useTabManagement';
 import { useWorkspaceConnectionRoute } from '~/core/composables/useWorkspaceConnectionRoute';
+import { getConnectionCapabilityProfile } from '~/core/constants/connection-capabilities';
+import { DatabaseClientType } from '~/core/constants/database-client-type';
 import { isElectron } from '~/core/helpers';
-import { useTabViewsStore, type TabView } from '~/core/stores';
+import {
+  useManagementConnectionStore,
+  useTabViewsStore,
+  type TabView,
+} from '~/core/stores';
+import { EConnectionMethod } from '~/core/types/entities/connection.entity';
 import TabViewItem from './TabViewItem.vue';
 import TabViewOpenActions from './TabViewOpenActions.vue';
 
 const tabsStore = useTabViewsStore();
+const connectionStore = useManagementConnectionStore();
 const { openStarterSqlTab, openNewSqlFileTab, openInstanceInsightsTab } =
   useTabManagement();
 const { openCommandPalette } = useCommandPalette();
@@ -49,8 +57,21 @@ const { width: tabBarBodyWidth } = useElementSize(tabBarBodyRef);
 const { width: tabsTrackWidth } = useElementSize(tabsTrackRef);
 const { width: actionsMeasureWidth } = useElementSize(actionsMeasureRef);
 
+const capabilityProfile = computed(() =>
+  getConnectionCapabilityProfile(
+    connectionStore.selectedConnection ?? {
+      type: DatabaseClientType.POSTGRES,
+      method: EConnectionMethod.STRING,
+    }
+  )
+);
+
 const canOpenWorkspaceTabs = computed(
   () => !!workspaceId.value && !!connectionId.value
+);
+
+const showTabOpenActions = computed(
+  () => capabilityProfile.value.supportsQueryFiles
 );
 
 const isDockedTabActions = computed(() => {
@@ -223,7 +244,7 @@ const isElectronRuntime = computed(() => isElectron());
           </ContextMenu>
 
           <div
-            v-if="!isDockedTabActions"
+            v-if="showTabOpenActions && !isDockedTabActions"
             class="flex h-full shrink-0 items-center bg-sidebar-accent/50 pl-1 pr-1"
           >
             <TabViewOpenActions
@@ -239,7 +260,7 @@ const isElectronRuntime = computed(() => isElectron());
 
       <div class="flex min-w-max items-end h-full">
         <div
-          v-if="isDockedTabActions"
+          v-if="showTabOpenActions && isDockedTabActions"
           class="flex h-full shrink-0 items-center bg-sidebar-accent/50 pl-1 pr-1"
         >
           <TabViewOpenActions
@@ -254,6 +275,7 @@ const isElectronRuntime = computed(() => isElectron());
     </div>
 
     <div
+      v-if="showTabOpenActions"
       ref="actionsMeasureRef"
       aria-hidden="true"
       class="pointer-events-none invisible absolute flex h-full shrink-0 items-center bg-sidebar-accent/50 pl-1 pr-1"

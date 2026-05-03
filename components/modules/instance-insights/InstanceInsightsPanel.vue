@@ -102,7 +102,7 @@ const onToggleSlotStatus = (params: {
       <div class="space-y-1">
         <div class="flex items-center gap-2">
           <Icon name="hugeicons:database" class="size-5 text-primary" />
-          <h2 class="text-lg font-medium">Instance Insights</h2>
+          <h2 class="text-base font-medium">Instance Insights</h2>
         </div>
 
         <div class="text-sm text-muted-foreground flex items-center gap-0.5">
@@ -120,7 +120,7 @@ const onToggleSlotStatus = (params: {
         </div>
 
         <div v-if="dashboard?.version" class="flex items-center gap-1.5 mt-0.5">
-          <Badge variant="outline" class="text-[10px] h-5 px-1.5 font-normal">
+          <Badge variant="outline" class="text-xxs h-5 px-1.5 font-normal">
             PostgreSQL {{ dashboard.version }}
           </Badge>
         </div>

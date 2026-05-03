@@ -1,3 +1,6 @@
+import { DatabaseClientType } from '~/core/constants/database-client-type';
+import { qualifySqlTableName, quoteSqlIdentifier } from './sqlIdentifier';
+
 export const differentObject = (
   oldValue: Record<string, any>,
   newValue: Record<string, any>
@@ -22,12 +25,14 @@ export function buildUpdateStatements({
   pKeys,
   update,
   pKeyValue,
+  dbType,
 }: {
   schemaName: string;
   tableName: string;
   pKeys: string[];
   pKeyValue: Record<string, string>;
   update: Record<string, any>;
+  dbType?: DatabaseClientType | string;
 }): string {
   // Validate inputs
   if (!tableName || !pKeys?.length || !update || !Object.keys(update).length) {
@@ -42,22 +47,22 @@ export function buildUpdateStatements({
     .map(([column, value]) => {
       // Handle different value types
       if (value === null) {
-        return `"${column}" = NULL`;
+        return `${quoteSqlIdentifier(column, dbType)} = NULL`;
       }
       if (typeof value === 'string') {
-        return `"${column}" = '${value.replace(/'/g, "''")}'`; // Escape single quotes
+        return `${quoteSqlIdentifier(column, dbType)} = '${value.replace(/'/g, "''")}'`; // Escape single quotes
       }
-      return `"${column}" = ${value}`;
+      return `${quoteSqlIdentifier(column, dbType)} = ${value}`;
     })
     .join(', ');
 
   // Build WHERE clause
   const whereClause = pKeys
-    .map(key => `"${key}" = '${pKeyValue[key]}'`)
+    .map(key => `${quoteSqlIdentifier(key, dbType)} = '${pKeyValue[key]}'`)
     .join(' AND ');
 
   // Construct final query
-  const query = `UPDATE "${schemaName}"."${tableName}" SET ${setClause} WHERE ${whereClause}`;
+  const query = `UPDATE ${qualifySqlTableName({ schemaName, tableName, dbType })} SET ${setClause} WHERE ${whereClause}`;
 
   return query;
 }

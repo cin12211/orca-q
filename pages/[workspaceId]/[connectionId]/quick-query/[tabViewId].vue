@@ -7,9 +7,12 @@ import {
   LazyViewOverview,
 } from '#components';
 import { DEFAULT_MAX_KEEP_ALIVE } from '~/core/constants';
+import { isSqlFamilyConnection } from '~/core/constants/connection-capabilities';
+import { DatabaseClientType } from '~/core/constants/database-client-type';
 import { useManagementConnectionStore } from '~/core/stores/managementConnectionStore';
 import { useTabViewsStore } from '~/core/stores/useTabViewsStore';
 import { TabViewType } from '~/core/stores/useTabViewsStore';
+import { EConnectionMethod } from '~/core/types/entities/connection.entity';
 
 definePageMeta({
   keepalive: {
@@ -26,8 +29,37 @@ const tabInfo = computed(() =>
   tabViews.value.find(t => t.id === route.params.tabViewId)
 );
 
+const selectedConnection = computed(() => connectionStore.selectedConnection);
+
+const isSqlFamily = computed(() =>
+  isSqlFamilyConnection(
+    selectedConnection.value ?? {
+      type: DatabaseClientType.POSTGRES,
+      method: EConnectionMethod.STRING,
+    }
+  )
+);
+
+watchEffect(() => {
+  if (!selectedConnection.value || isSqlFamily.value) {
+    return;
+  }
+
+  navigateTo(
+    {
+      name: 'workspaceId-connectionId',
+      params: {
+        workspaceId: route.params.workspaceId,
+        connectionId: route.params.connectionId,
+      },
+      replace: true,
+    },
+    { replace: true }
+  );
+});
+
 const activeComponent = computed(() => {
-  if (!tabInfo.value) return null;
+  if (!tabInfo.value || !isSqlFamily.value) return null;
 
   switch (tabInfo.value.type) {
     case TabViewType.TableDetail:

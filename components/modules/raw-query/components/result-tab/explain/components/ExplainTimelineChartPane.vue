@@ -192,7 +192,7 @@ const getBarColorClass = (nodeType: string) => {
 
                 <div class="truncate flex items-center gap-1">
                   <span
-                    class="font-mono text-[10px] text-right shrink-0 text-muted-foreground"
+                    class="font-mono text-xxs text-right shrink-0 text-muted-foreground"
                   >
                     #{{ node.id.replace('ep-', '') }}
                   </span>
@@ -205,7 +205,7 @@ const getBarColorClass = (nodeType: string) => {
                     </span>
                     <span
                       v-if="node.relation"
-                      class="text-muted-foreground text-[10px] truncate"
+                      class="text-muted-foreground text-xxs truncate"
                     >
                       {{ node.relation }}
                       <span v-if="node.alias && node.alias !== node.relation"

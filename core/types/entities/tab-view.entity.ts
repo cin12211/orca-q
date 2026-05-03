@@ -20,6 +20,8 @@ export enum TabViewType {
   Explorer = 'Explorer',
   Export = 'Export',
   AgentChat = 'AgentChat',
+  RedisBrowser = 'RedisBrowser',
+  RedisPubSub = 'RedisPubSub',
 }
 
 export enum WorkspaceTabOpenAction {
@@ -74,6 +76,18 @@ export interface AgentChatMetadata extends BaseTabMetadata {
   historyId?: string;
 }
 
+export interface RedisBrowserMetadata extends BaseTabMetadata {
+  type: TabViewType.RedisBrowser;
+  databaseIndex?: number;
+  keyPattern?: string;
+  selectedKey?: string;
+}
+
+export interface RedisPubSubMetadata extends BaseTabMetadata {
+  type: TabViewType.RedisPubSub;
+  databaseIndex?: number;
+}
+
 export type TabMetadata =
   | TableDetailMetadata
   | ViewDetailMetadata
@@ -81,6 +95,8 @@ export type TabMetadata =
   | ErdDetailMetadata
   | CodeQueryMetadata
   | AgentChatMetadata
+  | RedisBrowserMetadata
+  | RedisPubSubMetadata
   | BaseTabMetadata;
 
 export type TabView = {

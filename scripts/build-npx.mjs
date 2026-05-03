@@ -93,8 +93,8 @@ cpSync(outputDir, npxOutputDir, { recursive: true, dereference: true });
 log(4, 'Materializing copied symlinks...');
 materializeSymlinks(npxOutputDir);
 
-// Step 5: Sync version from main package.json
-log(5, 'Syncing version...');
+// Step 5: Sync version and dependencies from main package.json
+log(5, 'Syncing version and dependencies...');
 const mainPackageJson = JSON.parse(
   readFileSync(join(projectRoot, 'package.json'), 'utf-8')
 );
@@ -103,12 +103,26 @@ const npxPackageJson = JSON.parse(readFileSync(npxPackageJsonPath, 'utf-8'));
 
 npxPackageJson.version = mainPackageJson.version;
 
+// Ensure database drivers are in npx dependencies so they are installed for the target platform
+npxPackageJson.dependencies =
+  {
+    ...(npxPackageJson.dependencies || {}),
+    ...(mainPackageJson.dependencies || {}),
+  } || {};
+
+// skip dependencies with prefix name = 'electron-'
+for (const depName of Object.keys(npxPackageJson.dependencies)) {
+  if (depName.startsWith('electron-')) {
+    delete npxPackageJson.dependencies[depName];
+  }
+}
+
 writeFileSync(
   npxPackageJsonPath,
   JSON.stringify(npxPackageJson, null, 2) + '\n'
 );
 
-// Step 5: Done
+// Step 6: Done
 log(6, 'Build complete!');
 console.log(`
 ${colors.green}NPX package ready at: ${npxPackageDir}${colors.reset}

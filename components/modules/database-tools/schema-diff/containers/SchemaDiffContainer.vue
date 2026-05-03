@@ -53,12 +53,11 @@ const displayTab = ref<'diff' | 'sql'>('diff');
 <template>
   <div class="flex h-full flex-col gap-4 overflow-hidden p-4">
     <!-- Header -->
-    <div>
-      <h2 class="text-base font-medium">Schema Diff</h2>
-      <p class="text-xs text-muted-foreground">
-        Compare schemas between two database connections and generate sync SQL.
-      </p>
-    </div>
+    <ToolPageHeader
+      icon="hugeicons:git-compare"
+      title="Schema Diff"
+      description="Compare schemas between two database connections and generate sync SQL."
+    />
 
     <!-- Connection selector -->
     <SchemaDiffConnectionSelector
@@ -94,7 +93,7 @@ const displayTab = ref<'diff' | 'sql'>('diff');
               Diff View
               <span
                 v-if="hasDifferences"
-                class="ml-1 rounded-full bg-primary px-1.5 py-0.5 text-[10px] text-primary-foreground"
+                class="ml-1 rounded-full bg-primary px-1.5 py-0.5 text-xxs text-primary-foreground"
               >
                 {{
                   result.summary.added +
@@ -112,7 +111,7 @@ const displayTab = ref<'diff' | 'sql'>('diff');
               SQL
               <span
                 v-if="result.sql.statements.length > 0"
-                class="ml-1 rounded-full bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground"
+                class="ml-1 rounded-full bg-muted px-1.5 py-0.5 text-xxs text-muted-foreground"
               >
                 {{ result.sql.statements.length }}
               </span>

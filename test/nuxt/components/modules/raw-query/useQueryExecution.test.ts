@@ -2,6 +2,8 @@ import { reactive, ref, shallowRef } from 'vue';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { useQueryExecution } from '~/components/modules/raw-query/hooks/useQueryExecution';
 import * as streamingQuery from '~/components/modules/raw-query/hooks/useStreamingQuery';
+import { DatabaseClientType } from '~/core/constants/database-client-type';
+import { EConnectionMethod } from '~/core/types/entities/connection.entity';
 
 // Mock dependencies
 vi.mock('~/components/modules/raw-query/hooks/useStreamingQuery', () => ({
@@ -252,5 +254,60 @@ describe('useQueryExecution', () => {
       .calls[0][0];
     // In actual implementation, it might depend on convertParameters helper mock or real one.
     expect(streamingQuery.executeStreamingQuery).toHaveBeenCalled();
+  });
+
+  it('executes Redis commands through the workbench endpoint without streaming', async () => {
+    const connection = ref({
+      type: DatabaseClientType.REDIS,
+      method: EConnectionMethod.STRING,
+      connectionString: 'redis://127.0.0.1:6379/0',
+    });
+    const redisDatabaseIndex = ref(5);
+    const fileVariables = ref('{}');
+    const fieldDefs = ref([]);
+
+    mockFetch.mockResolvedValue({
+      command: ['PING'],
+      result: 'PONG',
+    });
+
+    const { executeCurrentStatement } = useQueryExecution({
+      getEditorView: getEditorViewMock,
+      connection: connection as any,
+      redisDatabaseIndex,
+      fileVariables,
+      fieldDefs: fieldDefs as any,
+      resultTabs: resultTabsMock,
+      buildExplainAnalyzePrefix: () => 'EXPLAIN ANALYZE',
+    });
+
+    await executeCurrentStatement({
+      currentStatements: [{ text: 'PING', from: 0, to: 4, type: 'Statement' }],
+    });
+
+    expect(streamingQuery.executeStreamingQuery).not.toHaveBeenCalled();
+    expect(mockFetch).toHaveBeenCalledWith(
+      '/api/redis/workbench/execute',
+      expect.objectContaining({
+        method: 'POST',
+        body: expect.objectContaining({
+          command: 'PING',
+          method: EConnectionMethod.STRING,
+          stringConnection: 'redis://127.0.0.1:6379/0',
+          databaseIndex: 5,
+        }),
+      })
+    );
+
+    expect(resultTabsMock.refreshResultTab).toHaveBeenCalled();
+    expect(
+      resultTabsMock.refreshResultTab.mock.calls.at(-1)?.[1]
+    ).toMatchObject({
+      result: [{ value: 'PONG' }],
+      metadata: expect.objectContaining({
+        command: 'PING',
+        rowCount: 1,
+      }),
+    });
   });
 });

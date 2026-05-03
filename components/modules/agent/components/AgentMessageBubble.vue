@@ -191,7 +191,7 @@ const messageText = computed(() => {
                   />
                   <span
                     v-if="isCopied(message.id)"
-                    class="text-[10px] font-medium leading-none"
+                    class="text-xxs font-medium leading-none"
                     :class="getCopyIconClass(isCopied(message.id))"
                     >Copied</span
                   >

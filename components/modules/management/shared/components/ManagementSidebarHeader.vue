@@ -43,6 +43,8 @@ const onClearSearch = () => {
         <p class="text-sm leading-none block pb-1">Schemas</p>
         <SchemaSelector class="w-full!" />
       </div>
+
+      <slot name="details" />
     </div>
 
     <!-- Title and Actions -->

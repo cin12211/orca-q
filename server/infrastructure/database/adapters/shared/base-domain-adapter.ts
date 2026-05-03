@@ -24,6 +24,8 @@ export abstract class BaseDomainAdapter {
       database: params.database,
       serviceName: params.serviceName,
       filePath: params.filePath,
+      providerKind: params.providerKind,
+      managedSqlite: params.managedSqlite,
       ssl: params.ssl,
       ssh: params.ssh,
     });
