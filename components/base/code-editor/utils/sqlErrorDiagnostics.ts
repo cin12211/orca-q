@@ -124,6 +124,28 @@ export function substituteParams(
       continue;
     }
 
+    // ── PostgreSQL Dollar-quoted strings ($tag$ ... $tag$): skip entire span ──
+    if (ch === '$' && clientType === DatabaseClientType.POSTGRES) {
+      const start = i;
+      let tag = '$';
+      let j = i + 1;
+      while (j < sql.length && sql[j] !== '$' && /[a-zA-Z0-9_]/.test(sql[j])) {
+        tag += sql[j++];
+      }
+      if (j < sql.length && sql[j] === '$') {
+        tag += '$';
+        j++;
+        // We found a starting tag, now look for the closing tag
+        const closingTagPos = sql.indexOf(tag, j);
+        if (closingTagPos !== -1) {
+          i = closingTagPos + tag.length;
+          result += sql.slice(start, i);
+          continue;
+        }
+      }
+      // If no valid tag or no closing tag, fall through to default handling
+    }
+
     // ── Named parameter: must be ':' followed by [a-zA-Z_] ──
     if (ch === ':' && i + 1 < sql.length && /[a-zA-Z_]/.test(sql[i + 1])) {
       const colonPos = i++;

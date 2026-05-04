@@ -34,6 +34,7 @@ import {
   currentStatementLineGutterExtension,
 } from '~/components/base/code-editor/extensions';
 import { pgKeywordCompletion } from '~/components/base/code-editor/utils/pgKeywordCompletion';
+import { SQLDialectSupport } from '~/components/base/code-editor/constants';
 import {
   generateRoutineUpdateSQL,
   getRoutineDefinitionType,
@@ -241,10 +242,7 @@ const extensions = [
 
   sqlCompartment.of(
     sql({
-      dialect: SQLDialect.define({
-        ...PostgreSQL.spec,
-        doubleDollarQuotedStrings: false,
-      }),
+      dialect: SQLDialectSupport.PostgreSQLHighlightDialect,
       upperCaseKeywords: true,
       keywordCompletion: pgKeywordCompletion,
       schema: mappedSchema.value,

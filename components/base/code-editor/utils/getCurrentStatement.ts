@@ -165,7 +165,11 @@ export const getCurrentStatement = (view: EditorView) => {
 };
 
 export const getTreeNodes = (view: EditorView) => {
-  const tree = syntaxTree(view.state);
+  const parserConfig = view.state.field(sqlParserConfigField);
+  const tree = parserConfig.isEnable
+    ? getStatementTree(view, view.state.doc.length, parserConfig.dialect)
+    : syntaxTree(view.state);
+
   const treeNodes: SyntaxTreeNodeData[] = [];
 
   tree.iterate({

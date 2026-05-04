@@ -14,7 +14,13 @@ import {
   sqlAutoCompletion,
   type SyntaxTreeNodeData,
 } from '~/components/base/code-editor/extensions';
-import { resolveDialect } from '~/components/base/code-editor/states/sqlParserConfig';
+import {
+  SQLDialectSupport,
+} from '~/components/base/code-editor/constants';
+import {
+  resolveParserDialect,
+  resolveHighlightDialect,
+} from '~/components/base/code-editor/states/sqlParserConfig';
 import {
   pgKeywordCompletion,
   rawQueryEditorFormat,
@@ -94,7 +100,7 @@ export function useSqlEditorExtensions({
 
   const buildSqlLanguageExtension = () =>
     sql({
-      dialect: resolveDialect(connection?.value?.type),
+      dialect: resolveHighlightDialect(connection?.value?.type),
       upperCaseKeywords: true,
       keywordCompletion:
         !connection?.value?.type ||
@@ -119,7 +125,7 @@ export function useSqlEditorExtensions({
       return [];
     }
 
-    return resolveDialect(connection?.value?.type).language.data.of({
+    return resolveHighlightDialect(connection?.value?.type).language.data.of({
       autocomplete: buildCteAwareCompletionSource(),
     });
   };
@@ -230,13 +236,13 @@ export function useSqlEditorExtensions({
     const editorView = getEditorView();
     if (!editorView) return;
 
-    const dialect = resolveDialect(connection?.value?.type);
+    const parserDialect = resolveParserDialect(connection?.value?.type);
     const statementMode = isRedisConnection.value ? 'line' : 'sql';
 
     editorView.dispatch({
       effects: [
         updateSqlParserConfigEffect.of({
-          dialect,
+          dialect: parserDialect,
           isEnable: !isRedisConnection.value,
           statementMode,
         }),
