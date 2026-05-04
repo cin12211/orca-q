@@ -27,7 +27,7 @@ jobs:
         run: bun install --frozen-lockfile --ignore-scripts
 
       - name: Build app
-        run: bun run build
+        run: bun run nuxt:build
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
