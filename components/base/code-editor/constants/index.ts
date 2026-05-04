@@ -2,7 +2,7 @@ import {
   MariaSQL,
   MySQL,
   PLSQL,
-  PostgreSQL,
+  PostgreSQL as PostgreSQLDialect,
   SQLDialect,
   SQLite,
 } from '@codemirror/lang-sql';
@@ -96,13 +96,19 @@ export enum CompletionIcon {
   ForeignKey = 'FOREIGNKEY',
 }
 
-const PostgreSQLCustom = SQLDialect.define({
-  ...PostgreSQL.spec,
+const PostgreSQLParserDialect = SQLDialect.define({
+  ...PostgreSQLDialect.spec,
+  doubleDollarQuotedStrings: true,
+});
+
+const PostgreSQLHighlightDialect = SQLDialect.define({
+  ...PostgreSQLDialect.spec,
   doubleDollarQuotedStrings: false,
 });
 
 export const SQLDialectSupport = {
-  PostgreSQL: PostgreSQLCustom,
+  PostgreSQLParserDialect,
+  PostgreSQLHighlightDialect,
   MySQL,
   MariaSQL,
   SQLite,

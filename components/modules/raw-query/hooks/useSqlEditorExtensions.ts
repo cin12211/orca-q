@@ -6,6 +6,7 @@ import { Compartment } from '@codemirror/state';
 import { EditorView, keymap } from '@codemirror/view';
 import { sqlExtension } from '@marimo-team/codemirror-sql';
 import type BaseCodeEditor from '~/components/base/code-editor/BaseCodeEditor.vue';
+import { SQLDialectSupport } from '~/components/base/code-editor/constants';
 import {
   currentStatementLineGutterExtension,
   currentStatementLineHighlightExtension,
@@ -14,7 +15,10 @@ import {
   sqlAutoCompletion,
   type SyntaxTreeNodeData,
 } from '~/components/base/code-editor/extensions';
-import { resolveDialect } from '~/components/base/code-editor/states/sqlParserConfig';
+import {
+  resolveParserDialect,
+  resolveHighlightDialect,
+} from '~/components/base/code-editor/states/sqlParserConfig';
 import {
   pgKeywordCompletion,
   rawQueryEditorFormat,
@@ -94,14 +98,13 @@ export function useSqlEditorExtensions({
 
   const buildSqlLanguageExtension = () =>
     sql({
-      dialect: resolveDialect(connection?.value?.type),
+      dialect: resolveHighlightDialect(connection?.value?.type),
       upperCaseKeywords: true,
       keywordCompletion:
         !connection?.value?.type ||
         connection.value.type === DatabaseClientType.POSTGRES
           ? pgKeywordCompletion
           : undefined,
-      tables: schemaConfig.value.variableCompletions,
       schema: schemaConfig.value.schema,
       defaultSchema: schemaConfig.value.defaultSchema,
     });
@@ -119,7 +122,7 @@ export function useSqlEditorExtensions({
       return [];
     }
 
-    return resolveDialect(connection?.value?.type).language.data.of({
+    return resolveHighlightDialect(connection?.value?.type).language.data.of({
       autocomplete: buildCteAwareCompletionSource(),
     });
   };
@@ -151,6 +154,7 @@ export function useSqlEditorExtensions({
     createCteAwareCompletionSource({
       schemas: connectionSchemas.value,
       defaultSchemaName: defaultSchemaName.value,
+      fileVariables: fileVariables.value,
     });
 
   const {
@@ -230,13 +234,13 @@ export function useSqlEditorExtensions({
     const editorView = getEditorView();
     if (!editorView) return;
 
-    const dialect = resolveDialect(connection?.value?.type);
+    const parserDialect = resolveParserDialect(connection?.value?.type);
     const statementMode = isRedisConnection.value ? 'line' : 'sql';
 
     editorView.dispatch({
       effects: [
         updateSqlParserConfigEffect.of({
-          dialect,
+          dialect: parserDialect,
           isEnable: !isRedisConnection.value,
           statementMode,
         }),

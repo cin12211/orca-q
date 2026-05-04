@@ -5,8 +5,8 @@ services:
       - '${HERAQ_POSTGRES_PORT:-5432}:5432'
     environment:
       POSTGRES_DB: '${HERAQ_POSTGRES_DATABASE:-pagila}'
-      POSTGRES_USER: '${HERAQ_POSTGRES_USER:-heraq}'
-      POSTGRES_PASSWORD: '${HERAQ_POSTGRES_PASSWORD:-heraq}'
+      POSTGRES_USER: '${HERAQ_POSTGRES_USER:-orcaq}'
+      POSTGRES_PASSWORD: '${HERAQ_POSTGRES_PASSWORD:-orcaq}'
     volumes:
       - postgres-data:/var/lib/postgresql/data
       - ./sql-init/postgres/00-bootstrap.sh:/docker-entrypoint-initdb.d/00-bootstrap.sh:ro
@@ -25,8 +25,8 @@ services:
       - '${HERAQ_MYSQL_PORT:-3306}:3306'
     environment:
       MYSQL_DATABASE: '${HERAQ_MYSQL_DATABASE:-sakila}'
-      MYSQL_USER: '${HERAQ_MYSQL_USER:-heraq}'
-      MYSQL_PASSWORD: '${HERAQ_MYSQL_PASSWORD:-heraq}'
+      MYSQL_USER: '${HERAQ_MYSQL_USER:-orcaq}'
+      MYSQL_PASSWORD: '${HERAQ_MYSQL_PASSWORD:-orcaq}'
       MYSQL_ROOT_PASSWORD: '${HERAQ_MYSQL_ROOT_PASSWORD:-root}'
     volumes:
       - mysql-data:/var/lib/mysql
@@ -52,8 +52,8 @@ services:
       - '${HERAQ_MARIADB_PORT:-3307}:3306'
     environment:
       MARIADB_DATABASE: '${HERAQ_MARIADB_DATABASE:-sakila}'
-      MARIADB_USER: '${HERAQ_MARIADB_USER:-heraq}'
-      MARIADB_PASSWORD: '${HERAQ_MARIADB_PASSWORD:-heraq}'
+      MARIADB_USER: '${HERAQ_MARIADB_USER:-orcaq}'
+      MARIADB_PASSWORD: '${HERAQ_MARIADB_PASSWORD:-orcaq}'
       MARIADB_ROOT_PASSWORD: '${HERAQ_MARIADB_ROOT_PASSWORD:-root}'
     volumes:
       - mariadb-data:/var/lib/mysql

@@ -27,6 +27,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { getConnectionParams } from '@/core/helpers/connection-helper';
 import BaseCodeEditor from '~/components/base/code-editor/BaseCodeEditor.vue';
+import { SQLDialectSupport } from '~/components/base/code-editor/constants';
 import {
   shortCutSaveFunction,
   shortCutFormatOnSave,
@@ -40,6 +41,7 @@ import {
 } from '~/components/modules/management/schemas/utils';
 import QuickQueryErrorPopup from '~/components/modules/quick-query/QuickQueryErrorPopup.vue';
 import FunctionControlBar from '~/components/modules/quick-query/function-control-bar/FunctionControlBar.vue';
+import { mappedSchemaSuggestion } from '~/components/modules/raw-query/utils/getMappedSchemaSuggestion';
 import { useQuickQueryLogs, useSchemaStore } from '~/core/stores';
 import { useManagementConnectionStore } from '~/core/stores/managementConnectionStore';
 
@@ -77,27 +79,11 @@ const previewTitle = computed(() => {
     : 'Routine update preview';
 });
 
-const mappedSchema = computed(() => {
-  const tableDetails = activeSchema.value?.tableDetails;
-
-  const schema: SQLNamespace = {};
-
-  for (const key in tableDetails) {
-    const columns = tableDetails[key]?.columns;
-
-    schema[key] = columns.map(col => {
-      const sqlNamespace: Completion = {
-        label: col.name,
-        type: 'field',
-        info: col.short_type_name || '',
-        boost: -col.ordinal_position,
-      };
-
-      return sqlNamespace;
-    });
-  }
-
-  return schema;
+const schemaConfig = computed(() => {
+  return mappedSchemaSuggestion({
+    schemas: schemaStore.activeSchemas,
+    defaultSchemaName: activeSchema.value?.name,
+  });
 });
 
 const sqlCompartment = new Compartment();
@@ -241,13 +227,10 @@ const extensions = [
 
   sqlCompartment.of(
     sql({
-      dialect: SQLDialect.define({
-        ...PostgreSQL.spec,
-        doubleDollarQuotedStrings: false,
-      }),
+      dialect: SQLDialectSupport.PostgreSQLHighlightDialect,
       upperCaseKeywords: true,
       keywordCompletion: pgKeywordCompletion,
-      schema: mappedSchema.value,
+      schema: schemaConfig.value.schema,
     })
   ),
   ...sqlAutoCompletion(),

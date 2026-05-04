@@ -5,7 +5,7 @@ set -euo pipefail
 script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 repo_root="$(cd "${script_dir}/../.." && pwd)"
 compose_file="${repo_root}/test/fixtures/containers/sql-services.compose.yml"
-compose_project="${ORCAQ_SQL_FIXTURE_PROJECT:-${HERAQ_SQL_FIXTURE_PROJECT:-heraq-sql-fixtures}}"
+compose_project="${ORCAQ_SQL_FIXTURE_PROJECT:-${HERAQ_SQL_FIXTURE_PROJECT:-orcaq-sql-fixtures}}"
 legacy_compose_project="${ORCAQ_FIXTURE_LEGACY_PROJECT:-${HERAQ_FIXTURE_LEGACY_PROJECT:-containers}}"
 
 resolve_compose_cmd() {

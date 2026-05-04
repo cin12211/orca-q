@@ -21,7 +21,7 @@ export interface SqlParserConfig {
 // ---------------------------------------------------------------------------
 
 export const SQL_DIALECT_BY_DB_TYPE: Record<string, SQLDialect> = {
-  [DatabaseClientType.POSTGRES]: SQLDialectSupport.PostgreSQL,
+  [DatabaseClientType.POSTGRES]: SQLDialectSupport.PostgreSQLParserDialect,
   [DatabaseClientType.MYSQL]: SQLDialectSupport.MySQL,
   [DatabaseClientType.MYSQL2]: SQLDialectSupport.MySQL,
   [DatabaseClientType.MARIADB]: SQLDialectSupport.MariaSQL,
@@ -30,14 +30,42 @@ export const SQL_DIALECT_BY_DB_TYPE: Record<string, SQLDialect> = {
 } as const;
 
 /**
- * Resolve the CodeMirror SQLDialect for a given connection type.
- * Falls back to PostgreSQL when the type is not (yet) mapped.
+ * Resolve the CodeMirror SQLDialect for parsing/statement detection.
+ * Use this when you need to accurately identify SQL blocks (e.g. PostgreSQL dollar quoting).
+ */
+export function resolveParserDialect(
+  dbType: DatabaseClientType | undefined
+): SQLDialect {
+  if (!dbType || dbType === DatabaseClientType.POSTGRES) {
+    return SQLDialectSupport.PostgreSQLParserDialect;
+  }
+  return (
+    SQL_DIALECT_BY_DB_TYPE[dbType] ?? SQLDialectSupport.PostgreSQLParserDialect
+  );
+}
+
+/**
+ * Resolve the CodeMirror SQLDialect for UI display, highlighting, and suggestions.
+ * Use this for the main editor extension to allow "looking inside" blocks like PostgreSQL $$.
+ */
+export function resolveHighlightDialect(
+  dbType: DatabaseClientType | undefined
+): SQLDialect {
+  if (!dbType || dbType === DatabaseClientType.POSTGRES) {
+    return SQLDialectSupport.PostgreSQLHighlightDialect;
+  }
+  return (
+    SQL_DIALECT_BY_DB_TYPE[dbType] ?? SQLDialectSupport.PostgreSQLParserDialect
+  );
+}
+
+/**
+ * @deprecated Use resolveParserDialect or resolveHighlightDialect.
  */
 export function resolveDialect(
   dbType: DatabaseClientType | undefined
 ): SQLDialect {
-  if (!dbType) return PostgreSQL;
-  return SQL_DIALECT_BY_DB_TYPE[dbType] ?? PostgreSQL;
+  return resolveParserDialect(dbType);
 }
 
 // ---------------------------------------------------------------------------
@@ -53,7 +81,7 @@ export const updateSqlParserConfigEffect =
 
 export const sqlParserConfigField = StateField.define<SqlParserConfig>({
   create: () => ({
-    dialect: PostgreSQL,
+    dialect: SQLDialectSupport.PostgreSQLParserDialect,
     isEnable: true,
     statementMode: 'sql',
   }),

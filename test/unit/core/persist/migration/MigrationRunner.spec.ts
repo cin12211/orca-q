@@ -1,22 +1,27 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { Migration } from '~/core/persist/migration/MigrationInterface';
 import { executeMigrations } from '~/core/persist/migration/MigrationRunner';
+// ── Import the mocked storage so tests can reset its internal state ────
 
-// ── In-memory localStorage stub ───────────────────────────────────────
+import { migrationStateStorage } from '~/core/storage/entities/MigrationStateStorage';
 
-function createFakeLocalStorage() {
-  const store = new Map<string, string>();
-  return {
-    getItem: (key: string) => store.get(key) ?? null,
-    setItem: (key: string, value: string) => store.set(key, value),
-    removeItem: (key: string) => store.delete(key),
-    clear: () => store.clear(),
-    get length() {
-      return store.size;
-    },
-    key: (index: number) => [...store.keys()][index] ?? null,
+// ── Mock migrationStateStorage so no real IDB / localforage is needed ──
+
+vi.mock('~/core/storage/entities/MigrationStateStorage', () => {
+  const store = new Map<string, string[]>();
+  const migrationStateStorage = {
+    get: vi.fn(async () => {
+      const names = store.get('applied');
+      return names ? { id: 'applied-migrations', names } : null;
+    }),
+    save: vi.fn(async (names: string[]) => {
+      store.set('applied', names);
+    }),
+    clear: vi.fn(async () => store.clear()),
+    _store: store, // exposed so tests can reset between runs
   };
-}
+  return { migrationStateStorage };
+});
 
 // ── FakeMigration helper ──────────────────────────────────────────────
 
@@ -31,15 +36,24 @@ function makeMigration(name: string, upImpl?: () => Promise<void>): Migration {
 // ── Tests ─────────────────────────────────────────────────────────────
 
 describe('executeMigrations', () => {
-  let fakeStorage: ReturnType<typeof createFakeLocalStorage>;
-
   beforeEach(() => {
-    fakeStorage = createFakeLocalStorage();
-    vi.stubGlobal('localStorage', fakeStorage);
+    vi.mocked(migrationStateStorage.get).mockClear();
+    vi.mocked(migrationStateStorage.save).mockClear();
+    // Reset the in-memory store between tests
+    (migrationStateStorage as any)._store?.clear();
+    vi.mocked(migrationStateStorage.get).mockImplementation(async () => {
+      const names = (migrationStateStorage as any)._store?.get('applied');
+      return names ? { id: 'applied-migrations', names } : null;
+    });
+    vi.mocked(migrationStateStorage.save).mockImplementation(
+      async (names: string[]) => {
+        (migrationStateStorage as any)._store?.set('applied', names);
+      }
+    );
   });
 
   afterEach(() => {
-    vi.unstubAllGlobals();
+    vi.clearAllMocks();
   });
 
   it('(1) runs all pending migrations and calls up() in name-sorted order', async () => {
@@ -60,17 +74,15 @@ describe('executeMigrations', () => {
     expect(order).toEqual(['A', 'B', 'C']);
   });
 
-  it('(2) applied names are serialised to localStorage after a run', async () => {
+  it('(2) applied names are persisted via storage after a run', async () => {
     const mA = makeMigration('Migration_A');
     const mB = makeMigration('Migration_B');
 
     await executeMigrations([mA, mB]);
 
-    const raw = fakeStorage.getItem('orcaq-applied-migrations-v1');
-    expect(raw).not.toBeNull();
-    const applied = JSON.parse(raw!) as string[];
-    expect(applied).toContain('Migration_A');
-    expect(applied).toContain('Migration_B');
+    expect(migrationStateStorage.save).toHaveBeenLastCalledWith(
+      expect.arrayContaining(['Migration_A', 'Migration_B'])
+    );
   });
 
   it('(3) calling executeMigrations again skips all already-applied migrations', async () => {
@@ -79,7 +91,6 @@ describe('executeMigrations', () => {
 
     await executeMigrations([mA, mB]);
 
-    // Reset spy call counts
     vi.mocked(mA.up).mockClear();
     vi.mocked(mB.up).mockClear();
 
@@ -98,9 +109,10 @@ describe('executeMigrations', () => {
       'migration failed'
     );
 
-    const raw = fakeStorage.getItem('orcaq-applied-migrations-v1');
-    const applied: string[] = raw ? JSON.parse(raw) : [];
-    expect(applied).not.toContain('Migration_Fail');
+    // save should not have been called with the failing migration's name
+    const savedCalls = vi.mocked(migrationStateStorage.save).mock.calls;
+    const allSavedNames = savedCalls.flatMap(([names]) => names);
+    expect(allSavedNames).not.toContain('Migration_Fail');
   });
 
   it('(5) onStep callback is called once per migration with the correct name', async () => {
@@ -119,10 +131,8 @@ describe('executeMigrations', () => {
     const mA = makeMigration('Migration_A');
     const mB = makeMigration('Migration_B');
 
-    // First run: only mA
     await executeMigrations([mA]);
 
-    // Second run: both, but mA is already applied
     await executeMigrations([mA, mB]);
 
     expect(vi.mocked(mA.up)).toHaveBeenCalledTimes(1);

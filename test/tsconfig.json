@@ -1,0 +1,27 @@
+{
+  "compilerOptions": {
+    "target": "ESNext",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "strict": false,
+    "allowJs": true,
+    "resolveJsonModule": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "baseUrl": "..",
+    "paths": {
+      "~/*": ["./*"],
+      "@/*": ["./*"]
+    },
+    "types": ["vitest/globals", "happy-dom", "node"]
+  },
+  "include": [
+    "../components/**/*",
+    "../core/**/*",
+    "../lib/**/*",
+    "../server/**/*",
+    "../types/**/*",
+    "./**/*"
+  ],
+  "exclude": []
+}
