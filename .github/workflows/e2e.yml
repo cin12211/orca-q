@@ -40,7 +40,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: app-build-${{ github.sha }}
-          path: .output/
+          path: .output
           retention-days: 1
           if-no-files-found: error
 
