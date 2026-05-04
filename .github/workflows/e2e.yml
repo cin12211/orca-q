@@ -29,12 +29,20 @@ jobs:
       - name: Build app
         run: bun run nuxt:build
 
+      - name: Debug build output
+        run: |
+          echo "==== ROOT ===="
+          ls -la
+          echo "==== .output ===="
+          ls -la .output || echo "NO OUTPUT"
+
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
           name: app-build-${{ github.sha }}
           path: .output/
           retention-days: 1
+          if-no-files-found: error
 
   # ───────────────────────────────────────────────────────────────────────────
   # 6 parallel E2E jobs — each runs on its own isolated runner
