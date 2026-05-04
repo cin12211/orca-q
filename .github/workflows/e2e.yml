@@ -43,6 +43,7 @@ jobs:
           path: .output
           retention-days: 1
           if-no-files-found: error
+          include-hidden-files: true
 
   # ───────────────────────────────────────────────────────────────────────────
   # 6 parallel E2E jobs — each runs on its own isolated runner
