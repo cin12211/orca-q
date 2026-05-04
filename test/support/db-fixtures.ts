@@ -192,8 +192,8 @@ export function getPostgresFixtureConfig() {
     envPrefixes: ['ORCAQ_POSTGRES', 'HERAQ_POSTGRES'],
     defaultPort: 5432,
     defaultDatabase: 'pagila',
-    defaultUsername: 'heraq',
-    defaultPassword: 'heraq',
+    defaultUsername: 'orcaq',
+    defaultPassword: 'orcaq',
   });
 }
 
@@ -203,8 +203,8 @@ export function getMysqlFixtureConfig() {
     envPrefixes: ['ORCAQ_MYSQL', 'HERAQ_MYSQL'],
     defaultPort: 3306,
     defaultDatabase: 'sakila',
-    defaultUsername: 'heraq',
-    defaultPassword: 'heraq',
+    defaultUsername: 'orcaq',
+    defaultPassword: 'orcaq',
   });
 }
 
@@ -214,8 +214,8 @@ export function getMariaDbFixtureConfig() {
     envPrefixes: ['ORCAQ_MARIADB', 'HERAQ_MARIADB'],
     defaultPort: 3307,
     defaultDatabase: 'sakila',
-    defaultUsername: 'heraq',
-    defaultPassword: 'heraq',
+    defaultUsername: 'orcaq',
+    defaultPassword: 'orcaq',
   });
 }
 

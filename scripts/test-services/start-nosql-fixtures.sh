@@ -5,7 +5,7 @@ set -euo pipefail
 script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 repo_root="$(cd "${script_dir}/../.." && pwd)"
 compose_file="${repo_root}/test/fixtures/containers/nosql-services.compose.yml"
-compose_project="${ORCAQ_REDIS_FIXTURE_PROJECT:-${HERAQ_REDIS_FIXTURE_PROJECT:-heraq-redis-fixture}}"
+compose_project="${ORCAQ_REDIS_FIXTURE_PROJECT:-${HERAQ_REDIS_FIXTURE_PROJECT:-orcaq-redis-fixture}}"
 legacy_compose_project="${ORCAQ_FIXTURE_LEGACY_PROJECT:-${HERAQ_FIXTURE_LEGACY_PROJECT:-containers}}"
 
 export HERAQ_REDIS_PORT="${ORCAQ_REDIS_PORT:-${HERAQ_REDIS_PORT:-6379}}"

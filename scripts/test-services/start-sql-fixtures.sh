@@ -5,22 +5,22 @@ set -euo pipefail
 script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 repo_root="$(cd "${script_dir}/../.." && pwd)"
 compose_file="${repo_root}/test/fixtures/containers/sql-services.compose.yml"
-compose_project="${ORCAQ_SQL_FIXTURE_PROJECT:-${HERAQ_SQL_FIXTURE_PROJECT:-heraq-sql-fixtures}}"
+compose_project="${ORCAQ_SQL_FIXTURE_PROJECT:-${HERAQ_SQL_FIXTURE_PROJECT:-orcaq-sql-fixtures}}"
 legacy_compose_project="${ORCAQ_FIXTURE_LEGACY_PROJECT:-${HERAQ_FIXTURE_LEGACY_PROJECT:-containers}}"
 
 export HERAQ_POSTGRES_PORT="${ORCAQ_POSTGRES_PORT:-${HERAQ_POSTGRES_PORT:-5432}}"
 export HERAQ_POSTGRES_DATABASE="${ORCAQ_POSTGRES_DATABASE:-${HERAQ_POSTGRES_DATABASE:-pagila}}"
-export HERAQ_POSTGRES_USER="${ORCAQ_POSTGRES_USER:-${HERAQ_POSTGRES_USER:-heraq}}"
-export HERAQ_POSTGRES_PASSWORD="${ORCAQ_POSTGRES_PASSWORD:-${HERAQ_POSTGRES_PASSWORD:-heraq}}"
+export HERAQ_POSTGRES_USER="${ORCAQ_POSTGRES_USER:-${HERAQ_POSTGRES_USER:-orcaq}}"
+export HERAQ_POSTGRES_PASSWORD="${ORCAQ_POSTGRES_PASSWORD:-${HERAQ_POSTGRES_PASSWORD:-orcaq}}"
 export HERAQ_MYSQL_PORT="${ORCAQ_MYSQL_PORT:-${HERAQ_MYSQL_PORT:-3306}}"
 export HERAQ_MYSQL_DATABASE="${ORCAQ_MYSQL_DATABASE:-${HERAQ_MYSQL_DATABASE:-sakila}}"
-export HERAQ_MYSQL_USER="${ORCAQ_MYSQL_USER:-${HERAQ_MYSQL_USER:-heraq}}"
-export HERAQ_MYSQL_PASSWORD="${ORCAQ_MYSQL_PASSWORD:-${HERAQ_MYSQL_PASSWORD:-heraq}}"
+export HERAQ_MYSQL_USER="${ORCAQ_MYSQL_USER:-${HERAQ_MYSQL_USER:-orcaq}}"
+export HERAQ_MYSQL_PASSWORD="${ORCAQ_MYSQL_PASSWORD:-${HERAQ_MYSQL_PASSWORD:-orcaq}}"
 export HERAQ_MYSQL_ROOT_PASSWORD="${ORCAQ_MYSQL_ROOT_PASSWORD:-${HERAQ_MYSQL_ROOT_PASSWORD:-root}}"
 export HERAQ_MARIADB_PORT="${ORCAQ_MARIADB_PORT:-${HERAQ_MARIADB_PORT:-3307}}"
 export HERAQ_MARIADB_DATABASE="${ORCAQ_MARIADB_DATABASE:-${HERAQ_MARIADB_DATABASE:-sakila}}"
-export HERAQ_MARIADB_USER="${ORCAQ_MARIADB_USER:-${HERAQ_MARIADB_USER:-heraq}}"
-export HERAQ_MARIADB_PASSWORD="${ORCAQ_MARIADB_PASSWORD:-${HERAQ_MARIADB_PASSWORD:-heraq}}"
+export HERAQ_MARIADB_USER="${ORCAQ_MARIADB_USER:-${HERAQ_MARIADB_USER:-orcaq}}"
+export HERAQ_MARIADB_PASSWORD="${ORCAQ_MARIADB_PASSWORD:-${HERAQ_MARIADB_PASSWORD:-orcaq}}"
 export HERAQ_MARIADB_ROOT_PASSWORD="${ORCAQ_MARIADB_ROOT_PASSWORD:-${HERAQ_MARIADB_ROOT_PASSWORD:-root}}"
 
 resolve_compose_cmd() {
@@ -71,8 +71,8 @@ reset_current_project() {
 
 wait_for_postgres_fixture() {
   local db_name="${HERAQ_POSTGRES_DATABASE:-pagila}"
-  local db_user="${HERAQ_POSTGRES_USER:-heraq}"
-  local db_password="${HERAQ_POSTGRES_PASSWORD:-heraq}"
+  local db_user="${HERAQ_POSTGRES_USER:-orcaq}"
+  local db_password="${HERAQ_POSTGRES_PASSWORD:-orcaq}"
   local attempt=0
 
   until "${compose_cmd[@]}" -p "${compose_project}" -f "${compose_file}" exec -T postgres \
@@ -166,15 +166,15 @@ wait_for_postgres_fixture
 wait_for_mysql_fixture \
   mysql \
   "${mysql_port}" \
-  "${HERAQ_MYSQL_USER:-heraq}" \
-  "${HERAQ_MYSQL_PASSWORD:-heraq}" \
+  "${HERAQ_MYSQL_USER:-orcaq}" \
+  "${HERAQ_MYSQL_PASSWORD:-orcaq}" \
   "${HERAQ_MYSQL_DATABASE:-sakila}" \
   'MySQL'
 wait_for_mysql_fixture \
   mariadb \
   "${mariadb_port}" \
-  "${HERAQ_MARIADB_USER:-heraq}" \
-  "${HERAQ_MARIADB_PASSWORD:-heraq}" \
+  "${HERAQ_MARIADB_USER:-orcaq}" \
+  "${HERAQ_MARIADB_PASSWORD:-orcaq}" \
   "${HERAQ_MARIADB_DATABASE:-sakila}" \
   'MariaDB'
 

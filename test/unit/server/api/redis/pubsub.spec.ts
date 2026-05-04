@@ -13,6 +13,7 @@ const {
   getRedisPubSubMessagesMock,
   publishRedisPubSubMessageMock,
   closeRedisPubSubSessionMock,
+  unsubscribeRedisPubSubTargetMock,
 } = vi.hoisted(() => ({
   readBodyMock: vi.fn(),
   getRedisPubSubOverviewMock: vi.fn(),
@@ -20,6 +21,7 @@ const {
   getRedisPubSubMessagesMock: vi.fn(),
   publishRedisPubSubMessageMock: vi.fn(),
   closeRedisPubSubSessionMock: vi.fn(),
+  unsubscribeRedisPubSubTargetMock: vi.fn(),
 }));
 
 vi.hoisted(() => {
@@ -41,6 +43,7 @@ vi.mock('~/server/infrastructure/nosql/redis/redis-pubsub.service', () => ({
   getRedisPubSubMessages: getRedisPubSubMessagesMock,
   publishRedisPubSubMessage: publishRedisPubSubMessageMock,
   closeRedisPubSubSession: closeRedisPubSubSessionMock,
+  unsubscribeRedisPubSubTarget: unsubscribeRedisPubSubTargetMock,
 }));
 
 describe('Redis Pub/Sub routes', () => {
@@ -89,7 +92,6 @@ describe('Redis Pub/Sub routes', () => {
         databaseIndex: 1,
       }),
       'orders.events',
-      'channel',
       'session-1'
     );
   });
@@ -131,12 +133,16 @@ describe('Redis Pub/Sub routes', () => {
   it('forwards unsubscribe requests to the Redis Pub/Sub service', async () => {
     readBodyMock.mockResolvedValue({
       sessionId: 'session-3',
+      target: 'orders.events',
     });
-    closeRedisPubSubSessionMock.mockResolvedValue({ closed: true });
+    unsubscribeRedisPubSubTargetMock.mockResolvedValue({ closed: true });
 
     const result = await unsubscribeHandler({} as never);
 
     expect(result).toEqual({ closed: true });
-    expect(closeRedisPubSubSessionMock).toHaveBeenCalledWith('session-3');
+    expect(unsubscribeRedisPubSubTargetMock).toHaveBeenCalledWith(
+      'session-3',
+      'orders.events'
+    );
   });
 });

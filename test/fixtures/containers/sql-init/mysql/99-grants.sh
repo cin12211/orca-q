@@ -1,8 +1,8 @@
 #!/bin/sh
 
 database_name="${MYSQL_DATABASE:-${MARIADB_DATABASE:-sakila}}"
-app_user="${MYSQL_USER:-${MARIADB_USER:-heraq}}"
-app_password="${MYSQL_PASSWORD:-${MARIADB_PASSWORD:-heraq}}"
+app_user="${MYSQL_USER:-${MARIADB_USER:-orcaq}}"
+app_password="${MYSQL_PASSWORD:-${MARIADB_PASSWORD:-orcaq}}"
 root_password="${MYSQL_ROOT_PASSWORD:-${MARIADB_ROOT_PASSWORD:-root}}"
 client_binary="mysql"
 

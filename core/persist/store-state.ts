@@ -39,11 +39,3 @@ export type {
 // the legacy migration system and are meaningless in the Electron main process.
 
 export const LEGACY_APP_CONFIG_STORAGE_KEY = 'app-config-store';
-
-export const LEGACY_AGENT_STORAGE_KEYS = {
-  selectedNodeId: 'heraq-agent-selected-node',
-  draftShowReasoning: 'heraq-agent-draft-show-reasoning',
-  activeHistoryId: 'heraq-agent-active-history',
-  showAttachmentPanel: 'heraq-agent-attachment-panel-open',
-  histories: 'heraq-agent-chat-history',
-} as const;

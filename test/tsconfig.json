@@ -1,0 +1,13 @@
+{
+  "extends": "../.nuxt/tsconfig.json",
+  "include": ["../components/**/*", "../core/**/*", "../lib/**/*", "./**/*"],
+  "exclude": [],
+  "compilerOptions": {
+    "baseUrl": "..",
+    "paths": {
+      "~/*": ["./*"],
+      "@/*": ["./*"]
+    },
+    "types": ["vitest/globals", "happy-dom"]
+  }
+}

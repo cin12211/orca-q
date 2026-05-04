@@ -6,6 +6,7 @@ import { Compartment } from '@codemirror/state';
 import { EditorView, keymap } from '@codemirror/view';
 import { sqlExtension } from '@marimo-team/codemirror-sql';
 import type BaseCodeEditor from '~/components/base/code-editor/BaseCodeEditor.vue';
+import { SQLDialectSupport } from '~/components/base/code-editor/constants';
 import {
   currentStatementLineGutterExtension,
   currentStatementLineHighlightExtension,
@@ -14,9 +15,6 @@ import {
   sqlAutoCompletion,
   type SyntaxTreeNodeData,
 } from '~/components/base/code-editor/extensions';
-import {
-  SQLDialectSupport,
-} from '~/components/base/code-editor/constants';
 import {
   resolveParserDialect,
   resolveHighlightDialect,
@@ -107,7 +105,6 @@ export function useSqlEditorExtensions({
         connection.value.type === DatabaseClientType.POSTGRES
           ? pgKeywordCompletion
           : undefined,
-      tables: schemaConfig.value.variableCompletions,
       schema: schemaConfig.value.schema,
       defaultSchema: schemaConfig.value.defaultSchema,
     });
@@ -157,6 +154,7 @@ export function useSqlEditorExtensions({
     createCteAwareCompletionSource({
       schemas: connectionSchemas.value,
       defaultSchemaName: defaultSchemaName.value,
+      fileVariables: fileVariables.value,
     });
 
   const {

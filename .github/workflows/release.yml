@@ -8,7 +8,7 @@ on:
 
 permissions:
   contents: read
-  id-token: write  # Required for OIDC
+  id-token: write # Required for OIDC
 
 concurrency:
   group: release-${{ github.ref_name || github.run_id }}
@@ -41,10 +41,88 @@ jobs:
           echo "tag=$TAG" >> "$GITHUB_OUTPUT"
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
 
+  e2e:
+    name: Run E2E tests
+    runs-on: ubuntu-latest
+    needs: prepare-release
+    timeout-minutes: 30
+
+    env:
+      PLAYWRIGHT_BASE_URL: http://localhost:3000
+      PLAYWRIGHT_WORKERS: 1
+      CI: true
+
+      ORCAQ_POSTGRES_PORT: 5432
+      ORCAQ_POSTGRES_DATABASE: pagila
+      ORCAQ_POSTGRES_USER: orcaq
+      ORCAQ_POSTGRES_PASSWORD: orcaq
+
+      ORCAQ_MYSQL_PORT: 3306
+      ORCAQ_MYSQL_DATABASE: sakila
+      ORCAQ_MYSQL_USER: orcaq
+      ORCAQ_MYSQL_PASSWORD: orcaq
+      ORCAQ_MYSQL_ROOT_PASSWORD: root
+
+      ORCAQ_MARIADB_PORT: 3307
+      ORCAQ_MARIADB_DATABASE: sakila
+      ORCAQ_MARIADB_USER: orcaq
+      ORCAQ_MARIADB_PASSWORD: orcaq
+      ORCAQ_MARIADB_ROOT_PASSWORD: root
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.2.8
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile --ignore-scripts
+
+      - name: Install Playwright browsers
+        run: bunx playwright install chromium --with-deps
+
+      - name: Start all database fixtures
+        run: bash scripts/test-services/start-all-db-fixtures.sh
+
+      - name: Build app
+        run: bun run build
+
+      - name: Run E2E — common
+        run: bun test:e2e:common:raw
+
+      - name: Run E2E — SQLite
+        run: bun test:e2e:sqlite:raw
+
+      - name: Run E2E — PostgreSQL
+        run: bun test:e2e:postgres:raw
+
+      - name: Run E2E — MySQL
+        run: bun test:e2e:mysql:raw
+
+      - name: Run E2E — MariaDB
+        run: bun test:e2e:mariadb:raw
+
+      - name: Stop all database fixtures
+        if: always()
+        run: bash scripts/test-services/stop-all-db-fixtures.sh
+
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-${{ github.sha }}
+          path: |
+            playwright-report/
+            test-results/playwright/
+          retention-days: 14
+
   docker-build-push:
     name: Build and push Docker image
     runs-on: ubuntu-latest
-    needs: prepare-release
+    needs: [prepare-release, e2e]
 
     steps:
       - name: Checkout code
@@ -81,7 +159,7 @@ jobs:
   npx-package-build-publish:
     name: Build and publish NPX package
     runs-on: ubuntu-latest
-    needs: prepare-release
+    needs: [prepare-release, e2e]
 
     steps:
       - name: Checkout code

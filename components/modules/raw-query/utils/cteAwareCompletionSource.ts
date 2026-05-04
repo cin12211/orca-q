@@ -7,6 +7,7 @@ import type {
 import { syntaxTree } from '@codemirror/language';
 import type { EditorState } from '@codemirror/state';
 import type { SyntaxNode } from '@lezer/common';
+import { CompletionIcon } from '~/components/base/code-editor/constants';
 import type { Schema } from '~/core/stores';
 import type {
   SchemaColumnMetadata as ColumnShortMetadata,
@@ -15,11 +16,15 @@ import type {
   TableDetails,
   ViewDetails,
 } from '~/core/types';
-import { createColumnCompletion } from './getMappedSchemaSuggestion';
+import {
+  createColumnCompletion,
+  createVariableInfoTooltip,
+} from './getMappedSchemaSuggestion';
 
 interface CteAwareCompletionSourceConfig {
   schemas: Schema[] | null | undefined;
   defaultSchemaName?: string;
+  fileVariables?: string;
 }
 
 interface ResolvedTableDetails {
@@ -367,10 +372,61 @@ function getAliasColumnCompletion(
   };
 }
 
+function getVariableCompletion(
+  context: CompletionContext,
+  config: CteAwareCompletionSourceConfig
+): CompletionResult | null {
+  if (!config.fileVariables) return null;
+
+  const word = context.matchBefore(/:\w*$/);
+  if (!word) return null;
+
+  try {
+    const varsJson = JSON.parse(config.fileVariables);
+    const options: Completion[] = [];
+
+    for (const key in varsJson) {
+      options.push({
+        label: `:${key}`,
+        type: CompletionIcon.Variable,
+        boost: 120,
+        detail: 'variable',
+        info: () => createVariableInfoTooltip(key, varsJson[key]),
+        apply(view, completion, from, to) {
+          // Adjust from to include the ':' if the match included it
+          const beforeChar = view.state.doc.sliceString(from - 1, from);
+          const adjustedFrom = beforeChar === ':' ? from - 1 : from;
+
+          view.dispatch({
+            changes: {
+              from: adjustedFrom,
+              to,
+              insert: completion.label,
+            },
+          });
+        },
+      });
+    }
+
+    return {
+      from: word.from,
+      options,
+      validFor: /^:\w*$/,
+    };
+  } catch (error) {
+    return null;
+  }
+}
+
 export function createCteAwareCompletionSource(
   config: CteAwareCompletionSourceConfig
 ): CompletionSource {
   return (context: CompletionContext) => {
+    // 1. Check for variable completion (starting with :)
+    const variableCompletion = getVariableCompletion(context, config);
+    if (variableCompletion) return variableCompletion;
+
+    // 2. Fallback to alias/column completion
     const aliasCompletion = getAliasColumnCompletion(context, config);
     return aliasCompletion;
   };
