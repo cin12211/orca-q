@@ -104,6 +104,16 @@ jobs:
         with:
           bun-version: 1.2.8
 
+      - name: Restore Bun install cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.bun/install/cache
+            node_modules
+          key: ${{ runner.os }}-bun-full-${{ hashFiles('bun.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-bun-full-
+
       - name: Install dependencies
         run: bun install --frozen-lockfile
 

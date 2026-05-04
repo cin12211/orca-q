@@ -15,6 +15,8 @@ jobs:
     runs-on: ${{ matrix.os }}
     env:
       NODE_OPTIONS: --max-old-space-size=16384
+      ELECTRON_CACHE: ${{ github.workspace }}/.cache/electron
+      ELECTRON_BUILDER_CACHE: ${{ github.workspace }}/.cache/electron-builder
 
     strategy:
       fail-fast: false
@@ -40,6 +42,26 @@ jobs:
         uses: oven-sh/setup-bun@v2
         with:
           bun-version: 1.2.8
+
+      - name: Restore Bun install cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.bun/install/cache
+            node_modules
+          key: ${{ runner.os }}-bun-full-${{ hashFiles('bun.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-bun-full-
+
+      - name: Restore Electron tool caches
+        uses: actions/cache@v4
+        with:
+          path: |
+            ${{ env.ELECTRON_CACHE }}
+            ${{ env.ELECTRON_BUILDER_CACHE }}
+          key: ${{ runner.os }}-electron-tooling-${{ hashFiles('bun.lock', 'electron-builder.yml', 'package.json') }}
+          restore-keys: |
+            ${{ runner.os }}-electron-tooling-
 
       - name: Install frontend dependencies
         run: bun install
