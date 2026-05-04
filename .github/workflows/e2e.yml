@@ -1,0 +1,476 @@
+name: E2E Tests
+
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  # ───────────────────────────────────────────────────────────────────────────
+  # Build the app once — all 6 E2E jobs download this artifact
+  # ───────────────────────────────────────────────────────────────────────────
+  e2e-build:
+    name: Build app
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.2.8
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile --ignore-scripts
+
+      - name: Build app
+        run: bun run build
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-build-${{ github.sha }}
+          path: .output/
+          retention-days: 1
+
+  # ───────────────────────────────────────────────────────────────────────────
+  # 6 parallel E2E jobs — each runs on its own isolated runner
+  #
+  #  common   │  sqlite   │ postgres  │   mysql   │  mariadb  │   redis
+  # fixtures: │ fixtures: │ fixtures: │ fixtures: │ fixtures: │ fixtures:
+  #    all    │  none ✨  │    all    │    all    │    all    │   redis
+  # ───────────────────────────────────────────────────────────────────────────
+
+  e2e-common:
+    name: E2E — common (all fixtures)
+    runs-on: ubuntu-latest
+    needs: e2e-build
+    timeout-minutes: 30
+
+    env:
+      PLAYWRIGHT_BASE_URL: http://localhost:3000
+      PLAYWRIGHT_WEB_SERVER_COMMAND: node .output/server/index.mjs
+      PLAYWRIGHT_WORKERS: 1
+      CI: true
+      ORCAQ_POSTGRES_PORT: 5432
+      ORCAQ_POSTGRES_DATABASE: pagila
+      ORCAQ_POSTGRES_USER: orcaq
+      ORCAQ_POSTGRES_PASSWORD: orcaq
+      ORCAQ_MYSQL_PORT: 3306
+      ORCAQ_MYSQL_DATABASE: sakila
+      ORCAQ_MYSQL_USER: orcaq
+      ORCAQ_MYSQL_PASSWORD: orcaq
+      ORCAQ_MYSQL_ROOT_PASSWORD: root
+      ORCAQ_MARIADB_PORT: 3307
+      ORCAQ_MARIADB_DATABASE: sakila
+      ORCAQ_MARIADB_USER: orcaq
+      ORCAQ_MARIADB_PASSWORD: orcaq
+      ORCAQ_MARIADB_ROOT_PASSWORD: root
+      ORCAQ_REDIS_PORT: 6379
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.2.8
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile --ignore-scripts
+
+      - name: Install Playwright browsers
+        run: bunx playwright install chromium --with-deps
+
+      - name: Download build artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: app-build-${{ github.sha }}
+          path: .output/
+
+      - name: Generate optimized SQL fixtures
+        run: node scripts/test-services/generate-optimized-sql-fixtures.mjs
+
+      - name: Start all database fixtures
+        run: |
+          bash scripts/test-services/start-sql-fixtures.sh
+          bash scripts/test-services/start-nosql-fixtures.sh
+
+      - name: Run E2E — common
+        run: bun test:e2e:common:raw
+
+      - name: Stop all database fixtures
+        if: always()
+        run: bash scripts/test-services/stop-all-db-fixtures.sh
+
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-common-${{ github.sha }}
+          path: |
+            playwright-report/
+            test-results/playwright/
+          retention-days: 14
+
+  # ─────────────────────────────────────────────────────────────────────────
+
+  e2e-sqlite:
+    name: E2E — SQLite (no fixtures)
+    runs-on: ubuntu-latest
+    needs: e2e-build
+    timeout-minutes: 30
+
+    env:
+      PLAYWRIGHT_BASE_URL: http://localhost:3000
+      PLAYWRIGHT_WEB_SERVER_COMMAND: node .output/server/index.mjs
+      PLAYWRIGHT_WORKERS: 1
+      CI: true
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.2.8
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile --ignore-scripts
+
+      - name: Install Playwright browsers
+        run: bunx playwright install chromium --with-deps
+
+      - name: Download build artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: app-build-${{ github.sha }}
+          path: .output/
+
+      - name: Prepare SQLite fixture
+        # Uses python3 (pre-installed on ubuntu-latest) to avoid pulling a
+        # Python container image, keeping this job container-free.
+        run: |
+          node scripts/test-services/generate-optimized-sql-fixtures.mjs
+          mkdir -p test/fixtures/datasets/.tmp/sqlite
+          python3 - <<'PY'
+          from pathlib import Path
+          import sqlite3
+
+          repo = Path('.')
+          schema = (repo / 'test/fixtures/datasets/sqlite/sqlite-sakila-schema.sql').read_text(encoding='utf-8')
+          data   = (repo / 'test/fixtures/datasets/sqlite/sqlite-sakila-insert-data-optimized.sql').read_text(encoding='utf-8')
+          out    = repo / 'test/fixtures/datasets/.tmp/sqlite/sakila.sqlite'
+
+          out.parent.mkdir(parents=True, exist_ok=True)
+          out.unlink(missing_ok=True)
+
+          conn = sqlite3.connect(str(out))
+          try:
+              conn.executescript(schema)
+              conn.executescript(data)
+              conn.commit()
+          finally:
+              conn.close()
+
+          print(f'SQLite fixture ready at {out}')
+          PY
+
+      - name: Run E2E — SQLite
+        run: bun test:e2e:sqlite:raw
+
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-sqlite-${{ github.sha }}
+          path: |
+            playwright-report/
+            test-results/playwright/
+          retention-days: 14
+
+  # ─────────────────────────────────────────────────────────────────────────
+
+  e2e-postgres:
+    name: E2E — PostgreSQL (all fixtures)
+    runs-on: ubuntu-latest
+    needs: e2e-build
+    timeout-minutes: 30
+
+    env:
+      PLAYWRIGHT_BASE_URL: http://localhost:3000
+      PLAYWRIGHT_WEB_SERVER_COMMAND: node .output/server/index.mjs
+      PLAYWRIGHT_WORKERS: 1
+      CI: true
+      ORCAQ_POSTGRES_PORT: 5432
+      ORCAQ_POSTGRES_DATABASE: pagila
+      ORCAQ_POSTGRES_USER: orcaq
+      ORCAQ_POSTGRES_PASSWORD: orcaq
+      ORCAQ_MYSQL_PORT: 3306
+      ORCAQ_MYSQL_DATABASE: sakila
+      ORCAQ_MYSQL_USER: orcaq
+      ORCAQ_MYSQL_PASSWORD: orcaq
+      ORCAQ_MYSQL_ROOT_PASSWORD: root
+      ORCAQ_MARIADB_PORT: 3307
+      ORCAQ_MARIADB_DATABASE: sakila
+      ORCAQ_MARIADB_USER: orcaq
+      ORCAQ_MARIADB_PASSWORD: orcaq
+      ORCAQ_MARIADB_ROOT_PASSWORD: root
+      ORCAQ_REDIS_PORT: 6379
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.2.8
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile --ignore-scripts
+
+      - name: Install Playwright browsers
+        run: bunx playwright install chromium --with-deps
+
+      - name: Download build artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: app-build-${{ github.sha }}
+          path: .output/
+
+      - name: Generate optimized SQL fixtures
+        run: node scripts/test-services/generate-optimized-sql-fixtures.mjs
+
+      - name: Start all database fixtures
+        run: |
+          bash scripts/test-services/start-sql-fixtures.sh
+          bash scripts/test-services/start-nosql-fixtures.sh
+
+      - name: Run E2E — PostgreSQL
+        run: bun test:e2e:postgres:raw
+
+      - name: Stop all database fixtures
+        if: always()
+        run: bash scripts/test-services/stop-all-db-fixtures.sh
+
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-postgres-${{ github.sha }}
+          path: |
+            playwright-report/
+            test-results/playwright/
+          retention-days: 14
+
+  # ─────────────────────────────────────────────────────────────────────────
+
+  e2e-mysql:
+    name: E2E — MySQL (all fixtures)
+    runs-on: ubuntu-latest
+    needs: e2e-build
+    timeout-minutes: 30
+
+    env:
+      PLAYWRIGHT_BASE_URL: http://localhost:3000
+      PLAYWRIGHT_WEB_SERVER_COMMAND: node .output/server/index.mjs
+      PLAYWRIGHT_WORKERS: 1
+      CI: true
+      ORCAQ_POSTGRES_PORT: 5432
+      ORCAQ_POSTGRES_DATABASE: pagila
+      ORCAQ_POSTGRES_USER: orcaq
+      ORCAQ_POSTGRES_PASSWORD: orcaq
+      ORCAQ_MYSQL_PORT: 3306
+      ORCAQ_MYSQL_DATABASE: sakila
+      ORCAQ_MYSQL_USER: orcaq
+      ORCAQ_MYSQL_PASSWORD: orcaq
+      ORCAQ_MYSQL_ROOT_PASSWORD: root
+      ORCAQ_MARIADB_PORT: 3307
+      ORCAQ_MARIADB_DATABASE: sakila
+      ORCAQ_MARIADB_USER: orcaq
+      ORCAQ_MARIADB_PASSWORD: orcaq
+      ORCAQ_MARIADB_ROOT_PASSWORD: root
+      ORCAQ_REDIS_PORT: 6379
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.2.8
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile --ignore-scripts
+
+      - name: Install Playwright browsers
+        run: bunx playwright install chromium --with-deps
+
+      - name: Download build artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: app-build-${{ github.sha }}
+          path: .output/
+
+      - name: Generate optimized SQL fixtures
+        run: node scripts/test-services/generate-optimized-sql-fixtures.mjs
+
+      - name: Start all database fixtures
+        run: |
+          bash scripts/test-services/start-sql-fixtures.sh
+          bash scripts/test-services/start-nosql-fixtures.sh
+
+      - name: Run E2E — MySQL
+        run: bun test:e2e:mysql:raw
+
+      - name: Stop all database fixtures
+        if: always()
+        run: bash scripts/test-services/stop-all-db-fixtures.sh
+
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-mysql-${{ github.sha }}
+          path: |
+            playwright-report/
+            test-results/playwright/
+          retention-days: 14
+
+  # ─────────────────────────────────────────────────────────────────────────
+
+  e2e-mariadb:
+    name: E2E — MariaDB (all fixtures)
+    runs-on: ubuntu-latest
+    needs: e2e-build
+    timeout-minutes: 30
+
+    env:
+      PLAYWRIGHT_BASE_URL: http://localhost:3000
+      PLAYWRIGHT_WEB_SERVER_COMMAND: node .output/server/index.mjs
+      PLAYWRIGHT_WORKERS: 1
+      CI: true
+      ORCAQ_POSTGRES_PORT: 5432
+      ORCAQ_POSTGRES_DATABASE: pagila
+      ORCAQ_POSTGRES_USER: orcaq
+      ORCAQ_POSTGRES_PASSWORD: orcaq
+      ORCAQ_MYSQL_PORT: 3306
+      ORCAQ_MYSQL_DATABASE: sakila
+      ORCAQ_MYSQL_USER: orcaq
+      ORCAQ_MYSQL_PASSWORD: orcaq
+      ORCAQ_MYSQL_ROOT_PASSWORD: root
+      ORCAQ_MARIADB_PORT: 3307
+      ORCAQ_MARIADB_DATABASE: sakila
+      ORCAQ_MARIADB_USER: orcaq
+      ORCAQ_MARIADB_PASSWORD: orcaq
+      ORCAQ_MARIADB_ROOT_PASSWORD: root
+      ORCAQ_REDIS_PORT: 6379
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.2.8
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile --ignore-scripts
+
+      - name: Install Playwright browsers
+        run: bunx playwright install chromium --with-deps
+
+      - name: Download build artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: app-build-${{ github.sha }}
+          path: .output/
+
+      - name: Generate optimized SQL fixtures
+        run: node scripts/test-services/generate-optimized-sql-fixtures.mjs
+
+      - name: Start all database fixtures
+        run: |
+          bash scripts/test-services/start-sql-fixtures.sh
+          bash scripts/test-services/start-nosql-fixtures.sh
+
+      - name: Run E2E — MariaDB
+        run: bun test:e2e:mariadb:raw
+
+      - name: Stop all database fixtures
+        if: always()
+        run: bash scripts/test-services/stop-all-db-fixtures.sh
+
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-mariadb-${{ github.sha }}
+          path: |
+            playwright-report/
+            test-results/playwright/
+          retention-days: 14
+
+  # ─────────────────────────────────────────────────────────────────────────
+
+  e2e-redis:
+    name: E2E — Redis (redis only)
+    runs-on: ubuntu-latest
+    needs: e2e-build
+    timeout-minutes: 30
+
+    env:
+      PLAYWRIGHT_BASE_URL: http://localhost:3000
+      PLAYWRIGHT_WEB_SERVER_COMMAND: node .output/server/index.mjs
+      PLAYWRIGHT_WORKERS: 1
+      CI: true
+      ORCAQ_REDIS_PORT: 6379
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.2.8
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile --ignore-scripts
+
+      - name: Install Playwright browsers
+        run: bunx playwright install chromium --with-deps
+
+      - name: Download build artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: app-build-${{ github.sha }}
+          path: .output/
+
+      - name: Start Redis fixture
+        run: bash scripts/test-services/start-nosql-fixtures.sh
+
+      - name: Run E2E — Redis
+        run: bun test:e2e:redis:raw
+
+      - name: Stop Redis fixture
+        if: always()
+        run: bash scripts/test-services/stop-nosql-fixtures.sh
+
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-redis-${{ github.sha }}
+          path: |
+            playwright-report/
+            test-results/playwright/
+          retention-days: 14

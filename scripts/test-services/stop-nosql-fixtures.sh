@@ -9,11 +9,6 @@ compose_project="${ORCAQ_REDIS_FIXTURE_PROJECT:-${HERAQ_REDIS_FIXTURE_PROJECT:-o
 legacy_compose_project="${ORCAQ_FIXTURE_LEGACY_PROJECT:-${HERAQ_FIXTURE_LEGACY_PROJECT:-containers}}"
 
 resolve_compose_cmd() {
-  if command -v podman >/dev/null 2>&1 && podman info >/dev/null 2>&1 && podman compose version >/dev/null 2>&1; then
-    compose_cmd=(podman compose)
-    return 0
-  fi
-
   if command -v docker >/dev/null 2>&1 && docker info >/dev/null 2>&1 && docker compose version >/dev/null 2>&1; then
     compose_cmd=(docker compose)
     return 0
@@ -24,7 +19,7 @@ resolve_compose_cmd() {
     return 0
   fi
 
-  echo 'Neither podman compose nor docker compose is available.' >&2
+  echo 'docker compose is not available.' >&2
   return 1
 }
 

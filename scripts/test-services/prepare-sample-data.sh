@@ -20,17 +20,12 @@ sql_server_source_dir="${dataset_root}/sql-server"
 sql_server_optimized_output_file="${sql_server_source_dir}/sql-server-sakila-insert-data-optimized.sql"
 
 resolve_container_cmd() {
-  if command -v podman >/dev/null 2>&1 && podman info >/dev/null 2>&1; then
-    container_cmd=(podman)
-    return 0
-  fi
-
   if command -v docker >/dev/null 2>&1 && docker info >/dev/null 2>&1; then
     container_cmd=(docker)
     return 0
   fi
 
-  echo 'Neither podman nor docker is available.' >&2
+  echo 'docker is not available.' >&2
   return 1
 }
 
