@@ -24,11 +24,6 @@ export HERAQ_MARIADB_PASSWORD="${ORCAQ_MARIADB_PASSWORD:-${HERAQ_MARIADB_PASSWOR
 export HERAQ_MARIADB_ROOT_PASSWORD="${ORCAQ_MARIADB_ROOT_PASSWORD:-${HERAQ_MARIADB_ROOT_PASSWORD:-root}}"
 
 resolve_compose_cmd() {
-  if command -v podman >/dev/null 2>&1 && podman info >/dev/null 2>&1 && podman compose version >/dev/null 2>&1; then
-    compose_cmd=(podman compose)
-    return 0
-  fi
-
   if command -v docker >/dev/null 2>&1 && docker info >/dev/null 2>&1 && docker compose version >/dev/null 2>&1; then
     compose_cmd=(docker compose)
     return 0
@@ -39,7 +34,7 @@ resolve_compose_cmd() {
     return 0
   fi
 
-  echo 'Neither podman compose nor docker compose is available.' >&2
+  echo 'docker compose is not available.' >&2
   return 1
 }
 
