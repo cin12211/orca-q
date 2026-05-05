@@ -32,6 +32,7 @@ export interface MappedSchemaSuggestion {
  * e.g., "user_orders" -> "uo", "UserOrders" -> "uo"
  */
 export function generateTableAlias(tableName: string): string {
+  if (!tableName) return 't';
   // convert to lowercase
   let name = tableName.toLowerCase();
 
@@ -324,6 +325,7 @@ export function generateFunctionSignature(parameters: string): string {
  * Maps column data type to appropriate CompletionIcon
  */
 export function getColumnTypeIcon(typeName: string): CompletionIcon {
+  if (!typeName) return CompletionIcon.Field;
   const lowerType = typeName.toLowerCase();
 
   // Numeric types
@@ -484,7 +486,7 @@ export function mappedSchemaSuggestion({
           );
 
           // Process columns
-          for (const col of tableInfo.columns) {
+          for (const col of tableInfo.columns || []) {
             const isPrimaryKey = pkColumns.has(col.name);
             const foreignKey = fkMap.get(col.name);
 
@@ -544,7 +546,7 @@ export function mappedSchemaSuggestion({
           const viewInfo = schema.viewDetails[viewName];
           const columnChildren: Record<string, SQLNamespace> = {};
 
-          for (const col of viewInfo.columns) {
+          for (const col of viewInfo.columns || []) {
             columnChildren[col.name] = {
               self: createColumnCompletion({
                 column: col,
@@ -577,7 +579,7 @@ export function mappedSchemaSuggestion({
             self: {
               label: func.name,
               type: CompletionIcon.Function,
-              detail: `${func.type.toLowerCase()}`,
+              detail: `${(func.type || 'function').toLowerCase()}`,
               boost: 80,
               info: () =>
                 createFunctionInfoTooltip(

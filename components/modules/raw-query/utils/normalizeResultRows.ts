@@ -45,5 +45,5 @@ export function normalizeResultRows(
   rows: RowData[],
   fieldDefs: Pick<FieldDef, 'name'>[]
 ): Record<string, unknown>[] {
-  return rows.map(row => normalizeResultRow(row, fieldDefs));
+  return (rows || []).map(row => normalizeResultRow(row, fieldDefs));
 }

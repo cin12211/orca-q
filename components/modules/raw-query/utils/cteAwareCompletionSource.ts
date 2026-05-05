@@ -71,6 +71,7 @@ const aliasStopWords = new Set([
 ]);
 
 function normalizeIdentifier(identifier: string): string {
+  if (!identifier) return '';
   const trimmed = identifier.trim();
   if (trimmed.startsWith('"') && trimmed.endsWith('"')) {
     return trimmed.slice(1, -1).replace(/""/g, '"');
@@ -79,6 +80,7 @@ function normalizeIdentifier(identifier: string): string {
 }
 
 function splitIdentifierPath(reference: string): string[] {
+  if (!reference) return [];
   const parts: string[] = [];
   let current = '';
   let inQuotes = false;

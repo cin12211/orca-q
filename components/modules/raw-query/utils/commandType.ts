@@ -89,6 +89,7 @@ const COMMAND_PREFIXES = Object.keys(COMMAND_CATEGORIES).sort(
 );
 
 const resolveCommandKeyword = (command: string): string => {
+  if (!command) return '';
   const normalized = command.toUpperCase().trim().replace(/;$/, '');
 
   for (const prefix of COMMAND_PREFIXES) {
@@ -104,6 +105,7 @@ const resolveCommandKeyword = (command: string): string => {
 // Shared helpers
 // ─────────────────────────────────────────────
 export const isMutationCommand = (command: string): boolean => {
+  if (!command) return false;
   const cmd = command.toUpperCase().trim();
   const commandKey = resolveCommandKeyword(cmd);
 
@@ -173,7 +175,7 @@ abstract class BaseCommandResultHandler {
   protected readonly rowCount: number;
 
   constructor(command: string, rowCount: number) {
-    this.cmd = command.toUpperCase().trim();
+    this.cmd = (command || '').toUpperCase().trim();
     this.commandKey = resolveCommandKeyword(this.cmd);
     this.rowCount = rowCount;
   }
