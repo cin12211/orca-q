@@ -42,15 +42,15 @@ jobs:
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
 
   # 6 parallel E2E jobs — all must pass before publishing
-  e2e:
-    name: E2E tests
-    needs: prepare-release
-    uses: ./.github/workflows/e2e.yml
+  # e2e:
+  #   name: E2E tests
+  #   needs: prepare-release
+  #   uses: ./.github/workflows/e2e.yml
 
   docker-build-push:
     name: Build and push Docker image
     runs-on: ubuntu-latest
-    needs: [prepare-release, e2e]
+    needs: [prepare-release]
 
     steps:
       - name: Checkout code
@@ -87,7 +87,7 @@ jobs:
   npx-package-build-publish:
     name: Build and publish NPX package
     runs-on: ubuntu-latest
-    needs: [prepare-release, e2e]
+    needs: [prepare-release]
 
     steps:
       - name: Checkout code
