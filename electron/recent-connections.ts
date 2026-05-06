@@ -99,10 +99,5 @@ export function buildRecentConnectionTargets(
     }
   }
 
-  console.log(
-    '🚀 ~ buildRecentConnectionTargets ~ recentConnections:',
-    recentConnections
-  );
-
   return recentConnections;
 }

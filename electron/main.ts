@@ -7,6 +7,7 @@ import {
 } from 'electron';
 import path from 'node:path';
 import { registerAllIpcHandlers } from './ipc';
+import { createLogger, initializeElectronLogger } from './logger';
 import { getKnex } from './persist/knex-db';
 import { runMigrations } from './persist/migration/runner';
 import { persistGetAll } from './persist/store';
@@ -23,6 +24,10 @@ const REPORT_ISSUE_URL = 'https://github.com/cin12211/orca-q/issues';
 const MIN_WIDTH = 1024;
 const MIN_HEIGHT = 720;
 const MAX_RECENT_CONNECTIONS = 10;
+
+initializeElectronLogger();
+
+const logger = createLogger('main');
 
 let mainWindow: BrowserWindow | null = null;
 let appServerUrl: string | null = null;
@@ -302,11 +307,15 @@ async function bootstrap(): Promise<void> {
   const gotLock = app.requestSingleInstanceLock();
 
   if (!gotLock) {
+    logger.warn(
+      'Another app instance is already running, quitting duplicate process'
+    );
     app.quit();
     return;
   }
 
   app.on('second-instance', () => {
+    logger.info('Received second-instance event');
     if (mainWindow) {
       focusWindow(mainWindow);
       return;
@@ -318,20 +327,26 @@ async function bootstrap(): Promise<void> {
   });
 
   await app.whenReady();
+  logger.info('Electron app is ready', {
+    mode: IS_DEV ? 'development' : 'production',
+    logsPath: app.getPath('logs'),
+  });
 
   if (IS_DEV) {
     appServerUrl = DEV_SERVER_URL;
+    logger.info('Using Electron dev server URL', { url: appServerUrl });
   } else {
     try {
       appServerUrl = await spawnSidecar();
     } catch (error) {
-      console.error('[electron] Failed to start Nitro runtime:', error);
+      logger.error('Failed to start Nitro runtime', error);
       app.quit();
       return;
     }
   }
 
   await runMigrations(getKnex());
+  logger.info('Electron persistence migrations completed');
 
   registerAllIpcHandlers(
     () => mainWindow,
@@ -339,13 +354,18 @@ async function bootstrap(): Promise<void> {
       void refreshNativeMenus();
     }
   );
+  logger.info('Electron IPC handlers registered');
 
   attachMainWindow(createWindow(appServerUrl));
+  logger.info('Main window attached');
   await refreshNativeMenus();
+  logger.info('Native application menus refreshed');
 
   app.on('activate', () => {
+    logger.info('App activate event received');
     if (BrowserWindow.getAllWindows().length === 0) {
       attachMainWindow(createWindow(appServerUrl!));
+      logger.info('Recreated main window after activate');
     }
 
     void refreshNativeMenus();
@@ -353,16 +373,18 @@ async function bootstrap(): Promise<void> {
 }
 
 app.on('before-quit', () => {
+  logger.info('before-quit received, stopping sidecar');
   killSidecar();
 });
 
 app.on('window-all-closed', () => {
+  logger.info('window-all-closed received');
   if (process.platform !== 'darwin') {
     app.quit();
   }
 });
 
 bootstrap().catch(error => {
-  console.error('[electron] Bootstrap failed:', error);
+  logger.error('Bootstrap failed', error);
   process.exit(1);
 });

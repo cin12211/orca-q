@@ -29,6 +29,7 @@ import { createTableAdapter } from '../adapters/tables';
 import {
   assertNativeBackupSupported,
   buildNativeBackupFileName,
+  ensureNativeBackupOperationAvailable,
   getNativeBackupCapability,
   getNativeBackupFileKind,
   getNativeBackupImportTool,
@@ -1432,6 +1433,7 @@ async function runNativeImportJob(
 }
 
 export async function startNativeExportJob(params: ExportJobParams) {
+  await ensureNativeBackupOperationAvailable(params.type, 'export');
   assertNativeBackupSupported(params.type);
 
   const tempDir = await mkdtemp(join(tmpdir(), 'heraq-native-export-'));
@@ -1471,6 +1473,11 @@ export async function startNativeExportJob(params: ExportJobParams) {
 }
 
 export async function startNativeImportJob(params: ImportJobParams) {
+  await ensureNativeBackupOperationAvailable(
+    params.type,
+    'import',
+    params.uploadFileName
+  );
   assertNativeBackupSupported(params.type);
 
   const tempDir = await mkdtemp(join(tmpdir(), 'heraq-native-import-'));

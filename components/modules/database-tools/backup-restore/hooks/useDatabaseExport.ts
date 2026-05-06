@@ -6,6 +6,7 @@ import type {
   ExportDatabaseRequest,
   ExportFormat,
   ExportOptions,
+  NativeBackupRuntimeCapability,
   StartDatabaseTransferResponse,
 } from '~/core/types';
 import { useDatabaseTransferJob } from './useDatabaseTransferJob';
@@ -14,7 +15,8 @@ import { useDatabaseTransferJob } from './useDatabaseTransferJob';
  * Composable for database export operations
  */
 export const useDatabaseExport = (
-  connection: Ref<Connection | null | undefined>
+  connection: Ref<Connection | null | undefined>,
+  capability?: Ref<NativeBackupRuntimeCapability | null>
 ) => {
   const error = ref<string | null>(null);
   const lastExport = ref<{ fileName: string; duration: number } | null>(null);
@@ -50,6 +52,11 @@ export const useDatabaseExport = (
   ): Promise<boolean> => {
     if (!connection.value) {
       error.value = 'No database connection provided';
+      return false;
+    }
+
+    if (capability?.value && !capability.value.exportAvailable) {
+      error.value = capability.value.exportMessage;
       return false;
     }
 

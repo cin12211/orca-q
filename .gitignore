@@ -59,9 +59,7 @@ tsconfig.tsbuildinfo
 .electron-build
 .electron-out
 .db
-src-tauri/target
-src-tauri/gen
-src-tauri/binaries
+.electron-logs
 
 # NPX package build output
 npx-package/.output

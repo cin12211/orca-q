@@ -65,7 +65,7 @@ export function useAiChat<UI_MESSAGE extends UIMessage = UIMessage>(
   // Create Chat instance with dynamic transport configuration
   const chat = new Chat<UI_MESSAGE>({
     transport: new DefaultChatTransport({
-      api: resolvedOptions.api ?? '/api/ai/chat',
+      api: resolvedOptions.api ?? '',
       body: () => {
         const extraBody = resolveTransportBody(resolvedOptions.body);
 

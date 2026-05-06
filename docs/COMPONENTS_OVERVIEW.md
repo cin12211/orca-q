@@ -80,7 +80,6 @@ Feature-specific modules containing related components, hooks, and logic.
 | `VariableEditor.vue`       | SQL variable input                 |
 | `IntroRawQuery.vue`        | Welcome/empty state                |
 | `ResultTabTableView.vue`   | Table result view                  |
-| `ResultTabAgentView.vue`   | AI chat result view                |
 | `ResultTabErrorView.vue`   | Error display                      |
 
 **Hooks:**

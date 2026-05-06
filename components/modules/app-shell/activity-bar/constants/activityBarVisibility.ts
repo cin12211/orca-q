@@ -64,6 +64,9 @@ export const AGENT_HIDDEN_CONNECTION_TYPES = new Set<DatabaseClientType>([
 ]);
 
 export const USERS_ROLES_HIDDEN_CONNECTION_TYPES = new Set<DatabaseClientType>([
+  DatabaseClientType.MYSQL,
+  DatabaseClientType.MYSQL2,
+  DatabaseClientType.MARIADB,
   DatabaseClientType.SQLITE3,
   DatabaseClientType.BETTER_SQLITE3,
   DatabaseClientType.REDIS,

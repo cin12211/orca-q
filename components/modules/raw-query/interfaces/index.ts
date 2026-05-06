@@ -67,5 +67,5 @@ export interface ExecutedResultItem {
   };
   result: RowData[];
   seqIndex: number;
-  view: 'result' | 'error' | 'info' | 'raw' | 'agent' | 'explain';
+  view: 'result' | 'error' | 'info' | 'raw' | 'explain';
 }

@@ -753,10 +753,6 @@ Nuxt server routes in `/server/api`:
 
 - **POST** `/api/managment-connection/health-check` - Test connection
 
-#### AI Integration
-
-- **POST** `/api/ai/chat` - AI chat for query generation
-
 #### Monitoring
 
 - **POST** `/api/getMetricMonitor` - Get database metrics
