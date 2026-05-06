@@ -6,10 +6,8 @@ import {
   ContextMenuTrigger,
 } from '#components';
 import { cn } from '@/lib/utils';
-import type { RowData } from '~/components/base/dynamic-table/utils';
 import type { ExecutedResultItem, MappedRawColumn } from '../interfaces';
 import { normalizeResultRows } from '../utils';
-import ResultTabAgentView from './result-tab/ResultTabAgentView.vue';
 import ResultTabErrorView from './result-tab/ResultTabErrorView.vue';
 import ResultTabInfoView from './result-tab/ResultTabInfoView.vue';
 import ResultTabRawView from './result-tab/ResultTabRawView.vue';
@@ -46,7 +44,7 @@ const isHaveRightItem = computed(() => {
 });
 
 // View modes for the vertical tabs
-type ViewMode = 'result' | 'raw' | 'info' | 'error' | 'agent' | 'explain';
+type ViewMode = 'result' | 'raw' | 'info' | 'error' | 'explain';
 
 const viewModes: { value: ViewMode; label: string }[] = [
   { value: 'result', label: 'Result' },
@@ -54,7 +52,6 @@ const viewModes: { value: ViewMode; label: string }[] = [
   { value: 'raw', label: 'Raw' },
   { value: 'info', label: 'Info' },
   { value: 'error', label: 'Errors' },
-  { value: 'agent', label: 'Agent' },
 ];
 
 // Cache key: tabId + resultLength for case (streaming)
@@ -318,12 +315,6 @@ const hasErrors = (tab: ExecutedResultItem) => {
           v-else-if="activeTab && currentView === 'error'"
           :active-tab="activeTab"
           @onChangeView="setViewMode($event)"
-        />
-
-        <!-- Agent View -->
-        <ResultTabAgentView
-          v-else-if="activeTab && currentView === 'agent'"
-          :active-tab="activeTab"
         />
       </div>
     </div>

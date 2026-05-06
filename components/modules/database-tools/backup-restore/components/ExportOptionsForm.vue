@@ -1,17 +1,19 @@
 <script setup lang="ts">
 import { Badge, Label } from '#components';
-import {
-  getDefaultNativeBackupFormat,
-  getNativeBackupFormatOptions,
-  getNativeBackupToolHint,
-} from '~/core/constants/database-backup';
-import { DatabaseClientType } from '~/core/constants/database-client-type';
-import type { ExportFormat, ExportScope, ExportOptions } from '~/core/types';
+import type {
+  ExportFormat,
+  ExportScope,
+  ExportOptions,
+  NativeBackupRuntimeFormat,
+  NativeBackupRuntimeFormatOption,
+} from '~/core/types';
 
 interface Props {
   schemas: string[];
   loading?: boolean;
-  connectionType?: DatabaseClientType | null;
+  formatOptions: NativeBackupRuntimeFormatOption[];
+  defaultFormat?: NativeBackupRuntimeFormat | null;
+  toolHint?: string;
 }
 
 interface Emits {
@@ -20,25 +22,23 @@ interface Emits {
 
 const props = defineProps<Props>();
 const emit = defineEmits<Emits>();
+const FALLBACK_EXPORT_FORMAT: ExportFormat = 'plain';
 
 // Form state
 const scope = ref<ExportScope>('full');
 const selectedFormat = ref<ExportFormat>(
-  getDefaultNativeBackupFormat(props.connectionType)
+  props.defaultFormat ||
+    props.formatOptions[0]?.format ||
+    FALLBACK_EXPORT_FORMAT
 );
 const selectedSchemas = ref<string[]>([]);
 
-const formatOptions = computed(() =>
-  getNativeBackupFormatOptions(props.connectionType)
-);
-
 watch(
-  formatOptions,
-  options => {
+  [() => props.formatOptions, () => props.defaultFormat],
+  ([options, defaultFormat]) => {
     if (!options.some(option => option.format === selectedFormat.value)) {
       selectedFormat.value =
-        options[0]?.format ||
-        getDefaultNativeBackupFormat(props.connectionType);
+        options[0]?.format || defaultFormat || FALLBACK_EXPORT_FORMAT;
     }
   },
   { immediate: true }
@@ -88,7 +88,7 @@ const onSubmit = () => {
             </Badge>
           </div>
           <p class="mt-1 text-xs text-muted-foreground">
-            Runtime uses {{ getNativeBackupToolHint(props.connectionType) }}.
+            Runtime uses {{ props.toolHint || 'Native database tools' }}.
           </p>
         </button>
       </div>

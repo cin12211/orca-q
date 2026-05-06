@@ -116,7 +116,7 @@ describe('useActivityMenu', () => {
     ]);
   });
 
-  it('hides the agent activity item for a MySQL connection', () => {
+  it('hides the users, roles, and agent activity items for a MySQL connection', () => {
     routeMock.params.workspaceId = 'ws-mysql';
     routeMock.params.connectionId = 'conn-mysql';
 
@@ -139,7 +139,33 @@ describe('useActivityMenu', () => {
       ActivityBarItemType.Explorer,
       ActivityBarItemType.Schemas,
       ActivityBarItemType.ErdDiagram,
-      ActivityBarItemType.UsersRoles,
+      ActivityBarItemType.DatabaseTools,
+    ]);
+  });
+
+  it('hides the users, roles, and agent activity items for a MariaDB connection', () => {
+    routeMock.params.workspaceId = 'ws-mariadb';
+    routeMock.params.connectionId = 'conn-mariadb';
+
+    const connectionStore = useManagementConnectionStore();
+    connectionStore.connections = [
+      {
+        id: 'conn-mariadb',
+        workspaceId: 'ws-mariadb',
+        name: 'MariaDB Fixture',
+        type: DatabaseClientType.MARIADB,
+        method: EConnectionMethod.STRING,
+        connectionString: 'mariadb://root@127.0.0.1:3307/mysql',
+        createdAt: '2026-05-01T00:00:00.000Z',
+      },
+    ];
+
+    const { activity } = useActivityMenu();
+
+    expect(activity.value.map(item => item.id)).toEqual([
+      ActivityBarItemType.Explorer,
+      ActivityBarItemType.Schemas,
+      ActivityBarItemType.ErdDiagram,
       ActivityBarItemType.DatabaseTools,
     ]);
   });

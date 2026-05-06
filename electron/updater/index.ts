@@ -1,6 +1,7 @@
 import { app } from 'electron';
 import { autoUpdater } from 'electron-updater';
 import type { UpdateInfo, ProgressInfo } from 'electron-updater';
+import { createLogger } from '../logger';
 
 let mainWindowWebContents: Electron.WebContents | null = null;
 let detachWebContentsDestroyedListener: (() => void) | null = null;
@@ -31,18 +32,20 @@ type UpdaterCheckResult =
 let cachedAvailableUpdate: RendererUpdateInfo | null = null;
 let cachedReadyUpdate: RendererUpdateInfo | null = null;
 
+const scopedUpdaterLogger = createLogger('updater');
+
 const updaterLogger = {
   debug(message: string) {
-    console.debug(`[electron-updater] ${message}`);
+    scopedUpdaterLogger.debug(message);
   },
   info(message: string) {
-    console.info(`[electron-updater] ${message}`);
+    scopedUpdaterLogger.info(message);
   },
   warn(message: string) {
-    console.warn(`[electron-updater] ${message}`);
+    scopedUpdaterLogger.warn(message);
   },
   error(message: string) {
-    console.error(`[electron-updater] ${message}`);
+    scopedUpdaterLogger.error(message);
   },
 };
 

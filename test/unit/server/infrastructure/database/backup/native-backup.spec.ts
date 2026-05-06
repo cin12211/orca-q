@@ -1,16 +1,47 @@
+import { chmod, mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { delimiter, join } from 'node:path';
 import { describe, expect, it } from 'vitest';
+import { afterEach } from 'vitest';
+import { vi } from 'vitest';
 import { DatabaseClientType } from '~/core/constants/database-client-type';
 import {
   assertNativeBackupSupported,
   buildNativeBackupFileName,
+  ensureNativeBackupOperationAvailable,
   getNativeBackupCapability,
   getNativeBackupFileExtension,
   getNativeBackupImportExtensions,
   getNativeBackupImportTool,
+  getNativeBackupRuntimeCapability,
   getOracleNativeBackupUnsupportedReason,
   resolveNativeExportFormat,
   sanitizeBackupFileSegment,
 } from '~/server/infrastructure/database/backup/native-backup';
+
+const tempDirectories: string[] = [];
+
+afterEach(async () => {
+  vi.unstubAllEnvs();
+
+  await Promise.all(
+    tempDirectories
+      .splice(0, tempDirectories.length)
+      .map(directory => rm(directory, { recursive: true, force: true }))
+  );
+});
+
+async function createFakeTool(name: string) {
+  const directory = await mkdtemp(join(tmpdir(), 'heraq-native-tools-'));
+  const executablePath = join(directory, name);
+
+  tempDirectories.push(directory);
+
+  await writeFile(executablePath, '#!/bin/sh\nexit 0\n', 'utf8');
+  await chmod(executablePath, 0o755);
+
+  return directory;
+}
 
 describe('native-backup capability helpers', () => {
   it('returns PostgreSQL native capabilities with both archive and plain sql formats', () => {
@@ -109,5 +140,37 @@ describe('native-backup capability helpers', () => {
     expect(() =>
       assertNativeBackupSupported(DatabaseClientType.ORACLE)
     ).toThrow(/DIRECTORY object/);
+  });
+
+  it('detects partial PostgreSQL tool availability from PATH', async () => {
+    const fakeToolDir = await createFakeTool('pg_dump');
+
+    vi.stubEnv('PATH', fakeToolDir);
+
+    const capability = await getNativeBackupRuntimeCapability(
+      DatabaseClientType.POSTGRES
+    );
+
+    expect(capability.available).toBe(true);
+    expect(capability.exportAvailable).toBe(true);
+    expect(capability.importAvailable).toBe(false);
+    expect(capability.availableExportTools).toEqual(['pg_dump']);
+    expect(capability.missingImportTools).toEqual(['pg_restore', 'psql']);
+  });
+
+  it('blocks export when no native tool is installed on PATH', async () => {
+    const fakeToolDir = await mkdtemp(
+      join(tmpdir(), 'heraq-empty-native-tools-')
+    );
+    tempDirectories.push(fakeToolDir);
+
+    vi.stubEnv('PATH', fakeToolDir);
+
+    await expect(
+      ensureNativeBackupOperationAvailable(
+        DatabaseClientType.POSTGRES,
+        'export'
+      )
+    ).rejects.toThrow(/Native backup requires pg_dump on PATH/);
   });
 });

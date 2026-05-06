@@ -1,6 +1,7 @@
 /**
  * Database backup/import types shared by server jobs and the UI.
  */
+import type { DatabaseClientType } from '~/core/constants/database-client-type';
 
 // ============================================================================
 // Export Configuration Types
@@ -90,6 +91,42 @@ export interface StartDatabaseTransferResponse {
   jobId: string;
   statusUrl: string;
   downloadUrl?: string;
+}
+
+export type NativeBackupRuntimeFormat = Extract<
+  ExportFormat,
+  'plain' | 'custom'
+>;
+
+export type NativeBackupFileKind = 'archive' | 'sql';
+
+export interface NativeBackupRuntimeFormatOption {
+  format: NativeBackupRuntimeFormat;
+  extension: string;
+  label: string;
+  fileKind: NativeBackupFileKind;
+  importTool: string;
+}
+
+export interface NativeBackupRuntimeCapability {
+  type: DatabaseClientType | null;
+  label: string;
+  toolHint: string;
+  supported: boolean;
+  available: boolean;
+  exportAvailable: boolean;
+  importAvailable: boolean;
+  formatOptions: NativeBackupRuntimeFormatOption[];
+  acceptExtensions: string;
+  defaultExportFormat: NativeBackupRuntimeFormat | null;
+  availableExportTools: string[];
+  availableImportTools: string[];
+  missingExportTools: string[];
+  missingImportTools: string[];
+  supportMessage: string;
+  exportMessage: string;
+  importMessage: string;
+  reason?: string;
 }
 
 // ============================================================================

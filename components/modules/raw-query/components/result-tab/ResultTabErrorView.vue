@@ -112,10 +112,6 @@ const errorDetails = computed(() => {
 const executedQuery = computed(() => {
   return props.activeTab.metadata.statementQuery || '';
 });
-
-const onAskAiToFix = () => {
-  emits('onChangeView', 'agent');
-};
 </script>
 
 <template>
@@ -143,11 +139,6 @@ const onAskAiToFix = () => {
             Hint: {{ getErrorHint }}
           </div>
         </div>
-
-        <Button @click="onAskAiToFix" size="xs" variant="outline">
-          <Icon name="hugeicons:ai-brain-04" class="size-4" />
-          Ask AI to fix this error
-        </Button>
       </div>
 
       <!-- View Executed Query Section (moved above Error Details) -->

@@ -1,12 +1,6 @@
 <script setup lang="ts">
-import {
-  getDatabaseClientLabel,
-  getNativeBackupAcceptExtensions,
-  getNativeBackupFormatOptions,
-  getNativeBackupSupportMessage,
-  getNativeBackupToolHint,
-  isNativeBackupSupported,
-} from '~/core/constants/database-backup';
+import LoadingOverlay from '~/components/base/LoadingOverlay.vue';
+import { getDatabaseClientLabel } from '~/core/constants/database-backup';
 import { useSchemaStore } from '~/core/stores';
 import { useManagementConnectionStore } from '~/core/stores/managementConnectionStore';
 import type { ExportOptions } from '~/core/types';
@@ -19,6 +13,7 @@ import RestoreConfirmDialog from '../components/RestoreConfirmDialog.vue';
 import TransferProgressCard from '../components/TransferProgressCard.vue';
 import { useDatabaseExport } from '../hooks/useDatabaseExport';
 import { useDatabaseImport } from '../hooks/useDatabaseImport';
+import { useNativeBackupCapability } from '../hooks/useNativeBackupCapability';
 import type {
   BackupRestoreSection,
   BackupRestoreTab,
@@ -48,24 +43,63 @@ const databaseName = computed(
 const connectionLabel = computed(() =>
   getDatabaseClientLabel(connectionType.value)
 );
-const nativeBackupSupported = computed(() =>
-  isNativeBackupSupported(connectionType.value)
+const {
+  capability,
+  isLoading: isCapabilityLoading,
+  error: capabilityError,
+} = useNativeBackupCapability(connectionType);
+const nativeBackupSupported = computed(
+  () => capability.value?.available ?? false
 );
-const supportMessage = computed(() =>
-  getNativeBackupSupportMessage(connectionType.value)
+const exportAvailable = computed(
+  () => capability.value?.exportAvailable ?? false
 );
-const nativeToolHint = computed(() =>
-  getNativeBackupToolHint(connectionType.value)
+const importAvailable = computed(
+  () => capability.value?.importAvailable ?? false
 );
-const nativeBackupFormats = computed(() =>
-  getNativeBackupFormatOptions(connectionType.value)
+const supportMessage = computed(() => {
+  if (capabilityError.value) {
+    return capabilityError.value;
+  }
+
+  if (capability.value) {
+    return capability.value.supportMessage;
+  }
+
+  if (connectionType.value) {
+    return `Checking ${connectionLabel.value} native tools...`;
+  }
+
+  return 'Select a connection to open database tools.';
+});
+const nativeToolHint = computed(
+  () => capability.value?.toolHint || 'Native database tools'
 );
-const nativeBackupAcceptExtensions = computed(() =>
-  getNativeBackupAcceptExtensions(connectionType.value)
+const nativeBackupFormats = computed(
+  () => capability.value?.formatOptions || []
 );
-const nativeBackupExtensionSummary = computed(() =>
-  nativeBackupFormats.value.map(f => f.extension).join(' / ')
+const nativeBackupAcceptExtensions = computed(
+  () => capability.value?.acceptExtensions || '.sql'
 );
+const nativeBackupExtensionSummary = computed(
+  () => nativeBackupFormats.value.map(f => f.extension).join(' / ') || '.sql'
+);
+const partialAvailabilityMessage = computed(() => {
+  if (
+    isCapabilityLoading.value ||
+    !nativeBackupSupported.value ||
+    (exportAvailable.value && importAvailable.value)
+  ) {
+    return null;
+  }
+
+  return [
+    !exportAvailable.value ? capability.value?.exportMessage : null,
+    !importAvailable.value ? capability.value?.importMessage : null,
+  ]
+    .filter(Boolean)
+    .join(' ');
+});
 const availableSchemas = computed(() => {
   if (!props.connectionId) return [];
   return (schemaStore.schemas[props.connectionId] || [])
@@ -101,6 +135,21 @@ watch(
   }
 );
 
+watch(
+  [activeTab, exportAvailable, importAvailable],
+  ([tab, canExport, canImport]) => {
+    if (tab === 'export' && !canExport && canImport) {
+      activeTab.value = 'import';
+      return;
+    }
+
+    if (tab === 'import' && !canImport && canExport) {
+      activeTab.value = 'export';
+    }
+  },
+  { immediate: true }
+);
+
 const selectToolTab = (type: BackupRestoreTab) => {
   activeTab.value = type;
 };
@@ -115,7 +164,7 @@ const {
   statusMessage: exportStatusMessage,
   exportDatabase,
   reset: resetExport,
-} = useDatabaseExport(connectionData);
+} = useDatabaseExport(connectionData, capability);
 
 const onExport = async (options: ExportOptions) => {
   await exportDatabase(databaseName.value, options);
@@ -138,7 +187,7 @@ const {
   clearSelectedFile,
   importDatabase,
   reset: resetImport,
-} = useDatabaseImport(connectionData);
+} = useDatabaseImport(connectionData, capability);
 
 // ─── Restore confirm dialog ──────────────────────────────────────────────────────────
 const showRestoreConfirm = ref(false);
@@ -186,7 +235,10 @@ const onRestoreCancelled = () => {
             :key="section.id"
             :value="section.id"
             class="min-w-fit shrink-0 cursor-pointer rounded-sm px-1.5 text-xs"
-            :disabled="!nativeBackupSupported"
+            :disabled="
+              isCapabilityLoading ||
+              (section.id === 'export' ? !exportAvailable : !importAvailable)
+            "
             @click="selectToolTab(section.id)"
           >
             <Icon :name="section.icon" class="shrink-0 size-3.5" />
@@ -201,15 +253,34 @@ const onRestoreCancelled = () => {
     </div>
 
     <!-- Content -->
-    <div class="flex-1 overflow-y-auto rounded-lg border bg-background p-4">
+    <div
+      class="relative flex-1 overflow-y-auto rounded-lg border bg-background p-4"
+    >
+      <LoadingOverlay v-if="isCapabilityLoading" visible />
+
+      <Alert
+        v-if="!isCapabilityLoading && capabilityError"
+        variant="destructive"
+      >
+        <Icon name="hugeicons:alert-circle" class="size-4" />
+        <AlertTitle>Capability Check Failed</AlertTitle>
+        <AlertDescription>{{ supportMessage }}</AlertDescription>
+      </Alert>
+
       <!-- Unsupported alert with install instructions -->
       <BackupRestoreUnsupportedAlert
-        v-if="!nativeBackupSupported"
+        v-else-if="!isCapabilityLoading && !nativeBackupSupported"
         :support-message="supportMessage"
         :connection-type="connectionType"
       />
 
-      <template v-else>
+      <template v-else-if="!isCapabilityLoading">
+        <Alert v-if="partialAvailabilityMessage">
+          <Icon name="hugeicons:alert-circle" class="size-4" />
+          <AlertTitle>Partial Native Tool Support</AlertTitle>
+          <AlertDescription>{{ partialAvailabilityMessage }}</AlertDescription>
+        </Alert>
+
         <!-- Export tab -->
         <div v-show="activeTab === 'export'" class="space-y-4">
           <div
@@ -263,7 +334,9 @@ const onRestoreCancelled = () => {
               <ExportOptionsForm
                 :schemas="availableSchemas"
                 :loading="isExporting"
-                :connection-type="connectionType"
+                :format-options="nativeBackupFormats"
+                :default-format="capability?.defaultExportFormat"
+                :tool-hint="nativeToolHint"
                 @submit="onExport"
               />
             </div>

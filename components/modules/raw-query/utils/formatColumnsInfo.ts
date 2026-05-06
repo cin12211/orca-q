@@ -58,7 +58,7 @@ export const formatColumnsInfo = ({
       }
     }
 
-    const column = tableInfo?.columns.find(
+    const column = (tableInfo?.columns || []).find(
       column => column.name === field.name
     ) as ColumnShortMetadata;
 

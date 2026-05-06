@@ -8,33 +8,33 @@
 
 ## 🧭 Product Overview
 
-| Field | Detail |
-|---|---|
-| **Product Name** | OrcaQ ("Next Generation database editor") |
-| **Type** | Cross-platform Desktop App (Electron) + Web SPA (Nuxt) |
-| **Homepage** | https://orca-q.com |
-| **Version** | 1.1.1 (MIT License) |
-| **Architecture** | Modular monolith — SPA renderer (Nuxt/Vue 3) embedded in Electron shell, with a Nuxt server-side API layer for DB operations |
-| **Render Mode** | SPA (`ssr: false`), hash-router in Electron, history-mode in web |
-| **State Management** | Pinia (no store persistence — all persistence delegated to NeDB / IndexedDB via IPC bridge) |
+| Field                | Detail                                                                                                                       |
+| -------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| **Product Name**     | OrcaQ ("Next Generation database editor")                                                                                    |
+| **Type**             | Cross-platform Desktop App (Electron) + Web SPA (Nuxt)                                                                       |
+| **Homepage**         | https://orca-q.com                                                                                                           |
+| **Version**          | 1.1.1 (MIT License)                                                                                                          |
+| **Architecture**     | Modular monolith — SPA renderer (Nuxt/Vue 3) embedded in Electron shell, with a Nuxt server-side API layer for DB operations |
+| **Render Mode**      | SPA (`ssr: false`), hash-router in Electron, history-mode in web                                                             |
+| **State Management** | Pinia (no store persistence — all persistence delegated to NeDB / IndexedDB via IPC bridge)                                  |
 
 ### Tech Stack
 
-| Layer | Technology |
-|---|---|
-| UI Framework | Nuxt 3.16 + Vue 3.5 + TypeScript |
-| Styling | Tailwind CSS 4 + shadcn-nuxt |
-| Desktop Shell | Electron 35 |
-| Code Editor | CodeMirror 6 (`@codemirror/lang-sql`, `@marimo-team/codemirror-sql`) |
-| Data Grid | ag-grid-vue3 |
-| AI SDK | Vercel AI SDK v5 (@ai-sdk/openai, anthropic, google, xai) |
-| Diagrams | vue-flow (ERD), ECharts + vue-echarts (charts), Mermaid (inline markdown) |
-| Forms | VeeValidate v4 + Zod |
-| Drag & Drop | @atlaskit/pragmatic-drag-and-drop |
-| DB Drivers | better-sqlite3, mysql2, oracledb, knex |
-| Desktop Persistence | NeDB (Electron main via knex-managed SQLite) |
-| Web Persistence | IndexedDB (polyfill with identical API surface) |
-| Analytics | Amplitude Analytics Browser |
+| Layer               | Technology                                                                |
+| ------------------- | ------------------------------------------------------------------------- |
+| UI Framework        | Nuxt 3.16 + Vue 3.5 + TypeScript                                          |
+| Styling             | Tailwind CSS 4 + shadcn-nuxt                                              |
+| Desktop Shell       | Electron 35                                                               |
+| Code Editor         | CodeMirror 6 (`@codemirror/lang-sql`, `@marimo-team/codemirror-sql`)      |
+| Data Grid           | ag-grid-vue3                                                              |
+| AI SDK              | Vercel AI SDK v5 (@ai-sdk/openai, anthropic, google, xai)                 |
+| Diagrams            | vue-flow (ERD), ECharts + vue-echarts (charts), Mermaid (inline markdown) |
+| Forms               | VeeValidate v4 + Zod                                                      |
+| Drag & Drop         | @atlaskit/pragmatic-drag-and-drop                                         |
+| DB Drivers          | better-sqlite3, mysql2, oracledb, knex                                    |
+| Desktop Persistence | NeDB (Electron main via knex-managed SQLite)                              |
+| Web Persistence     | IndexedDB (polyfill with identical API surface)                           |
+| Analytics           | Amplitude Analytics Browser                                               |
 
 ### Architecture Style
 
@@ -68,6 +68,7 @@
 **Description:** Top-level organizational unit. Users group related database connections under named workspaces with custom icons.
 
 **Capabilities:**
+
 - Create, rename, update, delete workspaces
 - Custom icon per workspace
 - Optional description field
@@ -77,6 +78,7 @@
 - Delete workspace cascades to connections
 
 **Tech Evidence:**
+
 - Files: `core/stores/useWorkspacesStore.ts`, `components/modules/workspace/`
 - Components: `Workspaces.vue`, `WorkspaceSelector.vue`
 - Storage: `workspaceStorage` (NeDB `workspace.db` / IndexedDB)
@@ -88,6 +90,7 @@
 **Description:** Define and manage database connection profiles within a workspace. Supports multiple database engines, connection methods, SSH tunnels, and SSL.
 
 **Capabilities:**
+
 - Create connections via **form fields** or **connection string**
 - File-based connection for SQLite (`.db`, `.sqlite` files)
 - Supported database types:
@@ -104,6 +107,7 @@
 - View connection list per workspace
 
 **Tech Evidence:**
+
 - Files: `core/types/entities/connection.entity.ts`, `components/modules/connection/`
 - API: `server/api/managment-connection/health-check.ts`
 - Components: `CreateConnectionModal.vue`, `ConnectionSSHTunnel.vue`, `ConnectionSSLConfig.vue`, `DatabaseTypeCard.vue`
@@ -116,6 +120,7 @@
 **Description:** Color-coded labels applied to connections to visually distinguish environments (dev, staging, production, etc.) with optional strict mode enforcement.
 
 **Capabilities:**
+
 - Create, rename, delete environment tags
 - Assign a color from a predefined palette
 - Enable **Strict Mode** per tag (triggers execution confirmation dialogs before running mutations)
@@ -124,6 +129,7 @@
 - Tags visible on connection cards in the status bar
 
 **Tech Evidence:**
+
 - Files: `core/stores/useEnvironmentTagStore.ts`, `components/modules/environment-tag/`
 - Constants: `DEFAULT_ENV_TAGS.ts`
 - Settings panel: `SettingsComponentKey.EnvironmentTagsConfig`
@@ -135,6 +141,7 @@
 **Description:** Tree-based browser of the connected database schema. Provides a navigable hierarchy of tables, views, functions, and other objects.
 
 **Capabilities:**
+
 - Browse all schemas in the connected database
 - Expand schemas → tables / views / functions / sequences
 - Search / filter objects by name
@@ -150,6 +157,7 @@
 - Multi-schema support (schema selector dropdown)
 
 **Tech Evidence:**
+
 - Files: `components/modules/management/schemas/ManagementSchemas.vue`
 - Hooks: `useSchemaTreeData.ts`, `useSchemaContextMenu.ts`
 - Store: `useSchemaStore.ts`
@@ -162,6 +170,7 @@
 **Description:** File-system-like explorer for organizing SQL query files into folders, similar to VS Code's Explorer panel.
 
 **Capabilities:**
+
 - Create new query files
 - Create folders (unlimited nesting)
 - Rename files and folders (inline edit)
@@ -173,6 +182,7 @@
 - Tree state persisted (expanded/collapsed nodes)
 
 **Tech Evidence:**
+
 - Files: `components/modules/management/explorer/ManagementExplorer.vue`
 - Hooks: `useManagementExplorerTree.ts`
 - Store: `useExplorerFileStore.ts`
@@ -187,6 +197,7 @@
 **Capabilities:**
 
 **Data Viewing:**
+
 - Display table rows in a high-performance ag-grid
 - Pagination with configurable page size
 - Column sorting (multi-column)
@@ -195,12 +206,14 @@
 - Column type-aware display
 
 **Filtering:**
+
 - UI row filter builder (generates WHERE clauses)
 - Autocomplete-aware column selector
 - Filter guide popup
 - View parser filter (for views with existing filters)
 
 **Inline Editing:**
+
 - Edit cell values inline
 - Insert new rows
 - Bulk delete selected rows
@@ -209,6 +222,7 @@
 - Error popup with generated SQL on failure
 
 **Structure / Metadata Tabs:**
+
 - Column structure (names, types, PK, nullable, default)
 - Table meta info (row count, size, created date)
 - Indexes tab
@@ -217,16 +231,19 @@
 - Rules tab (PostgreSQL)
 
 **Relations:**
+
 - Related table preview (FK navigation — click a FK value to preview rows in related table)
 - Breadcrumb navigation through FK relationships
 
 **Extra:**
+
 - Query history log panel (execution time, SQL, result)
 - Table summary panel
 - ERD view shortcut (opens table in ERD diagram)
 - Export data from current result
 
 **Tech Evidence:**
+
 - Files: `components/modules/quick-query/QuickQuery.vue`
 - Hooks: `useQuickQuery.ts`, `useQuickQueryMutation.ts`, `useQuickQueryTableInfo.ts`, `useReferencedTables.ts`, `useSafeModeDialog.ts`
 - API: `server/api/tables/` (bulk-delete, bulk-update, ddl, export, indexes, meta, overview, rls, rules, size, structure, triggers)
@@ -241,6 +258,7 @@
 **Capabilities:**
 
 **Editor:**
+
 - CodeMirror 6 with SQL syntax highlighting
 - Smart autocomplete (tables, columns, schemas from connected DB)
 - Format entire SQL script
@@ -251,6 +269,7 @@
 - Font size config
 
 **Execution:**
+
 - Execute current statement (Ctrl/Cmd+Enter)
 - Execute all statements
 - Serialized mode (statements run sequentially)
@@ -259,26 +278,31 @@
 - Query process state indicator
 
 **EXPLAIN / Analyze:**
+
 - Run EXPLAIN ANALYZE on current statement
 - Multiple explain format options
 - Performance plan visualization
 
 **Variables:**
+
 - Define named variables in a side panel
 - Use `{{variable}}` syntax in queries
 - Variable usage guide popover
 
 **File System:**
+
 - Each query is a file stored in the Explorer tree
 - File content persisted (NeDB `rowQueryFiles.db` / IndexedDB)
 - Switch connection per file
 - Connection execution confirm dialog (warns if file was last run on a different connection)
 
 **Environment Safety:**
+
 - Strict mode tag check on execution (if connection has strict-mode tag)
 - Visual environment badge in editor header
 
 **Tech Evidence:**
+
 - Files: `components/modules/raw-query/RawQuery.vue`
 - Hooks: `useRawQueryEditor.ts`, `useRawQueryFileContent.ts`
 - API: `server/api/query/raw-execute.post.ts`, `raw-execute-stream.post.ts`, `execute.post.ts`
@@ -291,6 +315,7 @@
 **Description:** Interactive Entity-Relationship Diagram (ERD) that visualizes tables and their foreign key relationships using a canvas-based renderer.
 
 **Capabilities:**
+
 - **All Tables ERD**: render every table in the schema as nodes
 - **Single Table ERD**: show one table and its direct FK relationships
 - Zoom in/out and pan the canvas
@@ -302,6 +327,7 @@
 - ERD canvas in a dedicated tab
 
 **Tech Evidence:**
+
 - Files: `components/modules/erd-diagram/ErdDiagram.vue`, `WrapperErdDiagram.vue`
 - Hooks: ERD hooks in `components/modules/erd-diagram/hooks/`
 - Library: vue-flow (node-based canvas)
@@ -315,6 +341,7 @@
 **Description:** Manage database users, roles, and their permissions without writing SQL. Visual role tree with grant/revoke operations.
 
 **Capabilities:**
+
 - View all database roles in a tree
 - Create new database roles
 - Delete roles
@@ -327,6 +354,7 @@
 - Role-level privilege management
 
 **Tech Evidence:**
+
 - Files: `components/modules/management/role-permission/ManagementUsersAndPermission.vue`
 - Hooks: `useDatabaseRoles.ts`, `useRoleMutations.ts`, `useBulkGrantPermissions.ts`
 - API: `server/api/database-roles/` (14 endpoints: create, delete, get-roles, get-schemas, grant, revoke, bulk-grant, role-inheritance, schema-objects, etc.)
@@ -340,32 +368,38 @@
 **Capabilities:**
 
 **Activity Tab:**
+
 - Transactions per second (TPS)
 - Tuple I/O metrics (read/write)
 - Block I/O statistics
 - Active session count
 
 **State Tab:**
+
 - Active sessions list
 - Lock information
 - Prepared transactions
 
 **Configuration Tab:**
+
 - Searchable `pg_settings` browser
 - View current value, unit, description
 
 **Replication Tab:**
+
 - Replication slot list and status
 - Replication statistics
 - Drop a replication slot
 - Toggle slot status (active/inactive)
 
 **Actions:**
+
 - Terminate a specific database connection/session
 - Cancel a running query
 - Auto-refresh interval toggle
 
 **Tech Evidence:**
+
 - Files: `components/modules/instance-insights/InstanceInsightsPanel.vue`
 - Components: `InstanceInsightsActivitySection.vue`, `InstanceInsightsStateSection.vue`, `InstanceInsightsConfigurationSection.vue`, `InstanceInsightsReplicationSection.vue`
 - API: `server/api/instance-insights/` (dashboard, state, configuration, replication, terminate-connection, cancel-query, drop-slot, toggle-slot-status)
@@ -377,6 +411,7 @@
 **Description:** Compare two database schemas (from any two supported connections) and generate a migration SQL script highlighting what has changed.
 
 **Capabilities:**
+
 - Select source connection + target connection independently
 - Side-by-side diff tree view (added / removed / changed objects)
 - SQL migration script panel (auto-generated ALTER/CREATE/DROP statements)
@@ -385,6 +420,7 @@
 - Copy/download generated migration SQL
 
 **Tech Evidence:**
+
 - Files: `components/modules/database-tools/schema-diff/`
 - Components: `SchemaDiffTree.vue`, `SchemaDiffSqlPanel.vue`, `SchemaDiffConnectionSelector.vue`
 - API: `server/api/schema-diff/index.post.ts`
@@ -399,6 +435,7 @@
 **Capabilities:**
 
 **Export:**
+
 - Select export **format**: native, plain, custom, tar
 - Select export **scope**: full / schema-only / data-only
 - Target specific schemas or tables
@@ -408,6 +445,7 @@
 - Download the output file
 
 **Import / Restore:**
+
 - File dropzone for uploading backup files
 - Import options form (analogous to export options)
 - Restore confirm dialog
@@ -415,6 +453,7 @@
 - SSH tunnel support during backup/restore
 
 **Tech Evidence:**
+
 - Files: `components/modules/database-tools/backup-restore/`
 - Components: `ExportOptionsForm.vue`, `ImportOptionsForm.vue`, `ImportFileDropzone.vue`, `TransferProgressCard.vue`, `RestoreConfirmDialog.vue`
 - API: `server/api/database-export/export-database.ts`, `server/api/database-import/import-database.ts`
@@ -430,6 +469,7 @@
 **Capabilities:**
 
 **Multi-Provider AI:**
+
 - OpenAI (GPT-4o, GPT-4 Turbo, etc.)
 - Anthropic (Claude 3.5/3)
 - Google (Gemini models)
@@ -454,10 +494,12 @@
 | `askClarification` | Ask the user a clarifying question before proceeding |
 
 **Safety:**
+
 - Mutation queries (INSERT/UPDATE/DELETE/DROP) are NEVER auto-executed
 - Agent shows generated SQL + explains the change, then asks for explicit confirmation
 
 **Chat UX:**
+
 - Multi-conversation history (create, rename, save, switch)
 - Rename conversation title inline
 - Show/hide reasoning panel
@@ -467,9 +509,10 @@
 - Mermaid diagram rendering in chat (auto-detected and rendered)
 
 **Tech Evidence:**
+
 - Files: `components/modules/agent/`, `server/infrastructure/agent/`
 - Hooks: `useDbAgentChat.ts`, `useDbAgentWorkspace.ts`, `useDbAgentAttachments.ts`, `useDbAgentRenderer.ts`
-- API: `server/api/ai/agent.ts`, `server/api/ai/chat.ts`
+- API: `server/api/ai/agent.ts`
 - Tool blocks: `AgentTableBlock.vue`, `AgentVisualizeTableBlock.vue`, `AgentErdBlock.vue`, `AgentExplainBlock.vue`, `AgentAnomalyBlock.vue`, `AgentDescribeBlock.vue`, `AgentQueryBlock.vue`, `AgentExportFileBlock.vue`, `AgentApprovalBlock.vue`
 - Store: `agentStore.ts`
 
@@ -480,6 +523,7 @@
 **Description:** Universal keyboard-driven command interface (Cmd/Ctrl+K) for navigating to any object or executing system actions from anywhere in the app.
 
 **Capabilities:**
+
 - Fuzzy global search across all entity types
 - Provider-based prefix search:
   - **Tables** — open table in quick query
@@ -493,6 +537,7 @@
 - Keyboard navigation (arrows + Enter)
 
 **Tech Evidence:**
+
 - Files: `components/modules/command-palette/`
 - Services: `commandRegistry.ts`
 - Providers: `useTableCommands.ts`, `useViewCommands.ts`, `useFunctionCommands.ts`, `useFileCommands.ts`, `useErdCommands.ts`, `useTabCommands.ts`, `useSystemCommands.ts`
@@ -505,26 +550,27 @@
 
 **Tab Types:**
 
-| Tab Type | Content |
-|---|---|
-| `TableDetail` | Quick Query grid for a table |
-| `TableOverview` | Table overview panel |
-| `ViewDetail` | View data and definition |
-| `FunctionsDetail` | Function body + signature + rename/delete actions |
-| `FunctionsOverview` | List of functions |
-| `AllERD` | ERD for all tables |
-| `DetailERD` | ERD for one table and its relations |
-| `CodeQuery` | Raw SQL editor for a query file |
-| `UserPermissions` | Role & permission management panel |
-| `DatabaseTools` | Backup/restore or schema diff |
-| `InstanceInsights` | DB monitor dashboard |
-| `SchemaDiff` | Schema comparison tool |
-| `AgentChat` | AI agent chat session |
-| `Export` | Export management |
-| `Connection` | Connection form |
-| `Explorer` | File explorer |
+| Tab Type            | Content                                           |
+| ------------------- | ------------------------------------------------- |
+| `TableDetail`       | Quick Query grid for a table                      |
+| `TableOverview`     | Table overview panel                              |
+| `ViewDetail`        | View data and definition                          |
+| `FunctionsDetail`   | Function body + signature + rename/delete actions |
+| `FunctionsOverview` | List of functions                                 |
+| `AllERD`            | ERD for all tables                                |
+| `DetailERD`         | ERD for one table and its relations               |
+| `CodeQuery`         | Raw SQL editor for a query file                   |
+| `UserPermissions`   | Role & permission management panel                |
+| `DatabaseTools`     | Backup/restore or schema diff                     |
+| `InstanceInsights`  | DB monitor dashboard                              |
+| `SchemaDiff`        | Schema comparison tool                            |
+| `AgentChat`         | AI agent chat session                             |
+| `Export`            | Export management                                 |
+| `Connection`        | Connection form                                   |
+| `Explorer`          | File explorer                                     |
 
 **Capabilities:**
+
 - Open multiple tabs simultaneously
 - Drag-and-drop tab reordering
 - Close individual tabs
@@ -532,6 +578,7 @@
 - Tab synchronization with sidebar selection
 
 **Tech Evidence:**
+
 - Files: `core/stores/useTabViewsStore.ts`, `components/modules/app-shell/tab-view-container/`
 - Components: `TabViews.vue`, `TabViewItem.vue`, `TabViewContainer.vue`, `TabViewOpenActions.vue`
 - DnD: `@atlaskit/pragmatic-drag-and-drop`
@@ -543,6 +590,7 @@
 **Description:** The master app layout with resizable panels, collapsible sidebars, and a configurable layout system.
 
 **Capabilities:**
+
 - **3-column resizable layout** (Primary Sidebar | Main Content | Secondary Sidebar)
 - Toggle primary sidebar (Activity Bar)
 - Toggle secondary sidebar
@@ -556,6 +604,7 @@
 - Responsive body layout (main content + bottom panel split)
 
 **Tech Evidence:**
+
 - Files: `core/stores/appConfigStore.ts`, `components/modules/app-shell/`
 - Constants: `RawQueryEditorLayout`, `RawQueryEditorDefaultSize`, `MAX_CUSTOM_LAYOUTS`
 - Layout builder: `settings/components/layout-builder/`
@@ -568,18 +617,19 @@
 
 **Settings Panels:**
 
-| Panel | Options |
-|---|---|
-| **Appearance** | Theme (light/dark), space display (compact / default / spacious) |
-| **Code Editor** | Theme, font size, minimap, indentation style |
-| **Quick Query** | Quick query specific behavior settings |
-| **Agent** | API keys per AI provider (OpenAI, Anthropic, Google, xAI, OpenRouter), chat font size, code font size, thinking style (Shimmer/Scramble) |
-| **Table Appearance** | Row height, font size, cell spacing, NULL sort order, accent colors (light/dark), header background, header font size/weight |
-| **Desktop** | Desktop-only settings (electron-only panel) |
-| **Environment Tags** | Manage tag list (CRUD, colors, strict mode) |
-| **Backup & Restore** | Export all app data (workspaces, connections, queries, chat history, settings), Import from backup, Reset all data |
+| Panel                | Options                                                                                                                                  |
+| -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| **Appearance**       | Theme (light/dark), space display (compact / default / spacious)                                                                         |
+| **Code Editor**      | Theme, font size, minimap, indentation style                                                                                             |
+| **Quick Query**      | Quick query specific behavior settings                                                                                                   |
+| **Agent**            | API keys per AI provider (OpenAI, Anthropic, Google, xAI, OpenRouter), chat font size, code font size, thinking style (Shimmer/Scramble) |
+| **Table Appearance** | Row height, font size, cell spacing, NULL sort order, accent colors (light/dark), header background, header font size/weight             |
+| **Desktop**          | Desktop-only settings (electron-only panel)                                                                                              |
+| **Environment Tags** | Manage tag list (CRUD, colors, strict mode)                                                                                              |
+| **Backup & Restore** | Export all app data (workspaces, connections, queries, chat history, settings), Import from backup, Reset all data                       |
 
 **Tech Evidence:**
+
 - Files: `components/modules/settings/`
 - Types: `settings.types.ts`
 - Store: `appConfigStore.ts`
@@ -592,6 +642,7 @@
 **Description:** Export and import the entire application state (distinct from database backup). Allows portability between devices or recovery.
 
 **Capabilities:**
+
 - Export everything to a single `.json` backup file:
   - Workspaces
   - Connections
@@ -603,6 +654,7 @@
 - Progress indicator during export
 
 **Tech Evidence:**
+
 - Files: `components/modules/settings/components/BackupRestoreConfig.vue`
 - Hooks: `useDataExport.ts`, `useResetAllData.ts`
 - Sub-components: `backup-restore/RestoreDataPanel.vue`
@@ -614,6 +666,7 @@
 **Description:** Seamless in-app update mechanism for the Electron desktop app using electron-updater.
 
 **Capabilities:**
+
 - Automatic update check on startup
 - Update available notification (version, release notes)
 - Background download of update
@@ -624,6 +677,7 @@
 - Deferred update support (install on next quit)
 
 **Tech Evidence:**
+
 - Files: `electron/updater/index.ts`, `electron/ipc/window.ts`
 - UI: `components/modules/changelog/ChangelogPopup.vue`
 - IPC channel: `registerUpdaterHandlers()`
@@ -635,11 +689,13 @@
 **Description:** macOS Dock menu shortcut to recently opened database connections for one-click access.
 
 **Capabilities:**
+
 - Tracks last 10 opened connections in macOS Dock menu
 - Click to open a connection directly in a new window
 - Persisted across app restarts
 
 **Tech Evidence:**
+
 - Files: `electron/recent-connections.ts`
 - Integration: Electron `app.dock.setMenu()` in `main.ts`
 - Constant: `MAX_RECENT_CONNECTIONS = 10`
@@ -651,6 +707,7 @@
 **Description:** Open multiple database connections simultaneously in separate application windows, each with independent routing state.
 
 **Capabilities:**
+
 - Open a connection in a new window
 - Each window has its own hash-based route
 - Focus existing window if already open
@@ -658,6 +715,7 @@
 - Default window size: 1440×960
 
 **Tech Evidence:**
+
 - Files: `electron/main.ts` → `createWindow()`, `focusWindow()`
 - IPC: `window.ts` handlers
 
@@ -668,11 +726,13 @@
 **Description:** Usage tracking via Amplitude to understand feature adoption and usage patterns.
 
 **Capabilities:**
+
 - Anonymized event tracking
 - Client-side Amplitude Browser SDK
 - Initialized via plugin on app boot
 
 **Tech Evidence:**
+
 - Files: `plugins/03.analytics.client.ts`
 - Library: `@amplitude/analytics-browser`
 
@@ -683,6 +743,7 @@
 **Description:** Browse, inspect, and manage database views similarly to tables.
 
 **Capabilities:**
+
 - List all views in schema
 - Open view in quick query grid
 - View definition (SQL) panel
@@ -692,6 +753,7 @@
 - Explain view query
 
 **Tech Evidence:**
+
 - API: `server/api/views/` (definition, dependencies, explain, indexes, meta, overview)
 - Components: `ViewOverview.vue`, `VirtualTableDefinition.vue`, `ViewDependencies.vue`, `ViewIndexesTab.vue`, `ViewMetaInfo.vue`
 
@@ -702,6 +764,7 @@
 **Description:** Browse, inspect, and manage stored functions/procedures.
 
 **Capabilities:**
+
 - List all functions in schema
 - Open function detail view
 - View function signature
@@ -711,6 +774,7 @@
 - Delete function
 
 **Tech Evidence:**
+
 - API: `server/api/functions/` (definition, delete, overview, rename, signature, update)
 - Components: `FunctionDetail.vue`, `FunctionOverview.vue`
 
@@ -729,16 +793,16 @@
 
 ### Partially Implemented / Coming Soon Features
 
-| Feature | Evidence |
-|---|---|
-| **MongoDB support** | Listed in `DatabaseClientType` enum but no MongoDB adapter found in `server/infrastructure/database/adapters/` |
-| **Redis support** | Listed in `DatabaseClientType` enum but no adapter |
-| **Snowflake support** | Listed in `DatabaseClientType` enum but no adapter |
-| **Export Management Panel** | `TabViewType.Export` exists + `ManagementExport.vue` referenced in sidebar skill but not fully wired |
-| **Desktop Config Panel** | `SettingsComponentKey.DesktopConfig` exists but `DesktopConfig.vue` appears mostly scaffold |
-| **`AgentChecklist` feature** | `components/modules/agent/check-list/` folder exists (agent task checklists) — unclear completion status |
-| **`useQuizState`** | `useQuizState.ts` hook in agent — quiz/learning mode not visible in UI |
-| **`SpaceDisplay`** | Enum defined (compact/default/spacious) but not all components fully adapt |
+| Feature                      | Evidence                                                                                                       |
+| ---------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| **MongoDB support**          | Listed in `DatabaseClientType` enum but no MongoDB adapter found in `server/infrastructure/database/adapters/` |
+| **Redis support**            | Listed in `DatabaseClientType` enum but no adapter                                                             |
+| **Snowflake support**        | Listed in `DatabaseClientType` enum but no adapter                                                             |
+| **Export Management Panel**  | `TabViewType.Export` exists + `ManagementExport.vue` referenced in sidebar skill but not fully wired           |
+| **Desktop Config Panel**     | `SettingsComponentKey.DesktopConfig` exists but `DesktopConfig.vue` appears mostly scaffold                    |
+| **`AgentChecklist` feature** | `components/modules/agent/check-list/` folder exists (agent task checklists) — unclear completion status       |
+| **`useQuizState`**           | `useQuizState.ts` hook in agent — quiz/learning mode not visible in UI                                         |
+| **`SpaceDisplay`**           | Enum defined (compact/default/spacious) but not all components fully adapt                                     |
 
 ### Potential Improvements
 
@@ -814,4 +878,4 @@ Core:
 
 ---
 
-*Report generated by reverse-engineering source code only. No documentation files were used as primary source.*
+_Report generated by reverse-engineering source code only. No documentation files were used as primary source._

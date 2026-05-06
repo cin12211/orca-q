@@ -9,7 +9,7 @@
     "url": "https://github.com/cin12211"
   },
   "license": "MIT",
-  "version": "1.1.4",
+  "version": "1.1.5",
   "main": "out/electron/main.js",
   "scripts": {
     "dev": "npm run nuxt:dev",
@@ -92,6 +92,7 @@
   "dependencies": {
     "@libsql/client": "^0.15.15",
     "better-sqlite3": "^12.9.0",
+    "electron-log": "^5.4.3",
     "electron-store": "^11.0.2",
     "electron-updater": "^6.8.3",
     "knex": "^3.1.0",

@@ -1,17 +1,16 @@
 import { getConnectionParams } from '@/core/helpers/connection-helper';
-import {
-  getDatabaseClientLabel,
-  getNativeBackupFormatOptions,
-} from '~/core/constants/database-backup';
+import { getDatabaseClientLabel } from '~/core/constants/database-backup';
 import type { Connection } from '~/core/stores';
 import type {
   ImportOptions,
+  NativeBackupRuntimeCapability,
   StartDatabaseTransferResponse,
 } from '~/core/types';
 import { useDatabaseTransferJob } from './useDatabaseTransferJob';
 
 export const useDatabaseImport = (
-  connection: Ref<Connection | null | undefined>
+  connection: Ref<Connection | null | undefined>,
+  capability: Ref<NativeBackupRuntimeCapability | null>
 ) => {
   const transferJob = useDatabaseTransferJob();
 
@@ -32,14 +31,15 @@ export const useDatabaseImport = (
   });
 
   const connectionType = computed(() => connection.value?.type);
-  const formats = computed(() =>
-    getNativeBackupFormatOptions(connectionType.value)
-  );
+  const formats = computed(() => capability.value?.formatOptions || []);
   const connectionLabel = computed(() =>
     getDatabaseClientLabel(connectionType.value)
   );
-  const extensionSummary = computed(() =>
-    formats.value.map(f => f.extension).join(' / ')
+  const extensionSummary = computed(
+    () =>
+      capability.value?.acceptExtensions ||
+      formats.value.map(f => f.extension).join(' / ') ||
+      '.sql'
   );
 
   const clearSelectedFile = () => {
@@ -76,6 +76,12 @@ export const useDatabaseImport = (
 
   const importDatabase = async () => {
     if (!selectedFile.value || !connection.value) return;
+
+    if (capability.value && !capability.value.importAvailable) {
+      error.value = capability.value.importMessage;
+      success.value = null;
+      return;
+    }
 
     error.value = null;
     success.value = null;

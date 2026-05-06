@@ -660,34 +660,6 @@ Test database connection.
 
 ---
 
-## AI Integration
-
-### POST `/api/ai/chat`
-
-AI-powered SQL generation.
-
-**Request:**
-
-```typescript
-{
-  messages: {
-    role: 'user' | 'assistant';
-    content: string;
-  }[];
-  provider: 'openai' | 'google' | 'anthropic' | 'xai';
-  model: string;
-  apiKey: string;
-  context?: {
-    schema: string;
-    tables: string[];
-  };
-}
-```
-
-**Response:** Streaming AI response
-
----
-
 ## Monitoring
 
 ### POST `/api/getMetricMonitor`
