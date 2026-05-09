@@ -345,4 +345,77 @@ describe('MariaDB Completion', () => {
     expect(result?.options[0].label).toBe('actor_id');
     expect(result?.options[1].label).toBe('first_name');
   });
+
+  it('17. should suggest alias columns inside a nested subquery', async () => {
+    const sqlText = `SELECT *
+FROM (
+  SELECT a.! FROM actor a
+) sub`;
+    const { state, pos } = createTestState(sqlText, highlightDialect);
+
+    const result = await getCompletionResult(state, pos, completionSource);
+    expect(hasOption(result, 'actor_id')).toBe(true);
+    expect(hasOption(result, 'first_name')).toBe(true);
+  });
+
+  it('18. should resolve outer query aliases inside a correlated subquery', async () => {
+    const sqlText = `SELECT *
+FROM customer c
+WHERE EXISTS (
+  SELECT 1
+  FROM rental r
+  WHERE r.customer_id = c.!
+)`;
+    const { state, pos } = createTestState(sqlText, highlightDialect);
+
+    const result = await getCompletionResult(state, pos, completionSource);
+    expect(hasOption(result, 'customer_id')).toBe(true);
+    expect(hasOption(result, 'email')).toBe(true);
+    expect(hasOption(result, 'rental_id')).toBe(false);
+  });
+
+  it('19. should prefer inner aliases when completion happens inside nested subquery scope', async () => {
+    const sqlText = `SELECT *
+FROM customer c
+WHERE EXISTS (
+  SELECT 1
+  FROM rental r
+  WHERE r.!
+)`;
+    const { state, pos } = createTestState(sqlText, highlightDialect);
+
+    const result = await getCompletionResult(state, pos, completionSource);
+    expect(hasOption(result, 'rental_id')).toBe(true);
+    expect(hasOption(result, 'customer_id')).toBe(true);
+    expect(hasOption(result, 'email')).toBe(false);
+  });
+
+  it('20. should support schema-qualified table aliases inside subqueries', async () => {
+    const sqlText = `SELECT *
+FROM (
+  SELECT a.! FROM public.actor a
+) sub`;
+    const { state, pos } = createTestState(sqlText, highlightDialect);
+
+    const result = await getCompletionResult(state, pos, completionSource);
+    expect(hasOption(result, 'actor_id')).toBe(true);
+    expect(hasOption(result, 'last_name')).toBe(true);
+  });
+
+  it('21. should not suggest completion inside strings within a subquery', async () => {
+    const sqlText = `SELECT *
+FROM actor a
+WHERE EXISTS (
+  SELECT 'r.!'
+  FROM rental r
+)`;
+    const { state, pos } = createTestState(sqlText, highlightDialect);
+
+    const result = await getCompletionResult(state, pos, completionSource);
+    expect(result).toBeNull();
+  });
+
+  it.todo(
+    '22. should resolve derived table aliases from nested subqueries like FROM (SELECT ...) sub'
+  );
 });
