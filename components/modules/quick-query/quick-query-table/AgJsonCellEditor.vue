@@ -10,20 +10,39 @@ enum JsonEditorMode {
   table = 'table',
 }
 
+type JsonEditorValue =
+  | string
+  | number
+  | boolean
+  | null
+  | JsonEditorValue[]
+  | { [key: string]: JsonEditorValue };
+
 const props = defineProps<{
   params: ICellEditorParams;
 }>();
 
-const localValue: Ref<Record<string, any>> = ref({});
+const localValue: Ref<JsonEditorValue> = ref({});
 
 let confirmed = false;
+
+const cloneJsonValue = (value: unknown): JsonEditorValue => {
+  if (value === null || value === undefined) {
+    return null;
+  }
+
+  if (typeof value === 'string') {
+    return JSON.parse(value) as JsonEditorValue;
+  }
+
+  return JSON.parse(JSON.stringify(value)) as JsonEditorValue;
+};
 
 onMounted(() => {
   const value = props.params.value;
 
   try {
-    localValue.value =
-      typeof value === 'string' ? JSON.parse(value) : { ...value };
+    localValue.value = cloneJsonValue(value);
   } catch (e) {
     console.warn('Invalid JSON in cell, starting with empty object');
     localValue.value = {};
@@ -48,7 +67,6 @@ function getValue(): any {
     if (!localValue.value) return null;
 
     if (typeof localValue.value === 'object') {
-      console.log('1');
       return JSON.stringify(localValue.value);
     }
 
