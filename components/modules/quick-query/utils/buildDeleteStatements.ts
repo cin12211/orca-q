@@ -1,5 +1,6 @@
 import { DatabaseClientType } from '~/core/constants/database-client-type';
 import { qualifySqlTableName, quoteSqlIdentifier } from './sqlIdentifier';
+import { toSqlLiteral } from './sqlLiteral';
 
 export function buildDeleteStatements({
   schemaName,
@@ -21,7 +22,10 @@ export function buildDeleteStatements({
 
   // Build WHERE clause
   const whereClause = pKeys
-    .map(key => `${quoteSqlIdentifier(key, dbType)} = '${pKeyValue[key]}'`)
+    .map(
+      key =>
+        `${quoteSqlIdentifier(key, dbType)} = ${toSqlLiteral(pKeyValue[key])}`
+    )
     .join(' AND ');
 
   // Construct final query

@@ -1,5 +1,6 @@
 import { DatabaseClientType } from '~/core/constants/database-client-type';
 import { qualifySqlTableName, quoteSqlIdentifier } from './sqlIdentifier';
+import { toSqlLiteral } from './sqlLiteral';
 
 export const differentObject = (
   oldValue: Record<string, any>,
@@ -45,20 +46,16 @@ export function buildUpdateStatements({
   // Build SET clause
   const setClause = Object.entries(update)
     .map(([column, value]) => {
-      // Handle different value types
-      if (value === null) {
-        return `${quoteSqlIdentifier(column, dbType)} = NULL`;
-      }
-      if (typeof value === 'string') {
-        return `${quoteSqlIdentifier(column, dbType)} = '${value.replace(/'/g, "''")}'`; // Escape single quotes
-      }
-      return `${quoteSqlIdentifier(column, dbType)} = ${value}`;
+      return `${quoteSqlIdentifier(column, dbType)} = ${toSqlLiteral(value)}`;
     })
     .join(', ');
 
   // Build WHERE clause
   const whereClause = pKeys
-    .map(key => `${quoteSqlIdentifier(key, dbType)} = '${pKeyValue[key]}'`)
+    .map(
+      key =>
+        `${quoteSqlIdentifier(key, dbType)} = ${toSqlLiteral(pKeyValue[key])}`
+    )
     .join(' AND ');
 
   // Construct final query

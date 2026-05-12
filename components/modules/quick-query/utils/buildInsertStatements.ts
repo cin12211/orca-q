@@ -1,5 +1,6 @@
 import { DatabaseClientType } from '~/core/constants/database-client-type';
 import { qualifySqlTableName, quoteSqlIdentifier } from './sqlIdentifier';
+import { toSqlLiteral } from './sqlLiteral';
 
 export function buildInsertStatements({
   schemaName,
@@ -28,16 +29,7 @@ export function buildInsertStatements({
     .join(', ');
 
   const valuesClause = Object.values(insertData)
-    .map(value => {
-      // Handle different value types
-      if (value === null) {
-        return 'NULL';
-      }
-      if (typeof value === 'string') {
-        return `'${value.replace(/'/g, "''")}'`; // Escape single quotes
-      }
-      return value;
-    })
+    .map(value => toSqlLiteral(value))
     .join(', ');
 
   // Construct final query
