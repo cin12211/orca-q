@@ -5,36 +5,50 @@ import {
   normalizeFilterSearchValue,
   type FilterSchema,
 } from '../utils/buildWhereClause';
+import type { QuickQueryColumnType } from '../utils/quickQueryTable';
 
 interface UseQuickQueryContextCellFilterOptions {
   quickQueryFilterRef: Ref<InstanceType<typeof QuickQueryFilter> | undefined>;
   quickQueryTableRef: Ref<InstanceType<typeof QuickQueryTable> | undefined>;
+  columnTypes?: Ref<QuickQueryColumnType[]>;
   filters: Ref<FilterSchema[]>;
   onApplyNewFilter: () => void;
 }
 
+const isPostgresArrayColumnType = (columnType?: string) =>
+  !!columnType?.trim().endsWith('[]');
+
 export const buildFilterFromContextCell = ({
   columnName,
+  columnType,
   cellValue,
 }: {
   columnName?: string;
+  columnType?: string;
   cellValue: unknown;
 }): FilterSchema | null => {
   if (!columnName) {
     return null;
   }
 
+  const isPostgresArrayValue =
+    Array.isArray(cellValue) && isPostgresArrayColumnType(columnType);
+
   return {
     fieldName: columnName,
     isSelect: true,
     operator: OperatorSet.EQUAL,
-    search: normalizeFilterSearchValue(cellValue),
+    valueType: isPostgresArrayValue ? 'postgres-array' : undefined,
+    search: normalizeFilterSearchValue(cellValue, {
+      preserveArray: isPostgresArrayValue,
+    }),
   };
 };
 
 export const useQuickQueryContextCellFilter = ({
   quickQueryFilterRef,
   quickQueryTableRef,
+  columnTypes,
   filters,
   onApplyNewFilter,
 }: UseQuickQueryContextCellFilterOptions) => {
@@ -51,6 +65,9 @@ export const useQuickQueryContextCellFilter = ({
 
     const filter = buildFilterFromContextCell({
       columnName: cellContextMenu.colDef.field,
+      columnType: columnTypes?.value.find(
+        column => column.name === cellContextMenu.colDef.field
+      )?.type,
       cellValue: cellContextMenu.value,
     });
 

@@ -13,6 +13,7 @@ const createFilter = (
     fieldName: string;
     isSelect: boolean;
     operator: string;
+    valueType: 'postgres-array';
     search: ReturnType<typeof normalizeFilterSearchValue>;
   }> = {}
 ) => ({
@@ -75,6 +76,12 @@ describe('buildWhereClause', () => {
 
     it('stringifies arrays', () => {
       expect(normalizeFilterSearchValue(['a', 1, true])).toBe('["a",1,true]');
+    });
+
+    it('preserves arrays when requested for Postgres array filters', () => {
+      expect(
+        normalizeFilterSearchValue(['java', 'spring'], { preserveArray: true })
+      ).toEqual(['java', 'spring']);
     });
   });
 
@@ -143,6 +150,39 @@ describe('buildWhereClause', () => {
       });
 
       expect(sql).toBe('WHERE "is_active" = FALSE');
+    });
+
+    it('formats preserved Postgres array filters as array literals', () => {
+      const sql = format({
+        filters: [
+          createFilter({
+            fieldName: 'tags',
+            operator: OperatorSet.EQUAL,
+            valueType: 'postgres-array',
+            search: normalizeFilterSearchValue(['java', 'spring'], {
+              preserveArray: true,
+            }),
+          }),
+        ],
+        columns: ['tags'],
+      });
+
+      expect(sql).toBe("WHERE \"tags\" = ARRAY['java', 'spring']");
+    });
+
+    it('keeps JSON array strings as JSON string literals', () => {
+      const sql = format({
+        filters: [
+          createFilter({
+            fieldName: 'payload',
+            operator: OperatorSet.EQUAL,
+            search: normalizeFilterSearchValue(['java', 'spring']),
+          }),
+        ],
+        columns: ['payload'],
+      });
+
+      expect(sql).toBe("WHERE \"payload\" = '[\"java\",\"spring\"]'");
     });
   });
 

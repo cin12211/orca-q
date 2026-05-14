@@ -1,6 +1,6 @@
 import { DatabaseClientType } from '~/core/constants/database-client-type';
 import { qualifySqlTableName, quoteSqlIdentifier } from './sqlIdentifier';
-import { toSqlLiteral } from './sqlLiteral';
+import { getSqlDataColumnNames, toSqlLiteral } from './sqlLiteral';
 
 export interface DeleteStatementResult {
   /** The generated DELETE SQL statement. */
@@ -31,7 +31,9 @@ export function buildDeleteStatements({
   }
 
   const noPkWarning = !pKeys?.length;
-  const columnsToMatch = pKeys?.length ? pKeys : Object.keys(pKeyValue);
+  const columnsToMatch = pKeys?.length
+    ? pKeys
+    : getSqlDataColumnNames(pKeyValue);
 
   if (!columnsToMatch.length) {
     throw new Error('Invalid input: no columns to match for WHERE clause');
@@ -44,7 +46,7 @@ export function buildDeleteStatements({
       if (value === null || value === undefined) {
         return `${quoteSqlIdentifier(key, dbType)} IS NULL`;
       }
-      return `${quoteSqlIdentifier(key, dbType)} = ${toSqlLiteral(value)}`;
+      return `${quoteSqlIdentifier(key, dbType)} = ${toSqlLiteral(value, { dbType })}`;
     })
     .join(' AND ');
 

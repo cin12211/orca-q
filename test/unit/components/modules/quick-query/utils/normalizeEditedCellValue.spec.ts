@@ -36,7 +36,9 @@ describe('normalizeEditedCellValue', () => {
     const options = { fieldType: 'bool', isObjectColumn: false };
 
     expect(normalizeEditedCellValue({ ...options, value: 'true' })).toBe(true);
-    expect(normalizeEditedCellValue({ ...options, value: 'false' })).toBe(false);
+    expect(normalizeEditedCellValue({ ...options, value: 'false' })).toBe(
+      false
+    );
     expect(normalizeEditedCellValue({ ...options, value: '1' })).toBe(true);
     expect(normalizeEditedCellValue({ ...options, value: '0' })).toBe(false);
     expect(normalizeEditedCellValue({ ...options, value: 1 })).toBe(true);
@@ -47,5 +49,25 @@ describe('normalizeEditedCellValue', () => {
     // Invalid boolean-like should be returned as-is (or handled by DB)
     expect(normalizeEditedCellValue({ ...options, value: 'yes' })).toBe('yes');
     expect(normalizeEditedCellValue({ ...options, value: 2 })).toBe(2);
+  });
+
+  it('parses JSON editor values for array columns into arrays', () => {
+    expect(
+      normalizeEditedCellValue({
+        fieldType: 'text[]',
+        isObjectColumn: true,
+        value: '["java","spring"]',
+      })
+    ).toEqual(['java', 'spring']);
+  });
+
+  it('preserves array values for array columns', () => {
+    expect(
+      normalizeEditedCellValue({
+        fieldType: 'text[]',
+        isObjectColumn: true,
+        value: ['java', 'spring'],
+      })
+    ).toEqual(['java', 'spring']);
   });
 });

@@ -1,7 +1,10 @@
 import { ref } from 'vue';
 import { toast } from 'vue-sonner';
 import { getConnectionParams } from '@/core/helpers/connection-helper';
-import { HASH_INDEX_ID } from '~/components/base/dynamic-table/constants';
+import {
+  HASH_INDEX_ID,
+  NEW_ROW_FLAG_ID,
+} from '~/components/base/dynamic-table/constants';
 import { cellValueFormatter } from '~/components/base/dynamic-table/utils';
 import {
   buildDeleteStatements,
@@ -360,12 +363,11 @@ export function useQuickQueryMutation(options: UseQuickQueryMutationOptions) {
     gridApi.forEachNode(() => totalRowsInGrid++);
 
     const addIndex = totalRowsInGrid; // Add the new row at the end of the current grid view
-    const rowId = Date.now() + Math.floor(Math.random() * 1000); // Unique stable rowId for new rows
+    const rowId = addIndex;
 
     const newNode = {
       [HASH_INDEX_ID]: addIndex + 1, // Assign an artificial row number for display
-      _originalIndex: rowId,
-      isNewRow: true,
+      [NEW_ROW_FLAG_ID]: true,
       ...Object.fromEntries(columnNames.value.map(name => [name, undefined])), // Initialize all columns with undefined
     };
 
@@ -426,13 +428,11 @@ export function useQuickQueryMutation(options: UseQuickQueryMutationOptions) {
 
     const mappedRows = rows
       .map(row => {
-        const index = row?._originalIndex;
-
-        if (row.isNewRow) {
+        if (row[NEW_ROW_FLAG_ID]) {
           return row;
         }
 
-        return data.value?.[index];
+        return row;
       })
       .filter(Boolean) as Record<string, any>[];
 

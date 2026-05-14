@@ -1,6 +1,6 @@
 import { DatabaseClientType } from '~/core/constants/database-client-type';
 import { qualifySqlTableName, quoteSqlIdentifier } from './sqlIdentifier';
-import { toSqlLiteral } from './sqlLiteral';
+import { getSqlDataColumnNames, toSqlLiteral } from './sqlLiteral';
 
 export const differentObject = (
   oldValue: Record<string, unknown>,
@@ -52,7 +52,9 @@ export function buildUpdateStatements({
   }
 
   const noPkWarning = !pKeys?.length;
-  const columnsToMatch = pKeys?.length ? pKeys : Object.keys(pKeyValue);
+  const columnsToMatch = pKeys?.length
+    ? pKeys
+    : getSqlDataColumnNames(pKeyValue);
 
   if (!columnsToMatch.length) {
     throw new Error('Invalid input: no columns to match for WHERE clause');
@@ -61,7 +63,7 @@ export function buildUpdateStatements({
   // Build SET clause
   const setClause = Object.entries(update)
     .map(([column, value]) => {
-      return `${quoteSqlIdentifier(column, dbType)} = ${toSqlLiteral(value)}`;
+      return `${quoteSqlIdentifier(column, dbType)} = ${toSqlLiteral(value, { dbType })}`;
     })
     .join(', ');
 
@@ -72,7 +74,7 @@ export function buildUpdateStatements({
       if (value === null || value === undefined) {
         return `${quoteSqlIdentifier(key, dbType)} IS NULL`;
       }
-      return `${quoteSqlIdentifier(key, dbType)} = ${toSqlLiteral(value)}`;
+      return `${quoteSqlIdentifier(key, dbType)} = ${toSqlLiteral(value, { dbType })}`;
     })
     .join(' AND ');
 

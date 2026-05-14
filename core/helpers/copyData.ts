@@ -1,6 +1,6 @@
 import { saveAs } from 'file-saver';
 import Papa from 'papaparse';
-import { HASH_INDEX_ID } from '~/components/base/dynamic-table/constants';
+import { DYNAMIC_TABLE_ROW_METADATA_IDS } from '~/components/base/dynamic-table/constants';
 
 /**
  * NEW TYPE DEFINITION: Define the accepted formats for better type safety.
@@ -26,7 +26,7 @@ export const copyToClipboard = async (text: string) => {
 };
 
 /**
- * Removes internal AG-Grid properties (like HASH_INDEX_ID) from rows.
+ * Removes internal AG-Grid properties from rows.
  * Always creates a shallow copy to avoid mutating the original row objects.
  * When `withStringifyNested` is true, nested objects/arrays are JSON-serialised
  * to plain strings — intended for CSV/TSV output only, NOT for SQL export
@@ -55,7 +55,9 @@ export const cleanRows = (
       });
     }
 
-    delete formattedRow[HASH_INDEX_ID];
+    DYNAMIC_TABLE_ROW_METADATA_IDS.forEach(key => {
+      delete formattedRow[key];
+    });
 
     return formattedRow;
   });
@@ -151,7 +153,7 @@ export const copyRowsData = (
 
   if (format === 'sql') {
     // Pass raw rows so formatSqlValue can preserve correct SQL types.
-    // Only strip the internal HASH_INDEX_ID key, no other transformation.
+    // Only strip internal grid metadata keys, no other transformation.
     const rawCleaned = cleanRows(rows);
     const sql = generateSqlInsert(rawCleaned, tableName, 'Copied', schemaName);
     copyToClipboard(sql);

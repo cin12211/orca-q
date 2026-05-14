@@ -1,6 +1,9 @@
 import { ref } from 'vue';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { HASH_INDEX_ID } from '~/components/base/dynamic-table/constants';
+import {
+  HASH_INDEX_ID,
+  NEW_ROW_FLAG_ID,
+} from '~/components/base/dynamic-table/constants';
 import { useQuickQueryMutation } from '~/components/modules/quick-query/hooks/useQuickQueryMutation';
 
 const { mockToast, mockFetch, mockGetConnectionParams } = vi.hoisted(() => ({
@@ -110,7 +113,7 @@ describe('useQuickQueryMutation', () => {
           [HASH_INDEX_ID]: 2,
           id: undefined,
           name: undefined,
-          isNewRow: true,
+          [NEW_ROW_FLAG_ID]: true,
         }),
       ],
       addIndex: 1,

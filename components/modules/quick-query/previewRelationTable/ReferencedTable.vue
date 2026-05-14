@@ -185,6 +185,7 @@ const { quickQueryTabView, openedQuickQueryTab } = useQuickQueryTabs();
 const { onAddFilterByContextCell } = useQuickQueryContextCellFilter({
   quickQueryFilterRef,
   quickQueryTableRef,
+  columnTypes,
   filters,
   onApplyNewFilter,
 });

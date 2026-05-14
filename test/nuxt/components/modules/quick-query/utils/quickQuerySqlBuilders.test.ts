@@ -1,11 +1,16 @@
 import { describe, expect, it } from 'vitest';
 import {
+  HASH_INDEX_ID,
+  NEW_ROW_FLAG_ID,
+} from '~/components/base/dynamic-table/constants';
+import {
   buildDeleteStatements,
   buildInsertStatements,
   buildUpdateStatements,
   normalizeEditedCellValue,
   toSqlLiteral,
 } from '~/components/modules/quick-query/utils';
+import { DatabaseClientType } from '~/core/constants/database-client-type';
 
 describe('QuickQuery value normalization and SQL builders', () => {
   describe('normalizeEditedCellValue', () => {
@@ -76,6 +81,9 @@ describe('QuickQuery value normalization and SQL builders', () => {
       expect(toSqlLiteral(42)).toBe('42');
       expect(toSqlLiteral("O'Hara")).toBe("'O''Hara'");
       expect(toSqlLiteral(['a', 'b'])).toBe('\'["a","b"]\'');
+      expect(
+        toSqlLiteral(['a', 'b'], { dbType: DatabaseClientType.POSTGRES })
+      ).toBe("ARRAY['a', 'b']");
       expect(toSqlLiteral({ role: "O'Hara" })).toBe(
         `'${JSON.stringify({ role: "O'Hara" }).replace(/'/g, "''")}'`
       );
@@ -135,6 +143,26 @@ describe('QuickQuery value normalization and SQL builders', () => {
         `UPDATE "public"."users" SET "meta" = '["a","b"]', "active" = TRUE, "note" = 'O''Hara' WHERE "id" = 7 AND "tenant" = 'team''O'`
       );
     });
+
+    it('skips quick-query metadata and formats array values when matching without PK', () => {
+      expect(
+        buildUpdateStatements({
+          schemaName: 'public',
+          tableName: 'sample_data_types',
+          pKeys: [],
+          pKeyValue: {
+            [HASH_INDEX_ID]: 5,
+            [NEW_ROW_FLAG_ID]: true,
+            id: '32a20c0a-6062-400d-9f83-f94494a2704b',
+            tags: ['java', 'spring'],
+          },
+          update: { tags: ['go', 'fiber'] },
+          dbType: DatabaseClientType.POSTGRES,
+        }).sql
+      ).toBe(
+        `UPDATE "public"."sample_data_types" SET "tags" = ARRAY['go', 'fiber'] WHERE "id" = '32a20c0a-6062-400d-9f83-f94494a2704b' AND "tags" = ARRAY['java', 'spring']`
+      );
+    });
   });
 
   describe('buildDeleteStatements', () => {
@@ -148,6 +176,25 @@ describe('QuickQuery value normalization and SQL builders', () => {
         }).sql
       ).toBe(
         `DELETE FROM "public"."users" WHERE "id" = 7 AND "slug" = 'ada''s-row'`
+      );
+    });
+
+    it('skips quick-query metadata and formats array values when matching without PK', () => {
+      expect(
+        buildDeleteStatements({
+          schemaName: 'public',
+          tableName: 'sample_data_types',
+          pKeys: [],
+          pKeyValue: {
+            [HASH_INDEX_ID]: 5,
+            [NEW_ROW_FLAG_ID]: true,
+            id: '32a20c0a-6062-400d-9f83-f94494a2704b',
+            tags: ['java', 'spring'],
+          },
+          dbType: DatabaseClientType.POSTGRES,
+        }).sql
+      ).toBe(
+        `DELETE FROM "public"."sample_data_types" WHERE "id" = '32a20c0a-6062-400d-9f83-f94494a2704b' AND "tags" = ARRAY['java', 'spring']`
       );
     });
   });

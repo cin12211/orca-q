@@ -12,24 +12,56 @@ import { DatabaseClientType } from '~/core/constants/database-client-type';
 /*                                   Types                                    */
 /* -------------------------------------------------------------------------- */
 
-export type FilterSearchValue = string | number | boolean | null;
+export type FilterSearchPrimitive = string | number | boolean | null;
+export type FilterSearchValue =
+  | FilterSearchPrimitive
+  | FilterSearchPrimitive[];
+export type FilterValueType = 'postgres-array';
 
-export const filterSchema = z.object({
-  isSelect: z.boolean().optional(),
-  fieldName: z.string(),
-  operator: z.string().optional(),
-  search: z
-    .preprocess(
-      value => normalizeFilterSearchValue(value),
-      z.union([z.string(), z.number(), z.boolean(), z.null()])
-    )
-    .optional(),
-});
+const filterSearchPrimitiveSchema = z.union([
+  z.string(),
+  z.number(),
+  z.boolean(),
+  z.null(),
+]);
+
+const filterSearchValueSchema = z.union([
+  filterSearchPrimitiveSchema,
+  z.array(filterSearchPrimitiveSchema),
+]);
+
+export const filterSchema = z.preprocess(
+  value => {
+    if (!value || typeof value !== 'object' || Array.isArray(value)) {
+      return value;
+    }
+
+    const filter = value as {
+      search?: unknown;
+      valueType?: FilterValueType;
+    };
+
+    return {
+      ...filter,
+      search: normalizeFilterSearchValue(filter.search, {
+        preserveArray: filter.valueType === 'postgres-array',
+      }),
+    };
+  },
+  z.object({
+    isSelect: z.boolean().optional(),
+    fieldName: z.string(),
+    operator: z.string().optional(),
+    valueType: z.enum(['postgres-array']).optional(),
+    search: filterSearchValueSchema.optional(),
+  })
+);
 
 export type FilterSchema = z.infer<typeof filterSchema>;
 
 export const normalizeFilterSearchValue = (
-  value: unknown
+  value: unknown,
+  options: { preserveArray?: boolean } = {}
 ): FilterSearchValue | undefined => {
   if (value === undefined) {
     return undefined;
@@ -48,11 +80,30 @@ export const normalizeFilterSearchValue = (
     return value.toString();
   }
 
+  if (Array.isArray(value) && options.preserveArray) {
+    return value.map(item => {
+      if (
+        item === null ||
+        typeof item === 'string' ||
+        typeof item === 'number' ||
+        typeof item === 'boolean'
+      ) {
+        return item;
+      }
+
+      if (typeof item === 'bigint') {
+        return item.toString();
+      }
+
+      return JSON.stringify(item);
+    });
+  }
+
   return JSON.stringify(value);
 };
 
 export interface WhereResult<
-  P extends unknown[] = (string | number | boolean | null)[],
+  P extends unknown[] = FilterSearchValue[],
 > {
   where: string;
   params: P;
@@ -192,7 +243,7 @@ function buildAnyFieldClause({
   const handler = handlerMap[op];
 
   const ors: string[] = [];
-  const params: (string | number | boolean | null)[] = [];
+  const params: FilterSearchValue[] = [];
 
   columns.forEach(colName => {
     const col = wrapCol(colName);
@@ -233,7 +284,7 @@ export function buildWhereClause<
   composeWith?: ComposeOperator;
 }): WhereResult {
   const pieces: string[] = [];
-  const params: (string | number | boolean | null)[] = [];
+  const params: FilterSearchValue[] = [];
 
   let placeholderCount = 1;
 
@@ -340,8 +391,22 @@ export function formatWhereClause<F extends readonly FilterSchema[]>({
   if (!where) return '';
 
   // simple literal‑encoder – good enough for logs
-  const lit = (v: string | number | boolean | null) =>
-    v === null
+  const lit = (v: FilterSearchValue): string => {
+    if (Array.isArray(v)) {
+      const jsonLiteral = `'${JSON.stringify(v).replace(/'/g, "''")}'`;
+
+      if (db !== DatabaseClientType.POSTGRES) {
+        return jsonLiteral;
+      }
+
+      if (!v.length) {
+        return "'{}'";
+      }
+
+      return `ARRAY[${v.map(item => lit(item)).join(', ')}]`;
+    }
+
+    return v === null
       ? 'NULL'
       : typeof v === 'boolean'
         ? v
@@ -350,6 +415,7 @@ export function formatWhereClause<F extends readonly FilterSchema[]>({
         : typeof v === 'number'
           ? String(v)
           : `'${String(v).replace(/'/g, "''")}'`;
+  };
 
   /** Postgres: $1, $2 … ・ MySQL: ? */
   if (db === DatabaseClientType.POSTGRES) {

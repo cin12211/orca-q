@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
+import {
+  HASH_INDEX_ID,
+  NEW_ROW_FLAG_ID,
+} from '~/components/base/dynamic-table/constants';
 import { buildUpdateStatements } from '~/components/modules/quick-query/utils/buildUpdateStatements';
+import { DatabaseClientType } from '~/core/constants/database-client-type';
 
 describe('buildUpdateStatements', () => {
   it('builds a simple update statement with PK', () => {
@@ -40,6 +45,27 @@ describe('buildUpdateStatements', () => {
     });
     expect(result.sql).toBe(
       'UPDATE "public"."logs" SET "level" = \'debug\' WHERE "level" = \'info\' AND "message" IS NULL'
+    );
+    expect(result.noPkWarning).toBe(true);
+  });
+
+  it('excludes quick-query row metadata and formats Postgres arrays without PK', () => {
+    const result = buildUpdateStatements({
+      schemaName: 'public',
+      tableName: 'sample_data_types',
+      pKeys: [],
+      pKeyValue: {
+        [HASH_INDEX_ID]: 5,
+        [NEW_ROW_FLAG_ID]: true,
+        id: '32a20c0a-6062-400d-9f83-f94494a2704b',
+        tags: ['java', 'spring'],
+      },
+      update: { tags: ['go', 'fiber'] },
+      dbType: DatabaseClientType.POSTGRES,
+    });
+
+    expect(result.sql).toBe(
+      `UPDATE "public"."sample_data_types" SET "tags" = ARRAY['go', 'fiber'] WHERE "id" = '32a20c0a-6062-400d-9f83-f94494a2704b' AND "tags" = ARRAY['java', 'spring']`
     );
     expect(result.noPkWarning).toBe(true);
   });

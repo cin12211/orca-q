@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
+import {
+  HASH_INDEX_ID,
+  NEW_ROW_FLAG_ID,
+} from '~/components/base/dynamic-table/constants';
 import { buildDeleteStatements } from '~/components/modules/quick-query/utils/buildDeleteStatements';
+import { DatabaseClientType } from '~/core/constants/database-client-type';
 
 describe('buildDeleteStatements', () => {
   it('builds a simple delete statement with PK', () => {
@@ -48,6 +53,26 @@ describe('buildDeleteStatements', () => {
     });
     expect(result.sql).toBe(
       'DELETE FROM "public"."logs" WHERE "level" = \'info\' AND "message" IS NULL'
+    );
+    expect(result.noPkWarning).toBe(true);
+  });
+
+  it('excludes quick-query row metadata when matching all columns without PK', () => {
+    const result = buildDeleteStatements({
+      schemaName: 'public',
+      tableName: 'sample_data_types',
+      pKeys: [],
+      pKeyValue: {
+        [HASH_INDEX_ID]: 5,
+        [NEW_ROW_FLAG_ID]: true,
+        id: '32a20c0a-6062-400d-9f83-f94494a2704b',
+        tags: ['java', 'spring'],
+      },
+      dbType: DatabaseClientType.POSTGRES,
+    });
+
+    expect(result.sql).toBe(
+      `DELETE FROM "public"."sample_data_types" WHERE "id" = '32a20c0a-6062-400d-9f83-f94494a2704b' AND "tags" = ARRAY['java', 'spring']`
     );
     expect(result.noPkWarning).toBe(true);
   });
