@@ -124,13 +124,13 @@ describe('QuickQuery value normalization and SQL builders', () => {
           schemaName: 'public',
           tableName: 'users',
           pKeys: ['id', 'tenant'],
-          pKeyValue: { id: 7, tenant: "team'O" } as any,
+          pKeyValue: { id: 7, tenant: "team'O" },
           update: {
             meta: '["a","b"]',
             active: true,
             note: "O'Hara",
           },
-        })
+        }).sql
       ).toBe(
         `UPDATE "public"."users" SET "meta" = '["a","b"]', "active" = TRUE, "note" = 'O''Hara' WHERE "id" = 7 AND "tenant" = 'team''O'`
       );
@@ -144,8 +144,8 @@ describe('QuickQuery value normalization and SQL builders', () => {
           schemaName: 'public',
           tableName: 'users',
           pKeys: ['id', 'slug'],
-          pKeyValue: { id: 7, slug: "ada's-row" } as any,
-        })
+          pKeyValue: { id: 7, slug: "ada's-row" },
+        }).sql
       ).toBe(
         `DELETE FROM "public"."users" WHERE "id" = 7 AND "slug" = 'ada''s-row'`
       );

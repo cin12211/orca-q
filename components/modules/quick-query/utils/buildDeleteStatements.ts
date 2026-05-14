@@ -2,6 +2,17 @@ import { DatabaseClientType } from '~/core/constants/database-client-type';
 import { qualifySqlTableName, quoteSqlIdentifier } from './sqlIdentifier';
 import { toSqlLiteral } from './sqlLiteral';
 
+export interface DeleteStatementResult {
+  /** The generated DELETE SQL statement. */
+  sql: string;
+  /**
+   * True when the table has no primary key — the WHERE clause uses all columns,
+   * which may match multiple rows. Callers must show a danger confirmation before
+   * executing.
+   */
+  noPkWarning: boolean;
+}
+
 export function buildDeleteStatements({
   schemaName,
   tableName,
@@ -12,24 +23,32 @@ export function buildDeleteStatements({
   schemaName: string;
   tableName: string;
   pKeys: string[];
-  pKeyValue: Record<string, string>;
+  pKeyValue: Record<string, unknown>;
   dbType?: DatabaseClientType | string;
-}): string {
-  // Validate inputs
-  if (!tableName || !pKeys?.length) {
-    throw new Error('Invalid input: tableName and pKeys are required');
+}): DeleteStatementResult {
+  if (!tableName) {
+    throw new Error('Invalid input: tableName is required');
   }
 
-  // Build WHERE clause
-  const whereClause = pKeys
-    .map(
-      key =>
-        `${quoteSqlIdentifier(key, dbType)} = ${toSqlLiteral(pKeyValue[key])}`
-    )
+  const noPkWarning = !pKeys?.length;
+  const columnsToMatch = pKeys?.length ? pKeys : Object.keys(pKeyValue);
+
+  if (!columnsToMatch.length) {
+    throw new Error('Invalid input: no columns to match for WHERE clause');
+  }
+
+  // Build WHERE clause — uses all columns when no PK to maximally scope the match
+  const whereClause = columnsToMatch
+    .map(key => {
+      const value = pKeyValue[key];
+      if (value === null || value === undefined) {
+        return `${quoteSqlIdentifier(key, dbType)} IS NULL`;
+      }
+      return `${quoteSqlIdentifier(key, dbType)} = ${toSqlLiteral(value)}`;
+    })
     .join(' AND ');
 
-  // Construct final query
-  const query = `DELETE FROM ${qualifySqlTableName({ schemaName, tableName, dbType })} WHERE ${whereClause}`;
+  const sql = `DELETE FROM ${qualifySqlTableName({ schemaName, tableName, dbType })} WHERE ${whereClause}`;
 
-  return query;
+  return { sql, noPkWarning };
 }

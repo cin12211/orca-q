@@ -20,6 +20,7 @@ As a database user, I want quick query updates and raw SQL execution to behave c
 1. **Given** a user edits a function or procedure through quick query, **When** the system generates the update statement, **Then** the update flow completes without rejecting a valid change that would execute successfully in the raw SQL editor.
 2. **Given** a raw SQL statement contains placeholder-like text inside comments, **When** the user runs the statement, **Then** the parser ignores comment-only placeholders and executes the valid SQL body.
 3. **Given** a user is about to save an update from quick query, **When** the user opens the change preview, **Then** the system shows the exact statement that will be submitted and leaves the underlying record unchanged until the user confirms the save.
+4. **Given** a table has no primary key, **When** the user attempts to update or delete a row, **Then** the system MUST display a high-visibility warning (Caution), explain that all fields will be used in the WHERE clause due to the missing primary key, show the generated SQL statement, and require explicit confirmation before proceeding.
 
 ---
 
@@ -61,6 +62,7 @@ As a database user, I want consistent column type labels, usable schema loading 
 - If several `new-file` names already exist, the next created raw SQL file must skip collisions and use the next available sequential name.
 - If schema loading exceeds typical wait time, the interface must continue to show progress or a waiting state rather than appearing frozen.
 - If a database family does not support a requested null-order behavior, the interface must preserve the user preference while clearly showing when the current result cannot apply it.
+- **CRITICAL DANGER**: If a table lacks a primary key, any update or delete operation is inherently dangerous as it may unintentionally affect multiple rows with identical values. The system MUST NOT execute these operations without a high-visibility warning and a full SQL preview for user confirmation.
 
 ## Requirements _(mandatory)_
 
@@ -79,6 +81,8 @@ As a database user, I want consistent column type labels, usable schema loading 
 - **FR-011**: The system MUST allow users to define a global null-ordering preference with the choices unset, nulls first, and nulls last.
 - **FR-012**: The system MUST expose the current null-ordering preference in both global settings and the quick query bar.
 - **FR-013**: The system MUST preserve existing save, query execution, and tab content until the user explicitly confirms an action that changes them.
+- **FR-014**: The system MUST detect when a table lacks a primary key during update or delete operations and fallback to using all available fields in the `WHERE` clause.
+- **FR-015**: In cases where no primary key exists, the system MUST show a "CRITICALLY DANGEROUS" warning modal that includes the exact generated SQL statement and requires explicit user confirmation.
 
 ### Key Entities _(include if feature involves data)_
 

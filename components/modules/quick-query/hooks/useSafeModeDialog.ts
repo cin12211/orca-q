@@ -7,15 +7,18 @@ export function useSafeModeDialog() {
   const safeModeDialogOpen = ref(false);
   const safeModeDialogSql = ref('');
   const safeModeDialogType = ref<'save' | 'delete'>('save');
+  const isDangerous = ref(false);
   let safeModeResolve: ((confirmed: boolean) => void) | null = null;
 
   const onRequestSafeModeConfirm = (
     sql: string,
-    type: 'save' | 'delete'
+    type: 'save' | 'delete',
+    dangerous = false
   ): Promise<boolean> => {
     return new Promise(resolve => {
       safeModeDialogSql.value = sql;
       safeModeDialogType.value = type;
+      isDangerous.value = dangerous;
       safeModeDialogOpen.value = true;
       safeModeResolve = resolve;
     });
@@ -41,6 +44,7 @@ export function useSafeModeDialog() {
     safeModeDialogOpen,
     safeModeDialogSql,
     safeModeDialogType,
+    isDangerous,
     onRequestSafeModeConfirm,
     onSafeModeConfirm,
     onSafeModeCancel,

@@ -495,18 +495,22 @@ export class OracleTableAdapter
   private async executeStatements(
     statements: string[]
   ): Promise<BulkUpdateResponse> {
+    const BULK_CHUNK_SIZE = 500;
     const startTime = performance.now();
 
     try {
       const data = [] as NonNullable<BulkUpdateResponse['data']>;
 
-      for (const statement of statements) {
-        const result = await this.adapter.rawOut(statement);
-        data.push({
-          query: statement,
-          affectedRows: result.rowCount || 0,
-          results: result.rows as Record<string, unknown>[],
-        });
+      for (let i = 0; i < statements.length; i += BULK_CHUNK_SIZE) {
+        const chunk = statements.slice(i, i + BULK_CHUNK_SIZE);
+        for (const statement of chunk) {
+          const result = await this.adapter.rawOut(statement);
+          data.push({
+            query: statement,
+            affectedRows: result.rowCount || 0,
+            results: result.rows as Record<string, unknown>[],
+          });
+        }
       }
 
       return {

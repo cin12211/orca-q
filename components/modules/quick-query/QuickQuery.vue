@@ -67,6 +67,7 @@ const {
   safeModeDialogOpen,
   safeModeDialogSql,
   safeModeDialogType,
+  isDangerous,
 } = useSafeModeDialog();
 
 const { quickQueryFilterRef, quickQueryTableRef, selectedRows, focusedCell } =
@@ -381,6 +382,7 @@ const onBackPreviousBreadcrumbByIndex = (index: number) => {
     v-model:open="safeModeDialogOpen"
     :sql="safeModeDialogSql"
     :type="safeModeDialogType"
+    :dangerous="isDangerous"
     @confirm="onSafeModeConfirm"
     @cancel="onSafeModeCancel"
   />

@@ -16,6 +16,7 @@ const props = defineProps<{
   sql: string;
   type: 'save' | 'delete';
   loading?: boolean;
+  dangerous?: boolean;
 }>();
 
 const emit = defineEmits<{
@@ -25,12 +26,20 @@ const emit = defineEmits<{
 }>();
 
 const title = computed(() => {
-  return props.type === 'save'
-    ? 'Confirm Save Operation'
-    : 'Confirm Delete Operation';
+  if (props.dangerous) {
+    return props.type === 'save'
+      ? 'High-Risk: Confirm Save'
+      : 'High-Risk: Confirm Delete';
+  }
+
+  return props.type === 'save' ? 'Confirm Save' : 'Confirm Delete';
 });
 
 const description = computed(() => {
+  if (props.dangerous) {
+    return 'Caution: No primary key detected. To identify the record, this operation will match all columns in the WHERE clause. This carries a risk of affecting multiple rows if they share identical data. Please verify the SQL below carefully before proceeding:';
+  }
+
   return props.type === 'save'
     ? 'The following SQL will be executed to save your changes:'
     : 'The following SQL will be executed to delete the selected rows:';
@@ -56,10 +65,20 @@ const onCancel = () => {
     <AlertDialogContent class="border w-[55vw]! max-w-[55vw]!">
       <LoadingOverlay :visible="!!loading" />
       <AlertDialogHeader>
-        <AlertDialogTitle class="flex items-center text-base font-medium">
+        <AlertDialogTitle
+          class="flex items-center gap-2 text-base font-medium"
+          :class="{ 'text-destructive': dangerous }"
+        >
+          <Icon
+            v-if="dangerous"
+            name="lucide:alert-triangle"
+            class="size-5 text-destructive"
+          />
           {{ title }}
         </AlertDialogTitle>
-        <AlertDialogDescription>
+        <AlertDialogDescription
+          :class="{ 'text-destructive font-normal': dangerous }"
+        >
           {{ description }}
         </AlertDialogDescription>
       </AlertDialogHeader>

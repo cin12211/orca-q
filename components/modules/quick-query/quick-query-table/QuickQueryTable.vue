@@ -108,6 +108,7 @@ const rowData = computed<RowData[]>(() =>
   (props.data ?? []).map((e, index) => {
     return {
       [HASH_INDEX_ID]: index + props.offset + 1,
+      _originalIndex: index,
       ...e,
     };
   })
@@ -133,18 +134,17 @@ const isJSONColumn = (fieldId: string) => {
 
 /* Handle cell value changed --------------------------------------- */
 const onCellValueChanged = (event: CellValueChangedEvent) => {
-  const { colDef, newValue, rowIndex } = event;
-  const rowId = Number(rowIndex); // Use row ID or index
+  const { colDef, newValue, data } = event;
+  const rowId = data._originalIndex;
   const fieldId = colDef.field;
 
   const isObjectColumn = isJSONColumn(fieldId ?? '');
 
   const fieldType = mapColumnDef.value.get(fieldId ?? '')?.type || '';
 
-  const isBoolenColumn = fieldType === 'bool';
-
-  if (rowId !== null && fieldId) {
-    const oldFieldValue = props?.data?.[rowId]?.[fieldId];
+  if (rowId !== undefined && rowId !== null && fieldId) {
+    const isNewRow = event.node.data.isNewRow;
+    const oldFieldValue = isNewRow ? undefined : props?.data?.[rowId]?.[fieldId];
 
     let haveDifferent = oldFieldValue !== newValue;
 
@@ -169,6 +169,7 @@ const onCellValueChanged = (event: CellValueChangedEvent) => {
         changedData: {
           [fieldId]: formatNewValue,
         },
+        isNewRow,
       });
       return;
     }

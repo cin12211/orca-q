@@ -41,6 +41,7 @@ const createGridApi = () => {
     forEachNode: vi.fn((callback: () => void) => {
       callback();
     }),
+    getDisplayedRowAtIndex: vi.fn(() => selectedRow),
     getRowNode: vi.fn(() => selectedRow),
     setFocusedCell: vi.fn(),
   };
@@ -104,15 +105,21 @@ describe('useQuickQueryMutation', () => {
     mutation.onAddEmptyRow();
 
     expect(gridApi.applyTransaction).toHaveBeenCalledWith({
-      add: [{ [HASH_INDEX_ID]: 2, id: undefined, name: undefined }],
+      add: [
+        expect.objectContaining({
+          [HASH_INDEX_ID]: 2,
+          id: undefined,
+          name: undefined,
+          isNewRow: true,
+        }),
+      ],
       addIndex: 1,
     });
     expect(quickQueryTableRef.value.editedCells).toEqual([
-      {
-        rowId: 1,
+      expect.objectContaining({
         changedData: {},
         isNewRow: true,
-      },
+      }),
     ]);
     expect(mutation.pendingChangesCount.value).toBe(1);
     expect(mutation.hasEditedRows.value).toBe(true);
@@ -172,7 +179,7 @@ describe('useQuickQueryMutation', () => {
     expect(mockToast.info).toHaveBeenCalledWith('Changes discarded.');
   });
 
-  it('builds update SQL that preserves booleans, escaped strings and json arrays on save', async () => {
+  it('sends raw update mutation that preserves booleans, escaped strings and json arrays on save', async () => {
     const { mutation, quickQueryTableRef, refreshCount, refreshTableData } =
       createMutation();
 
@@ -192,8 +199,14 @@ describe('useQuickQueryMutation', () => {
     expect(mockFetch).toHaveBeenCalledWith('/api/tables/bulk-update', {
       method: 'POST',
       body: {
-        sqlUpdateStatements: [
-          `UPDATE "public"."users" SET "active" = FALSE, "profile" = '["a","b","c"]', "name" = 'O''Hara' WHERE "id" = 1`,
+        tableName: 'users',
+        schemaName: 'public',
+        pKeys: ['id'],
+        updates: [
+          {
+            pKeyValue: { id: 1, name: 'Alice' },
+            update: { active: false, profile: '["a","b","c"]', name: "O'Hara" },
+          },
         ],
         connection: 'params',
       },
@@ -205,7 +218,7 @@ describe('useQuickQueryMutation', () => {
     expect(mockToast.success).toHaveBeenCalledWith('Data saved successfully!');
   });
 
-  it('builds insert SQL that preserves typed values for newly added rows on save', async () => {
+  it('sends raw insertItems to bulk-insert endpoint for newly added rows on save', async () => {
     const { mutation, quickQueryTableRef } = createMutation();
 
     quickQueryTableRef.value.editedCells = [
@@ -223,11 +236,13 @@ describe('useQuickQueryMutation', () => {
 
     await mutation.onSaveData();
 
-    expect(mockFetch).toHaveBeenCalledWith('/api/tables/bulk-update', {
+    expect(mockFetch).toHaveBeenCalledWith('/api/tables/bulk-insert', {
       method: 'POST',
       body: {
-        sqlUpdateStatements: [
-          `INSERT INTO "public"."users" ("name", "active", "profile", "note") VALUES ('O''Hara', TRUE, '["x","y"]', NULL)`,
+        tableName: 'users',
+        schemaName: 'public',
+        insertItems: [
+          { name: "O'Hara", active: true, profile: '["x","y"]', note: null },
         ],
         connection: 'params',
       },
@@ -235,7 +250,24 @@ describe('useQuickQueryMutation', () => {
     });
   });
 
-  it('builds delete SQL that safely escapes key values', async () => {
+  it('calls both bulk-update and bulk-insert in parallel when mixed changes exist on save', async () => {
+    const { mutation, quickQueryTableRef } = createMutation({
+      data: [{ id: 1, name: 'Alice' }],
+    });
+
+    quickQueryTableRef.value.editedCells = [
+      { rowId: 0, changedData: { name: 'Updated' } },
+      { rowId: 99, isNewRow: true, changedData: { name: 'New', active: true } },
+    ];
+
+    await mutation.onSaveData();
+
+    const calls = mockFetch.mock.calls.map((c: any[]) => c[0]);
+    expect(calls).toContain('/api/tables/bulk-update');
+    expect(calls).toContain('/api/tables/bulk-insert');
+  });
+
+  it('sends raw pKeyValues for deletion without building SQL at FE', async () => {
     const { mutation } = createMutation({
       primaryKeys: ['name'],
       data: [{ id: 7, name: "ada's-row" }],
@@ -252,9 +284,10 @@ describe('useQuickQueryMutation', () => {
     expect(mockFetch).toHaveBeenCalledWith('/api/tables/bulk-delete', {
       method: 'POST',
       body: {
-        sqlDeleteStatements: [
-          `DELETE FROM "public"."users" WHERE "name" = 'ada''s-row'`,
-        ],
+        tableName: 'users',
+        schemaName: 'public',
+        pKeys: ['name'],
+        pKeyValues: [{ name: "ada's-row" }],
         connection: 'params',
       },
       onResponseError: expect.any(Function),
@@ -262,5 +295,70 @@ describe('useQuickQueryMutation', () => {
     expect(mockToast.success).toHaveBeenCalledWith(
       'Rows deleted successfully!'
     );
+  });
+
+  it('sends full pKeyValues array to BE even when count exceeds 500', async () => {
+    const data = Array.from({ length: 600 }, (_, i) => ({
+      id: i + 1,
+      name: `row${i}`,
+    }));
+    const { mutation } = createMutation({
+      primaryKeys: ['id'],
+      data,
+    });
+
+    const selectedRows = data.map(r => ({ id: r.id }));
+    mutation.onSelectedRowsChange(selectedRows);
+
+    await mutation.onDeleteRows();
+
+    expect(mockFetch).toHaveBeenCalledWith('/api/tables/bulk-delete', {
+      method: 'POST',
+      body: {
+        tableName: 'users',
+        schemaName: 'public',
+        pKeys: ['id'],
+        pKeyValues: selectedRows,
+        connection: 'params',
+      },
+      onResponseError: expect.any(Function),
+    });
+  });
+
+  it('sends full updates array to bulk-update BE even when count exceeds 500', async () => {
+    const data = Array.from({ length: 600 }, (_, i) => ({
+      id: i + 1,
+      name: `row${i}`,
+    }));
+    const { mutation, quickQueryTableRef } = createMutation({
+      primaryKeys: ['id'],
+      data,
+    });
+
+    quickQueryTableRef.value.editedCells = data.map((row, i) => ({
+      rowId: i,
+      changedData: { name: `updated${i}` },
+    }));
+
+    await mutation.onSaveData();
+
+    expect(mockFetch).toHaveBeenCalledWith('/api/tables/bulk-update', {
+      method: 'POST',
+      body: expect.objectContaining({
+        tableName: 'users',
+        schemaName: 'public',
+        pKeys: ['id'],
+        updates: expect.arrayContaining([
+          expect.objectContaining({
+            pKeyValue: expect.any(Object),
+            update: expect.any(Object),
+          }),
+        ]),
+      }),
+      onResponseError: expect.any(Function),
+    });
+
+    const callBody = mockFetch.mock.calls[0][1].body;
+    expect(callBody.updates).toHaveLength(600);
   });
 });

@@ -19,7 +19,7 @@ export function normalizeSupportedDatabaseType(
 }
 
 export interface BaseDatabaseAdapterParams {
-  dbConnectionString: string;
+  dbConnectionString?: string;
   host?: string;
   port?: string;
   username?: string;

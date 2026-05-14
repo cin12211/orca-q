@@ -3,10 +3,10 @@ import { qualifySqlTableName, quoteSqlIdentifier } from './sqlIdentifier';
 import { toSqlLiteral } from './sqlLiteral';
 
 export const differentObject = (
-  oldValue: Record<string, any>,
-  newValue: Record<string, any>
+  oldValue: Record<string, unknown>,
+  newValue: Record<string, unknown>
 ) => {
-  const diff: Record<string, any> = {};
+  const diff: Record<string, unknown> = {};
 
   Object.keys(oldValue).forEach(key => {
     if (oldValue[key] !== newValue[key]) {
@@ -20,6 +20,17 @@ export const differentObject = (
   return diff;
 };
 
+export interface UpdateStatementResult {
+  /** The generated UPDATE SQL statement. */
+  sql: string;
+  /**
+   * True when the table has no primary key — the WHERE clause uses all columns,
+   * which may match multiple rows. Callers must show a danger confirmation before
+   * executing.
+   */
+  noPkWarning: boolean;
+}
+
 export function buildUpdateStatements({
   schemaName,
   tableName,
@@ -31,18 +42,22 @@ export function buildUpdateStatements({
   schemaName: string;
   tableName: string;
   pKeys: string[];
-  pKeyValue: Record<string, string>;
-  update: Record<string, any>;
+  pKeyValue: Record<string, unknown>;
+  update: Record<string, unknown>;
   dbType?: DatabaseClientType | string;
-}): string {
+}): UpdateStatementResult {
   // Validate inputs
-  if (!tableName || !pKeys?.length || !update || !Object.keys(update).length) {
-    throw new Error(
-      'Invalid input: tableName, pKeys, and update object are required'
-    );
+  if (!tableName || !update || !Object.keys(update).length) {
+    throw new Error('Invalid input: tableName and update object are required');
   }
 
-  // Build SET clause
+  const noPkWarning = !pKeys?.length;
+  const columnsToMatch = pKeys?.length ? pKeys : Object.keys(pKeyValue);
+
+  if (!columnsToMatch.length) {
+    throw new Error('Invalid input: no columns to match for WHERE clause');
+  }
+
   // Build SET clause
   const setClause = Object.entries(update)
     .map(([column, value]) => {
@@ -50,16 +65,18 @@ export function buildUpdateStatements({
     })
     .join(', ');
 
-  // Build WHERE clause
-  const whereClause = pKeys
-    .map(
-      key =>
-        `${quoteSqlIdentifier(key, dbType)} = ${toSqlLiteral(pKeyValue[key])}`
-    )
+  // Build WHERE clause — uses all columns when no PK to maximally scope the match
+  const whereClause = columnsToMatch
+    .map(key => {
+      const value = pKeyValue[key];
+      if (value === null || value === undefined) {
+        return `${quoteSqlIdentifier(key, dbType)} IS NULL`;
+      }
+      return `${quoteSqlIdentifier(key, dbType)} = ${toSqlLiteral(value)}`;
+    })
     .join(' AND ');
 
-  // Construct final query
-  const query = `UPDATE ${qualifySqlTableName({ schemaName, tableName, dbType })} SET ${setClause} WHERE ${whereClause}`;
+  const sql = `UPDATE ${qualifySqlTableName({ schemaName, tableName, dbType })} SET ${setClause} WHERE ${whereClause}`;
 
-  return query;
+  return { sql, noPkWarning };
 }

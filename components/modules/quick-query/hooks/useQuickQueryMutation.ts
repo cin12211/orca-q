@@ -3,17 +3,14 @@ import { toast } from 'vue-sonner';
 import { getConnectionParams } from '@/core/helpers/connection-helper';
 import { HASH_INDEX_ID } from '~/components/base/dynamic-table/constants';
 import { cellValueFormatter } from '~/components/base/dynamic-table/utils';
-import { buildUpdateStatements } from '~/components/modules/quick-query/utils';
 import {
-  // buildBulkDeleteStatement,
   buildDeleteStatements,
-} from '~/components/modules/quick-query/utils/buildDeleteStatements';
-import { buildInsertStatements } from '~/components/modules/quick-query/utils/buildInsertStatements';
+  buildInsertStatements,
+  buildUpdateStatements,
+} from '~/components/modules/quick-query/utils';
 import { copyRowsToClipboard } from '~/core/helpers';
 import { type Connection } from '~/core/stores';
 import type QuickQueryTable from '../quick-query-table/QuickQueryTable.vue';
-
-// Adjust the path as per your project structure
 
 /**
  * Interface for pagination details required by the hook.
@@ -55,7 +52,8 @@ interface UseQuickQueryMutationOptions {
   safeModeEnabled?: Ref<boolean>;
   onRequestSafeModeConfirm?: (
     sql: string,
-    type: 'save' | 'delete'
+    type: 'save' | 'delete',
+    dangerous?: boolean
   ) => Promise<boolean>;
   connection: Ref<Connection | undefined>;
 }
@@ -124,7 +122,7 @@ export function useQuickQueryMutation(options: UseQuickQueryMutationOptions) {
   };
 
   /**
-   * Saves changes made to table data, performing bulk inserts or updates.
+   * Saves changes made to table data, performing bulk inserts and/or updates via separate endpoints.
    */
   const onSaveData = async () => {
     const editedCells = getPendingEditedRows();
@@ -134,82 +132,122 @@ export function useQuickQueryMutation(options: UseQuickQueryMutationOptions) {
       return;
     }
 
-    const sqlBulkInsertOrUpdateStatements: string[] = [];
+    const updates: {
+      pKeyValue: Record<string, unknown>;
+      update: Record<string, unknown>;
+    }[] = [];
+    const insertItems: Record<string, unknown>[] = [];
+    const previewStatements: string[] = [];
+    let hasNoPkWarning = false;
 
     editedCells.forEach(cell => {
       const haveDifferent = !!Object.keys(cell.changedData).length;
-      const rowData = data.value?.[cell.rowId]; // Get existing row data if it's an update
+      const rowData = data.value?.[cell.rowId];
 
-      const isUpdateStatement = haveDifferent && rowData && !cell.isNewRow;
-      const isInsertStatement = cell.isNewRow || (!rowData && haveDifferent);
+      const isUpdate = haveDifferent && rowData && !cell.isNewRow;
+      const isInsert = cell.isNewRow || (!rowData && haveDifferent);
 
-      if (isUpdateStatement) {
-        const sqlUpdateStatement = buildUpdateStatements({
-          tableName: tableName,
-          schemaName: schemaName,
+      if (isUpdate) {
+        const { sql, noPkWarning } = buildUpdateStatements({
+          tableName,
+          schemaName,
           update: cell.changedData,
           pKeys: primaryKeys.value,
           pKeyValue: rowData,
           dbType: connection.value?.type,
         });
-        sqlBulkInsertOrUpdateStatements.push(sqlUpdateStatement);
-      } else if (isInsertStatement) {
-        const sqlInsertStatement = buildInsertStatements({
-          tableName: tableName,
-          schemaName: schemaName,
-          insertData: cell.changedData,
-          dbType: connection.value?.type,
-        });
-        sqlBulkInsertOrUpdateStatements.push(sqlInsertStatement);
+        if (noPkWarning) hasNoPkWarning = true;
+        updates.push({ pKeyValue: rowData, update: cell.changedData });
+        previewStatements.push(sql);
+      } else if (isInsert) {
+        insertItems.push(cell.changedData);
+        previewStatements.push(
+          buildInsertStatements({
+            tableName,
+            schemaName,
+            insertData: cell.changedData,
+            dbType: connection.value?.type,
+          })
+        );
       }
     });
 
-    if (!sqlBulkInsertOrUpdateStatements.length) {
+    if (!updates.length && !insertItems.length) {
       toast.info('No valid changes to save.');
       return;
     }
 
-    // Safe mode confirmation
-    if (safeModeEnabled?.value && onRequestSafeModeConfirm) {
+    // Danger confirmation: no PK — WHERE clause matches by all columns and may
+    // affect multiple rows. Show the generated SQL so the user knows exactly
+    // what will run.
+    if (hasNoPkWarning && onRequestSafeModeConfirm) {
       const confirmed = await onRequestSafeModeConfirm(
-        sqlBulkInsertOrUpdateStatements.join('\n'),
+        previewStatements.join('\n'),
+        'save',
+        true
+      );
+      if (!confirmed) return;
+    }
+
+    // Safe mode confirmation (skip if already confirmed via no-PK warning above)
+    if (!hasNoPkWarning && safeModeEnabled?.value && onRequestSafeModeConfirm) {
+      const confirmed = await onRequestSafeModeConfirm(
+        previewStatements.join('\n'),
         'save'
       );
-      if (!confirmed) {
-        return;
-      }
+      if (!confirmed) return;
     }
 
     isMutating.value = true;
 
-    try {
-      const { queryTime } = await $fetch('/api/tables/bulk-update', {
-        method: 'POST',
-        body: {
-          sqlUpdateStatements: sqlBulkInsertOrUpdateStatements,
-          ...getConnectionParams(connection.value),
-        },
-        onResponseError({ response }) {
-          const errorData = response?._data?.data?.driverError;
-          const message = response?._data?.message as string;
-          openErrorModal.value = true;
-          console.error('Error during bulk update:', response?._data);
-          errorMessage.value =
-            message || 'An unknown error occurred during update.';
+    const connParams = getConnectionParams(connection.value);
+    const baseBody = { tableName, schemaName, ...connParams };
 
-          addHistoryLog(
-            sqlBulkInsertOrUpdateStatements.join('\n'),
-            0,
-            errorData,
-            message
-          );
-        },
-      });
+    const handleResponseError = (label: string) => ({
+      onResponseError({ response }: { response: any }) {
+        const errorData = response?._data?.data?.driverError;
+        const message = response?._data?.message as string;
+        openErrorModal.value = true;
+        console.error(`Error during ${label}:`, response?._data);
+        errorMessage.value =
+          message || `An unknown error occurred during ${label}.`;
+        addHistoryLog(previewStatements.join('\n'), 0, errorData, message);
+      },
+    });
+
+    try {
+      const requests: Promise<{ queryTime: number }>[] = [];
+
+      if (updates.length) {
+        requests.push(
+          $fetch<{ queryTime: number }>('/api/tables/bulk-update', {
+            method: 'POST',
+            body: { ...baseBody, pKeys: primaryKeys.value, updates },
+            ...handleResponseError('bulk update'),
+          })
+        );
+      }
+
+      if (insertItems.length) {
+        requests.push(
+          $fetch<{ queryTime: number }>('/api/tables/bulk-insert', {
+            method: 'POST',
+            body: { ...baseBody, insertItems },
+            ...handleResponseError('bulk insert'),
+          })
+        );
+      }
+
+      const results = await Promise.all(requests);
+      const totalQueryTime = results.reduce(
+        (sum, r) => sum + (r.queryTime ?? 0),
+        0
+      );
 
       if (quickQueryTableRef.value?.editedCells) {
-        quickQueryTableRef.value.editedCells = []; // Clear edited cells after successful save
+        quickQueryTableRef.value.editedCells = [];
       }
-      addHistoryLog(sqlBulkInsertOrUpdateStatements.join('\n'), queryTime);
+      addHistoryLog(previewStatements.join('\n'), totalQueryTime);
       refreshCount();
       refreshTableData();
       toast.success('Data saved successfully!');
@@ -229,31 +267,36 @@ export function useQuickQueryMutation(options: UseQuickQueryMutationOptions) {
       return;
     }
 
-    const sqlDeleteStatements: string[] = [];
-    selectedRows.value.forEach(row => {
-      const sqlDeleteStatement = buildDeleteStatements({
-        tableName: tableName,
-        schemaName: schemaName,
+    // Build per-row DELETE SQL for preview in confirmation modals
+    const deleteStatements = selectedRows.value.map(row =>
+      buildDeleteStatements({
+        schemaName,
+        tableName,
         pKeys: primaryKeys.value,
         pKeyValue: row,
         dbType: connection.value?.type,
-      });
-      sqlDeleteStatements.push(sqlDeleteStatement);
-    });
+      })
+    );
 
-    // TODO:improve for bulk delete and for case table don't have pkey
-    // const sqlDeleteStatement: string = buildBulkDeleteStatement({
-    //   tableName: tableName,
-    //   pKeys: primaryKeys.value,
-    //   pKeyValues: selectedRows.value,
-    // });
+    const hasNoPkWarning = deleteStatements.some(r => r.noPkWarning);
+    const previewDeleteSql = deleteStatements.map(r => r.sql).join('\n');
 
-    // console.log('sqlDeleteStatement:', sqlDeleteStatement);
-
-    // Safe mode confirmation
-    if (safeModeEnabled?.value && onRequestSafeModeConfirm) {
+    // Danger confirmation: no PK — WHERE clause matches by all columns and may
+    // affect multiple rows. Show the generated SQL so the user knows exactly
+    // what will run.
+    if (hasNoPkWarning && onRequestSafeModeConfirm) {
       const confirmed = await onRequestSafeModeConfirm(
-        sqlDeleteStatements.join('\n'),
+        previewDeleteSql,
+        'delete',
+        true
+      );
+      if (!confirmed) return;
+    }
+
+    // Safe mode confirmation (skip if already confirmed via no-PK warning above)
+    if (!hasNoPkWarning && safeModeEnabled?.value && onRequestSafeModeConfirm) {
+      const confirmed = await onRequestSafeModeConfirm(
+        previewDeleteSql,
         'delete'
       );
       if (!confirmed) {
@@ -267,7 +310,10 @@ export function useQuickQueryMutation(options: UseQuickQueryMutationOptions) {
       const { queryTime } = await $fetch('/api/tables/bulk-delete', {
         method: 'POST',
         body: {
-          sqlDeleteStatements,
+          tableName,
+          schemaName,
+          pKeys: primaryKeys.value,
+          pKeyValues: selectedRows.value,
           ...getConnectionParams(connection.value),
         },
         onResponseError({ response }) {
@@ -277,7 +323,7 @@ export function useQuickQueryMutation(options: UseQuickQueryMutationOptions) {
           errorMessage.value =
             message || 'An unknown error occurred during deletion.';
 
-          addHistoryLog(sqlDeleteStatements.join('\n'), 0, errorData, message);
+          addHistoryLog(previewDeleteSql, 0, errorData, message);
         },
       });
 
@@ -289,7 +335,7 @@ export function useQuickQueryMutation(options: UseQuickQueryMutationOptions) {
         pagination.offset = newOffset > 0 ? newOffset : 0;
       }
 
-      addHistoryLog(sqlDeleteStatements.join('\n'), queryTime || 0);
+      addHistoryLog(previewDeleteSql, queryTime || 0);
       refreshCount();
       refreshTableData();
       toast.success('Rows deleted successfully!');
@@ -314,8 +360,12 @@ export function useQuickQueryMutation(options: UseQuickQueryMutationOptions) {
     gridApi.forEachNode(() => totalRowsInGrid++);
 
     const addIndex = totalRowsInGrid; // Add the new row at the end of the current grid view
+    const rowId = Date.now() + Math.floor(Math.random() * 1000); // Unique stable rowId for new rows
+
     const newNode = {
       [HASH_INDEX_ID]: addIndex + 1, // Assign an artificial row number for display
+      _originalIndex: rowId,
+      isNewRow: true,
       ...Object.fromEntries(columnNames.value.map(name => [name, undefined])), // Initialize all columns with undefined
     };
 
@@ -333,7 +383,7 @@ export function useQuickQueryMutation(options: UseQuickQueryMutationOptions) {
     quickQueryTableRef.value.editedCells = [
       ...editedCells,
       {
-        rowId: addIndex,
+        rowId,
         changedData: {},
         isNewRow: true,
       },
@@ -341,7 +391,8 @@ export function useQuickQueryMutation(options: UseQuickQueryMutationOptions) {
 
     // Set focus and select the newly added row for immediate editing
     gridApi.setFocusedCell(addIndex, columnNames.value[0]);
-    const currentAddedRow = gridApi.getRowNode(addIndex.toString()); // Row ID is its index string
+    // Note: getRowNode by index is still okay here for initial focus as it's just added at the end
+    const currentAddedRow = gridApi.getDisplayedRowAtIndex(addIndex);
     if (currentAddedRow) {
       gridApi.deselectAll();
       currentAddedRow.setSelected(true);
@@ -373,11 +424,17 @@ export function useQuickQueryMutation(options: UseQuickQueryMutationOptions) {
       return;
     }
 
-    const mappedRows = rows.map(row => {
-      const index = (row?.[HASH_INDEX_ID] || 1) - 1;
+    const mappedRows = rows
+      .map(row => {
+        const index = row?._originalIndex;
 
-      return data.value?.[index];
-    }) as Record<string, any>[];
+        if (row.isNewRow) {
+          return row;
+        }
+
+        return data.value?.[index];
+      })
+      .filter(Boolean) as Record<string, any>[];
 
     copyRowsToClipboard(mappedRows);
   };

@@ -1,5 +1,5 @@
 import { defineEventHandler, readBody, createError } from 'h3';
-import { buildUpdateStatements } from '~/components/modules/quick-query/utils/buildUpdateStatements';
+import { buildInsertStatements } from '~/components/modules/quick-query/utils/buildInsertStatements';
 import { DatabaseClientType } from '~/core/constants/database-client-type';
 import type { BulkUpdateResponse } from '~/core/types';
 import type {
@@ -9,11 +9,6 @@ import type {
 import { createTableAdapter } from '~/server/infrastructure/database/adapters/tables';
 
 const BULK_CHUNK_SIZE = 500;
-
-type UpdateItem = {
-  pKeyValue: Record<string, any>;
-  update: Record<string, any>;
-};
 
 function chunkArray<T>(arr: T[], size: number): T[][] {
   const chunks: T[][] = [];
@@ -27,8 +22,7 @@ export default defineEventHandler(async event => {
   const body = await readBody<{
     tableName: string;
     schemaName: string;
-    pKeys: string[];
-    updates: UpdateItem[];
+    insertItems: Record<string, any>[];
     dbConnectionString?: string;
     host?: string;
     port?: string;
@@ -40,7 +34,7 @@ export default defineEventHandler(async event => {
     managedSqlite?: IManagedSqliteConfig;
   }>(event);
 
-  const { tableName, schemaName, pKeys, updates } = body;
+  const { tableName, schemaName, insertItems } = body;
 
   if (!tableName || !schemaName) {
     throw createError({
@@ -49,29 +43,21 @@ export default defineEventHandler(async event => {
     });
   }
 
-  if (!updates?.length || !Array.isArray(updates)) {
+  if (!insertItems?.length || !Array.isArray(insertItems)) {
     throw createError({
       statusCode: 400,
-      message: 'updates must be a non-empty array',
+      message: 'insertItems must be a non-empty array',
     });
   }
 
-  const allStatements = updates.map(item => {
-    if (!item.pKeyValue || !item.update) {
-      throw createError({
-        statusCode: 400,
-        message: 'Each update item requires pKeyValue and update fields',
-      });
-    }
-    return buildUpdateStatements({
+  const allStatements = insertItems.map(item =>
+    buildInsertStatements({
       tableName,
       schemaName,
-      pKeys: pKeys ?? [],
-      pKeyValue: item.pKeyValue,
-      update: item.update,
+      insertData: item,
       dbType: body.type,
-    }).sql;
-  });
+    })
+  );
 
   const adapter = await createTableAdapter(
     body.type || DatabaseClientType.POSTGRES,

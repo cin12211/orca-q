@@ -44,8 +44,9 @@ onMounted(() => {
   try {
     localValue.value = cloneJsonValue(value);
   } catch (e) {
-    console.warn('Invalid JSON in cell, starting with empty object');
-    localValue.value = {};
+    console.warn('Invalid JSON in cell, keeping as is');
+    localValue.value = value as JsonEditorValue;
+    mode.value = JsonEditorMode.text;
   }
 });
 

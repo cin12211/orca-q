@@ -31,4 +31,21 @@ describe('normalizeEditedCellValue', () => {
       })
     ).toBe(false);
   });
+
+  it('handles various boolean-like inputs correctly', () => {
+    const options = { fieldType: 'bool', isObjectColumn: false };
+
+    expect(normalizeEditedCellValue({ ...options, value: 'true' })).toBe(true);
+    expect(normalizeEditedCellValue({ ...options, value: 'false' })).toBe(false);
+    expect(normalizeEditedCellValue({ ...options, value: '1' })).toBe(true);
+    expect(normalizeEditedCellValue({ ...options, value: '0' })).toBe(false);
+    expect(normalizeEditedCellValue({ ...options, value: 1 })).toBe(true);
+    expect(normalizeEditedCellValue({ ...options, value: 0 })).toBe(false);
+    expect(normalizeEditedCellValue({ ...options, value: true })).toBe(true);
+    expect(normalizeEditedCellValue({ ...options, value: false })).toBe(false);
+
+    // Invalid boolean-like should be returned as-is (or handled by DB)
+    expect(normalizeEditedCellValue({ ...options, value: 'yes' })).toBe('yes');
+    expect(normalizeEditedCellValue({ ...options, value: 2 })).toBe(2);
+  });
 });
