@@ -1,22 +1,11 @@
 import { DatabaseClientType } from '~/core/constants/database-client-type';
-
-function usesBacktickIdentifiers(dbType?: DatabaseClientType | string) {
-  return [
-    DatabaseClientType.MYSQL,
-    DatabaseClientType.MYSQL2,
-    DatabaseClientType.MARIADB,
-  ].includes(dbType as DatabaseClientType);
-}
+import { getSqlDialect } from '~/core/sql-dialect';
 
 export function quoteSqlIdentifier(
   identifier: string,
   dbType?: DatabaseClientType | string
 ) {
-  if (usesBacktickIdentifiers(dbType)) {
-    return `\`${identifier.replace(/`/g, '``')}\``;
-  }
-
-  return `"${identifier.replace(/"/g, '""')}"`;
+  return getSqlDialect(dbType).quoteIdentifier(identifier);
 }
 
 export function qualifySqlTableName({
@@ -28,11 +17,5 @@ export function qualifySqlTableName({
   tableName: string;
   dbType?: DatabaseClientType | string;
 }) {
-  const quotedTableName = quoteSqlIdentifier(tableName, dbType);
-
-  if (!schemaName) {
-    return quotedTableName;
-  }
-
-  return `${quoteSqlIdentifier(schemaName, dbType)}.${quotedTableName}`;
+  return getSqlDialect(dbType).qualifyTableName(tableName, schemaName);
 }

@@ -7,3 +7,4 @@ export * from './normalizeEditedCellValue';
 export * from './mapPgTypeToTsType';
 export * from './previewRelationBreadcrumb';
 export * from './quickQueryTable';
+export * from './sqlIdentifier';

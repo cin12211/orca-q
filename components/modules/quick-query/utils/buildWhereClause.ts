@@ -7,15 +7,15 @@ import {
   operatorSets,
 } from '~/core/constants';
 import { DatabaseClientType } from '~/core/constants/database-client-type';
+import { getSqlDialect } from '~/core/sql-dialect';
+import type { SqlDialect } from '~/core/sql-dialect';
 
 /* -------------------------------------------------------------------------- */
 /*                                   Types                                    */
 /* -------------------------------------------------------------------------- */
 
 export type FilterSearchPrimitive = string | number | boolean | null;
-export type FilterSearchValue =
-  | FilterSearchPrimitive
-  | FilterSearchPrimitive[];
+export type FilterSearchValue = FilterSearchPrimitive | FilterSearchPrimitive[];
 export type FilterValueType = 'postgres-array';
 
 const filterSearchPrimitiveSchema = z.union([
@@ -102,9 +102,7 @@ export const normalizeFilterSearchValue = (
   return JSON.stringify(value);
 };
 
-export interface WhereResult<
-  P extends unknown[] = FilterSearchValue[],
-> {
+export interface WhereResult<P extends unknown[] = FilterSearchValue[]> {
   where: string;
   params: P;
 }
@@ -118,7 +116,7 @@ interface HandleArgs {
   col: string;
   op: string;
   search: FilterSearchValue;
-  db: DatabaseClientType;
+  dialect: SqlDialect;
   nextPlaceholder: () => string;
 }
 type Handler = (a: HandleArgs) => WhereResult;
@@ -131,16 +129,9 @@ const getFilterSearchText = (value: FilterSearchValue): string => {
   return String(value);
 };
 
-// trợ giúp build placeholder
-const makePlaceholder = (db: DatabaseClientType) => (i: number) =>
-  db === DatabaseClientType.POSTGRES ? `$${i}` : '?';
-
-// bọc tên cột
-// Oracle and Postgres use double-quote quoting; MySQL/MariaDB/SQLite use backticks.
-const wrap = (db: DatabaseClientType) => (c: string) =>
-  db === DatabaseClientType.POSTGRES || db === DatabaseClientType.ORACLE
-    ? `"${c}"`
-    : `\`${c}\``;
+// bọc tên cột — now delegated to dialect
+const wrapFactory = (dialect: SqlDialect) => (c: string) =>
+  dialect.quoteIdentifier(c);
 
 /* -------------------------------------------------------------------------- */
 /*                           Handler implement‑ations                         */
@@ -169,19 +160,24 @@ const betweenHandler: Handler = ({ col, op, search }) => {
   };
 };
 
-const likeHandler: Handler = ({ col, op, search, db, nextPlaceholder }) => {
+const likeHandler: Handler = ({
+  col,
+  op,
+  search,
+  dialect,
+  nextPlaceholder,
+}) => {
   const includeNegative = op.toUpperCase().startsWith('NOT');
 
   const ilike = op.toUpperCase().startsWith('ILIKE');
-  const syntax = db === DatabaseClientType.POSTGRES && ilike ? 'ILIKE' : 'LIKE';
+  const syntax = dialect.likeOperator(ilike);
   let value = getFilterSearchText(search);
 
   if (op.endsWith('%VALUE%')) value = `%${search}%`;
   else if (op.endsWith('%VALUE')) value = `%${search}`;
   else if (op.endsWith('VALUE%')) value = `${search}%`;
 
-  // Only Postgres supports the ::TEXT cast syntax; other databases use the column directly.
-  const castCol = db === DatabaseClientType.POSTGRES ? `${col}::TEXT` : col;
+  const castCol = dialect.castForLike(col);
   return {
     where: `${castCol} ${includeNegative ? ' NOT ' : ' '}${syntax} ${nextPlaceholder()}`,
     params: [value],
@@ -229,17 +225,17 @@ const handlerMap: Record<OperatorSet, Handler> = {
 function buildAnyFieldClause({
   search,
   columns,
-  db,
+  dialect,
   op,
   nextPlaceholder,
 }: {
   search: FilterSearchValue;
   columns: readonly string[];
-  db: DatabaseClientType;
+  dialect: SqlDialect;
   op: OperatorSet;
   nextPlaceholder: () => string;
 }): WhereResult {
-  const wrapCol = wrap(db);
+  const wrapCol = wrapFactory(dialect);
   const handler = handlerMap[op];
 
   const ors: string[] = [];
@@ -251,7 +247,7 @@ function buildAnyFieldClause({
       col,
       op,
       search,
-      db,
+      dialect,
       nextPlaceholder,
     });
     if (result.where) {
@@ -283,14 +279,14 @@ export function buildWhereClause<
   columns: readonly string[];
   composeWith?: ComposeOperator;
 }): WhereResult {
+  const dialect = getSqlDialect(db);
   const pieces: string[] = [];
   const params: FilterSearchValue[] = [];
 
   let placeholderCount = 1;
 
-  const placeholder = makePlaceholder(db);
-  const nextPlaceholder = () => placeholder(placeholderCount++);
-  const wrapCol = wrap(db);
+  const nextPlaceholder = () => dialect.makePlaceholder(placeholderCount++);
+  const wrapCol = wrapFactory(dialect);
 
   // helper để push fragment + param
   const push = ({ where, params: p }: WhereResult) => {
@@ -317,7 +313,7 @@ export function buildWhereClause<
       const result = buildAnyFieldClause({
         search: f.search ?? '',
         columns,
-        db,
+        dialect,
         op: f.operator as OperatorSet,
         nextPlaceholder,
       });
@@ -350,7 +346,7 @@ export function buildWhereClause<
         col,
         op,
         search: f.search ?? '',
-        db,
+        dialect,
         nextPlaceholder,
       })
     );
@@ -390,20 +386,12 @@ export function formatWhereClause<F extends readonly FilterSchema[]>({
 
   if (!where) return '';
 
-  // simple literal‑encoder – good enough for logs
+  const dialect = getSqlDialect(db);
+
+  // simple literal encoder - delegates to dialect for arrays
   const lit = (v: FilterSearchValue): string => {
     if (Array.isArray(v)) {
-      const jsonLiteral = `'${JSON.stringify(v).replace(/'/g, "''")}'`;
-
-      if (db !== DatabaseClientType.POSTGRES) {
-        return jsonLiteral;
-      }
-
-      if (!v.length) {
-        return "'{}'";
-      }
-
-      return `ARRAY[${v.map(item => lit(item)).join(', ')}]`;
+      return dialect.toLiteral(v);
     }
 
     return v === null
@@ -417,11 +405,10 @@ export function formatWhereClause<F extends readonly FilterSchema[]>({
           : `'${String(v).replace(/'/g, "''")}'`;
   };
 
-  /** Postgres: $1, $2 … ・ MySQL: ? */
+  /** Replace placeholders with literal values */
   if (db === DatabaseClientType.POSTGRES) {
     let out = where;
     params.forEach((p, i) => {
-      // \b = word‑boundary → “$1 ”, “$1)” ...
       out = out.replace(new RegExp(`\\$${i + 1}\\b`, 'g'), lit(p));
     });
     return out;

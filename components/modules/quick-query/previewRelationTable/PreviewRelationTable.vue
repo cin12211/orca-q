@@ -6,18 +6,11 @@ import {
   Dialog,
   DialogContent,
 } from '#components';
+import type { PreviewRelationBreadcrumb } from '~/core/helpers/breadcrumb-builder';
 import BackReferencedTable from './BackReferencedTable.vue';
 import ForwardReferencedTable from './ForwardReferencedTable.vue';
 
-export type PreviewRelationBreadcrumb = {
-  id: string;
-  type: 'backReferenced' | 'forwardReferenced';
-  schemaName: string;
-  tableName: string;
-  columnName: string;
-  recordId: string;
-  selectedTab?: string;
-};
+export type { PreviewRelationBreadcrumb };
 
 const emit = defineEmits<{
   (e: 'onBackPreviousBreadcrumbByIndex', index: number): void;
