@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-04-30T09:53:21.520Z",
+  "generatedAt": "2026-05-20T03:43:08.096Z",
   "baseURL": "http://localhost:3000",
   "projects": [
     "common",
@@ -22,7 +22,7 @@
       "host": "127.0.0.1",
       "port": 5432,
       "database": "pagila",
-      "username": "heraq",
+      "username": "orcaq",
       "source": "default-local"
     },
     "mysql": {
@@ -30,7 +30,7 @@
       "host": "127.0.0.1",
       "port": 3306,
       "database": "sakila",
-      "username": "heraq",
+      "username": "orcaq",
       "source": "default-local"
     },
     "mariadb": {
@@ -38,7 +38,7 @@
       "host": "127.0.0.1",
       "port": 3307,
       "database": "sakila",
-      "username": "heraq",
+      "username": "orcaq",
       "source": "default-local"
     },
     "redis": {

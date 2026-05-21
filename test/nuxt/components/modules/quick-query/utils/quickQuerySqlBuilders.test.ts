@@ -3,14 +3,14 @@ import {
   HASH_INDEX_ID,
   NEW_ROW_FLAG_ID,
 } from '~/components/base/dynamic-table/constants';
+import { DatabaseClientType } from '~/core/constants/database-client-type';
+import { normalizeEditedCellValue } from '~/core/helpers/cell-value';
 import {
   buildDeleteStatements,
   buildInsertStatements,
   buildUpdateStatements,
-  normalizeEditedCellValue,
   toSqlLiteral,
-} from '~/components/modules/quick-query/utils';
-import { DatabaseClientType } from '~/core/constants/database-client-type';
+} from '~/core/helpers/sql-mutation-statements';
 
 describe('QuickQuery value normalization and SQL builders', () => {
   describe('normalizeEditedCellValue', () => {

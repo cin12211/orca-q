@@ -3,8 +3,8 @@ import {
   HASH_INDEX_ID,
   NEW_ROW_FLAG_ID,
 } from '~/components/base/dynamic-table/constants';
-import { buildDeleteStatements } from '~/components/modules/quick-query/utils/buildDeleteStatements';
 import { DatabaseClientType } from '~/core/constants/database-client-type';
+import { buildDeleteStatements } from '~/core/helpers/sql-mutation-statements';
 
 describe('buildDeleteStatements', () => {
   it('builds a simple delete statement with PK', () => {

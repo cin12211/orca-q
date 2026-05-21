@@ -8,7 +8,7 @@ import { ComposeOperator, DEFAULT_DEBOUNCE_INPUT } from '~/core/constants';
 import { DatabaseClientType } from '~/core/constants/database-client-type';
 import { useAppConfigStore } from '~/core/stores/appConfigStore';
 
-vi.mock('~/components/modules/quick-query/utils', () => ({
+vi.mock('~/core/helpers/sql-where-clause', () => ({
   formatWhereClause: vi.fn(() => 'WHERE "id" = 1'),
 }));
 

@@ -1,43 +1,45 @@
 import { describe, expect, it } from 'vitest';
+import { HASH_INDEX_ID } from '~/components/base/dynamic-table/constants';
 import {
-  formatQuickQueryCellValue,
-  isQuickQueryArrayColumnType,
-  isQuickQueryStructuredColumnType,
-  setQuickQueryCellValue,
+  buildQuickQueryRowData,
+  suppressDeleteKeyboardEvent,
 } from '~/components/modules/quick-query/utils/quickQueryTable';
 
 describe('quickQueryTable utils', () => {
-  it('detects Postgres array columns as structured editable columns', () => {
-    expect(isQuickQueryArrayColumnType('text[]')).toBe(true);
-    expect(isQuickQueryStructuredColumnType('text[]')).toBe(true);
-    expect(isQuickQueryStructuredColumnType('jsonb')).toBe(true);
-    expect(isQuickQueryStructuredColumnType('text')).toBe(false);
-  });
-
-  it('formats array cell values as pretty JSON for inline editing', () => {
+  it('adds display hash indexes without mutating row data order', () => {
     expect(
-      formatQuickQueryCellValue(
-        { value: ['java', 'spring'] } as Parameters<
-          typeof formatQuickQueryCellValue
-        >[0],
-        true
+      buildQuickQueryRowData(
+        [
+          { id: 'u1', name: 'Ada' },
+          { id: 'u2', name: 'Linus' },
+        ],
+        20
       )
-    ).toBe('[\n  "java",\n  "spring"\n]');
+    ).toEqual([
+      { [HASH_INDEX_ID]: 21, id: 'u1', name: 'Ada' },
+      { [HASH_INDEX_ID]: 22, id: 'u2', name: 'Linus' },
+    ]);
   });
 
-  it('sets array cell values from JSON editor output', () => {
-    const params = {
-      data: {},
-      newValue: '["java","spring"]',
-    } as Parameters<typeof setQuickQueryCellValue>[0]['params'];
+  it('returns an empty array when data is missing', () => {
+    expect(buildQuickQueryRowData(undefined, 5)).toEqual([]);
+  });
 
+  it('suppresses delete and backspace keyboard edits', () => {
     expect(
-      setQuickQueryCellValue({
-        params,
-        fieldId: 'tags',
-        isObjectColumn: true,
-      })
+      suppressDeleteKeyboardEvent({
+        event: { key: 'Delete' },
+      } as Parameters<typeof suppressDeleteKeyboardEvent>[0])
     ).toBe(true);
-    expect(params.data.tags).toEqual(['java', 'spring']);
+    expect(
+      suppressDeleteKeyboardEvent({
+        event: { key: 'Backspace' },
+      } as Parameters<typeof suppressDeleteKeyboardEvent>[0])
+    ).toBe(true);
+    expect(
+      suppressDeleteKeyboardEvent({
+        event: { key: 'Enter' },
+      } as Parameters<typeof suppressDeleteKeyboardEvent>[0])
+    ).toBe(false);
   });
 });

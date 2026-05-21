@@ -1,19 +1,20 @@
 import { describe, expect, it } from 'vitest';
+import { ComposeOperator, EExtendedField, OperatorSet } from '~/core/constants';
+import { DatabaseClientType } from '~/core/constants/database-client-type';
 import {
   buildWhereClause,
   formatWhereClause,
   getPlaceholderSearchByOperator,
   normalizeFilterSearchValue,
-} from '~/components/modules/quick-query/utils';
-import { ComposeOperator, EExtendedField, OperatorSet } from '~/core/constants';
-import { DatabaseClientType } from '~/core/constants/database-client-type';
+  SqlFilterValueType,
+} from '~/core/helpers/sql-where-clause';
 
 const createFilter = (
   overrides: Partial<{
     fieldName: string;
     isSelect: boolean;
     operator: string;
-    valueType: 'postgres-array';
+    valueType: SqlFilterValueType;
     search: ReturnType<typeof normalizeFilterSearchValue>;
   }> = {}
 ) => ({
@@ -158,7 +159,7 @@ describe('buildWhereClause', () => {
           createFilter({
             fieldName: 'tags',
             operator: OperatorSet.EQUAL,
-            valueType: 'postgres-array',
+            valueType: SqlFilterValueType.POSTGRES_ARRAY,
             search: normalizeFilterSearchValue(['java', 'spring'], {
               preserveArray: true,
             }),
@@ -182,7 +183,7 @@ describe('buildWhereClause', () => {
         columns: ['payload'],
       });
 
-      expect(sql).toBe("WHERE \"payload\" = '[\"java\",\"spring\"]'");
+      expect(sql).toBe('WHERE "payload" = \'["java","spring"]\'');
     });
   });
 

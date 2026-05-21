@@ -25,10 +25,10 @@ This document defines:
 
 PostgreSQL internally distinguishes object types via `pg_class.relkind`.
 
-| relkind | Type |
-|----------|------|
-| v | Normal View |
-| m | Materialized View |
+| relkind | Type              |
+| ------- | ----------------- |
+| v       | Normal View       |
+| m       | Materialized View |
 
 The system must detect view type at runtime and render appropriate UI.
 
@@ -268,16 +268,16 @@ SELECT
 
 # 5. UI Differences Summary
 
-| Feature | Normal View | Materialized View |
-|----------|--------------|------------------|
-| Definition | ✅ | ✅ |
-| Structure | ✅ | ✅ |
-| Dependencies | ✅ | ✅ |
-| Explain Plan | ✅ | ✅ |
-| Indexes | ❌ | ✅ |
-| Storage Size | ❌ | ✅ |
-| Row Count | ❌ | ✅ |
-| Populated Status | ❌ | ✅ |
+| Feature          | Normal View | Materialized View |
+| ---------------- | ----------- | ----------------- |
+| Definition       | ✅          | ✅                |
+| Structure        | ✅          | ✅                |
+| Dependencies     | ✅          | ✅                |
+| Explain Plan     | ✅          | ✅                |
+| Indexes          | ❌          | ✅                |
+| Storage Size     | ❌          | ✅                |
+| Row Count        | ❌          | ✅                |
+| Populated Status | ❌          | ✅                |
 
 ---
 
@@ -310,17 +310,17 @@ SELECT
 Extend SchemaStore:
 
 ```ts
-viewMetaMap: Record<string, ViewMeta>
+viewMetaMap: Record<string, ViewMeta>;
 ```
 
 ```ts
 interface ViewMeta {
-  type: 'normal' | 'materialized'
-  isUpdatable?: boolean
-  securityBarrier?: boolean
-  isPopulated?: boolean
-  totalSize?: string
-  rowEstimate?: number
+  type: 'normal' | 'materialized';
+  isUpdatable?: boolean;
+  securityBarrier?: boolean;
+  isPopulated?: boolean;
+  totalSize?: string;
+  rowEstimate?: number;
 }
 ```
 
@@ -361,4 +361,3 @@ ${schema}.${viewName}
 ---
 
 End of Document.
-

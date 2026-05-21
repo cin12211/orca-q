@@ -13,7 +13,7 @@ import {
   useQuickQueryGridOptions,
   useQuickQueryGridSizing,
 } from '../hooks';
-import { buildQuickQueryRowData } from '../utils';
+import { buildQuickQueryRowData } from '../utils/quickQueryTable';
 
 // document.getElementsByClassName('ag-body-viewport')
 /* props ------------------------------------------------------------- */

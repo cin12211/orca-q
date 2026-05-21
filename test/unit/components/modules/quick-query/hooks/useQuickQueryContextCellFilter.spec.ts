@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { OperatorSet } from '~/core/constants';
 import { buildFilterFromContextCell } from '~/components/modules/quick-query/hooks/useQuickQueryContextCellFilter';
+import { OperatorSet } from '~/core/constants';
+import { SqlFilterValueType } from '~/core/helpers/sql-where-clause';
 
 describe('buildFilterFromContextCell', () => {
   it('preserves Postgres array column values for equality filters', () => {
@@ -14,7 +15,7 @@ describe('buildFilterFromContextCell', () => {
       fieldName: 'tags',
       isSelect: true,
       operator: OperatorSet.EQUAL,
-      valueType: 'postgres-array',
+      valueType: SqlFilterValueType.POSTGRES_ARRAY,
       search: ['java', 'spring'],
     });
   });

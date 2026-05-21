@@ -6,12 +6,13 @@ import {
   NEW_ROW_FLAG_ID,
 } from '~/components/base/dynamic-table/constants';
 import { cellValueFormatter } from '~/components/base/dynamic-table/utils';
+import { QuickQueryMutationAction } from '~/components/modules/quick-query/constants';
+import { copyRowsToClipboard } from '~/core/helpers';
 import {
   buildDeleteStatements,
   buildInsertStatements,
   buildUpdateStatements,
-} from '~/components/modules/quick-query/utils';
-import { copyRowsToClipboard } from '~/core/helpers';
+} from '~/core/helpers/sql-mutation-statements';
 import { type Connection } from '~/core/stores';
 import type QuickQueryTable from '../quick-query-table/QuickQueryTable.vue';
 
@@ -55,7 +56,7 @@ interface UseQuickQueryMutationOptions {
   safeModeEnabled?: Ref<boolean>;
   onRequestSafeModeConfirm?: (
     sql: string,
-    type: 'save' | 'delete',
+    type: QuickQueryMutationAction,
     dangerous?: boolean
   ) => Promise<boolean>;
   connection: Ref<Connection | undefined>;
@@ -186,7 +187,7 @@ export function useQuickQueryMutation(options: UseQuickQueryMutationOptions) {
     if (hasNoPkWarning && onRequestSafeModeConfirm) {
       const confirmed = await onRequestSafeModeConfirm(
         previewStatements.join('\n'),
-        'save',
+        QuickQueryMutationAction.Save,
         true
       );
       if (!confirmed) return;
@@ -196,7 +197,7 @@ export function useQuickQueryMutation(options: UseQuickQueryMutationOptions) {
     if (!hasNoPkWarning && safeModeEnabled?.value && onRequestSafeModeConfirm) {
       const confirmed = await onRequestSafeModeConfirm(
         previewStatements.join('\n'),
-        'save'
+        QuickQueryMutationAction.Save
       );
       if (!confirmed) return;
     }
@@ -290,7 +291,7 @@ export function useQuickQueryMutation(options: UseQuickQueryMutationOptions) {
     if (hasNoPkWarning && onRequestSafeModeConfirm) {
       const confirmed = await onRequestSafeModeConfirm(
         previewDeleteSql,
-        'delete',
+        QuickQueryMutationAction.Delete,
         true
       );
       if (!confirmed) return;
@@ -300,7 +301,7 @@ export function useQuickQueryMutation(options: UseQuickQueryMutationOptions) {
     if (!hasNoPkWarning && safeModeEnabled?.value && onRequestSafeModeConfirm) {
       const confirmed = await onRequestSafeModeConfirm(
         previewDeleteSql,
-        'delete'
+        QuickQueryMutationAction.Delete
       );
       if (!confirmed) {
         return;
@@ -426,15 +427,7 @@ export function useQuickQueryMutation(options: UseQuickQueryMutationOptions) {
       return;
     }
 
-    const mappedRows = rows
-      .map(row => {
-        if (row[NEW_ROW_FLAG_ID]) {
-          return row;
-        }
-
-        return row;
-      })
-      .filter(Boolean) as Record<string, any>[];
+    const mappedRows = rows.filter(Boolean);
 
     copyRowsToClipboard(mappedRows);
   };
@@ -474,7 +467,7 @@ export function useQuickQueryMutation(options: UseQuickQueryMutationOptions) {
       return;
     }
 
-    // gridApi.deselectAll();
+    gridApi.deselectAll();
   };
 
   return {

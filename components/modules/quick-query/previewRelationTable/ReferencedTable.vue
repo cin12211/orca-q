@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { LoadingOverlay } from '#components';
-import type { FilterSchema } from '~/components/modules/quick-query/utils';
 import { useTableQueryBuilder } from '~/core/composables/useTableQueryBuilder';
 import { ComposeOperator, DEFAULT_QUERY_SIZE } from '~/core/constants';
 import { DatabaseClientType } from '~/core/constants/database-client-type';
+import type { FilterSchema } from '~/core/helpers/sql-where-clause';
 import { TabViewType } from '~/core/stores';
 import { useAppConfigStore } from '~/core/stores/appConfigStore';
 import { useManagementConnectionStore } from '~/core/stores/managementConnectionStore';

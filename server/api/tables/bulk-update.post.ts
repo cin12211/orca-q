@@ -1,6 +1,6 @@
 import { defineEventHandler, readBody, createError } from 'h3';
-import { buildUpdateStatements } from '~/components/modules/quick-query/utils/buildUpdateStatements';
 import { DatabaseClientType } from '~/core/constants/database-client-type';
+import { buildUpdateStatements } from '~/core/helpers/sql-mutation-statements';
 import type { BulkUpdateResponse } from '~/core/types';
 import type {
   EConnectionProviderKind,

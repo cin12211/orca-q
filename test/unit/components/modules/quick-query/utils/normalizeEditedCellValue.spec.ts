@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { normalizeEditedCellValue } from '~/components/modules/quick-query/utils/normalizeEditedCellValue';
+import { normalizeEditedCellValue } from '~/core/helpers/cell-value';
 
 describe('normalizeEditedCellValue', () => {
   it('preserves numeric zero instead of coercing it to null', () => {

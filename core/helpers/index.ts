@@ -10,3 +10,5 @@ export * from './mapped-columns';
 export * from './deepUnRef';
 export * from './database-error';
 export * from './parser-connection-string';
+export * from './sql-mutation-statements';
+export * from './sql-where-clause';

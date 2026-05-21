@@ -3,8 +3,8 @@ import {
   HASH_INDEX_ID,
   NEW_ROW_FLAG_ID,
 } from '~/components/base/dynamic-table/constants';
-import { buildUpdateStatements } from '~/components/modules/quick-query/utils/buildUpdateStatements';
 import { DatabaseClientType } from '~/core/constants/database-client-type';
+import { buildUpdateStatements } from '~/core/helpers/sql-mutation-statements';
 
 describe('buildUpdateStatements', () => {
   it('builds a simple update statement with PK', () => {

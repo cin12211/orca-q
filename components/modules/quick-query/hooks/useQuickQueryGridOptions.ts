@@ -8,12 +8,10 @@ import type {
 import { useTableTheme } from '~/components/base/dynamic-table/hooks';
 import type { RowData } from '~/components/base/dynamic-table/utils';
 import { DEFAULT_BUFFER_ROWS, DEFAULT_QUERY_SIZE } from '~/core/constants';
+import { areCellValuesDifferent } from '~/core/helpers/cell-value';
 import AgJsonCellEditor from '../quick-query-table/AgJsonCellEditor.vue';
 import CustomHeaderTable from '../quick-query-table/CustomHeaderTable.vue';
-import {
-  areQuickQueryCellValuesDifferent,
-  suppressDeleteKeyboardEvent,
-} from '../utils/quickQueryTable';
+import { suppressDeleteKeyboardEvent } from '../utils/quickQueryTable';
 
 interface UseQuickQueryGridOptionsOptions {
   defaultPageSize?: number;
@@ -63,7 +61,7 @@ export const useQuickQueryGridOptions = ({
           style.color = 'var(--muted-foreground)';
         }
 
-        const isChanged = areQuickQueryCellValuesDifferent({
+        const isChanged = areCellValuesDifferent({
           oldValue: originalFieldValue,
           newValue,
           isObjectColumn: isJSONColumn(field),

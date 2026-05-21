@@ -1,10 +1,11 @@
 import { OperatorSet } from '~/core/constants';
-import type QuickQueryFilter from '../quick-query-filter/QuickQueryFilter.vue';
-import type QuickQueryTable from '../quick-query-table/QuickQueryTable.vue';
 import {
   normalizeFilterSearchValue,
+  SqlFilterValueType,
   type FilterSchema,
-} from '../utils/buildWhereClause';
+} from '~/core/helpers/sql-where-clause';
+import type QuickQueryFilter from '../quick-query-filter/QuickQueryFilter.vue';
+import type QuickQueryTable from '../quick-query-table/QuickQueryTable.vue';
 import type { QuickQueryColumnType } from '../utils/quickQueryTable';
 
 interface UseQuickQueryContextCellFilterOptions {
@@ -38,7 +39,9 @@ export const buildFilterFromContextCell = ({
     fieldName: columnName,
     isSelect: true,
     operator: OperatorSet.EQUAL,
-    valueType: isPostgresArrayValue ? 'postgres-array' : undefined,
+    valueType: isPostgresArrayValue
+      ? SqlFilterValueType.POSTGRES_ARRAY
+      : undefined,
     search: normalizeFilterSearchValue(cellValue, {
       preserveArray: isPostgresArrayValue,
     }),

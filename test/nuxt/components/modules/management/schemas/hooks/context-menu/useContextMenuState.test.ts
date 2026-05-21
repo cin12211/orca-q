@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { useContextMenuState } from '~/components/modules/management/schemas/hooks/context-menu/useContextMenuState';
+import { QuickQueryMutationAction } from '~/components/modules/quick-query/constants';
 import { TabViewType } from '~/core/stores/useTabViewsStore';
 
 describe('useContextMenuState', () => {
@@ -10,7 +11,9 @@ describe('useContextMenuState', () => {
 
     expect(state.safeModeDialogOpen.value).toBe(false);
     expect(state.safeModeDialogSQL.value).toBe('');
-    expect(state.safeModeDialogType.value).toBe('delete');
+    expect(state.safeModeDialogType.value).toBe(
+      QuickQueryMutationAction.Delete
+    );
     expect(state.pendingAction.value).toBeNull();
 
     expect(state.renameDialogOpen.value).toBe(false);

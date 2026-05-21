@@ -10,11 +10,12 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import { QuickQueryMutationAction } from './constants';
 
 const props = defineProps<{
   open: boolean;
   sql: string;
-  type: 'save' | 'delete';
+  type: QuickQueryMutationAction;
   loading?: boolean;
   dangerous?: boolean;
 }>();
@@ -27,12 +28,14 @@ const emit = defineEmits<{
 
 const title = computed(() => {
   if (props.dangerous) {
-    return props.type === 'save'
+    return props.type === QuickQueryMutationAction.Save
       ? 'High-Risk: Confirm Save'
       : 'High-Risk: Confirm Delete';
   }
 
-  return props.type === 'save' ? 'Confirm Save' : 'Confirm Delete';
+  return props.type === QuickQueryMutationAction.Save
+    ? 'Confirm Save'
+    : 'Confirm Delete';
 });
 
 const description = computed(() => {
@@ -40,13 +43,13 @@ const description = computed(() => {
     return 'Caution: No primary key detected. To identify the record, this operation will match all columns in the WHERE clause. This carries a risk of affecting multiple rows if they share identical data. Please verify the SQL below carefully before proceeding:';
   }
 
-  return props.type === 'save'
+  return props.type === QuickQueryMutationAction.Save
     ? 'The following SQL will be executed to save your changes:'
     : 'The following SQL will be executed to delete the selected rows:';
 });
 
 const actionLabel = computed(() => {
-  return props.type === 'save' ? 'Save' : 'Delete';
+  return props.type === QuickQueryMutationAction.Save ? 'Save' : 'Delete';
 });
 
 const onConfirm = () => {
@@ -94,7 +97,11 @@ const onCancel = () => {
           @click="onConfirm"
         >
           <Icon
-            :name="type === 'save' ? 'lucide:save' : 'lucide:trash-2'"
+            :name="
+              type === QuickQueryMutationAction.Save
+                ? 'lucide:save'
+                : 'lucide:trash-2'
+            "
             class="size-4"
           />
           {{ actionLabel }}

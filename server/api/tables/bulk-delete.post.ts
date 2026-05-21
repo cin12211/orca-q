@@ -1,6 +1,6 @@
 import { defineEventHandler, readBody, createError } from 'h3';
-import { buildDeleteStatements } from '~/components/modules/quick-query/utils/buildDeleteStatements';
 import { DatabaseClientType } from '~/core/constants/database-client-type';
+import { buildDeleteStatements } from '~/core/helpers/sql-mutation-statements';
 import type {
   EConnectionProviderKind,
   IManagedSqliteConfig,

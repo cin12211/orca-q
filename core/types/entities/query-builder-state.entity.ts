@@ -1,5 +1,5 @@
-import type { FilterSchema } from '~/components/modules/quick-query/utils/buildWhereClause';
 import type { ComposeOperator } from '~/core/constants/operatorSets';
+import type { FilterSchema } from '~/core/helpers/sql-where-clause';
 
 export type Order = 'ASC' | 'DESC';
 

@@ -22,9 +22,7 @@ const dialectRegistry: Partial<Record<DatabaseClientType, SqlDialect>> = {
  * Get the SQL dialect for a given database client type.
  * Falls back to `baseDialect` for unknown / unsupported types.
  */
-export function getSqlDialect(
-  dbType?: DatabaseClientType | string
-): SqlDialect {
+export function getSqlDialect(dbType?: DatabaseClientType): SqlDialect {
   if (!dbType) return baseDialect;
-  return dialectRegistry[dbType as DatabaseClientType] ?? baseDialect;
+  return dialectRegistry[dbType] ?? baseDialect;
 }

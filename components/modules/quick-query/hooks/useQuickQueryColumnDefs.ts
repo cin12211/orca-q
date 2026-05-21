@@ -11,14 +11,11 @@ import {
   HASH_INDEX_ID,
 } from '~/components/base/dynamic-table/constants';
 import type { OrderBy } from '~/core/composables/useTableQueryBuilder';
+import { formatCellValue, setCellValue } from '~/core/helpers/cell-value';
+import { isStructuredColumnType } from '~/core/helpers/sql-column-type';
 import type { SchemaForeignKeyMetadata as ForeignKeyMetadata } from '~/core/types';
 import CustomCellUuid from '../quick-query-table/CustomCellUuid.vue';
-import {
-  formatQuickQueryCellValue,
-  isQuickQueryStructuredColumnType,
-  setQuickQueryCellValue,
-  type QuickQueryColumnType,
-} from '../utils/quickQueryTable';
+import { type QuickQueryColumnType } from '../utils/quickQueryTable';
 
 type RelationModalPayload = {
   id: string;
@@ -96,7 +93,7 @@ export const useQuickQueryColumnDefs = ({
       const isShowCustomCellUuid =
         (isPrimaryKey && haveRelationByFieldName) ||
         (isForeignKey && foreignKey);
-      const isStructuredColumn = isQuickQueryStructuredColumnType(type);
+      const isStructuredColumn = isStructuredColumnType(type);
 
       columns.push({
         headerName: fieldId,
@@ -147,9 +144,9 @@ export const useQuickQueryColumnDefs = ({
           }
         },
         valueFormatter: (params: ValueFormatterParams) =>
-          formatQuickQueryCellValue(params, isStructuredColumn),
+          formatCellValue(params, isStructuredColumn),
         valueSetter: (params: ValueSetterParams) =>
-          setQuickQueryCellValue({
+          setCellValue({
             params,
             fieldId,
             isObjectColumn: isStructuredColumn,

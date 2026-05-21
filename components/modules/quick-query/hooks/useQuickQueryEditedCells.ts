@@ -2,11 +2,15 @@ import { computed, ref, type Ref } from 'vue';
 import type { CellValueChangedEvent } from 'ag-grid-community';
 import { NEW_ROW_FLAG_ID } from '~/components/base/dynamic-table/constants';
 import type { RowData } from '~/components/base/dynamic-table/utils';
-import { normalizeEditedCellValue } from '../utils/normalizeEditedCellValue';
 import {
-  areQuickQueryCellValuesDifferent,
-  isQuickQueryJsonColumnType,
-  isQuickQueryStructuredColumnType,
+  areCellValuesDifferent,
+  normalizeEditedCellValue,
+} from '~/core/helpers/cell-value';
+import {
+  isJsonColumnType,
+  isStructuredColumnType,
+} from '~/core/helpers/sql-column-type';
+import {
   type QuickQueryColumnType,
   type QuickQueryEditedCell,
 } from '../utils/quickQueryTable';
@@ -31,13 +35,13 @@ export const useQuickQueryEditedCells = ({
   const isJSONColumn = (fieldId: string) => {
     const fieldType = mapColumnDef.value.get(fieldId)?.type || '';
 
-    return isQuickQueryJsonColumnType(fieldType);
+    return isJsonColumnType(fieldType);
   };
 
   const isStructuredColumn = (fieldId: string) => {
     const fieldType = mapColumnDef.value.get(fieldId)?.type || '';
 
-    return isQuickQueryStructuredColumnType(fieldType);
+    return isStructuredColumnType(fieldType);
   };
 
   const onCellValueChanged = (event: CellValueChangedEvent) => {
@@ -53,7 +57,7 @@ export const useQuickQueryEditedCells = ({
     const fieldType = mapColumnDef.value.get(fieldId)?.type || '';
     const isNewRow = !!event.node.data?.[NEW_ROW_FLAG_ID];
     const oldFieldValue = isNewRow ? undefined : data.value?.[rowId]?.[fieldId];
-    const haveDifferent = areQuickQueryCellValuesDifferent({
+    const haveDifferent = areCellValuesDifferent({
       oldValue: oldFieldValue,
       newValue,
       isObjectColumn,

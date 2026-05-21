@@ -1,5 +1,6 @@
 import type { Ref } from 'vue';
 import type { FlattenedTreeFileSystemItem } from '~/components/base/Tree';
+import { QuickQueryMutationAction } from '~/components/modules/quick-query/constants';
 import type { Connection } from '~/core/stores';
 import type { Schema } from '~/core/stores/useSchemaStore';
 import type { TabViewType } from '~/core/stores/useTabViewsStore';
@@ -17,7 +18,7 @@ export interface ContextMenuState {
   // Safe Mode Dialog
   safeModeDialogOpen: Ref<boolean>;
   safeModeDialogSQL: Ref<string>;
-  safeModeDialogType: Ref<'save' | 'delete'>;
+  safeModeDialogType: Ref<QuickQueryMutationAction>;
   pendingAction: Ref<(() => Promise<void>) | null>;
 
   // Rename Dialog
@@ -35,7 +36,7 @@ export interface ContextMenuState {
   isFetching: Ref<boolean>;
 }
 
-export type SafeModeDialogType = 'save' | 'delete';
+export type SafeModeDialogType = QuickQueryMutationAction;
 
 export enum ExportDataFormatType {
   CSV = 'csv',

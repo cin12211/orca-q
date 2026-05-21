@@ -1,6 +1,7 @@
 import { toRaw, toRef } from 'vue';
 import { toast } from 'vue-sonner';
 import type { FlattenedTreeFileSystemItem } from '~/components/base/Tree';
+import { QuickQueryMutationAction } from '~/components/modules/quick-query/constants';
 import { useAppConfigStore } from '~/core/stores/appConfigStore';
 import type {
   SchemaColumnMetadata as ColumnShortMetadata,
@@ -100,7 +101,7 @@ export function useContextMenuHelpers(
    */
   const executeWithSafeMode = async (
     sql: string,
-    type: 'save' | 'delete',
+    type: QuickQueryMutationAction,
     action: () => Promise<void>
   ) => {
     if (safeModeEnabled.value) {

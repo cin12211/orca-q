@@ -1,10 +1,10 @@
-import type { PreviewRelationBreadcrumb } from '../previewRelationTable/PreviewRelationTable.vue';
 import {
   createPreviewRelationBreadcrumb,
   keepPreviewRelationBreadcrumbsUntil,
   updatePreviewRelationBreadcrumbTab,
+  type PreviewRelationBreadcrumb,
   type PreviewRelationPayload,
-} from '../utils';
+} from '~/core/helpers/breadcrumb-builder';
 
 export const useQuickQueryPreviewRelations = () => {
   const previewRelationBreadcrumbs = ref<PreviewRelationBreadcrumb[]>([]);

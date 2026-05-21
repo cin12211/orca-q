@@ -123,11 +123,11 @@ WHERE t.relname = $1;
 
 ```ts
 interface TableIndex {
-  indexName: string
-  isUnique: boolean
-  isPrimary: boolean
-  method: string
-  definition: string
+  indexName: string;
+  isUnique: boolean;
+  isPrimary: boolean;
+  method: string;
+  definition: string;
 }
 ```
 
@@ -135,13 +135,13 @@ interface TableIndex {
 
 ## 4.5 UI Columns
 
-| Column | Description |
-|--------|-------------|
-| Name | Index name |
-| Method | btree / gin / gist / hash |
-| Unique | Boolean badge |
-| Primary | Boolean badge |
-| Actions | Copy definition |
+| Column  | Description               |
+| ------- | ------------------------- |
+| Name    | Index name                |
+| Method  | btree / gin / gist / hash |
+| Unique  | Boolean badge             |
+| Primary | Boolean badge             |
+| Actions | Copy definition           |
 
 Expandable row shows full SQL definition.
 
@@ -203,11 +203,11 @@ AND tablename = $2;
 
 ```ts
 interface RLSPolicy {
-  policyName: string
-  command: string
-  roles: string[]
-  usingExpression?: string
-  withCheckExpression?: string
+  policyName: string;
+  command: string;
+  roles: string[];
+  usingExpression?: string;
+  withCheckExpression?: string;
 }
 ```
 
@@ -271,9 +271,9 @@ WHERE c.relname = $1;
 
 ```ts
 interface TableRule {
-  ruleName: string
-  event: string
-  definition: string
+  ruleName: string;
+  event: string;
+  definition: string;
 }
 ```
 
@@ -328,9 +328,9 @@ AND NOT tg.tgisinternal;
 
 ```ts
 interface TableTrigger {
-  triggerName: string
-  enabled: boolean
-  definition: string
+  triggerName: string;
+  enabled: boolean;
+  definition: string;
 }
 ```
 
@@ -367,10 +367,10 @@ Flow:
 Extend SchemaStore:
 
 ```ts
-indexesMap: Record<string, TableIndex[]>
-rlsMap: Record<string, RLSPolicy[]>
-rulesMap: Record<string, TableRule[]>
-triggersMap: Record<string, TableTrigger[]>
+indexesMap: Record<string, TableIndex[]>;
+rlsMap: Record<string, RLSPolicy[]>;
+rulesMap: Record<string, TableRule[]>;
+triggersMap: Record<string, TableTrigger[]>;
 ```
 
 Key format:
@@ -426,4 +426,3 @@ Feature is complete when:
 ---
 
 End of Document.
-

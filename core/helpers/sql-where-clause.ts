@@ -1,4 +1,3 @@
-// ~/utils/query-generator.ts
 import { z } from 'zod';
 import {
   ComposeOperator,
@@ -10,13 +9,13 @@ import { DatabaseClientType } from '~/core/constants/database-client-type';
 import { getSqlDialect } from '~/core/sql-dialect';
 import type { SqlDialect } from '~/core/sql-dialect';
 
-/* -------------------------------------------------------------------------- */
-/*                                   Types                                    */
-/* -------------------------------------------------------------------------- */
+export enum SqlFilterValueType {
+  POSTGRES_ARRAY = 'postgres-array',
+}
 
 export type FilterSearchPrimitive = string | number | boolean | null;
 export type FilterSearchValue = FilterSearchPrimitive | FilterSearchPrimitive[];
-export type FilterValueType = 'postgres-array';
+export type FilterValueType = SqlFilterValueType;
 
 const filterSearchPrimitiveSchema = z.union([
   z.string(),
@@ -29,35 +28,6 @@ const filterSearchValueSchema = z.union([
   filterSearchPrimitiveSchema,
   z.array(filterSearchPrimitiveSchema),
 ]);
-
-export const filterSchema = z.preprocess(
-  value => {
-    if (!value || typeof value !== 'object' || Array.isArray(value)) {
-      return value;
-    }
-
-    const filter = value as {
-      search?: unknown;
-      valueType?: FilterValueType;
-    };
-
-    return {
-      ...filter,
-      search: normalizeFilterSearchValue(filter.search, {
-        preserveArray: filter.valueType === 'postgres-array',
-      }),
-    };
-  },
-  z.object({
-    isSelect: z.boolean().optional(),
-    fieldName: z.string(),
-    operator: z.string().optional(),
-    valueType: z.enum(['postgres-array']).optional(),
-    search: filterSearchValueSchema.optional(),
-  })
-);
-
-export type FilterSchema = z.infer<typeof filterSchema>;
 
 export const normalizeFilterSearchValue = (
   value: unknown,
@@ -102,16 +72,40 @@ export const normalizeFilterSearchValue = (
   return JSON.stringify(value);
 };
 
+export const filterSchema = z.preprocess(
+  value => {
+    if (!value || typeof value !== 'object' || Array.isArray(value)) {
+      return value;
+    }
+
+    const filter = value as {
+      search?: unknown;
+      valueType?: FilterValueType;
+    };
+
+    return {
+      ...filter,
+      search: normalizeFilterSearchValue(filter.search, {
+        preserveArray: filter.valueType === SqlFilterValueType.POSTGRES_ARRAY,
+      }),
+    };
+  },
+  z.object({
+    isSelect: z.boolean().optional(),
+    fieldName: z.string(),
+    operator: z.string().optional(),
+    valueType: z.nativeEnum(SqlFilterValueType).optional(),
+    search: filterSearchValueSchema.optional(),
+  })
+);
+
+export type FilterSchema = z.infer<typeof filterSchema>;
+
 export interface WhereResult<P extends unknown[] = FilterSearchValue[]> {
   where: string;
   params: P;
 }
 
-/* -------------------------------------------------------------------------- */
-/*                             Helper utilities                               */
-/* -------------------------------------------------------------------------- */
-
-// khung chung cho handler
 interface HandleArgs {
   col: string;
   op: string;
@@ -119,6 +113,7 @@ interface HandleArgs {
   dialect: SqlDialect;
   nextPlaceholder: () => string;
 }
+
 type Handler = (a: HandleArgs) => WhereResult;
 
 const getFilterSearchText = (value: FilterSearchValue): string => {
@@ -129,13 +124,8 @@ const getFilterSearchText = (value: FilterSearchValue): string => {
   return String(value);
 };
 
-// bọc tên cột — now delegated to dialect
-const wrapFactory = (dialect: SqlDialect) => (c: string) =>
-  dialect.quoteIdentifier(c);
-
-/* -------------------------------------------------------------------------- */
-/*                           Handler implement‑ations                         */
-/* -------------------------------------------------------------------------- */
+const wrapFactory = (dialect: SqlDialect) => (columnName: string) =>
+  dialect.quoteIdentifier(columnName);
 
 const nullHandler: Handler = ({ col, op }) => ({
   where: `${col} ${op}`,
@@ -147,18 +137,19 @@ const inHandler: Handler = ({ col, op, search, nextPlaceholder }) => {
     .split(',')
     .map(v => v.trim())
     .filter(Boolean);
-  if (!list.length) return { where: '', params: [] };
-  const place = list.map(() => nextPlaceholder()).join(', ');
 
-  return { where: `${col} ${op} (${place})`, params: list };
+  if (!list.length) {
+    return { where: '', params: [] };
+  }
+
+  const placeholders = list.map(() => nextPlaceholder()).join(', ');
+  return { where: `${col} ${op} (${placeholders})`, params: list };
 };
 
-const betweenHandler: Handler = ({ col, op, search }) => {
-  return {
-    where: `${col} ${op} ${getFilterSearchText(search)}`,
-    params: [],
-  };
-};
+const betweenHandler: Handler = ({ col, op, search }) => ({
+  where: `${col} ${op} ${getFilterSearchText(search)}`,
+  params: [],
+});
 
 const likeHandler: Handler = ({
   col,
@@ -168,7 +159,6 @@ const likeHandler: Handler = ({
   nextPlaceholder,
 }) => {
   const includeNegative = op.toUpperCase().startsWith('NOT');
-
   const ilike = op.toUpperCase().startsWith('ILIKE');
   const syntax = dialect.likeOperator(ilike);
   let value = getFilterSearchText(search);
@@ -188,10 +178,6 @@ const compareHandler: Handler = ({ col, op, search, nextPlaceholder }) => ({
   where: `${col} ${op} ${nextPlaceholder()}`,
   params: [search],
 });
-
-/* -------------------------------------------------------------------------- */
-/*                          Handler resolver table                            */
-/* -------------------------------------------------------------------------- */
 
 const handlerMap: Record<OperatorSet, Handler> = {
   [OperatorSet.IS_NULL]: nullHandler,
@@ -237,12 +223,11 @@ function buildAnyFieldClause({
 }): WhereResult {
   const wrapCol = wrapFactory(dialect);
   const handler = handlerMap[op];
-
   const ors: string[] = [];
   const params: FilterSearchValue[] = [];
 
-  columns.forEach(colName => {
-    const col = wrapCol(colName);
+  columns.forEach(columnName => {
+    const col = wrapCol(columnName);
     const result = handler({
       col,
       op,
@@ -250,6 +235,7 @@ function buildAnyFieldClause({
       dialect,
       nextPlaceholder,
     });
+
     if (result.where) {
       ors.push(result.where);
       params.push(...result.params);
@@ -262,13 +248,7 @@ function buildAnyFieldClause({
   };
 }
 
-/* -------------------------------------------------------------------------- */
-/*                       Main builder – public API (strict)                   */
-/* -------------------------------------------------------------------------- */
-
-export function buildWhereClause<
-  F extends readonly FilterSchema[], // giữ nguyên literal type của mảng filters
->({
+export function buildWhereClause<F extends readonly FilterSchema[]>({
   filters,
   db,
   columns = [],
@@ -287,15 +267,12 @@ export function buildWhereClause<
 
   const nextPlaceholder = () => dialect.makePlaceholder(placeholderCount++);
   const wrapCol = wrapFactory(dialect);
-
-  // helper để push fragment + param
   const push = ({ where, params: p }: WhereResult) => {
     if (!where) return;
     pieces.push(where);
     params.push(...p);
   };
 
-  // allowed operators theo DB — fall back to MySQL set when DB type not in map
   const allowedOps = new Set(
     (
       operatorSets[db as keyof typeof operatorSets] ??
@@ -306,38 +283,38 @@ export function buildWhereClause<
 
   filters.forEach(raw => {
     if (!raw?.isSelect) return;
-    const f = filterSchema.parse(raw); // bảo đảm đúng shape
 
-    /* Any field → OR qua mọi cột */
-    if (f.fieldName === EExtendedField.AnyField) {
+    const filter = filterSchema.parse(raw);
+
+    if (filter.fieldName === EExtendedField.AnyField) {
       const result = buildAnyFieldClause({
-        search: f.search ?? '',
+        search: filter.search ?? '',
         columns,
         dialect,
-        op: f.operator as OperatorSet,
+        op: filter.operator as OperatorSet,
         nextPlaceholder,
       });
+
       if (result.where) {
         pieces.push(result.where);
         params.push(...result.params);
       }
+
       return;
     }
 
-    /* Row query → raw fragment */
-    if (f.fieldName === EExtendedField.RawQuery) {
-      if (!f.search) {
+    if (filter.fieldName === EExtendedField.RawQuery) {
+      if (!filter.search) {
         return;
       }
 
-      pieces.push(`(${f.search})`);
+      pieces.push(`(${filter.search})`);
       return;
     }
 
-    /* Normal column */
-    const col = wrapCol(f.fieldName);
+    const col = wrapCol(filter.fieldName);
     const rawOp = (
-      f.operator ?? OperatorSet.LIKE_CONTAINS
+      filter.operator ?? OperatorSet.LIKE_CONTAINS
     ).toUpperCase() as OperatorSet;
     const op = allowedOps.has(rawOp) ? rawOp : OperatorSet.LIKE_CONTAINS;
 
@@ -345,7 +322,7 @@ export function buildWhereClause<
       handlerMap[op]({
         col,
         op,
-        search: f.search ?? '',
+        search: filter.search ?? '',
         dialect,
         nextPlaceholder,
       })
@@ -358,14 +335,6 @@ export function buildWhereClause<
   };
 }
 
-/**
- * Return a WHERE‑clause string with **place‑holders already substituted**
- * (handy for logging / debugging, NOT for running against DB!)
- *
- * @example
- * const sqlWhere = formatWhereClause(values.filters, 'postgres', tableFields)
- * // →  WHERE "name" ILIKE '%john%' AND "age" >= 18
- */
 export function formatWhereClause<F extends readonly FilterSchema[]>({
   filters,
   db,
@@ -384,51 +353,50 @@ export function formatWhereClause<F extends readonly FilterSchema[]>({
     composeWith,
   });
 
-  if (!where) return '';
+  if (!where) {
+    return '';
+  }
 
   const dialect = getSqlDialect(db);
 
-  // simple literal encoder - delegates to dialect for arrays
-  const lit = (v: FilterSearchValue): string => {
-    if (Array.isArray(v)) {
-      return dialect.toLiteral(v);
+  const toLiteral = (value: FilterSearchValue): string => {
+    if (Array.isArray(value)) {
+      return dialect.toLiteral(value);
     }
 
-    return v === null
+    return value === null
       ? 'NULL'
-      : typeof v === 'boolean'
-        ? v
+      : typeof value === 'boolean'
+        ? value
           ? 'TRUE'
           : 'FALSE'
-        : typeof v === 'number'
-          ? String(v)
-          : `'${String(v).replace(/'/g, "''")}'`;
+        : typeof value === 'number'
+          ? String(value)
+          : `'${String(value).replace(/'/g, "''")}'`;
   };
 
-  /** Replace placeholders with literal values */
   if (db === DatabaseClientType.POSTGRES) {
-    let out = where;
-    params.forEach((p, i) => {
-      out = out.replace(new RegExp(`\\$${i + 1}\\b`, 'g'), lit(p));
+    let output = where;
+    params.forEach((value, index) => {
+      output = output.replace(
+        new RegExp(`\\$${index + 1}\\b`, 'g'),
+        toLiteral(value)
+      );
     });
-    return out;
-  } else {
-    let idx = 0;
-    return where.replace(/\?/g, () => lit(params[idx++]));
+    return output;
   }
+
+  let parameterIndex = 0;
+  return where.replace(/\?/g, () => toLiteral(params[parameterIndex++]));
 }
 
 export function getPlaceholderSearchByOperator(raw: string): string {
   const op = raw.toUpperCase().trim();
 
-  /* 1. no‑value operators ----------------------------------------------- */
   if (op === 'IS NULL' || op === 'IS NOT NULL') return '';
-
-  /* 2. list‑style operators --------------------------------------------- */
   if (op === 'IN' || op === 'NOT IN') return 'value1,value2,value3';
   if (op === 'BETWEEN' || op === 'NOT BETWEEN') return 'value1 AND value2';
 
-  /* 3. LIKE / ILIKE variants -------------------------------------------- */
   if (op.includes('LIKE')) {
     if (op.endsWith('%VALUE%')) return 'contains';
     if (op.endsWith('VALUE%')) return 'prefix*';
@@ -436,6 +404,5 @@ export function getPlaceholderSearchByOperator(raw: string): string {
     return 'pattern';
   }
 
-  /* 4. default comparison (=, <>, <, >, <=, >=) ------------------------- */
   return 'value';
 }
