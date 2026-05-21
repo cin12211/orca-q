@@ -118,12 +118,6 @@ export const operatorSets: Record<
     { value: OperatorSet.ILIKE_CONTAINS, label: 'Contains' },
     { value: OperatorSet.NOT_ILIKE_CONTAINS, label: 'Not contains' },
 
-    { value: OperatorSet.ILIKE_CONTAINS, label: 'Contains - Case insensitive' },
-    {
-      value: OperatorSet.NOT_ILIKE_CONTAINS,
-      label: 'Not contains - Case insensitive',
-    },
-
     separatorRow,
 
     { value: OperatorSet.LIKE_PREFIX, label: 'Has prefix' },

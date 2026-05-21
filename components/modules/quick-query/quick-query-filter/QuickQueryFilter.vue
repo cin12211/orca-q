@@ -70,6 +70,11 @@ const insert = (index: number, filter: FilterSchema) => {
   emitFilters(nextFilters);
 };
 
+const getDefaultContainsOperator = () =>
+  props.dbType === DatabaseClientType.POSTGRES
+    ? OperatorSet.ILIKE_CONTAINS
+    : OperatorSet.LIKE_CONTAINS;
+
 const remove = (index: number) => {
   const nextFilters = getNextFilters();
 
@@ -82,7 +87,7 @@ const onAddFilter = (index: number) => {
   insert(index + 1, {
     isSelect: true,
     fieldName: EExtendedField.AnyField,
-    operator: OperatorSet.LIKE_CONTAINS,
+    operator: getDefaultContainsOperator(),
   });
 };
 
@@ -95,7 +100,7 @@ const updateFieldName = (index: number, newFieldName: string) => {
     updateFilter(index, {
       ...row,
       fieldName: newFieldName,
-      operator: OperatorSet.LIKE_CONTAINS,
+      operator: getDefaultContainsOperator(),
     });
   } else {
     updateFilter(index, {

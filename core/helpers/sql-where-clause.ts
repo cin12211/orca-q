@@ -158,8 +158,9 @@ const likeHandler: Handler = ({
   dialect,
   nextPlaceholder,
 }) => {
-  const includeNegative = op.toUpperCase().startsWith('NOT');
-  const ilike = op.toUpperCase().startsWith('ILIKE');
+  const normalizedOp = op.toUpperCase();
+  const includeNegative = normalizedOp.startsWith('NOT');
+  const ilike = normalizedOp.includes('ILIKE');
   const syntax = dialect.likeOperator(ilike);
   let value = getFilterSearchText(search);
 
@@ -206,6 +207,54 @@ const handlerMap: Record<OperatorSet, Handler> = {
   [OperatorSet.GREATER]: compareHandler,
   [OperatorSet.LESS_EQUAL]: compareHandler,
   [OperatorSet.GREATER_EQUAL]: compareHandler,
+};
+
+const postgresFilterOperators = [
+  OperatorSet.EQUAL,
+  OperatorSet.NOT_EQUAL,
+  OperatorSet.LESS,
+  OperatorSet.GREATER,
+  OperatorSet.LESS_EQUAL,
+  OperatorSet.GREATER_EQUAL,
+  OperatorSet.IN,
+  OperatorSet.NOT_IN,
+  OperatorSet.IS_NULL,
+  OperatorSet.IS_NOT_NULL,
+  OperatorSet.BETWEEN,
+  OperatorSet.NOT_BETWEEN,
+  OperatorSet.LIKE,
+  OperatorSet.ILIKE,
+  OperatorSet.LIKE_CONTAINS,
+  OperatorSet.LIKE_PREFIX,
+  OperatorSet.LIKE_SUFFIX,
+  OperatorSet.ILIKE_CONTAINS,
+  OperatorSet.ILIKE_PREFIX,
+  OperatorSet.ILIKE_SUFFIX,
+  OperatorSet.NOT_ILIKE_CONTAINS,
+  OperatorSet.NOT_ILIKE_PREFIX,
+  OperatorSet.NOT_ILIKE_SUFFIX,
+];
+
+const resolveOperator = (
+  rawOp: OperatorSet,
+  allowedOps: Set<string>
+): OperatorSet => {
+  if (allowedOps.has(rawOp)) {
+    return rawOp;
+  }
+
+  if (rawOp.startsWith('NOT LIKE')) {
+    const caseInsensitiveOp = rawOp.replace(
+      'NOT LIKE',
+      'NOT ILIKE'
+    ) as OperatorSet;
+
+    if (allowedOps.has(caseInsensitiveOp)) {
+      return caseInsensitiveOp;
+    }
+  }
+
+  return OperatorSet.LIKE_CONTAINS;
 };
 
 function buildAnyFieldClause({
@@ -274,11 +323,14 @@ export function buildWhereClause<F extends readonly FilterSchema[]>({
   };
 
   const allowedOps = new Set(
-    (
-      operatorSets[db as keyof typeof operatorSets] ??
-      operatorSets[DatabaseClientType.MYSQL] ??
-      []
-    ).map(o => o.value.toUpperCase())
+    (db === DatabaseClientType.POSTGRES
+      ? postgresFilterOperators
+      : (
+          operatorSets[db as keyof typeof operatorSets] ??
+          operatorSets[DatabaseClientType.MYSQL] ??
+          []
+        ).map(o => o.value)
+    ).map(value => value.toUpperCase())
   );
 
   filters.forEach(raw => {
@@ -313,10 +365,10 @@ export function buildWhereClause<F extends readonly FilterSchema[]>({
     }
 
     const col = wrapCol(filter.fieldName);
-    const rawOp = (
-      filter.operator ?? OperatorSet.LIKE_CONTAINS
-    ).toUpperCase() as OperatorSet;
-    const op = allowedOps.has(rawOp) ? rawOp : OperatorSet.LIKE_CONTAINS;
+    const rawOp = (filter.operator ?? OperatorSet.LIKE_CONTAINS)
+      .trim()
+      .toUpperCase() as OperatorSet;
+    const op = resolveOperator(rawOp, allowedOps);
 
     push(
       handlerMap[op]({

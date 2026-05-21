@@ -377,14 +377,14 @@ describe('buildWhereClause', () => {
         OperatorSet.NOT_LIKE_CONTAINS,
         DatabaseClientType.POSTGRES,
         'john',
-        'WHERE "name"::TEXT  NOT LIKE $1',
+        'WHERE "name"::TEXT  NOT ILIKE $1',
         ['%john%'],
       ],
       [
         OperatorSet.NOT_ILIKE_CONTAINS,
         DatabaseClientType.POSTGRES,
         'John',
-        'WHERE "name"::TEXT  NOT LIKE $1',
+        'WHERE "name"::TEXT  NOT ILIKE $1',
         ['%John%'],
       ],
     ])(

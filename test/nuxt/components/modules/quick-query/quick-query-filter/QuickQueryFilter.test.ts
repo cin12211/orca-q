@@ -41,7 +41,7 @@ const TestInput = defineComponent({
   },
 });
 
-const mountFilterHarness = () => {
+const mountFilterHarness = (dbType = DatabaseClientType.POSTGRES) => {
   const FilterHarness = defineComponent({
     components: {
       QuickQueryFilter,
@@ -60,7 +60,7 @@ const mountFilterHarness = () => {
 
       return {
         ComposeOperator,
-        DatabaseClientType,
+        dbType,
         filters,
         isShowFilters,
         filterRef,
@@ -70,7 +70,7 @@ const mountFilterHarness = () => {
       <QuickQueryFilter
         ref="filterRef"
         :columns="['name', 'email']"
-        :db-type="DatabaseClientType.POSTGRES"
+        :db-type="dbType"
         base-query='SELECT * FROM "public"."users"'
         :init-filters="filters"
         :compose-with="ComposeOperator.AND"
@@ -212,7 +212,7 @@ describe('QuickQueryFilter', () => {
     );
   });
 
-  it('focuses the first filter value input when showing filters', async () => {
+  it('focuses the first filter value input and defaults to Postgres contains when showing filters', async () => {
     const wrapper = mountFilterHarness();
     const filter = wrapper.getComponent(QuickQueryFilter);
     const exposed = filter.vm as unknown as {
@@ -236,9 +236,36 @@ describe('QuickQueryFilter', () => {
       {
         isSelect: true,
         fieldName: EExtendedField.AnyField,
-        operator: OperatorSet.LIKE_CONTAINS,
+        operator: OperatorSet.ILIKE_CONTAINS,
       },
     ]);
     expect(document.activeElement).toBe(input.element);
+  });
+
+  it('defaults to LIKE contains when showing filters for non-Postgres databases', async () => {
+    const wrapper = mountFilterHarness(DatabaseClientType.MYSQL);
+    const filter = wrapper.getComponent(QuickQueryFilter);
+    const exposed = filter.vm as unknown as {
+      onShowSearch: () => Promise<void>;
+    };
+
+    await exposed.onShowSearch();
+    await nextTick();
+
+    const state = wrapper.vm as unknown as {
+      filters: Array<{
+        isSelect?: boolean;
+        fieldName: string;
+        operator?: string;
+      }>;
+    };
+
+    expect(state.filters).toEqual([
+      {
+        isSelect: true,
+        fieldName: EExtendedField.AnyField,
+        operator: OperatorSet.LIKE_CONTAINS,
+      },
+    ]);
   });
 });
