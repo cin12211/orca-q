@@ -2,3 +2,8 @@ export * from './formatColumnsInfo';
 export * from './getMappedSchemaSuggestion';
 export * from './commandType';
 export * from './normalizeResultRows';
+export * from './relationDetection';
+export * from './buildRelationColumnDefs';
+export * from './isCellEditable';
+export * from './buildRawQueryUpdates';
+export * from './buildRawQueryColumnDefs';

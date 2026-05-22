@@ -15,6 +15,9 @@ export interface DatabaseField {
   dataTypeSize: number;
   dataTypeModifier: number;
   format: string;
+  schemaName?: string;
+  tableName?: string;
+  sourceColumnName?: string;
 }
 
 export interface RawQueryResultWithMetadata {

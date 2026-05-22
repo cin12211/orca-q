@@ -1,21 +1,25 @@
 import type { FieldDef } from 'pg';
 import type { Schema } from '~/core/stores';
 import type {
+  DatabaseField,
   TableDetailMetadata,
-  TableDetails,
-  ViewDetails,
   SchemaColumnMetadata as ColumnShortMetadata,
-  SchemaForeignKeyMetadata as ForeignKeyMetadata,
 } from '~/core/types';
 import type { MappedRawColumn } from '../interfaces';
+import { inferFieldMetadataFromStatement } from './inferFieldMetadataFromStatement';
+import { findTableInfoByName, type ResolvedTableInfo } from './sqlMetadata';
+
+type RawResultField = FieldDef & Partial<DatabaseField>;
 
 export const formatColumnsInfo = ({
   fieldDefs,
-  activeSchema,
+  statementQuery,
+  schemas,
   getTableInfoById,
 }: {
-  fieldDefs: FieldDef[];
-  activeSchema?: Schema;
+  fieldDefs: RawResultField[];
+  statementQuery?: string;
+  schemas: Schema[];
   getTableInfoById: (
     tableId: string,
     schema: Schema
@@ -26,63 +30,87 @@ export const formatColumnsInfo = ({
       }
     | undefined;
 }): MappedRawColumn[] => {
-  const mapTableInfo = new Map<string, TableDetailMetadata>();
-  const mapTableName = new Map<string, string>();
-  const mapFileName = new Map<string, string>();
+  const resolvedFieldDefs = inferFieldMetadataFromStatement({
+    fieldDefs,
+    statementQuery,
+    schemas,
+  });
+  const mapTableInfo = new Map<string, ResolvedTableInfo>();
+  const seenFieldNames = new Set<string>();
 
-  return fieldDefs.map(field => {
+  return resolvedFieldDefs.map(field => {
     const tableId = `${field.tableID}`;
+    const tableCacheKey =
+      field.tableID && field.tableID > 0
+        ? `id:${tableId}`
+        : `name:${field.schemaName || ''}.${field.tableName || ''}`;
 
     const fieldName = field.name;
+    const sourceColumnName = field.sourceColumnName || field.name;
 
-    let tableInfo = mapTableInfo.get(tableId);
-    let tableName = mapTableName.get(tableId);
+    let resolvedTableInfo = mapTableInfo.get(tableCacheKey);
 
-    const isHaveFieldName = mapFileName.has(fieldName);
+    const hasDuplicateFieldName = seenFieldNames.has(fieldName);
+    seenFieldNames.add(fieldName);
 
-    if (!isHaveFieldName) {
-      mapFileName.set(fieldName, fieldName);
-    }
-
-    if (!tableInfo) {
-      if (activeSchema) {
-        const table = getTableInfoById(tableId, activeSchema);
-
-        tableInfo = table?.tableInfo;
-        tableName = table?.tableName;
+    if (!resolvedTableInfo) {
+      if (field.tableName) {
+        resolvedTableInfo = findTableInfoByName({
+          schemas,
+          tableName: field.tableName,
+          schemaName: field.schemaName,
+        });
       }
 
-      if (tableInfo) {
-        mapTableInfo.set(tableId, tableInfo);
-        mapTableName.set(tableId, tableName as string);
+      if (!resolvedTableInfo && field.tableID) {
+        for (const schema of schemas) {
+          const table = getTableInfoById(tableId, schema);
+
+          if (table) {
+            resolvedTableInfo = {
+              schemaName: schema.name,
+              tableName: table.tableName,
+              tableInfo: table.tableInfo,
+            };
+            break;
+          }
+        }
+      }
+
+      if (resolvedTableInfo) {
+        mapTableInfo.set(tableCacheKey, resolvedTableInfo);
       }
     }
 
-    const column = (tableInfo?.columns || []).find(
-      column => column.name === field.name
+    const column = (resolvedTableInfo?.tableInfo.columns || []).find(
+      column => column.name === sourceColumnName
     ) as ColumnShortMetadata;
 
-    const isPrimaryKey = !!tableInfo?.primary_keys?.find(
-      pk => pk.column === field.name
+    const isPrimaryKey = !!resolvedTableInfo?.tableInfo.primary_keys?.find(
+      pk => pk.column === sourceColumnName
     );
 
-    const isForeignKey = !!tableInfo?.foreign_keys?.find(
-      fk => fk.column === field.name
+    const foreignKey = resolvedTableInfo?.tableInfo.foreign_keys?.find(
+      fk => fk.column === sourceColumnName
     );
+    const isForeignKey = !!foreignKey;
 
-    const aliasFieldName = isHaveFieldName
-      ? `${tableName}.${field.name}`
+    const aliasFieldName = hasDuplicateFieldName
+      ? `${resolvedTableInfo?.tableName || field.tableName || 'table'}.${field.name}`
       : field.name;
 
     const columnInfo: MappedRawColumn = {
-      tableName: tableName || '',
+      tableName: resolvedTableInfo?.tableName || field.tableName || '',
+      schemaName: resolvedTableInfo?.schemaName || field.schemaName,
       ...column,
       aliasFieldName,
       queryFieldName: field.name,
-      originalName: column?.name || '',
+      originalName: field.name,
+      sourceColumnName,
       canMutate: !!column,
       isPrimaryKey,
       isForeignKey,
+      foreignKey,
     };
 
     return columnInfo;

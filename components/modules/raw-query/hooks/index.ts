@@ -5,3 +5,6 @@ export * from './useRawQueryExplainAnalyzeOptions';
 export * from './useResultTabs';
 export * from './useQueryExecution';
 export * from './useSqlEditorExtensions';
+export * from './useRawQueryRelationPreview';
+export * from './useRawQueryEditedCells';
+export * from './useRawQueryMutation';

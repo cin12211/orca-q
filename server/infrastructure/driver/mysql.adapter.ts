@@ -13,6 +13,9 @@ export function normalizeMysqlFields(
 ): DatabaseField[] {
   return fields.map((field, index) => ({
     name: field.name,
+    schemaName: field.db || undefined,
+    tableName: field.orgTable || field.table || undefined,
+    sourceColumnName: field.orgName || field.name,
     tableID: 0,
     columnID: index,
     dataTypeID: field.columnType ?? 0,

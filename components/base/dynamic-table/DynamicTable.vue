@@ -8,7 +8,6 @@ import type {
   ColTypeDef,
   GridOptions,
   ICellEditorParams,
-  ValueFormatterParams,
   ValueSetterParams,
 } from 'ag-grid-community';
 import { AgGridVue } from 'ag-grid-vue3';
@@ -19,16 +18,16 @@ import DynamicPrimaryKeyHeader from './DynamicPrimaryKeyHeader.vue';
 import {
   DEFAULT_COLUMN_ADDITIONAL_GAP_WIDTH,
   DEFAULT_COLUMN_RAW_GAP_WIDTH,
-  DEFAULT_HASH_INDEX_WIDTH,
-  HASH_INDEX_HEADER,
   HASH_INDEX_ID,
 } from './constants';
 import { useAgGridApi, useTableTheme } from './hooks';
 import {
+  createHashIndexColumnDef,
+  estimateGridColumnWidth,
+  formatGridCellValue,
   type RowData,
   cellValueFormatter,
   estimateAllColumnWidths,
-  estimateColumnWidth,
 } from './utils';
 
 // TODO: refactor this component to reuse in query table
@@ -102,17 +101,7 @@ const columnDefs = computed<ColDef[]>(() => {
   const colDefs: ColDef[] = [];
 
   if (props.hasHashIndex) {
-    colDefs.push({
-      colId: HASH_INDEX_ID,
-      headerName: HASH_INDEX_HEADER,
-      field: HASH_INDEX_ID,
-      filter: false,
-      resizable: false,
-      editable: false,
-      sortable: true,
-      pinned: 'left',
-      width: DEFAULT_HASH_INDEX_WIDTH,
-    });
+    colDefs.push(createHashIndexColumnDef());
   }
 
   const tempRows = (props.data || []).slice(0, 10);
@@ -140,17 +129,12 @@ const columnDefs = computed<ColDef[]>(() => {
       }
 
       const headerName = aliasFieldName;
-
-      const additionalGap =
-        isPrimaryKey || isForeignKey ? DEFAULT_COLUMN_ADDITIONAL_GAP_WIDTH : 0;
-
-      const estimatedWidth =
-        estimateColumnWidth({
-          headerName,
-          rows: tempRows,
-          field: fieldId,
-          gapWidth: DEFAULT_COLUMN_RAW_GAP_WIDTH,
-        }) + additionalGap;
+      const estimatedWidth = estimateGridColumnWidth({
+        headerName,
+        rows: tempRows,
+        field: fieldId,
+        isKey: isPrimaryKey || isForeignKey,
+      });
 
       const column: ColDef = {
         headerName,
@@ -213,18 +197,7 @@ const columnDefs = computed<ColDef[]>(() => {
         // cellEditor: 'AgJsonCellEditor',
         // cellEditorPopup: true,
 
-        valueFormatter: (params: ValueFormatterParams) => {
-          const value = params.value;
-          if (value === null) {
-            return 'NULL';
-          }
-
-          if (typeof value === 'object' && value !== null) {
-            return JSON.stringify(value, null, 2); // Chuỗi có định dạng đẹp
-          }
-
-          return (value ?? '') as string;
-        },
+        valueFormatter: formatGridCellValue,
 
         // // // Chuyển Object thành chuỗi JSON khi vào chế độ chỉnh sửa
         // valueGetter: (params: ValueGetterParams) => {

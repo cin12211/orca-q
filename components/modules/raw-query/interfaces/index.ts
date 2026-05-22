@@ -1,4 +1,5 @@
 import type { FieldDef } from 'pg';
+import type { SchemaForeignKeyMetadata } from '~/core/types';
 import type { DatabaseDriverError } from '~/core/types';
 import type { Connection } from '~/core/types/entities';
 
@@ -16,6 +17,9 @@ export interface MappedRawColumn {
   type?: string | undefined;
   short_type_name?: string | undefined;
   tableName: string;
+  schemaName?: string | undefined;
+  sourceColumnName?: string | undefined;
+  foreignKey?: SchemaForeignKeyMetadata | undefined;
 }
 
 export interface EditorCursor {
