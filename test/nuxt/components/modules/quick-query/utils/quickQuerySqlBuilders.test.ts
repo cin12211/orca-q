@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   HASH_INDEX_ID,
   NEW_ROW_FLAG_ID,
-} from '~/components/base/dynamic-table/constants';
+} from '~/components/base/data-grid/constants';
 import { DatabaseClientType } from '~/core/constants/database-client-type';
 import { normalizeEditedCellValue } from '~/core/helpers/cell-value';
 import {

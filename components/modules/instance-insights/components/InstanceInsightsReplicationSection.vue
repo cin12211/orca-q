@@ -1,5 +1,10 @@
 <script setup lang="ts">
 import {
+  buildDynamicColumnDefs,
+  buildDynamicRowData,
+  DYNAMIC_COLUMN_TYPES,
+} from '~/components/base/data-grid/utils';
+import {
   buildMappedColumnsFromKeys as buildColumnsFromKeys,
   buildMappedColumnsFromRows as buildColumnsFromRows,
 } from '~/core/helpers';
@@ -71,6 +76,18 @@ const replicationStatsColumns = computed(() => {
   return buildColumnsFromKeys(REPLICATION_STATS_COLUMN_KEYS);
 });
 
+const replicationStatsColumnDefs = computed(() =>
+  buildDynamicColumnDefs({
+    columns: replicationStatsColumns.value,
+    rows: replicationStatsTableRows.value,
+    columnKeyBy: 'field',
+  })
+);
+
+const replicationStatsRowData = computed(() =>
+  buildDynamicRowData(replicationStatsTableRows.value)
+);
+
 const replicationSlotsTableRows = computed<Record<string, unknown>[]>(() =>
   replicationSlots.value.map(row => ({
     slot_name: row.slotName,
@@ -85,6 +102,18 @@ const replicationSlotsTableRows = computed<Record<string, unknown>[]>(() =>
 
 const replicationSlotsColumns = computed(() =>
   buildColumnsFromRows(replicationSlotsTableRows.value)
+);
+
+const replicationSlotsColumnDefs = computed(() =>
+  buildDynamicColumnDefs({
+    columns: replicationSlotsColumns.value,
+    rows: replicationSlotsTableRows.value,
+    columnKeyBy: 'field',
+  })
+);
+
+const replicationSlotsRowData = computed(() =>
+  buildDynamicRowData(replicationSlotsTableRows.value)
 );
 
 const TABLE_MAX_HEIGHT_PX = 300;
@@ -195,14 +224,14 @@ const onToggleSelectedSlotStatus = async () => {
     <div class="space-y-1.5">
       <p class="text-sm">Replication Stats</p>
       <div
-        class="max-h-[300px]"
+        class="max-h-[300px] min-h-[200px]"
         :style="{ height: replicationStatsTableHeight }"
       >
-        <DynamicTable
-          :columns="replicationStatsColumns"
-          :data="replicationStatsTableRows"
+        <BaseDataGrid
+          :column-defs="replicationStatsColumnDefs"
+          :row-data="replicationStatsRowData"
+          :column-types="DYNAMIC_COLUMN_TYPES"
           class="h-full border rounded-md"
-          columnKeyBy="field"
         />
       </div>
     </div>
@@ -210,16 +239,16 @@ const onToggleSelectedSlotStatus = async () => {
     <div class="space-y-1.5">
       <h4 class="text-sm font-normal">Replication Slots</h4>
       <div
-        class="max-h-[300px]"
+        class="max-h-[300px] min-h-[200px]"
         :style="{ height: replicationSlotsTableHeight }"
       >
-        <DynamicTable
-          :columns="replicationSlotsColumns"
-          :data="replicationSlotsTableRows"
-          :selectedRows="selectedSlotRows"
+        <BaseDataGrid
+          :column-defs="replicationSlotsColumnDefs"
+          :row-data="replicationSlotsRowData"
+          :column-types="DYNAMIC_COLUMN_TYPES"
+          :selected-rows="selectedSlotRows"
           class="h-full border rounded-md"
-          columnKeyBy="field"
-          @on-selected-rows="onSelectedSlotRows"
+          @selection-changed="onSelectedSlotRows"
         />
       </div>
     </div>

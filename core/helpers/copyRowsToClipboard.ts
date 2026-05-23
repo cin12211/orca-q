@@ -1,4 +1,4 @@
-import { DYNAMIC_TABLE_ROW_METADATA_IDS } from '~/components/base/dynamic-table/constants';
+import { DATA_GRID_ROW_METADATA_IDS } from '~/components/base/data-grid/constants';
 
 export const copyRowsToClipboard = (rows: Record<string, any>[]) => {
   if (!Array.isArray(rows) || rows.length === 0) {
@@ -13,8 +13,8 @@ export const copyRowsToClipboard = (rows: Record<string, any>[]) => {
     const rowData = Object.entries(row)
       .filter(
         ([key]) =>
-          !DYNAMIC_TABLE_ROW_METADATA_IDS.includes(
-            key as (typeof DYNAMIC_TABLE_ROW_METADATA_IDS)[number]
+          !DATA_GRID_ROW_METADATA_IDS.includes(
+            key as (typeof DATA_GRID_ROW_METADATA_IDS)[number]
           )
       )
       .map(([_, value]) => {

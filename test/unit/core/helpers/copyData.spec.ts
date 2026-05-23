@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { HASH_INDEX_ID } from '@/components/base/dynamic-table/constants/constants';
+import { HASH_INDEX_ID } from '@/components/base/data-grid/constants/constants';
 import {
   copyToClipboard,
   cleanRows,

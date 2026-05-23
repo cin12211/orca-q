@@ -1,12 +1,12 @@
 import type { ColDef } from 'ag-grid-community';
-import DynamicPrimaryKeyHeader from '~/components/base/dynamic-table/DynamicPrimaryKeyHeader.vue';
+import DataGridRelationCell from '~/components/base/data-grid/components/cell-renderers/DataGridRelationCell.vue';
+import DataGridKeyHeader from '~/components/base/data-grid/headers/DataGridKeyHeader.vue';
 import {
   createHashIndexColumnDef,
   estimateGridColumnWidth,
   formatGridCellValue,
   type RowData,
-} from '~/components/base/dynamic-table/utils';
-import CustomCellUuid from '~/components/modules/quick-query/quick-query-table/CustomCellUuid.vue';
+} from '~/components/base/data-grid/utils';
 import type { ReservedTableSchemas } from '~/core/types/database-tables.types';
 import type { MappedRawColumn } from '../interfaces';
 import { isRelationColumn } from './relationDetection';
@@ -62,11 +62,11 @@ export const buildRelationColumnDefs = ({
         sortable: true,
         type: 'editableColumn',
         headerComponentParams: {
-          innerHeaderComponent: DynamicPrimaryKeyHeader,
+          innerHeaderComponent: DataGridKeyHeader,
           isPrimaryKey: column.isPrimaryKey,
           isForeignKey: column.isForeignKey,
         },
-        cellRenderer: hasRelation ? CustomCellUuid : undefined,
+        cellRenderer: hasRelation ? DataGridRelationCell : undefined,
         cellRendererParams: {
           isPrimaryKey: hasRelation,
           onOpenPreviewReverseTableModal: (id: string) =>

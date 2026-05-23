@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { onClickOutside } from '@vueuse/core';
 import type { HTMLAttributes } from 'vue';
+import { markRaw } from 'vue';
 import type {
   CellContextMenuEvent,
   CellValueChangedEvent,
@@ -10,13 +11,16 @@ import type {
   GridReadyEvent,
 } from 'ag-grid-community';
 import { AgGridVue } from 'ag-grid-vue3';
+import { DEFAULT_BUFFER_ROWS } from '~/core/constants';
+import BaseDataGridCopyContextMenu from './components/BaseDataGridCopyContextMenu.vue';
+import BaseDataGridEmptyOverlay from './components/BaseDataGridEmptyOverlay.vue';
 import {
   useAgGridApi,
+  useDataGridContextMenu,
+  useDataGridSelection,
   useTableTheme,
-} from '~/components/base/dynamic-table/hooks';
-import { cellValueFormatter } from '~/components/base/dynamic-table/utils';
-import { DEFAULT_BUFFER_ROWS } from '~/core/constants';
-import { useDataGridContextMenu, useDataGridSelection } from './hooks';
+} from './hooks';
+import { cellValueFormatter } from './utils';
 
 /**
  * BaseDataGrid is the lowest-level shared AG Grid wrapper used by feature
@@ -29,10 +33,12 @@ import { useDataGridContextMenu, useDataGridSelection } from './hooks';
  *  - emit selection-changed / cell-focused / click-outside signals
  *  - bind the cmd/ctrl+C copy hotkey
  *
- * It is intentionally column-/row-/edit-agnostic: callers are responsible for
+ * It is intentionally column-/row-agnostic: callers are responsible for
  * building `columnDefs` and `rowData`, and for any feature-specific
  * `gridOptions` (column types, cell styling, custom components, ...). Those
- * options are deep-merged on top of the base defaults.
+ * options are deep-merged on top of the base defaults. Editing is disabled by
+ * default and must be explicitly enabled by feature grids that own mutation
+ * flows, such as Quick Query and Raw Query.
  */
 const props = withDefaults(
   defineProps<{
@@ -43,16 +49,28 @@ const props = withDefaults(
     components?: Record<string, unknown>;
     class?: HTMLAttributes['class'];
     selectedRows?: unknown[];
+    autoScrollOnSelection?: boolean;
+    enableSimpleCopyContextMenu?: boolean;
+    contextMenuTableName?: string;
+    contextMenuSchemaName?: string;
     enableCopyHotkey?: boolean;
     enableClickOutside?: boolean;
+    allowEditing?: boolean;
     suppressScrollOnNewData?: boolean;
     copyHeadersToClipboard?: boolean;
+    emptyTitle?: string;
+    emptyDescription?: string;
   }>(),
   {
+    autoScrollOnSelection: true,
+    enableSimpleCopyContextMenu: false,
     enableCopyHotkey: true,
     enableClickOutside: false,
+    allowEditing: false,
     suppressScrollOnNewData: true,
     copyHeadersToClipboard: false,
+    emptyTitle: 'No data found',
+    emptyDescription: 'There are no rows to display.',
   }
 );
 
@@ -69,8 +87,19 @@ const emit = defineEmits<{
 
 const containerRef = ref<HTMLElement>();
 const agGridRef = useTemplateRef<HTMLElement>('agGridRef');
+const selectedRowsState = ref<Record<string, unknown>[]>([]);
 
 const { gridApi, onGridReady: onAgGridReady } = useAgGridApi();
+
+watch(
+  () => props.selectedRows,
+  rows => {
+    if (Array.isArray(rows)) {
+      selectedRowsState.value = rows as Record<string, unknown>[];
+    }
+  },
+  { immediate: true }
+);
 
 const handleGridReady = (event: GridReadyEvent) => {
   onAgGridReady(event);
@@ -79,13 +108,17 @@ const handleGridReady = (event: GridReadyEvent) => {
 
 const { handleCellMouseOverDebounced, handleCellMouseDown } =
   useRangeSelectionTable({
+    enableAutoScroll: props.autoScrollOnSelection,
     gridApi,
     gridRef: agGridRef,
   });
 
 const { onSelectionChanged, onCellFocus } = useDataGridSelection({
   gridApi,
-  onSelectedRows: rows => emit('selectionChanged', rows),
+  onSelectedRows: rows => {
+    selectedRowsState.value = rows as Record<string, unknown>[];
+    emit('selectionChanged', rows);
+  },
   onFocusCell: value => emit('cellFocused', value),
 });
 
@@ -96,7 +129,7 @@ const {
   onCellHeaderContextMenu: handleCellHeaderContextMenu,
   clearCellContextMenu,
 } = useDataGridContextMenu({
-  hasSelectedRows: () => !!props.selectedRows?.length,
+  hasSelectedRows: () => selectedRowsState.value.length > 0,
 });
 
 const onCellContextMenu = (event: CellContextMenuEvent) => {
@@ -141,11 +174,19 @@ const mergedGridOptions = computed<GridOptions>(() => {
     },
     theme: tableTheme.value,
     pagination: false,
-    undoRedoCellEditing: true,
+    undoRedoCellEditing: props.allowEditing,
     undoRedoCellEditingLimit: 25,
     animateRows: true,
     onCellMouseDown: handleCellMouseDown,
     onCellMouseOver: handleCellMouseOverDebounced,
+    noRowsOverlayComponent: 'BaseDataGridEmptyOverlay',
+    noRowsOverlayComponentParams: {
+      title: props.emptyTitle,
+      description: props.emptyDescription,
+    },
+    components: {
+      BaseDataGridEmptyOverlay: markRaw(BaseDataGridEmptyOverlay),
+    },
   };
 
   const userOptions = props.gridOptions ?? {};
@@ -153,6 +194,8 @@ const mergedGridOptions = computed<GridOptions>(() => {
   return {
     ...baseOptions,
     ...userOptions,
+    undoRedoCellEditing:
+      props.allowEditing && (userOptions.undoRedoCellEditing ?? true),
     // Deep-merge `components` so consumers can add custom cell editors without
     // dropping the ones already provided via `props.components`.
     components: {
@@ -160,6 +203,33 @@ const mergedGridOptions = computed<GridOptions>(() => {
       ...(userOptions.components ?? {}),
       ...(props.components ?? {}),
     },
+  };
+});
+
+const effectiveColumnDefs = computed<ColDef[]>(() => {
+  if (props.allowEditing) {
+    return props.columnDefs;
+  }
+
+  return props.columnDefs.map(column => ({
+    ...column,
+    editable: false,
+  }));
+});
+
+const simpleContextMenuProps = computed(() => {
+  if (!props.enableSimpleCopyContextMenu) {
+    return {};
+  }
+
+  return {
+    cellContextMenu: cellContextMenu.value,
+    cellHeaderContextMenu: cellHeaderContextMenu.value,
+    data: props.rowData as Record<string, unknown>[],
+    selectedRows: selectedRowsState.value,
+    tableName: props.contextMenuTableName,
+    schemaName: props.contextMenuSchemaName,
+    onClearContextMenu: clearCellContextMenu,
   };
 });
 
@@ -193,6 +263,7 @@ if (props.enableCopyHotkey) {
 }
 
 const onCellValueChanged = (event: CellValueChangedEvent) => {
+  if (!props.allowEditing) return;
   emit('cellValueChanged', event);
 };
 
@@ -210,23 +281,31 @@ defineExpose({
 
 <template>
   <div ref="containerRef" class="h-full">
-    <AgGridVue
-      ref="agGridRef"
-      :class="props.class"
-      :grid-options="mergedGridOptions"
-      :column-defs="columnDefs"
-      :column-types="columnTypes"
-      :row-data="rowData"
-      :suppress-scroll-on-new-data="suppressScrollOnNewData"
-      :copy-headers-to-clipboard="copyHeadersToClipboard"
-      @grid-ready="handleGridReady"
-      @selection-changed="onSelectionChanged"
-      @cell-focused="onCellFocus"
-      @cell-value-changed="onCellValueChanged"
-      @row-data-updated="onRowDataUpdated"
-      @cell-context-menu="onCellContextMenu"
-      @column-header-context-menu="onCellHeaderContextMenu"
-    />
+    <component
+      :is="
+        props.enableSimpleCopyContextMenu ? BaseDataGridCopyContextMenu : 'div'
+      "
+      v-bind="simpleContextMenuProps"
+      class="h-full"
+    >
+      <AgGridVue
+        ref="agGridRef"
+        :class="props.class"
+        :grid-options="mergedGridOptions"
+        :column-defs="effectiveColumnDefs"
+        :column-types="columnTypes"
+        :row-data="rowData"
+        :suppress-scroll-on-new-data="suppressScrollOnNewData"
+        :copy-headers-to-clipboard="copyHeadersToClipboard"
+        @grid-ready="handleGridReady"
+        @selection-changed="onSelectionChanged"
+        @cell-focused="onCellFocus"
+        @cell-value-changed="onCellValueChanged"
+        @row-data-updated="onRowDataUpdated"
+        @cell-context-menu="onCellContextMenu"
+        @column-header-context-menu="onCellHeaderContextMenu"
+      />
+    </component>
   </div>
 </template>
 

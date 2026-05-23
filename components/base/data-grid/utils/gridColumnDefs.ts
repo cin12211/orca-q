@@ -11,7 +11,9 @@ import { estimateColumnWidth } from './calculateColumnWidths';
 
 type GridRowData = Record<string, unknown>;
 
-export function createHashIndexColumnDef(overrides: Partial<ColDef> = {}): ColDef {
+export function createHashIndexColumnDef(
+  overrides: Partial<ColDef> = {}
+): ColDef {
   return {
     colId: HASH_INDEX_ID,
     headerName: HASH_INDEX_HEADER,

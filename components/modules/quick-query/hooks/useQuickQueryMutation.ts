@@ -4,8 +4,8 @@ import { getConnectionParams } from '@/core/helpers/connection-helper';
 import {
   HASH_INDEX_ID,
   NEW_ROW_FLAG_ID,
-} from '~/components/base/dynamic-table/constants';
-import { cellValueFormatter } from '~/components/base/dynamic-table/utils';
+} from '~/components/base/data-grid/constants';
+import { cellValueFormatter } from '~/components/base/data-grid/utils';
 import { QuickQueryMutationAction } from '~/components/modules/quick-query/constants';
 import { copyRowsToClipboard } from '~/core/helpers';
 import {

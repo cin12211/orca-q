@@ -8,6 +8,10 @@ desktop support.
 
 - `components/` contains Vue UI. Reusable primitives live in `components/base`
   and shadcn-style components live in `components/ui`.
+- `components/base/data-grid/` contains the shared AG Grid wrapper, copy context
+  menu, and reusable grid renderers/headers. Read
+  `components/base/data-grid/docs/USAGE_GUIDE.md` before changing shared grid
+  behavior or adding a new generic grid feature.
 - `components/modules/` contains feature modules. Important modules include
   `quick-query`, `raw-query`, `management-connection`, `management-schemas`,
   `management-explorer`, `erd-diagram`, `workspace`, and `settings`.
@@ -29,6 +33,7 @@ desktop support.
 - `docs/` contains architecture, project structure, API, module flow, business
   rules, storage, and refactoring guidance. Read the specific doc that matches
   the task before changing broad behavior.
+- Shared grid usage notes live in `components/base/data-grid/docs/USAGE_GUIDE.md`.
 
 ## How To Run The Project
 

@@ -3,11 +3,11 @@ import type { Column } from 'ag-grid-community';
 import {
   DEFAULT_COLUMN_ADDITIONAL_GAP_WIDTH,
   HASH_INDEX_ID,
-} from '~/components/base/dynamic-table/constants';
+} from '~/components/base/data-grid/constants';
 import {
   estimateAllColumnWidths,
   type RowData,
-} from '~/components/base/dynamic-table/utils';
+} from '~/components/base/data-grid/utils';
 
 interface UseQuickQueryGridSizingOptions {
   gridApi: Ref<any>;

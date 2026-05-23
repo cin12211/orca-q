@@ -5,8 +5,8 @@ import type {
   ColTypeDef,
   GridOptions,
 } from 'ag-grid-community';
-import { useTableTheme } from '~/components/base/dynamic-table/hooks';
-import type { RowData } from '~/components/base/dynamic-table/utils';
+import { useTableTheme } from '~/components/base/data-grid/hooks';
+import type { RowData } from '~/components/base/data-grid/utils';
 import { DEFAULT_BUFFER_ROWS, DEFAULT_QUERY_SIZE } from '~/core/constants';
 import { areCellValuesDifferent } from '~/core/helpers/cell-value';
 import AgJsonCellEditor from '../quick-query-table/AgJsonCellEditor.vue';
@@ -19,8 +19,13 @@ interface UseQuickQueryGridOptionsOptions {
   selectedColumnFieldId: Ref<string | undefined>;
   isJSONColumn: (fieldId: string) => boolean;
   gridApi: Ref<any>;
-  onCellMouseDown: GridOptions['onCellMouseDown'];
-  onCellMouseOver: GridOptions['onCellMouseOver'];
+  /**
+   * Optional. When using `BaseDataGrid`, range-selection mouse handlers are
+   * managed by the underlying grid wrapper and should not be overridden
+   * here. Leave undefined to let the wrapper own them.
+   */
+  onCellMouseDown?: GridOptions['onCellMouseDown'];
+  onCellMouseOver?: GridOptions['onCellMouseOver'];
 }
 
 export const useQuickQueryGridOptions = ({
@@ -90,36 +95,44 @@ export const useQuickQueryGridOptions = ({
     gridApi.value?.updateGridOptions({ theme: newTheme });
   });
 
-  const gridOptions = computed<GridOptions>(() => ({
-    components: {
-      AgJsonCellEditor,
-    },
-    paginationPageSize: pageSize.value,
-    rowBuffer: DEFAULT_BUFFER_ROWS,
-    rowClass: 'class-row-border-none',
-    getRowStyle: params => {
-      if ((params.node.rowIndex || 0) % 2 === 0) {
-        return { background: 'var(--muted)' };
-      }
-    },
-    rowSelection: {
-      mode: 'multiRow',
-      checkboxes: false,
-      headerCheckbox: false,
-      enableSelectionWithoutKeys: false,
-      enableClickSelection: 'enableSelection',
-      copySelectedRows: false,
-    },
-    theme: tableTheme.value,
-    pagination: false,
-    undoRedoCellEditing: true,
-    undoRedoCellEditingLimit: 25,
-    animateRows: true,
-    onCellMouseDown,
-    onCellMouseOver,
-    defaultColDef: defaultColDef.value,
-    columnTypes: columnTypes.value,
-  }));
+  const gridOptions = computed<GridOptions>(() => {
+    const opts: GridOptions = {
+      components: {
+        AgJsonCellEditor,
+      },
+      paginationPageSize: pageSize.value,
+      rowBuffer: DEFAULT_BUFFER_ROWS,
+      rowClass: 'class-row-border-none',
+      getRowStyle: params => {
+        if ((params.node.rowIndex || 0) % 2 === 0) {
+          return { background: 'var(--muted)' };
+        }
+      },
+      rowSelection: {
+        mode: 'multiRow',
+        checkboxes: false,
+        headerCheckbox: false,
+        enableSelectionWithoutKeys: false,
+        enableClickSelection: 'enableSelection',
+        copySelectedRows: false,
+      },
+      theme: tableTheme.value,
+      pagination: false,
+      undoRedoCellEditing: true,
+      undoRedoCellEditingLimit: 25,
+      animateRows: true,
+      defaultColDef: defaultColDef.value,
+      columnTypes: columnTypes.value,
+    };
+
+    // Only attach mouse handlers when the caller explicitly provides them;
+    // otherwise leave them off so the underlying wrapper (e.g. BaseDataGrid)
+    // can own range-selection without being overridden.
+    if (onCellMouseDown) opts.onCellMouseDown = onCellMouseDown;
+    if (onCellMouseOver) opts.onCellMouseOver = onCellMouseOver;
+
+    return opts;
+  });
 
   return {
     pageSize,

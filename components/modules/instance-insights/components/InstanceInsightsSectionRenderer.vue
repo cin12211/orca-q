@@ -1,4 +1,9 @@
 <script setup lang="ts">
+import {
+  buildDynamicColumnDefs,
+  buildDynamicRowData,
+  DYNAMIC_COLUMN_TYPES,
+} from '~/components/base/data-grid/utils';
 import { buildMappedColumnsFromKeys as buildColumnsFromKeys } from '~/core/helpers';
 import type {
   InstanceInsightsActionState,
@@ -214,13 +219,19 @@ const getCheckClass = (status: 'pass' | 'warn' | 'fail' | 'info') => {
         class="max-h-[360px]"
         :style="{ height: `${getTableHeightPx(table.rows.length)}px` }"
       >
-        <DynamicTable
-          :columns="
-            buildColumnsFromKeys(table.columns.map(column => column.key))
+        <BaseDataGrid
+          :column-defs="
+            buildDynamicColumnDefs({
+              columns: buildColumnsFromKeys(
+                table.columns.map(column => column.key)
+              ),
+              rows: table.rows,
+              columnKeyBy: 'field',
+            })
           "
-          :data="table.rows"
+          :row-data="buildDynamicRowData(table.rows)"
+          :column-types="DYNAMIC_COLUMN_TYPES"
           class="h-full border rounded-md"
-          columnKeyBy="field"
         />
       </div>
 

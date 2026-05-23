@@ -2,7 +2,7 @@
 import { refDebounced } from '@vueuse/core';
 import { BaseEmpty, Textarea } from '#components';
 import * as z from 'zod';
-import { cellValueFormatter } from '~/components/base/dynamic-table/utils';
+import { cellValueFormatter } from '~/components/base/data-grid/utils';
 import { DEFAULT_DEBOUNCE_INPUT } from '~/core/constants';
 import { DatabaseClientType } from '~/core/constants/database-client-type';
 import { getSqlDialect } from '~/core/sql-dialect';

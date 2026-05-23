@@ -1,5 +1,5 @@
 import type { FieldDef } from 'pg';
-import type { RowData } from '~/components/base/dynamic-table/utils';
+import type { RowData } from '~/components/base/data-grid/utils';
 
 function hasOwn(value: Record<string, unknown>, key: string) {
   return Object.prototype.hasOwnProperty.call(value, key);

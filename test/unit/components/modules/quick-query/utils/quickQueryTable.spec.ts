@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { HASH_INDEX_ID } from '~/components/base/dynamic-table/constants';
+import { HASH_INDEX_ID } from '~/components/base/data-grid/constants';
 import {
   buildQuickQueryRowData,
   suppressDeleteKeyboardEvent,

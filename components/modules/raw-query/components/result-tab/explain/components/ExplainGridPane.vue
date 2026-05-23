@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { DynamicTable } from '#components';
 import type { ColDef } from 'ag-grid-community';
 import type { ExplainPlanNode } from '../../../../interfaces/explainAnalyzeResult';
 import ExplainOperationCell from './ExplainOperationCell.vue';
@@ -152,16 +151,12 @@ const externalComponents = {
 
 <template>
   <div class="h-full p-2">
-    <DynamicTable
+    <BaseDataGrid
       class="h-full"
-      :columns="[]"
-      :data="[]"
-      column-key-by="index"
-      skip-re-column-size
-      :has-hash-index="false"
-      :override-column-defs="columnDefs"
-      :override-row-data="tableRows"
-      :external-components="externalComponents"
+      :column-defs="columnDefs"
+      :row-data="tableRows"
+      :components="externalComponents"
+      :enable-copy-hotkey="false"
     />
   </div>
 </template>

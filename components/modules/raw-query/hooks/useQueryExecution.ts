@@ -6,7 +6,7 @@ import {
   clearSqlErrorDiagnostics,
   getCurrentStatement,
 } from '~/components/base/code-editor/utils';
-import type { RowData } from '~/components/base/dynamic-table/utils';
+import type { RowData } from '~/components/base/data-grid/utils';
 import { DatabaseClientType } from '~/core/constants/database-client-type';
 import { uuidv4 } from '~/core/helpers';
 import type { Connection } from '~/core/stores';

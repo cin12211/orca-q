@@ -3,14 +3,14 @@ import type {
   ColDef,
   EditableCallbackParams,
 } from 'ag-grid-community';
-import DynamicPrimaryKeyHeader from '~/components/base/dynamic-table/DynamicPrimaryKeyHeader.vue';
+import DataGridRelationCell from '~/components/base/data-grid/components/cell-renderers/DataGridRelationCell.vue';
+import DataGridKeyHeader from '~/components/base/data-grid/headers/DataGridKeyHeader.vue';
 import {
   createHashIndexColumnDef,
   estimateGridColumnWidth,
   formatGridCellValue,
   type RowData,
-} from '~/components/base/dynamic-table/utils';
-import CustomCellUuid from '~/components/modules/quick-query/quick-query-table/CustomCellUuid.vue';
+} from '~/components/base/data-grid/utils';
 import type { ReservedTableSchemas } from '~/core/types/database-tables.types';
 import type { MappedRawColumn } from '../interfaces';
 import type { RawQueryEditedCell } from './buildRawQueryUpdates';
@@ -52,7 +52,7 @@ interface BuildRawQueryColumnDefsOptions {
  * the table consumer never needs to fall back to a generic builder.
  *
  * Two cross-cutting concerns are baked in:
- *  - Relation columns get the `CustomCellUuid` renderer + relation click
+ *  - Relation columns get the shared relation-cell renderer + relation click
  *    handler so users can open `PreviewRelationTable`.
  *  - Per-cell editability is decided at render time via
  *    `isCellEditable(column, row)` — see `isCellEditable.ts` for the rules.
@@ -97,21 +97,30 @@ export const buildRawQueryColumnDefs = ({
      * Highlight dirty cells orange. Reads `dirtyTracker.cells` at paint-time so
      * it reflects saves/discards without rebuilding column defs.
      */
-    const cellStyle = columnEditable
-      ? (params: CellClassParams) => {
-          const field = params.colDef.field ?? '';
-          if (!field) return undefined;
+    const cellStyle = (params: CellClassParams) => {
+      const field = params.colDef.field ?? '';
+      if (!field) return undefined;
 
-          const rowId = Number(params.node.id ?? params.node.rowIndex);
-          const isDirty = dirtyTracker.cells.some(
-            c => c.rowId === rowId && c.fieldId === field
-          );
+      const rowId = Number(params.node.id ?? params.node.rowIndex);
+      const isDirty =
+        columnEditable &&
+        dirtyTracker.cells.some(c => c.rowId === rowId && c.fieldId === field);
 
-          return isDirty
-            ? { backgroundColor: 'var(--color-orange-200)' }
-            : undefined;
-        }
-      : undefined;
+      const style: { backgroundColor?: string; color?: string | number } = {
+        backgroundColor: 'unset',
+      };
+
+      if (isDirty) {
+        style.backgroundColor = 'var(--color-orange-200)';
+        return style;
+      }
+
+      if (params.value === null) {
+        style.color = 'var(--muted-foreground)';
+      }
+
+      return style;
+    };
 
     defs.push({
       headerName: column.aliasFieldName,
@@ -124,11 +133,11 @@ export const buildRawQueryColumnDefs = ({
       editable,
       cellStyle,
       headerComponentParams: {
-        innerHeaderComponent: DynamicPrimaryKeyHeader,
+        innerHeaderComponent: DataGridKeyHeader,
         isPrimaryKey: column.isPrimaryKey,
         isForeignKey: column.isForeignKey,
       },
-      cellRenderer: hasRelation ? CustomCellUuid : undefined,
+      cellRenderer: hasRelation ? DataGridRelationCell : undefined,
       cellRendererParams: hasRelation
         ? {
             isPrimaryKey: true,

@@ -1,12 +1,12 @@
 import type { Column } from 'ag-grid-community';
-import { cellValueFormatter, type RowData } from '.';
 import {
+  DEFAULT_COLUMN_GAP_WIDTH,
   DEFAULT_COLUMN_MAX_WIDTH,
   DEFAULT_COLUMN_MIN_WIDTH,
-  DEFAULT_COLUMN_GAP_WIDTH,
 } from '../constants';
+import { cellValueFormatter, type RowData } from './cellValueFormatter';
 
-// Shared canvas context for measuring text widths
+// Shared canvas context for measuring text widths.
 const canvas: HTMLCanvasElement = document.createElement('canvas');
 const ctx = canvas.getContext('2d') as CanvasRenderingContext2D;
 
@@ -78,8 +78,8 @@ export function estimateAllColumnWidths({
 }): Record<string, number> {
   const widths: Record<string, number> = {};
 
-  columns.forEach((col: Column) => {
-    const { headerName = '', field } = col.getColDef();
+  columns.forEach((column: Column) => {
+    const { headerName = '', field } = column.getColDef();
     if (!field) return;
 
     widths[field] = estimateColumnWidth({

@@ -18,11 +18,13 @@ import {
  */
 export const useRangeSelectionTable = ({
   debounceDelay = DEFAULT_DEBOUNCE_RANGE_SELECTION,
+  enableAutoScroll = true,
   gridApi,
   rowHeight = DEFAULT_ROW_HEIGHT,
   gridRef,
 }: {
   debounceDelay?: number;
+  enableAutoScroll?: boolean;
   gridApi?: globalThis.Ref<GridApi | null>;
   rowHeight?: number;
   gridRef: Readonly<ShallowRef<HTMLElement | null>>;
@@ -126,6 +128,7 @@ export const useRangeSelectionTable = ({
   // ============================================================
 
   function handlePointerDown(e: PointerEvent) {
+    if (!enableAutoScroll) return;
     if (!(e.target instanceof HTMLElement)) return;
 
     isDraggingPointer = true;
@@ -244,7 +247,7 @@ export const useRangeSelectionTable = ({
       '.ag-body-viewport'
     ) as HTMLElement | null;
 
-    if (gridViewportEl) {
+    if (gridViewportEl && enableAutoScroll) {
       gridViewportEl.addEventListener('pointerdown', handlePointerDown);
     }
   });

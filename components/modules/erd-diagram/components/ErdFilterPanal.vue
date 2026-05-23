@@ -143,6 +143,7 @@ const onFocusNode = (_e: MouseEvent, item: FlattenedTreeFileSystemItem) => {
         </div>
       </div>
 
+      <!-- TODO: remove TreeFolder use tree then remove component -->
       <div class="h-full w-[19rem] overflow-y-auto">
         <TreeFolder
           class="overflow-x-hidden"

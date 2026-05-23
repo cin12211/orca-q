@@ -1,5 +1,9 @@
 <script setup lang="ts">
-import DynamicTable from '~/components/base/dynamic-table/DynamicTable.vue';
+import {
+  buildDynamicColumnDefs,
+  buildDynamicRowData,
+  DYNAMIC_COLUMN_TYPES,
+} from '~/components/base/data-grid/utils';
 import type { MappedRawColumn } from '~/components/modules/raw-query/interfaces';
 import type { AgentDescribeTableResult } from '../../types';
 
@@ -41,6 +45,17 @@ const rows = computed(() =>
   }))
 );
 
+const columnDefs = computed(() =>
+  buildDynamicColumnDefs({
+    columns: mappedColumns.value,
+    rows: rows.value,
+    columnKeyBy: 'field',
+    hasHashIndex: false,
+  })
+);
+
+const rowData = computed(() => buildDynamicRowData(rows.value, false));
+
 const tableHeight = computed(() => {
   const rowHeight = 32;
   const headerHeight = 48;
@@ -79,11 +94,10 @@ const tableHeight = computed(() => {
     class="overflow-hidden rounded-lg border"
     :style="{ height: `${tableHeight}px` }"
   >
-    <DynamicTable
-      :columns="mappedColumns"
-      :data="rows"
-      column-key-by="field"
-      :has-hash-index="false"
+    <BaseDataGrid
+      :column-defs="columnDefs"
+      :row-data="rowData"
+      :column-types="DYNAMIC_COLUMN_TYPES"
       class="h-full w-full"
     />
   </div>

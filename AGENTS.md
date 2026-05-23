@@ -1,4 +1,5 @@
 # HeraQ / OrcaQ Agent Guide
+
 Orcaq is next-gen database clinet. Friendly, powerful
 This repo is a Nuxt 3 + Vue 3 + TypeScript with Electron
 desktop support.
@@ -7,6 +8,10 @@ desktop support.
 
 - `components/` contains Vue UI. Reusable primitives live in `components/base`
   and shadcn-style components live in `components/ui`.
+- `components/base/data-grid/` contains the shared AG Grid wrapper, copy context
+  menu, and reusable grid renderers/headers. Read
+  `components/base/data-grid/docs/USAGE_GUIDE.md` before changing shared grid
+  behavior or adding a new generic grid feature.
 - `components/modules/` contains feature modules. Important modules include
   `quick-query`, `raw-query`, `management-connection`, `management-schemas`,
   `management-explorer`, `erd-diagram`, `workspace`, and `settings`.
@@ -28,6 +33,16 @@ desktop support.
 - `docs/` contains architecture, project structure, API, module flow, business
   rules, storage, and refactoring guidance. Read the specific doc that matches
   the task before changing broad behavior.
+- Shared grid usage notes live in `components/base/data-grid/docs/USAGE_GUIDE.md`.
+
+## Component Reuse Rules
+
+- Before creating a new UI component, check existing components in
+  `components/base` and `components/ui`.
+- If an existing component already fits the need, reuse it instead of creating
+  another component.
+- Create a new component only when there is no suitable existing base or UI
+  component, or when the new behavior is clearly feature-specific.
 
 ## How To Run The Project
 
@@ -49,6 +64,7 @@ Nuxt/Electron workflows.
 - Typecheck: `bun run typecheck`.
 
 ## Tests And Verification
+
 - Typecheck: `bun run typecheck`.
 - Unit tests: `bun run test:unit`.
 - Nuxt/component tests: `bun run test:nuxt`.
@@ -60,16 +76,18 @@ Nuxt/Electron workflows.
   specs in addition to `bun run typecheck`.
 
 ## Verification Rules
-* Any source-code modification must pass `bun run typecheck` + `bun run test:unit`.
-* Do not claim a task is complete if type checking fails.
-* Run the smallest relevant test suite first.
-* Run broader suites only when the change scope requires it.
-* Clearly report:
-  * executed commands
-  * failing commands
-  * whether failures are related to the current change
+
+- Any source-code modification must pass `bun run typecheck` + `bun run test:unit`.
+- Do not claim a task is complete if type checking fails.
+- Run the smallest relevant test suite first.
+- Run broader suites only when the change scope requires it.
+- Clearly report:
+  - executed commands
+  - failing commands
+  - whether failures are related to the current change
 
 <!-- gitnexus:start -->
+
 # GitNexus — Code Intelligence
 
 This project is indexed by GitNexus as **HeraQ** (17613 symbols, 28999 relationships, 300 execution flows). Use the GitNexus MCP tools to understand code, assess impact, and navigate safely.
@@ -93,22 +111,22 @@ This project is indexed by GitNexus as **HeraQ** (17613 symbols, 28999 relations
 
 ## Resources
 
-| Resource | Use for |
-|----------|---------|
-| `gitnexus://repo/HeraQ/context` | Codebase overview, check index freshness |
-| `gitnexus://repo/HeraQ/clusters` | All functional areas |
-| `gitnexus://repo/HeraQ/processes` | All execution flows |
-| `gitnexus://repo/HeraQ/process/{name}` | Step-by-step execution trace |
+| Resource                               | Use for                                  |
+| -------------------------------------- | ---------------------------------------- |
+| `gitnexus://repo/HeraQ/context`        | Codebase overview, check index freshness |
+| `gitnexus://repo/HeraQ/clusters`       | All functional areas                     |
+| `gitnexus://repo/HeraQ/processes`      | All execution flows                      |
+| `gitnexus://repo/HeraQ/process/{name}` | Step-by-step execution trace             |
 
 ## CLI
 
-| Task | Read this skill file |
-|------|---------------------|
-| Understand architecture / "How does X work?" | `.claude/skills/gitnexus/gitnexus-exploring/SKILL.md` |
-| Blast radius / "What breaks if I change X?" | `.claude/skills/gitnexus/gitnexus-impact-analysis/SKILL.md` |
-| Trace bugs / "Why is X failing?" | `.claude/skills/gitnexus/gitnexus-debugging/SKILL.md` |
-| Rename / extract / split / refactor | `.claude/skills/gitnexus/gitnexus-refactoring/SKILL.md` |
-| Tools, resources, schema reference | `.claude/skills/gitnexus/gitnexus-guide/SKILL.md` |
-| Index, status, clean, wiki CLI commands | `.claude/skills/gitnexus/gitnexus-cli/SKILL.md` |
+| Task                                         | Read this skill file                                        |
+| -------------------------------------------- | ----------------------------------------------------------- |
+| Understand architecture / "How does X work?" | `.claude/skills/gitnexus/gitnexus-exploring/SKILL.md`       |
+| Blast radius / "What breaks if I change X?"  | `.claude/skills/gitnexus/gitnexus-impact-analysis/SKILL.md` |
+| Trace bugs / "Why is X failing?"             | `.claude/skills/gitnexus/gitnexus-debugging/SKILL.md`       |
+| Rename / extract / split / refactor          | `.claude/skills/gitnexus/gitnexus-refactoring/SKILL.md`     |
+| Tools, resources, schema reference           | `.claude/skills/gitnexus/gitnexus-guide/SKILL.md`           |
+| Index, status, clean, wiki CLI commands      | `.claude/skills/gitnexus/gitnexus-cli/SKILL.md`             |
 
 <!-- gitnexus:end -->

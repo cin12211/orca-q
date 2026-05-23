@@ -1,4 +1,9 @@
 <script setup lang="ts">
+import {
+  buildDynamicColumnDefs,
+  buildDynamicRowData,
+  DYNAMIC_COLUMN_TYPES,
+} from '~/components/base/data-grid/utils';
 import { buildMappedColumnsFromRows as buildColumnsFromRows } from '~/core/helpers';
 import type { InstanceInsightsState, InstanceSessionRow } from '~/core/types';
 import {
@@ -49,6 +54,19 @@ const sessionColumns = computed(() =>
   buildColumnsFromRows(sessionTableRows.value)
 );
 
+const sessionColumnDefs = computed(() =>
+  buildDynamicColumnDefs({
+    columns: sessionColumns.value,
+    rows: sessionTableRows.value,
+    columnKeyBy: 'field',
+    getCellClass: getSessionCellClass,
+  })
+);
+
+const sessionRowData = computed(() =>
+  buildDynamicRowData(sessionTableRows.value)
+);
+
 const lockTableRows = computed<Record<string, unknown>[]>(() =>
   lockRows.value.map(row => ({
     lock_type: row.lockType,
@@ -63,6 +81,16 @@ const lockTableRows = computed<Record<string, unknown>[]>(() =>
 
 const lockColumns = computed(() => buildColumnsFromRows(lockTableRows.value));
 
+const lockColumnDefs = computed(() =>
+  buildDynamicColumnDefs({
+    columns: lockColumns.value,
+    rows: lockTableRows.value,
+    columnKeyBy: 'field',
+  })
+);
+
+const lockRowData = computed(() => buildDynamicRowData(lockTableRows.value));
+
 const preparedTableRows = computed<Record<string, unknown>[]>(() =>
   preparedRows.value.map(row => ({
     gid: row.gid,
@@ -75,6 +103,18 @@ const preparedTableRows = computed<Record<string, unknown>[]>(() =>
 
 const preparedColumns = computed(() =>
   buildColumnsFromRows(preparedTableRows.value)
+);
+
+const preparedColumnDefs = computed(() =>
+  buildDynamicColumnDefs({
+    columns: preparedColumns.value,
+    rows: preparedTableRows.value,
+    columnKeyBy: 'field',
+  })
+);
+
+const preparedRowData = computed(() =>
+  buildDynamicRowData(preparedTableRows.value)
 );
 
 const selectedSession = computed<InstanceSessionRow | null>(() => {
@@ -155,14 +195,13 @@ const onTerminateSelectedConnection = async () => {
     <div class="space-y-1.5">
       <h4 class="text-sm font-normal">Active Sessions</h4>
       <div class="h-[360px]">
-        <DynamicTable
-          :columns="sessionColumns"
-          :data="sessionTableRows"
-          :selectedRows="selectedSessionRows"
-          :getCellClass="getSessionCellClass"
+        <BaseDataGrid
+          :column-defs="sessionColumnDefs"
+          :row-data="sessionRowData"
+          :column-types="DYNAMIC_COLUMN_TYPES"
+          :selected-rows="selectedSessionRows"
           class="h-full border rounded-md"
-          columnKeyBy="field"
-          @on-selected-rows="onSelectedSessionRows"
+          @selection-changed="onSelectedSessionRows"
         />
       </div>
     </div>
@@ -207,11 +246,11 @@ const onTerminateSelectedConnection = async () => {
       <div class="space-y-1.5">
         <h4 class="text-sm font-normal">Locks</h4>
         <div class="h-[300px]">
-          <DynamicTable
-            :columns="lockColumns"
-            :data="lockTableRows"
+          <BaseDataGrid
+            :column-defs="lockColumnDefs"
+            :row-data="lockRowData"
+            :column-types="DYNAMIC_COLUMN_TYPES"
             class="h-full border rounded-md"
-            columnKeyBy="field"
           />
         </div>
       </div>
@@ -219,11 +258,11 @@ const onTerminateSelectedConnection = async () => {
       <div class="space-y-1.5">
         <h4 class="text-sm font-normal">Prepared Transactions</h4>
         <div class="h-[300px]">
-          <DynamicTable
-            :columns="preparedColumns"
-            :data="preparedTableRows"
+          <BaseDataGrid
+            :column-defs="preparedColumnDefs"
+            :row-data="preparedRowData"
+            :column-types="DYNAMIC_COLUMN_TYPES"
             class="h-full border rounded-md"
-            columnKeyBy="field"
           />
         </div>
       </div>

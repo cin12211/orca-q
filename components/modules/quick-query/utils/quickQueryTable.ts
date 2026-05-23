@@ -1,6 +1,6 @@
 import type { SuppressKeyboardEventParams } from 'ag-grid-community';
-import { HASH_INDEX_ID } from '~/components/base/dynamic-table/constants';
-import type { RowData } from '~/components/base/dynamic-table/utils';
+import { HASH_INDEX_ID } from '~/components/base/data-grid/constants';
+import type { RowData } from '~/components/base/data-grid/utils';
 
 export type QuickQueryEditedCell = {
   rowId: number;

@@ -1,21 +1,18 @@
 <script setup lang="ts">
-import { onClickOutside } from '@vueuse/core';
 import type { HTMLAttributes } from 'vue';
-import { AgGridVue } from 'ag-grid-vue3';
-import { useAgGridApi } from '~/components/base/dynamic-table/hooks';
-import type { RowData } from '~/components/base/dynamic-table/utils';
+import type { GridApi } from 'ag-grid-community';
+import BaseDataGrid from '~/components/base/data-grid/BaseDataGrid.vue';
+import type { RowData } from '~/components/base/data-grid/utils';
 import type { OrderBy } from '~/core/composables/useTableQueryBuilder';
 import type { SchemaForeignKeyMetadata as ForeignKeyMetadata } from '~/core/types';
 import {
   useQuickQueryColumnDefs,
   useQuickQueryEditedCells,
-  useQuickQueryGridEvents,
   useQuickQueryGridOptions,
   useQuickQueryGridSizing,
 } from '../hooks';
 import { buildQuickQueryRowData } from '../utils/quickQueryTable';
 
-// document.getElementsByClassName('ag-body-viewport')
 /* props ------------------------------------------------------------- */
 const props = defineProps<{
   data?: RowData[];
@@ -60,23 +57,28 @@ const emit = defineEmits<{
   ): void;
 }>();
 
-const { gridApi, onGridReady } = useAgGridApi();
-const agGridRef = useTemplateRef<HTMLElement>('agGridRef');
+/**
+ * QuickQueryTable is now a thin wrapper over `BaseDataGrid` — the unified
+ * AG Grid shell that owns grid API lifecycle, theme, range selection,
+ * selection/focus/context-menu, click-outside, and the copy hotkey.
+ *
+ * QuickQueryTable's remaining responsibilities are domain-specific:
+ *  - build columnDefs from PK/FK metadata + custom header
+ *  - track edited cells (dirty + new rows)
+ *  - apply quick-query gridOptions (pagination, JSON editor, suppress delete)
+ *  - re-fit column widths on row-data updates and restore scroll on activate
+ */
+const baseGridRef = ref<InstanceType<typeof BaseDataGrid>>();
 
-onClickOutside(agGridRef, event => {
-  emit('onFocusCell', undefined);
-  emit('onClickOutSide', event);
-});
+/* Forward the grid API as a computed Ref so existing composables (which
+ * expect `Ref<GridApi | null>`) keep working unchanged. */
+const gridApi = computed<GridApi | null>(
+  () => (baseGridRef.value?.gridApi as GridApi | null | undefined) ?? null
+);
 
 const rowData = computed<RowData[]>(() =>
   buildQuickQueryRowData(props.data, props.offset)
 );
-
-const { handleCellMouseOverDebounced, handleCellMouseDown } =
-  useRangeSelectionTable({
-    gridApi: gridApi,
-    gridRef: agGridRef,
-  });
 
 const { editedCells, isJSONColumn, onCellValueChanged } =
   useQuickQueryEditedCells({
@@ -101,29 +103,16 @@ const { columnDefs } = useQuickQueryColumnDefs({
     emit('onOpenForwardReferencedTableModal', value),
 });
 
+/* `useQuickQueryGridOptions` still composes columnTypes / defaultColDef /
+ * pagination / cell editor registration. The legacy gridApi / mouse handler
+ * params are now no-ops (BaseDataGrid owns range selection + theme watch),
+ * but we keep passing them so the composable signature is untouched. */
 const { gridOptions } = useQuickQueryGridOptions({
   defaultPageSize: props.defaultPageSize,
   data: toRef(props, 'data'),
   selectedColumnFieldId: toRef(props, 'selectedColumnFieldId'),
   isJSONColumn,
   gridApi,
-  onCellMouseDown: handleCellMouseDown,
-  onCellMouseOver: handleCellMouseOverDebounced,
-});
-
-const {
-  cellContextMenu,
-  cellHeaderContextMenu,
-  onSelectionChanged,
-  onCellFocus,
-  onCellContextMenu,
-  onCellHeaderContextMenu,
-  clearCellContextMenu,
-} = useQuickQueryGridEvents({
-  gridApi,
-  selectedRows: toRef(props, 'selectedRows'),
-  onSelectedRows: rows => emit('onSelectedRows', rows),
-  onFocusCell: value => emit('onFocusCell', value),
 });
 
 const { onRowDataUpdated } = useQuickQueryGridSizing({
@@ -133,6 +122,20 @@ const { onRowDataUpdated } = useQuickQueryGridSizing({
   foreignKeyColumns: toRef(props, 'foreignKeyColumns'),
   selectedColumnFieldId: toRef(props, 'selectedColumnFieldId'),
 });
+
+/* Context-menu state lives on BaseDataGrid; forward it to consumers. */
+const cellContextMenu = computed(() => baseGridRef.value?.cellContextMenu);
+const cellHeaderContextMenu = computed(
+  () => baseGridRef.value?.cellHeaderContextMenu
+);
+const clearCellContextMenu = () => {
+  baseGridRef.value?.clearCellContextMenu();
+};
+
+const onClickOutsideGrid = (event: PointerEvent) => {
+  emit('onFocusCell', undefined);
+  emit('onClickOutSide', event);
+};
 
 defineExpose({
   gridApi,
@@ -145,58 +148,19 @@ defineExpose({
 </script>
 
 <template>
-  <AgGridVue
-    @selection-changed="onSelectionChanged"
-    @cell-value-changed="onCellValueChanged"
-    @grid-ready="onGridReady"
-    @cell-focused="onCellFocus"
-    @rowDataUpdated="onRowDataUpdated"
-    @cellContextMenu="onCellContextMenu"
-    @columnHeaderContextMenu="onCellHeaderContextMenu"
+  <BaseDataGrid
+    ref="baseGridRef"
     :class="props.class"
+    :column-defs="columnDefs"
+    :row-data="rowData"
     :grid-options="gridOptions"
-    :columnDefs="columnDefs"
-    :rowData="rowData"
-    ref="agGridRef"
+    :selected-rows="props.selectedRows"
+    :allow-editing="!props.isViewOnly"
+    enable-click-outside
+    @selection-changed="rows => emit('onSelectedRows', rows as RowData[])"
+    @cell-focused="value => emit('onFocusCell', value)"
+    @cell-value-changed="onCellValueChanged"
+    @row-data-updated="onRowDataUpdated"
+    @click-outside="onClickOutsideGrid"
   />
 </template>
-
-<style>
-/* .class-row-border-none {
-  border: 0px;
-} */
-
-/* .class-row-even {
-  background-color: var(--color-gray-100);
-} */
-
-.ag-cell-value {
-  user-select: none;
-}
-
-/* .ag-cell {
-  color: var(--foreground);
-}
-
-.dark .ag-cell {
-  color: var(--foreground);
-} */
-
-.ag-root-wrapper {
-  border-bottom-left-radius: 0px;
-  border-bottom-right-radius: 0px;
-  border: none;
-}
-
-/* .ag-row-selected:before {
-  background-color: var(--color-slate-200);
-} */
-
-.cellCenter .ag-cell-wrapper {
-  justify-content: center;
-}
-
-.col-highlight-cell {
-  background: var(--ag-selected-row-background-color);
-}
-</style>

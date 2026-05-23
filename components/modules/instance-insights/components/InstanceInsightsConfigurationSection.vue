@@ -1,4 +1,9 @@
 <script setup lang="ts">
+import {
+  buildDynamicColumnDefs,
+  buildDynamicRowData,
+  DYNAMIC_COLUMN_TYPES,
+} from '~/components/base/data-grid/utils';
 import { buildMappedColumnsFromRows as buildColumnsFromRows } from '~/core/helpers';
 import type { InstanceInsightsConfiguration } from '~/core/types';
 
@@ -34,6 +39,18 @@ const configurationTableRows = computed<Record<string, unknown>[]>(() =>
 
 const configurationColumns = computed(() =>
   buildColumnsFromRows(configurationTableRows.value)
+);
+
+const columnDefs = computed(() =>
+  buildDynamicColumnDefs({
+    columns: configurationColumns.value,
+    rows: configurationTableRows.value,
+    columnKeyBy: 'field',
+  })
+);
+
+const rowData = computed(() =>
+  buildDynamicRowData(configurationTableRows.value)
 );
 </script>
 
@@ -76,11 +93,11 @@ const configurationColumns = computed(() =>
           />
         </div>
       </div>
-      <DynamicTable
-        :columns="configurationColumns"
-        :data="configurationTableRows"
+      <BaseDataGrid
+        :column-defs="columnDefs"
+        :row-data="rowData"
+        :column-types="DYNAMIC_COLUMN_TYPES"
         class="h-full border rounded-md"
-        columnKeyBy="field"
       />
     </div>
   </div>

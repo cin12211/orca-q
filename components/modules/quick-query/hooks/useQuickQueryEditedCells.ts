@@ -1,7 +1,7 @@
 import { computed, ref, type Ref } from 'vue';
 import type { CellValueChangedEvent } from 'ag-grid-community';
-import { NEW_ROW_FLAG_ID } from '~/components/base/dynamic-table/constants';
-import type { RowData } from '~/components/base/dynamic-table/utils';
+import { NEW_ROW_FLAG_ID } from '~/components/base/data-grid/constants';
+import type { RowData } from '~/components/base/data-grid/utils';
 import {
   areCellValuesDifferent,
   normalizeEditedCellValue,

@@ -1,7 +1,11 @@
 <script setup lang="ts">
 import { storeToRefs } from 'pinia';
-import { DynamicTable } from '#components';
 import { getConnectionParams } from '@/core/helpers/connection-helper';
+import {
+  buildDynamicColumnDefs,
+  buildDynamicRowData,
+  DYNAMIC_COLUMN_TYPES,
+} from '~/components/base/data-grid/utils';
 import {
   buildMappedColumnsFromKeys,
   buildMappedColumnsFromRows,
@@ -53,17 +57,29 @@ const mappedColumns = computed(() => {
 
   return buildMappedColumnsFromKeys(FUNCTION_OVERVIEW_COLUMN_KEYS);
 });
+
+const columnDefs = computed(() =>
+  buildDynamicColumnDefs({
+    columns: mappedColumns.value,
+    rows: (data.value || []) as Record<string, unknown>[],
+    columnKeyBy: 'field',
+  })
+);
+
+const rowData = computed(() =>
+  buildDynamicRowData((data.value || []) as Record<string, unknown>[])
+);
 </script>
 
 <template>
   <div class="h-full relative p-1">
     <LoadingOverlay :visible="status === 'pending'" />
 
-    <DynamicTable
-      :columns="mappedColumns"
-      :data="data || []"
+    <BaseDataGrid
+      :column-defs="columnDefs"
+      :row-data="rowData"
+      :column-types="DYNAMIC_COLUMN_TYPES"
       class="h-full border rounded-md"
-      columnKeyBy="field"
     />
   </div>
 </template>

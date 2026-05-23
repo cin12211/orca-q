@@ -2,7 +2,6 @@ export * from './useQuickQuery';
 export * from './useQuickQueryContextCellFilter';
 export * from './useQuickQueryColumnDefs';
 export * from './useQuickQueryEditedCells';
-export * from './useQuickQueryGridEvents';
 export * from './useQuickQueryGridOptions';
 export * from './useQuickQueryGridSizing';
 export * from './useQuickQueryMutation';

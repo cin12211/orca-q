@@ -1,7 +1,7 @@
 export const HASH_INDEX_HEADER = '#';
 export const HASH_INDEX_ID = '_____#';
 export const NEW_ROW_FLAG_ID = 'isNewRow';
-export const DYNAMIC_TABLE_ROW_METADATA_IDS = [
+export const DATA_GRID_ROW_METADATA_IDS = [
   HASH_INDEX_ID,
   NEW_ROW_FLAG_ID,
 ] as const;

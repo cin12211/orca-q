@@ -1,12 +1,12 @@
-import { DYNAMIC_TABLE_ROW_METADATA_IDS } from '~/components/base/dynamic-table/constants';
+import { DATA_GRID_ROW_METADATA_IDS } from '~/components/base/data-grid/constants';
 
 /**
- * Check whether a column name is a row-metadata column injected by DynamicTable
+ * Check whether a column name is a row-metadata column injected by the shared data grid
  * (e.g. `__hash_index__`), not actual DB data.
  */
 export const isSqlRowMetadataColumn = (columnName: string) =>
-  DYNAMIC_TABLE_ROW_METADATA_IDS.includes(
-    columnName as (typeof DYNAMIC_TABLE_ROW_METADATA_IDS)[number]
+  DATA_GRID_ROW_METADATA_IDS.includes(
+    columnName as (typeof DATA_GRID_ROW_METADATA_IDS)[number]
   );
 
 /**

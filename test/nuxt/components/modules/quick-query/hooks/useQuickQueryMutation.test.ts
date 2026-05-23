@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   HASH_INDEX_ID,
   NEW_ROW_FLAG_ID,
-} from '~/components/base/dynamic-table/constants';
+} from '~/components/base/data-grid/constants';
 import { useQuickQueryMutation } from '~/components/modules/quick-query/hooks/useQuickQueryMutation';
 
 const { mockToast, mockFetch, mockGetConnectionParams } = vi.hoisted(() => ({

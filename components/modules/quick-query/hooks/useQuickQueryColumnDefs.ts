@@ -5,16 +5,16 @@ import type {
   ValueFormatterParams,
   ValueSetterParams,
 } from 'ag-grid-community';
+import DataGridRelationCell from '~/components/base/data-grid/components/cell-renderers/DataGridRelationCell.vue';
 import {
   DEFAULT_HASH_INDEX_WIDTH,
   HASH_INDEX_HEADER,
   HASH_INDEX_ID,
-} from '~/components/base/dynamic-table/constants';
+} from '~/components/base/data-grid/constants';
 import type { OrderBy } from '~/core/composables/useTableQueryBuilder';
 import { formatCellValue, setCellValue } from '~/core/helpers/cell-value';
 import { isStructuredColumnType } from '~/core/helpers/sql-column-type';
 import type { SchemaForeignKeyMetadata as ForeignKeyMetadata } from '~/core/types';
-import CustomCellUuid from '../quick-query-table/CustomCellUuid.vue';
 import { type QuickQueryColumnType } from '../utils/quickQueryTable';
 
 type RelationModalPayload = {
@@ -112,7 +112,7 @@ export const useQuickQueryColumnDefs = ({
           isPrimaryKey,
           isForeignKey,
         },
-        cellRenderer: isShowCustomCellUuid ? CustomCellUuid : undefined,
+        cellRenderer: isShowCustomCellUuid ? DataGridRelationCell : undefined,
         cellRendererParams: {
           isPrimaryKey: isShowCustomCellUuid,
           onOpenPreviewReverseTableModal: (id: string) => {

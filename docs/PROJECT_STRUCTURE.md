@@ -53,10 +53,9 @@ components/
 │   ├── Tree/                  # Tree view component (folders, items)
 │   ├── code-editor/           # CodeMirror SQL editor
 │   ├── context-menu/          # Right-click context menu
-│   ├── dynamic-table/         # Generic data table
+│   ├── data-grid/             # Shared AG Grid shell and utilities
 │   ├── BaseEmpty.vue          # Empty state
-│   ├── LoadingOverlay.vue     # Loading spinner
-│   └── TableSkeleton.vue      # Loading placeholder
+│   └── LoadingOverlay.vue     # Loading spinner
 │
 ├── modules/                   # Feature modules (13 modules)
 │   ├── quick-query/           # Table data browsing & editing

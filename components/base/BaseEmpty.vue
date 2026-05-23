@@ -24,7 +24,7 @@ withDefaults(
 <template>
   <Empty class="h-full">
     <EmptyHeader>
-      <Icon v-if="!hiddenIcon" class="size-32!" :name="icon" />
+      <Icon v-if="!hiddenIcon" class="size-28!" :name="icon" />
 
       <EmptyTitle v-if="title" class="text-foreground">{{ title }}</EmptyTitle>
       <EmptyDescription v-if="desc">

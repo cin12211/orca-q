@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { storeToRefs } from 'pinia';
-import type { GridOptions } from 'ag-grid-community';
-import type DynamicTable from '~/components/base/dynamic-table/DynamicTable.vue';
+import type BaseDataGrid from '~/components/base/data-grid/BaseDataGrid.vue';
+import { HASH_INDEX_ID } from '~/components/base/data-grid/constants';
+import { buildDynamicRowData } from '~/components/base/data-grid/utils';
 import PreviewRelationTable from '~/components/modules/quick-query/previewRelationTable/PreviewRelationTable.vue';
 import { useHotkeys } from '~/core/composables/useHotKeys';
 import { DatabaseClientType } from '~/core/constants/database-client-type';
@@ -16,6 +17,7 @@ import {
   buildRawQueryColumnDefs,
   createCommandResultFactory,
   groupColumnsByTable,
+  type RawQueryEditedCell,
   type RawQueryDirtyTracker,
 } from '../../utils';
 import RawQueryContextMenu from '../RawQueryContextMenu.vue';
@@ -30,7 +32,7 @@ const props = defineProps<{
   isStreaming: boolean;
 }>();
 
-const rawQueryTableRef = ref<InstanceType<typeof DynamicTable>>();
+const rawQueryTableRef = ref<InstanceType<typeof BaseDataGrid>>();
 const containerRef = ref<HTMLElement>();
 const schemaStore = useSchemaStore();
 const { reservedSchemas } = storeToRefs(schemaStore);
@@ -51,6 +53,14 @@ const commandResult = computed(() =>
 
 const isMutation = computed(() => commandResult.value.isMutation);
 const mutationMessage = computed(() => commandResult.value.message);
+const hasResultColumns = computed(() => props.activeTabColumns.length > 0);
+const showNoResultsEmptyState = computed(
+  () =>
+    props.activeTab.result.length === 0 &&
+    !hasResultColumns.value &&
+    !props.executeLoading &&
+    !props.isStreaming
+);
 
 const reservedTables = computed(() => {
   const connectionId = props.activeTab.metadata.connection?.id;
@@ -73,14 +83,95 @@ const isEditingEnabled = computed(() => {
   return false;
 });
 
+type RawQueryRow = Record<string, unknown>;
+
+const cloneRawQueryRows = (rows: RawQueryRow[]): RawQueryRow[] =>
+  rows.map(row => ({ ...row }));
+
+const buildRawQueryRowData = (rows: RawQueryRow[]): RawQueryRow[] =>
+  buildDynamicRowData(rows) as RawQueryRow[];
+
+const stripGridMetaFromRows = (rows: RawQueryRow[]): RawQueryRow[] =>
+  rows.map(row => {
+    const { [HASH_INDEX_ID]: _hashIndex, ...dataRow } = row;
+    return { ...dataRow };
+  });
+
+const mergeTrackedCells = (
+  ...cellGroups: RawQueryEditedCell[][]
+): RawQueryEditedCell[] => {
+  const merged = new Map<string, RawQueryEditedCell>();
+
+  for (const cells of cellGroups) {
+    for (const cell of cells) {
+      merged.set(`${cell.rowId}:${cell.fieldId}`, cell);
+    }
+  }
+
+  return [...merged.values()];
+};
+
 const activeTabColumnsRef = computed(() => props.activeTabColumns);
-const formattedDataRef = computed(() => props.formattedData || []);
+const formattedDataRef = computed<RawQueryRow[]>(
+  () => props.formattedData || []
+);
+
+/**
+ * `baselineRows` is the last accepted data state:
+ *  - initial query result on first render / tab switch
+ *  - updated to current grid values after a successful save
+ *
+ * `rowData` is the live AG Grid backing array, which AG Grid mutates in place
+ * while the user edits.
+ */
+const baselineRows = ref<RawQueryRow[]>(
+  cloneRawQueryRows(formattedDataRef.value)
+);
+const rowData = ref<RawQueryRow[]>(buildRawQueryRowData(baselineRows.value));
+const acceptedCells = ref<RawQueryEditedCell[]>([]);
 
 const { editedCells, onCellValueChanged, clearEditedCells } =
   useRawQueryEditedCells({
     columns: activeTabColumnsRef,
-    originalRows: formattedDataRef,
+    originalRows: baselineRows,
   });
+
+function refreshDirtyCells() {
+  rawQueryTableRef.value?.gridApi?.refreshCells({ force: true });
+}
+
+const highlightedCells = computed(() =>
+  mergeTrackedCells(acceptedCells.value, editedCells.value)
+);
+
+const syncGridRowsFromBaseline = () => {
+  rowData.value = buildRawQueryRowData(baselineRows.value);
+};
+
+const acceptPendingChanges = () => {
+  const pendingCells = editedCells.value.slice();
+
+  if (!pendingCells.length) {
+    return;
+  }
+
+  baselineRows.value = stripGridMetaFromRows(rowData.value);
+  acceptedCells.value = mergeTrackedCells(acceptedCells.value, pendingCells);
+  clearEditedCells();
+};
+
+const discardPendingChanges = () => {
+  clearEditedCells();
+  syncGridRowsFromBaseline();
+  refreshDirtyCells();
+};
+
+watch([formattedDataRef, () => props.activeTab.id], ([rows]) => {
+  baselineRows.value = cloneRawQueryRows(rows);
+  acceptedCells.value = [];
+  clearEditedCells();
+  syncGridRowsFromBaseline();
+});
 
 /**
  * Mutable tracker passed to column defs so cellStyle can read the dirty set
@@ -90,16 +181,16 @@ const { editedCells, onCellValueChanged, clearEditedCells } =
 const dirtyTracker: RawQueryDirtyTracker = { cells: [] };
 
 watch(
-  editedCells,
+  highlightedCells,
   cells => {
     dirtyTracker.cells = cells;
+    // AG Grid evaluates cellStyle *before* this watcher runs, so the cell
+    // already rendered with stale dirty state. Force a repaint now that the
+    // tracker is up-to-date.
+    refreshDirtyCells();
   },
   { immediate: true }
 );
-
-const refreshDirtyCells = () => {
-  rawQueryTableRef.value?.gridApi?.refreshCells({ force: true });
-};
 
 const connectionRef = computed(() => props.activeTab.metadata.connection);
 
@@ -122,13 +213,10 @@ const {
 } = useRawQueryMutation({
   connection: connectionRef,
   columns: activeTabColumnsRef,
-  rows: formattedDataRef,
+  rows: baselineRows,
   editedCells,
   selectedRows: selectedRowsRef,
-  onSaved: () => {
-    clearEditedCells();
-    refreshDirtyCells();
-  },
+  onSaved: acceptPendingChanges,
   onDeleted: () => {
     // After delete the result is stale — clear selection so counts reset.
     selectedRows.value = [];
@@ -153,7 +241,7 @@ const {
 const columnDefs = computed(() =>
   buildRawQueryColumnDefs({
     columns: props.activeTabColumns,
-    rows: props.formattedData || [],
+    rows: baselineRows.value,
     reservedTables: reservedTables.value,
     isEditingEnabled: isEditingEnabled.value,
     dirtyTracker,
@@ -161,10 +249,7 @@ const columnDefs = computed(() =>
   })
 );
 
-/* Pipe ag-grid edit events into the dirty-tracker. */
-const gridOptions = computed<GridOptions>(() => ({
-  onCellValueChanged,
-}));
+/* Pipe ag-grid edit events into the dirty-tracker via BaseDataGrid event. */
 
 /* ------------------------------------------------------------------ *
  * Keyboard shortcuts (scoped to this result view, mirroring QuickQuery)
@@ -239,9 +324,7 @@ useHotkeys(
     />
 
     <BaseEmpty
-      v-else-if="
-        activeTab.result.length === 0 && !executeLoading && !isStreaming
-      "
+      v-else-if="showNoResultsEmptyState"
       title="No Results"
       desc="The query returned no records."
       class="h-full"
@@ -249,17 +332,13 @@ useHotkeys(
 
     <template v-else>
       <RawQueryResultControlBar
+        v-if="rowData.length"
         :pending-count="editedCells.length"
         :is-mutating="isMutating"
         :is-editing-enabled="isEditingEnabled"
         :total-selected-rows="selectedRows.length"
         @save="requestSave"
-        @discard="
-          () => {
-            clearEditedCells();
-            refreshDirtyCells();
-          }
-        "
+        @discard="discardPendingChanges"
         @delete="requestDelete"
       />
 
@@ -271,17 +350,18 @@ useHotkeys(
         @onClearContextMenu="rawQueryTableRef?.clearCellContextMenu()"
         class="flex-1 min-h-0"
       >
-        <DynamicTable
+        <BaseDataGrid
           ref="rawQueryTableRef"
-          :columns="activeTabColumns"
-          :data="formattedData || []"
-          :selectedRows="selectedRows"
-          @on-selected-rows="onSelectedRowsChange"
+          :column-defs="columnDefs"
+          :row-data="rowData"
+          :selected-rows="selectedRows"
+          empty-title="No Results"
+          empty-description="The query returned no records."
           class="h-full"
-          skip-re-column-size
-          columnKeyBy="field"
-          :overrideColumnDefs="columnDefs"
-          :externalGridOptions="gridOptions"
+          :allow-editing="isEditingEnabled"
+          :suppress-scroll-on-new-data="true"
+          @selection-changed="onSelectedRowsChange"
+          @cell-value-changed="onCellValueChanged"
         />
       </RawQueryContextMenu>
     </template>

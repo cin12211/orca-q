@@ -1,20 +1,6 @@
-import { h } from 'vue';
-import { Icon as NuxtIcon } from '#components';
 import type { Meta, StoryObj } from '@storybook/vue3';
 import BaseContextMenu from './BaseContextMenu.vue';
 import { ContextMenuItemType } from './menuContext.type';
-
-// Mock Icon component
-const Icon = {
-  props: ['name'],
-  setup(props: { name?: string }) {
-    return () =>
-      h(NuxtIcon, {
-        name: props.name || 'hugeicons:file-01',
-        class: 'size-4',
-      });
-  },
-};
 
 const meta = {
   title: 'Base/BaseContextMenu',
@@ -69,7 +55,7 @@ export const Default: Story = {
     contextMenuItems: mockItems as any,
   },
   render: args => ({
-    components: { BaseContextMenu, Icon },
+    components: { BaseContextMenu },
     setup() {
       return { args };
     },
@@ -83,11 +69,4 @@ export const Default: Story = {
       </div>
     `,
   }),
-  decorators: [
-    (story, context) => {
-      const { app } = context;
-      app.component('Icon', Icon);
-      return story();
-    },
-  ],
 };

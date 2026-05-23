@@ -1,6 +1,6 @@
 import { saveAs } from 'file-saver';
 import Papa from 'papaparse';
-import { DYNAMIC_TABLE_ROW_METADATA_IDS } from '~/components/base/dynamic-table/constants';
+import { DATA_GRID_ROW_METADATA_IDS } from '~/components/base/data-grid/constants';
 
 /**
  * NEW TYPE DEFINITION: Define the accepted formats for better type safety.
@@ -55,7 +55,7 @@ export const cleanRows = (
       });
     }
 
-    DYNAMIC_TABLE_ROW_METADATA_IDS.forEach(key => {
+    DATA_GRID_ROW_METADATA_IDS.forEach(key => {
       delete formattedRow[key];
     });
 

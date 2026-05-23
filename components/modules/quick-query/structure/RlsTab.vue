@@ -1,6 +1,10 @@
 <script setup lang="ts">
-import { DynamicTable } from '#components';
 import { getConnectionParams } from '@/core/helpers/connection-helper';
+import {
+  buildDynamicColumnDefs,
+  buildDynamicRowData,
+  DYNAMIC_COLUMN_TYPES,
+} from '~/components/base/data-grid/utils';
 import { Alert, AlertDescription } from '~/components/ui/alert';
 import { Button } from '~/components/ui/button';
 import {
@@ -112,6 +116,16 @@ const mappedColumns = computed(() => {
   return buildMappedColumnsFromKeys(RLS_COLUMN_KEYS);
 });
 
+const columnDefs = computed(() =>
+  buildDynamicColumnDefs({
+    columns: mappedColumns.value,
+    rows: policyRows.value,
+    columnKeyBy: 'field',
+  })
+);
+
+const rowData = computed(() => buildDynamicRowData(policyRows.value));
+
 const tableHeight = computed(
   () => `${getStructureTableHeightPx(policyRows.value.length)}px`
 );
@@ -143,11 +157,11 @@ const onRetry = () => {
           height: tableHeight,
         }"
       >
-        <DynamicTable
-          :columns="mappedColumns"
-          :data="policyRows"
+        <BaseDataGrid
+          :column-defs="columnDefs"
+          :row-data="rowData"
+          :column-types="DYNAMIC_COLUMN_TYPES"
           class="h-full"
-          columnKeyBy="field"
         />
       </div>
 

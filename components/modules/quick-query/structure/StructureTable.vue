@@ -1,6 +1,10 @@
 <script setup lang="ts">
-import { DynamicTable } from '#components';
 import { getConnectionParams } from '@/core/helpers/connection-helper';
+import {
+  buildDynamicColumnDefs,
+  buildDynamicRowData,
+  DYNAMIC_COLUMN_TYPES,
+} from '~/components/base/data-grid/utils';
 import { Badge } from '~/components/ui/badge';
 import {
   buildMappedColumnsFromKeys,
@@ -68,6 +72,18 @@ const mappedColumns = computed(() => {
 
   return buildMappedColumnsFromKeys(STRUCTURE_TABLE_COLUMN_KEYS);
 });
+
+const columnDefs = computed(() =>
+  buildDynamicColumnDefs({
+    columns: mappedColumns.value,
+    rows: (data.value || []) as Record<string, unknown>[],
+    columnKeyBy: 'field',
+  })
+);
+
+const rowData = computed(() =>
+  buildDynamicRowData((data.value || []) as Record<string, unknown>[])
+);
 
 const schemaStore = useSchemaStore();
 const structureCacheKey = computed(() => `${props.schema}.${props.tableName}`);
@@ -165,11 +181,11 @@ const columnsTableHeight = computed(() => {
           }"
         >
           <LoadingOverlay :visible="status === 'pending'" />
-          <DynamicTable
-            :columns="mappedColumns"
-            :data="data || []"
+          <BaseDataGrid
+            :column-defs="columnDefs"
+            :row-data="rowData"
+            :column-types="DYNAMIC_COLUMN_TYPES"
             class="h-full border rounded-md"
-            columnKeyBy="field"
           />
         </div>
       </section>

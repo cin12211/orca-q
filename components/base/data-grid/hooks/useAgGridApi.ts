@@ -4,8 +4,8 @@ import type { GridApi, GridReadyEvent } from 'ag-grid-community';
 export function useAgGridApi() {
   const gridApi = ref<GridApi | null>(null);
 
-  const onGridReady = (e: GridReadyEvent) => {
-    gridApi.value = e.api;
+  const onGridReady = (event: GridReadyEvent) => {
+    gridApi.value = event.api;
   };
 
   return {

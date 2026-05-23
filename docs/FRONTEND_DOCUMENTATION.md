@@ -943,9 +943,9 @@ const reader = response.body.getReader();
 />
 ```
 
-#### 2. **DynamicTable** (`/components/base/dynamic-table`)
+#### 2. **BaseDataGrid / data-grid** (`/components/base/data-grid`)
 
-**High-performance table component:**
+**High-performance shared grid layer:**
 
 - Virtual scrolling for millions of rows
 - Column resizing, reordering
