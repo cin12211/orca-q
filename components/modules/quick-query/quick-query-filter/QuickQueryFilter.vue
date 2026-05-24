@@ -1,13 +1,13 @@
 <script setup lang="ts">
 import { Icon, Tooltip, TooltipContent, TooltipTrigger } from '#components';
+import type { Input } from '~/components/ui/input';
+import { ComposeOperator, EExtendedField, OperatorSet } from '~/core/constants';
+import { DatabaseClientType } from '~/core/constants/database-client-type';
 import {
   formatWhereClause,
   getPlaceholderSearchByOperator,
   type FilterSchema,
-} from '~/components/modules/quick-query/utils';
-import type { Input } from '~/components/ui/input';
-import { ComposeOperator, EExtendedField, OperatorSet } from '~/core/constants';
-import { DatabaseClientType } from '~/core/constants/database-client-type';
+} from '~/core/helpers/sql-where-clause';
 import ColumnSelector from '../../selectors/ColumnSelector.vue';
 import OperatorSelector from '../../selectors/OperatorSelector.vue';
 import QuickQueryFilterGuide from './QuickQueryFilterGuide.vue';
@@ -30,8 +30,13 @@ const emit = defineEmits<{
 
 const quickQueryFilterRef = ref<HTMLElement>();
 
-const filterSearchRefs =
-  useTemplateRef<InstanceType<typeof Input>[]>('filterSearchRefs');
+interface FilterSearchRef {
+  $el?: Element | null;
+  el?: HTMLInputElement | null;
+  focus?: () => void;
+}
+
+const filterSearchRefs = useTemplateRef<FilterSearchRef[]>('filterSearchRefs');
 
 const fields = computed(() => props.initFilters || []);
 
@@ -65,6 +70,11 @@ const insert = (index: number, filter: FilterSchema) => {
   emitFilters(nextFilters);
 };
 
+const getDefaultContainsOperator = () =>
+  props.dbType === DatabaseClientType.POSTGRES
+    ? OperatorSet.ILIKE_CONTAINS
+    : OperatorSet.LIKE_CONTAINS;
+
 const remove = (index: number) => {
   const nextFilters = getNextFilters();
 
@@ -77,7 +87,7 @@ const onAddFilter = (index: number) => {
   insert(index + 1, {
     isSelect: true,
     fieldName: EExtendedField.AnyField,
-    operator: OperatorSet.LIKE_CONTAINS,
+    operator: getDefaultContainsOperator(),
   });
 };
 
@@ -90,7 +100,7 @@ const updateFieldName = (index: number, newFieldName: string) => {
     updateFilter(index, {
       ...row,
       fieldName: newFieldName,
-      operator: OperatorSet.LIKE_CONTAINS,
+      operator: getDefaultContainsOperator(),
     });
   } else {
     updateFilter(index, {
@@ -160,7 +170,7 @@ const onRemoveFilter = async (index: number) => {
   await nextTick();
 
   if (index !== 0) {
-    focusSearchByIndex(index - 1);
+    await focusSearchByIndex(index - 1);
   }
 
   if (shouldApplyAfterRemove) {
@@ -190,24 +200,90 @@ const updateFilterSelection = async (index: number, isSelected: boolean) => {
   await onExecuteSearch();
 };
 
-const focusSearchByIndex = (index: number) => {
-  if (filterSearchRefs.value) {
-    filterSearchRefs.value?.[index]?.$el.focus();
+const getSearchInputElement = (index: number): HTMLInputElement | null => {
+  const inputRef = filterSearchRefs.value?.[index];
+
+  if (!inputRef) {
+    return null;
+  }
+
+  if (inputRef.el instanceof HTMLInputElement) {
+    return inputRef.el;
+  }
+
+  if (inputRef.$el instanceof HTMLInputElement) {
+    return inputRef.$el;
+  }
+
+  if (inputRef.$el instanceof HTMLElement) {
+    const nestedInput = inputRef.$el.querySelector('input');
+
+    if (nestedInput instanceof HTMLInputElement) {
+      return nestedInput;
+    }
+  }
+
+  return null;
+};
+
+const runInNextFrame = (callback: () => void) => {
+  if (
+    typeof window !== 'undefined' &&
+    typeof window.requestAnimationFrame === 'function'
+  ) {
+    window.requestAnimationFrame(() => callback());
+    return;
+  }
+
+  callback();
+};
+
+const tryFocusSearchByIndex = (
+  index: number,
+  remainingAttempts: number = 2
+) => {
+  const inputElement = getSearchInputElement(index);
+
+  if (!inputElement) {
+    if (remainingAttempts > 0) {
+      runInNextFrame(() => tryFocusSearchByIndex(index, remainingAttempts - 1));
+    }
+
+    return;
+  }
+
+  inputElement.focus();
+
+  if (
+    typeof document !== 'undefined' &&
+    document.activeElement !== inputElement &&
+    remainingAttempts > 0
+  ) {
+    runInNextFrame(() => tryFocusSearchByIndex(index, remainingAttempts - 1));
   }
 };
 
-const onShowSearch = () => {
+const focusSearchByIndex = async (index: number) => {
+  if (index < 0) {
+    return;
+  }
+
+  await nextTick();
+  runInNextFrame(() => tryFocusSearchByIndex(index));
+};
+
+const onShowSearch = async () => {
+  const shouldAddFirstFilter = !fields.value.length;
+
   if (!fields.value.length) {
     onAddFilter(-1);
   }
 
   isShowFilters.value = true;
 
-  nextTick(() => {
-    const lastIndex = fields.value.length - 1 || 0;
+  const lastIndex = shouldAddFirstFilter ? 0 : fields.value.length - 1;
 
-    focusSearchByIndex(lastIndex);
-  });
+  await focusSearchByIndex(lastIndex);
 };
 
 const getCurrentFocusInput = (): number | undefined => {
@@ -216,7 +292,7 @@ const getCurrentFocusInput = (): number | undefined => {
   }
 
   const currenFocusIndex = filterSearchRefs.value.findIndex(
-    input => input.$el === document.activeElement
+    (_, index) => getSearchInputElement(index) === document.activeElement
   );
 
   return currenFocusIndex;
@@ -233,7 +309,7 @@ useHotkeys(
           return;
         }
 
-        onRemoveFilter(currenFocusIndex);
+        await onRemoveFilter(currenFocusIndex);
       },
     },
     {
@@ -261,9 +337,7 @@ useHotkeys(
 
         onAddFilter(currenFocusIndex);
 
-        await nextTick();
-
-        focusSearchByIndex(currenFocusIndex + 1);
+        await focusSearchByIndex(currenFocusIndex + 1);
       },
     },
     {
@@ -316,7 +390,7 @@ defineExpose({
         @update:open="
           isOpen => {
             if (!isOpen) {
-              $nextTick(() => focusSearchByIndex(index));
+              focusSearchByIndex(index);
             }
           }
         "
@@ -334,7 +408,7 @@ defineExpose({
         @update:open="
           isOpen => {
             if (!isOpen) {
-              $nextTick(() => focusSearchByIndex(index));
+              focusSearchByIndex(index);
             }
           }
         "

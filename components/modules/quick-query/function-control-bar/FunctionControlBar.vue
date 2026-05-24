@@ -10,6 +10,7 @@ const emit = defineEmits<{
   (e: 'onPreview'): void;
   (e: 'onSave'): void;
   (e: 'onDiscard'): void;
+  (e: 'onReload'): void;
 }>();
 </script>
 
@@ -60,6 +61,26 @@ const emit = defineEmits<{
           <p v-if="!hasChanges" class="text-xs text-muted-foreground">
             No changes to save
           </p>
+        </TooltipContent>
+      </Tooltip>
+
+      <Tooltip>
+        <TooltipTrigger as-child>
+          <div>
+            <Button
+              variant="outline"
+              size="xxs"
+              :disabled="isSaving"
+              @click="emit('onReload')"
+            >
+              <Icon name="lucide:refresh-cw" class="size-4" />
+              Reload
+              <ContextMenuShortcut>⌘R</ContextMenuShortcut>
+            </Button>
+          </div>
+        </TooltipTrigger>
+        <TooltipContent>
+          <p>Reload latest version from database</p>
         </TooltipContent>
       </Tooltip>
 

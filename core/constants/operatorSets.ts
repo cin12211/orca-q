@@ -115,14 +115,8 @@ export const operatorSets: Record<
 
     separatorRow,
 
-    { value: OperatorSet.LIKE_CONTAINS, label: 'Contains' },
-    { value: OperatorSet.NOT_LIKE_CONTAINS, label: 'Not contains' },
-
-    { value: OperatorSet.ILIKE_CONTAINS, label: 'Contains - Case insensitive' },
-    {
-      value: OperatorSet.NOT_ILIKE_CONTAINS,
-      label: 'Not contains - Case insensitive',
-    },
+    { value: OperatorSet.ILIKE_CONTAINS, label: 'Contains' },
+    { value: OperatorSet.NOT_ILIKE_CONTAINS, label: 'Not contains' },
 
     separatorRow,
 

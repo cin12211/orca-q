@@ -19,6 +19,8 @@ const modelValue = useVModel(props, 'modelValue', emits, {
   defaultValue: props.defaultValue,
 });
 
+const inputRef = ref<HTMLInputElement | null>(null);
+
 const sizeClass = computed(() => {
   switch (props.size) {
     case 'xs':
@@ -31,10 +33,20 @@ const sizeClass = computed(() => {
       return 'h-9 px-3 py-1';
   }
 });
+
+const focus = () => {
+  inputRef.value?.focus();
+};
+
+defineExpose({
+  focus,
+  el: inputRef,
+});
 </script>
 
 <template>
   <input
+    ref="inputRef"
     v-model="modelValue"
     data-slot="input"
     :class="

@@ -114,11 +114,11 @@ const getConnectionSupportIconProps = (connection?: Connection) => {
     :model-value="connectionId"
     :disabled="disabled"
     v-model:open="open"
+    size="sm"
   >
     <SelectTrigger
       :class="cn('cursor-pointer font-normal', props.class)"
       :disabled="disabled"
-      size="sm"
     >
       <div class="flex items-center gap-2 truncate" v-if="connection">
         <component

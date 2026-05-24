@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { buildInsertStatements } from '~/components/modules/quick-query/utils/buildInsertStatements';
+import { buildInsertStatements } from '~/core/helpers/sql-mutation-statements';
 
 describe('buildInsertStatements', () => {
   it('builds DEFAULT VALUES insert for an empty new row', () => {

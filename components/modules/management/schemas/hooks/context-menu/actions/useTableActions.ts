@@ -5,6 +5,7 @@ import {
   generateDropTableSQL,
   generateRenameTableSQL,
 } from '~/components/modules/management/schemas/utils/generateTableSQL';
+import { QuickQueryMutationAction } from '~/components/modules/quick-query/constants';
 import { generateTableAlias } from '~/components/modules/raw-query/utils/getMappedSchemaSuggestion';
 import { useStreamingDownload } from '~/core/composables/useStreamingDownload';
 import { TabViewType } from '~/core/stores/useTabViewsStore';
@@ -132,24 +133,28 @@ export function useTableActions(
       false
     );
 
-    await executeWithSafeMode(sql, 'delete', async () => {
-      await executeWithLoading(
-        async () => {
-          await $fetch('/api/query/execute', {
-            method: 'POST',
-            body: {
-              ...getConnectionParams(options.connection.value),
-              query: sql,
-            },
-          });
+    await executeWithSafeMode(
+      sql,
+      QuickQueryMutationAction.Delete,
+      async () => {
+        await executeWithLoading(
+          async () => {
+            await $fetch('/api/query/execute', {
+              method: 'POST',
+              body: {
+                ...getConnectionParams(options.connection.value),
+                query: sql,
+              },
+            });
 
-          toast.success('Table deleted successfully');
-          await options.onRefreshSchema();
-        },
-        state.isFetching,
-        'Failed to delete table'
-      );
-    });
+            toast.success('Table deleted successfully');
+            await options.onRefreshSchema();
+          },
+          state.isFetching,
+          'Failed to delete table'
+        );
+      }
+    );
   };
 
   const onRenameTable = () => {
@@ -174,7 +179,7 @@ export function useTableActions(
       newName
     );
 
-    await executeWithSafeMode(sql, 'save', async () => {
+    await executeWithSafeMode(sql, QuickQueryMutationAction.Save, async () => {
       await executeWithLoading(
         async () => {
           await $fetch('/api/query/execute', {

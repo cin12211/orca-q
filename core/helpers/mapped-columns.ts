@@ -1,4 +1,4 @@
-import type { MappedRawColumn } from '~/components/modules/raw-query/interfaces';
+import type { MappedRawColumn } from '~/core/types/mapped-column.types';
 
 export const buildMappedColumnsFromRows = (
   rows: Record<string, unknown>[]

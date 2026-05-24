@@ -10,12 +10,14 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import { QuickQueryMutationAction } from './constants';
 
 const props = defineProps<{
   open: boolean;
   sql: string;
-  type: 'save' | 'delete';
+  type: QuickQueryMutationAction;
   loading?: boolean;
+  dangerous?: boolean;
 }>();
 
 const emit = defineEmits<{
@@ -25,19 +27,29 @@ const emit = defineEmits<{
 }>();
 
 const title = computed(() => {
-  return props.type === 'save'
-    ? 'Confirm Save Operation'
-    : 'Confirm Delete Operation';
+  if (props.dangerous) {
+    return props.type === QuickQueryMutationAction.Save
+      ? 'High-Risk: Confirm Save'
+      : 'High-Risk: Confirm Delete';
+  }
+
+  return props.type === QuickQueryMutationAction.Save
+    ? 'Confirm Save'
+    : 'Confirm Delete';
 });
 
 const description = computed(() => {
-  return props.type === 'save'
+  if (props.dangerous) {
+    return 'Caution: No primary key detected. To identify the record, this operation will match all columns in the WHERE clause. This carries a risk of affecting multiple rows if they share identical data. Please verify the SQL below carefully before proceeding:';
+  }
+
+  return props.type === QuickQueryMutationAction.Save
     ? 'The following SQL will be executed to save your changes:'
     : 'The following SQL will be executed to delete the selected rows:';
 });
 
 const actionLabel = computed(() => {
-  return props.type === 'save' ? 'Save' : 'Delete';
+  return props.type === QuickQueryMutationAction.Save ? 'Save' : 'Delete';
 });
 
 const onConfirm = () => {
@@ -53,13 +65,23 @@ const onCancel = () => {
 
 <template>
   <AlertDialog :open="open" @update:open="emit('update:open', $event)">
-    <AlertDialogContent class="border w-[55vw]! max-w-[55vw]!">
+    <AlertDialogContent size="preview">
       <LoadingOverlay :visible="!!loading" />
       <AlertDialogHeader>
-        <AlertDialogTitle class="flex items-center text-base font-medium">
+        <AlertDialogTitle
+          class="flex items-center gap-2 text-base font-medium"
+          :class="{ 'text-destructive': dangerous }"
+        >
+          <Icon
+            v-if="dangerous"
+            name="lucide:alert-triangle"
+            class="size-5 text-destructive"
+          />
           {{ title }}
         </AlertDialogTitle>
-        <AlertDialogDescription>
+        <AlertDialogDescription
+          :class="{ 'text-destructive font-normal': dangerous }"
+        >
           {{ description }}
         </AlertDialogDescription>
       </AlertDialogHeader>
@@ -75,7 +97,11 @@ const onCancel = () => {
           @click="onConfirm"
         >
           <Icon
-            :name="type === 'save' ? 'lucide:save' : 'lucide:trash-2'"
+            :name="
+              type === QuickQueryMutationAction.Save
+                ? 'lucide:save'
+                : 'lucide:trash-2'
+            "
             class="size-4"
           />
           {{ actionLabel }}

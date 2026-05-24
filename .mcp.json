@@ -1,0 +1,41 @@
+{
+  "servers": {
+    "shadcnVue": {
+      "command": "npx",
+      "args": ["shadcn-vue@latest", "mcp"],
+      "type": "stdio"
+    },
+    "nuxt": {
+      "type": "http",
+      "url": "https://nuxt.com/mcp"
+    },
+    "playwright": {
+      "command": "npx",
+      "args": ["@playwright/mcp@latest"],
+      "type": "stdio"
+    },
+    "gitnexus": {
+      "command": "npx",
+      "args": ["-y", "gitnexus", "mcp"]
+    },
+    "context7": {
+      "type": "http",
+      "url": "https://mcp.context7.com/mcp",
+      "headers": {
+        "X-API-Key": "${input:context7-api-key}"
+      }
+    },
+    "github": {
+      "type": "http",
+      "url": "https://api.githubcopilot.com/mcp/"
+    }
+  },
+  "inputs": [
+    {
+      "id": "context7-api-key",
+      "type": "promptString",
+      "description": "API key for Context7 (get it from context7.com/dashboard)",
+      "password": true
+    }
+  ]
+}

@@ -1,10 +1,6 @@
 import debounce from 'lodash-es/debounce';
 import { toast } from 'vue-sonner';
 import { getConnectionParams } from '@/core/helpers/connection-helper';
-import {
-  formatWhereClause,
-  type FilterSchema,
-} from '~/components/modules/quick-query/utils';
 import { NullOrderPreference } from '~/components/modules/settings/types';
 import {
   ComposeOperator,
@@ -14,6 +10,10 @@ import {
   DEFAULT_QUERY_SIZE,
 } from '~/core/constants';
 import { DatabaseClientType } from '~/core/constants/database-client-type';
+import {
+  formatWhereClause,
+  type FilterSchema,
+} from '~/core/helpers/sql-where-clause';
 import { LocalStorageManager } from '~/core/persist/LocalStorageManager';
 import { useQuickQueryLogs, type Connection } from '~/core/stores';
 import { useAppConfigStore } from '~/core/stores/appConfigStore';

@@ -6,6 +6,7 @@ import {
   generateDropFunctionSQL,
   generateRenameFunctionSQL,
 } from '~/components/modules/management/schemas/utils/generateFunctionSQL';
+import { QuickQueryMutationAction } from '~/components/modules/quick-query/constants';
 import { TabViewType } from '~/core/stores/useTabViewsStore';
 import type { FunctionSignature } from '~/core/types';
 import type { ContextMenuState, SchemaContextMenuOptions } from '../types';
@@ -41,25 +42,29 @@ export function useFunctionActions(
 
     const functionName = state.selectedItem.value!.name;
 
-    await executeWithSafeMode(sql, 'delete', async () => {
-      await executeWithLoading(
-        async () => {
-          await $fetch('/api/functions/delete', {
-            method: 'POST',
-            body: {
-              ...getConnectionParams(options.connection.value),
-              schemaName: getSchemaName(),
-              functionName,
-            },
-          });
+    await executeWithSafeMode(
+      sql,
+      QuickQueryMutationAction.Delete,
+      async () => {
+        await executeWithLoading(
+          async () => {
+            await $fetch('/api/functions/delete', {
+              method: 'POST',
+              body: {
+                ...getConnectionParams(options.connection.value),
+                schemaName: getSchemaName(),
+                functionName,
+              },
+            });
 
-          toast.success('Function deleted successfully');
-          await options.onRefreshSchema();
-        },
-        state.isFetching, // or safeModeLoading? safeMode already handles loading for the action it wraps usually, checking helpers.
-        'Failed to delete function'
-      );
-    });
+            toast.success('Function deleted successfully');
+            await options.onRefreshSchema();
+          },
+          state.isFetching, // or safeModeLoading? safeMode already handles loading for the action it wraps usually, checking helpers.
+          'Failed to delete function'
+        );
+      }
+    );
   };
 
   const onRenameFunction = () => {
@@ -85,7 +90,7 @@ export function useFunctionActions(
       state.renameDialogParameters.value
     );
 
-    await executeWithSafeMode(sql, 'save', async () => {
+    await executeWithSafeMode(sql, QuickQueryMutationAction.Save, async () => {
       await executeWithLoading(
         async () => {
           await $fetch('/api/functions/rename', {

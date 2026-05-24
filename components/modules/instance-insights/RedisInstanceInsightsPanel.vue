@@ -97,12 +97,16 @@ const {
     </ToolPageHeader>
 
     <Tabs v-model="activeSection" class="flex flex-1 min-h-0 flex-col gap-0">
-      <TabsList class="h-8 max-w-full justify-start! shrink-0 overflow-x-auto">
+      <TabsList
+        size="sm"
+        class="max-w-full justify-start! shrink-0 overflow-x-auto"
+      >
         <TabsTrigger
+          size="xs"
           v-for="section in sections"
           :key="section.id"
           :value="section.id"
-          class="min-w-fit shrink-0 cursor-pointer rounded-sm px-1.5 text-xs"
+          class="min-w-fit shrink-0 cursor-pointer rounded-sm"
         >
           {{ section.label }}
         </TabsTrigger>

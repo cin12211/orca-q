@@ -2,6 +2,7 @@ import { reactive, ref } from 'vue';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { useContextMenuHelpers } from '~/components/modules/management/schemas/hooks/context-menu/useContextMenuHelpers';
 import { useContextMenuState } from '~/components/modules/management/schemas/hooks/context-menu/useContextMenuState';
+import { QuickQueryMutationAction } from '~/components/modules/quick-query/constants';
 import { TabViewType } from '~/core/stores/useTabViewsStore';
 import {
   makeColumn,
@@ -135,12 +136,18 @@ describe('useContextMenuHelpers', () => {
     const helpers = useContextMenuHelpers(makeOptions(), state);
     const action = vi.fn().mockResolvedValue(undefined);
 
-    await helpers.executeWithSafeMode('DELETE FROM users;', 'delete', action);
+    await helpers.executeWithSafeMode(
+      'DELETE FROM users;',
+      QuickQueryMutationAction.Delete,
+      action
+    );
 
     expect(action).not.toHaveBeenCalled();
     expect(state.safeModeDialogOpen.value).toBe(true);
     expect(state.safeModeDialogSQL.value).toBe('DELETE FROM users;');
-    expect(state.safeModeDialogType.value).toBe('delete');
+    expect(state.safeModeDialogType.value).toBe(
+      QuickQueryMutationAction.Delete
+    );
     expect(state.pendingAction.value).toBe(action);
   });
 
@@ -151,7 +158,7 @@ describe('useContextMenuHelpers', () => {
 
     await helpers.executeWithSafeMode(
       'UPDATE users SET active = true;',
-      'save',
+      QuickQueryMutationAction.Save,
       action
     );
 

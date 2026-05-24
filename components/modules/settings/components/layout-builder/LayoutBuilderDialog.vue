@@ -300,7 +300,7 @@ const availableSlots = (
 
 <template>
   <Dialog :open="open" @update:open="emit('update:open', $event)">
-    <DialogContent class="max-w-3xl! w-3xl max-h-[85vh] overflow-y-auto">
+    <DialogContent size="2xl" scroll="viewport">
       <DialogHeader>
         <DialogTitle>
           {{ isEditMode ? 'Edit Layout' : 'Create Layout' }}
@@ -390,10 +390,11 @@ const availableSlots = (
             />
 
             <Select
+              size="xs"
               :modelValue="panel.slot"
               @update:modelValue="panel.slot = $event as LayoutSlot"
             >
-              <SelectTrigger size="sm" class="h-7! w-28 cursor-pointer text-xs">
+              <SelectTrigger class="w-28 cursor-pointer">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -401,7 +402,7 @@ const availableSlots = (
                   v-for="slot in availableSlots(panel.slot, panels)"
                   :key="slot"
                   :value="slot"
-                  class="cursor-pointer text-xs"
+                  class="cursor-pointer"
                 >
                   {{ slot }}
                 </SelectItem>
@@ -465,10 +466,11 @@ const availableSlots = (
               >Split panel</Label
             >
             <Select
+              size="xs"
               :modelValue="String(innerSplitPanelIndex)"
               @update:modelValue="innerSplitPanelIndex = Number($event)"
             >
-              <SelectTrigger size="sm" class="h-7! w-28 cursor-pointer text-xs">
+              <SelectTrigger class="w-28 cursor-pointer">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -476,7 +478,7 @@ const availableSlots = (
                   v-for="(panel, idx) in panels"
                   :key="idx"
                   :value="String(idx)"
-                  class="cursor-pointer text-xs"
+                  class="cursor-pointer"
                 >
                   Panel {{ idx + 1 }} ({{ panel.slot }})
                 </SelectItem>
@@ -531,10 +533,11 @@ const availableSlots = (
             />
 
             <Select
+              size="xs"
               :modelValue="innerPanel.slot"
               @update:modelValue="innerPanel.slot = $event as LayoutSlot"
             >
-              <SelectTrigger size="sm" class="h-7! w-28 cursor-pointer text-xs">
+              <SelectTrigger class="w-28 cursor-pointer">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -542,7 +545,7 @@ const availableSlots = (
                   v-for="slot in availableSlots(innerPanel.slot, innerPanels)"
                   :key="slot"
                   :value="slot"
-                  class="cursor-pointer text-xs"
+                  class="cursor-pointer"
                 >
                   {{ slot }}
                 </SelectItem>

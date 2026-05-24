@@ -123,12 +123,13 @@ const viewMode = defineModel<ExplainViewMode>({ required: true });
 
     <div class="flex items-center gap-2 shrink-0">
       <Tabs v-model="viewMode" class="gap-0">
-        <TabsList class="h-6">
+        <TabsList size="xxs">
           <TabsTrigger
+            size="xxs"
             v-for="option in EXPLAIN_VIEW_MODE_OPTIONS"
             :key="option.value"
             :value="option.value"
-            class="text-xs px-1 rounded-sm cursor-pointer"
+            class="rounded-sm cursor-pointer"
           >
             <Icon :name="option.icon" class="size-3.5!" />
             {{ option.label }}

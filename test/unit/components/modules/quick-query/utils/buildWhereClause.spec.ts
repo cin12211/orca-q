@@ -1,18 +1,20 @@
 import { describe, expect, it } from 'vitest';
+import { ComposeOperator, EExtendedField, OperatorSet } from '~/core/constants';
+import { DatabaseClientType } from '~/core/constants/database-client-type';
 import {
   buildWhereClause,
   formatWhereClause,
   getPlaceholderSearchByOperator,
   normalizeFilterSearchValue,
-} from '~/components/modules/quick-query/utils';
-import { ComposeOperator, EExtendedField, OperatorSet } from '~/core/constants';
-import { DatabaseClientType } from '~/core/constants/database-client-type';
+  SqlFilterValueType,
+} from '~/core/helpers/sql-where-clause';
 
 const createFilter = (
   overrides: Partial<{
     fieldName: string;
     isSelect: boolean;
     operator: string;
+    valueType: SqlFilterValueType;
     search: ReturnType<typeof normalizeFilterSearchValue>;
   }> = {}
 ) => ({
@@ -75,6 +77,12 @@ describe('buildWhereClause', () => {
 
     it('stringifies arrays', () => {
       expect(normalizeFilterSearchValue(['a', 1, true])).toBe('["a",1,true]');
+    });
+
+    it('preserves arrays when requested for Postgres array filters', () => {
+      expect(
+        normalizeFilterSearchValue(['java', 'spring'], { preserveArray: true })
+      ).toEqual(['java', 'spring']);
     });
   });
 
@@ -143,6 +151,39 @@ describe('buildWhereClause', () => {
       });
 
       expect(sql).toBe('WHERE "is_active" = FALSE');
+    });
+
+    it('formats preserved Postgres array filters as array literals', () => {
+      const sql = format({
+        filters: [
+          createFilter({
+            fieldName: 'tags',
+            operator: OperatorSet.EQUAL,
+            valueType: SqlFilterValueType.POSTGRES_ARRAY,
+            search: normalizeFilterSearchValue(['java', 'spring'], {
+              preserveArray: true,
+            }),
+          }),
+        ],
+        columns: ['tags'],
+      });
+
+      expect(sql).toBe("WHERE \"tags\" = ARRAY['java', 'spring']");
+    });
+
+    it('keeps JSON array strings as JSON string literals', () => {
+      const sql = format({
+        filters: [
+          createFilter({
+            fieldName: 'payload',
+            operator: OperatorSet.EQUAL,
+            search: normalizeFilterSearchValue(['java', 'spring']),
+          }),
+        ],
+        columns: ['payload'],
+      });
+
+      expect(sql).toBe('WHERE "payload" = \'["java","spring"]\'');
     });
   });
 
@@ -336,14 +377,14 @@ describe('buildWhereClause', () => {
         OperatorSet.NOT_LIKE_CONTAINS,
         DatabaseClientType.POSTGRES,
         'john',
-        'WHERE "name"::TEXT  NOT LIKE $1',
+        'WHERE "name"::TEXT  NOT ILIKE $1',
         ['%john%'],
       ],
       [
         OperatorSet.NOT_ILIKE_CONTAINS,
         DatabaseClientType.POSTGRES,
         'John',
-        'WHERE "name"::TEXT  NOT LIKE $1',
+        'WHERE "name"::TEXT  NOT ILIKE $1',
         ['%John%'],
       ],
     ])(

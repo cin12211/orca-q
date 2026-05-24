@@ -1,3 +1,5 @@
+import { DATA_GRID_ROW_METADATA_IDS } from '~/core/constants/data-grid-row-metadata';
+
 export const copyRowsToClipboard = (rows: Record<string, any>[]) => {
   if (!Array.isArray(rows) || rows.length === 0) {
     return;
@@ -9,6 +11,12 @@ export const copyRowsToClipboard = (rows: Record<string, any>[]) => {
   // Add row data
   rows.forEach((row, index) => {
     const rowData = Object.entries(row)
+      .filter(
+        ([key]) =>
+          !DATA_GRID_ROW_METADATA_IDS.includes(
+            key as (typeof DATA_GRID_ROW_METADATA_IDS)[number]
+          )
+      )
       .map(([_, value]) => {
         return `${value}`;
       })

@@ -1,4 +1,4 @@
-import type { RowData } from '~/components/base/dynamic-table/utils';
+import type { RowData } from '~/components/base/data-grid/utils';
 import type { ExplainPlanNode } from '../../../../../interfaces/explainAnalyzeResult';
 
 export interface ExplainGridRow {

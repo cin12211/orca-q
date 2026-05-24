@@ -2,9 +2,10 @@
 import { refDebounced } from '@vueuse/core';
 import { BaseEmpty, Textarea } from '#components';
 import * as z from 'zod';
-import { cellValueFormatter } from '~/components/base/dynamic-table/utils';
-import { mapPgTypeToTsType } from '~/components/modules/quick-query/utils/mapPgTypeToTsType';
+import { cellValueFormatter } from '~/components/base/data-grid/utils';
 import { DEFAULT_DEBOUNCE_INPUT } from '~/core/constants';
+import { DatabaseClientType } from '~/core/constants/database-client-type';
+import { getSqlDialect } from '~/core/sql-dialect';
 import DynamicForm, { type ConfigFieldItem } from './DynamicForm.vue';
 
 const props = defineProps<{
@@ -21,7 +22,10 @@ const rowSchema = computed<
   const schema: Record<string, any> = {};
 
   props.columnTypes.forEach(column => {
-    const tsType = mapPgTypeToTsType(column.type);
+    //TODO: support more db types
+    const tsType = getSqlDialect(DatabaseClientType.POSTGRES).mapDbTypeToTsType(
+      column.type
+    );
 
     if (tsType === 'boolean') {
       schema[column.name] = z.coerce.boolean().optional();

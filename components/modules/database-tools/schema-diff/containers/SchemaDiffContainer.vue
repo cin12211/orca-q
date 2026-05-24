@@ -83,10 +83,11 @@ const displayTab = ref<'diff' | 'sql'>('diff');
       <!-- Tab bar -->
       <div class="flex items-center justify-between gap-2">
         <Tabs v-model="displayTab" class="min-w-0 flex-1 gap-0">
-          <TabsList class="h-8 max-w-full justify-start! overflow-x-auto">
+          <TabsList size="sm" class="max-w-full justify-start! overflow-x-auto">
             <TabsTrigger
+              size="xs"
               value="diff"
-              class="min-w-fit shrink-0 cursor-pointer rounded-sm px-1.5 text-xs"
+              class="min-w-fit shrink-0 cursor-pointer rounded-sm"
               @click="displayTab = 'diff'"
             >
               <Icon name="hugeicons:git-compare" class="shrink-0 size-3.5" />

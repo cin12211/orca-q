@@ -36,7 +36,7 @@ export function useResetAllData() {
 
       localStorage.clear();
       window.sessionStorage?.clear();
-      window.location.assign('/');
+      window.location.reload();
     } finally {
       isResetting.value = false;
     }

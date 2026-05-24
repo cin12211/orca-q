@@ -30,8 +30,12 @@ const onBackToWorkspaces = async () => {
 };
 </script>
 <template>
-  <Select @update:model-value="onChangeWorkspace" :model-value="workspaceId">
-    <SelectTrigger :class="cn(props.class, 'cursor-pointer')" size="sm">
+  <Select
+    @update:model-value="onChangeWorkspace"
+    :model-value="workspaceId"
+    size="sm"
+  >
+    <SelectTrigger :class="cn(props.class, 'cursor-pointer')">
       <div class="flex items-center gap-2 truncate" v-if="selectedWorkspace">
         <Icon :name="selectedWorkspace.icon" />
         {{ selectedWorkspace.name }}

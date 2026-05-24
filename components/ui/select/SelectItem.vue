@@ -1,42 +1,57 @@
 <script setup lang="ts">
-import { computed, type HTMLAttributes } from 'vue';
+import { computed, inject, type HTMLAttributes } from 'vue';
 import { Check } from 'lucide-vue-next';
 import {
   SelectItem,
   SelectItemIndicator,
-  type SelectItemProps,
+  type SelectItemProps as SelectItemPrimitiveProps,
   SelectItemText,
   useForwardProps,
 } from 'reka-ui';
 import { cn } from '@/lib/utils';
+import { SELECT_SIZE_INJECTION_KEY, type SelectSize } from './context';
+import {
+  selectItemIndicatorIconVariants,
+  selectItemIndicatorWrapperVariants,
+  selectItemVariants,
+} from './styles';
 
-const props = defineProps<
-  SelectItemProps & { class?: HTMLAttributes['class'] }
->();
+export interface SelectItemProps extends SelectItemPrimitiveProps {
+  class?: HTMLAttributes['class'];
+  /**
+   * Overrides the injected Select size for this item only.
+   */
+  size?: SelectSize;
+}
+
+const props = defineProps<SelectItemProps>();
 
 const delegatedProps = computed(() => {
-  const { class: _, ...delegated } = props;
+  const { class: _, size: __, ...delegated } = props;
 
   return delegated;
 });
 
 const forwardedProps = useForwardProps(delegatedProps);
+const injectedSize = inject(
+  SELECT_SIZE_INJECTION_KEY,
+  computed<SelectSize>(() => 'default')
+);
+const resolvedSize = computed(() => props.size ?? injectedSize.value);
 </script>
 
 <template>
   <SelectItem
     data-slot="select-item"
+    :data-size="resolvedSize"
     v-bind="forwardedProps"
-    :class="
-      cn(
-        `focus:bg-accent focus:text-accent-foreground [&_svg:not([class*='text-'])]:text-muted-foreground relative flex w-full cursor-default items-center gap-2 rounded-sm py-1.5 pr-8 pl-2 text-sm outline-hidden select-none data-[disabled]:pointer-events-none data-[disabled]:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 *:[span]:last:flex *:[span]:last:items-center *:[span]:last:gap-2`,
-        props.class
-      )
-    "
+    :class="cn(selectItemVariants({ size: resolvedSize }), props.class)"
   >
-    <span class="absolute right-2 flex size-3.5 items-center justify-center">
+    <span :class="selectItemIndicatorWrapperVariants({ size: resolvedSize })">
       <SelectItemIndicator>
-        <Check class="size-4" />
+        <Check
+          :class="selectItemIndicatorIconVariants({ size: resolvedSize })"
+        />
       </SelectItemIndicator>
     </span>
 

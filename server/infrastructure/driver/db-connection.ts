@@ -288,7 +288,7 @@ export const getDatabaseSource = async ({
   ssl,
   ssh,
 }: {
-  dbConnectionString: string;
+  dbConnectionString?: string;
   type?: DatabaseClientType;
   host?: string;
   port?: string;

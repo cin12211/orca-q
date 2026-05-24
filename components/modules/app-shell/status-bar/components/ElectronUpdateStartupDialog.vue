@@ -66,9 +66,11 @@ const handlePrimaryAction = async () => {
             </template>
           </p>
 
-          <p v-if="displayUpdate?.body" class="whitespace-pre-wrap text-xs">
-            {{ displayUpdate.body }}
-          </p>
+          <div
+            v-if="displayUpdate?.body"
+            class="text-xs space-y-1"
+            v-html="displayUpdate.body"
+          />
 
           <!-- T037: In-dialog progress when download is in flight -->
           <div

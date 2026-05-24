@@ -14,10 +14,7 @@ const emit = defineEmits(['update:open']);
 
 <template>
   <Dialog :open="!!open" @update:open="emit('update:open', $event)">
-    <DialogContent class="w-[95vw]! max-w-[55vw]!">
-      <!-- <DialogHeader>
-        <DialogTitle> hello </DialogTitle>
-      </DialogHeader> -->
+    <DialogContent size="preview">
       <div class="w-full overflow-x-auto">
         <ManagementConnection
           :connections="connections"

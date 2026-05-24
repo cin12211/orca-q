@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import QuickQueryTableSummary from '~/components/modules/quick-query/quick-query-table-summary/QuickQueryTableSummary.vue';
+import { usePreviewRelations } from '~/core/composables/usePreviewRelations';
 import { useTableQueryBuilder } from '~/core/composables/useTableQueryBuilder';
 import { DEFAULT_QUERY_SIZE } from '~/core/constants';
 import { DatabaseClientType } from '~/core/constants/database-client-type';
-import { uuidv4 } from '~/core/helpers';
 import { useAppConfigStore } from '~/core/stores/appConfigStore';
 import { useManagementConnectionStore } from '~/core/stores/managementConnectionStore';
 import WrapperErdDiagram from '../erd-diagram/WrapperErdDiagram.vue';
@@ -15,15 +15,16 @@ import {
   useQuickQueryContextCellFilter,
   useQuickQuery,
   useQuickQueryMutation,
+  useQuickQueryShortcuts,
+  useQuickQueryTableColumns,
   useQuickQueryTableInfo,
   useQuickQueryTabs,
+  useQuickQueryTeleport,
   useReferencedTables,
   useSafeModeDialog,
 } from './hooks';
 import PreviewSelectedRow from './preview/PreviewSelectedRow.vue';
-import PreviewRelationTable, {
-  type PreviewRelationBreadcrumb,
-} from './previewRelationTable/PreviewRelationTable.vue';
+import PreviewRelationTable from './previewRelationTable/PreviewRelationTable.vue';
 import QuickQueryControlBar from './quick-query-control-bar/QuickQueryControlBar.vue';
 import QuickQueryFilter from './quick-query-filter/QuickQueryFilter.vue';
 import QuickQueryHistoryLogsPanel from './quick-query-history-log-panel/QuickQueryHistoryLogsPanel.vue';
@@ -57,8 +58,16 @@ const currentDbType = computed(
 const tableName = computed(() => props.tableName);
 const schemaName = computed(() => props.schemaName);
 
-const previewRelationBreadcrumbs = ref<PreviewRelationBreadcrumb[]>([]);
 const containerRef = ref<InstanceType<typeof HTMLElement>>();
+const {
+  previewRelationBreadcrumbs,
+  onOpenBackReferencedTableModal,
+  onOpenForwardReferencedTableModal,
+  onUpdateSelectedTabInBreadcrumb,
+  onClearBreadcrumbs,
+  onBackPreviousBreadcrumb,
+  onBackPreviousBreadcrumbByIndex,
+} = usePreviewRelations();
 
 const {
   onRequestSafeModeConfirm,
@@ -67,6 +76,7 @@ const {
   safeModeDialogOpen,
   safeModeDialogSql,
   safeModeDialogType,
+  isDangerous,
 } = useSafeModeDialog();
 
 const { quickQueryFilterRef, quickQueryTableRef, selectedRows, focusedCell } =
@@ -178,61 +188,12 @@ const { quickQueryTabView, openedQuickQueryTab } = useQuickQueryTabs({
   },
 });
 
-const isActiveTeleport = ref(true);
-
-onActivated(() => {
-  isActiveTeleport.value = true;
-});
-
-onDeactivated(() => {
-  isActiveTeleport.value = false;
-});
-
-const onOpenBackReferencedTableModal = ({
-  id,
-  tableName,
-  columnName,
-  schemaName,
-}: {
-  id: string;
-  tableName: string;
-  columnName: string;
-  schemaName: string;
-}) => {
-  previewRelationBreadcrumbs.value.push({
-    id: uuidv4(),
-    type: 'backReferenced',
-    schemaName,
-    tableName,
-    columnName,
-    recordId: id,
-  });
-};
-
-const onOpenForwardReferencedTableModal = ({
-  id,
-  tableName,
-  columnName,
-  schemaName,
-}: {
-  id: string;
-  tableName: string;
-  columnName: string;
-  schemaName: string;
-}) => {
-  previewRelationBreadcrumbs.value.push({
-    id: uuidv4(),
-    type: 'forwardReferenced',
-    schemaName,
-    tableName,
-    columnName,
-    recordId: id,
-  });
-};
+const { isActiveTeleport } = useQuickQueryTeleport();
 
 const { onAddFilterByContextCell } = useQuickQueryContextCellFilter({
   quickQueryFilterRef,
   quickQueryTableRef,
+  columnTypes,
   filters,
   onApplyNewFilter,
 });
@@ -248,116 +209,19 @@ const isSkipShortcut = computed(
 
 const isViewOnly = computed(() => isVirtualTable.value);
 
-useHotkeys(
-  [
-    {
-      key: 'meta+a',
-      callback: () => {
-        if (isSkipShortcut.value) {
-          return;
-        }
-        quickQueryTableRef.value?.gridApi?.selectAll();
-      },
-      excludeInput: true,
-      isPreventDefault: true,
-    },
-    {
-      key: 'meta+c',
-      callback: () => {
-        if (isSkipShortcut.value) {
-          return;
-        }
+useQuickQueryShortcuts({
+  containerRef,
+  quickQueryFilterRef,
+  quickQueryTableRef,
+  isSkipShortcut,
+  isViewOnly,
+  onCopySelectedCell,
+  onPasteRows,
+  onSaveData,
+  onDeleteRows,
+});
 
-        onCopySelectedCell();
-      },
-      excludeInput: true,
-    },
-    {
-      key: 'meta+v',
-      callback: () => {
-        if (isSkipShortcut.value) {
-          return;
-        }
-        onPasteRows();
-      },
-      excludeInput: true,
-    },
-    {
-      key: 'meta+s',
-      callback: () => {
-        if (isSkipShortcut.value || isViewOnly.value) {
-          return;
-        }
-        onSaveData();
-      },
-      isPreventDefault: true,
-    },
-    {
-      key: 'meta+alt+backspace',
-      callback: () => {
-        if (isSkipShortcut.value || isViewOnly.value) {
-          return;
-        }
-        onDeleteRows();
-      },
-      isPreventDefault: true,
-    },
-  ],
-  {
-    target: containerRef,
-  }
-);
-
-useHotkeys([
-  {
-    key: 'meta+f',
-    callback: async () => {
-      if (isSkipShortcut.value) {
-        return;
-      }
-      await quickQueryFilterRef.value?.onShowSearch();
-    },
-  },
-]);
-
-const columns = ref();
-
-watch(
-  () => quickQueryTableRef.value?.columnDefs,
-  () => {
-    if (quickQueryTableRef.value?.columnDefs) {
-      columns.value = quickQueryTableRef.value?.columnDefs;
-    }
-  },
-  { immediate: true, deep: true }
-);
-
-const onUpdateSelectedTabInBreadcrumb = (
-  index: number,
-  selectedTab: string,
-  schemaName: string
-) => {
-  if (previewRelationBreadcrumbs.value[index]) {
-    previewRelationBreadcrumbs.value[index].selectedTab = selectedTab;
-    previewRelationBreadcrumbs.value[index].schemaName = schemaName;
-  }
-};
-
-const onClearBreadcrumbs = () => {
-  previewRelationBreadcrumbs.value = [];
-};
-
-const onBackPreviousBreadcrumb = () => {
-  previewRelationBreadcrumbs.value.pop();
-};
-
-const onBackPreviousBreadcrumbByIndex = (index: number) => {
-  const newBreadcrumb = previewRelationBreadcrumbs.value.filter((_, i) => {
-    return i <= index;
-  });
-
-  previewRelationBreadcrumbs.value = newBreadcrumb;
-};
+const { columns } = useQuickQueryTableColumns(quickQueryTableRef);
 </script>
 
 <template>
@@ -381,6 +245,7 @@ const onBackPreviousBreadcrumbByIndex = (index: number) => {
     v-model:open="safeModeDialogOpen"
     :sql="safeModeDialogSql"
     :type="safeModeDialogType"
+    :dangerous="isDangerous"
     @confirm="onSafeModeConfirm"
     @cancel="onSafeModeCancel"
   />

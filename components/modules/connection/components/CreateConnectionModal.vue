@@ -117,6 +117,12 @@ const structuredTargetModel = computed({
     formData.database = value;
   },
 });
+
+const handleSubmit = () => {
+  if (isFormValid.value && testStatus.value !== 'testing') {
+    handleCreateConnection();
+  }
+};
 </script>
 
 <template>
@@ -134,7 +140,10 @@ const structuredTargetModel = computed({
       </template>
 
       <template v-else>
-        <div class="flex flex-col h-full overflow-hidden">
+        <form
+          @submit.prevent="handleSubmit"
+          class="flex flex-col h-full overflow-hidden"
+        >
           <DialogHeader class="p-6 pb-2">
             <DialogTitle>Connection Details</DialogTitle>
             <DialogDescription>
@@ -529,13 +538,19 @@ const structuredTargetModel = computed({
             class="p-6 pt-4 flex flex-col-reverse gap-2 sm:flex-row sm:justify-between sm:space-x-2"
           >
             <div class="flex flex-1 space-x-2">
-              <Button variant="outline" @click="handleBack" size="sm">
+              <Button
+                type="button"
+                variant="outline"
+                @click="handleBack"
+                size="sm"
+              >
                 <Icon name="hugeicons:arrow-left-02" />
                 Back
               </Button>
             </div>
             <div class="flex space-x-2">
               <Button
+                type="button"
                 variant="outline"
                 @click="handleTestConnection"
                 size="sm"
@@ -550,7 +565,7 @@ const structuredTargetModel = computed({
               </Button>
               <Button
                 id="tour-create-update-connection-btn"
-                @click="handleCreateConnection"
+                type="submit"
                 size="sm"
                 :disabled="testStatus === 'testing' || !isFormValid"
               >
@@ -558,7 +573,7 @@ const structuredTargetModel = computed({
               </Button>
             </div>
           </DialogFooter>
-        </div>
+        </form>
       </template>
     </DialogContent>
   </Dialog>

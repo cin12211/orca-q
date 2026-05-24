@@ -97,15 +97,15 @@ const currentModelDisplay = computed(() => {
 </script>
 
 <template>
-  <Select v-model="selectedModelFull">
-    <SelectTrigger :class="cn('text-sm px-2 w-full', props.class)">
+  <Select v-model="selectedModelFull" size="xxs">
+    <SelectTrigger size="sm" :class="cn('w-full', props.class)">
       <SelectValue :placeholder="currentModelDisplay" />
     </SelectTrigger>
 
     <SelectContent>
       <template v-for="provider in AI_PROVIDERS" :key="provider.id">
         <SelectGroup>
-          <SelectLabel class="h-6">
+          <SelectLabel size="xxs">
             {{ provider.name }}
           </SelectLabel>
 
@@ -113,7 +113,8 @@ const currentModelDisplay = computed(() => {
             v-for="model in groupedModels[provider.id]"
             :key="model.value"
             :value="model.value"
-            class="text-xs cursor-pointer h-6"
+            size="xxs"
+            class="cursor-pointer"
           >
             {{ model.label }}
           </SelectItem>

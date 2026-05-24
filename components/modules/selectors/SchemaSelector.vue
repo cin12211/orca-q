@@ -22,8 +22,9 @@ const { schemaId } = storeToRefs(wsStateStore);
       }
     "
     :model-value="schemaId"
+    size="sm"
   >
-    <SelectTrigger :class="cn(props.class, 'w-48 cursor-pointer')" size="sm">
+    <SelectTrigger :class="cn(props.class, 'w-48 cursor-pointer')">
       <div class="flex items-center gap-2 w-44 truncate" v-if="activeSchema">
         {{ activeSchema?.name }}
       </div>

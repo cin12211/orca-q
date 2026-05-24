@@ -1,6 +1,10 @@
 <script setup lang="ts">
-import DynamicTable from '~/components/base/dynamic-table/DynamicTable.vue';
-import type { MappedRawColumn } from '~/components/modules/raw-query/interfaces';
+import {
+  buildDynamicColumnDefs,
+  buildDynamicRowData,
+  DYNAMIC_COLUMN_TYPES,
+} from '~/components/base/data-grid/utils';
+import type { MappedRawColumn } from '~/core/types/mapped-column.types';
 import type { AgentRenderTableResult } from '../../types';
 import AgentToolSqlPreview from './AgentToolSqlPreview.vue';
 
@@ -22,6 +26,17 @@ const mappedColumns = computed<MappedRawColumn[]>(() =>
 );
 
 const rows = computed(() => props.data.rows ?? []);
+
+const columnDefs = computed(() =>
+  buildDynamicColumnDefs({
+    columns: mappedColumns.value,
+    rows: rows.value,
+    columnKeyBy: 'field',
+    hasHashIndex: false,
+  })
+);
+
+const rowData = computed(() => buildDynamicRowData(rows.value, false));
 const sqlPreviewId = computed(
   () => `agent-render-table-${props.data.sql || ''}`
 );
@@ -56,11 +71,10 @@ const tableHeight = computed(() => {
     class="overflow-hidden rounded-lg border max-h-96"
     :style="{ height: `${tableHeight}px` }"
   >
-    <DynamicTable
-      :columns="mappedColumns"
-      :data="rows"
-      column-key-by="field"
-      :has-hash-index="false"
+    <BaseDataGrid
+      :column-defs="columnDefs"
+      :row-data="rowData"
+      :column-types="DYNAMIC_COLUMN_TYPES"
       class="h-full w-full"
     />
   </div>

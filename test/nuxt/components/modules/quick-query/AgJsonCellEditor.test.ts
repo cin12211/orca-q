@@ -1,6 +1,6 @@
 import { mount } from '@vue/test-utils';
 import { describe, expect, it, vi } from 'vitest';
-import AgJsonCellEditor from '~/components/modules/quick-query/quick-query-table/AgJsonCellEditor.vue';
+import AgJsonCellEditor from '~/components/base/data-grid/components/AgJsonCellEditor.vue';
 
 const mountComponent = (value: unknown) => {
   const stopEditing = vi.fn();

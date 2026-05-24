@@ -22,18 +22,17 @@ Complete inventory of all Vue components in the OrcaQ project.
 
 Reusable foundation components shared across the application.
 
-| Component            | Location                   | Purpose                          |
-| -------------------- | -------------------------- | -------------------------------- |
-| **Tree**             | `/base/Tree/`              | Hierarchical tree view (5 files) |
-| ├─ TreeFolder.vue    |                            | Folder node                      |
-| ├─ TreeItem.vue      |                            | Item node                        |
-| └─ TreeContainer.vue |                            | Container wrapper                |
-| **BaseCodeEditor**   | `/base/code-editor/`       | CodeMirror SQL editor (20 files) |
-| **DynamicTable**     | `/base/dynamic-table/`     | Generic data table (12 files)    |
-| **ContextMenu**      | `/base/context-menu/`      | Right-click menu (2 files)       |
-| **BaseEmpty**        | `/base/BaseEmpty.vue`      | Empty state display              |
-| **LoadingOverlay**   | `/base/LoadingOverlay.vue` | Loading spinner overlay          |
-| **TableSkeleton**    | `/base/TableSkeleton.vue`  | Table loading placeholder        |
+| Component            | Location                   | Purpose                           |
+| -------------------- | -------------------------- | --------------------------------- |
+| **Tree**             | `/base/Tree/`              | Hierarchical tree view (5 files)  |
+| ├─ TreeFolder.vue    |                            | Folder node                       |
+| ├─ TreeItem.vue      |                            | Item node                         |
+| └─ TreeContainer.vue |                            | Container wrapper                 |
+| **BaseCodeEditor**   | `/base/code-editor/`       | CodeMirror SQL editor (20 files)  |
+| **BaseDataGrid**     | `/base/data-grid/`         | Shared AG Grid shell + primitives |
+| **ContextMenu**      | `/base/context-menu/`      | Right-click menu (2 files)        |
+| **BaseEmpty**        | `/base/BaseEmpty.vue`      | Empty state display               |
+| **LoadingOverlay**   | `/base/LoadingOverlay.vue` | Loading spinner overlay           |
 
 ---
 

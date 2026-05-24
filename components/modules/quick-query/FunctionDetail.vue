@@ -100,7 +100,7 @@ const requestBody = computed(() => ({
   ...getConnectionParams(connection.value),
 }));
 
-const { status } = useFetch('/api/functions/definition', {
+const { status, refresh } = useFetch('/api/functions/definition', {
   method: 'POST',
   body: requestBody,
   onResponse: response => {
@@ -207,10 +207,25 @@ const discardChanges = () => {
   code.value = originalCode.value;
 };
 
+const openReloadConfirmModal = ref(false);
+
+const reloadFunction = async () => {
+  if (hasChanges.value) {
+    openReloadConfirmModal.value = true;
+  } else {
+    await refresh();
+  }
+};
+
+const confirmReload = async () => {
+  openReloadConfirmModal.value = false;
+  await refresh();
+};
+
 const extensions = [
   shortCutSaveFunction(content => {
     code.value = content;
-    openSavePreview();
+    saveCurrentFunction();
   }),
   shortCutFormatOnSave((fileContent: string) => {
     const formatted = format(fileContent, {
@@ -223,6 +238,23 @@ const extensions = [
   keymap.of([
     { key: 'Mod-i', run: startCompletion },
     { key: 'Tab', run: acceptCompletion },
+    {
+      key: 'Mod-r',
+      mac: 'Cmd-r',
+      run: () => {
+        reloadFunction();
+        return true;
+      },
+      preventDefault: true,
+    },
+    {
+      key: 'F5',
+      run: () => {
+        reloadFunction();
+        return true;
+      },
+      preventDefault: true,
+    },
   ]),
 
   sqlCompartment.of(
@@ -249,7 +281,7 @@ const extensions = [
     :open="openPreviewModal"
     @update:open="openPreviewModal = $event"
   >
-    <AlertDialogContent class="border w-[55vw]! max-w-[55vw]!">
+    <AlertDialogContent size="preview">
       <AlertDialogHeader>
         <AlertDialogTitle class="flex items-center text-base font-medium">
           <Icon name="lucide:file-search" class="size-4 mr-2" />
@@ -269,7 +301,7 @@ const extensions = [
 
       <AlertDialogFooter>
         <AlertDialogCancel :disabled="isSaving">Cancel</AlertDialogCancel>
-        <AlertDialogAction class="gap-2" @click.prevent="saveFunction">
+        <AlertDialogAction class="gap-2" @click.prevent="saveFunction()">
           <Icon
             v-if="isSaving"
             name="hugeicons:loading-03"
@@ -277,6 +309,33 @@ const extensions = [
           />
           <Icon v-else name="lucide:save" class="size-4" />
           Save to database
+        </AlertDialogAction>
+      </AlertDialogFooter>
+    </AlertDialogContent>
+  </AlertDialog>
+
+  <AlertDialog
+    :open="openReloadConfirmModal"
+    @update:open="openReloadConfirmModal = $event"
+  >
+    <AlertDialogContent>
+      <AlertDialogHeader>
+        <AlertDialogTitle
+          class="flex items-center text-base font-medium text-destructive"
+        >
+          <Icon name="lucide:alert-triangle" class="size-5 mr-2" />
+          Discard Unsaved Changes?
+        </AlertDialogTitle>
+        <AlertDialogDescription>
+          You have unsaved changes in your editor. Reloading will fetch the
+          latest definition from the database and discard all your local
+          modifications. This action cannot be undone.
+        </AlertDialogDescription>
+      </AlertDialogHeader>
+      <AlertDialogFooter>
+        <AlertDialogCancel>Cancel</AlertDialogCancel>
+        <AlertDialogAction variant="destructive" @click="confirmReload">
+          Reload and Discard
         </AlertDialogAction>
       </AlertDialogFooter>
     </AlertDialogContent>
@@ -290,6 +349,7 @@ const extensions = [
         @on-preview="openSavePreview"
         @on-save="saveCurrentFunction"
         @on-discard="discardChanges"
+        @on-reload="reloadFunction"
       />
       <div class="h-full flex flex-col overflow-y-auto relative">
         <LoadingOverlay :visible="status === 'pending' || isSaving" />

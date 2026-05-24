@@ -155,17 +155,17 @@ const handleDownload = async (item: AttachmentItem | null) => {
 
     <div class="flex-1 overflow-hidden flex flex-col min-h-0 relative mt-2">
       <Tabs v-model="activeTab" class="flex-1 min-h-0">
-        <TabsList class="h-8">
-          <TabsTrigger value="all" class="text-xs cursor-pointer"
+        <TabsList size="sm">
+          <TabsTrigger size="xs" value="all" class="cursor-pointer"
             >All</TabsTrigger
           >
-          <TabsTrigger value="files" class="text-xs cursor-pointer"
+          <TabsTrigger size="xs" value="files" class="cursor-pointer"
             >Files</TabsTrigger
           >
-          <TabsTrigger value="code" class="text-xs cursor-pointer"
+          <TabsTrigger size="xs" value="code" class="cursor-pointer"
             >Code</TabsTrigger
           >
-          <TabsTrigger value="links" class="text-xs cursor-pointer"
+          <TabsTrigger size="xs" value="links" class="cursor-pointer"
             >Links</TabsTrigger
           >
         </TabsList>

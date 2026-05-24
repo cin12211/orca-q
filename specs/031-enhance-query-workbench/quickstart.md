@@ -40,20 +40,29 @@ bun vitest run --project unit test/unit/server/infrastructure/agent/schema/schem
 4. Confirm the preview shows the exact submitted SQL.
 5. Save and verify that the same change succeeds when it is valid.
 
-### 3. Type alias consistency across databases
+### 3. No-Primary-Key Danger Warning
+
+1. Open a table that has NO primary key in quick query.
+2. Modify a cell and attempt to save.
+3. Confirm that a "CRITICALLY DANGEROUS" warning modal appears.
+4. Verify the warning mentions that multiple rows might be affected and shows the generated SQL with all fields in the WHERE clause.
+5. Select several rows and attempt to delete them.
+6. Confirm the same "CRITICALLY DANGEROUS" warning appears for the delete operation.
+
+### 4. Type alias consistency across databases
 
 1. Inspect metadata for equivalent column types in supported database families.
 2. Compare `short_type_name` values for common samples such as varchar, int, bool, decimal, and timestamp families.
 3. Confirm the displayed aliases remain consistent across metadata and query-driven views.
 
-### 4. Long schema-loading feedback
+### 5. Long schema-loading feedback
 
 1. Open schema browsing on a large multi-schema connection.
 2. Confirm a loading state appears immediately.
 3. Wait beyond the normal fast path and verify the UI continues to show an active waiting/progress message.
 4. Confirm the state resolves to completion or explicit failure.
 
-### 5. Workspace tab shortcuts
+### 6. Workspace tab shortcuts
 
 1. From the first tab area, click the `SQL` shortcut.
 2. Confirm `sample.sql` opens and is reused on the next click instead of being duplicated.
@@ -61,7 +70,7 @@ bun vitest run --project unit test/unit/server/infrastructure/agent/schema/schem
 4. Create multiple new raw SQL files and confirm collision-free `new-file(-n)` naming.
 5. Open schema browser and instance insight from the same menu.
 
-### 6. Null-order preference
+### 7. Null-order preference
 
 1. Set the global null-order preference in settings.
 2. Open a quick-query/table view and confirm the same preference is visible in the quick-query bar.

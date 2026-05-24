@@ -179,7 +179,6 @@ OrcaQ now treats connection type and provider kind as a capability problem inste
 | `DynamicTable`         | AG Grid wrapper with virtual scrolling, dynamic columns, row editing           |
 | `BaseEmpty`            | Empty state component                                                          |
 | `LoadingOverlay`       | Full-screen loading overlay                                                    |
-| `TableSkeleton`        | Loading placeholder for tables                                                 |
 | `Tree/`                | Tree manager class with CRUD operations, sorting, flat-to-tree conversion      |
 | `tree-folder/`         | Drag-and-drop file tree with pseudomorphism drag items                         |
 | `CodeHighlightPreview` | Syntax-highlighted code preview (read-only)                                    |
@@ -681,7 +680,7 @@ None. Raw `$fetch()` throughout. This is a simplicity trade-off — appropriate 
 | Type                      | Location                                  | Examples                                                                 |
 | ------------------------- | ----------------------------------------- | ------------------------------------------------------------------------ |
 | **Smart (Container)**     | `components/modules/*/` root `.vue` files | `QuickQuery.vue`, `RawQuery.vue`, `ErdDiagram.vue`, `CommandPalette.vue` |
-| **Presentational (Dumb)** | `components/ui/`, `components/base/`      | `Button`, `Input`, `Dialog`, `BaseEmpty`, `TableSkeleton`                |
+| **Presentational (Dumb)** | `components/ui/`, `components/base/`      | `Button`, `Input`, `Dialog`, `BaseEmpty`                                 |
 | **Orchestrator**          | `pages/*.vue`                             | Thin shells that compose features and pass route params                  |
 
 Pages are extremely thin — typically just `definePageMeta` + a single feature component. All logic lives in composables.

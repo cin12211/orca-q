@@ -66,11 +66,12 @@ const onOpenChange = (isOpen: boolean) => {
 
 <template>
   <Select
+    size="xxs"
     :model-value="value"
     @update:model-value="newValue => emit('update:value', newValue)"
     @update:open="onOpenChange"
   >
-    <SelectTrigger class="w-36 min-w-36 h-6! text-sm cursor-pointer px-2">
+    <SelectTrigger class="w-36 min-w-36 cursor-pointer">
       <SelectValue placeholder="Select field" />
     </SelectTrigger>
     <SelectContent>
@@ -96,7 +97,7 @@ const onOpenChange = (isOpen: boolean) => {
           <SelectItem
             v-for="column in filteredColumns"
             :key="column"
-            class="h-6 text-sm cursor-pointer"
+            class="cursor-pointer"
             :value="column"
           >
             {{ column }}
@@ -111,7 +112,7 @@ const onOpenChange = (isOpen: boolean) => {
           <SelectItem
             v-for="field in filteredExtendedFields"
             :key="field.value"
-            class="h-6 text-sm cursor-pointer"
+            class="cursor-pointer"
             :value="field.value"
           >
             {{ field.label }}

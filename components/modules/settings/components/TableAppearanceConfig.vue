@@ -87,6 +87,7 @@ const previewHeaderBg = computed(() =>
         <div class="space-y-1.5">
           <p class="text-xs text-muted-foreground font-medium">Font size</p>
           <Select
+            size="xs"
             :model-value="String(configs.headerFontSize)"
             @update:model-value="
               v =>
@@ -94,7 +95,7 @@ const previewHeaderBg = computed(() =>
                   Number(v))
             "
           >
-            <SelectTrigger size="sm" class="h-7! w-full cursor-pointer text-xs">
+            <SelectTrigger class="w-full cursor-pointer">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -102,7 +103,6 @@ const previewHeaderBg = computed(() =>
                 v-for="opt in TABLE_HEADER_FONT_SIZE_OPTIONS"
                 :key="opt.value"
                 :value="String(opt.value)"
-                class="text-xs"
               >
                 {{ opt.label }}
               </SelectItem>
@@ -112,6 +112,7 @@ const previewHeaderBg = computed(() =>
         <div class="space-y-1.5">
           <p class="text-xs text-muted-foreground font-medium">Font weight</p>
           <Select
+            size="xs"
             :model-value="String(configs.headerFontWeight)"
             @update:model-value="
               v =>
@@ -119,7 +120,7 @@ const previewHeaderBg = computed(() =>
                   Number(v))
             "
           >
-            <SelectTrigger size="sm" class="h-7! w-full cursor-pointer text-xs">
+            <SelectTrigger class="w-full cursor-pointer">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -127,7 +128,6 @@ const previewHeaderBg = computed(() =>
                 v-for="opt in HEADER_FONT_WEIGHT_OPTIONS"
                 :key="opt.value"
                 :value="String(opt.value)"
-                class="text-xs"
               >
                 {{ opt.label }}
               </SelectItem>
@@ -187,12 +187,13 @@ const previewHeaderBg = computed(() =>
         <div class="space-y-1.5">
           <p class="text-xs text-muted-foreground font-medium">Font size</p>
           <Select
+            size="xs"
             :model-value="String(configs.fontSize)"
             @update:model-value="
               v => (appConfigStore.tableAppearanceConfigs.fontSize = Number(v))
             "
           >
-            <SelectTrigger size="sm" class="h-7! w-full cursor-pointer text-xs">
+            <SelectTrigger class="w-full cursor-pointer">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -200,7 +201,6 @@ const previewHeaderBg = computed(() =>
                 v-for="opt in TABLE_FONT_SIZE_OPTIONS"
                 :key="opt.value"
                 :value="String(opt.value)"
-                class="text-xs"
               >
                 {{ opt.label }}
               </SelectItem>

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { storeToRefs } from 'pinia';
 import {
   ContextMenu,
   ContextMenuContent,
@@ -6,8 +7,10 @@ import {
   ContextMenuTrigger,
 } from '#components';
 import { cn } from '@/lib/utils';
+import { useSchemaStore } from '~/core/stores';
 import type { ExecutedResultItem, MappedRawColumn } from '../interfaces';
-import { normalizeResultRows } from '../utils';
+import { formatColumnsInfo } from '../utils/formatColumnsInfo';
+import { normalizeResultRows } from '../utils/normalizeResultRows';
 import ResultTabErrorView from './result-tab/ResultTabErrorView.vue';
 import ResultTabInfoView from './result-tab/ResultTabInfoView.vue';
 import ResultTabRawView from './result-tab/ResultTabRawView.vue';
@@ -21,6 +24,9 @@ const props = defineProps<{
   executeLoading: boolean;
   isStreaming: boolean;
 }>();
+
+const schemaStore = useSchemaStore();
+const { schemas } = storeToRefs(schemaStore);
 
 const emit = defineEmits<{
   (e: 'update:activeTab', id: string): void;
@@ -67,22 +73,51 @@ const activeTab = computed(() => {
   return props.executedResults.get(props.activeTabId) || null;
 });
 
+watch(
+  () => activeTab.value?.metadata.connection,
+  async connection => {
+    if (!connection) {
+      return;
+    }
+
+    try {
+      if (!schemas.value[connection.id]?.length) {
+        await schemaStore.fetchSchemas({
+          connectionId: connection.id,
+          workspaceId: connection.workspaceId,
+          connection,
+        });
+      }
+
+      await schemaStore.fetchReservedSchemas({
+        connectionId: connection.id,
+        connection,
+      });
+    } catch (error) {
+      console.error(
+        '[RawQueryResultTabs] Failed to load schema metadata',
+        error
+      );
+    }
+  },
+  { immediate: true }
+);
+
 // Get current view mode for active tab
 const currentView = computed(() => activeTab.value?.view || 'result');
 
 // Derive columns from active tab's fieldDefs (not global mappedColumns)
 const activeTabColumns = computed<MappedRawColumn[]>(() => {
   if (!activeTab.value?.metadata.fieldDefs) return [];
-  return activeTab.value.metadata.fieldDefs.map((field, index) => ({
-    index,
-    originalName: field.name,
-    aliasFieldName: field.name,
-    queryFieldName: field.name,
-    isPrimaryKey: false,
-    isForeignKey: false,
-    type: field.dataTypeID?.toString() || 'unknown',
-    tableName: '',
-  }));
+
+  const connectionId = activeTab.value.metadata.connection?.id;
+
+  return formatColumnsInfo({
+    fieldDefs: activeTab.value.metadata.fieldDefs,
+    statementQuery: activeTab.value.metadata.statementQuery,
+    schemas: connectionId ? schemas.value[connectionId] || [] : [],
+    getTableInfoById: schemaStore.getTableInfoById,
+  });
 });
 
 const getFormattedData = (tab: ExecutedResultItem): Record<string, any>[] => {

@@ -6,6 +6,7 @@ import {
   generateRefreshMaterializedViewSQL,
   generateViewSelectSQL,
 } from '~/components/modules/management/schemas/utils/generateViewSQL';
+import { QuickQueryMutationAction } from '~/components/modules/quick-query/constants';
 import { TabViewType } from '~/core/stores/useTabViewsStore';
 import { ViewSchemaEnum } from '~/core/types';
 import type { ViewDefinitionResponse } from '~/core/types';
@@ -119,7 +120,7 @@ export function useViewActions(
       isMaterialized
     );
 
-    await executeWithSafeMode(sql, 'save', async () => {
+    await executeWithSafeMode(sql, QuickQueryMutationAction.Save, async () => {
       await executeWithLoading(
         async () => {
           await $fetch('/api/query/execute', {
@@ -158,24 +159,28 @@ export function useViewActions(
       false
     );
 
-    await executeWithSafeMode(sql, 'delete', async () => {
-      await executeWithLoading(
-        async () => {
-          await $fetch('/api/query/execute', {
-            method: 'POST',
-            body: {
-              ...getConnectionParams(options.connection.value),
-              query: sql,
-            },
-          });
+    await executeWithSafeMode(
+      sql,
+      QuickQueryMutationAction.Delete,
+      async () => {
+        await executeWithLoading(
+          async () => {
+            await $fetch('/api/query/execute', {
+              method: 'POST',
+              body: {
+                ...getConnectionParams(options.connection.value),
+                query: sql,
+              },
+            });
 
-          toast.success('View deleted successfully');
-          await options.onRefreshSchema();
-        },
-        state.isFetching,
-        'Failed to delete view'
-      );
-    });
+            toast.success('View deleted successfully');
+            await options.onRefreshSchema();
+          },
+          state.isFetching,
+          'Failed to delete view'
+        );
+      }
+    );
   };
 
   const onRefreshMaterializedView = async () => {
@@ -199,7 +204,7 @@ export function useViewActions(
       false
     );
 
-    await executeWithSafeMode(sql, 'save', async () => {
+    await executeWithSafeMode(sql, QuickQueryMutationAction.Save, async () => {
       await executeWithLoading(
         async () => {
           await $fetch('/api/query/execute', {

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Input } from '#components';
-import type { FilterSchema } from '~/components/modules/quick-query/utils';
 import { OperatorSet } from '~/core/constants';
+import type { FilterSchema } from '~/core/helpers/sql-where-clause';
 import { useReferencedTables } from '../hooks';
 import ReferencedTable from './ReferencedTable.vue';
 

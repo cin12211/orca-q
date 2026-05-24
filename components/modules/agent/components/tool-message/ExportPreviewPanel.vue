@@ -1,9 +1,13 @@
 <script setup lang="ts">
 import { computed } from 'vue';
-import DynamicTable from '~/components/base/dynamic-table/DynamicTable.vue';
-import type { MappedRawColumn } from '~/components/modules/raw-query/interfaces';
+import {
+  buildDynamicColumnDefs,
+  buildDynamicRowData,
+  DYNAMIC_COLUMN_TYPES,
+} from '~/components/base/data-grid/utils';
 import type { SupportedLanguage } from '~/core/composables/useSqlHighlighter';
 import { formatBytes } from '~/core/helpers';
+import type { MappedRawColumn } from '~/core/types/mapped-column.types';
 import { useFileDownload } from '../../hooks/useFileDownload';
 import type { AgentExportFileResult } from '../../types';
 
@@ -57,6 +61,16 @@ const dynamicTableColumns = computed<MappedRawColumn[]>(() => {
     canMutate: false,
   }));
 });
+
+const columnDefs = computed(() =>
+  buildDynamicColumnDefs({
+    columns: dynamicTableColumns.value,
+    rows: previewRows.value,
+    columnKeyBy: 'field',
+  })
+);
+
+const rowData = computed(() => buildDynamicRowData(previewRows.value));
 
 const handleDownload = async () => {
   await downloadFile(props.result);
@@ -120,10 +134,10 @@ const fileSizeLabel = computed(() => {
         v-else-if="isTablePreview"
         class="flex-1 w-full overflow-hidden rounded-xl border border-border/70 flex flex-col min-h-0 relative h-full"
       >
-        <DynamicTable
-          :columns="dynamicTableColumns"
-          :data="previewRows"
-          column-key-by="field"
+        <BaseDataGrid
+          :column-defs="columnDefs"
+          :row-data="rowData"
+          :column-types="DYNAMIC_COLUMN_TYPES"
           class="h-full"
         />
       </div>

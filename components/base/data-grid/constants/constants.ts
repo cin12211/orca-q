@@ -1,0 +1,13 @@
+export {
+  DATA_GRID_ROW_METADATA_IDS,
+  DEFAULT_HASH_INDEX_WIDTH,
+  HASH_INDEX_HEADER,
+  HASH_INDEX_ID,
+  NEW_ROW_FLAG_ID,
+} from '~/core/constants/data-grid-row-metadata';
+
+export const DEFAULT_COLUMN_MAX_WIDTH = 300;
+export const DEFAULT_COLUMN_MIN_WIDTH = 35;
+export const DEFAULT_COLUMN_GAP_WIDTH = 20;
+export const DEFAULT_COLUMN_RAW_GAP_WIDTH = 25;
+export const DEFAULT_COLUMN_ADDITIONAL_GAP_WIDTH = 15;

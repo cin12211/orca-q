@@ -245,22 +245,25 @@ const currentNullOrderLabel = computed(() => {
           $emit('update:tabView', $event as QuickQueryTabView)
         "
       >
-        <TabsList class="grid w-full grid-cols-3 h-[1.625rem]!">
+        <TabsList size="xxs" class="grid w-full grid-cols-3">
           <TabsTrigger
+            size="xxs"
             :value="QuickQueryTabView.Data"
-            class="h-5! px-1 font-medium text-xs cursor-pointer text-primary/80"
+            class="font-medium cursor-pointer text-primary/80"
           >
             Data
           </TabsTrigger>
           <TabsTrigger
+            size="xxs"
             :value="QuickQueryTabView.Structure"
-            class="h-5! px-1 font-medium text-xs cursor-pointer text-primary/80"
+            class="font-medium cursor-pointer text-primary/80"
           >
             Structure
           </TabsTrigger>
           <TabsTrigger
+            size="xxs"
             :value="QuickQueryTabView.Erd"
-            class="h-5! px-1 font-medium text-xs cursor-pointer text-primary/80"
+            class="font-medium cursor-pointer text-primary/80"
             :disabled="isViewVirtualTable"
           >
             ERD

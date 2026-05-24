@@ -1,5 +1,4 @@
 import { ref, computed } from 'vue';
-import { Icon } from '#components';
 import type { Meta, StoryObj } from '@storybook/vue3';
 import FileTree from './FileTree.vue';
 import type { FileNode } from './types';
@@ -775,7 +774,7 @@ Add custom action buttons that appear on row hover:
     },
   },
   render: args => ({
-    components: { FileTree, Icon },
+    components: { FileTree },
     setup() {
       const handleAction = (
         action: string,

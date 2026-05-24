@@ -1,7 +1,7 @@
 import { defineComponent, h } from 'vue';
 import { mount } from '@vue/test-utils';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import CodeHighlightPreview from '~/components/base/CodeHighlightPreview.vue';
+import CodeHighlightPreview from '~/components/base/code-highlight-preview/CodeHighlightPreview.vue';
 
 const { highlightMock } = vi.hoisted(() => ({
   highlightMock: vi.fn(),

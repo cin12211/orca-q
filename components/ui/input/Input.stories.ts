@@ -8,6 +8,10 @@ const meta = {
   tags: ['autodocs'],
   argTypes: {
     defaultValue: { control: 'text' },
+    size: {
+      control: 'select',
+      options: ['lg', 'default', 'sm', 'xs'],
+    },
   },
 } satisfies Meta<typeof Input>;
 
@@ -24,6 +28,9 @@ export const Default: Story = {
     template:
       '<Input v-model="value" v-bind="args" placeholder="Type something..." />',
   }),
+  args: {
+    size: 'default',
+  },
 };
 
 export const WithLabel: Story = {
@@ -47,4 +54,43 @@ export const Disabled: Story = {
     disabled: true,
     modelValue: 'Disabled input',
   } as any,
+};
+
+export const Sizes: Story = {
+  render: () => ({
+    components: { Input },
+    setup() {
+      return {
+        values: {
+          lg: 'Large input',
+          default: 'Default input',
+          sm: 'Small input',
+          xs: 'Compact input',
+        },
+      };
+    },
+    template: `
+      <div class="flex w-[320px] flex-col gap-3">
+        <div class="flex flex-col gap-1.5">
+          <span class="text-sm text-muted-foreground">lg</span>
+          <Input v-model="values.lg" size="lg" />
+        </div>
+
+        <div class="flex flex-col gap-1.5">
+          <span class="text-sm text-muted-foreground">default</span>
+          <Input v-model="values.default" size="default" />
+        </div>
+
+        <div class="flex flex-col gap-1.5">
+          <span class="text-sm text-muted-foreground">sm</span>
+          <Input v-model="values.sm" size="sm" />
+        </div>
+
+        <div class="flex flex-col gap-1.5">
+          <span class="text-sm text-muted-foreground">xs</span>
+          <Input v-model="values.xs" size="xs" />
+        </div>
+      </div>
+    `,
+  }),
 };
