@@ -270,23 +270,23 @@ export async function persistGetAllPaginated(
 export async function clearPersistedUserData(): Promise<void> {
   const knex = getKnex();
 
-  await knex.raw('PRAGMA foreign_keys = OFF');
+  await knex.transaction(async trx => {
+    await trx.raw('PRAGMA foreign_keys = OFF');
 
-  try {
-    for (const collection of CLEARABLE_SQLITE_COLLECTIONS) {
-      const adapter = requireAdapter(collection);
-      const existing = await adapter.getMany();
+    // Delete child rows first, parent rows last to avoid foreign key violations
+    await trx('row_query_file_contents').del();
+    await trx('row_query_files').del();
+    await trx('quick_query_logs').del();
+    await trx('tab_views').del();
+    await trx('workspace_states').del();
+    await trx('connections').del();
+    await trx('workspaces').del();
 
-      for (const record of existing) {
-        await adapter.delete(getRecordId(record));
-      }
-    }
+    await trx('environment_tags').del();
+    await trx('migration_state').del();
+    await trx('app_config').del();
+    await trx('agent_state').del();
 
-    await environmentTagSQLiteStorage.replaceAll([]);
-    await migrationStateSQLiteStorage.clear();
-    await appConfigSQLiteStorage.deleteConfig();
-    await agentStateSQLiteStorage.deleteState();
-  } finally {
-    await knex.raw('PRAGMA foreign_keys = ON');
-  }
+    await trx.raw('PRAGMA foreign_keys = ON');
+  });
 }
