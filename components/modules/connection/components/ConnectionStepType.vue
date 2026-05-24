@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { computed } from 'vue';
 import { Button } from '@/components/ui/button';
 import {
   DialogDescription,
@@ -6,6 +7,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { useHotkeys } from '~/core/composables/useHotKeys';
 import { DatabaseClientType } from '~/core/constants/database-client-type';
 import type { IDBSupport } from '../constants';
 import DatabaseTypeCard from './DatabaseTypeCard.vue';
@@ -30,6 +32,77 @@ const handleSelect = (option: IDatabaseOption) => {
     option.onClick();
   }
 };
+
+const supportedOptions = computed(() =>
+  props.databaseOptions.filter(o => o.isSupport)
+);
+
+const handleNextSelection = () => {
+  const currentIndex = supportedOptions.value.findIndex(
+    o => o.type === props.dbType
+  );
+  let nextIndex = 0;
+  if (currentIndex !== -1) {
+    nextIndex = (currentIndex + 1) % supportedOptions.value.length;
+  }
+  const nextOption = supportedOptions.value[nextIndex];
+  if (nextOption) {
+    handleSelect(nextOption);
+  }
+};
+
+const handlePrevSelection = () => {
+  const currentIndex = supportedOptions.value.findIndex(
+    o => o.type === props.dbType
+  );
+  let prevIndex = supportedOptions.value.length - 1;
+  if (currentIndex !== -1) {
+    prevIndex =
+      (currentIndex - 1 + supportedOptions.value.length) %
+      supportedOptions.value.length;
+  }
+  const prevOption = supportedOptions.value[prevIndex];
+  if (prevOption) {
+    handleSelect(prevOption);
+  }
+};
+
+useHotkeys([
+  {
+    key: 'arrowdown',
+    excludeInput: true,
+    isPreventDefault: true,
+    callback: handleNextSelection,
+  },
+  {
+    key: 'arrowright',
+    excludeInput: true,
+    isPreventDefault: true,
+    callback: handleNextSelection,
+  },
+  {
+    key: 'arrowup',
+    excludeInput: true,
+    isPreventDefault: true,
+    callback: handlePrevSelection,
+  },
+  {
+    key: 'arrowleft',
+    excludeInput: true,
+    isPreventDefault: true,
+    callback: handlePrevSelection,
+  },
+  {
+    key: 'enter',
+    excludeInput: true,
+    isPreventDefault: true,
+    callback: () => {
+      if (props.dbType) {
+        emit('next');
+      }
+    },
+  },
+]);
 </script>
 
 <template>
