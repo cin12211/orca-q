@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import QuickQueryTableSummary from '~/components/modules/quick-query/quick-query-table-summary/QuickQueryTableSummary.vue';
+import { usePreviewRelations } from '~/core/composables/usePreviewRelations';
 import { useTableQueryBuilder } from '~/core/composables/useTableQueryBuilder';
 import { DEFAULT_QUERY_SIZE } from '~/core/constants';
 import { DatabaseClientType } from '~/core/constants/database-client-type';
@@ -14,7 +15,6 @@ import {
   useQuickQueryContextCellFilter,
   useQuickQuery,
   useQuickQueryMutation,
-  useQuickQueryPreviewRelations,
   useQuickQueryShortcuts,
   useQuickQueryTableColumns,
   useQuickQueryTableInfo,
@@ -67,7 +67,7 @@ const {
   onClearBreadcrumbs,
   onBackPreviousBreadcrumb,
   onBackPreviousBreadcrumbByIndex,
-} = useQuickQueryPreviewRelations();
+} = usePreviewRelations();
 
 const {
   onRequestSafeModeConfirm,

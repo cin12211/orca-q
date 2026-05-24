@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import type { MappedRawColumn } from '~/components/modules/raw-query/interfaces';
 import {
   groupColumnsByTable,
   isCellEditable,
   isColumnPotentiallyEditable,
 } from '~/components/modules/raw-query/utils/isCellEditable';
+import type { MappedRawColumn } from '~/core/types/mapped-column.types';
 
 const col = (overrides: Partial<MappedRawColumn> = {}): MappedRawColumn => ({
   isPrimaryKey: false,

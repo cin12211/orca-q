@@ -25,6 +25,7 @@ const emit = defineEmits<{
     :selected-rows="selectedRows"
     :table-name="tableName"
     :schema-name="schemaName"
+    enable-copy-as-sql
     @on-clear-context-menu="emit('onClearContextMenu')"
   >
     <slot />

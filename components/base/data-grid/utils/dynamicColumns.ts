@@ -14,7 +14,7 @@ import type {
   ValueSetterParams,
 } from 'ag-grid-community';
 import DataGridKeyHeader from '~/components/base/data-grid/headers/DataGridKeyHeader.vue';
-import type { MappedRawColumn } from '~/components/modules/raw-query/interfaces';
+import type { MappedRawColumn } from '~/core/types/mapped-column.types';
 import { HASH_INDEX_ID } from '../constants';
 import type { RowData } from './cellValueFormatter';
 import {

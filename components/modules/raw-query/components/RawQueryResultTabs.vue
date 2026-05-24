@@ -9,7 +9,8 @@ import {
 import { cn } from '@/lib/utils';
 import { useSchemaStore } from '~/core/stores';
 import type { ExecutedResultItem, MappedRawColumn } from '../interfaces';
-import { formatColumnsInfo, normalizeResultRows } from '../utils';
+import { formatColumnsInfo } from '../utils/formatColumnsInfo';
+import { normalizeResultRows } from '../utils/normalizeResultRows';
 import ResultTabErrorView from './result-tab/ResultTabErrorView.vue';
 import ResultTabInfoView from './result-tab/ResultTabInfoView.vue';
 import ResultTabRawView from './result-tab/ResultTabRawView.vue';

@@ -5,9 +5,9 @@ import {
   buildDynamicRowData,
   DYNAMIC_COLUMN_TYPES,
 } from '~/components/base/data-grid/utils';
-import type { MappedRawColumn } from '~/components/modules/raw-query/interfaces';
 import type { SupportedLanguage } from '~/core/composables/useSqlHighlighter';
 import { formatBytes } from '~/core/helpers';
+import type { MappedRawColumn } from '~/core/types/mapped-column.types';
 import { useFileDownload } from '../../hooks/useFileDownload';
 import type { AgentExportFileResult } from '../../types';
 

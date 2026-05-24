@@ -15,11 +15,11 @@ import {
 import type { ExecutedResultItem, MappedRawColumn } from '../../interfaces';
 import {
   buildRawQueryColumnDefs,
-  createCommandResultFactory,
-  groupColumnsByTable,
-  type RawQueryEditedCell,
   type RawQueryDirtyTracker,
-} from '../../utils';
+} from '../../utils/buildRawQueryColumnDefs';
+import { type RawQueryEditedCell } from '../../utils/buildRawQueryUpdates';
+import { createCommandResultFactory } from '../../utils/commandType';
+import { groupColumnsByTable } from '../../utils/isCellEditable';
 import RawQueryContextMenu from '../RawQueryContextMenu.vue';
 import RawQueryResultControlBar from './RawQueryResultControlBar.vue';
 import RawQueryUpdatePreviewDialog from './RawQueryUpdatePreviewDialog.vue';
@@ -156,7 +156,8 @@ const acceptPendingChanges = () => {
   }
 
   baselineRows.value = stripGridMetaFromRows(rowData.value);
-  acceptedCells.value = mergeTrackedCells(acceptedCells.value, pendingCells);
+
+  acceptedCells.value = [];
   clearEditedCells();
 };
 
@@ -355,6 +356,7 @@ useHotkeys(
           :column-defs="columnDefs"
           :row-data="rowData"
           :selected-rows="selectedRows"
+          :enable-simple-copy-context-menu="false"
           empty-title="No Results"
           empty-description="The query returned no records."
           class="h-full"

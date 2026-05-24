@@ -1,6 +1,6 @@
 import { saveAs } from 'file-saver';
 import Papa from 'papaparse';
-import { DATA_GRID_ROW_METADATA_IDS } from '~/components/base/data-grid/constants';
+import { DATA_GRID_ROW_METADATA_IDS } from '~/core/constants/data-grid-row-metadata';
 
 /**
  * NEW TYPE DEFINITION: Define the accepted formats for better type safety.

@@ -1,5 +1,5 @@
 import { ref } from 'vue';
-import { useQuickQueryPreviewRelations } from '~/components/modules/quick-query/hooks';
+import { usePreviewRelations } from '~/core/composables/usePreviewRelations';
 import type { MappedRawColumn } from '../interfaces';
 
 /**
@@ -21,7 +21,7 @@ export const useRawQueryRelationPreview = () => {
     onClearBreadcrumbs,
     onBackPreviousBreadcrumb,
     onBackPreviousBreadcrumbByIndex,
-  } = useQuickQueryPreviewRelations();
+  } = usePreviewRelations();
 
   const openRelationPreview = (column: MappedRawColumn, value: unknown) => {
     if (value === null || value === undefined || value === '') {

@@ -1,26 +1,11 @@
 import type { FieldDef } from 'pg';
-import type { SchemaForeignKeyMetadata } from '~/core/types';
 import type { DatabaseDriverError } from '~/core/types';
 import type { Connection } from '~/core/types/entities';
 
+export type { MappedRawColumn } from '~/core/types/mapped-column.types';
+
 // Defined inline to avoid importing from dynamic-table utils which has browser API dependencies
 type RowData = { [key: string]: unknown };
-
-export interface MappedRawColumn {
-  isPrimaryKey: boolean;
-  isForeignKey: boolean;
-  queryFieldName: string; // use this for display field name
-  originalName: string; // use this for update statement or delete statement
-  aliasFieldName: string; // use this for display field name
-  canMutate?: boolean;
-  ordinal_position?: number | undefined;
-  type?: string | undefined;
-  short_type_name?: string | undefined;
-  tableName: string;
-  schemaName?: string | undefined;
-  sourceColumnName?: string | undefined;
-  foreignKey?: SchemaForeignKeyMetadata | undefined;
-}
 
 export interface EditorCursor {
   line: number;

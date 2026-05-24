@@ -156,6 +156,7 @@ defineExpose({
     :grid-options="gridOptions"
     :selected-rows="props.selectedRows"
     :allow-editing="!props.isViewOnly"
+    :enable-simple-copy-context-menu="false"
     enable-click-outside
     @selection-changed="rows => emit('onSelectedRows', rows as RowData[])"
     @cell-focused="value => emit('onFocusCell', value)"

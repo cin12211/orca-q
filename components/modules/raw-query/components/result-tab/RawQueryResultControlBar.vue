@@ -46,6 +46,7 @@ const emit = defineEmits<{
               >
                 {{ pendingCount }}
               </span>
+              <ContextMenuShortcut>⌘S</ContextMenuShortcut>
             </Button>
           </TooltipTrigger>
           <TooltipContent>
@@ -83,6 +84,7 @@ const emit = defineEmits<{
               @click="emit('delete')"
             >
               <Icon name="lucide:trash" />
+              <ContextMenuShortcut>⌥⌘⌫</ContextMenuShortcut>
             </Button>
           </TooltipTrigger>
           <TooltipContent>
@@ -90,7 +92,7 @@ const emit = defineEmits<{
               Delete {{ totalSelectedRows }} selected row{{
                 totalSelectedRows === 1 ? '' : 's'
               }}
-              <ContextMenuShortcut>⌘⌥⌫</ContextMenuShortcut>
+              <ContextMenuShortcut>⌥⌘⌫</ContextMenuShortcut>
             </p>
           </TooltipContent>
         </Tooltip>

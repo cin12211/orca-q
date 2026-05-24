@@ -81,6 +81,33 @@ export const areCellValuesDifferent = ({
   return oldValue !== newValue;
 };
 
+export const normalizeEditedCellChange = ({
+  fieldType,
+  isObjectColumn,
+  oldValue,
+  newValue,
+}: {
+  fieldType: string;
+  isObjectColumn: boolean;
+  oldValue: unknown;
+  newValue: unknown;
+}) => {
+  const normalizedValue = normalizeEditedCellValue({
+    fieldType,
+    isObjectColumn,
+    value: newValue,
+  });
+
+  return {
+    normalizedValue,
+    hasChanged: areCellValuesDifferent({
+      oldValue,
+      newValue: normalizedValue,
+      isObjectColumn,
+    }),
+  };
+};
+
 /**
  * Format a cell value for display in the grid.
  */
@@ -114,14 +141,26 @@ export const setCellValue = ({
   fieldId,
   isObjectColumn,
   isViewOnly,
+  emptyAsNull,
 }: {
   params: ValueSetterParams;
   fieldId: string;
   isObjectColumn: boolean;
   isViewOnly?: boolean;
+  emptyAsNull?: boolean;
 }) => {
   if (isViewOnly) {
     return false;
+  }
+
+  if (
+    emptyAsNull &&
+    (params.newValue === '' ||
+      params.newValue === null ||
+      params.newValue === undefined)
+  ) {
+    params.data[fieldId] = null;
+    return true;
   }
 
   if (!isObjectColumn) {

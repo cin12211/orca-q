@@ -5,11 +5,11 @@ import type {
   ColTypeDef,
   GridOptions,
 } from 'ag-grid-community';
+import AgJsonCellEditor from '~/components/base/data-grid/components/AgJsonCellEditor.vue';
 import { useTableTheme } from '~/components/base/data-grid/hooks';
 import type { RowData } from '~/components/base/data-grid/utils';
 import { DEFAULT_BUFFER_ROWS, DEFAULT_QUERY_SIZE } from '~/core/constants';
 import { areCellValuesDifferent } from '~/core/helpers/cell-value';
-import AgJsonCellEditor from '../quick-query-table/AgJsonCellEditor.vue';
 import CustomHeaderTable from '../quick-query-table/CustomHeaderTable.vue';
 import { suppressDeleteKeyboardEvent } from '../utils/quickQueryTable';
 

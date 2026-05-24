@@ -2,6 +2,8 @@ import type {
   CellClassParams,
   ColDef,
   EditableCallbackParams,
+  ICellEditorParams,
+  ValueSetterParams,
 } from 'ag-grid-community';
 import DataGridRelationCell from '~/components/base/data-grid/components/cell-renderers/DataGridRelationCell.vue';
 import DataGridKeyHeader from '~/components/base/data-grid/headers/DataGridKeyHeader.vue';
@@ -11,6 +13,11 @@ import {
   formatGridCellValue,
   type RowData,
 } from '~/components/base/data-grid/utils';
+import { setCellValue } from '~/core/helpers/cell-value';
+import {
+  isJsonColumnType,
+  isStructuredColumnType,
+} from '~/core/helpers/sql-column-type';
 import type { ReservedTableSchemas } from '~/core/types/database-tables.types';
 import type { MappedRawColumn } from '../interfaces';
 import type { RawQueryEditedCell } from './buildRawQueryUpdates';
@@ -132,6 +139,31 @@ export const buildRawQueryColumnDefs = ({
       type: 'editableColumn',
       editable,
       cellStyle,
+      cellEditorSelector: (params: ICellEditorParams) => {
+        const value = params.data?.[column.originalName];
+        const fieldType = column.short_type_name || column.type || '';
+
+        if (
+          isJsonColumnType(fieldType) ||
+          (typeof value === 'object' && value !== null)
+        ) {
+          return {
+            component: 'AgJsonCellEditor',
+            popup: true,
+            popupPosition: 'under',
+          };
+        }
+      },
+      valueSetter: (params: ValueSetterParams) => {
+        const fieldType = column.short_type_name || column.type || '';
+
+        return setCellValue({
+          params,
+          fieldId: column.originalName,
+          isObjectColumn: isStructuredColumnType(fieldType),
+          emptyAsNull: true,
+        });
+      },
       headerComponentParams: {
         innerHeaderComponent: DataGridKeyHeader,
         isPrimaryKey: column.isPrimaryKey,

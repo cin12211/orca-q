@@ -183,8 +183,8 @@ const contextMenuItems = computed<ContextMenuItem[]>(() => {
     },
     {
       type: ContextMenuItemType.ACTION,
-      title: 'Copy as CSV/TSV',
-      icon: 'hugeicons:csv-02',
+      title: 'Copy as text (TSV)',
+      icon: 'hugeicons:file-01',
       select: () => onCopySelectedRowsData('csv-no-header'),
       condition: isSelected,
     },
@@ -206,8 +206,8 @@ const contextMenuItems = computed<ContextMenuItem[]>(() => {
     { type: ContextMenuItemType.LABEL, title: 'All rows' },
     {
       type: ContextMenuItemType.ACTION,
-      title: 'Copy as CSV/TSV',
-      icon: 'hugeicons:csv-02',
+      title: 'Copy as text (TSV)',
+      icon: 'hugeicons:file-01',
       select: () => onCopyAllRowsData('csv-no-header'),
     },
     {

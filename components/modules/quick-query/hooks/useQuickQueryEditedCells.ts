@@ -2,10 +2,7 @@ import { computed, ref, type Ref } from 'vue';
 import type { CellValueChangedEvent } from 'ag-grid-community';
 import { NEW_ROW_FLAG_ID } from '~/components/base/data-grid/constants';
 import type { RowData } from '~/components/base/data-grid/utils';
-import {
-  areCellValuesDifferent,
-  normalizeEditedCellValue,
-} from '~/core/helpers/cell-value';
+import { normalizeEditedCellChange } from '~/core/helpers/cell-value';
 import {
   isJsonColumnType,
   isStructuredColumnType,
@@ -57,39 +54,35 @@ export const useQuickQueryEditedCells = ({
     const fieldType = mapColumnDef.value.get(fieldId)?.type || '';
     const isNewRow = !!event.node.data?.[NEW_ROW_FLAG_ID];
     const oldFieldValue = isNewRow ? undefined : data.value?.[rowId]?.[fieldId];
-    const haveDifferent = areCellValuesDifferent({
+    const { hasChanged, normalizedValue } = normalizeEditedCellChange({
+      fieldType,
+      isObjectColumn,
       oldValue: oldFieldValue,
       newValue,
-      isObjectColumn,
     });
     const haveEditedCellRecord = editedCells.value.some(
       cell => cell.rowId === rowId
     );
-    const formatNewValue = normalizeEditedCellValue({
-      fieldType,
-      isObjectColumn,
-      value: newValue,
-    });
 
-    if (haveDifferent && !haveEditedCellRecord) {
+    if (hasChanged && !haveEditedCellRecord) {
       editedCells.value.push({
         rowId,
         changedData: {
-          [fieldId]: formatNewValue,
+          [fieldId]: normalizedValue,
         },
         isNewRow,
       });
       return;
     }
 
-    if (haveDifferent) {
+    if (hasChanged) {
       editedCells.value = editedCells.value.map(cell => {
         if (cell.rowId === rowId) {
           return {
             ...cell,
             changedData: {
               ...cell.changedData,
-              [fieldId]: formatNewValue,
+              [fieldId]: normalizedValue,
             },
           };
         }

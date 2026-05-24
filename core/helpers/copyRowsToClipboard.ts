@@ -1,4 +1,4 @@
-import { DATA_GRID_ROW_METADATA_IDS } from '~/components/base/data-grid/constants';
+import { DATA_GRID_ROW_METADATA_IDS } from '~/core/constants/data-grid-row-metadata';
 
 export const copyRowsToClipboard = (rows: Record<string, any>[]) => {
   if (!Array.isArray(rows) || rows.length === 0) {

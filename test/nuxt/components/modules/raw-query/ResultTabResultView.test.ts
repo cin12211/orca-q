@@ -170,6 +170,8 @@ describe('ResultTabResultView', () => {
               'suppressScrollOnNewData',
               'emptyTitle',
               'emptyDescription',
+              'enableSimpleCopyContextMenu',
+              'enableCopyAsSql',
             ],
             template: '<div data-test="base-data-grid" />',
           },
@@ -215,6 +217,16 @@ describe('ResultTabResultView', () => {
       node: { rowIndex: 0, id: '0' },
       value: rowData[0]?.title,
     });
+  };
+
+  const getTitleColumnDef = (wrapper: ReturnType<typeof mount>) => {
+    const baseDataGrid = getBaseDataGrid(wrapper);
+    const columnDefs = baseDataGrid.props('columnDefs') as Array<{
+      field?: string;
+      valueSetter?: (params: Record<string, unknown>) => boolean;
+    }>;
+
+    return columnDefs.find(column => column.field === 'title');
   };
 
   it('keeps estimated widths when relation columns switch raw query to override column defs', async () => {
@@ -307,6 +319,36 @@ describe('ResultTabResultView', () => {
     expect(getEditableColumnStyle(wrapper)).toEqual({
       backgroundColor: 'unset',
       color: 'var(--muted-foreground)',
+    });
+  });
+
+  it('accepts plain text edits and marks the raw query cell as pending', async () => {
+    const wrapper = await mountView();
+    const baseDataGrid = getBaseDataGrid(wrapper);
+    const controlBar = getControlBar(wrapper);
+    const rowData = baseDataGrid.props('rowData') as Array<
+      Record<string, unknown>
+    >;
+    const titleColumn = getTitleColumnDef(wrapper);
+
+    expect(
+      titleColumn?.valueSetter?.({
+        data: rowData[0],
+        newValue: 'beta',
+      })
+    ).toBe(true);
+    expect(rowData[0].title).toBe('beta');
+
+    baseDataGrid.vm.$emit('cell-value-changed', {
+      colDef: { field: 'title' },
+      newValue: rowData[0].title,
+      node: { rowIndex: 0, id: '0' },
+    });
+    await nextTick();
+
+    expect(controlBar.props('pendingCount')).toBe(1);
+    expect(getEditableColumnStyle(wrapper)).toEqual({
+      backgroundColor: 'var(--color-orange-200)',
     });
   });
 

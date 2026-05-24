@@ -4,7 +4,7 @@ import {
   buildDynamicRowData,
   DYNAMIC_COLUMN_TYPES,
 } from '~/components/base/data-grid/utils';
-import type { MappedRawColumn } from '~/components/modules/raw-query/interfaces';
+import type { MappedRawColumn } from '~/core/types/mapped-column.types';
 import type { AgentDescribeTableResult } from '../../types';
 
 //TODO: this block not meaning must have same result with structure table

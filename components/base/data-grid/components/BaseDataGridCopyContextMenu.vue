@@ -23,11 +23,13 @@ const props = withDefaults(
     selectedRows?: DataGridRow[];
     tableName?: string;
     schemaName?: string;
+    enableCopyAsSql?: boolean;
   }>(),
   {
     data: () => [],
     selectedRows: () => [],
     tableName: 'table_data',
+    enableCopyAsSql: false,
   }
 );
 
@@ -173,8 +175,8 @@ const contextMenuItems = computed<ContextMenuItem[]>(() => {
     },
     {
       type: ContextMenuItemType.ACTION,
-      title: 'Copy selected as CSV/TSV',
-      icon: 'hugeicons:csv-02',
+      title: 'Copy selected as text (TSV)',
+      icon: 'hugeicons:file-01',
       select: () => copySelectedRowsData('csv-no-header'),
       condition: hasSelectedRows,
     },
@@ -190,7 +192,7 @@ const contextMenuItems = computed<ContextMenuItem[]>(() => {
       title: 'Copy selected as SQL',
       icon: 'hugeicons:database',
       select: () => copySelectedRowsData('sql'),
-      condition: hasSelectedRows,
+      condition: hasSelectedRows && props.enableCopyAsSql,
     },
     {
       type: ContextMenuItemType.SEPARATOR,
@@ -202,8 +204,8 @@ const contextMenuItems = computed<ContextMenuItem[]>(() => {
     },
     {
       type: ContextMenuItemType.ACTION,
-      title: 'Copy all as CSV/TSV',
-      icon: 'hugeicons:csv-02',
+      title: 'Copy all as text (TSV)',
+      icon: 'hugeicons:file-01',
       select: () => copyAllRowsData('csv-no-header'),
     },
     {
@@ -217,6 +219,7 @@ const contextMenuItems = computed<ContextMenuItem[]>(() => {
       title: 'Copy all as SQL',
       icon: 'hugeicons:database',
       select: () => copyAllRowsData('sql'),
+      condition: props.enableCopyAsSql,
     },
   ];
 

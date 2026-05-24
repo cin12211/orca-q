@@ -4,7 +4,7 @@
  */
 
 export const isJsonColumnType = (type: string) =>
-  ['object', 'json', 'jsonb'].includes(type);
+  ['object', 'json', 'jsonb'].includes(type.trim().toLowerCase());
 
 export const isArrayColumnType = (type: string) => type.trim().endsWith('[]');
 

@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { normalizeEditedCellValue } from '~/core/helpers/cell-value';
+import {
+  normalizeEditedCellChange,
+  normalizeEditedCellValue,
+} from '~/core/helpers/cell-value';
 
 describe('normalizeEditedCellValue', () => {
   it('preserves numeric zero instead of coercing it to null', () => {
@@ -69,5 +72,19 @@ describe('normalizeEditedCellValue', () => {
         value: ['java', 'spring'],
       })
     ).toEqual(['java', 'spring']);
+  });
+
+  it('normalizes before comparing edited structured values', () => {
+    expect(
+      normalizeEditedCellChange({
+        fieldType: 'text[]',
+        isObjectColumn: true,
+        oldValue: ['java', 'spring'],
+        newValue: '["java","spring"]',
+      })
+    ).toEqual({
+      normalizedValue: ['java', 'spring'],
+      hasChanged: false,
+    });
   });
 });

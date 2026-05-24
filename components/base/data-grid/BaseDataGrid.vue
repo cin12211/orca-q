@@ -12,6 +12,7 @@ import type {
 } from 'ag-grid-community';
 import { AgGridVue } from 'ag-grid-vue3';
 import { DEFAULT_BUFFER_ROWS } from '~/core/constants';
+import AgJsonCellEditor from './components/AgJsonCellEditor.vue';
 import BaseDataGridCopyContextMenu from './components/BaseDataGridCopyContextMenu.vue';
 import BaseDataGridEmptyOverlay from './components/BaseDataGridEmptyOverlay.vue';
 import {
@@ -51,6 +52,7 @@ const props = withDefaults(
     selectedRows?: unknown[];
     autoScrollOnSelection?: boolean;
     enableSimpleCopyContextMenu?: boolean;
+    enableCopyAsSql?: boolean;
     contextMenuTableName?: string;
     contextMenuSchemaName?: string;
     enableCopyHotkey?: boolean;
@@ -63,7 +65,8 @@ const props = withDefaults(
   }>(),
   {
     autoScrollOnSelection: true,
-    enableSimpleCopyContextMenu: false,
+    enableSimpleCopyContextMenu: true,
+    enableCopyAsSql: false,
     enableCopyHotkey: true,
     enableClickOutside: false,
     allowEditing: false,
@@ -186,6 +189,7 @@ const mergedGridOptions = computed<GridOptions>(() => {
     },
     components: {
       BaseDataGridEmptyOverlay: markRaw(BaseDataGridEmptyOverlay),
+      AgJsonCellEditor: markRaw(AgJsonCellEditor),
     },
   };
 
@@ -229,6 +233,7 @@ const simpleContextMenuProps = computed(() => {
     selectedRows: selectedRowsState.value,
     tableName: props.contextMenuTableName,
     schemaName: props.contextMenuSchemaName,
+    enableCopyAsSql: props.enableCopyAsSql,
     onClearContextMenu: clearCellContextMenu,
   };
 });

@@ -1,13 +1,7 @@
 import { computed, ref, type Ref } from 'vue';
 import type { CellValueChangedEvent } from 'ag-grid-community';
-import {
-  areCellValuesDifferent,
-  normalizeEditedCellValue,
-} from '~/core/helpers/cell-value';
-import {
-  isJsonColumnType,
-  isStructuredColumnType,
-} from '~/core/helpers/sql-column-type';
+import { normalizeEditedCellChange } from '~/core/helpers/cell-value';
+import { isStructuredColumnType } from '~/core/helpers/sql-column-type';
 import type { MappedRawColumn } from '../interfaces';
 import type { RawQueryEditedCell } from '../utils/buildRawQueryUpdates';
 
@@ -48,25 +42,20 @@ export const useRawQueryEditedCells = ({
     if (!column) return;
 
     const fieldType = resolveFieldType(fieldId);
-    const isObjectColumn =
-      isStructuredColumnType(fieldType) || isJsonColumnType(fieldType);
+    const isObjectColumn = isStructuredColumnType(fieldType);
     const originalValue = originalRows.value[rowId]?.[fieldId];
-    const normalized = normalizeEditedCellValue({
+    const { hasChanged, normalizedValue } = normalizeEditedCellChange({
       fieldType,
       isObjectColumn,
-      value: newValue,
-    });
-    const haveDifferent = areCellValuesDifferent({
       oldValue: originalValue,
-      newValue: normalized,
-      isObjectColumn,
+      newValue,
     });
 
     const existingIndex = editedCells.value.findIndex(
       cell => cell.rowId === rowId && cell.fieldId === fieldId
     );
 
-    if (!haveDifferent) {
+    if (!hasChanged) {
       if (existingIndex >= 0) {
         editedCells.value = editedCells.value.filter(
           (_, idx) => idx !== existingIndex
@@ -77,14 +66,14 @@ export const useRawQueryEditedCells = ({
 
     if (existingIndex >= 0) {
       const next = editedCells.value.slice();
-      next[existingIndex] = { rowId, fieldId, newValue: normalized };
+      next[existingIndex] = { rowId, fieldId, newValue: normalizedValue };
       editedCells.value = next;
       return;
     }
 
     editedCells.value = [
       ...editedCells.value,
-      { rowId, fieldId, newValue: normalized },
+      { rowId, fieldId, newValue: normalizedValue },
     ];
   };
 
