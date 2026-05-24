@@ -1,10 +1,8 @@
 <script setup lang="ts">
 import { refDebounced } from '@vueuse/core';
 import { Icon } from '#components';
-import {
-  type FlattenedTreeFileSystemItem,
-  type TreeFileSystemItem,
-} from '~/components/base/Tree';
+import FileTree from '~/components/base/tree-folder/FileTree.vue';
+import type { FileNode } from '~/components/base/tree-folder/types';
 import { DEFAULT_DEBOUNCE_INPUT } from '~/core/constants';
 import type { TableMetadata } from '~/core/types';
 import { buildTableNodeId, detructTableNodeId } from '../utils';
@@ -27,8 +25,8 @@ const tableInfo = computed(() => {
   return detructTableNodeId(props.tableId || '');
 });
 
-const items = computed(() => {
-  const treeTables: TreeFileSystemItem[] = [];
+const items = computed<Record<string, FileNode>>(() => {
+  const treeTables: Record<string, FileNode> = {};
 
   props.tables.forEach(table => {
     if (
@@ -46,57 +44,23 @@ const items = computed(() => {
     // const mapPK = new Map(table.primary_keys.map(item => [item.column, item]));
     // const mapFK = new Map(table.foreign_keys.map(item => [item.column, item]));
 
-    const treeItem: TreeFileSystemItem = {
-      title: table.table,
+    treeTables[nodeTableId] = {
       id: nodeTableId,
-      icon: 'vscode-icons:file-type-sql',
-      closeIcon: 'vscode-icons:file-type-sql',
-      path: nodeTableId,
-      // children: [
-      //   ...columns.map(column => {
-      //     let icon = 'hugeicons:diamond';
-      //     let iconClass = 'text-gray-300';
-
-      //     const isPk = mapPK.has(column.name);
-      //     const isFk = mapFK.has(column.name);
-
-      //     if (isPk || isFk) {
-      //       icon = 'hugeicons:key-01';
-
-      //       if (isPk) {
-      //         iconClass = 'text-yellow-400';
-      //       } else {
-      //         iconClass = 'text-gray-400';
-      //       }
-      //     } else if (column.nullable) {
-      //       icon = 'mynaui:diamond-solid';
-      //     }
-
-      //     return {
-      //       title: column.name,
-      //       id: column.name,
-      //       icon,
-      //       iconClass,
-      //       paths: [table.table, column.name],
-      //       isFolder: false,
-      //     };
-      //   }),
-      // ],
-      isFolder: false,
+      parentId: null,
+      name: table.table,
+      type: 'file',
+      depth: -1,
+      iconOpen: 'vscode-icons:file-type-sql',
+      iconClose: 'vscode-icons:file-type-sql',
     };
-
-    treeTables.push(treeItem);
   });
 
   return treeTables;
 });
 
-const onFocusNode = (_e: MouseEvent, item: FlattenedTreeFileSystemItem) => {
-  const { value } = item;
-
-  emit('focusTable', value.id);
+const onFocusNode = (nodeId: string) => {
+  emit('focusTable', nodeId);
 };
-// TODO must enhance use new tree
 </script>
 <template>
   <div
@@ -143,24 +107,28 @@ const onFocusNode = (_e: MouseEvent, item: FlattenedTreeFileSystemItem) => {
         </div>
       </div>
 
-      <!-- TODO: remove TreeFolder use tree then remove component -->
       <div class="h-full w-[19rem] overflow-y-auto">
-        <TreeFolder
+        <FileTree
           class="overflow-x-hidden"
-          v-model:explorerFiles="items"
-          :isShowArrow="false"
-          :isExpandedByArrow="false"
-          @click-tree-item="onFocusNode"
+          :initial-data="items"
+          :allow-drag-and-drop="false"
+          storage-key="erd-filter-tree"
+          @click="onFocusNode"
         >
-          <template #extra-actions>
-            <Button size="iconSm" class="hover:bg-background" variant="ghost">
+          <template #actions>
+            <Button
+              size="iconSm"
+              @click="onFocusNode"
+              class="hover:bg-background"
+              variant="ghost"
+            >
               <Icon
                 name="hugeicons:dashed-line-circle"
                 class="size-4! min-w-4 text-muted-foreground"
               />
             </Button>
           </template>
-        </TreeFolder>
+        </FileTree>
       </div>
     </div>
   </div>

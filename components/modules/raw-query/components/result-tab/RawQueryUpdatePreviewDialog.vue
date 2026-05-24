@@ -94,7 +94,7 @@ const onCancel = () => {
     :open="open"
     @update:open="!$event && !isMutating && emit('cancel')"
   >
-    <AlertDialogContent class="border w-[55vw]! max-w-[55vw]!">
+    <AlertDialogContent size="preview">
       <LoadingOverlay :visible="!!isMutating" />
       <AlertDialogHeader>
         <AlertDialogTitle

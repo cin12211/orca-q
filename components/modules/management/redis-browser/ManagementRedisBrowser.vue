@@ -133,13 +133,14 @@ const openSelectedKey = async (key: string) => {
       <template #actions>
         <div class="inline-flex items-center gap-1">
           <Tabs :model-value="viewMode" @update:model-value="updateViewMode">
-            <TabsList class="w-full h-6">
+            <TabsList size="xxs" class="w-full">
               <Tooltip v-for="item in redisBrowserViewModes" :key="item.value">
                 <TooltipTrigger as-child>
                   <TabsTrigger
+                    size="xxs"
                     :value="item.value"
                     :aria-label="item.tooltip"
-                    class="h-5! px-1 font-medium text-xs cursor-pointer text-primary/80"
+                    class="font-medium cursor-pointer text-primary/80"
                   >
                     <Icon :name="item.icon" class="size-3!" />
                   </TabsTrigger>

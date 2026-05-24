@@ -62,6 +62,7 @@ const appConfigStore = useAppConfigStore();
         </div>
 
         <Select
+          size="xs"
           :model-value="
             appConfigStore.tableAppearanceConfigs.nullOrderPreference
           "
@@ -71,7 +72,7 @@ const appConfigStore = useAppConfigStore();
                 value as typeof appConfigStore.tableAppearanceConfigs.nullOrderPreference)
           "
         >
-          <SelectTrigger size="sm" class="h-7! min-w-36 cursor-pointer text-xs">
+          <SelectTrigger class="min-w-36 cursor-pointer">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -79,7 +80,6 @@ const appConfigStore = useAppConfigStore();
               v-for="option in NULL_ORDER_OPTIONS"
               :key="option.value"
               :value="option.value"
-              class="text-xs"
             >
               {{ option.label }}
             </SelectItem>

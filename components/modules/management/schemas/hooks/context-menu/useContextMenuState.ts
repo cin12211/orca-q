@@ -1,11 +1,14 @@
 import { ref } from 'vue';
-import type { FlattenedTreeFileSystemItem } from '~/components/base/Tree';
 import { QuickQueryMutationAction } from '~/components/modules/quick-query/constants';
 import type { TabViewType } from '~/core/stores/useTabViewsStore';
-import type { ContextMenuState, SafeModeDialogType } from './types';
+import type {
+  ContextMenuState,
+  SafeModeDialogType,
+  SchemaContextMenuItemValue,
+} from './types';
 
 export function useContextMenuState(): ContextMenuState {
-  const selectedItem = ref<FlattenedTreeFileSystemItem['value'] | null>(null);
+  const selectedItem = ref<SchemaContextMenuItemValue | null>(null);
 
   // Safe mode dialog state
   const safeModeDialogOpen = ref(false);

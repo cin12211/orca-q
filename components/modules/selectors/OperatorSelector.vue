@@ -21,11 +21,12 @@ const operators = computed(
 
 <template>
   <Select
+    size="xxs"
     :model-value="value"
     @update:model-value="$emit('update:value', $event)"
     @update:open="$emit('update:open', $event)"
   >
-    <SelectTrigger class="w-36 min-w-36 h-6! text-sm cursor-pointer px-2">
+    <SelectTrigger class="w-36 min-w-36 cursor-pointer">
       <SelectValue placeholder="Select operator" />
     </SelectTrigger>
     <SelectContent>
@@ -35,11 +36,7 @@ const operators = computed(
         <template v-for="operator in operators">
           <SelectSeparator v-if="operator.value === separatorRow.value" />
 
-          <SelectItem
-            class="h-6 text-sm cursor-pointer"
-            :value="operator.value"
-            v-else
-          >
+          <SelectItem class="cursor-pointer" :value="operator.value" v-else>
             {{ operator.label }}
           </SelectItem>
         </template>

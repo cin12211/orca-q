@@ -249,7 +249,7 @@ const extensions = [
     :open="openPreviewModal"
     @update:open="openPreviewModal = $event"
   >
-    <AlertDialogContent class="border w-[55vw]! max-w-[55vw]!">
+    <AlertDialogContent size="preview">
       <AlertDialogHeader>
         <AlertDialogTitle class="flex items-center text-base font-medium">
           <Icon name="lucide:file-search" class="size-4 mr-2" />

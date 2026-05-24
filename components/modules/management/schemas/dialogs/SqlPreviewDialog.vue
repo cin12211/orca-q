@@ -9,7 +9,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import LoadingOverlay from '~/components/base/LoadingOverlay.vue';
+import LoadingOverlay from '~/components/base/loading-overlay/LoadingOverlay.vue';
 import { useCopyToClipboard } from '~/core/composables/useCopyToClipboard';
 
 const props = defineProps<{
@@ -35,7 +35,7 @@ const onClose = () => {
 
 <template>
   <AlertDialog :open="open" @update:open="emit('update:open', $event)">
-    <AlertDialogContent class="border w-[55vw]! max-w-[55vw]!">
+    <AlertDialogContent size="preview">
       <!-- DDL Loading Overlay -->
       <LoadingOverlay :visible="isLoading" />
       <AlertDialogHeader>

@@ -9,3 +9,10 @@ export { default as SelectScrollUpButton } from './SelectScrollUpButton.vue';
 export { default as SelectSeparator } from './SelectSeparator.vue';
 export { default as SelectTrigger } from './SelectTrigger.vue';
 export { default as SelectValue } from './SelectValue.vue';
+export { SELECT_SIZES } from './context';
+
+export type { SelectSize } from './context';
+export type { SelectProps } from './Select.vue';
+export type { SelectTriggerProps } from './SelectTrigger.vue';
+export type { SelectItemProps } from './SelectItem.vue';
+export type { SelectLabelProps } from './SelectLabel.vue';

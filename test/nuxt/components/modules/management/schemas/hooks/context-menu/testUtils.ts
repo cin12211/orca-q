@@ -1,4 +1,4 @@
-import type { FlattenedTreeFileSystemItem } from '~/components/base/Tree';
+import type { SchemaContextMenuItemValue } from '~/components/modules/management/schemas/hooks/context-menu/types';
 import type { Schema } from '~/core/stores/useSchemaStore';
 import { TabViewType } from '~/core/stores/useTabViewsStore';
 import { ViewSchemaEnum, type SchemaColumnMetadata } from '~/core/types';
@@ -43,7 +43,7 @@ export const makeSelectedItem = (
   name = 'users',
   id = 'item-1',
   extra: Record<string, unknown> = {}
-): FlattenedTreeFileSystemItem['value'] => ({
+): SchemaContextMenuItemValue => ({
   id,
   name,
   title: name,

@@ -136,12 +136,13 @@ const actionBadgeClass = (
 
     <div class="flex items-center justify-between gap-2">
       <Tabs v-model="activeSection" class="gap-0 flex-1 min-w-0">
-        <TabsList class="h-8 max-w-full overflow-x-auto justify-start!">
+        <TabsList size="sm" class="max-w-full overflow-x-auto justify-start!">
           <TabsTrigger
+            size="xs"
             v-for="section in view?.sections || []"
             :key="section.id"
             :value="section.id"
-            class="text-xs px-1.5 rounded-sm cursor-pointer min-w-fit shrink-0"
+            class="rounded-sm cursor-pointer min-w-fit shrink-0"
             @click="refreshSection(section.id, { silent: true })"
           >
             {{ section.title }}

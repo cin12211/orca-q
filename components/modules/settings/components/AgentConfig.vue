@@ -54,18 +54,19 @@ const toggleKeyVisibility = (provider: string) => {
             </p>
           </div>
           <Select
+            size="xxs"
             :modelValue="appConfigStore.chatUiConfigs.fontSize"
             @update:modelValue="
               appConfigStore.chatUiConfigs.fontSize = $event as number
             "
           >
-            <SelectTrigger size="sm" class="h-6! cursor-pointer">
+            <SelectTrigger class="cursor-pointer">
               <SelectValue placeholder="Select font size" />
             </SelectTrigger>
             <SelectContent>
               <SelectGroup>
                 <SelectItem
-                  class="cursor-pointer h-6!"
+                  class="cursor-pointer"
                   v-for="value in CHAT_FONT_SIZES"
                   :value="value"
                 >
@@ -87,18 +88,19 @@ const toggleKeyVisibility = (provider: string) => {
             </p>
           </div>
           <Select
+            size="xxs"
             :modelValue="appConfigStore.chatUiConfigs.codeFontSize"
             @update:modelValue="
               appConfigStore.chatUiConfigs.codeFontSize = $event as number
             "
           >
-            <SelectTrigger size="sm" class="h-6! cursor-pointer">
+            <SelectTrigger class="cursor-pointer">
               <SelectValue placeholder="Select code size" />
             </SelectTrigger>
             <SelectContent>
               <SelectGroup>
                 <SelectItem
-                  class="cursor-pointer h-6!"
+                  class="cursor-pointer"
                   v-for="value in CHAT_CODE_FONT_SIZES"
                   :value="value"
                 >
@@ -122,19 +124,20 @@ const toggleKeyVisibility = (provider: string) => {
             </p>
           </div>
           <Select
+            size="xxs"
             :modelValue="appConfigStore.chatUiConfigs.thinkingStyle"
             @update:modelValue="
               appConfigStore.chatUiConfigs.thinkingStyle =
                 $event as ThinkingStyle
             "
           >
-            <SelectTrigger size="sm" class="h-6! cursor-pointer">
+            <SelectTrigger class="cursor-pointer">
               <SelectValue placeholder="Select style" />
             </SelectTrigger>
             <SelectContent>
               <SelectGroup>
                 <SelectItem
-                  class="cursor-pointer h-6!"
+                  class="cursor-pointer"
                   v-for="option in THINKING_STYLE_OPTIONS"
                   :value="option.value"
                 >

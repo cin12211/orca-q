@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import LoadingOverlay from '~/components/base/LoadingOverlay.vue';
 import BaseContextMenu from '~/components/base/context-menu/BaseContextMenu.vue';
 import {
   ContextMenuItemType,
   type ContextMenuItem,
 } from '~/components/base/context-menu/menuContext.type';
+import LoadingOverlay from '~/components/base/loading-overlay/LoadingOverlay.vue';
 import FileTree from '~/components/base/tree-folder/FileTree.vue';
 import type { FileNode } from '~/components/base/tree-folder/types';
 import { useTabManagement } from '~/core/composables/useTabManagement';

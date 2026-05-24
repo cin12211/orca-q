@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import LoadingOverlay from '~/components/base/LoadingOverlay.vue';
+import LoadingOverlay from '~/components/base/loading-overlay/LoadingOverlay.vue';
 import { getDatabaseClientLabel } from '~/core/constants/database-backup';
 import { useSchemaStore } from '~/core/stores';
 import { useManagementConnectionStore } from '~/core/stores/managementConnectionStore';
@@ -229,12 +229,13 @@ const onRestoreCancelled = () => {
     <!-- Tab bar -->
     <div class="flex items-center justify-between gap-2">
       <Tabs v-model="activeTab" class="min-w-0 flex-1 gap-0">
-        <TabsList class="h-8 max-w-full justify-start! overflow-x-auto">
+        <TabsList size="sm" class="max-w-full justify-start! overflow-x-auto">
           <TabsTrigger
+            size="xs"
             v-for="section in sections"
             :key="section.id"
             :value="section.id"
-            class="min-w-fit shrink-0 cursor-pointer rounded-sm px-1.5 text-xs"
+            class="min-w-fit shrink-0 cursor-pointer rounded-sm"
             :disabled="
               isCapabilityLoading ||
               (section.id === 'export' ? !exportAvailable : !importAvailable)

@@ -1,10 +1,15 @@
 <script setup lang="ts">
-import { computed, type HTMLAttributes } from 'vue';
+import { computed, inject, type HTMLAttributes } from 'vue';
 import {
   DropdownMenuSeparator,
   type DropdownMenuSeparatorProps,
 } from 'reka-ui';
 import { cn } from '@/lib/utils';
+import {
+  DROPDOWN_MENU_SIZE_INJECTION_KEY,
+  type DropdownMenuSize,
+} from './context';
+import { dropdownMenuSeparatorSizeClasses } from './styles';
 
 const props = defineProps<
   DropdownMenuSeparatorProps & {
@@ -17,12 +22,20 @@ const delegatedProps = computed(() => {
 
   return delegated;
 });
+
+const size = inject(
+  DROPDOWN_MENU_SIZE_INJECTION_KEY,
+  computed<DropdownMenuSize>(() => 'default')
+);
 </script>
 
 <template>
   <DropdownMenuSeparator
     data-slot="dropdown-menu-separator"
+    :data-size="size"
     v-bind="delegatedProps"
-    :class="cn('bg-border -mx-1 my-1 h-px', props.class)"
+    :class="
+      cn('bg-border h-px', dropdownMenuSeparatorSizeClasses[size], props.class)
+    "
   />
 </template>

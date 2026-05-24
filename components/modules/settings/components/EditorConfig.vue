@@ -260,19 +260,20 @@ const canAddLayout = computed(
             </p>
           </div>
           <Select
+            size="xxs"
             @update:modelValue="
               appConfigStore.codeEditorConfigs.theme = $event as EditorTheme
             "
             :modelValue="appConfigStore.codeEditorConfigs.theme"
           >
-            <SelectTrigger size="sm" class="h-6! cursor-pointer">
+            <SelectTrigger class="cursor-pointer">
               <SelectValue placeholder="Select theme" />
             </SelectTrigger>
             <SelectContent>
               <SelectGroup>
                 <SelectLabel>Light Theme</SelectLabel>
                 <SelectItem
-                  class="cursor-pointer h-6!"
+                  class="cursor-pointer"
                   v-for="value in EditorThemeLight"
                   :value="value"
                 >
@@ -283,7 +284,7 @@ const canAddLayout = computed(
                 <SelectSeparator />
                 <SelectLabel>Dark Theme</SelectLabel>
                 <SelectItem
-                  class="cursor-pointer h-6!"
+                  class="cursor-pointer"
                   v-for="value in EditorThemeDark"
                   :value="value"
                 >
@@ -303,18 +304,19 @@ const canAddLayout = computed(
             </p>
           </div>
           <Select
+            size="xxs"
             @update:modelValue="
               appConfigStore.codeEditorConfigs.fontSize = $event as number
             "
             :modelValue="appConfigStore.codeEditorConfigs.fontSize"
           >
-            <SelectTrigger size="sm" class="h-6! cursor-pointer">
+            <SelectTrigger class="cursor-pointer">
               <SelectValue placeholder="Select font size" />
             </SelectTrigger>
             <SelectContent>
               <SelectGroup>
                 <SelectItem
-                  class="cursor-pointer h-6!"
+                  class="cursor-pointer"
                   v-for="value in EDITOR_FONT_SIZES"
                   :value="value"
                 >

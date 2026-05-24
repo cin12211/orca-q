@@ -96,8 +96,8 @@ const onSubmit = () => {
 
     <div class="space-y-2">
       <Label>Export Scope</Label>
-      <Select v-model="scope">
-        <SelectTrigger size="sm" class="h-7!">
+      <Select v-model="scope" size="xs">
+        <SelectTrigger>
           <SelectValue placeholder="Select scope" />
         </SelectTrigger>
         <SelectContent>

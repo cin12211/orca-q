@@ -27,7 +27,7 @@ export interface TreeFileSystemItemPersistent {
 }
 
 export interface TreeFileSystemItem extends TreeFileSystemItemPersistent {
-  path: string; // computed
+  path: string;
   children?: TreeFileSystemItem[];
 }
 
@@ -42,7 +42,6 @@ export interface TreeManagerOptions {
 }
 
 export class TreeManager {
-  /** The mutable tree data (roots). */
   public tree: TreeFileSystemItem[];
 
   private opts: TreeManagerOptions;
@@ -55,16 +54,13 @@ export class TreeManager {
     this.tree = this.buildTree(flatData);
   }
 
-  /** A convenient snapshot of persistable items (no children, no path). */
   get flat(): TreeFileSystemItemPersistent[] {
     return this.flatten(this.tree);
   }
 
-  // ───────────────────── Core builders / utils ─────────────────────
-
   private rebuildPathsFrom(node: TreeFileSystemItem, parentPath = ''): void {
     node.path = parentPath ? `${parentPath}/${node.title}` : node.title;
-    node.children?.forEach(c => this.rebuildPathsFrom(c, node.path));
+    node.children?.forEach(child => this.rebuildPathsFrom(child, node.path));
   }
 
   private buildTree(
@@ -73,13 +69,10 @@ export class TreeManager {
     const map = new Map<string, TreeFileSystemItem>();
     const roots: TreeFileSystemItem[] = [];
 
-    // materialize
-    // 1️⃣ Chuyển flat sang map (chưa có children)
     for (const item of items) {
       map.set(item.id, { ...(item as TreeFileSystemItem), path: '' });
     }
 
-    // link (unknown parent -> root)
     for (const node of map.values()) {
       if (node.parentId) {
         const parent = map.get(node.parentId);
@@ -93,18 +86,20 @@ export class TreeManager {
         roots.push(node);
       }
     }
-    // compute paths
-    for (const r of roots) this.rebuildPathsFrom(r);
 
-    // optional: keep input order for roots
-    const order = new Map(items.map((it, i) => [it.id, i]));
-    roots.sort((a, b) => order.get(a.id)! - order.get(b.id)!);
+    for (const root of roots) {
+      this.rebuildPathsFrom(root);
+    }
+
+    const order = new Map(items.map((item, index) => [item.id, index]));
+    roots.sort((left, right) => order.get(left.id)! - order.get(right.id)!);
+
     return roots;
   }
 
   private flatten(items: TreeFileSystemItem[]): TreeFileSystemItemPersistent[] {
     const out: TreeFileSystemItemPersistent[] = [];
-    const pushNode = (n: TreeFileSystemItem) => {
+    const pushNode = (node: TreeFileSystemItem) => {
       const {
         id,
         title,
@@ -119,13 +114,20 @@ export class TreeManager {
         isFolder,
         cursorPos,
         variables,
-      } = n;
+        iconClass,
+        tabViewType,
+        name,
+        parameters,
+      } = node;
+
       out.push({
         id,
         title,
         icon,
+        iconClass,
         closeIcon,
         status,
+        tabViewType,
         workspaceId,
         connectionId,
         createdAt,
@@ -134,52 +136,59 @@ export class TreeManager {
         isFolder,
         cursorPos,
         variables,
+        name,
+        parameters,
       });
-      n.children?.forEach(pushNode);
+
+      node.children?.forEach(pushNode);
     };
+
     items.forEach(pushNode);
     return out;
   }
 
-  /** DFS deep find by id. */
   public findNode(
     id: string,
     nodes: TreeFileSystemItem[] = this.tree
   ): TreeFileSystemItem | null {
     for (const node of nodes) {
       if (node.id === id) return node;
+
       if (node.children) {
         const hit = this.findNode(id, node.children);
         if (hit) return hit;
       }
     }
+
     return null;
   }
 
   private getParent(nodeId: string): TreeFileSystemItem | null {
     const target = this.findNode(nodeId);
-    const pid = target?.parentId;
-    return pid ? this.findNode(pid) : null;
+    const parentId = target?.parentId;
+    return parentId ? this.findNode(parentId) : null;
   }
 
   private removeFromCurrentParent(id: string): boolean {
-    const remove = (arr: TreeFileSystemItem[]): boolean => {
-      const i = arr.findIndex(n => n.id === id);
-      if (i >= 0) {
-        arr.splice(i, 1);
+    const remove = (nodes: TreeFileSystemItem[]): boolean => {
+      const index = nodes.findIndex(node => node.id === id);
+      if (index >= 0) {
+        nodes.splice(index, 1);
         return true;
       }
-      for (const n of arr) {
-        if (n.children && remove(n.children)) return true;
+
+      for (const node of nodes) {
+        if (node.children && remove(node.children)) {
+          return true;
+        }
       }
+
       return false;
     };
+
     return remove(this.tree);
   }
 
-  // ───────────────────── Mutations ─────────────────────
-
-  /** Insert a node under a parent (or as root when parentId = null). Recomputes path for the node subtree. */
   public insertNode(
     parentId: string | null,
     node: TreeFileSystemItem
@@ -190,9 +199,7 @@ export class TreeManager {
       : this.tree;
 
     node.parentId = parentId ?? undefined;
-    // node.children = node.children ?? [];
-    const parentPath = parent?.path ?? '';
-    this.rebuildPathsFrom(node, parentPath);
+    this.rebuildPathsFrom(node, parent?.path ?? '');
 
     bucket.push(node);
     this.opts.onInsert?.([node]);
@@ -200,7 +207,6 @@ export class TreeManager {
     return node;
   }
 
-  /** Move node to a (new) parent and optional index; recompute paths. */
   public moveNode(
     id: string,
     newParentId: string | null,
@@ -232,10 +238,6 @@ export class TreeManager {
     this.opts.onUpdate?.([node]);
   }
 
-  /**
-   * Update node partially. If `parentId` changes, performs a move.
-   * If `title` changes, updates `path` for the subtree.
-   */
   public updateNode(
     id: string,
     patch: Partial<TreeFileSystemItem>,
@@ -244,19 +246,17 @@ export class TreeManager {
     const node = this.findNode(id);
     if (!node) return;
 
-    const prevParent = node.parentId;
-    const prevTitle = node.title;
+    const previousParentId = node.parentId;
+    const previousTitle = node.title;
 
     Object.assign(node, patch);
 
-    // parent change => move
-    if (patch.parentId !== undefined && patch.parentId !== prevParent) {
+    if (patch.parentId !== undefined && patch.parentId !== previousParentId) {
       this.moveNode(id, patch.parentId ?? null);
-      return; // moveNode already emitted onUpdate
+      return;
     }
 
-    // title changed => recompute subtree paths
-    if (patch.title !== undefined && patch.title !== prevTitle) {
+    if (patch.title !== undefined && patch.title !== previousTitle) {
       const parentPath = node.parentId ? (this.getParent(id)?.path ?? '') : '';
       this.rebuildPathsFrom(node, parentPath);
     }
@@ -266,62 +266,62 @@ export class TreeManager {
     }
   }
 
-  /** Delete a node and all descendants; triggers onDelete with the deleted set. */
   public deleteNode(id: string): void {
     const deleted: TreeFileSystemItem[] = [];
 
-    const collect = (n: TreeFileSystemItem) => {
-      deleted.push(n);
-      n.children?.forEach(collect);
+    const collect = (node: TreeFileSystemItem) => {
+      deleted.push(node);
+      node.children?.forEach(collect);
     };
 
-    const removeRec = (arr: TreeFileSystemItem[]): boolean => {
-      const i = arr.findIndex(n => n.id === id);
-      if (i >= 0) {
-        collect(arr[i]);
-        arr.splice(i, 1);
+    const removeRec = (nodes: TreeFileSystemItem[]): boolean => {
+      const index = nodes.findIndex(node => node.id === id);
+      if (index >= 0) {
+        collect(nodes[index]);
+        nodes.splice(index, 1);
         return true;
       }
-      for (const n of arr) {
-        if (n.children && removeRec(n.children)) return true;
+
+      for (const node of nodes) {
+        if (node.children && removeRec(node.children)) {
+          return true;
+        }
       }
+
       return false;
     };
 
     removeRec(this.tree);
-    if (deleted.length) this.opts.onDelete?.(deleted);
+    if (deleted.length) {
+      this.opts.onDelete?.(deleted);
+    }
   }
 
-  /**
-   * Sort nodes by title (case-insensitive) recursively.
-   * If `ascending = false`, sorts descending.
-   */
   public sortByTitle(ascending = true): void {
     const sortRecursive = (nodes: TreeFileSystemItem[]): void => {
-      nodes.sort((a, b) => {
-        const cmp = a.title.localeCompare(b.title, undefined, {
+      nodes.sort((left, right) => {
+        const compareResult = left.title.localeCompare(right.title, undefined, {
           sensitivity: 'base',
         });
-        return ascending ? cmp : -cmp;
+
+        return ascending ? compareResult : -compareResult;
       });
-      for (const n of nodes) {
-        if (n.children && n.children.length > 0) sortRecursive(n.children);
+
+      for (const node of nodes) {
+        if (node.children?.length) {
+          sortRecursive(node.children);
+        }
       }
     };
+
     sortRecursive(this.tree);
   }
 
-  /**
-   * Lọc cây theo tiêu đề. Trả về một cây MỚI (deep copy) chỉ chứa
-   * các node khớp tiêu chí hoặc có hậu duệ khớp. Duyệt tối đa levelSearch.
-   * - titleSearch: so khớp substring, không phân biệt hoa/thường.
-   * - levelSearch: độ sâu tối đa tính từ root (root = 0). Mặc định: không giới hạn.
-   */
   public searchByTitle(
     titleSearch: string,
     levelSearch?: number
   ): TreeFileSystemItem[] {
-    const q = (titleSearch ?? '').trim().toLocaleLowerCase();
+    const query = (titleSearch ?? '').trim().toLocaleLowerCase();
     const maxDepth =
       typeof levelSearch === 'number' && levelSearch >= 0
         ? levelSearch
@@ -332,33 +332,35 @@ export class TreeManager {
       depth: number
     ): TreeFileSystemItem[] => {
       const out: TreeFileSystemItem[] = [];
-      for (const n of nodes) {
+
+      for (const node of nodes) {
         if (depth > maxDepth) continue;
 
-        // Duyệt con nếu còn quota độ sâu
         const filteredChildren =
-          n.children && depth < maxDepth ? filter(n.children, depth + 1) : [];
+          node.children && depth < maxDepth
+            ? filter(node.children, depth + 1)
+            : [];
 
         const selfMatch =
-          q === '' ? true : n.title.toLocaleLowerCase().includes(q);
+          query === '' ? true : node.title.toLocaleLowerCase().includes(query);
 
         if (selfMatch || filteredChildren.length > 0) {
-          // Clone node, children chỉ set khi có
-          const clone: TreeFileSystemItem = {
-            ...n,
+          out.push({
+            ...node,
             children: filteredChildren.length ? filteredChildren : undefined,
-            path: '', // sẽ build lại
-          };
-          out.push(clone);
+            path: '',
+          });
         }
       }
+
       return out;
     };
 
     const resultRoots = filter(this.tree, 0);
 
-    // Tính lại path cho cây kết quả (độc lập dữ liệu gốc)
-    for (const r of resultRoots) this.rebuildPathsFrom(r);
+    for (const root of resultRoots) {
+      this.rebuildPathsFrom(root);
+    }
 
     return resultRoots;
   }
@@ -371,14 +373,8 @@ export class TreeManager {
     if (!name) return false;
 
     const parentNode = this.findNode(parentId);
-
     const nodes = (parentNode ? parentNode.children : this.tree) ?? [];
 
-    const duplicateNode = nodes.find(n => n.title === name && n.id !== nodeId);
-    if (!!duplicateNode) {
-      return true;
-    }
-
-    return false;
+    return !!nodes.find(node => node.title === name && node.id !== nodeId);
   }
 }

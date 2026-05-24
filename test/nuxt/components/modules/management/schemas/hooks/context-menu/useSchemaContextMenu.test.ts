@@ -10,11 +10,11 @@
  */
 import { ref } from 'vue';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import type { FlattenedTreeFileSystemItem } from '~/components/base/Tree';
 import {
   ContextMenuItemType,
   type ContextMenuItem,
 } from '~/components/base/context-menu/menuContext.type';
+import type { SchemaContextMenuItemValue } from '~/components/modules/management/schemas/hooks/context-menu/types';
 import { useSchemaContextMenu } from '~/components/modules/management/schemas/hooks/useSchemaContextMenu';
 import type { Schema } from '~/core/stores/useSchemaStore';
 import { TabViewType } from '~/core/stores/useTabViewsStore';
@@ -82,7 +82,7 @@ const makeSelectedItem = (
   name = 'test_table',
   id = 'item-1',
   extra: Record<string, any> = {}
-): FlattenedTreeFileSystemItem['value'] => ({
+): SchemaContextMenuItemValue => ({
   id,
   name,
   title: name,

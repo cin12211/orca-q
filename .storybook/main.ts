@@ -7,5 +7,6 @@ const config: StorybookConfig = {
   ],
   addons: ['@storybook/addon-a11y', '@storybook/addon-docs'],
   framework: '@storybook-vue/nuxt',
+  staticDirs: ['../public'],
 };
 export default config;

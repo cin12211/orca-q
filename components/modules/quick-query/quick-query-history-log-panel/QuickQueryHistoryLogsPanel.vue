@@ -2,16 +2,18 @@
   <div class="flex h-full min-h-0 flex-col">
     <div class="flex h-8 shrink-0 items-center justify-between">
       <Tabs v-model="tab" class="pt-1">
-        <TabsList class="h-7!">
+        <TabsList size="xs">
           <TabsTrigger
+            size="xs"
             :value="HistoryLogTabs.All"
-            class="h-5! font-medium text-xs cursor-pointer text-primary/80"
+            class="cursor-pointer text-primary/80"
           >
             All logs
           </TabsTrigger>
           <TabsTrigger
+            size="xs"
             :value="HistoryLogTabs.OneTable"
-            class="h-5! font-medium text-xs cursor-pointer text-primary/80"
+            class="cursor-pointer text-primary/80"
           >
             Only this table
           </TabsTrigger>

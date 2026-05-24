@@ -1,9 +1,24 @@
 import type { Ref } from 'vue';
-import type { FlattenedTreeFileSystemItem } from '~/components/base/Tree';
 import { QuickQueryMutationAction } from '~/components/modules/quick-query/constants';
 import type { Connection } from '~/core/stores';
 import type { Schema } from '~/core/stores/useSchemaStore';
 import type { TabViewType } from '~/core/stores/useTabViewsStore';
+
+export interface SchemaContextMenuItemValue {
+  id: string;
+  title: string;
+  isFolder: boolean;
+  icon: string;
+  iconClass?: string;
+  path?: string;
+  name?: string;
+  parameters?: string;
+  tabViewType?: TabViewType;
+}
+
+export interface SchemaContextMenuSelection {
+  value: SchemaContextMenuItemValue;
+}
 
 export interface SchemaContextMenuOptions {
   schemaName: Ref<string>;
@@ -13,7 +28,7 @@ export interface SchemaContextMenuOptions {
 }
 
 export interface ContextMenuState {
-  selectedItem: Ref<FlattenedTreeFileSystemItem['value'] | null>;
+  selectedItem: Ref<SchemaContextMenuItemValue | null>;
 
   // Safe Mode Dialog
   safeModeDialogOpen: Ref<boolean>;

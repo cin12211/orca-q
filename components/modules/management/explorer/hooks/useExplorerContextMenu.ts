@@ -1,9 +1,9 @@
 import { computed, ref, nextTick } from 'vue';
-import type { TreeFileSystemItem } from '~/components/base/Tree';
 import {
   ContextMenuItemType,
   type ContextMenuItem,
 } from '~/components/base/context-menu/menuContext.type';
+import type { TreeFileSystemItem } from '~/components/base/tree-folder/treeManagement';
 
 export interface ExplorerContextMenuOptions {
   resolveNodeById: (nodeId: string) => TreeFileSystemItem | null;

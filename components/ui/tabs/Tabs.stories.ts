@@ -14,6 +14,12 @@ const meta = {
   title: 'UI/Tabs',
   component: Tabs,
   tags: ['autodocs'],
+  argTypes: {
+    size: {
+      control: 'select',
+      options: ['lg', 'default', 'sm', 'xs', 'xxs'],
+    },
+  },
 } satisfies Meta<typeof Tabs>;
 
 export default meta;
@@ -36,8 +42,11 @@ export const Default: Story = {
       Input,
       Label,
     },
+    setup() {
+      return { args };
+    },
     template: `
-      <Tabs defaultValue="account" class="w-[400px]">
+      <Tabs v-bind="args" class="w-[400px]">
         <TabsList class="grid w-full grid-cols-2">
           <TabsTrigger value="account">Account</TabsTrigger>
           <TabsTrigger value="password">Password</TabsTrigger>
@@ -89,6 +98,79 @@ export const Default: Story = {
           </Card>
         </TabsContent>
       </Tabs>
+    `,
+  }),
+  args: {
+    defaultValue: 'account',
+    size: 'default',
+  },
+};
+
+export const Sizes: Story = {
+  render: () => ({
+    components: {
+      Tabs,
+      TabsList,
+      TabsTrigger,
+      TabsContent,
+    },
+    template: `
+      <div class="flex w-[360px] flex-col gap-4">
+        <Tabs defaultValue="overview" size="lg">
+          <TabsList class="grid w-full grid-cols-3">
+            <TabsTrigger value="overview">Overview</TabsTrigger>
+            <TabsTrigger value="activity">Activity</TabsTrigger>
+            <TabsTrigger value="settings">Settings</TabsTrigger>
+          </TabsList>
+          <TabsContent value="overview" class="text-sm text-muted-foreground">
+            Large tabs
+          </TabsContent>
+        </Tabs>
+
+        <Tabs defaultValue="overview" size="default">
+          <TabsList class="grid w-full grid-cols-3">
+            <TabsTrigger value="overview">Overview</TabsTrigger>
+            <TabsTrigger value="activity">Activity</TabsTrigger>
+            <TabsTrigger value="settings">Settings</TabsTrigger>
+          </TabsList>
+          <TabsContent value="overview" class="text-sm text-muted-foreground">
+            Default tabs
+          </TabsContent>
+        </Tabs>
+
+        <Tabs defaultValue="overview" size="sm">
+          <TabsList class="grid w-full grid-cols-3">
+            <TabsTrigger value="overview">Overview</TabsTrigger>
+            <TabsTrigger value="activity">Activity</TabsTrigger>
+            <TabsTrigger value="settings">Settings</TabsTrigger>
+          </TabsList>
+          <TabsContent value="overview" class="text-sm text-muted-foreground">
+            Small tabs
+          </TabsContent>
+        </Tabs>
+
+        <Tabs defaultValue="overview" size="xs">
+          <TabsList class="grid w-full grid-cols-3">
+            <TabsTrigger value="overview">Overview</TabsTrigger>
+            <TabsTrigger value="activity">Activity</TabsTrigger>
+            <TabsTrigger value="settings">Settings</TabsTrigger>
+          </TabsList>
+          <TabsContent value="overview" class="text-sm text-muted-foreground">
+            Extra small tabs
+          </TabsContent>
+        </Tabs>
+
+        <Tabs defaultValue="overview" size="xxs">
+          <TabsList class="grid w-full grid-cols-3">
+            <TabsTrigger value="overview">Overview</TabsTrigger>
+            <TabsTrigger value="activity">Activity</TabsTrigger>
+            <TabsTrigger value="settings">Settings</TabsTrigger>
+          </TabsList>
+          <TabsContent value="overview" class="text-sm text-muted-foreground">
+            Compact tabs
+          </TabsContent>
+        </Tabs>
+      </div>
     `,
   }),
 };

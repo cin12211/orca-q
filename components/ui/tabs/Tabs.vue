@@ -1,17 +1,33 @@
 <script setup lang="ts">
 import { reactiveOmit } from '@vueuse/core';
-import type { HTMLAttributes } from 'vue';
-import type { TabsRootEmits, TabsRootProps } from 'reka-ui';
+import { computed, provide, type HTMLAttributes } from 'vue';
+import type {
+  TabsRootEmits,
+  TabsRootProps as TabsRootPrimitiveProps,
+} from 'reka-ui';
 import { TabsRoot, useForwardPropsEmits } from 'reka-ui';
 import { cn } from '@/lib/utils';
+import { TABS_SIZE_INJECTION_KEY, type TabsSize } from './context';
 
-const props = defineProps<
-  TabsRootProps & { class?: HTMLAttributes['class'] }
->();
+export interface TabsProps extends TabsRootPrimitiveProps {
+  class?: HTMLAttributes['class'];
+  /**
+   * Shared visual size for the full Tabs family.
+   * Applied to TabsList and TabsTrigger unless they override it.
+   */
+  size?: TabsSize;
+}
+
+const props = withDefaults(defineProps<TabsProps>(), {
+  size: 'default',
+});
 const emits = defineEmits<TabsRootEmits>();
 
-const delegatedProps = reactiveOmit(props, 'class');
+const delegatedProps = reactiveOmit(props, 'class', 'size');
 const forwarded = useForwardPropsEmits(delegatedProps, emits);
+const size = computed(() => props.size);
+
+provide(TABS_SIZE_INJECTION_KEY, size);
 </script>
 
 <template>

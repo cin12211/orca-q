@@ -65,7 +65,7 @@ const onCancel = () => {
 
 <template>
   <AlertDialog :open="open" @update:open="emit('update:open', $event)">
-    <AlertDialogContent class="border w-[55vw]! max-w-[55vw]!">
+    <AlertDialogContent size="preview">
       <LoadingOverlay :visible="!!loading" />
       <AlertDialogHeader>
         <AlertDialogTitle

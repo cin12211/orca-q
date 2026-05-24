@@ -60,12 +60,9 @@ const triggerClassName = computed(() => {
     <Select
       :model-value="String(databaseIndex)"
       @update:model-value="emit('update:databaseIndex', Number($event) || 0)"
+      size="sm"
     >
-      <SelectTrigger
-        :id="resolvedTriggerId"
-        size="sm"
-        :class="triggerClassName"
-      >
+      <SelectTrigger :id="resolvedTriggerId" :class="triggerClassName">
         <div class="flex min-w-0 items-center gap-1.5 pr-5 text-left">
           <span :class="compact ? 'truncate text-xs' : 'truncate text-sm'">
             {{ selectedDatabase?.label || 'Select DB' }}

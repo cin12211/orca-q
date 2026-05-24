@@ -1,6 +1,5 @@
 import { toRaw, toRef } from 'vue';
 import { toast } from 'vue-sonner';
-import type { FlattenedTreeFileSystemItem } from '~/components/base/Tree';
 import { QuickQueryMutationAction } from '~/components/modules/quick-query/constants';
 import { useAppConfigStore } from '~/core/stores/appConfigStore';
 import type {
@@ -9,7 +8,11 @@ import type {
   SchemaPrimaryKey as PrimaryKey,
   TableDetailMetadata,
 } from '~/core/types';
-import type { ContextMenuState, SchemaContextMenuOptions } from './types';
+import type {
+  ContextMenuState,
+  SchemaContextMenuOptions,
+  SchemaContextMenuSelection,
+} from './types';
 
 export function useContextMenuHelpers(
   options: SchemaContextMenuOptions,
@@ -82,7 +85,7 @@ export function useContextMenuHelpers(
    */
   const onRightClickItem = (
     _: MouseEvent,
-    item: FlattenedTreeFileSystemItem
+    item: SchemaContextMenuSelection
   ) => {
     state.selectedItem.value = toRaw(item.value);
   };

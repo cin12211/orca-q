@@ -21,13 +21,14 @@ const emit = defineEmits<{
     <div class="flex items-center gap-0.5 text-xs">
       Compose with:
       <Select
+        size="xxs"
         :modelValue="composeWith"
         @update:model-value="
           emit('onChangeComposeWith', $event as ComposeOperator)
         "
       >
         <SelectTrigger
-          class="w-14 h-5! text-xs cursor-pointer px-1 border-none gap-1 shadow-none"
+          class="text-xs cursor-pointer px-1 border-none gap-1 shadow-none"
         >
           <SelectValue placeholder="Select operator" />
         </SelectTrigger>

@@ -1,11 +1,11 @@
 import { refDebounced } from '@vueuse/core';
 import { storeToRefs } from 'pinia';
 import dayjs from 'dayjs';
+import { createTreePersistencePlugin } from '~/components/base/tree-folder';
 import {
   type TreeFileSystem,
   type TreeFileSystemItem,
-} from '~/components/base/Tree';
-import { createTreePersistencePlugin } from '~/components/base/tree-folder';
+} from '~/components/base/tree-folder/treeManagement';
 import type {
   DropPosition,
   FileNode,

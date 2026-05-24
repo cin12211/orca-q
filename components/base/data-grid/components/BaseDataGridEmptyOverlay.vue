@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import BaseEmpty from '../../BaseEmpty.vue';
+import BaseEmpty from '../../base-empty/BaseEmpty.vue';
 
 defineProps<{
   params?: {

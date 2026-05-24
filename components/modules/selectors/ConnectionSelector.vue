@@ -101,11 +101,9 @@ const selectedConnectionTags = computed(() => {
     @update:model-value="onChangeConnection"
     :model-value="activeConnectionId"
     v-model:open="open"
+    size="sm"
   >
-    <SelectTrigger
-      :class="cn(props.class, 'w-48 min-w-0 cursor-pointer')"
-      size="sm"
-    >
+    <SelectTrigger :class="cn(props.class, 'w-48 min-w-0 cursor-pointer')">
       <div
         class="flex min-w-0 flex-1 items-center gap-2 overflow-hidden"
         v-if="selectedConnection"
