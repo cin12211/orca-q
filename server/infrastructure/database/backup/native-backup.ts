@@ -3,22 +3,37 @@ import { constants as fsConstants } from 'node:fs';
 import { access } from 'node:fs/promises';
 import { delimiter, extname, join } from 'node:path';
 import { DatabaseClientType } from '~/core/constants/database-client-type';
-import type { ExportFormat, NativeBackupRuntimeCapability } from '~/core/types';
+import {
+  NativeBackupTool,
+  NativeBackupFileKind,
+  NativeExportFormat,
+  type ExportFormat,
+  type NativeBackupToolName,
+  type NativeBackupRuntimeCapability,
+} from '~/core/types';
 
-export type NativeBackupToolName =
-  | 'pg_dump'
-  | 'pg_restore'
-  | 'psql'
-  | 'mysqlpump'
-  | 'mysqldump'
-  | 'mysql'
-  | 'sqlite3'
-  | 'expdp'
-  | 'impdp';
+export type { NativeBackupToolName };
 
-export type NativeBackupFileKind = 'archive' | 'sql';
+// On macOS, packaged GUI apps do not inherit standard PATH entries like `/opt/homebrew/bin`
+// or `/usr/local/bin` from shell environments. We inject standard fallbacks here so
+// that both tool resolution and child processes can locate the native database binaries.
+if (process.platform === 'darwin') {
+  const standardPaths = [
+    '/opt/homebrew/bin',
+    '/usr/local/bin',
+    '/Applications/Postgres.app/Contents/Versions/latest/bin',
+  ];
+  const currentPaths = (process.env.PATH || '').split(delimiter);
+  const newPaths = [...currentPaths];
 
-export type NativeExportFormat = Extract<ExportFormat, 'plain' | 'custom'>;
+  for (const pathEntry of standardPaths) {
+    if (!newPaths.includes(pathEntry)) {
+      newPaths.push(pathEntry);
+    }
+  }
+
+  process.env.PATH = newPaths.join(delimiter);
+}
 
 export interface NativeBackupFormatOption {
   format: NativeExportFormat;
@@ -40,65 +55,68 @@ export interface NativeBackupCapability {
 
 const POSTGRES_FORMAT_OPTIONS: NativeBackupFormatOption[] = [
   {
-    format: 'custom',
+    format: NativeExportFormat.CUSTOM,
     fileExtension: '.dump',
-    fileKind: 'archive',
+    fileKind: NativeBackupFileKind.ARCHIVE,
     label: 'PostgreSQL custom archive (.dump)',
-    importTool: 'pg_restore',
+    importTool: NativeBackupTool.PG_RESTORE,
   },
   {
-    format: 'plain',
+    format: NativeExportFormat.PLAIN,
     fileExtension: '.sql',
-    fileKind: 'sql',
+    fileKind: NativeBackupFileKind.SQL,
     label: 'PostgreSQL plain SQL script (.sql)',
-    importTool: 'psql',
+    importTool: NativeBackupTool.PSQL,
   },
 ];
 
 const MYSQL_FORMAT_OPTIONS: NativeBackupFormatOption[] = [
   {
-    format: 'plain',
+    format: NativeExportFormat.PLAIN,
     fileExtension: '.sql',
-    fileKind: 'sql',
+    fileKind: NativeBackupFileKind.SQL,
     label: 'MySQL SQL dump (.sql)',
-    importTool: 'mysql',
+    importTool: NativeBackupTool.MYSQL,
   },
 ];
 
 const SQLITE_FORMAT_OPTIONS: NativeBackupFormatOption[] = [
   {
-    format: 'plain',
+    format: NativeExportFormat.PLAIN,
     fileExtension: '.sql',
-    fileKind: 'sql',
+    fileKind: NativeBackupFileKind.SQL,
     label: 'SQLite SQL dump (.sql)',
-    importTool: 'sqlite3',
+    importTool: NativeBackupTool.SQLITE3,
   },
 ];
 
 const POSTGRES_CAPABILITY: NativeBackupCapability = {
   supported: true,
   formatOptions: POSTGRES_FORMAT_OPTIONS,
-  defaultExportFormat: 'custom',
-  exportToolCandidates: ['pg_dump'],
-  importToolCandidates: ['pg_restore', 'psql'],
+  defaultExportFormat: NativeExportFormat.CUSTOM,
+  exportToolCandidates: [NativeBackupTool.PG_DUMP],
+  importToolCandidates: [NativeBackupTool.PG_RESTORE, NativeBackupTool.PSQL],
   label: 'PostgreSQL native backup',
 };
 
 const MYSQL_CAPABILITY: NativeBackupCapability = {
   supported: true,
   formatOptions: MYSQL_FORMAT_OPTIONS,
-  defaultExportFormat: 'plain',
-  exportToolCandidates: ['mysqlpump', 'mysqldump'],
-  importToolCandidates: ['mysql'],
+  defaultExportFormat: NativeExportFormat.PLAIN,
+  exportToolCandidates: [
+    NativeBackupTool.MYSQLPUMP,
+    NativeBackupTool.MYSQLDUMP,
+  ],
+  importToolCandidates: [NativeBackupTool.MYSQL],
   label: 'MySQL SQL dump',
 };
 
 const SQLITE_CAPABILITY: NativeBackupCapability = {
   supported: true,
   formatOptions: SQLITE_FORMAT_OPTIONS,
-  defaultExportFormat: 'plain',
-  exportToolCandidates: ['sqlite3'],
-  importToolCandidates: ['sqlite3'],
+  defaultExportFormat: NativeExportFormat.PLAIN,
+  exportToolCandidates: [NativeBackupTool.SQLITE3],
+  importToolCandidates: [NativeBackupTool.SQLITE3],
   label: 'SQLite SQL dump',
 };
 
@@ -323,16 +341,16 @@ export function getNativeBackupCapability(
         supported: false,
         formatOptions: [
           {
-            format: 'custom',
+            format: NativeExportFormat.CUSTOM,
             fileExtension: '.dmp',
-            fileKind: 'archive',
+            fileKind: NativeBackupFileKind.ARCHIVE,
             label: 'Oracle Data Pump dump (.dmp)',
-            importTool: 'impdp',
+            importTool: NativeBackupTool.IMPDP,
           },
         ],
-        defaultExportFormat: 'custom',
-        exportToolCandidates: ['expdp'],
-        importToolCandidates: ['impdp'],
+        defaultExportFormat: NativeExportFormat.CUSTOM,
+        exportToolCandidates: [NativeBackupTool.EXPDP],
+        importToolCandidates: [NativeBackupTool.IMPDP],
         label: 'Oracle Data Pump dump',
         reason: ORACLE_UNSUPPORTED_REASON,
       };
@@ -369,7 +387,10 @@ export function resolveNativeExportFormat(
     return capability.defaultExportFormat;
   }
 
-  if (requestedFormat !== 'plain' && requestedFormat !== 'custom') {
+  if (
+    requestedFormat !== NativeExportFormat.PLAIN &&
+    requestedFormat !== NativeExportFormat.CUSTOM
+  ) {
     throw createError({
       statusCode: 400,
       statusMessage: `${requestedFormat} export format is not supported for ${type}.`,
@@ -385,7 +406,7 @@ export function resolveNativeExportFormat(
     });
   }
 
-  return requestedFormat;
+  return requestedFormat as NativeExportFormat;
 }
 
 export function getNativeBackupFormatOption(

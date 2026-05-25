@@ -68,6 +68,11 @@ async function loadComposable() {
   return import('~/core/composables/useElectronUpdater');
 }
 
+async function setAutoDownloadUpdates(value: boolean) {
+  const { useAppConfigStore } = await import('~/core/stores/appConfigStore');
+  useAppConfigStore().autoDownloadUpdates = value;
+}
+
 describe('useElectronUpdater', () => {
   beforeEach(() => {
     vi.resetModules();
@@ -87,6 +92,7 @@ describe('useElectronUpdater', () => {
         updater: updater.api,
       },
     });
+    await setAutoDownloadUpdates(false);
 
     const { useElectronUpdater } = await loadComposable();
     const composable = useElectronUpdater();
@@ -114,6 +120,7 @@ describe('useElectronUpdater', () => {
         updater: updater.api,
       },
     });
+    await setAutoDownloadUpdates(false);
 
     const { useElectronUpdater } = await loadComposable();
     const composable = useElectronUpdater();
@@ -144,7 +151,7 @@ describe('useElectronUpdater', () => {
         updater: updater.api,
       },
     });
-
+    await setAutoDownloadUpdates(false);
     const { useElectronUpdater } = await loadComposable();
     const composable = useElectronUpdater();
 
@@ -168,6 +175,7 @@ describe('useElectronUpdater', () => {
         updater: updater.api,
       },
     });
+    await setAutoDownloadUpdates(false);
 
     const { useElectronUpdater } = await loadComposable();
     const composable = useElectronUpdater();
@@ -179,6 +187,37 @@ describe('useElectronUpdater', () => {
     expect(composable.status.value).toBe('downloading');
   });
 
+  it('auto-downloads available updates when the desktop setting is enabled', async () => {
+    const { createPinia, setActivePinia } = await import('pinia');
+    setActivePinia(createPinia());
+
+    await setAutoDownloadUpdates(true);
+
+    const updater = createMockUpdaterApi();
+    updater.api.check.mockResolvedValue({
+      status: 'available',
+      updateInfo: {
+        version: '1.0.41',
+        currentVersion: '1.0.40',
+      },
+    });
+
+    vi.stubGlobal('window', {
+      electronAPI: {
+        updater: updater.api,
+      },
+    });
+
+    const { useElectronUpdater } = await loadComposable();
+    const composable = useElectronUpdater();
+
+    await composable.checkForUpdates({ promptIfAvailable: true });
+
+    expect(updater.api.download).toHaveBeenCalledTimes(1);
+    expect(composable.startupPromptOpen.value).toBe(false);
+    expect(composable.status.value).toBe('downloading');
+  });
+
   it('shares updater state across composable instances', async () => {
     const updater = createMockUpdaterApi();
 
@@ -187,6 +226,7 @@ describe('useElectronUpdater', () => {
         updater: updater.api,
       },
     });
+    await setAutoDownloadUpdates(false);
 
     const { useElectronUpdater } = await loadComposable();
     const first = useElectronUpdater();
@@ -254,6 +294,7 @@ describe('useElectronUpdater', () => {
     scheduleElectronStartupUpdateCheck(5_000);
 
     expect(focusHandler).not.toBeNull();
+    focusHandler?.();
 
     expect(updater.api.check).toHaveBeenCalledTimes(1);
 

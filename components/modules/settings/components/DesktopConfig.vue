@@ -1,11 +1,14 @@
 <script setup lang="ts">
+import { Switch } from '#components';
 import { toast } from 'vue-sonner';
 import { useElectronUpdater } from '~/core/composables/useElectronUpdater';
 import { formatBytes, isElectron } from '~/core/helpers';
+import { useAppConfigStore } from '~/core/stores/appConfigStore';
 
 interface StoragePaths {
   nativeDataPath: string | null;
   webStoragePath: string | null;
+  logPath: string | null;
 }
 
 const {
@@ -23,12 +26,14 @@ const {
   restartToApplyUpdate,
   downloadProgress,
 } = useElectronUpdater();
+const appConfigStore = useAppConfigStore();
 const isDevBuild = import.meta.dev;
 const isElectronRuntime = isElectron();
 const storagePaths = shallowRef<StoragePaths | null>(null);
 const storageError = ref<string | null>(null);
 const isLoadingStoragePaths = ref(false);
 const isOpeningStoragePath = ref(false);
+const isOpeningLogFile = ref(false);
 
 const formattedLastCheckedAt = computed(() => {
   if (!lastCheckedAt.value) {
@@ -83,7 +88,9 @@ const statusLabel = computed(() => {
     case 'error':
       return 'The last update action failed.';
     default:
-      return 'The app checks GitHub Releases in the background and lets you decide when to apply updates.';
+      return appConfigStore.autoDownloadUpdates
+        ? 'The app checks GitHub Releases, downloads new builds in the background, and waits for you to restart.'
+        : 'The app checks GitHub Releases in the background and lets you decide when to download updates.';
   }
 });
 
@@ -104,10 +111,12 @@ const loadStoragePaths = async () => {
   storageError.value = null;
 
   try {
-    const mainPath = await (window as any).electronAPI.window.getStoragePath();
+    const mainPath = await window.electronAPI?.window.getStoragePath();
+    const logPath = await window.electronAPI?.window.getLogPath();
     storagePaths.value = {
-      nativeDataPath: mainPath,
+      nativeDataPath: mainPath ?? null,
       webStoragePath: 'Maintained by Electron Session internally',
+      logPath: logPath ?? null,
     };
   } catch (error) {
     const message =
@@ -125,7 +134,7 @@ const handleOpenStoragePath = async () => {
   isOpeningStoragePath.value = true;
 
   try {
-    await (window as any).electronAPI.window.openStoragePath();
+    await window.electronAPI?.window.openStoragePath();
   } catch (error) {
     const message =
       error instanceof Error ? error.message : 'Failed to open storage folder';
@@ -136,6 +145,24 @@ const handleOpenStoragePath = async () => {
     });
   } finally {
     isOpeningStoragePath.value = false;
+  }
+};
+
+const handleOpenLogFile = async () => {
+  isOpeningLogFile.value = true;
+
+  try {
+    await window.electronAPI?.window.openLogFile();
+  } catch (error) {
+    const message =
+      error instanceof Error ? error.message : 'Failed to open log file';
+
+    storageError.value = message;
+    toast(message, {
+      description: 'Could not open the app log file.',
+    });
+  } finally {
+    isOpeningLogFile.value = false;
   }
 };
 
@@ -183,6 +210,21 @@ onMounted(() => {
           >
             Check now
           </Button>
+        </div>
+
+        <div class="flex items-center justify-between gap-4">
+          <div class="flex flex-col gap-0.5">
+            <p class="text-sm">Auto-download updates</p>
+            <p class="text-xs text-muted-foreground">
+              Download new releases in the background so only restart/apply is
+              left.
+            </p>
+          </div>
+          <Switch
+            v-model="appConfigStore.autoDownloadUpdates"
+            id="auto-download-updates-toggle"
+            class="cursor-pointer"
+          />
         </div>
 
         <div
@@ -356,6 +398,35 @@ onMounted(() => {
                 @click="handleOpenStoragePath()"
               >
                 Open folder
+              </Button>
+            </div>
+          </div>
+
+          <div class="rounded-lg border bg-muted/30 p-3 flex flex-col gap-3">
+            <div class="flex items-start justify-between gap-4">
+              <div class="min-w-0 flex-1 flex flex-col gap-1">
+                <p class="text-sm font-medium">App log file</p>
+                <p class="text-xs text-muted-foreground">
+                  Main-process diagnostics and updater events are written here.
+                </p>
+                <code
+                  class="text-xs break-all rounded-md bg-background/70 px-2 py-1 font-mono"
+                >
+                  {{
+                    storagePaths?.logPath ||
+                    (isLoadingStoragePaths ? 'Loading…' : 'Unavailable')
+                  }}
+                </code>
+              </div>
+
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                :disabled="!storagePaths?.logPath || isOpeningLogFile"
+                @click="handleOpenLogFile()"
+              >
+                Open log
               </Button>
             </div>
           </div>

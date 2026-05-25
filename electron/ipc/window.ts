@@ -8,6 +8,7 @@ import {
   type OpenDialogOptions,
 } from 'electron';
 import path from 'node:path';
+import { getElectronLogPath } from '../logger';
 import { clearPersistedUserData } from '../persist/store';
 import { checkForUpdates, downloadUpdate, quitAndInstall } from '../updater';
 
@@ -83,6 +84,15 @@ export function registerWindowHandlers(
 
   ipcMain.handle('window:open-storage-path', async () => {
     await shell.openPath(getStoragePath());
+  });
+
+  ipcMain.handle('window:get-log-path', () => {
+    return getElectronLogPath();
+  });
+
+  ipcMain.handle('window:open-log-file', async () => {
+    const logPath = getElectronLogPath();
+    await shell.openPath(path.dirname(logPath));
   });
 
   ipcMain.handle('window:reset-all-data', async () => {

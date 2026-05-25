@@ -104,6 +104,8 @@ const electronAPI = {
     pickSqliteFile: () => ipcRenderer.invoke('window:pick-sqlite-file'),
     getStoragePath: () => ipcRenderer.invoke('window:get-storage-path'),
     openStoragePath: () => ipcRenderer.invoke('window:open-storage-path'),
+    getLogPath: () => ipcRenderer.invoke('window:get-log-path'),
+    openLogFile: () => ipcRenderer.invoke('window:open-log-file'),
     resetAllData: () => ipcRenderer.invoke('window:reset-all-data'),
 
     onOpenSettings: (cb: () => void) => {

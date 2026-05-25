@@ -10,9 +10,24 @@ type PersistMatchMode = 'all' | 'any';
 
 interface ElectronUpdaterInfo {
   version: string;
+  currentVersion: string;
   releaseDate?: string;
   releaseNotes?: string;
 }
+
+type ElectronUpdaterCheckResult =
+  | {
+      status: 'available';
+      updateInfo: ElectronUpdaterInfo;
+    }
+  | {
+      status: 'ready';
+      updateInfo: ElectronUpdaterInfo;
+    }
+  | {
+      status: 'up-to-date';
+      currentVersion: string;
+    };
 
 interface ElectronDownloadProgress {
   bytesPerSecond: number;
@@ -55,7 +70,7 @@ interface ElectronPersistAPI {
 }
 
 interface ElectronUpdaterAPI {
-  check: () => Promise<ElectronUpdaterInfo | null>;
+  check: () => Promise<ElectronUpdaterCheckResult | null>;
   download: () => Promise<void>;
   install: () => Promise<void>;
   onUpdateAvailable: (cb: (info: ElectronUpdaterInfo) => void) => () => void;
@@ -72,6 +87,8 @@ interface ElectronWindowAPI {
   pickSqliteFile: () => Promise<string | null>;
   getStoragePath: () => Promise<string>;
   openStoragePath: () => Promise<void>;
+  getLogPath: () => Promise<string>;
+  openLogFile: () => Promise<void>;
   resetAllData: () => Promise<void>;
   onOpenSettings: (cb: () => void) => () => void;
 }

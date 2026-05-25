@@ -8,6 +8,7 @@ import {
   persistGetOne,
   persistUpsert,
 } from '~/core/persist/adapters/electron/primitives';
+import { useAppConfigStore } from '~/core/stores/appConfigStore';
 
 interface UpdateInfo {
   version: string;
@@ -93,6 +94,7 @@ const downloadTotalBytes = ref<number | null>(null);
 const downloadedBytes = ref<number | null>(null);
 const startupPromptOpen = ref(false);
 let listenersInitialized = false;
+let autoDownloadRequestedVersion: string | null = null;
 
 const isBusy = computed(
   () => isChecking.value || isDownloading.value || status.value === 'restarting'
@@ -122,10 +124,16 @@ function toResolvedUpdateInfo(info: UpdateInfo): ResolvedUpdateInfo {
 
 function setAvailableUpdate(info: UpdateInfo): void {
   const resolved = toResolvedUpdateInfo(info);
+  const isCurrentDownload =
+    status.value === 'downloading' &&
+    updateInfo.value?.version === info.version;
   updateInfo.value = info;
   availableUpdate.value = resolved;
   readyToRestartUpdate.value = null;
-  status.value = 'available';
+
+  if (!isCurrentDownload) {
+    status.value = 'available';
+  }
 }
 
 function setReadyUpdate(info: UpdateInfo): void {
@@ -137,6 +145,55 @@ function setReadyUpdate(info: UpdateInfo): void {
   status.value = 'ready-to-restart';
   // T022 — clear stall timer when download completes naturally
   resetStall();
+}
+
+function getAutoDownloadUpdatesPreference(): boolean {
+  try {
+    return useAppConfigStore().autoDownloadUpdates;
+  } catch {
+    return false;
+  }
+}
+
+async function startDownload(): Promise<void> {
+  const api = updaterAPI();
+  if (!api) return;
+
+  initializeUpdaterListeners();
+  isDownloading.value = true;
+  status.value = 'downloading';
+  downloadProgress.value = 0;
+  downloadTotalBytes.value = null;
+  downloadedBytes.value = 0;
+
+  try {
+    await api.download();
+  } catch (err: any) {
+    isDownloading.value = false;
+    status.value = 'error';
+    lastError.value = err?.message || String(err);
+  }
+}
+
+function requestAutoDownloadIfEnabled(info: UpdateInfo): void {
+  if (!getAutoDownloadUpdatesPreference()) {
+    return;
+  }
+
+  if (skippedVersion.value === info.version) {
+    return;
+  }
+
+  if (
+    status.value === 'downloading' ||
+    readyToRestartUpdate.value?.version === info.version ||
+    autoDownloadRequestedVersion === info.version
+  ) {
+    return;
+  }
+
+  autoDownloadRequestedVersion = info.version;
+  void startDownload();
 }
 
 function initializeUpdaterListeners(): void {
@@ -157,6 +214,7 @@ function initializeUpdaterListeners(): void {
   api.onUpdateAvailable(info => {
     lastError.value = null;
     setAvailableUpdate(info);
+    requestAutoDownloadIfEnabled(info);
   });
 
   api.onUpToDate(info => {
@@ -205,12 +263,16 @@ function initializeUpdaterListeners(): void {
 
   api.onReady(info => {
     setReadyUpdate(info);
+    if (getAutoDownloadUpdatesPreference()) {
+      startupPromptOpen.value = true;
+    }
     // T035 — do NOT close dialog; if open, it auto-transitions to restart-ready variant via readyToRestartUpdate
     // T021 — persistent toast removed; status bar indicator + startup dialog now own restart-ready UX
   });
 
   api.onError(msg => {
     isDownloading.value = false;
+    autoDownloadRequestedVersion = null;
     status.value = 'error';
     lastError.value = msg;
     console.error('[electron-updater] Download error:', msg);
@@ -257,9 +319,18 @@ export function useElectronUpdater() {
             skippedVersion.value = null;
           }
 
-          if (result.updateInfo.version !== skippedVersion.value) {
+          const shouldAutoDownload = getAutoDownloadUpdatesPreference();
+
+          if (
+            shouldAutoDownload &&
+            result.updateInfo.version !== skippedVersion.value
+          ) {
+            requestAutoDownloadIfEnabled(result.updateInfo);
+          } else if (result.updateInfo.version !== skippedVersion.value) {
             startupPromptOpen.value = true;
           }
+        } else {
+          requestAutoDownloadIfEnabled(result.updateInfo);
         }
 
         return result.updateInfo;
@@ -286,26 +357,6 @@ export function useElectronUpdater() {
       return null;
     } finally {
       isChecking.value = false;
-    }
-  };
-
-  const startDownload = async (): Promise<void> => {
-    const api = updaterAPI();
-    if (!api) return;
-
-    initializeUpdaterListeners();
-    isDownloading.value = true;
-    status.value = 'downloading';
-    downloadProgress.value = 0;
-    downloadTotalBytes.value = null;
-    downloadedBytes.value = 0;
-
-    try {
-      await api.download();
-    } catch (err: any) {
-      isDownloading.value = false;
-      status.value = 'error';
-      lastError.value = err?.message || String(err);
     }
   };
 
@@ -348,6 +399,7 @@ export function useElectronUpdater() {
   const cancelDownload = (): void => {
     // T022 — clear stall timer on cancel
     clearStallTimer();
+    autoDownloadRequestedVersion = null;
     isDownloadStalled.value = false;
     isDownloading.value = false;
     status.value = 'available';
@@ -368,6 +420,8 @@ export function useElectronUpdater() {
     availableUpdate,
     readyToRestartUpdate,
     isBusy,
+    isChecking,
+    isDownloading,
     lastCheckedAt,
     lastError,
     downloadTotalBytes,
@@ -442,7 +496,7 @@ export function scheduleElectronStartupUpdateCheck(delayMs = 5_000): void {
 }
 
 export function startElectronBackgroundUpdateChecks(
-  intervalMs = 6 * 60 * 60 * 1_000 // 6 hours
+  intervalMs = 4 * 60 * 60 * 1_000 // 4 hours
 ): void {
   if (!updaterAPI() || import.meta.dev) return;
   if (_backgroundInterval) return; // Already running

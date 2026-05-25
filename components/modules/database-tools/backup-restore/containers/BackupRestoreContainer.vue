@@ -47,7 +47,19 @@ const {
   capability,
   isLoading: isCapabilityLoading,
   error: capabilityError,
+  refresh: refreshCapability,
 } = useNativeBackupCapability(connectionType);
+
+const isRefreshing = ref(false);
+
+const handleReload = async () => {
+  isRefreshing.value = true;
+  try {
+    await refreshCapability();
+  } finally {
+    isRefreshing.value = false;
+  }
+};
 const nativeBackupSupported = computed(
   () => capability.value?.available ?? false
 );
@@ -257,10 +269,10 @@ const onRestoreCancelled = () => {
     <div
       class="relative flex-1 overflow-y-auto rounded-lg border bg-background p-4"
     >
-      <LoadingOverlay v-if="isCapabilityLoading" visible />
+      <LoadingOverlay v-if="isCapabilityLoading && !isRefreshing" visible />
 
       <Alert
-        v-if="!isCapabilityLoading && capabilityError"
+        v-if="(!isCapabilityLoading || isRefreshing) && capabilityError"
         variant="destructive"
       >
         <Icon name="hugeicons:alert-circle" class="size-4" />
@@ -270,12 +282,16 @@ const onRestoreCancelled = () => {
 
       <!-- Unsupported alert with install instructions -->
       <BackupRestoreUnsupportedAlert
-        v-else-if="!isCapabilityLoading && !nativeBackupSupported"
+        v-else-if="
+          (!isCapabilityLoading || isRefreshing) && !nativeBackupSupported
+        "
         :support-message="supportMessage"
         :connection-type="connectionType"
+        :is-loading="isRefreshing"
+        @reload="handleReload"
       />
 
-      <template v-else-if="!isCapabilityLoading">
+      <template v-else-if="!isCapabilityLoading && !isRefreshing">
         <Alert v-if="partialAvailabilityMessage">
           <Icon name="hugeicons:alert-circle" class="size-4" />
           <AlertTitle>Partial Native Tool Support</AlertTitle>
