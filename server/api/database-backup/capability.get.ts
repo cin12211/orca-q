@@ -5,6 +5,10 @@ import { getNativeBackupRuntimeCapability } from '~/server/infrastructure/databa
 export default defineEventHandler(async event => {
   const rawType = getQuery(event).type;
   const typeValue = Array.isArray(rawType) ? rawType[0] : rawType;
+  const rawDiscoverAll = getQuery(event).discoverAll;
+  const discoverAllValue = Array.isArray(rawDiscoverAll)
+    ? rawDiscoverAll[0]
+    : rawDiscoverAll;
 
   if (
     typeof typeValue === 'string' &&
@@ -17,6 +21,9 @@ export default defineEventHandler(async event => {
   }
 
   return getNativeBackupRuntimeCapability(
-    (typeValue as DatabaseClientType | undefined) || undefined
+    (typeValue as DatabaseClientType | undefined) || undefined,
+    {
+      discoverAll: discoverAllValue === 'true',
+    }
   );
 });

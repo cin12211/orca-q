@@ -175,6 +175,9 @@ export const useAppConfigStore = defineStore('app-config-store', () => {
   // Quick Query settings
   const quickQuerySafeModeEnabled = ref<boolean>(false);
 
+  // Desktop update settings
+  const autoDownloadUpdates = ref<boolean>(true);
+
   // Space display setting
   const spaceDisplay = ref<SpaceDisplay>(SpaceDisplay.Default);
 
@@ -305,6 +308,7 @@ export const useAppConfigStore = defineStore('app-config-store', () => {
       agentSelectedProvider: agentSelectedProvider.value,
       agentSelectedModel: agentSelectedModel.value,
       quickQuerySafeModeEnabled: quickQuerySafeModeEnabled.value,
+      autoDownloadUpdates: autoDownloadUpdates.value,
       spaceDisplay: spaceDisplay.value,
       tableAppearanceConfigs,
       customLayouts: customLayouts.value,
@@ -329,6 +333,7 @@ export const useAppConfigStore = defineStore('app-config-store', () => {
     agentSelectedProvider.value = normalized.agentSelectedProvider;
     agentSelectedModel.value = normalized.agentSelectedModel;
     quickQuerySafeModeEnabled.value = normalized.quickQuerySafeModeEnabled;
+    autoDownloadUpdates.value = normalized.autoDownloadUpdates;
     spaceDisplay.value = normalized.spaceDisplay;
     Object.assign(tableAppearanceConfigs, normalized.tableAppearanceConfigs);
     customLayouts.value = normalized.customLayouts as CustomLayoutDefinition[];
@@ -391,6 +396,7 @@ export const useAppConfigStore = defineStore('app-config-store', () => {
     agentSelectedProvider,
     agentSelectedModel,
     quickQuerySafeModeEnabled,
+    autoDownloadUpdates,
     // Custom Layouts
     customLayouts,
     activeCustomLayoutId,

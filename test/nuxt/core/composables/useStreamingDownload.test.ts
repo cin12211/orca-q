@@ -94,6 +94,35 @@ describe('useStreamingDownload', () => {
     expect(toast.success).toHaveBeenCalled();
   });
 
+  it('writes to a desktop file path when one is provided', async () => {
+    const response = createStreamingResponse([new Uint8Array([1, 2])]);
+    const writeFile = vi.fn().mockResolvedValue(undefined);
+
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(response));
+    Object.defineProperty(window, 'electronAPI', {
+      configurable: true,
+      value: {
+        window: {
+          writeFile,
+        },
+      },
+    });
+
+    const { downloadStream } = useStreamingDownload();
+    const result = await downloadStream({
+      url: '/api/export',
+      filename: 'rows.json',
+      saveFilePath: '/tmp/rows.json',
+    });
+
+    expect(result).toEqual({ success: true, size: 2 });
+    expect(writeFile).toHaveBeenCalledWith(
+      '/tmp/rows.json',
+      expect.any(Uint8Array)
+    );
+    expect(URL.createObjectURL).not.toHaveBeenCalled();
+  });
+
   it('returns error when server responds with failure payload', async () => {
     vi.stubGlobal(
       'fetch',

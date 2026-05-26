@@ -9,6 +9,15 @@ interface PersistFilter {
 
 type PersistMatchMode = 'all' | 'any';
 
+interface WindowSaveDialogOptions {
+  title?: string;
+  defaultPath?: string;
+  filters?: Array<{
+    name: string;
+    extensions: string[];
+  }>;
+}
+
 // ─── electronAPI surface ──────────────────────────────────────────────────────
 
 const electronAPI = {
@@ -102,8 +111,17 @@ const electronAPI = {
     maximize: () => ipcRenderer.invoke('window:maximize'),
     close: () => ipcRenderer.invoke('window:close'),
     pickSqliteFile: () => ipcRenderer.invoke('window:pick-sqlite-file'),
+    pickSaveFile: (options?: WindowSaveDialogOptions) =>
+      ipcRenderer.invoke('window:pick-save-file', options),
+    pickDirectory: () => ipcRenderer.invoke('window:pick-directory'),
+    writeFile: (filePath: string, data: Uint8Array) =>
+      ipcRenderer.invoke('window:write-file', { filePath, data }),
+    openPath: (targetPath: string) =>
+      ipcRenderer.invoke('window:open-path', targetPath),
     getStoragePath: () => ipcRenderer.invoke('window:get-storage-path'),
     openStoragePath: () => ipcRenderer.invoke('window:open-storage-path'),
+    getLogPath: () => ipcRenderer.invoke('window:get-log-path'),
+    openLogFile: () => ipcRenderer.invoke('window:open-log-file'),
     resetAllData: () => ipcRenderer.invoke('window:reset-all-data'),
 
     onOpenSettings: (cb: () => void) => {

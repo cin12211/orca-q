@@ -5,6 +5,7 @@ import {
   ContextMenuContent,
   ContextMenuItem,
   ContextMenuTrigger,
+  Button,
 } from '#components';
 import { cn } from '@/lib/utils';
 import { useSchemaStore } from '~/core/stores';
@@ -38,6 +39,14 @@ const emit = defineEmits<{
 
 // Context menu state
 const currentTabMenuContext = ref<string | null>(null);
+
+const isFullscreen = ref(false);
+
+const handleKeyDown = (e: KeyboardEvent) => {
+  if (e.key === 'Escape' && isFullscreen.value) {
+    isFullscreen.value = false;
+  }
+};
 
 // Check if there are tabs to the right of the current context menu tab
 const isHaveRightItem = computed(() => {
@@ -156,7 +165,12 @@ watch(
   { immediate: true }
 );
 
+onMounted(() => {
+  window.addEventListener('keydown', handleKeyDown);
+});
+
 onUnmounted(() => {
+  window.removeEventListener('keydown', handleKeyDown);
   if (rafId) cancelAnimationFrame(rafId);
 });
 
@@ -174,7 +188,14 @@ const hasErrors = (tab: ExecutedResultItem) => {
 </script>
 
 <template>
-  <div class="h-full flex w-full">
+  <div
+    :class="
+      cn(
+        'h-full flex w-full bg-background transition-all duration-200',
+        isFullscreen ? 'fixed inset-0 z-[999] pt-10 px-0 pb-0' : ''
+      )
+    "
+  >
     <!-- Vertical view tabs (left side) -->
     <div class="flex mt-7 [writing-mode:vertical-rl]" v-if="activeTab">
       <div
@@ -231,75 +252,103 @@ const hasErrors = (tab: ExecutedResultItem) => {
       </div>
     </div>
 
-    <div class="h-full w-full flex flex-col">
-      <!-- Horizontal result tabs (top) -->
-      <div class="flex items-end overflow-x-auto pt-0.5">
-        <ContextMenu>
-          <ContextMenuTrigger class="flex items-end">
-            <Tooltip v-for="[tabId, tab] in executedResults" :key="tabId">
-              <TooltipTrigger as-child>
-                <div
-                  @click="$emit('update:activeTab', tabId)"
-                  @contextmenu="currentTabMenuContext = tabId"
-                  :class="
-                    cn(
-                      'h-6! flex gap-0.5 rounded-t-md max-w-44 justify-start! items-center font-normal p-1! hover:[&>div]:opacity-100 transition-all duration-200 border rounded-b-none cursor-pointer relative',
-                      tabId === activeTabId
-                        ? 'border-b-transparent bg-background dark:bg-accent'
-                        : 'border-transparent bg-muted/30'
-                    )
-                  "
-                >
-                  <Icon
-                    :name="
-                      hasErrors(tab) ? 'hugeicons:alert-02' : 'hugeicons:sql'
-                    "
-                    :class="cn('min-w-4', hasErrors(tab) ? 'text-red-500' : '')"
-                  />
-
-                  <div class="truncate text-xs font-medium">
-                    Query {{ tab.seqIndex }} -
-                    {{ tab.metadata.statementQuery }}
-                  </div>
-
+    <div class="h-full w-full flex flex-col min-w-0">
+      <!-- Horizontal result tabs bar -->
+      <div class="flex items-end justify-between flex-shrink-0 w-full">
+        <!-- Horizontal result tabs (top) -->
+        <div class="flex items-end overflow-x-auto pt-0.5 flex-1 min-w-0 pr-4">
+          <ContextMenu>
+            <ContextMenuTrigger class="flex items-end">
+              <Tooltip v-for="[tabId, tab] in executedResults" :key="tabId">
+                <TooltipTrigger as-child>
                   <div
-                    @click.stop="$emit('close-tab', tabId)"
-                    class="hover:bg-accent h-5 w-5 flex items-center justify-center rounded-full opacity-0"
+                    @click="$emit('update:activeTab', tabId)"
+                    @contextmenu="currentTabMenuContext = tabId"
+                    :class="
+                      cn(
+                        'h-6! flex gap-0.5 rounded-t-md max-w-44 justify-start! items-center font-normal p-1! hover:[&>div]:opacity-100 transition-all duration-200 border rounded-b-none cursor-pointer relative',
+                        tabId === activeTabId
+                          ? 'border-b-transparent bg-background dark:bg-accent'
+                          : 'border-transparent bg-muted/30'
+                      )
+                    "
                   >
-                    <Icon name="lucide:x" class="stroke-[2.5]! size-3!" />
+                    <Icon
+                      :name="
+                        hasErrors(tab) ? 'hugeicons:alert-02' : 'hugeicons:sql'
+                      "
+                      :class="
+                        cn('min-w-4', hasErrors(tab) ? 'text-red-500' : '')
+                      "
+                    />
+
+                    <div class="truncate text-xs font-medium">
+                      Query {{ tab.seqIndex }} -
+                      {{ tab.metadata.statementQuery }}
+                    </div>
+
+                    <div
+                      @click.stop="$emit('close-tab', tabId)"
+                      class="hover:bg-accent h-5 w-5 flex items-center justify-center rounded-full opacity-0"
+                    >
+                      <Icon name="lucide:x" class="stroke-[2.5]! size-3!" />
+                    </div>
                   </div>
-                </div>
-              </TooltipTrigger>
+                </TooltipTrigger>
 
-              <TooltipContent class="max-w-xl">
-                <p>{{ tab.metadata.statementQuery }}</p>
-              </TooltipContent>
-            </Tooltip>
-          </ContextMenuTrigger>
+                <TooltipContent class="max-w-xl">
+                  <p>{{ tab.metadata.statementQuery }}</p>
+                </TooltipContent>
+              </Tooltip>
+            </ContextMenuTrigger>
 
-          <ContextMenuContent
-            hideWhenDetached
-            class="w-56"
-            v-if="currentTabMenuContext"
-          >
-            <ContextMenuItem
-              @select="$emit('close-tab', currentTabMenuContext!)"
+            <ContextMenuContent
+              hideWhenDetached
+              class="w-56"
+              v-if="currentTabMenuContext"
             >
-              Close
-            </ContextMenuItem>
-            <ContextMenuItem
-              @select="$emit('close-other-tabs', currentTabMenuContext!)"
-            >
-              Close Others
-            </ContextMenuItem>
-            <ContextMenuItem
-              :disabled="!isHaveRightItem"
-              @select="$emit('close-tabs-to-right', currentTabMenuContext!)"
-            >
-              Close to the Right
-            </ContextMenuItem>
-          </ContextMenuContent>
-        </ContextMenu>
+              <ContextMenuItem
+                @select="$emit('close-tab', currentTabMenuContext!)"
+              >
+                Close
+              </ContextMenuItem>
+              <ContextMenuItem
+                @select="$emit('close-other-tabs', currentTabMenuContext!)"
+              >
+                Close Others
+              </ContextMenuItem>
+              <ContextMenuItem
+                :disabled="!isHaveRightItem"
+                @select="$emit('close-tabs-to-right', currentTabMenuContext!)"
+              >
+                Close to the Right
+              </ContextMenuItem>
+            </ContextMenuContent>
+          </ContextMenu>
+        </div>
+
+        <!-- Fullscreen Button -->
+        <div class="flex items-center gap-1.5 px-2 pb-1.5 flex-shrink-0">
+          <Tooltip>
+            <TooltipTrigger as-child>
+              <Button
+                @click="isFullscreen = !isFullscreen"
+                :variant="isFullscreen ? 'secondary' : 'ghost'"
+                size="icon"
+                class="size-5 rounded border border-border"
+              >
+                <Icon name="hugeicons:full-screen" class="size-3.5!" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent align="end" side="top">
+              {{
+                isFullscreen
+                  ? 'Zoom In (Restore Normal)'
+                  : 'Zoom Out (Full Screen)'
+              }}
+            </TooltipContent>
+          </Tooltip>
+        </div>
       </div>
 
       <!-- Tab content area -->

@@ -143,6 +143,7 @@ export interface AppConfigPersistedState {
   agentSelectedProvider: AIProvider;
   agentSelectedModel: string;
   quickQuerySafeModeEnabled: boolean;
+  autoDownloadUpdates: boolean;
   spaceDisplay: SpaceDisplay;
   tableAppearanceConfigs: TableAppearanceConfigs;
   customLayouts: CustomLayoutDefinition[];
@@ -365,6 +366,7 @@ export const createDefaultAppConfigState = (): AppConfigPersistedState => ({
   agentSelectedProvider: AIProvider.Google,
   agentSelectedModel: 'gemini-2.5-flash',
   quickQuerySafeModeEnabled: false,
+  autoDownloadUpdates: true,
   spaceDisplay: SpaceDisplay.Default,
   tableAppearanceConfigs: { ...DEFAULT_TABLE_APPEARANCE_CONFIGS },
   customLayouts: [],
@@ -458,6 +460,10 @@ export const normalizeAppConfigState = (
       typeof source.quickQuerySafeModeEnabled === 'boolean'
         ? source.quickQuerySafeModeEnabled
         : fallback.quickQuerySafeModeEnabled,
+    autoDownloadUpdates:
+      typeof source.autoDownloadUpdates === 'boolean'
+        ? source.autoDownloadUpdates
+        : fallback.autoDownloadUpdates,
     spaceDisplay,
     tableAppearanceConfigs: normalizeObject(
       source.tableAppearanceConfigs,

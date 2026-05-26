@@ -4,6 +4,7 @@ import type { Connection } from '~/core/stores';
 import type {
   ImportOptions,
   NativeBackupRuntimeCapability,
+  NativeBackupRuntimeSelection,
   StartDatabaseTransferResponse,
 } from '~/core/types';
 import { useDatabaseTransferJob } from './useDatabaseTransferJob';
@@ -74,10 +75,14 @@ export const useDatabaseImport = (
     success.value = null;
   };
 
-  const importDatabase = async () => {
+  const importDatabase = async (runtime?: NativeBackupRuntimeSelection) => {
     if (!selectedFile.value || !connection.value) return;
 
-    if (capability.value && !capability.value.importAvailable) {
+    if (
+      capability.value &&
+      !capability.value.importAvailable &&
+      !runtime?.executablePath?.trim()
+    ) {
       error.value = capability.value.importMessage;
       success.value = null;
       return;
@@ -101,6 +106,10 @@ export const useDatabaseImport = (
       });
 
       formData.append('options', JSON.stringify(options.value));
+
+      if (runtime?.executablePath?.trim()) {
+        formData.append('runtime', JSON.stringify(runtime));
+      }
 
       const response = await $fetch<StartDatabaseTransferResponse>(
         '/api/database-import/import-database',

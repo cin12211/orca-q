@@ -8,6 +8,10 @@ export interface StreamingDownloadOptions {
   body?: unknown;
   filename: string;
   contentType?: string;
+  saveFilePath?: string;
+  openPath?: string;
+  successTitle?: string;
+  getSuccessDescription?: (sizeBytes: number) => string;
 }
 
 export interface StreamingDownloadState {
@@ -26,12 +30,34 @@ export function useStreamingDownload() {
   const downloadedBytes = ref(0);
   const error = ref<Error | null>(null);
 
+  const combineChunks = (chunks: Uint8Array[], totalBytes: number) => {
+    const fileBytes = new Uint8Array(totalBytes);
+    let offset = 0;
+
+    chunks.forEach(chunk => {
+      fileBytes.set(chunk, offset);
+      offset += chunk.length;
+    });
+
+    return fileBytes;
+  };
+
   /**
    * Download a file using streaming.
    * Shows progress via toast and saves directly as chunks arrive.
    */
   const downloadStream = async (options: StreamingDownloadOptions) => {
-    const { url, method = 'POST', body, filename, contentType } = options;
+    const {
+      url,
+      method = 'POST',
+      body,
+      filename,
+      contentType,
+      saveFilePath,
+      openPath,
+      successTitle,
+      getSuccessDescription,
+    } = options;
 
     isDownloading.value = true;
     downloadedBytes.value = 0;
@@ -91,29 +117,48 @@ export function useStreamingDownload() {
         });
       }
 
-      // Combine chunks into final blob
-      const blob = new Blob(chunks as BlobPart[], {
-        type:
-          contentType ||
-          response.headers.get('Content-Type') ||
-          'application/octet-stream',
-      });
+      const fileBytes = combineChunks(chunks, receivedLength);
+      const electronWindowApi =
+        typeof window !== 'undefined' ? window.electronAPI?.window : undefined;
 
-      // Trigger download
-      const blobUrl = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = blobUrl;
-      a.download = filename;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(blobUrl);
+      if (saveFilePath && electronWindowApi?.writeFile) {
+        await electronWindowApi.writeFile(saveFilePath, fileBytes);
+      } else {
+        const blob = new Blob([fileBytes], {
+          type:
+            contentType ||
+            response.headers.get('Content-Type') ||
+            'application/octet-stream',
+        });
+
+        const blobUrl = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = blobUrl;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(blobUrl);
+      }
 
       const sizeKBFormatted = formatBytes(receivedLength);
-      toast.success(`Exported ${filename}`, {
+      toast.success(successTitle || `Exported ${filename}`, {
         id: toastId,
-        description: `${sizeKBFormatted} downloaded`,
+        description:
+          getSuccessDescription?.(receivedLength) ||
+          (saveFilePath
+            ? `${sizeKBFormatted} saved to ${saveFilePath}`
+            : `${sizeKBFormatted} downloaded`),
         position: 'bottom-right',
+        action:
+          openPath && electronWindowApi?.openPath
+            ? {
+                label: 'Open',
+                onClick: () => {
+                  void electronWindowApi.openPath(openPath);
+                },
+              }
+            : undefined,
       });
 
       return { success: true, size: receivedLength };

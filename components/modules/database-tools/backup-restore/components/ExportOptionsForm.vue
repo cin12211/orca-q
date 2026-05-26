@@ -10,7 +10,10 @@ import type {
 
 interface Props {
   schemas: string[];
+  schemaLoading?: boolean;
+  schemaError?: string | null;
   loading?: boolean;
+  disabled?: boolean;
   formatOptions: NativeBackupRuntimeFormatOption[];
   defaultFormat?: NativeBackupRuntimeFormat | null;
   toolHint?: string;
@@ -112,9 +115,13 @@ const onSubmit = () => {
       </Select>
     </div>
 
-    <div v-if="schemas.length > 0" class="space-y-2">
+    <div
+      v-if="schemaLoading || schemaError || schemas.length > 0"
+      class="space-y-2"
+    >
       <Label>Schemas (optional)</Label>
       <div
+        v-if="schemas.length > 0"
         class="flex flex-wrap gap-2 max-h-32 overflow-y-auto p-2 border rounded-md"
       >
         <Badge
@@ -134,7 +141,13 @@ const onSubmit = () => {
           {{ schema }}
         </Badge>
       </div>
-      <p class="text-xs text-muted-foreground">
+      <p v-if="schemaError" class="text-xs text-destructive">
+        {{ schemaError }}
+      </p>
+      <p v-else-if="schemaLoading" class="text-xs text-muted-foreground">
+        Loading schemas...
+      </p>
+      <p v-else class="text-xs text-muted-foreground">
         {{
           selectedSchemas.length
             ? `${selectedSchemas.length} selected`
@@ -143,7 +156,7 @@ const onSubmit = () => {
       </p>
     </div>
 
-    <Button class="w-full" :disabled="loading" @click="onSubmit">
+    <Button class="w-full" :disabled="loading || disabled" @click="onSubmit">
       <Icon
         v-if="loading"
         name="hugeicons:loading-03"

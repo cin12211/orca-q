@@ -42,4 +42,8 @@ export function createLogger(scopeLabel: string) {
   return log.scope(scopeLabel);
 }
 
+export function getElectronLogPath(): string {
+  return log.transports.file.getFile().path;
+}
+
 export { log as electronLog };

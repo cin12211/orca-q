@@ -2,6 +2,7 @@ import type { ISSLConfig, ISSHConfig } from '~/components/modules/connection';
 import { DatabaseClientType } from '~/core/constants/database-client-type';
 import type {
   ImportOptions,
+  NativeBackupRuntimeSelection,
   StartDatabaseTransferResponse,
 } from '~/core/types';
 import { createDatabaseHttpError } from '~/server/infrastructure/database/adapters/shared/error';
@@ -29,6 +30,7 @@ export default defineEventHandler(async event => {
   let filePath = '';
   let type: DatabaseClientType | undefined;
   let options: ImportOptions = {};
+  let runtime: NativeBackupRuntimeSelection | undefined;
   let fileData: Buffer | null = null;
   let ssl: ISSLConfig | undefined;
   let ssh: ISSHConfig | undefined;
@@ -57,6 +59,14 @@ export default defineEventHandler(async event => {
         options = JSON.parse(field.data.toString());
       } catch {
         options = {};
+      }
+    } else if (field.name === 'runtime') {
+      try {
+        runtime = JSON.parse(
+          field.data.toString()
+        ) as NativeBackupRuntimeSelection;
+      } catch {
+        runtime = undefined;
       }
     } else if (field.name === 'ssl') {
       try {
@@ -112,6 +122,7 @@ export default defineEventHandler(async event => {
       filePath,
       type,
       options,
+      runtime,
       ssl,
       ssh,
       fileData,

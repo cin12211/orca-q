@@ -4,9 +4,14 @@ import type { DatabaseClientType } from '~/core/constants/database-client-type';
 interface Props {
   supportMessage: string;
   connectionType?: DatabaseClientType | null;
+  isLoading?: boolean;
 }
 
 defineProps<Props>();
+
+const emit = defineEmits<{
+  reload: [];
+}>();
 
 const postgresCode = `brew install postgresql # macOS
 apt-get install postgresql-client # Linux
@@ -48,6 +53,33 @@ apt-get install sqlite3 # Linux
           :code="sqliteCode"
           language="bash"
         />
+      </div>
+
+      <div
+        class="mt-4 pt-2 border-t border-border/40 flex flex-wrap items-center gap-3"
+      >
+        <Button
+          size="sm"
+          variant="outline"
+          class="cursor-pointer transition-all duration-300 hover:bg-accent hover:text-accent-foreground active:scale-95 group"
+          :disabled="isLoading"
+          @click="emit('reload')"
+        >
+          <Icon
+            name="hugeicons:refresh"
+            :class="[
+              'size-4 mr-2 shrink-0',
+              isLoading
+                ? 'animate-spin'
+                : 'transition-transform duration-500 group-hover:rotate-180',
+            ]"
+          />
+          {{ isLoading ? 'Checking...' : 'Check Again' }}
+        </Button>
+        <span class="text-[11px] text-muted-foreground">
+          Installed the tools? Click check again to re-detect capabilities and
+          enable Backup & Restore.
+        </span>
       </div>
     </AlertDescription>
   </Alert>

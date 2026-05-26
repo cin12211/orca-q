@@ -93,15 +93,44 @@ export interface StartDatabaseTransferResponse {
   downloadUrl?: string;
 }
 
-export type NativeBackupRuntimeFormat = Extract<
-  ExportFormat,
-  'plain' | 'custom'
->;
+export enum NativeBackupTool {
+  PG_DUMP = 'pg_dump',
+  PG_RESTORE = 'pg_restore',
+  PSQL = 'psql',
+  MYSQLPUMP = 'mysqlpump',
+  MYSQLDUMP = 'mysqldump',
+  MYSQL = 'mysql',
+  SQLITE3 = 'sqlite3',
+  EXPDP = 'expdp',
+  IMPDP = 'impdp',
+}
 
-export type NativeBackupFileKind = 'archive' | 'sql';
+export type NativeBackupToolName = `${NativeBackupTool}`;
+
+export interface NativeBackupRuntimeToolPath {
+  tool: NativeBackupToolName;
+  path: string;
+}
+
+export interface NativeBackupRuntimeSelection {
+  tool?: NativeBackupToolName;
+  executablePath?: string;
+}
+
+export enum NativeBackupFileKind {
+  ARCHIVE = 'archive',
+  SQL = 'sql',
+}
+
+export enum NativeExportFormat {
+  PLAIN = 'plain',
+  CUSTOM = 'custom',
+}
+
+export type NativeBackupRuntimeFormat = `${NativeExportFormat}`;
 
 export interface NativeBackupRuntimeFormatOption {
-  format: NativeBackupRuntimeFormat;
+  format: NativeExportFormat;
   extension: string;
   label: string;
   fileKind: NativeBackupFileKind;
@@ -118,9 +147,11 @@ export interface NativeBackupRuntimeCapability {
   importAvailable: boolean;
   formatOptions: NativeBackupRuntimeFormatOption[];
   acceptExtensions: string;
-  defaultExportFormat: NativeBackupRuntimeFormat | null;
+  defaultExportFormat: NativeExportFormat | null;
   availableExportTools: string[];
   availableImportTools: string[];
+  availableExportToolPaths: NativeBackupRuntimeToolPath[];
+  availableImportToolPaths: NativeBackupRuntimeToolPath[];
   missingExportTools: string[];
   missingImportTools: string[];
   supportMessage: string;
@@ -140,6 +171,7 @@ export interface ExportDatabaseRequest {
   dbConnectionString: string;
   databaseName: string;
   options: ExportOptions;
+  runtime?: NativeBackupRuntimeSelection;
 }
 
 export type ExportDatabaseResponse = StartDatabaseTransferResponse;
@@ -191,6 +223,7 @@ export interface ImportOptions {
 export interface ImportDatabaseRequest {
   dbConnectionString: string;
   options: ImportOptions;
+  runtime?: NativeBackupRuntimeSelection;
   // File is sent as multipart form data
 }
 

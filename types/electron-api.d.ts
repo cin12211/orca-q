@@ -10,15 +10,41 @@ type PersistMatchMode = 'all' | 'any';
 
 interface ElectronUpdaterInfo {
   version: string;
+  currentVersion: string;
   releaseDate?: string;
   releaseNotes?: string;
 }
+
+type ElectronUpdaterCheckResult =
+  | {
+      status: 'available';
+      updateInfo: ElectronUpdaterInfo;
+    }
+  | {
+      status: 'ready';
+      updateInfo: ElectronUpdaterInfo;
+    }
+  | {
+      status: 'up-to-date';
+      currentVersion: string;
+    };
 
 interface ElectronDownloadProgress {
   bytesPerSecond: number;
   percent: number;
   transferred: number;
   total: number;
+}
+
+interface ElectronSaveDialogFilter {
+  name: string;
+  extensions: string[];
+}
+
+interface ElectronSaveDialogOptions {
+  title?: string;
+  defaultPath?: string;
+  filters?: ElectronSaveDialogFilter[];
 }
 
 interface ElectronPersistAPI {
@@ -55,7 +81,7 @@ interface ElectronPersistAPI {
 }
 
 interface ElectronUpdaterAPI {
-  check: () => Promise<ElectronUpdaterInfo | null>;
+  check: () => Promise<ElectronUpdaterCheckResult | null>;
   download: () => Promise<void>;
   install: () => Promise<void>;
   onUpdateAvailable: (cb: (info: ElectronUpdaterInfo) => void) => () => void;
@@ -70,8 +96,14 @@ interface ElectronWindowAPI {
   maximize: () => Promise<void>;
   close: () => Promise<void>;
   pickSqliteFile: () => Promise<string | null>;
+  pickSaveFile: (options?: ElectronSaveDialogOptions) => Promise<string | null>;
+  pickDirectory: () => Promise<string | null>;
+  writeFile: (filePath: string, data: Uint8Array) => Promise<void>;
+  openPath: (targetPath: string) => Promise<string>;
   getStoragePath: () => Promise<string>;
   openStoragePath: () => Promise<void>;
+  getLogPath: () => Promise<string>;
+  openLogFile: () => Promise<void>;
   resetAllData: () => Promise<void>;
   onOpenSettings: (cb: () => void) => () => void;
 }

@@ -69,13 +69,44 @@ const indicatorIcon = computed(() => {
   return 'hugeicons:arrow-up-01';
 });
 
-// T016 — stall state gets yellow colour
-const indicatorClass = computed(() => {
-  if (status.value === 'error') return 'text-destructive';
-  if (status.value === 'downloading' && isDownloadStalled.value)
-    return 'text-yellow-500';
-  if (readyToRestartUpdate.value) return 'text-green-500';
-  return 'text-blue-500';
+const indicatorButtonClass = computed(() => {
+  if (readyToRestartUpdate.value) {
+    return 'border-green-500/40 bg-green-500/10 text-green-600 hover:bg-green-500/15';
+  }
+
+  if (status.value === 'downloading' && isDownloadStalled.value) {
+    return 'border-yellow-500/40 bg-yellow-500/10 text-yellow-600 hover:bg-yellow-500/15';
+  }
+
+  if (status.value === 'downloading') {
+    return 'border-blue-500/40 bg-blue-500/10 text-blue-600 hover:bg-blue-500/15';
+  }
+
+  if (status.value === 'error') {
+    return 'border-destructive/40 bg-destructive/10 text-destructive hover:bg-destructive/15';
+  }
+
+  return 'border-blue-500/40 bg-blue-500/10 text-blue-600 hover:bg-blue-500/15';
+});
+
+const indicatorLabel = computed(() => {
+  if (readyToRestartUpdate.value) {
+    return `Apply update ${readyToRestartUpdate.value.version}`;
+  }
+
+  if (status.value === 'downloading' && isDownloadStalled.value) {
+    return `Update ${displayUpdate.value?.version} stalled`;
+  }
+
+  if (status.value === 'downloading') {
+    return `Update ${displayUpdate.value?.version} ${downloadProgress.value}%`;
+  }
+
+  if (status.value === 'error') {
+    return `Update ${displayUpdate.value?.version} failed`;
+  }
+
+  return `Update ${displayUpdate.value?.version} available`;
 });
 </script>
 
@@ -85,15 +116,13 @@ const indicatorClass = computed(() => {
     <Tooltip v-if="readyToRestartUpdate">
       <TooltipTrigger as-child>
         <button
-          class="flex items-center gap-1 px-1 rounded hover:bg-muted cursor-pointer transition-colors"
-          :class="indicatorClass"
+          class="h-5 max-w-[220px] flex items-center gap-1.5 rounded-sm border px-2 text-xs font-semibold cursor-pointer transition-colors"
+          :class="indicatorButtonClass"
           :disabled="isBusy"
           @click="restartToApplyUpdate()"
         >
-          <Icon :name="indicatorIcon" class="size-3.5!" />
-          <span class="text-xxs font-medium leading-none"
-            >Restart to update</span
-          >
+          <Icon :name="indicatorIcon" class="size-4!" />
+          <span class="truncate leading-none">{{ indicatorLabel }}</span>
         </button>
       </TooltipTrigger>
       <TooltipContent>
@@ -107,20 +136,11 @@ const indicatorClass = computed(() => {
         <PopoverTrigger as-child>
           <TooltipTrigger as-child>
             <button
-              class="flex items-center gap-1 px-1 rounded hover:bg-muted cursor-pointer transition-colors"
-              :class="indicatorClass"
+              class="h-5 max-w-[220px] flex items-center gap-1.5 rounded-sm border px-2 text-xs font-semibold cursor-pointer transition-colors"
+              :class="indicatorButtonClass"
             >
-              <Icon :name="indicatorIcon" class="size-3.5!" />
-              <span class="text-xxs font-medium leading-none">
-                <!-- T013/T014: show % when downloading, 'stalled' when stalled -->
-                <template v-if="status === 'downloading' && isDownloadStalled">
-                  v{{ displayUpdate?.version }} · stalled
-                </template>
-                <template v-else-if="status === 'downloading'">
-                  v{{ displayUpdate?.version }} · {{ downloadProgress }}%
-                </template>
-                <template v-else>v{{ displayUpdate?.version }}</template>
-              </span>
+              <Icon :name="indicatorIcon" class="size-4!" />
+              <span class="truncate leading-none">{{ indicatorLabel }}</span>
             </button>
           </TooltipTrigger>
           <TooltipContent>
@@ -152,7 +172,7 @@ const indicatorClass = computed(() => {
 
           <p
             v-if="displayUpdate?.body"
-            class="text-xs text-muted-foreground whitespace-pre-wrap border rounded-md p-2 bg-muted/30 max-h-32 overflow-y-auto"
+            class="text-xs text-muted-foreground whitespace-pre-wrap border rounded-sm p-2 bg-muted/30 max-h-32 overflow-y-auto"
           >
             {{ displayUpdate.body }}
           </p>
