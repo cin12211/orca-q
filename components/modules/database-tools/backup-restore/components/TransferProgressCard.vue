@@ -7,11 +7,19 @@ interface Props {
   isRunning: boolean;
   /** Tailwind bg class for the progress bar. Defaults to bg-primary. */
   progressClass?: string;
+  actionLabel?: string;
+  actionDisabled?: boolean;
 }
 
 const props = withDefaults(defineProps<Props>(), {
   progressClass: 'bg-primary',
+  actionLabel: undefined,
+  actionDisabled: false,
 });
+
+const emit = defineEmits<{
+  (e: 'action'): void;
+}>();
 </script>
 
 <template>
@@ -23,7 +31,20 @@ const props = withDefaults(defineProps<Props>(), {
           {{ statusMessage || 'Preparing job...' }}
         </p>
       </div>
-      <span class="text-sm font-medium">{{ progress }}%</span>
+      <div class="flex shrink-0 items-center gap-2">
+        <Button
+          v-if="actionLabel"
+          type="button"
+          variant="outline"
+          size="sm"
+          :disabled="actionDisabled"
+          @click="emit('action')"
+        >
+          <Icon name="lucide:folder-open" class="size-4 mr-2" />
+          {{ actionLabel }}
+        </Button>
+        <span class="text-sm font-medium">{{ progress }}%</span>
+      </div>
     </div>
 
     <div class="mt-3 h-2 overflow-hidden rounded-full bg-border/60">

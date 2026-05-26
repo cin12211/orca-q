@@ -36,6 +36,17 @@ interface ElectronDownloadProgress {
   total: number;
 }
 
+interface ElectronSaveDialogFilter {
+  name: string;
+  extensions: string[];
+}
+
+interface ElectronSaveDialogOptions {
+  title?: string;
+  defaultPath?: string;
+  filters?: ElectronSaveDialogFilter[];
+}
+
 interface ElectronPersistAPI {
   getAll: <T = Record<string, unknown>>(
     collection: PersistCollection
@@ -85,6 +96,10 @@ interface ElectronWindowAPI {
   maximize: () => Promise<void>;
   close: () => Promise<void>;
   pickSqliteFile: () => Promise<string | null>;
+  pickSaveFile: (options?: ElectronSaveDialogOptions) => Promise<string | null>;
+  pickDirectory: () => Promise<string | null>;
+  writeFile: (filePath: string, data: Uint8Array) => Promise<void>;
+  openPath: (targetPath: string) => Promise<string>;
   getStoragePath: () => Promise<string>;
   openStoragePath: () => Promise<void>;
   getLogPath: () => Promise<string>;

@@ -107,6 +107,16 @@ export enum NativeBackupTool {
 
 export type NativeBackupToolName = `${NativeBackupTool}`;
 
+export interface NativeBackupRuntimeToolPath {
+  tool: NativeBackupToolName;
+  path: string;
+}
+
+export interface NativeBackupRuntimeSelection {
+  tool?: NativeBackupToolName;
+  executablePath?: string;
+}
+
 export enum NativeBackupFileKind {
   ARCHIVE = 'archive',
   SQL = 'sql',
@@ -140,6 +150,8 @@ export interface NativeBackupRuntimeCapability {
   defaultExportFormat: NativeExportFormat | null;
   availableExportTools: string[];
   availableImportTools: string[];
+  availableExportToolPaths: NativeBackupRuntimeToolPath[];
+  availableImportToolPaths: NativeBackupRuntimeToolPath[];
   missingExportTools: string[];
   missingImportTools: string[];
   supportMessage: string;
@@ -159,6 +171,7 @@ export interface ExportDatabaseRequest {
   dbConnectionString: string;
   databaseName: string;
   options: ExportOptions;
+  runtime?: NativeBackupRuntimeSelection;
 }
 
 export type ExportDatabaseResponse = StartDatabaseTransferResponse;
@@ -210,6 +223,7 @@ export interface ImportOptions {
 export interface ImportDatabaseRequest {
   dbConnectionString: string;
   options: ImportOptions;
+  runtime?: NativeBackupRuntimeSelection;
   // File is sent as multipart form data
 }
 

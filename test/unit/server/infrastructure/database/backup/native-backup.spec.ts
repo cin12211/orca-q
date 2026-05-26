@@ -144,6 +144,7 @@ describe('native-backup capability helpers', () => {
 
   it('detects partial PostgreSQL tool availability from PATH', async () => {
     const fakeToolDir = await createFakeTool('pg_dump');
+    const fakeToolPath = join(fakeToolDir, 'pg_dump');
 
     vi.stubEnv('PATH', fakeToolDir);
 
@@ -155,7 +156,36 @@ describe('native-backup capability helpers', () => {
     expect(capability.exportAvailable).toBe(true);
     expect(capability.importAvailable).toBe(false);
     expect(capability.availableExportTools).toEqual(['pg_dump']);
+    expect(capability.availableExportToolPaths).toEqual([
+      {
+        tool: 'pg_dump',
+        path: fakeToolPath,
+      },
+    ]);
     expect(capability.missingImportTools).toEqual(['pg_restore', 'psql']);
+  });
+
+  it('returns multiple executable paths when more than one version is available on PATH', async () => {
+    const firstToolDir = await createFakeTool('pg_dump');
+    const secondToolDir = await createFakeTool('pg_dump');
+
+    vi.stubEnv('PATH', `${firstToolDir}${delimiter}${secondToolDir}`);
+
+    const capability = await getNativeBackupRuntimeCapability(
+      DatabaseClientType.POSTGRES
+    );
+
+    expect(capability.availableExportTools).toEqual(['pg_dump']);
+    expect(capability.availableExportToolPaths).toEqual([
+      {
+        tool: 'pg_dump',
+        path: join(firstToolDir, 'pg_dump'),
+      },
+      {
+        tool: 'pg_dump',
+        path: join(secondToolDir, 'pg_dump'),
+      },
+    ]);
   });
 
   it('blocks export when no native tool is installed on PATH', async () => {
