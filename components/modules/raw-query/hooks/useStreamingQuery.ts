@@ -63,25 +63,14 @@ export interface StreamingQueryCallbacks {
  * abort();
  * ```
  */
-export function executeStreamingQuery({
-  query,
-  dbConnectionString,
-  type,
-  providerKind,
-  managedSqlite,
-  params,
-  onMeta,
-  onRows,
-  onDone,
-  onError,
-}: {
-  query: string;
-  dbConnectionString: string;
-  type?: string;
-  providerKind?: string;
-  managedSqlite?: IManagedSqliteConfig;
-  params?: Record<string, unknown>;
-} & StreamingQueryCallbacks) {
+export function executeStreamingQuery(
+  payload: {
+    query: string;
+    params?: Record<string, unknown>;
+    [key: string]: any;
+  } & StreamingQueryCallbacks
+) {
+  const { onMeta, onRows, onDone, onError, query, params, ...connectionParams } = payload;
   const controller = new AbortController();
   let totalRows = 0;
 
@@ -92,11 +81,8 @@ export function executeStreamingQuery({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           query,
-          dbConnectionString,
-          type,
-          providerKind,
-          managedSqlite,
           params: params || {},
+          ...connectionParams,
         }),
         signal: controller.signal,
       });

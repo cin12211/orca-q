@@ -4,6 +4,7 @@ import { MysqlMetadataAdapter } from './mysql/mysql-metadata.adapter';
 import { OracleMetadataAdapter } from './oracle/oracle-metadata.adapter';
 import { PostgresMetadataAdapter } from './postgres/postgres-metadata.adapter';
 import { SqliteMetadataAdapter } from './sqlite/sqlite-metadata.adapter';
+import { MssqlMetadataAdapter } from './mssql/mssql-metadata.adapter';
 import type {
   IDatabaseMetadataAdapter,
   DatabaseMetadataAdapterParams,
@@ -24,5 +25,6 @@ export async function createMetadataAdapter(
       MysqlMetadataAdapter.create(params, DatabaseClientType.MARIADB),
     oracledb: OracleMetadataAdapter.create,
     sqlite3: SqliteMetadataAdapter.create,
+    mssql: MssqlMetadataAdapter.create,
   });
 }

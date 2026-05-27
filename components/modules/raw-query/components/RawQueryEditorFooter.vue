@@ -23,7 +23,7 @@ import type {
 
 const isExplainAnalyzeMenuOpen = ref(false);
 
-defineProps<{
+const props = defineProps<{
   cursorInfo: EditorCursor;
   isHaveOneExecute: boolean;
   executeLoading: boolean;
@@ -50,6 +50,35 @@ defineEmits<{
   (e: 'update:isRawViewMode', value: boolean): void;
   (e: 'onCancelQuery'): void;
 }>();
+
+const elapsedSeconds = ref(0);
+let timerId: any = null;
+
+watch(() => props.isStreaming, (newVal) => {
+  if (newVal) {
+    elapsedSeconds.value = 0;
+    timerId = setInterval(() => {
+      elapsedSeconds.value++;
+    }, 1000);
+  } else {
+    if (timerId) {
+      clearInterval(timerId);
+      timerId = null;
+    }
+  }
+}, { immediate: true });
+
+onBeforeUnmount(() => {
+  if (timerId) clearInterval(timerId);
+});
+
+const formattedElapsed = computed(() => {
+  const s = elapsedSeconds.value;
+  if (s < 60) return `${s}s`;
+  const m = Math.floor(s / 60);
+  const r = s % 60;
+  return `${m}m ${r}s`;
+});
 </script>
 <template>
   <div class="h-fit py-1 flex items-center justify-between px-2">
@@ -67,7 +96,7 @@ defineEmits<{
     >
       <span v-if="isStreaming" class="flex items-center gap-1">
         <Icon name="hugeicons:loading-03" class="size-4! animate-spin" />
-        Streaming... {{ formatNumber(streamingRowCount) }} rows
+        ({{ formattedElapsed }}) Streaming... {{ formatNumber(streamingRowCount) }} rows
       </span>
       <span v-else-if="executeLoading" class="flex items-center gap-1"
         >Processing
@@ -223,26 +252,21 @@ defineEmits<{
       </Tooltip>
 
       <Tooltip>
-        <TooltipTrigger as-child>
-          <Button
-            v-if="isStreaming || executeLoading"
-            @click="$emit('onCancelQuery')"
-            variant="outline"
-            size="xxs"
-          >
-            <Icon name="hugeicons:stop" class="size-4! text-red-500" />
-            Cancel query
-          </Button>
-          <Button
-            v-else
-            @click="$emit('onExecuteCurrent')"
-            variant="outline"
-            size="xxs"
-          >
-            <Icon name="hugeicons:play" />
-            Execute current
-            <ContextMenuShortcut>⌘↵</ContextMenuShortcut>
-          </Button>
+        <TooltipTrigger>
+          <div class="flex items-center">
+            <Button
+              @click="(isStreaming || executeLoading) ? $emit('onCancelQuery') : $emit('onExecuteCurrent')"
+              variant="outline"
+              size="xxs"
+            >
+              <Icon
+                :name="(isStreaming || executeLoading) ? 'hugeicons:stop' : 'hugeicons:play'"
+                :class="{ 'text-red-500': isStreaming || executeLoading }"
+              />
+              {{ (isStreaming || executeLoading) ? 'Cancel query' : 'Execute current' }}
+              <ContextMenuShortcut v-if="!(isStreaming || executeLoading)">⌘↵</ContextMenuShortcut>
+            </Button>
+          </div>
         </TooltipTrigger>
         <TooltipContent>
           <p v-if="isStreaming || executeLoading">Cancel query</p>

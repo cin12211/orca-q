@@ -14,6 +14,8 @@ import {
   isSqliteConnectionDisabled,
 } from '../connection';
 
+defineOptions({ inheritAttrs: false });
+
 const emit = defineEmits<{
   (e: 'update:connectionId', connectionId: string): void;
 }>();
@@ -117,6 +119,7 @@ const getConnectionSupportIconProps = (connection?: Connection) => {
     size="sm"
   >
     <SelectTrigger
+      v-bind="$attrs"
       :class="cn('cursor-pointer font-normal', props.class)"
       :disabled="disabled"
     >

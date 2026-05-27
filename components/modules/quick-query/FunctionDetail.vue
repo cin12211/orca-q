@@ -63,9 +63,11 @@ const openErrorModal = ref(false);
 const openPreviewModal = ref(false);
 const previewSql = ref('');
 
-const normalizedCode = computed(() => generateRoutineUpdateSQL(code.value));
+const normalizedCode = computed(() =>
+  generateRoutineUpdateSQL(code.value, connection.value?.type)
+);
 const normalizedOriginalCode = computed(() =>
-  generateRoutineUpdateSQL(originalCode.value)
+  generateRoutineUpdateSQL(originalCode.value, connection.value?.type)
 );
 
 const hasChanges = computed(
@@ -128,7 +130,7 @@ const getValidatedUpdateSql = () => {
     return;
   }
 
-  const nextPreviewSql = generateRoutineUpdateSQL(code.value);
+  const nextPreviewSql = generateRoutineUpdateSQL(code.value, connection.value?.type);
   const routineType = getRoutineDefinitionType(nextPreviewSql);
 
   if (!routineType) {

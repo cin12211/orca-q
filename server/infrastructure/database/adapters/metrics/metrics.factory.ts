@@ -4,6 +4,7 @@ import { MysqlMetricsAdapter } from './mysql/mysql-metrics.adapter';
 import { OracleMetricsAdapter } from './oracle/oracle-metrics.adapter';
 import { PostgresMetricsAdapter } from './postgres/postgres-metrics.adapter';
 import { SqliteMetricsAdapter } from './sqlite/sqlite-metrics.adapter';
+import { MssqlMetricsAdapter } from './mssql/mssql-metrics.adapter';
 import type {
   IDatabaseMetricsAdapter,
   DatabaseMetricsAdapterParams,
@@ -23,5 +24,6 @@ export async function createMetricsAdapter(
       MysqlMetricsAdapter.create(createParams, DatabaseClientType.MARIADB),
     oracledb: OracleMetricsAdapter.create,
     sqlite3: SqliteMetricsAdapter.create,
+    mssql: MssqlMetricsAdapter.create,
   });
 }

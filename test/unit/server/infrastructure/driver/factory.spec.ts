@@ -6,6 +6,7 @@ import {
 } from '~/core/types/entities/connection.entity';
 import { createDatabaseAdapter } from '~/server/infrastructure/driver/factory';
 import { SqliteAdapter } from '~/server/infrastructure/driver/sqlite.adapter';
+import { MssqlAdapter } from '~/server/infrastructure/driver/mssql.adapter';
 
 const { createManagedSqliteAdapterMock } = vi.hoisted(() => ({
   createManagedSqliteAdapterMock: vi.fn(),
@@ -65,5 +66,20 @@ describe('createDatabaseAdapter', () => {
 
     expect(adapter).toBeInstanceOf(SqliteAdapter);
     expect(createManagedSqliteAdapterMock).not.toHaveBeenCalled();
+  });
+
+  it('creates an instance of MssqlAdapter for DatabaseClientType.MSSQL', () => {
+    const adapter = createDatabaseAdapter(
+      DatabaseClientType.MSSQL,
+      {
+        host: '127.0.0.1',
+        port: 1433,
+        user: 'sa',
+        password: 'password',
+        database: 'test',
+      }
+    );
+
+    expect(adapter).toBeInstanceOf(MssqlAdapter);
   });
 });
