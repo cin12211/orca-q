@@ -11,12 +11,14 @@ import { useVueFlow } from '@vue-flow/core';
 import { Kbd, KbdGroup } from '~/components/ui/kbd';
 import { DEFAULT_ZOOM_DURATION } from '../../constants';
 import type { BackGroundGridStatus } from '../../type';
+import ErdExportMenu from './ErdExportMenu.vue';
 
 const props = defineProps<{
   isHand: boolean;
   isUseBgGrid: BackGroundGridStatus;
   isUseMiniMap: boolean;
   isShowFilter: boolean;
+  isExporting?: boolean;
 }>();
 
 const { zoomIn, zoomOut, fitView, getViewport } = useVueFlow();
@@ -27,6 +29,10 @@ const emit = defineEmits<{
   (e: 'update:isUseMiniMap', value: boolean): void;
   (e: 'update:isShowFilter', value: boolean): void;
   (e: 'arrange'): void;
+  (e: 'export-mermaid'): void;
+  (e: 'export-json'): void;
+  (e: 'export-image'): void;
+  (e: 'export-pdf'): void;
 }>();
 
 const zoomPercent = computed(() => Math.round(getViewport().zoom * 100));
@@ -178,5 +184,16 @@ const onFitToView = () => fitView({ duration: DEFAULT_ZOOM_DURATION });
         </KbdGroup>
       </TooltipContent>
     </Tooltip>
+
+    <Separator orientation="vertical" class="mx-1.5" />
+
+    <!-- Export -->
+    <ErdExportMenu
+      :is-exporting="isExporting"
+      @export-mermaid="emit('export-mermaid')"
+      @export-json="emit('export-json')"
+      @export-image="emit('export-image')"
+      @export-pdf="emit('export-pdf')"
+    />
   </div>
 </template>
