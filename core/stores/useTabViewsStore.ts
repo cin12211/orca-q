@@ -233,17 +233,19 @@ export const useTabViewsStore = defineStore(
       const tabToClose = getTabById(tabId);
 
       if (tabToClose) {
-        // Leave the current route before removing the tab backing it.
         if (activeTab.value?.id === tabId) {
-          await navigateAwayFromClosingTab(tabToClose);
+          // Run navigation and storage delete in parallel
+          await Promise.all([
+            navigateAwayFromClosingTab(tabToClose),
+            deletePersistedTab(tabToClose),
+          ]);
+        } else {
+          await deletePersistedTab(tabToClose);
         }
 
-        await deletePersistedTab(tabToClose);
         removeTabsFromState([tabId]);
       } else {
         logMissingTab(tabId);
-        // throw new Error(`Tab with ID ${tabId} does not exist.`);
-
         await navigateToConnectionRoot();
       }
     };

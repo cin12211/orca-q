@@ -10,6 +10,7 @@ import { MysqlAdapter } from './mysql.adapter';
 import { OracleAdapter } from './oracle.adapter';
 import { PostgresAdapter } from './postgres.adapter';
 import { SqliteAdapter } from './sqlite.adapter';
+import { MssqlAdapter } from './mssql.adapter';
 import type { IDatabaseAdapter } from './types';
 
 type AdapterFactory = (
@@ -23,6 +24,7 @@ const ADAPTER_FACTORIES: Partial<Record<DatabaseClientType, AdapterFactory>> = {
     new MysqlAdapter(connection, DatabaseClientType.MARIADB),
   [DatabaseClientType.ORACLE]: connection => new OracleAdapter(connection),
   [DatabaseClientType.SQLITE3]: connection => new SqliteAdapter(connection),
+  [DatabaseClientType.MSSQL]: connection => new MssqlAdapter(connection),
 };
 
 export function createDatabaseAdapter(

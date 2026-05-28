@@ -1,12 +1,47 @@
 /**
- * SQL generators for PostgreSQL functions.
- * Used by the schema context menu to generate SQL statements.
+ * SQL generators for database functions/procedures.
+ * Used by the schema context menu and the function editor to generate SQL statements.
  */
+
+import { DatabaseClientType } from '~/core/constants/database-client-type';
 
 export type RoutineDefinitionType = 'FUNCTION' | 'PROCEDURE';
 
+// Matches:
+//   CREATE OR REPLACE FUNCTION/PROCEDURE  (PostgreSQL, MySQL)
+//   CREATE OR ALTER  FUNCTION/PROCEDURE   (T-SQL / MSSQL)
+//   CREATE           FUNCTION/PROCEDURE   (MSSQL, Oracle, etc.)
+//   ALTER            FUNCTION/PROCEDURE   (MSSQL after transform)
 const ROUTINE_DEFINITION_PATTERN =
-  /^create(?:\s+or\s+replace)?\s+(function|procedure)\b/i;
+  /^(?:create(?:\s+or\s+(?:replace|alter))?|alter)\s+(function|procedure)\b/i;
+
+// Matches the CREATE prefix (with any optional OR REPLACE / OR ALTER clause) to be replaced with ALTER.
+const MSSQL_CREATE_TO_ALTER_PATTERN =
+  /^(create(?:\s+or\s+(?:replace|alter))?)(\s+(?:function|procedure)\b)/i;
+
+// Matches the CREATE prefix (with optional OR REPLACE) to be replaced with CREATE OR REPLACE.
+const CREATE_TO_CREATE_OR_REPLACE_PATTERN =
+  /^(create(?:\s+or\s+replace)?)(\s+(?:function|procedure)\b)/i;
+
+/**
+ * For MSSQL, convert `CREATE [OR ALTER] FUNCTION/PROCEDURE` to `ALTER FUNCTION/PROCEDURE`.
+ * MSSQL does not support CREATE OR REPLACE; the correct DDL keyword is ALTER.
+ * Returns the original string unchanged for all other inputs.
+ */
+export function convertCreateToAlterMssql(sql: string): string {
+  return sql.replace(MSSQL_CREATE_TO_ALTER_PATTERN, (_, _createClause, routineKind) =>
+    `ALTER${routineKind}`
+  );
+}
+
+/**
+ * For PostgreSQL, MySQL, MariaDB, Oracle, convert `CREATE FUNCTION/PROCEDURE` to `CREATE OR REPLACE FUNCTION/PROCEDURE`.
+ */
+export function convertCreateToCreateOrReplace(sql: string): string {
+  return sql.replace(CREATE_TO_CREATE_OR_REPLACE_PATTERN, (_, _createClause, routineKind) =>
+    `CREATE OR REPLACE${routineKind}`
+  );
+}
 
 export function getRoutineDefinitionType(
   functionDef: string
@@ -20,14 +55,35 @@ export function getRoutineDefinitionType(
   return match[1].toUpperCase() as RoutineDefinitionType;
 }
 
-export function generateRoutineUpdateSQL(functionDef: string): string {
+export function generateRoutineUpdateSQL(
+  functionDef: string,
+  dbType?: DatabaseClientType
+): string {
   const trimmed = functionDef.trim();
 
   if (!trimmed) {
     return '';
   }
 
-  return `${trimmed.replace(/;+\s*$/, '')};`;
+  const normalized = `${trimmed.replace(/;+\s*$/, '')};`;
+
+  // MSSQL does not support CREATE OR REPLACE — rewrite to ALTER automatically.
+  if (dbType === DatabaseClientType.MSSQL) {
+    return convertCreateToAlterMssql(normalized);
+  }
+
+  // PostgreSQL, MySQL, MariaDB, Oracle support CREATE OR REPLACE — rewrite automatically.
+  if (
+    dbType === DatabaseClientType.POSTGRES ||
+    dbType === DatabaseClientType.MYSQL ||
+    dbType === DatabaseClientType.MYSQL2 ||
+    dbType === DatabaseClientType.MARIADB ||
+    dbType === DatabaseClientType.ORACLE
+  ) {
+    return convertCreateToCreateOrReplace(normalized);
+  }
+
+  return normalized;
 }
 
 /**

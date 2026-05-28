@@ -438,6 +438,17 @@ export function formatWhereClause<F extends readonly FilterSchema[]>({
     return output;
   }
 
+  if (db === DatabaseClientType.MSSQL) {
+    let output = where;
+    params.forEach((value, index) => {
+      output = output.replace(
+        new RegExp(`@p${index + 1}\\b`, 'g'),
+        toLiteral(value)
+      );
+    });
+    return output;
+  }
+
   let parameterIndex = 0;
   return where.replace(/\?/g, () => toLiteral(params[parameterIndex++]));
 }

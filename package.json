@@ -95,10 +95,12 @@
     "electron-log": "^5.4.3",
     "electron-store": "^11.0.2",
     "electron-updater": "^6.8.3",
+    "html2canvas": "^1.4.1",
     "knex": "^3.1.0",
     "mysql2": "^3.22.2",
     "oracledb": "^6.10.0",
-    "redis": "^5.9.0"
+    "redis": "^5.9.0",
+    "tedious": "^19.0.0"
   },
   "devDependencies": {
     "@ai-sdk/anthropic": "^3.0.9",
@@ -203,7 +205,7 @@
     "marked": "^17.0.1",
     "mermaid": "^11.13.0",
     "motion-v": "^2.0.0",
-    "nuxt": "^3.16.2",
+    "nuxt": "3.15.0",
     "nuxt-icon": "^1.0.0-beta.7",
     "nuxt-mcp-dev": "^0.3.2",
     "nuxt-typed-router": "3.8.0",

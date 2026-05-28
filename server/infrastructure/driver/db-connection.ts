@@ -243,12 +243,26 @@ async function resolveHealthCheckConnection({
     sshTunnelClose = tunnel.close;
   }
 
-  const connection: Record<string, unknown> = {
-    host: finalHost,
-    port: finalPort,
-    user: username,
-    password,
-  };
+  let connection: Record<string, any>;
+  if (type === DatabaseClientType.MSSQL) {
+    connection = {
+      server: finalHost,
+      port: finalPort,
+      user: username,
+      password,
+      options: {
+        enableArithAbort: true,
+        trustServerCertificate: true,
+      },
+    };
+  } else {
+    connection = {
+      host: finalHost,
+      port: finalPort,
+      user: username,
+      password,
+    };
+  }
 
   if (serviceName) {
     connection.database = serviceName;
@@ -376,6 +390,18 @@ export const getDatabaseSource = async ({
         connectString: `${finalHost}:${finalPort}/${targetName}`,
         serviceName: targetName,
         database: targetName,
+      };
+    } else if (dbType === DatabaseClientType.MSSQL) {
+      finalConnection = {
+        server: finalHost,
+        port: finalPort,
+        user: username,
+        password,
+        database: targetName,
+        options: {
+          enableArithAbort: true,
+          trustServerCertificate: true,
+        },
       };
     } else {
       finalConnection = {

@@ -109,15 +109,61 @@ describe('schema SQL utils', () => {
     it.each([
       [
         'CREATE OR REPLACE FUNCTION test() RETURNS void AS $$ $$ LANGUAGE sql',
+        undefined,
         'CREATE OR REPLACE FUNCTION test() RETURNS void AS $$ $$ LANGUAGE sql;',
       ],
       [
         '  CREATE OR REPLACE PROCEDURE sync_data() LANGUAGE sql AS $$ $$;  ',
+        undefined,
         'CREATE OR REPLACE PROCEDURE sync_data() LANGUAGE sql AS $$ $$;',
       ],
-      ['', ''],
-    ])('normalizes routine update SQL case %#', (input, expected) => {
-      expect(generateRoutineUpdateSQL(input)).toBe(expected);
+      ['', undefined, ''],
+      // MSSQL: CREATE → ALTER
+      [
+        'CREATE FUNCTION [dbo].[fn_test]()',
+        'mssql',
+        'ALTER FUNCTION [dbo].[fn_test]();',
+      ],
+      [
+        'CREATE PROCEDURE [dbo].[sp_sync]()',
+        'mssql',
+        'ALTER PROCEDURE [dbo].[sp_sync]();',
+      ],
+      [
+        'CREATE OR ALTER FUNCTION [dbo].[fn_test]()',
+        'mssql',
+        'ALTER FUNCTION [dbo].[fn_test]();',
+      ],
+      // MSSQL: already ALTER → unchanged
+      [
+        'ALTER FUNCTION [dbo].[fn_test]()',
+        'mssql',
+        'ALTER FUNCTION [dbo].[fn_test]();',
+      ],
+      // Non-MSSQL (Postgres, MySQL, Oracle): CREATE -> CREATE OR REPLACE
+      [
+        'CREATE FUNCTION test()',
+        'postgres',
+        'CREATE OR REPLACE FUNCTION test();',
+      ],
+      [
+        'CREATE PROCEDURE sync_data()',
+        'mysql',
+        'CREATE OR REPLACE PROCEDURE sync_data();',
+      ],
+      [
+        'CREATE OR REPLACE FUNCTION test()',
+        'postgres',
+        'CREATE OR REPLACE FUNCTION test();',
+      ],
+      // Unsupported or unchanged clients (like sqlite3) stays as-is
+      [
+        'CREATE FUNCTION test()',
+        'sqlite3',
+        'CREATE FUNCTION test();',
+      ],
+    ])('normalizes routine update SQL case %#', (input, dbType, expected) => {
+      expect(generateRoutineUpdateSQL(input, dbType as any)).toBe(expected);
     });
   });
 
@@ -128,7 +174,11 @@ describe('schema SQL utils', () => {
         'FUNCTION',
       ],
       ['create procedure sync_data() language sql as $$ $$;', 'PROCEDURE'],
-      ['ALTER FUNCTION test() RENAME TO test2;', null],
+      // ALTER FUNCTION/PROCEDURE now recognized (after MSSQL transform)
+      ['ALTER FUNCTION [dbo].[fn_test]() AS BEGIN END', 'FUNCTION'],
+      ['ALTER PROCEDURE [dbo].[sp_sync]() AS BEGIN END', 'PROCEDURE'],
+      // Unrelated ALTER returns null
+      ['ALTER TABLE users ADD COLUMN foo INT;', null],
     ])('detects routine definition types case %#', (input, expected) => {
       expect(getRoutineDefinitionType(input)).toBe(expected);
     });
