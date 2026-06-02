@@ -1,0 +1,77 @@
+name: API Tests
+
+on:
+  pull_request:
+    branches:
+      - main
+
+concurrency:
+  group: api-tests-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  BUN_VERSION: 1.2.8
+
+jobs:
+  api-tests:
+    name: Run API integration tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    env:
+      ORCAQ_POSTGRES_PORT: 5432
+      ORCAQ_POSTGRES_DATABASE: pagila
+      ORCAQ_POSTGRES_USER: orcaq
+      ORCAQ_POSTGRES_PASSWORD: orcaq
+      ORCAQ_MYSQL_PORT: 3306
+      ORCAQ_MYSQL_DATABASE: sakila
+      ORCAQ_MYSQL_USER: orcaq
+      ORCAQ_MYSQL_PASSWORD: orcaq
+      ORCAQ_MYSQL_ROOT_PASSWORD: root
+      ORCAQ_MARIADB_PORT: 3307
+      ORCAQ_MARIADB_DATABASE: sakila
+      ORCAQ_MARIADB_USER: orcaq
+      ORCAQ_MARIADB_PASSWORD: orcaq
+      ORCAQ_MARIADB_ROOT_PASSWORD: root
+      ORCAQ_REDIS_PORT: 6379
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: ${{ env.BUN_VERSION }}
+
+      - name: Restore Bun install cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.bun/install/cache
+            node_modules
+          key: ${{ runner.os }}-bun-full-${{ hashFiles('bun.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-bun-full-
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Run Nuxt prepare
+        run: bun nuxt prepare
+
+      - name: Generate optimized SQL fixtures
+        run: node scripts/test-services/generate-optimized-sql-fixtures.mjs
+
+      - name: Start all database fixtures
+        run: bash scripts/test-services/start-fixtures.sh --profile all
+
+      - name: Run API tests
+        run: bun test:api:raw
+
+      - name: Stop all database fixtures
+        if: always()
+        run: bash scripts/test-services/stop-fixtures.sh --profile all
