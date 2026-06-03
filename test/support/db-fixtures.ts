@@ -189,7 +189,7 @@ function buildSqlFixtureConfig(input: {
 export function getPostgresFixtureConfig() {
   return buildSqlFixtureConfig({
     engine: 'postgres',
-    envPrefixes: ['ORCAQ_POSTGRES', 'HERAQ_POSTGRES'],
+    envPrefixes: ['ORCAQ_POSTGRES'],
     defaultPort: 5432,
     defaultDatabase: 'pagila',
     defaultUsername: 'orcaq',
@@ -200,7 +200,7 @@ export function getPostgresFixtureConfig() {
 export function getMysqlFixtureConfig() {
   return buildSqlFixtureConfig({
     engine: 'mysql',
-    envPrefixes: ['ORCAQ_MYSQL', 'HERAQ_MYSQL'],
+    envPrefixes: ['ORCAQ_MYSQL'],
     defaultPort: 3306,
     defaultDatabase: 'sakila',
     defaultUsername: 'orcaq',
@@ -211,7 +211,7 @@ export function getMysqlFixtureConfig() {
 export function getMariaDbFixtureConfig() {
   return buildSqlFixtureConfig({
     engine: 'mariadb',
-    envPrefixes: ['ORCAQ_MARIADB', 'HERAQ_MARIADB'],
+    envPrefixes: ['ORCAQ_MARIADB'],
     defaultPort: 3307,
     defaultDatabase: 'sakila',
     defaultUsername: 'orcaq',
@@ -228,32 +228,22 @@ export function getSqlFixtureCatalog() {
 }
 
 export function getRedisFixtureConfig(): RedisFixtureConfig {
-  const host =
-    readEnv('ORCAQ_REDIS_HOST', 'HERAQ_REDIS_HOST', 'REDIS_HOST') ||
-    '127.0.0.1';
+  const host = readEnv('ORCAQ_REDIS_HOST', 'REDIS_HOST') || '127.0.0.1';
   const port = parseInteger(
-    readEnv('ORCAQ_REDIS_PORT', 'HERAQ_REDIS_PORT', 'REDIS_PORT'),
+    readEnv('ORCAQ_REDIS_PORT', 'REDIS_PORT'),
     6379,
     'ORCAQ_REDIS_PORT'
   );
   const database = parseInteger(
-    readEnv('ORCAQ_REDIS_DATABASE', 'HERAQ_REDIS_DATABASE', 'REDIS_DATABASE'),
+    readEnv('ORCAQ_REDIS_DATABASE', 'REDIS_DATABASE'),
     0,
     'ORCAQ_REDIS_DATABASE',
     0
   );
-  const username = readEnv(
-    'ORCAQ_REDIS_USERNAME',
-    'HERAQ_REDIS_USERNAME',
-    'REDIS_USERNAME'
-  );
-  const password = readEnv(
-    'ORCAQ_REDIS_PASSWORD',
-    'HERAQ_REDIS_PASSWORD',
-    'REDIS_PASSWORD'
-  );
+  const username = readEnv('ORCAQ_REDIS_USERNAME', 'REDIS_USERNAME');
+  const password = readEnv('ORCAQ_REDIS_PASSWORD', 'REDIS_PASSWORD');
   const url =
-    readEnv('ORCAQ_REDIS_URL', 'HERAQ_REDIS_URL', 'REDIS_URL') ||
+    readEnv('ORCAQ_REDIS_URL', 'REDIS_URL') ||
     buildRedisUrl({
       host,
       port,
@@ -276,12 +266,6 @@ export function getRedisFixtureConfig(): RedisFixtureConfig {
       'ORCAQ_REDIS_DATABASE',
       'ORCAQ_REDIS_USERNAME',
       'ORCAQ_REDIS_PASSWORD',
-      'HERAQ_REDIS_URL',
-      'HERAQ_REDIS_HOST',
-      'HERAQ_REDIS_PORT',
-      'HERAQ_REDIS_DATABASE',
-      'HERAQ_REDIS_USERNAME',
-      'HERAQ_REDIS_PASSWORD',
       'REDIS_URL',
       'REDIS_HOST',
       'REDIS_PORT',
@@ -330,28 +314,17 @@ export function getManagedSqliteLiveConnections() {
 }
 
 export function getOracleLiveConnection(): OracleLiveConnection {
-  const host = readEnv('ORCAQ_ORACLE_HOST', 'HERAQ_ORACLE_HOST', 'ORACLE_HOST');
-  const portValue = readEnv(
-    'ORCAQ_ORACLE_PORT',
-    'HERAQ_ORACLE_PORT',
-    'ORACLE_PORT'
-  );
+  const host = readEnv('ORCAQ_ORACLE_HOST', 'ORACLE_HOST');
+  const portValue = readEnv('ORCAQ_ORACLE_PORT', 'ORACLE_PORT');
   const username = readEnv(
     'ORCAQ_ORACLE_USER',
     'ORCAQ_ORACLE_USERNAME',
-    'HERAQ_ORACLE_USER',
-    'HERAQ_ORACLE_USERNAME',
     'ORACLE_USER',
     'ORACLE_USERNAME'
   );
-  const password = readEnv(
-    'ORCAQ_ORACLE_PASSWORD',
-    'HERAQ_ORACLE_PASSWORD',
-    'ORACLE_PASSWORD'
-  );
+  const password = readEnv('ORCAQ_ORACLE_PASSWORD', 'ORACLE_PASSWORD');
   const serviceName = readEnv(
     'ORCAQ_ORACLE_SERVICE_NAME',
-    'HERAQ_ORACLE_SERVICE_NAME',
     'ORACLE_SERVICE_NAME'
   );
   const url =
@@ -359,8 +332,6 @@ export function getOracleLiveConnection(): OracleLiveConnection {
       'ORACLE_CONNECTION',
       'ORCAQ_ORACLE_URL',
       'ORCAQ_ORACLE_CONNECTION_STRING',
-      'HERAQ_ORACLE_URL',
-      'HERAQ_ORACLE_CONNECTION_STRING',
       'ORACLE_URL'
     ) ||
     (host && username && password && serviceName
@@ -404,15 +375,7 @@ export function getOracleLiveConnection(): OracleLiveConnection {
       'ORCAQ_ORACLE_USERNAME',
       'ORCAQ_ORACLE_PASSWORD',
       'ORCAQ_ORACLE_SERVICE_NAME',
-      'HERAQ_ORACLE_URL',
-      'HERAQ_ORACLE_CONNECTION_STRING',
       'ORACLE_URL',
-      'HERAQ_ORACLE_HOST',
-      'HERAQ_ORACLE_PORT',
-      'HERAQ_ORACLE_USER',
-      'HERAQ_ORACLE_USERNAME',
-      'HERAQ_ORACLE_PASSWORD',
-      'HERAQ_ORACLE_SERVICE_NAME',
       'ORACLE_HOST',
       'ORACLE_PORT',
       'ORACLE_USER',

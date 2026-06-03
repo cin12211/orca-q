@@ -54,7 +54,7 @@ export class MysqlTableAdapter
       `
         SELECT
           table_name AS name,
-          table_schema AS schema,
+          table_schema AS \`schema\`,
           'TABLE' AS kind,
           '' AS owner,
           table_rows AS estimated_row,

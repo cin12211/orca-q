@@ -2,7 +2,7 @@ services:
   redis:
     image: docker.io/library/redis:7.4-alpine
     ports:
-      - '${HERAQ_REDIS_PORT:-6379}:6379'
+      - '${ORCAQ_REDIS_PORT:-6379}:6379'
     command: ['redis-server', '--save', '', '--appendonly', 'no']
     healthcheck:
       test: ['CMD', 'redis-cli', 'ping']

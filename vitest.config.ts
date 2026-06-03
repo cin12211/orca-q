@@ -24,15 +24,21 @@ export default defineConfig(async () => {
         {
           test: {
             name: 'integration',
-            include: ['test/e2e/**/*.{test,spec}.ts'],
+            include: ['test/api/**/*.{test,spec}.ts'],
             environment: 'node',
             env: loadEnv('e2e', process.cwd(), ''),
+            // Each test file starts its own Nuxt server via @nuxt/test-utils setup().
+            // Run files one-at-a-time to avoid port / resource contention.
+            fileParallelism: false,
+            hookTimeout: 240_000,
+            testTimeout: 60_000,
           },
         },
         await defineVitestProject({
           test: {
             name: 'nuxt',
             include: ['test/nuxt/**/*.{test,spec}.ts'],
+            exclude: ['test/api/**/*.{test,spec}.ts'],
             environment: 'nuxt',
             environmentOptions: {
               nuxt: {

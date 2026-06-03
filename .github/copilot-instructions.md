@@ -56,21 +56,27 @@ Nuxt/Electron workflows.
 
 ## Tests And Verification
 
+> **For any test-related task, load the skill first:** > `.github/skills/testing-orcaq/SKILL.md`
+> It contains the exact commands, fixture profiles, and decision rules.
+> Full reference: `docs/TESTING_GUIDE.md`
+
 - Typecheck: `bun run typecheck`.
-- Unit tests: `bun run test:unit`.
-- Nuxt/component tests: `bun run test:nuxt`.
-- All Vitest projects: `bun run test:all`.
-- Integration tests: `bun run test:integration`.
-- Playwright E2E: `bun run test:e2e`.
-- Database matrix checks: `bun run test:db-matrix:all`.
-- For quick-query utility/table work, run the relevant quick-query unit/Nuxt
-  specs in addition to `bun run typecheck`.
+- Unit tests: `bun test:unit`
+- Nuxt/component tests: `bun test:nuxt`
+- All Vitest suites: `bun test:all`
+- API/integration tests (auto fixtures): `bun test:api`
+- API/integration tests (fixtures already up): `bun test:api:raw`
+- Playwright E2E (auto fixtures): `bun test:e2e`
+- Playwright E2E (fixtures already up): `bun test:e2e:raw`
+- Start fixtures: `bun test:fixtures:up`
+- Stop fixtures: `bun test:fixtures:down`
 
 ## Verification Rules
 
-- Any source-code modification must pass `bun run typecheck` + `bun run test:unit`.
+- Any source-code modification must pass `bun run typecheck` + `bun test:unit`.
 - Do not claim a task is complete if type checking fails.
-- Run the smallest relevant test suite first.
+- Run the smallest relevant test suite first — never start all fixtures to test a single DB.
+- Use `bun test:api:raw` / `bun test:e2e:raw` when fixtures are already running.
 - Run broader suites only when the change scope requires it.
 - Clearly report:
   - executed commands
