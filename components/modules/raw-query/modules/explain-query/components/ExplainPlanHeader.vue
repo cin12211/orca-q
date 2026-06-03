@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { formatQueryTime } from '~/core/helpers/format';
-import type { ExplainPlanNode } from '../../../../interfaces/explainAnalyzeResult';
-import { EXPLAIN_VIEW_MODE_OPTIONS, type ExplainViewMode } from '../view-mode';
+import type { ExplainPlanNode } from '../../../interfaces/explainAnalyzeResult';
+import { EXPLAIN_VIEW_MODE_OPTIONS } from '../constants';
+import { ExplainViewMode } from '../types';
 
 defineProps<{
   summaryStats: {

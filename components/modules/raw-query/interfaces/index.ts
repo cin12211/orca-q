@@ -37,6 +37,15 @@ export interface ExplainAnalyzeOptionItem {
   checked: boolean;
 }
 
+export enum ViewMode {
+  RESULT = 'result',
+  ERROR = 'error',
+  INFO = 'info',
+  RAW = 'raw',
+  EXPLAIN = 'explain',
+  CHART = 'chart',
+}
+
 export interface ExecutedResultItem {
   id: string;
   metadata: {
@@ -56,5 +65,35 @@ export interface ExecutedResultItem {
   };
   result: RowData[];
   seqIndex: number;
-  view: 'result' | 'error' | 'info' | 'raw' | 'explain';
+  view: ViewMode;
+}
+
+export enum ChartType {
+  LINE = 'line',
+  BAR = 'bar',
+  HORIZONTAL_BAR = 'horizontal-bar',
+  AREA = 'area',
+  STACKED_BAR = 'stacked-bar',
+  PIE = 'pie',
+  DONUT = 'donut',
+  SCATTER = 'scatter',
+  HEATMAP = 'heatmap',
+  RADAR = 'radar',
+}
+
+export enum AggregationType {
+  NONE = 'none',
+  SUM = 'sum',
+  AVG = 'avg',
+  COUNT = 'count',
+  MIN = 'min',
+  MAX = 'max',
+}
+
+export enum SortByType {
+  NONE = 'none',
+  X_ASC = 'x-asc',
+  X_DESC = 'x-desc',
+  Y_ASC = 'y-asc',
+  Y_DESC = 'y-desc',
 }

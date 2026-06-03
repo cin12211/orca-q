@@ -1,11 +1,12 @@
 <script setup lang="ts">
+import { computed } from 'vue';
 import type { ColDef } from 'ag-grid-community';
-import type { ExplainPlanNode } from '../../../../interfaces/explainAnalyzeResult';
-import ExplainOperationCell from './ExplainOperationCell.vue';
+import type { ExplainPlanNode } from '../../../interfaces/explainAnalyzeResult';
 import {
   mapGridRowsToTableRows,
   mapPlanNodesToGridRows,
-} from './utils/explainGrid.utils';
+} from '../utils/explainGrid.utils';
+import ExplainOperationCell from './ExplainOperationCell.vue';
 
 // ── Props ──────────────────────────────────────────────────────────────────
 const props = defineProps<{ nodes: ExplainPlanNode[] }>();

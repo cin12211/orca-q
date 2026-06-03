@@ -68,7 +68,7 @@ const onCopyAllColumnData = (format: ColumnCopyFormat) => {
   copyColumnData(props.data || [], currentColumnName.value ?? '', format);
 };
 
-const onCopySelectedRowsData = (format: ExportFormat) => {
+const onCopySelectedRowsData = (format: ExportFormat | `${ExportFormat}`) => {
   return copyRowsData(
     props.selectedRows || [],
     props.tableName || 'table_data',
@@ -77,7 +77,7 @@ const onCopySelectedRowsData = (format: ExportFormat) => {
   );
 };
 
-const onCopyAllRowsData = (format: ExportFormat) => {
+const onCopyAllRowsData = (format: ExportFormat | `${ExportFormat}`) => {
   return copyRowsData(
     props.data || [],
     props.tableName || 'table_data',
@@ -86,7 +86,7 @@ const onCopyAllRowsData = (format: ExportFormat) => {
   );
 };
 
-const onExportSelectedRows = (format: ExportFormat) => {
+const onExportSelectedRows = (format: ExportFormat | `${ExportFormat}`) => {
   return exportData(
     props.selectedRows || [],
     props.tableName || 'table_data',
@@ -96,7 +96,7 @@ const onExportSelectedRows = (format: ExportFormat) => {
   );
 };
 
-const onExportAllRows = (format: ExportFormat) => {
+const onExportAllRows = (format: ExportFormat | `${ExportFormat}`) => {
   return exportData(
     props.data || [],
     props.tableName || 'table_data',

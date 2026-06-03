@@ -125,6 +125,13 @@ describe('copyData helpers', () => {
     expect(text).toBe('[{"a":1}]');
   });
 
+  it('copyRowsData tsv copies as TSV with header', () => {
+    copyRowsData([{ a: 1, b: 2 }] as any, 'users', 'tsv');
+    const text = (globalThis as any).navigator.clipboard.writeText.mock
+      .calls[0][0];
+    expect(text).toBe('a\tb\r\n1\t2');
+  });
+
   it('cleanRows does not mutate source rows', () => {
     const source = [{ a: 1, [HASH_INDEX_ID]: 1 }];
     const before = JSON.stringify(source);

@@ -1,8 +1,4 @@
-export enum ExplainViewMode {
-  GRID = 'grid',
-  TIMELINE = 'time-line',
-  RAW = 'raw',
-}
+import { ExplainViewMode } from '../types';
 
 export const EXPLAIN_VIEW_MODE_OPTIONS: ReadonlyArray<{
   value: ExplainViewMode;

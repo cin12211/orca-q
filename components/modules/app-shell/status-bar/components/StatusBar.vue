@@ -7,7 +7,6 @@ import { useSettingsModal } from '~/core/contexts/useSettingsModal';
 import { TabViewType } from '~/core/stores';
 import { useTabViewsStore } from '~/core/stores/useTabViewsStore';
 import CurrentPositionPath from './CurrentPositionPath.vue';
-import ElectronUpdateIndicator from './ElectronUpdateIndicator.vue';
 
 const tabViewStore = useTabViewsStore();
 const { openChangelog } = useChangelogModal();
@@ -106,8 +105,6 @@ const formattedTabType = computed(() => {
     </div>
 
     <div class="flex flex-shrink-0 items-center gap-3">
-      <ElectronUpdateIndicator />
-
       <Tooltip>
         <TooltipTrigger as-child>
           <a :href="ggFormLink" target="_blank">

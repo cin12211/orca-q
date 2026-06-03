@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { computed } from 'vue';
+
 /** AG Grid passes the full row data via `params.data` and the cell value via `params.value`. */
 interface CellParams {
   data: {

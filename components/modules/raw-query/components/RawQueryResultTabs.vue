@@ -9,14 +9,19 @@ import {
 } from '#components';
 import { cn } from '@/lib/utils';
 import { useSchemaStore } from '~/core/stores';
-import type { ExecutedResultItem, MappedRawColumn } from '../interfaces';
+import {
+  ViewMode,
+  type ExecutedResultItem,
+  type MappedRawColumn,
+} from '../interfaces';
+import { ChartBuilder } from '../modules/chart-builder';
+import { ExplainQuery } from '../modules/explain-query';
 import { formatColumnsInfo } from '../utils/formatColumnsInfo';
 import { normalizeResultRows } from '../utils/normalizeResultRows';
 import ResultTabErrorView from './result-tab/ResultTabErrorView.vue';
 import ResultTabInfoView from './result-tab/ResultTabInfoView.vue';
 import ResultTabRawView from './result-tab/ResultTabRawView.vue';
 import ResultTabResultView from './result-tab/ResultTabResultView.vue';
-import ResultTabExplainView from './result-tab/explain/ResultTabExplainView.vue';
 
 const props = defineProps<{
   executedResults: Map<string, ExecutedResultItem>;
@@ -58,15 +63,13 @@ const isHaveRightItem = computed(() => {
   return currentIndex >= 0 && currentIndex < tabIds.length - 1;
 });
 
-// View modes for the vertical tabs
-type ViewMode = 'result' | 'raw' | 'info' | 'error' | 'explain';
-
 const viewModes: { value: ViewMode; label: string }[] = [
-  { value: 'result', label: 'Result' },
-  { value: 'explain', label: 'Explain' },
-  { value: 'raw', label: 'Raw' },
-  { value: 'info', label: 'Info' },
-  { value: 'error', label: 'Errors' },
+  { value: ViewMode.RESULT, label: 'Result' },
+  { value: ViewMode.EXPLAIN, label: 'Explain' },
+  { value: ViewMode.RAW, label: 'Raw' },
+  { value: ViewMode.INFO, label: 'Info' },
+  { value: ViewMode.CHART, label: 'Chart' },
+  { value: ViewMode.ERROR, label: 'Errors' },
 ];
 
 // Cache key: tabId + resultLength for case (streaming)
@@ -113,7 +116,7 @@ watch(
 );
 
 // Get current view mode for active tab
-const currentView = computed(() => activeTab.value?.view || 'result');
+const currentView = computed(() => activeTab.value?.view || ViewMode.RESULT);
 
 // Derive columns from active tab's fieldDefs (not global mappedColumns)
 const activeTabColumns = computed<MappedRawColumn[]>(() => {
@@ -180,7 +183,6 @@ const setViewMode = (view: ViewMode) => {
     emit('update:view', props.activeTabId, view);
   }
 };
-
 // Check if tab has errors
 const hasErrors = (tab: ExecutedResultItem) => {
   return !!tab.metadata.executeErrors;
@@ -202,11 +204,13 @@ const hasErrors = (tab: ExecutedResultItem) => {
         v-for="mode in viewModes"
         :key="mode.value"
         @click="
-          // Disable result/raw if has errors, disable error if no errors
+          // Disable result/raw/chart if has errors, disable error if no errors
           hasErrors(activeTab) &&
-          (mode.value === 'result' || mode.value === 'raw')
+          (mode.value === ViewMode.RESULT ||
+            mode.value === ViewMode.RAW ||
+            mode.value === ViewMode.CHART)
             ? null
-            : mode.value === 'error' && !hasErrors(activeTab)
+            : mode.value === ViewMode.ERROR && !hasErrors(activeTab)
               ? null
               : setViewMode(mode.value)
         "
@@ -217,30 +221,34 @@ const hasErrors = (tab: ExecutedResultItem) => {
               ? 'bg-muted border-transparent border-r-border'
               : 'border-transparent',
             // Error tab styling
-            mode.value === 'error' && hasErrors(activeTab)
+            mode.value === ViewMode.ERROR && hasErrors(activeTab)
               ? 'hover:bg-muted cursor-pointer'
-              : mode.value === 'explain' &&
+              : mode.value === ViewMode.EXPLAIN &&
                   !activeTab.metadata.statementQuery.startsWith('EXPLAIN')
                 ? null
                 : '',
-            mode.value === 'error' && !hasErrors(activeTab)
+            mode.value === ViewMode.ERROR && !hasErrors(activeTab)
               ? 'opacity-40 cursor-not-allowed'
               : '',
-            // Result/Raw disabled when errors
-            (mode.value === 'result' || mode.value === 'raw') &&
+            // Result/Raw/Chart disabled when errors
+            (mode.value === ViewMode.RESULT ||
+              mode.value === ViewMode.RAW ||
+              mode.value === ViewMode.CHART) &&
               hasErrors(activeTab)
               ? 'opacity-40 cursor-not-allowed'
               : '',
-            mode.value === 'explain' &&
+            mode.value === ViewMode.EXPLAIN &&
               !activeTab.metadata.statementQuery.startsWith('EXPLAIN')
               ? 'opacity-40 cursor-not-allowed'
               : '',
             // Normal hover state for enabled tabs
             !(
-              (mode.value === 'error' && !hasErrors(activeTab)) ||
-              ((mode.value === 'result' || mode.value === 'raw') &&
+              (mode.value === ViewMode.ERROR && !hasErrors(activeTab)) ||
+              ((mode.value === ViewMode.RESULT ||
+                mode.value === ViewMode.RAW ||
+                mode.value === ViewMode.CHART) &&
                 hasErrors(activeTab)) ||
-              (mode.value === 'explain' &&
+              (mode.value === ViewMode.EXPLAIN &&
                 !activeTab.metadata.statementQuery.startsWith('EXPLAIN'))
             )
               ? 'hover:bg-muted cursor-pointer'
@@ -335,7 +343,7 @@ const hasErrors = (tab: ExecutedResultItem) => {
                 @click="isFullscreen = !isFullscreen"
                 :variant="isFullscreen ? 'secondary' : 'ghost'"
                 size="icon"
-                class="size-5 rounded border border-border"
+                class="size-5 rounded border border-border cursor-pointer"
               >
                 <Icon name="hugeicons:full-screen" class="size-3.5!" />
               </Button>
@@ -366,7 +374,7 @@ const hasErrors = (tab: ExecutedResultItem) => {
 
         <!-- Result View -->
         <ResultTabResultView
-          v-else-if="activeTab && currentView === 'result'"
+          v-else-if="activeTab && currentView === ViewMode.RESULT"
           :active-tab="activeTab"
           :active-tab-columns="activeTabColumns"
           :formatted-data="formattedData"
@@ -375,28 +383,36 @@ const hasErrors = (tab: ExecutedResultItem) => {
           :key="activeTab.id"
         />
 
-        <ResultTabExplainView
-          v-else-if="activeTab && currentView === 'explain'"
+        <ExplainQuery
+          v-else-if="activeTab && currentView === ViewMode.EXPLAIN"
           :active-tab="activeTab"
         />
 
         <!-- Raw View (JSON) -->
         <ResultTabRawView
-          v-else-if="activeTab && currentView === 'raw'"
+          v-else-if="activeTab && currentView === ViewMode.RAW"
           :formatted-data="formattedData"
           :execute-loading="executeLoading"
           :is-streaming="isStreaming"
         />
 
+        <!-- Chart View -->
+        <ChartBuilder
+          v-else-if="activeTab && currentView === ViewMode.CHART"
+          :active-tab="activeTab"
+          :active-tab-columns="activeTabColumns"
+          :formatted-data="formattedData"
+        />
+
         <!-- Info View -->
         <ResultTabInfoView
-          v-else-if="activeTab && currentView === 'info'"
+          v-else-if="activeTab && currentView === ViewMode.INFO"
           :active-tab="activeTab"
         />
 
         <!-- Errors View -->
         <ResultTabErrorView
-          v-else-if="activeTab && currentView === 'error'"
+          v-else-if="activeTab && currentView === ViewMode.ERROR"
           :active-tab="activeTab"
           @onChangeView="setViewMode($event)"
         />

@@ -1,5 +1,5 @@
 import type { RowData } from '~/components/base/data-grid/utils';
-import type { ExplainPlanNode } from '../../../../../interfaces/explainAnalyzeResult';
+import type { ExplainPlanNode } from '../../../interfaces/explainAnalyzeResult';
 
 export interface ExplainGridRow {
   id: string;

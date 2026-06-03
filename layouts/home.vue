@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { cn } from '@/lib/utils';
+import ElectronUpdateIndicator from '~/components/modules/app-shell/status-bar/components/ElectronUpdateIndicator.vue';
 import { isDesktopApp, isMacOS, isPWA, isElectron } from '~/core/helpers';
 
 const isDesktopMacWindow = computed(() => isDesktopApp() && isMacOS());
@@ -32,14 +33,22 @@ const githubLink = config.public.githubLink;
       ]"
       :data-electron-drag-region="isElectron() ? '' : undefined"
     >
-      <div class="flex items-center space-x-2 pointer-events-none">
-        <Avatar class="rounded-2xl">
-          <AvatarImage src="/logo.png" alt="@unovue" />
-        </Avatar>
+      <div class="flex min-w-0 flex-1 items-center gap-3">
+        <div class="flex items-center space-x-2 pointer-events-none">
+          <Avatar class="rounded-2xl">
+            <AvatarImage src="/logo.png" alt="@unovue" />
+          </Avatar>
 
-        <p class="text-xl font-medium">orcaq</p>
+          <p class="text-xl font-medium">orcaq</p>
+        </div>
+        <span class="text-sm text-muted-foreground">
+          v{{ config.public.version }}
+        </span>
       </div>
-      v{{ config.public.version }}
+
+      <div class="window-no-drag flex shrink-0 items-center">
+        <ElectronUpdateIndicator side="bottom" align="end" />
+      </div>
     </div>
   </div>
 

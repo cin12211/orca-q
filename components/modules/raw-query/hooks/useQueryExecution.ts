@@ -11,7 +11,7 @@ import { DatabaseClientType } from '~/core/constants/database-client-type';
 import { uuidv4 } from '~/core/helpers';
 import type { Connection } from '~/core/stores';
 import type { DatabaseDriverError } from '~/core/types';
-import type { ExecutedResultItem } from '../interfaces';
+import { ViewMode, type ExecutedResultItem } from '../interfaces';
 import type { ResultTabsReturn } from './useResultTabs';
 import { executeStreamingQuery } from './useStreamingQuery';
 
@@ -171,14 +171,14 @@ export function useQueryExecution({
       console.log('fileParameters error::', e);
     }
 
-    let executedResultView: ExecutedResultItem['view'] = 'result';
+    let executedResultView: ExecutedResultItem['view'] = ViewMode.RESULT;
     const isRedisConnection =
       connection.value?.type === DatabaseClientType.REDIS;
 
     if (queryPrefix && !isRedisConnection) {
       executeQuery = `${queryPrefix} ${executeQuery}`;
       if (queryPrefix.startsWith('EXPLAIN')) {
-        executedResultView = 'explain';
+        executedResultView = ViewMode.EXPLAIN;
       }
     }
 
@@ -282,7 +282,7 @@ export function useQueryExecution({
         };
         executedResultItem.metadata.executeErrors =
           queryProcessState.executeErrors;
-        executedResultItem.view = 'error';
+        executedResultItem.view = ViewMode.ERROR;
 
         resultTabs.refreshResultTab(executedResultItem.id, executedResultItem);
       }
@@ -290,7 +290,7 @@ export function useQueryExecution({
       return;
     }
 
-    if (queryPrefix && executedResultView === 'explain') {
+    if (queryPrefix && executedResultView === ViewMode.EXPLAIN) {
       try {
         const result = await $fetch('/api/query/raw-execute', {
           method: 'POST',
@@ -335,7 +335,7 @@ export function useQueryExecution({
       } catch (e: any) {
         queryProcessState.executeErrors = e.data;
         executedResultItem.metadata.executeErrors = e.data;
-        executedResultItem.view = 'error';
+        executedResultItem.view = ViewMode.ERROR;
       }
 
       queryProcessState.executeLoading = false;
@@ -404,7 +404,7 @@ export function useQueryExecution({
         queryProcessState.isStreaming = false;
         queryProcessState.executeErrors = resolvedError;
         executedResultItem.metadata.executeErrors = resolvedError;
-        executedResultItem.view = 'error';
+        executedResultItem.view = ViewMode.ERROR;
 
         const editorView = getEditorView();
         if (editorView && errorDetail) {

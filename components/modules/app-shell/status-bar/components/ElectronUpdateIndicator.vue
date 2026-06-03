@@ -2,6 +2,17 @@
 import { useElectronUpdater } from '~/core/composables/useElectronUpdater';
 import { formatBytes } from '~/core/helpers';
 
+withDefaults(
+  defineProps<{
+    side?: 'top' | 'right' | 'bottom' | 'left';
+    align?: 'start' | 'center' | 'end';
+  }>(),
+  {
+    side: 'bottom',
+    align: 'end',
+  }
+);
+
 const popoverOpen = ref(false);
 
 const {
@@ -71,42 +82,42 @@ const indicatorIcon = computed(() => {
 
 const indicatorButtonClass = computed(() => {
   if (readyToRestartUpdate.value) {
-    return 'border-green-500/40 bg-green-500/10 text-green-600 hover:bg-green-500/15';
+    return 'border-emerald-500/40 bg-emerald-500/10 text-emerald-700 shadow-emerald-500/10 hover:bg-emerald-500/15 dark:text-emerald-300';
   }
 
   if (status.value === 'downloading' && isDownloadStalled.value) {
-    return 'border-yellow-500/40 bg-yellow-500/10 text-yellow-600 hover:bg-yellow-500/15';
+    return 'border-amber-500/40 bg-amber-500/10 text-amber-700 shadow-amber-500/10 hover:bg-amber-500/15 dark:text-amber-300';
   }
 
   if (status.value === 'downloading') {
-    return 'border-blue-500/40 bg-blue-500/10 text-blue-600 hover:bg-blue-500/15';
+    return 'border-[#0169CC]/40 bg-[#0169CC]/10 text-[#0169CC] shadow-[#0169CC]/10 hover:bg-[#0169CC]/15 dark:text-[#4EA3FF]';
   }
 
   if (status.value === 'error') {
-    return 'border-destructive/40 bg-destructive/10 text-destructive hover:bg-destructive/15';
+    return 'border-destructive/40 bg-destructive/10 text-destructive shadow-destructive/10 hover:bg-destructive/15';
   }
 
-  return 'border-blue-500/40 bg-blue-500/10 text-blue-600 hover:bg-blue-500/15';
+  return 'border-[#0169CC]/40 bg-[#0169CC]/10 text-[#0169CC] shadow-[#0169CC]/10 hover:bg-[#0169CC]/15 dark:text-[#4EA3FF]';
 });
 
 const indicatorLabel = computed(() => {
   if (readyToRestartUpdate.value) {
-    return `Apply update ${readyToRestartUpdate.value.version}`;
+    return 'Restart';
   }
 
   if (status.value === 'downloading' && isDownloadStalled.value) {
-    return `Update ${displayUpdate.value?.version} stalled`;
+    return 'Stalled';
   }
 
   if (status.value === 'downloading') {
-    return `Update ${displayUpdate.value?.version} ${downloadProgress.value}%`;
+    return `${downloadProgress.value}%`;
   }
 
   if (status.value === 'error') {
-    return `Update ${displayUpdate.value?.version} failed`;
+    return 'Failed';
   }
 
-  return `Update ${displayUpdate.value?.version} available`;
+  return 'Update';
 });
 </script>
 
@@ -116,7 +127,7 @@ const indicatorLabel = computed(() => {
     <Tooltip v-if="readyToRestartUpdate">
       <TooltipTrigger as-child>
         <button
-          class="h-5 max-w-[220px] flex items-center gap-1.5 rounded-sm border px-2 text-xs font-semibold cursor-pointer transition-colors"
+          class="h-7 max-w-[148px] flex items-center gap-1.5 rounded-md border px-2.5 text-xs font-semibold shadow-sm cursor-pointer transition-colors"
           :class="indicatorButtonClass"
           :disabled="isBusy"
           @click="restartToApplyUpdate()"
@@ -136,7 +147,7 @@ const indicatorLabel = computed(() => {
         <PopoverTrigger as-child>
           <TooltipTrigger as-child>
             <button
-              class="h-5 max-w-[220px] flex items-center gap-1.5 rounded-sm border px-2 text-xs font-semibold cursor-pointer transition-colors"
+              class="h-7 max-w-[148px] flex items-center gap-1.5 rounded-md border px-2.5 text-xs font-semibold shadow-sm cursor-pointer transition-colors"
               :class="indicatorButtonClass"
             >
               <Icon :name="indicatorIcon" class="size-4!" />
@@ -150,8 +161,8 @@ const indicatorLabel = computed(() => {
 
         <PopoverContent
           class="w-80 p-4 flex flex-col gap-3"
-          align="end"
-          side="top"
+          :align="align"
+          :side="side"
         >
           <div class="flex flex-col gap-1">
             <p class="text-sm font-medium">

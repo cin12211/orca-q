@@ -1,11 +1,18 @@
 <script setup lang="ts">
+import { computed, ref } from 'vue';
 import type { ExecutedResultItem } from '../../../interfaces';
 import {
   extractExplainPayload,
   extractExplainText,
   parseExplainPlan,
 } from '../../../utils/parseExplainPlan';
-import { ExplainViewMode } from './view-mode';
+import {
+  ExplainPlanHeader,
+  ExplainGridPane,
+  ExplainTimelineChartPane,
+  ExplainRawPane,
+} from '../components';
+import { ExplainViewMode } from '../types';
 
 const props = defineProps<{
   activeTab: ExecutedResultItem;
