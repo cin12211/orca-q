@@ -1,4 +1,11 @@
 <script setup lang="ts">
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  Button,
+} from '#components';
 import { ContextMenuShortcut } from '@/components/ui/context-menu';
 import {
   Tooltip,
@@ -18,6 +25,7 @@ const emit = defineEmits<{
   save: [];
   discard: [];
   delete: [];
+  download: [format: 'csv' | 'json' | 'text'];
 }>();
 </script>
 
@@ -112,19 +120,60 @@ const emit = defineEmits<{
       </template>
     </div>
 
-    <!-- Right: status indicator -->
-    <div class="flex items-center gap-1">
-      <template v-if="isEditingEnabled">
-        <Icon
-          name="hugeicons:pencil-edit-02"
-          class="size-3.5 text-muted-foreground"
-        />
-        <span class="font-normal text-xs text-primary/60">Editable</span>
-      </template>
-      <template v-else>
-        <Icon name="hugeicons:lock-01" class="size-3.5 text-muted-foreground" />
-        <span class="font-normal text-xs text-primary/60">Read-only</span>
-      </template>
+    <!-- Right: status indicator & download -->
+    <div class="flex items-center gap-2">
+      <div class="flex items-center gap-1">
+        <template v-if="isEditingEnabled">
+          <Icon
+            name="hugeicons:pencil-edit-02"
+            class="size-3.5 text-muted-foreground"
+          />
+          <span class="font-normal text-xs text-primary/60">Editable</span>
+        </template>
+        <template v-else>
+          <Icon
+            name="hugeicons:lock-01"
+            class="size-3.5 text-muted-foreground"
+          />
+          <span class="font-normal text-xs text-primary/60">Read-only</span>
+        </template>
+      </div>
+
+      <DropdownMenu>
+        <DropdownMenuTrigger as-child>
+          <Button
+            variant="outline"
+            size="xxs"
+            class="font-normal flex items-center gap-1 cursor-pointer"
+          >
+            <Icon name="hugeicons:download-04" class="size-3.5" />
+            <span>Export</span>
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" class="w-36">
+          <DropdownMenuItem
+            @click="emit('download', 'csv')"
+            class="text-xs cursor-pointer"
+          >
+            <Icon name="hugeicons:file-01" class="mr-2 size-3.5" />
+            Export CSV
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            @click="emit('download', 'json')"
+            class="text-xs cursor-pointer"
+          >
+            <Icon name="hugeicons:code" class="mr-2 size-3.5" />
+            Export JSON
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            @click="emit('download', 'text')"
+            class="text-xs cursor-pointer"
+          >
+            <Icon name="hugeicons:file-01" class="mr-2 size-3.5" />
+            Export TSV
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
     </div>
   </div>
 </template>

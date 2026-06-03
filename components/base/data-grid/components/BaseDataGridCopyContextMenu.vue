@@ -98,7 +98,7 @@ const copyAllColumnData = (format: ColumnCopyFormat) => {
   return copyColumnData(props.data, currentColumnId.value, format);
 };
 
-const copySelectedRowsData = (format: ExportFormat) => {
+const copySelectedRowsData = (format: ExportFormat | `${ExportFormat}`) => {
   if (!props.selectedRows.length) {
     return;
   }
@@ -111,7 +111,7 @@ const copySelectedRowsData = (format: ExportFormat) => {
   );
 };
 
-const copyAllRowsData = (format: ExportFormat) => {
+const copyAllRowsData = (format: ExportFormat | `${ExportFormat}`) => {
   if (!props.data.length) {
     return;
   }

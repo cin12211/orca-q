@@ -1,6 +1,7 @@
 <script setup lang="ts">
+import { computed, ref } from 'vue';
 import { formatDuration } from '@/core/helpers';
-import type { ExplainPlanNode } from '../../../../interfaces/explainAnalyzeResult';
+import type { ExplainPlanNode } from '../../../interfaces/explainAnalyzeResult';
 
 const props = defineProps<{
   nodes: ExplainPlanNode[];

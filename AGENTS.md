@@ -44,6 +44,18 @@ desktop support.
 - Create a new component only when there is no suitable existing base or UI
   component, or when the new behavior is clearly feature-specific.
 
+## Icon Usage Rules
+
+- Prefer Hugeicons for UI icons. Use the `hugeicons:` collection first so icon
+  style stays consistent across the app.
+- When adding or changing any `hugeicons:*` icon name, verify that the icon
+  actually exists in `node_modules/@iconify-json/hugeicons/icons.json` before
+  committing the change. Do not assume names from another collection are
+  available in Hugeicons.
+- Use another collection such as `lucide:` only when there is no suitable
+  verified Hugeicons equivalent, and use that collection prefix explicitly (for
+  example `lucide:chart-pie`).
+
 ## How To Run The Project
 
 Commands are defined in `package.json`. This repo supports Bun, npm scripts, and
@@ -96,7 +108,7 @@ Nuxt/Electron workflows.
 
 # GitNexus — Code Intelligence
 
-This project is indexed by GitNexus as **HeraQ** (18324 symbols, 30210 relationships, 300 execution flows). Use the GitNexus MCP tools to understand code, assess impact, and navigate safely.
+This project is indexed by GitNexus as **HeraQ** (18835 symbols, 30911 relationships, 300 execution flows). Use the GitNexus MCP tools to understand code, assess impact, and navigate safely.
 
 > If any GitNexus tool warns the index is stale, run `npx gitnexus analyze` in terminal first.
 

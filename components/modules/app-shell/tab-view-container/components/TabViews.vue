@@ -32,6 +32,7 @@ import {
   type TabView,
 } from '~/core/stores';
 import { EConnectionMethod } from '~/core/types/entities/connection.entity';
+import ElectronUpdateIndicator from '../../status-bar/components/ElectronUpdateIndicator.vue';
 import TabViewItem from './TabViewItem.vue';
 import TabViewOpenActions from './TabViewOpenActions.vue';
 
@@ -184,6 +185,10 @@ const isElectronRuntime = computed(() => isElectron());
         </TooltipTrigger>
         <TooltipContent>Open or reuse sample.sql</TooltipContent>
       </Tooltip>
+    </div>
+
+    <div class="window-no-drag flex h-full shrink-0 items-center pl-1">
+      <ElectronUpdateIndicator side="bottom" align="start" />
     </div>
 
     <div ref="tabBarBodyRef" class="flex h-full min-w-0 flex-1 items-end">

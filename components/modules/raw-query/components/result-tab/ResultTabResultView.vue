@@ -6,6 +6,7 @@ import { buildDynamicRowData } from '~/components/base/data-grid/utils';
 import PreviewRelationTable from '~/components/modules/quick-query/previewRelationTable/PreviewRelationTable.vue';
 import { useHotkeys } from '~/core/composables/useHotKeys';
 import { DatabaseClientType } from '~/core/constants/database-client-type';
+import { exportData, ExportFormat } from '~/core/helpers/copyData';
 import { useSchemaStore } from '~/core/stores';
 import {
   useRawQueryEditedCells,
@@ -41,6 +42,27 @@ const selectedRows = ref<Record<string, any>[]>([]);
 
 const onSelectedRowsChange = (rows: unknown[]) => {
   selectedRows.value = rows as Record<string, any>[];
+};
+
+const downloadResults = (format: 'csv' | 'json' | 'text') => {
+  const rows = props.formattedData;
+  const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
+  const filename = `query_result_tab_${props.activeTab.seqIndex}_${timestamp}`;
+
+  const formatMap: Record<'csv' | 'json' | 'text', ExportFormat> = {
+    csv: ExportFormat.CSV_WITH_HEADER,
+    json: ExportFormat.JSON,
+    text: ExportFormat.TSV,
+  };
+
+  exportData(
+    rows,
+    `query_result_tab_${props.activeTab.seqIndex}`,
+    formatMap[format],
+    'all',
+    undefined,
+    filename
+  );
 };
 
 const commandResult = computed(() =>
@@ -341,6 +363,7 @@ useHotkeys(
         @save="requestSave"
         @discard="discardPendingChanges"
         @delete="requestDelete"
+        @download="downloadResults"
       />
 
       <RawQueryContextMenu

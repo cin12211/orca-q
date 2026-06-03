@@ -94,7 +94,7 @@ const meta = {
       return {
         components: { TooltipProvider },
         template:
-          '<TooltipProvider><div class="h-6 min-w-[360px] bg-sidebar-accent px-3 flex items-center justify-end"><story /></div></TooltipProvider>',
+          '<TooltipProvider><div class="h-9 min-w-[360px] bg-sidebar-accent px-3 flex items-center justify-end"><story /></div></TooltipProvider>',
       };
     },
   ],
