@@ -4,18 +4,20 @@ import {
   getRoutineDefinitionType,
 } from '~/components/modules/management/schemas/utils';
 import { DatabaseClientType } from '~/core/constants/database-client-type';
+import type { DatabaseMetadataRequestParams } from '~/core/types';
 import { createFunctionAdapter } from '~/server/infrastructure/database/adapters/functions';
 
 export default defineEventHandler(async event => {
-  const body = await readBody<{
-    dbConnectionString: string;
-    functionDefinition: string;
-  }>(event);
+  const body = await readBody<
+    DatabaseMetadataRequestParams & {
+      functionDefinition: string;
+    }
+  >(event);
 
-  if (!body.dbConnectionString || !body.functionDefinition) {
+  if ((!body.dbConnectionString && !body.host) || !body.functionDefinition) {
     throw createError({
       statusCode: 400,
-      message: 'Missing dbConnectionString or functionDefinition',
+      message: 'Missing connection details or functionDefinition',
     });
   }
 
@@ -30,9 +32,10 @@ export default defineEventHandler(async event => {
     });
   }
 
-  const adapter = await createFunctionAdapter(DatabaseClientType.POSTGRES, {
-    dbConnectionString: body.dbConnectionString,
-  });
+  const adapter = await createFunctionAdapter(
+    body.type,
+    body
+  );
 
   return await adapter.updateFunction(updateSql);
 });

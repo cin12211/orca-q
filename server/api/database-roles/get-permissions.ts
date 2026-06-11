@@ -4,10 +4,10 @@
  * Supports multiple database types via adapter pattern
  */
 import { DatabaseClientType } from '~/core/constants/database-client-type';
-import type { GetRolePermissionsRequest, RolePermissions } from '~/core/types';
+import type { GetRolePermissionsRequest, RolePermissions, DatabaseMetadataRequestParams } from '~/core/types';
 import { createRoleAdapter } from '~/server/infrastructure/database/adapters/database-roles';
 
-interface RequestBody extends GetRolePermissionsRequest {
+interface RequestBody extends GetRolePermissionsRequest, DatabaseMetadataRequestParams {
   dbType?: DatabaseClientType;
 }
 
@@ -22,10 +22,8 @@ export default defineEventHandler(async (event): Promise<RolePermissions> => {
   }
 
   const adapter = await createRoleAdapter(
-    body.dbType || DatabaseClientType.POSTGRES,
-    {
-      dbConnectionString: body.dbConnectionString,
-    }
+    body.type || body.dbType,
+    body
   );
 
   return adapter.getRolePermissions(body.roleName);

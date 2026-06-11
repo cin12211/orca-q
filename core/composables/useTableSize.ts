@@ -1,3 +1,4 @@
+import { getConnectionParams } from '~/core/helpers/connection-helper';
 import { useManagementConnectionStore } from '~/core/stores/managementConnectionStore';
 
 export const useTableSize = ({
@@ -13,8 +14,8 @@ export const useTableSize = ({
     method: 'POST',
     body: {
       tableName,
-      dbConnectionString: connectionStore.selectedConnection?.connectionString,
       schema: schemaName,
+      ...getConnectionParams(connectionStore.selectedConnection),
     },
     key: `table-size-${tableName}-${schemaName}`,
   });

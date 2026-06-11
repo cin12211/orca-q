@@ -9,6 +9,7 @@ import {
 import type { RowData } from '~/components/base/data-grid/utils';
 import { DatabaseClientType } from '~/core/constants/database-client-type';
 import { uuidv4 } from '~/core/helpers';
+import { getConnectionParams } from '~/core/helpers/connection-helper';
 import type { Connection } from '~/core/stores';
 import type { DatabaseDriverError } from '~/core/types';
 import { ViewMode, type ExecutedResultItem } from '../interfaces';
@@ -292,13 +293,11 @@ export function useQueryExecution({
 
     if (queryPrefix && executedResultView === ViewMode.EXPLAIN) {
       try {
+        const connParams = getConnectionParams(connection.value);
         const result = await $fetch('/api/query/raw-execute', {
           method: 'POST',
           body: {
-            dbConnectionString: connection.value?.connectionString,
-            type: connection.value?.type,
-            providerKind: connection.value?.providerKind,
-            managedSqlite: connection.value?.managedSqlite,
+            ...connParams,
             query: executeQuery,
             params: fileParameters,
           },
@@ -349,12 +348,10 @@ export function useQueryExecution({
     queryProcessState.isStreaming = true;
     queryProcessState.executeLoading = false;
 
+    const connParams = getConnectionParams(connection.value);
     const { abort } = executeStreamingQuery({
       query: executeQuery,
-      dbConnectionString: connection.value?.connectionString || '',
-      type: connection.value?.type,
-      providerKind: connection.value?.providerKind,
-      managedSqlite: connection.value?.managedSqlite,
+      ...connParams,
       params: fileParameters,
       onMeta: (fields, command) => {
         fieldDefs.value = fields;

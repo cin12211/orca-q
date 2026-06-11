@@ -2,6 +2,7 @@ import { isProxy, nextTick, ref } from 'vue';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { useConnectionForm } from '~/components/modules/connection/hooks/useConnectionForm';
 import {
+  ESSHAuthMethod,
   EConnectionMethod,
   EConnectionProviderKind,
   EManagedSqliteProvider,
@@ -200,6 +201,37 @@ describe('useConnectionForm', () => {
     );
     expect(body.type).toBe(DatabaseClientType.POSTGRES);
     expect(body.method).toBe(EConnectionMethod.STRING);
+  });
+
+  it('sends SSH config for STRING method health checks', async () => {
+    mockHealthCheck.mockResolvedValue({ isConnectedSuccess: true });
+
+    const { connectionMethod, connectionString, formData, handleTestConnection } =
+      createForm();
+
+    connectionMethod.value = EConnectionMethod.STRING;
+    connectionString.value = 'mysql://user:pass@mysql.internal:3306/app';
+    formData.sshEnabled = true;
+    formData.sshHost = 'bastion.internal';
+    formData.sshPort = 22;
+    formData.sshUsername = 'ubuntu';
+    formData.sshPassword = 'ssh-secret';
+
+    await handleTestConnection();
+
+    const body = mockHealthCheck.mock.calls[0][0];
+    expect(body.method).toBe(EConnectionMethod.STRING);
+    expect(body.ssh).toEqual({
+      enabled: true,
+      host: 'bastion.internal',
+      port: 22,
+      username: 'ubuntu',
+      authMethod: ESSHAuthMethod.PASSWORD,
+      password: 'ssh-secret',
+      privateKey: '',
+      storeInKeychain: true,
+      useSshKey: false,
+    });
   });
 
   it('sets testStatus to "error" when health check returns isConnectedSuccess: false', async () => {
@@ -594,6 +626,42 @@ describe('useConnectionForm', () => {
     expect(connection.workspaceId).toBe('ws-123');
     expect(connection.id).toBeDefined();
     expect(connection.createdAt).toBeDefined();
+  });
+
+  it('stores SSH config for new STRING connections', async () => {
+    mockHealthCheck.mockResolvedValue({ isConnectedSuccess: true });
+
+    const onAddNew = vi.fn();
+
+    const {
+      connectionMethod,
+      connectionString,
+      connectionName,
+      formData,
+      handleCreateConnection,
+    } = createForm({ onAddNew, workspaceId: 'ws-123' });
+
+    connectionMethod.value = EConnectionMethod.STRING;
+    connectionString.value = 'mysql://user:pass@mysql.internal:3306/app';
+    connectionName.value = 'mysql-over-ssh';
+    formData.sshEnabled = true;
+    formData.sshHost = 'bastion.internal';
+    formData.sshUsername = 'ubuntu';
+    formData.sshPassword = 'ssh-secret';
+
+    await handleCreateConnection();
+
+    const connection = onAddNew.mock.calls[0][0];
+    expect(connection.method).toBe(EConnectionMethod.STRING);
+    expect(connection.connectionString).toBe(
+      'mysql://user:pass@mysql.internal:3306/app'
+    );
+    expect(connection.ssh).toMatchObject({
+      enabled: true,
+      host: 'bastion.internal',
+      username: 'ubuntu',
+      password: 'ssh-secret',
+    });
   });
 
   it('handleCreateConnection clones tagIds into a plain array', async () => {

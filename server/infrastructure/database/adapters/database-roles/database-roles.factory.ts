@@ -15,7 +15,7 @@ import type { IDatabaseRoleAdapter, DatabaseRoleAdapterParams } from './types';
  * Extend this to add support for new database types
  */
 export async function createRoleAdapter(
-  dbType: DatabaseClientType,
+  dbType: DatabaseClientType | undefined,
   params: DatabaseRoleAdapterParams
 ): Promise<IDatabaseRoleAdapter> {
   return createDomainAdapter<IDatabaseRoleAdapter, DatabaseRoleAdapterParams>(

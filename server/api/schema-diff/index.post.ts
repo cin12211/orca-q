@@ -13,7 +13,7 @@ export default defineEventHandler(
     const body: SchemaDiffRequest = await readBody(event);
 
     const [sourceAdapter, targetAdapter] = await Promise.all([
-      createMetadataAdapter(body.source.type || DatabaseClientType.POSTGRES, {
+      createMetadataAdapter(body.source.type, {
         dbConnectionString: body.source.connectionString ?? '',
         host: body.source.host,
         port: body.source.port,
@@ -23,7 +23,7 @@ export default defineEventHandler(
         ssl: body.source.ssl,
         ssh: body.source.ssh,
       }),
-      createMetadataAdapter(body.target.type || DatabaseClientType.POSTGRES, {
+      createMetadataAdapter(body.target.type, {
         dbConnectionString: body.target.connectionString ?? '',
         host: body.target.host,
         port: body.target.port,
