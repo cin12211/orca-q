@@ -1,8 +1,11 @@
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
 # HeraQ / OrcaQ Agent Guide
 
-Orcaq is next-gen database client. Friendly, powerful
-This repo is a Nuxt 3 + Vue 3 + TypeScript with Electron
-desktop support.
+OrcaQ is a next-gen database client. Friendly, powerful.
+This repo is a Nuxt 3 + Vue 3 + TypeScript with Electron desktop support.
 
 ## Repo Layout And Important Directories
 
@@ -35,6 +38,50 @@ desktop support.
   the task before changing broad behavior.
 - Shared grid usage notes live in `components/base/data-grid/docs/USAGE_GUIDE.md`.
 
+## Code Patterns
+
+### Vue Components
+
+All components use `<script setup lang="ts">` with this order:
+1. Imports
+2. Props & Emits (`defineProps`, `defineEmits`)
+3. Stores & Composables
+4. Refs & Reactive State
+5. Computed Properties
+6. Functions
+7. Lifecycle Hooks
+8. Watchers
+
+Component file structure order: `<script setup>`, then `<template>`, then `<style scoped>` (if needed).
+
+### TypeScript Conventions
+
+- Use `interface` for object shapes: `interface Schema { id: string; name: string; }`
+- Use `type` for unions, intersections: `type TabViewType = 'TableOverview' | 'CodeQuery'`
+- Use `enum` for fixed sets with semantic meaning: `enum TabViewType { AllERD = 'AllERD' }`
+- Avoid `any` type; prefer explicit typing or `unknown` with type guards
+
+### Imports & Path Aliases
+
+- Use `~/` path alias for src root: `import { useSchemaStore } from '~/shared/stores/useSchemaStore'`
+- Avoid relative paths for cross-module imports (`../../../`)
+- Each module should have an `index.ts` barrel export
+
+### State Management
+
+| State Type | Use For | Location |
+|------------|---------|----------|
+| Local `ref`/`reactive` | UI state (modals, forms, temp) | Component |
+| Pinia Store | Shared state across components | `/shared/stores/` |
+| Composable | Reusable logic with local state | `/composables/` |
+| Provide/Inject | Deep component tree data | `/shared/contexts/` |
+
+Use `storeToRefs()` when accessing store state for reactivity: `const { workspaceId } = storeToRefs(wsStateStore)`
+
+### Styling
+
+Prefer Tailwind utilities. Use `<style scoped>` only for complex styles not achievable with Tailwind.
+
 ## Component Reuse Rules
 
 - Before creating a new UI component, check existing components in
@@ -55,6 +102,37 @@ desktop support.
 - Use another collection such as `lucide:` only when there is no suitable
   verified Hugeicons equivalent, and use that collection prefix explicitly (for
   example `lucide:chart-pie`).
+
+## Business Rules
+
+### Database Connections
+
+- Supported types: `postgres`, `mysql`, `mariadb`, `oracledb`, `sqlite3`, `redis`
+- Connection string formats:
+  - PostgreSQL: `postgresql://user:password@host:port/database`
+  - MySQL: `mysql://user:password@host:port/database`
+  - MariaDB: `mariadb://user:password@host:port/database`
+  - Oracle: `oracledb://user:password@host:port/serviceName`
+  - SQLite: `sqlite3:///absolute/path/to/database.sqlite`
+- Oracle structured-form connections use `serviceName` instead of `database`
+- Managed SQLite (Cloudflare D1, Turso) uses `managed` method and stays on SQL family path
+- Local SQLite uses `file` method (desktop runtime only)
+- Failed health checks return actionable driver messages but connections are still saved
+- A failed re-test must not delete or mutate an already saved connection record
+
+### Database Family Gating
+
+- Connection family drives visible tabs, sidebar panels, empty states, and unsupported-feature fallbacks
+- D1 and Turso stay on `sqlite3` type but resolve to the `sql` family
+- Redis hides SQL-only surfaces: `Schemas`, `ERD`, `UsersRoles`, schema diff, SQL backup/restore
+- Provider-limited SQL tools for D1/Turso must show clear unavailable state instead of redirecting away from SQL family
+
+### Workspaces
+
+- Workspace must have at least one connection to be functional
+- Deleting workspace cascades to all associated connections and state
+- Connections belong to exactly one workspace; `workspaceId` is immutable after creation
+- Deleting connection removes all associated tabs and state
 
 ## How To Run The Project
 
@@ -108,11 +186,8 @@ Nuxt/Electron workflows.
 
 This project has a knowledge graph at graphify-out/ with god nodes, community structure, and cross-file relationships.
 
-When the user types `/graphify`, invoke the `skill` tool with `skill: "graphify"` before doing anything else.
-
 Rules:
 - For codebase questions, first run `graphify query "<question>"` when graphify-out/graph.json exists. Use `graphify path "<A>" "<B>"` for relationships and `graphify explain "<concept>"` for focused concepts. These return a scoped subgraph, usually much smaller than GRAPH_REPORT.md or raw grep output.
-- Dirty graphify-out/ files are expected after hooks or incremental updates; dirty graph files are not a reason to skip graphify. Only skip graphify if the task is about stale or incorrect graph output, or the user explicitly says not to use it.
 - If graphify-out/wiki/index.md exists, use it for broad navigation instead of raw source browsing.
 - Read graphify-out/GRAPH_REPORT.md only for broad architecture review or when query/path/explain do not surface enough context.
 - After modifying code, run `graphify update .` to keep the graph current (AST-only, no API cost).
