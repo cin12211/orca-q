@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import { storeToRefs } from 'pinia';
+import { useHotkeys } from '~/core/composables/useHotKeys';
 import { isMacOS, isPWA, isElectron, isDesktopApp } from '~/core/helpers';
 import { useAppConfigStore } from '~/core/stores/appConfigStore';
+import { useTabViewsStore } from '~/core/stores/useTabViewsStore';
 import { ActivityBarHorizontal } from '../../activity-bar';
 import {
   getTabViewMinWidth,
@@ -16,6 +18,7 @@ const props = defineProps<{
 const route = useRoute();
 
 const appConfigStore = useAppConfigStore();
+const tabsStore = useTabViewsStore();
 
 const { isPrimarySidebarCollapsed, isSecondSidebarCollapsed } =
   storeToRefs(appConfigStore);
@@ -45,6 +48,26 @@ const onTitleBarDoubleClick = async () => {
     await (window as any).electronAPI.window.maximize();
   }
 };
+
+// Tab keyboard shortcuts
+useHotkeys([
+  {
+    key: 'meta+w',
+    callback: () => {
+      if (tabsStore.activeTab) {
+        tabsStore.closeTab(tabsStore.activeTab.id);
+      }
+    },
+  },
+  {
+    key: 'meta+alt+t',
+    callback: () => {
+      if (tabsStore.activeTab) {
+        tabsStore.closeOtherTab(tabsStore.activeTab.id);
+      }
+    },
+  },
+]);
 </script>
 
 <template>
