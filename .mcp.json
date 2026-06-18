@@ -14,10 +14,6 @@
       "args": ["@playwright/mcp@latest"],
       "type": "stdio"
     },
-    "gitnexus": {
-      "command": "npx",
-      "args": ["-y", "gitnexus", "mcp"]
-    },
     "context7": {
       "type": "http",
       "url": "https://mcp.context7.com/mcp",

@@ -235,7 +235,7 @@ const isElectronRuntime = computed(() => isElectron());
                 @select="tabsStore.closeOtherTab(currentTabMenuContext.id)"
               >
                 Close other
-                <ContextMenuShortcut>⌘AO</ContextMenuShortcut>
+                <ContextMenuShortcut>⌘⌥T</ContextMenuShortcut>
               </ContextMenuItem>
 
               <ContextMenuItem
@@ -243,7 +243,6 @@ const isElectronRuntime = computed(() => isElectron());
                 @select="tabsStore.closeToTheRight(currentTabMenuContext.id)"
               >
                 Close to the right
-                <ContextMenuShortcut>⌘AX</ContextMenuShortcut>
               </ContextMenuItem>
             </ContextMenuContent>
           </ContextMenu>
