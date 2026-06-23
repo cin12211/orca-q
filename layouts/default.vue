@@ -36,7 +36,7 @@ const isAccessRightPanel = computed(() => {
 
 useHotkeys([
   {
-    key: 'meta+shift+b',
+    key: 'meta+alt+b',
     callback: () => {
       if (isAccessRightPanel.value) {
         appConfigStore.onToggleSecondSidebar();
