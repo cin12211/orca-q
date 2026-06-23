@@ -126,7 +126,7 @@ useHotkeys([
           <PanelLeftClose class="size-4" v-else /> -->
             </Button>
           </TooltipTrigger>
-          <TooltipContent> Toggle Sidebar </TooltipContent>
+          <TooltipContent> Toggle Left Sidebar (⌘B) </TooltipContent>
         </Tooltip>
       </div>
 
@@ -149,7 +149,7 @@ useHotkeys([
               <Icon name="hugeicons:sidebar-right-01" class="size-5!" v-else />
             </Button>
           </TooltipTrigger>
-          <TooltipContent> Toggle Sidebar </TooltipContent>
+          <TooltipContent> Toggle Right Sidebar (⌘⌥B) </TooltipContent>
         </Tooltip>
       </div>
     </div>

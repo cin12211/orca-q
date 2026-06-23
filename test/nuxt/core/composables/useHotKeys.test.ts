@@ -162,6 +162,25 @@ describe('useHotkeys', () => {
     wrapper.unmount();
   });
 
+  it('matches hotkeys using code when alt changes the key value', () => {
+    const callback = vi.fn();
+    const { wrapper } = mountHotkeysHarness({
+      hotkeys: [{ key: 'meta+alt+t', callback }],
+    });
+
+    window.dispatchEvent(
+      new KeyboardEvent('keydown', {
+        key: '∂',
+        code: 'KeyT',
+        altKey: true,
+        metaKey: true,
+      })
+    );
+
+    expect(callback).toHaveBeenCalledTimes(1);
+    wrapper.unmount();
+  });
+
   it('removes listener on unmount', () => {
     const callback = vi.fn();
     const { wrapper } = mountHotkeysHarness({
