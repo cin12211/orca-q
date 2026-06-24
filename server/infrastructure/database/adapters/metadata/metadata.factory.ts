@@ -10,7 +10,7 @@ import type {
 } from './types';
 
 export async function createMetadataAdapter(
-  dbType: DatabaseClientType,
+  dbType: DatabaseClientType | undefined,
   params: DatabaseMetadataAdapterParams
 ): Promise<IDatabaseMetadataAdapter> {
   return createDomainAdapter<

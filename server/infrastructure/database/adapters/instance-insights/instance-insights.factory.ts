@@ -10,7 +10,7 @@ import type {
 } from './types';
 
 export async function createInstanceInsightsAdapter(
-  dbType: DatabaseClientType,
+  dbType: DatabaseClientType | undefined,
   params: InstanceInsightsAdapterParams
 ): Promise<IDatabaseInstanceInsightsAdapter> {
   return createDomainAdapter<

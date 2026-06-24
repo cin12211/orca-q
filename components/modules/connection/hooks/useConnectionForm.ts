@@ -183,6 +183,17 @@ export function useConnectionForm(props: {
   const canUseNetworkOptions = computed(() =>
     NETWORK_CONNECTION_METHODS.has(connectionMethod.value)
   );
+  const isSSHConfigValid = computed(() => {
+    if (!formData.sshEnabled || !canUseNetworkOptions.value) {
+      return true;
+    }
+
+    return Boolean(
+      formData.sshHost &&
+        formData.sshUsername &&
+        (formData.sshUseKey ? formData.sshPrivateKey : formData.sshPassword)
+    );
+  });
 
   const getDefaultPort = (type: DatabaseClientType | null) => {
     if (!type) return '';
@@ -296,6 +307,7 @@ export function useConnectionForm(props: {
         type,
         method: EConnectionMethod.STRING,
         stringConnection: connectionString.value,
+        ssh: buildSSHConfig(),
       };
     }
 
@@ -438,6 +450,7 @@ export function useConnectionForm(props: {
 
     if (connectionMethod.value === EConnectionMethod.STRING) {
       connection.connectionString = connectionString.value;
+      connection.ssh = buildSSHConfig();
     } else if (connectionMethod.value === EConnectionMethod.FILE) {
       connection.filePath = formData.filePath;
       connection.connectionString = buildSqliteConnectionString(
@@ -518,7 +531,7 @@ export function useConnectionForm(props: {
     if (!connectionName.value) return false;
 
     if (connectionMethod.value === EConnectionMethod.STRING) {
-      return !!connectionString.value;
+      return !!connectionString.value && isSSHConfigValid.value;
     }
 
     if (connectionMethod.value === EConnectionMethod.FILE) {
@@ -543,7 +556,8 @@ export function useConnectionForm(props: {
         (formData.port || getDefaultPort(dbType.value)) &&
         formData.username &&
         formData.password &&
-        formData.serviceName
+        formData.serviceName &&
+        isSSHConfigValid.value
       );
     }
 
@@ -551,7 +565,8 @@ export function useConnectionForm(props: {
       formData.host &&
       (formData.port || getDefaultPort(dbType.value)) &&
       formData.username &&
-      formData.database
+      formData.database &&
+      isSSHConfigValid.value
     );
   });
 

@@ -3,10 +3,10 @@
  * Deletes a PostgreSQL role/user
  */
 import { DatabaseClientType } from '~/core/constants/database-client-type';
-import type { DeleteRoleRequest, GrantRevokeResponse } from '~/core/types';
+import type { DeleteRoleRequest, GrantRevokeResponse, DatabaseMetadataRequestParams } from '~/core/types';
 import { createRoleAdapter } from '~/server/infrastructure/database/adapters/database-roles';
 
-interface RequestBody extends DeleteRoleRequest {
+interface RequestBody extends DeleteRoleRequest, DatabaseMetadataRequestParams {
   dbType?: DatabaseClientType;
 }
 
@@ -22,10 +22,8 @@ export default defineEventHandler(
     }
 
     const adapter = await createRoleAdapter(
-      body.dbType || DatabaseClientType.POSTGRES,
-      {
-        dbConnectionString: body.dbConnectionString,
-      }
+      body.type || body.dbType,
+      body
     );
 
     return adapter.deleteRole(body.roleName);

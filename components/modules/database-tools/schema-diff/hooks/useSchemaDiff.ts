@@ -1,3 +1,4 @@
+import { getConnectionParams } from '~/core/helpers/connection-helper';
 import type { Connection } from '~/core/types/entities/connection.entity';
 import { schemaDiffService } from '../services/schemaDiff.service';
 import type {
@@ -12,15 +13,8 @@ export function useSchemaDiff() {
   const safeMode = ref(true);
 
   const buildParams = (conn: Connection): ConnectionParams => ({
-    type: conn.type,
+    ...getConnectionParams(conn),
     connectionString: conn.connectionString,
-    host: conn.host,
-    port: conn.port,
-    username: conn.username,
-    password: conn.password,
-    database: conn.database,
-    ssl: conn.ssl,
-    ssh: conn.ssh,
   });
 
   const runDiff = async (source: Connection, target: Connection) => {

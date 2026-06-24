@@ -1,18 +1,14 @@
 import { defineEventHandler, readBody, createError } from 'h3';
 import { DatabaseClientType } from '~/core/constants/database-client-type';
+import type { DatabaseMetadataRequestParams } from '~/core/types';
 import { createFunctionAdapter } from '~/server/infrastructure/database/adapters/functions';
 
+interface RequestBody extends DatabaseMetadataRequestParams {
+  schema: string;
+}
+
 export default defineEventHandler(async event => {
-  const body = await readBody<{
-    dbConnectionString: string;
-    host?: string;
-    port?: string;
-    username?: string;
-    password?: string;
-    database?: string;
-    type?: DatabaseClientType;
-    schema: string;
-  }>(event);
+  const body = await readBody<RequestBody>(event);
 
   if ((!body.dbConnectionString && !body.host) || !body.schema) {
     throw createError({
@@ -22,15 +18,8 @@ export default defineEventHandler(async event => {
   }
 
   const adapter = await createFunctionAdapter(
-    body.type || DatabaseClientType.POSTGRES,
-    {
-      dbConnectionString: body.dbConnectionString,
-      host: body.host,
-      port: body.port,
-      username: body.username,
-      password: body.password,
-      database: body.database,
-    }
+    body.type,
+    body
   );
 
   return await adapter.getOverviewFunctions(body.schema);
