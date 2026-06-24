@@ -4,6 +4,7 @@ import { MysqlQueryAdapter } from './mysql/mysql-query.adapter';
 import { OracleQueryAdapter } from './oracle/oracle-query.adapter';
 import { PostgresQueryAdapter } from './postgres/postgres-query.adapter';
 import { SqliteQueryAdapter } from './sqlite/sqlite-query.adapter';
+import { MssqlQueryAdapter } from './mssql/mssql-query.adapter';
 import type {
   IDatabaseQueryAdapter,
   DatabaseQueryAdapterParams,
@@ -25,6 +26,7 @@ export async function createQueryAdapter(
         MysqlQueryAdapter.create(params, DatabaseClientType.MARIADB),
       oracledb: OracleQueryAdapter.create,
       sqlite3: SqliteQueryAdapter.create,
+      mssql: MssqlQueryAdapter.create,
     }
   );
 }

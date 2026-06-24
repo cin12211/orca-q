@@ -17,6 +17,7 @@ import {
 import { LocalStorageManager } from '~/core/persist/LocalStorageManager';
 import { useQuickQueryLogs, type Connection } from '~/core/stores';
 import { useAppConfigStore } from '~/core/stores/appConfigStore';
+import { getSqlDialect } from '~/core/sql-dialect/dialect-factory';
 
 export interface OrderBy {
   columnName?: string;
@@ -85,17 +86,9 @@ export const useTableQueryBuilder = ({
   });
 
   // Returns a quoting function appropriate for the active connection's DB type.
-  // MySQL and MariaDB use backtick quoting; all others (Postgres, Oracle, SQLite) use double-quotes.
   const quoteIdent = computed(() => {
-    const dbType = connection.value?.type;
-    if (
-      dbType === DatabaseClientType.MYSQL ||
-      dbType === DatabaseClientType.MYSQL2 ||
-      dbType === DatabaseClientType.MARIADB
-    ) {
-      return (name: string) => `\`${name}\``;
-    }
-    return (name: string) => `"${name}"`;
+    const dialect = getSqlDialect(connection.value?.type as DatabaseClientType);
+    return (name: string) => dialect.quoteIdentifier(name);
   });
 
   const baseQueryString = computed(() => {
@@ -136,6 +129,20 @@ export const useTableQueryBuilder = ({
 
     const limitClause = `LIMIT ${pagination.limit}`;
     const offsetClause = `OFFSET ${pagination.offset}`;
+    const dbType = connection.value?.type;
+
+    if (dbType === DatabaseClientType.MSSQL) {
+      if (!orderClauses) {
+        const orderColumn =
+          orderBy?.columnName || primaryKeys.value[0] || columns.value[0];
+        if (orderColumn) {
+          orderClauses = `ORDER BY ${q(orderColumn)} ASC`;
+        } else {
+          orderClauses = `ORDER BY (SELECT NULL)`;
+        }
+      }
+      return `${DEFAULT_QUERY} ${q(schemaName)}.${q(tableName)} ${whereClauses.value || ''} ${orderClauses} OFFSET ${pagination.offset} ROWS FETCH NEXT ${pagination.limit} ROWS ONLY`;
+    }
 
     return `${DEFAULT_QUERY} ${q(schemaName)}.${q(tableName)} ${whereClauses.value || ''} ${orderClauses} ${limitClause} ${offsetClause}`;
   });

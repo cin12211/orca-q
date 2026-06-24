@@ -5,6 +5,7 @@ export type MetadataTypeAliasDatabaseFamily =
   | DatabaseClientType.MYSQL
   | DatabaseClientType.MARIADB
   | DatabaseClientType.SQLITE3
+  | DatabaseClientType.MSSQL
   | DatabaseClientType.ORACLE;
 
 export type MetadataTypeAliasMatchKind = 'exact' | 'prefix' | 'pattern';
@@ -191,11 +192,19 @@ const ORACLE_TYPE_ALIAS_RULES: MetadataTypeAliasRule[] = [
   { matchKind: 'exact', rawType: 'float', alias: 'float', priority: 100 },
 ];
 
+const MSSQL_TYPE_ALIAS_RULES: MetadataTypeAliasRule[] = [
+  { matchKind: 'exact', rawType: 'int', alias: 'int', priority: 10 },
+  { matchKind: 'exact', rawType: 'varchar', alias: 'varchar', priority: 20 },
+  { matchKind: 'exact', rawType: 'nvarchar', alias: 'varchar', priority: 30 },
+  { matchKind: 'exact', rawType: 'datetime', alias: 'timestamp', priority: 40 },
+];
+
 export const METADATA_TYPE_ALIAS_FAMILIES: MetadataTypeAliasDatabaseFamily[] = [
   DatabaseClientType.POSTGRES,
   DatabaseClientType.MYSQL,
   DatabaseClientType.MARIADB,
   DatabaseClientType.SQLITE3,
+  DatabaseClientType.MSSQL,
   DatabaseClientType.ORACLE,
 ];
 
@@ -208,6 +217,7 @@ export const METADATA_TYPE_ALIAS_RULES: Record<
   [DatabaseClientType.MARIADB]: MYSQL_FAMILY_TYPE_ALIAS_RULES,
   [DatabaseClientType.SQLITE3]: SQLITE_TYPE_ALIAS_RULES,
   [DatabaseClientType.ORACLE]: ORACLE_TYPE_ALIAS_RULES,
+  [DatabaseClientType.MSSQL]: MSSQL_TYPE_ALIAS_RULES,
 };
 
 const METADATA_TYPE_ALIAS_DATABASE_ALIASES: Partial<

@@ -4,6 +4,7 @@ import { MysqlViewAdapter } from './mysql/mysql-view.adapter';
 import { OracleViewAdapter } from './oracle/oracle-view.adapter';
 import { PostgresViewAdapter } from './postgres/postgres-view.adapter';
 import { SqliteViewAdapter } from './sqlite/sqlite-view.adapter';
+import { MssqlViewAdapter } from './mssql/mssql-view.adapter';
 import type { IDatabaseViewAdapter, DatabaseViewAdapterParams } from './types';
 
 export async function createViewAdapter(
@@ -21,6 +22,7 @@ export async function createViewAdapter(
         MysqlViewAdapter.create(createParams, DatabaseClientType.MARIADB),
       oracledb: OracleViewAdapter.create,
       sqlite3: SqliteViewAdapter.create,
+      mssql: MssqlViewAdapter.create,
     }
   );
 }

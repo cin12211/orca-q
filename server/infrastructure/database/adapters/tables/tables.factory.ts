@@ -4,6 +4,7 @@ import { MysqlTableAdapter } from './mysql/mysql-table.adapter';
 import { OracleTableAdapter } from './oracle/oracle-table.adapter';
 import { PostgresTableAdapter } from './postgres/postgres-table.adapter';
 import { SqliteTableAdapter } from './sqlite/sqlite-table.adapter';
+import { MssqlTableAdapter } from './mssql/mssql-table.adapter';
 import type {
   IDatabaseTableAdapter,
   DatabaseTableAdapterParams,
@@ -25,6 +26,7 @@ export async function createTableAdapter(
         MysqlTableAdapter.create(params, DatabaseClientType.MARIADB),
       oracledb: OracleTableAdapter.create,
       sqlite3: SqliteTableAdapter.create,
+      mssql: MssqlTableAdapter.create,
     }
   );
 }

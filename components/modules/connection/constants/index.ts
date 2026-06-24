@@ -70,8 +70,9 @@ export const databaseSupports: IDBSupport[] = [
     type: DatabaseClientType.MSSQL,
     name: 'SQL Server',
     icon: h(Icon, { name: 'simple-icons:microsoftsqlserver' }),
-    isSupport: false,
-    unsupportedLabel: 'Coming soon',
+    isSupport: true,
+    isBeta: true,
+    description: 'Relational SQL workflows',
   },
   {
     type: DatabaseClientType.SNOWFLAKE,

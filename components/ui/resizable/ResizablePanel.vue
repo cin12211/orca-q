@@ -9,7 +9,7 @@ const panelRef = ref<InstanceType<typeof SplitterPanel>>();
 
 const forwarded = useForwardPropsEmits(props, emits);
 
-defineExpose(panelRef);
+defineExpose({ panelRef });
 </script>
 
 <template>

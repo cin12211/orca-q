@@ -4,6 +4,7 @@ import { MysqlFunctionAdapter } from './mysql/mysql-function.adapter';
 import { OracleFunctionAdapter } from './oracle/oracle-function.adapter';
 import { PostgresFunctionAdapter } from './postgres/postgres-function.adapter';
 import { SqliteFunctionAdapter } from './sqlite/sqlite-function.adapter';
+import { MssqlFunctionAdapter } from './mssql/mssql-function.adapter';
 import type {
   IDatabaseFunctionAdapter,
   DatabaseFunctionAdapterParams,
@@ -23,5 +24,6 @@ export async function createFunctionAdapter(
       MysqlFunctionAdapter.create(createParams, DatabaseClientType.MARIADB),
     oracledb: OracleFunctionAdapter.create,
     sqlite3: SqliteFunctionAdapter.create,
+    mssql: MssqlFunctionAdapter.create,
   });
 }

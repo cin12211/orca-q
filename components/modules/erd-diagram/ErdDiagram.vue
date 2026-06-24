@@ -21,10 +21,12 @@ import type { ErdDiagramProps } from '~/components/modules/erd-diagram/type';
 import ErdControls from './components/Controls/ErdControls.vue';
 import CustomEdge from './components/CustomEdge.vue';
 import ErdFilterPanal from './components/ErdFilterPanal.vue';
+import { useErdExport } from './hooks/useErdExport';
 import { useErdFlow } from './hooks/useErdControl';
 import { buildTableNodeId } from './utils';
 
 const { width, height } = useWindowSize();
+const erdContainerRef = ref<HTMLElement | null>(null);
 
 export interface ErdDiagramAdditionalProps {
   isExpanded?: (tableId: string) => boolean;
@@ -56,6 +58,9 @@ const {
   onfocusNode,
 } = useErdFlow(props);
 
+const { isExporting, exportMermaid, exportJson, exportImage, exportPdf } =
+  useErdExport(erdContainerRef);
+
 const onArrangeDiagram = () => {
   getNodes.value?.forEach(node => {
     const position = props.matrixTablePosition?.[node.id];
@@ -70,6 +75,7 @@ const onArrangeDiagram = () => {
 
 <template>
   <VueFlow
+    ref="erdContainerRef"
     class="erd-flow w-full"
     :pan-on-drag="isHand"
     :pan-on-scroll="true"
@@ -130,11 +136,16 @@ const onArrangeDiagram = () => {
     />
     <ErdControls
       :isShowFilter="props.isShowFilter"
+      :is-exporting="isExporting"
       v-model:isHand="isHand"
       v-model:isUseBgGrid="isUseBgGrid"
       v-model:isUseMiniMap="isUseMiniMap"
       @update:is-show-filter="emit('update:isShowFilter', $event)"
       @arrange="onArrangeDiagram"
+      @export-mermaid="exportMermaid"
+      @export-json="exportJson"
+      @export-image="exportImage"
+      @export-pdf="exportPdf"
     />
   </VueFlow>
 

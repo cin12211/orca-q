@@ -8,6 +8,7 @@ import { MysqlRoleAdapter } from './mysql/mysql-role.adapter';
 import { OracleRoleAdapter } from './oracle/oracle-role.adapter';
 import { PostgresRoleAdapter } from './postgres/postgres-role.adapter';
 import { SqliteRoleAdapter } from './sqlite/sqlite-role.adapter';
+import { MssqlRoleAdapter } from './mssql/mssql-role.adapter';
 import type { IDatabaseRoleAdapter, DatabaseRoleAdapterParams } from './types';
 
 /**
@@ -29,6 +30,7 @@ export async function createRoleAdapter(
         MysqlRoleAdapter.create(createParams, DatabaseClientType.MARIADB),
       oracledb: OracleRoleAdapter.create,
       sqlite3: SqliteRoleAdapter.create,
+      mssql: MssqlRoleAdapter.create,
     }
   );
 }

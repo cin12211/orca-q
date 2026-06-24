@@ -9,6 +9,7 @@ import {
 import type { RowData } from '~/components/base/data-grid/utils';
 import { DatabaseClientType } from '~/core/constants/database-client-type';
 import { uuidv4 } from '~/core/helpers';
+import { getConnectionParams } from '~/core/helpers/connection-helper';
 import type { Connection } from '~/core/stores';
 import type { DatabaseDriverError } from '~/core/types';
 import { ViewMode, type ExecutedResultItem } from '../interfaces';
@@ -295,10 +296,7 @@ export function useQueryExecution({
         const result = await $fetch('/api/query/raw-execute', {
           method: 'POST',
           body: {
-            dbConnectionString: connection.value?.connectionString,
-            type: connection.value?.type,
-            providerKind: connection.value?.providerKind,
-            managedSqlite: connection.value?.managedSqlite,
+            ...getConnectionParams(connection.value),
             query: executeQuery,
             params: fileParameters,
           },
@@ -351,11 +349,8 @@ export function useQueryExecution({
 
     const { abort } = executeStreamingQuery({
       query: executeQuery,
-      dbConnectionString: connection.value?.connectionString || '',
-      type: connection.value?.type,
-      providerKind: connection.value?.providerKind,
-      managedSqlite: connection.value?.managedSqlite,
       params: fileParameters,
+      ...getConnectionParams(connection.value),
       onMeta: (fields, command) => {
         fieldDefs.value = fields;
         executedResultItem.metadata.fieldDefs = fields;
@@ -464,11 +459,15 @@ export function useQueryExecution({
    */
   const cancelStreamingQuery = () => {
     if (activeStreamAbort) {
-      activeStreamAbort();
+      try {
+        activeStreamAbort();
+      } catch (e) {
+        console.error('[cancelStreamingQuery] Error calling activeStreamAbort:', e);
+      }
       activeStreamAbort = null;
-      queryProcessState.executeLoading = false;
-      queryProcessState.isStreaming = false;
     }
+    queryProcessState.executeLoading = false;
+    queryProcessState.isStreaming = false;
   };
 
   return {
