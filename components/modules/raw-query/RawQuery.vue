@@ -307,12 +307,7 @@ onBeforeUnmount(() => {
           <RawQueryEditorFooter
             :cursor-info="cursorInfo"
             :execute-loading="queryProcessState.executeLoading"
-            :execute-errors="!!queryProcessState.executeErrors"
-            :is-have-one-execute="queryProcessState.isHaveOneExecute"
             :is-streaming="queryProcessState.isStreaming"
-            :streaming-row-count="queryProcessState.streamingRowCount"
-            :queryTime="queryProcessState.queryTime"
-            :raw-query-results-length="currentRawQueryResult.length"
             :explain-analyze-option-items="explainAnalyzeOptionItems"
             :serialize-mode="serializeMode"
             :is-support-format="isFormatSupported"

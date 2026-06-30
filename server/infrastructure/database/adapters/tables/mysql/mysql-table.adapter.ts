@@ -1,5 +1,5 @@
 import { createError } from 'h3';
-import { DatabaseClientType } from '~/core/constants/database-client-type';
+import { DatabaseClientType, BULK_CHUNK_SIZE } from '~/core/constants';
 import type {
   BulkUpdateResponse,
   RLSPolicy,
@@ -25,6 +25,14 @@ function formatBytes(value?: number | null) {
 
 function escapeMySqlIdentifier(identifier: string) {
   return `\`${identifier.replace(/`/g, '``')}\``;
+}
+
+function chunkArray<T>(arr: T[], size: number): T[][] {
+  const chunks: T[][] = [];
+  for (let i = 0; i < arr.length; i += size) {
+    chunks.push(arr.slice(i, i + size));
+  }
+  return chunks;
 }
 
 export class MysqlTableAdapter
@@ -286,23 +294,48 @@ export class MysqlTableAdapter
   private async executeStatements(
     statements: string[]
   ): Promise<BulkUpdateResponse> {
-    const BULK_CHUNK_SIZE = 500;
     const startTime = performance.now();
+    const data = [] as NonNullable<BulkUpdateResponse['data']>;
+    const connection = await this.adapter.acquireRawConnection();
+
+    const queryPromise = (sql: string): Promise<{ rows: any; fields: any }> => {
+      return new Promise((resolve, reject) => {
+        connection.query(
+          { sql, rowsAsArray: true },
+          (err: any, rows: any, fields: any) => {
+            if (err) reject(err);
+            else resolve({ rows, fields });
+          }
+        );
+      });
+    };
 
     try {
-      const data = [] as NonNullable<BulkUpdateResponse['data']>;
+      await queryPromise('START TRANSACTION');
 
-      for (let i = 0; i < statements.length; i += BULK_CHUNK_SIZE) {
-        const chunk = statements.slice(i, i + BULK_CHUNK_SIZE);
+      const chunks = chunkArray(statements, BULK_CHUNK_SIZE);
+      for (const chunk of chunks) {
         for (const statement of chunk) {
-          const result = await this.adapter.rawOut(statement);
+          const { rows } = await queryPromise(statement);
+          let affectedRows = 0;
+          let results: Record<string, unknown>[] = [];
+
+          if (Array.isArray(rows)) {
+            affectedRows = rows.length;
+            results = rows as Record<string, unknown>[];
+          } else if (rows) {
+            affectedRows = (rows as any).affectedRows || 0;
+          }
+
           data.push({
             query: statement,
-            affectedRows: result.rowCount || 0,
-            results: result.rows as Record<string, unknown>[],
+            affectedRows,
+            results,
           });
         }
       }
+
+      await queryPromise('COMMIT');
 
       return {
         success: true,
@@ -310,11 +343,18 @@ export class MysqlTableAdapter
         queryTime: Number((performance.now() - startTime).toFixed(2)),
       };
     } catch (error: any) {
+      try {
+        await queryPromise('ROLLBACK');
+      } catch (rollbackError) {
+        // Silent catch
+      }
       return {
         success: false,
         error: error?.message || 'Failed to execute statements',
         queryTime: Number((performance.now() - startTime).toFixed(2)),
       };
+    } finally {
+      await this.adapter.releaseRawConnection(connection);
     }
   }
 

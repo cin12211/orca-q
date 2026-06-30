@@ -188,6 +188,7 @@ describe('ResultTabResultView', () => {
             ],
             template: '<div data-test="raw-query-result-control-bar" />',
           },
+          LoadingOverlay: { template: '<div data-test="loading-overlay" />' },
         },
       },
     });
