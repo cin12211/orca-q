@@ -1,12 +1,20 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import { Handle, Position, useVueFlow, type NodeProps } from '@vue-flow/core';
-import type { ColumnMetadata, TableMetadata } from '~/core/types';
-import { HANDLE_HEIGHT, HANDLE_LEFT, ROW_HEIGHT, ROW_WIDTH } from './constants';
-import type { LabelTableNode } from './type';
+import type { ColumnMetadata } from '~/core/types';
+import {
+  ERD_HEADER_HANDLE_SOURCE_ID,
+  ERD_HEADER_HANDLE_TARGET_ID,
+  HANDLE_HEIGHT,
+  HANDLE_LEFT,
+  HEADER_HANDLE_TOP,
+  ROW_HEIGHT,
+  ROW_WIDTH,
+} from './constants';
+import type { ErdTableNodeData, LabelTableNode } from './type';
 import { buildTableNodeId, focusNodeById, getHandPosition } from './utils';
 
-export interface ErdTableNodeProps extends NodeProps<TableMetadata> {
+export interface ErdTableNodeProps extends NodeProps<ErdTableNodeData> {
   isExpanded?: boolean;
   hasRelations?: boolean;
 }
@@ -16,6 +24,7 @@ const props = defineProps<ErdTableNodeProps>();
 const emit = defineEmits<{
   (e: 'expand', tableId: string): void;
   (e: 'collapse', tableId: string): void;
+  (e: 'toggleCollapseHeader', tableId: string): void;
 }>();
 
 const { findNode, fitView, getViewport } = useVueFlow();
@@ -35,6 +44,10 @@ const onToggleExpand = () => {
   } else {
     emit('expand', nodeId.value);
   }
+};
+
+const onToggleCollapseHeader = () => {
+  emit('toggleCollapseHeader', nodeId.value);
 };
 
 // --- 1️⃣ Precompute lookup maps (O(1) instead of array.includes)
@@ -83,6 +96,8 @@ const primaryHandles = computed(() =>
   })
 );
 
+const isHeaderCollapsed = computed(() => !!props.data.isHeaderCollapsed);
+
 const onFocusNode = (
   row: ColumnMetadata & { isPrimary: boolean; isForeign: boolean }
 ) => {
@@ -120,106 +135,157 @@ const onFocusNode = (
         class="rounded-t-md box-border p-2 bg-primary dark:bg-accent text-primary-foreground dark:text-foreground flex items-center justify-between gap-2"
         :style="{ height: ROW_HEIGHT + 10 + 'px' }"
       >
+        <Button
+          size="iconMd"
+          :title="isHeaderCollapsed ? 'Expand table' : 'Collapse table'"
+          @click.stop="onToggleCollapseHeader"
+        >
+          <Icon
+            :name="
+              isHeaderCollapsed
+                ? 'hugeicons:arrow-down-01'
+                : 'hugeicons:arrow-up-01'
+            "
+            class="w-5 h-5"
+          />
+        </Button>
+
         <p class="flex-1 text-center px-2 box-border text-xl truncate">
           {{ data.table }}
           {{ data.schema === 'public' ? '' : `(${data.schema})` }}
         </p>
 
-        <Button
-          v-if="hasRelations"
-          size="iconMd"
-          :title="
-            isExpanded ? 'Collapse related tables' : 'Expand related tables'
-          "
-          @click.stop="onToggleExpand"
-        >
-          <Icon
-            :name="
-              isExpanded ? 'hugeicons:remove-circle' : 'hugeicons:add-circle'
+        <div class="flex items-center gap-2">
+          <Button
+            v-if="hasRelations"
+            size="iconMd"
+            :title="
+              isExpanded ? 'Collapse related tables' : 'Expand related tables'
             "
-            class="w-5 h-5"
-          />
-        </Button>
+            @click.stop="onToggleExpand"
+          >
+            <Icon
+              :name="
+                isExpanded ? 'hugeicons:remove-circle' : 'hugeicons:add-circle'
+              "
+              class="w-5 h-5"
+            />
+          </Button>
+        </div>
       </div>
 
       <!-- Columns -->
-      <div
-        v-for="row in rows"
-        :key="row.name"
-        :class="[
-          'grid grid-cols-3 px-2 border-t border-border bg-card transition-colors',
-          row.isForeign && 'cursor-pointer hover:bg-primary/10',
-          (label as LabelTableNode)?.get(row.name) && 'bg-primary/10',
-        ]"
-        :style="{ height: ROW_HEIGHT + 'px' }"
-        @click="onFocusNode(row)"
-      >
-        <div class="col-span-2 py-2 truncate flex items-center gap-1">
-          <div class="w-6 flex items-center justify-center">
+      <template v-if="!isHeaderCollapsed">
+        <div
+          v-for="row in rows"
+          :key="row.name"
+          :class="[
+            'grid grid-cols-3 px-2 border-t border-border bg-card transition-colors',
+            row.isForeign && 'cursor-pointer hover:bg-primary/10',
+            (label as LabelTableNode)?.get(row.name) && 'bg-primary/10',
+          ]"
+          :style="{ height: ROW_HEIGHT + 'px' }"
+          @click="onFocusNode(row)"
+        >
+          <div class="col-span-2 py-2 truncate flex items-center gap-1">
+            <div class="w-6 flex items-center justify-center">
+              <Icon
+                v-if="row.isPrimary"
+                name="hugeicons:key-01"
+                class="w-4 text-yellow-400 dark:text-yellow-300 text-xl"
+              />
+              <Icon
+                v-else-if="row.isForeign"
+                name="hugeicons:key-01"
+                class="min-w-4 text-muted-foreground text-xl"
+              />
+              <Icon
+                v-else-if="row.nullable"
+                name="hugeicons:diamond"
+                class="min-w-4 text-muted-foreground/60"
+              />
+              <Icon
+                v-else
+                name="mynaui:diamond-solid"
+                class="min-w-4 text-muted-foreground/60"
+              />
+            </div>
+            <p class="truncate">{{ row.name }}</p>
+
             <Icon
-              v-if="row.isPrimary"
-              name="hugeicons:key-01"
-              class="w-4 text-yellow-400 dark:text-yellow-300 text-xl"
-            />
-            <Icon
-              v-else-if="row.isForeign"
-              name="hugeicons:key-01"
-              class="min-w-4 text-muted-foreground text-xl"
-            />
-            <Icon
-              v-else-if="row.nullable"
-              name="hugeicons:diamond"
-              class="min-w-4 text-muted-foreground/60"
-            />
-            <Icon
-              v-else
-              name="mynaui:diamond-solid"
-              class="min-w-4 text-muted-foreground/60"
+              v-if="row.isForeign"
+              name="hugeicons:link-04"
+              class="min-w-3 text-muted-foreground"
             />
           </div>
-          <p class="truncate">{{ row.name }}</p>
-
-          <Icon
-            v-if="row.isForeign"
-            name="hugeicons:link-04"
-            class="min-w-3 text-muted-foreground"
-          />
+          <div
+            class="col-span-1 py-2 truncate text-center text-muted-foreground"
+          >
+            {{ row.type }}
+          </div>
         </div>
-        <div class="col-span-1 py-2 truncate text-center text-muted-foreground">
-          {{ row.type }}
-        </div>
-      </div>
+      </template>
     </div>
 
-    <!-- Handles -->
+    <!-- Header Handles (always rendered so collapsed/expanded edges anchor correctly) -->
     <Handle
-      v-for="hand in foreignHandles"
-      :key="hand.id"
+      :id="ERD_HEADER_HANDLE_SOURCE_ID"
       type="source"
-      :id="hand.id"
       :position="Position.Left"
       :connectable="false"
       :style="{
-        top: hand.top + 'px',
+        top: HEADER_HANDLE_TOP,
         left: HANDLE_LEFT,
         height: HANDLE_HEIGHT,
         opacity: 0,
+        pointerEvents: 'none',
       }"
     />
     <Handle
-      v-for="hand in primaryHandles"
-      :key="hand.id"
+      :id="ERD_HEADER_HANDLE_TARGET_ID"
       type="target"
-      :id="hand.id"
       :position="Position.Right"
       :connectable="false"
       :style="{
-        top: hand.top + 'px',
+        top: HEADER_HANDLE_TOP,
         right: HANDLE_LEFT,
         height: HANDLE_HEIGHT,
         opacity: 0,
+        pointerEvents: 'none',
       }"
     />
+
+    <!-- Handles -->
+    <template v-if="!isHeaderCollapsed">
+      <Handle
+        v-for="hand in foreignHandles"
+        :key="hand.id"
+        type="source"
+        :id="hand.id"
+        :position="Position.Left"
+        :connectable="false"
+        :style="{
+          top: hand.top + 'px',
+          left: HANDLE_LEFT,
+          height: HANDLE_HEIGHT,
+          opacity: 0,
+        }"
+      />
+      <Handle
+        v-for="hand in primaryHandles"
+        :key="hand.id"
+        type="target"
+        :id="hand.id"
+        :position="Position.Right"
+        :connectable="false"
+        :style="{
+          top: hand.top + 'px',
+          right: HANDLE_LEFT,
+          height: HANDLE_HEIGHT,
+          opacity: 0,
+        }"
+      />
+    </template>
   </div>
 </template>
 
