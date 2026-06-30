@@ -21,6 +21,7 @@ import { getReorderDestinationIndex } from '@atlaskit/pragmatic-drag-and-drop-hi
 import { combine } from '@atlaskit/pragmatic-drag-and-drop/combine';
 import { monitorForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import { useCommandPalette } from '~/components/modules/command-palette';
+import { useHotkeys } from '~/core/composables/useHotKeys';
 import { useTabManagement } from '~/core/composables/useTabManagement';
 import { useWorkspaceConnectionRoute } from '~/core/composables/useWorkspaceConnectionRoute';
 import { getConnectionCapabilityProfile } from '~/core/constants/connection-capabilities';
@@ -42,6 +43,18 @@ const { openStarterSqlTab, openNewSqlFileTab, openInstanceInsightsTab } =
   useTabManagement();
 const { openCommandPalette } = useCommandPalette();
 const { workspaceId, connectionId } = useWorkspaceConnectionRoute();
+
+useHotkeys([
+  {
+    key: 'meta+q',
+    callback: () => {
+      if (canOpenWorkspaceTabs.value) {
+        openStarterSqlTab();
+      }
+    },
+    isPreventDefault: true,
+  },
+]);
 
 const { tabViews } = storeToRefs(tabsStore);
 

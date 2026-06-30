@@ -12,6 +12,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
+import { formatNumber, formatQueryTime } from '~/core/helpers/format';
 
 defineProps<{
   pendingCount: number;
@@ -19,6 +20,12 @@ defineProps<{
   /** When false the bar shows a read-only indicator instead of edit actions. */
   isEditingEnabled: boolean;
   totalSelectedRows: number;
+  queryTime: number;
+  totalRows: number;
+  executeLoading: boolean;
+  isStreaming: boolean;
+  streamingRowCount: number;
+  hasError: boolean;
 }>();
 
 const emit = defineEmits<{
@@ -118,6 +125,25 @@ const emit = defineEmits<{
           {{ totalSelectedRows }}
         </p>
       </template>
+    </div>
+
+    <!-- Center: query status -->
+    <div class="font-normal select-text text-xs text-muted-foreground">
+      <span v-if="isStreaming" class="flex items-center gap-1">
+        <Icon name="hugeicons:loading-03" class="size-4! animate-spin" />
+        Streaming... {{ formatNumber(streamingRowCount) }} rows
+      </span>
+      <span v-else-if="executeLoading" class="flex items-center gap-1">
+        Processing
+        <Icon name="hugeicons:loading-03" class="size-4! animate-spin" />
+      </span>
+      <span v-else-if="hasError">
+        Query: 1 error in {{ formatQueryTime(queryTime) }}
+      </span>
+      <span v-else>
+        Query success: {{ formatNumber(totalRows) }} rows in
+        {{ formatQueryTime(queryTime) }}
+      </span>
     </div>
 
     <!-- Right: status indicator & download -->

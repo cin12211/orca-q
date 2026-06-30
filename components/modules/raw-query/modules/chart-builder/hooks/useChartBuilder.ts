@@ -22,8 +22,8 @@ export function useChartBuilder(
 
   const resetConfig = () => {
     chartType.value = ChartType.BAR;
-    xAxisField.value = activeTabColumns.value[0]?.queryFieldName || '';
-    yAxisField.value = activeTabColumns.value[1]?.queryFieldName || '';
+    xAxisField.value = activeTabColumns.value[0]?.aliasFieldName || '';
+    yAxisField.value = activeTabColumns.value[1]?.aliasFieldName || '';
     valueField.value = '';
     categoryYField.value = '';
     aggregation.value = AggregationType.NONE;
@@ -60,7 +60,7 @@ export function useChartBuilder(
     // Seed xAxisField from columns if empty after type switch
     const cols = activeTabColumns.value;
     if (!xAxisField.value && cols.length > 0) {
-      xAxisField.value = cols[0]?.queryFieldName || '';
+      xAxisField.value = cols[0]?.aliasFieldName || '';
     }
   });
 
@@ -68,9 +68,9 @@ export function useChartBuilder(
     activeTabColumns,
     cols => {
       if (cols && cols.length > 0) {
-        if (!xAxisField.value) xAxisField.value = cols[0]?.queryFieldName || '';
+        if (!xAxisField.value) xAxisField.value = cols[0]?.aliasFieldName || '';
         if (!yAxisField.value && cols.length > 1) {
-          yAxisField.value = cols[1]?.queryFieldName || '';
+          yAxisField.value = cols[1]?.aliasFieldName || '';
         }
       }
     },

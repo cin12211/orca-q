@@ -55,7 +55,7 @@ export const buildRawQueryUpdates = ({
   rows,
   dbType,
 }: BuildRawQueryUpdatesOptions): BuildRawQueryUpdatesResult => {
-  const columnsByField = new Map(columns.map(col => [col.originalName, col]));
+  const columnsByField = new Map(columns.map(col => [col.aliasFieldName, col]));
   const tableGroups = groupColumnsByTable(columns);
   const skipped: RawQueryEditedCell[] = [];
 
@@ -100,7 +100,7 @@ export const buildRawQueryUpdates = ({
       bucket.rows.set(cell.rowId, rowUpdate);
     }
 
-    rowUpdate[column.originalName] = cell.newValue;
+    rowUpdate[column.sourceColumnName || column.originalName] = cell.newValue;
   }
 
   const groups: RawQueryUpdateGroup[] = [];
@@ -109,7 +109,9 @@ export const buildRawQueryUpdates = ({
     const group: RawQueryUpdateGroup = {
       schemaName: bucket.table.schemaName,
       tableName: bucket.table.tableName,
-      pKeys: bucket.table.primaryKeyFields,
+      pKeys: bucket.table.primaryKeyColumns.map(
+        c => c.sourceColumnName || c.originalName
+      ),
       updates: [],
       sqlStatements: [],
       hasNoPkWarning: false,
@@ -121,14 +123,17 @@ export const buildRawQueryUpdates = ({
 
       // Build the WHERE clause input — just the PK fields from the row.
       const pKeyValue: Record<string, unknown> = {};
-      for (const pkField of bucket.table.primaryKeyFields) {
-        pKeyValue[pkField] = row[pkField];
+      for (const pkCol of bucket.table.primaryKeyColumns) {
+        pKeyValue[pkCol.sourceColumnName || pkCol.originalName] =
+          row[pkCol.aliasFieldName];
       }
 
       const { sql, noPkWarning } = buildUpdateStatements({
         schemaName: bucket.table.schemaName,
         tableName: bucket.table.tableName,
-        pKeys: bucket.table.primaryKeyFields,
+        pKeys: bucket.table.primaryKeyColumns.map(
+          c => c.sourceColumnName || c.originalName
+        ),
         pKeyValue,
         update,
         dbType,
@@ -192,7 +197,9 @@ export const buildRawQueryDeletes = ({
     const group: RawQueryDeleteGroup = {
       schemaName: table.schemaName,
       tableName: table.tableName,
-      pKeys: table.primaryKeyFields,
+      pKeys: table.primaryKeyColumns.map(
+        c => c.sourceColumnName || c.originalName
+      ),
       pKeyValues: [],
       sqlStatements: [],
       hasNoPkWarning: false,
@@ -200,20 +207,24 @@ export const buildRawQueryDeletes = ({
 
     for (const row of selectedRows) {
       // Only include rows where all PKs are non-null.
-      const allPksPresent = table.primaryKeyFields.every(
-        pk => row[pk] !== null && row[pk] !== undefined
-      );
+      const allPksPresent = table.primaryKeyColumns.every(pkCol => {
+        const val = row[pkCol.aliasFieldName];
+        return val !== null && val !== undefined;
+      });
       if (!allPksPresent) continue;
 
       const pKeyValue: Record<string, unknown> = {};
-      for (const pk of table.primaryKeyFields) {
-        pKeyValue[pk] = row[pk];
+      for (const pkCol of table.primaryKeyColumns) {
+        pKeyValue[pkCol.sourceColumnName || pkCol.originalName] =
+          row[pkCol.aliasFieldName];
       }
 
       const { sql, noPkWarning } = buildDeleteStatements({
         schemaName: table.schemaName,
         tableName: table.tableName,
-        pKeys: table.primaryKeyFields,
+        pKeys: table.primaryKeyColumns.map(
+          c => c.sourceColumnName || c.originalName
+        ),
         pKeyValue,
         dbType,
       });

@@ -14,3 +14,4 @@ export const ONE_SECOND = 1000;
 export const DEFAULT_WINDOW_NAME = 'OrcaQ';
 export const DEFAULT_BUFFER_ROWS = 10;
 export const DEFAULT_ROW_HEIGHT = 25;
+export const BULK_CHUNK_SIZE = 500;

@@ -37,6 +37,7 @@ export const formatColumnsInfo = ({
   });
   const mapTableInfo = new Map<string, ResolvedTableInfo>();
   const seenFieldNames = new Set<string>();
+  const seenAliasNames = new Set<string>();
 
   return resolvedFieldDefs.map(field => {
     const tableId = `${field.tableID}`;
@@ -95,9 +96,18 @@ export const formatColumnsInfo = ({
     );
     const isForeignKey = !!foreignKey;
 
-    const aliasFieldName = hasDuplicateFieldName
+    let aliasFieldName = hasDuplicateFieldName
       ? `${resolvedTableInfo?.tableName || field.tableName || 'table'}.${field.name}`
       : field.name;
+
+    let uniqueAlias = aliasFieldName;
+    let suffix = 1;
+    while (seenAliasNames.has(uniqueAlias)) {
+      uniqueAlias = `${aliasFieldName}_${suffix}`;
+      suffix++;
+    }
+    seenAliasNames.add(uniqueAlias);
+    aliasFieldName = uniqueAlias;
 
     const columnInfo: MappedRawColumn = {
       tableName: resolvedTableInfo?.tableName || field.tableName || '',

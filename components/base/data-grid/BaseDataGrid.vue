@@ -161,7 +161,10 @@ watch(tableTheme, newTheme => {
 const mergedGridOptions = computed<GridOptions>(() => {
   const baseOptions: GridOptions = {
     rowBuffer: DEFAULT_BUFFER_ROWS,
+    // Prevent AG Grid from parsing dots in flat field keys (e.g. 'table.column') as deep object access
+    suppressFieldDotNotation: true,
     rowClass: 'class-row-border-none',
+
     getRowStyle: params => {
       if ((params.node.rowIndex || 0) % 2 === 0) {
         return { background: 'var(--muted)' };
