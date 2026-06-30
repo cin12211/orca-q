@@ -131,11 +131,11 @@ const showYAxis = computed(() => {
             <SelectContent class="max-h-60">
               <SelectItem
                 v-for="col in activeTabColumns"
-                :key="col.queryFieldName"
-                :value="col.queryFieldName"
+                :key="col.aliasFieldName"
+                :value="col.aliasFieldName"
                 class="cursor-pointer"
               >
-                {{ col.queryFieldName }}
+                {{ col.aliasFieldName }}
               </SelectItem>
             </SelectContent>
           </Select>
@@ -153,11 +153,11 @@ const showYAxis = computed(() => {
             <SelectContent class="max-h-60">
               <SelectItem
                 v-for="col in activeTabColumns"
-                :key="col.queryFieldName"
-                :value="col.queryFieldName"
+                :key="col.aliasFieldName"
+                :value="col.aliasFieldName"
                 class="cursor-pointer"
               >
-                {{ col.queryFieldName }}
+                {{ col.aliasFieldName }}
               </SelectItem>
             </SelectContent>
           </Select>
@@ -175,11 +175,11 @@ const showYAxis = computed(() => {
             <SelectContent class="max-h-60">
               <SelectItem
                 v-for="col in activeTabColumns"
-                :key="col.queryFieldName"
-                :value="col.queryFieldName"
+                :key="col.aliasFieldName"
+                :value="col.aliasFieldName"
                 class="cursor-pointer"
               >
-                {{ col.queryFieldName }}
+                {{ col.aliasFieldName }}
               </SelectItem>
             </SelectContent>
           </Select>
@@ -197,11 +197,11 @@ const showYAxis = computed(() => {
             <SelectContent class="max-h-60">
               <SelectItem
                 v-for="col in activeTabColumns"
-                :key="col.queryFieldName"
-                :value="col.queryFieldName"
+                :key="col.aliasFieldName"
+                :value="col.aliasFieldName"
                 class="cursor-pointer"
               >
-                {{ col.queryFieldName }}
+                {{ col.aliasFieldName }}
               </SelectItem>
             </SelectContent>
           </Select>
@@ -219,11 +219,11 @@ const showYAxis = computed(() => {
             <SelectContent class="max-h-60">
               <SelectItem
                 v-for="col in activeTabColumns"
-                :key="col.queryFieldName"
-                :value="col.queryFieldName"
+                :key="col.aliasFieldName"
+                :value="col.aliasFieldName"
                 class="cursor-pointer"
               >
-                {{ col.queryFieldName }}
+                {{ col.aliasFieldName }}
               </SelectItem>
             </SelectContent>
           </Select>
@@ -241,11 +241,11 @@ const showYAxis = computed(() => {
             <SelectContent class="max-h-60">
               <SelectItem
                 v-for="col in activeTabColumns"
-                :key="col.queryFieldName"
-                :value="col.queryFieldName"
+                :key="col.aliasFieldName"
+                :value="col.aliasFieldName"
                 class="cursor-pointer"
               >
-                {{ col.queryFieldName }}
+                {{ col.aliasFieldName }}
               </SelectItem>
             </SelectContent>
           </Select>
@@ -306,11 +306,11 @@ const showYAxis = computed(() => {
               >
               <SelectItem
                 v-for="col in activeTabColumns"
-                :key="col.queryFieldName"
-                :value="col.queryFieldName"
+                :key="col.aliasFieldName"
+                :value="col.aliasFieldName"
                 class="cursor-pointer"
               >
-                {{ col.queryFieldName }}
+                {{ col.aliasFieldName }}
               </SelectItem>
             </SelectContent>
           </Select>

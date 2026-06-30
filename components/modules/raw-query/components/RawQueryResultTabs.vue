@@ -140,8 +140,15 @@ const getFormattedData = (tab: ExecutedResultItem): Record<string, any>[] => {
     return formattedDataCache.get(cacheKey)!;
   }
 
-  const fieldDefs = tab.metadata.fieldDefs || [];
-  const formatted = normalizeResultRows(tab.result || [], fieldDefs);
+  const connectionId = tab.metadata.connection?.id;
+  const cols = formatColumnsInfo({
+    fieldDefs: tab.metadata.fieldDefs || [],
+    statementQuery: tab.metadata.statementQuery,
+    schemas: connectionId ? schemas.value[connectionId] || [] : [],
+    getTableInfoById: schemaStore.getTableInfoById,
+  });
+
+  const formatted = normalizeResultRows(tab.result || [], cols);
 
   formattedDataCache.set(cacheKey, formatted);
 

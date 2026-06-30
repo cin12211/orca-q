@@ -16,16 +16,19 @@ vi.mock('~/core/sql-dialect', () => ({
   }),
 }));
 
-const col = (overrides: Partial<MappedRawColumn> = {}): MappedRawColumn => ({
-  isPrimaryKey: false,
-  isForeignKey: false,
-  queryFieldName: 'col',
-  originalName: 'col',
-  aliasFieldName: 'col',
-  tableName: 'users',
-  schemaName: 'public',
-  ...overrides,
-});
+const col = (overrides: Partial<MappedRawColumn> = {}): MappedRawColumn => {
+  const originalName = overrides.originalName || 'col';
+  return {
+    isPrimaryKey: false,
+    isForeignKey: false,
+    queryFieldName: originalName,
+    originalName: originalName,
+    aliasFieldName: originalName,
+    tableName: 'users',
+    schemaName: 'public',
+    ...overrides,
+  };
+};
 
 const columns: MappedRawColumn[] = [
   col({ originalName: 'id', isPrimaryKey: true }),

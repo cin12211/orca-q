@@ -109,12 +109,18 @@ const handleGridReady = (event: GridReadyEvent) => {
   emit('gridReady', event);
 };
 
-const { handleCellMouseOverDebounced, handleCellMouseDown } =
-  useRangeSelectionTable({
-    enableAutoScroll: props.autoScrollOnSelection,
-    gridApi,
-    gridRef: agGridRef,
-  });
+const {
+  handleCellMouseOverDebounced,
+  handleCellMouseDown,
+  isCellInSelectedRange,
+  getCellRangeSelectionEdges,
+  copySelectedRangeToClipboard,
+  clearCellSelection,
+} = useRangeSelectionTable({
+  enableAutoScroll: props.autoScrollOnSelection,
+  gridApi,
+  gridRef: agGridRef,
+});
 
 const { onSelectionChanged, onCellFocus } = useDataGridSelection({
   gridApi,
@@ -146,6 +152,7 @@ const onCellHeaderContextMenu = (event: CellContextMenuEvent) => {
 };
 
 onClickOutside(agGridRef, event => {
+  clearCellSelection();
   if (!props.enableClickOutside) return;
   emit('clickOutside', event);
 });
@@ -161,7 +168,43 @@ watch(tableTheme, newTheme => {
 const mergedGridOptions = computed<GridOptions>(() => {
   const baseOptions: GridOptions = {
     rowBuffer: DEFAULT_BUFFER_ROWS,
+    // Prevent AG Grid from parsing dots in flat field keys (e.g. 'table.column') as deep object access
+    suppressFieldDotNotation: true,
     rowClass: 'class-row-border-none',
+    defaultColDef: {
+      cellClassRules: {
+        'custom-cell-range-selected': params => {
+          return isCellInSelectedRange(
+            params.node.rowIndex ?? -1,
+            params.column.getColId()
+          );
+        },
+        'custom-cell-range-top': params => {
+          return getCellRangeSelectionEdges(
+            params.node.rowIndex ?? -1,
+            params.column.getColId()
+          ).top;
+        },
+        'custom-cell-range-bottom': params => {
+          return getCellRangeSelectionEdges(
+            params.node.rowIndex ?? -1,
+            params.column.getColId()
+          ).bottom;
+        },
+        'custom-cell-range-left': params => {
+          return getCellRangeSelectionEdges(
+            params.node.rowIndex ?? -1,
+            params.column.getColId()
+          ).left;
+        },
+        'custom-cell-range-right': params => {
+          return getCellRangeSelectionEdges(
+            params.node.rowIndex ?? -1,
+            params.column.getColId()
+          ).right;
+        },
+      },
+    },
     getRowStyle: params => {
       if ((params.node.rowIndex || 0) % 2 === 0) {
         return { background: 'var(--muted)' };
@@ -195,9 +238,49 @@ const mergedGridOptions = computed<GridOptions>(() => {
 
   const userOptions = props.gridOptions ?? {};
 
+  const mergedDefaultColDef = {
+    ...(baseOptions.defaultColDef ?? {}),
+    ...(userOptions.defaultColDef ?? {}),
+    cellClassRules: {
+      'custom-cell-range-selected': (params: any) => {
+        return isCellInSelectedRange(
+          params.node?.rowIndex ?? -1,
+          params.column?.getColId() || ''
+        );
+      },
+      'custom-cell-range-top': (params: any) => {
+        return getCellRangeSelectionEdges(
+          params.node?.rowIndex ?? -1,
+          params.column?.getColId() || ''
+        ).top;
+      },
+      'custom-cell-range-bottom': (params: any) => {
+        return getCellRangeSelectionEdges(
+          params.node?.rowIndex ?? -1,
+          params.column?.getColId() || ''
+        ).bottom;
+      },
+      'custom-cell-range-left': (params: any) => {
+        return getCellRangeSelectionEdges(
+          params.node?.rowIndex ?? -1,
+          params.column?.getColId() || ''
+        ).left;
+      },
+      'custom-cell-range-right': (params: any) => {
+        return getCellRangeSelectionEdges(
+          params.node?.rowIndex ?? -1,
+          params.column?.getColId() || ''
+        ).right;
+      },
+      ...(baseOptions.defaultColDef?.cellClassRules ?? {}),
+      ...(userOptions.defaultColDef?.cellClassRules ?? {}),
+    },
+  };
+
   return {
     ...baseOptions,
     ...userOptions,
+    defaultColDef: mergedDefaultColDef,
     undoRedoCellEditing:
       props.allowEditing && (userOptions.undoRedoCellEditing ?? true),
     // Deep-merge `components` so consumers can add custom cell editors without
@@ -244,6 +327,11 @@ if (props.enableCopyHotkey) {
       {
         key: 'meta+c',
         callback: async () => {
+          if (gridApi.value) {
+            const copied = await copySelectedRangeToClipboard(gridApi.value);
+            if (copied) return;
+          }
+
           const selectedCell = gridApi.value?.getFocusedCell();
           if (!selectedCell) return;
 
@@ -331,5 +419,25 @@ defineExpose({
 
 .col-highlight-cell {
   background: var(--ag-selected-row-background-color);
+}
+
+.custom-cell-range-selected {
+  background-color: hsl(var(--primary) / 0.12) !important;
+}
+
+.custom-cell-range-top {
+  border-top: 1.5px solid hsl(var(--primary)) !important;
+}
+
+.custom-cell-range-bottom {
+  border-bottom: 1.5px solid hsl(var(--primary)) !important;
+}
+
+.custom-cell-range-left {
+  border-left: 1.5px solid hsl(var(--primary)) !important;
+}
+
+.custom-cell-range-right {
+  border-right: 1.5px solid hsl(var(--primary)) !important;
 }
 </style>
