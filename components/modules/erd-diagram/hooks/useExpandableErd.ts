@@ -1,4 +1,4 @@
-import { computed, ref, watch, type Ref } from 'vue';
+import { computed, ref, watch, type ComputedRef, type Ref } from 'vue';
 import type { Edge } from '@vue-flow/core';
 import type { TableMetadata } from '~/core/types';
 import { DEFAULT_VUE_FLOW_LAYOUT_CONFIG } from '../constants';
@@ -23,6 +23,7 @@ export interface UseExpandableErdOptions {
 
 export interface ExpandableErdReturn {
   expandedTables: Ref<Set<string>>;
+  collapsedHeaderTables: Ref<Set<string>>;
   visibleNodes: Ref<TableNode[]>;
   visibleEdges: Ref<Edge[]>;
   expandTable: (tableId: string) => void;
@@ -30,6 +31,10 @@ export interface ExpandableErdReturn {
   isExpanded: (tableId: string) => boolean;
   hasRelations: (tableId: string) => boolean;
   matrixPosition: Ref<MatrixTablePosition>;
+  toggleCollapseHeader: (tableId: string) => void;
+  collapseAllVisibleTables: () => void;
+  expandAllVisibleTables: () => void;
+  areAllVisibleTablesCollapsed: ComputedRef<boolean>;
 }
 
 /**
@@ -186,6 +191,8 @@ export function useExpandableErd(
   // Track which tables have been expanded
   const expandedTables = ref(new Set<string>());
 
+  const collapsedHeaderTables = ref(new Set<string>());
+
   // Track which tables are currently visible (by tableId)
   const visibleTableIds = ref(new Set<string>());
 
@@ -198,6 +205,10 @@ export function useExpandableErd(
   // Track next Y offset per layer (depth) to prevent overlaps
   const layerNextY = ref(new Map<number, number>());
 
+  const isTableHeaderCollapsed = (tableId: string) => {
+    return collapsedHeaderTables.value.has(tableId);
+  };
+
   /**
    * Initialize with center table and use original buildERDWithPrimaryTables layout
    */
@@ -208,6 +219,8 @@ export function useExpandableErd(
     addedByMap.value.clear();
     matrixPosition.value = {};
     layerNextY.value.clear();
+    // Single-table mode: default all tables expanded (fewer tables, easier to read)
+    collapsedHeaderTables.value = new Set<string>();
 
     if (!autoExpandInitial) {
       // Just show center table
@@ -220,8 +233,12 @@ export function useExpandableErd(
     const result = getTablesByTableCenterId(centerId, allTables.value);
     if (!result) return;
 
-    const { nodes, matrixPosition: originalMatrix } =
-      buildERDWithPrimaryTables(result);
+    const { nodes, matrixPosition: originalMatrix } = buildERDWithPrimaryTables(
+      {
+        ...result,
+        collapsedHeaderTables: collapsedHeaderTables.value,
+      }
+    );
 
     // Copy positions from original algorithm
     for (const node of nodes) {
@@ -250,6 +267,7 @@ export function useExpandableErd(
     addedByMap.value.clear();
     matrixPosition.value = {};
     layerNextY.value.clear();
+    collapsedHeaderTables.value = new Set<string>();
 
     if (allTables.value.length === 0) return;
 
@@ -264,6 +282,9 @@ export function useExpandableErd(
       // Track as added by initial
       addedByMap.value.set(node.id, new Set(['__initial__']));
     }
+
+    // Full ERD mode: default all tables collapsed (too many tables to show full bodies)
+    collapsedHeaderTables.value = new Set(visibleTableIds.value);
 
     // Mark center as expanded (if exists)
     if (centerId) {
@@ -404,12 +425,19 @@ export function useExpandableErd(
 
   // Compute visible nodes
   const visibleNodes = computed<TableNode[]>(() => {
-    return createNodes(visibleTablesData.value, matrixPosition.value);
+    return createNodes(
+      visibleTablesData.value,
+      matrixPosition.value,
+      collapsedHeaderTables.value
+    );
   });
 
   // Compute visible edges (only edges where both source and target are visible)
   const visibleEdges = computed<Edge[]>(() => {
-    const allEdges = createEdges(visibleTablesData.value);
+    const allEdges = createEdges(
+      visibleTablesData.value,
+      collapsedHeaderTables.value
+    );
     return allEdges.filter(edge => {
       return (
         visibleTableIds.value.has(edge.source) &&
@@ -532,10 +560,41 @@ export function useExpandableErd(
     }
 
     expandedTables.value.delete(tableId);
+    // Recalculate layer Y offsets based on remaining visible tables
+    initializeLayerOffsets();
   };
+
+  const toggleCollapseHeader = (tableId: string) => {
+    if (collapsedHeaderTables.value.has(tableId)) {
+      collapsedHeaderTables.value.delete(tableId);
+    } else {
+      collapsedHeaderTables.value.add(tableId);
+    }
+  };
+
+  const collapseAllVisibleTables = () => {
+    visibleTableIds.value.forEach(tableId => {
+      collapsedHeaderTables.value.add(tableId);
+    });
+  };
+
+  const expandAllVisibleTables = () => {
+    visibleTableIds.value.forEach(tableId => {
+      collapsedHeaderTables.value.delete(tableId);
+    });
+  };
+
+  const areAllVisibleTablesCollapsed = computed(
+    () =>
+      visibleTableIds.value.size > 0 &&
+      [...visibleTableIds.value].every(id =>
+        collapsedHeaderTables.value.has(id)
+      )
+  );
 
   return {
     expandedTables,
+    collapsedHeaderTables,
     visibleNodes,
     visibleEdges,
     expandTable,
@@ -543,5 +602,9 @@ export function useExpandableErd(
     isExpanded,
     hasRelations,
     matrixPosition,
+    toggleCollapseHeader,
+    collapseAllVisibleTables,
+    expandAllVisibleTables,
+    areAllVisibleTablesCollapsed,
   };
 }

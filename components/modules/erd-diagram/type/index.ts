@@ -29,7 +29,11 @@ export interface ErdDiagramProps {
 
 export type { Edge };
 
-export type TableNode = Node<TableMetadata>;
+export interface ErdTableNodeData extends TableMetadata {
+  isHeaderCollapsed?: boolean;
+}
+
+export type TableNode = Node<ErdTableNodeData>;
 
 export type NodePosition = Node['position'];
 

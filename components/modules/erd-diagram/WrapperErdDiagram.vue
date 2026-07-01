@@ -50,6 +50,10 @@ const {
   isExpanded,
   hasRelations,
   matrixPosition,
+  toggleCollapseHeader,
+  collapseAllVisibleTables,
+  expandAllVisibleTables,
+  areAllVisibleTablesCollapsed,
 } = useExpandableErd({
   allTables,
   initialTableId, // Pass as Ref for reactivity
@@ -81,6 +85,18 @@ const onCollapseTable = (tableId: string) => {
   collapseTable(tableId);
 };
 
+const onToggleCollapseHeader = (tableId: string) => {
+  toggleCollapseHeader(tableId);
+};
+
+const onToggleCollapseAll = () => {
+  if (areAllVisibleTablesCollapsed.value) {
+    expandAllVisibleTables();
+  } else {
+    collapseAllVisibleTables();
+  }
+};
+
 useHotkeys(
   [
     {
@@ -109,9 +125,12 @@ useHotkeys(
       :tableId="props.tableId"
       :isExpanded="isExpanded"
       :hasRelations="hasRelations"
+      :areAllCollapsed="areAllVisibleTablesCollapsed"
       v-model:isShowFilter="isShowFilter"
       @expand="onExpandTable"
       @collapse="onCollapseTable"
+      @toggleCollapseHeader="onToggleCollapseHeader"
+      @toggleCollapseAll="onToggleCollapseAll"
     />
   </div>
 </template>
