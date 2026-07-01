@@ -428,10 +428,10 @@ export const createEdges = (
         source: sourceId,
         target: targetId,
         sourceHandle: collapsedHeaderTables.has(sourceId)
-          ? ERD_HEADER_HANDLE_SOURCE_ID
+          ? `${ERD_HEADER_HANDLE_SOURCE_ID}-${sourceId}`
           : foreignKey.column,
         targetHandle: collapsedHeaderTables.has(targetId)
-          ? ERD_HEADER_HANDLE_TARGET_ID
+          ? `${ERD_HEADER_HANDLE_TARGET_ID}-${targetId}`
           : foreignKey.reference_column,
         updatable: false,
       };

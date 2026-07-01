@@ -229,7 +229,7 @@ const onFocusNode = (
 
     <!-- Header Handles (always rendered so collapsed/expanded edges anchor correctly) -->
     <Handle
-      :id="ERD_HEADER_HANDLE_SOURCE_ID"
+      :id="`${ERD_HEADER_HANDLE_SOURCE_ID}-${nodeId}`"
       type="source"
       :position="Position.Left"
       :connectable="false"
@@ -242,7 +242,7 @@ const onFocusNode = (
       }"
     />
     <Handle
-      :id="ERD_HEADER_HANDLE_TARGET_ID"
+      :id="`${ERD_HEADER_HANDLE_TARGET_ID}-${nodeId}`"
       type="target"
       :position="Position.Right"
       :connectable="false"
