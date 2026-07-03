@@ -17,6 +17,7 @@ const props = defineProps<{
   isUseBgGrid: BackGroundGridStatus;
   isUseMiniMap: boolean;
   isShowFilter: boolean;
+  areAllCollapsed?: boolean;
 }>();
 
 const { zoomIn, zoomOut, fitView, getViewport } = useVueFlow();
@@ -27,6 +28,7 @@ const emit = defineEmits<{
   (e: 'update:isUseMiniMap', value: boolean): void;
   (e: 'update:isShowFilter', value: boolean): void;
   (e: 'arrange'): void;
+  (e: 'toggleCollapseAll'): void;
 }>();
 
 const zoomPercent = computed(() => Math.round(getViewport().zoom * 100));
@@ -49,6 +51,7 @@ const onToggleGrid = () => {
 const onToggleMiniMap = () => emit('update:isUseMiniMap', !props.isUseMiniMap);
 const onToggleFilter = () => emit('update:isShowFilter', !props.isShowFilter);
 const onArrangeDiagram = () => emit('arrange');
+const onToggleCollapseAll = () => emit('toggleCollapseAll');
 const onZoomOut = () => zoomOut({ duration: DEFAULT_ZOOM_DURATION });
 const onZoomIn = () => zoomIn({ duration: DEFAULT_ZOOM_DURATION });
 const onFitToView = () => fitView({ duration: DEFAULT_ZOOM_DURATION });
@@ -156,6 +159,24 @@ const onFitToView = () => fitView({ duration: DEFAULT_ZOOM_DURATION });
         </Button>
       </TooltipTrigger>
       <TooltipContent>Arrange the diagram</TooltipContent>
+    </Tooltip>
+
+    <Tooltip>
+      <TooltipTrigger as-child>
+        <Button variant="ghost" size="iconMd" @click="onToggleCollapseAll">
+          <Icon
+            :name="
+              areAllCollapsed
+                ? 'hugeicons:arrow-expand-02'
+                : 'hugeicons:minimize-01'
+            "
+            class="size-4!"
+          />
+        </Button>
+      </TooltipTrigger>
+      <TooltipContent>{{
+        areAllCollapsed ? 'Expand all tables' : 'Collapse all tables'
+      }}</TooltipContent>
     </Tooltip>
 
     <!-- Toggle Filter -->
