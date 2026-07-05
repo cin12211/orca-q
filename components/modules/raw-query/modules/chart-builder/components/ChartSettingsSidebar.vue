@@ -102,7 +102,7 @@ const showYAxis = computed(() => {
           <p class="text-xs font-medium text-muted-foreground">Chart Title</p>
           <Input
             v-model="chartTitle"
-            size="sm"
+            size="xs"
             type="text"
             placeholder="Chart Title"
           />
@@ -355,7 +355,7 @@ const showYAxis = computed(() => {
                   val === '' ? null : Math.max(1, parseInt(val, 10) || 1);
               }
             "
-            size="sm"
+            size="xs"
             type="number"
             min="1"
             placeholder="All"

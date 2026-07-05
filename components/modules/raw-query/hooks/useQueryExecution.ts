@@ -12,6 +12,7 @@ import { uuidv4 } from '~/core/helpers';
 import type { Connection } from '~/core/stores';
 import type { DatabaseDriverError } from '~/core/types';
 import { ViewMode, type ExecutedResultItem } from '../interfaces';
+import { extractParamsFromSql } from '../utils';
 import type { ResultTabsReturn } from './useResultTabs';
 import { executeStreamingQuery } from './useStreamingQuery';
 
@@ -24,6 +25,10 @@ interface UseQueryExecutionParams {
   resultTabs: ResultTabsReturn;
   buildExplainAnalyzePrefix: () => string;
   beforeExecute?: () => Promise<boolean>;
+  promptMissingVariables?: (
+    missing: string[]
+  ) => Promise<{ values: Record<string, any>; insertBack: boolean } | null>;
+  onUpdateVariables?: (value: string) => void;
 }
 
 type RedisCommandResponse = {
@@ -100,6 +105,8 @@ export function useQueryExecution({
   resultTabs,
   buildExplainAnalyzePrefix,
   beforeExecute,
+  promptMissingVariables,
+  onUpdateVariables,
 }: UseQueryExecutionParams) {
   const currentRawQueryResult = shallowRef<RowData[]>([]);
   const rawResponse = shallowRef<
@@ -171,9 +178,45 @@ export function useQueryExecution({
       console.log('fileParameters error::', e);
     }
 
-    let executedResultView: ExecutedResultItem['view'] = ViewMode.RESULT;
     const isRedisConnection =
       connection.value?.type === DatabaseClientType.REDIS;
+    const isSqliteConnection = [
+      DatabaseClientType.SQLITE3,
+      DatabaseClientType.BETTER_SQLITE3,
+    ].includes(connection.value?.type as DatabaseClientType);
+    const isVariableSupported = !isRedisConnection && !isSqliteConnection;
+
+    if (isVariableSupported && promptMissingVariables) {
+      const extracted = extractParamsFromSql(
+        executeQuery,
+        connection.value?.type
+      );
+      const missing = extracted.filter(param => !(param in fileParameters));
+      if (missing.length > 0) {
+        const result = await promptMissingVariables(missing);
+        if (!result) {
+          return;
+        }
+        fileParameters = {
+          ...fileParameters,
+          ...result.values,
+        };
+        if (result.insertBack && onUpdateVariables) {
+          try {
+            const currentVars = JSON.parse(fileVariables.value || '{}');
+            const newVars = {
+              ...currentVars,
+              ...result.values,
+            };
+            onUpdateVariables(JSON.stringify(newVars, null, 2));
+          } catch (e) {
+            console.error('Failed to update variables:', e);
+          }
+        }
+      }
+    }
+
+    let executedResultView: ExecutedResultItem['view'] = ViewMode.RESULT;
 
     if (queryPrefix && !isRedisConnection) {
       executeQuery = `${queryPrefix} ${executeQuery}`;

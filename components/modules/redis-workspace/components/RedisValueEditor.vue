@@ -521,7 +521,7 @@ onBeforeUnmount(() => {
                 >
                   <Input
                     v-if="column.editable"
-                    size="sm"
+                    size="xs"
                     :model-value="`${row[column.key] ?? ''}`"
                     :disabled="!canEdit"
                     @update:model-value="
