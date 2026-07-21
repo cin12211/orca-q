@@ -167,7 +167,7 @@ const onFitToView = () => fitView({ duration: DEFAULT_ZOOM_DURATION });
           <Icon
             :name="
               areAllCollapsed
-                ? 'hugeicons:arrow-expand-02'
+                ? 'hugeicons:maximize-01'
                 : 'hugeicons:minimize-01'
             "
             class="size-4!"

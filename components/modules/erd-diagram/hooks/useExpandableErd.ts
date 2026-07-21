@@ -283,9 +283,6 @@ export function useExpandableErd(
       addedByMap.value.set(node.id, new Set(['__initial__']));
     }
 
-    // Full ERD mode: default all tables collapsed (too many tables to show full bodies)
-    collapsedHeaderTables.value = new Set(visibleTableIds.value);
-
     // Mark center as expanded (if exists)
     if (centerId) {
       expandedTables.value.add(centerId);
