@@ -1,28 +1,18 @@
 import { defineEventHandler, readBody, createError } from 'h3';
 import { DatabaseClientType } from '~/core/constants/database-client-type';
 import { buildDeleteStatements } from '~/core/helpers/sql-mutation-statements';
-import type {
-  EConnectionProviderKind,
-  IManagedSqliteConfig,
-} from '~/core/types/entities/connection.entity';
+import type { DatabaseMetadataRequestParams } from '~/core/types';
 import { createTableAdapter } from '~/server/infrastructure/database/adapters/tables';
 
+interface RequestBody extends DatabaseMetadataRequestParams {
+  tableName: string;
+  schemaName: string;
+  pKeys: string[];
+  pKeyValues: Record<string, unknown>[];
+}
+
 export default defineEventHandler(async event => {
-  const body = await readBody<{
-    tableName: string;
-    schemaName: string;
-    pKeys: string[];
-    pKeyValues: Record<string, unknown>[];
-    dbConnectionString?: string;
-    host?: string;
-    port?: string;
-    username?: string;
-    password?: string;
-    database?: string;
-    type?: DatabaseClientType;
-    providerKind?: EConnectionProviderKind;
-    managedSqlite?: IManagedSqliteConfig;
-  }>(event);
+  const body = await readBody<RequestBody>(event);
 
   const { tableName, schemaName, pKeys, pKeyValues } = body;
 
@@ -53,7 +43,7 @@ export default defineEventHandler(async event => {
   );
 
   const adapter = await createTableAdapter(
-    body.type || DatabaseClientType.POSTGRES,
+    body.type,
     body
   );
   return await adapter.executeBulkDelete(sqlDeleteStatements);

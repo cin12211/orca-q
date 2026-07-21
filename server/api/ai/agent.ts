@@ -173,9 +173,16 @@ export default defineEventHandler(async event => {
       model
     );
 
-    const adapter: DatabaseAdapter | null = dbConnectionString
+    const hasDbConnection = Boolean(
+      body.dbConnectionString ||
+        body.host ||
+        body.filePath ||
+        (body.providerKind && body.managedSqlite)
+    );
+
+    const adapter: DatabaseAdapter | null = hasDbConnection
       ? await getDatabaseSource({
-          dbConnectionString,
+          ...body,
           type: resolveDatabaseClientType(body),
         })
       : null;

@@ -1,13 +1,20 @@
 import { defineEventHandler, readBody } from 'h3';
 import { DatabaseClientType } from '~/core/constants/database-client-type';
+import type { DatabaseMetadataRequestParams } from '~/core/types';
 import { createViewAdapter } from '~/server/infrastructure/database/adapters/views';
 
-export default defineEventHandler(async event => {
-  const body = await readBody(event);
+interface RequestBody extends DatabaseMetadataRequestParams {
+  schema: string;
+  viewName: string;
+}
 
-  const adapter = await createViewAdapter(DatabaseClientType.POSTGRES, {
-    dbConnectionString: body.dbConnectionString,
-  });
+export default defineEventHandler(async event => {
+  const body = await readBody<RequestBody>(event);
+
+  const adapter = await createViewAdapter(
+    body.type,
+    body
+  );
 
   return await adapter.getViewExplainPlan(body.schema, body.viewName);
 });

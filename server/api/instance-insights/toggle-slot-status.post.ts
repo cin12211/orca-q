@@ -3,17 +3,11 @@ import { DatabaseClientType } from '~/core/constants/database-client-type';
 import type {
   InstanceActionResponse,
   ReplicationSlotDesiredStatus,
+  DatabaseMetadataRequestParams,
 } from '~/core/types';
 import { createInstanceInsightsAdapter } from '~/server/infrastructure/database/adapters/instance-insights';
 
-interface RequestBody {
-  dbConnectionString: string;
-  host?: string;
-  port?: string;
-  username?: string;
-  password?: string;
-  database?: string;
-  type?: DatabaseClientType;
+interface RequestBody extends DatabaseMetadataRequestParams {
   slotName: string;
   desiredStatus: ReplicationSlotDesiredStatus;
   activePid?: number | null;
@@ -33,15 +27,8 @@ export default defineEventHandler(
       }
 
       const adapter = await createInstanceInsightsAdapter(
-        body.type || DatabaseClientType.POSTGRES,
-        {
-          dbConnectionString: body.dbConnectionString,
-          host: body.host,
-          port: body.port,
-          username: body.username,
-          password: body.password,
-          database: body.database,
-        }
+        body.type,
+        body
       );
 
       return await adapter.toggleReplicationSlotStatus({

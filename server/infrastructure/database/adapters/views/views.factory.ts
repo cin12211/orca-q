@@ -7,7 +7,7 @@ import { SqliteViewAdapter } from './sqlite/sqlite-view.adapter';
 import type { IDatabaseViewAdapter, DatabaseViewAdapterParams } from './types';
 
 export async function createViewAdapter(
-  dbType: DatabaseClientType,
+  dbType: DatabaseClientType | undefined,
   params: DatabaseViewAdapterParams
 ): Promise<IDatabaseViewAdapter> {
   return createDomainAdapter<IDatabaseViewAdapter, DatabaseViewAdapterParams>(

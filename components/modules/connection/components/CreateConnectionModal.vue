@@ -327,14 +327,6 @@ const handleSubmit = () => {
                   >
                     <ConnectionSSLConfig :form-data="formData" />
                   </Accordion>
-
-                  <Accordion
-                    type="single"
-                    collapsible
-                    class="w-full border px-4 rounded-lg shadow"
-                  >
-                    <ConnectionSSHTunnel :form-data="formData" />
-                  </Accordion>
                 </div>
               </TabsContent>
 
@@ -527,6 +519,15 @@ const handleSubmit = () => {
                 </p>
               </TabsContent>
             </Tabs>
+
+            <Accordion
+              v-if="canUseNetworkOptions"
+              type="single"
+              collapsible
+              class="w-full border px-4 rounded-lg shadow"
+            >
+              <ConnectionSSHTunnel :form-data="formData" />
+            </Accordion>
 
             <ConnectionStatusSection
               :test-status="testStatus"

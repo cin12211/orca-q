@@ -3,20 +3,20 @@
  * Executes multiple permission grants in sequence (for wizard)
  */
 import { DatabaseClientType } from '~/core/constants/database-client-type';
-import type { BulkGrantRequest, BulkGrantResponse } from '~/core/types';
+import type { BulkGrantRequest, BulkGrantResponse, DatabaseMetadataRequestParams } from '~/core/types';
 import { createRoleAdapter } from '~/server/infrastructure/database/adapters/database-roles';
 
-interface RequestBody extends BulkGrantRequest {
+interface RequestBody extends BulkGrantRequest, DatabaseMetadataRequestParams {
   dbType?: DatabaseClientType;
 }
 
 export default defineEventHandler(async (event): Promise<BulkGrantResponse> => {
   const body: RequestBody = await readBody(event);
 
-  if (!body.dbConnectionString) {
+  if (!body.dbConnectionString && !body.host) {
     throw createError({
       statusCode: 400,
-      statusMessage: 'Database connection string is required',
+      statusMessage: 'Database connection details are required',
     });
   }
 
@@ -28,10 +28,8 @@ export default defineEventHandler(async (event): Promise<BulkGrantResponse> => {
   }
 
   const adapter = await createRoleAdapter(
-    body.dbType || DatabaseClientType.POSTGRES,
-    {
-      dbConnectionString: body.dbConnectionString,
-    }
+    body.type || body.dbType,
+    body
   );
 
   return adapter.grantBulkPermissions({

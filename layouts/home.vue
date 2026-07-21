@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { cn } from '@/lib/utils';
 import ElectronUpdateIndicator from '~/components/modules/app-shell/status-bar/components/ElectronUpdateIndicator.vue';
+import { useSettingsModal } from '~/core/contexts/useSettingsModal';
 import { isDesktopApp, isMacOS, isPWA, isElectron } from '~/core/helpers';
 
 const isDesktopMacWindow = computed(() => isDesktopApp() && isMacOS());
@@ -18,6 +19,10 @@ const onTitleBarDoubleClick = async () => {
 
 const isAppVersion = computed(() => isElectron() || isPWA());
 const githubLink = config.public.githubLink;
+const discordLink = config.public.discordLink;
+const donateLink = config.public.donateLink;
+
+const { openSettings } = useSettingsModal();
 </script>
 
 <template>
@@ -35,7 +40,7 @@ const githubLink = config.public.githubLink;
     >
       <div class="flex min-w-0 flex-1 items-center gap-3">
         <div class="flex items-center space-x-2 pointer-events-none">
-          <Avatar class="rounded-2xl">
+          <Avatar class="rounded-md!">
             <AvatarImage src="/logo.png" alt="@unovue" />
           </Avatar>
 
@@ -44,10 +49,32 @@ const githubLink = config.public.githubLink;
         <span class="text-sm text-muted-foreground">
           v{{ config.public.version }}
         </span>
+
+        <ElectronUpdateIndicator side="bottom" align="end" />
       </div>
 
-      <div class="window-no-drag flex shrink-0 items-center">
-        <ElectronUpdateIndicator side="bottom" align="end" />
+      <div class="window-no-drag flex shrink-0 items-center gap-1">
+        <div class="flex items-center gap-1">
+          <Button variant="ghost" size="xxs" as-child>
+            <a :href="donateLink" target="_blank">
+              <Icon name="hugeicons:coffee-01" class="w-3.5 h-3.5" />
+              Buy me a coffee
+            </a>
+          </Button>
+          <Button variant="ghost" size="xxs" as-child>
+            <a :href="discordLink" target="_blank">
+              <Icon name="hugeicons:discord" class="w-3.5 h-3.5" /> Discord
+            </a>
+          </Button>
+          <Button variant="ghost" size="xxs" as-child>
+            <a :href="githubLink" target="_blank">
+              <Icon name="hugeicons:github" class="w-3.5 h-3.5" /> GitHub ⭐️
+            </a>
+          </Button>
+          <Button variant="ghost" size="xxs" @click="openSettings()">
+            <Icon name="hugeicons:settings-01" class="w-3.5 h-3.5" />
+          </Button>
+        </div>
       </div>
     </div>
   </div>
@@ -58,25 +85,37 @@ const githubLink = config.public.githubLink;
       class="flex items-center justify-between border-b border-border py-2 px-2"
     >
       <div class="flex items-center space-x-2">
-        <Avatar class="rounded-2xl">
+        <Avatar class="rounded-md!">
           <AvatarImage src="/logo.png" alt="@unovue" />
         </Avatar>
 
         <p class="text-2xl font-medium">orcaq</p>
       </div>
 
-      <div>
-        <Button variant="outline" size="sm" as-child>
-          <a :href="githubLink" target="_blank">
-            <Icon name="hugeicons:github" class="w-5 h-5" /> Star us on GitHub
-            ⭐️
+      <div class="flex items-center gap-1">
+        <Button variant="ghost" size="xxs" as-child>
+          <a :href="donateLink" target="_blank">
+            <Icon name="hugeicons:coffee-01" class="w-3.5 h-3.5" />
+            Buy me a coffee
           </a>
         </Button>
+        <Button variant="ghost" size="xxs" as-child>
+          <a :href="discordLink" target="_blank">
+            <Icon name="hugeicons:discord" class="w-3.5 h-3.5" /> Discord
+          </a>
+        </Button>
+        <Button variant="ghost" size="xxs" as-child>
+          <a :href="githubLink" target="_blank">
+            <Icon name="hugeicons:github" class="w-3.5 h-3.5" /> GitHub ⭐️
+          </a>
+        </Button>
+        <Button variant="ghost" size="xxs" @click="openSettings()">
+          <Icon name="hugeicons:settings-01" class="w-3.5 h-3.5" />
+        </Button>
+        <Button variant="ghost" size="xxs" @click="openSettings()">
+          <Icon name="hugeicons:settings-01" class="w-3.5 h-3.5" />
+        </Button>
       </div>
-      <!-- <Avatar>
-      <AvatarImage src="https://github.com/unovue.png" alt="@unovue" />
-      <AvatarFallback>CN</AvatarFallback>
-    </Avatar> -->
     </div>
 
     <slot />

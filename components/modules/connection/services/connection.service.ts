@@ -18,6 +18,7 @@ export type ConnectionHealthCheckBody =
       type: DatabaseClientType;
       method: EConnectionMethod.STRING;
       stringConnection: string;
+      ssh?: ISSHConfig;
     }
   | {
       type: DatabaseClientType;

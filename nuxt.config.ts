@@ -95,6 +95,8 @@ export default defineNuxtConfig({
       downloadLink:
         process.env.NUXT_PUBLIC_DOWNLOAD_LINK ??
         'https://github.com/cin12211/orca-q/releases',
+      discordLink: process.env.NUXT_DISCORD_LINK ?? 'https://discord.gg/orcaq',
+      donateLink: process.env.NUXT_DONATE_LINK ?? 'https://ko-fi.com/ynnic',
     },
   },
 

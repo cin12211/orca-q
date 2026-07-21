@@ -104,6 +104,95 @@ function getDefaultPort(type: DatabaseClientType) {
   return DEFAULT_PORTS[type] ?? 5432;
 }
 
+function isMysqlClient(type: DatabaseClientType) {
+  return (
+    type === DatabaseClientType.MYSQL ||
+    type === DatabaseClientType.MARIADB ||
+    type === DatabaseClientType.MYSQL2
+  );
+}
+
+function isSslEnabled(ssl?: ISSLConfig) {
+  return Boolean(ssl?.mode && ssl.mode !== 'disable');
+}
+
+function createSslConnectionOptions(ssl: ISSLConfig) {
+  return {
+    rejectUnauthorized: ssl.rejectUnauthorized ?? true,
+    ca: ssl.ca,
+    cert: ssl.cert,
+    key: ssl.key,
+  };
+}
+
+function applyConnectionStringSsl({
+  connection,
+  type,
+  ssl,
+}: {
+  connection: string;
+  type: DatabaseClientType;
+  ssl?: ISSLConfig;
+}) {
+  if (!isSslEnabled(ssl) || !ssl) {
+    return connection;
+  }
+
+  if (isMysqlClient(type)) {
+    return {
+      uri: connection,
+      ssl: createSslConnectionOptions(ssl),
+    };
+  }
+
+  return connection;
+}
+
+async function resolveSshConnectionString({
+  url,
+  type,
+  ssl,
+  ssh,
+}: {
+  url: string;
+  type: DatabaseClientType;
+  ssl?: ISSLConfig;
+  ssh?: ISSHConfig;
+}) {
+  if (!ssh?.enabled) {
+    return {
+      connection: applyConnectionStringSsl({
+        connection: url,
+        type,
+        ssl,
+      }),
+      sshTunnelClose: undefined,
+    };
+  }
+
+  const parsedUrl = new URL(url);
+  const targetHost = parsedUrl.hostname;
+
+  if (!targetHost) {
+    throw new Error('Missing host in SSH connection string.');
+  }
+
+  const targetPort = Number(parsedUrl.port) || getDefaultPort(type);
+  const tunnel = await createSshTunnel(ssh, targetHost, targetPort);
+
+  parsedUrl.hostname = tunnel.localHost;
+  parsedUrl.port = `${tunnel.localPort}`;
+
+  return {
+    connection: applyConnectionStringSsl({
+      connection: parsedUrl.toString(),
+      type,
+      ssl,
+    }),
+    sshTunnelClose: tunnel.close,
+  };
+}
+
 function resolveRuntimeContext(input: {
   type: DatabaseClientType;
   method: EConnectionMethod;
@@ -185,10 +274,12 @@ async function resolveHealthCheckConnection({
       );
     }
 
-    return {
-      connection: url,
-      sshTunnelClose,
-    };
+    return resolveSshConnectionString({
+      url,
+      type,
+      ssl,
+      ssh,
+    });
   }
 
   if (method === EConnectionMethod.FILE) {
@@ -258,12 +349,7 @@ async function resolveHealthCheckConnection({
   }
 
   if (ssl?.mode && ssl.mode !== 'disable') {
-    connection.ssl = {
-      rejectUnauthorized: ssl.rejectUnauthorized ?? true,
-      ca: ssl.ca,
-      cert: ssl.cert,
-      key: ssl.key,
-    };
+    connection.ssl = createSslConnectionOptions(ssl);
   }
 
   return {
@@ -338,11 +424,23 @@ export const getDatabaseSource = async ({
   assertSupportedConnectionRuntime(runtimeContext);
 
   let finalConnection: string | any = dbConnectionString;
-  let cacheKey = `${dbType}://${dbConnectionString}`;
+  const sslCacheSuffix = ssl?.mode ? `-${ssl.mode}` : '';
+  let cacheKey = `${dbType}://${dbConnectionString}${sslCacheSuffix}`;
   let sshTunnelClose: (() => Promise<void>) | undefined;
   const targetName = serviceName || database || '';
 
-  if (!dbConnectionString && filePath) {
+  if (dbConnectionString && ssh?.enabled) {
+    const resolvedConnection = await resolveSshConnectionString({
+      url: dbConnectionString,
+      type: dbType,
+      ssl,
+      ssh,
+    });
+
+    finalConnection = resolvedConnection.connection;
+    sshTunnelClose = resolvedConnection.sshTunnelClose;
+    cacheKey = `${dbType}://${dbConnectionString}-ssh${sslCacheSuffix}`;
+  } else if (!dbConnectionString && filePath) {
     finalConnection = {
       filename: filePath,
     };
@@ -388,12 +486,7 @@ export const getDatabaseSource = async ({
     }
 
     if (ssl?.mode && ssl.mode !== 'disable') {
-      finalConnection.ssl = {
-        rejectUnauthorized: ssl.rejectUnauthorized ?? true,
-        ca: ssl.ca,
-        cert: ssl.cert,
-        key: ssl.key,
-      };
+      finalConnection.ssl = createSslConnectionOptions(ssl);
     }
 
     cacheKey = `${dbType}://${username}@${host}:${finalPort}/${targetName}${ssh?.enabled ? '-ssh' : ''}${ssl?.mode ? `-${ssl.mode}` : ''}`;

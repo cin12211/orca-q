@@ -1,19 +1,11 @@
 import { defineEventHandler, readBody, createError } from 'h3';
 import { DatabaseClientType } from '~/core/constants/database-client-type';
-import type { DatabaseMetrics } from '~/core/types';
+import type { DatabaseMetrics, DatabaseMetadataRequestParams } from '~/core/types';
 import { createMetricsAdapter } from '~/server/infrastructure/database/adapters/metrics';
 
 export default defineEventHandler(async (event): Promise<DatabaseMetrics> => {
   try {
-    const body: {
-      dbConnectionString: string;
-      host?: string;
-      port?: string;
-      username?: string;
-      password?: string;
-      database?: string;
-      type?: DatabaseClientType;
-    } = await readBody(event);
+    const body = await readBody<DatabaseMetadataRequestParams>(event);
 
     if (!body?.dbConnectionString && !body?.host) {
       throw createError({
@@ -23,15 +15,8 @@ export default defineEventHandler(async (event): Promise<DatabaseMetrics> => {
     }
 
     const adapter = await createMetricsAdapter(
-      body.type || DatabaseClientType.POSTGRES,
-      {
-        dbConnectionString: body.dbConnectionString,
-        host: body.host,
-        port: body.port,
-        username: body.username,
-        password: body.password,
-        database: body.database,
-      }
+      body.type,
+      body
     );
 
     return await adapter.getMetrics();
