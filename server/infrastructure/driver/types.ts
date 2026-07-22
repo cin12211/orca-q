@@ -24,6 +24,11 @@ export interface IDatabaseAdapter {
   acquireRawConnection(): Promise<any>;
   releaseRawConnection(connection: any): Promise<void>;
   healthCheck(): Promise<boolean>;
+  /**
+   * Like healthCheck, but throws the underlying driver error instead of
+   * swallowing it — used so connection failures can be reported with detail.
+   */
+  verifyConnection(): Promise<void>;
   getNativeSql(sql: string, bindings: Knex.RawBinding): Knex.SqlNative;
   destroy(): Promise<void>;
 }

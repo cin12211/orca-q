@@ -1,0 +1,3 @@
+# Generated secrets — never commit.
+certs/
+bastion/authorized_keys

@@ -10,10 +10,15 @@ import {
   type ISSLConfig,
   type ISSHConfig,
 } from '~/core/types/entities/connection.entity';
+import type { NormalizedConnectionError } from '~/server/infrastructure/driver/connection-error';
 import { healthCheckConnection } from '~/server/infrastructure/driver/db-connection';
 
 export default defineEventHandler(
-  async (event): Promise<{ isConnectedSuccess: boolean; message?: string }> => {
+  async (
+    event
+  ): Promise<
+    { isConnectedSuccess: boolean } & Partial<NormalizedConnectionError>
+  > => {
     const body: {
       method?: EConnectionMethod;
       stringConnection?: string;

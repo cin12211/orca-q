@@ -126,14 +126,8 @@ export class OracleAdapter extends BaseDatabaseAdapter {
     }
   }
 
-  override async healthCheck(): Promise<boolean> {
-    try {
-      await this.knex.raw('SELECT 1 FROM DUAL');
-      return true;
-    } catch (error) {
-      console.error('[OracleAdapter] Health check failed', error);
-      return false;
-    }
+  override async verifyConnection(): Promise<void> {
+    await this.knex.raw('SELECT 1 FROM DUAL');
   }
 
   protected async _rawQuery<T = any>(

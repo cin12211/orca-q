@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto';
 import {
   resolveConnectionFamily,
   resolveConnectionProviderKind,
@@ -7,6 +8,8 @@ import {
   EConnectionFamily,
   EConnectionMethod,
   EConnectionProviderKind,
+  ESSHAuthMethod,
+  ESSLMode,
   type IManagedSqliteConfig,
   type ISSLConfig,
   type ISSHConfig,
@@ -14,6 +17,10 @@ import {
 import { assertSupportedConnectionRuntime } from '~/server/infrastructure/nosql';
 import { pingRedisConnection } from '~/server/infrastructure/nosql/redis/redis.client';
 import { createSshTunnel } from '~/server/utils/ssh-tunnel';
+import {
+  normalizeConnectionError,
+  type NormalizedConnectionError,
+} from './connection-error';
 import { createDatabaseAdapter } from './factory';
 import {
   createManagedSqliteConnectionString,
@@ -25,6 +32,7 @@ type CachedAdapter = {
   adapter: IDatabaseAdapter;
   lastUsed: number;
   sshTunnelClose?: () => Promise<void>;
+  sshTunnelAlive?: () => boolean;
 };
 
 const adapterCache = new Map<string, CachedAdapter>();
@@ -116,13 +124,64 @@ function isSslEnabled(ssl?: ISSLConfig) {
   return Boolean(ssl?.mode && ssl.mode !== 'disable');
 }
 
+// Cache-key fragment for SSL. Includes the full trust material (not just the
+// mode) so two connections that differ only by CA/cert/key/rejectUnauthorized
+// do not collide onto the same cached adapter.
+function sslCacheKeyPart(ssl?: ISSLConfig): string {
+  if (!isSslEnabled(ssl) || !ssl) return '';
+  const material = JSON.stringify([
+    ssl.mode,
+    ssl.ca ?? '',
+    ssl.cert ?? '',
+    ssl.key ?? '',
+    ssl.rejectUnauthorized ?? null,
+  ]);
+  return `-ssl:${createHash('sha1').update(material).digest('hex').slice(0, 12)}`;
+}
+
+// Cache-key fragment for SSH identity. Excludes the ephemeral local tunnel port
+// so a rebuilt tunnel maps back to the same cache entry.
+function sshCacheKeyPart(ssh?: ISSHConfig): string {
+  if (!ssh?.enabled) return '';
+  const method =
+    ssh.authMethod ??
+    (ssh.useSshKey ? ESSHAuthMethod.KEY : ESSHAuthMethod.PASSWORD);
+  return `-ssh:${ssh.host ?? ''}:${ssh.port ?? ''}:${ssh.username ?? ''}:${method}`;
+}
+
 function createSslConnectionOptions(ssl: ISSLConfig) {
-  return {
-    rejectUnauthorized: ssl.rejectUnauthorized ?? true,
-    ca: ssl.ca,
-    cert: ssl.cert,
-    key: ssl.key,
-  };
+  const isVerify =
+    ssl.mode === ESSLMode.VERIFY_CA || ssl.mode === ESSLMode.VERIFY_FULL;
+
+  // Mode drives verification. require/preferred encrypt the channel but must
+  // NOT fail on a self-signed/untrusted cert (the common managed-DB case) —
+  // only an explicit rejectUnauthorized can force it on. verify-ca and
+  // verify-full always enforce chain validation.
+  const rejectUnauthorized = isVerify
+    ? true
+    : (ssl.rejectUnauthorized ?? false);
+
+  const options: {
+    rejectUnauthorized: boolean;
+    ca?: string;
+    cert?: string;
+    key?: string;
+    checkServerIdentity?: () => undefined;
+  } = { rejectUnauthorized };
+
+  // Omit empty strings so the TLS layer falls back to its defaults instead of
+  // trying to parse a blank PEM.
+  if (ssl.ca) options.ca = ssl.ca;
+  if (ssl.cert) options.cert = ssl.cert;
+  if (ssl.key) options.key = ssl.key;
+
+  // verify-ca validates the chain but NOT the server hostname; verify-full
+  // does both (the TLS default when rejectUnauthorized is true).
+  if (ssl.mode === ESSLMode.VERIFY_CA) {
+    options.checkServerIdentity = () => undefined;
+  }
+
+  return options;
 }
 
 function applyConnectionStringSsl({
@@ -141,6 +200,16 @@ function applyConnectionStringSsl({
   if (isMysqlClient(type)) {
     return {
       uri: connection,
+      ssl: createSslConnectionOptions(ssl),
+    };
+  }
+
+  // node-postgres ignores SSL options embedded only as a raw string, so pass a
+  // config object with an explicit `ssl` block. Previously the plain string was
+  // returned unchanged and SSL was silently dropped on the string path.
+  if (type === DatabaseClientType.POSTGRES) {
+    return {
+      connectionString: connection,
       ssl: createSslConnectionOptions(ssl),
     };
   }
@@ -167,6 +236,7 @@ async function resolveSshConnectionString({
         ssl,
       }),
       sshTunnelClose: undefined,
+      sshTunnelAlive: undefined,
     };
   }
 
@@ -190,6 +260,7 @@ async function resolveSshConnectionString({
       ssl,
     }),
     sshTunnelClose: tunnel.close,
+    sshTunnelAlive: tunnel.isAlive,
   };
 }
 
@@ -423,48 +494,93 @@ export const getDatabaseSource = async ({
 
   assertSupportedConnectionRuntime(runtimeContext);
 
-  let finalConnection: string | any = dbConnectionString;
-  const sslCacheSuffix = ssl?.mode ? `-${ssl.mode}` : '';
-  let cacheKey = `${dbType}://${dbConnectionString}${sslCacheSuffix}`;
-  let sshTunnelClose: (() => Promise<void>) | undefined;
   const targetName = serviceName || database || '';
+  const realPort = parseInt(port || `${getDefaultPort(dbType)}`, 10);
+
+  const isManaged = Boolean(
+    method === EConnectionMethod.MANAGED &&
+      runtimeContext.providerKind &&
+      managedSqlite
+  );
+
+  // Managed SQLite connection string is deterministic and needs no tunnel, so
+  // compute it once for both the cache key and the connection config.
+  const managedConnection = isManaged
+    ? createManagedSqliteConnectionString(
+        runtimeContext.providerKind!,
+        managedSqlite!
+      )
+    : undefined;
+
+  // --- Stable cache key: independent of any ephemeral local tunnel port and
+  // sensitive to the full SSL trust material, so it never collides or pins to a
+  // dead tunnel port. ---
+  let cacheKey: string;
+  if (dbConnectionString) {
+    cacheKey = `${dbType}://${dbConnectionString}${sshCacheKeyPart(ssh)}${sslCacheKeyPart(ssl)}`;
+  } else if (filePath) {
+    cacheKey = `${dbType}://${filePath}`;
+  } else if (isManaged) {
+    cacheKey = `${runtimeContext.providerKind}://${managedConnection}`;
+  } else if (host) {
+    cacheKey = `${dbType}://${username ?? ''}@${host}:${realPort}/${targetName}${sshCacheKeyPart(ssh)}${sslCacheKeyPart(ssl)}`;
+  } else {
+    cacheKey = `${dbType}://${dbConnectionString}`;
+  }
+
+  // --- Cache lookup with dead-tunnel self-heal ---
+  const cached = adapterCache.get(cacheKey);
+  if (cached) {
+    const tunnelDead =
+      typeof cached.sshTunnelAlive === 'function' && !cached.sshTunnelAlive();
+
+    if (!tunnelDead) {
+      cached.lastUsed = Date.now();
+      return cached.adapter;
+    }
+
+    // The SSH tunnel behind this adapter died; tear it down and rebuild so the
+    // caller gets a live connection instead of a pool bound to a dead port.
+    adapterCache.delete(cacheKey);
+    await cached.adapter.destroy().catch(() => {});
+    if (cached.sshTunnelClose) await cached.sshTunnelClose().catch(() => {});
+  }
+
+  // --- Build the connection, opening an SSH tunnel only on a cache miss ---
+  let finalConnection: string | any = dbConnectionString;
+  let sshTunnelClose: (() => Promise<void>) | undefined;
+  let sshTunnelAlive: (() => boolean) | undefined;
 
   if (dbConnectionString && ssh?.enabled) {
-    const resolvedConnection = await resolveSshConnectionString({
+    const resolved = await resolveSshConnectionString({
       url: dbConnectionString,
       type: dbType,
       ssl,
       ssh,
     });
-
-    finalConnection = resolvedConnection.connection;
-    sshTunnelClose = resolvedConnection.sshTunnelClose;
-    cacheKey = `${dbType}://${dbConnectionString}-ssh${sslCacheSuffix}`;
-  } else if (!dbConnectionString && filePath) {
-    finalConnection = {
-      filename: filePath,
-    };
-
-    cacheKey = `${dbType}://${filePath}`;
-  } else if (
-    method === EConnectionMethod.MANAGED &&
-    runtimeContext.providerKind &&
-    managedSqlite
-  ) {
-    finalConnection = createManagedSqliteConnectionString(
-      runtimeContext.providerKind,
-      managedSqlite
-    );
-    cacheKey = `${runtimeContext.providerKind}://${finalConnection}`;
-  } else if (!dbConnectionString && host) {
+    finalConnection = resolved.connection;
+    sshTunnelClose = resolved.sshTunnelClose;
+    sshTunnelAlive = resolved.sshTunnelAlive;
+  } else if (dbConnectionString) {
+    finalConnection = applyConnectionStringSsl({
+      connection: dbConnectionString,
+      type: dbType,
+      ssl,
+    });
+  } else if (filePath) {
+    finalConnection = { filename: filePath };
+  } else if (isManaged) {
+    finalConnection = managedConnection;
+  } else if (host) {
     let finalHost = host;
-    let finalPort = parseInt(port || `${getDefaultPort(dbType)}`, 10);
+    let finalPort = realPort;
 
     if (ssh?.enabled) {
       const tunnel = await createSshTunnel(ssh, host, finalPort);
       finalHost = tunnel.localHost;
       finalPort = tunnel.localPort;
       sshTunnelClose = tunnel.close;
+      sshTunnelAlive = tunnel.isAlive;
     }
 
     if (dbType === DatabaseClientType.ORACLE) {
@@ -485,18 +601,9 @@ export const getDatabaseSource = async ({
       };
     }
 
-    if (ssl?.mode && ssl.mode !== 'disable') {
+    if (isSslEnabled(ssl) && ssl) {
       finalConnection.ssl = createSslConnectionOptions(ssl);
     }
-
-    cacheKey = `${dbType}://${username}@${host}:${finalPort}/${targetName}${ssh?.enabled ? '-ssh' : ''}${ssl?.mode ? `-${ssl.mode}` : ''}`;
-  }
-
-  let cached = adapterCache.get(cacheKey);
-
-  if (cached) {
-    cached.lastUsed = Date.now();
-    return cached.adapter;
   }
 
   const newAdapter = createDatabaseAdapter(dbType, finalConnection, {
@@ -508,6 +615,7 @@ export const getDatabaseSource = async ({
     adapter: newAdapter,
     lastUsed: Date.now(),
     sshTunnelClose,
+    sshTunnelAlive,
   });
 
   return newAdapter;
@@ -545,7 +653,9 @@ export async function healthCheckConnection({
   managedSqlite?: IManagedSqliteConfig;
   ssl?: ISSLConfig;
   ssh?: ISSHConfig;
-}): Promise<{ isConnectedSuccess: boolean; message?: string }> {
+}): Promise<
+  { isConnectedSuccess: boolean } & Partial<NormalizedConnectionError>
+> {
   let sshTunnelClose: (() => Promise<void>) | undefined;
 
   try {
@@ -599,18 +709,25 @@ export async function healthCheckConnection({
       providerKind: runtimeContext.providerKind,
       managedSqlite,
     });
-    const isConnected = await adapter.healthCheck();
+    // verifyConnection throws the real driver error (unlike healthCheck, which
+    // returns a bare boolean) so failures can be reported with detail.
+    await adapter.verifyConnection();
     await adapter.destroy();
     if (sshTunnelClose) await sshTunnelClose();
+
     return {
-      isConnectedSuccess: isConnected,
+      isConnectedSuccess: true,
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Database connection failed:', error);
     if (sshTunnelClose) await sshTunnelClose();
     return {
       isConnectedSuccess: false,
-      message: error?.message || 'Database connection failed',
+      ...normalizeConnectionError(error, {
+        type,
+        sslEnabled: isSslEnabled(ssl),
+        sshEnabled: Boolean(ssh?.enabled),
+      }),
     };
   }
 }

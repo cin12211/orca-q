@@ -63,6 +63,8 @@ const {
   tagIds,
   testStatus,
   testErrorMessage,
+  testErrorHint,
+  testErrorDetail,
   handleNext,
   handleBack,
   handleTestConnection,
@@ -532,6 +534,8 @@ const handleSubmit = () => {
             <ConnectionStatusSection
               :test-status="testStatus"
               :error-message="testErrorMessage"
+              :error-hint="testErrorHint"
+              :error-detail="testErrorDetail"
             />
           </div>
 

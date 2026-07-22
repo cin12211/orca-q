@@ -287,10 +287,27 @@ export class ConnectionModalPage {
     ).toHaveCount(0);
   }
 
-  async expectConnectionError() {
-    await expect(this.page.getByText('Connection failed.')).toBeVisible({
-      timeout: 15_000,
-    });
+  get testErrorBox(): Locator {
+    return this.page.getByTestId('connection-test-error');
+  }
+
+  get testErrorHint(): Locator {
+    return this.page.getByTestId('connection-test-error-hint');
+  }
+
+  get testErrorDetailToggle(): Locator {
+    return this.page.getByTestId('connection-test-error-detail-toggle');
+  }
+
+  get testErrorDetail(): Locator {
+    return this.page.getByTestId('connection-test-error-detail');
+  }
+
+  async expectConnectionError(expectedText?: string | RegExp) {
+    await expect(this.testErrorBox).toBeVisible({ timeout: 15_000 });
+    if (expectedText) {
+      await expect(this.testErrorBox).toContainText(expectedText);
+    }
   }
 
   async clickCreate() {

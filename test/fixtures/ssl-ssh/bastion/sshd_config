@@ -1,0 +1,11 @@
+# Bastion sshd — password + key auth, TCP forwarding on (needed for tunnel).
+Port 22
+PermitRootLogin no
+PasswordAuthentication yes
+PubkeyAuthentication yes
+AllowTcpForwarding yes
+GatewayPorts no
+X11Forwarding no
+AllowUsers tunnel
+AuthorizedKeysFile .ssh/authorized_keys
+Subsystem sftp internal-sftp

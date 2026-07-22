@@ -61,9 +61,13 @@ export abstract class BaseDatabaseAdapter implements IDatabaseAdapter {
     return this._getNativeSql(normalizeBindableSql(sql, bindings), bindings);
   }
 
+  async verifyConnection(): Promise<void> {
+    await this.knex.raw('SELECT 1');
+  }
+
   async healthCheck(): Promise<boolean> {
     try {
-      await this.knex.raw('SELECT 1');
+      await this.verifyConnection();
       return true;
     } catch (e) {
       console.error(

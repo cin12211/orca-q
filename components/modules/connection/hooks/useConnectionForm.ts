@@ -154,6 +154,14 @@ export function useConnectionForm(props: {
   const tagIds = ref<string[]>([]);
   const testStatus = ref<'idle' | 'testing' | 'success' | 'error'>('idle');
   const testErrorMessage = ref('');
+  const testErrorHint = ref('');
+  const testErrorDetail = ref('');
+
+  const resetTestState = () => {
+    resetTestState();
+    testErrorHint.value = '';
+    testErrorDetail.value = '';
+  };
 
   const tagStore = useEnvironmentTagStore();
 
@@ -370,8 +378,7 @@ export function useConnectionForm(props: {
     Object.assign(managedSqlite, createManagedSqliteState());
 
     tagIds.value = getDefaultTagIds();
-    testStatus.value = 'idle';
-    testErrorMessage.value = '';
+    resetTestState();
   };
 
   const handleNext = () => {
@@ -382,9 +389,11 @@ export function useConnectionForm(props: {
 
   const handleBack = () => {
     step.value = 1;
-    testStatus.value = 'idle';
-    testErrorMessage.value = '';
+    resetTestState();
   };
+
+  const DEFAULT_ERROR_MESSAGE =
+    'Connection failed. Please check your details and try again.';
 
   const handleTestConnection = async () => {
     if (
@@ -394,11 +403,13 @@ export function useConnectionForm(props: {
       testStatus.value = 'error';
       testErrorMessage.value =
         'SQLite file connections are available only in the desktop app.';
+      testErrorHint.value = '';
+      testErrorDetail.value = '';
       return false;
     }
 
+    resetTestState();
     testStatus.value = 'testing';
-    testErrorMessage.value = '';
 
     try {
       const result = await connectionService.healthCheck(
@@ -406,22 +417,24 @@ export function useConnectionForm(props: {
       );
 
       if (result.isConnectedSuccess) {
+        resetTestState();
         testStatus.value = 'success';
-        testErrorMessage.value = '';
         return true;
       }
 
       testStatus.value = 'error';
-      testErrorMessage.value =
-        result.message ||
-        'Connection failed. Please check your details and try again.';
+      testErrorMessage.value = result.message || DEFAULT_ERROR_MESSAGE;
+      testErrorHint.value = result.hint || '';
+      testErrorDetail.value = result.detail || '';
       return false;
     } catch (error: any) {
+      // Network-level failure before the API could respond (server error body
+      // still carries the normalized fields when available).
       testStatus.value = 'error';
       testErrorMessage.value =
-        error?.data?.message ||
-        error?.message ||
-        'Connection failed. Please check your details and try again.';
+        error?.data?.message || error?.message || DEFAULT_ERROR_MESSAGE;
+      testErrorHint.value = error?.data?.hint || '';
+      testErrorDetail.value = error?.data?.detail || '';
       return false;
     }
   };
@@ -684,6 +697,8 @@ export function useConnectionForm(props: {
     tagIds,
     testStatus,
     testErrorMessage,
+    testErrorHint,
+    testErrorDetail,
     handleNext,
     handleBack,
     handleTestConnection,

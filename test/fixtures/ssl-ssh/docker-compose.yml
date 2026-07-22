@@ -1,0 +1,127 @@
+# =============================================================================
+# OrcaQ — SSL + SSH connection test fixture (standalone).
+#
+#   postgres / mysql : force SSL (server certs signed by the local test CA).
+#   bastion          : SSH jump host (password + key), forwards to the DBs.
+#
+# DB ports are also exposed on NON-standard host ports so SSL can be tested
+# on its own; the real target is SSL *through* the SSH bastion.
+#
+# Run via ./start.sh (generates certs first). See README.md for OrcaQ values.
+# =============================================================================
+services:
+  postgres:
+    image: docker.io/library/postgres:16-alpine
+    container_name: orcaq-sslssh-postgres
+    entrypoint: ['/bin/sh', '/pg-entrypoint.sh']
+    command:
+      - postgres
+      - '-c'
+      - 'ssl=on'
+      - '-c'
+      - 'ssl_cert_file=/certs-out/server.crt'
+      - '-c'
+      - 'ssl_key_file=/certs-out/server.key'
+      - '-c'
+      - 'ssl_ca_file=/certs-out/ca.crt'
+      - '-c'
+      - 'hba_file=/certs-out/pg_hba.conf'
+    environment:
+      POSTGRES_DB: orcaq
+      POSTGRES_USER: orcaq
+      POSTGRES_PASSWORD: orcaq
+    ports:
+      - '55432:5432' # optional: direct SSL test (no SSH)
+    volumes:
+      - ./certs:/certs-src:ro
+      - ./postgres/pg-entrypoint.sh:/pg-entrypoint.sh:ro
+      - ./postgres/pg_hba.conf:/pg-hba-src/pg_hba.conf:ro
+      - ./postgres/10-seed.sql:/docker-entrypoint-initdb.d/10-seed.sql:ro
+    networks:
+      - orcaq-sslssh
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U orcaq -d orcaq']
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  mysql:
+    image: docker.io/library/mysql:8.4
+    container_name: orcaq-sslssh-mysql
+    entrypoint: ['/bin/bash', '/mysql-entrypoint.sh']
+    command:
+      - mysqld
+      - '--require-secure-transport=ON'
+      - '--ssl-ca=/certs-out/ca.crt'
+      - '--ssl-cert=/certs-out/server.crt'
+      - '--ssl-key=/certs-out/server.key'
+      - '--mysql-native-password=ON'
+      - '--mysqlx=0'
+    environment:
+      MYSQL_DATABASE: orcaq
+      MYSQL_USER: orcaq
+      MYSQL_PASSWORD: orcaq
+      MYSQL_ROOT_PASSWORD: root
+    ports:
+      - '33306:3306' # optional: direct SSL test (no SSH)
+    volumes:
+      - ./certs:/certs-src:ro
+      - ./mysql/mysql-entrypoint.sh:/mysql-entrypoint.sh:ro
+      - ./mysql/10-seed.sql:/docker-entrypoint-initdb.d/10-seed.sql:ro
+    networks:
+      - orcaq-sslssh
+    healthcheck:
+      # ping over the unix socket (exempt from require-secure-transport)
+      test: ['CMD-SHELL', 'mysqladmin ping -uroot -proot --silent']
+      interval: 5s
+      timeout: 5s
+      retries: 30
+
+  mariadb:
+    image: docker.io/library/mariadb:11.4
+    container_name: orcaq-sslssh-mariadb
+    entrypoint: ['/bin/bash', '/mysql-entrypoint.sh']
+    command:
+      - mariadbd
+      - '--require-secure-transport=ON'
+      - '--ssl-ca=/certs-out/ca.crt'
+      - '--ssl-cert=/certs-out/server.crt'
+      - '--ssl-key=/certs-out/server.key'
+    environment:
+      MARIADB_DATABASE: orcaq
+      MARIADB_USER: orcaq
+      MARIADB_PASSWORD: orcaq
+      MARIADB_ROOT_PASSWORD: root
+    ports:
+      - '33307:3306' # optional: direct SSL test (no SSH)
+    volumes:
+      - ./certs:/certs-src:ro
+      - ./mysql/mysql-entrypoint.sh:/mysql-entrypoint.sh:ro
+      - ./mysql/10-seed.sql:/docker-entrypoint-initdb.d/10-seed.sql:ro
+    networks:
+      - orcaq-sslssh
+    healthcheck:
+      test: ['CMD-SHELL', 'mariadb-admin ping -uroot -proot --silent']
+      interval: 5s
+      timeout: 5s
+      retries: 30
+
+  bastion:
+    build:
+      context: ./bastion
+    container_name: orcaq-sslssh-bastion
+    ports:
+      - '2222:22'
+    networks:
+      - orcaq-sslssh
+    depends_on:
+      postgres:
+        condition: service_healthy
+      mysql:
+        condition: service_healthy
+      mariadb:
+        condition: service_healthy
+
+networks:
+  orcaq-sslssh:
+    driver: bridge
