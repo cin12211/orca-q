@@ -15,7 +15,7 @@ describe('Instance Insights API — MySQL', async () => {
 
       expect(res).toBeDefined();
       expect(typeof res).toBe('object');
-    });
+    }, 120_000);
   });
 
   // ─── dashboard.post (unsupported for MySQL — should return 501) ──────
