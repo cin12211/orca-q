@@ -13,7 +13,10 @@ const mountDialog = (props: Record<string, unknown>) =>
         AlertDialogTitle: { template: '<div><slot /></div>' },
         AlertDialogDescription: { template: '<div><slot /></div>' },
         AlertDialogFooter: { template: '<div><slot /></div>' },
-        AlertDialogCancel: { template: '<button><slot /></button>' },
+        AlertDialogCancel: {
+          props: ['disabled'],
+          template: '<button :disabled="disabled"><slot /></button>',
+        },
         AlertDialogAction: {
           props: ['disabled'],
           emits: ['click'],
@@ -62,6 +65,32 @@ describe('RedisDeleteKeyDialog', () => {
     const confirmButton = actionButtons[actionButtons.length - 1];
 
     expect(confirmButton?.attributes('disabled')).toBeDefined();
+  });
+
+  it('shows a "Deleting..." label and disables Cancel while the delete is in flight', () => {
+    const wrapper = mountDialog({
+      mode: 'key',
+      targetKey: 'orders:1',
+      loading: true,
+    });
+
+    const buttons = wrapper.findAll('button');
+    const confirmButton = buttons[buttons.length - 1];
+    const cancelButton = buttons[0];
+
+    expect(confirmButton?.text()).toContain('Deleting...');
+    expect(cancelButton?.attributes('disabled')).toBeDefined();
+  });
+
+  it('shows the plain Delete label and an enabled Cancel when not loading', () => {
+    const wrapper = mountDialog({ mode: 'key', targetKey: 'orders:1' });
+
+    const buttons = wrapper.findAll('button');
+    const confirmButton = buttons[buttons.length - 1];
+    const cancelButton = buttons[0];
+
+    expect(confirmButton?.text().trim()).toBe('Delete');
+    expect(cancelButton?.attributes('disabled')).toBeUndefined();
   });
 
   it('shows a loading state and hides the key list while the group preview is still fetching', () => {

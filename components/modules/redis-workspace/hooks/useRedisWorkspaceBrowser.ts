@@ -215,11 +215,6 @@ export function useRedisWorkspaceBrowser({
 
   const isDeletingKey = ref(false);
 
-  const removeKeysFromList = (deletedKeys: string[]) => {
-    const deletedSet = new Set(deletedKeys);
-    keys.value = keys.value.filter(item => !deletedSet.has(item.key));
-  };
-
   const clearSelectionIfDeleted = (deletedKeys: string[]) => {
     if (
       !session.value?.selectedKey ||
@@ -252,8 +247,11 @@ export function useRedisWorkspaceBrowser({
       detailCache.delete(
         getDetailCacheKey(session.value.selectedDatabaseIndex, key)
       );
-      removeKeysFromList([key]);
       clearSelectionIfDeleted([key]);
+      await refreshKeys();
+      toast.success('Redis key deleted', {
+        description: `Deleted ${key}`,
+      });
     } finally {
       isDeletingKey.value = false;
     }
@@ -281,8 +279,11 @@ export function useRedisWorkspaceBrowser({
           getDetailCacheKey(session.value!.selectedDatabaseIndex, key)
         )
       );
-      removeKeysFromList(keysToDelete);
       clearSelectionIfDeleted(keysToDelete);
+      await refreshKeys();
+      toast.success('Redis keys deleted', {
+        description: `Deleted ${keysToDelete.length} keys`,
+      });
     } finally {
       isDeletingKey.value = false;
     }

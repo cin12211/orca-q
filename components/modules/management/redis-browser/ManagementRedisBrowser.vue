@@ -6,11 +6,12 @@ import { useTabManagement } from '~/core/composables/useTabManagement';
 import { useWorkspaceConnectionRoute } from '~/core/composables/useWorkspaceConnectionRoute';
 import { useManagementConnectionStore } from '~/core/stores';
 import { RedisBrowserViewMode } from '~/core/stores/useRedisWorkspaceStore';
-import { TabViewType } from '~/core/stores/useTabViewsStore';
+import { TabViewType, useTabViewsStore } from '~/core/stores/useTabViewsStore';
 import { ManagementSidebarHeader } from '../shared';
 import RedisKeyTree from './components/RedisKeyTree.vue';
 
 const connectionStore = useManagementConnectionStore();
+const tabViewStore = useTabViewsStore();
 const { openRedisTab } = useTabManagement();
 const { workspaceId } = useWorkspaceConnectionRoute();
 const connection = computed(() => connectionStore.selectedConnection);
@@ -105,9 +106,11 @@ const openSelectedKey = async (key: string) => {
   await workspace.openKey(key);
 
   const connectionId = connection.value?.id || 'redis';
+  const tabId = `redis-browser-${connectionId}`;
+
   await openRedisTab({
-    id: `redis-browser-${connectionId}`,
-    name: 'Redis Browser',
+    id: tabId,
+    name: key,
     type: TabViewType.RedisBrowser,
     metadata: {
       type: TabViewType.RedisBrowser,
@@ -116,6 +119,11 @@ const openSelectedKey = async (key: string) => {
       selectedKey: key,
     },
   });
+
+  // openRedisTab only sets the name on first creation; the tab is reused
+  // for every key of this connection, so update it explicitly when an
+  // already-open tab switches to a different key.
+  await tabViewStore.updateTabName(tabId, key);
 };
 
 const deleteDialogState = ref<
@@ -294,7 +302,7 @@ const deleteDialogTargetKeys = computed(() =>
       :target-keys="deleteDialogTargetKeys"
       :loading="isDeletingKey"
       :preview-loading="isPreviewLoadingGroup"
-      @update:open="value => !value && closeDeleteDialog()"
+      @update:open="value => !value && !isDeletingKey && closeDeleteDialog()"
       @confirm="onConfirmDelete"
     />
   </div>

@@ -69,7 +69,7 @@ const confirmDelete = async () => {
     mode="key"
     :target-key="selectedKeyDetail?.key ?? ''"
     :loading="isDeletingKey"
-    @update:open="value => (isDeleteDialogOpen = value)"
+    @update:open="value => !isDeletingKey && (isDeleteDialogOpen = value)"
     @confirm="confirmDelete"
   />
 </template>

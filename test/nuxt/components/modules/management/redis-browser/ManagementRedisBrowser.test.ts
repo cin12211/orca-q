@@ -6,6 +6,7 @@ import { TabViewType } from '~/core/stores/useTabViewsStore';
 
 const openRedisTabMock = vi.fn();
 const openKeyMock = vi.fn();
+const updateTabNameMock = vi.fn();
 const deleteKeyMock = vi.fn().mockResolvedValue(undefined);
 const deleteKeysMock = vi.fn().mockResolvedValue(undefined);
 const previewGroupKeysMock = vi
@@ -53,6 +54,18 @@ vi.mock('~/core/composables/useWorkspaceConnectionRoute', () => ({
     workspaceId: ref('ws-1'),
   }),
 }));
+
+vi.mock('~/core/stores/useTabViewsStore', async importOriginal => {
+  const actual =
+    await importOriginal<typeof import('~/core/stores/useTabViewsStore')>();
+
+  return {
+    ...actual,
+    useTabViewsStore: () => ({
+      updateTabName: updateTabNameMock,
+    }),
+  };
+});
 
 vi.mock('~/core/stores', async importOriginal => {
   const actual = await importOriginal<typeof import('~/core/stores')>();
@@ -143,7 +156,7 @@ describe('ManagementRedisBrowser', () => {
     expect(openKeyMock).toHaveBeenCalledWith('orders:1');
     expect(openRedisTabMock).toHaveBeenCalledWith({
       id: 'redis-browser-redis-conn',
-      name: 'Redis Browser',
+      name: 'orders:1',
       type: TabViewType.RedisBrowser,
       metadata: {
         type: TabViewType.RedisBrowser,
@@ -152,6 +165,21 @@ describe('ManagementRedisBrowser', () => {
         selectedKey: 'orders:1',
       },
     });
+    expect(updateTabNameMock).toHaveBeenCalledWith(
+      'redis-browser-redis-conn',
+      'orders:1'
+    );
+  });
+
+  it('renames the existing tab when a different key is opened in the same browser tab', async () => {
+    const wrapper = mountComponent();
+
+    await (wrapper.vm as any).openSelectedKey('orders:2');
+
+    expect(updateTabNameMock).toHaveBeenCalledWith(
+      'redis-browser-redis-conn',
+      'orders:2'
+    );
   });
 
   it('switches the browser session between tree and list modes', async () => {

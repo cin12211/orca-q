@@ -360,16 +360,21 @@ describe('useRedisWorkspace', () => {
     );
   });
 
-  it('deletes a single key, clears it from the list, and clears the selection if it was selected', async () => {
+  it('deletes a single key, reloads the sidebar from the server, clears the selection, and shows a success toast', async () => {
+    let currentKeys = [
+      { key: 'orders:1', type: 'string', ttl: -1 },
+      { key: 'orders:2', type: 'string', ttl: -1 },
+    ];
+    let browserCallCount = 0;
+
     mockFetch.mockImplementation(async (url, options) => {
       if (url === '/api/redis/browser') {
+        browserCallCount += 1;
+
         return {
           cursor: '0',
           truncated: false,
-          keys: [
-            { key: 'orders:1', type: 'string', ttl: -1 },
-            { key: 'orders:2', type: 'string', ttl: -1 },
-          ],
+          keys: currentKeys,
           databases: [
             { index: 0, label: 'DB 0', keyCount: 2, expires: 0, avgTtl: null },
           ],
@@ -378,6 +383,7 @@ describe('useRedisWorkspace', () => {
       }
 
       if (url === '/api/redis/browser/value' && options?.method === 'DELETE') {
+        currentKeys = currentKeys.filter(item => item.key !== 'orders:1');
         return { deletedCount: 1 };
       }
 
@@ -393,6 +399,13 @@ describe('useRedisWorkspace', () => {
     workspace.session.value!.selectedKey = 'orders:1';
     await flushReactive();
 
+    expect(workspace.keys.value.map(item => item.key)).toEqual([
+      'orders:1',
+      'orders:2',
+    ]);
+
+    const callCountBeforeDelete = browserCallCount;
+
     await workspace.deleteKey('orders:1');
 
     expect(mockFetch).toHaveBeenCalledWith(
@@ -402,27 +415,41 @@ describe('useRedisWorkspace', () => {
         body: expect.objectContaining({ key: 'orders:1' }),
       })
     );
+    expect(browserCallCount).toBe(callCountBeforeDelete + 1);
     expect(workspace.keys.value.map(item => item.key)).toEqual(['orders:2']);
     expect(workspace.session.value!.selectedKey).toBeNull();
+    expect(toast.success).toHaveBeenCalledWith(
+      'Redis key deleted',
+      expect.objectContaining({
+        description: expect.stringContaining('orders:1'),
+      })
+    );
   });
 
-  it('deletes multiple keys in bulk without touching the selection when it is unaffected', async () => {
+  it('deletes multiple keys in bulk, reloads the sidebar from the server, and shows a success toast', async () => {
+    let currentKeys = [
+      { key: 'orders:1', type: 'string', ttl: -1 },
+      { key: 'orders:2', type: 'string', ttl: -1 },
+      { key: 'inventory:1', type: 'string', ttl: -1 },
+    ];
+    let browserCallCount = 0;
+
     mockFetch.mockImplementation(async (url, options) => {
       if (url === '/api/redis/browser') {
+        browserCallCount += 1;
+
         return {
           cursor: '0',
           truncated: false,
-          keys: [
-            { key: 'orders:1', type: 'string', ttl: -1 },
-            { key: 'orders:2', type: 'string', ttl: -1 },
-            { key: 'inventory:1', type: 'string', ttl: -1 },
-          ],
+          keys: currentKeys,
           databases: [],
           selectedKeyDetail: null,
         };
       }
 
       if (url === '/api/redis/browser/keys' && options?.method === 'DELETE') {
+        const deletedSet = new Set(['orders:1', 'orders:2']);
+        currentKeys = currentKeys.filter(item => !deletedSet.has(item.key));
         return { deletedCount: 2 };
       }
 
@@ -438,6 +465,8 @@ describe('useRedisWorkspace', () => {
     workspace.session.value!.selectedKey = 'inventory:1';
     await flushReactive();
 
+    const callCountBeforeDelete = browserCallCount;
+
     await workspace.deleteKeys(['orders:1', 'orders:2']);
 
     expect(mockFetch).toHaveBeenCalledWith(
@@ -447,8 +476,13 @@ describe('useRedisWorkspace', () => {
         body: expect.objectContaining({ keys: ['orders:1', 'orders:2'] }),
       })
     );
+    expect(browserCallCount).toBe(callCountBeforeDelete + 1);
     expect(workspace.keys.value.map(item => item.key)).toEqual(['inventory:1']);
     expect(workspace.session.value!.selectedKey).toBe('inventory:1');
+    expect(toast.success).toHaveBeenCalledWith(
+      'Redis keys deleted',
+      expect.objectContaining({ description: expect.stringContaining('2') })
+    );
   });
 
   it('previews the full set of keys matching a group prefix', async () => {

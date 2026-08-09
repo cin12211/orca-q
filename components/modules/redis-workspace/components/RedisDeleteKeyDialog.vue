@@ -68,13 +68,20 @@ const isConfirmDisabled = computed(() => props.loading || props.previewLoading);
       </AlertDialogHeader>
 
       <AlertDialogFooter>
-        <AlertDialogCancel class="border">Cancel</AlertDialogCancel>
+        <AlertDialogCancel class="border" :disabled="loading">
+          Cancel
+        </AlertDialogCancel>
         <AlertDialogAction
           class="bg-destructive text-white hover:bg-destructive/90"
           :disabled="isConfirmDisabled"
           @click="emit('confirm')"
         >
-          Delete
+          <Icon
+            v-if="loading"
+            name="hugeicons:loading-03"
+            class="size-4 animate-spin"
+          />
+          {{ loading ? 'Deleting...' : 'Delete' }}
         </AlertDialogAction>
       </AlertDialogFooter>
     </AlertDialogContent>

@@ -203,6 +203,17 @@ export const useTabViewsStore = defineStore(
       return getTabById(tab.id);
     };
 
+    const updateTabName = async (tabId: string, name: string) => {
+      const tab = getTabById(tabId);
+
+      if (!tab || tab.name === name) {
+        return;
+      }
+
+      tab.name = name;
+      await storageApis.tabViewStorage.create({ ...tab });
+    };
+
     const selectTab = async (tabId: string) => {
       const tab = getTabById(tabId);
 
@@ -396,6 +407,7 @@ export const useTabViewsStore = defineStore(
       isLoading,
       openTab,
       ensureTab,
+      updateTabName,
       closeTab,
       closeTabsByIds,
       selectTab,
