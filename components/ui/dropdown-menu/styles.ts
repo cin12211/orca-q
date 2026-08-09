@@ -73,7 +73,7 @@ export const dropdownMenuShortcutSizeClasses: Record<DropdownMenuSize, string> =
     lg: 'text-xs tracking-widest',
     default: 'text-xs tracking-widest',
     sm: 'text-[11px] tracking-wide',
-    xxs: 'text-[10px] tracking-wide',
+    xxs: 'text-xxs tracking-wide',
   };
 
 export const dropdownMenuSeparatorSizeClasses: Record<

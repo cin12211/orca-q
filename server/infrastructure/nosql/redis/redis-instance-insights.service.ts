@@ -258,7 +258,8 @@ export async function getRedisInstanceInsights(
   input: RedisRuntimeInput & { databaseIndex?: number }
 ): Promise<RedisInstanceInsights> {
   const databaseIndex =
-    typeof input.databaseIndex === 'number' && Number.isFinite(input.databaseIndex)
+    typeof input.databaseIndex === 'number' &&
+    Number.isFinite(input.databaseIndex)
       ? input.databaseIndex
       : parseRedisDatabaseIndex(input.database, input.url);
   const runtime = await createRedisRuntimeClient({
@@ -438,6 +439,11 @@ export async function getRedisInstanceInsights(
       );
     }
 
+    const totalSystemMemory = toInteger(memoryInfo.total_system_memory);
+    const totalSystemMemoryHuman =
+      memoryInfo.total_system_memory_human ||
+      (totalSystemMemory > 0 ? formatBytes(totalSystemMemory) : undefined);
+
     return {
       capturedAt: new Date().toISOString(),
       databaseIndex,
@@ -451,6 +457,13 @@ export async function getRedisInstanceInsights(
         usedMemory,
         usedMemoryHuman:
           memoryInfo.used_memory_human || formatBytes(usedMemory),
+        maxmemory,
+        maxmemoryHuman:
+          memoryInfo.maxmemory_human ||
+          (maxmemory > 0 ? formatBytes(maxmemory) : 'unlimited'),
+        maxmemoryPolicy: memoryInfo.maxmemory_policy || 'noeviction',
+        totalSystemMemory,
+        totalSystemMemoryHuman,
         totalKeys: totalKeys || dbSize,
         hitRate,
         opsPerSec: toNumber(statsInfo.instantaneous_ops_per_sec),
@@ -472,6 +485,8 @@ export async function getRedisInstanceInsights(
           memoryInfo.maxmemory_human ||
           (maxmemory > 0 ? formatBytes(maxmemory) : 'unlimited'),
         maxmemoryPolicy: memoryInfo.maxmemory_policy || 'noeviction',
+        totalSystemMemory,
+        totalSystemMemoryHuman,
         topPrefixesByMemory,
         bigKeys: [...sampledKeyMetrics]
           .sort((left, right) => right.memoryBytes - left.memoryBytes)
@@ -499,10 +514,13 @@ export async function getRedisInstanceInsights(
         keyTypeDistribution: Object.values(keyTypeDistribution).sort(
           (left, right) => right.count - left.count
         ),
-        topPrefixes: topPrefixesByMemory.map(item => ({
-          prefix: item.prefix,
-          keyCount: item.keyCount,
-        })),
+        topPrefixes: Object.values(prefixMemoryMap)
+          .sort((left, right) => right.keyCount - left.keyCount)
+          .slice(0, 10)
+          .map(item => ({
+            prefix: item.prefix,
+            keyCount: item.keyCount,
+          })),
         keysWithoutTtl: sampledKeyMetrics.filter(item => item.ttl < 0).length,
         hotKeysNote:
           'Hot key tracking requires Redis keyspace notifications or external sampling and is not available in this release.',
@@ -564,7 +582,8 @@ export async function killRedisClient(
   clientId: string
 ): Promise<InstanceActionResponse> {
   const databaseIndex =
-    typeof input.databaseIndex === 'number' && Number.isFinite(input.databaseIndex)
+    typeof input.databaseIndex === 'number' &&
+    Number.isFinite(input.databaseIndex)
       ? input.databaseIndex
       : parseRedisDatabaseIndex(input.database, input.url);
   const runtime = await createRedisRuntimeClient({

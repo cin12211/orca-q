@@ -240,7 +240,7 @@ export const Overview: Story = {
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 bg-muted/20 p-5 rounded-lg border border-border">
           <div class="flex flex-col gap-2 justify-between">
             <div class="flex flex-col gap-1">
-              <span class="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">State Details</span>
+              <span class="text-xxs font-semibold uppercase tracking-wider text-muted-foreground">State Details</span>
               <p class="text-sm font-bold text-foreground">{{ states[activeIndex].name }}</p>
               <p class="text-xs text-muted-foreground mt-1">{{ states[activeIndex].description }}</p>
             </div>
@@ -250,7 +250,7 @@ export const Overview: Story = {
           </div>
 
           <div class="flex flex-col gap-2 justify-center">
-            <span class="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Live Indicator</span>
+            <span class="text-xxs font-semibold uppercase tracking-wider text-muted-foreground">Live Indicator</span>
             <div class="h-10 w-full bg-sidebar-accent px-4 flex items-center justify-end rounded-md border border-border/80 shadow-inner">
               <ElectronUpdateIndicator />
             </div>
