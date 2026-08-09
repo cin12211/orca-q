@@ -59,6 +59,7 @@ const emit = defineEmits<{
   contextmenu: [nodeId: string, event: MouseEvent];
   rename: [nodeId: string, newName: string];
   'cancel-rename': [nodeId: string];
+  delete: [nodeId: string, event: KeyboardEvent];
 }>();
 
 // Core state - use shallowRef for performance with large datasets
@@ -676,6 +677,12 @@ const handleKeyDown = (event: KeyboardEvent) => {
       } else {
         emit('click', focusedId.value, event as unknown as MouseEvent);
       }
+      break;
+
+    case 'Delete':
+    case 'Backspace':
+      event.preventDefault();
+      emit('delete', focusedId.value, event);
       break;
   }
 

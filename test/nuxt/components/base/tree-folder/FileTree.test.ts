@@ -234,4 +234,24 @@ describe('FileTree', () => {
     const selectEvents = wrapper.emitted('select') || [];
     expect(selectEvents[selectEvents.length - 1]).toEqual([[]]);
   });
+
+  it('emits delete with the focused node id when Delete is pressed', async () => {
+    const wrapper = mountTree();
+
+    await wrapper.vm.$nextTick();
+    await wrapper.find('.tree-row').trigger('click');
+    await wrapper.find('.file-tree').trigger('keydown', { key: 'Delete' });
+
+    expect(wrapper.emitted('delete')?.[0]?.[0]).toBe('root');
+  });
+
+  it('emits delete when Backspace is pressed on a focused node', async () => {
+    const wrapper = mountTree();
+
+    await wrapper.vm.$nextTick();
+    await wrapper.find('.tree-row').trigger('click');
+    await wrapper.find('.file-tree').trigger('keydown', { key: 'Backspace' });
+
+    expect(wrapper.emitted('delete')?.[0]?.[0]).toBe('root');
+  });
 });
