@@ -54,6 +54,7 @@ export interface RedisKeyDetail extends RedisKeyListItem {
 
 export interface RedisBrowserResponse {
   cursor: string;
+  truncated: boolean;
   keys: RedisKeyListItem[];
   databases: RedisDatabaseOption[];
   selectedKeyDetail: RedisKeyDetail | null;

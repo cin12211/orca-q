@@ -97,6 +97,7 @@ describe('updateRedisKeyValue', () => {
 
     expect(result).toEqual({
       cursor: '0',
+      truncated: false,
       keys: [
         {
           key: 'orders:1',
@@ -152,6 +153,7 @@ describe('updateRedisKeyValue', () => {
     expect(clientMock.scan).toHaveBeenCalledTimes(2);
     expect(result).toEqual({
       cursor: '0',
+      truncated: false,
       keys: [
         {
           key: 'orders:1',
@@ -263,5 +265,47 @@ describe('getRedisKeyDetail', () => {
     expect(callOrder.indexOf('get:start')).toBeLessThan(
       callOrder.indexOf('ttl:end')
     );
+  });
+});
+
+describe('listRedisKeys scanning limits', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    clientMock.select.mockResolvedValue('OK');
+    clientMock.type.mockResolvedValue('string');
+    clientMock.ttl.mockResolvedValue(-1);
+    clientMock.sendCommand.mockResolvedValue(null);
+  });
+
+  it('keeps scanning past the old 500-key default until the cursor is exhausted', async () => {
+    const firstBatch = Array.from({ length: 300 }, (_, i) => `key:${i}`);
+    const secondBatch = Array.from({ length: 300 }, (_, i) => `key:${i + 300}`);
+
+    clientMock.scan
+      .mockResolvedValueOnce({ cursor: 11, keys: firstBatch })
+      .mockResolvedValueOnce({ cursor: 0, keys: secondBatch });
+
+    const result = await listRedisKeys({
+      method: EConnectionMethod.STRING,
+      url: 'redis://127.0.0.1:6379/0',
+    });
+
+    expect(result.keys).toHaveLength(600);
+    expect(result.truncated).toBe(false);
+    expect(clientMock.scan).toHaveBeenCalledTimes(2);
+  });
+
+  it('stops at an explicit count and reports truncated when more keys remain', async () => {
+    clientMock.scan
+      .mockResolvedValueOnce({ cursor: 5, keys: ['a', 'b'] })
+      .mockResolvedValueOnce({ cursor: 9, keys: ['c'] });
+
+    const result = await listRedisKeys(
+      { method: EConnectionMethod.STRING, url: 'redis://127.0.0.1:6379/0' },
+      { count: 3 }
+    );
+
+    expect(result.keys.map(item => item.key)).toEqual(['a', 'b', 'c']);
+    expect(result.truncated).toBe(true);
   });
 });

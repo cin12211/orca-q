@@ -384,6 +384,11 @@ const applyRedisTtl = async (
   await client.expire(key, Math.max(1, Math.floor(ttlSeconds)));
 };
 
+// Safety ceiling only — not a normal-case limit. Fetching "all matching keys"
+// is the correct MVP behavior; this just stops an unbounded request against a
+// pathologically huge keyspace from hanging.
+const DEFAULT_KEY_SCAN_LIMIT = 20_000;
+
 export async function listRedisKeys(
   input: RedisBrowserInput,
   options?: {
@@ -394,11 +399,12 @@ export async function listRedisKeys(
 ) {
   return withSelectedDatabase(input, async client => {
     const scanPattern = options?.keyPattern || '*';
-    const requestedKeyCount = Math.max(options?.count ?? 500, 100);
-    const scanBatchCount = Math.min(requestedKeyCount, 200);
+    const keyLimit = options?.count ?? DEFAULT_KEY_SCAN_LIMIT;
+    const scanBatchCount = Math.min(keyLimit, 200);
     const collectedKeys: string[] = [];
     const seenKeys = new Set<string>();
     let cursor = options?.cursor || '0';
+    let truncated = false;
 
     do {
       const scanResult = await client.scan(cursor, {
@@ -416,11 +422,18 @@ export async function listRedisKeys(
         seenKeys.add(key);
         collectedKeys.push(key);
 
-        if (collectedKeys.length >= requestedKeyCount) {
+        if (collectedKeys.length >= keyLimit) {
+          truncated = cursor !== '0';
           break;
         }
       }
-    } while (cursor !== '0' && collectedKeys.length < requestedKeyCount);
+    } while (cursor !== '0' && collectedKeys.length < keyLimit);
+
+    if (truncated) {
+      console.warn(
+        `[redis-browser] Key scan hit the ${keyLimit}-key limit for pattern "${scanPattern}"; results are incomplete.`
+      );
+    }
 
     const keys = await Promise.all(
       collectedKeys.map(async key => {
@@ -442,6 +455,7 @@ export async function listRedisKeys(
 
     return {
       cursor,
+      truncated,
       keys: keys as RedisKeyListItem[],
     };
   });
