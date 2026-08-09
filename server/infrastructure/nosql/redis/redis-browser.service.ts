@@ -22,7 +22,10 @@ type RedisClient = Awaited<
 >['client'];
 
 const resolveDatabaseIndex = (input: RedisBrowserInput) => {
-  if (typeof input.databaseIndex === 'number' && Number.isFinite(input.databaseIndex)) {
+  if (
+    typeof input.databaseIndex === 'number' &&
+    Number.isFinite(input.databaseIndex)
+  ) {
     return input.databaseIndex;
   }
 
@@ -285,11 +288,13 @@ const buildRedisKeyDetail = async (
   databaseIndex: number
 ): Promise<RedisKeyDetail> => {
   const type = await client.type(key);
-  const ttl = await client.ttl(key);
-  const value = await readRedisValue(client, key, type);
-  const memoryUsage = await getRedisMemoryUsage(client, key);
+  const [ttl, value, memoryUsage, encoding] = await Promise.all([
+    client.ttl(key),
+    readRedisValue(client, key, type),
+    getRedisMemoryUsage(client, key),
+    getRedisEncoding(client, key),
+  ]);
   const length = await getRedisLength(client, key, type, value);
-  const encoding = await getRedisEncoding(client, key);
   const jsonValue =
     type === 'string' ? tryParseJsonString(value as string | null) : null;
   const tablePreview = buildTablePreview(type, value);

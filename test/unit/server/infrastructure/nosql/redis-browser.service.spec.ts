@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { EConnectionMethod } from '~/core/types/entities/connection.entity';
 import {
+  getRedisKeyDetail,
   listRedisKeys,
   updateRedisKeyValue,
 } from '~/server/infrastructure/nosql/redis/redis-browser.service';
@@ -204,5 +205,63 @@ describe('updateRedisKeyValue', () => {
     );
 
     expect(clientMock.persist).toHaveBeenCalledWith('orders:1');
+  });
+});
+
+describe('getRedisKeyDetail', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    clientMock.select.mockResolvedValue('OK');
+    clientMock.type.mockResolvedValue('string');
+    clientMock.ttl.mockResolvedValue(120);
+    clientMock.get.mockResolvedValue('paid');
+    clientMock.strLen.mockResolvedValue(4);
+    clientMock.sendCommand.mockResolvedValue(null);
+  });
+
+  it('resolves ttl, value, memory usage and encoding concurrently instead of sequentially', async () => {
+    const callOrder: string[] = [];
+    let ttlResolve!: () => void;
+    let getResolve!: () => void;
+
+    clientMock.ttl.mockImplementation(
+      () =>
+        new Promise(resolve => {
+          callOrder.push('ttl:start');
+          ttlResolve = () => {
+            callOrder.push('ttl:end');
+            resolve(120);
+          };
+        })
+    );
+    clientMock.get.mockImplementation(
+      () =>
+        new Promise(resolve => {
+          callOrder.push('get:start');
+          getResolve = () => {
+            callOrder.push('get:end');
+            resolve('paid');
+          };
+        })
+    );
+
+    const detailPromise = getRedisKeyDetail(
+      { method: EConnectionMethod.STRING, url: 'redis://127.0.0.1:6379/0' },
+      'orders:1'
+    );
+
+    await vi.waitFor(() => {
+      expect(callOrder).toContain('ttl:start');
+      expect(callOrder).toContain('get:start');
+    });
+
+    ttlResolve();
+    getResolve();
+
+    await detailPromise;
+
+    expect(callOrder.indexOf('get:start')).toBeLessThan(
+      callOrder.indexOf('ttl:end')
+    );
   });
 });
