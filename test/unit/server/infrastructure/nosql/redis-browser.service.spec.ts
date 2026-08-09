@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { EConnectionMethod } from '~/core/types/entities/connection.entity';
 import {
+  deleteRedisKeys,
   getRedisKeyDetail,
   listRedisKeys,
   updateRedisKeyValue,
@@ -20,6 +21,7 @@ const { clientMock, closeMock, createRedisRuntimeClientMock } = vi.hoisted(
       expire: vi.fn(),
       persist: vi.fn(),
       del: vi.fn(),
+      unlink: vi.fn(),
       hSet: vi.fn(),
       rPush: vi.fn(),
       sAdd: vi.fn(),
@@ -307,5 +309,42 @@ describe('listRedisKeys scanning limits', () => {
 
     expect(result.keys.map(item => item.key)).toEqual(['a', 'b', 'c']);
     expect(result.truncated).toBe(true);
+  });
+});
+
+describe('deleteRedisKeys', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    clientMock.select.mockResolvedValue('OK');
+    clientMock.unlink.mockResolvedValue(1);
+  });
+
+  it('unlinks a single key and returns the deleted count', async () => {
+    const result = await deleteRedisKeys(
+      { method: EConnectionMethod.STRING, url: 'redis://127.0.0.1:6379/0' },
+      ['orders:1']
+    );
+
+    expect(clientMock.unlink).toHaveBeenCalledWith(['orders:1']);
+    expect(result).toEqual({ deletedCount: 1 });
+    expect(closeMock).toHaveBeenCalled();
+  });
+
+  it('chunks large key lists into batches of 500 for UNLINK', async () => {
+    const keys = Array.from({ length: 1200 }, (_, i) => `bulk:${i}`);
+    clientMock.unlink.mockImplementation(
+      async (chunk: string[]) => chunk.length
+    );
+
+    const result = await deleteRedisKeys(
+      { method: EConnectionMethod.STRING, url: 'redis://127.0.0.1:6379/0' },
+      keys
+    );
+
+    expect(clientMock.unlink).toHaveBeenCalledTimes(3);
+    expect(clientMock.unlink).toHaveBeenNthCalledWith(1, keys.slice(0, 500));
+    expect(clientMock.unlink).toHaveBeenNthCalledWith(2, keys.slice(500, 1000));
+    expect(clientMock.unlink).toHaveBeenNthCalledWith(3, keys.slice(1000));
+    expect(result).toEqual({ deletedCount: 1200 });
   });
 });

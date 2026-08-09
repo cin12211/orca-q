@@ -619,3 +619,21 @@ export async function updateRedisKeyValue(
     throw new Error(`Editing is not supported for Redis ${type} keys.`);
   });
 }
+
+const DELETE_CHUNK_SIZE = 500;
+
+export async function deleteRedisKeys(
+  input: RedisBrowserInput,
+  keys: string[]
+): Promise<{ deletedCount: number }> {
+  return withSelectedDatabase(input, async client => {
+    let deletedCount = 0;
+
+    for (let index = 0; index < keys.length; index += DELETE_CHUNK_SIZE) {
+      const chunk = keys.slice(index, index + DELETE_CHUNK_SIZE);
+      deletedCount += await client.unlink(chunk);
+    }
+
+    return { deletedCount };
+  });
+}
