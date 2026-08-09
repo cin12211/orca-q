@@ -36,6 +36,16 @@ export interface RedisKeyTableRow {
   [key: string]: string | number | boolean | null;
 }
 
+export interface RedisKeyInfo extends RedisKeyListItem {
+  databaseIndex: number;
+  editingSupported: boolean;
+  memoryUsage: number | null;
+  memoryUsageHuman: string | null;
+  length: number | null;
+  encoding: string | null;
+  ttlLabel: string;
+}
+
 export interface RedisKeyDetail extends RedisKeyListItem {
   databaseIndex: number;
   value: unknown;

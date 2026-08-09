@@ -1,6 +1,7 @@
 import type {
   RedisDatabaseOption,
   RedisKeyDetail,
+  RedisKeyInfo,
   RedisKeyListItem,
   RedisKeyTableColumn,
   RedisKeyTableRow,
@@ -184,7 +185,16 @@ const getRedisEncoding = async (client: RedisClient, key: string) => {
 
 const getRedisMemoryUsage = async (client: RedisClient, key: string) => {
   return await safeCommand<number | null>(async () => {
-    const rawValue = await client.sendCommand(['MEMORY', 'USAGE', key]);
+    // SAMPLES 0 examines every element instead of the Redis default of 5,
+    // which badly undercounts memory for large hash/list/set/zset keys.
+    // Safe here because this runs once per on-demand key open, not on a poll loop.
+    const rawValue = await client.sendCommand([
+      'MEMORY',
+      'USAGE',
+      key,
+      'SAMPLES',
+      '0',
+    ]);
     return rawValue === null ? null : Number(rawValue);
   }, null);
 };
@@ -280,6 +290,33 @@ const buildTablePreview = (
   }
 
   return null;
+};
+
+const buildRedisKeyInfo = async (
+  client: RedisClient,
+  key: string,
+  databaseIndex: number
+): Promise<RedisKeyInfo> => {
+  const type = await client.type(key);
+  const [ttl, memoryUsage, encoding, length] = await Promise.all([
+    client.ttl(key),
+    getRedisMemoryUsage(client, key),
+    getRedisEncoding(client, key),
+    getRedisLength(client, key, type, undefined),
+  ]);
+
+  return {
+    key,
+    type,
+    ttl,
+    databaseIndex,
+    editingSupported: type !== 'stream' && type !== 'none',
+    memoryUsage,
+    memoryUsageHuman: formatBytes(memoryUsage),
+    length,
+    encoding,
+    ttlLabel: formatTtl(ttl),
+  };
 };
 
 const buildRedisKeyDetail = async (
@@ -511,6 +548,15 @@ export async function listRedisDatabases(
     return [...databases.values()].sort(
       (left, right) => left.index - right.index
     );
+  });
+}
+
+export async function getRedisKeyInfo(
+  input: RedisBrowserInput,
+  key: string
+): Promise<RedisKeyInfo> {
+  return withSelectedDatabase(input, async client => {
+    return buildRedisKeyInfo(client, key, resolveDatabaseIndex(input));
   });
 }
 

@@ -2,8 +2,8 @@
 import type { Connection } from '~/core/stores';
 import { TabViewType, type TabView } from '~/core/stores/useTabViewsStore';
 import RedisDeleteKeyDialog from './components/RedisDeleteKeyDialog.vue';
+import RedisKeyDetailPanel from './components/RedisKeyDetailPanel.vue';
 import RedisPubSubPanel from './components/RedisPubSubPanel.vue';
-import RedisValueEditor from './components/RedisValueEditor.vue';
 import { useRedisWorkspace } from './hooks/useRedisWorkspace';
 
 const props = defineProps<{
@@ -22,9 +22,11 @@ const {
   isDeletingKey,
   loadingKeys,
   loadingSelectedKeyDetail,
+  loadingSelectedKeyInfo,
   savingValue,
   selectedDatabaseIndex,
   selectedKeyDetail,
+  selectedKeyInfo,
 } = workspace;
 
 const activeType = computed(
@@ -32,6 +34,9 @@ const activeType = computed(
 );
 
 const isDeleteDialogOpen = ref(false);
+const selectedKey = computed(
+  () => selectedKeyDetail.value?.key ?? selectedKeyInfo.value?.key ?? null
+);
 
 const confirmDelete = async () => {
   if (!selectedKeyDetail.value) {
@@ -52,15 +57,17 @@ const confirmDelete = async () => {
     @update:database-index="workspace.selectedDatabaseIndex.value = $event"
   />
 
-  <RedisValueEditor
+  <RedisKeyDetailPanel
     v-else
+    :info="selectedKeyInfo"
     :detail="selectedKeyDetail"
-    :loading="loadingKeys || loadingSelectedKeyDetail"
+    :loading-info="loadingKeys || loadingSelectedKeyInfo"
+    :loading-value="loadingKeys || loadingSelectedKeyDetail"
     :saving="savingValue"
     :can-edit="canEditSelectedValue"
     :unavailable-reason="editUnavailableReason"
     @save="workspace.saveSelectedValue"
-    @refresh="selectedKeyDetail && workspace.focusKey(selectedKeyDetail.key)"
+    @refresh="selectedKey && workspace.focusKey(selectedKey)"
     @delete="isDeleteDialogOpen = true"
   />
 
