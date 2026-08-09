@@ -13,7 +13,7 @@ const { activity, onChangeActivity } = useActivityMenu();
           :variant="item.isActive ? 'default' : 'ghost'"
           @click="onChangeActivity(item.id)"
         >
-          <Icon :name="item.icon" class="size-5!" />
+          <Icon :name="item.icon" :key="item.icon" class="size-5!" />
         </Button>
       </TooltipTrigger>
       <TooltipContent side="bottom">

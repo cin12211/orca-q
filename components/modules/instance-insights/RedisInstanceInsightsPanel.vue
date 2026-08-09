@@ -55,7 +55,7 @@ const {
 </script>
 
 <template>
-  <div class="flex h-full flex-col gap-3 overflow-hidden p-3">
+  <div class="flex h-full relative flex-col gap-3 overflow-hidden p-3">
     <ToolPageHeader icon="hugeicons:activity-02" title="Instance Insights">
       <template #context>
         <component
@@ -114,16 +114,9 @@ const {
 
       <BaseNotice v-if="error" variant="destructive">{{ error }}</BaseNotice>
 
-      <div
-        v-if="isInitialLoading && !insights"
-        class="flex flex-1 items-center justify-center gap-2 rounded-lg border bg-background text-muted-foreground"
-      >
-        <Icon name="hugeicons:redo" class="size-4 animate-spin" />
-        Loading Redis instance insights...
-      </div>
+      <LoadingOverlay :visible="isInitialLoading" />
 
       <div
-        v-else
         class="flex-1 overflow-y-auto rounded-lg border bg-background p-3 mt-2"
       >
         <RedisOverviewSection

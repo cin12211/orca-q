@@ -24,7 +24,7 @@ const colorMode = useColorMode();
               :variant="item.isActive ? 'default' : 'ghost'"
               @click="onChangeActivity(item.id, true)"
             >
-              <Icon :name="item.icon" class="size-5!" />
+              <Icon :name="item.icon" :key="item.icon" class="size-5!" />
             </Button>
           </TooltipTrigger>
           <TooltipContent side="right">
