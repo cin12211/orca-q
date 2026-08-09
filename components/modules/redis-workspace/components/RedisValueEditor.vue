@@ -339,10 +339,10 @@ onBeforeUnmount(() => {
 
 <template>
   <div class="h-full relative flex flex-col gap-3 p-4 overflow-auto">
-    <LoadingOverlay v-if="loading && !detail" :visible="true" />
+    <LoadingOverlay :visible="!!loading" />
 
     <BaseEmpty
-      v-else-if="!detail && !loading"
+      v-if="!detail && !loading"
       title="Select a Redis key"
       desc="Choose a key from the Redis browser to inspect its value and metadata."
     />

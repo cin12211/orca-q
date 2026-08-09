@@ -44,6 +44,13 @@ export function useRedisTreeContextMenu(
 
       return [
         {
+          title: 'actions',
+          type: ContextMenuItemType.LABEL,
+        },
+        {
+          type: ContextMenuItemType.SEPARATOR,
+        },
+        {
           title: 'Delete',
           icon: 'hugeicons:delete-02',
           type: ContextMenuItemType.ACTION,
@@ -60,6 +67,13 @@ export function useRedisTreeContextMenu(
         typeof data.keyCount === 'number' ? ` ${data.keyCount}` : '';
 
       return [
+        {
+          title: 'actions',
+          type: ContextMenuItemType.LABEL,
+        },
+        {
+          type: ContextMenuItemType.SEPARATOR,
+        },
         {
           title: `Delete${countLabel} keys...`,
           icon: 'hugeicons:delete-02',
