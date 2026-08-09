@@ -337,18 +337,8 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div class="h-full flex flex-col gap-3 p-4 overflow-auto">
-    <div
-      v-if="loading && !detail"
-      class="relative min-h-[240px] overflow-hidden rounded-lg border bg-background"
-    >
-      <div
-        class="flex h-full min-h-[240px] items-center justify-center px-4 text-sm text-muted-foreground"
-      >
-        Loading Redis key detail...
-      </div>
-      <LoadingOverlay :visible="true" />
-    </div>
+  <div class="h-full relative flex flex-col gap-3 p-4 overflow-auto">
+    <LoadingOverlay v-if="loading && !detail" :visible="true" />
 
     <BaseEmpty
       v-else-if="!detail && !loading"

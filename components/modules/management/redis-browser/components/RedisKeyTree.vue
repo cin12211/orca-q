@@ -192,13 +192,11 @@ defineExpose({
 </script>
 
 <template>
-  <div class="min-h-0 flex-1 overflow-hidden">
-    <div v-if="loading" class="px-3 py-4 text-sm text-muted-foreground">
-      Loading Redis keys...
-    </div>
+  <div class="relative h-full flex-1 overflow-hidden">
+    <LoadingOverlay :visible="loading" />
 
     <div
-      v-else-if="visibleKeys.length === 0"
+      v-if="visibleKeys.length === 0"
       class="flex h-full items-center justify-center"
     >
       <BaseEmpty
