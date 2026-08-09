@@ -6,6 +6,7 @@ import type { RedisWorkspaceSession } from '~/core/stores/useRedisWorkspaceStore
 import type {
   RedisBrowserResponse,
   RedisDatabaseOption,
+  RedisDeleteResponse,
   RedisKeyDetail,
   RedisKeyListItem,
   RedisValueUpdatePayload,
@@ -212,6 +213,98 @@ export function useRedisWorkspaceBrowser({
     }
   };
 
+  const isDeletingKey = ref(false);
+
+  const removeKeysFromList = (deletedKeys: string[]) => {
+    const deletedSet = new Set(deletedKeys);
+    keys.value = keys.value.filter(item => !deletedSet.has(item.key));
+  };
+
+  const clearSelectionIfDeleted = (deletedKeys: string[]) => {
+    if (
+      !session.value?.selectedKey ||
+      !deletedKeys.includes(session.value.selectedKey)
+    ) {
+      return;
+    }
+
+    store.patchSession(session.value.connectionId, { selectedKey: null });
+    selectedKeyDetail.value = null;
+  };
+
+  const deleteKey = async (key: string) => {
+    if (!connection.value || !session.value) {
+      return;
+    }
+
+    isDeletingKey.value = true;
+
+    try {
+      await $fetch<RedisDeleteResponse>('/api/redis/browser/value', {
+        method: 'DELETE',
+        body: {
+          ...buildConnectionBody(connection.value),
+          databaseIndex: session.value.selectedDatabaseIndex,
+          key,
+        },
+      });
+
+      detailCache.delete(
+        getDetailCacheKey(session.value.selectedDatabaseIndex, key)
+      );
+      removeKeysFromList([key]);
+      clearSelectionIfDeleted([key]);
+    } finally {
+      isDeletingKey.value = false;
+    }
+  };
+
+  const deleteKeys = async (keysToDelete: string[]) => {
+    if (!connection.value || !session.value || keysToDelete.length === 0) {
+      return;
+    }
+
+    isDeletingKey.value = true;
+
+    try {
+      await $fetch<RedisDeleteResponse>('/api/redis/browser/keys', {
+        method: 'DELETE',
+        body: {
+          ...buildConnectionBody(connection.value),
+          databaseIndex: session.value.selectedDatabaseIndex,
+          keys: keysToDelete,
+        },
+      });
+
+      keysToDelete.forEach(key =>
+        detailCache.delete(
+          getDetailCacheKey(session.value!.selectedDatabaseIndex, key)
+        )
+      );
+      removeKeysFromList(keysToDelete);
+      clearSelectionIfDeleted(keysToDelete);
+    } finally {
+      isDeletingKey.value = false;
+    }
+  };
+
+  const previewGroupKeys = async (prefix: string): Promise<string[]> => {
+    if (!connection.value || !session.value) {
+      return [];
+    }
+
+    const result = await $fetch<RedisBrowserResponse>('/api/redis/browser', {
+      method: 'POST',
+      body: {
+        ...buildConnectionBody(connection.value),
+        databaseIndex: session.value.selectedDatabaseIndex,
+        keyPattern: `${prefix}:*`,
+      },
+    });
+
+    return result.keys.map(item => item.key);
+  };
+
   return {
     keys,
     databases,
@@ -219,6 +312,7 @@ export function useRedisWorkspaceBrowser({
     loadingKeys,
     loadingSelectedKeyDetail,
     savingValue,
+    isDeletingKey,
     editUnavailableReason,
     canEditSelectedValue,
     refreshKeys,
@@ -227,5 +321,8 @@ export function useRedisWorkspaceBrowser({
     openKey,
     focusKey,
     saveSelectedValue,
+    deleteKey,
+    deleteKeys,
+    previewGroupKeys,
   };
 }

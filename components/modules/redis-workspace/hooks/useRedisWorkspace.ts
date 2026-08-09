@@ -199,6 +199,7 @@ export function useRedisWorkspace(options: {
     loadingKeys: browser.loadingKeys,
     loadingSelectedKeyDetail: browser.loadingSelectedKeyDetail,
     savingValue: browser.savingValue,
+    isDeletingKey: browser.isDeletingKey,
     selectedDatabaseIndex,
     keyPattern,
     canEditSelectedValue: browser.canEditSelectedValue,
@@ -207,5 +208,8 @@ export function useRedisWorkspace(options: {
     openKey: browser.openKey,
     focusKey: browser.focusKey,
     saveSelectedValue: browser.saveSelectedValue,
+    deleteKey: browser.deleteKey,
+    deleteKeys: browser.deleteKeys,
+    previewGroupKeys: browser.previewGroupKeys,
   };
 }

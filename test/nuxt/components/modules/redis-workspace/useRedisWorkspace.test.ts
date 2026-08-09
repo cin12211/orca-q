@@ -359,4 +359,136 @@ describe('useRedisWorkspace', () => {
       })
     );
   });
+
+  it('deletes a single key, clears it from the list, and clears the selection if it was selected', async () => {
+    mockFetch.mockImplementation(async (url, options) => {
+      if (url === '/api/redis/browser') {
+        return {
+          cursor: '0',
+          truncated: false,
+          keys: [
+            { key: 'orders:1', type: 'string', ttl: -1 },
+            { key: 'orders:2', type: 'string', ttl: -1 },
+          ],
+          databases: [
+            { index: 0, label: 'DB 0', keyCount: 2, expires: 0, avgTtl: null },
+          ],
+          selectedKeyDetail: null,
+        };
+      }
+
+      if (url === '/api/redis/browser/value' && options?.method === 'DELETE') {
+        return { deletedCount: 1 };
+      }
+
+      return {};
+    });
+
+    const workspace = useRedisWorkspace({
+      connection: ref(makeConnection()),
+    });
+
+    await flushReactive();
+    await workspace.refreshKeys();
+    workspace.session.value!.selectedKey = 'orders:1';
+    await flushReactive();
+
+    await workspace.deleteKey('orders:1');
+
+    expect(mockFetch).toHaveBeenCalledWith(
+      '/api/redis/browser/value',
+      expect.objectContaining({
+        method: 'DELETE',
+        body: expect.objectContaining({ key: 'orders:1' }),
+      })
+    );
+    expect(workspace.keys.value.map(item => item.key)).toEqual(['orders:2']);
+    expect(workspace.session.value!.selectedKey).toBeNull();
+  });
+
+  it('deletes multiple keys in bulk without touching the selection when it is unaffected', async () => {
+    mockFetch.mockImplementation(async (url, options) => {
+      if (url === '/api/redis/browser') {
+        return {
+          cursor: '0',
+          truncated: false,
+          keys: [
+            { key: 'orders:1', type: 'string', ttl: -1 },
+            { key: 'orders:2', type: 'string', ttl: -1 },
+            { key: 'inventory:1', type: 'string', ttl: -1 },
+          ],
+          databases: [],
+          selectedKeyDetail: null,
+        };
+      }
+
+      if (url === '/api/redis/browser/keys' && options?.method === 'DELETE') {
+        return { deletedCount: 2 };
+      }
+
+      return {};
+    });
+
+    const workspace = useRedisWorkspace({
+      connection: ref(makeConnection()),
+    });
+
+    await flushReactive();
+    await workspace.refreshKeys();
+    workspace.session.value!.selectedKey = 'inventory:1';
+    await flushReactive();
+
+    await workspace.deleteKeys(['orders:1', 'orders:2']);
+
+    expect(mockFetch).toHaveBeenCalledWith(
+      '/api/redis/browser/keys',
+      expect.objectContaining({
+        method: 'DELETE',
+        body: expect.objectContaining({ keys: ['orders:1', 'orders:2'] }),
+      })
+    );
+    expect(workspace.keys.value.map(item => item.key)).toEqual(['inventory:1']);
+    expect(workspace.session.value!.selectedKey).toBe('inventory:1');
+  });
+
+  it('previews the full set of keys matching a group prefix', async () => {
+    mockFetch.mockImplementation(async (url, options) => {
+      if (url === '/api/redis/browser') {
+        const body = (options as { body?: { keyPattern?: string } })?.body;
+
+        if (body?.keyPattern === 'orders:*') {
+          return {
+            cursor: '0',
+            truncated: false,
+            keys: [
+              { key: 'orders:1', type: 'string', ttl: -1 },
+              { key: 'orders:2', type: 'string', ttl: -1 },
+            ],
+            databases: [],
+            selectedKeyDetail: null,
+          };
+        }
+
+        return {
+          cursor: '0',
+          truncated: false,
+          keys: [],
+          databases: [],
+          selectedKeyDetail: null,
+        };
+      }
+
+      return {};
+    });
+
+    const workspace = useRedisWorkspace({
+      connection: ref(makeConnection()),
+    });
+
+    await flushReactive();
+
+    const preview = await workspace.previewGroupKeys('orders');
+
+    expect(preview).toEqual(['orders:1', 'orders:2']);
+  });
 });
