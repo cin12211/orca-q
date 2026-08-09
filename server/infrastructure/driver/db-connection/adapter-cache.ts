@@ -1,0 +1,69 @@
+import type { IDatabaseAdapter } from '../types';
+
+export type CachedAdapter = {
+  adapter: IDatabaseAdapter;
+  lastUsed: number;
+  sshTunnelClose?: () => Promise<void>;
+  sshTunnelAlive?: () => boolean;
+};
+
+export const adapterCache = new Map<string, CachedAdapter>();
+const LRU_TIMEOUT = 5 * 60 * 1000; // 5 minutes
+
+// Cleanup every 1 minute
+function cleanupIdleAdapters() {
+  const now = Date.now();
+
+  for (const [key, cached] of adapterCache.entries()) {
+    const idleTime = now - cached.lastUsed;
+
+    if (idleTime > LRU_TIMEOUT) {
+      cached.adapter.destroy().catch(console.error);
+      if (cached.sshTunnelClose) {
+        cached.sshTunnelClose().catch(console.error);
+      }
+      adapterCache.delete(key);
+      console.log(
+        `[Adapter Cache] Destroyed idle adapter for ${cached.adapter.dbType}`
+      );
+    }
+  }
+}
+
+setInterval(cleanupIdleAdapters, 60 * 1000);
+
+// Graceful shutdown handler
+async function shutdownAllAdapters() {
+  for (const [key, cached] of adapterCache.entries()) {
+    try {
+      await cached.adapter.destroy();
+      if (cached.sshTunnelClose) {
+        await cached.sshTunnelClose();
+      }
+      console.log(
+        `[Adapter Cache] Adapter closed on shutdown: ${cached.adapter.dbType}`
+      );
+    } catch (err) {
+      console.error(
+        `[Adapter Cache] Error shutting down adapter: ${cached.adapter.dbType}`,
+        err
+      );
+    } finally {
+      adapterCache.delete(key);
+    }
+  }
+}
+
+process.on('SIGINT', async () => {
+  await shutdownAllAdapters();
+  process.exit(0);
+});
+
+process.on('SIGTERM', async () => {
+  await shutdownAllAdapters();
+  process.exit(0);
+});
+
+process.on('exit', async () => {
+  await shutdownAllAdapters();
+});

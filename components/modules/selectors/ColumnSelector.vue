@@ -119,12 +119,11 @@ const onOpenChange = (isOpen: boolean) => {
           </SelectItem>
         </template>
 
-        <div
+        <BaseEmpty
           v-if="!filteredColumns.length && !filteredExtendedFields.length"
-          class="px-2 py-1 text-sm text-muted-foreground"
-        >
-          No fields found
-        </div>
+          desc="No fields found"
+          class="py-1"
+        />
       </SelectGroup>
     </SelectContent>
   </Select>

@@ -125,6 +125,19 @@ const handleSubmit = () => {
     handleCreateConnection();
   }
 };
+
+const statusSectionRef = ref<HTMLElement | null>(null);
+
+watch(testStatus, status => {
+  if (status !== 'error') return;
+
+  nextTick(() => {
+    statusSectionRef.value?.scrollIntoView({
+      behavior: 'smooth',
+      block: 'center',
+    });
+  });
+});
 </script>
 
 <template>
@@ -531,12 +544,14 @@ const handleSubmit = () => {
               <ConnectionSSHTunnel :form-data="formData" />
             </Accordion>
 
-            <ConnectionStatusSection
-              :test-status="testStatus"
-              :error-message="testErrorMessage"
-              :error-hint="testErrorHint"
-              :error-detail="testErrorDetail"
-            />
+            <div ref="statusSectionRef">
+              <ConnectionStatusSection
+                :test-status="testStatus"
+                :error-message="testErrorMessage"
+                :error-hint="testErrorHint"
+                :error-detail="testErrorDetail"
+              />
+            </div>
           </div>
 
           <DialogFooter

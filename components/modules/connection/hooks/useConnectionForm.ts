@@ -138,7 +138,7 @@ export function useConnectionForm(props: {
     sslCA: '',
     sslCert: '',
     sslKey: '',
-    sslRejectUnauthorized: true,
+    sslRejectUnauthorized: false,
     // SSH
     sshEnabled: false,
     sshHost: '',
@@ -158,7 +158,8 @@ export function useConnectionForm(props: {
   const testErrorDetail = ref('');
 
   const resetTestState = () => {
-    resetTestState();
+    testStatus.value = 'idle';
+    testErrorMessage.value = '';
     testErrorHint.value = '';
     testErrorDetail.value = '';
   };
@@ -315,6 +316,7 @@ export function useConnectionForm(props: {
         type,
         method: EConnectionMethod.STRING,
         stringConnection: connectionString.value,
+        ssl: buildSSLConfig(),
         ssh: buildSSHConfig(),
       };
     }
@@ -363,7 +365,7 @@ export function useConnectionForm(props: {
     formData.sslCA = '';
     formData.sslCert = '';
     formData.sslKey = '';
-    formData.sslRejectUnauthorized = true;
+    formData.sslRejectUnauthorized = false;
 
     formData.sshEnabled = false;
     formData.sshHost = '';
@@ -463,6 +465,7 @@ export function useConnectionForm(props: {
 
     if (connectionMethod.value === EConnectionMethod.STRING) {
       connection.connectionString = connectionString.value;
+      connection.ssl = buildSSLConfig();
       connection.ssh = buildSSHConfig();
     } else if (connectionMethod.value === EConnectionMethod.FILE) {
       connection.filePath = formData.filePath;
@@ -660,7 +663,7 @@ export function useConnectionForm(props: {
           formData.sslCA = conn.ssl.ca || '';
           formData.sslCert = conn.ssl.cert || '';
           formData.sslKey = conn.ssl.key || '';
-          formData.sslRejectUnauthorized = conn.ssl.rejectUnauthorized ?? true;
+          formData.sslRejectUnauthorized = conn.ssl.rejectUnauthorized ?? false;
         }
 
         formData.sshEnabled = !!conn.ssh?.enabled;

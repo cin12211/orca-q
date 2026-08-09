@@ -15,11 +15,12 @@ const DatabaseClientType = {
 type DatabaseClientType =
   (typeof DatabaseClientType)[keyof typeof DatabaseClientType];
 
-const EConnectionMethod = { FORM: 'form' } as const;
+const EConnectionMethod = { FORM: 'form', STRING: 'string' } as const;
 const ESSHAuthMethod = { KEY: 'key', PASSWORD: 'password' } as const;
 const ESSLMode = {
   DISABLE: 'disable',
   REQUIRE: 'require',
+  VERIFY_CA: 'verify-ca',
   VERIFY_FULL: 'verify-full',
 } as const;
 
@@ -70,28 +71,41 @@ if (!fixtureUp) {
 interface EngineCase {
   label: string;
   type: DatabaseClientType;
-  host: string; // host as the SSH bastion resolves it (docker service name)
-  port: string;
+  // Host/port as the SSH bastion resolves it (docker service name) — used for
+  // every case that goes through the SSH tunnel.
+  tunnelHost: string;
+  tunnelPort: string;
+  // Host/port exposed directly on the docker host — used for the "no SSH"
+  // direct-SSL cases. Must NOT be combined with ssh.enabled (nothing listens
+  // on this port from inside the bastion's own network namespace).
+  directPort: string;
+  scheme: string;
 }
 
 const ENGINES: EngineCase[] = [
   {
     label: 'PostgreSQL',
     type: DatabaseClientType.POSTGRES,
-    host: 'postgres',
-    port: '5432',
+    tunnelHost: 'postgres',
+    tunnelPort: '5432',
+    directPort: '55432',
+    scheme: 'postgresql',
   },
   {
     label: 'MySQL',
     type: DatabaseClientType.MYSQL,
-    host: 'mysql',
-    port: '3306',
+    tunnelHost: 'mysql',
+    tunnelPort: '3306',
+    directPort: '33306',
+    scheme: 'mysql',
   },
   {
     label: 'MariaDB',
     type: DatabaseClientType.MARIADB,
-    host: 'mariadb',
-    port: '3306',
+    tunnelHost: 'mariadb',
+    tunnelPort: '3306',
+    directPort: '33307',
+    scheme: 'mariadb',
   },
 ];
 
@@ -124,100 +138,210 @@ describe.skipIf(!fixtureUp)('SSL + SSH connection E2E', async () => {
   });
 
   const healthCheck = (body: Record<string, unknown>) =>
-    $fetch<{ isConnectedSuccess: boolean; message?: string }>(
-      '/api/managment-connection/health-check',
-      { method: 'POST', body }
-    );
+    $fetch<{
+      isConnectedSuccess: boolean;
+      message?: string;
+      hint?: string;
+      detail?: string;
+    }>('/api/managment-connection/health-check', { method: 'POST', body });
 
-  const baseBody = (engine: EngineCase) => ({
+  const formBody = (engine: EngineCase, host: string, port: string) => ({
     type: engine.type,
     method: EConnectionMethod.FORM,
-    host: engine.host,
-    port: engine.port,
+    host,
+    port,
     ...DB_CREDS,
   });
 
+  // Builds a connection string the way the "Connection String" tab actually
+  // does — sslmode baked into the query string, not passed as a side-channel
+  // `ssl` field. This is the realistic UI path and is what previously hit the
+  // pg-connection-string clobber bug (explicit `ssl` object silently
+  // overridden by `?sslmode=` re-parsed out of the string itself).
+  const connString = (
+    engine: EngineCase,
+    host: string,
+    port: string,
+    sslmode: string
+  ) =>
+    `${engine.scheme}://orcaq:orcaq@${host}:${port}/orcaq?sslmode=${sslmode}`;
+
   for (const engine of ENGINES) {
     describe(engine.label, () => {
-      it('connects with SSL require + SSH key auth', async () => {
-        const res = await healthCheck({
-          ...baseBody(engine),
-          ssl: { mode: ESSLMode.REQUIRE },
-          ssh: sshKey(),
+      describe('Form method — SSH tunnel', () => {
+        it('connects with SSL require + SSH key auth', async () => {
+          const res = await healthCheck({
+            ...formBody(engine, engine.tunnelHost, engine.tunnelPort),
+            ssl: { mode: ESSLMode.REQUIRE },
+            ssh: sshKey(),
+          });
+          expect(res.isConnectedSuccess, res.message).toBe(true);
         });
-        expect(res.isConnectedSuccess, res.message).toBe(true);
+
+        it('connects with SSL require + SSH password auth', async () => {
+          const res = await healthCheck({
+            ...formBody(engine, engine.tunnelHost, engine.tunnelPort),
+            ssl: { mode: ESSLMode.REQUIRE },
+            ssh: sshPassword(),
+          });
+          expect(res.isConnectedSuccess, res.message).toBe(true);
+        });
+
+        it('connects with SSL verify-ca + CA + SSH key auth', async () => {
+          const res = await healthCheck({
+            ...formBody(engine, engine.tunnelHost, engine.tunnelPort),
+            ssl: { mode: ESSLMode.VERIFY_CA, ca: caCert },
+            ssh: sshKey(),
+          });
+          expect(res.isConnectedSuccess, res.message).toBe(true);
+        });
+
+        it('connects with SSL verify-full + CA + SSH key auth', async () => {
+          const res = await healthCheck({
+            ...formBody(engine, engine.tunnelHost, engine.tunnelPort),
+            ssl: { mode: ESSLMode.VERIFY_FULL, ca: caCert },
+            ssh: sshKey(),
+          });
+          expect(res.isConnectedSuccess, res.message).toBe(true);
+        });
+
+        it('fails verify-full when no CA is provided (untrusted cert)', async () => {
+          const res = await healthCheck({
+            ...formBody(engine, engine.tunnelHost, engine.tunnelPort),
+            ssl: { mode: ESSLMode.VERIFY_FULL },
+            ssh: sshKey(),
+          });
+          expect(res.isConnectedSuccess).toBe(false);
+          // Normalized, actionable error surfaced to the form.
+          expect(res.message).toMatch(/certificate could not be verified/i);
+          expect(res.hint).toBeTruthy();
+          expect(res.detail).toBeTruthy();
+        });
+
+        it('fails when SSL is disabled (server requires SSL)', async () => {
+          const res = await healthCheck({
+            ...formBody(engine, engine.tunnelHost, engine.tunnelPort),
+            ssl: { mode: ESSLMode.DISABLE },
+            ssh: sshKey(),
+          });
+          expect(res.isConnectedSuccess).toBe(false);
+          expect(res.message).toMatch(/requires an ssl/i);
+          expect(res.hint).toMatch(/enable ssl/i);
+        });
+
+        it('returns a normalized auth error for a wrong password', async () => {
+          const res = await healthCheck({
+            ...formBody(engine, engine.tunnelHost, engine.tunnelPort),
+            password: 'definitely-wrong',
+            ssl: { mode: ESSLMode.REQUIRE },
+            ssh: sshKey(),
+          });
+          expect(res.isConnectedSuccess).toBe(false);
+          expect(res.message).toMatch(/authentication failed/i);
+          expect(res.hint).toBeTruthy();
+        });
       });
 
-      it('connects with SSL require + SSH password auth', async () => {
-        const res = await healthCheck({
-          ...baseBody(engine),
-          ssl: { mode: ESSLMode.REQUIRE },
-          ssh: sshPassword(),
+      describe('Form method — direct (no SSH)', () => {
+        it('connects with SSL require against the exposed direct port', async () => {
+          const res = await healthCheck({
+            ...formBody(engine, 'localhost', engine.directPort),
+            ssl: { mode: ESSLMode.REQUIRE },
+          });
+          expect(res.isConnectedSuccess, res.message).toBe(true);
         });
-        expect(res.isConnectedSuccess, res.message).toBe(true);
+
+        it('connects with SSL verify-full + CA against the exposed direct port', async () => {
+          const res = await healthCheck({
+            ...formBody(engine, 'localhost', engine.directPort),
+            ssl: { mode: ESSLMode.VERIFY_FULL, ca: caCert },
+          });
+          expect(res.isConnectedSuccess, res.message).toBe(true);
+        });
+
+        it('fails when SSL is disabled against the exposed direct port', async () => {
+          const res = await healthCheck({
+            ...formBody(engine, 'localhost', engine.directPort),
+            ssl: { mode: ESSLMode.DISABLE },
+          });
+          expect(res.isConnectedSuccess).toBe(false);
+          expect(res.message).toMatch(/requires an ssl/i);
+        });
       });
 
-      it('connects with SSL verify-full + CA + SSH key auth', async () => {
-        const res = await healthCheck({
-          ...baseBody(engine),
-          ssl: { mode: ESSLMode.VERIFY_FULL, ca: caCert },
-          ssh: sshKey(),
+      describe('Connection string method — SSH tunnel', () => {
+        // Regression coverage: sslmode baked directly into the URL (the real
+        // UI path), not passed only as a side-channel `ssl` field.
+        it('connects with sslmode=require embedded in the URL + SSH key auth', async () => {
+          const res = await healthCheck({
+            type: engine.type,
+            method: EConnectionMethod.STRING,
+            stringConnection: connString(
+              engine,
+              engine.tunnelHost,
+              engine.tunnelPort,
+              'require'
+            ),
+            ssh: sshKey(),
+          });
+          expect(res.isConnectedSuccess, res.message).toBe(true);
         });
-        expect(res.isConnectedSuccess, res.message).toBe(true);
+
+        it('connects with sslmode=require embedded in the URL + SSH password auth', async () => {
+          const res = await healthCheck({
+            type: engine.type,
+            method: EConnectionMethod.STRING,
+            stringConnection: connString(
+              engine,
+              engine.tunnelHost,
+              engine.tunnelPort,
+              'require'
+            ),
+            ssh: sshPassword(),
+          });
+          expect(res.isConnectedSuccess, res.message).toBe(true);
+        });
+
+        it('connects via explicit ssl field + SSL verify-full + CA + SSH key', async () => {
+          const res = await healthCheck({
+            type: engine.type,
+            method: EConnectionMethod.STRING,
+            stringConnection: `${engine.scheme}://orcaq:orcaq@${engine.tunnelHost}:${engine.tunnelPort}/orcaq`,
+            ssl: { mode: ESSLMode.VERIFY_FULL, ca: caCert },
+            ssh: sshKey(),
+          });
+          expect(res.isConnectedSuccess, res.message).toBe(true);
+        });
       });
 
-      it('fails verify-full when no CA is provided (untrusted cert)', async () => {
-        const res = await healthCheck({
-          ...baseBody(engine),
-          ssl: { mode: ESSLMode.VERIFY_FULL },
-          ssh: sshKey(),
+      describe('Connection string method — direct (no SSH)', () => {
+        it('connects with sslmode=require embedded in the URL against the exposed direct port', async () => {
+          const res = await healthCheck({
+            type: engine.type,
+            method: EConnectionMethod.STRING,
+            stringConnection: connString(
+              engine,
+              'localhost',
+              engine.directPort,
+              'require'
+            ),
+          });
+          expect(res.isConnectedSuccess, res.message).toBe(true);
         });
-        expect(res.isConnectedSuccess).toBe(false);
-        // Normalized, actionable error surfaced to the form.
-        expect(res.message).toMatch(/certificate could not be verified/i);
-        expect(res.hint).toBeTruthy();
-        expect(res.detail).toBeTruthy();
-      });
 
-      it('fails when SSL is disabled (server requires SSL)', async () => {
-        const res = await healthCheck({
-          ...baseBody(engine),
-          ssl: { mode: ESSLMode.DISABLE },
-          ssh: sshKey(),
+        it('fails with sslmode=disable against the exposed direct port', async () => {
+          const res = await healthCheck({
+            type: engine.type,
+            method: EConnectionMethod.STRING,
+            stringConnection: connString(
+              engine,
+              'localhost',
+              engine.directPort,
+              'disable'
+            ),
+          });
+          expect(res.isConnectedSuccess).toBe(false);
         });
-        expect(res.isConnectedSuccess).toBe(false);
-        expect(res.message).toMatch(/requires an ssl/i);
-        expect(res.hint).toMatch(/enable ssl/i);
-      });
-
-      it('returns a normalized auth error for a wrong password', async () => {
-        const res = await healthCheck({
-          ...baseBody(engine),
-          password: 'definitely-wrong',
-          ssl: { mode: ESSLMode.REQUIRE },
-          ssh: sshKey(),
-        });
-        expect(res.isConnectedSuccess).toBe(false);
-        expect(res.message).toMatch(/authentication failed/i);
-        expect(res.hint).toBeTruthy();
-      });
-
-      // Connection-string method: exercises applyConnectionStringSsl, where
-      // Postgres SSL was previously dropped (bug #7).
-      it('connects via connection string + SSL verify-full + CA + SSH key', async () => {
-        const connString = `mysql://orcaq:orcaq@${engine.host}:${engine.port}/orcaq`;
-        const pgConnString = `postgresql://orcaq:orcaq@${engine.host}:${engine.port}/orcaq`;
-        const res = await healthCheck({
-          type: engine.type,
-          method: 'string',
-          stringConnection:
-            engine.type === DatabaseClientType.POSTGRES
-              ? pgConnString
-              : connString,
-          ssl: { mode: ESSLMode.VERIFY_FULL, ca: caCert },
-          ssh: sshKey(),
-        });
-        expect(res.isConnectedSuccess, res.message).toBe(true);
       });
     });
   }

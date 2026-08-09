@@ -1,6 +1,13 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue';
 import { Icon } from '#components';
+import { Button } from '~/components/ui/button';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '~/components/ui/tooltip';
+import { useCopyToClipboard } from '~/core/composables/useCopyToClipboard';
 
 const props = defineProps<{
   testStatus: 'idle' | 'testing' | 'success' | 'error';
@@ -9,7 +16,9 @@ const props = defineProps<{
   errorDetail?: string;
 }>();
 
-const showDetail = ref(false);
+const showDetail = ref(true);
+const { copied, handleCopy, getCopyIcon, getCopyIconClass, getCopyTooltip } =
+  useCopyToClipboard();
 
 // Collapse the raw detail again whenever the status leaves the error state.
 watch(
@@ -18,6 +27,14 @@ watch(
     if (status !== 'error') showDetail.value = false;
   }
 );
+
+const handleCopyError = () => {
+  const parts = [props.errorMessage, props.errorHint, props.errorDetail]
+    .filter(Boolean)
+    .join('\n');
+
+  handleCopy(parts);
+};
 </script>
 
 <template>
@@ -44,12 +61,45 @@ watch(
   >
     <div class="flex items-start gap-2">
       <Icon name="hugeicons:cancel-01" class="mt-0.5 shrink-0 size-4" />
-      <span data-testid="connection-test-error-message" class="font-medium">
+      <span
+        data-testid="connection-test-error-message"
+        class="flex-1 font-medium"
+      >
         {{
           props.errorMessage ||
           'Connection failed. Please check your details and try again.'
         }}
       </span>
+      <Tooltip>
+        <TooltipTrigger as-child>
+          <Button
+            type="button"
+            variant="ghost"
+            size="xxs"
+            data-testid="connection-test-error-copy"
+            class="shrink-0"
+            @click="handleCopyError"
+          >
+            <span class="flex items-center gap-1 justify-center">
+              <Icon
+                :key="copied ? 'tick' : 'copy'"
+                :name="getCopyIcon(copied)"
+                class="size-3.5"
+                :class="getCopyIconClass(copied)"
+              />
+              <span
+                v-if="copied"
+                class="text-xxs font-medium leading-none"
+                :class="getCopyIconClass(copied)"
+                >Copied</span
+              >
+            </span>
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent>
+          <p>{{ getCopyTooltip(copied, 'Copy error') }}</p>
+        </TooltipContent>
+      </Tooltip>
     </div>
 
     <p

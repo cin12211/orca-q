@@ -18,6 +18,7 @@ export interface RedisRuntimeInput {
   database?: string;
   ssl?: ISSLConfig;
   ssh?: ISSHConfig;
+  disableReconnect?: boolean;
 }
 
 const parseRedisDatabaseIndex = (value?: string) => {
@@ -87,8 +88,12 @@ export async function createRedisRuntimeClient(input: RedisRuntimeInput) {
 
   const client = createClient({
     url,
-    socket:
-      input.ssl?.mode && input.ssl.mode !== 'disable'
+    socket: {
+      // Without this, node-redis retries a failed initial connect forever
+      // (default reconnectStrategy), so an unreachable instance never
+      // rejects and the health check hangs instead of reporting failure.
+      reconnectStrategy: input.disableReconnect ? false : undefined,
+      ...(input.ssl?.mode && input.ssl.mode !== 'disable'
         ? {
             tls: true,
             rejectUnauthorized: input.ssl.rejectUnauthorized ?? true,
@@ -96,7 +101,8 @@ export async function createRedisRuntimeClient(input: RedisRuntimeInput) {
             cert: input.ssl.cert,
             key: input.ssl.key,
           }
-        : undefined,
+        : undefined),
+    },
   });
 
   client.on('error', () => undefined);
@@ -118,7 +124,10 @@ export async function createRedisRuntimeClient(input: RedisRuntimeInput) {
 }
 
 export async function pingRedisConnection(input: RedisRuntimeInput) {
-  const runtime = await createRedisRuntimeClient(input);
+  const runtime = await createRedisRuntimeClient({
+    ...input,
+    disableReconnect: true,
+  });
 
   try {
     await runtime.client.ping();

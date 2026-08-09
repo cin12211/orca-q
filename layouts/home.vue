@@ -57,22 +57,22 @@ const { openSettings } = useSettingsModal();
         <div class="flex items-center gap-1">
           <Button variant="ghost" size="xxs" as-child>
             <a :href="donateLink" target="_blank">
-              <Icon name="hugeicons:coffee-01" class="w-3.5 h-3.5" />
+              <Icon name="hugeicons:coffee-01" class="size-4!" />
               Buy me a coffee
             </a>
           </Button>
           <Button variant="ghost" size="xxs" as-child>
             <a :href="discordLink" target="_blank">
-              <Icon name="hugeicons:discord" class="w-3.5 h-3.5" /> Discord
+              <Icon name="hugeicons:discord" class="size-4!" /> Discord
             </a>
           </Button>
           <Button variant="ghost" size="xxs" as-child>
             <a :href="githubLink" target="_blank">
-              <Icon name="hugeicons:github" class="w-3.5 h-3.5" /> GitHub ⭐️
+              <Icon name="hugeicons:github" class="size-4!" /> GitHub ⭐️
             </a>
           </Button>
           <Button variant="ghost" size="xxs" @click="openSettings()">
-            <Icon name="hugeicons:settings-01" class="w-3.5 h-3.5" />
+            <Icon name="hugeicons:settings-01" class="size-4!" />
           </Button>
         </div>
       </div>
@@ -95,25 +95,22 @@ const { openSettings } = useSettingsModal();
       <div class="flex items-center gap-1">
         <Button variant="ghost" size="xxs" as-child>
           <a :href="donateLink" target="_blank">
-            <Icon name="hugeicons:coffee-01" class="w-3.5 h-3.5" />
+            <Icon name="hugeicons:coffee-01" class="size-4!" />
             Buy me a coffee
           </a>
         </Button>
         <Button variant="ghost" size="xxs" as-child>
           <a :href="discordLink" target="_blank">
-            <Icon name="hugeicons:discord" class="w-3.5 h-3.5" /> Discord
+            <Icon name="hugeicons:discord" class="size-4!" /> Discord
           </a>
         </Button>
         <Button variant="ghost" size="xxs" as-child>
           <a :href="githubLink" target="_blank">
-            <Icon name="hugeicons:github" class="w-3.5 h-3.5" /> GitHub ⭐️
+            <Icon name="hugeicons:github" class="size-4!" /> GitHub ⭐️
           </a>
         </Button>
         <Button variant="ghost" size="xxs" @click="openSettings()">
-          <Icon name="hugeicons:settings-01" class="w-3.5 h-3.5" />
-        </Button>
-        <Button variant="ghost" size="xxs" @click="openSettings()">
-          <Icon name="hugeicons:settings-01" class="w-3.5 h-3.5" />
+          <Icon name="hugeicons:settings-01" class="size-4!" />
         </Button>
       </div>
     </div>
