@@ -124,6 +124,8 @@ const deleteDialogState = ref<
   | { open: true; mode: 'group'; prefix: string; keys: string[] }
 >({ open: false });
 
+const isPreviewLoadingGroup = ref(false);
+
 const closeDeleteDialog = () => {
   deleteDialogState.value = { open: false };
 };
@@ -141,13 +143,27 @@ const onDeleteKeyRequest = async (
 };
 
 const onDeleteGroupRequest = async (prefix: string) => {
-  const groupKeys = await workspace.previewGroupKeys(prefix);
-  deleteDialogState.value = {
-    open: true,
-    mode: 'group',
-    prefix,
-    keys: groupKeys,
-  };
+  deleteDialogState.value = { open: true, mode: 'group', prefix, keys: [] };
+  isPreviewLoadingGroup.value = true;
+
+  try {
+    const groupKeys = await workspace.previewGroupKeys(prefix);
+    const state = deleteDialogState.value;
+
+    // The user may have closed the dialog or opened a different group's
+    // dialog while this request was in flight — only apply the result if
+    // it's still the same request the dialog is showing.
+    if (state.open && state.mode === 'group' && state.prefix === prefix) {
+      deleteDialogState.value = {
+        open: true,
+        mode: 'group',
+        prefix,
+        keys: groupKeys,
+      };
+    }
+  } finally {
+    isPreviewLoadingGroup.value = false;
+  }
 };
 
 const onConfirmDelete = async () => {
@@ -277,6 +293,7 @@ const deleteDialogTargetKeys = computed(() =>
       :target-key="deleteDialogTargetKey"
       :target-keys="deleteDialogTargetKeys"
       :loading="isDeletingKey"
+      :preview-loading="isPreviewLoadingGroup"
       @update:open="value => !value && closeDeleteDialog()"
       @confirm="onConfirmDelete"
     />

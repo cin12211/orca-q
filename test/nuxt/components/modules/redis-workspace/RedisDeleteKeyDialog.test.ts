@@ -63,4 +63,40 @@ describe('RedisDeleteKeyDialog', () => {
 
     expect(confirmButton?.attributes('disabled')).toBeDefined();
   });
+
+  it('shows a loading state and hides the key list while the group preview is still fetching', () => {
+    const wrapper = mountDialog({
+      mode: 'group',
+      targetKeys: [],
+      previewLoading: true,
+    });
+
+    expect(wrapper.text()).toContain('Counting keys');
+    expect(wrapper.find('ul').exists()).toBe(false);
+  });
+
+  it('disables the confirm action while the group preview is loading', () => {
+    const wrapper = mountDialog({
+      mode: 'group',
+      targetKeys: [],
+      previewLoading: true,
+    });
+
+    const actionButtons = wrapper.findAll('button');
+    const confirmButton = actionButtons[actionButtons.length - 1];
+
+    expect(confirmButton?.attributes('disabled')).toBeDefined();
+  });
+
+  it('shows the resolved key list once preview loading finishes', () => {
+    const wrapper = mountDialog({
+      mode: 'group',
+      targetKeys: ['orders:1', 'orders:2'],
+      previewLoading: false,
+    });
+
+    expect(wrapper.text()).not.toContain('Counting keys');
+    expect(wrapper.find('ul').exists()).toBe(true);
+    expect(wrapper.text()).toContain('orders:1');
+  });
 });
