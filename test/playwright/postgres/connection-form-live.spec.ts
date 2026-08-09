@@ -96,9 +96,12 @@ test.describe('US5 — Combined Form + SSL + SSH: Live Flow', () => {
     });
 
     await connectionModal.clickTestConnection();
-    await expect(page.getByText('Connection failed.')).toBeVisible({
-      timeout: 30_000,
-    });
+    // An unreachable host yields a normalized, actionable error (timeout /
+    // refused / unresolved) rather than a bare "connection failed".
+    await expect(connectionModal.testErrorBox).toBeVisible({ timeout: 30_000 });
+    await expect(connectionModal.testErrorBox).toContainText(
+      /timed out|refused|could not|not be resolved/i
+    );
   });
 
   test('[US5-UI] Test button loading state is isolated — does not block other page elements', async ({

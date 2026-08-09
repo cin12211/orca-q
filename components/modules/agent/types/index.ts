@@ -8,8 +8,8 @@ import type {
   UITool,
   UserModelMessage,
 } from 'ai';
-import type { DatabaseClientType } from '~/core/constants';
-import type { Schema } from '~/core/types';
+import type { Schema, DatabaseMetadataRequestParams } from '~/core/types';
+import { DatabaseClientType } from '~/core/constants/database-client-type';
 
 // ─── Shared tool name enum (FE + BE) ─────────────────────────────────────────
 export const AgentToolName = {
@@ -306,13 +306,12 @@ export interface AgentToolResultMap {
 
 export type DbAgentSchemaSnapshot = Schema;
 
-export interface DbAgentRequestBody {
+export interface DbAgentRequestBody extends DatabaseMetadataRequestParams {
   provider: string;
   model: string;
   apiKey: string;
   messages: DbAgentMessage[];
   systemPrompt?: string;
-  dbConnectionString?: string;
   dbType?: DatabaseClientType;
   dialect?: DbAgentDialect;
   schemaSnapshot?: DbAgentSchemaSnapshot;

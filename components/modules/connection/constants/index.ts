@@ -1,9 +1,13 @@
 import type { RendererElement, RendererNode } from 'vue';
 import { Icon } from '#components';
 import { DatabaseClientType } from '~/core/constants/database-client-type';
+import { EManagedSqliteProvider } from '../types';
 
 export interface IDBSupport {
   type: DatabaseClientType;
+  // Only set for the Cloudflare D1 / Turso cards, which share `type: SQLITE3`
+  // with the local-file SQLite card and need this to disambiguate selection.
+  managedProvider?: EManagedSqliteProvider;
   name: string;
   icon: globalThis.VNode<
     RendererNode,
@@ -56,7 +60,25 @@ export const databaseSupports: IDBSupport[] = [
     icon: h(Icon, { name: 'file-icons:sqlite' }),
     isSupport: true,
     isBeta: true,
-    description: 'Local file, Cloudflare D1, Turso',
+    description: 'Local file database',
+  },
+  {
+    type: DatabaseClientType.SQLITE3,
+    managedProvider: EManagedSqliteProvider.CLOUDFLARE_D1,
+    name: 'Cloudflare D1',
+    icon: h(Icon, { name: 'devicon:cloudflare' }),
+    isSupport: true,
+    isBeta: true,
+    description: 'Remote SQLite over the Cloudflare API',
+  },
+  {
+    type: DatabaseClientType.SQLITE3,
+    managedProvider: EManagedSqliteProvider.TURSO,
+    name: 'Turso',
+    icon: h(Icon, { name: 'simple-icons:turso', class: 'text-[#4ff8d2]' }),
+    isSupport: true,
+    isBeta: true,
+    description: 'libSQL endpoint with optional branch routing',
   },
   {
     type: DatabaseClientType.REDIS,

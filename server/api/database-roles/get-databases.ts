@@ -3,16 +3,10 @@
  * Fetches all databases (no role-specific permissions)
  */
 import { DatabaseClientType } from '~/core/constants/database-client-type';
-import type { DatabaseInfo } from '~/core/types';
+import type { DatabaseInfo, DatabaseMetadataRequestParams } from '~/core/types';
 import { createRoleAdapter } from '~/server/infrastructure/database/adapters/database-roles';
 
-interface RequestBody {
-  dbConnectionString: string;
-  host?: string;
-  port?: string;
-  username?: string;
-  password?: string;
-  database?: string;
+interface RequestBody extends DatabaseMetadataRequestParams {
   dbType?: DatabaseClientType;
 }
 
@@ -27,15 +21,8 @@ export default defineEventHandler(async (event): Promise<DatabaseInfo[]> => {
   }
 
   const adapter = await createRoleAdapter(
-    body.dbType || DatabaseClientType.POSTGRES,
-    {
-      dbConnectionString: body.dbConnectionString,
-      host: body.host,
-      port: body.port,
-      username: body.username,
-      password: body.password,
-      database: body.database,
-    }
+    body.type || body.dbType,
+    body
   );
 
   return adapter.getDatabases();

@@ -10,7 +10,7 @@ import type {
 } from './types';
 
 export async function createQueryAdapter(
-  dbType: DatabaseClientType,
+  dbType: DatabaseClientType | undefined,
   params: DatabaseQueryAdapterParams
 ): Promise<IDatabaseQueryAdapter> {
   return createDomainAdapter<IDatabaseQueryAdapter, DatabaseQueryAdapterParams>(

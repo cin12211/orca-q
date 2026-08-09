@@ -18,6 +18,8 @@ export type ConnectionHealthCheckBody =
       type: DatabaseClientType;
       method: EConnectionMethod.STRING;
       stringConnection: string;
+      ssl?: ISSLConfig;
+      ssh?: ISSHConfig;
     }
   | {
       type: DatabaseClientType;
@@ -93,9 +95,21 @@ export function getConnectionHealthCheckCapabilities(
   return getConnectionCapabilityProfile(resolveConnectionHealthCheckBody(body));
 }
 
+export interface ConnectionHealthCheckResult {
+  isConnectedSuccess: boolean;
+  /** Plain-language description of what went wrong. */
+  message?: string;
+  /** Actionable suggestion on how to fix it. */
+  hint?: string;
+  /** Raw driver/error code, if any. */
+  code?: string;
+  /** Raw underlying error text, for power users / bug reports. */
+  detail?: string;
+}
+
 export const connectionService = {
   healthCheck: (body: ConnectionHealthCheckBody) =>
-    $fetch<{ isConnectedSuccess: boolean; message?: string }>(
+    $fetch<ConnectionHealthCheckResult>(
       '/api/managment-connection/health-check',
       {
         method: 'POST',

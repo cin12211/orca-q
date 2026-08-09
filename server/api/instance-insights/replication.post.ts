@@ -1,20 +1,12 @@
 import { createError, defineEventHandler, readBody } from 'h3';
 import { DatabaseClientType } from '~/core/constants/database-client-type';
-import type { InstanceInsightsReplication } from '~/core/types';
+import type { InstanceInsightsReplication, DatabaseMetadataRequestParams } from '~/core/types';
 import { createInstanceInsightsAdapter } from '~/server/infrastructure/database/adapters/instance-insights';
 
 export default defineEventHandler(
   async (event): Promise<InstanceInsightsReplication> => {
     try {
-      const body = await readBody<{
-        dbConnectionString: string;
-        host?: string;
-        port?: string;
-        username?: string;
-        password?: string;
-        database?: string;
-        type?: DatabaseClientType;
-      }>(event);
+      const body = await readBody<DatabaseMetadataRequestParams>(event);
 
       if (!body?.dbConnectionString && !body?.host) {
         throw createError({
@@ -24,15 +16,8 @@ export default defineEventHandler(
       }
 
       const adapter = await createInstanceInsightsAdapter(
-        body.type || DatabaseClientType.POSTGRES,
-        {
-          dbConnectionString: body.dbConnectionString,
-          host: body.host,
-          port: body.port,
-          username: body.username,
-          password: body.password,
-          database: body.database,
-        }
+        body.type,
+        body
       );
 
       return await adapter.getReplication();

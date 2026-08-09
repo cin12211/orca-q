@@ -3,11 +3,10 @@
  * Fetches tables, views, functions, sequences in a schema
  */
 import { DatabaseClientType } from '~/core/constants/database-client-type';
-import type { SchemaObjects } from '~/core/types';
+import type { SchemaObjects, DatabaseMetadataRequestParams } from '~/core/types';
 import { createRoleAdapter } from '~/server/infrastructure/database/adapters/database-roles';
 
-interface RequestBody {
-  dbConnectionString: string;
+interface RequestBody extends DatabaseMetadataRequestParams {
   schemaName: string;
   dbType?: DatabaseClientType;
 }
@@ -15,10 +14,10 @@ interface RequestBody {
 export default defineEventHandler(async (event): Promise<SchemaObjects> => {
   const body: RequestBody = await readBody(event);
 
-  if (!body.dbConnectionString) {
+  if (!body.dbConnectionString && !body.host) {
     throw createError({
       statusCode: 400,
-      statusMessage: 'Database connection string is required',
+      statusMessage: 'Database connection details are required',
     });
   }
 
@@ -30,10 +29,8 @@ export default defineEventHandler(async (event): Promise<SchemaObjects> => {
   }
 
   const adapter = await createRoleAdapter(
-    body.dbType || DatabaseClientType.POSTGRES,
-    {
-      dbConnectionString: body.dbConnectionString,
-    }
+    body.type || body.dbType,
+    body
   );
 
   return adapter.getSchemaObjects(body.schemaName);

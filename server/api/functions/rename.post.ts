@@ -1,17 +1,19 @@
 import { defineEventHandler, readBody, createError } from 'h3';
 import { DatabaseClientType } from '~/core/constants/database-client-type';
+import type { DatabaseMetadataRequestParams } from '~/core/types';
 import { createFunctionAdapter } from '~/server/infrastructure/database/adapters/functions';
 
+interface RequestBody extends DatabaseMetadataRequestParams {
+  schemaName: string;
+  oldName: string;
+  newName: string;
+}
+
 export default defineEventHandler(async event => {
-  const body = await readBody<{
-    dbConnectionString: string;
-    schemaName: string;
-    oldName: string;
-    newName: string;
-  }>(event);
+  const body = await readBody<RequestBody>(event);
 
   if (
-    !body.dbConnectionString ||
+    (!body.dbConnectionString && !body.host) ||
     !body.schemaName ||
     !body.oldName ||
     !body.newName
@@ -30,9 +32,10 @@ export default defineEventHandler(async event => {
     });
   }
 
-  const adapter = await createFunctionAdapter(DatabaseClientType.POSTGRES, {
-    dbConnectionString: body.dbConnectionString,
-  });
+  const adapter = await createFunctionAdapter(
+    body.type,
+    body
+  );
 
   return await adapter.renameFunction(
     body.schemaName,

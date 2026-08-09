@@ -1,4 +1,27 @@
 import { type FunctionSchemaEnum, type ViewSchemaEnum } from '~/core/types';
+import type { DatabaseClientType } from '~/core/constants/database-client-type';
+import type {
+  EConnectionProviderKind,
+  IManagedSqliteConfig,
+  ISSLConfig,
+  ISSHConfig,
+} from '~/core/types/entities/connection.entity';
+
+export interface DatabaseMetadataRequestParams {
+  dbConnectionString?: string;
+  host?: string;
+  port?: string;
+  username?: string;
+  password?: string;
+  database?: string;
+  serviceName?: string;
+  filePath?: string;
+  type?: DatabaseClientType;
+  providerKind?: EConnectionProviderKind;
+  managedSqlite?: IManagedSqliteConfig;
+  ssl?: ISSLConfig;
+  ssh?: ISSHConfig;
+}
 
 export interface SchemaColumnMetadata {
   name: string;

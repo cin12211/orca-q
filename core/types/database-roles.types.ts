@@ -89,14 +89,14 @@ export interface RolePermissions {
  * Request body for fetching database roles
  */
 export interface GetDatabaseRolesRequest {
-  dbConnectionString: string;
+  dbConnectionString?: string;
 }
 
 /**
  * Request body for fetching role permissions
  */
 export interface GetRolePermissionsRequest {
-  dbConnectionString: string;
+  dbConnectionString?: string;
   roleName: string;
 }
 
@@ -104,7 +104,7 @@ export interface GetRolePermissionsRequest {
  * Request body for granting/revoking permissions
  */
 export interface GrantRevokeRequest {
-  dbConnectionString: string;
+  dbConnectionString?: string;
   roleName: string;
   objectType: ObjectType;
   schemaName: string;
@@ -167,7 +167,7 @@ export interface RoleInheritanceNode {
  * Request for creating a new role
  */
 export interface CreateRoleRequest {
-  dbConnectionString: string;
+  dbConnectionString?: string;
   roleName: string;
   password?: string;
   canLogin: boolean;
@@ -184,7 +184,7 @@ export interface CreateRoleRequest {
  * Request for deleting a role
  */
 export interface DeleteRoleRequest {
-  dbConnectionString: string;
+  dbConnectionString?: string;
   roleName: string;
 }
 
@@ -250,7 +250,7 @@ export interface ObjectGrant {
  * Request for bulk granting permissions (wizard final step)
  */
 export interface BulkGrantRequest {
-  dbConnectionString: string;
+  dbConnectionString?: string;
   roleName: string;
   databaseGrants: DatabaseGrant[];
   schemaGrants: SchemaGrant[];

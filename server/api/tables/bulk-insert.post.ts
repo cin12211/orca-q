@@ -1,12 +1,14 @@
 import { defineEventHandler, readBody, createError } from 'h3';
 import { DatabaseClientType } from '~/core/constants/database-client-type';
 import { buildInsertStatements } from '~/core/helpers/sql-mutation-statements';
-import type { BulkUpdateResponse } from '~/core/types';
-import type {
-  EConnectionProviderKind,
-  IManagedSqliteConfig,
-} from '~/core/types/entities/connection.entity';
+import type { BulkUpdateResponse, DatabaseMetadataRequestParams } from '~/core/types';
 import { createTableAdapter } from '~/server/infrastructure/database/adapters/tables';
+
+interface RequestBody extends DatabaseMetadataRequestParams {
+  tableName: string;
+  schemaName: string;
+  insertItems: Record<string, any>[];
+}
 
 const BULK_CHUNK_SIZE = 500;
 
@@ -19,20 +21,7 @@ function chunkArray<T>(arr: T[], size: number): T[][] {
 }
 
 export default defineEventHandler(async event => {
-  const body = await readBody<{
-    tableName: string;
-    schemaName: string;
-    insertItems: Record<string, any>[];
-    dbConnectionString?: string;
-    host?: string;
-    port?: string;
-    username?: string;
-    password?: string;
-    database?: string;
-    type?: DatabaseClientType;
-    providerKind?: EConnectionProviderKind;
-    managedSqlite?: IManagedSqliteConfig;
-  }>(event);
+  const body = await readBody<RequestBody>(event);
 
   const { tableName, schemaName, insertItems } = body;
 
@@ -60,7 +49,7 @@ export default defineEventHandler(async event => {
   );
 
   const adapter = await createTableAdapter(
-    body.type || DatabaseClientType.POSTGRES,
+    body.type,
     body
   );
 

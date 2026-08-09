@@ -3,6 +3,7 @@ import type { DatabaseClientType } from '~/core/constants/database-client-type';
 import type {
   SchemaColumnMetadata,
   SchemaForeignKeyMetadata,
+  DatabaseMetadataRequestParams,
 } from '~/core/types';
 
 // ─── Status ────────────────────────────────────────────────────────────────────
@@ -11,16 +12,8 @@ export type DiffStatus = 'added' | 'removed' | 'modified' | 'unchanged';
 
 // ─── Request ───────────────────────────────────────────────────────────────────
 
-export interface ConnectionParams {
-  type: DatabaseClientType;
+export interface ConnectionParams extends DatabaseMetadataRequestParams {
   connectionString?: string;
-  host?: string;
-  port?: string;
-  username?: string;
-  password?: string;
-  database?: string;
-  ssl?: ISSLConfig;
-  ssh?: ISSHConfig;
 }
 
 export interface SchemaDiffRequest {

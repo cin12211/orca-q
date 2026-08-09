@@ -3,10 +3,10 @@
  * Creates a new PostgreSQL role/user
  */
 import { DatabaseClientType } from '~/core/constants/database-client-type';
-import type { CreateRoleRequest, GrantRevokeResponse } from '~/core/types';
+import type { CreateRoleRequest, GrantRevokeResponse, DatabaseMetadataRequestParams } from '~/core/types';
 import { createRoleAdapter } from '~/server/infrastructure/database/adapters/database-roles';
 
-interface RequestBody extends CreateRoleRequest {
+interface RequestBody extends CreateRoleRequest, DatabaseMetadataRequestParams {
   dbType?: DatabaseClientType;
 }
 
@@ -22,10 +22,8 @@ export default defineEventHandler(
     }
 
     const adapter = await createRoleAdapter(
-      body.dbType || DatabaseClientType.POSTGRES,
-      {
-        dbConnectionString: body.dbConnectionString,
-      }
+      body.type || body.dbType,
+      body
     );
 
     return adapter.createRole({

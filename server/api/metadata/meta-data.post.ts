@@ -1,32 +1,13 @@
 import { defineEventHandler, readBody } from 'h3';
-import type { ISSLConfig, ISSHConfig } from '~/components/modules/connection';
 import { DatabaseClientType } from '~/core/constants/database-client-type';
-import type { SchemaMetaData } from '~/core/types';
-import type {
-  EConnectionProviderKind,
-  IManagedSqliteConfig,
-} from '~/core/types/entities/connection.entity';
+import type { SchemaMetaData, DatabaseMetadataRequestParams } from '~/core/types';
 import { createMetadataAdapter } from '~/server/infrastructure/database/adapters/metadata';
 
-interface RequestBody {
-  dbConnectionString: string;
-  host?: string;
-  port?: string;
-  username?: string;
-  password?: string;
-  database?: string;
-  type?: DatabaseClientType;
-  providerKind?: EConnectionProviderKind;
-  managedSqlite?: IManagedSqliteConfig;
-  ssl?: ISSLConfig;
-  ssh?: ISSHConfig;
-}
-
 export default defineEventHandler(async (event): Promise<SchemaMetaData[]> => {
-  const body: RequestBody = await readBody(event);
+  const body: DatabaseMetadataRequestParams = await readBody(event);
 
   const adapter = await createMetadataAdapter(
-    body.type || DatabaseClientType.POSTGRES,
+    body.type,
     {
       dbConnectionString: body.dbConnectionString,
       host: body.host,

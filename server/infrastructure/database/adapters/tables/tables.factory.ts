@@ -10,7 +10,7 @@ import type {
 } from './types';
 
 export async function createTableAdapter(
-  dbType: DatabaseClientType,
+  dbType: DatabaseClientType | undefined,
   params: DatabaseTableAdapterParams
 ): Promise<IDatabaseTableAdapter> {
   return createDomainAdapter<IDatabaseTableAdapter, DatabaseTableAdapterParams>(

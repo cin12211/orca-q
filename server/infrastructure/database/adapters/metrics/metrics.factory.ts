@@ -10,7 +10,7 @@ import type {
 } from './types';
 
 export async function createMetricsAdapter(
-  dbType: DatabaseClientType,
+  dbType: DatabaseClientType | undefined,
   params: DatabaseMetricsAdapterParams
 ): Promise<IDatabaseMetricsAdapter> {
   return createDomainAdapter<

@@ -27,11 +27,17 @@ export async function createDomainAdapter<
   TAdapter,
   TParams extends BaseDatabaseAdapterParams,
 >(
-  dbType: DatabaseClientType,
+  dbType: DatabaseClientType | undefined,
   params: TParams,
   adapterName: string,
   factories: AdapterFactories<TAdapter, TParams>
 ): Promise<TAdapter> {
+  if (!dbType) {
+    throw createError({
+      statusCode: 400,
+      statusMessage: 'Database type is required',
+    });
+  }
   const normalizedDbType = normalizeSupportedDatabaseType(dbType);
   const factory = factories[normalizedDbType];
 

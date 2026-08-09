@@ -1,21 +1,14 @@
 import { defineEventHandler, readBody, createError } from 'h3';
-import type { ISSLConfig, ISSHConfig } from '~/components/modules/connection';
 import { DatabaseClientType } from '~/core/constants/database-client-type';
+import type { DatabaseMetadataRequestParams } from '~/core/types';
 import { createFunctionAdapter } from '~/server/infrastructure/database/adapters/functions';
 
+interface RequestBody extends DatabaseMetadataRequestParams {
+  functionId: string;
+}
+
 export default defineEventHandler(async event => {
-  const body = await readBody<{
-    dbConnectionString: string;
-    host?: string;
-    port?: string;
-    username?: string;
-    password?: string;
-    database?: string;
-    type?: DatabaseClientType;
-    functionId: string;
-    ssl?: ISSLConfig;
-    ssh?: ISSHConfig;
-  }>(event);
+  const body = await readBody<RequestBody>(event);
 
   if ((!body.dbConnectionString && !body.host) || !body.functionId) {
     throw createError({
@@ -25,7 +18,7 @@ export default defineEventHandler(async event => {
   }
 
   const adapter = await createFunctionAdapter(
-    body.type || DatabaseClientType.POSTGRES,
+    body.type,
     body
   );
 

@@ -138,7 +138,7 @@ export function useConnectionForm(props: {
     sslCA: '',
     sslCert: '',
     sslKey: '',
-    sslRejectUnauthorized: true,
+    sslRejectUnauthorized: false,
     // SSH
     sshEnabled: false,
     sshHost: '',
@@ -154,6 +154,15 @@ export function useConnectionForm(props: {
   const tagIds = ref<string[]>([]);
   const testStatus = ref<'idle' | 'testing' | 'success' | 'error'>('idle');
   const testErrorMessage = ref('');
+  const testErrorHint = ref('');
+  const testErrorDetail = ref('');
+
+  const resetTestState = () => {
+    testStatus.value = 'idle';
+    testErrorMessage.value = '';
+    testErrorHint.value = '';
+    testErrorDetail.value = '';
+  };
 
   const tagStore = useEnvironmentTagStore();
 
@@ -183,6 +192,17 @@ export function useConnectionForm(props: {
   const canUseNetworkOptions = computed(() =>
     NETWORK_CONNECTION_METHODS.has(connectionMethod.value)
   );
+  const isSSHConfigValid = computed(() => {
+    if (!formData.sshEnabled || !canUseNetworkOptions.value) {
+      return true;
+    }
+
+    return Boolean(
+      formData.sshHost &&
+        formData.sshUsername &&
+        (formData.sshUseKey ? formData.sshPrivateKey : formData.sshPassword)
+    );
+  });
 
   const getDefaultPort = (type: DatabaseClientType | null) => {
     if (!type) return '';
@@ -296,6 +316,8 @@ export function useConnectionForm(props: {
         type,
         method: EConnectionMethod.STRING,
         stringConnection: connectionString.value,
+        ssl: buildSSLConfig(),
+        ssh: buildSSHConfig(),
       };
     }
 
@@ -343,7 +365,7 @@ export function useConnectionForm(props: {
     formData.sslCA = '';
     formData.sslCert = '';
     formData.sslKey = '';
-    formData.sslRejectUnauthorized = true;
+    formData.sslRejectUnauthorized = false;
 
     formData.sshEnabled = false;
     formData.sshHost = '';
@@ -358,8 +380,7 @@ export function useConnectionForm(props: {
     Object.assign(managedSqlite, createManagedSqliteState());
 
     tagIds.value = getDefaultTagIds();
-    testStatus.value = 'idle';
-    testErrorMessage.value = '';
+    resetTestState();
   };
 
   const handleNext = () => {
@@ -370,9 +391,11 @@ export function useConnectionForm(props: {
 
   const handleBack = () => {
     step.value = 1;
-    testStatus.value = 'idle';
-    testErrorMessage.value = '';
+    resetTestState();
   };
+
+  const DEFAULT_ERROR_MESSAGE =
+    'Connection failed. Please check your details and try again.';
 
   const handleTestConnection = async () => {
     if (
@@ -382,11 +405,13 @@ export function useConnectionForm(props: {
       testStatus.value = 'error';
       testErrorMessage.value =
         'SQLite file connections are available only in the desktop app.';
+      testErrorHint.value = '';
+      testErrorDetail.value = '';
       return false;
     }
 
+    resetTestState();
     testStatus.value = 'testing';
-    testErrorMessage.value = '';
 
     try {
       const result = await connectionService.healthCheck(
@@ -394,22 +419,24 @@ export function useConnectionForm(props: {
       );
 
       if (result.isConnectedSuccess) {
+        resetTestState();
         testStatus.value = 'success';
-        testErrorMessage.value = '';
         return true;
       }
 
       testStatus.value = 'error';
-      testErrorMessage.value =
-        result.message ||
-        'Connection failed. Please check your details and try again.';
+      testErrorMessage.value = result.message || DEFAULT_ERROR_MESSAGE;
+      testErrorHint.value = result.hint || '';
+      testErrorDetail.value = result.detail || '';
       return false;
     } catch (error: any) {
+      // Network-level failure before the API could respond (server error body
+      // still carries the normalized fields when available).
       testStatus.value = 'error';
       testErrorMessage.value =
-        error?.data?.message ||
-        error?.message ||
-        'Connection failed. Please check your details and try again.';
+        error?.data?.message || error?.message || DEFAULT_ERROR_MESSAGE;
+      testErrorHint.value = error?.data?.hint || '';
+      testErrorDetail.value = error?.data?.detail || '';
       return false;
     }
   };
@@ -438,6 +465,8 @@ export function useConnectionForm(props: {
 
     if (connectionMethod.value === EConnectionMethod.STRING) {
       connection.connectionString = connectionString.value;
+      connection.ssl = buildSSLConfig();
+      connection.ssh = buildSSHConfig();
     } else if (connectionMethod.value === EConnectionMethod.FILE) {
       connection.filePath = formData.filePath;
       connection.connectionString = buildSqliteConnectionString(
@@ -518,7 +547,7 @@ export function useConnectionForm(props: {
     if (!connectionName.value) return false;
 
     if (connectionMethod.value === EConnectionMethod.STRING) {
-      return !!connectionString.value;
+      return !!connectionString.value && isSSHConfigValid.value;
     }
 
     if (connectionMethod.value === EConnectionMethod.FILE) {
@@ -543,7 +572,8 @@ export function useConnectionForm(props: {
         (formData.port || getDefaultPort(dbType.value)) &&
         formData.username &&
         formData.password &&
-        formData.serviceName
+        formData.serviceName &&
+        isSSHConfigValid.value
       );
     }
 
@@ -551,7 +581,8 @@ export function useConnectionForm(props: {
       formData.host &&
       (formData.port || getDefaultPort(dbType.value)) &&
       formData.username &&
-      formData.database
+      formData.database &&
+      isSSHConfigValid.value
     );
   });
 
@@ -632,7 +663,7 @@ export function useConnectionForm(props: {
           formData.sslCA = conn.ssl.ca || '';
           formData.sslCert = conn.ssl.cert || '';
           formData.sslKey = conn.ssl.key || '';
-          formData.sslRejectUnauthorized = conn.ssl.rejectUnauthorized ?? true;
+          formData.sslRejectUnauthorized = conn.ssl.rejectUnauthorized ?? false;
         }
 
         formData.sshEnabled = !!conn.ssh?.enabled;
@@ -669,6 +700,8 @@ export function useConnectionForm(props: {
     tagIds,
     testStatus,
     testErrorMessage,
+    testErrorHint,
+    testErrorDetail,
     handleNext,
     handleBack,
     handleTestConnection,

@@ -1,5 +1,6 @@
 import { lastAssistantMessageIsCompleteWithApprovalResponses } from 'ai';
 import { useAiChat } from '~/core/composables/useAiChat';
+import { getConnectionParams } from '~/core/helpers/connection-helper';
 import { useSchemaStore } from '~/core/stores';
 import { useManagementConnectionStore } from '~/core/stores/managementConnectionStore';
 import {
@@ -31,10 +32,9 @@ export function useAgentChat(sendReasoning?: Ref<boolean>) {
   const chat = useAiChat<DbAgentMessage>({
     api: '/api/ai/agent',
     body: () => ({
-      dbConnectionString: connectionStore.selectedConnection?.connectionString,
-      dbType: connectionStore.selectedConnection?.type,
       schemaSnapshots: schemaStore.activeSchemas || [],
       sendReasoning: sendReasoning?.value ?? true,
+      ...getConnectionParams(connectionStore.selectedConnection),
     }),
     sendAutomaticallyWhen: lastAssistantMessageIsCompleteWithApprovalResponses,
   });

@@ -1,7 +1,12 @@
 import type { FieldDef } from 'pg';
 import type { RowData } from '~/components/base/data-grid/utils';
 import type { DatabaseDriverError } from '~/core/types';
-import type { IManagedSqliteConfig } from '~/core/types/entities/connection.entity';
+import type {
+  EConnectionProviderKind,
+  IManagedSqliteConfig,
+  ISSHConfig,
+  ISSLConfig,
+} from '~/core/types/entities/connection.entity';
 import type { ExecutedResultItem } from '../interfaces';
 
 /**
@@ -66,9 +71,18 @@ export interface StreamingQueryCallbacks {
 export function executeStreamingQuery({
   query,
   dbConnectionString,
+  host,
+  port,
+  username,
+  password,
+  database,
+  serviceName,
+  filePath,
   type,
   providerKind,
   managedSqlite,
+  ssl,
+  ssh,
   params,
   onMeta,
   onRows,
@@ -76,10 +90,19 @@ export function executeStreamingQuery({
   onError,
 }: {
   query: string;
-  dbConnectionString: string;
+  dbConnectionString?: string;
+  host?: string;
+  port?: string;
+  username?: string;
+  password?: string;
+  database?: string;
+  serviceName?: string;
+  filePath?: string;
   type?: string;
-  providerKind?: string;
+  providerKind?: EConnectionProviderKind;
   managedSqlite?: IManagedSqliteConfig;
+  ssl?: ISSLConfig;
+  ssh?: ISSHConfig;
   params?: Record<string, unknown>;
 } & StreamingQueryCallbacks) {
   const controller = new AbortController();
@@ -93,9 +116,18 @@ export function executeStreamingQuery({
         body: JSON.stringify({
           query,
           dbConnectionString,
+          host,
+          port,
+          username,
+          password,
+          database,
+          serviceName,
+          filePath,
           type,
           providerKind,
           managedSqlite,
+          ssl,
+          ssh,
           params: params || {},
         }),
         signal: controller.signal,
