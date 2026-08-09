@@ -1,6 +1,6 @@
-import { ref } from 'vue';
+import { defineComponent, h, KeepAlive, ref } from 'vue';
 import { mount } from '@vue/test-utils';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import RedisKeyTree from '~/components/modules/management/redis-browser/components/RedisKeyTree.vue';
 import { useRedisTreeData } from '~/components/modules/management/redis-browser/hooks/useRedisTreeData';
 
@@ -99,5 +99,91 @@ describe('useRedisTreeData', () => {
     await items[0]?.trigger('click');
 
     expect(wrapper.emitted('select')).toEqual([['inventory:1']]);
+  });
+});
+
+const createFileTreeStub = () => {
+  const focusItem = vi.fn();
+  const clearSelection = vi.fn();
+
+  const stub = defineComponent({
+    name: 'FileTree',
+    props: {
+      initialData: { type: Object, default: () => ({}) },
+      initExpandedIds: { type: Array, default: () => [] },
+      storageKey: { type: String, default: '' },
+      allowDragAndDrop: { type: Boolean, default: false },
+      delayFocus: { type: Number, default: 0 },
+    },
+    emits: ['click', 'contextmenu', 'delete'],
+    setup(_, { expose }) {
+      expose({
+        focusItem,
+        clearSelection,
+        collapseAll: vi.fn(),
+        expandAll: vi.fn(),
+        isExpandedAll: false,
+      });
+    },
+    render: () => h('div', { class: 'filetree-stub' }),
+  });
+
+  return { stub, focusItem, clearSelection };
+};
+
+describe('RedisKeyTree focus behavior', () => {
+  it('does not re-focus the row on a direct click (already highlighted by FileTree itself)', async () => {
+    const { stub, focusItem } = createFileTreeStub();
+    const wrapper = mount(RedisKeyTree, {
+      props: { keys: redisKeys, viewMode: 'list' },
+      global: { stubs: { FileTree: stub } },
+    });
+
+    await wrapper.vm.$nextTick();
+    focusItem.mockClear();
+
+    const fileTreeStub = wrapper.findComponent(stub);
+    await fileTreeStub.vm.$emit('click', 'redis-key:inventory:1');
+    await wrapper.setProps({ selectedKey: 'inventory:1' });
+    await wrapper.vm.$nextTick();
+
+    expect(focusItem).not.toHaveBeenCalled();
+  });
+
+  it('focuses the selected key when the component is (re)activated with a key already selected', async () => {
+    const { stub, focusItem } = createFileTreeStub();
+
+    const KeepAliveHost = defineComponent({
+      setup() {
+        const show = ref(true);
+        return { show };
+      },
+      render() {
+        return h(KeepAlive, null, {
+          default: () =>
+            this.show
+              ? h(RedisKeyTree, {
+                  keys: redisKeys,
+                  selectedKey: 'inventory:1',
+                  viewMode: 'list',
+                })
+              : null,
+        });
+      },
+    });
+
+    const wrapper = mount(KeepAliveHost, {
+      global: { stubs: { FileTree: stub } },
+    });
+
+    await wrapper.vm.$nextTick();
+    focusItem.mockClear();
+
+    (wrapper.vm as any).show = false;
+    await wrapper.vm.$nextTick();
+    (wrapper.vm as any).show = true;
+    await wrapper.vm.$nextTick();
+
+    expect(focusItem).toHaveBeenCalledWith('redis-key:inventory:1');
   });
 });

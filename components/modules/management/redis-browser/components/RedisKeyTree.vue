@@ -122,11 +122,14 @@ const getNodeMeta = (
   return labels;
 };
 
+const isLocalSelection = ref(false);
+
 const handleListClick = (nodeId: string) => {
   const node = flatFileTreeData.value[nodeId];
   const redisKey = node?.data?.redisKey;
 
   if (node?.data?.kind === 'key' && redisKey) {
+    isLocalSelection.value = true;
     emit('select', redisKey);
   }
 };
@@ -136,31 +139,47 @@ const handleTreeClick = (nodeId: string) => {
   const redisKey = node?.data?.redisKey;
 
   if (node?.data?.kind === 'key' && redisKey) {
+    isLocalSelection.value = true;
     emit('select', redisKey);
   }
+};
+
+const focusSelectedKey = (selectedKey: string | null) => {
+  const activeRef =
+    props.viewMode === RedisBrowserViewMode.Tree
+      ? fileTreeRef.value
+      : flatTreeRef.value;
+
+  if (!activeRef) {
+    return;
+  }
+
+  if (!selectedKey) {
+    activeRef.clearSelection();
+    return;
+  }
+
+  activeRef.focusItem(`redis-key:${selectedKey}`);
 };
 
 watch(
   () => props.selectedKey,
   selectedKey => {
-    const activeRef =
-      props.viewMode === RedisBrowserViewMode.Tree
-        ? fileTreeRef.value
-        : flatTreeRef.value;
-
-    if (!activeRef) {
+    if (isLocalSelection.value) {
+      isLocalSelection.value = false;
       return;
     }
 
-    if (!selectedKey) {
-      activeRef.clearSelection();
-      return;
-    }
-
-    activeRef.focusItem(`redis-key:${selectedKey}`);
+    focusSelectedKey(selectedKey);
   },
   { flush: 'post', immediate: true }
 );
+
+onActivated(() => {
+  if (props.selectedKey) {
+    focusSelectedKey(props.selectedKey);
+  }
+});
 
 watch(
   () => props.searchQuery,
