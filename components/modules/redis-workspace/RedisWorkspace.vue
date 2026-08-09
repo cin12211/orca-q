@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { Connection } from '~/core/stores';
 import { TabViewType, type TabView } from '~/core/stores/useTabViewsStore';
+import RedisDeleteKeyDialog from './components/RedisDeleteKeyDialog.vue';
 import RedisPubSubPanel from './components/RedisPubSubPanel.vue';
 import RedisValueEditor from './components/RedisValueEditor.vue';
 import { useRedisWorkspace } from './hooks/useRedisWorkspace';
@@ -18,6 +19,7 @@ const {
   canEditSelectedValue,
   databases,
   editUnavailableReason,
+  isDeletingKey,
   loadingKeys,
   loadingSelectedKeyDetail,
   savingValue,
@@ -28,6 +30,17 @@ const {
 const activeType = computed(
   () => props.tabInfo?.type || TabViewType.RedisBrowser
 );
+
+const isDeleteDialogOpen = ref(false);
+
+const confirmDelete = async () => {
+  if (!selectedKeyDetail.value) {
+    return;
+  }
+
+  await workspace.deleteKey(selectedKeyDetail.value.key);
+  isDeleteDialogOpen.value = false;
+};
 </script>
 
 <template>
@@ -48,5 +61,15 @@ const activeType = computed(
     :unavailable-reason="editUnavailableReason"
     @save="workspace.saveSelectedValue"
     @refresh="selectedKeyDetail && workspace.focusKey(selectedKeyDetail.key)"
+    @delete="isDeleteDialogOpen = true"
+  />
+
+  <RedisDeleteKeyDialog
+    :open="isDeleteDialogOpen"
+    mode="key"
+    :target-key="selectedKeyDetail?.key ?? ''"
+    :loading="isDeletingKey"
+    @update:open="value => (isDeleteDialogOpen = value)"
+    @confirm="confirmDelete"
   />
 </template>

@@ -122,6 +122,14 @@ describe('RedisValueEditor', () => {
     expect(wrapper.emitted('refresh')).toHaveLength(1);
   });
 
+  it('emits delete when the Delete button is clicked', async () => {
+    const wrapper = mountComponent();
+
+    await wrapper.find('button[aria-label="Delete key"]').trigger('click');
+
+    expect(wrapper.emitted('delete')).toHaveLength(1);
+  });
+
   it('uses the shared loading overlay while key detail is loading', () => {
     const wrapper = mount(RedisValueEditor, {
       props: {
@@ -213,9 +221,9 @@ describe('RedisValueEditor', () => {
 
   it('keeps Save Changes disabled until the value is updated', async () => {
     const wrapper = mountComponent();
-    const saveButton = wrapper.findAll('button').find(
-      button => button.text() === 'Save Changes'
-    );
+    const saveButton = wrapper
+      .findAll('button')
+      .find(button => button.text() === 'Save Changes');
 
     expect(saveButton?.attributes('disabled')).toBeDefined();
 

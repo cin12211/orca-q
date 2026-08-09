@@ -24,6 +24,7 @@ const props = defineProps<{
 const emit = defineEmits<{
   (e: 'save', payload: RedisValueUpdatePayload): void;
   (e: 'refresh'): void;
+  (e: 'delete'): void;
 }>();
 
 const textValue = ref('');
@@ -395,6 +396,17 @@ onBeforeUnmount(() => {
           >
             <Icon name="hugeicons:redo" class="size-3.5! min-w-3.5" />
             Refresh
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            class="h-7 px-2 text-xs text-destructive hover:text-destructive"
+            aria-label="Delete key"
+            :disabled="loading || saving"
+            @click="emit('delete')"
+          >
+            <Icon name="hugeicons:delete-02" class="size-3.5! min-w-3.5" />
+            Delete
           </Button>
           <select
             v-if="autoRefreshEnabled"
