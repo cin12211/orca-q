@@ -2,10 +2,17 @@ import { type Edge } from '@vue-flow/core';
 import type { TableMetadata } from '~/core/types';
 import {
   DEFAULT_VUE_FLOW_LAYOUT_CONFIG,
+  ERD_HEADER_HANDLE_SOURCE_ID,
+  ERD_HEADER_HANDLE_TARGET_ID,
   ROW_HEIGHT,
   HEAD_ROW_HEIGHT,
 } from '../constants';
-import type { MatrixTablePosition, NodePosition, TableNode } from '../type';
+import type {
+  ErdTableNodeData,
+  MatrixTablePosition,
+  NodePosition,
+  TableNode,
+} from '../type';
 
 export const calcTableHeight = (columnsLength?: number): number =>
   (columnsLength || 0) * ROW_HEIGHT + HEAD_ROW_HEIGHT;
@@ -368,7 +375,8 @@ const generateMatrixTableCenter = ({
 
 export const createNodes = (
   tablesData: TableMetadata[],
-  matrix: Record<string, NodePosition>
+  matrix: Record<string, NodePosition>,
+  collapsedHeaderTables = new Set<string>()
 ): TableNode[] => {
   return tablesData.map(table => {
     const refId = buildTableNodeId({
@@ -378,19 +386,36 @@ export const createNodes = (
 
     const position = matrix[refId] || { x: 0, y: 0 };
 
+    const nodeData: ErdTableNodeData = {
+      ...table,
+      isHeaderCollapsed: collapsedHeaderTables.has(refId),
+    };
+
     const node: TableNode = {
       id: refId,
       type: NODE_TYPE,
       position,
-      data: table,
+      data: nodeData,
     };
     return node;
   });
 };
 
-export const createEdges = (tablesData: TableMetadata[]): Edge[] => {
+export const createEdges = (
+  tablesData: TableMetadata[],
+  collapsedHeaderTables: Set<string> = new Set<string>()
+): Edge[] => {
   return tablesData.flatMap(table =>
     table.foreign_keys.map(foreignKey => {
+      const sourceId = buildTableNodeId({
+        schemaName: table.schema,
+        tableName: table.table,
+      });
+      const targetId = buildTableNodeId({
+        schemaName: foreignKey.reference_schema,
+        tableName: foreignKey.reference_table,
+      });
+
       const edge: Edge = {
         id: buildEdgeId({
           schemaName: table.schema,
@@ -400,16 +425,14 @@ export const createEdges = (tablesData: TableMetadata[]): Edge[] => {
           column: foreignKey.column,
         }),
         type: EDGE_TYPE,
-        source: buildTableNodeId({
-          schemaName: table.schema,
-          tableName: table.table,
-        }),
-        target: buildTableNodeId({
-          schemaName: foreignKey.reference_schema,
-          tableName: foreignKey.reference_table,
-        }),
-        sourceHandle: foreignKey.column,
-        targetHandle: foreignKey.reference_column,
+        source: sourceId,
+        target: targetId,
+        sourceHandle: collapsedHeaderTables.has(sourceId)
+          ? `${ERD_HEADER_HANDLE_SOURCE_ID}-${sourceId}`
+          : foreignKey.column,
+        targetHandle: collapsedHeaderTables.has(targetId)
+          ? `${ERD_HEADER_HANDLE_TARGET_ID}-${targetId}`
+          : foreignKey.reference_column,
         updatable: false,
       };
       return edge;
@@ -484,11 +507,13 @@ export const buildERDWithPrimaryTables = ({
   leftTables,
   rightTables,
   tableCenterId,
+  collapsedHeaderTables = new Set<string>(),
 }: {
   tables: TableMetadata[];
   leftTables: TableMetadata[];
   rightTables: TableMetadata[];
   tableCenterId: string;
+  collapsedHeaderTables?: Set<string>;
 }) => {
   const matrixPosition = generateMatrixTableCenter({
     leftTables,
@@ -497,8 +522,8 @@ export const buildERDWithPrimaryTables = ({
   });
 
   return {
-    edges: createEdges(tables),
-    nodes: createNodes(tables, matrixPosition),
+    edges: createEdges(tables, collapsedHeaderTables),
+    nodes: createNodes(tables, matrixPosition, collapsedHeaderTables),
     matrixPosition,
   };
 };

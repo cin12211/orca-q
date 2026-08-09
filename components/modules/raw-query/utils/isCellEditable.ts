@@ -37,7 +37,7 @@ export const groupColumnsByTable = (
 
     if (column.isPrimaryKey) {
       group.primaryKeyColumns.push(column);
-      group.primaryKeyFields.push(column.originalName);
+      group.primaryKeyFields.push(column.aliasFieldName);
     }
   }
 

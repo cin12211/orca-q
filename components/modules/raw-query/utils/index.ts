@@ -7,3 +7,4 @@ export * from './buildRelationColumnDefs';
 export * from './isCellEditable';
 export * from './buildRawQueryUpdates';
 export * from './buildRawQueryColumnDefs';
+export * from './extractVariables';

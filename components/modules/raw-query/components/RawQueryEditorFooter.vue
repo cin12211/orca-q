@@ -13,7 +13,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '#components';
-import { formatNumber, formatQueryTime } from '~/core/helpers/format';
 import type {
   EditorCursor,
   ExplainAnalyzeOptionItem,
@@ -25,13 +24,8 @@ const isExplainAnalyzeMenuOpen = ref(false);
 
 defineProps<{
   cursorInfo: EditorCursor;
-  isHaveOneExecute: boolean;
   executeLoading: boolean;
-  executeErrors: boolean;
   isStreaming: boolean;
-  streamingRowCount: number;
-  queryTime: number;
-  rawQueryResultsLength: number;
   isRawViewMode?: boolean;
   explainAnalyzeOptionItems: ExplainAnalyzeOptionItem[];
   serializeMode: ExplainAnalyzeSerializeMode;
@@ -59,30 +53,6 @@ defineEmits<{
       </div>
 
       <RawQueryVariableUsageGuidePopover v-if="isSupportVariable" />
-    </div>
-
-    <div
-      v-if="isHaveOneExecute"
-      class="font-normal text-xs text-muted-foreground"
-    >
-      <span v-if="isStreaming" class="flex items-center gap-1">
-        <Icon name="hugeicons:loading-03" class="size-4! animate-spin" />
-        Streaming... {{ formatNumber(streamingRowCount) }} rows
-      </span>
-      <span v-else-if="executeLoading" class="flex items-center gap-1"
-        >Processing
-
-        <Icon name="hugeicons:loading-03" class="size-4! animate-spin"> </Icon>
-      </span>
-      <span v-else>
-        <span v-if="executeErrors">
-          Query: 1 error in {{ formatQueryTime(queryTime) }}
-        </span>
-        <span v-else>
-          Query success: {{ formatNumber(rawQueryResultsLength) }} rows in
-          {{ formatQueryTime(queryTime) }}
-        </span>
-      </span>
     </div>
 
     <div class="flex gap-1">

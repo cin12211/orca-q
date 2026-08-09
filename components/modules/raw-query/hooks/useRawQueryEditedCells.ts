@@ -23,7 +23,7 @@ export const useRawQueryEditedCells = ({
   const editedCells = ref<RawQueryEditedCell[]>([]);
 
   const columnsByField = computed(
-    () => new Map(columns.value.map(column => [column.originalName, column]))
+    () => new Map(columns.value.map(column => [column.aliasFieldName, column]))
   );
 
   const resolveFieldType = (fieldId: string): string =>

@@ -24,9 +24,9 @@ const inputRef = ref<HTMLInputElement | null>(null);
 const sizeClass = computed(() => {
   switch (props.size) {
     case 'xs':
-      return 'h-6 px-2 py-0.5 text-xs';
+      return 'h-7 px-2 py-0.5 text-xs';
     case 'sm':
-      return 'h-7 px-2.5 py-1 text-sm';
+      return 'h-8 px-2.5 py-1 text-sm';
     case 'lg':
       return 'h-11 px-4 py-2.5 text-base';
     default:

@@ -130,8 +130,7 @@ const onCancel = () => {
         <AlertDialogAction
           class="border font-normal flex gap-1"
           :class="{
-            'bg-destructive text-destructive-foreground hover:bg-destructive/90':
-              isDelete,
+            'bg-destructive hover:bg-destructive/90': isDelete,
           }"
           @click="onConfirm"
         >

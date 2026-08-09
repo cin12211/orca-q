@@ -8,6 +8,7 @@ import { DatabaseClientType } from '~/core/constants/database-client-type';
 import { useEnvironmentTagStore } from '~/core/stores';
 import { useAppConfigStore } from '~/core/stores/appConfigStore';
 import IntroRawQuery from './components/IntroRawQuery.vue';
+import MissingVariablesDialog from './components/MissingVariablesDialog.vue';
 import RawQueryConnectionConfirmDialog from './components/RawQueryConnectionConfirmDialog.vue';
 import RawQueryEditorContextMenu from './components/RawQueryEditorContextMenu.vue';
 import RawQueryEditorFooter from './components/RawQueryEditorFooter.vue';
@@ -87,12 +88,48 @@ const updateRedisDatabaseIndex = (value: number) => {
   redisWorkspace.selectedDatabaseIndex.value = value;
 };
 
+const isMissingVariablesOpen = ref(false);
+const missingVariablesList = ref<string[]>([]);
+let resolveMissingVariables:
+  | ((
+      value: { values: Record<string, any>; insertBack: boolean } | null
+    ) => void)
+  | null = null;
+
+const promptMissingVariables = (missing: string[]) => {
+  missingVariablesList.value = missing;
+  isMissingVariablesOpen.value = true;
+  return new Promise<{
+    values: Record<string, any>;
+    insertBack: boolean;
+  } | null>(resolve => {
+    resolveMissingVariables = resolve;
+  });
+};
+
+const onConfirmMissingVariables = (
+  values: Record<string, any>,
+  insertBack: boolean
+) => {
+  isMissingVariablesOpen.value = false;
+  resolveMissingVariables?.({ values, insertBack });
+  resolveMissingVariables = null;
+};
+
+const onCancelMissingVariables = () => {
+  isMissingVariablesOpen.value = false;
+  resolveMissingVariables?.(null);
+  resolveMissingVariables = null;
+};
+
 const rawQueryEditor = useRawQueryEditor({
   connection,
   redisDatabaseIndex: redisWorkspace.selectedDatabaseIndex,
   fieldDefs,
   fileVariables: effectiveFileVariables,
   beforeExecute: () => requestConnectionExecutionConfirm(),
+  promptMissingVariables,
+  onUpdateVariables: updateFileVariables,
 });
 const {
   cursorInfo,
@@ -260,6 +297,13 @@ onBeforeUnmount(() => {
     @cancel="onCancelConnectionExecution"
   />
 
+  <MissingVariablesDialog
+    :open="isMissingVariablesOpen"
+    :missing-variables="missingVariablesList"
+    @confirm="onConfirmMissingVariables"
+    @cancel="onCancelMissingVariables"
+  />
+
   <RawQueryLayout
     :layout="appConfigStore.codeEditorLayout"
     :customLayout="appConfigStore.activeCustomLayout"
@@ -307,12 +351,7 @@ onBeforeUnmount(() => {
           <RawQueryEditorFooter
             :cursor-info="cursorInfo"
             :execute-loading="queryProcessState.executeLoading"
-            :execute-errors="!!queryProcessState.executeErrors"
-            :is-have-one-execute="queryProcessState.isHaveOneExecute"
             :is-streaming="queryProcessState.isStreaming"
-            :streaming-row-count="queryProcessState.streamingRowCount"
-            :queryTime="queryProcessState.queryTime"
-            :raw-query-results-length="currentRawQueryResult.length"
             :explain-analyze-option-items="explainAnalyzeOptionItems"
             :serialize-mode="serializeMode"
             :is-support-format="isFormatSupported"

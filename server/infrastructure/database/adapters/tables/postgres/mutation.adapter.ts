@@ -1,9 +1,8 @@
-import { DatabaseClientType } from '~/core/constants/database-client-type';
+import type { PoolClient, QueryResult } from 'pg';
+import { DatabaseClientType, BULK_CHUNK_SIZE } from '~/core/constants';
 import type { BulkUpdateResponse } from '~/core/types';
 import type { IDatabaseAdapter } from '~/server/infrastructure/driver';
 import { createDatabaseHttpError } from '../../shared';
-
-const BULK_CHUNK_SIZE = 500;
 
 function chunkArray<T>(arr: T[], size: number): T[][] {
   const chunks: T[][] = [];
@@ -17,29 +16,36 @@ export class PostgresTableMutationAdapter {
   constructor(private readonly adapter: IDatabaseAdapter) {}
 
   private async executeChunk(
+    client: PoolClient,
     statements: string[]
-  ): Promise<{ data: NonNullable<BulkUpdateResponse['data']> }> {
-    const client = await this.adapter.acquireRawConnection();
-    try {
-      await client.query('BEGIN');
-      const results: NonNullable<BulkUpdateResponse['data']> = [];
+  ): Promise<NonNullable<BulkUpdateResponse['data']>[number]> {
+    const batchQuery = statements.join(';\n');
+    const queryResult = (await client.query({
+      text: batchQuery,
+    })) as unknown as
+      | QueryResult<Record<string, unknown>>
+      | QueryResult<Record<string, unknown>>[];
 
-      for (const statement of statements) {
-        const queryResult = await client.query({ text: statement });
-        results.push({
-          query: statement,
-          affectedRows: queryResult.rowCount || 0,
-          results: queryResult.rows || [],
-        });
-      }
-      await client.query('COMMIT');
-      return { data: results };
-    } catch (e) {
-      await client.query('ROLLBACK');
-      throw createDatabaseHttpError(DatabaseClientType.POSTGRES, e);
-    } finally {
-      await this.adapter.releaseRawConnection(client);
+    let affectedRows = 0;
+    let results: Record<string, unknown>[] = [];
+
+    if (Array.isArray(queryResult)) {
+      affectedRows = queryResult.reduce(
+        (sum: number, r) => sum + (r.rowCount || 0),
+        0
+      );
+      results = queryResult.flatMap(r => r.rows || []);
+    } else {
+      const singleResult = queryResult as QueryResult<Record<string, unknown>>;
+      affectedRows = singleResult.rowCount || 0;
+      results = singleResult.rows || [];
     }
+
+    return {
+      query: batchQuery,
+      affectedRows,
+      results,
+    };
   }
 
   private async executeBulkStatements(
@@ -48,10 +54,26 @@ export class PostgresTableMutationAdapter {
     const startTime = performance.now();
     const chunks = chunkArray(statements, BULK_CHUNK_SIZE);
     const aggregatedData: NonNullable<BulkUpdateResponse['data']> = [];
+    const client = await this.adapter.acquireRawConnection();
 
-    for (const chunk of chunks) {
-      const { data } = await this.executeChunk(chunk);
-      aggregatedData.push(...data);
+    try {
+      await client.query('BEGIN');
+
+      for (const chunk of chunks) {
+        const result = await this.executeChunk(client, chunk);
+        aggregatedData.push(result);
+      }
+
+      await client.query('COMMIT');
+    } catch (e) {
+      try {
+        await client.query('ROLLBACK');
+      } catch (rollbackError) {
+        // Silent catch
+      }
+      throw createDatabaseHttpError(DatabaseClientType.POSTGRES, e);
+    } finally {
+      await this.adapter.releaseRawConnection(client);
     }
 
     return {

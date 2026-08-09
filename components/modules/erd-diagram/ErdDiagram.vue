@@ -29,6 +29,7 @@ const { width, height } = useWindowSize();
 export interface ErdDiagramAdditionalProps {
   isExpanded?: (tableId: string) => boolean;
   hasRelations?: (tableId: string) => boolean;
+  areAllCollapsed?: boolean;
 }
 
 const props = defineProps<ErdDiagramProps & ErdDiagramAdditionalProps>();
@@ -37,6 +38,8 @@ const emit = defineEmits<{
   (e: 'update:isShowFilter', value: boolean): void;
   (e: 'expand', tableId: string): void;
   (e: 'collapse', tableId: string): void;
+  (e: 'toggleCollapseHeader', tableId: string): void;
+  (e: 'toggleCollapseAll'): void;
 }>();
 
 const {
@@ -116,6 +119,7 @@ const onArrangeDiagram = () => {
         "
         @expand="emit('expand', $event)"
         @collapse="emit('collapse', $event)"
+        @toggleCollapseHeader="emit('toggleCollapseHeader', $event)"
       />
     </template>
 
@@ -130,11 +134,13 @@ const onArrangeDiagram = () => {
     />
     <ErdControls
       :isShowFilter="props.isShowFilter"
+      :areAllCollapsed="props.areAllCollapsed"
       v-model:isHand="isHand"
       v-model:isUseBgGrid="isUseBgGrid"
       v-model:isUseMiniMap="isUseMiniMap"
       @update:is-show-filter="emit('update:isShowFilter', $event)"
       @arrange="onArrangeDiagram"
+      @toggleCollapseAll="emit('toggleCollapseAll')"
     />
   </VueFlow>
 

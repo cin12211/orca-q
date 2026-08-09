@@ -6,6 +6,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
+  DropdownMenuShortcut,
   Tooltip,
   TooltipContent,
   TooltipTrigger,
@@ -63,7 +64,7 @@ const emit = defineEmits<{
             <Icon name="hugeicons:plus-sign" class="size-4 min-w-4" />
           </Button>
         </TooltipTrigger>
-        <TooltipContent>New SQL file</TooltipContent>
+        <TooltipContent>New SQL file (⌘Q)</TooltipContent>
       </Tooltip>
 
       <DropdownMenu>

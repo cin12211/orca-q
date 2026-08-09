@@ -1,5 +1,6 @@
 import { createError } from 'h3';
-import { DatabaseClientType } from '~/core/constants/database-client-type';
+import * as oracledb from 'oracledb';
+import { DatabaseClientType, BULK_CHUNK_SIZE } from '~/core/constants';
 import type {
   BulkUpdateResponse,
   RLSPolicy,
@@ -28,6 +29,14 @@ function escapeOracleIdentifier(identifier: string) {
 
 function buildQualifiedTable(schema: string, tableName: string) {
   return `${escapeOracleIdentifier(schema)}.${escapeOracleIdentifier(tableName)}`;
+}
+
+function chunkArray<T>(arr: T[], size: number): T[][] {
+  const chunks: T[][] = [];
+  for (let i = 0; i < arr.length; i += size) {
+    chunks.push(arr.slice(i, i + size));
+  }
+  return chunks;
 }
 
 function formatOracleType(column: {
@@ -495,23 +504,26 @@ export class OracleTableAdapter
   private async executeStatements(
     statements: string[]
   ): Promise<BulkUpdateResponse> {
-    const BULK_CHUNK_SIZE = 500;
     const startTime = performance.now();
+    const data = [] as NonNullable<BulkUpdateResponse['data']>;
+    const connection = await this.adapter.acquireRawConnection();
 
     try {
-      const data = [] as NonNullable<BulkUpdateResponse['data']>;
-
-      for (let i = 0; i < statements.length; i += BULK_CHUNK_SIZE) {
-        const chunk = statements.slice(i, i + BULK_CHUNK_SIZE);
+      const chunks = chunkArray(statements, BULK_CHUNK_SIZE);
+      for (const chunk of chunks) {
         for (const statement of chunk) {
-          const result = await this.adapter.rawOut(statement);
+          const result = await connection.execute(statement, [], {
+            outFormat: oracledb.OUT_FORMAT_ARRAY,
+          });
           data.push({
             query: statement,
-            affectedRows: result.rowCount || 0,
-            results: result.rows as Record<string, unknown>[],
+            affectedRows: result.rowsAffected || 0,
+            results: (result.rows as Record<string, unknown>[]) || [],
           });
         }
       }
+
+      await connection.commit();
 
       return {
         success: true,
@@ -519,11 +531,18 @@ export class OracleTableAdapter
         queryTime: Number((performance.now() - startTime).toFixed(2)),
       };
     } catch (error: any) {
+      try {
+        await connection.rollback();
+      } catch (rollbackError) {
+        // Silent catch
+      }
       return {
         success: false,
         error: error?.message || 'Failed to execute statements',
         queryTime: Number((performance.now() - startTime).toFixed(2)),
       };
+    } finally {
+      await this.adapter.releaseRawConnection(connection);
     }
   }
 

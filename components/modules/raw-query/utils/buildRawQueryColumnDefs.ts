@@ -87,7 +87,7 @@ export const buildRawQueryColumnDefs = ({
     const estimatedWidth = estimateGridColumnWidth({
       headerName: column.aliasFieldName,
       rows: sampleRows,
-      field: column.originalName,
+      field: column.aliasFieldName,
       isKey: hasRelation || column.isPrimaryKey,
     });
 
@@ -131,8 +131,8 @@ export const buildRawQueryColumnDefs = ({
 
     defs.push({
       headerName: column.aliasFieldName,
-      field: column.originalName,
-      colId: column.originalName,
+      field: column.aliasFieldName,
+      colId: column.aliasFieldName,
       filter: true,
       resizable: true,
       sortable: true,
@@ -140,7 +140,7 @@ export const buildRawQueryColumnDefs = ({
       editable,
       cellStyle,
       cellEditorSelector: (params: ICellEditorParams) => {
-        const value = params.data?.[column.originalName];
+        const value = params.data?.[column.aliasFieldName];
         const fieldType = column.short_type_name || column.type || '';
 
         if (
@@ -159,7 +159,7 @@ export const buildRawQueryColumnDefs = ({
 
         return setCellValue({
           params,
-          fieldId: column.originalName,
+          fieldId: column.aliasFieldName,
           isObjectColumn: isStructuredColumnType(fieldType),
           emptyAsNull: true,
         });

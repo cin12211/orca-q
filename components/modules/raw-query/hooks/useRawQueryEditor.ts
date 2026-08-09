@@ -18,12 +18,18 @@ export function useRawQueryEditor({
   redisDatabaseIndex,
   fieldDefs,
   beforeExecute,
+  promptMissingVariables,
+  onUpdateVariables,
 }: {
   fileVariables: Ref<string>;
   connection: Ref<Connection | undefined>;
   redisDatabaseIndex?: Ref<number>;
   fieldDefs: Ref<FieldDef[]>;
   beforeExecute?: () => Promise<boolean>;
+  promptMissingVariables?: (
+    missing: string[]
+  ) => Promise<{ values: Record<string, any>; insertBack: boolean } | null>;
+  onUpdateVariables?: (value: string) => void;
 }) {
   const codeEditorRef = ref<InstanceType<typeof BaseCodeEditor> | null>(null);
 
@@ -49,6 +55,8 @@ export function useRawQueryEditor({
     resultTabs,
     buildExplainAnalyzePrefix,
     beforeExecute,
+    promptMissingVariables,
+    onUpdateVariables,
   });
 
   const sqlEditor = useSqlEditorExtensions({

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { storeToRefs } from 'pinia';
+import { LoadingOverlay } from '#components';
 import type BaseDataGrid from '~/components/base/data-grid/BaseDataGrid.vue';
 import { HASH_INDEX_ID } from '~/components/base/data-grid/constants';
 import { buildDynamicRowData } from '~/components/base/data-grid/utils';
@@ -241,7 +242,19 @@ const {
   selectedRows: selectedRowsRef,
   onSaved: acceptPendingChanges,
   onDeleted: () => {
-    // After delete the result is stale — clear selection so counts reset.
+    // Remove deleted rows from the backing data so the grid reflects the change.
+    const deletedHashIds = new Set(
+      selectedRows.value.map(r => r[HASH_INDEX_ID])
+    );
+
+    baselineRows.value = baselineRows.value.filter(
+      (_, index) => !deletedHashIds.has(index + 1)
+    );
+
+    acceptedCells.value = [];
+    clearEditedCells();
+    syncGridRowsFromBaseline();
+
     selectedRows.value = [];
   },
 });
@@ -303,7 +316,8 @@ useHotkeys(
 </script>
 
 <template>
-  <div ref="containerRef" class="h-full w-full flex flex-col">
+  <div ref="containerRef" class="h-full w-full flex flex-col relative">
+    <LoadingOverlay :visible="isMutating" />
     <PreviewRelationTable
       v-if="relationRoot && previewRelationBreadcrumbs.length"
       :open="previewRelationBreadcrumbs.length > 0"
@@ -360,6 +374,12 @@ useHotkeys(
         :is-mutating="isMutating"
         :is-editing-enabled="isEditingEnabled"
         :total-selected-rows="selectedRows.length"
+        :query-time="activeTab.metadata.queryTime"
+        :total-rows="formattedData.length"
+        :execute-loading="executeLoading"
+        :is-streaming="isStreaming"
+        :streaming-row-count="formattedData.length"
+        :has-error="!!activeTab.metadata.executeErrors"
         @save="requestSave"
         @discard="discardPendingChanges"
         @delete="requestDelete"

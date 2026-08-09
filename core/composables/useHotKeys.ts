@@ -78,6 +78,18 @@ export interface Hotkey {
 
 const MODIFIERS = ['ctrl', 'shift', 'alt', 'meta', 'cmd', 'mod'] as const;
 
+const normalizeMainKey = (e: KeyboardEvent): string => {
+  const code = e.code.toLowerCase();
+  if (code.startsWith('key')) return code.slice(3);
+  if (code.startsWith('digit')) return code.slice(5);
+  if (code === 'space') return 'space';
+
+  const key = e.key.toLowerCase();
+  if (key === ' ') return 'space';
+
+  return key;
+};
+
 const matchHotkey = (e: KeyboardEvent, template: string): boolean => {
   const parts = template.toLowerCase().replace(/\s+/g, '').split('+');
   const want = {
@@ -87,7 +99,7 @@ const matchHotkey = (e: KeyboardEvent, template: string): boolean => {
     meta: parts.some(p => p === 'meta' || p === 'cmd' || p === 'mod'),
   };
   const main = parts.find(p => !MODIFIERS.includes(p as any)) ?? '';
-  const hitMain = main ? e.key.toLowerCase() === main : true;
+  const hitMain = main ? normalizeMainKey(e) === main : true;
 
   return (
     hitMain &&

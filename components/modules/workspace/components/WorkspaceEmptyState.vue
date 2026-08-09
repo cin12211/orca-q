@@ -1,0 +1,57 @@
+<script setup lang="ts">
+import { ContextMenuShortcut } from '#components';
+
+withDefaults(
+  defineProps<{
+    title?: string;
+    description?: string;
+  }>(),
+  {
+    title: undefined,
+    description: 'Click on a database table from the sidebar to begin',
+  }
+);
+</script>
+
+<template>
+  <div class="p-2 flex flex-col items-center justify-center h-full">
+    <Avatar class="rounded-2xl size-40">
+      <AvatarImage src="/logo.png" alt="@unovue" />
+    </Avatar>
+
+    <div v-if="title" class="font-medium text-xl pt-2">{{ title }}</div>
+
+    <div class="text-muted-foreground text-sm">
+      {{ description }}
+
+      <Icon
+        name="hugeicons:artificial-intelligence-08"
+        class="size-4 min-w-4"
+      />
+    </div>
+
+    <div class="flex items-center pt-3 text-muted-foreground gap-0.5 text-sm">
+      <Icon name="hugeicons:settings-01" /> Open setting
+
+      <ContextMenuShortcut class="pl-2">(⌘,)</ContextMenuShortcut>
+    </div>
+
+    <div class="flex items-center pt-1 text-muted-foreground gap-0.5 text-sm">
+      <Icon name="hugeicons:command" /> Command Palette
+
+      <ContextMenuShortcut class="pl-2">(⌘K or ⌘P)</ContextMenuShortcut>
+    </div>
+
+    <div class="flex items-center pt-1 text-muted-foreground gap-0.5 text-sm">
+      <Icon name="hugeicons:sidebar-left" /> Toggle left sidebar
+
+      <ContextMenuShortcut class="pl-2">(⌘B)</ContextMenuShortcut>
+    </div>
+
+    <div class="flex items-center pt-1 text-muted-foreground gap-0.5 text-sm">
+      <Icon name="hugeicons:sidebar-right" /> Toggle right sidebar
+
+      <ContextMenuShortcut class="pl-2">(⌘⌥B)</ContextMenuShortcut>
+    </div>
+  </div>
+</template>

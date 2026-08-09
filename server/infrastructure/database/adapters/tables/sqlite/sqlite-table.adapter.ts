@@ -1,5 +1,5 @@
 import { createError } from 'h3';
-import { DatabaseClientType } from '~/core/constants/database-client-type';
+import { DatabaseClientType, BULK_CHUNK_SIZE } from '~/core/constants';
 import type {
   BulkUpdateResponse,
   RLSPolicy,
@@ -32,6 +32,14 @@ function resolveSqliteSchema(schema?: string) {
   }
 
   return schema;
+}
+
+function chunkArray<T>(arr: T[], size: number): T[][] {
+  const chunks: T[][] = [];
+  for (let i = 0; i < arr.length; i += size) {
+    chunks.push(arr.slice(i, i + size));
+  }
+  return chunks;
 }
 
 function buildQualifiedTable(schema: string, tableName: string) {
@@ -290,23 +298,35 @@ export class SqliteTableAdapter
   private async executeStatements(
     statements: string[]
   ): Promise<BulkUpdateResponse> {
-    const BULK_CHUNK_SIZE = 500;
     const startTime = performance.now();
+    const data = [] as NonNullable<BulkUpdateResponse['data']>;
+    const connection = await this.adapter.acquireRawConnection();
+
+    const runPromise = (sql: string): Promise<{ changes: number }> => {
+      return new Promise((resolve, reject) => {
+        connection.run(sql, function (this: any, err: Error | null) {
+          if (err) reject(err);
+          else resolve({ changes: this?.changes || 0 });
+        });
+      });
+    };
 
     try {
-      const data = [] as NonNullable<BulkUpdateResponse['data']>;
+      await runPromise('BEGIN TRANSACTION');
 
-      for (let i = 0; i < statements.length; i += BULK_CHUNK_SIZE) {
-        const chunk = statements.slice(i, i + BULK_CHUNK_SIZE);
+      const chunks = chunkArray(statements, BULK_CHUNK_SIZE);
+      for (const chunk of chunks) {
         for (const statement of chunk) {
-          const result = await this.adapter.rawOut(statement);
+          const result = await runPromise(statement);
           data.push({
             query: statement,
-            affectedRows: result.rowCount || 0,
-            results: result.rows as Record<string, unknown>[],
+            affectedRows: result.changes,
+            results: [],
           });
         }
       }
+
+      await runPromise('COMMIT');
 
       return {
         success: true,
@@ -314,11 +334,18 @@ export class SqliteTableAdapter
         queryTime: Number((performance.now() - startTime).toFixed(2)),
       };
     } catch (error: any) {
+      try {
+        await runPromise('ROLLBACK');
+      } catch (rollbackError) {
+        // Silent catch
+      }
       return {
         success: false,
         error: error?.message || 'Failed to execute statements',
         queryTime: Number((performance.now() - startTime).toFixed(2)),
       };
+    } finally {
+      await this.adapter.releaseRawConnection(connection);
     }
   }
 
