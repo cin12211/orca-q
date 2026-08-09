@@ -17,12 +17,13 @@ const mountDialog = (props: Record<string, unknown>) =>
           props: ['disabled'],
           template: '<button :disabled="disabled"><slot /></button>',
         },
-        AlertDialogAction: {
+        Button: {
           props: ['disabled'],
           emits: ['click'],
           template:
             '<button :disabled="disabled" @click="$emit(\'click\')"><slot /></button>',
         },
+        LoadingOverlay: { template: '<div />' },
       },
     },
   });

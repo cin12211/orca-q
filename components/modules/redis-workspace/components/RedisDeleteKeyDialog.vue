@@ -58,8 +58,9 @@ const isConfirmDisabled = computed(() => props.loading || props.previewLoading);
               </ul>
               <div
                 v-else
-                class="flex h-20 items-center justify-center rounded-md border bg-muted/20 text-xs text-muted-foreground"
+                class="flex h-40 items-center relative justify-center rounded-md border bg-muted/20 text-xs text-muted-foreground"
               >
+                <LoadingOverlay visible />
                 Loading matching keys...
               </div>
             </template>
@@ -71,8 +72,15 @@ const isConfirmDisabled = computed(() => props.loading || props.previewLoading);
         <AlertDialogCancel class="border" :disabled="loading">
           Cancel
         </AlertDialogCancel>
-        <AlertDialogAction
-          class="bg-destructive text-white hover:bg-destructive/90"
+        <!--
+          Intentionally a plain Button, not AlertDialogAction: reka-ui
+          implements AlertDialogAction as DialogClose, so clicking it closes
+          the dialog immediately and synchronously regardless of any @click
+          handler — which silently discarded the delete-in-flight state here.
+          This button stays fully under our own open/close control instead.
+        -->
+        <Button
+          variant="destructive"
           :disabled="isConfirmDisabled"
           @click="emit('confirm')"
         >
@@ -82,7 +90,7 @@ const isConfirmDisabled = computed(() => props.loading || props.previewLoading);
             class="size-4 animate-spin"
           />
           {{ loading ? 'Deleting...' : 'Delete' }}
-        </AlertDialogAction>
+        </Button>
       </AlertDialogFooter>
     </AlertDialogContent>
   </AlertDialog>
