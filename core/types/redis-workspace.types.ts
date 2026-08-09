@@ -91,6 +91,10 @@ export interface RedisValueUpdateRequestBody
   value: unknown;
 }
 
+export interface RedisDeleteResponse {
+  deletedCount: number;
+}
+
 export type RedisPubSubSubscriptionMode = 'channel' | 'pattern';
 
 export interface RedisPubSubSubscriptionTarget {

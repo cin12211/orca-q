@@ -39,6 +39,11 @@ export function useRedisWorkspaceBrowser({
     () => !!selectedKeyDetail.value && !editUnavailableReason.value
   );
 
+  const detailCache = new Map<string, RedisKeyDetail>();
+
+  const getDetailCacheKey = (databaseIndex: number, key: string) =>
+    `${connection.value?.id}:${databaseIndex}:${key}`;
+
   const refreshKeys = async () => {
     if (!connection.value || !session.value) {
       keys.value = [];
@@ -85,9 +90,25 @@ export function useRedisWorkspaceBrowser({
     );
   };
 
-  const refreshSelectedKeyDetail = async (key = session.value?.selectedKey) => {
+  const refreshSelectedKeyDetail = async (
+    key = session.value?.selectedKey,
+    options?: { force?: boolean }
+  ) => {
     if (!connection.value || !session.value || !key) {
       selectedKeyDetail.value = null;
+      editUnavailableReason.value = '';
+      loadingSelectedKeyDetail.value = false;
+      return;
+    }
+
+    const cacheKey = getDetailCacheKey(
+      session.value.selectedDatabaseIndex,
+      key
+    );
+    const cached = detailCache.get(cacheKey);
+
+    if (!options?.force && cached) {
+      selectedKeyDetail.value = cached;
       editUnavailableReason.value = '';
       loadingSelectedKeyDetail.value = false;
       return;
@@ -111,6 +132,7 @@ export function useRedisWorkspaceBrowser({
         return;
       }
 
+      detailCache.set(cacheKey, detail);
       selectedKeyDetail.value = detail;
       editUnavailableReason.value = '';
     } finally {
@@ -137,7 +159,7 @@ export function useRedisWorkspaceBrowser({
     }
 
     await openKey(key);
-    await refreshSelectedKeyDetail(key);
+    await refreshSelectedKeyDetail(key, { force: true });
   };
 
   const saveSelectedValue = async (payload: RedisValueUpdatePayload) => {
@@ -148,7 +170,7 @@ export function useRedisWorkspaceBrowser({
     savingValue.value = true;
 
     try {
-      selectedKeyDetail.value = await $fetch<RedisKeyDetail>(
+      const updatedDetail = await $fetch<RedisKeyDetail>(
         '/api/redis/browser/value',
         {
           method: 'PATCH',
@@ -164,6 +186,15 @@ export function useRedisWorkspaceBrowser({
           },
         }
       );
+
+      detailCache.set(
+        getDetailCacheKey(
+          session.value.selectedDatabaseIndex,
+          session.value.selectedKey
+        ),
+        updatedDetail
+      );
+      selectedKeyDetail.value = updatedDetail;
       editUnavailableReason.value = '';
       toast.success('Redis key saved successfully', {
         description: `Updated ${session.value.selectedKey}`,

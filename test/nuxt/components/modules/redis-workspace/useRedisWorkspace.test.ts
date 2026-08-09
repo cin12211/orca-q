@@ -270,12 +270,9 @@ describe('useRedisWorkspace', () => {
       ttlSeconds: 300,
     });
 
-    expect(toast.success).toHaveBeenCalledWith(
-      'Redis key saved successfully',
-      {
-        description: 'Updated orders:1',
-      }
-    );
+    expect(toast.success).toHaveBeenCalledWith('Redis key saved successfully', {
+      description: 'Updated orders:1',
+    });
   });
 
   it('defaults selectedDatabaseIndex from connection string when database property is missing', async () => {
@@ -292,5 +289,74 @@ describe('useRedisWorkspace', () => {
     await flushReactive();
 
     expect(workspace.selectedDatabaseIndex.value).toBe(13);
+  });
+
+  const makeBrowserTabInfo = () =>
+    ref({
+      id: 'redis-browser-redis-conn',
+      workspaceId: 'ws-1',
+      connectionId: 'redis-conn',
+      schemaId: '',
+      index: 0,
+      name: 'Redis Browser',
+      icon: 'hugeicons:database-sync-01',
+      type: TabViewType.RedisBrowser,
+      routeName: 'workspaceId-connectionId-redis-tabViewId',
+      routeParams: {
+        workspaceId: 'ws-1',
+        connectionId: 'redis-conn',
+        tabViewId: 'redis-browser-redis-conn',
+      },
+      metadata: {
+        type: TabViewType.RedisBrowser,
+      },
+    } as any);
+
+  it('serves a previously fetched key detail from cache without another network call', async () => {
+    const workspace = useRedisWorkspace({
+      connection: ref(makeConnection()),
+      tabInfo: makeBrowserTabInfo(),
+    });
+
+    await flushReactive();
+    workspace.session.value!.selectedKey = 'orders:1';
+    await flushReactive();
+
+    expect(workspace.selectedKeyDetail.value?.key).toBe('orders:1');
+
+    workspace.session.value!.selectedKey = 'orders:2';
+    await flushReactive();
+    expect(workspace.selectedKeyDetail.value?.key).toBe('orders:2');
+
+    mockFetch.mockClear();
+    workspace.session.value!.selectedKey = 'orders:1';
+    await flushReactive();
+
+    expect(workspace.selectedKeyDetail.value?.key).toBe('orders:1');
+    expect(mockFetch).not.toHaveBeenCalledWith(
+      '/api/redis/browser/value',
+      expect.anything()
+    );
+  });
+
+  it('bypasses the cache and refetches when focusKey is called for a manual refresh', async () => {
+    const workspace = useRedisWorkspace({
+      connection: ref(makeConnection()),
+      tabInfo: makeBrowserTabInfo(),
+    });
+
+    await flushReactive();
+    workspace.session.value!.selectedKey = 'orders:1';
+    await flushReactive();
+
+    mockFetch.mockClear();
+    await workspace.focusKey('orders:1');
+
+    expect(mockFetch).toHaveBeenCalledWith(
+      '/api/redis/browser/value',
+      expect.objectContaining({
+        body: expect.objectContaining({ key: 'orders:1' }),
+      })
+    );
   });
 });
