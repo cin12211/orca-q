@@ -71,6 +71,7 @@ const handleDeleteConnection = (id: string) => {
       />
 
       <CreateConnectionModal
+        v-if="isModalOpen"
         :open="isModalOpen"
         :editing-connection="editingConnection"
         @update:open="isModalOpen = $event"

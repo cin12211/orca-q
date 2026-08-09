@@ -8,8 +8,6 @@ import { TabViewType } from '~/core/stores';
 import { useTabViewsStore } from '~/core/stores/useTabViewsStore';
 import CurrentPositionPath from './CurrentPositionPath.vue';
 
-const route = useRoute();
-
 const tabViewStore = useTabViewsStore();
 const { openChangelog } = useChangelogModal();
 const { openSettings } = useSettingsModal();
@@ -91,8 +89,6 @@ const formattedTabType = computed(() => {
       </Tooltip>
 
       <div class="min-w-0 overflow-hidden">
-        {{ route.path }}
-
         <CurrentPositionPath />
       </div>
     </div>
