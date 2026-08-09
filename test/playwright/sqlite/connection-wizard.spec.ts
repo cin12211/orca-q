@@ -38,6 +38,22 @@ test.describe('US7 — SQLite Connection Wizard', () => {
     await expect(connectionModal.tursoAuthTokenInput).toBeVisible();
     await expect(connectionModal.tursoBranchNameInput).toBeVisible();
   });
+
+  test('selecting Cloudflare D1 as the database type shows D1 fields directly', async () => {
+    await connectionModal.completeStep1('Cloudflare D1');
+
+    await expect(connectionModal.d1AccountIdInput).toBeVisible();
+    await expect(connectionModal.d1DatabaseIdInput).toBeVisible();
+    await expect(connectionModal.d1ApiTokenInput).toBeVisible();
+  });
+
+  test('selecting Turso as the database type shows Turso fields directly', async () => {
+    await connectionModal.completeStep1('Turso');
+
+    await expect(connectionModal.tursoUrlInput).toBeVisible();
+    await expect(connectionModal.tursoAuthTokenInput).toBeVisible();
+    await expect(connectionModal.tursoBranchNameInput).toBeVisible();
+  });
 });
 
 test.describe('US7 — Cloudflare D1 Managed Connection Flow', () => {

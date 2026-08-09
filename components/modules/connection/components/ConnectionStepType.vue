@@ -121,7 +121,7 @@ useHotkeys([
       >
         <DatabaseTypeCard
           v-for="option in databaseOptions"
-          :key="option.type"
+          :key="`${option.type}-${option.managedProvider ?? 'default'}`"
           :name="option.name"
           :icon="option.icon"
           :description="option.description"

@@ -94,13 +94,29 @@ const databaseOptions = computed(() =>
       e,
       sqlite3ConnectionsEnabled.value
     );
+    const isManagedSqliteActive =
+      dbType.value === DatabaseClientType.SQLITE3 &&
+      connectionMethod.value === EConnectionMethod.MANAGED;
 
     return {
       ...e,
       isSupport: isSqliteDisabled ? false : e.isSupport,
       unsupportedLabel: isSqliteDisabled ? 'Disabled' : e.unsupportedLabel,
-      isActive: dbType.value === e.type,
-      onClick: () => (dbType.value = e.type),
+      // Cloudflare D1, Turso, and local-file SQLite all share `type: SQLITE3`,
+      // so "active" also has to match on the managed provider (or its absence).
+      isActive: e.managedProvider
+        ? isManagedSqliteActive && managedSqlite.provider === e.managedProvider
+        : dbType.value === e.type && !isManagedSqliteActive,
+      onClick: () => {
+        dbType.value = e.type;
+
+        if (e.managedProvider) {
+          connectionMethod.value = EConnectionMethod.MANAGED;
+          managedSqlite.provider = e.managedProvider;
+        } else if (e.type === DatabaseClientType.SQLITE3) {
+          connectionMethod.value = EConnectionMethod.FILE;
+        }
+      },
     };
   })
 );
