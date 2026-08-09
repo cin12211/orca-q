@@ -3,6 +3,7 @@ import { toast } from 'vue-sonner';
 import type { Connection } from '~/core/stores';
 import { useRedisWorkspaceStore } from '~/core/stores/useRedisWorkspaceStore';
 import type { RedisWorkspaceSession } from '~/core/stores/useRedisWorkspaceStore';
+import { useTabViewsStore } from '~/core/stores/useTabViewsStore';
 import type {
   RedisBrowserResponse,
   RedisDatabaseOption,
@@ -214,8 +215,17 @@ export function useRedisWorkspaceBrowser({
   };
 
   const isDeletingKey = ref(false);
+  const tabViewStore = useTabViewsStore();
 
-  const clearSelectionIfDeleted = (deletedKeys: string[]) => {
+  const closeBrowserTabForConnection = async () => {
+    if (!connection.value) {
+      return;
+    }
+
+    await tabViewStore.closeTab(`redis-browser-${connection.value.id}`);
+  };
+
+  const handleDeletedKeySelection = async (deletedKeys: string[]) => {
     if (
       !session.value?.selectedKey ||
       !deletedKeys.includes(session.value.selectedKey)
@@ -225,6 +235,7 @@ export function useRedisWorkspaceBrowser({
 
     store.patchSession(session.value.connectionId, { selectedKey: null });
     selectedKeyDetail.value = null;
+    await closeBrowserTabForConnection();
   };
 
   const deleteKey = async (key: string) => {
@@ -247,7 +258,7 @@ export function useRedisWorkspaceBrowser({
       detailCache.delete(
         getDetailCacheKey(session.value.selectedDatabaseIndex, key)
       );
-      clearSelectionIfDeleted([key]);
+      await handleDeletedKeySelection([key]);
       await refreshKeys();
       toast.success('Redis key deleted', {
         description: `Deleted ${key}`,
@@ -279,7 +290,7 @@ export function useRedisWorkspaceBrowser({
           getDetailCacheKey(session.value!.selectedDatabaseIndex, key)
         )
       );
-      clearSelectionIfDeleted(keysToDelete);
+      await handleDeletedKeySelection(keysToDelete);
       await refreshKeys();
       toast.success('Redis keys deleted', {
         description: `Deleted ${keysToDelete.length} keys`,

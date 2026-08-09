@@ -7,6 +7,8 @@ import { DatabaseClientType } from '~/core/constants/database-client-type';
 import { TabViewType } from '~/core/stores/useTabViewsStore';
 import { EConnectionMethod } from '~/core/types/entities/connection.entity';
 
+const closeTabMock = vi.fn().mockResolvedValue(undefined);
+
 const mockFetch = vi.fn();
 
 vi.stubGlobal('$fetch', mockFetch);
@@ -43,6 +45,18 @@ vi.mock('~/core/stores', async importOriginal => {
     useWSStateStore: createAsyncNoopStore,
     useEnvironmentTagStore: () => ({
       loadTags: vi.fn().mockResolvedValue(undefined),
+    }),
+  };
+});
+
+vi.mock('~/core/stores/useTabViewsStore', async importOriginal => {
+  const actual =
+    await importOriginal<typeof import('~/core/stores/useTabViewsStore')>();
+
+  return {
+    ...actual,
+    useTabViewsStore: () => ({
+      closeTab: closeTabMock,
     }),
   };
 });
@@ -424,6 +438,44 @@ describe('useRedisWorkspace', () => {
         description: expect.stringContaining('orders:1'),
       })
     );
+    expect(closeTabMock).toHaveBeenCalledWith('redis-browser-redis-conn');
+  });
+
+  it('does not close the browser tab when the deleted key was not the one open', async () => {
+    mockFetch.mockImplementation(async (url, options) => {
+      if (url === '/api/redis/browser') {
+        return {
+          cursor: '0',
+          truncated: false,
+          keys: [
+            { key: 'orders:1', type: 'string', ttl: -1 },
+            { key: 'orders:2', type: 'string', ttl: -1 },
+          ],
+          databases: [],
+          selectedKeyDetail: null,
+        };
+      }
+
+      if (url === '/api/redis/browser/value' && options?.method === 'DELETE') {
+        return { deletedCount: 1 };
+      }
+
+      return {};
+    });
+
+    const workspace = useRedisWorkspace({
+      connection: ref(makeConnection()),
+    });
+
+    await flushReactive();
+    await workspace.refreshKeys();
+    workspace.session.value!.selectedKey = 'orders:2';
+    await flushReactive();
+
+    await workspace.deleteKey('orders:1');
+
+    expect(closeTabMock).not.toHaveBeenCalled();
+    expect(workspace.session.value!.selectedKey).toBe('orders:2');
   });
 
   it('deletes multiple keys in bulk, reloads the sidebar from the server, and shows a success toast', async () => {
@@ -483,6 +535,44 @@ describe('useRedisWorkspace', () => {
       'Redis keys deleted',
       expect.objectContaining({ description: expect.stringContaining('2') })
     );
+    expect(closeTabMock).not.toHaveBeenCalled();
+  });
+
+  it('closes the browser tab when a bulk delete removes the key that was open', async () => {
+    mockFetch.mockImplementation(async (url, options) => {
+      if (url === '/api/redis/browser') {
+        return {
+          cursor: '0',
+          truncated: false,
+          keys: [
+            { key: 'orders:1', type: 'string', ttl: -1 },
+            { key: 'orders:2', type: 'string', ttl: -1 },
+          ],
+          databases: [],
+          selectedKeyDetail: null,
+        };
+      }
+
+      if (url === '/api/redis/browser/keys' && options?.method === 'DELETE') {
+        return { deletedCount: 2 };
+      }
+
+      return {};
+    });
+
+    const workspace = useRedisWorkspace({
+      connection: ref(makeConnection()),
+    });
+
+    await flushReactive();
+    await workspace.refreshKeys();
+    workspace.session.value!.selectedKey = 'orders:1';
+    await flushReactive();
+
+    await workspace.deleteKeys(['orders:1', 'orders:2']);
+
+    expect(closeTabMock).toHaveBeenCalledWith('redis-browser-redis-conn');
+    expect(workspace.session.value!.selectedKey).toBeNull();
   });
 
   it('previews the full set of keys matching a group prefix', async () => {
