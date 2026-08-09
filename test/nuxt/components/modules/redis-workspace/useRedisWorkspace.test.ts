@@ -277,4 +277,20 @@ describe('useRedisWorkspace', () => {
       }
     );
   });
+
+  it('defaults selectedDatabaseIndex from connection string when database property is missing', async () => {
+    const connWithDbInString = {
+      ...makeConnection(),
+      connectionString: 'redis://127.0.0.1:63279/13',
+      database: undefined,
+    };
+
+    const workspace = useRedisWorkspace({
+      connection: ref(connWithDbInString),
+    });
+
+    await flushReactive();
+
+    expect(workspace.selectedDatabaseIndex.value).toBe(13);
+  });
 });

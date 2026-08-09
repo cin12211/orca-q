@@ -10,7 +10,10 @@ import type {
   RedisSlowlogEntry,
 } from '~/core/types';
 import type { RedisRuntimeInput } from './redis.client';
-import { createRedisRuntimeClient } from './redis.client';
+import {
+  createRedisRuntimeClient,
+  parseRedisDatabaseIndex,
+} from './redis.client';
 
 const CONFIG_KEYS = [
   'maxmemory',
@@ -255,16 +258,16 @@ export async function getRedisInstanceInsights(
   input: RedisRuntimeInput & { databaseIndex?: number }
 ): Promise<RedisInstanceInsights> {
   const databaseIndex =
-    input.databaseIndex ?? (Number.parseInt(input.database || '0', 10) || 0);
+    typeof input.databaseIndex === 'number' && Number.isFinite(input.databaseIndex)
+      ? input.databaseIndex
+      : parseRedisDatabaseIndex(input.database, input.url);
   const runtime = await createRedisRuntimeClient({
     ...input,
     database: `${databaseIndex}`,
   });
 
   try {
-    if (databaseIndex > 0) {
-      await runtime.client.select(databaseIndex);
-    }
+    await runtime.client.select(databaseIndex);
 
     const [
       serverInfoRaw,
@@ -561,16 +564,16 @@ export async function killRedisClient(
   clientId: string
 ): Promise<InstanceActionResponse> {
   const databaseIndex =
-    input.databaseIndex ?? (Number.parseInt(input.database || '0', 10) || 0);
+    typeof input.databaseIndex === 'number' && Number.isFinite(input.databaseIndex)
+      ? input.databaseIndex
+      : parseRedisDatabaseIndex(input.database, input.url);
   const runtime = await createRedisRuntimeClient({
     ...input,
     database: `${databaseIndex}`,
   });
 
   try {
-    if (databaseIndex > 0) {
-      await runtime.client.select(databaseIndex);
-    }
+    await runtime.client.select(databaseIndex);
 
     await runtime.client.sendCommand(['CLIENT', 'KILL', 'ID', clientId]);
 

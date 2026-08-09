@@ -39,9 +39,20 @@ const { clientMock, closeMock, createRedisRuntimeClientMock } = vi.hoisted(
   }
 );
 
-vi.mock('~/server/infrastructure/nosql/redis/redis.client', () => ({
-  createRedisRuntimeClient: createRedisRuntimeClientMock,
-}));
+vi.mock(
+  '~/server/infrastructure/nosql/redis/redis.client',
+  async importOriginal => {
+    const actual =
+      await importOriginal<
+        typeof import('~/server/infrastructure/nosql/redis/redis.client')
+      >();
+
+    return {
+      ...actual,
+      createRedisRuntimeClient: createRedisRuntimeClientMock,
+    };
+  }
+);
 
 describe('updateRedisKeyValue', () => {
   beforeEach(() => {

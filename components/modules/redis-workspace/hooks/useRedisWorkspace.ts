@@ -26,7 +26,10 @@ export function useRedisWorkspace(options: {
 
     return store.ensureSession(
       connection.value.id,
-      parseRedisDatabaseIndex(connection.value.database)
+      parseRedisDatabaseIndex(
+        connection.value.database,
+        connection.value.connectionString
+      )
     );
   });
 
