@@ -22,7 +22,7 @@ const modelValue = defineModel<ChartType>({ required: true });
     <SelectContent class="max-h-72">
       <SelectGroup v-for="group in CHART_TYPE_CATEGORIES" :key="group.category">
         <SelectLabel
-          class="text-[10px] uppercase tracking-wider text-muted-foreground/60"
+          class="text-xxs uppercase tracking-wider text-muted-foreground/60"
         >
           {{ group.label }}
         </SelectLabel>
@@ -35,7 +35,7 @@ const modelValue = defineModel<ChartType>({ required: true });
           <div class="flex items-center gap-2">
             <Icon :name="chartMeta.icon" class="size-3.5" />
             <span>{{ chartMeta.label }}</span>
-            <span class="text-[10px] text-muted-foreground/50 ml-auto">
+            <span class="text-xxs text-muted-foreground/50 ml-auto">
               {{ chartMeta.description }}
             </span>
           </div>

@@ -1,6 +1,6 @@
-import { ref } from 'vue';
+import { defineComponent, h, KeepAlive, ref } from 'vue';
 import { mount } from '@vue/test-utils';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import RedisKeyTree from '~/components/modules/management/redis-browser/components/RedisKeyTree.vue';
 import { useRedisTreeData } from '~/components/modules/management/redis-browser/hooks/useRedisTreeData';
 
@@ -99,5 +99,200 @@ describe('useRedisTreeData', () => {
     await items[0]?.trigger('click');
 
     expect(wrapper.emitted('select')).toEqual([['inventory:1']]);
+  });
+});
+
+const createFileTreeStub = () => {
+  const focusItem = vi.fn();
+  const clearSelection = vi.fn();
+
+  const stub = defineComponent({
+    name: 'FileTree',
+    props: {
+      initialData: { type: Object, default: () => ({}) },
+      initExpandedIds: { type: Array, default: () => [] },
+      storageKey: { type: String, default: '' },
+      allowDragAndDrop: { type: Boolean, default: false },
+      delayFocus: { type: Number, default: 0 },
+    },
+    emits: ['click', 'contextmenu', 'delete'],
+    setup(_, { expose }) {
+      expose({
+        focusItem,
+        clearSelection,
+        collapseAll: vi.fn(),
+        expandAll: vi.fn(),
+        isExpandedAll: false,
+      });
+    },
+    render: () => h('div', { class: 'filetree-stub' }),
+  });
+
+  return { stub, focusItem, clearSelection };
+};
+
+describe('RedisKeyTree focus behavior', () => {
+  it('does not re-focus the row on a direct click (already highlighted by FileTree itself)', async () => {
+    const { stub, focusItem } = createFileTreeStub();
+    const wrapper = mount(RedisKeyTree, {
+      props: { keys: redisKeys, viewMode: 'list' },
+      global: { stubs: { FileTree: stub } },
+    });
+
+    await wrapper.vm.$nextTick();
+    focusItem.mockClear();
+
+    const fileTreeStub = wrapper.findComponent(stub);
+    await fileTreeStub.vm.$emit('click', 'redis-key:inventory:1');
+    await wrapper.setProps({ selectedKey: 'inventory:1' });
+    await wrapper.vm.$nextTick();
+
+    expect(focusItem).not.toHaveBeenCalled();
+  });
+
+  it('focuses the selected key when the component is (re)activated with a key already selected', async () => {
+    const { stub, focusItem } = createFileTreeStub();
+
+    const KeepAliveHost = defineComponent({
+      setup() {
+        const show = ref(true);
+        return { show };
+      },
+      render() {
+        return h(KeepAlive, null, {
+          default: () =>
+            this.show
+              ? h(RedisKeyTree, {
+                  keys: redisKeys,
+                  selectedKey: 'inventory:1',
+                  viewMode: 'list',
+                })
+              : null,
+        });
+      },
+    });
+
+    const wrapper = mount(KeepAliveHost, {
+      global: { stubs: { FileTree: stub } },
+    });
+
+    await wrapper.vm.$nextTick();
+    focusItem.mockClear();
+
+    (wrapper.vm as any).show = false;
+    await wrapper.vm.$nextTick();
+    (wrapper.vm as any).show = true;
+    await wrapper.vm.$nextTick();
+
+    expect(focusItem).toHaveBeenCalledWith('redis-key:inventory:1');
+  });
+});
+
+const createBaseContextMenuStub = () => {
+  let lastItems: any[] = [];
+
+  const stub = defineComponent({
+    name: 'BaseContextMenu',
+    props: {
+      contextMenuItems: { type: Array, default: () => [] },
+    },
+    emits: ['onClearContextMenu'],
+    setup(props, { slots }) {
+      return () => {
+        lastItems = props.contextMenuItems as any[];
+        return h('div', { class: 'context-menu-stub' }, slots.default?.());
+      };
+    },
+  });
+
+  return { stub, getLastItems: () => lastItems };
+};
+
+describe('RedisKeyTree delete', () => {
+  it('emits delete-key with immediate:false on a plain Delete keypress for a focused key', async () => {
+    const { stub } = createFileTreeStub();
+    const wrapper = mount(RedisKeyTree, {
+      props: { keys: redisKeys, viewMode: 'list' },
+      global: { stubs: { FileTree: stub } },
+    });
+
+    await wrapper.vm.$nextTick();
+    const fileTreeStub = wrapper.findComponent(stub);
+    await fileTreeStub.vm.$emit('delete', 'redis-key:inventory:1', {
+      metaKey: false,
+      ctrlKey: false,
+    });
+
+    expect(wrapper.emitted('delete-key')?.[0]).toEqual([
+      'inventory:1',
+      { immediate: false },
+    ]);
+  });
+
+  it('emits delete-key with immediate:true when Cmd/Ctrl+Delete is pressed on a focused key', async () => {
+    const { stub } = createFileTreeStub();
+    const wrapper = mount(RedisKeyTree, {
+      props: { keys: redisKeys, viewMode: 'list' },
+      global: { stubs: { FileTree: stub } },
+    });
+
+    await wrapper.vm.$nextTick();
+    const fileTreeStub = wrapper.findComponent(stub);
+    await fileTreeStub.vm.$emit('delete', 'redis-key:inventory:1', {
+      metaKey: true,
+      ctrlKey: false,
+    });
+
+    expect(wrapper.emitted('delete-key')?.[0]).toEqual([
+      'inventory:1',
+      { immediate: true },
+    ]);
+  });
+
+  it('emits delete-group with the group prefix when a folder node is deleted via keyboard', async () => {
+    const { stub } = createFileTreeStub();
+    const wrapper = mount(RedisKeyTree, {
+      props: { keys: redisKeys, viewMode: 'tree' },
+      global: { stubs: { FileTree: stub } },
+    });
+
+    await wrapper.vm.$nextTick();
+    const fileTreeStub = wrapper.findComponent(stub);
+    await fileTreeStub.vm.$emit('delete', 'redis-group:orders', {
+      metaKey: false,
+      ctrlKey: false,
+    });
+
+    expect(wrapper.emitted('delete-group')?.[0]).toEqual(['orders']);
+  });
+
+  it('resolves a right-clicked key node into a Delete context menu action that emits delete-key', async () => {
+    const { stub: fileTreeStub } = createFileTreeStub();
+    const { stub: contextMenuStub, getLastItems } = createBaseContextMenuStub();
+
+    const wrapper = mount(RedisKeyTree, {
+      props: { keys: redisKeys, viewMode: 'list' },
+      global: {
+        stubs: { FileTree: fileTreeStub, BaseContextMenu: contextMenuStub },
+      },
+    });
+
+    await wrapper.vm.$nextTick();
+    const treeStub = wrapper.findComponent(fileTreeStub);
+    await treeStub.vm.$emit(
+      'contextmenu',
+      'redis-key:inventory:1',
+      new MouseEvent('contextmenu')
+    );
+    await wrapper.vm.$nextTick();
+
+    const items = getLastItems();
+    const deleteAction = items.find(item => item.title === 'Delete');
+    deleteAction?.select?.();
+
+    expect(wrapper.emitted('delete-key')?.[0]).toEqual([
+      'inventory:1',
+      { immediate: false },
+    ]);
   });
 });

@@ -269,6 +269,11 @@ export interface RedisOverviewMetrics {
   connectedClients: number;
   usedMemory: number;
   usedMemoryHuman: string;
+  maxmemory?: number;
+  maxmemoryHuman?: string;
+  maxmemoryPolicy?: string;
+  totalSystemMemory?: number;
+  totalSystemMemoryHuman?: string;
   totalKeys: number;
   hitRate: number;
   opsPerSec: number;
@@ -299,6 +304,8 @@ export interface RedisMemoryInsight {
   maxmemory: number;
   maxmemoryHuman: string;
   maxmemoryPolicy: string;
+  totalSystemMemory?: number;
+  totalSystemMemoryHuman?: string;
   topPrefixesByMemory: RedisPrefixMetric[];
   bigKeys: RedisBigKeyMetric[];
   warnings: string[];

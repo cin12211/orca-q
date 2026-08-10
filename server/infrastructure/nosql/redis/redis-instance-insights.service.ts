@@ -1,16 +1,32 @@
 import type {
   InstanceActionResponse,
-  RedisBigKeyMetric,
+  RedisClientInsight,
   RedisClientSummary,
   RedisCommandStat,
   RedisConfigEntry,
-  RedisInstanceInsights,
   RedisKeyTypeDistribution,
+  RedisKeyspaceInsight,
+  RedisMemoryInsight,
+  RedisOverviewMetrics,
+  RedisPerformanceInsight,
+  RedisPersistenceInsight,
   RedisPrefixMetric,
+  RedisReplicationInsight,
   RedisSlowlogEntry,
 } from '~/core/types';
-import type { RedisRuntimeInput } from './redis.client';
-import { createRedisRuntimeClient } from './redis.client';
+import {
+  createRedisRuntimeClient,
+  parseRedisDatabaseIndex,
+  type RedisRuntimeInput,
+} from './redis.client';
+
+export interface RedisInstanceInsightsInput extends RedisRuntimeInput {
+  databaseIndex?: number;
+}
+
+type RedisClient = Awaited<
+  ReturnType<typeof createRedisRuntimeClient>
+>['client'];
 
 const CONFIG_KEYS = [
   'maxmemory',
@@ -88,7 +104,7 @@ const getPrefixFromKey = (key: string) => {
 };
 
 const safeCommand = async <T>(
-  client: Awaited<ReturnType<typeof createRedisRuntimeClient>>['client'],
+  client: RedisClient,
   args: string[],
   fallback: T
 ) => {
@@ -99,10 +115,10 @@ const safeCommand = async <T>(
   }
 };
 
-const scanKeys = async (
-  client: Awaited<ReturnType<typeof createRedisRuntimeClient>>['client'],
-  limit = 250
-) => {
+// Scans the entire keyspace (no cap) so key-count/type/TTL based metrics are
+// exact rather than a partial sample. Safe for the Keyspace tab because it
+// only reads TYPE + TTL per key (cheap) — see getRedisKeyspaceInsight.
+const scanAllKeys = async (client: RedisClient) => {
   const keys: string[] = [];
   const seen = new Set<string>();
   let cursor = '0';
@@ -110,7 +126,7 @@ const scanKeys = async (
   do {
     const result = await client.scan(cursor, {
       MATCH: '*',
-      COUNT: Math.min(limit, 100),
+      COUNT: 100,
     });
     cursor = `${result.cursor}`;
 
@@ -119,12 +135,8 @@ const scanKeys = async (
         seen.add(key);
         keys.push(key);
       }
-
-      if (keys.length >= limit) {
-        break;
-      }
     }
-  } while (cursor !== '0' && keys.length < limit);
+  } while (cursor !== '0');
 
   return keys;
 };
@@ -251,97 +263,64 @@ const parseConfigEntry = (name: string, raw: unknown): RedisConfigEntry => {
   };
 };
 
-export async function getRedisInstanceInsights(
-  input: RedisRuntimeInput & { databaseIndex?: number }
-): Promise<RedisInstanceInsights> {
-  const databaseIndex =
-    input.databaseIndex ?? (Number.parseInt(input.database || '0', 10) || 0);
+const resolveDatabaseIndex = (input: RedisInstanceInsightsInput) => {
+  if (
+    typeof input.databaseIndex === 'number' &&
+    Number.isFinite(input.databaseIndex)
+  ) {
+    return input.databaseIndex;
+  }
+
+  return parseRedisDatabaseIndex(input.database, input.url);
+};
+
+const withSelectedDatabase = async <T>(
+  input: RedisInstanceInsightsInput,
+  run: (client: RedisClient, databaseIndex: number) => Promise<T>
+): Promise<T> => {
+  const databaseIndex = resolveDatabaseIndex(input);
   const runtime = await createRedisRuntimeClient({
     ...input,
     database: `${databaseIndex}`,
   });
 
   try {
-    if (databaseIndex > 0) {
-      await runtime.client.select(databaseIndex);
-    }
+    await runtime.client.select(databaseIndex);
+    return await run(runtime.client, databaseIndex);
+  } finally {
+    await runtime.close();
+  }
+};
 
+export async function getRedisOverviewInsight(
+  input: RedisInstanceInsightsInput
+): Promise<RedisOverviewMetrics> {
+  return withSelectedDatabase(input, async client => {
     const [
       serverInfoRaw,
       statsInfoRaw,
       memoryInfoRaw,
       clientsInfoRaw,
-      persistenceInfoRaw,
-      replicationInfoRaw,
       keyspaceInfoRaw,
-      commandstatsInfoRaw,
-      clientListRaw,
-      latencyDoctorRaw,
-      slowlogRaw,
       clusterInfoRaw,
-      sentinelInfoRaw,
+      dbSize,
     ] = await Promise.all([
-      runtime.client.info('server'),
-      runtime.client.info('stats'),
-      runtime.client.info('memory'),
-      runtime.client.info('clients'),
-      runtime.client.info('persistence'),
-      runtime.client.info('replication'),
-      runtime.client.info('keyspace'),
-      runtime.client.info('commandstats'),
-      safeCommand(runtime.client, ['CLIENT', 'LIST'], ''),
-      safeCommand(runtime.client, ['LATENCY', 'DOCTOR'], ''),
-      safeCommand(runtime.client, ['SLOWLOG', 'GET', '32'], [] as unknown[]),
-      safeCommand(runtime.client, ['CLUSTER', 'INFO'], ''),
-      safeCommand(runtime.client, ['INFO', 'sentinel'], ''),
+      client.info('server'),
+      client.info('stats'),
+      client.info('memory'),
+      client.info('clients'),
+      client.info('keyspace'),
+      safeCommand(client, ['CLUSTER', 'INFO'], ''),
+      client.dbSize(),
     ]);
-
-    const [dbSize, sampledKeys, configEntriesRaw] = await Promise.all([
-      runtime.client.dbSize(),
-      scanKeys(runtime.client),
-      Promise.all(
-        CONFIG_KEYS.map(name =>
-          safeCommand(
-            runtime.client,
-            ['CONFIG', 'GET', name],
-            [] as unknown[]
-          ).then(result => parseConfigEntry(name, result))
-        )
-      ),
-    ]);
-
-    const sampledKeyMetrics = await Promise.all(
-      sampledKeys.map(async key => {
-        const [type, ttl, memoryUsage] = await Promise.all([
-          runtime.client.type(key),
-          runtime.client.ttl(key),
-          safeCommand(runtime.client, ['MEMORY', 'USAGE', key], 0 as number),
-        ]);
-
-        return {
-          key,
-          type,
-          ttl,
-          memoryBytes: Number(memoryUsage) || 0,
-        };
-      })
-    );
 
     const serverInfo = parseInfoBlock(serverInfoRaw);
     const statsInfo = parseInfoBlock(statsInfoRaw);
     const memoryInfo = parseInfoBlock(memoryInfoRaw);
     const clientsInfo = parseInfoBlock(clientsInfoRaw);
-    const persistenceInfo = parseInfoBlock(persistenceInfoRaw);
-    const replicationInfo = parseInfoBlock(replicationInfoRaw);
     const keyspaceInfo = parseInfoBlock(keyspaceInfoRaw);
-    const commandstatsInfo = parseInfoBlock(commandstatsInfoRaw);
     const clusterInfo = parseInfoBlock(clusterInfoRaw);
-    const sentinelInfo = parseInfoBlock(sentinelInfoRaw);
     const keyspaceDatabases = parseKeyspace(keyspaceInfo);
-    const clientRows = parseClientList(clientListRaw);
-    const slowlogEntries = parseSlowlog(slowlogRaw as unknown[]);
-    const commandStats = parseCommandStats(commandstatsInfo);
-    const replicationReplicas = parseReplicationReplicas(replicationInfo);
 
     const totalKeys = keyspaceDatabases.reduce(
       (count, database) => count + database.keyCount,
@@ -350,28 +329,66 @@ export async function getRedisInstanceInsights(
     const hits = toInteger(statsInfo.keyspace_hits);
     const misses = toInteger(statsInfo.keyspace_misses);
     const hitRate = hits + misses > 0 ? hits / (hits + misses) : 0;
+    const usedMemory = toInteger(memoryInfo.used_memory);
+    const maxmemory = toInteger(memoryInfo.maxmemory);
+    const totalSystemMemory = toInteger(memoryInfo.total_system_memory);
 
-    const prefixMemoryMap = sampledKeyMetrics.reduce<
-      Record<string, RedisPrefixMetric>
-    >((acc, item) => {
-      const prefix = getPrefixFromKey(item.key);
-      const current = acc[prefix] || {
-        prefix,
-        keyCount: 0,
-        memoryBytes: 0,
-      };
+    return {
+      redisVersion: serverInfo.redis_version || 'unknown',
+      mode:
+        serverInfo.redis_mode ||
+        (clusterInfo.cluster_enabled === '1' ? 'cluster' : 'standalone'),
+      uptimeSeconds: toInteger(serverInfo.uptime_in_seconds),
+      connectedClients: toInteger(clientsInfo.connected_clients),
+      usedMemory,
+      usedMemoryHuman: memoryInfo.used_memory_human || formatBytes(usedMemory),
+      maxmemory,
+      maxmemoryHuman:
+        memoryInfo.maxmemory_human ||
+        (maxmemory > 0 ? formatBytes(maxmemory) : 'unlimited'),
+      maxmemoryPolicy: memoryInfo.maxmemory_policy || 'noeviction',
+      totalSystemMemory,
+      totalSystemMemoryHuman:
+        memoryInfo.total_system_memory_human ||
+        (totalSystemMemory > 0 ? formatBytes(totalSystemMemory) : undefined),
+      totalKeys: totalKeys || dbSize,
+      hitRate,
+      opsPerSec: toNumber(statsInfo.instantaneous_ops_per_sec),
+      evictedKeys: toInteger(statsInfo.evicted_keys),
+      expiredKeys: toInteger(statsInfo.expired_keys),
+      rejectedConnections: toInteger(statsInfo.rejected_connections),
+    };
+  });
+}
 
-      current.keyCount += 1;
-      current.memoryBytes += item.memoryBytes;
-      acc[prefix] = current;
-      return acc;
-    }, {});
+export async function getRedisKeyspaceInsight(
+  input: RedisInstanceInsightsInput
+): Promise<RedisKeyspaceInsight> {
+  return withSelectedDatabase(input, async (client, databaseIndex) => {
+    const [keyspaceInfoRaw, statsInfoRaw, keys] = await Promise.all([
+      client.info('keyspace'),
+      client.info('stats'),
+      scanAllKeys(client),
+    ]);
 
-    const topPrefixesByMemory = Object.values(prefixMemoryMap)
-      .sort((left, right) => right.memoryBytes - left.memoryBytes)
-      .slice(0, 8);
+    // Keyspace tab never shows byte sizes, so only TYPE + TTL are read per
+    // key here — MEMORY USAGE (expensive) is intentionally left to the
+    // Memory tab's own fetch.
+    const keyMetrics = await Promise.all(
+      keys.map(async key => {
+        const [type, ttl] = await Promise.all([
+          client.type(key),
+          client.ttl(key),
+        ]);
+        return { key, type, ttl };
+      })
+    );
 
-    const keyTypeDistribution = sampledKeyMetrics.reduce<
+    const keyspaceInfo = parseInfoBlock(keyspaceInfoRaw);
+    const statsInfo = parseInfoBlock(statsInfoRaw);
+    const keyspaceDatabases = parseKeyspace(keyspaceInfo);
+
+    const keyTypeDistribution = keyMetrics.reduce<
       Record<string, RedisKeyTypeDistribution>
     >((acc, item) => {
       const current = acc[item.type] || { type: item.type, count: 0 };
@@ -380,37 +397,54 @@ export async function getRedisInstanceInsights(
       return acc;
     }, {});
 
-    const addressCount = clientRows.reduce<Record<string, number>>(
-      (acc, client) => {
-        acc[client.addr] = (acc[client.addr] || 0) + 1;
+    const prefixCountMap = keyMetrics.reduce<Record<string, RedisPrefixMetric>>(
+      (acc, item) => {
+        const prefix = getPrefixFromKey(item.key);
+        const current = acc[prefix] || { prefix, keyCount: 0, memoryBytes: 0 };
+        current.keyCount += 1;
+        acc[prefix] = current;
         return acc;
       },
       {}
     );
 
-    const suspiciousClients = clientRows.flatMap(client => {
-      const reasons: string[] = [];
+    return {
+      databases: keyspaceDatabases,
+      expiredKeyCount: toInteger(statsInfo.expired_keys),
+      avgTtl:
+        keyspaceDatabases.find(
+          database => database.database === `db${databaseIndex}`
+        )?.avgTtl || 0,
+      keyTypeDistribution: Object.values(keyTypeDistribution).sort(
+        (left, right) => right.count - left.count
+      ),
+      topPrefixes: Object.values(prefixCountMap)
+        .sort((left, right) => right.keyCount - left.keyCount)
+        .slice(0, 10)
+        .map(item => ({ prefix: item.prefix, keyCount: item.keyCount })),
+      keysWithoutTtl: keyMetrics.filter(item => item.ttl < 0).length,
+      hotKeysNote:
+        'Hot key tracking requires Redis keyspace notifications or external sampling and is not available in this release.',
+      sampledKeys: keyMetrics.length,
+    };
+  });
+}
 
-      if (client.idleSeconds > 3600) {
-        reasons.push('idle for more than 1 hour');
-      }
+export async function getRedisMemoryInsight(
+  input: RedisInstanceInsightsInput
+): Promise<RedisMemoryInsight> {
+  return withSelectedDatabase(input, async client => {
+    const [memoryInfoRaw, statsInfoRaw] = await Promise.all([
+      client.info('memory'),
+      client.info('stats'),
+    ]);
 
-      if (client.flags.includes('b')) {
-        reasons.push('client is blocked');
-      }
-
-      if ((addressCount[client.addr] || 0) >= 5) {
-        reasons.push('many connections from same address');
-      }
-
-      return reasons.map(reason => ({
-        clientId: client.id,
-        reason: `${client.addr}: ${reason}`,
-      }));
-    });
+    const memoryInfo = parseInfoBlock(memoryInfoRaw);
+    const statsInfo = parseInfoBlock(statsInfoRaw);
 
     const usedMemory = toInteger(memoryInfo.used_memory);
     const maxmemory = toInteger(memoryInfo.maxmemory);
+    const totalSystemMemory = toInteger(memoryInfo.total_system_memory);
     const memoryWarnings: string[] = [];
 
     if (maxmemory > 0 && usedMemory / maxmemory >= 0.85) {
@@ -425,6 +459,165 @@ export async function getRedisInstanceInsights(
       memoryWarnings.push('Evictions have been recorded for this instance.');
     }
 
+    // Big Keys Detector + Top Prefixes by Memory are disabled for now:
+    // computing them exactly requires scanning every key in the keyspace and
+    // calling `MEMORY USAGE <key> SAMPLES 0` on each one, which is too heavy
+    // to run on demand for large databases. Re-enable by scanning all keys
+    // (scanAllKeys) and reading TYPE + TTL + MEMORY USAGE with SAMPLES 0
+    // (exact, matches the key-detail panel) instead of the Redis default
+    // SAMPLES 5, which undercounts/overcounts large hash/list/set/zset keys.
+    //
+    // const keys = await scanAllKeys(client);
+    // const sampledKeyMetrics = await Promise.all(
+    //   keys.map(async key => {
+    //     const [type, ttl, memoryUsage] = await Promise.all([
+    //       client.type(key),
+    //       client.ttl(key),
+    //       safeCommand(
+    //         client,
+    //         ['MEMORY', 'USAGE', key, 'SAMPLES', '0'],
+    //         0 as number
+    //       ),
+    //     ]);
+    //     return { key, type, ttl, memoryBytes: Number(memoryUsage) || 0 };
+    //   })
+    // );
+    // const prefixMemoryMap = sampledKeyMetrics.reduce<
+    //   Record<string, RedisPrefixMetric>
+    // >((acc, item) => {
+    //   const prefix = getPrefixFromKey(item.key);
+    //   const current = acc[prefix] || { prefix, keyCount: 0, memoryBytes: 0 };
+    //   current.keyCount += 1;
+    //   current.memoryBytes += item.memoryBytes;
+    //   acc[prefix] = current;
+    //   return acc;
+    // }, {});
+    // const topPrefixesByMemory = Object.values(prefixMemoryMap)
+    //   .sort((left, right) => right.memoryBytes - left.memoryBytes)
+    //   .slice(0, 8);
+    // const bigKeys = [...sampledKeyMetrics]
+    //   .sort((left, right) => right.memoryBytes - left.memoryBytes)
+    //   .slice(0, 10) as RedisBigKeyMetric[];
+
+    return {
+      usedMemory,
+      usedMemoryHuman: memoryInfo.used_memory_human || formatBytes(usedMemory),
+      usedMemoryPeak: toInteger(memoryInfo.used_memory_peak),
+      usedMemoryPeakHuman:
+        memoryInfo.used_memory_peak_human ||
+        formatBytes(toInteger(memoryInfo.used_memory_peak)),
+      memoryFragmentationRatio: toNumber(memoryInfo.mem_fragmentation_ratio),
+      maxmemory,
+      maxmemoryHuman:
+        memoryInfo.maxmemory_human ||
+        (maxmemory > 0 ? formatBytes(maxmemory) : 'unlimited'),
+      maxmemoryPolicy: memoryInfo.maxmemory_policy || 'noeviction',
+      totalSystemMemory,
+      totalSystemMemoryHuman:
+        memoryInfo.total_system_memory_human ||
+        (totalSystemMemory > 0 ? formatBytes(totalSystemMemory) : undefined),
+      topPrefixesByMemory: [],
+      bigKeys: [],
+      warnings: memoryWarnings,
+    };
+  });
+}
+
+export async function getRedisPerformanceInsight(
+  input: RedisInstanceInsightsInput
+): Promise<RedisPerformanceInsight> {
+  return withSelectedDatabase(input, async client => {
+    const [
+      statsInfoRaw,
+      clientsInfoRaw,
+      commandstatsInfoRaw,
+      clientListRaw,
+      latencyDoctorRaw,
+      slowlogRaw,
+    ] = await Promise.all([
+      client.info('stats'),
+      client.info('clients'),
+      client.info('commandstats'),
+      safeCommand(client, ['CLIENT', 'LIST'], ''),
+      safeCommand(client, ['LATENCY', 'DOCTOR'], ''),
+      safeCommand(client, ['SLOWLOG', 'GET', '32'], [] as unknown[]),
+    ]);
+
+    const statsInfo = parseInfoBlock(statsInfoRaw);
+    const clientsInfo = parseInfoBlock(clientsInfoRaw);
+    const commandstatsInfo = parseInfoBlock(commandstatsInfoRaw);
+    const clientRows = parseClientList(clientListRaw);
+
+    return {
+      instantaneousOpsPerSec: toNumber(statsInfo.instantaneous_ops_per_sec),
+      totalCommandsProcessed: toInteger(statsInfo.total_commands_processed),
+      latencyDoctor: latencyDoctorRaw ? String(latencyDoctorRaw) : null,
+      slowlog: parseSlowlog(slowlogRaw as unknown[]),
+      commandStats: parseCommandStats(commandstatsInfo),
+      blockedClients: toInteger(clientsInfo.blocked_clients),
+      longRunningLuaScripts: clientRows.filter(client =>
+        ['eval', 'evalsha', 'fcall'].includes(client.cmd.toLowerCase())
+      ),
+    };
+  });
+}
+
+export async function getRedisClientInsight(
+  input: RedisInstanceInsightsInput
+): Promise<RedisClientInsight> {
+  return withSelectedDatabase(input, async client => {
+    const [clientsInfoRaw, clientListRaw] = await Promise.all([
+      client.info('clients'),
+      safeCommand(client, ['CLIENT', 'LIST'], ''),
+    ]);
+
+    const clientsInfo = parseInfoBlock(clientsInfoRaw);
+    const clientRows = parseClientList(clientListRaw);
+
+    const addressCount = clientRows.reduce<Record<string, number>>(
+      (acc, row) => {
+        acc[row.addr] = (acc[row.addr] || 0) + 1;
+        return acc;
+      },
+      {}
+    );
+
+    const suspiciousClients = clientRows.flatMap(row => {
+      const reasons: string[] = [];
+
+      if (row.idleSeconds > 3600) {
+        reasons.push('idle for more than 1 hour');
+      }
+
+      if (row.flags.includes('b')) {
+        reasons.push('client is blocked');
+      }
+
+      if ((addressCount[row.addr] || 0) >= 5) {
+        reasons.push('many connections from same address');
+      }
+
+      return reasons.map(reason => ({
+        clientId: row.id,
+        reason: `${row.addr}: ${reason}`,
+      }));
+    });
+
+    return {
+      connectedClients: toInteger(clientsInfo.connected_clients),
+      clients: clientRows,
+      suspiciousClients,
+    };
+  });
+}
+
+export async function getRedisPersistenceInsight(
+  input: RedisInstanceInsightsInput
+): Promise<RedisPersistenceInsight> {
+  return withSelectedDatabase(input, async client => {
+    const persistenceInfoRaw = await client.info('persistence');
+    const persistenceInfo = parseInfoBlock(persistenceInfoRaw);
+
     const persistenceWarnings: string[] = [];
     const rdbEnabled = persistenceInfo.rdb_last_save_time !== undefined;
     const aofEnabled = persistenceInfo.aof_enabled === '1';
@@ -436,149 +629,94 @@ export async function getRedisInstanceInsights(
     }
 
     return {
-      capturedAt: new Date().toISOString(),
-      databaseIndex,
-      overview: {
-        redisVersion: serverInfo.redis_version || 'unknown',
-        mode:
-          serverInfo.redis_mode ||
-          (clusterInfo.cluster_enabled === '1' ? 'cluster' : 'standalone'),
-        uptimeSeconds: toInteger(serverInfo.uptime_in_seconds),
-        connectedClients: toInteger(clientsInfo.connected_clients),
-        usedMemory,
-        usedMemoryHuman:
-          memoryInfo.used_memory_human || formatBytes(usedMemory),
-        totalKeys: totalKeys || dbSize,
-        hitRate,
-        opsPerSec: toNumber(statsInfo.instantaneous_ops_per_sec),
-        evictedKeys: toInteger(statsInfo.evicted_keys),
-        expiredKeys: toInteger(statsInfo.expired_keys),
-        rejectedConnections: toInteger(statsInfo.rejected_connections),
-      },
-      memory: {
-        usedMemory,
-        usedMemoryHuman:
-          memoryInfo.used_memory_human || formatBytes(usedMemory),
-        usedMemoryPeak: toInteger(memoryInfo.used_memory_peak),
-        usedMemoryPeakHuman:
-          memoryInfo.used_memory_peak_human ||
-          formatBytes(toInteger(memoryInfo.used_memory_peak)),
-        memoryFragmentationRatio: toNumber(memoryInfo.mem_fragmentation_ratio),
-        maxmemory,
-        maxmemoryHuman:
-          memoryInfo.maxmemory_human ||
-          (maxmemory > 0 ? formatBytes(maxmemory) : 'unlimited'),
-        maxmemoryPolicy: memoryInfo.maxmemory_policy || 'noeviction',
-        topPrefixesByMemory,
-        bigKeys: [...sampledKeyMetrics]
-          .sort((left, right) => right.memoryBytes - left.memoryBytes)
-          .slice(0, 10) as RedisBigKeyMetric[],
-        warnings: memoryWarnings,
-      },
-      performance: {
-        instantaneousOpsPerSec: toNumber(statsInfo.instantaneous_ops_per_sec),
-        totalCommandsProcessed: toInteger(statsInfo.total_commands_processed),
-        latencyDoctor: latencyDoctorRaw ? String(latencyDoctorRaw) : null,
-        slowlog: slowlogEntries,
-        commandStats,
-        blockedClients: toInteger(clientsInfo.blocked_clients),
-        longRunningLuaScripts: clientRows.filter(client =>
-          ['eval', 'evalsha', 'fcall'].includes(client.cmd.toLowerCase())
-        ),
-      },
-      keyspace: {
-        databases: keyspaceDatabases,
-        expiredKeyCount: toInteger(statsInfo.expired_keys),
-        avgTtl:
-          keyspaceDatabases.find(
-            database => database.database === `db${databaseIndex}`
-          )?.avgTtl || 0,
-        keyTypeDistribution: Object.values(keyTypeDistribution).sort(
-          (left, right) => right.count - left.count
-        ),
-        topPrefixes: topPrefixesByMemory.map(item => ({
-          prefix: item.prefix,
-          keyCount: item.keyCount,
-        })),
-        keysWithoutTtl: sampledKeyMetrics.filter(item => item.ttl < 0).length,
-        hotKeysNote:
-          'Hot key tracking requires Redis keyspace notifications or external sampling and is not available in this release.',
-        sampledKeys: sampledKeyMetrics.length,
-      },
-      clients: {
-        connectedClients: toInteger(clientsInfo.connected_clients),
-        clients: clientRows,
-        suspiciousClients,
-      },
-      persistence: {
-        rdbEnabled,
-        lastSaveStatus: persistenceInfo.rdb_last_bgsave_status || null,
-        lastSaveTime: parseTimestamp(persistenceInfo.rdb_last_save_time),
-        aofEnabled,
-        aofRewriteInProgress: persistenceInfo.aof_rewrite_in_progress === '1',
-        aofLastRewriteStatus: persistenceInfo.aof_last_bgrewrite_status || null,
-        lastBgsaveError:
-          persistenceInfo.rdb_last_bgsave_status === 'err'
-            ? 'Background save failed.'
-            : null,
-        changesSinceLastSave: toInteger(
-          persistenceInfo.rdb_changes_since_last_save
-        ),
-        warnings: persistenceWarnings,
-      },
-      replication: {
-        role: replicationInfo.role || 'unknown',
-        connectedReplicas: toInteger(replicationInfo.connected_slaves),
-        replicas: replicationReplicas,
-        replicationLag:
-          replicationReplicas.length > 0
-            ? Math.max(...replicationReplicas.map(replica => replica.lag || 0))
-            : null,
-        masterLinkStatus: replicationInfo.master_link_status || null,
-        sentinelMasters: sentinelInfo.masters
-          ? toInteger(sentinelInfo.masters)
+      rdbEnabled,
+      lastSaveStatus: persistenceInfo.rdb_last_bgsave_status || null,
+      lastSaveTime: parseTimestamp(persistenceInfo.rdb_last_save_time),
+      aofEnabled,
+      aofRewriteInProgress: persistenceInfo.aof_rewrite_in_progress === '1',
+      aofLastRewriteStatus: persistenceInfo.aof_last_bgrewrite_status || null,
+      lastBgsaveError:
+        persistenceInfo.rdb_last_bgsave_status === 'err'
+          ? 'Background save failed.'
           : null,
-        clusterEnabled:
-          clusterInfo.cluster_enabled === '1' ||
-          serverInfo.redis_mode === 'cluster',
-        clusterState: clusterInfo.cluster_state || null,
-        clusterSlotsAssigned: clusterInfo.cluster_slots_assigned
-          ? toInteger(clusterInfo.cluster_slots_assigned)
-          : null,
-        clusterKnownNodes: clusterInfo.cluster_known_nodes
-          ? toInteger(clusterInfo.cluster_known_nodes)
-          : null,
-      },
-      config: configEntriesRaw.filter(entry => entry.value !== ''),
+      changesSinceLastSave: toInteger(
+        persistenceInfo.rdb_changes_since_last_save
+      ),
+      warnings: persistenceWarnings,
     };
-  } finally {
-    await runtime.close();
-  }
+  });
+}
+
+export async function getRedisReplicationInsight(
+  input: RedisInstanceInsightsInput
+): Promise<RedisReplicationInsight> {
+  return withSelectedDatabase(input, async client => {
+    const [replicationInfoRaw, serverInfoRaw, clusterInfoRaw, sentinelInfoRaw] =
+      await Promise.all([
+        client.info('replication'),
+        client.info('server'),
+        safeCommand(client, ['CLUSTER', 'INFO'], ''),
+        safeCommand(client, ['INFO', 'sentinel'], ''),
+      ]);
+
+    const replicationInfo = parseInfoBlock(replicationInfoRaw);
+    const serverInfo = parseInfoBlock(serverInfoRaw);
+    const clusterInfo = parseInfoBlock(clusterInfoRaw);
+    const sentinelInfo = parseInfoBlock(sentinelInfoRaw);
+    const replicationReplicas = parseReplicationReplicas(replicationInfo);
+
+    return {
+      role: replicationInfo.role || 'unknown',
+      connectedReplicas: toInteger(replicationInfo.connected_slaves),
+      replicas: replicationReplicas,
+      replicationLag:
+        replicationReplicas.length > 0
+          ? Math.max(...replicationReplicas.map(replica => replica.lag || 0))
+          : null,
+      masterLinkStatus: replicationInfo.master_link_status || null,
+      sentinelMasters: sentinelInfo.masters
+        ? toInteger(sentinelInfo.masters)
+        : null,
+      clusterEnabled:
+        clusterInfo.cluster_enabled === '1' ||
+        serverInfo.redis_mode === 'cluster',
+      clusterState: clusterInfo.cluster_state || null,
+      clusterSlotsAssigned: clusterInfo.cluster_slots_assigned
+        ? toInteger(clusterInfo.cluster_slots_assigned)
+        : null,
+      clusterKnownNodes: clusterInfo.cluster_known_nodes
+        ? toInteger(clusterInfo.cluster_known_nodes)
+        : null,
+    };
+  });
+}
+
+export async function getRedisConfigInsight(
+  input: RedisInstanceInsightsInput
+): Promise<RedisConfigEntry[]> {
+  return withSelectedDatabase(input, async client => {
+    const configEntriesRaw = await Promise.all(
+      CONFIG_KEYS.map(name =>
+        safeCommand(client, ['CONFIG', 'GET', name], [] as unknown[]).then(
+          result => parseConfigEntry(name, result)
+        )
+      )
+    );
+
+    return configEntriesRaw.filter(entry => entry.value !== '');
+  });
 }
 
 export async function killRedisClient(
-  input: RedisRuntimeInput & { databaseIndex?: number },
+  input: RedisInstanceInsightsInput,
   clientId: string
 ): Promise<InstanceActionResponse> {
-  const databaseIndex =
-    input.databaseIndex ?? (Number.parseInt(input.database || '0', 10) || 0);
-  const runtime = await createRedisRuntimeClient({
-    ...input,
-    database: `${databaseIndex}`,
-  });
-
-  try {
-    if (databaseIndex > 0) {
-      await runtime.client.select(databaseIndex);
-    }
-
-    await runtime.client.sendCommand(['CLIENT', 'KILL', 'ID', clientId]);
+  return withSelectedDatabase(input, async client => {
+    await client.sendCommand(['CLIENT', 'KILL', 'ID', clientId]);
 
     return {
       success: true,
       message: `Killed Redis client ${clientId}.`,
     };
-  } finally {
-    await runtime.close();
-  }
+  });
 }

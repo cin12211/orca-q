@@ -540,7 +540,7 @@ export function useConnectionForm(props: {
       connectionName.value = getFileNameStem(selectedPath);
     }
 
-    testStatus.value = 'idle';
+    resetTestState();
   };
 
   const isFormValid = computed(() => {
@@ -618,7 +618,7 @@ export function useConnectionForm(props: {
       }
     }
 
-    testStatus.value = 'idle';
+    resetTestState();
   });
 
   watch(connectionMethod, method => {
@@ -630,7 +630,7 @@ export function useConnectionForm(props: {
       Object.assign(managedSqlite, createManagedSqliteState());
     }
 
-    testStatus.value = 'idle';
+    resetTestState();
   });
 
   watch(

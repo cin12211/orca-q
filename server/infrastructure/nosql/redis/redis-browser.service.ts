@@ -1,6 +1,7 @@
 import type {
   RedisDatabaseOption,
   RedisKeyDetail,
+  RedisKeyInfo,
   RedisKeyListItem,
   RedisKeyTableColumn,
   RedisKeyTableRow,
@@ -9,6 +10,7 @@ import type {
 } from '~/core/types/redis-workspace.types';
 import {
   createRedisRuntimeClient,
+  parseRedisDatabaseIndex,
   type RedisRuntimeInput,
 } from './redis.client';
 
@@ -21,9 +23,14 @@ type RedisClient = Awaited<
 >['client'];
 
 const resolveDatabaseIndex = (input: RedisBrowserInput) => {
-  const parsed =
-    input.databaseIndex ?? Number.parseInt(input.database ?? '0', 10);
-  return Number.isFinite(parsed) ? parsed : 0;
+  if (
+    typeof input.databaseIndex === 'number' &&
+    Number.isFinite(input.databaseIndex)
+  ) {
+    return input.databaseIndex;
+  }
+
+  return parseRedisDatabaseIndex(input.database, input.url);
 };
 
 const formatBytes = (value: number | null) => {
@@ -95,9 +102,7 @@ const withSelectedDatabase = async <T>(
   });
 
   try {
-    if (databaseIndex > 0) {
-      await runtime.client.select(databaseIndex);
-    }
+    await runtime.client.select(databaseIndex);
 
     return await run(runtime.client);
   } finally {
@@ -180,7 +185,16 @@ const getRedisEncoding = async (client: RedisClient, key: string) => {
 
 const getRedisMemoryUsage = async (client: RedisClient, key: string) => {
   return await safeCommand<number | null>(async () => {
-    const rawValue = await client.sendCommand(['MEMORY', 'USAGE', key]);
+    // SAMPLES 0 examines every element instead of the Redis default of 5,
+    // which badly undercounts memory for large hash/list/set/zset keys.
+    // Safe here because this runs once per on-demand key open, not on a poll loop.
+    const rawValue = await client.sendCommand([
+      'MEMORY',
+      'USAGE',
+      key,
+      'SAMPLES',
+      '0',
+    ]);
     return rawValue === null ? null : Number(rawValue);
   }, null);
 };
@@ -278,17 +292,46 @@ const buildTablePreview = (
   return null;
 };
 
+const buildRedisKeyInfo = async (
+  client: RedisClient,
+  key: string,
+  databaseIndex: number
+): Promise<RedisKeyInfo> => {
+  const type = await client.type(key);
+  const [ttl, memoryUsage, encoding, length] = await Promise.all([
+    client.ttl(key),
+    getRedisMemoryUsage(client, key),
+    getRedisEncoding(client, key),
+    getRedisLength(client, key, type, undefined),
+  ]);
+
+  return {
+    key,
+    type,
+    ttl,
+    databaseIndex,
+    editingSupported: type !== 'stream' && type !== 'none',
+    memoryUsage,
+    memoryUsageHuman: formatBytes(memoryUsage),
+    length,
+    encoding,
+    ttlLabel: formatTtl(ttl),
+  };
+};
+
 const buildRedisKeyDetail = async (
   client: RedisClient,
   key: string,
   databaseIndex: number
 ): Promise<RedisKeyDetail> => {
   const type = await client.type(key);
-  const ttl = await client.ttl(key);
-  const value = await readRedisValue(client, key, type);
-  const memoryUsage = await getRedisMemoryUsage(client, key);
+  const [ttl, value, memoryUsage, encoding] = await Promise.all([
+    client.ttl(key),
+    readRedisValue(client, key, type),
+    getRedisMemoryUsage(client, key),
+    getRedisEncoding(client, key),
+  ]);
   const length = await getRedisLength(client, key, type, value);
-  const encoding = await getRedisEncoding(client, key);
   const jsonValue =
     type === 'string' ? tryParseJsonString(value as string | null) : null;
   const tablePreview = buildTablePreview(type, value);
@@ -378,6 +421,11 @@ const applyRedisTtl = async (
   await client.expire(key, Math.max(1, Math.floor(ttlSeconds)));
 };
 
+// Safety ceiling only — not a normal-case limit. Fetching "all matching keys"
+// is the correct MVP behavior; this just stops an unbounded request against a
+// pathologically huge keyspace from hanging.
+const DEFAULT_KEY_SCAN_LIMIT = 20_000;
+
 export async function listRedisKeys(
   input: RedisBrowserInput,
   options?: {
@@ -388,11 +436,12 @@ export async function listRedisKeys(
 ) {
   return withSelectedDatabase(input, async client => {
     const scanPattern = options?.keyPattern || '*';
-    const requestedKeyCount = Math.max(options?.count ?? 500, 100);
-    const scanBatchCount = Math.min(requestedKeyCount, 200);
+    const keyLimit = options?.count ?? DEFAULT_KEY_SCAN_LIMIT;
+    const scanBatchCount = Math.min(keyLimit, 200);
     const collectedKeys: string[] = [];
     const seenKeys = new Set<string>();
     let cursor = options?.cursor || '0';
+    let truncated = false;
 
     do {
       const scanResult = await client.scan(cursor, {
@@ -410,11 +459,18 @@ export async function listRedisKeys(
         seenKeys.add(key);
         collectedKeys.push(key);
 
-        if (collectedKeys.length >= requestedKeyCount) {
+        if (collectedKeys.length >= keyLimit) {
+          truncated = cursor !== '0';
           break;
         }
       }
-    } while (cursor !== '0' && collectedKeys.length < requestedKeyCount);
+    } while (cursor !== '0' && collectedKeys.length < keyLimit);
+
+    if (truncated) {
+      console.warn(
+        `[redis-browser] Key scan hit the ${keyLimit}-key limit for pattern "${scanPattern}"; results are incomplete.`
+      );
+    }
 
     const keys = await Promise.all(
       collectedKeys.map(async key => {
@@ -436,6 +492,7 @@ export async function listRedisKeys(
 
     return {
       cursor,
+      truncated,
       keys: keys as RedisKeyListItem[],
     };
   });
@@ -491,6 +548,15 @@ export async function listRedisDatabases(
     return [...databases.values()].sort(
       (left, right) => left.index - right.index
     );
+  });
+}
+
+export async function getRedisKeyInfo(
+  input: RedisBrowserInput,
+  key: string
+): Promise<RedisKeyInfo> {
+  return withSelectedDatabase(input, async client => {
+    return buildRedisKeyInfo(client, key, resolveDatabaseIndex(input));
   });
 }
 
@@ -597,5 +663,23 @@ export async function updateRedisKeyValue(
     }
 
     throw new Error(`Editing is not supported for Redis ${type} keys.`);
+  });
+}
+
+const DELETE_CHUNK_SIZE = 500;
+
+export async function deleteRedisKeys(
+  input: RedisBrowserInput,
+  keys: string[]
+): Promise<{ deletedCount: number }> {
+  return withSelectedDatabase(input, async client => {
+    let deletedCount = 0;
+
+    for (let index = 0; index < keys.length; index += DELETE_CHUNK_SIZE) {
+      const chunk = keys.slice(index, index + DELETE_CHUNK_SIZE);
+      deletedCount += await client.unlink(chunk);
+    }
+
+    return { deletedCount };
   });
 }

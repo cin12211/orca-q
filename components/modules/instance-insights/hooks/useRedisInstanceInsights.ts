@@ -4,10 +4,18 @@ import { getConnectionParams } from '~/core/helpers/connection-helper';
 import type { Connection } from '~/core/stores';
 import type {
   InstanceActionResponse,
+  RedisClientInsight,
+  RedisConfigEntry,
   RedisInstanceInsights,
+  RedisKeyspaceInsight,
+  RedisMemoryInsight,
+  RedisOverviewMetrics,
+  RedisPerformanceInsight,
+  RedisPersistenceInsight,
+  RedisReplicationInsight,
 } from '~/core/types';
 
-type RedisInsightsSection =
+export type RedisInsightsSection =
   | 'overview'
   | 'keyspace'
   | 'memory'
@@ -16,6 +24,28 @@ type RedisInsightsSection =
   | 'persistence'
   | 'replication'
   | 'config';
+
+interface RedisInsightsSectionDataMap {
+  overview: RedisOverviewMetrics;
+  keyspace: RedisKeyspaceInsight;
+  memory: RedisMemoryInsight;
+  performance: RedisPerformanceInsight;
+  clients: RedisClientInsight;
+  persistence: RedisPersistenceInsight;
+  replication: RedisReplicationInsight;
+  config: RedisConfigEntry[];
+}
+
+const SECTION_ENDPOINTS: Record<RedisInsightsSection, string> = {
+  overview: '/api/redis/instance-insights/overview',
+  keyspace: '/api/redis/instance-insights/keyspace',
+  memory: '/api/redis/instance-insights/memory',
+  performance: '/api/redis/instance-insights/performance',
+  clients: '/api/redis/instance-insights/clients',
+  persistence: '/api/redis/instance-insights/persistence',
+  replication: '/api/redis/instance-insights/replication',
+  config: '/api/redis/instance-insights/config',
+};
 
 const AUTO_REFRESH_INTERVAL_MS = 5000;
 
@@ -29,8 +59,12 @@ export function useRedisInstanceInsights(options: {
   const isInitialLoading = ref(false);
   const isLoading = ref(false);
   const isActionLoading = ref(false);
-  const insights = ref<RedisInstanceInsights | null>(null);
+  const insights = ref<Partial<RedisInstanceInsights>>({});
+  const loadedSections = ref<Set<RedisInsightsSection>>(new Set());
   const isActiveView = ref(true);
+  // Bumped on every completed fetch (silent or not) so the UI can flash the
+  // refresh icon to show an auto-refresh just happened.
+  const refreshSignal = ref(0);
 
   const hasConnection = computed(() => Boolean(options.connection.value));
 
@@ -42,30 +76,43 @@ export function useRedisInstanceInsights(options: {
     isActiveView.value = true;
   });
 
-  const fetchInsights = async (silent = false) => {
+  const fetchSection = async <K extends RedisInsightsSection>(
+    section: K,
+    silent = false
+  ): Promise<RedisInsightsSectionDataMap[K] | null> => {
     if (!options.connection.value) {
-      insights.value = null;
       return null;
     }
 
+    const isFirstLoadForSection = !loadedSections.value.has(section);
+
     if (!silent) {
-      isLoading.value = true;
+      if (isFirstLoadForSection) {
+        isInitialLoading.value = true;
+      } else {
+        isLoading.value = true;
+      }
     }
 
     try {
       error.value = null;
-      const result = await $fetch<RedisInstanceInsights>(
-        '/api/redis/instance-insights/overview',
-        {
-          method: 'POST',
-          body: {
-            ...getConnectionParams(options.connection.value),
-            method: options.connection.value.method,
-            databaseIndex: options.databaseIndex.value,
-          },
-        }
-      );
-      insights.value = result;
+      const endpoint: string = SECTION_ENDPOINTS[section];
+      const result = (await ($fetch as any)(endpoint, {
+        method: 'POST',
+        body: {
+          ...getConnectionParams(options.connection.value),
+          method: options.connection.value.method,
+          databaseIndex: options.databaseIndex.value,
+        },
+      })) as RedisInsightsSectionDataMap[K];
+
+      insights.value = {
+        ...insights.value,
+        [section]: result,
+      } as Partial<RedisInstanceInsights>;
+      loadedSections.value.add(section);
+      refreshSignal.value += 1;
+
       return result;
     } catch (err: any) {
       error.value =
@@ -75,9 +122,8 @@ export function useRedisInstanceInsights(options: {
         'Failed to fetch Redis instance insights.';
       return null;
     } finally {
-      if (!silent) {
-        isLoading.value = false;
-      }
+      isInitialLoading.value = false;
+      isLoading.value = false;
     }
   };
 
@@ -106,7 +152,7 @@ export function useRedisInstanceInsights(options: {
         toast('Redis client terminated', {
           description: result.message,
         });
-        await fetchInsights(true);
+        await fetchSection('clients', true);
         return true;
       }
 
@@ -128,20 +174,29 @@ export function useRedisInstanceInsights(options: {
   };
 
   const refresh = async () => {
-    await fetchInsights();
+    await fetchSection(activeSection.value);
   };
+
+  watch(
+    () => activeSection.value,
+    section => {
+      if (!loadedSections.value.has(section)) {
+        fetchSection(section);
+      }
+    }
+  );
 
   watch(
     [() => options.connection.value, () => options.databaseIndex.value],
     async ([connection]) => {
+      insights.value = {};
+      loadedSections.value = new Set();
+
       if (!connection) {
-        insights.value = null;
         return;
       }
 
-      isInitialLoading.value = true;
-      await fetchInsights();
-      isInitialLoading.value = false;
+      await fetchSection(activeSection.value);
     },
     { immediate: true }
   );
@@ -152,7 +207,7 @@ export function useRedisInstanceInsights(options: {
         return;
       }
 
-      await fetchInsights(true);
+      await fetchSection(activeSection.value, true);
     },
     AUTO_REFRESH_INTERVAL_MS,
     { immediate: false }
@@ -178,6 +233,7 @@ export function useRedisInstanceInsights(options: {
     isLoading,
     isActionLoading,
     insights,
+    refreshSignal,
     refresh,
     killClient,
   };

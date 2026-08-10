@@ -8,6 +8,7 @@ import type {
 } from '~/core/types/redis-workspace.types';
 import {
   createRedisRuntimeClient,
+  parseRedisDatabaseIndex,
   type RedisRuntimeInput,
 } from './redis.client';
 
@@ -29,9 +30,11 @@ const MAX_MESSAGES = 200;
 const pubSubSessions = new Map<string, RedisPubSubSession>();
 
 const resolveDatabaseIndex = (input: RedisPubSubInput) => {
-  const parsed =
-    input.databaseIndex ?? Number.parseInt(input.database ?? '0', 10);
-  return Number.isFinite(parsed) ? parsed : 0;
+  if (typeof input.databaseIndex === 'number' && Number.isFinite(input.databaseIndex)) {
+    return input.databaseIndex;
+  }
+
+  return parseRedisDatabaseIndex(input.database, input.url);
 };
 
 const inferRedisPubSubMode = (target: string): RedisPubSubSubscriptionMode => {
@@ -80,9 +83,7 @@ const withSelectedDatabase = async <T>(
   });
 
   try {
-    if (databaseIndex > 0) {
-      await runtime.client.select(databaseIndex);
-    }
+    await runtime.client.select(databaseIndex);
 
     return await run(runtime);
   } finally {
@@ -124,9 +125,7 @@ const createRedisPubSubSession = async (
     database: `${databaseIndex}`,
   });
 
-  if (databaseIndex > 0) {
-    await runtime.client.select(databaseIndex);
-  }
+  await runtime.client.select(databaseIndex);
 
   const session: RedisPubSubSession = {
     id: crypto.randomUUID(),

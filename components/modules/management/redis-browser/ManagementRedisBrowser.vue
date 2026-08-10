@@ -1,15 +1,17 @@
 <script setup lang="ts">
+import RedisDeleteKeyDialog from '~/components/modules/redis-workspace/components/RedisDeleteKeyDialog.vue';
 import { useRedisWorkspace } from '~/components/modules/redis-workspace/hooks/useRedisWorkspace';
 import RedisDBSelector from '~/components/modules/selectors/RedisDBSelector.vue';
 import { useTabManagement } from '~/core/composables/useTabManagement';
 import { useWorkspaceConnectionRoute } from '~/core/composables/useWorkspaceConnectionRoute';
 import { useManagementConnectionStore } from '~/core/stores';
 import { RedisBrowserViewMode } from '~/core/stores/useRedisWorkspaceStore';
-import { TabViewType } from '~/core/stores/useTabViewsStore';
+import { TabViewType, useTabViewsStore } from '~/core/stores/useTabViewsStore';
 import { ManagementSidebarHeader } from '../shared';
 import RedisKeyTree from './components/RedisKeyTree.vue';
 
 const connectionStore = useManagementConnectionStore();
+const tabViewStore = useTabViewsStore();
 const { openRedisTab } = useTabManagement();
 const { workspaceId } = useWorkspaceConnectionRoute();
 const connection = computed(() => connectionStore.selectedConnection);
@@ -17,8 +19,14 @@ const connection = computed(() => connectionStore.selectedConnection);
 const workspace = useRedisWorkspace({
   connection,
 });
-const { session, keys, databases, loadingKeys, selectedDatabaseIndex } =
-  workspace;
+const {
+  session,
+  keys,
+  databases,
+  loadingKeys,
+  selectedDatabaseIndex,
+  isDeletingKey,
+} = workspace;
 const selectedKey = computed(() => session.value?.selectedKey ?? null);
 const viewMode = computed({
   get: () => session.value?.viewMode ?? RedisBrowserViewMode.Tree,
@@ -98,9 +106,11 @@ const openSelectedKey = async (key: string) => {
   await workspace.openKey(key);
 
   const connectionId = connection.value?.id || 'redis';
+  const tabId = `redis-browser-${connectionId}`;
+
   await openRedisTab({
-    id: `redis-browser-${connectionId}`,
-    name: 'Redis Browser',
+    id: tabId,
+    name: key,
     type: TabViewType.RedisBrowser,
     metadata: {
       type: TabViewType.RedisBrowser,
@@ -109,7 +119,90 @@ const openSelectedKey = async (key: string) => {
       selectedKey: key,
     },
   });
+
+  // openRedisTab only sets the name on first creation; the tab is reused
+  // for every key of this connection, so update it explicitly when an
+  // already-open tab switches to a different key.
+  await tabViewStore.updateTabName(tabId, key);
 };
+
+const deleteDialogState = ref<
+  | { open: false }
+  | { open: true; mode: 'key'; key: string }
+  | { open: true; mode: 'group'; prefix: string; keys: string[] }
+>({ open: false });
+
+const isPreviewLoadingGroup = ref(false);
+
+const closeDeleteDialog = () => {
+  deleteDialogState.value = { open: false };
+};
+
+const onDeleteKeyRequest = async (
+  key: string,
+  options: { immediate: boolean }
+) => {
+  if (options.immediate) {
+    await workspace.deleteKey(key);
+    return;
+  }
+
+  deleteDialogState.value = { open: true, mode: 'key', key };
+};
+
+const onDeleteGroupRequest = async (prefix: string) => {
+  deleteDialogState.value = { open: true, mode: 'group', prefix, keys: [] };
+  isPreviewLoadingGroup.value = true;
+
+  try {
+    const groupKeys = await workspace.previewGroupKeys(prefix);
+    const state = deleteDialogState.value;
+
+    // The user may have closed the dialog or opened a different group's
+    // dialog while this request was in flight — only apply the result if
+    // it's still the same request the dialog is showing.
+    if (state.open && state.mode === 'group' && state.prefix === prefix) {
+      deleteDialogState.value = {
+        open: true,
+        mode: 'group',
+        prefix,
+        keys: groupKeys,
+      };
+    }
+  } finally {
+    isPreviewLoadingGroup.value = false;
+  }
+};
+
+const onConfirmDelete = async () => {
+  const state = deleteDialogState.value;
+
+  if (!state.open) {
+    return;
+  }
+
+  if (state.mode === 'key') {
+    await workspace.deleteKey(state.key);
+  } else {
+    await workspace.deleteKeys(state.keys);
+  }
+
+  closeDeleteDialog();
+};
+
+const deleteDialogMode = computed(() =>
+  deleteDialogState.value.open ? deleteDialogState.value.mode : 'key'
+);
+const deleteDialogTargetKey = computed(() =>
+  deleteDialogState.value.open && deleteDialogState.value.mode === 'key'
+    ? deleteDialogState.value.key
+    : ''
+);
+const deleteDialogTargetKeys = computed(() =>
+  deleteDialogState.value.open && deleteDialogState.value.mode === 'group'
+    ? deleteDialogState.value.keys
+    : []
+);
 </script>
 
 <template>
@@ -197,7 +290,20 @@ const openSelectedKey = async (key: string) => {
         :search-query="searchQuery"
         :view-mode="viewMode"
         @select="openSelectedKey"
+        @delete-key="onDeleteKeyRequest"
+        @delete-group="onDeleteGroupRequest"
       />
     </div>
+
+    <RedisDeleteKeyDialog
+      :open="deleteDialogState.open"
+      :mode="deleteDialogMode"
+      :target-key="deleteDialogTargetKey"
+      :target-keys="deleteDialogTargetKeys"
+      :loading="isDeletingKey"
+      :preview-loading="isPreviewLoadingGroup"
+      @update:open="value => !value && !isDeletingKey && closeDeleteDialog()"
+      @confirm="onConfirmDelete"
+    />
   </div>
 </template>

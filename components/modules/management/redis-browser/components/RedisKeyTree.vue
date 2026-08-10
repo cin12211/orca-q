@@ -1,9 +1,11 @@
 <script setup lang="ts">
+import BaseContextMenu from '~/components/base/context-menu/BaseContextMenu.vue';
 import FileTree from '~/components/base/tree-folder/FileTree.vue';
 import type { FileNode } from '~/components/base/tree-folder/types';
 import { formatBytes } from '~/core/helpers/bytes-formatter';
 import { RedisBrowserViewMode } from '~/core/stores/useRedisWorkspaceStore';
 import type { RedisKeyListItem } from '~/core/types/redis-workspace.types';
+import { useRedisTreeContextMenu } from '../hooks/useRedisTreeContextMenu';
 import {
   useRedisTreeData,
   type RedisTreeNodeData,
@@ -27,6 +29,8 @@ const props = withDefaults(
 
 const emit = defineEmits<{
   (e: 'select', key: string): void;
+  (e: 'delete-key', key: string, options: { immediate: boolean }): void;
+  (e: 'delete-group', prefix: string): void;
 }>();
 
 const fileTreeRef = useTemplateRef<typeof FileTree | null>('fileTreeRef');
@@ -122,11 +126,52 @@ const getNodeMeta = (
   return labels;
 };
 
+const resolveNode = (nodeId: string): RedisTreeNodeData | null => {
+  const source =
+    props.viewMode === RedisBrowserViewMode.Tree
+      ? fileTreeData.value
+      : flatFileTreeData.value;
+
+  return getRedisNodeData(source[nodeId]);
+};
+
+const { contextMenuItems, onRightClickItem, onClearContextMenu } =
+  useRedisTreeContextMenu({
+    resolveNode,
+    onDeleteKey: key => emit('delete-key', key, { immediate: false }),
+    onDeleteGroup: prefix => emit('delete-group', prefix),
+  });
+
+const handleTreeDelete = (nodeId: string, event: KeyboardEvent) => {
+  const data = resolveNode(nodeId);
+
+  if (!data) {
+    return;
+  }
+
+  if (data.kind === 'key' && data.redisKey) {
+    emit('delete-key', data.redisKey, {
+      immediate: event.metaKey || event.ctrlKey,
+    });
+    return;
+  }
+
+  if (data.kind === 'group') {
+    const prefix = nodeId.startsWith('redis-group:')
+      ? nodeId.slice('redis-group:'.length)
+      : nodeId;
+    emit('delete-group', prefix);
+  }
+};
+
+const isLocalSelection = ref(false);
+
 const handleListClick = (nodeId: string) => {
   const node = flatFileTreeData.value[nodeId];
   const redisKey = node?.data?.redisKey;
 
   if (node?.data?.kind === 'key' && redisKey) {
+    isLocalSelection.value = true;
     emit('select', redisKey);
   }
 };
@@ -136,31 +181,47 @@ const handleTreeClick = (nodeId: string) => {
   const redisKey = node?.data?.redisKey;
 
   if (node?.data?.kind === 'key' && redisKey) {
+    isLocalSelection.value = true;
     emit('select', redisKey);
   }
+};
+
+const focusSelectedKey = (selectedKey: string | null) => {
+  const activeRef =
+    props.viewMode === RedisBrowserViewMode.Tree
+      ? fileTreeRef.value
+      : flatTreeRef.value;
+
+  if (!activeRef) {
+    return;
+  }
+
+  if (!selectedKey) {
+    activeRef.clearSelection();
+    return;
+  }
+
+  activeRef.focusItem(`redis-key:${selectedKey}`);
 };
 
 watch(
   () => props.selectedKey,
   selectedKey => {
-    const activeRef =
-      props.viewMode === RedisBrowserViewMode.Tree
-        ? fileTreeRef.value
-        : flatTreeRef.value;
-
-    if (!activeRef) {
+    if (isLocalSelection.value) {
+      isLocalSelection.value = false;
       return;
     }
 
-    if (!selectedKey) {
-      activeRef.clearSelection();
-      return;
-    }
-
-    activeRef.focusItem(`redis-key:${selectedKey}`);
+    focusSelectedKey(selectedKey);
   },
   { flush: 'post', immediate: true }
 );
+
+onActivated(() => {
+  if (props.selectedKey) {
+    focusSelectedKey(props.selectedKey);
+  }
+});
 
 watch(
   () => props.searchQuery,
@@ -192,13 +253,11 @@ defineExpose({
 </script>
 
 <template>
-  <div class="min-h-0 flex-1 overflow-hidden">
-    <div v-if="loading" class="px-3 py-4 text-sm text-muted-foreground">
-      Loading Redis keys...
-    </div>
+  <div class="relative h-full flex-1 overflow-hidden">
+    <LoadingOverlay :visible="loading" />
 
     <div
-      v-else-if="visibleKeys.length === 0"
+      v-if="visibleKeys.length === 0"
       class="flex h-full items-center justify-center"
     >
       <BaseEmpty
@@ -207,57 +266,68 @@ defineExpose({
       />
     </div>
 
-    <div
-      v-else-if="props.viewMode === RedisBrowserViewMode.Tree"
-      class="h-full"
+    <BaseContextMenu
+      v-else
+      :context-menu-items="contextMenuItems"
+      @on-clear-context-menu="onClearContextMenu"
     >
-      <FileTree
-        ref="fileTreeRef"
-        :init-expanded-ids="defaultFolderOpenIds"
-        :initial-data="fileTreeData"
-        storage-key="redis-key-tree"
-        :allow-drag-and-drop="false"
-        :delay-focus="0"
-        @click="handleTreeClick"
-      >
-        <template #actions="{ node }">
-          <div class="flex items-center gap-1.5 text-xxs text-muted-foreground">
-            <span
-              v-for="meta in getNodeMeta(node)"
-              :key="`${node.id}-${meta.label}`"
-              class="truncate"
-              :title="meta.title"
+      <div v-if="props.viewMode === RedisBrowserViewMode.Tree" class="h-full">
+        <FileTree
+          ref="fileTreeRef"
+          :init-expanded-ids="defaultFolderOpenIds"
+          :initial-data="fileTreeData"
+          storage-key="redis-key-tree"
+          :allow-drag-and-drop="false"
+          :delay-focus="0"
+          @click="handleTreeClick"
+          @contextmenu="onRightClickItem"
+          @delete="handleTreeDelete"
+        >
+          <template #actions="{ node }">
+            <div
+              class="flex items-center gap-1.5 text-xxs text-muted-foreground"
             >
-              {{ meta.label }}
-            </span>
-          </div>
-        </template>
-      </FileTree>
-    </div>
+              <span
+                v-for="meta in getNodeMeta(node)"
+                :key="`${node.id}-${meta.label}`"
+                class="truncate"
+                :title="meta.title"
+              >
+                {{ meta.label }}
+              </span>
+            </div>
+          </template>
+        </FileTree>
+      </div>
 
-    <div v-else class="h-full">
-      <FileTree
-        ref="flatTreeRef"
-        :init-expanded-ids="[]"
-        :initial-data="flatFileTreeData"
-        storage-key="redis-key-list"
-        :allow-drag-and-drop="false"
-        :delay-focus="0"
-        @click="handleListClick"
-      >
-        <template #actions="{ node }">
-          <div class="flex items-center gap-1.5 text-xxs text-muted-foreground">
-            <span
-              v-for="meta in getNodeMeta(node)"
-              :key="`${node.id}-${meta.label}`"
-              class="truncate"
-              :title="meta.title"
+      <div v-else class="h-full">
+        <FileTree
+          ref="flatTreeRef"
+          :init-expanded-ids="[]"
+          :initial-data="flatFileTreeData"
+          storage-key="redis-key-list"
+          :allow-drag-and-drop="false"
+          :delay-focus="0"
+          @click="handleListClick"
+          @contextmenu="onRightClickItem"
+          @delete="handleTreeDelete"
+        >
+          <template #actions="{ node }">
+            <div
+              class="flex items-center gap-1.5 text-xxs text-muted-foreground"
             >
-              {{ meta.label }}
-            </span>
-          </div>
-        </template>
-      </FileTree>
-    </div>
+              <span
+                v-for="meta in getNodeMeta(node)"
+                :key="`${node.id}-${meta.label}`"
+                class="truncate"
+                :title="meta.title"
+              >
+                {{ meta.label }}
+              </span>
+            </div>
+          </template>
+        </FileTree>
+      </div>
+    </BaseContextMenu>
   </div>
 </template>

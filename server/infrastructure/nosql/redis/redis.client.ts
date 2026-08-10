@@ -1,4 +1,5 @@
 import { createClient } from 'redis';
+import { parseConnectionString } from '~/core/helpers/parser-connection-string';
 import {
   EConnectionMethod,
   type ISSLConfig,
@@ -21,9 +22,43 @@ export interface RedisRuntimeInput {
   disableReconnect?: boolean;
 }
 
-const parseRedisDatabaseIndex = (value?: string) => {
-  const parsed = Number.parseInt(value || '0', 10);
-  return Number.isFinite(parsed) ? parsed : 0;
+export const parseRedisDatabaseIndex = (value?: string, url?: string) => {
+  if (value !== undefined && value !== null && value !== '') {
+    const parsed = Number.parseInt(value, 10);
+    if (Number.isFinite(parsed)) {
+      return parsed;
+    }
+
+    if (value.startsWith('redis://') || value.startsWith('rediss://')) {
+      try {
+        const parsedConn = parseConnectionString(value);
+        if (parsedConn.database) {
+          const parsedDb = Number.parseInt(parsedConn.database, 10);
+          if (Number.isFinite(parsedDb)) {
+            return parsedDb;
+          }
+        }
+      } catch {
+        // Fallthrough
+      }
+    }
+  }
+
+  if (url) {
+    try {
+      const parsedConn = parseConnectionString(url);
+      if (parsedConn.database) {
+        const parsedDb = Number.parseInt(parsedConn.database, 10);
+        if (Number.isFinite(parsedDb)) {
+          return parsedDb;
+        }
+      }
+    } catch {
+      // Fallthrough
+    }
+  }
+
+  return 0;
 };
 
 const encodeAuthSegment = (value?: string) =>
@@ -110,7 +145,7 @@ export async function createRedisRuntimeClient(input: RedisRuntimeInput) {
 
   return {
     client,
-    databaseIndex: parseRedisDatabaseIndex(input.database),
+    databaseIndex: parseRedisDatabaseIndex(input.database, url),
     close: async () => {
       if (client.isOpen) {
         await client.quit();

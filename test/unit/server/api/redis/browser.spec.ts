@@ -1,6 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { EConnectionMethod } from '~/core/types/entities/connection.entity';
 import browserHandler from '~/server/api/redis/browser/index.post';
+import keysDeleteHandler from '~/server/api/redis/browser/keys.delete';
+import valueDeleteHandler from '~/server/api/redis/browser/value.delete';
 import valueHandler from '~/server/api/redis/browser/value.patch';
 
 const {
@@ -10,6 +12,7 @@ const {
   listRedisDatabasesMock,
   getRedisKeyDetailMock,
   updateRedisKeyValueMock,
+  deleteRedisKeysMock,
 } = vi.hoisted(() => ({
   readBodyMock: vi.fn(),
   readValidatedBodyMock: vi.fn(),
@@ -17,6 +20,7 @@ const {
   listRedisDatabasesMock: vi.fn(),
   getRedisKeyDetailMock: vi.fn(),
   updateRedisKeyValueMock: vi.fn(),
+  deleteRedisKeysMock: vi.fn(),
 }));
 
 vi.hoisted(() => {
@@ -38,6 +42,7 @@ vi.mock('~/server/infrastructure/nosql/redis/redis-browser.service', () => ({
   listRedisDatabases: listRedisDatabasesMock,
   getRedisKeyDetail: getRedisKeyDetailMock,
   updateRedisKeyValue: updateRedisKeyValueMock,
+  deleteRedisKeys: deleteRedisKeysMock,
 }));
 
 describe('Redis browser routes', () => {
@@ -157,5 +162,61 @@ describe('Redis browser routes', () => {
       'Validation error: key is required'
     );
     expect(updateRedisKeyValueMock).not.toHaveBeenCalled();
+  });
+
+  it('deletes a single key via UNLINK', async () => {
+    readValidatedBodyMock.mockResolvedValue({
+      method: EConnectionMethod.STRING,
+      stringConnection: 'redis://127.0.0.1:6379/0',
+      key: 'orders:1',
+    });
+    deleteRedisKeysMock.mockResolvedValue({ deletedCount: 1 });
+
+    const result = await valueDeleteHandler({} as never);
+
+    expect(result).toEqual({ deletedCount: 1 });
+    expect(deleteRedisKeysMock).toHaveBeenCalledWith(
+      expect.objectContaining({ url: 'redis://127.0.0.1:6379/0' }),
+      ['orders:1']
+    );
+  });
+
+  it('rejects single delete when key is missing', async () => {
+    readValidatedBodyMock.mockRejectedValue(
+      new Error('Validation error: key is required')
+    );
+
+    await expect(valueDeleteHandler({} as never)).rejects.toThrow(
+      'Validation error: key is required'
+    );
+    expect(deleteRedisKeysMock).not.toHaveBeenCalled();
+  });
+
+  it('deletes a bulk key list via UNLINK', async () => {
+    readValidatedBodyMock.mockResolvedValue({
+      method: EConnectionMethod.STRING,
+      stringConnection: 'redis://127.0.0.1:6379/0',
+      keys: ['orders:1', 'orders:2'],
+    });
+    deleteRedisKeysMock.mockResolvedValue({ deletedCount: 2 });
+
+    const result = await keysDeleteHandler({} as never);
+
+    expect(result).toEqual({ deletedCount: 2 });
+    expect(deleteRedisKeysMock).toHaveBeenCalledWith(
+      expect.objectContaining({ url: 'redis://127.0.0.1:6379/0' }),
+      ['orders:1', 'orders:2']
+    );
+  });
+
+  it('rejects bulk delete when keys array is empty', async () => {
+    readValidatedBodyMock.mockRejectedValue(
+      new Error('Validation error: keys must contain at least 1 item')
+    );
+
+    await expect(keysDeleteHandler({} as never)).rejects.toThrow(
+      'Validation error: keys must contain at least 1 item'
+    );
+    expect(deleteRedisKeysMock).not.toHaveBeenCalled();
   });
 });

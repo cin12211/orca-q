@@ -102,6 +102,7 @@ const getConnectionSupportIconProps = (connection?: Connection) => {
 </script>
 <template>
   <CreateConnectionModal
+    v-if="isModalCreateConnectionOpen"
     :open="isModalCreateConnectionOpen"
     :editing-connection="null"
     @update:open="isModalCreateConnectionOpen = $event"

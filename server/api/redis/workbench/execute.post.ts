@@ -4,7 +4,10 @@ import {
   type ISSHConfig,
   type ISSLConfig,
 } from '~/core/types/entities/connection.entity';
-import { createRedisRuntimeClient } from '~/server/infrastructure/nosql/redis/redis.client';
+import {
+  createRedisRuntimeClient,
+  parseRedisDatabaseIndex,
+} from '~/server/infrastructure/nosql/redis/redis.client';
 
 const parseCommand = (command: string) => {
   const tokens: string[] = [];
@@ -32,6 +35,11 @@ export default defineEventHandler(async event => {
     ssh?: ISSHConfig;
   } = await readBody(event);
 
+  const databaseIndex =
+    typeof body.databaseIndex === 'number' && Number.isFinite(body.databaseIndex)
+      ? body.databaseIndex
+      : parseRedisDatabaseIndex(body.database, body.stringConnection);
+
   const runtime = await createRedisRuntimeClient({
     method: body.method,
     url: body.stringConnection,
@@ -39,15 +47,13 @@ export default defineEventHandler(async event => {
     port: body.port,
     username: body.username,
     password: body.password,
-    database: `${body.databaseIndex ?? body.database ?? 0}`,
+    database: `${databaseIndex}`,
     ssl: body.ssl,
     ssh: body.ssh,
   });
 
   try {
-    if ((body.databaseIndex ?? 0) > 0) {
-      await runtime.client.select(body.databaseIndex ?? 0);
-    }
+    await runtime.client.select(databaseIndex);
 
     const args = parseCommand(body.command);
 

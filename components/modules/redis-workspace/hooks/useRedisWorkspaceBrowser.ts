@@ -3,10 +3,13 @@ import { toast } from 'vue-sonner';
 import type { Connection } from '~/core/stores';
 import { useRedisWorkspaceStore } from '~/core/stores/useRedisWorkspaceStore';
 import type { RedisWorkspaceSession } from '~/core/stores/useRedisWorkspaceStore';
+import { useTabViewsStore } from '~/core/stores/useTabViewsStore';
 import type {
   RedisBrowserResponse,
   RedisDatabaseOption,
+  RedisDeleteResponse,
   RedisKeyDetail,
+  RedisKeyInfo,
   RedisKeyListItem,
   RedisValueUpdatePayload,
 } from '~/core/types/redis-workspace.types';
@@ -29,15 +32,24 @@ export function useRedisWorkspaceBrowser({
   const keys = ref<RedisKeyListItem[]>([]);
   const databases = ref<RedisDatabaseOption[]>([]);
   const selectedKeyDetail = shallowRef<RedisKeyDetail | null>(null);
+  const selectedKeyInfo = shallowRef<RedisKeyInfo | null>(null);
   const loadingKeys = ref(false);
   const loadingSelectedKeyDetail = ref(false);
+  const loadingSelectedKeyInfo = ref(false);
   const savingValue = ref(false);
   const editUnavailableReason = ref('');
   let selectedKeyDetailRequestId = 0;
+  let selectedKeyInfoRequestId = 0;
 
   const canEditSelectedValue = computed(
     () => !!selectedKeyDetail.value && !editUnavailableReason.value
   );
+
+  const detailCache = new Map<string, RedisKeyDetail>();
+  const infoCache = new Map<string, RedisKeyInfo>();
+
+  const getDetailCacheKey = (databaseIndex: number, key: string) =>
+    `${connection.value?.id}:${databaseIndex}:${key}`;
 
   const refreshKeys = async () => {
     if (!connection.value || !session.value) {
@@ -85,13 +97,86 @@ export function useRedisWorkspaceBrowser({
     );
   };
 
-  const refreshSelectedKeyDetail = async (key = session.value?.selectedKey) => {
+  const refreshSelectedKeyInfo = async (
+    key = session.value?.selectedKey,
+    options?: { force?: boolean }
+  ) => {
     if (!connection.value || !session.value || !key) {
-      selectedKeyDetail.value = null;
-      editUnavailableReason.value = '';
-      loadingSelectedKeyDetail.value = false;
+      selectedKeyInfo.value = null;
+      loadingSelectedKeyInfo.value = false;
       return;
     }
+
+    const cacheKey = getDetailCacheKey(
+      session.value.selectedDatabaseIndex,
+      key
+    );
+    const cached = infoCache.get(cacheKey);
+
+    if (!options?.force && cached) {
+      selectedKeyInfo.value = cached;
+      loadingSelectedKeyInfo.value = false;
+      return;
+    }
+
+    const requestId = ++selectedKeyInfoRequestId;
+    loadingSelectedKeyInfo.value = true;
+
+    try {
+      const info = await $fetch<RedisKeyInfo>('/api/redis/browser/value/info', {
+        method: 'POST',
+        body: {
+          ...buildConnectionBody(connection.value),
+          databaseIndex: session.value.selectedDatabaseIndex,
+          key,
+        },
+      });
+
+      if (requestId !== selectedKeyInfoRequestId) {
+        return;
+      }
+
+      infoCache.set(cacheKey, info);
+      selectedKeyInfo.value = info;
+    } finally {
+      if (requestId === selectedKeyInfoRequestId) {
+        loadingSelectedKeyInfo.value = false;
+      }
+    }
+  };
+
+  const refreshSelectedKeyDetail = async (
+    key = session.value?.selectedKey,
+    options?: { force?: boolean }
+  ) => {
+    if (!connection.value || !session.value || !key) {
+      selectedKeyDetail.value = null;
+      selectedKeyInfo.value = null;
+      editUnavailableReason.value = '';
+      loadingSelectedKeyDetail.value = false;
+      loadingSelectedKeyInfo.value = false;
+      return;
+    }
+
+    const cacheKey = getDetailCacheKey(
+      session.value.selectedDatabaseIndex,
+      key
+    );
+    const cached = detailCache.get(cacheKey);
+
+    if (!options?.force && cached) {
+      selectedKeyDetail.value = cached;
+      selectedKeyInfo.value = cached;
+      editUnavailableReason.value = '';
+      loadingSelectedKeyDetail.value = false;
+      loadingSelectedKeyInfo.value = false;
+      return;
+    }
+
+    // Fire the lightweight metadata-only call alongside the full value
+    // fetch so the header/badges can render before the (potentially slow)
+    // value read finishes.
+    void refreshSelectedKeyInfo(key, options);
 
     const requestId = ++selectedKeyDetailRequestId;
     selectedKeyDetail.value = null;
@@ -111,7 +196,10 @@ export function useRedisWorkspaceBrowser({
         return;
       }
 
+      detailCache.set(cacheKey, detail);
+      infoCache.set(cacheKey, detail);
       selectedKeyDetail.value = detail;
+      selectedKeyInfo.value = detail;
       editUnavailableReason.value = '';
     } finally {
       if (requestId === selectedKeyDetailRequestId) {
@@ -137,7 +225,7 @@ export function useRedisWorkspaceBrowser({
     }
 
     await openKey(key);
-    await refreshSelectedKeyDetail(key);
+    await refreshSelectedKeyDetail(key, { force: true });
   };
 
   const saveSelectedValue = async (payload: RedisValueUpdatePayload) => {
@@ -148,7 +236,7 @@ export function useRedisWorkspaceBrowser({
     savingValue.value = true;
 
     try {
-      selectedKeyDetail.value = await $fetch<RedisKeyDetail>(
+      const updatedDetail = await $fetch<RedisKeyDetail>(
         '/api/redis/browser/value',
         {
           method: 'PATCH',
@@ -164,6 +252,15 @@ export function useRedisWorkspaceBrowser({
           },
         }
       );
+
+      const updatedCacheKey = getDetailCacheKey(
+        session.value.selectedDatabaseIndex,
+        session.value.selectedKey
+      );
+      detailCache.set(updatedCacheKey, updatedDetail);
+      infoCache.set(updatedCacheKey, updatedDetail);
+      selectedKeyDetail.value = updatedDetail;
+      selectedKeyInfo.value = updatedDetail;
       editUnavailableReason.value = '';
       toast.success('Redis key saved successfully', {
         description: `Updated ${session.value.selectedKey}`,
@@ -181,20 +278,137 @@ export function useRedisWorkspaceBrowser({
     }
   };
 
+  const isDeletingKey = ref(false);
+  const tabViewStore = useTabViewsStore();
+
+  const closeBrowserTabForConnection = async () => {
+    if (!connection.value) {
+      return;
+    }
+
+    await tabViewStore.closeTab(`redis-browser-${connection.value.id}`);
+  };
+
+  const handleDeletedKeySelection = async (deletedKeys: string[]) => {
+    if (
+      !session.value?.selectedKey ||
+      !deletedKeys.includes(session.value.selectedKey)
+    ) {
+      return;
+    }
+
+    store.patchSession(session.value.connectionId, { selectedKey: null });
+    selectedKeyDetail.value = null;
+    selectedKeyInfo.value = null;
+    await closeBrowserTabForConnection();
+  };
+
+  const deleteKey = async (key: string) => {
+    if (!connection.value || !session.value) {
+      return;
+    }
+
+    isDeletingKey.value = true;
+
+    try {
+      await $fetch<RedisDeleteResponse>('/api/redis/browser/value', {
+        method: 'DELETE',
+        body: {
+          ...buildConnectionBody(connection.value),
+          databaseIndex: session.value.selectedDatabaseIndex,
+          key,
+        },
+      });
+
+      const deletedCacheKey = getDetailCacheKey(
+        session.value.selectedDatabaseIndex,
+        key
+      );
+      detailCache.delete(deletedCacheKey);
+      infoCache.delete(deletedCacheKey);
+      await handleDeletedKeySelection([key]);
+      await refreshKeys();
+      toast.success('Redis key deleted', {
+        description: `Deleted ${key}`,
+      });
+    } finally {
+      isDeletingKey.value = false;
+    }
+  };
+
+  const deleteKeys = async (keysToDelete: string[]) => {
+    if (!connection.value || !session.value || keysToDelete.length === 0) {
+      return;
+    }
+
+    isDeletingKey.value = true;
+
+    try {
+      await $fetch<RedisDeleteResponse>('/api/redis/browser/keys', {
+        method: 'DELETE',
+        body: {
+          ...buildConnectionBody(connection.value),
+          databaseIndex: session.value.selectedDatabaseIndex,
+          keys: keysToDelete,
+        },
+      });
+
+      keysToDelete.forEach(key => {
+        const cacheKey = getDetailCacheKey(
+          session.value!.selectedDatabaseIndex,
+          key
+        );
+        detailCache.delete(cacheKey);
+        infoCache.delete(cacheKey);
+      });
+      await handleDeletedKeySelection(keysToDelete);
+      await refreshKeys();
+      toast.success('Redis keys deleted', {
+        description: `Deleted ${keysToDelete.length} keys`,
+      });
+    } finally {
+      isDeletingKey.value = false;
+    }
+  };
+
+  const previewGroupKeys = async (prefix: string): Promise<string[]> => {
+    if (!connection.value || !session.value) {
+      return [];
+    }
+
+    const result = await $fetch<RedisBrowserResponse>('/api/redis/browser', {
+      method: 'POST',
+      body: {
+        ...buildConnectionBody(connection.value),
+        databaseIndex: session.value.selectedDatabaseIndex,
+        keyPattern: `${prefix}:*`,
+      },
+    });
+
+    return result.keys.map(item => item.key);
+  };
+
   return {
     keys,
     databases,
     selectedKeyDetail,
+    selectedKeyInfo,
     loadingKeys,
     loadingSelectedKeyDetail,
+    loadingSelectedKeyInfo,
     savingValue,
+    isDeletingKey,
     editUnavailableReason,
     canEditSelectedValue,
     refreshKeys,
     refreshDatabases,
     refreshSelectedKeyDetail,
+    refreshSelectedKeyInfo,
     openKey,
     focusKey,
     saveSelectedValue,
+    deleteKey,
+    deleteKeys,
+    previewGroupKeys,
   };
 }

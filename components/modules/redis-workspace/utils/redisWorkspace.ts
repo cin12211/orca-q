@@ -1,8 +1,46 @@
 import type { Connection } from '~/core/stores';
+import { parseConnectionString } from '~/core/helpers/parser-connection-string';
 
-export const parseRedisDatabaseIndex = (value?: string | null) => {
-  const parsed = Number.parseInt(value || '0', 10);
-  return Number.isFinite(parsed) ? parsed : 0;
+export const parseRedisDatabaseIndex = (
+  value?: string | null,
+  connectionString?: string | null
+) => {
+  if (value !== undefined && value !== null && value !== '') {
+    const parsed = Number.parseInt(value, 10);
+    if (Number.isFinite(parsed)) {
+      return parsed;
+    }
+
+    if (value.startsWith('redis://') || value.startsWith('rediss://')) {
+      try {
+        const parsedConn = parseConnectionString(value);
+        if (parsedConn.database) {
+          const parsedDb = Number.parseInt(parsedConn.database, 10);
+          if (Number.isFinite(parsedDb)) {
+            return parsedDb;
+          }
+        }
+      } catch {
+        // Fallthrough
+      }
+    }
+  }
+
+  if (connectionString) {
+    try {
+      const parsedConn = parseConnectionString(connectionString);
+      if (parsedConn.database) {
+        const parsedDb = Number.parseInt(parsedConn.database, 10);
+        if (Number.isFinite(parsedDb)) {
+          return parsedDb;
+        }
+      }
+    } catch {
+      // Fallthrough
+    }
+  }
+
+  return 0;
 };
 
 export const DESTRUCTIVE_COMMANDS = new Set([

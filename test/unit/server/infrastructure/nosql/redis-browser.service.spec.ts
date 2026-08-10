@@ -1,6 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { EConnectionMethod } from '~/core/types/entities/connection.entity';
 import {
+  deleteRedisKeys,
+  getRedisKeyDetail,
   listRedisKeys,
   updateRedisKeyValue,
 } from '~/server/infrastructure/nosql/redis/redis-browser.service';
@@ -19,6 +21,7 @@ const { clientMock, closeMock, createRedisRuntimeClientMock } = vi.hoisted(
       expire: vi.fn(),
       persist: vi.fn(),
       del: vi.fn(),
+      unlink: vi.fn(),
       hSet: vi.fn(),
       rPush: vi.fn(),
       sAdd: vi.fn(),
@@ -39,9 +42,20 @@ const { clientMock, closeMock, createRedisRuntimeClientMock } = vi.hoisted(
   }
 );
 
-vi.mock('~/server/infrastructure/nosql/redis/redis.client', () => ({
-  createRedisRuntimeClient: createRedisRuntimeClientMock,
-}));
+vi.mock(
+  '~/server/infrastructure/nosql/redis/redis.client',
+  async importOriginal => {
+    const actual =
+      await importOriginal<
+        typeof import('~/server/infrastructure/nosql/redis/redis.client')
+      >();
+
+    return {
+      ...actual,
+      createRedisRuntimeClient: createRedisRuntimeClientMock,
+    };
+  }
+);
 
 describe('updateRedisKeyValue', () => {
   beforeEach(() => {
@@ -85,6 +99,7 @@ describe('updateRedisKeyValue', () => {
 
     expect(result).toEqual({
       cursor: '0',
+      truncated: false,
       keys: [
         {
           key: 'orders:1',
@@ -140,6 +155,7 @@ describe('updateRedisKeyValue', () => {
     expect(clientMock.scan).toHaveBeenCalledTimes(2);
     expect(result).toEqual({
       cursor: '0',
+      truncated: false,
       keys: [
         {
           key: 'orders:1',
@@ -193,5 +209,142 @@ describe('updateRedisKeyValue', () => {
     );
 
     expect(clientMock.persist).toHaveBeenCalledWith('orders:1');
+  });
+});
+
+describe('getRedisKeyDetail', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    clientMock.select.mockResolvedValue('OK');
+    clientMock.type.mockResolvedValue('string');
+    clientMock.ttl.mockResolvedValue(120);
+    clientMock.get.mockResolvedValue('paid');
+    clientMock.strLen.mockResolvedValue(4);
+    clientMock.sendCommand.mockResolvedValue(null);
+  });
+
+  it('resolves ttl, value, memory usage and encoding concurrently instead of sequentially', async () => {
+    const callOrder: string[] = [];
+    let ttlResolve!: () => void;
+    let getResolve!: () => void;
+
+    clientMock.ttl.mockImplementation(
+      () =>
+        new Promise(resolve => {
+          callOrder.push('ttl:start');
+          ttlResolve = () => {
+            callOrder.push('ttl:end');
+            resolve(120);
+          };
+        })
+    );
+    clientMock.get.mockImplementation(
+      () =>
+        new Promise(resolve => {
+          callOrder.push('get:start');
+          getResolve = () => {
+            callOrder.push('get:end');
+            resolve('paid');
+          };
+        })
+    );
+
+    const detailPromise = getRedisKeyDetail(
+      { method: EConnectionMethod.STRING, url: 'redis://127.0.0.1:6379/0' },
+      'orders:1'
+    );
+
+    await vi.waitFor(() => {
+      expect(callOrder).toContain('ttl:start');
+      expect(callOrder).toContain('get:start');
+    });
+
+    ttlResolve();
+    getResolve();
+
+    await detailPromise;
+
+    expect(callOrder.indexOf('get:start')).toBeLessThan(
+      callOrder.indexOf('ttl:end')
+    );
+  });
+});
+
+describe('listRedisKeys scanning limits', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    clientMock.select.mockResolvedValue('OK');
+    clientMock.type.mockResolvedValue('string');
+    clientMock.ttl.mockResolvedValue(-1);
+    clientMock.sendCommand.mockResolvedValue(null);
+  });
+
+  it('keeps scanning past the old 500-key default until the cursor is exhausted', async () => {
+    const firstBatch = Array.from({ length: 300 }, (_, i) => `key:${i}`);
+    const secondBatch = Array.from({ length: 300 }, (_, i) => `key:${i + 300}`);
+
+    clientMock.scan
+      .mockResolvedValueOnce({ cursor: 11, keys: firstBatch })
+      .mockResolvedValueOnce({ cursor: 0, keys: secondBatch });
+
+    const result = await listRedisKeys({
+      method: EConnectionMethod.STRING,
+      url: 'redis://127.0.0.1:6379/0',
+    });
+
+    expect(result.keys).toHaveLength(600);
+    expect(result.truncated).toBe(false);
+    expect(clientMock.scan).toHaveBeenCalledTimes(2);
+  });
+
+  it('stops at an explicit count and reports truncated when more keys remain', async () => {
+    clientMock.scan
+      .mockResolvedValueOnce({ cursor: 5, keys: ['a', 'b'] })
+      .mockResolvedValueOnce({ cursor: 9, keys: ['c'] });
+
+    const result = await listRedisKeys(
+      { method: EConnectionMethod.STRING, url: 'redis://127.0.0.1:6379/0' },
+      { count: 3 }
+    );
+
+    expect(result.keys.map(item => item.key)).toEqual(['a', 'b', 'c']);
+    expect(result.truncated).toBe(true);
+  });
+});
+
+describe('deleteRedisKeys', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    clientMock.select.mockResolvedValue('OK');
+    clientMock.unlink.mockResolvedValue(1);
+  });
+
+  it('unlinks a single key and returns the deleted count', async () => {
+    const result = await deleteRedisKeys(
+      { method: EConnectionMethod.STRING, url: 'redis://127.0.0.1:6379/0' },
+      ['orders:1']
+    );
+
+    expect(clientMock.unlink).toHaveBeenCalledWith(['orders:1']);
+    expect(result).toEqual({ deletedCount: 1 });
+    expect(closeMock).toHaveBeenCalled();
+  });
+
+  it('chunks large key lists into batches of 500 for UNLINK', async () => {
+    const keys = Array.from({ length: 1200 }, (_, i) => `bulk:${i}`);
+    clientMock.unlink.mockImplementation(
+      async (chunk: string[]) => chunk.length
+    );
+
+    const result = await deleteRedisKeys(
+      { method: EConnectionMethod.STRING, url: 'redis://127.0.0.1:6379/0' },
+      keys
+    );
+
+    expect(clientMock.unlink).toHaveBeenCalledTimes(3);
+    expect(clientMock.unlink).toHaveBeenNthCalledWith(1, keys.slice(0, 500));
+    expect(clientMock.unlink).toHaveBeenNthCalledWith(2, keys.slice(500, 1000));
+    expect(clientMock.unlink).toHaveBeenNthCalledWith(3, keys.slice(1000));
+    expect(result).toEqual({ deletedCount: 1200 });
   });
 });

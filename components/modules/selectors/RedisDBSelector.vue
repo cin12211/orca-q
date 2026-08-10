@@ -53,7 +53,7 @@ const triggerClassName = computed(() => {
 </script>
 
 <template>
-  <div :class="compact ? 'w-[132px]' : 'space-y-1'">
+  <div :class="compact ? '' : 'space-y-1'">
     <Label v-if="!compact" :for="resolvedTriggerId">
       {{ label || 'Databases' }}
     </Label>

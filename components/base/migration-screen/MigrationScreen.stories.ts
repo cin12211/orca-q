@@ -152,7 +152,7 @@ export const InteractiveLifecycle: Story = {
               ✅ Complete/Done
             </button>
           </div>
-          <p class="text-[10px] text-zinc-500 text-center mt-1">Click Done to fade out and reveal mock dashboard. Click Start/Next to fade in.</p>
+          <p class="text-xxs text-zinc-500 text-center mt-1">Click Done to fade out and reveal mock dashboard. Click Start/Next to fade in.</p>
         </div>
       </div>
     `,

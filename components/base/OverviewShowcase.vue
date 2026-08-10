@@ -193,7 +193,7 @@ const contextMenuItems: ContextMenuItem[] = [
                     class="flex flex-col gap-1.5"
                   >
                     <span
-                      class="text-[10px] font-mono text-muted-foreground uppercase"
+                      class="text-xxs font-mono text-muted-foreground uppercase"
                       >{{ size }}</span
                     >
                     <Button :size="size">Button {{ size }}</Button>
@@ -208,7 +208,7 @@ const contextMenuItems: ContextMenuItem[] = [
                     class="flex flex-col gap-1.5"
                   >
                     <span
-                      class="text-[10px] font-mono text-muted-foreground uppercase"
+                      class="text-xxs font-mono text-muted-foreground uppercase"
                       >{{ size }}</span
                     >
                     <Button :size="size" variant="outline">
@@ -264,7 +264,7 @@ const contextMenuItems: ContextMenuItem[] = [
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               <div v-for="size in inputSizes" :key="size" class="space-y-1.5">
                 <label
-                  class="text-[10px] font-mono text-muted-foreground uppercase"
+                  class="text-xxs font-mono text-muted-foreground uppercase"
                   >Size: {{ size }}</label
                 >
                 <Input :size="size" :placeholder="'Input ' + size" />
@@ -287,8 +287,7 @@ const contextMenuItems: ContextMenuItem[] = [
                 :key="size"
                 class="flex flex-col gap-1.5 w-40"
               >
-                <span
-                  class="text-[10px] font-mono text-muted-foreground uppercase"
+                <span class="text-xxs font-mono text-muted-foreground uppercase"
                   >Size: {{ size }}</span
                 >
                 <Select v-model="selectVal" :size="size">
@@ -391,9 +390,7 @@ const contextMenuItems: ContextMenuItem[] = [
             </p>
             <div class="space-y-5">
               <div v-for="size in tabsSizes" :key="size" class="space-y-1.5">
-                <div
-                  class="text-[10px] font-mono text-muted-foreground uppercase"
-                >
+                <div class="text-xxs font-mono text-muted-foreground uppercase">
                   Size: {{ size }}
                 </div>
                 <Tabs

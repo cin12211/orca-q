@@ -20,9 +20,20 @@ vi.mock('h3', async importOriginal => {
   };
 });
 
-vi.mock('~/server/infrastructure/nosql/redis/redis.client', () => ({
-  createRedisRuntimeClient: createRedisRuntimeClientMock,
-}));
+vi.mock(
+  '~/server/infrastructure/nosql/redis/redis.client',
+  async importOriginal => {
+    const actual =
+      await importOriginal<
+        typeof import('~/server/infrastructure/nosql/redis/redis.client')
+      >();
+
+    return {
+      ...actual,
+      createRedisRuntimeClient: createRedisRuntimeClientMock,
+    };
+  }
+);
 
 describe('Redis workbench route', () => {
   const runtime = {

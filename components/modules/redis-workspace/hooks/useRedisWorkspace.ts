@@ -26,7 +26,10 @@ export function useRedisWorkspace(options: {
 
     return store.ensureSession(
       connection.value.id,
-      parseRedisDatabaseIndex(connection.value.database)
+      parseRedisDatabaseIndex(
+        connection.value.database,
+        connection.value.connectionString
+      )
     );
   });
 
@@ -193,9 +196,12 @@ export function useRedisWorkspace(options: {
     keys: browser.keys,
     databases: browser.databases,
     selectedKeyDetail: browser.selectedKeyDetail,
+    selectedKeyInfo: browser.selectedKeyInfo,
     loadingKeys: browser.loadingKeys,
     loadingSelectedKeyDetail: browser.loadingSelectedKeyDetail,
+    loadingSelectedKeyInfo: browser.loadingSelectedKeyInfo,
     savingValue: browser.savingValue,
+    isDeletingKey: browser.isDeletingKey,
     selectedDatabaseIndex,
     keyPattern,
     canEditSelectedValue: browser.canEditSelectedValue,
@@ -204,5 +210,8 @@ export function useRedisWorkspace(options: {
     openKey: browser.openKey,
     focusKey: browser.focusKey,
     saveSelectedValue: browser.saveSelectedValue,
+    deleteKey: browser.deleteKey,
+    deleteKeys: browser.deleteKeys,
+    previewGroupKeys: browser.previewGroupKeys,
   };
 }

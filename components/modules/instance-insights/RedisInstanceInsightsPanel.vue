@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import RedisDBSelector from '~/components/modules/selectors/RedisDBSelector.vue';
 import { DatabaseClientType } from '~/core/constants/database-client-type';
 import { useManagementConnectionStore } from '~/core/stores/managementConnectionStore';
 import type { RedisDatabaseOption } from '~/core/types/redis-workspace.types';
@@ -46,16 +45,27 @@ const {
   isLoading,
   isActionLoading,
   insights,
+  refreshSignal,
   refresh,
   killClient,
 } = useRedisInstanceInsights({
   connection,
   databaseIndex: computed(() => props.databaseIndex),
 });
+
+// Flips on every completed fetch (including silent auto-refresh) so the
+// refresh icon rotates 180deg to signal a refresh just happened.
+const isRefreshIconFlipped = ref(false);
+
+watch(refreshSignal, () => {
+  isRefreshIconFlipped.value = !isRefreshIconFlipped.value;
+});
 </script>
 
 <template>
-  <div class="flex h-full flex-col gap-3 overflow-hidden p-3">
+  <div
+    class="flex h-full relative flex-col gap-2.5 overflow-hidden p-3 min-h-0"
+  >
     <ToolPageHeader icon="hugeicons:activity-02" title="Instance Insights">
       <template #context>
         <component
@@ -65,21 +75,15 @@ const {
       </template>
 
       <template #actions>
-        <RedisDBSelector
-          compact
-          trigger-id="redis-instance-insights-db-index"
-          trigger-class="bg-background"
-          :databases="databases"
-          :database-index="databaseIndex"
-          @update:database-index="emit('update:databaseIndex', $event)"
-        />
-
         <div class="flex items-center gap-2 text-xs">
           <Switch
             id="redis-insights-auto-refresh"
             v-model:model-value="autoRefresh"
           />
-          <label for="redis-insights-auto-refresh" class="cursor-pointer">
+          <label
+            for="redis-insights-auto-refresh"
+            class="cursor-pointer select-none"
+          >
             Auto refresh
           </label>
         </div>
@@ -90,13 +94,24 @@ const {
           :disabled="isLoading || isActionLoading"
           @click="refresh"
         >
-          <Icon name="hugeicons:redo" class="size-3.5!" />
+          <Icon
+            name="hugeicons:redo"
+            class="size-3.5! transition-transform duration-500"
+            :style="{
+              transform: isRefreshIconFlipped
+                ? 'rotate(180deg)'
+                : 'rotate(0deg)',
+            }"
+          />
           Refresh
         </Button>
       </template>
     </ToolPageHeader>
 
-    <Tabs v-model="activeSection" class="flex flex-1 min-h-0 flex-col gap-0">
+    <Tabs
+      v-model="activeSection"
+      class="flex flex-1 min-h-0 flex-col gap-2 overflow-hidden"
+    >
       <TabsList
         size="sm"
         class="max-w-full justify-start! shrink-0 overflow-x-auto"
@@ -112,62 +127,101 @@ const {
         </TabsTrigger>
       </TabsList>
 
-      <BaseNotice v-if="error" variant="destructive">{{ error }}</BaseNotice>
+      <BaseNotice v-if="error" variant="destructive" class="shrink-0">{{
+        error
+      }}</BaseNotice>
 
-      <div
-        v-if="isInitialLoading && !insights"
-        class="flex flex-1 items-center justify-center gap-2 rounded-lg border bg-background text-muted-foreground"
-      >
-        <Icon name="hugeicons:redo" class="size-4 animate-spin" />
-        Loading Redis instance insights...
-      </div>
-
-      <div
-        v-else
-        class="flex-1 overflow-y-auto rounded-lg border bg-background p-3 mt-2"
+      <TabsContent
+        value="overview"
+        class="flex-1 min-h-0 overflow-hidden rounded-lg border bg-background p-3 mt-0 data-[state=inactive]:hidden"
       >
         <RedisOverviewSection
-          v-show="activeSection === 'overview'"
           :overview="insights?.overview"
-        />
-
-        <RedisKeyspaceSection
-          v-show="activeSection === 'keyspace'"
           :keyspace="insights?.keyspace"
+          :db-index="databaseIndex"
+          :is-initial-loading="isInitialLoading"
         />
+      </TabsContent>
 
+      <TabsContent
+        value="keyspace"
+        class="flex-1 min-h-0 overflow-hidden rounded-lg border bg-background p-3 mt-0 data-[state=inactive]:hidden"
+      >
+        <RedisKeyspaceSection
+          :keyspace="insights?.keyspace"
+          :db-index="databaseIndex"
+          :is-initial-loading="isInitialLoading"
+          @select-db="emit('update:databaseIndex', $event)"
+        />
+      </TabsContent>
+
+      <TabsContent
+        value="memory"
+        class="flex-1 min-h-0 overflow-hidden rounded-lg border bg-background p-3 mt-0 data-[state=inactive]:hidden"
+      >
         <RedisMemorySection
-          v-show="activeSection === 'memory'"
           :memory="insights?.memory"
+          :db-index="databaseIndex"
+          :is-initial-loading="isInitialLoading"
         />
+      </TabsContent>
 
+      <TabsContent
+        value="performance"
+        class="flex-1 min-h-0 overflow-hidden rounded-lg border bg-background p-3 mt-0 data-[state=inactive]:hidden"
+      >
         <RedisPerformanceSection
-          v-show="activeSection === 'performance'"
           :performance="insights?.performance"
+          :db-index="databaseIndex"
+          :is-initial-loading="isInitialLoading"
         />
+      </TabsContent>
 
+      <TabsContent
+        value="clients"
+        class="flex-1 min-h-0 overflow-hidden rounded-lg border bg-background p-3 mt-0 data-[state=inactive]:hidden"
+      >
         <RedisClientsSection
-          v-show="activeSection === 'clients'"
           :clients="insights?.clients"
+          :db-index="databaseIndex"
           :is-action-loading="isActionLoading"
+          :is-initial-loading="isInitialLoading"
           @kill-client="killClient"
         />
+      </TabsContent>
 
+      <TabsContent
+        value="persistence"
+        class="flex-1 min-h-0 overflow-hidden rounded-lg border bg-background p-3 mt-0 data-[state=inactive]:hidden"
+      >
         <RedisPersistenceSection
-          v-show="activeSection === 'persistence'"
           :persistence="insights?.persistence"
+          :db-index="databaseIndex"
+          :is-initial-loading="isInitialLoading"
         />
+      </TabsContent>
 
+      <TabsContent
+        value="replication"
+        class="flex-1 min-h-0 overflow-hidden rounded-lg border bg-background p-3 mt-0 data-[state=inactive]:hidden"
+      >
         <RedisReplicationSection
-          v-show="activeSection === 'replication'"
           :replication="insights?.replication"
+          :db-index="databaseIndex"
+          :is-initial-loading="isInitialLoading"
         />
+      </TabsContent>
 
+      <TabsContent
+        value="config"
+        class="flex-1 min-h-0 overflow-hidden rounded-lg border bg-background p-3 mt-0 data-[state=inactive]:hidden"
+      >
         <RedisConfigSection
-          v-show="activeSection === 'config'"
           :config="insights?.config"
+          :db-index="databaseIndex"
+          :is-initial-loading="isInitialLoading"
         />
-      </div>
+      </TabsContent>
     </Tabs>
   </div>
 </template>
