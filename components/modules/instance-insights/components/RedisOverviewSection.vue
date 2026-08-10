@@ -10,6 +10,7 @@ const props = defineProps<{
   overview: RedisOverviewMetrics | undefined;
   keyspace?: RedisKeyspaceInsight | undefined;
   dbIndex?: number;
+  isInitialLoading?: boolean;
 }>();
 
 const numberFormatter = new Intl.NumberFormat();
@@ -84,7 +85,10 @@ const memorySubtext = computed(() => {
 </script>
 
 <template>
-  <div class="flex h-full min-h-0 flex-col overflow-y-auto space-y-4 pr-1">
+  <div
+    class="relative flex h-full min-h-0 flex-col overflow-y-auto space-y-4 pr-1"
+  >
+    <LoadingOverlay :visible="!!isInitialLoading" />
     <!-- Server Overview Group -->
     <div class="space-y-2">
       <div class="flex items-center justify-between">

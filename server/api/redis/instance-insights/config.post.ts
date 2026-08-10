@@ -4,7 +4,7 @@ import {
   type ISSHConfig,
   type ISSLConfig,
 } from '~/core/types/entities/connection.entity';
-import { getRedisOverviewInsight } from '~/server/infrastructure/nosql/redis/redis-instance-insights.service';
+import { getRedisConfigInsight } from '~/server/infrastructure/nosql/redis/redis-instance-insights.service';
 
 export default defineEventHandler(async event => {
   const body: {
@@ -20,7 +20,7 @@ export default defineEventHandler(async event => {
     ssh?: ISSHConfig;
   } = await readBody(event);
 
-  return getRedisOverviewInsight({
+  return getRedisConfigInsight({
     method: body.method,
     url: body.dbConnectionString,
     host: body.host,

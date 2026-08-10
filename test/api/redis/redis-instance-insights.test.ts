@@ -17,4 +17,28 @@ describe('Redis Instance Insights API E2E', async () => {
       expect(typeof res).toBe('object');
     });
   });
+
+  // ─── per-tab lazy-load endpoints ──────────────────────────────────────
+  const sections = [
+    'keyspace',
+    'memory',
+    'performance',
+    'clients',
+    'persistence',
+    'replication',
+    'config',
+  ] as const;
+
+  for (const section of sections) {
+    describe(`POST /api/redis/instance-insights/${section}`, () => {
+      it(`returns ${section} insight`, async () => {
+        const res = await $fetch(`/api/redis/instance-insights/${section}`, {
+          method: 'POST',
+          body: redisBody(),
+        });
+
+        expect(res).toBeDefined();
+      });
+    });
+  }
 });

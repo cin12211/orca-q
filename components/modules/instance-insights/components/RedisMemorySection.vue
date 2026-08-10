@@ -1,27 +1,33 @@
 <script setup lang="ts">
-import {
-  getRedisKeyIcon,
-  getRedisKeyIconClass,
-} from '~/components/modules/management/redis-browser/hooks/useRedisTreeData';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '~/components/ui/table';
+// Big Keys Detector + Top Prefixes by Memory are temporarily disabled — see
+// the commented block in the template below and in
+// server/infrastructure/nosql/redis/redis-instance-insights.service.ts for
+// how to bring them back.
+// import {
+//   getRedisKeyIcon,
+//   getRedisKeyIconClass,
+// } from '~/components/modules/management/redis-browser/hooks/useRedisTreeData';
+// import {
+//   Table,
+//   TableBody,
+//   TableCell,
+//   TableHead,
+//   TableHeader,
+//   TableRow,
+// } from '~/components/ui/table';
 import type { RedisMemoryInsight } from '~/core/types/instance-insights.types';
 import InsightKpiCard from './InsightKpiCard.vue';
-import InsightScopeBadge from './InsightScopeBadge.vue';
+
+// import InsightScopeBadge from './InsightScopeBadge.vue';
 
 const props = defineProps<{
   memory: RedisMemoryInsight | undefined;
   dbIndex?: number;
+  isInitialLoading?: boolean;
 }>();
 
-const bigKeySearch = ref('');
-const prefixSearch = ref('');
+// const bigKeySearch = ref('');
+// const prefixSearch = ref('');
 
 const numberFormatter = new Intl.NumberFormat();
 
@@ -91,25 +97,28 @@ const memoryProgress = computed(() => {
   return undefined;
 });
 
-const filteredBigKeys = computed(() => {
-  const list = props.memory?.bigKeys || [];
-  const q = bigKeySearch.value.trim().toLowerCase();
-  if (!q) return list;
-  return list.filter(
-    k => k.key.toLowerCase().includes(q) || k.type.toLowerCase().includes(q)
-  );
-});
+// const filteredBigKeys = computed(() => {
+//   const list = props.memory?.bigKeys || [];
+//   const q = bigKeySearch.value.trim().toLowerCase();
+//   if (!q) return list;
+//   return list.filter(
+//     k => k.key.toLowerCase().includes(q) || k.type.toLowerCase().includes(q)
+//   );
+// });
 
-const filteredPrefixes = computed(() => {
-  const list = props.memory?.topPrefixesByMemory || [];
-  const q = prefixSearch.value.trim().toLowerCase();
-  if (!q) return list;
-  return list.filter(p => p.prefix.toLowerCase().includes(q));
-});
+// const filteredPrefixes = computed(() => {
+//   const list = props.memory?.topPrefixesByMemory || [];
+//   const q = prefixSearch.value.trim().toLowerCase();
+//   if (!q) return list;
+//   return list.filter(p => p.prefix.toLowerCase().includes(q));
+// });
 </script>
 
 <template>
-  <div class="flex h-full min-h-0 flex-col overflow-y-auto space-y-4 pr-1">
+  <div
+    class="relative flex h-full min-h-0 flex-col overflow-y-auto space-y-4 pr-1"
+  >
+    <LoadingOverlay :visible="!!isInitialLoading" />
     <!-- Memory Top KPI Cards -->
     <div class="grid gap-3 md:grid-cols-2 xl:grid-cols-4 shrink-0">
       <InsightKpiCard
@@ -163,9 +172,15 @@ const filteredPrefixes = computed(() => {
       </div>
     </BaseNotice>
 
-    <!-- Main Split: Big Keys & Memory Prefixes -->
+    <!--
+      Big Keys Detector & Top Prefixes by Memory — temporarily disabled.
+      Both require scanning every key and calling MEMORY USAGE on each one,
+      which is too heavy to run on demand for large databases. Re-enable by
+      uncommenting this block (and its matching script computeds/imports
+      above) together with the commented-out computation in
+      server/infrastructure/nosql/redis/redis-instance-insights.service.ts.
+
     <div class="grid gap-4 lg:grid-cols-2 flex-1 min-h-0">
-      <!-- Big Keys Table with Search -->
       <div class="rounded-lg border bg-card/60 p-3 flex flex-col min-h-[240px]">
         <div
           class="flex h-6 items-center justify-between pb-2.5 border-b mb-2.5 shrink-0 gap-2"
@@ -251,7 +266,6 @@ const filteredPrefixes = computed(() => {
         </div>
       </div>
 
-      <!-- Top Prefixes By Memory -->
       <div class="rounded-lg border bg-card/60 p-3 flex flex-col min-h-[240px]">
         <div
           class="flex h-6 items-center justify-between pb-2.5 border-b mb-2.5 shrink-0 gap-2"
@@ -301,5 +315,15 @@ const filteredPrefixes = computed(() => {
         </div>
       </div>
     </div>
+    -->
+
+    <!-- <div
+      class="rounded-lg border bg-card/60 flex-1 min-h-[240px] flex items-center justify-center p-6"
+    >
+      <BaseEmpty
+        desc="Big Keys Detector and Top Prefixes by Memory are temporarily disabled — showing them requires scanning every key in the database with MEMORY USAGE, which is too heavy to run on demand."
+        hidden-icon
+      />
+    </div> -->
   </div>
 </template>

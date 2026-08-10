@@ -13,6 +13,7 @@ import InsightKpiCard from './InsightKpiCard.vue';
 defineProps<{
   replication: RedisReplicationInsight | undefined;
   dbIndex?: number;
+  isInitialLoading?: boolean;
 }>();
 
 const numberFormatter = new Intl.NumberFormat();
@@ -24,7 +25,10 @@ function fmt(value: number | string | null | undefined) {
 </script>
 
 <template>
-  <div class="flex h-full min-h-0 flex-col overflow-y-auto space-y-4 pr-1">
+  <div
+    class="relative flex h-full min-h-0 flex-col overflow-y-auto space-y-4 pr-1"
+  >
+    <LoadingOverlay :visible="!!isInitialLoading" />
     <div class="flex items-center justify-between shrink-0">
       <h3
         class="text-xs font-medium uppercase tracking-wider text-muted-foreground flex items-center gap-1.5"

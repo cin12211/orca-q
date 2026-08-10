@@ -45,11 +45,20 @@ const {
   isLoading,
   isActionLoading,
   insights,
+  refreshSignal,
   refresh,
   killClient,
 } = useRedisInstanceInsights({
   connection,
   databaseIndex: computed(() => props.databaseIndex),
+});
+
+// Flips on every completed fetch (including silent auto-refresh) so the
+// refresh icon rotates 180deg to signal a refresh just happened.
+const isRefreshIconFlipped = ref(false);
+
+watch(refreshSignal, () => {
+  isRefreshIconFlipped.value = !isRefreshIconFlipped.value;
 });
 </script>
 
@@ -85,7 +94,15 @@ const {
           :disabled="isLoading || isActionLoading"
           @click="refresh"
         >
-          <Icon name="hugeicons:redo" class="size-3.5!" />
+          <Icon
+            name="hugeicons:redo"
+            class="size-3.5! transition-transform duration-500"
+            :style="{
+              transform: isRefreshIconFlipped
+                ? 'rotate(180deg)'
+                : 'rotate(0deg)',
+            }"
+          />
           Refresh
         </Button>
       </template>
@@ -114,8 +131,6 @@ const {
         error
       }}</BaseNotice>
 
-      <LoadingOverlay :visible="isInitialLoading" />
-
       <TabsContent
         value="overview"
         class="flex-1 min-h-0 overflow-hidden rounded-lg border bg-background p-3 mt-0 data-[state=inactive]:hidden"
@@ -124,6 +139,7 @@ const {
           :overview="insights?.overview"
           :keyspace="insights?.keyspace"
           :db-index="databaseIndex"
+          :is-initial-loading="isInitialLoading"
         />
       </TabsContent>
 
@@ -134,6 +150,7 @@ const {
         <RedisKeyspaceSection
           :keyspace="insights?.keyspace"
           :db-index="databaseIndex"
+          :is-initial-loading="isInitialLoading"
           @select-db="emit('update:databaseIndex', $event)"
         />
       </TabsContent>
@@ -145,6 +162,7 @@ const {
         <RedisMemorySection
           :memory="insights?.memory"
           :db-index="databaseIndex"
+          :is-initial-loading="isInitialLoading"
         />
       </TabsContent>
 
@@ -155,6 +173,7 @@ const {
         <RedisPerformanceSection
           :performance="insights?.performance"
           :db-index="databaseIndex"
+          :is-initial-loading="isInitialLoading"
         />
       </TabsContent>
 
@@ -166,6 +185,7 @@ const {
           :clients="insights?.clients"
           :db-index="databaseIndex"
           :is-action-loading="isActionLoading"
+          :is-initial-loading="isInitialLoading"
           @kill-client="killClient"
         />
       </TabsContent>
@@ -177,6 +197,7 @@ const {
         <RedisPersistenceSection
           :persistence="insights?.persistence"
           :db-index="databaseIndex"
+          :is-initial-loading="isInitialLoading"
         />
       </TabsContent>
 
@@ -187,6 +208,7 @@ const {
         <RedisReplicationSection
           :replication="insights?.replication"
           :db-index="databaseIndex"
+          :is-initial-loading="isInitialLoading"
         />
       </TabsContent>
 
@@ -197,6 +219,7 @@ const {
         <RedisConfigSection
           :config="insights?.config"
           :db-index="databaseIndex"
+          :is-initial-loading="isInitialLoading"
         />
       </TabsContent>
     </Tabs>

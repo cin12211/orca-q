@@ -10,6 +10,7 @@ import InsightScopeBadge from './InsightScopeBadge.vue';
 const props = defineProps<{
   keyspace: RedisKeyspaceInsight | undefined;
   dbIndex?: number;
+  isInitialLoading?: boolean;
 }>();
 
 const emit = defineEmits<{
@@ -71,7 +72,10 @@ function getDatabaseNumber(dbName: string): number {
 </script>
 
 <template>
-  <div class="flex h-full min-h-0 flex-col overflow-y-auto space-y-4 pr-1">
+  <div
+    class="relative flex h-full min-h-0 flex-col overflow-y-auto space-y-4 pr-1"
+  >
+    <LoadingOverlay :visible="!!isInitialLoading" />
     <!-- Top KPI Cards -->
     <div class="grid gap-3 md:grid-cols-4 shrink-0">
       <InsightKpiCard

@@ -12,6 +12,7 @@ import type { RedisConfigEntry } from '~/core/types/instance-insights.types';
 const props = defineProps<{
   config: RedisConfigEntry[] | undefined;
   dbIndex?: number;
+  isInitialLoading?: boolean;
 }>();
 
 const searchQuery = ref('');
@@ -48,7 +49,8 @@ const filteredEntries = computed(() => {
 </script>
 
 <template>
-  <div class="flex h-full min-h-0 flex-col gap-3 overflow-hidden">
+  <div class="relative flex h-full min-h-0 flex-col gap-3 overflow-hidden">
+    <LoadingOverlay :visible="!!isInitialLoading" />
     <div class="flex items-center justify-between shrink-0">
       <h3
         class="text-xs font-medium uppercase tracking-wider text-muted-foreground flex items-center gap-1.5"

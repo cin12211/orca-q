@@ -19,6 +19,7 @@ import InsightKpiCard from './InsightKpiCard.vue';
 const props = defineProps<{
   performance: RedisPerformanceInsight | undefined;
   dbIndex?: number;
+  isInitialLoading?: boolean;
 }>();
 
 const slowlogSearch = ref('');
@@ -58,7 +59,10 @@ function copyLatencyDoctor() {
 </script>
 
 <template>
-  <div class="flex h-full min-h-0 flex-col overflow-y-auto space-y-4 pr-1">
+  <div
+    class="relative flex h-full min-h-0 flex-col overflow-y-auto space-y-4 pr-1"
+  >
+    <LoadingOverlay :visible="!!isInitialLoading" />
     <div class="flex items-center justify-between shrink-0">
       <h3
         class="text-xs font-medium uppercase tracking-wider text-muted-foreground flex items-center gap-1.5"
