@@ -6,9 +6,11 @@ import {
   type ManagedSqliteAdapterOptions,
 } from '~/server/infrastructure/driver/managed-sqlite';
 import { isNoSqlClientType } from '~/server/infrastructure/nosql';
+import { CockroachAdapter } from './cockroachdb.adapter';
 import { MysqlAdapter } from './mysql.adapter';
 import { OracleAdapter } from './oracle.adapter';
 import { PostgresAdapter } from './postgres.adapter';
+import { RedshiftAdapter } from './redshift.adapter';
 import { SqliteAdapter } from './sqlite.adapter';
 import type { IDatabaseAdapter } from './types';
 
@@ -23,6 +25,9 @@ const ADAPTER_FACTORIES: Partial<Record<DatabaseClientType, AdapterFactory>> = {
     new MysqlAdapter(connection, DatabaseClientType.MARIADB),
   [DatabaseClientType.ORACLE]: connection => new OracleAdapter(connection),
   [DatabaseClientType.SQLITE3]: connection => new SqliteAdapter(connection),
+  [DatabaseClientType.REDSHIFT]: connection => new RedshiftAdapter(connection),
+  [DatabaseClientType.COCKROACHDB]: connection =>
+    new CockroachAdapter(connection),
 };
 
 export function createDatabaseAdapter(

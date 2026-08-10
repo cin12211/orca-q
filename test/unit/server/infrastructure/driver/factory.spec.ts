@@ -66,4 +66,22 @@ describe('createDatabaseAdapter', () => {
     expect(adapter).toBeInstanceOf(SqliteAdapter);
     expect(createManagedSqliteAdapterMock).not.toHaveBeenCalled();
   });
+
+  it('routes Redshift connections to RedshiftAdapter', () => {
+    const adapter = createDatabaseAdapter(
+      DatabaseClientType.REDSHIFT,
+      'redshift://admin:secret@cluster.redshift.amazonaws.com:5439/analytics'
+    );
+
+    expect(adapter.dbType).toBe(DatabaseClientType.REDSHIFT);
+  });
+
+  it('routes CockroachDB connections to CockroachAdapter', () => {
+    const adapter = createDatabaseAdapter(
+      DatabaseClientType.COCKROACHDB,
+      'cockroachdb://root:secret@localhost:26257/defaultdb'
+    );
+
+    expect(adapter.dbType).toBe(DatabaseClientType.COCKROACHDB);
+  });
 });
