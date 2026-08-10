@@ -27,6 +27,8 @@ export const SQL_DIALECT_BY_DB_TYPE: Record<string, SQLDialect> = {
   [DatabaseClientType.MARIADB]: SQLDialectSupport.MariaSQL,
   [DatabaseClientType.SQLITE3]: SQLDialectSupport.SQLite,
   [DatabaseClientType.ORACLE]: SQLDialectSupport.PLSQL,
+  [DatabaseClientType.REDSHIFT]: SQLDialectSupport.PostgreSQLParserDialect,
+  [DatabaseClientType.COCKROACHDB]: SQLDialectSupport.PostgreSQLParserDialect,
 } as const;
 
 /**
