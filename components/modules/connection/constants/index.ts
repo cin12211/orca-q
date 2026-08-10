@@ -55,6 +55,22 @@ export const databaseSupports: IDBSupport[] = [
     description: 'Relational SQL workflows',
   },
   {
+    type: DatabaseClientType.REDSHIFT,
+    name: 'Amazon Redshift',
+    icon: h(Icon, { name: 'logos:aws-redshift' }),
+    isSupport: true,
+    isBeta: true,
+    description: 'Cloud data warehouse',
+  },
+  {
+    type: DatabaseClientType.COCKROACHDB,
+    name: 'CockroachDB',
+    icon: h(Icon, { name: 'simple-icons:cockroachlabs' }),
+    isSupport: true,
+    isBeta: true,
+    description: 'Distributed SQL database',
+  },
+  {
     type: DatabaseClientType.SQLITE3,
     name: 'SQLite',
     icon: h(Icon, { name: 'file-icons:sqlite' }),
@@ -122,6 +138,8 @@ export const DEFAULT_DB_PORTS: Record<string, string> = {
   [DatabaseClientType.BETTER_SQLITE3]: '0',
   [DatabaseClientType.SQLITE3]: '0',
   [DatabaseClientType.SNOWFLAKE]: '443',
+  [DatabaseClientType.REDSHIFT]: '5439',
+  [DatabaseClientType.COCKROACHDB]: '26257',
 };
 
 export const getDatabaseSupportByType = (type: DatabaseClientType) => {

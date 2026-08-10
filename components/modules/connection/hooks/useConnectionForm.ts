@@ -91,6 +91,10 @@ const getConnectionStringScheme = (type: DatabaseClientType | null) => {
     case DatabaseClientType.MYSQL:
     case DatabaseClientType.MYSQL2:
       return 'mysql';
+    case DatabaseClientType.REDSHIFT:
+      return 'redshift';
+    case DatabaseClientType.COCKROACHDB:
+      return 'cockroachdb';
     default:
       return '';
   }
@@ -518,6 +522,10 @@ export function useConnectionForm(props: {
         return 'snowflake://username:password@account.snowflakecomputing.com:443/database';
       case DatabaseClientType.SQLITE3:
         return '/Users/you/data/app.sqlite';
+      case DatabaseClientType.REDSHIFT:
+        return 'redshift://username:password@cluster.abc123.us-east-1.redshift.amazonaws.com:5439/database';
+      case DatabaseClientType.COCKROACHDB:
+        return 'cockroachdb://username:password@localhost:26257/database';
       default:
         return '';
     }
