@@ -41,7 +41,8 @@ const TEMPORAL_OIDS = [
 export class PostgresAdapter extends BaseDatabaseAdapter {
   constructor(
     connection: string | Knex.Config['connection'],
-    applicationName: string = 'OrcaQ'
+    applicationName: string = 'OrcaQ',
+    dbType: DatabaseClientType = DatabaseClientType.POSTGRES
   ) {
     let connectionConfig: string | Knex.Config['connection'] = connection;
 
@@ -60,7 +61,7 @@ export class PostgresAdapter extends BaseDatabaseAdapter {
     }
 
     const knexInstance = knex({
-      client: DatabaseClientType.POSTGRES,
+      client: dbType,
       connection: connectionConfig,
       pool: {
         min: 1,
@@ -84,7 +85,7 @@ export class PostgresAdapter extends BaseDatabaseAdapter {
       },
     });
 
-    super(DatabaseClientType.POSTGRES, connection, knexInstance);
+    super(dbType, connection, knexInstance);
   }
 
   protected async _rawQuery<T = any>(
