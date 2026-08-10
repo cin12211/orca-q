@@ -71,7 +71,7 @@ export class PostgresMetadataAdapter
   extends BaseDomainAdapter
   implements IDatabaseMetadataAdapter
 {
-  readonly dbType = DatabaseClientType.POSTGRES;
+  readonly dbType: DatabaseClientType = DatabaseClientType.POSTGRES;
 
   static async create(
     params: DatabaseMetadataAdapterParams
