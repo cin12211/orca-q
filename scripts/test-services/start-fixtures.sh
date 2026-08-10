@@ -37,6 +37,8 @@ export ORCAQ_MARIADB_DATABASE="${ORCAQ_MARIADB_DATABASE:-sakila}"
 export ORCAQ_MARIADB_USER="${ORCAQ_MARIADB_USER:-orcaq}"
 export ORCAQ_MARIADB_PASSWORD="${ORCAQ_MARIADB_PASSWORD:-orcaq}"
 export ORCAQ_MARIADB_ROOT_PASSWORD="${ORCAQ_MARIADB_ROOT_PASSWORD:-root}"
+export ORCAQ_COCKROACHDB_PORT="${ORCAQ_COCKROACHDB_PORT:-26257}"
+export ORCAQ_COCKROACHDB_DATABASE="${ORCAQ_COCKROACHDB_DATABASE:-defaultdb}"
 export ORCAQ_REDIS_PORT="${ORCAQ_REDIS_PORT:-6379}"
 
 # ─── Docker compose resolution ───────────────────────────────────────────────
@@ -135,6 +137,26 @@ NODE
   echo "${engine_label} is ready on port ${host_port}"
 }
 
+wait_for_cockroachdb() {
+  local attempt=0
+  echo "Waiting for CockroachDB..."
+  until "${compose_cmd[@]}" -p "${sql_project}" -f "${sql_compose_file}" exec -T cockroachdb \
+    cockroach sql --insecure -e 'SELECT 1;' >/dev/null 2>&1; do
+    attempt=$((attempt + 1))
+    if [ "${attempt}" -ge 60 ]; then
+      echo 'CockroachDB fixture did not become ready in time.' >&2
+      "${compose_cmd[@]}" -p "${sql_project}" -f "${sql_compose_file}" logs --tail=80 cockroachdb >&2 || true
+      exit 1
+    fi
+    sleep 2
+  done
+
+  "${compose_cmd[@]}" -p "${sql_project}" -f "${sql_compose_file}" exec -T cockroachdb \
+    cockroach sql --insecure -f /cockroach-seed/seed.sql
+
+  echo "CockroachDB is ready on port ${ORCAQ_COCKROACHDB_PORT}"
+}
+
 # ─── Start functions ─────────────────────────────────────────────────────────
 start_sql_profile() {
   local docker_profile="$1"
@@ -157,10 +179,14 @@ start_sql_profile() {
     mariadb)
       wait_for_mysql_engine mariadb "${ORCAQ_MARIADB_PORT}" "${ORCAQ_MARIADB_USER}" "${ORCAQ_MARIADB_PASSWORD}" "${ORCAQ_MARIADB_DATABASE}" 'MariaDB'
       ;;
+    cockroachdb)
+      wait_for_cockroachdb
+      ;;
     sql|all)
       wait_for_postgres
       wait_for_mysql_engine mysql "${ORCAQ_MYSQL_PORT}" "${ORCAQ_MYSQL_USER}" "${ORCAQ_MYSQL_PASSWORD}" "${ORCAQ_MYSQL_DATABASE}" 'MySQL'
       wait_for_mysql_engine mariadb "${ORCAQ_MARIADB_PORT}" "${ORCAQ_MARIADB_USER}" "${ORCAQ_MARIADB_PASSWORD}" "${ORCAQ_MARIADB_DATABASE}" 'MariaDB'
+      wait_for_cockroachdb
       ;;
   esac
 
@@ -197,7 +223,7 @@ case "${profile}" in
   none)
     echo "No fixtures requested"
     ;;
-  postgres|mysql|mariadb)
+  postgres|mysql|mariadb|cockroachdb)
     node "${script_dir}/generate-optimized-sql-fixtures.mjs" 2>/dev/null || true
     start_sql_profile "${profile}"
     ;;

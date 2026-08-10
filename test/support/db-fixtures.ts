@@ -34,7 +34,7 @@ export type RedisFixtureConfig = {
   source: FixtureSource;
 };
 
-export type SqlFixtureEngine = 'postgres' | 'mysql' | 'mariadb';
+export type SqlFixtureEngine = 'postgres' | 'mysql' | 'mariadb' | 'cockroachdb';
 
 export type SqlFixtureConfig = {
   engine: SqlFixtureEngine;
@@ -117,7 +117,13 @@ function buildSqlUrl(config: {
   username: string;
   password: string;
 }) {
-  const protocol = config.engine === 'postgres' ? 'postgresql' : 'mysql';
+  const protocolByEngine: Record<SqlFixtureEngine, string> = {
+    postgres: 'postgresql',
+    mysql: 'mysql',
+    mariadb: 'mysql',
+    cockroachdb: 'cockroachdb',
+  };
+  const protocol = protocolByEngine[config.engine];
   const username = encodeAuthSegment(config.username);
   const password = encodeAuthSegment(config.password);
 
@@ -219,11 +225,23 @@ export function getMariaDbFixtureConfig() {
   });
 }
 
+export function getCockroachDbFixtureConfig() {
+  return buildSqlFixtureConfig({
+    engine: 'cockroachdb',
+    envPrefixes: ['ORCAQ_COCKROACHDB'],
+    defaultPort: 26257,
+    defaultDatabase: 'defaultdb',
+    defaultUsername: 'root',
+    defaultPassword: '',
+  });
+}
+
 export function getSqlFixtureCatalog() {
   return {
     postgres: getPostgresFixtureConfig(),
     mysql: getMysqlFixtureConfig(),
     mariadb: getMariaDbFixtureConfig(),
+    cockroachdb: getCockroachDbFixtureConfig(),
   };
 }
 

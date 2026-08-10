@@ -60,7 +60,7 @@ case "${profile}" in
   none|sqlite)
     echo "No containers to stop"
     ;;
-  postgres|mysql|mariadb|sql)
+  postgres|mysql|mariadb|cockroachdb|sql)
     stop_sql "${profile}"
     ;;
   redis)

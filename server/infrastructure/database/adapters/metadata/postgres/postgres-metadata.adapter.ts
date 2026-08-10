@@ -38,7 +38,7 @@ const normalizeSchemaColumns = <
     };
   });
 
-const normalizeDetails = <
+export const normalizeDetails = <
   TDetails extends Record<
     string,
     {

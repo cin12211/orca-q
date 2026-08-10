@@ -73,7 +73,23 @@ services:
       timeout: 5s
       retries: 30
 
+  cockroachdb:
+    profiles: [cockroachdb, sql, all]
+    image: docker.io/cockroachdb/cockroach:v24.2.0
+    command: start-single-node --insecure --accept-sql-without-tls
+    ports:
+      - '${ORCAQ_COCKROACHDB_PORT:-26257}:26257'
+    volumes:
+      - cockroachdb-data:/cockroach/cockroach-data
+      - ../datasets/cockroachdb/cockroachdb-seed.sql:/cockroach-seed/seed.sql:ro
+    healthcheck:
+      test: ['CMD-SHELL', 'cockroach sql --insecure -e "SELECT 1"']
+      interval: 5s
+      timeout: 5s
+      retries: 30
+
 volumes:
   postgres-data:
   mysql-data:
   mariadb-data:
+  cockroachdb-data:
