@@ -1,8 +1,10 @@
 import { DatabaseClientType } from '~/core/constants/database-client-type';
 import { createDomainAdapter } from '../shared';
+import { CockroachTableAdapter } from './cockroachdb/cockroachdb-table.adapter';
 import { MysqlTableAdapter } from './mysql/mysql-table.adapter';
 import { OracleTableAdapter } from './oracle/oracle-table.adapter';
 import { PostgresTableAdapter } from './postgres/postgres-table.adapter';
+import { RedshiftTableAdapter } from './redshift/redshift-table.adapter';
 import { SqliteTableAdapter } from './sqlite/sqlite-table.adapter';
 import type {
   IDatabaseTableAdapter,
@@ -25,6 +27,8 @@ export async function createTableAdapter(
         MysqlTableAdapter.create(params, DatabaseClientType.MARIADB),
       oracledb: OracleTableAdapter.create,
       sqlite3: SqliteTableAdapter.create,
+      redshift: RedshiftTableAdapter.create,
+      cockroachdb: CockroachTableAdapter.create,
     }
   );
 }
