@@ -285,6 +285,8 @@ const HANDLER_REGISTRY: Record<
   [DatabaseClientType.BETTER_SQLITE3]: BetterSqlite3CommandResultHandler,
   [DatabaseClientType.MSSQL]: MssqlCommandResultHandler,
   [DatabaseClientType.ORACLE]: OracleCommandResultHandler,
+  [DatabaseClientType.REDSHIFT]: PostgresCommandResultHandler,
+  [DatabaseClientType.COCKROACHDB]: PostgresCommandResultHandler,
 };
 
 // ─────────────────────────────────────────────

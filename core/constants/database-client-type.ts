@@ -19,6 +19,8 @@ export enum DatabaseClientType {
   BETTER_SQLITE3 = 'better-sqlite3',
   MSSQL = 'mssql',
   ORACLE = 'oracledb',
+  REDSHIFT = 'redshift',
+  COCKROACHDB = 'cockroachdb',
 }
 
 export const SQL_DATABASE_CLIENT_TYPES = [
@@ -30,6 +32,8 @@ export const SQL_DATABASE_CLIENT_TYPES = [
   DatabaseClientType.BETTER_SQLITE3,
   DatabaseClientType.MSSQL,
   DatabaseClientType.ORACLE,
+  DatabaseClientType.REDSHIFT,
+  DatabaseClientType.COCKROACHDB,
 ] as const;
 
 export const NOSQL_DATABASE_CLIENT_TYPES = [DatabaseClientType.REDIS] as const;

@@ -40,6 +40,8 @@ const DEFAULT_PORTS: Partial<Record<DatabaseClientType, number>> = {
   [DatabaseClientType.BETTER_SQLITE3]: 0, // No port for SQLite
   [DatabaseClientType.SQLITE3]: 0,
   [DatabaseClientType.SNOWFLAKE]: 443,
+  [DatabaseClientType.REDSHIFT]: 5439,
+  [DatabaseClientType.COCKROACHDB]: 26257,
 };
 
 function parseQueryString(raw: string): Record<string, string> {
@@ -252,6 +254,14 @@ const SCHEME_MAP: Record<
   },
   pg: {
     type: DatabaseClientType.POSTGRES,
+    providerKind: EConnectionProviderKind.DIRECT_SQL,
+  },
+  redshift: {
+    type: DatabaseClientType.REDSHIFT,
+    providerKind: EConnectionProviderKind.DIRECT_SQL,
+  },
+  cockroachdb: {
+    type: DatabaseClientType.COCKROACHDB,
     providerKind: EConnectionProviderKind.DIRECT_SQL,
   },
   mysql: {
