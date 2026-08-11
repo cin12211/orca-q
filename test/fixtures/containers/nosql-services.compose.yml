@@ -1,11 +1,23 @@
 services:
   redis:
+    profiles: [redis, all]
     image: docker.io/library/redis:7.4-alpine
     ports:
       - '${ORCAQ_REDIS_PORT:-6379}:6379'
     command: ['redis-server', '--save', '', '--appendonly', 'no']
     healthcheck:
       test: ['CMD', 'redis-cli', 'ping']
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  mongodb:
+    profiles: [mongodb, all]
+    image: docker.io/library/mongo:7
+    ports:
+      - '${ORCAQ_MONGODB_PORT:-27017}:27017'
+    healthcheck:
+      test: ['CMD', 'mongosh', '--eval', 'db.runCommand({ ping: 1 })']
       interval: 5s
       timeout: 3s
       retries: 20

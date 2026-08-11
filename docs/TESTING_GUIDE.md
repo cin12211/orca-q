@@ -83,7 +83,7 @@ bunx playwright test test/e2e/postgres/table-browser.spec.ts
 
 ## Fixture Management
 
-Fixtures are Docker containers (PostgreSQL 16, MySQL 8.4, MariaDB 11.4, Redis 7.4) plus SQLite file preparation.
+Fixtures are Docker containers (PostgreSQL 16, MySQL 8.4, MariaDB 11.4, Redis 7.4, MongoDB 7) plus SQLite file preparation.
 
 ### Profiles
 
@@ -94,6 +94,7 @@ Fixtures are Docker containers (PostgreSQL 16, MySQL 8.4, MariaDB 11.4, Redis 7.
 | `mariadb`  | MariaDB only                 |
 | `sql`      | PostgreSQL + MySQL + MariaDB |
 | `redis`    | Redis only                   |
+| `mongodb`  | MongoDB only                 |
 | `sqlite`   | SQLite prep only (no Docker) |
 | `all`      | Everything above             |
 | `none`     | Nothing — fixtures skipped   |
@@ -131,23 +132,25 @@ ORCAQ_KEEP_FIXTURES=1 bash scripts/test-services/run-tests.sh --fixtures=postgre
 
 All fixture env vars use the `ORCAQ_` prefix. Defaults are set automatically when fixtures start.
 
-| Variable                  | Default  | Description                               |
-| ------------------------- | -------- | ----------------------------------------- |
-| `ORCAQ_POSTGRES_PORT`     | `5432`   | PostgreSQL port                           |
-| `ORCAQ_POSTGRES_DATABASE` | `pagila` | Default database                          |
-| `ORCAQ_POSTGRES_USER`     | `orcaq`  | Username                                  |
-| `ORCAQ_POSTGRES_PASSWORD` | `orcaq`  | Password                                  |
-| `ORCAQ_MYSQL_PORT`        | `3306`   | MySQL port                                |
-| `ORCAQ_MYSQL_DATABASE`    | `sakila` | Default database                          |
-| `ORCAQ_MYSQL_USER`        | `orcaq`  | Username                                  |
-| `ORCAQ_MYSQL_PASSWORD`    | `orcaq`  | Password                                  |
-| `ORCAQ_MARIADB_PORT`      | `3307`   | MariaDB port                              |
-| `ORCAQ_MARIADB_DATABASE`  | `sakila` | Default database                          |
-| `ORCAQ_MARIADB_USER`      | `orcaq`  | Username                                  |
-| `ORCAQ_MARIADB_PASSWORD`  | `orcaq`  | Password                                  |
-| `ORCAQ_REDIS_PORT`        | `6379`   | Redis port                                |
-| `ORCAQ_KEEP_FIXTURES`     | unset    | Set to `1` to keep containers after a run |
-| `ORCAQ_FIXTURE_PROFILE`   | `all`    | Override fixture profile via env          |
+| Variable                  | Default         | Description                               |
+| ------------------------- | --------------- | ----------------------------------------- |
+| `ORCAQ_POSTGRES_PORT`     | `5432`          | PostgreSQL port                           |
+| `ORCAQ_POSTGRES_DATABASE` | `pagila`        | Default database                          |
+| `ORCAQ_POSTGRES_USER`     | `orcaq`         | Username                                  |
+| `ORCAQ_POSTGRES_PASSWORD` | `orcaq`         | Password                                  |
+| `ORCAQ_MYSQL_PORT`        | `3306`          | MySQL port                                |
+| `ORCAQ_MYSQL_DATABASE`    | `sakila`        | Default database                          |
+| `ORCAQ_MYSQL_USER`        | `orcaq`         | Username                                  |
+| `ORCAQ_MYSQL_PASSWORD`    | `orcaq`         | Password                                  |
+| `ORCAQ_MARIADB_PORT`      | `3307`          | MariaDB port                              |
+| `ORCAQ_MARIADB_DATABASE`  | `sakila`        | Default database                          |
+| `ORCAQ_MARIADB_USER`      | `orcaq`         | Username                                  |
+| `ORCAQ_MARIADB_PASSWORD`  | `orcaq`         | Password                                  |
+| `ORCAQ_REDIS_PORT`        | `6379`          | Redis port                                |
+| `ORCAQ_MONGODB_PORT`      | `27017`         | MongoDB port                              |
+| `ORCAQ_MONGODB_DATABASE`  | `orcaq_fixture` | Default database                          |
+| `ORCAQ_KEEP_FIXTURES`     | unset           | Set to `1` to keep containers after a run |
+| `ORCAQ_FIXTURE_PROFILE`   | `all`           | Override fixture profile via env          |
 
 Override any value inline:
 

@@ -5,7 +5,7 @@
 # Usage:
 #   bash scripts/test-services/stop-fixtures.sh --profile <profile>
 #
-# Profiles: postgres | mysql | mariadb | sql | redis | all
+# Profiles: postgres | mysql | mariadb | sql | redis | mongodb | all
 # ──────────────────────────────────────────────────────────────────────────────
 
 set -euo pipefail
@@ -26,6 +26,8 @@ sql_compose_file="${repo_root}/test/fixtures/containers/sql-services.compose.yml
 redis_compose_file="${repo_root}/test/fixtures/containers/nosql-services.compose.yml"
 sql_project="${ORCAQ_SQL_FIXTURE_PROJECT:-orcaq-sql-fixtures}"
 redis_project="${ORCAQ_REDIS_FIXTURE_PROJECT:-orcaq-redis-fixture}"
+mongo_compose_file="${repo_root}/test/fixtures/containers/nosql-services.compose.yml"
+mongo_project="${ORCAQ_MONGODB_FIXTURE_PROJECT:-orcaq-mongodb-fixture}"
 
 compose_cmd=()
 
@@ -50,7 +52,12 @@ stop_sql() {
 
 stop_redis() {
   echo "Stopping Redis fixture"
-  "${compose_cmd[@]}" -p "${redis_project}" -f "${redis_compose_file}" down --volumes --remove-orphans
+  "${compose_cmd[@]}" -p "${redis_project}" -f "${redis_compose_file}" --profile redis down --volumes --remove-orphans
+}
+
+stop_mongo() {
+  echo "Stopping MongoDB fixture"
+  "${compose_cmd[@]}" -p "${mongo_project}" -f "${mongo_compose_file}" --profile mongodb down --volumes --remove-orphans
 }
 
 # ─── Main ────────────────────────────────────────────────────────────────────
@@ -66,8 +73,12 @@ case "${profile}" in
   redis)
     stop_redis
     ;;
+  mongodb)
+    stop_mongo
+    ;;
   all)
     stop_redis 2>/dev/null || true
+    stop_mongo 2>/dev/null || true
     stop_sql "all" 2>/dev/null || true
     echo "All fixtures stopped"
     ;;

@@ -5,7 +5,7 @@
 # Usage:
 #   bash scripts/test-services/start-fixtures.sh --profile <profile>
 #
-# Profiles: postgres | mysql | mariadb | sql | redis | sqlite | all
+# Profiles: postgres | mysql | mariadb | sql | redis | mongodb | sqlite | all
 # ──────────────────────────────────────────────────────────────────────────────
 
 set -euo pipefail
@@ -38,12 +38,16 @@ export ORCAQ_MARIADB_USER="${ORCAQ_MARIADB_USER:-orcaq}"
 export ORCAQ_MARIADB_PASSWORD="${ORCAQ_MARIADB_PASSWORD:-orcaq}"
 export ORCAQ_MARIADB_ROOT_PASSWORD="${ORCAQ_MARIADB_ROOT_PASSWORD:-root}"
 export ORCAQ_REDIS_PORT="${ORCAQ_REDIS_PORT:-6379}"
+export ORCAQ_MONGODB_PORT="${ORCAQ_MONGODB_PORT:-27017}"
+export ORCAQ_MONGODB_DATABASE="${ORCAQ_MONGODB_DATABASE:-orcaq_fixture}"
 
 # ─── Docker compose resolution ───────────────────────────────────────────────
 sql_compose_file="${repo_root}/test/fixtures/containers/sql-services.compose.yml"
 redis_compose_file="${repo_root}/test/fixtures/containers/nosql-services.compose.yml"
 sql_project="${ORCAQ_SQL_FIXTURE_PROJECT:-orcaq-sql-fixtures}"
 redis_project="${ORCAQ_REDIS_FIXTURE_PROJECT:-orcaq-redis-fixture}"
+mongo_compose_file="${repo_root}/test/fixtures/containers/nosql-services.compose.yml"
+mongo_project="${ORCAQ_MONGODB_FIXTURE_PROJECT:-orcaq-mongodb-fixture}"
 
 compose_cmd=()
 
@@ -170,8 +174,8 @@ start_sql_profile() {
 start_redis() {
   echo "Starting Redis fixture"
 
-  "${compose_cmd[@]}" -p "${redis_project}" -f "${redis_compose_file}" down --volumes --remove-orphans >/dev/null 2>&1 || true
-  "${compose_cmd[@]}" -p "${redis_project}" -f "${redis_compose_file}" up -d --remove-orphans
+  "${compose_cmd[@]}" -p "${redis_project}" -f "${redis_compose_file}" --profile redis down --volumes --remove-orphans >/dev/null 2>&1 || true
+  "${compose_cmd[@]}" -p "${redis_project}" -f "${redis_compose_file}" --profile redis up -d --remove-orphans
 
   local wait_cmd
   if wait_cmd=$(resolve_wait_cmd); then
@@ -182,6 +186,50 @@ start_redis() {
 
   bash "${script_dir}/seed-nosql-fixtures.sh"
   echo "Redis is ready on port ${ORCAQ_REDIS_PORT}"
+}
+
+wait_for_mongo() {
+  local attempt=0
+  echo "Waiting for MongoDB..."
+  until (
+    cd "${repo_root}" &&
+      FIXTURE_PORT="${ORCAQ_MONGODB_PORT}" \
+      node <<'NODE'
+const { MongoClient } = require('mongodb');
+(async () => {
+  const client = new MongoClient(`mongodb://127.0.0.1:${process.env.FIXTURE_PORT}`, {
+    serverSelectionTimeoutMS: 2_000,
+    connectTimeoutMS: 2_000,
+  });
+  try {
+    await client.connect();
+    await client.db('admin').command({ ping: 1 });
+  } finally {
+    await client.close();
+  }
+})().catch(() => { process.exit(1); });
+NODE
+  ) >/dev/null 2>&1; do
+    attempt=$((attempt + 1))
+    if [ "${attempt}" -ge 60 ]; then
+      echo 'MongoDB fixture did not become ready in time.' >&2
+      "${compose_cmd[@]}" -p "${mongo_project}" -f "${mongo_compose_file}" --profile mongodb logs --tail=80 mongodb >&2 || true
+      exit 1
+    fi
+    sleep 2
+  done
+  echo "MongoDB is ready on port ${ORCAQ_MONGODB_PORT}"
+}
+
+start_mongo() {
+  echo "Starting MongoDB fixture"
+
+  "${compose_cmd[@]}" -p "${mongo_project}" -f "${mongo_compose_file}" --profile mongodb down --volumes --remove-orphans >/dev/null 2>&1 || true
+  "${compose_cmd[@]}" -p "${mongo_project}" -f "${mongo_compose_file}" --profile mongodb up -d --remove-orphans
+
+  wait_for_mongo
+  node "${script_dir}/seed-mongo-fixture.mjs"
+  echo "MongoDB fixture is ready at mongodb://127.0.0.1:${ORCAQ_MONGODB_PORT}/${ORCAQ_MONGODB_DATABASE}"
 }
 
 start_sqlite() {
@@ -208,6 +256,9 @@ case "${profile}" in
   redis)
     start_redis
     ;;
+  mongodb)
+    start_mongo
+    ;;
   sqlite)
     node "${script_dir}/generate-optimized-sql-fixtures.mjs" 2>/dev/null || true
     start_sqlite
@@ -217,6 +268,7 @@ case "${profile}" in
     start_sqlite
     start_sql_profile "all"
     start_redis
+    start_mongo
     echo "All fixtures are ready"
     ;;
   *)
