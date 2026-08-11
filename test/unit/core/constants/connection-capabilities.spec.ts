@@ -14,4 +14,15 @@ describe('connection capabilities', () => {
     expect(profile.supportsQueryFiles).toBe(true);
     expect(profile.primaryQuerySurface).toBe('raw-query');
   });
+
+  it('routes MongoDB to the document Quick Query capability family', () => {
+    const profile = getConnectionCapabilityProfile({
+      type: DatabaseClientType.MONGODB,
+      method: EConnectionMethod.STRING,
+    });
+
+    expect(profile.primaryQuerySurface).toBe('quick-query');
+    expect(profile.supportsRawSql).toBe(false);
+    expect(profile.supportsErd).toBe(false);
+  });
 });

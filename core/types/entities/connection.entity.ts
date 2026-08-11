@@ -13,11 +13,13 @@ export enum EConnectionProviderKind {
   CLOUDFLARE_D1 = 'cloudflare-d1',
   TURSO = 'turso',
   REDIS_DIRECT = 'redis-direct',
+  MONGODB_DIRECT = 'mongodb-direct',
 }
 
 export enum EConnectionFamily {
   SQL = 'sql',
   REDIS = 'redis',
+  MONGODB = 'mongodb',
 }
 
 export enum EManagedSqliteProvider {

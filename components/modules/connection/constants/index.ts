@@ -89,6 +89,14 @@ export const databaseSupports: IDBSupport[] = [
     description: 'Browser, workbench, analysis',
   },
   {
+    type: DatabaseClientType.MONGODB,
+    name: 'MongoDB',
+    icon: h(Icon, { name: 'logos:mongodb-icon' }),
+    isSupport: true,
+    isBeta: true,
+    description: 'Document collections and Quick Query',
+  },
+  {
     type: DatabaseClientType.MSSQL,
     name: 'SQL Server',
     icon: h(Icon, { name: 'simple-icons:microsoftsqlserver' }),
@@ -117,6 +125,7 @@ export const DEFAULT_DB_PORTS: Record<string, string> = {
   [DatabaseClientType.MARIADB]: '3306',
   [DatabaseClientType.MYSQL2]: '3306',
   [DatabaseClientType.REDIS]: '6379',
+  [DatabaseClientType.MONGODB]: '27017',
   [DatabaseClientType.MSSQL]: '1433',
   [DatabaseClientType.ORACLE]: '1521',
   [DatabaseClientType.BETTER_SQLITE3]: '0',
