@@ -78,8 +78,8 @@ const REDIS_TAB_TYPES = [
 ] as const;
 
 const MONGODB_TAB_TYPES = [
-  TabViewType.TableOverview,
-  TabViewType.TableDetail,
+  TabViewType.MongoDatabaseOverview,
+  TabViewType.MongoCollectionDetail,
   TabViewType.Connection,
   TabViewType.Explorer,
   TabViewType.AgentChat,
