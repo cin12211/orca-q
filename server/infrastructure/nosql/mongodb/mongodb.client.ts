@@ -13,6 +13,13 @@ function getMongoUri(params: DatabaseMetadataRequestParams) {
   return `mongodb://${credentials}${host}:${port}/${database}`;
 }
 
+export async function pingMongoConnection(
+  params: DatabaseMetadataRequestParams
+): Promise<boolean> {
+  await withMongoDatabase(params, database => database.command({ ping: 1 }));
+  return true;
+}
+
 export async function withMongoDatabase<T>(
   params: DatabaseMetadataRequestParams,
   operation: (database: ReturnType<MongoClient['db']>) => Promise<T>

@@ -1,12 +1,13 @@
 import type { DatabaseClientType } from '~/core/constants/database-client-type';
 import {
   EConnectionFamily,
-  type EConnectionMethod,
+  EConnectionMethod,
   type EConnectionProviderKind,
   type IManagedSqliteConfig,
   type ISSLConfig,
   type ISSHConfig,
 } from '~/core/types/entities/connection.entity';
+import { pingMongoConnection } from '~/server/infrastructure/nosql/mongodb/mongodb.client';
 import { pingRedisConnection } from '~/server/infrastructure/nosql/redis/redis.client';
 import {
   normalizeConnectionError,
@@ -82,6 +83,34 @@ export async function healthCheckConnection({
         };
       } catch (error: unknown) {
         console.error('Redis connection failed:', error);
+        return {
+          isConnectedSuccess: false,
+          ...normalizeConnectionError(error, {
+            type,
+            sslEnabled: isSslEnabled(ssl),
+            sshEnabled: Boolean(ssh?.enabled),
+          }),
+        };
+      }
+    }
+
+    if (runtimeContext.family === EConnectionFamily.MONGODB) {
+      try {
+        const isConnected = await pingMongoConnection({
+          dbConnectionString:
+            method === EConnectionMethod.STRING ? url : undefined,
+          host,
+          port,
+          username,
+          password,
+          database,
+        });
+
+        return {
+          isConnectedSuccess: isConnected,
+        };
+      } catch (error: unknown) {
+        console.error('MongoDB connection failed:', error);
         return {
           isConnectedSuccess: false,
           ...normalizeConnectionError(error, {
