@@ -28,6 +28,9 @@ export function resolveRouteNameForTabType(type: TabViewType): RoutesNamesList {
     case TabViewType.RedisBrowser:
     case TabViewType.RedisPubSub:
       return 'workspaceId-connectionId-redis-tabViewId' as RoutesNamesList;
+    case TabViewType.MongoDatabaseOverview:
+    case TabViewType.MongoCollectionDetail:
+      return 'workspaceId-connectionId-mongodb-tabViewId' as RoutesNamesList;
     default:
       return 'workspaceId-connectionId-quick-query-tabViewId';
   }
@@ -164,9 +167,7 @@ export const useTabManagement = () => {
   const openRedisTab = async (params: {
     id: string;
     name: string;
-    type:
-      | TabViewType.RedisBrowser
-      | TabViewType.RedisPubSub;
+    type: TabViewType.RedisBrowser | TabViewType.RedisPubSub;
     icon?: string;
     iconClass?: string;
     metadata?: Record<string, any>;
@@ -182,6 +183,42 @@ export const useTabManagement = () => {
         tabViewId: params.id,
       },
       metadata: params.metadata,
+    });
+  };
+
+  const openMongoDatabaseTab = async (params: { databaseName: string }) => {
+    await openTab({
+      id: `mongo-database-${params.databaseName}`,
+      name: params.databaseName,
+      icon: 'hugeicons:database-01',
+      type: TabViewType.MongoDatabaseOverview,
+      routeName: resolveRouteNameForTabType(TabViewType.MongoDatabaseOverview),
+      routeParams: {
+        tabViewId: `mongo-database-${params.databaseName}`,
+      },
+      metadata: {
+        databaseName: params.databaseName,
+      },
+    });
+  };
+
+  const openMongoCollectionTab = async (params: {
+    databaseName: string;
+    collectionName: string;
+  }) => {
+    await openTab({
+      id: `mongo-collection-${params.databaseName}-${params.collectionName}`,
+      name: params.collectionName,
+      icon: 'hugeicons:grid-table',
+      type: TabViewType.MongoCollectionDetail,
+      routeName: resolveRouteNameForTabType(TabViewType.MongoCollectionDetail),
+      routeParams: {
+        tabViewId: `mongo-collection-${params.databaseName}-${params.collectionName}`,
+      },
+      metadata: {
+        databaseName: params.databaseName,
+        collectionName: params.collectionName,
+      },
     });
   };
 
@@ -309,6 +346,8 @@ export const useTabManagement = () => {
     openNewSqlFileTab,
     openSchemaItemTab,
     openRedisTab,
+    openMongoDatabaseTab,
+    openMongoCollectionTab,
     openUserPermissionsTab,
     openInstanceInsightsTab,
     openSchemaDiffTab,

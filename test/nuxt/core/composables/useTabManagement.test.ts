@@ -20,4 +20,13 @@ describe('resolveRouteNameForTabType', () => {
       'workspaceId-connectionId-agent-tabViewId'
     );
   });
+
+  it('routes Mongo tab types to the mongodb page', () => {
+    expect(resolveRouteNameForTabType(TabViewType.MongoDatabaseOverview)).toBe(
+      'workspaceId-connectionId-mongodb-tabViewId'
+    );
+    expect(resolveRouteNameForTabType(TabViewType.MongoCollectionDetail)).toBe(
+      'workspaceId-connectionId-mongodb-tabViewId'
+    );
+  });
 });
