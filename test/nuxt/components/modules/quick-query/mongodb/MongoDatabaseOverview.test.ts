@@ -7,10 +7,21 @@ vi.mock('~/core/composables/useTabManagement', () => ({
   useTabManagement: () => ({ openMongoCollectionTab }),
 }));
 
+const usersSummary = {
+  name: 'users',
+  properties: [],
+  documentCount: 3,
+  storageSize: 4096,
+  dataSize: 2048,
+  avgDocumentSize: 100,
+  indexCount: 1,
+  totalIndexSize: 512,
+};
+
 vi.stubGlobal(
   '$fetch',
   vi.fn().mockResolvedValue({
-    collections: [{ name: 'users', documentCount: 3 }],
+    collections: [usersSummary],
   })
 );
 
@@ -22,11 +33,9 @@ describe('MongoDatabaseOverview', () => {
     await flushPromises();
 
     const grid = wrapper.findComponent({ name: 'BaseDataGrid' });
-    expect(grid.props('rowData')).toEqual([
-      { name: 'users', documentCount: 3 },
-    ]);
+    expect(grid.props('rowData')).toEqual([usersSummary]);
 
-    grid.vm.$emit('rowClicked', { data: { name: 'users', documentCount: 3 } });
+    grid.vm.$emit('rowClicked', { data: usersSummary });
 
     expect(openMongoCollectionTab).toHaveBeenCalledWith({
       databaseName: 'shop',

@@ -1,28 +1,26 @@
 <script setup lang="ts">
+import JsonEditorVue from 'json-editor-vue';
 import type { MongoDocument } from '../types';
-import { buildMongoPreviewFields } from '../utils';
 
 const props = defineProps<{ documents: MongoDocument[] }>();
+
+const treeMode = 'tree' as unknown as undefined;
 </script>
 
 <template>
-  <div class="h-full overflow-auto divide-y">
+  <div class="h-full overflow-auto flex flex-col gap-2 p-2">
     <div
       v-for="document in props.documents"
       :key="document._id"
-      class="flex items-center gap-4 px-3 py-2 text-sm"
+      class="rounded-md border overflow-hidden"
     >
-      <span class="font-mono text-muted-foreground shrink-0">{{
-        document._id
-      }}</span>
-      <span
-        v-for="field in buildMongoPreviewFields(document)"
-        :key="field.key"
-        class="truncate"
-      >
-        <span class="text-muted-foreground">{{ field.key }}:</span>
-        {{ field.value }}
-      </span>
+      <JsonEditorVue
+        :model-value="document"
+        :mode="treeMode"
+        :navigation-bar="false"
+        :read-only="true"
+        class="max-h-64"
+      />
     </div>
   </div>
 </template>

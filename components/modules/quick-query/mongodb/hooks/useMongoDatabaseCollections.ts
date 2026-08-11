@@ -5,6 +5,7 @@ import type { MongoCollectionSummary } from '../types';
 
 export function useMongoDatabaseCollections(params: {
   connection: Ref<Connection | undefined>;
+  databaseName?: Ref<string | undefined>;
 }) {
   const collections = ref<MongoCollectionSummary[]>([]);
   const isLoading = ref(false);
@@ -18,7 +19,12 @@ export function useMongoDatabaseCollections(params: {
         '/api/mongodb/collections',
         {
           method: 'POST',
-          body: getConnectionParams(params.connection.value),
+          body: {
+            ...getConnectionParams(params.connection.value),
+            ...(params.databaseName?.value
+              ? { database: params.databaseName.value }
+              : {}),
+          },
         }
       );
       collections.value = response.collections;

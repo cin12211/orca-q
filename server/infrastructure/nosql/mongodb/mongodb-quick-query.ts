@@ -62,23 +62,85 @@ export function buildMongoDocumentSelector(id: string) {
   return { _id: new ObjectId(id) };
 }
 
+export interface MongoCollectionSummary {
+  name: string;
+  properties: string[];
+  documentCount: number;
+  storageSize: number;
+  dataSize: number;
+  avgDocumentSize: number;
+  indexCount: number;
+  totalIndexSize: number;
+}
+
+interface MongoCollectionListInfo {
+  name: string;
+  type?: string;
+  options?: { capped?: boolean };
+}
+
+interface MongoCollStats {
+  count?: number;
+  storageSize?: number;
+  size?: number;
+  avgObjSize?: number;
+  nindexes?: number;
+  totalIndexSize?: number;
+}
+
 interface MongoCollectionsSource {
-  listCollections(): { toArray(): Promise<{ name: string }[]> };
-  collection(name: string): { countDocuments(): Promise<number> };
+  listCollections(): { toArray(): Promise<MongoCollectionListInfo[]> };
+  command(command: Record<string, unknown>): Promise<MongoCollStats>;
+}
+
+function buildCollectionProperties(info: MongoCollectionListInfo): string[] {
+  const properties: string[] = [];
+
+  if (info.type === 'view') properties.push('View');
+  if (info.options?.capped) properties.push('Capped');
+
+  return properties;
 }
 
 export async function listMongoCollections(
   database: MongoCollectionsSource
-): Promise<{ name: string; documentCount: number }[]> {
+): Promise<MongoCollectionSummary[]> {
   const collectionInfos = await database.listCollections().toArray();
   const collections = await Promise.all(
-    collectionInfos.map(async info => ({
-      name: info.name,
-      documentCount: await database.collection(info.name).countDocuments(),
-    }))
+    collectionInfos.map(async info => {
+      const stats = await database
+        .command({ collStats: info.name })
+        .catch(() => ({}) as MongoCollStats);
+
+      return {
+        name: info.name,
+        properties: buildCollectionProperties(info),
+        documentCount: stats.count ?? 0,
+        storageSize: stats.storageSize ?? 0,
+        dataSize: stats.size ?? 0,
+        avgDocumentSize: stats.avgObjSize ?? 0,
+        indexCount: stats.nindexes ?? 0,
+        totalIndexSize: stats.totalIndexSize ?? 0,
+      };
+    })
   );
 
   return collections.sort((a, b) => a.name.localeCompare(b.name));
+}
+
+interface MongoAdminSource {
+  db(): {
+    admin(): { listDatabases(): Promise<{ databases: { name: string }[] }> };
+  };
+}
+
+export async function listMongoDatabases(
+  client: MongoAdminSource
+): Promise<string[]> {
+  const { databases } = await client.db().admin().listDatabases();
+  return databases
+    .map(database => database.name)
+    .sort((a, b) => a.localeCompare(b));
 }
 
 export function serializeMongoDocument(document: Record<string, unknown>) {

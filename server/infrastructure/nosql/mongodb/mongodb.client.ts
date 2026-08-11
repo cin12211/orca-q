@@ -24,6 +24,15 @@ export async function withMongoDatabase<T>(
   params: DatabaseMetadataRequestParams,
   operation: (database: ReturnType<MongoClient['db']>) => Promise<T>
 ) {
+  return withMongoClient(params, client =>
+    operation(client.db(params.database))
+  );
+}
+
+export async function withMongoClient<T>(
+  params: DatabaseMetadataRequestParams,
+  operation: (client: MongoClient) => Promise<T>
+) {
   const client = new MongoClient(getMongoUri(params), {
     serverSelectionTimeoutMS: 5_000,
     connectTimeoutMS: 5_000,
@@ -31,7 +40,7 @@ export async function withMongoDatabase<T>(
 
   try {
     await client.connect();
-    return await operation(client.db(params.database));
+    return await operation(client);
   } finally {
     await client.close();
   }

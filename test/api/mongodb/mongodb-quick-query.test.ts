@@ -6,18 +6,25 @@ describe('MongoDB Quick Query E2E', async () => {
   await setup();
 
   describe('POST /api/mongodb/collections', () => {
-    it('lists the seeded collections with their document counts', async () => {
+    it('lists the seeded collections with their document counts and stats', async () => {
       const res = await $fetch<{
-        collections: { name: string; documentCount: number }[];
+        collections: {
+          name: string;
+          documentCount: number;
+          storageSize: number;
+          indexCount: number;
+        }[];
       }>('/api/mongodb/collections', {
         method: 'POST',
         body: mongoBody(),
       });
 
       expect(res.collections).toEqual([
-        { name: 'orders', documentCount: 2 },
-        { name: 'users', documentCount: 3 },
+        expect.objectContaining({ name: 'orders', documentCount: 2 }),
+        expect.objectContaining({ name: 'users', documentCount: 3 }),
       ]);
+      expect(res.collections[1].storageSize).toBeGreaterThan(0);
+      expect(res.collections[1].indexCount).toBeGreaterThanOrEqual(1);
     });
   });
 

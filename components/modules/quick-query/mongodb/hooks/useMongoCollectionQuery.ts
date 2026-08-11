@@ -13,6 +13,7 @@ interface MongoQuickQueryResponse {
 export function useMongoCollectionQuery(params: {
   connection: Ref<Connection | undefined>;
   collectionName: Ref<string>;
+  databaseName?: Ref<string | undefined>;
 }) {
   const documents = ref<MongoDocument[]>([]);
   const total = ref(0);
@@ -32,6 +33,9 @@ export function useMongoCollectionQuery(params: {
           method: 'POST',
           body: {
             ...getConnectionParams(params.connection.value),
+            ...(params.databaseName?.value
+              ? { database: params.databaseName.value }
+              : {}),
             collection: params.collectionName.value,
             skip: skip.value,
             limit: limit.value,

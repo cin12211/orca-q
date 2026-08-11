@@ -18,6 +18,7 @@ const props = defineProps<{
 const connectionStore = useManagementConnectionStore();
 const connection = toRef(connectionStore, 'selectedConnection');
 const collectionName = toRef(props, 'collectionName');
+const databaseName = toRef(props, 'databaseName');
 
 const {
   documents,
@@ -29,11 +30,11 @@ const {
   onNextPage,
   onPreviousPage,
   onRefresh,
-} = useMongoCollectionQuery({ connection, collectionName });
+} = useMongoCollectionQuery({ connection, collectionName, databaseName });
 
 const viewMode = ref<MongoCollectionViewMode>('table');
 
-watch(collectionName, fetchDocuments, { immediate: true });
+watch([databaseName, collectionName], fetchDocuments, { immediate: true });
 </script>
 
 <template>

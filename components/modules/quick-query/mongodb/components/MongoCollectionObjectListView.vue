@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { CodeHighlightPreview } from '~/components/base/code-highlight-preview';
 import type { MongoDocument } from '../types';
 
 const props = defineProps<{ documents: MongoDocument[] }>();
@@ -6,11 +7,12 @@ const props = defineProps<{ documents: MongoDocument[] }>();
 
 <template>
   <div class="h-full overflow-auto flex flex-col gap-2 p-2">
-    <pre
+    <CodeHighlightPreview
       v-for="document in props.documents"
       :key="document._id"
-      class="text-xs rounded-md border bg-muted/40 p-2 overflow-auto"
-      >{{ JSON.stringify(document, null, 2) }}</pre
-    >
+      :code="JSON.stringify(document, null, 2)"
+      language="json"
+      max-height="320px"
+    />
   </div>
 </template>
