@@ -47,16 +47,16 @@ Two tab views exist:
 
 `MongoDatabaseOverview.vue` and `MongoCollectionDetail.vue` must look like
 part of the same app as `QuickQuery.vue`, not a bolted-on screen: same
-toolbar height/spacing/header layout, same `BaseDataGrid` theme, and a
-tab-strip for the Table/List/Object List switcher styled like the existing
-Data/Structure/Erd sub-tab strip (driven today by `useQuickQueryTabs`). This
-is achieved by reusing the same shared Tailwind classes/base components
-(`components/base`, `components/ui`) that `QuickQuery.vue` already uses for
-its shell — never by importing `QuickQuery.vue` itself or its SQL hooks.
-Where a shell piece (toolbar container, header bar) is only exposed as a
-private element inside `QuickQuery.vue` today, extract it to
-`components/base` first so both the SQL and Mongo containers consume the
-same presentational component, instead of duplicating markup.
+toolbar height/spacing/padding, same `BaseDataGrid` theme, and a tab-strip
+for the Table/List/Object List switcher styled like the existing
+Data/Structure/Erd sub-tab strip (driven today by `useQuickQueryTabs`/
+`QuickQueryControlBar.vue`). This is achieved by building new Mongo-only
+toolbar/tab-strip components that reuse the same `components/ui` primitives
+(buttons, tabs) and the same Tailwind utility classes `QuickQueryControlBar.vue`
+uses for spacing/layout — never by importing `QuickQuery.vue`,
+`QuickQueryControlBar.vue`, or their SQL hooks, and never by refactoring
+those SQL components to extract a shared base (out of scope for this
+phase — mirror the markup instead).
 
 ## Component structure
 
