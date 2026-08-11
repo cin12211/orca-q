@@ -1,0 +1,79 @@
+import { ref, type Ref } from 'vue';
+import { DEFAULT_QUERY_SIZE } from '~/core/constants';
+import { getConnectionParams } from '~/core/helpers/connection-helper';
+import type { Connection } from '~/core/stores';
+import type { MongoDocument } from '../types';
+
+interface MongoQuickQueryResponse {
+  documents: MongoDocument[];
+  total: number;
+  queryTime: number;
+}
+
+export function useMongoCollectionQuery(params: {
+  connection: Ref<Connection | undefined>;
+  collectionName: Ref<string>;
+}) {
+  const documents = ref<MongoDocument[]>([]);
+  const total = ref(0);
+  const queryTime = ref(0);
+  const isLoading = ref(false);
+  const error = ref<string | undefined>();
+  const limit = ref(DEFAULT_QUERY_SIZE);
+  const skip = ref(0);
+
+  const fetchDocuments = async () => {
+    isLoading.value = true;
+    error.value = undefined;
+    try {
+      const response = await $fetch<MongoQuickQueryResponse>(
+        '/api/mongodb/quick-query',
+        {
+          method: 'POST',
+          body: {
+            ...getConnectionParams(params.connection.value),
+            collection: params.collectionName.value,
+            skip: skip.value,
+            limit: limit.value,
+          },
+        }
+      );
+      documents.value = response.documents;
+      total.value = response.total;
+      queryTime.value = response.queryTime;
+    } catch (fetchError) {
+      error.value =
+        fetchError instanceof Error ? fetchError.message : 'Unknown error';
+    } finally {
+      isLoading.value = false;
+    }
+  };
+
+  const onNextPage = () => {
+    skip.value += limit.value;
+    fetchDocuments();
+  };
+
+  const onPreviousPage = () => {
+    skip.value = Math.max(0, skip.value - limit.value);
+    fetchDocuments();
+  };
+
+  const onRefresh = () => {
+    fetchDocuments();
+  };
+
+  return {
+    documents,
+    total,
+    queryTime,
+    isLoading,
+    error,
+    limit,
+    skip,
+    fetchDocuments,
+    onNextPage,
+    onPreviousPage,
+    onRefresh,
+  };
+}
