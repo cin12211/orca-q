@@ -62,6 +62,25 @@ export function buildMongoDocumentSelector(id: string) {
   return { _id: new ObjectId(id) };
 }
 
+interface MongoCollectionsSource {
+  listCollections(): { toArray(): Promise<{ name: string }[]> };
+  collection(name: string): { countDocuments(): Promise<number> };
+}
+
+export async function listMongoCollections(
+  database: MongoCollectionsSource
+): Promise<{ name: string; documentCount: number }[]> {
+  const collectionInfos = await database.listCollections().toArray();
+  const collections = await Promise.all(
+    collectionInfos.map(async info => ({
+      name: info.name,
+      documentCount: await database.collection(info.name).countDocuments(),
+    }))
+  );
+
+  return collections.sort((a, b) => a.name.localeCompare(b.name));
+}
+
 export function serializeMongoDocument(document: Record<string, unknown>) {
   return Object.fromEntries(
     Object.entries(document).map(([key, value]) => [
