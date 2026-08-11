@@ -89,7 +89,7 @@ components/modules/quick-query/mongodb/
 A parallel sidebar sub-module:
 
 ```
-components/modules/management-schemas/mongodb/
+components/modules/management/schemas/mongodb/
 ├── ManagementMongoSchemas.vue        — database -> collection tree panel
 ├── hooks/
 │   ├── useMongoSchemaTreeData.ts     — builds the tree, tags nodes with TabViewType
@@ -116,7 +116,10 @@ SQL component:
   new `mongodb` page.
 - `components/modules/app-shell/primary-side-bar/components/PrimarySideBar.vue`:
   add a MongoDB family branch that renders `ManagementMongoSchemas.vue`
-  (parallel to the existing Redis branch).
+  (parallel to the existing Redis branch). Sidebar tree reuses the same
+  `FileTree` base component (`components/base/tree-folder/FileTree.vue`) the
+  SQL Schemas tree already uses, with its own `FileNode` map instead of
+  importing the SQL tree hook.
 - `core/constants/connection-capabilities.ts`: change `MONGODB_TAB_TYPES` to
   `[TabViewType.MongoDatabaseOverview, TabViewType.MongoCollectionDetail]`.
 
