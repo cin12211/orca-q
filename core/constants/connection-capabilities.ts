@@ -133,7 +133,7 @@ export const CONNECTION_CAPABILITY_REGISTRY: Record<
   },
   [EConnectionFamily.MONGODB]: {
     family: EConnectionFamily.MONGODB,
-    visibleActivityItems: ['Explorer', 'Schemas', 'Agent'],
+    visibleActivityItems: ['Schemas'],
     allowedTabTypes: [...MONGODB_TAB_TYPES],
     defaultActivityItem: 'Schemas',
     primaryQuerySurface: 'quick-query',

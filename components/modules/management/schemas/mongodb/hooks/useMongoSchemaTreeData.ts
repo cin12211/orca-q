@@ -10,13 +10,18 @@ export function useMongoSchemaTreeData(params: {
   const { collections, isLoading, fetchCollections } =
     useMongoDatabaseCollections({ connection: params.connection });
 
-  const databaseName = computed(() => params.connection.value?.database || '');
+  const databaseName = computed(
+    () =>
+      params.connection.value?.database ||
+      params.connection.value?.name ||
+      'database'
+  );
 
   const fileTreeData = computed<
     Record<string, FileNode<{ tabViewType: TabViewType }>>
   >(() => {
+    if (!params.connection.value) return {};
     const rootId = databaseName.value;
-    if (!rootId) return {};
 
     const nodes: Record<string, FileNode<{ tabViewType: TabViewType }>> = {
       [rootId]: {
