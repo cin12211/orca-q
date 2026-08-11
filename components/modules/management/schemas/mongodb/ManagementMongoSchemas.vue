@@ -1,9 +1,16 @@
 <script setup lang="ts">
 import { refDebounced } from '@vueuse/core';
 import { computed, ref, shallowRef, toRef, useTemplateRef } from 'vue';
+import {
+  ContextMenuItemType,
+  type ContextMenuItem,
+} from '~/components/base/context-menu/menuContext.type';
 import FileTree from '~/components/base/tree-folder/FileTree.vue';
 import type { FileNode } from '~/components/base/tree-folder/types';
-import { useMongoCollectionMutation } from '~/components/modules/quick-query/mongodb/hooks';
+import {
+  useMongoCollectionMutation,
+  useMongoDatabaseStats,
+} from '~/components/modules/quick-query/mongodb/hooks';
 import { useTabManagement } from '~/core/composables/useTabManagement';
 import { useWorkspaceConnectionRoute } from '~/core/composables/useWorkspaceConnectionRoute';
 import { DEFAULT_DEBOUNCE_INPUT } from '~/core/constants';
@@ -13,7 +20,9 @@ import { TabViewType } from '~/core/types/entities/tab-view.entity';
 import { ManagementSidebarHeader } from '../../shared';
 import {
   CreateCollectionDialog,
+  DatabaseInfoDialog,
   DeleteCollectionDialog,
+  DeleteDatabaseDialog,
   RenameCollectionDialog,
 } from './dialogs';
 import { useMongoSchemaTreeData } from './hooks';
@@ -30,11 +39,22 @@ const debouncedSearch = refDebounced(searchInput, DEFAULT_DEBOUNCE_INPUT);
 const { fileTreeData, isLoading, defaultFolderOpenId, fetchDatabases } =
   useMongoSchemaTreeData(connection, debouncedSearch);
 
-const { isMutating, createCollection, renameCollection, deleteCollection } =
-  useMongoCollectionMutation({ connection });
+const {
+  isMutating,
+  createCollection,
+  renameCollection,
+  deleteCollection,
+  deleteDatabase,
+} = useMongoCollectionMutation({ connection });
+const {
+  stats: databaseStats,
+  isLoading: isLoadingStats,
+  fetchStats,
+} = useMongoDatabaseStats({ connection });
 
 const fileTreeRef = useTemplateRef<typeof FileTree | null>('fileTreeRef');
 const isTreeCollapsed = ref(false);
+const selectedNode = ref<FileNode | null>(null);
 
 const hasTreeData = computed(() => Object.keys(fileTreeData.value).length > 0);
 
@@ -75,6 +95,11 @@ const handleTreeClick = async (nodeId: string) => {
   }
 };
 
+const handleTreeContextMenu = (nodeId: string) => {
+  selectedNode.value =
+    (fileTreeData.value[nodeId] as unknown as FileNode) || null;
+};
+
 const createDialogState = ref<{ open: boolean; databaseName: string }>({
   open: false,
   databaseName: '',
@@ -84,11 +109,19 @@ const renameDialogState = ref<{
   databaseName: string;
   currentName: string;
 }>({ open: false, databaseName: '', currentName: '' });
-const deleteDialogState = ref<{
+const deleteCollectionDialogState = ref<{
   open: boolean;
   databaseName: string;
   collectionName: string;
 }>({ open: false, databaseName: '', collectionName: '' });
+const infoDialogState = ref<{ open: boolean; databaseName: string }>({
+  open: false,
+  databaseName: '',
+});
+const deleteDatabaseDialogState = ref<{ open: boolean; databaseName: string }>({
+  open: false,
+  databaseName: '',
+});
 
 const onRequestCreateCollection = (node: FileNode) => {
   createDialogState.value = { open: true, databaseName: node.name };
@@ -103,11 +136,20 @@ const onRequestRenameCollection = (node: FileNode) => {
 };
 
 const onRequestDeleteCollection = (node: FileNode) => {
-  deleteDialogState.value = {
+  deleteCollectionDialogState.value = {
     open: true,
     databaseName: node.parentId || '',
     collectionName: node.name,
   };
+};
+
+const onRequestDatabaseInfo = async (node: FileNode) => {
+  infoDialogState.value = { open: true, databaseName: node.name };
+  await fetchStats(node.name);
+};
+
+const onRequestDeleteDatabase = (node: FileNode) => {
+  deleteDatabaseDialogState.value = { open: true, databaseName: node.name };
 };
 
 const onConfirmCreateCollection = async (name: string) => {
@@ -135,18 +177,74 @@ const onConfirmRenameCollection = async (newName: string) => {
 
 const onConfirmDeleteCollection = async () => {
   const succeeded = await deleteCollection(
-    deleteDialogState.value.databaseName,
-    deleteDialogState.value.collectionName
+    deleteCollectionDialogState.value.databaseName,
+    deleteCollectionDialogState.value.collectionName
   );
   if (succeeded) {
-    deleteDialogState.value.open = false;
+    deleteCollectionDialogState.value.open = false;
     await fetchDatabases();
   }
 };
+
+const onConfirmDeleteDatabase = async () => {
+  const succeeded = await deleteDatabase(
+    deleteDatabaseDialogState.value.databaseName
+  );
+  if (succeeded) {
+    deleteDatabaseDialogState.value.open = false;
+    await fetchDatabases();
+  }
+};
+
+const contextMenuItems = computed<ContextMenuItem[]>(() => {
+  const node = selectedNode.value;
+  if (!node) return [];
+
+  if (node.type === 'folder') {
+    return [
+      {
+        type: ContextMenuItemType.ACTION,
+        title: 'Create Collection',
+        icon: 'hugeicons:add-01',
+        select: () => onRequestCreateCollection(node),
+      },
+      {
+        type: ContextMenuItemType.ACTION,
+        title: 'View Info',
+        icon: 'hugeicons:information-circle',
+        select: () => onRequestDatabaseInfo(node),
+      },
+      { type: ContextMenuItemType.SEPARATOR },
+      {
+        type: ContextMenuItemType.ACTION,
+        title: 'Delete Database',
+        icon: 'hugeicons:delete-02',
+        select: () => onRequestDeleteDatabase(node),
+      },
+    ];
+  }
+
+  return [
+    {
+      type: ContextMenuItemType.ACTION,
+      title: 'Rename',
+      icon: 'hugeicons:edit-02',
+      select: () => onRequestRenameCollection(node),
+    },
+    {
+      type: ContextMenuItemType.ACTION,
+      title: 'Delete',
+      icon: 'hugeicons:delete-02',
+      select: () => onRequestDeleteCollection(node),
+    },
+  ];
+});
 </script>
 
 <template>
-  <div class="flex flex-col h-full w-full overflow-hidden">
+  <div class="flex flex-col h-full w-full overflow-hidden relative">
+    <LoadingOverlay :visible="isLoading" />
+
     <ManagementSidebarHeader
       v-model:search="searchInput"
       title="Schemas"
@@ -194,69 +292,107 @@ const onConfirmDeleteCollection = async () => {
       desc="There are no databases available for this connection."
     />
 
-    <div class="h-full min-h-0 flex-1 overflow-hidden">
-      <FileTree
-        ref="fileTreeRef"
-        :init-expanded-ids="[defaultFolderOpenId]"
-        :initial-data="fileTreeData as unknown as Record<string, FileNode>"
-        :storage-key="`${connectionStore.selectedConnection?.id}-mongo-schemas-tree`"
-        :allow-drag-and-drop="false"
-        :delay-focus="0"
-        @click="handleTreeClick"
-      >
-        <template #meta="{ node }">
-          <span
-            v-if="
-              node.type === 'folder' &&
-              (node.data as any)?.totalSize !== undefined
-            "
-            class="text-xs text-muted-foreground"
-          >
-            {{ formatBytes(((node.data as any)?.totalSize as number) || 0) }}
-          </span>
-        </template>
+    <BaseContextMenu
+      :context-menu-items="contextMenuItems"
+      @on-clear-context-menu="selectedNode = null"
+    >
+      <div class="h-full min-h-0 flex-1 overflow-hidden">
+        <FileTree
+          ref="fileTreeRef"
+          :init-expanded-ids="[defaultFolderOpenId]"
+          :initial-data="fileTreeData as unknown as Record<string, FileNode>"
+          :storage-key="`${connectionStore.selectedConnection?.id}-mongo-schemas-tree`"
+          :allow-drag-and-drop="false"
+          :delay-focus="0"
+          @click="handleTreeClick"
+          @contextmenu="handleTreeContextMenu"
+        >
+          <template #meta="{ node }">
+            <span
+              v-if="(node.data as any)?.totalSize !== undefined"
+              class="text-xs text-muted-foreground"
+            >
+              {{ formatBytes(((node.data as any)?.totalSize as number) || 0) }}
+            </span>
+            <span
+              v-else-if="(node.data as any)?.size !== undefined"
+              class="text-xs text-muted-foreground"
+            >
+              {{ formatBytes(((node.data as any)?.size as number) || 0) }}
+            </span>
+          </template>
 
-        <template #actions="{ node }">
-          <Tooltip v-if="node.type === 'folder'">
-            <TooltipTrigger as-child>
-              <Button
-                size="iconSm"
-                variant="ghost"
-                class="size-5!"
-                @click="onRequestCreateCollection(node)"
-              >
-                <Icon name="hugeicons:add-01" class="size-3.5!" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>Create Collection</TooltipContent>
-          </Tooltip>
+          <template #actions="{ node }">
+            <template v-if="node.type === 'folder'">
+              <Tooltip>
+                <TooltipTrigger as-child>
+                  <Button
+                    size="iconSm"
+                    variant="ghost"
+                    class="size-5!"
+                    @click="onRequestCreateCollection(node)"
+                  >
+                    <Icon name="hugeicons:add-01" class="size-3.5!" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Create Collection</TooltipContent>
+              </Tooltip>
 
-          <DropdownMenu v-else>
-            <DropdownMenuTrigger as-child>
-              <Button size="iconSm" variant="ghost" class="size-5!">
-                <Icon
-                  name="hugeicons:more-horizontal-circle-01"
-                  class="size-3.5!"
-                />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem @click="onRequestRenameCollection(node)">
-                <Icon name="hugeicons:edit-02" class="size-4 mr-2" />
-                Rename
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                class="text-destructive"
-                @click="onRequestDeleteCollection(node)"
-              >
-                <Icon name="hugeicons:delete-02" class="size-4 mr-2" />
-                Delete
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </template>
-      </FileTree>
-    </div>
+              <DropdownMenu>
+                <DropdownMenuTrigger as-child>
+                  <Button size="iconSm" variant="ghost" class="size-5!">
+                    <Icon
+                      name="hugeicons:more-horizontal-circle-01"
+                      class="size-3.5!"
+                    />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem @click="onRequestDatabaseInfo(node)">
+                    <Icon
+                      name="hugeicons:information-circle"
+                      class="size-4 mr-2"
+                    />
+                    View Info
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    class="text-destructive"
+                    @click="onRequestDeleteDatabase(node)"
+                  >
+                    <Icon name="hugeicons:delete-02" class="size-4 mr-2" />
+                    Delete Database
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </template>
+
+            <DropdownMenu v-else>
+              <DropdownMenuTrigger as-child>
+                <Button size="iconSm" variant="ghost" class="size-5!">
+                  <Icon
+                    name="hugeicons:more-horizontal-circle-01"
+                    class="size-3.5!"
+                  />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem @click="onRequestRenameCollection(node)">
+                  <Icon name="hugeicons:edit-02" class="size-4 mr-2" />
+                  Rename
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  class="text-destructive"
+                  @click="onRequestDeleteCollection(node)"
+                >
+                  <Icon name="hugeicons:delete-02" class="size-4 mr-2" />
+                  Delete
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </template>
+        </FileTree>
+      </div>
+    </BaseContextMenu>
 
     <CreateCollectionDialog
       :open="createDialogState.open"
@@ -275,12 +411,29 @@ const onConfirmDeleteCollection = async () => {
     />
 
     <DeleteCollectionDialog
-      :open="deleteDialogState.open"
-      :collection-name="deleteDialogState.collectionName"
+      :open="deleteCollectionDialogState.open"
+      :collection-name="deleteCollectionDialogState.collectionName"
       :loading="isMutating"
-      @update:open="deleteDialogState.open = $event"
+      @update:open="deleteCollectionDialogState.open = $event"
       @confirm="onConfirmDeleteCollection"
-      @cancel="deleteDialogState.open = false"
+      @cancel="deleteCollectionDialogState.open = false"
+    />
+
+    <DatabaseInfoDialog
+      :open="infoDialogState.open"
+      :database-name="infoDialogState.databaseName"
+      :stats="databaseStats"
+      :loading="isLoadingStats"
+      @update:open="infoDialogState.open = $event"
+    />
+
+    <DeleteDatabaseDialog
+      :open="deleteDatabaseDialogState.open"
+      :database-name="deleteDatabaseDialogState.databaseName"
+      :loading="isMutating"
+      @update:open="deleteDatabaseDialogState.open = $event"
+      @confirm="onConfirmDeleteDatabase"
+      @cancel="deleteDatabaseDialogState.open = false"
     />
   </div>
 </template>

@@ -131,23 +131,29 @@ export async function listMongoCollections(
 export interface MongoCollectionName {
   name: string;
   properties: string[];
-}
-
-interface MongoCollectionNamesSource {
-  listCollections(): { toArray(): Promise<MongoCollectionListInfo[]> };
+  size: number;
 }
 
 export async function listMongoCollectionNames(
-  database: MongoCollectionNamesSource
+  database: MongoCollectionsSource
 ): Promise<MongoCollectionName[]> {
   const collectionInfos = await database.listCollections().toArray();
 
-  return collectionInfos
-    .map(info => ({
-      name: info.name,
-      properties: buildCollectionProperties(info),
-    }))
-    .sort((a, b) => a.name.localeCompare(b.name));
+  const collections = await Promise.all(
+    collectionInfos.map(async info => {
+      const stats = await database
+        .command({ collStats: info.name })
+        .catch(() => ({}) as MongoCollStats);
+
+      return {
+        name: info.name,
+        properties: buildCollectionProperties(info),
+        size: stats.storageSize ?? 0,
+      };
+    })
+  );
+
+  return collections.sort((a, b) => a.name.localeCompare(b.name));
 }
 
 interface MongoDatabaseStatsSource {
@@ -159,6 +165,50 @@ export async function getMongoDatabaseTotalSize(
 ): Promise<number> {
   const stats = await database.command({ dbStats: 1 });
   return stats.totalSize ?? 0;
+}
+
+export interface MongoDatabaseStats {
+  collections: number;
+  views: number;
+  objects: number;
+  avgObjectSize: number;
+  dataSize: number;
+  storageSize: number;
+  indexes: number;
+  indexSize: number;
+  totalSize: number;
+}
+
+interface MongoFullDatabaseStatsSource {
+  command(command: Record<string, unknown>): Promise<{
+    collections?: number;
+    views?: number;
+    objects?: number;
+    avgObjSize?: number;
+    dataSize?: number;
+    storageSize?: number;
+    indexes?: number;
+    indexSize?: number;
+    totalSize?: number;
+  }>;
+}
+
+export async function getMongoDatabaseStats(
+  database: MongoFullDatabaseStatsSource
+): Promise<MongoDatabaseStats> {
+  const stats = await database.command({ dbStats: 1 });
+
+  return {
+    collections: stats.collections ?? 0,
+    views: stats.views ?? 0,
+    objects: stats.objects ?? 0,
+    avgObjectSize: stats.avgObjSize ?? 0,
+    dataSize: stats.dataSize ?? 0,
+    storageSize: stats.storageSize ?? 0,
+    indexes: stats.indexes ?? 0,
+    indexSize: stats.indexSize ?? 0,
+    totalSize: stats.totalSize ?? 0,
+  };
 }
 
 interface MongoCollectionMutationSource {
@@ -187,6 +237,16 @@ export async function dropMongoCollection(
   name: string
 ): Promise<void> {
   await database.dropCollection(name);
+}
+
+interface MongoDatabaseMutationSource {
+  dropDatabase(): Promise<unknown>;
+}
+
+export async function dropMongoDatabase(
+  database: MongoDatabaseMutationSource
+): Promise<void> {
+  await database.dropDatabase();
 }
 
 interface MongoAdminSource {

@@ -11,6 +11,7 @@ import { TabViewType } from '~/core/types/entities/tab-view.entity';
 interface MongoNodeData {
   tabViewType: TabViewType;
   totalSize?: number;
+  size?: number;
 }
 
 type MongoFileNode = FileNode<MongoNodeData>;
@@ -96,7 +97,10 @@ export function useMongoSchemaTreeData(
           iconOpen: 'hugeicons:grid-table',
           iconClose: 'hugeicons:grid-table',
           iconClass: 'text-green-500',
-          data: { tabViewType: TabViewType.MongoCollectionDetail },
+          data: {
+            tabViewType: TabViewType.MongoCollectionDetail,
+            size: collection.size,
+          },
         };
         nodes[databaseName].children!.push(nodeId);
       }

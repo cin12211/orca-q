@@ -57,6 +57,27 @@ export function useMongoCollectionMutation(params: {
     }
   };
 
+  const deleteDatabase = async (databaseName: string) => {
+    isMutating.value = true;
+    error.value = undefined;
+    try {
+      await $fetch('/api/mongodb/delete-database', {
+        method: 'POST',
+        body: {
+          ...getConnectionParams(params.connection.value),
+          database: databaseName,
+        },
+      });
+      return true;
+    } catch (fetchError) {
+      error.value =
+        fetchError instanceof Error ? fetchError.message : 'Unknown error';
+      return false;
+    } finally {
+      isMutating.value = false;
+    }
+  };
+
   const deleteCollection = async (databaseName: string, name: string) => {
     isMutating.value = true;
     error.value = undefined;
@@ -85,5 +106,6 @@ export function useMongoCollectionMutation(params: {
     createCollection,
     renameCollection,
     deleteCollection,
+    deleteDatabase,
   };
 }

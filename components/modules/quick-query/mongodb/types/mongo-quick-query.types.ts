@@ -6,6 +6,19 @@ export interface MongoDocument {
 export interface MongoCollectionName {
   name: string;
   properties: string[];
+  size: number;
+}
+
+export interface MongoDatabaseStats {
+  collections: number;
+  views: number;
+  objects: number;
+  avgObjectSize: number;
+  dataSize: number;
+  storageSize: number;
+  indexes: number;
+  indexSize: number;
+  totalSize: number;
 }
 
 export interface MongoCollectionSummary {

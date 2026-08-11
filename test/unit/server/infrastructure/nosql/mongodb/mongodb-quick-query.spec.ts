@@ -3,6 +3,8 @@ import {
   buildMongoDocumentSelector,
   createMongoCollection,
   dropMongoCollection,
+  dropMongoDatabase,
+  getMongoDatabaseStats,
   getMongoDatabaseTotalSize,
   listMongoCollectionNames,
   listMongoCollections,
@@ -111,7 +113,7 @@ describe('listMongoCollections', () => {
 });
 
 describe('listMongoCollectionNames', () => {
-  it('returns collection names with derived properties, no stats calls, sorted by name', async () => {
+  it('returns collection names with derived properties and size, sorted by name', async () => {
     const fakeDatabase = {
       listCollections: () => ({
         toArray: async () => [
@@ -119,12 +121,52 @@ describe('listMongoCollectionNames', () => {
           { name: 'archive', type: 'collection', options: { capped: true } },
         ],
       }),
+      command: async ({ collStats }: { collStats: string }) => ({
+        storageSize: collStats === 'users' ? 4096 : 2048,
+      }),
     };
 
     expect(await listMongoCollectionNames(fakeDatabase as any)).toEqual([
-      { name: 'archive', properties: ['Capped'] },
-      { name: 'users', properties: [] },
+      { name: 'archive', properties: ['Capped'], size: 2048 },
+      { name: 'users', properties: [], size: 4096 },
     ]);
+  });
+});
+
+describe('getMongoDatabaseStats', () => {
+  it('returns the full dbStats fields with defaults for missing values', async () => {
+    const fakeDatabase = {
+      command: async () => ({
+        collections: 2,
+        objects: 5,
+        avgObjSize: 78.8,
+        dataSize: 394,
+        storageSize: 8192,
+        indexes: 2,
+        indexSize: 8192,
+        totalSize: 16384,
+      }),
+    };
+
+    expect(await getMongoDatabaseStats(fakeDatabase as any)).toEqual({
+      collections: 2,
+      views: 0,
+      objects: 5,
+      avgObjectSize: 78.8,
+      dataSize: 394,
+      storageSize: 8192,
+      indexes: 2,
+      indexSize: 8192,
+      totalSize: 16384,
+    });
+  });
+});
+
+describe('dropMongoDatabase', () => {
+  it('calls database.dropDatabase', async () => {
+    const dropDatabase = vi.fn().mockResolvedValue(undefined);
+    await dropMongoDatabase({ dropDatabase } as any);
+    expect(dropDatabase).toHaveBeenCalledWith();
   });
 });
 
