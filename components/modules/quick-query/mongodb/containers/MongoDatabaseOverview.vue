@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { toRef, watch } from 'vue';
+import { computed, toRef, watch } from 'vue';
 import type { ColDef, RowClickedEvent } from 'ag-grid-community';
 import BaseDataGrid from '~/components/base/data-grid/BaseDataGrid.vue';
 import { useTabManagement } from '~/core/composables/useTabManagement';
@@ -15,11 +15,16 @@ const props = defineProps<{
 }>();
 
 const connectionStore = useManagementConnectionStore();
-const { collections, fetchCollections } = useMongoDatabaseCollections({
-  connection: toRef(connectionStore, 'selectedConnection'),
-  databaseName: toRef(props, 'databaseName'),
-});
+const { collections, isLoading, fetchCollections } =
+  useMongoDatabaseCollections({
+    connection: toRef(connectionStore, 'selectedConnection'),
+    databaseName: toRef(props, 'databaseName'),
+  });
 const { openMongoCollectionTab } = useTabManagement();
+
+const isEmpty = computed(
+  () => !isLoading.value && collections.value.length === 0
+);
 
 const columnDefs: ColDef<MongoCollectionSummary>[] = [
   { field: 'name', headerName: 'Collection name' },
@@ -64,12 +69,22 @@ watch(() => props.databaseName, fetchCollections, { immediate: true });
 </script>
 
 <template>
-  <div class="h-full w-full px-1">
-    <BaseDataGrid
-      class="h-full border rounded-md"
-      :column-defs="columnDefs"
-      :row-data="collections"
-      @row-clicked="onRowClicked"
-    />
+  <div class="flex flex-col h-full w-full relative">
+    <LoadingOverlay :visible="isLoading" />
+
+    <div class="flex-1 overflow-hidden px-1 mb-0.5">
+      <BaseEmpty
+        v-if="isEmpty"
+        title="No collections found"
+        desc="This database has no collections yet."
+      />
+      <BaseDataGrid
+        v-else
+        class="h-full border rounded-md"
+        :column-defs="columnDefs"
+        :row-data="collections"
+        @row-clicked="onRowClicked"
+      />
+    </div>
   </div>
 </template>

@@ -3,6 +3,11 @@ export interface MongoDocument {
   [key: string]: unknown;
 }
 
+export interface MongoCollectionName {
+  name: string;
+  properties: string[];
+}
+
 export interface MongoCollectionSummary {
   name: string;
   properties: string[];

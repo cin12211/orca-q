@@ -1,9 +1,14 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import {
   buildMongoDocumentSelector,
+  createMongoCollection,
+  dropMongoCollection,
+  getMongoDatabaseTotalSize,
+  listMongoCollectionNames,
   listMongoCollections,
   listMongoDatabases,
   normalizeMongoFilter,
+  renameMongoCollection,
 } from '~/server/infrastructure/nosql/mongodb/mongodb-quick-query';
 
 describe('MongoDB Quick Query request helpers', () => {
@@ -102,6 +107,60 @@ describe('listMongoCollections', () => {
     };
 
     expect(await listMongoCollections(fakeDatabase as any)).toEqual([]);
+  });
+});
+
+describe('listMongoCollectionNames', () => {
+  it('returns collection names with derived properties, no stats calls, sorted by name', async () => {
+    const fakeDatabase = {
+      listCollections: () => ({
+        toArray: async () => [
+          { name: 'users', type: 'collection' },
+          { name: 'archive', type: 'collection', options: { capped: true } },
+        ],
+      }),
+    };
+
+    expect(await listMongoCollectionNames(fakeDatabase as any)).toEqual([
+      { name: 'archive', properties: ['Capped'] },
+      { name: 'users', properties: [] },
+    ]);
+  });
+});
+
+describe('getMongoDatabaseTotalSize', () => {
+  it('returns the totalSize field from the dbStats command', async () => {
+    const fakeDatabase = {
+      command: async () => ({ totalSize: 16384, storageSize: 8192 }),
+    };
+
+    expect(await getMongoDatabaseTotalSize(fakeDatabase as any)).toBe(16384);
+  });
+
+  it('defaults to 0 when totalSize is missing', async () => {
+    const fakeDatabase = { command: async () => ({}) };
+
+    expect(await getMongoDatabaseTotalSize(fakeDatabase as any)).toBe(0);
+  });
+});
+
+describe('collection mutation helpers', () => {
+  it('createMongoCollection calls database.createCollection with the given name', async () => {
+    const createCollection = vi.fn().mockResolvedValue(undefined);
+    await createMongoCollection({ createCollection } as any, 'new_collection');
+    expect(createCollection).toHaveBeenCalledWith('new_collection');
+  });
+
+  it('renameMongoCollection calls database.renameCollection with from/to names', async () => {
+    const renameCollection = vi.fn().mockResolvedValue(undefined);
+    await renameMongoCollection({ renameCollection } as any, 'old', 'new');
+    expect(renameCollection).toHaveBeenCalledWith('old', 'new');
+  });
+
+  it('dropMongoCollection calls database.dropCollection with the given name', async () => {
+    const dropCollection = vi.fn().mockResolvedValue(undefined);
+    await dropMongoCollection({ dropCollection } as any, 'gone');
+    expect(dropCollection).toHaveBeenCalledWith('gone');
   });
 });
 

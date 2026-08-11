@@ -1,14 +1,24 @@
 import { computed, ref, watch, type Ref } from 'vue';
 import type { FileNode } from '~/components/base/tree-folder/types';
 import {
-  useMongoDatabaseCollections,
+  useMongoDatabaseSummary,
   useMongoServerDatabases,
 } from '~/components/modules/quick-query/mongodb/hooks';
-import type { MongoCollectionSummary } from '~/components/modules/quick-query/mongodb/types';
+import type { MongoCollectionName } from '~/components/modules/quick-query/mongodb/types';
 import type { Connection } from '~/core/stores';
 import { TabViewType } from '~/core/types/entities/tab-view.entity';
 
-type MongoFileNode = FileNode<{ tabViewType: TabViewType }>;
+interface MongoNodeData {
+  tabViewType: TabViewType;
+  totalSize?: number;
+}
+
+type MongoFileNode = FileNode<MongoNodeData>;
+
+interface DatabaseSummary {
+  collections: MongoCollectionName[];
+  totalSize: number;
+}
 
 export function useMongoSchemaTreeData(
   connection: Ref<Connection | undefined>,
@@ -19,42 +29,46 @@ export function useMongoSchemaTreeData(
     isLoading: isLoadingDatabases,
     fetchDatabases,
   } = useMongoServerDatabases({ connection });
-  const collectionsByDatabase = ref<Record<string, MongoCollectionSummary[]>>(
-    {}
-  );
-  const isLoadingCollections = ref(false);
+  const summaryByDatabase = ref<Record<string, DatabaseSummary>>({});
+  const isLoadingSummaries = ref(false);
 
   const isLoading = computed(
-    () => isLoadingDatabases.value || isLoadingCollections.value
+    () => isLoadingDatabases.value || isLoadingSummaries.value
   );
 
   const loadTree = async () => {
     if (!connection.value) {
-      collectionsByDatabase.value = {};
+      summaryByDatabase.value = {};
       return;
     }
 
     await fetchDatabases();
 
-    isLoadingCollections.value = true;
+    isLoadingSummaries.value = true;
     const entries = await Promise.all(
       databases.value.map(async databaseName => {
-        const { collections, fetchCollections } = useMongoDatabaseCollections({
-          connection,
-          databaseName: ref(databaseName),
-        });
-        await fetchCollections();
-        return [databaseName, collections.value] as const;
+        const { collections, totalSize, fetchSummary } =
+          useMongoDatabaseSummary({
+            connection,
+            databaseName: ref(databaseName),
+          });
+        await fetchSummary();
+        return [
+          databaseName,
+          { collections: collections.value, totalSize: totalSize.value },
+        ] as const;
       })
     );
-    collectionsByDatabase.value = Object.fromEntries(entries);
-    isLoadingCollections.value = false;
+    summaryByDatabase.value = Object.fromEntries(entries);
+    isLoadingSummaries.value = false;
   };
 
   const fileTreeData = computed<Record<string, MongoFileNode>>(() => {
     const nodes: Record<string, MongoFileNode> = {};
 
     for (const databaseName of databases.value) {
+      const summary = summaryByDatabase.value[databaseName];
+
       nodes[databaseName] = {
         id: databaseName,
         parentId: null,
@@ -63,12 +77,15 @@ export function useMongoSchemaTreeData(
         depth: 0,
         iconOpen: 'hugeicons:database-01',
         iconClose: 'hugeicons:database-01',
+        iconClass: 'text-yellow-500',
         children: [],
-        data: { tabViewType: TabViewType.MongoDatabaseOverview },
+        data: {
+          tabViewType: TabViewType.MongoDatabaseOverview,
+          totalSize: summary?.totalSize,
+        },
       };
 
-      for (const collection of collectionsByDatabase.value[databaseName] ||
-        []) {
+      for (const collection of summary?.collections || []) {
         const nodeId = `${databaseName}.${collection.name}`;
         nodes[nodeId] = {
           id: nodeId,
@@ -78,6 +95,7 @@ export function useMongoSchemaTreeData(
           depth: 1,
           iconOpen: 'hugeicons:grid-table',
           iconClose: 'hugeicons:grid-table',
+          iconClass: 'text-green-500',
           data: { tabViewType: TabViewType.MongoCollectionDetail },
         };
         nodes[databaseName].children!.push(nodeId);

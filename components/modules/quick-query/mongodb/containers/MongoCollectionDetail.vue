@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, toRef, watch } from 'vue';
+import { computed, ref, toRef, watch } from 'vue';
 import { useManagementConnectionStore } from '~/core/stores/managementConnectionStore';
 import MongoCollectionListView from '../components/MongoCollectionListView.vue';
 import MongoCollectionObjectListView from '../components/MongoCollectionObjectListView.vue';
@@ -34,34 +34,56 @@ const {
 
 const viewMode = ref<MongoCollectionViewMode>('table');
 
+const onPaginate = (value: { limit: number; offset: number }) => {
+  limit.value = value.limit;
+  skip.value = value.offset;
+  fetchDocuments();
+};
+
+const isEmpty = computed(
+  () => !isLoading.value && documents.value.length === 0
+);
+
 watch([databaseName, collectionName], fetchDocuments, { immediate: true });
 </script>
 
 <template>
-  <div class="flex flex-col h-full w-full">
-    <MongoQuickQueryControlBar
-      :total-rows="total"
-      :current-total-rows="documents.length"
-      :limit="limit"
-      :skip="skip"
-      :is-loading="isLoading"
-      :view-mode="viewMode"
-      @on-next-page="onNextPage"
-      @on-previous-page="onPreviousPage"
-      @on-refresh="onRefresh"
-      @update:view-mode="mode => (viewMode = mode)"
-    />
+  <div class="flex flex-col h-full w-full relative">
+    <LoadingOverlay :visible="isLoading" />
 
-    <div class="flex-1 overflow-hidden px-1">
-      <MongoCollectionTableView
-        v-if="viewMode === 'table'"
-        :documents="documents"
+    <div class="px-1">
+      <MongoQuickQueryControlBar
+        :total-rows="total"
+        :current-total-rows="documents.length"
+        :limit="limit"
+        :skip="skip"
+        :is-loading="isLoading"
+        :view-mode="viewMode"
+        @on-next-page="onNextPage"
+        @on-previous-page="onPreviousPage"
+        @on-refresh="onRefresh"
+        @on-paginate="onPaginate"
+        @update:view-mode="mode => (viewMode = mode)"
       />
-      <MongoCollectionListView
-        v-else-if="viewMode === 'list'"
-        :documents="documents"
+    </div>
+
+    <div class="flex-1 overflow-hidden px-1 mb-0.5">
+      <BaseEmpty
+        v-if="isEmpty"
+        title="No documents found"
+        desc="This collection has no documents matching the current query."
       />
-      <MongoCollectionObjectListView v-else :documents="documents" />
+      <template v-else>
+        <MongoCollectionTableView
+          v-if="viewMode === 'table'"
+          :documents="documents"
+        />
+        <MongoCollectionListView
+          v-else-if="viewMode === 'list'"
+          :documents="documents"
+        />
+        <MongoCollectionObjectListView v-else :documents="documents" />
+      </template>
     </div>
   </div>
 </template>

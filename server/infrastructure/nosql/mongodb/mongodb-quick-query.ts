@@ -128,6 +128,67 @@ export async function listMongoCollections(
   return collections.sort((a, b) => a.name.localeCompare(b.name));
 }
 
+export interface MongoCollectionName {
+  name: string;
+  properties: string[];
+}
+
+interface MongoCollectionNamesSource {
+  listCollections(): { toArray(): Promise<MongoCollectionListInfo[]> };
+}
+
+export async function listMongoCollectionNames(
+  database: MongoCollectionNamesSource
+): Promise<MongoCollectionName[]> {
+  const collectionInfos = await database.listCollections().toArray();
+
+  return collectionInfos
+    .map(info => ({
+      name: info.name,
+      properties: buildCollectionProperties(info),
+    }))
+    .sort((a, b) => a.name.localeCompare(b.name));
+}
+
+interface MongoDatabaseStatsSource {
+  command(command: Record<string, unknown>): Promise<{ totalSize?: number }>;
+}
+
+export async function getMongoDatabaseTotalSize(
+  database: MongoDatabaseStatsSource
+): Promise<number> {
+  const stats = await database.command({ dbStats: 1 });
+  return stats.totalSize ?? 0;
+}
+
+interface MongoCollectionMutationSource {
+  createCollection(name: string): Promise<unknown>;
+  renameCollection(fromName: string, toName: string): Promise<unknown>;
+  dropCollection(name: string): Promise<unknown>;
+}
+
+export async function createMongoCollection(
+  database: MongoCollectionMutationSource,
+  name: string
+): Promise<void> {
+  await database.createCollection(name);
+}
+
+export async function renameMongoCollection(
+  database: MongoCollectionMutationSource,
+  fromName: string,
+  toName: string
+): Promise<void> {
+  await database.renameCollection(fromName, toName);
+}
+
+export async function dropMongoCollection(
+  database: MongoCollectionMutationSource,
+  name: string
+): Promise<void> {
+  await database.dropCollection(name);
+}
+
 interface MongoAdminSource {
   db(): {
     admin(): { listDatabases(): Promise<{ databases: { name: string }[] }> };

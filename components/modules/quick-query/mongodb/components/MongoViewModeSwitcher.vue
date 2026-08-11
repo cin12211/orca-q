@@ -3,31 +3,40 @@ import type { MongoCollectionViewMode } from '../types';
 
 defineProps<{ modelValue: MongoCollectionViewMode }>();
 const emit = defineEmits<{ 'update:modelValue': [MongoCollectionViewMode] }>();
-
-const MODES: { value: MongoCollectionViewMode; label: string }[] = [
-  { value: 'table', label: 'Table' },
-  { value: 'list', label: 'List' },
-  { value: 'object-list', label: 'Object List' },
-];
 </script>
 
 <template>
-  <div class="flex items-center gap-1 rounded-md border p-0.5">
-    <button
-      v-for="mode in MODES"
-      :key="mode.value"
-      type="button"
-      :data-testid="`mongo-view-mode-${mode.value}`"
-      :aria-pressed="modelValue === mode.value"
-      class="px-2.5 py-1 text-sm rounded-sm transition-colors"
-      :class="
-        modelValue === mode.value
-          ? 'bg-primary text-primary-foreground'
-          : 'text-muted-foreground hover:bg-muted'
-      "
-      @click="emit('update:modelValue', mode.value)"
-    >
-      {{ mode.label }}
-    </button>
-  </div>
+  <Tabs
+    :model-value="modelValue"
+    @update:model-value="
+      emit('update:modelValue', $event as MongoCollectionViewMode)
+    "
+  >
+    <TabsList size="xxs" class="grid w-full grid-cols-3">
+      <TabsTrigger
+        size="xxs"
+        value="table"
+        data-testid="mongo-view-mode-table"
+        class="font-medium cursor-pointer text-primary/80"
+      >
+        Table
+      </TabsTrigger>
+      <TabsTrigger
+        size="xxs"
+        value="list"
+        data-testid="mongo-view-mode-list"
+        class="font-medium cursor-pointer text-primary/80"
+      >
+        List
+      </TabsTrigger>
+      <TabsTrigger
+        size="xxs"
+        value="object-list"
+        data-testid="mongo-view-mode-object-list"
+        class="font-medium cursor-pointer text-primary/80"
+      >
+        Object List
+      </TabsTrigger>
+    </TabsList>
+  </Tabs>
 </template>
