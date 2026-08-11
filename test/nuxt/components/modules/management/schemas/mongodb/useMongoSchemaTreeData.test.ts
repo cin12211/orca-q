@@ -33,6 +33,8 @@ describe('useMongoSchemaTreeData', () => {
 
     const adminFolder = fileTreeData.value.admin;
     expect(adminFolder.type).toBe('folder');
+    expect(adminFolder.iconOpen).toBe('hugeicons:database');
+    expect(adminFolder.iconClose).toBe('hugeicons:database');
     expect(adminFolder.data?.tabViewType).toBe(
       TabViewType.MongoDatabaseOverview
     );
@@ -45,6 +47,8 @@ describe('useMongoSchemaTreeData', () => {
 
     const collectionNode = fileTreeData.value['orcaq_fixture.users'];
     expect(collectionNode.type).toBe('file');
+    expect(collectionNode.iconOpen).toBe('hugeicons:files-01');
+    expect(collectionNode.iconClose).toBe('hugeicons:files-01');
     expect(collectionNode.parentId).toBe('orcaq_fixture');
     expect(collectionNode.data?.tabViewType).toBe(
       TabViewType.MongoCollectionDetail

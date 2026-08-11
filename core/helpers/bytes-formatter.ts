@@ -30,5 +30,5 @@ export const formatBytes = (bytes: number) => {
     ++i;
   }
 
-  return (i ? bytes.toFixed(2) : bytes) + ' ' + FORMATS[i];
+  return (i ? Number(bytes.toFixed(2)) : bytes) + ' ' + FORMATS[i];
 };

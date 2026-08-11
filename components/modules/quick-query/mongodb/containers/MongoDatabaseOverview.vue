@@ -26,34 +26,73 @@ const isEmpty = computed(
   () => !isLoading.value && collections.value.length === 0
 );
 
+const defaultColDef: ColDef = {
+  sortable: true,
+  filter: true,
+  resizable: true,
+};
+
 const columnDefs: ColDef<MongoCollectionSummary>[] = [
-  { field: 'name', headerName: 'Collection name' },
+  {
+    field: 'name',
+    headerName: 'Collection name',
+    sortable: true,
+    filter: 'agTextColumnFilter',
+  },
   {
     field: 'properties',
     headerName: 'Properties',
     valueGetter: params => (params.data?.properties || []).join(', ') || '—',
+    sortable: true,
+    filter: 'agTextColumnFilter',
   },
   {
     field: 'storageSize',
     headerName: 'Storage size',
     valueGetter: params => formatBytes(params.data?.storageSize || 0),
+    sortable: true,
+    filter: 'agNumberColumnFilter',
+    comparator: (_valueA, _valueB, nodeA, nodeB) =>
+      (nodeA.data?.storageSize || 0) - (nodeB.data?.storageSize || 0),
   },
   {
     field: 'dataSize',
     headerName: 'Data size',
     valueGetter: params => formatBytes(params.data?.dataSize || 0),
+    sortable: true,
+    filter: 'agNumberColumnFilter',
+    comparator: (_valueA, _valueB, nodeA, nodeB) =>
+      (nodeA.data?.dataSize || 0) - (nodeB.data?.dataSize || 0),
   },
-  { field: 'documentCount', headerName: 'Documents' },
+  {
+    field: 'documentCount',
+    headerName: 'Documents',
+    sortable: true,
+    filter: 'agNumberColumnFilter',
+  },
   {
     field: 'avgDocumentSize',
     headerName: 'Avg. document size',
     valueGetter: params => formatBytes(params.data?.avgDocumentSize || 0),
+    sortable: true,
+    filter: 'agNumberColumnFilter',
+    comparator: (_valueA, _valueB, nodeA, nodeB) =>
+      (nodeA.data?.avgDocumentSize || 0) - (nodeB.data?.avgDocumentSize || 0),
   },
-  { field: 'indexCount', headerName: 'Indexes' },
+  {
+    field: 'indexCount',
+    headerName: 'Indexes',
+    sortable: true,
+    filter: 'agNumberColumnFilter',
+  },
   {
     field: 'totalIndexSize',
     headerName: 'Total index size',
     valueGetter: params => formatBytes(params.data?.totalIndexSize || 0),
+    sortable: true,
+    filter: 'agNumberColumnFilter',
+    comparator: (_valueA, _valueB, nodeA, nodeB) =>
+      (nodeA.data?.totalIndexSize || 0) - (nodeB.data?.totalIndexSize || 0),
   },
 ];
 
@@ -83,6 +122,7 @@ watch(() => props.databaseName, fetchCollections, { immediate: true });
         class="h-full border rounded-md"
         :column-defs="columnDefs"
         :row-data="collections"
+        :grid-options="{ defaultColDef }"
         @row-clicked="onRowClicked"
       />
     </div>

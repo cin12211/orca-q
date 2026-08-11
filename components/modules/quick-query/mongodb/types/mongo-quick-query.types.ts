@@ -32,4 +32,43 @@ export interface MongoCollectionSummary {
   totalIndexSize: number;
 }
 
-export type MongoCollectionViewMode = 'table' | 'list' | 'object-list';
+export type MongoCollectionViewMode = 'table' | 'list' | 'info';
+
+export interface MongoIndexInfo {
+  name: string;
+  key: Record<string, number | string>;
+  unique?: boolean;
+  sparse?: boolean;
+  expireAfterSeconds?: number;
+}
+
+export interface MongoValidationInfo {
+  validator: Record<string, unknown> | null;
+  validationLevel: string | null;
+  validationAction: string | null;
+}
+
+export type MongoFilterOperator =
+  | '$eq'
+  | '$ne'
+  | '$regex'
+  | '$gt'
+  | '$gte'
+  | '$lt'
+  | '$lte'
+  | '$in'
+  | '$nin'
+  | '$exists'
+  | '$type'
+  | '$mod'
+  | '$all'
+  | '$size';
+
+export interface MongoFilterRow {
+  isSelect: boolean;
+  field: string;
+  operator: MongoFilterOperator;
+  value: string;
+}
+
+export type MongoFilterMode = 'visual' | 'raw';

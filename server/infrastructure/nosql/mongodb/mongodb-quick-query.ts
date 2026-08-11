@@ -264,6 +264,63 @@ export async function listMongoDatabases(
     .sort((a, b) => a.localeCompare(b));
 }
 
+interface MongoIndexesSource {
+  collection(name: string): {
+    indexes(): Promise<Array<Record<string, unknown>>>;
+  };
+}
+
+export interface MongoIndexInfo {
+  name: string;
+  key: Record<string, number | string>;
+  unique?: boolean;
+  sparse?: boolean;
+  expireAfterSeconds?: number;
+}
+
+export async function getMongoCollectionIndexes(
+  database: MongoIndexesSource,
+  collectionName: string
+): Promise<MongoIndexInfo[]> {
+  const indexes = await database.collection(collectionName).indexes();
+
+  return indexes.map(index => ({
+    name: String(index.name),
+    key: index.key as Record<string, number | string>,
+    unique: index.unique as boolean | undefined,
+    sparse: index.sparse as boolean | undefined,
+    expireAfterSeconds: index.expireAfterSeconds as number | undefined,
+  }));
+}
+
+interface MongoListCollectionsFilterSource {
+  listCollections(filter: Record<string, unknown>): {
+    toArray(): Promise<Array<{ options?: Record<string, unknown> }>>;
+  };
+}
+
+export interface MongoValidationInfo {
+  validator: Record<string, unknown> | null;
+  validationLevel: string | null;
+  validationAction: string | null;
+}
+
+export async function getMongoCollectionValidation(
+  database: MongoListCollectionsFilterSource,
+  collectionName: string
+): Promise<MongoValidationInfo> {
+  const [info] = await database
+    .listCollections({ name: collectionName })
+    .toArray();
+  const options = info?.options ?? {};
+
+  return {
+    validator: (options.validator as Record<string, unknown>) ?? null,
+    validationLevel: (options.validationLevel as string) ?? null,
+    validationAction: (options.validationAction as string) ?? null,
+  };
+}
+
 export function serializeMongoDocument(document: Record<string, unknown>) {
   return Object.fromEntries(
     Object.entries(document).map(([key, value]) => [

@@ -1,26 +1,128 @@
 <script setup lang="ts">
-import JsonEditorVue from 'json-editor-vue';
+import { computed, ref } from 'vue';
+import { Button, Tooltip, TooltipContent, TooltipTrigger } from '#components';
+import { useVirtualizer } from '@tanstack/vue-virtual';
+import VueJsonPretty from 'vue-json-pretty';
+import 'vue-json-pretty/lib/styles.css';
+import { useCopyToClipboard } from '~/core/composables/useCopyToClipboard';
 import type { MongoDocument } from '../types';
 
 const props = defineProps<{ documents: MongoDocument[] }>();
 
-const treeMode = 'tree' as unknown as undefined;
+const { handleCopyWithKey, isCopied, getCopyIcon, getCopyTooltip } =
+  useCopyToClipboard();
+
+const onCopyDocument = (doc: MongoDocument) => {
+  const jsonStr = JSON.stringify(doc, null, 2);
+  return handleCopyWithKey(doc._id, jsonStr);
+};
+
+const parentRef = ref<HTMLElement | null>(null);
+
+const rowVirtualizer = useVirtualizer({
+  get count() {
+    return props.documents.length;
+  },
+  getScrollElement: () => parentRef.value,
+  estimateSize: () => 120,
+  overscan: 5,
+});
+
+const virtualRows = computed(() => rowVirtualizer.value.getVirtualItems());
+
+const totalSize = computed(() => rowVirtualizer.value.getTotalSize());
+
+const measureElement = (el: any) => {
+  if (!el) {
+    return;
+  }
+
+  rowVirtualizer.value.measureElement(el);
+
+  return undefined;
+};
 </script>
 
 <template>
-  <div class="h-full overflow-auto flex flex-col gap-2 p-2">
+  <div
+    ref="parentRef"
+    class="h-full overflow-auto contain-strict [overflow-anchor:none] p-2"
+  >
     <div
-      v-for="document in props.documents"
-      :key="document._id"
-      class="rounded-md border overflow-hidden"
+      :style="{
+        height: `${totalSize}px`,
+        width: '100%',
+        position: 'relative',
+      }"
     >
-      <JsonEditorVue
-        :model-value="document"
-        :mode="treeMode"
-        :navigation-bar="false"
-        :read-only="true"
-        class="max-h-64"
-      />
+      <div
+        v-for="virtualRow in virtualRows"
+        :key="virtualRow.key.toString()"
+        :data-index="virtualRow.index"
+        :ref="measureElement"
+        class="[overflow-anchor:none]"
+        :style="{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          width: '100%',
+          transform: `translateY(${virtualRow.start}px)`,
+        }"
+      >
+        <div class="rounded-md border border-border/60 bg-card shadow-xs mb-2">
+          <div
+            class="flex items-center justify-between px-3 py-1.5 bg-muted/50 border-b border-border/40 text-xs font-mono select-none"
+          >
+            <div class="flex items-center gap-2 font-medium">
+              <Icon name="hugeicons:files-01" class="size-4!" />
+              <span>_id: {{ documents[virtualRow.index]._id }}</span>
+            </div>
+
+            <Tooltip>
+              <TooltipTrigger as-child>
+                <Button
+                  variant="ghost"
+                  size="iconSm"
+                  class="h-5 w-5 p-0 text-muted-foreground hover:text-foreground"
+                  @click="onCopyDocument(documents[virtualRow.index])"
+                >
+                  <Icon
+                    :name="
+                      getCopyIcon(isCopied(documents[virtualRow.index]._id))
+                    "
+                    :class="[
+                      'size-3.5',
+                      isCopied(documents[virtualRow.index]._id) &&
+                        'text-emerald-500 font-bold',
+                    ]"
+                  />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>
+                  {{
+                    getCopyTooltip(
+                      isCopied(documents[virtualRow.index]._id),
+                      'Copy document JSON'
+                    )
+                  }}
+                </p>
+              </TooltipContent>
+            </Tooltip>
+          </div>
+
+          <div class="m-2 overflow-x-auto text-xs bg-background">
+            <VueJsonPretty
+              :data="documents[virtualRow.index]"
+              :deep="1"
+              :show-double-quotes="true"
+              :show-length="false"
+              :show-line="false"
+              :show-icon="true"
+            />
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </template>

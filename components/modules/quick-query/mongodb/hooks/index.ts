@@ -4,3 +4,6 @@ export * from './useMongoServerDatabases';
 export * from './useMongoDatabaseSummary';
 export * from './useMongoCollectionMutation';
 export * from './useMongoDatabaseStats';
+export * from './useMongoCollectionShortcuts';
+export * from './useMongoCollectionIndexes';
+export * from './useMongoCollectionValidation';

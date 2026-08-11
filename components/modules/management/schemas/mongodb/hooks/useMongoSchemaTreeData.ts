@@ -43,9 +43,13 @@ export function useMongoSchemaTreeData(
       return;
     }
 
+    // Keep isLoadingSummaries true across both fetch phases so isLoading
+    // (isLoadingDatabases || isLoadingSummaries) never drops to false between
+    // fetchDatabases finishing and the summaries fetch starting.
+    isLoadingSummaries.value = true;
+
     await fetchDatabases();
 
-    isLoadingSummaries.value = true;
     const entries = await Promise.all(
       databases.value.map(async databaseName => {
         const { collections, totalSize, fetchSummary } =
@@ -76,8 +80,8 @@ export function useMongoSchemaTreeData(
         name: databaseName,
         type: 'folder',
         depth: 0,
-        iconOpen: 'hugeicons:database-01',
-        iconClose: 'hugeicons:database-01',
+        iconOpen: 'hugeicons:database',
+        iconClose: 'hugeicons:database',
         iconClass: 'text-yellow-500',
         children: [],
         data: {
@@ -94,9 +98,9 @@ export function useMongoSchemaTreeData(
           name: collection.name,
           type: 'file',
           depth: 1,
-          iconOpen: 'hugeicons:grid-table',
-          iconClose: 'hugeicons:grid-table',
-          iconClass: 'text-green-500',
+          iconOpen: 'hugeicons:files-01',
+          iconClose: 'hugeicons:files-01',
+          iconClass: 'text-emerald-500',
           data: {
             tabViewType: TabViewType.MongoCollectionDetail,
             size: collection.size,

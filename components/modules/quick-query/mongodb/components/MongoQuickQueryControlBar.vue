@@ -1,4 +1,12 @@
 <script setup lang="ts">
+import {
+  Button,
+  ContextMenuShortcut,
+  Icon,
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '#components';
 import QuickPagination from '~/components/modules/quick-query/quick-query-control-bar/QuickPagination.vue';
 import RefreshButton from '~/components/modules/quick-query/quick-query-control-bar/RefreshButton.vue';
 import type { MongoCollectionViewMode } from '../types';
@@ -11,12 +19,15 @@ const props = defineProps<{
   skip: number;
   isLoading: boolean;
   viewMode: MongoCollectionViewMode;
+  isShowFilters?: boolean;
+  activeFilterCount?: number;
 }>();
 
 const emit = defineEmits<{
   onNextPage: [];
   onPreviousPage: [];
   onRefresh: [];
+  onToggleFilter: [];
   onPaginate: [value: { limit: number; offset: number }];
   'update:viewMode': [MongoCollectionViewMode];
 }>();
@@ -25,6 +36,18 @@ const emit = defineEmits<{
 <template>
   <div class="w-full select-none h-9 flex items-center justify-between">
     <div class="flex items-center gap-1">
+      <Tooltip>
+        <TooltipTrigger as-child>
+          <Button variant="outline" size="xxs" @click="emit('onToggleFilter')">
+            <Icon name="lucide:filter" />
+            <ContextMenuShortcut>⌘F</ContextMenuShortcut>
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent>
+          <p>Filter data</p>
+        </TooltipContent>
+      </Tooltip>
+
       <RefreshButton @on-refresh="emit('onRefresh')" />
     </div>
 

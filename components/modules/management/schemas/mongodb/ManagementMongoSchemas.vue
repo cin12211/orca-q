@@ -7,10 +7,7 @@ import {
 } from '~/components/base/context-menu/menuContext.type';
 import FileTree from '~/components/base/tree-folder/FileTree.vue';
 import type { FileNode } from '~/components/base/tree-folder/types';
-import {
-  useMongoCollectionMutation,
-  useMongoDatabaseStats,
-} from '~/components/modules/quick-query/mongodb/hooks';
+import { useMongoCollectionMutation } from '~/components/modules/quick-query/mongodb/hooks';
 import { useTabManagement } from '~/core/composables/useTabManagement';
 import { useWorkspaceConnectionRoute } from '~/core/composables/useWorkspaceConnectionRoute';
 import { DEFAULT_DEBOUNCE_INPUT } from '~/core/constants';
@@ -20,7 +17,6 @@ import { TabViewType } from '~/core/types/entities/tab-view.entity';
 import { ManagementSidebarHeader } from '../../shared';
 import {
   CreateCollectionDialog,
-  DatabaseInfoDialog,
   DeleteCollectionDialog,
   DeleteDatabaseDialog,
   RenameCollectionDialog,
@@ -46,11 +42,6 @@ const {
   deleteCollection,
   deleteDatabase,
 } = useMongoCollectionMutation({ connection });
-const {
-  stats: databaseStats,
-  isLoading: isLoadingStats,
-  fetchStats,
-} = useMongoDatabaseStats({ connection });
 
 const fileTreeRef = useTemplateRef<typeof FileTree | null>('fileTreeRef');
 const isTreeCollapsed = ref(false);
@@ -114,10 +105,6 @@ const deleteCollectionDialogState = ref<{
   databaseName: string;
   collectionName: string;
 }>({ open: false, databaseName: '', collectionName: '' });
-const infoDialogState = ref<{ open: boolean; databaseName: string }>({
-  open: false,
-  databaseName: '',
-});
 const deleteDatabaseDialogState = ref<{ open: boolean; databaseName: string }>({
   open: false,
   databaseName: '',
@@ -141,11 +128,6 @@ const onRequestDeleteCollection = (node: FileNode) => {
     databaseName: node.parentId || '',
     collectionName: node.name,
   };
-};
-
-const onRequestDatabaseInfo = async (node: FileNode) => {
-  infoDialogState.value = { open: true, databaseName: node.name };
-  await fetchStats(node.name);
 };
 
 const onRequestDeleteDatabase = (node: FileNode) => {
@@ -204,15 +186,15 @@ const contextMenuItems = computed<ContextMenuItem[]>(() => {
     return [
       {
         type: ContextMenuItemType.ACTION,
-        title: 'Create Collection',
-        icon: 'hugeicons:add-01',
-        select: () => onRequestCreateCollection(node),
+        title: 'View Database',
+        icon: 'hugeicons:link-circle-02',
+        select: () => openMongoDatabaseTab({ databaseName: node.name }),
       },
       {
         type: ContextMenuItemType.ACTION,
-        title: 'View Info',
-        icon: 'hugeicons:information-circle',
-        select: () => onRequestDatabaseInfo(node),
+        title: 'Create Collection',
+        icon: 'hugeicons:add-01',
+        select: () => onRequestCreateCollection(node),
       },
       { type: ContextMenuItemType.SEPARATOR },
       {
@@ -225,6 +207,16 @@ const contextMenuItems = computed<ContextMenuItem[]>(() => {
   }
 
   return [
+    {
+      type: ContextMenuItemType.ACTION,
+      title: 'View Collection',
+      icon: 'hugeicons:link-circle-02',
+      select: () =>
+        openMongoCollectionTab({
+          databaseName: node.parentId || '',
+          collectionName: node.name,
+        }),
+    },
     {
       type: ContextMenuItemType.ACTION,
       title: 'Rename',
@@ -324,20 +316,6 @@ const contextMenuItems = computed<ContextMenuItem[]>(() => {
 
           <template #actions="{ node }">
             <template v-if="node.type === 'folder'">
-              <Tooltip>
-                <TooltipTrigger as-child>
-                  <Button
-                    size="iconSm"
-                    variant="ghost"
-                    class="size-5!"
-                    @click="onRequestCreateCollection(node)"
-                  >
-                    <Icon name="hugeicons:add-01" class="size-3.5!" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>Create Collection</TooltipContent>
-              </Tooltip>
-
               <DropdownMenu>
                 <DropdownMenuTrigger as-child>
                   <Button size="iconSm" variant="ghost" class="size-5!">
@@ -348,12 +326,15 @@ const contextMenuItems = computed<ContextMenuItem[]>(() => {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
-                  <DropdownMenuItem @click="onRequestDatabaseInfo(node)">
-                    <Icon
-                      name="hugeicons:information-circle"
-                      class="size-4 mr-2"
-                    />
-                    View Info
+                  <DropdownMenuItem
+                    @click="openMongoDatabaseTab({ databaseName: node.name })"
+                  >
+                    <Icon name="hugeicons:link-circle-02" class="size-4 mr-2" />
+                    View Database
+                  </DropdownMenuItem>
+                  <DropdownMenuItem @click="onRequestCreateCollection(node)">
+                    <Icon name="hugeicons:add-01" class="size-4 mr-2" />
+                    Create Collection
                   </DropdownMenuItem>
                   <DropdownMenuItem
                     class="text-destructive"
@@ -376,6 +357,17 @@ const contextMenuItems = computed<ContextMenuItem[]>(() => {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
+                <DropdownMenuItem
+                  @click="
+                    openMongoCollectionTab({
+                      databaseName: node.parentId || '',
+                      collectionName: node.name,
+                    })
+                  "
+                >
+                  <Icon name="hugeicons:link-circle-02" class="size-4 mr-2" />
+                  View Collection
+                </DropdownMenuItem>
                 <DropdownMenuItem @click="onRequestRenameCollection(node)">
                   <Icon name="hugeicons:edit-02" class="size-4 mr-2" />
                   Rename
@@ -417,14 +409,6 @@ const contextMenuItems = computed<ContextMenuItem[]>(() => {
       @update:open="deleteCollectionDialogState.open = $event"
       @confirm="onConfirmDeleteCollection"
       @cancel="deleteCollectionDialogState.open = false"
-    />
-
-    <DatabaseInfoDialog
-      :open="infoDialogState.open"
-      :database-name="infoDialogState.databaseName"
-      :stats="databaseStats"
-      :loading="isLoadingStats"
-      @update:open="infoDialogState.open = $event"
     />
 
     <DeleteDatabaseDialog

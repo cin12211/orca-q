@@ -190,7 +190,8 @@ export const useTabManagement = () => {
     await openTab({
       id: `mongo-database-${params.databaseName}`,
       name: params.databaseName,
-      icon: 'hugeicons:database-01',
+      icon: 'hugeicons:database',
+      iconClass: 'text-yellow-500',
       type: TabViewType.MongoDatabaseOverview,
       routeName: resolveRouteNameForTabType(TabViewType.MongoDatabaseOverview),
       routeParams: {
@@ -209,7 +210,8 @@ export const useTabManagement = () => {
     await openTab({
       id: `mongo-collection-${params.databaseName}-${params.collectionName}`,
       name: params.collectionName,
-      icon: 'hugeicons:grid-table',
+      icon: 'hugeicons:files-01',
+      iconClass: 'text-emerald-500',
       type: TabViewType.MongoCollectionDetail,
       routeName: resolveRouteNameForTabType(TabViewType.MongoCollectionDetail),
       routeParams: {

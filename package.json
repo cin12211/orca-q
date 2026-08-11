@@ -58,7 +58,8 @@
     "mongodb": "^7.5.0",
     "mysql2": "^3.22.2",
     "oracledb": "^6.10.0",
-    "redis": "^5.9.0"
+    "redis": "^5.9.0",
+    "vue3-json-viewer": "^2.4.1"
   },
   "devDependencies": {
     "@ai-sdk/anthropic": "^3.0.9",

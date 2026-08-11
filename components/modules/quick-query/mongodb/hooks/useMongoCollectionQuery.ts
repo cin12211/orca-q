@@ -22,6 +22,7 @@ export function useMongoCollectionQuery(params: {
   const error = ref<string | undefined>();
   const limit = ref(DEFAULT_QUERY_SIZE);
   const skip = ref(0);
+  const activeFilterPayload = ref<Record<string, unknown> | undefined>();
 
   const fetchDocuments = async () => {
     isLoading.value = true;
@@ -37,6 +38,9 @@ export function useMongoCollectionQuery(params: {
               ? { database: params.databaseName.value }
               : {}),
             collection: params.collectionName.value,
+            ...(activeFilterPayload.value
+              ? { filter: activeFilterPayload.value }
+              : {}),
             skip: skip.value,
             limit: limit.value,
           },
@@ -51,6 +55,12 @@ export function useMongoCollectionQuery(params: {
     } finally {
       isLoading.value = false;
     }
+  };
+
+  const applyFilter = (filter?: Record<string, unknown>) => {
+    activeFilterPayload.value = filter;
+    skip.value = 0;
+    return fetchDocuments();
   };
 
   const onNextPage = () => {
@@ -75,6 +85,8 @@ export function useMongoCollectionQuery(params: {
     error,
     limit,
     skip,
+    activeFilterPayload,
+    applyFilter,
     fetchDocuments,
     onNextPage,
     onPreviousPage,
