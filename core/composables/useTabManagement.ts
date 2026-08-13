@@ -207,15 +207,20 @@ export const useTabManagement = () => {
     databaseName: string;
     collectionName: string;
   }) => {
+    const tabId = `mongo-collection-${params.databaseName}-${params.collectionName}`;
+    const name = `${params.collectionName} - ${params.databaseName}`;
+
+    await tabViewStore.updateTabName(tabId, name);
+
     await openTab({
-      id: `mongo-collection-${params.databaseName}-${params.collectionName}`,
-      name: params.collectionName,
+      id: tabId,
+      name,
       icon: 'hugeicons:files-01',
       iconClass: 'text-emerald-500',
       type: TabViewType.MongoCollectionDetail,
       routeName: resolveRouteNameForTabType(TabViewType.MongoCollectionDetail),
       routeParams: {
-        tabViewId: `mongo-collection-${params.databaseName}-${params.collectionName}`,
+        tabViewId: tabId,
       },
       metadata: {
         databaseName: params.databaseName,

@@ -12,3 +12,4 @@ export * from './fontSizeTheme';
 export * from './redisLanguage';
 export * from './shortCutExplainCurrentStatement';
 export * from './shortCutFormatOnSave';
+export * from './mongoQueryLanguage';

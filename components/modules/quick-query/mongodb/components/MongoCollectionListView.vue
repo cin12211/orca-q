@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue';
+import { computed, nextTick, ref } from 'vue';
 import { Button, Tooltip, TooltipContent, TooltipTrigger } from '#components';
 import { useVirtualizer } from '@tanstack/vue-virtual';
 import VueJsonPretty from 'vue-json-pretty';
@@ -15,6 +15,26 @@ const { handleCopyWithKey, isCopied, getCopyIcon, getCopyTooltip } =
 const onCopyDocument = (doc: MongoDocument) => {
   const jsonStr = JSON.stringify(doc, null, 2);
   return handleCopyWithKey(doc._id, jsonStr);
+};
+
+const expandedDocIds = ref<Set<string | number>>(new Set());
+
+const getDocId = (doc: MongoDocument, index: number): string | number => {
+  return doc?._id !== undefined && doc?._id !== null ? String(doc._id) : index;
+};
+
+const isExpanded = (docId: string | number) => expandedDocIds.value.has(docId);
+
+const toggleExpandDocument = async (docId: string | number) => {
+  const next = new Set(expandedDocIds.value);
+  if (next.has(docId)) {
+    next.delete(docId);
+  } else {
+    next.add(docId);
+  }
+  expandedDocIds.value = next;
+  await nextTick();
+  rowVirtualizer.value.measure();
 };
 
 const parentRef = ref<HTMLElement | null>(null);
@@ -78,43 +98,91 @@ const measureElement = (el: any) => {
               <span>_id: {{ documents[virtualRow.index]._id }}</span>
             </div>
 
-            <Tooltip>
-              <TooltipTrigger as-child>
-                <Button
-                  variant="ghost"
-                  size="iconSm"
-                  class="h-5 w-5 p-0 text-muted-foreground hover:text-foreground"
-                  @click="onCopyDocument(documents[virtualRow.index])"
-                >
-                  <Icon
-                    :name="
-                      getCopyIcon(isCopied(documents[virtualRow.index]._id))
+            <div class="flex items-center gap-1">
+              <Tooltip>
+                <TooltipTrigger as-child>
+                  <Button
+                    variant="ghost"
+                    size="iconSm"
+                    class="h-5 w-5 p-0 text-muted-foreground hover:text-foreground"
+                    @click="
+                      toggleExpandDocument(
+                        getDocId(documents[virtualRow.index], virtualRow.index)
+                      )
                     "
-                    :class="[
-                      'size-3.5',
-                      isCopied(documents[virtualRow.index]._id) &&
-                        'text-emerald-500 font-bold',
-                    ]"
-                  />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>
-                  {{
-                    getCopyTooltip(
-                      isCopied(documents[virtualRow.index]._id),
-                      'Copy document JSON'
-                    )
-                  }}
-                </p>
-              </TooltipContent>
-            </Tooltip>
+                  >
+                    <Icon
+                      :name="
+                        isExpanded(
+                          getDocId(
+                            documents[virtualRow.index],
+                            virtualRow.index
+                          )
+                        )
+                          ? 'hugeicons:unfold-less'
+                          : 'hugeicons:unfold-more'
+                      "
+                      class="size-3.5!"
+                    />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>
+                    {{
+                      isExpanded(
+                        getDocId(documents[virtualRow.index], virtualRow.index)
+                      )
+                        ? 'Collapse nested keys'
+                        : 'Expand all nested keys'
+                    }}
+                  </p>
+                </TooltipContent>
+              </Tooltip>
+
+              <Tooltip>
+                <TooltipTrigger as-child>
+                  <Button
+                    variant="ghost"
+                    size="iconSm"
+                    class="h-5 w-5 p-0 text-muted-foreground hover:text-foreground"
+                    @click="onCopyDocument(documents[virtualRow.index])"
+                  >
+                    <Icon
+                      :name="
+                        getCopyIcon(isCopied(documents[virtualRow.index]._id))
+                      "
+                      :class="[
+                        'size-3.5',
+                        isCopied(documents[virtualRow.index]._id) &&
+                          'text-emerald-500 font-bold',
+                      ]"
+                    />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>
+                    {{
+                      getCopyTooltip(
+                        isCopied(documents[virtualRow.index]._id),
+                        'Copy document JSON'
+                      )
+                    }}
+                  </p>
+                </TooltipContent>
+              </Tooltip>
+            </div>
           </div>
 
           <div class="m-2 overflow-x-auto text-xs bg-background">
             <VueJsonPretty
               :data="documents[virtualRow.index]"
-              :deep="1"
+              :deep="
+                isExpanded(
+                  getDocId(documents[virtualRow.index], virtualRow.index)
+                )
+                  ? 99
+                  : 1
+              "
               :show-double-quotes="true"
               :show-length="false"
               :show-line="false"

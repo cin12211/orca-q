@@ -201,8 +201,28 @@ export function extractFieldsFromDocuments(
   const fieldSet = new Set<string>();
   for (const doc of documents) {
     if (doc && typeof doc === 'object') {
-      for (const key of Object.keys(doc)) {
+      for (const [key, val] of Object.entries(doc)) {
         fieldSet.add(key);
+
+        if (val !== null && typeof val === 'object') {
+          if (Array.isArray(val)) {
+            for (const item of val) {
+              if (item && typeof item === 'object' && !Array.isArray(item)) {
+                for (const subKey of Object.keys(item)) {
+                  if (subKey && !subKey.startsWith('$')) {
+                    fieldSet.add(`${key}.${subKey}`);
+                  }
+                }
+              }
+            }
+          } else {
+            for (const subKey of Object.keys(val)) {
+              if (subKey && !subKey.startsWith('$')) {
+                fieldSet.add(`${key}.${subKey}`);
+              }
+            }
+          }
+        }
       }
     }
   }

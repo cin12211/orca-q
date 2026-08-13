@@ -16,6 +16,8 @@ definePageMeta({
   keepalive: {
     max: DEFAULT_MAX_KEEP_ALIVE,
   },
+  notAllowBottomPanel: true,
+  notAllowRightPanel: true,
 });
 
 const route = useRoute('workspaceId-connectionId-mongodb-tabViewId');

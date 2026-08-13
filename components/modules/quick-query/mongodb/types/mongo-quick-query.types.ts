@@ -7,6 +7,7 @@ export interface MongoCollectionName {
   name: string;
   properties: string[];
   size: number;
+  count?: number;
 }
 
 export interface MongoDatabaseStats {

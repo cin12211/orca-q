@@ -11,7 +11,7 @@ const mockFetch = vi.fn(async (url: string, options: any) => {
 
   if (options.body.database === 'orcaq_fixture') {
     return {
-      collections: [{ name: 'users', properties: [], size: 4096 }],
+      collections: [{ name: 'users', properties: [], size: 4096, count: 10 }],
       totalSize: 16384,
     };
   }
@@ -21,7 +21,7 @@ const mockFetch = vi.fn(async (url: string, options: any) => {
 vi.stubGlobal('$fetch', mockFetch);
 
 describe('useMongoSchemaTreeData', () => {
-  it('builds one folder node per database (with totalSize) and collection leaf nodes tagged with TabViewType and size', async () => {
+  it('builds one folder node per database (with totalSize) and collection leaf nodes tagged with TabViewType, size, and count', async () => {
     const connection = ref({ id: 'c1' } as any);
     const { fileTreeData } = useMongoSchemaTreeData(connection);
     await flushPromises();
@@ -54,6 +54,7 @@ describe('useMongoSchemaTreeData', () => {
       TabViewType.MongoCollectionDetail
     );
     expect(collectionNode.data?.size).toBe(4096);
+    expect(collectionNode.data?.count).toBe(10);
   });
 
   it('filters to databases with a matching collection when search is set', async () => {

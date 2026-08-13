@@ -310,7 +310,13 @@ const contextMenuItems = computed<ContextMenuItem[]>(() => {
               v-else-if="(node.data as any)?.size !== undefined"
               class="text-xs text-muted-foreground"
             >
-              {{ formatBytes(((node.data as any)?.size as number) || 0) }}
+              <template v-if="(node.data as any)?.count !== undefined">
+                {{ ((node.data as any)?.count as number).toLocaleString() }} ·
+                {{ formatBytes(((node.data as any)?.size as number) || 0) }}
+              </template>
+              <template v-else>
+                {{ formatBytes(((node.data as any)?.size as number) || 0) }}
+              </template>
             </span>
           </template>
 

@@ -123,12 +123,13 @@ describe('listMongoCollectionNames', () => {
       }),
       command: async ({ collStats }: { collStats: string }) => ({
         storageSize: collStats === 'users' ? 4096 : 2048,
+        count: collStats === 'users' ? 42 : 5,
       }),
     };
 
     expect(await listMongoCollectionNames(fakeDatabase as any)).toEqual([
-      { name: 'archive', properties: ['Capped'], size: 2048 },
-      { name: 'users', properties: [], size: 4096 },
+      { name: 'archive', properties: ['Capped'], size: 2048, count: 5 },
+      { name: 'users', properties: [], size: 4096, count: 42 },
     ]);
   });
 });

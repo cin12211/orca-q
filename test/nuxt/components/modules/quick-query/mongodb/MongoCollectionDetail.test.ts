@@ -32,9 +32,9 @@ describe('MongoCollectionDetail', () => {
       wrapper.findComponent({ name: 'MongoCollectionTableView' }).exists()
     ).toBe(true);
 
-    await wrapper
-      .get('[data-testid="mongo-view-mode-list"]')
-      .trigger('mousedown', { button: 0 });
+    const switcher = wrapper.findComponent({ name: 'MongoViewModeSwitcher' });
+    switcher.vm.$emit('update:modelValue', 'list');
+    await flushPromises();
 
     expect(
       wrapper.findComponent({ name: 'MongoCollectionTableView' }).exists()

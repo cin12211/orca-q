@@ -5,7 +5,6 @@ import {
   ContextMenuShortcut,
   Icon,
   Separator,
-  Textarea,
   Tooltip,
   TooltipContent,
   TooltipTrigger,
@@ -30,6 +29,7 @@ import {
 } from '../utils/mongoFilterUtils';
 import MongoColumnSelector from './MongoColumnSelector.vue';
 import MongoFilterOperatorSelector from './MongoFilterOperatorSelector.vue';
+import MongoQueryEditor from './MongoQueryEditor.vue';
 
 const props = defineProps<{
   documents: MongoDocument[];
@@ -402,13 +402,11 @@ defineExpose({
 
     <!-- Raw BSON JSON Mode -->
     <div v-else class="space-y-1.5 pt-1">
-      <Textarea
+      <MongoQueryEditor
         v-model="rawJsonQuery"
-        rows="3"
+        :fields="availableFields"
         placeholder='{ "status": "active", "qty": { "$gte": 10 } }'
-        class="font-mono text-xs p-2 min-h-[70px]"
-        @keyup.enter.ctrl.stop="onExecuteSearch"
-        @keyup.enter.meta.stop="onExecuteSearch"
+        @execute="onExecuteSearch"
       />
       <span class="text-xs text-destructive font-mono" v-if="rawJsonError">
         {{ rawJsonError }}

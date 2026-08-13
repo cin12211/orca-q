@@ -12,6 +12,7 @@ interface MongoNodeData {
   tabViewType: TabViewType;
   totalSize?: number;
   size?: number;
+  count?: number;
 }
 
 type MongoFileNode = FileNode<MongoNodeData>;
@@ -104,6 +105,7 @@ export function useMongoSchemaTreeData(
           data: {
             tabViewType: TabViewType.MongoCollectionDetail,
             size: collection.size,
+            count: collection.count,
           },
         };
         nodes[databaseName].children!.push(nodeId);

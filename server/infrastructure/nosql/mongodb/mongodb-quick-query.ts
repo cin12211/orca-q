@@ -132,6 +132,7 @@ export interface MongoCollectionName {
   name: string;
   properties: string[];
   size: number;
+  count: number;
 }
 
 export async function listMongoCollectionNames(
@@ -149,6 +150,7 @@ export async function listMongoCollectionNames(
         name: info.name,
         properties: buildCollectionProperties(info),
         size: stats.storageSize ?? 0,
+        count: stats.count ?? 0,
       };
     })
   );

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, ref, toRef, useTemplateRef, watch } from 'vue';
+import QuickQueryErrorPopup from '~/components/modules/quick-query/QuickQueryErrorPopup.vue';
 import { LocalStorageManager } from '~/core/persist/LocalStorageManager';
 import { useManagementConnectionStore } from '~/core/stores/managementConnectionStore';
 import MongoCollectionFilter from '../components/MongoCollectionFilter.vue';
@@ -39,7 +40,16 @@ const {
   onNextPage,
   onPreviousPage,
   onRefresh,
+  error,
 } = useMongoCollectionQuery({ connection, collectionName, databaseName });
+
+const openErrorModal = ref(false);
+
+watch(error, newError => {
+  if (newError) {
+    openErrorModal.value = true;
+  }
+});
 
 useMongoCollectionShortcuts({
   containerRef,
@@ -60,7 +70,7 @@ const activeFilterCount = computed(() =>
   activeFilterPayload.value ? Object.keys(activeFilterPayload.value).length : 0
 );
 
-const viewMode = ref<MongoCollectionViewMode>('list');
+const viewMode = ref<MongoCollectionViewMode>('table');
 
 const onPaginate = (value: { limit: number; offset: number }) => {
   limit.value = value.limit;
@@ -115,6 +125,11 @@ watch([databaseName, collectionName], fetchDocuments, { immediate: true });
     </div>
 
     <div class="flex-1 overflow-hidden px-1 mb-0.5">
+      <QuickQueryErrorPopup
+        v-model:open="openErrorModal"
+        :message="error || ''"
+      />
+
       <MongoCollectionInfoView
         v-if="viewMode === 'info'"
         :connection="connection"
@@ -123,17 +138,32 @@ watch([databaseName, collectionName], fetchDocuments, { immediate: true });
       />
       <template v-else>
         <BaseEmpty
-          v-if="isEmpty"
+          v-if="isEmpty && !error"
           title="No documents found"
           desc="This collection has no documents matching the current query."
         />
+        <div
+          v-else-if="error"
+          class="flex flex-col items-center justify-center h-full gap-2 p-4"
+        >
+          <Icon name="hugeicons:alert-02" class="text-destructive size-8" />
+          <p class="text-sm font-medium text-destructive">Query Error</p>
+          <p
+            class="text-xs text-muted-foreground text-center max-w-md break-all"
+          >
+            {{ error }}
+          </p>
+          <Button size="sm" variant="outline" @click="openErrorModal = true"
+            >View Details</Button
+          >
+        </div>
         <template v-else>
           <MongoCollectionTableView
-            v-show="viewMode === 'table'"
+            v-if="viewMode === 'table'"
             :documents="documents"
           />
           <MongoCollectionListView
-            v-show="viewMode === 'list'"
+            v-else-if="viewMode === 'list'"
             :documents="documents"
           />
         </template>

@@ -45,14 +45,34 @@ describe('mongoFilterUtils', () => {
     ).toThrow();
   });
 
-  it('extracts unique document fields with _id first', () => {
+  it('extracts unique document fields with _id first including 1-level nested fields', () => {
     const docs = [
-      { _id: '1', name: 'Alice', age: 25 },
-      { _id: '2', email: 'bob@example.com', name: 'Bob' },
+      {
+        _id: '1',
+        name: 'Alice',
+        age: 25,
+        roomServices: { cbd: 'test1', note: 'test' },
+      },
+      {
+        _id: '2',
+        email: 'bob@example.com',
+        name: 'Bob',
+        customers: [{ name: 'Child' }],
+      },
     ];
 
     const fields = extractFieldsFromDocuments(docs);
-    expect(fields).toEqual(['_id', 'age', 'email', 'name']);
+    expect(fields).toEqual([
+      '_id',
+      'age',
+      'customers',
+      'customers.name',
+      'email',
+      'name',
+      'roomServices',
+      'roomServices.cbd',
+      'roomServices.note',
+    ]);
   });
 
   it('formats visual rows to raw JSON string', () => {
