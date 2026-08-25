@@ -70,7 +70,21 @@ const activeFilterCount = computed(() =>
   activeFilterPayload.value ? Object.keys(activeFilterPayload.value).length : 0
 );
 
-const viewMode = ref<MongoCollectionViewMode>('table');
+const viewMode = ref<MongoCollectionViewMode>('list');
+
+const tableViewRef =
+  useTemplateRef<InstanceType<typeof MongoCollectionTableView>>(
+    'tableViewRef'
+  );
+const listViewRef =
+  useTemplateRef<InstanceType<typeof MongoCollectionListView>>(
+    'listViewRef'
+  );
+
+watch(skip, () => {
+  tableViewRef.value?.scrollToTop();
+  listViewRef.value?.scrollToTop();
+});
 
 const onPaginate = (value: { limit: number; offset: number }) => {
   limit.value = value.limit;
@@ -160,10 +174,12 @@ watch([databaseName, collectionName], fetchDocuments, { immediate: true });
         <template v-else>
           <MongoCollectionTableView
             v-if="viewMode === 'table'"
+            ref="tableViewRef"
             :documents="documents"
           />
           <MongoCollectionListView
             v-else-if="viewMode === 'list'"
+            ref="listViewRef"
             :documents="documents"
           />
         </template>

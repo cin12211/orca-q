@@ -61,6 +61,15 @@ const measureElement = (el: any) => {
 
   return undefined;
 };
+
+const scrollToTop = () => {
+  rowVirtualizer.value.scrollToIndex(0);
+  if (parentRef.value) {
+    parentRef.value.scrollTop = 0;
+  }
+};
+
+defineExpose({ scrollToTop });
 </script>
 
 <template>

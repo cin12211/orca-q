@@ -11,7 +11,7 @@ const mockFetch = vi.fn().mockResolvedValue({
 vi.stubGlobal('$fetch', mockFetch);
 
 describe('MongoCollectionDetail', () => {
-  it('renders the table view by default and switches to list view on mode change', async () => {
+  it('renders the list view by default and switches to table view on mode change', async () => {
     const wrapper = mount(
       {
         components: { MongoCollectionDetail, TooltipProvider },
@@ -29,18 +29,18 @@ describe('MongoCollectionDetail', () => {
     await flushPromises();
 
     expect(
-      wrapper.findComponent({ name: 'MongoCollectionTableView' }).exists()
+      wrapper.findComponent({ name: 'MongoCollectionListView' }).exists()
     ).toBe(true);
 
     const switcher = wrapper.findComponent({ name: 'MongoViewModeSwitcher' });
-    switcher.vm.$emit('update:modelValue', 'list');
+    switcher.vm.$emit('update:modelValue', 'table');
     await flushPromises();
 
     expect(
-      wrapper.findComponent({ name: 'MongoCollectionTableView' }).exists()
+      wrapper.findComponent({ name: 'MongoCollectionListView' }).exists()
     ).toBe(false);
     expect(
-      wrapper.findComponent({ name: 'MongoCollectionListView' }).exists()
+      wrapper.findComponent({ name: 'MongoCollectionTableView' }).exists()
     ).toBe(true);
   });
 });

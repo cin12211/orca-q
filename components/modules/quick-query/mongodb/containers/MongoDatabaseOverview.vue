@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { computed, toRef, watch } from 'vue';
-import type { ColDef, RowClickedEvent } from 'ag-grid-community';
+import { computed, ref, toRef, watch } from 'vue';
+import type { ColDef, GridApi, RowClickedEvent } from 'ag-grid-community';
 import BaseDataGrid from '~/components/base/data-grid/BaseDataGrid.vue';
+import { useDataGridAutoSizing } from '~/components/base/data-grid/hooks';
 import { useTabManagement } from '~/core/composables/useTabManagement';
 import { formatBytes } from '~/core/helpers/bytes-formatter';
 import { useManagementConnectionStore } from '~/core/stores/managementConnectionStore';
@@ -96,6 +97,16 @@ const columnDefs: ColDef<MongoCollectionSummary>[] = [
   },
 ];
 
+const baseGridRef = ref<InstanceType<typeof BaseDataGrid>>();
+const gridApi = computed<GridApi | null>(
+  () => (baseGridRef.value?.gridApi as GridApi | null | undefined) ?? null
+);
+
+const { onRowDataUpdated } = useDataGridAutoSizing({
+  gridApi,
+  data: collections,
+});
+
 const onRowClicked = (event: RowClickedEvent<MongoCollectionSummary>) => {
   if (!event.data) return;
   openMongoCollectionTab({
@@ -119,11 +130,13 @@ watch(() => props.databaseName, fetchCollections, { immediate: true });
       />
       <BaseDataGrid
         v-else
+        ref="baseGridRef"
         class="h-full border rounded-md"
         :column-defs="columnDefs"
         :row-data="collections"
         :grid-options="{ defaultColDef }"
         @row-clicked="onRowClicked"
+        @row-data-updated="onRowDataUpdated"
       />
     </div>
   </div>
