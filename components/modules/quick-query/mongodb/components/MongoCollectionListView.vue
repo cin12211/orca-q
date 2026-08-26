@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, nextTick, ref } from 'vue';
+import { computed, ref } from 'vue';
 import { Button, Tooltip, TooltipContent, TooltipTrigger } from '#components';
 import { useVirtualizer } from '@tanstack/vue-virtual';
 import VueJsonPretty from 'vue-json-pretty';
@@ -25,7 +25,7 @@ const getDocId = (doc: MongoDocument, index: number): string | number => {
 
 const isExpanded = (docId: string | number) => expandedDocIds.value.has(docId);
 
-const toggleExpandDocument = async (docId: string | number) => {
+const toggleExpandDocument = (docId: string | number) => {
   const next = new Set(expandedDocIds.value);
   if (next.has(docId)) {
     next.delete(docId);
@@ -33,8 +33,6 @@ const toggleExpandDocument = async (docId: string | number) => {
     next.add(docId);
   }
   expandedDocIds.value = next;
-  await nextTick();
-  rowVirtualizer.value.measure();
 };
 
 const parentRef = ref<HTMLElement | null>(null);
