@@ -7,3 +7,4 @@ export * from './useMongoDatabaseStats';
 export * from './useMongoCollectionShortcuts';
 export * from './useMongoCollectionIndexes';
 export * from './useMongoCollectionValidation';
+export * from './useMongoDocumentMutation';
