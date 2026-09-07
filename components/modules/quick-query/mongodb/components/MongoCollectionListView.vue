@@ -136,20 +136,28 @@ defineExpose({ scrollToTop, onExitEditMode });
             isExpanded(getDocId(documents[virtualRow.index], virtualRow.index))
           "
           :is-editing="
-            activeEditDocId === String(documents[virtualRow.index]._id)
+            activeEditDocId ===
+            String(getDocId(documents[virtualRow.index], virtualRow.index))
           "
-          :is-saving="savingDocId === String(documents[virtualRow.index]._id)"
+          :is-saving="
+            savingDocId ===
+            String(getDocId(documents[virtualRow.index], virtualRow.index))
+          "
           @toggle-expand="
             toggleExpandDocument(
               getDocId(documents[virtualRow.index], virtualRow.index)
             )
           "
-          @start-edit="onStartEdit(String(documents[virtualRow.index]._id))"
+          @start-edit="
+            onStartEdit(
+              String(getDocId(documents[virtualRow.index], virtualRow.index))
+            )
+          "
           @cancel-edit="onCancelEdit"
           @save="
             updatedDoc =>
               onSaveDocument(
-                String(documents[virtualRow.index]._id),
+                String(getDocId(documents[virtualRow.index], virtualRow.index)),
                 updatedDoc
               )
           "
