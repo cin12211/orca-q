@@ -9,3 +9,4 @@ export { default as MongoColumnSelector } from './MongoColumnSelector.vue';
 export { default as MongoCollectionInfoView } from './MongoCollectionInfoView.vue';
 export { default as MongoIndexesTab } from './MongoIndexesTab.vue';
 export { default as MongoValidationTab } from './MongoValidationTab.vue';
+export { default as MongoCollectionListItem } from './MongoCollectionListItem.vue';
