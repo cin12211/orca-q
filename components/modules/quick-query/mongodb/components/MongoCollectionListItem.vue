@@ -104,7 +104,7 @@ const onSave = () => {
         <span>_id: {{ document._id }}</span>
         <span
           v-if="isEditing"
-          class="px-1.5 py-0.2 rounded text-[10px] bg-primary/10 text-primary border border-primary/20 font-sans font-medium"
+          class="px-1.5 py-[1px] rounded text-[10px] bg-primary/10 text-primary border border-primary/20 font-sans font-medium"
         >
           Editing
         </span>
