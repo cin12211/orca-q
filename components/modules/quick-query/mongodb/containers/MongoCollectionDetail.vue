@@ -8,7 +8,11 @@ import MongoCollectionInfoView from '../components/MongoCollectionInfoView.vue';
 import MongoCollectionListView from '../components/MongoCollectionListView.vue';
 import MongoCollectionTableView from '../components/MongoCollectionTableView.vue';
 import MongoQuickQueryControlBar from '../components/MongoQuickQueryControlBar.vue';
-import { useMongoCollectionQuery, useMongoCollectionShortcuts } from '../hooks';
+import {
+  useMongoCollectionQuery,
+  useMongoCollectionShortcuts,
+  useMongoDocumentMutation,
+} from '../hooks';
 import { MongoCollectionViewMode } from '../types';
 
 const props = defineProps<{
@@ -76,6 +80,23 @@ const tableViewRef =
   useTemplateRef<InstanceType<typeof MongoCollectionTableView>>('tableViewRef');
 const listViewRef =
   useTemplateRef<InstanceType<typeof MongoCollectionListView>>('listViewRef');
+
+const { savingDocId, updateDocument } = useMongoDocumentMutation({
+  connection,
+  databaseName,
+  collectionName,
+  documents,
+});
+
+const handleUpdateDocument = async (payload: {
+  id: string;
+  document: Record<string, unknown>;
+}) => {
+  const success = await updateDocument(payload.id, payload.document);
+  if (success) {
+    listViewRef.value?.onExitEditMode(payload.id);
+  }
+};
 
 watch(skip, () => {
   tableViewRef.value?.scrollToTop();
@@ -177,6 +198,8 @@ watch([databaseName, collectionName], fetchDocuments, { immediate: true });
             v-else-if="viewMode === MongoCollectionViewMode.List"
             ref="listViewRef"
             :documents="documents"
+            :saving-doc-id="savingDocId"
+            @update-document="handleUpdateDocument"
           />
         </template>
       </template>
