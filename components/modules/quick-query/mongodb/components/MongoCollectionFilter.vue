@@ -15,9 +15,9 @@ import { Input } from '~/components/ui/input';
 import { useHotkeys } from '~/core/composables/useHotKeys';
 import { DEFAULT_DEBOUNCE_INPUT } from '~/core/constants';
 import { getPlatformStorage } from '~/core/persist/storage-adapter';
+import { MongoFilterMode } from '../types';
 import type {
   MongoDocument,
-  MongoFilterMode,
   MongoFilterOperator,
   MongoFilterRow,
 } from '../types';
@@ -45,7 +45,7 @@ const emit = defineEmits<{
 }>();
 
 const quickQueryFilterRef = ref<HTMLElement>();
-const mode = ref<MongoFilterMode>('visual');
+const mode = ref<MongoFilterMode>(MongoFilterMode.Visual);
 const rawJsonQuery = ref('');
 const rawJsonError = ref<string | undefined>();
 
@@ -316,7 +316,7 @@ defineExpose({
     :class="['h-fit space-y-1', filterRows.length && 'pb-2']"
   >
     <!-- Visual Builder Mode -->
-    <template v-if="mode === 'visual'">
+    <template v-if="mode === MongoFilterMode.Visual">
       <div
         v-for="(value, index) in filterRows"
         :key="index"
@@ -422,7 +422,10 @@ defineExpose({
         :model-value="mode"
         @update:model-value="
           val => {
-            if (val === 'raw' && mode === 'visual') {
+            if (
+              val === MongoFilterMode.Raw &&
+              mode === MongoFilterMode.Visual
+            ) {
               rawJsonQuery = formatMongoFilterToRaw(filterRows);
             }
             mode = val as MongoFilterMode;
@@ -432,14 +435,14 @@ defineExpose({
         <TabsList size="xxs">
           <TabsTrigger
             size="xxs"
-            value="visual"
+            :value="MongoFilterMode.Visual"
             class="font-medium cursor-pointer text-primary/80"
           >
             Visual
           </TabsTrigger>
           <TabsTrigger
             size="xxs"
-            value="raw"
+            :value="MongoFilterMode.Raw"
             class="font-medium cursor-pointer text-primary/80"
           >
             Raw JSON
@@ -447,7 +450,10 @@ defineExpose({
         </TabsList>
       </Tabs>
 
-      <div v-if="mode === 'visual'" class="text-xs flex items-center gap-2">
+      <div
+        v-if="mode === MongoFilterMode.Visual"
+        class="text-xs flex items-center gap-2"
+      >
         <div><ContextMenuShortcut>⌘F</ContextMenuShortcut>: Show</div>
         <div><ContextMenuShortcut>Esc</ContextMenuShortcut>: Exit</div>
         <Separator orientation="vertical" class="h-3/4!" />
@@ -459,7 +465,7 @@ defineExpose({
         Press Meta+Enter or Ctrl+Enter to execute query.
       </div>
       <Button
-        v-if="mode === 'raw'"
+        v-if="mode === MongoFilterMode.Raw"
         size="xs"
         variant="secondary"
         @click="onExecuteSearch"

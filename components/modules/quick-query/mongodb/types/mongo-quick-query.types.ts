@@ -33,7 +33,11 @@ export interface MongoCollectionSummary {
   totalIndexSize: number;
 }
 
-export type MongoCollectionViewMode = 'table' | 'list' | 'info';
+export enum MongoCollectionViewMode {
+  Table = 'table',
+  List = 'list',
+  Info = 'info',
+}
 
 export interface MongoIndexInfo {
   name: string;
@@ -72,4 +76,7 @@ export interface MongoFilterRow {
   value: string;
 }
 
-export type MongoFilterMode = 'visual' | 'raw';
+export enum MongoFilterMode {
+  Visual = 'visual',
+  Raw = 'raw',
+}

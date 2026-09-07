@@ -1,6 +1,7 @@
 import { flushPromises, mount } from '@vue/test-utils';
 import { describe, expect, it, vi } from 'vitest';
 import MongoCollectionDetail from '~/components/modules/quick-query/mongodb/containers/MongoCollectionDetail.vue';
+import { MongoCollectionViewMode } from '~/components/modules/quick-query/mongodb/types';
 import TooltipProvider from '~/components/ui/tooltip/TooltipProvider.vue';
 
 const mockFetch = vi.fn().mockResolvedValue({
@@ -33,7 +34,7 @@ describe('MongoCollectionDetail', () => {
     ).toBe(true);
 
     const switcher = wrapper.findComponent({ name: 'MongoViewModeSwitcher' });
-    switcher.vm.$emit('update:modelValue', 'table');
+    switcher.vm.$emit('update:modelValue', MongoCollectionViewMode.Table);
     await flushPromises();
 
     expect(

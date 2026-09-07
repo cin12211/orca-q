@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { MongoFilterMode } from '~/components/modules/quick-query/mongodb/types';
 import {
   buildMongoFilterPayload,
   extractFieldsFromDocuments,
@@ -23,7 +24,7 @@ describe('mongoFilterUtils', () => {
       },
     ];
 
-    const filter = buildMongoFilterPayload(rows, '', 'visual');
+    const filter = buildMongoFilterPayload(rows, '', MongoFilterMode.Visual);
     expect(filter).toEqual({
       name: 'John',
       age: { $gte: 18 },
@@ -32,7 +33,7 @@ describe('mongoFilterUtils', () => {
 
   it('parses raw JSON filter text correctly', () => {
     const rawText = '{ "status": "active", "qty": { "$gt": 10 } }';
-    const filter = buildMongoFilterPayload([], rawText, 'raw');
+    const filter = buildMongoFilterPayload([], rawText, MongoFilterMode.Raw);
     expect(filter).toEqual({
       status: 'active',
       qty: { $gt: 10 },
@@ -41,7 +42,7 @@ describe('mongoFilterUtils', () => {
 
   it('throws error for invalid raw JSON filter', () => {
     expect(() =>
-      buildMongoFilterPayload([], '{ invalid: json }', 'raw')
+      buildMongoFilterPayload([], '{ invalid: json }', MongoFilterMode.Raw)
     ).toThrow();
   });
 

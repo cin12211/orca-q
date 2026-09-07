@@ -9,7 +9,7 @@ import MongoCollectionListView from '../components/MongoCollectionListView.vue';
 import MongoCollectionTableView from '../components/MongoCollectionTableView.vue';
 import MongoQuickQueryControlBar from '../components/MongoQuickQueryControlBar.vue';
 import { useMongoCollectionQuery, useMongoCollectionShortcuts } from '../hooks';
-import type { MongoCollectionViewMode } from '../types';
+import { MongoCollectionViewMode } from '../types';
 
 const props = defineProps<{
   connectionId: string;
@@ -70,16 +70,12 @@ const activeFilterCount = computed(() =>
   activeFilterPayload.value ? Object.keys(activeFilterPayload.value).length : 0
 );
 
-const viewMode = ref<MongoCollectionViewMode>('list');
+const viewMode = ref<MongoCollectionViewMode>(MongoCollectionViewMode.List);
 
 const tableViewRef =
-  useTemplateRef<InstanceType<typeof MongoCollectionTableView>>(
-    'tableViewRef'
-  );
+  useTemplateRef<InstanceType<typeof MongoCollectionTableView>>('tableViewRef');
 const listViewRef =
-  useTemplateRef<InstanceType<typeof MongoCollectionListView>>(
-    'listViewRef'
-  );
+  useTemplateRef<InstanceType<typeof MongoCollectionListView>>('listViewRef');
 
 watch(skip, () => {
   tableViewRef.value?.scrollToTop();
@@ -145,7 +141,7 @@ watch([databaseName, collectionName], fetchDocuments, { immediate: true });
       />
 
       <MongoCollectionInfoView
-        v-if="viewMode === 'info'"
+        v-if="viewMode === MongoCollectionViewMode.Info"
         :connection="connection"
         :collection-name="collectionName"
         :database-name="databaseName"
@@ -173,12 +169,12 @@ watch([databaseName, collectionName], fetchDocuments, { immediate: true });
         </div>
         <template v-else>
           <MongoCollectionTableView
-            v-if="viewMode === 'table'"
+            v-if="viewMode === MongoCollectionViewMode.Table"
             ref="tableViewRef"
             :documents="documents"
           />
           <MongoCollectionListView
-            v-else-if="viewMode === 'list'"
+            v-else-if="viewMode === MongoCollectionViewMode.List"
             ref="listViewRef"
             :documents="documents"
           />

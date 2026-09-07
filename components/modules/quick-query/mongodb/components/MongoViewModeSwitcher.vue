@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { MongoCollectionViewMode } from '../types';
+import { MongoCollectionViewMode } from '../types';
 
 defineProps<{ modelValue: MongoCollectionViewMode }>();
 const emit = defineEmits<{ 'update:modelValue': [MongoCollectionViewMode] }>();
@@ -15,7 +15,7 @@ const emit = defineEmits<{ 'update:modelValue': [MongoCollectionViewMode] }>();
     <TabsList size="xxs" class="grid w-full grid-cols-3">
       <TabsTrigger
         size="xxs"
-        value="list"
+        :value="MongoCollectionViewMode.List"
         data-testid="mongo-view-mode-list"
         class="font-medium cursor-pointer text-primary/80"
       >
@@ -23,7 +23,7 @@ const emit = defineEmits<{ 'update:modelValue': [MongoCollectionViewMode] }>();
       </TabsTrigger>
       <TabsTrigger
         size="xxs"
-        value="table"
+        :value="MongoCollectionViewMode.Table"
         data-testid="mongo-view-mode-table"
         class="font-medium cursor-pointer text-primary/80"
       >
@@ -31,7 +31,7 @@ const emit = defineEmits<{ 'update:modelValue': [MongoCollectionViewMode] }>();
       </TabsTrigger>
       <TabsTrigger
         size="xxs"
-        value="info"
+        :value="MongoCollectionViewMode.Info"
         data-testid="mongo-view-mode-info"
         class="font-medium cursor-pointer text-primary/80"
       >

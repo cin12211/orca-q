@@ -1,6 +1,6 @@
+import { MongoFilterMode } from '../types';
 import type {
   MongoDocument,
-  MongoFilterMode,
   MongoFilterOperator,
   MongoFilterRow,
 } from '../types';
@@ -138,9 +138,9 @@ function parseValue(value: string, operator: MongoFilterOperator): unknown {
 export function buildMongoFilterPayload(
   rows: MongoFilterRow[],
   rawQueryText: string = '',
-  mode: MongoFilterMode = 'visual'
+  mode: MongoFilterMode = MongoFilterMode.Visual
 ): Record<string, unknown> | undefined {
-  if (mode === 'raw') {
+  if (mode === MongoFilterMode.Raw) {
     const trimmed = rawQueryText.trim();
     if (!trimmed) return undefined;
     try {
@@ -190,7 +190,7 @@ export function buildMongoFilterPayload(
 }
 
 export function formatMongoFilterToRaw(rows: MongoFilterRow[]): string {
-  const payload = buildMongoFilterPayload(rows, '', 'visual');
+  const payload = buildMongoFilterPayload(rows, '', MongoFilterMode.Visual);
   if (!payload || Object.keys(payload).length === 0) return '';
   return JSON.stringify(payload, null, 2);
 }
