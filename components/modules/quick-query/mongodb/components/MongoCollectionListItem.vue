@@ -45,7 +45,7 @@ const emit = defineEmits<{
 const { handleCopyWithKey, isCopied, getCopyIcon, getCopyTooltip } =
   useCopyToClipboard();
 
-const { themeMode, themeClass } = useVueJsonPrettyTheme();
+const { themeMode, themeClass, themeStyle } = useVueJsonPrettyTheme();
 
 const onCopyDocument = () => {
   const jsonStr = JSON.stringify(props.document, null, 2);
@@ -436,6 +436,7 @@ const editorExtensions = [
             :show-icon="true"
             :theme="themeMode"
             :class="themeClass"
+            :style="themeStyle"
           />
         </div>
       </div>

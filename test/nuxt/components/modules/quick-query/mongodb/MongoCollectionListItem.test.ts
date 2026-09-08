@@ -316,6 +316,39 @@ describe('MongoCollectionListItem', () => {
     expect(jsonPretty.classes()).toContain('vjs-theme-ayu-light');
   });
 
+  it('updates VueJsonPretty font size according to editor font size in settings', async () => {
+    const store = useAppConfigStore();
+    store.codeEditorConfigs.fontSize = 14;
+
+    const wrapper = mount({
+      components: { MongoCollectionListItem, TooltipProvider },
+      template: `
+          <TooltipProvider>
+            <MongoCollectionListItem
+              :document="doc"
+              :is-expanded="false"
+              :is-editing="false"
+              :is-saving="false"
+            />
+          </TooltipProvider>
+        `,
+      setup() {
+        return { doc: sampleDoc };
+      },
+    });
+    await flushPromises();
+
+    const jsonPretty = wrapper.findComponent(VueJsonPretty);
+    expect(jsonPretty.exists()).toBe(true);
+    expect(jsonPretty.attributes('style')).toContain('font-size: 14pt');
+
+    // Change setting to 16
+    store.codeEditorConfigs.fontSize = 16;
+    await flushPromises();
+
+    expect(jsonPretty.attributes('style')).toContain('font-size: 16pt');
+  });
+
   it('renders delete button in read mode and emits delete on click', async () => {
     const wrapper = mount({
       components: { MongoCollectionListItem, TooltipProvider },

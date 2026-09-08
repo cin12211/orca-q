@@ -36,10 +36,25 @@ export function useVueJsonPrettyTheme() {
     return `orca-json-pretty vjs-theme-${resolvedTheme.value}`;
   });
 
+  const fontSize = computed<number>(() => {
+    return (
+      appConfigStore.codeEditorConfigs?.fontSize ||
+      DEFAULT_EDITOR_CONFIG.fontSize
+    );
+  });
+
+  const themeStyle = computed<Record<string, string>>(() => {
+    return {
+      fontSize: `${fontSize.value}pt`,
+    };
+  });
+
   return {
     resolvedTheme,
     isDark,
     themeMode,
     themeClass,
+    fontSize,
+    themeStyle,
   };
 }

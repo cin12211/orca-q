@@ -60,4 +60,17 @@ describe('useVueJsonPrettyTheme', () => {
     expect(themeMode.value).toBe('light');
     expect(themeClass.value).toBe('orca-json-pretty vjs-theme-noctis-lilac');
   });
+
+  it('reactively updates fontSize and themeStyle when editor fontSize changes', () => {
+    const store = useAppConfigStore();
+    const { fontSize, themeStyle } = useVueJsonPrettyTheme();
+
+    expect(fontSize.value).toBe(10);
+    expect(themeStyle.value).toEqual({ fontSize: '10pt' });
+
+    store.codeEditorConfigs.fontSize = 14;
+
+    expect(fontSize.value).toBe(14);
+    expect(themeStyle.value).toEqual({ fontSize: '14pt' });
+  });
 });

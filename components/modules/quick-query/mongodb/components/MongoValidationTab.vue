@@ -24,7 +24,7 @@ const { validation, isLoading, error, fetchValidation } =
 
 const hasValidator = computed(() => !!validation.value?.validator);
 
-const { themeMode, themeClass } = useVueJsonPrettyTheme();
+const { themeMode, themeClass, themeStyle } = useVueJsonPrettyTheme();
 
 onMounted(fetchValidation);
 </script>
@@ -63,6 +63,7 @@ onMounted(fetchValidation);
           :show-icon="true"
           :theme="themeMode"
           :class="themeClass"
+          :style="themeStyle"
         />
       </div>
     </div>
