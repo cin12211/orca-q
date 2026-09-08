@@ -1,0 +1,279 @@
+/* ==========================================================================
+   Orca Themes for VueJsonPretty (orca-dark [default] & orca-light)
+   Matches OrcaQ BaseCodeEditor themes (orcaDarkTheme.ts & orcaLightTheme.ts)
+   ========================================================================== */
+
+/* Base typography & structure */
+.vjs-tree {
+  font-family:
+    ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono',
+    'Courier New', monospace;
+  font-size: 12px;
+  line-height: 1.5;
+  background-color: transparent;
+}
+
+/* ==========================================================================
+   1. ORCA DARK THEME (Default)
+   Dracula friendly palette matching components/base/code-editor/themes/orcaDarkTheme.ts
+   ========================================================================== */
+.vjs-tree,
+.vjs-tree.dark,
+.vjs-tree.orca-dark,
+.dark .vjs-tree {
+  color: #f8f8f2;
+}
+
+/* Brackets & Punctuation */
+.vjs-tree .vjs-tree-brackets,
+.vjs-tree.dark .vjs-tree-brackets,
+.dark .vjs-tree .vjs-tree-brackets {
+  color: #f8f8f2;
+  cursor: pointer;
+  transition: color 0.15s ease;
+}
+
+.vjs-tree .vjs-tree-brackets:hover,
+.vjs-tree.dark .vjs-tree-brackets:hover,
+.dark .vjs-tree .vjs-tree-brackets:hover {
+  color: #ff79c6; /* Dracula Pink */
+}
+
+.vjs-tree .vjs-colon,
+.vjs-tree.dark .vjs-colon,
+.dark .vjs-tree .vjs-colon {
+  color: #f8f8f2;
+}
+
+/* Object Keys: Cyan (#8be9fd - t.propertyName) */
+.vjs-tree .vjs-key,
+.vjs-tree.dark .vjs-key,
+.dark .vjs-tree .vjs-key {
+  color: #8be9fd;
+  font-weight: 500;
+}
+
+/* String Values: Yellow (#f1fa8c - t.string) */
+.vjs-tree .vjs-value-string,
+.vjs-tree.dark .vjs-value-string,
+.dark .vjs-tree .vjs-value-string {
+  color: #f1fa8c;
+}
+
+/* Number Values: Orange (#ffb86c - t.number) */
+.vjs-tree .vjs-value-number,
+.vjs-tree.dark .vjs-value-number,
+.dark .vjs-tree .vjs-value-number {
+  color: #ffb86c;
+  font-weight: 500;
+}
+
+/* Boolean Values: Orange (#ffb86c - t.bool) */
+.vjs-tree .vjs-value-boolean,
+.vjs-tree.dark .vjs-value-boolean,
+.dark .vjs-tree .vjs-value-boolean {
+  color: #ffb86c;
+  font-weight: 500;
+}
+
+/* Null Values: Pink (#ff79c6 - t.null) */
+.vjs-tree .vjs-value-null,
+.vjs-tree.dark .vjs-value-null,
+.dark .vjs-tree .vjs-value-null {
+  color: #ff79c6;
+  font-weight: 500;
+}
+
+/* Undefined: Muted purple/gray (#6272a4) */
+.vjs-tree .vjs-value-undefined,
+.vjs-tree.dark .vjs-value-undefined,
+.dark .vjs-tree .vjs-value-undefined {
+  color: #6272a4;
+  font-style: italic;
+}
+
+/* Comments (collapsed length indicator: // 3 items) */
+.vjs-tree .vjs-comment,
+.vjs-tree.dark .vjs-comment,
+.dark .vjs-tree .vjs-comment {
+  color: #6272a4;
+  font-style: italic;
+}
+
+/* Carets (Expand/collapse arrow) */
+.vjs-tree .vjs-carets,
+.vjs-tree.dark .vjs-carets,
+.dark .vjs-tree .vjs-carets {
+  color: #6272a4;
+  transition:
+    color 0.15s ease,
+    transform 0.2s ease;
+}
+
+.vjs-tree .vjs-carets:hover,
+.vjs-tree.dark .vjs-carets:hover,
+.dark .vjs-tree .vjs-carets:hover {
+  color: #8be9fd;
+}
+
+/* Indent Guide Line */
+.vjs-tree .vjs-indent-unit.has-line,
+.vjs-tree.dark .vjs-indent-unit.has-line,
+.dark .vjs-tree .vjs-indent-unit.has-line {
+  border-left: 1px dashed rgba(98, 114, 164, 0.4);
+}
+
+/* Row Hover / Highlight */
+.vjs-tree .vjs-tree-node:hover,
+.vjs-tree .vjs-tree-node.is-highlight,
+.vjs-tree-node.dark:hover,
+.vjs-tree-node.dark.is-highlight,
+.dark .vjs-tree .vjs-tree-node:hover,
+.dark .vjs-tree .vjs-tree-node.is-highlight {
+  background-color: rgba(68, 71, 90, 0.35);
+  border-radius: 4px;
+}
+
+/* Node Actions (Copy button on hover) */
+.vjs-tree .vjs-tree-node-actions,
+.vjs-tree.dark .vjs-tree-node-actions,
+.vjs-tree-node.dark .vjs-tree-node-actions,
+.dark .vjs-tree .vjs-tree-node-actions {
+  background-color: #282a36;
+  border: 1px solid #44475a;
+  color: #f8f8f2;
+  border-radius: 4px;
+  padding: 0 6px;
+  font-size: 11px;
+}
+
+.vjs-tree .vjs-tree-node-actions .vjs-tree-node-actions-item:hover,
+.vjs-tree.dark .vjs-tree-node-actions .vjs-tree-node-actions-item:hover,
+.dark .vjs-tree .vjs-tree-node-actions .vjs-tree-node-actions-item:hover {
+  color: #8be9fd;
+}
+
+/* ==========================================================================
+   2. ORCA LIGHT THEME
+   Friendly light palette matching components/base/code-editor/themes/orcaLightTheme.ts
+   ========================================================================== */
+html:not(.dark) .vjs-tree:not(.dark):not(.orca-dark),
+.vjs-tree.orca-light {
+  color: #24292e;
+}
+
+/* Brackets & Punctuation */
+html:not(.dark) .vjs-tree:not(.dark):not(.orca-dark) .vjs-tree-brackets,
+.vjs-tree.orca-light .vjs-tree-brackets {
+  color: #24292e;
+  cursor: pointer;
+  transition: color 0.15s ease;
+}
+
+html:not(.dark) .vjs-tree:not(.dark):not(.orca-dark) .vjs-tree-brackets:hover,
+.vjs-tree.orca-light .vjs-tree-brackets:hover {
+  color: #0366d6; /* Light Blue */
+}
+
+html:not(.dark) .vjs-tree:not(.dark):not(.orca-dark) .vjs-colon,
+.vjs-tree.orca-light .vjs-colon {
+  color: #24292e;
+}
+
+/* Object Keys: Teal (#1b7c83 - t.propertyName) */
+html:not(.dark) .vjs-tree:not(.dark):not(.orca-dark) .vjs-key,
+.vjs-tree.orca-light .vjs-key {
+  color: #1b7c83;
+  font-weight: 500;
+}
+
+/* String Values: Warm Amber/Brown (#b35900 - t.string) */
+html:not(.dark) .vjs-tree:not(.dark):not(.orca-dark) .vjs-value-string,
+.vjs-tree.orca-light .vjs-value-string {
+  color: #b35900;
+}
+
+/* Number Values: Orange (#e36209 - t.number) */
+html:not(.dark) .vjs-tree:not(.dark):not(.orca-dark) .vjs-value-number,
+.vjs-tree.orca-light .vjs-value-number {
+  color: #e36209;
+  font-weight: 500;
+}
+
+/* Boolean Values: Red (#d73a49 - t.bool) */
+html:not(.dark) .vjs-tree:not(.dark):not(.orca-dark) .vjs-value-boolean,
+.vjs-tree.orca-light .vjs-value-boolean {
+  color: #d73a49;
+  font-weight: 500;
+}
+
+/* Null Values: Purple (#6f42c1 - t.null) */
+html:not(.dark) .vjs-tree:not(.dark):not(.orca-dark) .vjs-value-null,
+.vjs-tree.orca-light .vjs-value-null {
+  color: #6f42c1;
+  font-weight: 500;
+}
+
+/* Undefined: Muted gray (#6a737d) */
+html:not(.dark) .vjs-tree:not(.dark):not(.orca-dark) .vjs-value-undefined,
+.vjs-tree.orca-light .vjs-value-undefined {
+  color: #6a737d;
+  font-style: italic;
+}
+
+/* Comments */
+html:not(.dark) .vjs-tree:not(.dark):not(.orca-dark) .vjs-comment,
+.vjs-tree.orca-light .vjs-comment {
+  color: #6a737d;
+  font-style: italic;
+}
+
+/* Carets */
+html:not(.dark) .vjs-tree:not(.dark):not(.orca-dark) .vjs-carets,
+.vjs-tree.orca-light .vjs-carets {
+  color: #959da5;
+  transition:
+    color 0.15s ease,
+    transform 0.2s ease;
+}
+
+html:not(.dark) .vjs-tree:not(.dark):not(.orca-dark) .vjs-carets:hover,
+.vjs-tree.orca-light .vjs-carets:hover {
+  color: #0366d6;
+}
+
+/* Indent Guide Line */
+html:not(.dark) .vjs-tree:not(.dark):not(.orca-dark) .vjs-indent-unit.has-line,
+.vjs-tree.orca-light .vjs-indent-unit.has-line {
+  border-left: 1px dashed #e1e4e8;
+}
+
+/* Row Hover / Highlight */
+html:not(.dark) .vjs-tree:not(.dark):not(.orca-dark) .vjs-tree-node:hover,
+html:not(.dark)
+  .vjs-tree:not(.dark):not(.orca-dark)
+  .vjs-tree-node.is-highlight,
+.vjs-tree.orca-light .vjs-tree-node:hover,
+.vjs-tree.orca-light .vjs-tree-node.is-highlight {
+  background-color: rgba(0, 0, 0, 0.04);
+  border-radius: 4px;
+}
+
+/* Node Actions */
+html:not(.dark) .vjs-tree:not(.dark):not(.orca-dark) .vjs-tree-node-actions,
+.vjs-tree.orca-light .vjs-tree-node-actions {
+  background-color: #ffffff;
+  border: 1px solid #e1e4e8;
+  color: #24292e;
+  border-radius: 4px;
+  padding: 0 6px;
+  font-size: 11px;
+}
+
+html:not(.dark)
+  .vjs-tree:not(.dark):not(.orca-dark)
+  .vjs-tree-node-actions
+  .vjs-tree-node-actions-item:hover,
+.vjs-tree.orca-light .vjs-tree-node-actions .vjs-tree-node-actions-item:hover {
+  color: #0366d6;
+}

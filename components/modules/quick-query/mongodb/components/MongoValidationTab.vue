@@ -23,6 +23,11 @@ const { validation, isLoading, error, fetchValidation } =
 
 const hasValidator = computed(() => !!validation.value?.validator);
 
+const colorMode = useColorMode();
+const jsonPrettyTheme = computed(() =>
+  colorMode.value === 'light' ? 'light' : 'dark'
+);
+
 onMounted(fetchValidation);
 </script>
 
@@ -58,6 +63,8 @@ onMounted(fetchValidation);
           :show-length="false"
           :show-line="false"
           :show-icon="true"
+          :theme="jsonPrettyTheme"
+          class="orca-json-pretty"
         />
       </div>
     </div>

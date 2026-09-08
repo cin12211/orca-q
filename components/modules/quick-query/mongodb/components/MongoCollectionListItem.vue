@@ -28,6 +28,11 @@ const emit = defineEmits<{
 const { handleCopyWithKey, isCopied, getCopyIcon, getCopyTooltip } =
   useCopyToClipboard();
 
+const colorMode = useColorMode();
+const jsonPrettyTheme = computed(() =>
+  colorMode.value === 'light' ? 'light' : 'dark'
+);
+
 const onCopyDocument = () => {
   const jsonStr = JSON.stringify(props.document, null, 2);
   return handleCopyWithKey(props.document._id, jsonStr);
@@ -238,7 +243,7 @@ const onSave = () => {
     </div>
 
     <!-- Body -->
-    <div class="m-2 text-xs bg-background">
+    <div class="text-xs bg-background">
       <div
         v-if="isEditing"
         class="h-[260px] border border-border/50 rounded overflow-hidden"
@@ -249,7 +254,7 @@ const onSave = () => {
           class="h-full"
         />
       </div>
-      <div v-else class="overflow-x-auto">
+      <div v-else class="overflow-x-auto m-2">
         <VueJsonPretty
           :data="document"
           :deep="isExpanded ? 99 : 1"
@@ -257,6 +262,8 @@ const onSave = () => {
           :show-length="false"
           :show-line="false"
           :show-icon="true"
+          :theme="jsonPrettyTheme"
+          class="orca-json-pretty"
         />
       </div>
     </div>
