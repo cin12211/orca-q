@@ -8,3 +8,4 @@ export * from './useMongoCollectionShortcuts';
 export * from './useMongoCollectionIndexes';
 export * from './useMongoCollectionValidation';
 export * from './useMongoDocumentMutation';
+export * from './useVueJsonPrettyTheme';

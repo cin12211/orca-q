@@ -10,3 +10,4 @@ export { default as MongoCollectionInfoView } from './MongoCollectionInfoView.vu
 export { default as MongoIndexesTab } from './MongoIndexesTab.vue';
 export { default as MongoValidationTab } from './MongoValidationTab.vue';
 export { default as MongoCollectionListItem } from './MongoCollectionListItem.vue';
+export { default as MongoDeleteDocumentDialog } from './MongoDeleteDocumentDialog.vue';

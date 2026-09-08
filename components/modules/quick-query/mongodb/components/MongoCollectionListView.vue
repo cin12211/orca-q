@@ -10,9 +10,11 @@ const props = withDefaults(
   defineProps<{
     documents: MongoDocument[];
     savingDocId?: string | null;
+    deletingDocId?: string | null;
   }>(),
   {
     savingDocId: null,
+    deletingDocId: null,
   }
 );
 
@@ -21,6 +23,7 @@ const emit = defineEmits<{
     e: 'update-document',
     payload: { id: string; document: Record<string, unknown> }
   ): void;
+  (e: 'delete-document', id: string): void;
 }>();
 
 const expandedDocIds = ref<Set<string | number>>(new Set());
@@ -52,6 +55,10 @@ const onCancelEdit = () => {
 
 const onSaveDocument = (docId: string, updatedDoc: Record<string, unknown>) => {
   emit('update-document', { id: docId, document: updatedDoc });
+};
+
+const onDeleteDocument = (docId: string) => {
+  emit('delete-document', docId);
 };
 
 const onExitEditMode = (docId: string) => {
@@ -143,6 +150,10 @@ defineExpose({ scrollToTop, onExitEditMode });
             savingDocId ===
             String(getDocId(documents[virtualRow.index], virtualRow.index))
           "
+          :is-deleting="
+            deletingDocId ===
+            String(getDocId(documents[virtualRow.index], virtualRow.index))
+          "
           @toggle-expand="
             toggleExpandDocument(
               getDocId(documents[virtualRow.index], virtualRow.index)
@@ -160,6 +171,11 @@ defineExpose({ scrollToTop, onExitEditMode });
                 String(getDocId(documents[virtualRow.index], virtualRow.index)),
                 updatedDoc
               )
+          "
+          @delete="
+            onDeleteDocument(
+              String(getDocId(documents[virtualRow.index], virtualRow.index))
+            )
           "
           @resize="() => onItemResize(virtualRow.key)"
         />

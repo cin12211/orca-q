@@ -7,6 +7,7 @@ import MongoCollectionFilter from '../components/MongoCollectionFilter.vue';
 import MongoCollectionInfoView from '../components/MongoCollectionInfoView.vue';
 import MongoCollectionListView from '../components/MongoCollectionListView.vue';
 import MongoCollectionTableView from '../components/MongoCollectionTableView.vue';
+import MongoDeleteDocumentDialog from '../components/MongoDeleteDocumentDialog.vue';
 import MongoQuickQueryControlBar from '../components/MongoQuickQueryControlBar.vue';
 import {
   useMongoCollectionQuery,
@@ -81,11 +82,25 @@ const tableViewRef =
 const listViewRef =
   useTemplateRef<InstanceType<typeof MongoCollectionListView>>('listViewRef');
 
-const { savingDocId, updateDocument } = useMongoDocumentMutation({
+const {
+  savingDocId,
+  deletingDocId,
+  isMutating,
+  updateDocument,
+  deleteDocument,
+} = useMongoDocumentMutation({
   connection,
   databaseName,
   collectionName,
   documents,
+});
+
+const deleteDialogState = ref<{
+  open: boolean;
+  docId: string | null;
+}>({
+  open: false,
+  docId: null,
 });
 
 const handleUpdateDocument = async (payload: {
@@ -95,6 +110,29 @@ const handleUpdateDocument = async (payload: {
   const success = await updateDocument(payload.id, payload.document);
   if (success) {
     listViewRef.value?.onExitEditMode(payload.id);
+  }
+};
+
+const onRequestDeleteDocument = (id: string) => {
+  deleteDialogState.value = {
+    open: true,
+    docId: id,
+  };
+};
+
+const handleConfirmDelete = async () => {
+  if (!deleteDialogState.value.docId) return;
+  const docIdToDelete = deleteDialogState.value.docId;
+  const success = await deleteDocument(docIdToDelete);
+  if (success) {
+    listViewRef.value?.onExitEditMode(docIdToDelete);
+    if (total.value > 0) {
+      total.value -= 1;
+    }
+    deleteDialogState.value = {
+      open: false,
+      docId: null,
+    };
   }
 };
 
@@ -199,10 +237,21 @@ watch([databaseName, collectionName], fetchDocuments, { immediate: true });
             ref="listViewRef"
             :documents="documents"
             :saving-doc-id="savingDocId"
+            :deleting-doc-id="deletingDocId"
             @update-document="handleUpdateDocument"
+            @delete-document="onRequestDeleteDocument"
           />
         </template>
       </template>
     </div>
+
+    <MongoDeleteDocumentDialog
+      :open="deleteDialogState.open"
+      :doc-id="deleteDialogState.docId"
+      :loading="isMutating"
+      @update:open="val => (deleteDialogState.open = val)"
+      @confirm="handleConfirmDelete"
+      @cancel="deleteDialogState.open = false"
+    />
   </div>
 </template>

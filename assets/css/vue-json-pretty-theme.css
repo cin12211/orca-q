@@ -1,6 +1,8 @@
 /* ==========================================================================
-   Orca Themes for VueJsonPretty (orca-dark [default] & orca-light)
-   Matches OrcaQ BaseCodeEditor themes (orcaDarkTheme.ts & orcaLightTheme.ts)
+   Orca Themes for VueJsonPretty
+   Matches all OrcaQ BaseCodeEditor themes:
+   - Dark: orca-dark (default), dracula, barf, bespin, ayu-dark, ayu-mirage
+   - Light: orca-light, tomorrow, ayu-light, noctis-lilac, rose-pine-dawn
    ========================================================================== */
 
 /* Base typography & structure */
@@ -11,269 +13,355 @@
   font-size: 12px;
   line-height: 1.5;
   background-color: transparent;
-}
-
-/* ==========================================================================
-   1. ORCA DARK THEME (Default)
-   Dracula friendly palette matching components/base/code-editor/themes/orcaDarkTheme.ts
-   ========================================================================== */
-.vjs-tree,
-.vjs-tree.dark,
-.vjs-tree.orca-dark,
-.dark .vjs-tree {
-  color: #f8f8f2;
+  color: var(--vjs-fg, #f8f8f2);
 }
 
 /* Brackets & Punctuation */
 .vjs-tree .vjs-tree-brackets,
-.vjs-tree.dark .vjs-tree-brackets,
-.dark .vjs-tree .vjs-tree-brackets {
-  color: #f8f8f2;
+.vjs-tree .vjs-colon {
+  color: var(--vjs-bracket, var(--vjs-fg, #f8f8f2));
   cursor: pointer;
   transition: color 0.15s ease;
 }
 
-.vjs-tree .vjs-tree-brackets:hover,
-.vjs-tree.dark .vjs-tree-brackets:hover,
-.dark .vjs-tree .vjs-tree-brackets:hover {
-  color: #ff79c6; /* Dracula Pink */
+.vjs-tree .vjs-tree-brackets:hover {
+  color: var(--vjs-bracket-hover, #ff79c6);
 }
 
-.vjs-tree .vjs-colon,
-.vjs-tree.dark .vjs-colon,
-.dark .vjs-tree .vjs-colon {
-  color: #f8f8f2;
-}
-
-/* Object Keys: Cyan (#8be9fd - t.propertyName) */
-.vjs-tree .vjs-key,
-.vjs-tree.dark .vjs-key,
-.dark .vjs-tree .vjs-key {
-  color: #8be9fd;
+/* Object Keys */
+.vjs-tree .vjs-key {
+  color: var(--vjs-key, #8be9fd);
   font-weight: 500;
 }
 
-/* String Values: Yellow (#f1fa8c - t.string) */
-.vjs-tree .vjs-value-string,
-.vjs-tree.dark .vjs-value-string,
-.dark .vjs-tree .vjs-value-string {
-  color: #f1fa8c;
+/* String Values */
+.vjs-tree .vjs-value-string {
+  color: var(--vjs-string, #f1fa8c);
 }
 
-/* Number Values: Orange (#ffb86c - t.number) */
-.vjs-tree .vjs-value-number,
-.vjs-tree.dark .vjs-value-number,
-.dark .vjs-tree .vjs-value-number {
-  color: #ffb86c;
+/* Number Values */
+.vjs-tree .vjs-value-number {
+  color: var(--vjs-number, #ffb86c);
   font-weight: 500;
 }
 
-/* Boolean Values: Orange (#ffb86c - t.bool) */
-.vjs-tree .vjs-value-boolean,
-.vjs-tree.dark .vjs-value-boolean,
-.dark .vjs-tree .vjs-value-boolean {
-  color: #ffb86c;
+/* Boolean Values */
+.vjs-tree .vjs-value-boolean {
+  color: var(--vjs-boolean, #ffb86c);
   font-weight: 500;
 }
 
-/* Null Values: Pink (#ff79c6 - t.null) */
-.vjs-tree .vjs-value-null,
-.vjs-tree.dark .vjs-value-null,
-.dark .vjs-tree .vjs-value-null {
-  color: #ff79c6;
+/* Null Values */
+.vjs-tree .vjs-value-null {
+  color: var(--vjs-null, #ff79c6);
   font-weight: 500;
-}
-
-/* Undefined: Muted purple/gray (#6272a4) */
-.vjs-tree .vjs-value-undefined,
-.vjs-tree.dark .vjs-value-undefined,
-.dark .vjs-tree .vjs-value-undefined {
-  color: #6272a4;
   font-style: italic;
 }
 
-/* Comments (collapsed length indicator: // 3 items) */
-.vjs-tree .vjs-comment,
-.vjs-tree.dark .vjs-comment,
-.dark .vjs-tree .vjs-comment {
-  color: #6272a4;
-  font-style: italic;
-}
-
-/* Carets (Expand/collapse arrow) */
-.vjs-tree .vjs-carets,
-.vjs-tree.dark .vjs-carets,
-.dark .vjs-tree .vjs-carets {
-  color: #6272a4;
-  transition:
-    color 0.15s ease,
-    transform 0.2s ease;
-}
-
-.vjs-tree .vjs-carets:hover,
-.vjs-tree.dark .vjs-carets:hover,
-.dark .vjs-tree .vjs-carets:hover {
-  color: #8be9fd;
-}
-
-/* Indent Guide Line */
-.vjs-tree .vjs-indent-unit.has-line,
-.vjs-tree.dark .vjs-indent-unit.has-line,
-.dark .vjs-tree .vjs-indent-unit.has-line {
-  border-left: 1px dashed rgba(98, 114, 164, 0.4);
-}
-
-/* Row Hover / Highlight */
-.vjs-tree .vjs-tree-node:hover,
-.vjs-tree .vjs-tree-node.is-highlight,
-.vjs-tree-node.dark:hover,
-.vjs-tree-node.dark.is-highlight,
-.dark .vjs-tree .vjs-tree-node:hover,
-.dark .vjs-tree .vjs-tree-node.is-highlight {
-  background-color: rgba(68, 71, 90, 0.35);
-  border-radius: 4px;
-}
-
-/* Node Actions (Copy button on hover) */
-.vjs-tree .vjs-tree-node-actions,
-.vjs-tree.dark .vjs-tree-node-actions,
-.vjs-tree-node.dark .vjs-tree-node-actions,
-.dark .vjs-tree .vjs-tree-node-actions {
-  background-color: #282a36;
-  border: 1px solid #44475a;
-  color: #f8f8f2;
-  border-radius: 4px;
-  padding: 0 6px;
-  font-size: 11px;
-}
-
-.vjs-tree .vjs-tree-node-actions .vjs-tree-node-actions-item:hover,
-.vjs-tree.dark .vjs-tree-node-actions .vjs-tree-node-actions-item:hover,
-.dark .vjs-tree .vjs-tree-node-actions .vjs-tree-node-actions-item:hover {
-  color: #8be9fd;
-}
-
-/* ==========================================================================
-   2. ORCA LIGHT THEME
-   Friendly light palette matching components/base/code-editor/themes/orcaLightTheme.ts
-   ========================================================================== */
-html:not(.dark) .vjs-tree:not(.dark):not(.orca-dark),
-.vjs-tree.orca-light {
-  color: #24292e;
-}
-
-/* Brackets & Punctuation */
-html:not(.dark) .vjs-tree:not(.dark):not(.orca-dark) .vjs-tree-brackets,
-.vjs-tree.orca-light .vjs-tree-brackets {
-  color: #24292e;
-  cursor: pointer;
-  transition: color 0.15s ease;
-}
-
-html:not(.dark) .vjs-tree:not(.dark):not(.orca-dark) .vjs-tree-brackets:hover,
-.vjs-tree.orca-light .vjs-tree-brackets:hover {
-  color: #0366d6; /* Light Blue */
-}
-
-html:not(.dark) .vjs-tree:not(.dark):not(.orca-dark) .vjs-colon,
-.vjs-tree.orca-light .vjs-colon {
-  color: #24292e;
-}
-
-/* Object Keys: Teal (#1b7c83 - t.propertyName) */
-html:not(.dark) .vjs-tree:not(.dark):not(.orca-dark) .vjs-key,
-.vjs-tree.orca-light .vjs-key {
-  color: #1b7c83;
-  font-weight: 500;
-}
-
-/* String Values: Warm Amber/Brown (#b35900 - t.string) */
-html:not(.dark) .vjs-tree:not(.dark):not(.orca-dark) .vjs-value-string,
-.vjs-tree.orca-light .vjs-value-string {
-  color: #b35900;
-}
-
-/* Number Values: Orange (#e36209 - t.number) */
-html:not(.dark) .vjs-tree:not(.dark):not(.orca-dark) .vjs-value-number,
-.vjs-tree.orca-light .vjs-value-number {
-  color: #e36209;
-  font-weight: 500;
-}
-
-/* Boolean Values: Red (#d73a49 - t.bool) */
-html:not(.dark) .vjs-tree:not(.dark):not(.orca-dark) .vjs-value-boolean,
-.vjs-tree.orca-light .vjs-value-boolean {
-  color: #d73a49;
-  font-weight: 500;
-}
-
-/* Null Values: Purple (#6f42c1 - t.null) */
-html:not(.dark) .vjs-tree:not(.dark):not(.orca-dark) .vjs-value-null,
-.vjs-tree.orca-light .vjs-value-null {
-  color: #6f42c1;
-  font-weight: 500;
-}
-
-/* Undefined: Muted gray (#6a737d) */
-html:not(.dark) .vjs-tree:not(.dark):not(.orca-dark) .vjs-value-undefined,
-.vjs-tree.orca-light .vjs-value-undefined {
-  color: #6a737d;
+/* Undefined */
+.vjs-tree .vjs-value-undefined {
+  color: var(--vjs-undefined, var(--vjs-caret, #6272a4));
   font-style: italic;
 }
 
 /* Comments */
-html:not(.dark) .vjs-tree:not(.dark):not(.orca-dark) .vjs-comment,
-.vjs-tree.orca-light .vjs-comment {
-  color: #6a737d;
+.vjs-tree .vjs-comment {
+  color: var(--vjs-comment, var(--vjs-caret, #6272a4));
   font-style: italic;
 }
 
 /* Carets */
-html:not(.dark) .vjs-tree:not(.dark):not(.orca-dark) .vjs-carets,
-.vjs-tree.orca-light .vjs-carets {
-  color: #959da5;
+.vjs-tree .vjs-carets {
+  color: var(--vjs-caret, #6272a4);
   transition:
     color 0.15s ease,
     transform 0.2s ease;
 }
 
-html:not(.dark) .vjs-tree:not(.dark):not(.orca-dark) .vjs-carets:hover,
-.vjs-tree.orca-light .vjs-carets:hover {
-  color: #0366d6;
+.vjs-tree .vjs-carets:hover {
+  color: var(--vjs-caret-hover, var(--vjs-key, #8be9fd));
 }
 
 /* Indent Guide Line */
-html:not(.dark) .vjs-tree:not(.dark):not(.orca-dark) .vjs-indent-unit.has-line,
-.vjs-tree.orca-light .vjs-indent-unit.has-line {
-  border-left: 1px dashed #e1e4e8;
+.vjs-tree .vjs-indent-unit.has-line {
+  border-left: 1px dashed var(--vjs-guide, rgba(98, 114, 164, 0.4));
 }
 
 /* Row Hover / Highlight */
-html:not(.dark) .vjs-tree:not(.dark):not(.orca-dark) .vjs-tree-node:hover,
-html:not(.dark)
-  .vjs-tree:not(.dark):not(.orca-dark)
-  .vjs-tree-node.is-highlight,
-.vjs-tree.orca-light .vjs-tree-node:hover,
-.vjs-tree.orca-light .vjs-tree-node.is-highlight {
-  background-color: rgba(0, 0, 0, 0.04);
+.vjs-tree .vjs-tree-node:hover,
+.vjs-tree .vjs-tree-node.is-highlight {
+  background-color: var(--vjs-hover-bg, rgba(68, 71, 90, 0.35));
   border-radius: 4px;
 }
 
 /* Node Actions */
-html:not(.dark) .vjs-tree:not(.dark):not(.orca-dark) .vjs-tree-node-actions,
-.vjs-tree.orca-light .vjs-tree-node-actions {
-  background-color: #ffffff;
-  border: 1px solid #e1e4e8;
-  color: #24292e;
+.vjs-tree .vjs-tree-node-actions {
+  background-color: var(--vjs-actions-bg, #282a36);
+  border: 1px solid var(--vjs-actions-border, #44475a);
+  color: var(--vjs-fg, #f8f8f2);
   border-radius: 4px;
   padding: 0 6px;
   font-size: 11px;
 }
 
-html:not(.dark)
-  .vjs-tree:not(.dark):not(.orca-dark)
-  .vjs-tree-node-actions
-  .vjs-tree-node-actions-item:hover,
-.vjs-tree.orca-light .vjs-tree-node-actions .vjs-tree-node-actions-item:hover {
-  color: #0366d6;
+.vjs-tree .vjs-tree-node-actions .vjs-tree-node-actions-item:hover {
+  color: var(--vjs-key, #8be9fd);
+}
+
+/* ==========================================================================
+   1. ORCA DARK (Default Dark)
+   ========================================================================== */
+.vjs-tree,
+.vjs-tree.dark,
+.vjs-tree.orca-dark,
+.vjs-tree.vjs-theme-orca-dark,
+.dark .vjs-tree {
+  --vjs-fg: #f8f8f2;
+  --vjs-bracket: #f8f8f2;
+  --vjs-bracket-hover: #ff79c6;
+  --vjs-key: #8be9fd;
+  --vjs-string: #f1fa8c;
+  --vjs-number: #ffb86c;
+  --vjs-boolean: #ffb86c;
+  --vjs-null: #ff79c6;
+  --vjs-undefined: #6272a4;
+  --vjs-comment: #6272a4;
+  --vjs-caret: #6272a4;
+  --vjs-caret-hover: #8be9fd;
+  --vjs-guide: rgba(98, 114, 164, 0.4);
+  --vjs-hover-bg: rgba(68, 71, 90, 0.35);
+  --vjs-actions-bg: #282a36;
+  --vjs-actions-border: #44475a;
+}
+
+/* ==========================================================================
+   2. ORCA LIGHT
+   ========================================================================== */
+html:not(.dark) .vjs-tree:not(.dark):not(.orca-dark):not([class*='vjs-theme-']),
+.vjs-tree.light,
+.vjs-tree.orca-light,
+.vjs-tree.vjs-theme-orca-light {
+  --vjs-fg: #24292e;
+  --vjs-bracket: #24292e;
+  --vjs-bracket-hover: #0366d6;
+  --vjs-key: #1b7c83;
+  --vjs-string: #b35900;
+  --vjs-number: #e36209;
+  --vjs-boolean: #d73a49;
+  --vjs-null: #6f42c1;
+  --vjs-undefined: #6a737d;
+  --vjs-comment: #6a737d;
+  --vjs-caret: #959da5;
+  --vjs-caret-hover: #0366d6;
+  --vjs-guide: #e1e4e8;
+  --vjs-hover-bg: rgba(0, 0, 0, 0.04);
+  --vjs-actions-bg: #ffffff;
+  --vjs-actions-border: #e1e4e8;
+}
+
+/* ==========================================================================
+   3. DRACULA
+   ========================================================================== */
+.vjs-tree.dracula,
+.vjs-tree.vjs-theme-dracula {
+  --vjs-fg: #f8f8f2;
+  --vjs-bracket: #f8f8f2;
+  --vjs-bracket-hover: #ff79c6;
+  --vjs-key: #50fa7b;
+  --vjs-string: #f1fa8c;
+  --vjs-number: #bd93f9;
+  --vjs-boolean: #bd93f9;
+  --vjs-null: #bd93f9;
+  --vjs-undefined: #6272a4;
+  --vjs-comment: #6272a4;
+  --vjs-caret: #6272a4;
+  --vjs-caret-hover: #50fa7b;
+  --vjs-guide: rgba(98, 114, 164, 0.4);
+  --vjs-hover-bg: rgba(68, 71, 90, 0.35);
+  --vjs-actions-bg: #282a36;
+  --vjs-actions-border: #44475a;
+}
+
+/* ==========================================================================
+   4. BARF
+   ========================================================================== */
+.vjs-tree.barf,
+.vjs-tree.vjs-theme-barf {
+  --vjs-fg: #eef2f7;
+  --vjs-bracket: #eef2f7;
+  --vjs-bracket-hover: #a3d295;
+  --vjs-key: #a3d295;
+  --vjs-string: #5c81b3;
+  --vjs-number: #c1e1b8;
+  --vjs-boolean: #53667d;
+  --vjs-null: #697a8e;
+  --vjs-undefined: #6e6e6e;
+  --vjs-comment: #6e6e6e;
+  --vjs-caret: #aaaaaa95;
+  --vjs-caret-hover: #a3d295;
+  --vjs-guide: rgba(170, 170, 170, 0.3);
+  --vjs-hover-bg: rgba(144, 178, 213, 0.15);
+  --vjs-actions-bg: #15191e;
+  --vjs-actions-border: #575757;
+}
+
+/* ==========================================================================
+   5. BESPIN
+   ========================================================================== */
+.vjs-tree.bespin,
+.vjs-tree.vjs-theme-bespin {
+  --vjs-fg: #baae9e;
+  --vjs-bracket: #baae9e;
+  --vjs-bracket-hover: #5ea6ea;
+  --vjs-key: #f9ee98;
+  --vjs-string: #54be0d;
+  --vjs-number: #cf6a4c;
+  --vjs-boolean: #5ea6ea;
+  --vjs-null: #5ea6ea;
+  --vjs-undefined: #666666;
+  --vjs-comment: #666666;
+  --vjs-caret: #baae9e90;
+  --vjs-caret-hover: #5ea6ea;
+  --vjs-guide: rgba(186, 174, 158, 0.3);
+  --vjs-hover-bg: rgba(221, 240, 255, 0.1);
+  --vjs-actions-bg: #28211c;
+  --vjs-actions-border: #baae9e40;
+}
+
+/* ==========================================================================
+   6. AYU DARK
+   ========================================================================== */
+.vjs-tree.ayu-dark,
+.vjs-tree.vjs-theme-ayu-dark {
+  --vjs-fg: #bfbdb6;
+  --vjs-bracket: #bfbdb6;
+  --vjs-bracket-hover: #e6b450;
+  --vjs-key: #39bae6;
+  --vjs-string: #c2d94c;
+  --vjs-number: #39bae6;
+  --vjs-boolean: #ff8f40;
+  --vjs-null: #ff8f40;
+  --vjs-undefined: #5c6773;
+  --vjs-comment: #5c6773;
+  --vjs-caret: #5c6773;
+  --vjs-caret-hover: #e6b450;
+  --vjs-guide: rgba(92, 103, 115, 0.4);
+  --vjs-hover-bg: rgba(37, 51, 64, 0.4);
+  --vjs-actions-bg: #11151c;
+  --vjs-actions-border: #253340;
+}
+
+/* ==========================================================================
+   7. AYU MIRAGE
+   ========================================================================== */
+.vjs-tree.ayu-mirage,
+.vjs-tree.vjs-theme-ayu-mirage {
+  --vjs-fg: #cccac2;
+  --vjs-bracket: #cccac2;
+  --vjs-bracket-hover: #ffcc66;
+  --vjs-key: #5ccfe6;
+  --vjs-string: #d5ff80;
+  --vjs-number: #5ccfe6;
+  --vjs-boolean: #ffad66;
+  --vjs-null: #ffad66;
+  --vjs-undefined: #5f677a;
+  --vjs-comment: #5f677a;
+  --vjs-caret: #5f677a;
+  --vjs-caret-hover: #ffcc66;
+  --vjs-guide: rgba(95, 103, 122, 0.4);
+  --vjs-hover-bg: rgba(52, 63, 76, 0.4);
+  --vjs-actions-bg: #1a1f29;
+  --vjs-actions-border: #343f4c;
+}
+
+/* ==========================================================================
+   8. TOMORROW
+   ========================================================================== */
+.vjs-tree.tomorrow,
+.vjs-tree.vjs-theme-tomorrow {
+  --vjs-fg: #4d4d4c;
+  --vjs-bracket: #4d4d4c;
+  --vjs-bracket-hover: #4271ae;
+  --vjs-key: #c82829;
+  --vjs-string: #718c00;
+  --vjs-number: #f5871f;
+  --vjs-boolean: #f5871f;
+  --vjs-null: #f5871f;
+  --vjs-undefined: #8e908c;
+  --vjs-comment: #8e908c;
+  --vjs-caret: #8e908c;
+  --vjs-caret-hover: #4271ae;
+  --vjs-guide: #d6d6d6;
+  --vjs-hover-bg: rgba(66, 113, 174, 0.08);
+  --vjs-actions-bg: #ffffff;
+  --vjs-actions-border: #d6d6d6;
+}
+
+/* ==========================================================================
+   9. AYU LIGHT
+   ========================================================================== */
+.vjs-tree.ayu-light,
+.vjs-tree.vjs-theme-ayu-light {
+  --vjs-fg: #5c6166;
+  --vjs-bracket: #5c6166;
+  --vjs-bracket-hover: #ffaa33;
+  --vjs-key: #55b4d4;
+  --vjs-string: #86b300;
+  --vjs-number: #55b4d4;
+  --vjs-boolean: #fa8d3e;
+  --vjs-null: #fa8d3e;
+  --vjs-undefined: #787b80;
+  --vjs-comment: #787b80;
+  --vjs-caret: #787b80;
+  --vjs-caret-hover: #ffaa33;
+  --vjs-guide: #e6e6e6;
+  --vjs-hover-bg: rgba(209, 228, 244, 0.3);
+  --vjs-actions-bg: #fcfcfc;
+  --vjs-actions-border: #e6e6e6;
+}
+
+/* ==========================================================================
+   10. NOCTIS LILAC
+   ========================================================================== */
+.vjs-tree.noctis-lilac,
+.vjs-tree.vjs-theme-noctis-lilac {
+  --vjs-fg: #0c006b;
+  --vjs-bracket: #0431fa;
+  --vjs-bracket-hover: #ff5792;
+  --vjs-key: #fa8900;
+  --vjs-string: #00b368;
+  --vjs-number: #5842ff;
+  --vjs-boolean: #5842ff;
+  --vjs-null: #5842ff;
+  --vjs-undefined: #9995b7;
+  --vjs-comment: #9995b7;
+  --vjs-caret: #9995b7;
+  --vjs-caret-hover: #ff5792;
+  --vjs-guide: #d5d1f2;
+  --vjs-hover-bg: rgba(213, 209, 242, 0.35);
+  --vjs-actions-bg: #f2f1f8;
+  --vjs-actions-border: #d5d1f2;
+}
+
+/* ==========================================================================
+   11. ROSE PINE DAWN
+   ========================================================================== */
+.vjs-tree.rose-pine-dawn,
+.vjs-tree.vjs-theme-rose-pine-dawn {
+  --vjs-fg: #575279;
+  --vjs-bracket: #797593;
+  --vjs-bracket-hover: #286983;
+  --vjs-key: #907aa9;
+  --vjs-string: #ea9d34;
+  --vjs-number: #d7827e;
+  --vjs-boolean: #286983;
+  --vjs-null: #286983;
+  --vjs-undefined: #9893a5;
+  --vjs-comment: #9893a5;
+  --vjs-caret: #9893a5;
+  --vjs-caret-hover: #286983;
+  --vjs-guide: #e4dfd7;
+  --vjs-hover-bg: rgba(110, 106, 134, 0.12);
+  --vjs-actions-bg: #faf4ed;
+  --vjs-actions-border: #e4dfd7;
 }

@@ -18,6 +18,7 @@ export function useMongoDocumentMutation(params: {
 }) {
   const isMutating = ref(false);
   const savingDocId = ref<string | null>(null);
+  const deletingDocId = ref<string | null>(null);
 
   const updateDocument = async (
     id: string,
@@ -75,9 +76,49 @@ export function useMongoDocumentMutation(params: {
     }
   };
 
+  const deleteDocument = async (id: string): Promise<boolean> => {
+    isMutating.value = true;
+    deletingDocId.value = id;
+
+    try {
+      await $fetch<MongoQuickQueryMutationResponse>(
+        '/api/mongodb/quick-query-mutation',
+        {
+          method: 'POST',
+          body: {
+            ...getConnectionParams(params.connection.value),
+            ...(params.databaseName?.value
+              ? { database: params.databaseName.value }
+              : {}),
+            collection: params.collectionName.value,
+            operation: 'delete',
+            id,
+          },
+        }
+      );
+
+      params.documents.value = params.documents.value.filter(
+        doc => String(doc._id) !== String(id)
+      );
+
+      toast.success('Document deleted successfully!');
+      return true;
+    } catch (fetchError) {
+      const errorMessage =
+        fetchError instanceof Error ? fetchError.message : 'Unknown error';
+      toast.error(errorMessage);
+      return false;
+    } finally {
+      isMutating.value = false;
+      deletingDocId.value = null;
+    }
+  };
+
   return {
     isMutating,
     savingDocId,
+    deletingDocId,
     updateDocument,
+    deleteDocument,
   };
 }

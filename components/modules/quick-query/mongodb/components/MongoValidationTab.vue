@@ -5,6 +5,7 @@ import 'vue-json-pretty/lib/styles.css';
 import { Alert, AlertDescription } from '~/components/ui/alert';
 import { Badge } from '~/components/ui/badge';
 import { Button } from '~/components/ui/button';
+import { useVueJsonPrettyTheme } from '~/core/composables/useVueJsonPrettyTheme';
 import type { Connection } from '~/core/stores';
 import { useMongoCollectionValidation } from '../hooks';
 
@@ -23,10 +24,7 @@ const { validation, isLoading, error, fetchValidation } =
 
 const hasValidator = computed(() => !!validation.value?.validator);
 
-const colorMode = useColorMode();
-const jsonPrettyTheme = computed(() =>
-  colorMode.value === 'light' ? 'light' : 'dark'
-);
+const { themeMode, themeClass } = useVueJsonPrettyTheme();
 
 onMounted(fetchValidation);
 </script>
@@ -63,8 +61,8 @@ onMounted(fetchValidation);
           :show-length="false"
           :show-line="false"
           :show-icon="true"
-          :theme="jsonPrettyTheme"
-          class="orca-json-pretty"
+          :theme="themeMode"
+          :class="themeClass"
         />
       </div>
     </div>

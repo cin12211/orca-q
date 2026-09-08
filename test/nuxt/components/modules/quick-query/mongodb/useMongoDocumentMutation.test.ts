@@ -120,4 +120,63 @@ describe('useMongoDocumentMutation', () => {
     expect(documents.value[0]).toEqual({ _id: 'doc-1', name: 'Alice' });
     expect(mockToastError).toHaveBeenCalledWith('Network failure');
   });
+
+  it('calls quick-query-mutation with operation delete and removes document from list', async () => {
+    const documents = ref([
+      { _id: 'doc-1', name: 'Alice' },
+      { _id: 'doc-2', name: 'Bob' },
+    ]);
+    mockFetch.mockResolvedValueOnce({ deletedCount: 1 });
+
+    const { isMutating, deletingDocId, deleteDocument } =
+      useMongoDocumentMutation({
+        connection: ref({ id: 'c1', type: 'mongodb' } as any),
+        databaseName: ref('testdb'),
+        collectionName: ref('users'),
+        documents,
+      });
+
+    expect(isMutating.value).toBe(false);
+    expect(deletingDocId.value).toBeNull();
+
+    const result = await deleteDocument('doc-1');
+
+    expect(result).toBe(true);
+    expect(mockFetch).toHaveBeenCalledWith(
+      '/api/mongodb/quick-query-mutation',
+      expect.objectContaining({
+        method: 'POST',
+        body: expect.objectContaining({
+          database: 'testdb',
+          collection: 'users',
+          operation: 'delete',
+          id: 'doc-1',
+        }),
+      })
+    );
+    expect(documents.value).toEqual([{ _id: 'doc-2', name: 'Bob' }]);
+    expect(mockToastSuccess).toHaveBeenCalledWith(
+      'Document deleted successfully!'
+    );
+    expect(isMutating.value).toBe(false);
+    expect(deletingDocId.value).toBeNull();
+  });
+
+  it('handles error in deleteDocument gracefully and does not remove document', async () => {
+    const documents = ref([{ _id: 'doc-1', name: 'Alice' }]);
+    mockFetch.mockRejectedValueOnce(new Error('Delete failed'));
+
+    const { deleteDocument } = useMongoDocumentMutation({
+      connection: ref({ id: 'c1', type: 'mongodb' } as any),
+      databaseName: ref('testdb'),
+      collectionName: ref('users'),
+      documents,
+    });
+
+    const result = await deleteDocument('doc-1');
+
+    expect(result).toBe(false);
+    expect(documents.value).toHaveLength(1);
+    expect(mockToastError).toHaveBeenCalledWith('Delete failed');
+  });
 });

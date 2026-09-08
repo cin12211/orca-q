@@ -79,6 +79,21 @@ export const EditorThemeMap: Record<EditorTheme, any> = {
   [EditorTheme.OrcaLight]: orcaLightTheme,
 };
 
+export const resolveEditorTheme = (
+  theme: EditorTheme,
+  colorModeValue?: string
+): EditorTheme => {
+  if (colorModeValue === 'dark' && theme === EditorTheme.Tomorrow) {
+    return EditorTheme.OrcaDark;
+  }
+
+  if (colorModeValue !== 'dark' && theme === EditorTheme.OrcaDark) {
+    return EditorTheme.OrcaLight;
+  }
+
+  return theme;
+};
+
 export enum CompletionIcon {
   Keyword = 'KEYWORD',
   Variable = 'VARIABLE',

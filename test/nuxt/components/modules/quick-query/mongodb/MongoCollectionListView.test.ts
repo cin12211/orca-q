@@ -203,4 +203,31 @@ describe('MongoCollectionListView', () => {
     await flushPromises();
     expect(mockMeasureElement).toHaveBeenCalled();
   });
+
+  it('forwards delete event from item as delete-document', async () => {
+    const documents = [{ _id: 'doc-1', name: 'John' }];
+    const onDelete = vi.fn();
+
+    const wrapper = mountComponent(
+      `
+        <TooltipProvider>
+          <MongoCollectionListView
+            :documents="documents"
+            deleting-doc-id="doc-1"
+            @delete-document="onDelete"
+          />
+        </TooltipProvider>
+      `,
+      () => ({ documents, onDelete })
+    );
+    await flushPromises();
+
+    const listItem = wrapper.findComponent(MongoCollectionListItem);
+    expect(listItem.props('isDeleting')).toBe(true);
+
+    await listItem.vm.$emit('delete');
+    await flushPromises();
+
+    expect(onDelete).toHaveBeenCalledWith('doc-1');
+  });
 });
