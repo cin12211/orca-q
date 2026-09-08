@@ -27,4 +27,4 @@ compose_cmd=()
 resolve_compose_cmd
 
 echo "Stopping Redis fixture with: ${compose_cmd[*]}"
-"${compose_cmd[@]}" -p "${compose_project}" -f "${compose_file}" down --volumes --remove-orphans
+"${compose_cmd[@]}" -p "${compose_project}" -f "${compose_file}" --profile redis down --volumes --remove-orphans

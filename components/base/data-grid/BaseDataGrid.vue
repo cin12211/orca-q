@@ -9,6 +9,7 @@ import type {
   ColTypeDef,
   GridOptions,
   GridReadyEvent,
+  RowClickedEvent,
 } from 'ag-grid-community';
 import { AgGridVue } from 'ag-grid-vue3';
 import { DEFAULT_BUFFER_ROWS } from '~/core/constants';
@@ -86,6 +87,7 @@ const emit = defineEmits<{
   (e: 'columnHeaderContextMenu', event: CellContextMenuEvent): void;
   (e: 'gridReady', event: GridReadyEvent): void;
   (e: 'clickOutside', event: PointerEvent): void;
+  (e: 'rowClicked', event: RowClickedEvent): void;
 }>();
 
 const containerRef = ref<HTMLElement>();
@@ -312,6 +314,7 @@ defineExpose({
         @row-data-updated="onRowDataUpdated"
         @cell-context-menu="onCellContextMenu"
         @column-header-context-menu="onCellHeaderContextMenu"
+        @row-clicked="emit('rowClicked', $event)"
       />
     </component>
   </div>

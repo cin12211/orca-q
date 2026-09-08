@@ -8,6 +8,7 @@ import {
   ManagementAgent,
   ManagementRedisBrowser,
   ManagementRedisTools,
+  ManagementMongoSchemas,
 } from '#components';
 import {
   getConnectionCapabilityProfile,
@@ -78,6 +79,14 @@ watch(
 );
 
 const current = computed(() => {
+  if (currentFamily.value === EConnectionFamily.MONGODB) {
+    if (activityStore.activityActive === ActivityBarItemType.Schemas) {
+      return ManagementMongoSchemas;
+    }
+
+    return null;
+  }
+
   if (currentFamily.value === EConnectionFamily.REDIS) {
     if (activityStore.activityActive === ActivityBarItemType.Explorer) {
       return ManagementExplorer;

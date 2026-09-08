@@ -20,7 +20,10 @@ export type ConnectionActivityItem =
   | 'DatabaseTools'
   | 'Agent';
 
-export type ConnectionPrimaryQuerySurface = 'sql-editor' | 'raw-query';
+export type ConnectionPrimaryQuerySurface =
+  | 'sql-editor'
+  | 'raw-query'
+  | 'quick-query';
 
 export interface ConnectionCapabilityProfile {
   family: EConnectionFamily;
@@ -74,6 +77,14 @@ const REDIS_TAB_TYPES = [
   TabViewType.InstanceInsights,
 ] as const;
 
+const MONGODB_TAB_TYPES = [
+  TabViewType.MongoDatabaseOverview,
+  TabViewType.MongoCollectionDetail,
+  TabViewType.Connection,
+  TabViewType.Explorer,
+  TabViewType.AgentChat,
+] as const;
+
 export const CONNECTION_CAPABILITY_REGISTRY: Record<
   EConnectionFamily,
   ConnectionCapabilityProfile
@@ -120,6 +131,23 @@ export const CONNECTION_CAPABILITY_REGISTRY: Record<
       UsersRoles: 'Users & Roles is only available for SQL connections.',
     },
   },
+  [EConnectionFamily.MONGODB]: {
+    family: EConnectionFamily.MONGODB,
+    visibleActivityItems: ['Schemas'],
+    allowedTabTypes: [...MONGODB_TAB_TYPES],
+    defaultActivityItem: 'Schemas',
+    primaryQuerySurface: 'quick-query',
+    supportsRawSql: false,
+    supportsQueryFiles: false,
+    supportsSchemaTree: true,
+    supportsErd: false,
+    supportsUsersRoles: false,
+    supportsDatabaseTools: false,
+    hiddenFeatureReasons: {
+      ERDiagram: 'ER diagrams are not available for MongoDB collections.',
+      UsersRoles: 'Users & Roles is not available for MongoDB connections.',
+    },
+  },
 };
 
 export function resolveConnectionProviderKind(
@@ -149,6 +177,10 @@ export function resolveConnectionProviderKind(
     return EConnectionProviderKind.REDIS_DIRECT;
   }
 
+  if (input.type === DatabaseClientType.MONGODB) {
+    return EConnectionProviderKind.MONGODB_DIRECT;
+  }
+
   return EConnectionProviderKind.DIRECT_SQL;
 }
 
@@ -159,6 +191,14 @@ export function resolveConnectionFamily(
 
   if (providerKind === EConnectionProviderKind.REDIS_DIRECT) {
     return EConnectionFamily.REDIS;
+  }
+
+  if (providerKind === EConnectionProviderKind.MONGODB_DIRECT) {
+    return EConnectionFamily.MONGODB;
+  }
+
+  if (input.type === DatabaseClientType.MONGODB) {
+    return EConnectionFamily.MONGODB;
   }
 
   if (NOSQL_DATABASE_CLIENT_TYPES.includes(input.type as never)) {

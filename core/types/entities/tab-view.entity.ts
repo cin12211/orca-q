@@ -22,6 +22,8 @@ export enum TabViewType {
   AgentChat = 'AgentChat',
   RedisBrowser = 'RedisBrowser',
   RedisPubSub = 'RedisPubSub',
+  MongoDatabaseOverview = 'MongoDatabaseOverview',
+  MongoCollectionDetail = 'MongoCollectionDetail',
 }
 
 export enum WorkspaceTabOpenAction {
@@ -88,6 +90,17 @@ export interface RedisPubSubMetadata extends BaseTabMetadata {
   databaseIndex?: number;
 }
 
+export interface MongoDatabaseOverviewMetadata extends BaseTabMetadata {
+  type: TabViewType.MongoDatabaseOverview;
+  databaseName: string;
+}
+
+export interface MongoCollectionDetailMetadata extends BaseTabMetadata {
+  type: TabViewType.MongoCollectionDetail;
+  databaseName: string;
+  collectionName: string;
+}
+
 export type TabMetadata =
   | TableDetailMetadata
   | ViewDetailMetadata
@@ -97,6 +110,8 @@ export type TabMetadata =
   | AgentChatMetadata
   | RedisBrowserMetadata
   | RedisPubSubMetadata
+  | MongoDatabaseOverviewMetadata
+  | MongoCollectionDetailMetadata
   | BaseTabMetadata;
 
 export type TabView = {

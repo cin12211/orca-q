@@ -120,4 +120,5 @@ onBeforeUnmount(() => {
 <style>
 @import url('./assets/global.css');
 @import url('./assets/css/json-editor-overrides.css');
+@import url('./assets/css/vue-json-pretty-theme.css');
 </style>

@@ -28,6 +28,9 @@ export function resolveRouteNameForTabType(type: TabViewType): RoutesNamesList {
     case TabViewType.RedisBrowser:
     case TabViewType.RedisPubSub:
       return 'workspaceId-connectionId-redis-tabViewId' as RoutesNamesList;
+    case TabViewType.MongoDatabaseOverview:
+    case TabViewType.MongoCollectionDetail:
+      return 'workspaceId-connectionId-mongodb-tabViewId' as RoutesNamesList;
     default:
       return 'workspaceId-connectionId-quick-query-tabViewId';
   }
@@ -164,9 +167,7 @@ export const useTabManagement = () => {
   const openRedisTab = async (params: {
     id: string;
     name: string;
-    type:
-      | TabViewType.RedisBrowser
-      | TabViewType.RedisPubSub;
+    type: TabViewType.RedisBrowser | TabViewType.RedisPubSub;
     icon?: string;
     iconClass?: string;
     metadata?: Record<string, any>;
@@ -182,6 +183,49 @@ export const useTabManagement = () => {
         tabViewId: params.id,
       },
       metadata: params.metadata,
+    });
+  };
+
+  const openMongoDatabaseTab = async (params: { databaseName: string }) => {
+    await openTab({
+      id: `mongo-database-${params.databaseName}`,
+      name: params.databaseName,
+      icon: 'hugeicons:database',
+      iconClass: 'text-yellow-500',
+      type: TabViewType.MongoDatabaseOverview,
+      routeName: resolveRouteNameForTabType(TabViewType.MongoDatabaseOverview),
+      routeParams: {
+        tabViewId: `mongo-database-${params.databaseName}`,
+      },
+      metadata: {
+        databaseName: params.databaseName,
+      },
+    });
+  };
+
+  const openMongoCollectionTab = async (params: {
+    databaseName: string;
+    collectionName: string;
+  }) => {
+    const tabId = `mongo-collection-${params.databaseName}-${params.collectionName}`;
+    const name = `${params.collectionName} - ${params.databaseName}`;
+
+    await tabViewStore.updateTabName(tabId, name);
+
+    await openTab({
+      id: tabId,
+      name,
+      icon: 'hugeicons:files-01',
+      iconClass: 'text-emerald-500',
+      type: TabViewType.MongoCollectionDetail,
+      routeName: resolveRouteNameForTabType(TabViewType.MongoCollectionDetail),
+      routeParams: {
+        tabViewId: tabId,
+      },
+      metadata: {
+        databaseName: params.databaseName,
+        collectionName: params.collectionName,
+      },
     });
   };
 
@@ -309,6 +353,8 @@ export const useTabManagement = () => {
     openNewSqlFileTab,
     openSchemaItemTab,
     openRedisTab,
+    openMongoDatabaseTab,
+    openMongoCollectionTab,
     openUserPermissionsTab,
     openInstanceInsightsTab,
     openSchemaDiffTab,

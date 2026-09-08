@@ -1,0 +1,227 @@
+import { describe, expect, it, vi } from 'vitest';
+import {
+  buildMongoDocumentSelector,
+  createMongoCollection,
+  dropMongoCollection,
+  dropMongoDatabase,
+  getMongoDatabaseStats,
+  getMongoDatabaseTotalSize,
+  listMongoCollectionNames,
+  listMongoCollections,
+  listMongoDatabases,
+  normalizeMongoFilter,
+  renameMongoCollection,
+} from '~/server/infrastructure/nosql/mongodb/mongodb-quick-query';
+
+describe('MongoDB Quick Query request helpers', () => {
+  it('converts a valid _id string in a filter into an ObjectId', () => {
+    const filter = normalizeMongoFilter({
+      _id: '507f1f77bcf86cd799439011',
+      status: 'active',
+    });
+
+    expect(filter.status).toBe('active');
+    expect(filter._id?.toHexString()).toBe('507f1f77bcf86cd799439011');
+  });
+
+  it('rejects Mongo operators outside the Quick Query allowlist', () => {
+    expect(() => normalizeMongoFilter({ $where: 'sleep(1)' })).toThrow(
+      'Unsupported MongoDB filter operator: $where'
+    );
+  });
+
+  it('creates a mutation selector only from a valid document id', () => {
+    expect(
+      buildMongoDocumentSelector('507f1f77bcf86cd799439011')._id.toHexString()
+    ).toBe('507f1f77bcf86cd799439011');
+    expect(() => buildMongoDocumentSelector('not-an-object-id')).toThrow(
+      'Invalid MongoDB document _id'
+    );
+  });
+});
+
+describe('listMongoCollections', () => {
+  it('returns collection stats sorted by name, with properties derived from listCollections info', async () => {
+    const fakeDatabase = {
+      listCollections: () => ({
+        toArray: async () => [
+          { name: 'users', type: 'collection' },
+          { name: 'archive', type: 'collection', options: { capped: true } },
+          { name: 'active_users', type: 'view' },
+        ],
+      }),
+      command: async ({ collStats }: { collStats: string }) => {
+        if (collStats === 'active_users') {
+          throw new Error('collStats is not supported on views');
+        }
+
+        return {
+          count: collStats === 'users' ? 42 : 5,
+          storageSize: 4096,
+          size: 2048,
+          avgObjSize: 100,
+          nindexes: 2,
+          totalIndexSize: 512,
+        };
+      },
+    };
+
+    const collections = await listMongoCollections(fakeDatabase as any);
+
+    expect(collections).toEqual([
+      {
+        name: 'active_users',
+        properties: ['View'],
+        documentCount: 0,
+        storageSize: 0,
+        dataSize: 0,
+        avgDocumentSize: 0,
+        indexCount: 0,
+        totalIndexSize: 0,
+      },
+      {
+        name: 'archive',
+        properties: ['Capped'],
+        documentCount: 5,
+        storageSize: 4096,
+        dataSize: 2048,
+        avgDocumentSize: 100,
+        indexCount: 2,
+        totalIndexSize: 512,
+      },
+      {
+        name: 'users',
+        properties: [],
+        documentCount: 42,
+        storageSize: 4096,
+        dataSize: 2048,
+        avgDocumentSize: 100,
+        indexCount: 2,
+        totalIndexSize: 512,
+      },
+    ]);
+  });
+
+  it('returns an empty array when the database has no collections', async () => {
+    const fakeDatabase = {
+      listCollections: () => ({ toArray: async () => [] }),
+      command: async () => ({}),
+    };
+
+    expect(await listMongoCollections(fakeDatabase as any)).toEqual([]);
+  });
+});
+
+describe('listMongoCollectionNames', () => {
+  it('returns collection names with derived properties and size, sorted by name', async () => {
+    const fakeDatabase = {
+      listCollections: () => ({
+        toArray: async () => [
+          { name: 'users', type: 'collection' },
+          { name: 'archive', type: 'collection', options: { capped: true } },
+        ],
+      }),
+      command: async ({ collStats }: { collStats: string }) => ({
+        storageSize: collStats === 'users' ? 4096 : 2048,
+        count: collStats === 'users' ? 42 : 5,
+      }),
+    };
+
+    expect(await listMongoCollectionNames(fakeDatabase as any)).toEqual([
+      { name: 'archive', properties: ['Capped'], size: 2048, count: 5 },
+      { name: 'users', properties: [], size: 4096, count: 42 },
+    ]);
+  });
+});
+
+describe('getMongoDatabaseStats', () => {
+  it('returns the full dbStats fields with defaults for missing values', async () => {
+    const fakeDatabase = {
+      command: async () => ({
+        collections: 2,
+        objects: 5,
+        avgObjSize: 78.8,
+        dataSize: 394,
+        storageSize: 8192,
+        indexes: 2,
+        indexSize: 8192,
+        totalSize: 16384,
+      }),
+    };
+
+    expect(await getMongoDatabaseStats(fakeDatabase as any)).toEqual({
+      collections: 2,
+      views: 0,
+      objects: 5,
+      avgObjectSize: 78.8,
+      dataSize: 394,
+      storageSize: 8192,
+      indexes: 2,
+      indexSize: 8192,
+      totalSize: 16384,
+    });
+  });
+});
+
+describe('dropMongoDatabase', () => {
+  it('calls database.dropDatabase', async () => {
+    const dropDatabase = vi.fn().mockResolvedValue(undefined);
+    await dropMongoDatabase({ dropDatabase } as any);
+    expect(dropDatabase).toHaveBeenCalledWith();
+  });
+});
+
+describe('getMongoDatabaseTotalSize', () => {
+  it('returns the totalSize field from the dbStats command', async () => {
+    const fakeDatabase = {
+      command: async () => ({ totalSize: 16384, storageSize: 8192 }),
+    };
+
+    expect(await getMongoDatabaseTotalSize(fakeDatabase as any)).toBe(16384);
+  });
+
+  it('defaults to 0 when totalSize is missing', async () => {
+    const fakeDatabase = { command: async () => ({}) };
+
+    expect(await getMongoDatabaseTotalSize(fakeDatabase as any)).toBe(0);
+  });
+});
+
+describe('collection mutation helpers', () => {
+  it('createMongoCollection calls database.createCollection with the given name', async () => {
+    const createCollection = vi.fn().mockResolvedValue(undefined);
+    await createMongoCollection({ createCollection } as any, 'new_collection');
+    expect(createCollection).toHaveBeenCalledWith('new_collection');
+  });
+
+  it('renameMongoCollection calls database.renameCollection with from/to names', async () => {
+    const renameCollection = vi.fn().mockResolvedValue(undefined);
+    await renameMongoCollection({ renameCollection } as any, 'old', 'new');
+    expect(renameCollection).toHaveBeenCalledWith('old', 'new');
+  });
+
+  it('dropMongoCollection calls database.dropCollection with the given name', async () => {
+    const dropCollection = vi.fn().mockResolvedValue(undefined);
+    await dropMongoCollection({ dropCollection } as any, 'gone');
+    expect(dropCollection).toHaveBeenCalledWith('gone');
+  });
+});
+
+describe('listMongoDatabases', () => {
+  it('returns database names sorted alphabetically', async () => {
+    const fakeClient = {
+      db: () => ({
+        admin: () => ({
+          listDatabases: async () => ({
+            databases: [{ name: 'orcaq_fixture' }, { name: 'admin' }],
+          }),
+        }),
+      }),
+    };
+
+    expect(await listMongoDatabases(fakeClient as any)).toEqual([
+      'admin',
+      'orcaq_fixture',
+    ]);
+  });
+});

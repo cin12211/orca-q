@@ -21,7 +21,7 @@ import {
   DEFAULT_DEBOUNCE_SCROLL,
 } from '~/core/constants';
 import { useAppConfigStore } from '~/core/stores/appConfigStore';
-import { EditorTheme, EditorThemeMap } from './constants';
+import { EditorThemeMap, resolveEditorTheme } from './constants';
 import {
   cursorSmooth,
   fontSizeTheme,
@@ -105,20 +105,8 @@ const staticExtensions: Extension[] = [
   }),
 ];
 
-const resolveEditorTheme = (theme: EditorTheme) => {
-  if (colorMode?.value === 'dark' && theme === EditorTheme.Tomorrow) {
-    return EditorTheme.OrcaDark;
-  }
-
-  if (colorMode?.value !== 'dark' && theme === EditorTheme.OrcaDark) {
-    return EditorTheme.OrcaLight;
-  }
-
-  return theme;
-};
-
 const dynamicExtensions = (cfg: CodeEditorConfigs) => {
-  const resolvedTheme = resolveEditorTheme(cfg.theme);
+  const resolvedTheme = resolveEditorTheme(cfg.theme, colorMode?.value);
   return [
     themeComp.of(EditorThemeMap[resolvedTheme]),
     fontSizeComp.of(fontSizeTheme(cfg.fontSize + 'pt')),
@@ -182,7 +170,7 @@ watch(
   ([cfg]) => {
     if (!editorView.value) return;
 
-    const resolvedTheme = resolveEditorTheme(cfg.theme);
+    const resolvedTheme = resolveEditorTheme(cfg.theme, colorMode?.value);
 
     editorView.value.dispatch({
       effects: [

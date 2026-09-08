@@ -46,8 +46,8 @@ resolve_compose_cmd
 redis_port="${ORCAQ_REDIS_PORT:-6379}"
 
 echo "Starting Redis fixture with: ${compose_cmd[*]}"
-"${compose_cmd[@]}" -p "${compose_project}" -f "${compose_file}" down --volumes --remove-orphans >/dev/null 2>&1 || true
-"${compose_cmd[@]}" -p "${compose_project}" -f "${compose_file}" up -d --remove-orphans
+"${compose_cmd[@]}" -p "${compose_project}" -f "${compose_file}" --profile redis down --volumes --remove-orphans >/dev/null 2>&1 || true
+"${compose_cmd[@]}" -p "${compose_project}" -f "${compose_file}" --profile redis up -d --remove-orphans
 
 if resolve_wait_cmd; then
   "${wait_cmd[@]}" "tcp:127.0.0.1:${redis_port}"
@@ -57,6 +57,6 @@ fi
 
 bash "${script_dir}/seed-nosql-fixtures.sh"
 
-"${compose_cmd[@]}" -p "${compose_project}" -f "${compose_file}" ps
+"${compose_cmd[@]}" -p "${compose_project}" -f "${compose_file}" --profile redis ps
 
 echo "Redis fixture is ready at redis://127.0.0.1:${redis_port}"

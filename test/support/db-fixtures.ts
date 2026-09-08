@@ -34,6 +34,14 @@ export type RedisFixtureConfig = {
   source: FixtureSource;
 };
 
+export type MongoFixtureConfig = {
+  host: string;
+  port: number;
+  database: string;
+  url: string;
+  source: FixtureSource;
+};
+
 export type SqlFixtureEngine = 'postgres' | 'mysql' | 'mariadb';
 
 export type SqlFixtureConfig = {
@@ -272,6 +280,39 @@ export function getRedisFixtureConfig(): RedisFixtureConfig {
       'REDIS_DATABASE',
       'REDIS_USERNAME',
       'REDIS_PASSWORD',
+    ])
+      ? 'env'
+      : 'default-local',
+  };
+}
+
+export function getMongoFixtureConfig(): MongoFixtureConfig {
+  const host = readEnv('ORCAQ_MONGODB_HOST', 'MONGODB_HOST') || '127.0.0.1';
+  const port = parseInteger(
+    readEnv('ORCAQ_MONGODB_PORT', 'MONGODB_PORT'),
+    27017,
+    'ORCAQ_MONGODB_PORT'
+  );
+  const database =
+    readEnv('ORCAQ_MONGODB_DATABASE', 'MONGODB_DATABASE') || 'orcaq_fixture';
+  const url =
+    readEnv('ORCAQ_MONGODB_URL', 'MONGODB_URL') ||
+    `mongodb://${host}:${port}/${database}`;
+
+  return {
+    host,
+    port,
+    database,
+    url,
+    source: hasAnyEnv([
+      'ORCAQ_MONGODB_URL',
+      'ORCAQ_MONGODB_HOST',
+      'ORCAQ_MONGODB_PORT',
+      'ORCAQ_MONGODB_DATABASE',
+      'MONGODB_URL',
+      'MONGODB_HOST',
+      'MONGODB_PORT',
+      'MONGODB_DATABASE',
     ])
       ? 'env'
       : 'default-local',

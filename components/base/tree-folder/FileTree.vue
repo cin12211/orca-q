@@ -993,6 +993,10 @@ defineExpose({
           <template #actions="{ node }">
             <slot name="actions" :node="node" />
           </template>
+          <!-- Pass through always-visible meta slot -->
+          <template #meta="{ node }">
+            <slot name="meta" :node="node" />
+          </template>
         </TreeRow>
       </div>
 

@@ -1,0 +1,367 @@
+/* ==========================================================================
+   Orca Themes for VueJsonPretty
+   Matches all OrcaQ BaseCodeEditor themes:
+   - Dark: orca-dark (default), dracula, barf, bespin, ayu-dark, ayu-mirage
+   - Light: orca-light, tomorrow, ayu-light, noctis-lilac, rose-pine-dawn
+   ========================================================================== */
+
+/* Base typography & structure */
+.vjs-tree {
+  font-family:
+    ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono',
+    'Courier New', monospace;
+  font-size: 12px;
+  line-height: 1.5;
+  background-color: transparent;
+  color: var(--vjs-fg, #f8f8f2);
+}
+
+/* Brackets & Punctuation */
+.vjs-tree .vjs-tree-brackets,
+.vjs-tree .vjs-colon {
+  color: var(--vjs-bracket, var(--vjs-fg, #f8f8f2));
+  cursor: pointer;
+  transition: color 0.15s ease;
+}
+
+.vjs-tree .vjs-tree-brackets:hover {
+  color: var(--vjs-bracket-hover, #ff79c6);
+}
+
+/* Object Keys */
+.vjs-tree .vjs-key {
+  color: var(--vjs-key, #8be9fd);
+  font-weight: 500;
+}
+
+/* String Values */
+.vjs-tree .vjs-value-string {
+  color: var(--vjs-string, #f1fa8c);
+}
+
+/* Number Values */
+.vjs-tree .vjs-value-number {
+  color: var(--vjs-number, #ffb86c);
+  font-weight: 500;
+}
+
+/* Boolean Values */
+.vjs-tree .vjs-value-boolean {
+  color: var(--vjs-boolean, #ffb86c);
+  font-weight: 500;
+}
+
+/* Null Values */
+.vjs-tree .vjs-value-null {
+  color: var(--vjs-null, #ff79c6);
+  font-weight: 500;
+  font-style: italic;
+}
+
+/* Undefined */
+.vjs-tree .vjs-value-undefined {
+  color: var(--vjs-undefined, var(--vjs-caret, #6272a4));
+  font-style: italic;
+}
+
+/* Comments */
+.vjs-tree .vjs-comment {
+  color: var(--vjs-comment, var(--vjs-caret, #6272a4));
+  font-style: italic;
+}
+
+/* Carets */
+.vjs-tree .vjs-carets {
+  color: var(--vjs-caret, #6272a4);
+  transition:
+    color 0.15s ease,
+    transform 0.2s ease;
+}
+
+.vjs-tree .vjs-carets:hover {
+  color: var(--vjs-caret-hover, var(--vjs-key, #8be9fd));
+}
+
+/* Indent Guide Line */
+.vjs-tree .vjs-indent-unit.has-line {
+  border-left: 1px dashed var(--vjs-guide, rgba(98, 114, 164, 0.4));
+}
+
+/* Row Hover / Highlight */
+.vjs-tree .vjs-tree-node:hover,
+.vjs-tree .vjs-tree-node.is-highlight {
+  background-color: var(--vjs-hover-bg, rgba(68, 71, 90, 0.35));
+  border-radius: 4px;
+}
+
+/* Node Actions */
+.vjs-tree .vjs-tree-node-actions {
+  background-color: var(--vjs-actions-bg, #282a36);
+  border: 1px solid var(--vjs-actions-border, #44475a);
+  color: var(--vjs-fg, #f8f8f2);
+  border-radius: 4px;
+  padding: 0 6px;
+  font-size: 11px;
+}
+
+.vjs-tree .vjs-tree-node-actions .vjs-tree-node-actions-item:hover {
+  color: var(--vjs-key, #8be9fd);
+}
+
+/* ==========================================================================
+   1. ORCA DARK (Default Dark)
+   ========================================================================== */
+.vjs-tree,
+.vjs-tree.dark,
+.vjs-tree.orca-dark,
+.vjs-tree.vjs-theme-orca-dark,
+.dark .vjs-tree {
+  --vjs-fg: #f8f8f2;
+  --vjs-bracket: #f8f8f2;
+  --vjs-bracket-hover: #ff79c6;
+  --vjs-key: #8be9fd;
+  --vjs-string: #f1fa8c;
+  --vjs-number: #ffb86c;
+  --vjs-boolean: #ffb86c;
+  --vjs-null: #ff79c6;
+  --vjs-undefined: #6272a4;
+  --vjs-comment: #6272a4;
+  --vjs-caret: #6272a4;
+  --vjs-caret-hover: #8be9fd;
+  --vjs-guide: rgba(98, 114, 164, 0.4);
+  --vjs-hover-bg: rgba(68, 71, 90, 0.35);
+  --vjs-actions-bg: #282a36;
+  --vjs-actions-border: #44475a;
+}
+
+/* ==========================================================================
+   2. ORCA LIGHT
+   ========================================================================== */
+html:not(.dark) .vjs-tree:not(.dark):not(.orca-dark):not([class*='vjs-theme-']),
+.vjs-tree.light,
+.vjs-tree.orca-light,
+.vjs-tree.vjs-theme-orca-light {
+  --vjs-fg: #24292e;
+  --vjs-bracket: #24292e;
+  --vjs-bracket-hover: #0366d6;
+  --vjs-key: #1b7c83;
+  --vjs-string: #b35900;
+  --vjs-number: #e36209;
+  --vjs-boolean: #d73a49;
+  --vjs-null: #6f42c1;
+  --vjs-undefined: #6a737d;
+  --vjs-comment: #6a737d;
+  --vjs-caret: #959da5;
+  --vjs-caret-hover: #0366d6;
+  --vjs-guide: #e1e4e8;
+  --vjs-hover-bg: rgba(0, 0, 0, 0.04);
+  --vjs-actions-bg: #ffffff;
+  --vjs-actions-border: #e1e4e8;
+}
+
+/* ==========================================================================
+   3. DRACULA
+   ========================================================================== */
+.vjs-tree.dracula,
+.vjs-tree.vjs-theme-dracula {
+  --vjs-fg: #f8f8f2;
+  --vjs-bracket: #f8f8f2;
+  --vjs-bracket-hover: #ff79c6;
+  --vjs-key: #50fa7b;
+  --vjs-string: #f1fa8c;
+  --vjs-number: #bd93f9;
+  --vjs-boolean: #bd93f9;
+  --vjs-null: #bd93f9;
+  --vjs-undefined: #6272a4;
+  --vjs-comment: #6272a4;
+  --vjs-caret: #6272a4;
+  --vjs-caret-hover: #50fa7b;
+  --vjs-guide: rgba(98, 114, 164, 0.4);
+  --vjs-hover-bg: rgba(68, 71, 90, 0.35);
+  --vjs-actions-bg: #282a36;
+  --vjs-actions-border: #44475a;
+}
+
+/* ==========================================================================
+   4. BARF
+   ========================================================================== */
+.vjs-tree.barf,
+.vjs-tree.vjs-theme-barf {
+  --vjs-fg: #eef2f7;
+  --vjs-bracket: #eef2f7;
+  --vjs-bracket-hover: #a3d295;
+  --vjs-key: #a3d295;
+  --vjs-string: #5c81b3;
+  --vjs-number: #c1e1b8;
+  --vjs-boolean: #53667d;
+  --vjs-null: #697a8e;
+  --vjs-undefined: #6e6e6e;
+  --vjs-comment: #6e6e6e;
+  --vjs-caret: #aaaaaa95;
+  --vjs-caret-hover: #a3d295;
+  --vjs-guide: rgba(170, 170, 170, 0.3);
+  --vjs-hover-bg: rgba(144, 178, 213, 0.15);
+  --vjs-actions-bg: #15191e;
+  --vjs-actions-border: #575757;
+}
+
+/* ==========================================================================
+   5. BESPIN
+   ========================================================================== */
+.vjs-tree.bespin,
+.vjs-tree.vjs-theme-bespin {
+  --vjs-fg: #baae9e;
+  --vjs-bracket: #baae9e;
+  --vjs-bracket-hover: #5ea6ea;
+  --vjs-key: #f9ee98;
+  --vjs-string: #54be0d;
+  --vjs-number: #cf6a4c;
+  --vjs-boolean: #5ea6ea;
+  --vjs-null: #5ea6ea;
+  --vjs-undefined: #666666;
+  --vjs-comment: #666666;
+  --vjs-caret: #baae9e90;
+  --vjs-caret-hover: #5ea6ea;
+  --vjs-guide: rgba(186, 174, 158, 0.3);
+  --vjs-hover-bg: rgba(221, 240, 255, 0.1);
+  --vjs-actions-bg: #28211c;
+  --vjs-actions-border: #baae9e40;
+}
+
+/* ==========================================================================
+   6. AYU DARK
+   ========================================================================== */
+.vjs-tree.ayu-dark,
+.vjs-tree.vjs-theme-ayu-dark {
+  --vjs-fg: #bfbdb6;
+  --vjs-bracket: #bfbdb6;
+  --vjs-bracket-hover: #e6b450;
+  --vjs-key: #39bae6;
+  --vjs-string: #c2d94c;
+  --vjs-number: #39bae6;
+  --vjs-boolean: #ff8f40;
+  --vjs-null: #ff8f40;
+  --vjs-undefined: #5c6773;
+  --vjs-comment: #5c6773;
+  --vjs-caret: #5c6773;
+  --vjs-caret-hover: #e6b450;
+  --vjs-guide: rgba(92, 103, 115, 0.4);
+  --vjs-hover-bg: rgba(37, 51, 64, 0.4);
+  --vjs-actions-bg: #11151c;
+  --vjs-actions-border: #253340;
+}
+
+/* ==========================================================================
+   7. AYU MIRAGE
+   ========================================================================== */
+.vjs-tree.ayu-mirage,
+.vjs-tree.vjs-theme-ayu-mirage {
+  --vjs-fg: #cccac2;
+  --vjs-bracket: #cccac2;
+  --vjs-bracket-hover: #ffcc66;
+  --vjs-key: #5ccfe6;
+  --vjs-string: #d5ff80;
+  --vjs-number: #5ccfe6;
+  --vjs-boolean: #ffad66;
+  --vjs-null: #ffad66;
+  --vjs-undefined: #5f677a;
+  --vjs-comment: #5f677a;
+  --vjs-caret: #5f677a;
+  --vjs-caret-hover: #ffcc66;
+  --vjs-guide: rgba(95, 103, 122, 0.4);
+  --vjs-hover-bg: rgba(52, 63, 76, 0.4);
+  --vjs-actions-bg: #1a1f29;
+  --vjs-actions-border: #343f4c;
+}
+
+/* ==========================================================================
+   8. TOMORROW
+   ========================================================================== */
+.vjs-tree.tomorrow,
+.vjs-tree.vjs-theme-tomorrow {
+  --vjs-fg: #4d4d4c;
+  --vjs-bracket: #4d4d4c;
+  --vjs-bracket-hover: #4271ae;
+  --vjs-key: #c82829;
+  --vjs-string: #718c00;
+  --vjs-number: #f5871f;
+  --vjs-boolean: #f5871f;
+  --vjs-null: #f5871f;
+  --vjs-undefined: #8e908c;
+  --vjs-comment: #8e908c;
+  --vjs-caret: #8e908c;
+  --vjs-caret-hover: #4271ae;
+  --vjs-guide: #d6d6d6;
+  --vjs-hover-bg: rgba(66, 113, 174, 0.08);
+  --vjs-actions-bg: #ffffff;
+  --vjs-actions-border: #d6d6d6;
+}
+
+/* ==========================================================================
+   9. AYU LIGHT
+   ========================================================================== */
+.vjs-tree.ayu-light,
+.vjs-tree.vjs-theme-ayu-light {
+  --vjs-fg: #5c6166;
+  --vjs-bracket: #5c6166;
+  --vjs-bracket-hover: #ffaa33;
+  --vjs-key: #55b4d4;
+  --vjs-string: #86b300;
+  --vjs-number: #55b4d4;
+  --vjs-boolean: #fa8d3e;
+  --vjs-null: #fa8d3e;
+  --vjs-undefined: #787b80;
+  --vjs-comment: #787b80;
+  --vjs-caret: #787b80;
+  --vjs-caret-hover: #ffaa33;
+  --vjs-guide: #e6e6e6;
+  --vjs-hover-bg: rgba(209, 228, 244, 0.3);
+  --vjs-actions-bg: #fcfcfc;
+  --vjs-actions-border: #e6e6e6;
+}
+
+/* ==========================================================================
+   10. NOCTIS LILAC
+   ========================================================================== */
+.vjs-tree.noctis-lilac,
+.vjs-tree.vjs-theme-noctis-lilac {
+  --vjs-fg: #0c006b;
+  --vjs-bracket: #0431fa;
+  --vjs-bracket-hover: #ff5792;
+  --vjs-key: #fa8900;
+  --vjs-string: #00b368;
+  --vjs-number: #5842ff;
+  --vjs-boolean: #5842ff;
+  --vjs-null: #5842ff;
+  --vjs-undefined: #9995b7;
+  --vjs-comment: #9995b7;
+  --vjs-caret: #9995b7;
+  --vjs-caret-hover: #ff5792;
+  --vjs-guide: #d5d1f2;
+  --vjs-hover-bg: rgba(213, 209, 242, 0.35);
+  --vjs-actions-bg: #f2f1f8;
+  --vjs-actions-border: #d5d1f2;
+}
+
+/* ==========================================================================
+   11. ROSE PINE DAWN
+   ========================================================================== */
+.vjs-tree.rose-pine-dawn,
+.vjs-tree.vjs-theme-rose-pine-dawn {
+  --vjs-fg: #575279;
+  --vjs-bracket: #797593;
+  --vjs-bracket-hover: #286983;
+  --vjs-key: #907aa9;
+  --vjs-string: #ea9d34;
+  --vjs-number: #d7827e;
+  --vjs-boolean: #286983;
+  --vjs-null: #286983;
+  --vjs-undefined: #9893a5;
+  --vjs-comment: #9893a5;
+  --vjs-caret: #9893a5;
+  --vjs-caret-hover: #286983;
+  --vjs-guide: #e4dfd7;
+  --vjs-hover-bg: rgba(110, 106, 134, 0.12);
+  --vjs-actions-bg: #faf4ed;
+  --vjs-actions-border: #e4dfd7;
+}

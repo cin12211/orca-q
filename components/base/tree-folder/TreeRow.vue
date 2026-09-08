@@ -204,6 +204,11 @@ defineExpose({
       @dblclick.stop
     />
 
+    <!-- Always-visible meta info (e.g. size label) -->
+    <span v-if="!isEditing && $slots.meta" class="tree-row__meta">
+      <slot name="meta" :node="node" />
+    </span>
+
     <!-- Action Slot -->
     <div v-if="!isEditing" class="tree-row__actions" @click.stop>
       <slot name="actions" :node="node" />
@@ -354,6 +359,11 @@ defineExpose({
 
 .tree-row__edit-input--error {
   border-color: var(--destructive) !important;
+}
+
+.tree-row__meta {
+  flex-shrink: 0;
+  margin-left: var(--v-tree-actions-spacing, 8px);
 }
 
 .tree-row__actions {

@@ -50,6 +50,19 @@ export class LocalStorageManager {
   }
 
   /**
+   * Composite key for MongoDB Quick Query filter persisted state.
+   * Format: `mongo-${workspaceId}-${connectionId}-${databaseName}-${collectionName}`
+   */
+  static mongoQueryBuilderKey(
+    workspaceId: string,
+    connectionId: string,
+    databaseName: string,
+    collectionName: string
+  ): string {
+    return `mongo-${workspaceId}-${connectionId}-${databaseName}-${collectionName}`;
+  }
+
+  /**
    * Expanded-node key for tree-folder persistence plugin.
    * Format: `${storageKey}_expanded`
    * Note: tree-persistence.ts uses this format directly via its own adapter;

@@ -19,23 +19,23 @@ describe('bytes-formatter', () => {
   });
 
   it('formats exactly 1 KB as KB unit', () => {
-    expect(formatBytes(1024)).toBe('1.00 KB');
+    expect(formatBytes(1024)).toBe('1 KB');
   });
 
-  it('formats 1.5 KB with two decimals', () => {
-    expect(formatBytes(1536)).toBe('1.50 KB');
+  it('formats 1.5 KB without trailing zero', () => {
+    expect(formatBytes(1536)).toBe('1.5 KB');
   });
 
   it('formats 2 KB correctly', () => {
-    expect(formatBytes(2048)).toBe('2.00 KB');
+    expect(formatBytes(2048)).toBe('2 KB');
   });
 
   it('formats 1 MB correctly', () => {
-    expect(formatBytes(1024 * 1024)).toBe('1.00 MB');
+    expect(formatBytes(1024 * 1024)).toBe('1 MB');
   });
 
   it('formats 5 MB correctly', () => {
-    expect(formatBytes(5 * 1024 * 1024)).toBe('5.00 MB');
+    expect(formatBytes(5 * 1024 * 1024)).toBe('5 MB');
   });
 
   it('formats MB and larger units', () => {

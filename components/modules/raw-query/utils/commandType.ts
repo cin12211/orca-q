@@ -280,6 +280,7 @@ const HANDLER_REGISTRY: Record<
   [DatabaseClientType.MYSQL]: MysqlCommandResultHandler,
   [DatabaseClientType.MYSQL2]: Mysql2CommandResultHandler,
   [DatabaseClientType.REDIS]: GenericCommandResultHandler,
+  [DatabaseClientType.MONGODB]: GenericCommandResultHandler,
   [DatabaseClientType.SQLITE3]: Sqlite3CommandResultHandler,
   [DatabaseClientType.SNOWFLAKE]: GenericCommandResultHandler,
   [DatabaseClientType.BETTER_SQLITE3]: BetterSqlite3CommandResultHandler,

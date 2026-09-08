@@ -182,6 +182,16 @@ Nuxt/Electron workflows.
   - failing commands
   - whether failures are related to the current change
 
+## Agent skills
+
+### Issue tracker
+
+Issues tracked as local markdown files under `.scratch/<feature-slug>/`. See `docs/agents/issue-tracker.md`.
+
+### Domain docs
+
+Single-context — root `CONTEXT.md` + `docs/adr/`. See `docs/agents/domain.md`.
+
 ## graphify
 
 This project has a knowledge graph at graphify-out/ with god nodes, community structure, and cross-file relationships.

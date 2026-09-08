@@ -86,6 +86,8 @@ const getConnectionStringScheme = (type: DatabaseClientType | null) => {
       return 'oracledb';
     case DatabaseClientType.REDIS:
       return 'redis';
+    case DatabaseClientType.MONGODB:
+      return 'mongodb';
     case DatabaseClientType.SNOWFLAKE:
       return 'snowflake';
     case DatabaseClientType.MYSQL:
@@ -514,6 +516,8 @@ export function useConnectionForm(props: {
         return 'oracledb://username:password@localhost:1521/ORCLPDB1';
       case DatabaseClientType.REDIS:
         return 'redis://username:password@localhost:6379';
+      case DatabaseClientType.MONGODB:
+        return 'mongodb://username:password@localhost:27017/database';
       case DatabaseClientType.SNOWFLAKE:
         return 'snowflake://username:password@account.snowflakecomputing.com:443/database';
       case DatabaseClientType.SQLITE3:
