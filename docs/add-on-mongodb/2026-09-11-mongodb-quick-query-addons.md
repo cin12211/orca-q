@@ -20,6 +20,7 @@
 ### Task 1: Xóa Table View Mode & Dọn dẹp Code thừa
 
 **Files:**
+
 - Delete: `components/modules/quick-query/mongodb/components/MongoCollectionTableView.vue`
 - Delete: `components/modules/quick-query/mongodb/utils/buildMongoColumnDefs.ts`
 - Delete: `test/unit/components/modules/quick-query/mongodb/buildMongoColumnDefs.spec.ts`
@@ -32,12 +33,14 @@
 - Test: `test/nuxt/components/modules/quick-query/mongodb/MongoCollectionDetail.test.ts`
 
 **Interfaces:**
+
 - Consumes: `MongoCollectionViewMode` enum
 - Produces: `MongoCollectionViewMode` updated without `Table` variant (`List = 'list'`, `Info = 'info'`)
 
 - [ ] **Step 1: Cập nhật failing test cho `MongoViewModeSwitcher` và `MongoCollectionDetail`**
 
 Sửa `test/nuxt/components/modules/quick-query/mongodb/MongoViewModeSwitcher.test.ts` để kiểm tra chỉ còn 2 tab (`List` và `Info`):
+
 ```typescript
 import { mount } from '@vue/test-utils';
 import { describe, expect, it } from 'vitest';
@@ -76,12 +79,15 @@ describe('MongoViewModeSwitcher', () => {
       props: { modelValue: MongoCollectionViewMode.List },
     });
 
-    expect(wrapper.find('[data-testid="mongo-view-mode-table"]').exists()).toBe(false);
+    expect(wrapper.find('[data-testid="mongo-view-mode-table"]').exists()).toBe(
+      false
+    );
   });
 });
 ```
 
 Sửa `test/nuxt/components/modules/quick-query/mongodb/MongoCollectionDetail.test.ts` để kiểm tra chuyển sang `Info` mode thay vì `Table`:
+
 ```typescript
 import { flushPromises, mount } from '@vue/test-utils';
 import { describe, expect, it, vi } from 'vitest';
@@ -133,13 +139,16 @@ describe('MongoCollectionDetail', () => {
 ```
 
 - [ ] **Step 2: Chạy test để kiểm tra failing**
+
 ```bash
 bun test:nuxt test/nuxt/components/modules/quick-query/mongodb/MongoViewModeSwitcher.test.ts
 ```
+
 Expected: FAIL vì `[data-testid="mongo-view-mode-table"]` vẫn đang tồn tại.
 
 - [ ] **Step 3: Cập nhật `MongoCollectionViewMode` enum**
-Mở `components/modules/quick-query/mongodb/types/mongo-quick-query.types.ts`:
+      Mở `components/modules/quick-query/mongodb/types/mongo-quick-query.types.ts`:
+
 ```typescript
 export enum MongoCollectionViewMode {
   List = 'list',
@@ -148,7 +157,8 @@ export enum MongoCollectionViewMode {
 ```
 
 - [ ] **Step 4: Cập nhật `MongoViewModeSwitcher.vue`**
-Mở `components/modules/quick-query/mongodb/components/MongoViewModeSwitcher.vue`:
+      Mở `components/modules/quick-query/mongodb/components/MongoViewModeSwitcher.vue`:
+
 ```vue
 <script setup lang="ts">
 import { MongoCollectionViewMode } from '../types';
@@ -187,50 +197,49 @@ const emit = defineEmits<{ 'update:modelValue': [MongoCollectionViewMode] }>();
 ```
 
 - [ ] **Step 5: Cập nhật `MongoCollectionDetail.vue`**
-Xóa import `MongoCollectionTableView`, template ref `tableViewRef`, lệnh `tableViewRef.value?.scrollToTop()` trong watch `skip`, và nhánh render `MongoCollectionTableView`:
+      Xóa import `MongoCollectionTableView`, template ref `tableViewRef`, lệnh `tableViewRef.value?.scrollToTop()` trong watch `skip`, và nhánh render `MongoCollectionTableView`:
+
 ```vue
 <!-- Trong template phần render viewMode -->
-      <MongoCollectionInfoView
-        v-if="viewMode === MongoCollectionViewMode.Info"
-        :connection="connection"
-        :collection-name="collectionName"
-        :database-name="databaseName"
-      />
-      <template v-else>
-        <BaseEmpty
-          v-if="isEmpty && !error"
-          title="No documents found"
-          desc="This collection has no documents matching the current query."
-        />
-        <div
-          v-else-if="error"
-          class="flex flex-col items-center justify-center h-full gap-2 p-4"
-        >
-          <Icon name="hugeicons:alert-02" class="text-destructive size-8" />
-          <p class="text-sm font-medium text-destructive">Query Error</p>
-          <p
-            class="text-xs text-muted-foreground text-center max-w-md break-all"
-          >
-            {{ error }}
-          </p>
-          <Button size="sm" variant="outline" @click="openErrorModal = true"
-            >View Details</Button
-          >
-        </div>
-        <MongoCollectionListView
-          v-else
-          ref="listViewRef"
-          :documents="documents"
-          :saving-doc-id="savingDocId"
-          :deleting-doc-id="deletingDocId"
-          @update-document="handleUpdateDocument"
-          @delete-document="onRequestDeleteDocument"
-        />
-      </template>
+<MongoCollectionInfoView
+  v-if="viewMode === MongoCollectionViewMode.Info"
+  :connection="connection"
+  :collection-name="collectionName"
+  :database-name="databaseName"
+/>
+<template v-else>
+  <BaseEmpty
+    v-if="isEmpty && !error"
+    title="No documents found"
+    desc="This collection has no documents matching the current query."
+  />
+  <div
+    v-else-if="error"
+    class="flex flex-col items-center justify-center h-full gap-2 p-4"
+  >
+    <Icon name="hugeicons:alert-02" class="text-destructive size-8" />
+    <p class="text-sm font-medium text-destructive">Query Error</p>
+    <p class="text-xs text-muted-foreground text-center max-w-md break-all">
+      {{ error }}
+    </p>
+    <Button size="sm" variant="outline" @click="openErrorModal = true"
+      >View Details</Button
+    >
+  </div>
+  <MongoCollectionListView
+    v-else
+    ref="listViewRef"
+    :documents="documents"
+    :saving-doc-id="savingDocId"
+    :deleting-doc-id="deletingDocId"
+    @update-document="handleUpdateDocument"
+    @delete-document="onRequestDeleteDocument"
+  />
+</template>
 ```
 
 - [ ] **Step 6: Xoá các file thừa và dọn re-export**
-Xoá các file:
+      Xoá các file:
 - `components/modules/quick-query/mongodb/components/MongoCollectionTableView.vue`
 - `components/modules/quick-query/mongodb/utils/buildMongoColumnDefs.ts`
 - `test/unit/components/modules/quick-query/mongodb/buildMongoColumnDefs.spec.ts`
@@ -242,11 +251,13 @@ Trong `components/modules/quick-query/mongodb/utils/index.ts`:
 Xoá dòng `export * from './buildMongoColumnDefs';`.
 
 - [ ] **Step 7: Chạy test xác minh Task 1**
+
 ```bash
 bun run typecheck
 bun test:nuxt test/nuxt/components/modules/quick-query/mongodb/MongoViewModeSwitcher.test.ts
 bun test:nuxt test/nuxt/components/modules/quick-query/mongodb/MongoCollectionDetail.test.ts
 ```
+
 Expected: PASS toàn bộ.
 
 ---
@@ -254,21 +265,27 @@ Expected: PASS toàn bộ.
 ### Task 2: Khôi phục cột '#' trong MongoDatabaseOverview
 
 **Files:**
+
 - Modify: `components/modules/quick-query/mongodb/containers/MongoDatabaseOverview.vue`
 - Modify: `test/nuxt/components/modules/quick-query/mongodb/MongoDatabaseOverview.test.ts`
 
 **Interfaces:**
+
 - Consumes: `createHashIndexColumnDef` from `~/components/base/data-grid/utils/gridColumnDefs`
 - Produces: `columnDefs` with `#` row number column at index 0
 
 - [ ] **Step 1: Viết failing test kiểm tra cột '#' trong `MongoDatabaseOverview.test.ts`**
 
 Mở `test/nuxt/components/modules/quick-query/mongodb/MongoDatabaseOverview.test.ts`:
+
 ```typescript
 import { flushPromises, mount } from '@vue/test-utils';
 import { describe, expect, it, vi } from 'vitest';
+import {
+  HASH_INDEX_HEADER,
+  HASH_INDEX_ID,
+} from '~/components/base/data-grid/constants';
 import MongoDatabaseOverview from '~/components/modules/quick-query/mongodb/containers/MongoDatabaseOverview.vue';
-import { HASH_INDEX_HEADER, HASH_INDEX_ID } from '~/components/base/data-grid/constants';
 
 const openMongoCollectionTab = vi.fn();
 vi.mock('~/core/composables/useTabManagement', () => ({
@@ -326,13 +343,16 @@ describe('MongoDatabaseOverview', () => {
 ```
 
 - [ ] **Step 2: Chạy test để verify test fail**
+
 ```bash
 bun test:nuxt test/nuxt/components/modules/quick-query/mongodb/MongoDatabaseOverview.test.ts
 ```
+
 Expected: FAIL vì `columnDefs[0].colId` đang là `'name'` thay vì `HASH_INDEX_ID`.
 
 - [ ] **Step 3: Cập nhật `columnDefs` trong `MongoDatabaseOverview.vue`**
-Mở `components/modules/quick-query/mongodb/containers/MongoDatabaseOverview.vue`:
+      Mở `components/modules/quick-query/mongodb/containers/MongoDatabaseOverview.vue`:
+
 ```typescript
 import { createHashIndexColumnDef } from '~/components/base/data-grid/utils/gridColumnDefs';
 
@@ -353,9 +373,11 @@ const columnDefs: ColDef<MongoCollectionSummary>[] = [
 ```
 
 - [ ] **Step 4: Chạy test để verify pass**
+
 ```bash
 bun test:nuxt test/nuxt/components/modules/quick-query/mongodb/MongoDatabaseOverview.test.ts
 ```
+
 Expected: PASS.
 
 ---
@@ -363,6 +385,7 @@ Expected: PASS.
 ### Task 3: Thêm Button '+ Insert' & Modal Insert Document / Import File
 
 **Files:**
+
 - Create: `components/modules/quick-query/mongodb/components/MongoInsertModal.vue`
 - Create: `server/api/mongodb/import-collection.post.ts`
 - Modify: `components/modules/quick-query/mongodb/components/MongoQuickQueryControlBar.vue`
@@ -371,11 +394,13 @@ Expected: PASS.
 - Test: `test/nuxt/components/modules/quick-query/mongodb/MongoInsertModal.test.ts`
 
 **Interfaces:**
+
 - Consumes: `/api/mongodb/quick-query-mutation` with `operation: 'insert'`, `/api/mongodb/import-collection`
 - Produces: `MongoInsertModal.vue`, `onInsertClick` event on `MongoQuickQueryControlBar`
 
 - [ ] **Step 1: Viết test cho `MongoInsertModal.vue`**
-Tạo `test/nuxt/components/modules/quick-query/mongodb/MongoInsertModal.test.ts`:
+      Tạo `test/nuxt/components/modules/quick-query/mongodb/MongoInsertModal.test.ts`:
+
 ```typescript
 import { mount } from '@vue/test-utils';
 import { describe, expect, it } from 'vitest';
@@ -414,13 +439,16 @@ describe('MongoInsertModal', () => {
 ```
 
 - [ ] **Step 2: Chạy test để verify fail**
+
 ```bash
 bun test:nuxt test/nuxt/components/modules/quick-query/mongodb/MongoInsertModal.test.ts
 ```
+
 Expected: FAIL vì `MongoInsertModal.vue` chưa tồn tại.
 
 - [ ] **Step 3: Tạo server endpoint `server/api/mongodb/import-collection.post.ts`**
-Tạo file `server/api/mongodb/import-collection.post.ts`:
+      Tạo file `server/api/mongodb/import-collection.post.ts`:
+
 ```typescript
 import { createError, defineEventHandler, readMultipartFormData } from 'h3';
 import { BSON } from 'mongodb';
@@ -429,7 +457,10 @@ import { withMongoDatabase } from '~/server/infrastructure/nosql/mongodb/mongodb
 export default defineEventHandler(async event => {
   const parts = await readMultipartFormData(event);
   if (!parts?.length) {
-    throw createError({ statusCode: 400, message: 'No file or form data uploaded' });
+    throw createError({
+      statusCode: 400,
+      message: 'No file or form data uploaded',
+    });
   }
 
   let connectionId = '';
@@ -439,9 +470,11 @@ export default defineEventHandler(async event => {
   let fileName = '';
 
   for (const part of parts) {
-    if (part.name === 'connectionId') connectionId = part.data.toString('utf-8');
+    if (part.name === 'connectionId')
+      connectionId = part.data.toString('utf-8');
     if (part.name === 'database') databaseName = part.data.toString('utf-8');
-    if (part.name === 'collection') collectionName = part.data.toString('utf-8');
+    if (part.name === 'collection')
+      collectionName = part.data.toString('utf-8');
     if (part.name === 'file' && part.filename) {
       fileBuffer = part.data;
       fileName = part.filename;
@@ -470,9 +503,13 @@ export default defineEventHandler(async event => {
   } else if (fileName.endsWith('.csv')) {
     const lines = fileContent.split('\n').filter(l => l.trim().length > 0);
     if (lines.length > 1) {
-      const headers = lines[0].split(',').map(h => h.trim().replace(/^["']|["']$/g, ''));
+      const headers = lines[0]
+        .split(',')
+        .map(h => h.trim().replace(/^["']|["']$/g, ''));
       for (let i = 1; i < lines.length; i++) {
-        const row = lines[i].split(',').map(c => c.trim().replace(/^["']|["']$/g, ''));
+        const row = lines[i]
+          .split(',')
+          .map(c => c.trim().replace(/^["']|["']$/g, ''));
         const doc: Record<string, unknown> = {};
         headers.forEach((header, index) => {
           doc[header] = row[index] ?? null;
@@ -481,18 +518,26 @@ export default defineEventHandler(async event => {
       }
     }
   } else {
-    throw createError({ statusCode: 400, message: 'Only .json and .csv files are supported' });
+    throw createError({
+      statusCode: 400,
+      message: 'Only .json and .csv files are supported',
+    });
   }
 
   if (!docsToInsert.length) {
-    throw createError({ statusCode: 400, message: 'No documents found in uploaded file' });
+    throw createError({
+      statusCode: 400,
+      message: 'No documents found in uploaded file',
+    });
   }
 
   return await withMongoDatabase(
     { connectionId, database: databaseName } as any,
     async database => {
       const collection = database.collection(collectionName);
-      const result = await collection.insertMany(docsToInsert as any, { ordered: false });
+      const result = await collection.insertMany(docsToInsert as any, {
+        ordered: false,
+      });
       return { success: true, insertedCount: result.insertedCount };
     }
   );
@@ -500,7 +545,8 @@ export default defineEventHandler(async event => {
 ```
 
 - [ ] **Step 4: Tạo Component `MongoInsertModal.vue`**
-Tạo file `components/modules/quick-query/mongodb/components/MongoInsertModal.vue`:
+      Tạo file `components/modules/quick-query/mongodb/components/MongoInsertModal.vue`:
+
 ```vue
 <script setup lang="ts">
 import { useDropZone } from '@vueuse/core';
@@ -533,7 +579,9 @@ const emit = defineEmits<{
 }>();
 
 function generateRandomMongoObjectId(): string {
-  const timestamp = Math.floor(Date.now() / 1000).toString(16).padStart(8, '0');
+  const timestamp = Math.floor(Date.now() / 1000)
+    .toString(16)
+    .padStart(8, '0');
   const randomHex = Array.from({ length: 16 }, () =>
     Math.floor(Math.random() * 16).toString(16)
   ).join('');
@@ -547,7 +595,15 @@ const fileInputRef = ref<HTMLInputElement | null>(null);
 const isLoading = ref(false);
 
 const resetState = () => {
-  editorContent.value = `{\n  _id: ObjectId('${generateRandomMongoObjectId()}')\n}`;
+  editorContent.value = JSON.stringify(
+    {
+      _id: {
+        $oid: generateRandomMongoObjectId(),
+      },
+    },
+    null,
+    2
+  );
   stagedFile.value = null;
   activeTab.value = 'document';
   if (fileInputRef.value) fileInputRef.value.value = '';
@@ -657,11 +713,16 @@ const handleImportFile = async () => {
 
 <template>
   <Dialog :open="open" @update:open="val => emit('update:open', val)">
-    <DialogContent class="sm:max-w-xl">
+    <DialogContent class="sm:max-w-3xl">
       <DialogHeader>
-        <DialogTitle class="flex items-center gap-2">
-          <Icon name="hugeicons:plus-sign" class="size-4" />
-          <span>Insert into {{ props.collectionName }}</span>
+        <DialogTitle class="flex items-center gap-2 text-base">
+          <Icon name="hugeicons:plus-sign" class="size-4 text-primary" />
+          <span class="flex items-center gap-1.5 font-medium">
+            Insert into
+            <Badge variant="secondary" class="font-mono text-xs">
+              {{ props.collectionName }}
+            </Badge>
+          </span>
         </DialogTitle>
       </DialogHeader>
 
@@ -672,18 +733,39 @@ const handleImportFile = async () => {
         </TabsList>
 
         <TabsContent value="document" class="space-y-4 pt-2">
-          <div class="border rounded-md overflow-hidden h-60">
-            <BaseCodeEditor
-              v-model="editorContent"
-              class="h-full w-full"
-            />
+          <div class="flex items-center justify-between">
+            <span class="text-xs text-muted-foreground">Document JSON</span>
+            <Button
+              variant="ghost"
+              size="xs"
+              class="h-6 px-2 text-xs"
+              @click="formatEditorContent"
+            >
+              <Icon name="hugeicons:magic-wand-01" class="size-3.5 mr-1" />
+              Format
+            </Button>
+          </div>
+          <div class="border rounded-md overflow-hidden h-[380px]">
+            <BaseCodeEditor v-model="editorContent" class="h-full w-full" />
           </div>
           <DialogFooter>
-            <Button variant="outline" size="sm" @click="emit('update:open', false)">
+            <Button
+              variant="outline"
+              size="sm"
+              @click="emit('update:open', false)"
+            >
               Cancel
             </Button>
-            <Button size="sm" :disabled="isLoading" @click="handleInsertDocument">
-              <Icon v-if="isLoading" name="hugeicons:loading-03" class="size-4 animate-spin mr-1.5" />
+            <Button
+              size="sm"
+              :disabled="isLoading"
+              @click="handleInsertDocument"
+            >
+              <Icon
+                v-if="isLoading"
+                name="hugeicons:loading-03"
+                class="size-4 animate-spin mr-1.5"
+              />
               <span>Insert</span>
             </Button>
           </DialogFooter>
@@ -702,15 +784,24 @@ const handleImportFile = async () => {
             ref="dropZoneRef"
             class="border-2 border-dashed rounded-lg p-8 flex flex-col items-center gap-3 cursor-pointer transition-colors"
             :class="[
-              isOverDropZone ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/50',
-              isLoading ? 'opacity-50 pointer-events-none' : ''
+              isOverDropZone
+                ? 'border-primary bg-primary/5'
+                : 'border-border hover:border-primary/50',
+              isLoading ? 'opacity-50 pointer-events-none' : '',
             ]"
             @click="fileInputRef?.click()"
           >
-            <Icon name="hugeicons:upload-cloud-01" class="size-10 text-muted-foreground" />
+            <Icon
+              name="hugeicons:upload-cloud-01"
+              class="size-10 text-muted-foreground"
+            />
             <div class="text-center">
-              <p class="text-sm font-medium">Drop file here or click to browse</p>
-              <p class="text-xs text-muted-foreground mt-0.5">Supports .json and .csv files</p>
+              <p class="text-sm font-medium">
+                Drop file here or click to browse
+              </p>
+              <p class="text-xs text-muted-foreground mt-0.5">
+                Supports .json and .csv files
+              </p>
             </div>
           </div>
 
@@ -718,10 +809,15 @@ const handleImportFile = async () => {
             v-if="stagedFile"
             class="flex items-center gap-3 rounded-lg border border-border bg-muted/40 px-3 py-2"
           >
-            <Icon name="hugeicons:file-01" class="size-5 text-muted-foreground" />
+            <Icon
+              name="hugeicons:file-01"
+              class="size-5 text-muted-foreground"
+            />
             <div class="flex-1 min-w-0">
               <p class="text-sm font-medium truncate">{{ stagedFile.name }}</p>
-              <p class="text-xs text-muted-foreground">{{ formatFileSize(stagedFile.size) }}</p>
+              <p class="text-xs text-muted-foreground">
+                {{ formatFileSize(stagedFile.size) }}
+              </p>
             </div>
             <Button variant="ghost" size="xs" @click="stagedFile = null">
               <Icon name="hugeicons:cancel-01" class="size-3.5" />
@@ -729,7 +825,11 @@ const handleImportFile = async () => {
           </div>
 
           <DialogFooter>
-            <Button variant="outline" size="sm" @click="emit('update:open', false)">
+            <Button
+              variant="outline"
+              size="sm"
+              @click="emit('update:open', false)"
+            >
               Cancel
             </Button>
             <Button
@@ -737,7 +837,11 @@ const handleImportFile = async () => {
               :disabled="isLoading || !stagedFile"
               @click="handleImportFile"
             >
-              <Icon v-if="isLoading" name="hugeicons:loading-03" class="size-4 animate-spin mr-1.5" />
+              <Icon
+                v-if="isLoading"
+                name="hugeicons:loading-03"
+                class="size-4 animate-spin mr-1.5"
+              />
               <span>Import</span>
             </Button>
           </DialogFooter>
@@ -753,23 +857,33 @@ const handleImportFile = async () => {
   - Thêm `emit('onInsertClick')`.
   - Thêm button `+ Insert`:
     ```vue
-    <Button variant="outline" size="xxs" class="gap-1 h-7" @click="emit('onInsertClick')">
-      <Icon name="hugeicons:plus-sign" class="size-3.5" />
-      <span>Insert</span>
-    </Button>
+    <Tooltip>
+      <TooltipTrigger as-child>
+        <Button variant="outline" size="xxs" class="font-normal" @click="emit('onInsertClick')">
+          <Icon name="hugeicons:plus-sign" />
+          <span>Insert</span>
+        </Button>
+      </TooltipTrigger>
+      <TooltipContent>
+        <p>Insert document or import file</p>
+      </TooltipContent>
+    </Tooltip>
     ```
 - Trong `MongoCollectionDetail.vue`:
   - Thêm `const isInsertModalOpen = ref(false);`.
   - Truyền `@on-insert-click="isInsertModalOpen = true"`.
   - Thêm `<MongoInsertModal v-model:open="isInsertModalOpen" :connection="connection" :database-name="databaseName" :collection-name="collectionName" @inserted="fetchDocuments" />`.
 - Trong `components/modules/quick-query/mongodb/components/index.ts`:
+
   - Export `MongoInsertModal`.
 
 - [ ] **Step 6: Chạy test verify Task 3**
+
 ```bash
 bun run typecheck
 bun test:nuxt test/nuxt/components/modules/quick-query/mongodb/MongoInsertModal.test.ts
 ```
+
 Expected: PASS.
 
 ---
@@ -777,6 +891,7 @@ Expected: PASS.
 ### Task 4: Thêm Button 'Export Data' & Modal Cấu hình Export
 
 **Files:**
+
 - Create: `components/modules/quick-query/mongodb/components/MongoExportModal.vue`
 - Create: `server/api/mongodb/export-collection.post.ts`
 - Modify: `components/modules/quick-query/mongodb/components/MongoQuickQueryControlBar.vue`
@@ -785,11 +900,13 @@ Expected: PASS.
 - Test: `test/nuxt/components/modules/quick-query/mongodb/MongoExportModal.test.ts`
 
 **Interfaces:**
+
 - Consumes: `server/api/mongodb/export-collection.post.ts`
 - Produces: `openExport` event on `MongoQuickQueryControlBar`, `MongoExportModal.vue`
 
 - [ ] **Step 1: Viết test cho `MongoExportModal.vue`**
-Tạo file `test/nuxt/components/modules/quick-query/mongodb/MongoExportModal.test.ts`:
+      Tạo file `test/nuxt/components/modules/quick-query/mongodb/MongoExportModal.test.ts`:
+
 ```typescript
 import { mount } from '@vue/test-utils';
 import { describe, expect, it } from 'vitest';
@@ -842,13 +959,16 @@ describe('MongoExportModal', () => {
 ```
 
 - [ ] **Step 2: Chạy test để verify fail**
+
 ```bash
 bun test:nuxt test/nuxt/components/modules/quick-query/mongodb/MongoExportModal.test.ts
 ```
+
 Expected: FAIL vì `MongoExportModal.vue` chưa tồn tại.
 
 - [ ] **Step 3: Tạo server endpoint `server/api/mongodb/export-collection.post.ts`**
-Tạo file `server/api/mongodb/export-collection.post.ts`:
+      Tạo file `server/api/mongodb/export-collection.post.ts`:
+
 ```typescript
 import { createError, defineEventHandler, readBody, setHeader } from 'h3';
 import { BSON } from 'mongodb';
@@ -867,7 +987,10 @@ interface ExportRequestBody extends DatabaseMetadataRequestParams {
 export default defineEventHandler(async event => {
   const body = await readBody<ExportRequestBody>(event);
   if (!body.collection || !body.format) {
-    throw createError({ statusCode: 400, message: 'collection and format are required' });
+    throw createError({
+      statusCode: 400,
+      message: 'collection and format are required',
+    });
   }
 
   return await withMongoDatabase(body, async database => {
@@ -881,7 +1004,9 @@ export default defineEventHandler(async event => {
 
     if (body.format === 'json') {
       const isRelaxed = body.jsonFormat === 'relaxed';
-      const output = BSON.EJSON.stringify(docs, undefined, 2, { relaxed: isRelaxed });
+      const output = BSON.EJSON.stringify(docs, undefined, 2, {
+        relaxed: isRelaxed,
+      });
       setHeader(event, 'Content-Type', 'application/json');
       setHeader(
         event,
@@ -892,16 +1017,15 @@ export default defineEventHandler(async event => {
     }
 
     // CSV format
-    const allKeys = Array.from(
-      new Set(docs.flatMap(d => Object.keys(d)))
-    );
+    const allKeys = Array.from(new Set(docs.flatMap(d => Object.keys(d))));
     const headerRow = allKeys.join(',');
     const rows = docs.map(doc => {
       return allKeys
         .map(key => {
           const val = doc[key];
           if (val === undefined || val === null) return '';
-          const str = typeof val === 'object' ? JSON.stringify(val) : String(val);
+          const str =
+            typeof val === 'object' ? JSON.stringify(val) : String(val);
           return `"${str.replace(/"/g, '""')}"`;
         })
         .join(',');
@@ -920,7 +1044,8 @@ export default defineEventHandler(async event => {
 ```
 
 - [ ] **Step 4: Tạo Component `MongoExportModal.vue`**
-Tạo file `components/modules/quick-query/mongodb/components/MongoExportModal.vue`:
+      Tạo file `components/modules/quick-query/mongodb/components/MongoExportModal.vue`:
+
 ```vue
 <script setup lang="ts">
 import { computed, ref } from 'vue';
@@ -1003,81 +1128,140 @@ const handleExport = async () => {
 
 <template>
   <Dialog :open="open" @update:open="val => emit('update:open', val)">
-    <DialogContent class="sm:max-w-lg">
-      <DialogHeader>
-        <DialogTitle class="flex items-center gap-2">
-          <Icon name="hugeicons:file-download" class="size-4" />
-          <span>Export Data - {{ props.collectionName }}</span>
-        </DialogTitle>
-      </DialogHeader>
+    <DialogContent class="sm:max-w-2xl">
+      <TooltipProvider>
+        <DialogHeader>
+          <DialogTitle class="flex items-center gap-2 text-base">
+            <Icon name="hugeicons:file-download" class="size-4 text-primary" />
+            <span class="flex items-center gap-1.5 font-medium">
+              Export Data -
+              <Badge variant="secondary" class="font-mono text-xs">
+                {{ props.collectionName }}
+              </Badge>
+            </span>
+          </DialogTitle>
+        </DialogHeader>
 
-      <div class="space-y-4 py-2">
-        <div
-          v-if="props.exportScope === 'current'"
-          class="rounded-md bg-muted/60 p-3 text-xs font-mono whitespace-pre-wrap border border-border text-primary/90"
-        >
-          {{ queryPreviewText }}
+        <div class="space-y-4 py-2">
+          <div v-if="props.exportScope === 'current'" class="space-y-1.5">
+            <Label class="text-xs font-medium text-muted-foreground">
+              Export results from the query below
+            </Label>
+            <CodeHighlightPreview
+              :code="queryPreviewCode"
+              language="javascript"
+              :show-copy-button="true"
+              max-height="160px"
+            />
+          </div>
+
+          <div class="space-y-2">
+            <Label class="text-sm font-semibold">Export Format</Label>
+            <RadioGroup v-model="exportType" class="flex gap-4">
+              <div class="flex items-center gap-2">
+                <RadioGroupItem id="export-json" value="json" />
+                <Label for="export-json" class="cursor-pointer font-medium"
+                  >JSON</Label
+                >
+              </div>
+              <div class="flex items-center gap-2">
+                <RadioGroupItem id="export-csv" value="csv" />
+                <Label for="export-csv" class="cursor-pointer font-medium"
+                  >CSV</Label
+                >
+              </div>
+            </RadioGroup>
+          </div>
+
+          <div
+            v-if="exportType === 'json'"
+            class="space-y-3 pt-2 border-t border-border"
+          >
+            <Label class="text-sm font-semibold">Advanced JSON Format</Label>
+            <RadioGroup v-model="jsonFormat" class="space-y-3">
+              <div class="flex items-start gap-2.5">
+                <RadioGroupItem
+                  id="format-default"
+                  value="default"
+                  class="mt-1"
+                />
+                <div>
+                  <Label
+                    for="format-default"
+                    class="font-medium cursor-pointer"
+                  >
+                    Default Extended JSON
+                  </Label>
+                  <p class="text-xs text-muted-foreground mt-0.5">
+                    Example: { "fortyTwo": 42, "oneHalf": 0.5, "bignumber": {
+                    "$numberLong": "5000000000" } }
+                  </p>
+                </div>
+              </div>
+
+              <div class="flex items-start gap-2.5">
+                <RadioGroupItem
+                  id="format-relaxed"
+                  value="relaxed"
+                  class="mt-1"
+                />
+                <div>
+                  <Label
+                    for="format-relaxed"
+                    class="font-medium cursor-pointer"
+                  >
+                    Relaxed Extended JSON
+                  </Label>
+                  <p class="text-xs text-muted-foreground mt-0.5">
+                    Example: { "fortyTwo": 42, "oneHalf": 0.5, "bignumber":
+                    5000000000 }. Large numbers (>= 2^53) will change with this
+                    format.
+                  </p>
+                </div>
+              </div>
+
+              <div class="flex items-start gap-2.5">
+                <RadioGroupItem
+                  id="format-canonical"
+                  value="canonical"
+                  class="mt-1"
+                />
+                <div>
+                  <Label
+                    for="format-canonical"
+                    class="font-medium cursor-pointer"
+                  >
+                    Canonical Extended JSON
+                  </Label>
+                  <p class="text-xs text-muted-foreground mt-0.5">
+                    Example: { "fortyTwo": { "$numberInt": "42" }, "oneHalf": {
+                    "$numberDouble": "0.5" }, "bignumber": { "$numberLong":
+                    "5000000000" } }
+                  </p>
+                </div>
+              </div>
+            </RadioGroup>
+          </div>
         </div>
 
-        <div class="space-y-2">
-          <Label class="text-sm font-semibold">Export Format</Label>
-          <RadioGroup v-model="exportType" class="flex gap-4">
-            <div class="flex items-center gap-2">
-              <RadioGroupItem id="export-json" value="json" />
-              <Label for="export-json" class="cursor-pointer">JSON</Label>
-            </div>
-            <div class="flex items-center gap-2">
-              <RadioGroupItem id="export-csv" value="csv" />
-              <Label for="export-csv" class="cursor-pointer">CSV</Label>
-            </div>
-          </RadioGroup>
-        </div>
-
-        <div v-if="exportType === 'json'" class="space-y-3 pt-2 border-t border-border">
-          <Label class="text-sm font-semibold">Advanced JSON Format</Label>
-          <RadioGroup v-model="jsonFormat" class="space-y-3">
-            <div class="flex items-start gap-2.5">
-              <RadioGroupItem id="format-default" value="default" class="mt-1" />
-              <div>
-                <Label for="format-default" class="font-medium cursor-pointer">Default Extended JSON</Label>
-                <p class="text-xs text-muted-foreground mt-0.5">
-                  Example: { "fortyTwo": 42, "oneHalf": 0.5, "bignumber": { "$numberLong": "5000000000" } }
-                </p>
-              </div>
-            </div>
-
-            <div class="flex items-start gap-2.5">
-              <RadioGroupItem id="format-relaxed" value="relaxed" class="mt-1" />
-              <div>
-                <Label for="format-relaxed" class="font-medium cursor-pointer">Relaxed Extended JSON</Label>
-                <p class="text-xs text-muted-foreground mt-0.5">
-                  Example: { "fortyTwo": 42, "oneHalf": 0.5, "bignumber": 5000000000 }. Large numbers (>= 2^^53) will change with this format.
-                </p>
-              </div>
-            </div>
-
-            <div class="flex items-start gap-2.5">
-              <RadioGroupItem id="format-canonical" value="canonical" class="mt-1" />
-              <div>
-                <Label for="format-canonical" class="font-medium cursor-pointer">Canonical Extended JSON</Label>
-                <p class="text-xs text-muted-foreground mt-0.5">
-                  Example: { "fortyTwo": { "$numberInt": "42" }, "oneHalf": { "$numberDouble": "0.5" }, "bignumber": { "$numberLong": "5000000000" } }
-                </p>
-              </div>
-            </div>
-          </RadioGroup>
-        </div>
-      </div>
-
-      <DialogFooter>
-        <Button variant="outline" size="sm" @click="emit('update:open', false)">
-          Cancel
-        </Button>
-        <Button size="sm" :disabled="isExporting" @click="handleExport">
-          <Icon v-if="isExporting" name="hugeicons:loading-03" class="size-4 animate-spin mr-1.5" />
-          <span>Export</span>
-        </Button>
-      </DialogFooter>
+        <DialogFooter>
+          <Button
+            variant="outline"
+            size="sm"
+            @click="emit('update:open', false)"
+          >
+            Cancel
+          </Button>
+          <Button size="sm" :disabled="isExporting" @click="handleExport">
+            <Icon
+              v-if="isExporting"
+              name="hugeicons:loading-03"
+              class="size-4 animate-spin mr-1.5"
+            />
+            <span>Export</span>
+          </Button>
+        </DialogFooter>
+      </TooltipProvider>
     </DialogContent>
   </Dialog>
 </template>
@@ -1085,45 +1269,72 @@ const handleExport = async () => {
 
 - [ ] **Step 5: Tích hợp vào `MongoQuickQueryControlBar.vue` & `MongoCollectionDetail.vue`**
 - Trong `MongoQuickQueryControlBar.vue`:
+
   - Thêm `emit('openExport', scope: 'current' | 'full')`.
   - Thêm DropdownMenu bên phải `MongoViewModeSwitcher`:
+
     ```vue
     <div class="flex items-center gap-1">
-      <MongoViewModeSwitcher
+      <Tabs
         :model-value="props.viewMode"
-        @update:model-value="mode => emit('update:viewMode', mode)"
-      />
-
+        @update:model-value="
+          emit('update:viewMode', $event as MongoCollectionViewMode)
+        "
+      >
+        <TabsList size="xxs" class="grid w-full grid-cols-2">
+          <TabsTrigger
+            size="xxs"
+            :value="MongoCollectionViewMode.List"
+            data-testid="mongo-view-mode-list"
+            class="font-medium cursor-pointer text-primary/80"
+          >
+            List
+          </TabsTrigger>
+          <TabsTrigger
+            size="xxs"
+            :value="MongoCollectionViewMode.Info"
+            data-testid="mongo-view-mode-info"
+            class="font-medium cursor-pointer text-primary/80"
+          >
+            Info
+          </TabsTrigger>
+        </TabsList>
+      </Tabs>
+    
       <DropdownMenu>
         <DropdownMenuTrigger as-child>
-          <Button variant="outline" size="xxs" class="gap-1 h-7">
-            <Icon name="hugeicons:file-download" class="size-3.5" />
+          <Button variant="outline" size="xxs" class="font-normal">
+            <Icon name="hugeicons:file-download" />
             <span>Export</span>
             <Icon name="lucide:chevron-down" class="size-3 text-muted-foreground" />
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
-          <DropdownMenuItem @click="emit('openExport', 'current')">
+          <DropdownMenuItem @click="emit('openExport', MongoExportScope.Current)">
             Current results
           </DropdownMenuItem>
-          <DropdownMenuItem @click="emit('openExport', 'full')">
+          <DropdownMenuItem @click="emit('openExport', MongoExportScope.All)">
             Full collections
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
     </div>
     ```
+
 - Trong `MongoCollectionDetail.vue`:
   - Thêm state: `const exportModalState = ref<{ open: boolean; scope: 'current' | 'full' }>({ open: false, scope: 'current' });`.
   - Lắng nghe `@open-export="scope => { exportModalState = { open: true, scope } }"`.
   - Đặt `<MongoExportModal v-model:open="exportModalState.open" :export-scope="exportModalState.scope" :database-name="databaseName" :collection-name="collectionName" :active-filter-payload="activeFilterPayload" :connection="connection" />`.
 - Trong `components/modules/quick-query/mongodb/components/index.ts`:
+
   - Export `MongoExportModal`.
 
 - [ ] **Step 6: Chạy test xác minh toàn diện**
+
 ```bash
 bun run typecheck
 bun test:nuxt test/nuxt/components/modules/quick-query/mongodb/MongoExportModal.test.ts
 bun test:unit
 ```
+
 Expected: PASS toàn bộ.

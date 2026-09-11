@@ -159,21 +159,17 @@ export function parseMongoRawFilter(rawText: string): Record<string, unknown> {
   return parsed;
 }
 
-export function parseMongoDocumentInput(rawText: string): Record<string, unknown> {
+export function parseMongoDocumentInput(
+  rawText: string
+): Record<string, unknown> | Record<string, unknown>[] {
   if (!rawText || !rawText.trim()) {
     throw new Error('Document content cannot be empty');
   }
 
   // Replace ObjectId(...) and ISODate(...) with EJSON equivalents
   const withEjsonLiterals = rawText
-    .replace(
-      /ObjectId\(\s*(['"])([0-9a-fA-F]{24})\1\s*\)/g,
-      '{"$oid": "$2"}'
-    )
-    .replace(
-      /ISODate\(\s*(['"])(.*?)\1\s*\)/g,
-      '{"$date": "$2"}'
-    );
+    .replace(/ObjectId\(\s*(['"])([0-9a-fA-F]{24})\1\s*\)/g, '{"$oid": "$2"}')
+    .replace(/ISODate\(\s*(['"])(.*?)\1\s*\)/g, '{"$date": "$2"}');
 
   // Quote unquoted keys
   const withQuotedKeys = withEjsonLiterals.replace(
@@ -181,9 +177,34 @@ export function parseMongoDocumentInput(rawText: string): Record<string, unknown
     '$1"$2":'
   );
 
-  const parsed = JSON.parse(withQuotedKeys);
+  const clean = withQuotedKeys.trim().replace(/,\s*$/, '');
+  let parsed: unknown;
+
+  try {
+    parsed = JSON.parse(clean);
+  } catch (directError) {
+    try {
+      // Handles comma-separated documents without outer brackets: { ... }, { ... }
+      parsed = JSON.parse(`[${clean}]`);
+    } catch {
+      try {
+        // Handles newline-delimited JSON objects without commas: { ... }\n{ ... }
+        parsed = JSON.parse(`[${clean.replace(/}\s*\{/g, '},{')}]`);
+      } catch {
+        throw directError;
+      }
+    }
+  }
+
+  if (Array.isArray(parsed)) {
+    if (!parsed.every(item => isRecord(item))) {
+      throw new Error('All elements in the array must be valid JSON objects');
+    }
+    return parsed as Record<string, unknown>[];
+  }
+
   if (!isRecord(parsed)) {
-    throw new Error('Document must be a valid JSON object');
+    throw new Error('Document must be a valid JSON object or array of objects');
   }
   return parsed;
 }

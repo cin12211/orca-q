@@ -1,5 +1,6 @@
 import bash from '@shikijs/langs/bash';
 import html from '@shikijs/langs/html';
+import javascript from '@shikijs/langs/javascript';
 import json from '@shikijs/langs/json';
 import markdown from '@shikijs/langs/markdown';
 import plsql from '@shikijs/langs/plsql';
@@ -22,6 +23,8 @@ const DARK_THEME = 'catppuccin-mocha';
 export type SupportedLanguage =
   | 'sql'
   | 'json'
+  | 'javascript'
+  | 'js'
   | 'markdown'
   | 'xml'
   | 'yaml'
@@ -32,6 +35,8 @@ export type SupportedLanguage =
 const LANGUAGE_MAP: Record<SupportedLanguage, string> = {
   sql: 'plsql',
   json: 'json',
+  javascript: 'javascript',
+  js: 'javascript',
   markdown: 'markdown',
   xml: 'xml',
   yaml: 'yaml',
@@ -69,7 +74,7 @@ export function useCodeHighlighter() {
     try {
       const highlighterInstance = await createHighlighterCore({
         themes: [catppuccinLatte, catppuccinMocha],
-        langs: [plsql, json, markdown, xml, yaml, html, bash],
+        langs: [plsql, json, javascript, markdown, xml, yaml, html, bash],
         engine: createJavaScriptRegexEngine(),
       });
 

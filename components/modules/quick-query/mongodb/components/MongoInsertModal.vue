@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { json } from '@codemirror/lang-json';
-import { lintGutter } from '@codemirror/lint';
 import { useDropZone } from '@vueuse/core';
 import { ref, useTemplateRef, watch } from 'vue';
+import { json } from '@codemirror/lang-json';
+import { lintGutter } from '@codemirror/lint';
 import { toast } from 'vue-sonner';
 import { Button } from '@/components/ui/button';
 import {
@@ -34,7 +34,9 @@ const emit = defineEmits<{
 }>();
 
 function generateRandomMongoObjectId(): string {
-  const timestamp = Math.floor(Date.now() / 1000).toString(16).padStart(8, '0');
+  const timestamp = Math.floor(Date.now() / 1000)
+    .toString(16)
+    .padStart(8, '0');
   const randomHex = Array.from({ length: 16 }, () =>
     Math.floor(Math.random() * 16).toString(16)
   ).join('');
@@ -55,7 +57,15 @@ const editorExtensions = [
 ];
 
 const resetState = () => {
-  editorContent.value = `{\n  "_id": ObjectId("${generateRandomMongoObjectId()}")\n}`;
+  editorContent.value = JSON.stringify(
+    {
+      _id: {
+        $oid: generateRandomMongoObjectId(),
+      },
+    },
+    null,
+    2
+  );
   stagedFile.value = null;
   activeTab.value = MongoInsertTab.Document;
   if (fileInputRef.value) fileInputRef.value.value = '';
@@ -117,7 +127,12 @@ const handleInsertDocument = async () => {
       },
     });
 
-    toast.success('Document inserted successfully!');
+    const isMultiple = Array.isArray(parsed);
+    toast.success(
+      isMultiple
+        ? `${parsed.length} documents inserted successfully!`
+        : 'Document inserted successfully!'
+    );
     emit('inserted');
     emit('update:open', false);
   } catch (err) {
@@ -166,18 +181,27 @@ const handleImportFile = async () => {
 
 <template>
   <Dialog :open="open" @update:open="val => emit('update:open', val)">
-    <DialogContent class="sm:max-w-xl">
+    <DialogContent class="sm:max-w-3xl">
       <DialogHeader>
-        <DialogTitle class="flex items-center gap-2">
-          <Icon name="hugeicons:plus-sign" class="size-4" />
-          <span>Insert into {{ props.collectionName }}</span>
+        <DialogTitle class="flex items-center gap-2 text-base">
+          <Icon name="hugeicons:plus-sign" class="size-4 text-primary" />
+          <span class="font-medium"
+            >Insert Document -
+            <Badge variant="secondary" class="font-mono text-xs">
+              {{ props.collectionName }}
+            </Badge></span
+          >
         </DialogTitle>
       </DialogHeader>
 
       <Tabs v-model="activeTab" class="w-full">
-        <TabsList class="grid w-full grid-cols-2">
-          <TabsTrigger :value="MongoInsertTab.Document">Insert Document</TabsTrigger>
-          <TabsTrigger :value="MongoInsertTab.Import">Import JSON or CSV file</TabsTrigger>
+        <TabsList class="w-fit">
+          <TabsTrigger :value="MongoInsertTab.Document" class="cursor-pointer">
+            Insert Document
+          </TabsTrigger>
+          <TabsTrigger :value="MongoInsertTab.Import" class="cursor-pointer">
+            Import JSON or CSV file
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent :value="MongoInsertTab.Document" class="space-y-3 pt-2">
@@ -190,11 +214,13 @@ const handleImportFile = async () => {
                 class="h-6 px-2 text-xs"
                 @click="formatEditorContent"
               >
-                <Icon name="hugeicons:clean" class="size-3.5 mr-1" />
+                <Icon name="hugeicons:magic-wand-01" class="size-3.5 mr-1" />
                 Format
               </Button>
             </div>
-            <div class="border border-border/50 rounded-md overflow-hidden h-[260px]">
+            <div
+              class="border border-border/50 rounded-md overflow-hidden h-[380px]"
+            >
               <BaseCodeEditor
                 ref="editorRef"
                 v-model="editorContent"
@@ -204,11 +230,23 @@ const handleImportFile = async () => {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" size="sm" @click="emit('update:open', false)">
+            <Button
+              variant="outline"
+              size="sm"
+              @click="emit('update:open', false)"
+            >
               Cancel
             </Button>
-            <Button size="sm" :disabled="isLoading" @click="handleInsertDocument">
-              <Icon v-if="isLoading" name="hugeicons:loading-03" class="size-4 animate-spin mr-1.5" />
+            <Button
+              size="sm"
+              :disabled="isLoading"
+              @click="handleInsertDocument"
+            >
+              <Icon
+                v-if="isLoading"
+                name="hugeicons:loading-03"
+                class="size-4 animate-spin mr-1.5"
+              />
               <span>Insert</span>
             </Button>
           </DialogFooter>
@@ -227,15 +265,24 @@ const handleImportFile = async () => {
             ref="dropZoneRef"
             class="border-2 border-dashed rounded-lg p-8 flex flex-col items-center gap-3 cursor-pointer transition-colors"
             :class="[
-              isOverDropZone ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/50',
-              isLoading ? 'opacity-50 pointer-events-none' : ''
+              isOverDropZone
+                ? 'border-primary bg-primary/5'
+                : 'border-border hover:border-primary/50',
+              isLoading ? 'opacity-50 pointer-events-none' : '',
             ]"
             @click="fileInputRef?.click()"
           >
-            <Icon name="hugeicons:cloud-upload" class="size-10 text-muted-foreground" />
+            <Icon
+              name="hugeicons:cloud-upload"
+              class="size-10 text-muted-foreground"
+            />
             <div class="text-center">
-              <p class="text-sm font-medium">Drop file here or click to browse</p>
-              <p class="text-xs text-muted-foreground mt-0.5">Supports .json and .csv files</p>
+              <p class="text-sm font-medium">
+                Drop file here or click to browse
+              </p>
+              <p class="text-xs text-muted-foreground mt-0.5">
+                Supports .json and .csv files
+              </p>
             </div>
           </div>
 
@@ -243,10 +290,15 @@ const handleImportFile = async () => {
             v-if="stagedFile"
             class="flex items-center gap-3 rounded-lg border border-border bg-muted/40 px-3 py-2"
           >
-            <Icon name="hugeicons:file-01" class="size-5 text-muted-foreground" />
+            <Icon
+              name="hugeicons:file-01"
+              class="size-5 text-muted-foreground"
+            />
             <div class="flex-1 min-w-0">
               <p class="text-sm font-medium truncate">{{ stagedFile.name }}</p>
-              <p class="text-xs text-muted-foreground">{{ formatBytes(stagedFile.size) }}</p>
+              <p class="text-xs text-muted-foreground">
+                {{ formatBytes(stagedFile.size) }}
+              </p>
             </div>
             <Button variant="ghost" size="xs" @click="stagedFile = null">
               <Icon name="hugeicons:cancel-01" class="size-3.5" />
@@ -254,7 +306,11 @@ const handleImportFile = async () => {
           </div>
 
           <DialogFooter>
-            <Button variant="outline" size="sm" @click="emit('update:open', false)">
+            <Button
+              variant="outline"
+              size="sm"
+              @click="emit('update:open', false)"
+            >
               Cancel
             </Button>
             <Button
@@ -262,7 +318,11 @@ const handleImportFile = async () => {
               :disabled="isLoading || !stagedFile"
               @click="handleImportFile"
             >
-              <Icon v-if="isLoading" name="hugeicons:loading-03" class="size-4 animate-spin mr-1.5" />
+              <Icon
+                v-if="isLoading"
+                name="hugeicons:loading-03"
+                class="size-4 animate-spin mr-1.5"
+              />
               <span>Import</span>
             </Button>
           </DialogFooter>

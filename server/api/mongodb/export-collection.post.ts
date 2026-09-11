@@ -10,12 +10,16 @@ interface ExportRequestBody extends DatabaseMetadataRequestParams {
   filter?: Record<string, unknown>;
   format: 'csv' | 'json';
   jsonFormat?: 'default' | 'relaxed' | 'canonical';
+  filename?: string;
 }
 
 export default defineEventHandler(async event => {
   const body = await readBody<ExportRequestBody>(event);
   if (!body.collection || !body.format) {
-    throw createError({ statusCode: 400, message: 'collection and format are required' });
+    throw createError({
+      statusCode: 400,
+      message: 'collection and format are required',
+    });
   }
 
   return await withMongoDatabase(body, async database => {
@@ -26,30 +30,33 @@ export default defineEventHandler(async event => {
         : {};
 
     const docs = await collection.find(queryFilter).toArray();
+    const downloadFilename =
+      body.filename?.trim() || `${body.collection}_export.${body.format}`;
 
     if (body.format === 'json') {
       const isRelaxed = body.jsonFormat !== 'canonical';
-      const output = BSON.EJSON.stringify(docs, undefined, 2, { relaxed: isRelaxed });
+      const output = BSON.EJSON.stringify(docs, undefined, 2, {
+        relaxed: isRelaxed,
+      });
       setHeader(event, 'Content-Type', 'application/json');
       setHeader(
         event,
         'Content-Disposition',
-        `attachment; filename="${body.collection}_export.json"`
+        `attachment; filename="${downloadFilename}"`
       );
       return output;
     }
 
     // CSV format
-    const allKeys = Array.from(
-      new Set(docs.flatMap(d => Object.keys(d)))
-    );
+    const allKeys = Array.from(new Set(docs.flatMap(d => Object.keys(d))));
     const headerRow = allKeys.join(',');
     const rows = docs.map(doc => {
       return allKeys
         .map(key => {
           const val = doc[key];
           if (val === undefined || val === null) return '';
-          const str = typeof val === 'object' ? JSON.stringify(val) : String(val);
+          const str =
+            typeof val === 'object' ? JSON.stringify(val) : String(val);
           return `"${str.replace(/"/g, '""')}"`;
         })
         .join(',');
@@ -60,7 +67,7 @@ export default defineEventHandler(async event => {
     setHeader(
       event,
       'Content-Disposition',
-      `attachment; filename="${body.collection}_export.csv"`
+      `attachment; filename="${downloadFilename}"`
     );
     return csvOutput;
   });

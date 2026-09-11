@@ -13,7 +13,7 @@ import {
 } from '#components';
 import QuickPagination from '~/components/modules/quick-query/quick-query-control-bar/QuickPagination.vue';
 import RefreshButton from '~/components/modules/quick-query/quick-query-control-bar/RefreshButton.vue';
-import { type MongoCollectionViewMode, MongoExportScope } from '../types';
+import { MongoCollectionViewMode, MongoExportScope } from '../types';
 import MongoViewModeSwitcher from './MongoViewModeSwitcher.vue';
 
 const props = defineProps<{
@@ -47,11 +47,16 @@ const emit = defineEmits<{
           <Button
             variant="outline"
             size="xxs"
-            :class="props.isShowFilters ? 'bg-accent text-accent-foreground' : ''"
+            :class="
+              props.isShowFilters ? 'bg-accent text-accent-foreground' : ''
+            "
             @click="emit('onToggleFilter')"
           >
             <Icon name="lucide:filter" />
-            <span v-if="props.activeFilterCount" class="ml-1 text-[10px] font-semibold">
+            <span
+              v-if="props.activeFilterCount"
+              class="ml-1 text-[10px] font-semibold"
+            >
               {{ props.activeFilterCount }}
             </span>
             <ContextMenuShortcut>⌘F</ContextMenuShortcut>
@@ -64,15 +69,22 @@ const emit = defineEmits<{
 
       <RefreshButton @on-refresh="emit('onRefresh')" />
 
-      <Button
-        variant="outline"
-        size="xxs"
-        class="gap-1 h-7"
-        @click="emit('onInsertClick')"
-      >
-        <Icon name="hugeicons:plus-sign" class="size-3.5" />
-        <span>Insert</span>
-      </Button>
+      <Tooltip>
+        <TooltipTrigger as-child>
+          <Button
+            variant="outline"
+            size="xxs"
+            class="font-normal"
+            @click="emit('onInsertClick')"
+          >
+            <Icon name="hugeicons:plus-sign" />
+            <span>Insert</span>
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent>
+          <p>Insert document or import file</p>
+        </TooltipContent>
+      </Tooltip>
     </div>
 
     <div class="flex items-center gap-2">
@@ -98,9 +110,7 @@ const emit = defineEmits<{
           <p class="font-normal text-xs text-primary/60 inline">of</p>
           {{ props.totalRows }}
         </template>
-        <template v-else>
-          0-0 of 0
-        </template>
+        <template v-else> 0-0 of 0 </template>
         <p class="font-normal text-xs text-primary/60 inline">rows</p>
       </div>
 
@@ -136,14 +146,19 @@ const emit = defineEmits<{
 
       <DropdownMenu>
         <DropdownMenuTrigger as-child>
-          <Button variant="outline" size="xxs" class="gap-1 h-7">
-            <Icon name="hugeicons:file-download" class="size-3.5" />
+          <Button variant="ghost" size="xxs" class="font-normal">
+            <Icon name="hugeicons:file-download" />
             <span>Export</span>
-            <Icon name="lucide:chevron-down" class="size-3 text-muted-foreground" />
+            <Icon
+              name="lucide:chevron-down"
+              class="size-3 text-muted-foreground"
+            />
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
-          <DropdownMenuItem @click="emit('openExport', MongoExportScope.Current)">
+          <DropdownMenuItem
+            @click="emit('openExport', MongoExportScope.Current)"
+          >
             Current results
           </DropdownMenuItem>
           <DropdownMenuItem @click="emit('openExport', MongoExportScope.All)">

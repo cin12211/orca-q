@@ -85,4 +85,48 @@ describe('mongoEjsonUtils', () => {
       name: 'Orca',
     });
   });
+
+  it('parses comma-separated multiple documents without outer brackets', async () => {
+    const { parseMongoDocumentInput } = await import(
+      '~/components/modules/quick-query/mongodb/utils/mongoEjsonUtils'
+    );
+
+    const input = `
+{
+  "_id": {
+    "$oid": "65dc48eb36ac6bd6b6c27c11"
+  },
+  "fullName": "Linh Tran"
+},
+{
+  "_id": {
+    "$oid": "65dc48eb36ac6bd6b6c27c12"
+  },
+  "fullName": "Linh Tran 2"
+}
+    `.trim();
+
+    const parsed = parseMongoDocumentInput(input);
+    expect(Array.isArray(parsed)).toBe(true);
+    expect((parsed as any[]).length).toBe(2);
+    expect((parsed as any[])[0].fullName).toBe('Linh Tran');
+    expect((parsed as any[])[1].fullName).toBe('Linh Tran 2');
+  });
+
+  it('parses an array of documents and handles trailing comma', async () => {
+    const { parseMongoDocumentInput } = await import(
+      '~/components/modules/quick-query/mongodb/utils/mongoEjsonUtils'
+    );
+
+    const input = `
+[
+  { "title": "Doc 1" },
+  { "title": "Doc 2" }
+]
+    `.trim();
+
+    const parsed = parseMongoDocumentInput(input);
+    expect(Array.isArray(parsed)).toBe(true);
+    expect((parsed as any[]).length).toBe(2);
+  });
 });

@@ -127,7 +127,7 @@ watch(() => props.databaseName, fetchCollections, { immediate: true });
   <div class="flex flex-col h-full w-full relative">
     <LoadingOverlay :visible="isLoading" />
 
-    <div class="flex-1 overflow-hidden px-1 mb-0.5">
+    <div class="flex-1 overflow-hidden p-1">
       <BaseEmpty
         v-if="isEmpty"
         title="No collections found"
