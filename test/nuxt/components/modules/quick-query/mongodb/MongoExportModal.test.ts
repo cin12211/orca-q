@@ -1,13 +1,14 @@
 import { mount } from '@vue/test-utils';
 import { describe, expect, it } from 'vitest';
 import MongoExportModal from '~/components/modules/quick-query/mongodb/components/MongoExportModal.vue';
+import { MongoExportScope } from '~/components/modules/quick-query/mongodb/types';
 
 describe('MongoExportModal', () => {
   it('shows query preview when exportScope is current', () => {
     const wrapper = mount(MongoExportModal, {
       props: {
         open: true,
-        exportScope: 'current',
+        exportScope: MongoExportScope.Current,
         databaseName: 'shop',
         collectionName: 'roles',
         activeFilterPayload: { name: 'admin' },
@@ -18,11 +19,11 @@ describe('MongoExportModal', () => {
     expect(wrapper.text()).toContain("db.getCollection('roles').find(");
   });
 
-  it('hides query preview when exportScope is full', () => {
+  it('hides query preview when exportScope is full/all', () => {
     const wrapper = mount(MongoExportModal, {
       props: {
         open: true,
-        exportScope: 'full',
+        exportScope: MongoExportScope.All,
         databaseName: 'shop',
         collectionName: 'roles',
       },
@@ -35,7 +36,7 @@ describe('MongoExportModal', () => {
     const wrapper = mount(MongoExportModal, {
       props: {
         open: true,
-        exportScope: 'current',
+        exportScope: MongoExportScope.Current,
         databaseName: 'shop',
         collectionName: 'roles',
       },

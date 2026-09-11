@@ -29,6 +29,6 @@ describe('MongoInsertModal', () => {
 
     const editor = wrapper.findComponent({ name: 'BaseCodeEditor' });
     expect(editor.exists()).toBe(true);
-    expect(editor.props('modelValue')).toContain('_id: ObjectId(');
+    expect(editor.props('modelValue')).toContain('"_id": ObjectId(');
   });
 });

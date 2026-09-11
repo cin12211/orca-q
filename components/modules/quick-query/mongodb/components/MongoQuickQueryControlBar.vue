@@ -13,7 +13,7 @@ import {
 } from '#components';
 import QuickPagination from '~/components/modules/quick-query/quick-query-control-bar/QuickPagination.vue';
 import RefreshButton from '~/components/modules/quick-query/quick-query-control-bar/RefreshButton.vue';
-import type { MongoCollectionViewMode } from '../types';
+import { type MongoCollectionViewMode, MongoExportScope } from '../types';
 import MongoViewModeSwitcher from './MongoViewModeSwitcher.vue';
 
 const props = defineProps<{
@@ -34,7 +34,7 @@ const emit = defineEmits<{
   onToggleFilter: [];
   onPaginate: [value: { limit: number; offset: number }];
   onInsertClick: [];
-  openExport: [scope: 'current' | 'full'];
+  openExport: [scope: MongoExportScope];
   'update:viewMode': [MongoCollectionViewMode];
 }>();
 </script>
@@ -44,8 +44,16 @@ const emit = defineEmits<{
     <div class="flex items-center gap-1">
       <Tooltip>
         <TooltipTrigger as-child>
-          <Button variant="outline" size="xxs" @click="emit('onToggleFilter')">
+          <Button
+            variant="outline"
+            size="xxs"
+            :class="props.isShowFilters ? 'bg-accent text-accent-foreground' : ''"
+            @click="emit('onToggleFilter')"
+          >
             <Icon name="lucide:filter" />
+            <span v-if="props.activeFilterCount" class="ml-1 text-[10px] font-semibold">
+              {{ props.activeFilterCount }}
+            </span>
             <ContextMenuShortcut>⌘F</ContextMenuShortcut>
           </Button>
         </TooltipTrigger>
@@ -85,9 +93,14 @@ const emit = defineEmits<{
       </Tooltip>
 
       <div class="font-normal text-sm text-primary/80">
-        {{ props.skip + 1 }}-{{ props.skip + props.currentTotalRows }}
-        <p class="font-normal text-xs text-primary/60 inline">of</p>
-        {{ props.totalRows }}
+        <template v-if="props.totalRows > 0 && props.currentTotalRows > 0">
+          {{ props.skip + 1 }}-{{ props.skip + props.currentTotalRows }}
+          <p class="font-normal text-xs text-primary/60 inline">of</p>
+          {{ props.totalRows }}
+        </template>
+        <template v-else>
+          0-0 of 0
+        </template>
         <p class="font-normal text-xs text-primary/60 inline">rows</p>
       </div>
 
@@ -130,10 +143,10 @@ const emit = defineEmits<{
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
-          <DropdownMenuItem @click="emit('openExport', 'current')">
+          <DropdownMenuItem @click="emit('openExport', MongoExportScope.Current)">
             Current results
           </DropdownMenuItem>
-          <DropdownMenuItem @click="emit('openExport', 'full')">
+          <DropdownMenuItem @click="emit('openExport', MongoExportScope.All)">
             Full collections
           </DropdownMenuItem>
         </DropdownMenuContent>

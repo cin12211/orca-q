@@ -15,7 +15,7 @@ import {
   useMongoCollectionShortcuts,
   useMongoDocumentMutation,
 } from '../hooks';
-import { MongoCollectionViewMode } from '../types';
+import { MongoCollectionViewMode, MongoExportScope } from '../types';
 
 const props = defineProps<{
   connectionId: string;
@@ -53,10 +53,10 @@ const openErrorModal = ref(false);
 const isInsertModalOpen = ref(false);
 const exportModalState = ref<{
   open: boolean;
-  scope: 'current' | 'full';
+  scope: MongoExportScope;
 }>({
   open: false,
-  scope: 'current',
+  scope: MongoExportScope.Current,
 });
 
 watch(error, newError => {

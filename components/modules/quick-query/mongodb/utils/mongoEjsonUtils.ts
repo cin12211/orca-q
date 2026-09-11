@@ -158,3 +158,32 @@ export function parseMongoRawFilter(rawText: string): Record<string, unknown> {
   }
   return parsed;
 }
+
+export function parseMongoDocumentInput(rawText: string): Record<string, unknown> {
+  if (!rawText || !rawText.trim()) {
+    throw new Error('Document content cannot be empty');
+  }
+
+  // Replace ObjectId(...) and ISODate(...) with EJSON equivalents
+  const withEjsonLiterals = rawText
+    .replace(
+      /ObjectId\(\s*(['"])([0-9a-fA-F]{24})\1\s*\)/g,
+      '{"$oid": "$2"}'
+    )
+    .replace(
+      /ISODate\(\s*(['"])(.*?)\1\s*\)/g,
+      '{"$date": "$2"}'
+    );
+
+  // Quote unquoted keys
+  const withQuotedKeys = withEjsonLiterals.replace(
+    /([{,]\s*)([a-zA-Z_$][a-zA-Z0-9_$]*)\s*:/g,
+    '$1"$2":'
+  );
+
+  const parsed = JSON.parse(withQuotedKeys);
+  if (!isRecord(parsed)) {
+    throw new Error('Document must be a valid JSON object');
+  }
+  return parsed;
+}

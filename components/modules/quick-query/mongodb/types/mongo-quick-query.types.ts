@@ -79,3 +79,24 @@ export enum MongoFilterMode {
   Visual = 'visual',
   Raw = 'raw',
 }
+
+export enum MongoInsertTab {
+  Document = 'document',
+  Import = 'import',
+}
+
+export enum MongoExportScope {
+  Current = 'current',
+  All = 'all',
+}
+
+export enum MongoExportFormat {
+  Json = 'json',
+  Csv = 'csv',
+}
+
+export enum MongoExtendedJsonMode {
+  Default = 'default',
+  Relaxed = 'relaxed',
+  Canonical = 'canonical',
+}

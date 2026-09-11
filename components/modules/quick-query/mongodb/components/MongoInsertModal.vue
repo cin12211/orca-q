@@ -1,6 +1,8 @@
 <script setup lang="ts">
+import { json } from '@codemirror/lang-json';
+import { lintGutter } from '@codemirror/lint';
 import { useDropZone } from '@vueuse/core';
-import { computed, ref, useTemplateRef, watch } from 'vue';
+import { ref, useTemplateRef, watch } from 'vue';
 import { toast } from 'vue-sonner';
 import { Button } from '@/components/ui/button';
 import {
@@ -12,9 +14,12 @@ import {
 } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import BaseCodeEditor from '~/components/base/code-editor/BaseCodeEditor.vue';
+import { currentStatementLineGutterExtension } from '~/components/base/code-editor/extensions';
+import { formatBytes } from '~/core/helpers';
 import { getConnectionParams } from '~/core/helpers/connection-helper';
 import type { Connection } from '~/core/stores';
-import { getMongoErrorMessage } from '../utils';
+import { MongoInsertTab } from '../types';
+import { getMongoErrorMessage, parseMongoDocumentInput } from '../utils';
 
 const props = defineProps<{
   open: boolean;
@@ -36,16 +41,23 @@ function generateRandomMongoObjectId(): string {
   return timestamp + randomHex;
 }
 
-const activeTab = ref<'document' | 'import'>('document');
+const activeTab = ref<MongoInsertTab>(MongoInsertTab.Document);
 const editorContent = ref('');
 const stagedFile = ref<File | null>(null);
 const fileInputRef = ref<HTMLInputElement | null>(null);
+const editorRef = ref<InstanceType<typeof BaseCodeEditor> | null>(null);
 const isLoading = ref(false);
 
+const editorExtensions = [
+  json(),
+  lintGutter(),
+  currentStatementLineGutterExtension,
+];
+
 const resetState = () => {
-  editorContent.value = `{\n  _id: ObjectId('${generateRandomMongoObjectId()}')\n}`;
+  editorContent.value = `{\n  "_id": ObjectId("${generateRandomMongoObjectId()}")\n}`;
   stagedFile.value = null;
-  activeTab.value = 'document';
+  activeTab.value = MongoInsertTab.Document;
   if (fileInputRef.value) fileInputRef.value.value = '';
 };
 
@@ -80,26 +92,19 @@ const handleFileSelect = (e: Event) => {
   stagedFile.value = file;
 };
 
-const formatFileSize = (bytes: number) => {
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+const formatEditorContent = () => {
+  try {
+    const parsed = parseMongoDocumentInput(editorContent.value);
+    editorContent.value = JSON.stringify(parsed, null, 2);
+  } catch (err) {
+    toast.error(getMongoErrorMessage(err));
+  }
 };
 
 const handleInsertDocument = async () => {
   isLoading.value = true;
   try {
-    let parsed: Record<string, unknown>;
-    try {
-      parsed = JSON.parse(editorContent.value);
-    } catch {
-      // Parse ObjectId literals like ObjectId('...')
-      const sanitized = editorContent.value.replace(
-        /ObjectId\((['"])([0-9a-fA-F]{24})\1\)/g,
-        '"$2"'
-      );
-      parsed = JSON.parse(sanitized);
-    }
+    const parsed = parseMongoDocumentInput(editorContent.value);
 
     await $fetch('/api/mongodb/quick-query-mutation', {
       method: 'POST',
@@ -127,7 +132,15 @@ const handleImportFile = async () => {
   isLoading.value = true;
   try {
     const formData = new FormData();
-    formData.append('connectionId', props.connection?.id ?? '');
+    const connParams = getConnectionParams(props.connection);
+    Object.entries(connParams).forEach(([key, value]) => {
+      if (value != null) {
+        formData.append(
+          key,
+          typeof value === 'object' ? JSON.stringify(value) : String(value)
+        );
+      }
+    });
     formData.append('database', props.databaseName);
     formData.append('collection', props.collectionName);
     formData.append('file', stagedFile.value);
@@ -163,16 +176,32 @@ const handleImportFile = async () => {
 
       <Tabs v-model="activeTab" class="w-full">
         <TabsList class="grid w-full grid-cols-2">
-          <TabsTrigger value="document">Insert Document</TabsTrigger>
-          <TabsTrigger value="import">Import JSON or CSV file</TabsTrigger>
+          <TabsTrigger :value="MongoInsertTab.Document">Insert Document</TabsTrigger>
+          <TabsTrigger :value="MongoInsertTab.Import">Import JSON or CSV file</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="document" class="space-y-4 pt-2">
-          <div class="border rounded-md overflow-hidden h-60">
-            <BaseCodeEditor
-              v-model="editorContent"
-              class="h-full w-full"
-            />
+        <TabsContent :value="MongoInsertTab.Document" class="space-y-3 pt-2">
+          <div class="space-y-1.5">
+            <div class="flex items-center justify-between">
+              <span class="text-xs text-muted-foreground">Document JSON</span>
+              <Button
+                variant="ghost"
+                size="xs"
+                class="h-6 px-2 text-xs"
+                @click="formatEditorContent"
+              >
+                <Icon name="hugeicons:clean" class="size-3.5 mr-1" />
+                Format
+              </Button>
+            </div>
+            <div class="border border-border/50 rounded-md overflow-hidden h-[260px]">
+              <BaseCodeEditor
+                ref="editorRef"
+                v-model="editorContent"
+                :extensions="editorExtensions"
+                class="h-full w-full"
+              />
+            </div>
           </div>
           <DialogFooter>
             <Button variant="outline" size="sm" @click="emit('update:open', false)">
@@ -185,7 +214,7 @@ const handleImportFile = async () => {
           </DialogFooter>
         </TabsContent>
 
-        <TabsContent value="import" class="space-y-4 pt-2">
+        <TabsContent :value="MongoInsertTab.Import" class="space-y-4 pt-2">
           <input
             ref="fileInputRef"
             type="file"
@@ -203,7 +232,7 @@ const handleImportFile = async () => {
             ]"
             @click="fileInputRef?.click()"
           >
-            <Icon name="hugeicons:upload-cloud-01" class="size-10 text-muted-foreground" />
+            <Icon name="hugeicons:cloud-upload" class="size-10 text-muted-foreground" />
             <div class="text-center">
               <p class="text-sm font-medium">Drop file here or click to browse</p>
               <p class="text-xs text-muted-foreground mt-0.5">Supports .json and .csv files</p>
@@ -217,7 +246,7 @@ const handleImportFile = async () => {
             <Icon name="hugeicons:file-01" class="size-5 text-muted-foreground" />
             <div class="flex-1 min-w-0">
               <p class="text-sm font-medium truncate">{{ stagedFile.name }}</p>
-              <p class="text-xs text-muted-foreground">{{ formatFileSize(stagedFile.size) }}</p>
+              <p class="text-xs text-muted-foreground">{{ formatBytes(stagedFile.size) }}</p>
             </div>
             <Button variant="ghost" size="xs" @click="stagedFile = null">
               <Icon name="hugeicons:cancel-01" class="size-3.5" />

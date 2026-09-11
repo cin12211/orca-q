@@ -72,4 +72,17 @@ describe('mongoEjsonUtils', () => {
       ].join('\n')
     );
   });
+
+  it('parses document input with unquoted keys and ObjectId literals', async () => {
+    const { parseMongoDocumentInput } = await import(
+      '~/components/modules/quick-query/mongodb/utils/mongoEjsonUtils'
+    );
+
+    const input = `{\n  _id: ObjectId('6aa41a66635e05041887bac0'),\n  name: "Orca"\n}`;
+    const parsed = parseMongoDocumentInput(input);
+    expect(parsed).toEqual({
+      _id: { $oid: '6aa41a66635e05041887bac0' },
+      name: 'Orca',
+    });
+  });
 });

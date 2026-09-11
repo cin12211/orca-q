@@ -6,7 +6,7 @@ import { withMongoDatabase } from '~/server/infrastructure/nosql/mongodb/mongodb
 
 interface ExportRequestBody extends DatabaseMetadataRequestParams {
   collection: string;
-  scope: 'current' | 'full';
+  scope: 'current' | 'all' | 'full';
   filter?: Record<string, unknown>;
   format: 'csv' | 'json';
   jsonFormat?: 'default' | 'relaxed' | 'canonical';
@@ -28,7 +28,7 @@ export default defineEventHandler(async event => {
     const docs = await collection.find(queryFilter).toArray();
 
     if (body.format === 'json') {
-      const isRelaxed = body.jsonFormat === 'relaxed';
+      const isRelaxed = body.jsonFormat !== 'canonical';
       const output = BSON.EJSON.stringify(docs, undefined, 2, { relaxed: isRelaxed });
       setHeader(event, 'Content-Type', 'application/json');
       setHeader(
