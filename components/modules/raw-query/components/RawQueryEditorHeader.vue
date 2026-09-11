@@ -17,6 +17,8 @@ defineProps<{
   connections: Connection[];
   connection?: Connection;
   isRedisConnection?: boolean;
+  isMongoConnection?: boolean;
+  mongoDatabaseName?: string;
   isSupportVariable?: boolean;
   redisDatabases?: RedisDatabaseOption[];
   redisDatabaseIndex?: number;
@@ -65,6 +67,14 @@ const openConfigModal = () => {
     </div>
 
     <div class="flex gap-2 items-center">
+      <Badge v-if="isMongoConnection" variant="secondary" class="text-[10px]"
+        >MongoDB Beta</Badge
+      >
+      <span
+        v-if="isMongoConnection && mongoDatabaseName"
+        class="text-xs text-muted-foreground"
+        >{{ mongoDatabaseName }}</span
+      >
       <Tooltip
         v-if="
           isSupportVariable &&

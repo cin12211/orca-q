@@ -63,6 +63,7 @@ bun vitest --run test/unit/core/helpers/deepUnRef.spec.ts
 ```bash
 # Auto-provisions only the required fixtures, then cleans up
 bash scripts/test-services/run-tests.sh --fixtures=postgres -- playwright test --project postgres
+bash scripts/test-services/run-tests.sh --fixtures=mongodb -- playwright test --project mongodb
 bash scripts/test-services/run-tests.sh --fixtures=mysql   -- playwright test --project mysql
 bash scripts/test-services/run-tests.sh --fixtures=redis   -- playwright test --project redis
 bash scripts/test-services/run-tests.sh --fixtures=sqlite  -- playwright test --project sqlite

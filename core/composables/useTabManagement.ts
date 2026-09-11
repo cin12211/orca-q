@@ -130,6 +130,32 @@ export const useTabManagement = () => {
     });
   };
 
+  const openNewMongoQueryTab = async (params: {
+    databaseName: string;
+    collectionName?: string;
+  }) => {
+    const file = await explorerFileStore.createNextQueryFile({
+      starterFileName: 'sample',
+      newFileBaseName: 'new-file',
+      extension: undefined,
+    });
+    if (!file) return;
+    await openCodeQueryTab({
+      id: file.id,
+      name: file.title,
+      icon: file.icon,
+      metadata: {
+        fileSource: WorkspaceSqlFileSource.ManualCreate,
+        openAction: WorkspaceTabOpenAction.MongoCollectionRawQuery,
+        queryContext: {
+          kind: 'mongodb',
+          databaseName: params.databaseName,
+          collectionName: params.collectionName,
+        },
+      },
+    });
+  };
+
   const openSchemaItemTab = async (params: {
     id: string;
     name: string;
@@ -351,6 +377,7 @@ export const useTabManagement = () => {
     openCodeQueryTab,
     openStarterSqlTab,
     openNewSqlFileTab,
+    openNewMongoQueryTab,
     openSchemaItemTab,
     openRedisTab,
     openMongoDatabaseTab,

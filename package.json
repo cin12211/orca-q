@@ -59,6 +59,7 @@
     "mysql2": "^3.22.2",
     "oracledb": "^6.10.0",
     "redis": "^5.9.0",
+    "ses": "^2.3.0",
     "vue3-json-viewer": "^2.4.1"
   },
   "devDependencies": {
@@ -73,6 +74,7 @@
     "@atlaskit/pragmatic-drag-and-drop-hitbox": "^1.0.3",
     "@codemirror/autocomplete": "^6.18.6",
     "@codemirror/commands": "^6.8.1",
+    "@codemirror/lang-javascript": "^6.2.5",
     "@codemirror/lang-json": "^6.0.1",
     "@codemirror/lang-markdown": "^6.5.0",
     "@codemirror/lang-sql": "^6.8.0",
@@ -86,6 +88,7 @@
     "@iconify-json/logos": "^1.2.4",
     "@iconify-json/lucide": "^1.2.39",
     "@iconify-json/material-icon-theme": "^1.2.7",
+    "@jridgewell/trace-mapping": "^0.3.31",
     "@marimo-team/codemirror-sql": "^0.2.4",
     "@nuxt/fonts": "^0.11.2",
     "@nuxt/icon": "1.11.0",

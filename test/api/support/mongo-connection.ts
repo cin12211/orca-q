@@ -43,4 +43,16 @@ export function mongoHealthCheckBody(overrides: Record<string, unknown> = {}) {
   };
 }
 
+export function mongoRawQueryBody(overrides: Record<string, unknown> = {}) {
+  return {
+    type: CLIENT_TYPE.MONGODB,
+    method: CONNECTION_METHOD.FORM,
+    connectionId: 'mongodb-fixture',
+    host: mongo.host,
+    port: `${mongo.port}`,
+    database: mongo.database,
+    ...overrides,
+  };
+}
+
 export { mongo as mongoConfig };

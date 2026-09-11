@@ -49,6 +49,7 @@ export default defineConfig({
     createDbProject('oracle', 'oracle'),
     createDbProject('redis', 'redis'),
     createDbProject('sqlite', 'sqlite'),
+    createDbProject('mongodb', 'mongodb'),
   ],
   webServer: {
     command: process.env.PLAYWRIGHT_WEB_SERVER_COMMAND || 'npm run nuxt:dev',

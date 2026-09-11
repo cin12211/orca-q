@@ -8,6 +8,7 @@ import {
   Button,
 } from '#components';
 import { cn } from '@/lib/utils';
+import { DatabaseClientType } from '~/core/constants/database-client-type';
 import { useSchemaStore } from '~/core/stores';
 import {
   ViewMode,
@@ -91,6 +92,7 @@ watch(
     if (!connection) {
       return;
     }
+    if (connection.type === DatabaseClientType.MONGODB) return;
 
     try {
       if (!schemas.value[connection.id]?.length) {
@@ -387,6 +389,7 @@ const hasErrors = (tab: ExecutedResultItem) => {
           :formatted-data="formattedData"
           :execute-loading="executeLoading"
           :is-streaming="isStreaming"
+          :raw-data="activeTab.metadata.rawResult"
           :key="activeTab.id"
         />
 

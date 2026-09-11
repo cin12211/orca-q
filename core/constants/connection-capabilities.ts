@@ -78,6 +78,7 @@ const REDIS_TAB_TYPES = [
 ] as const;
 
 const MONGODB_TAB_TYPES = [
+  TabViewType.CodeQuery,
   TabViewType.MongoDatabaseOverview,
   TabViewType.MongoCollectionDetail,
   TabViewType.Connection,
@@ -136,9 +137,9 @@ export const CONNECTION_CAPABILITY_REGISTRY: Record<
     visibleActivityItems: ['Schemas'],
     allowedTabTypes: [...MONGODB_TAB_TYPES],
     defaultActivityItem: 'Schemas',
-    primaryQuerySurface: 'quick-query',
+    primaryQuerySurface: 'raw-query',
     supportsRawSql: false,
-    supportsQueryFiles: false,
+    supportsQueryFiles: true,
     supportsSchemaTree: true,
     supportsErd: false,
     supportsUsersRoles: false,

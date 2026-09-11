@@ -5,7 +5,7 @@ import BaseCodeEditor from '~/components/base/code-editor/BaseCodeEditor.vue';
 import { useRedisWorkspace } from '~/components/modules/redis-workspace/hooks/useRedisWorkspace';
 import { useHotkeys } from '~/core/composables/useHotKeys';
 import { DatabaseClientType } from '~/core/constants/database-client-type';
-import { useEnvironmentTagStore } from '~/core/stores';
+import { useEnvironmentTagStore, useTabViewsStore } from '~/core/stores';
 import { useAppConfigStore } from '~/core/stores/appConfigStore';
 import IntroRawQuery from './components/IntroRawQuery.vue';
 import MissingVariablesDialog from './components/MissingVariablesDialog.vue';
@@ -18,6 +18,7 @@ import RawQueryResultTabs from './components/RawQueryResultTabs.vue';
 import VariableEditor from './components/VariableEditor.vue';
 import { useRawQueryEditor, useRawQueryFileContent } from './hooks';
 import { useRawQueryEditorContextMenu } from './hooks/useRawQueryEditorContextMenu';
+import MongoRawQueryApprovalDialog from './mongo/components/MongoRawQueryApprovalDialog.vue';
 
 const props = withDefaults(
   defineProps<{
@@ -35,6 +36,7 @@ const workspaceId = computed(() => {
 });
 const appConfigStore = useAppConfigStore();
 const tagStore = useEnvironmentTagStore();
+const tabViewsStore = useTabViewsStore();
 const rawQueryFileContent = useRawQueryFileContent();
 const {
   connection,
@@ -53,7 +55,24 @@ const {
 const isRedisConnection = computed(
   () => connection.value?.type === DatabaseClientType.REDIS
 );
-const isFormatSupported = computed(() => !isRedisConnection.value);
+const isMongoConnection = computed(
+  () => connection.value?.type === DatabaseClientType.MONGODB
+);
+const mongoQueryContext = computed(() => {
+  const metadata = tabViewsStore.activeTab?.metadata as any;
+  return metadata?.queryContext?.kind === 'mongodb'
+    ? metadata.queryContext
+    : undefined;
+});
+const mongoDatabaseName = computed(
+  () => mongoQueryContext.value?.databaseName || connection.value?.database
+);
+const mongoCollectionContext = computed(
+  () => mongoQueryContext.value?.collectionName
+);
+const isFormatSupported = computed(
+  () => !isRedisConnection.value && !isMongoConnection.value
+);
 const isSqliteConnection = computed(() =>
   [DatabaseClientType.SQLITE3, DatabaseClientType.BETTER_SQLITE3].includes(
     connection.value?.type as DatabaseClientType
@@ -130,6 +149,9 @@ const rawQueryEditor = useRawQueryEditor({
   beforeExecute: () => requestConnectionExecutionConfirm(),
   promptMissingVariables,
   onUpdateVariables: updateFileVariables,
+  databaseName: mongoDatabaseName,
+  collectionContext: mongoCollectionContext,
+  documentText: fileContents,
 });
 const {
   cursorInfo,
@@ -145,6 +167,7 @@ const {
   queryProcessState,
   executedResults,
   activeResultTabId,
+  pendingMongoApproval,
 } = rawQueryEditor;
 
 const { contextMenuItems, onContextMenuOpen } = useRawQueryEditorContextMenu({
@@ -289,6 +312,12 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
+  <MongoRawQueryApprovalDialog
+    :open="Boolean(pendingMongoApproval)"
+    :operations="pendingMongoApproval?.operations || []"
+    @confirm="rawQueryEditor.confirmMongoWrite"
+    @cancel="rawQueryEditor.cancelMongoWrite"
+  />
   <RawQueryConnectionConfirmDialog
     :open="isConnectionExecutionConfirmOpen"
     :target-connection-name="executionConfirmTargetConnectionName"
@@ -319,6 +348,8 @@ onBeforeUnmount(() => {
             :selected-connection-id="selectedConnectionId"
             :disable-connection-switch="isCurrentConnectionStrictMode"
             :is-redis-connection="isRedisConnection"
+            :is-mongo-connection="isMongoConnection"
+            :mongo-database-name="mongoDatabaseName"
             :redis-databases="redisWorkspace.databases.value"
             :redis-database-index="redisWorkspace.selectedDatabaseIndex.value"
             :workspaceId="workspaceId"
@@ -357,6 +388,7 @@ onBeforeUnmount(() => {
             :is-support-format="isFormatSupported"
             :is-support-variable="isVariableSupported"
             :is-explain-supported="isExplainSupported"
+            :is-mongo-connection="isMongoConnection"
             @on-format-current-statement="onHandleFormatCurrentStatement"
             @on-format-all="onHandleFormatCode"
             @on-explain-analyze-current="onExplainAnalyzeCurrent"

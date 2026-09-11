@@ -1,11 +1,17 @@
 <script setup lang="ts">
+import { computed } from 'vue';
 import JsonEditorVue from 'json-editor-vue';
 
 const props = defineProps<{
   formattedData: Record<string, any>[];
   executeLoading: boolean;
   isStreaming: boolean;
+  rawData?: unknown;
 }>();
+
+const displayData = computed(() =>
+  props.rawData === undefined ? props.formattedData : props.rawData
+);
 </script>
 
 <template>
@@ -17,7 +23,7 @@ const props = defineProps<{
     />
     <JsonEditorVue
       v-else
-      :modelValue="props.formattedData"
+      :modelValue="displayData"
       :mode="'text' as unknown as undefined"
       :readOnly="true"
       :navigationBar="false"

@@ -1,7 +1,16 @@
+import { computed, watch } from 'vue';
+import { Compartment } from '@codemirror/state';
 import type { EditorView } from '@codemirror/view';
 import type { FieldDef } from 'pg';
 import type BaseCodeEditor from '~/components/base/code-editor/BaseCodeEditor.vue';
+import { DatabaseClientType } from '~/core/constants/database-client-type';
 import type { Connection } from '~/core/stores';
+import {
+  useMongoScriptEditorExtensions,
+  useMongoScriptExecution,
+  useMongoScriptMetadata,
+} from '../mongo/hooks';
+import { resolveMongoScriptSource } from '../mongo/utils';
 import { useQueryExecution } from './useQueryExecution';
 import { useRawQueryExplainAnalyzeOptions } from './useRawQueryExplainAnalyzeOptions';
 import { useResultTabs } from './useResultTabs';
@@ -20,6 +29,9 @@ export function useRawQueryEditor({
   beforeExecute,
   promptMissingVariables,
   onUpdateVariables,
+  databaseName: databaseNameRef,
+  collectionContext: collectionContextRef,
+  documentText: documentTextRef,
 }: {
   fileVariables: Ref<string>;
   connection: Ref<Connection | undefined>;
@@ -30,6 +42,9 @@ export function useRawQueryEditor({
     missing: string[]
   ) => Promise<{ values: Record<string, any>; insertBack: boolean } | null>;
   onUpdateVariables?: (value: string) => void;
+  databaseName?: Ref<string | undefined>;
+  collectionContext?: Ref<string | undefined>;
+  documentText?: Ref<string>;
 }) {
   const codeEditorRef = ref<InstanceType<typeof BaseCodeEditor> | null>(null);
 
@@ -67,13 +82,89 @@ export function useRawQueryEditor({
     onExplainAnalyzeCurrent: queryExecution.onExplainAnalyzeCurrent,
   });
 
+  const databaseName = databaseNameRef ?? ref<string | undefined>(undefined);
+  const collectionContext =
+    collectionContextRef ?? ref<string | undefined>(undefined);
+  const documentText = documentTextRef ?? ref('');
+  const mongoExecution = useMongoScriptExecution({
+    connection,
+    databaseName,
+    collectionContext,
+    documentText,
+    fileVariables,
+    fieldDefs,
+    resultTabs,
+    beforeExecute,
+  });
+  const mongoMetadata = useMongoScriptMetadata({
+    connection,
+    databaseName,
+    collectionContext,
+  });
+  const isMongoConnection = computed(
+    () => connection.value?.type === DatabaseClientType.MONGODB
+  );
+  const mongoEditor = useMongoScriptEditorExtensions({
+    codeEditorRef,
+    fileVariables,
+    databaseName,
+    collectionContext,
+    metadata: mongoMetadata.metadata,
+    onExecuteCurrent: async () => {
+      const editorView = getEditorView();
+      if (editorView)
+        await mongoExecution.execute(resolveMongoScriptSource(editorView));
+    },
+  });
+  const editorModeCompartment = new Compartment();
+  const activeModeExtensions = () =>
+    isMongoConnection.value ? mongoEditor.extensions : sqlEditor.extensions;
+  const extensions = [editorModeCompartment.of(activeModeExtensions())];
+  const reloadLanguageCompartment = () => {
+    const editorView = getEditorView();
+    if (!editorView) return;
+    editorView.dispatch({
+      effects: editorModeCompartment.reconfigure(activeModeExtensions()),
+    });
+  };
+  watch(
+    () => [connection.value?.type, databaseName.value, collectionContext.value],
+    reloadLanguageCompartment,
+    { flush: 'post' }
+  );
+  const onExecuteCurrent = async () => {
+    if (isMongoConnection.value) {
+      const editorView = getEditorView();
+      if (editorView)
+        await mongoExecution.execute(resolveMongoScriptSource(editorView));
+      return;
+    }
+    queryExecution.onExecuteCurrent();
+  };
+  const cancelStreamingQuery = () => {
+    if (isMongoConnection.value) mongoExecution.cancel();
+    else queryExecution.cancelStreamingQuery();
+  };
+
   return {
     codeEditorRef,
-    currentRawQueryResult: queryExecution.currentRawQueryResult,
-    rawResponse: queryExecution.rawResponse,
-    queryProcessState: queryExecution.queryProcessState,
-    onExecuteCurrent: queryExecution.onExecuteCurrent,
-    extensions: sqlEditor.extensions,
+    currentRawQueryResult: computed(() =>
+      isMongoConnection.value
+        ? mongoExecution.currentRawQueryResult.value
+        : queryExecution.currentRawQueryResult.value
+    ),
+    rawResponse: computed(() =>
+      isMongoConnection.value
+        ? mongoExecution.rawResponse.value
+        : queryExecution.rawResponse.value
+    ),
+    queryProcessState: computed(() =>
+      isMongoConnection.value
+        ? mongoExecution.queryProcessState
+        : queryExecution.queryProcessState
+    ),
+    onExecuteCurrent,
+    extensions,
     sqlCompartment: sqlEditor.sqlCompartment,
     cursorInfo: sqlEditor.cursorInfo,
     onHandleFormatCode: sqlEditor.onHandleFormatCode,
@@ -83,8 +174,15 @@ export function useRawQueryEditor({
     serializeMode,
     toggleExplainOption,
     setSerializeMode,
-    reloadSqlCompartment: sqlEditor.reloadSqlCompartment,
-    cancelStreamingQuery: queryExecution.cancelStreamingQuery,
+    reloadSqlCompartment: () =>
+      isMongoConnection.value
+        ? reloadLanguageCompartment()
+        : sqlEditor.reloadSqlCompartment(),
+    reloadLanguageCompartment,
+    cancelStreamingQuery,
+    pendingMongoApproval: mongoExecution.pendingApproval,
+    confirmMongoWrite: mongoExecution.confirmPendingWrite,
+    cancelMongoWrite: mongoExecution.cancelPendingWrite,
 
     // Results tab management
     executedResults: resultTabs.executedResults,

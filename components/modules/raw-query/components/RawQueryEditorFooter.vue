@@ -32,6 +32,7 @@ defineProps<{
   isSupportFormat?: boolean;
   isSupportVariable?: boolean;
   isExplainSupported?: boolean;
+  isMongoConnection?: boolean;
 }>();
 
 defineEmits<{
@@ -210,7 +211,7 @@ defineEmits<{
             size="xxs"
           >
             <Icon name="hugeicons:play" />
-            Execute current
+            {{ isMongoConnection ? 'Execute script' : 'Execute current' }}
             <ContextMenuShortcut>⌘↵</ContextMenuShortcut>
           </Button>
         </TooltipTrigger>

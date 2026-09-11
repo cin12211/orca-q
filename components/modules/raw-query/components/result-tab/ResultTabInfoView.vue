@@ -3,6 +3,7 @@ import { computed } from 'vue';
 import { formatBytes } from '~/core/helpers';
 import { formatNumber, formatQueryTime } from '~/core/helpers/format';
 import type { ExecutedResultItem } from '../../interfaces';
+import MongoRawQueryConsole from '../../mongo/components/MongoRawQueryConsole.vue';
 
 const props = defineProps<{
   activeTab: ExecutedResultItem;
@@ -101,6 +102,32 @@ const resultSize = computed(() => {
       <div class="text-sm text-muted-foreground mb-2">Query:</div>
       <CodeHighlightPreview :code="activeTab.metadata.statementQuery || ''" />
     </div>
+
+    <div
+      v-if="activeTab.metadata.mutationSummary"
+      class="pt-3 border-t text-sm space-y-1"
+    >
+      <div class="font-medium">Mutation</div>
+      <div v-if="activeTab.metadata.mutationSummary.matchedCount !== undefined">
+        Matched: {{ activeTab.metadata.mutationSummary.matchedCount }}
+      </div>
+      <div
+        v-if="activeTab.metadata.mutationSummary.modifiedCount !== undefined"
+      >
+        Modified: {{ activeTab.metadata.mutationSummary.modifiedCount }}
+      </div>
+      <div v-if="activeTab.metadata.mutationSummary.deletedCount !== undefined">
+        Deleted: {{ activeTab.metadata.mutationSummary.deletedCount }}
+      </div>
+    </div>
+    <div
+      v-if="activeTab.metadata.truncated"
+      class="pt-3 border-t text-sm text-amber-600"
+    >
+      Truncated at
+      {{ formatNumber(activeTab.metadata.rowCount || 0) }} documents
+    </div>
+    <MongoRawQueryConsole :logs="activeTab.metadata.logs" />
 
     <div v-if="activeTab.metadata.fieldDefs?.length" class="pt-3 border-t">
       <div class="text-sm text-muted-foreground mb-2">Fields:</div>

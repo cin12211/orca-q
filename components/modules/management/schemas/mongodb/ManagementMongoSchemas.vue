@@ -25,7 +25,8 @@ import { useMongoSchemaTreeData } from './hooks';
 
 const connectionStore = useManagementConnectionStore();
 const { workspaceId } = useWorkspaceConnectionRoute();
-const { openMongoDatabaseTab, openMongoCollectionTab } = useTabManagement();
+const { openMongoDatabaseTab, openMongoCollectionTab, openNewMongoQueryTab } =
+  useTabManagement();
 
 const connection = toRef(connectionStore, 'selectedConnection');
 const isRefreshing = ref(false);
@@ -219,6 +220,16 @@ const contextMenuItems = computed<ContextMenuItem[]>(() => {
     },
     {
       type: ContextMenuItemType.ACTION,
+      title: 'New Raw Query',
+      icon: 'hugeicons:code',
+      select: () =>
+        openNewMongoQueryTab({
+          databaseName: node.parentId || '',
+          collectionName: node.name,
+        }),
+    },
+    {
+      type: ContextMenuItemType.ACTION,
       title: 'Rename',
       icon: 'hugeicons:edit-02',
       select: () => onRequestRenameCollection(node),
@@ -355,7 +366,12 @@ const contextMenuItems = computed<ContextMenuItem[]>(() => {
 
             <DropdownMenu v-else>
               <DropdownMenuTrigger as-child>
-                <Button size="iconSm" variant="ghost" class="size-5!">
+                <Button
+                  size="iconSm"
+                  variant="ghost"
+                  class="size-5!"
+                  :data-testid="`mongo-collection-menu-${node.name}`"
+                >
                   <Icon
                     name="hugeicons:more-horizontal-circle-01"
                     class="size-3.5!"
@@ -373,6 +389,18 @@ const contextMenuItems = computed<ContextMenuItem[]>(() => {
                 >
                   <Icon name="hugeicons:link-circle-02" class="size-4 mr-2" />
                   View Collection
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  :data-testid="`new-mongo-raw-query-${node.name}`"
+                  @click="
+                    openNewMongoQueryTab({
+                      databaseName: node.parentId || '',
+                      collectionName: node.name,
+                    })
+                  "
+                >
+                  <Icon name="hugeicons:code" class="size-4 mr-2" />
+                  New Raw Query
                 </DropdownMenuItem>
                 <DropdownMenuItem @click="onRequestRenameCollection(node)">
                   <Icon name="hugeicons:edit-02" class="size-4 mr-2" />
