@@ -30,6 +30,8 @@ The implementation adds direct dependencies for the capabilities it uses:
 
 - `@codemirror/lang-javascript` for JavaScript/TypeScript parsing and syntax
   highlighting in CodeMirror.
+- `@jridgewell/trace-mapping` for mapping worker stack locations back to the
+  original TypeScript source.
 - `ses` for the hardened JavaScript compartment inside the worker.
 
 The existing TypeScript compiler package supplies parsing, policy validation,
@@ -68,6 +70,12 @@ If a script has no `return`, it can still complete successfully. The result tab
 shows completion metadata and captured console output, but no result value.
 CodeMirror should warn when a script has no reachable top-level return without
 blocking execution.
+
+Mongo execution uses the current text selection when it is non-empty;
+otherwise it executes the complete query file. It does not reuse SQL's
+statement-under-cursor behavior because a TypeScript return value may depend on
+variables and functions declared anywhere in the script. SQL and Redis keep
+their existing execution-unit behavior.
 
 ### Injected capabilities
 
@@ -162,15 +170,20 @@ The validator rejects:
 - Database switching and access to a client/session object.
 - Change streams, GridFS, sessions, transactions, and unsupported admin calls.
 
-The RPC bridge enforces the same policy at runtime. Static validation is a
-developer experience and preflight layer, not the security boundary.
+The RPC bridge enforces the same policy at runtime. It independently
+reclassifies the actual method, collection, command, and aggregation pipeline
+received from the worker, then requires a matching entry in the approved
+manifest. It never trusts an operation identifier supplied by sandbox code.
+Static validation is a developer experience and preflight layer, not the
+security boundary.
 
 ### Supported V1 operations
 
 V1 supports common database, collection, and cursor operations for:
 
 - Find, find-one, count, distinct, and bounded list operations.
-- Aggregation without `$out`, `$merge`, `$function`, or server-side JavaScript.
+- Aggregation, with `$out` and `$merge` gated as writes, but without `$function`
+  or other server-side JavaScript.
 - Insert, replace, update, delete, find-and-modify, and bulk writes.
 - Index inspection, creation, and deletion.
 - A documented database-command allowlist split into read and write commands.
@@ -241,6 +254,8 @@ Default execution limits are:
 - 128 MB worker heap limit.
 - 10,000 streamed documents per execution.
 - 20 MB serialized limit for returned object or array values.
+- 1 MB source and 2 MB serialized parameter payload before policy analysis.
+- 100 manifest operations with 2,000 characters per redacted summary.
 - Bounded console entry count and total console payload.
 
 Reaching a document or payload limit closes the cursor and emits a successful
