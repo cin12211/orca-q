@@ -2,6 +2,7 @@
 import { computed, nextTick, ref } from 'vue';
 import { useVirtualizer } from '@tanstack/vue-virtual';
 import type { MongoDocument } from '../types';
+import { getMongoDocumentKey } from '../utils';
 import MongoCollectionListItem from './MongoCollectionListItem.vue';
 
 type VirtualItemKey = string | number | bigint;
@@ -21,48 +22,53 @@ const props = withDefaults(
 const emit = defineEmits<{
   (
     e: 'update-document',
-    payload: { id: string; document: Record<string, unknown> }
+    payload: { id: unknown; document: Record<string, unknown> }
   ): void;
-  (e: 'delete-document', id: string): void;
+  (e: 'delete-document', id: unknown): void;
 }>();
 
-const expandedDocIds = ref<Set<string | number>>(new Set());
+const expandedDocIds = ref<Set<string>>(new Set());
 const activeEditDocId = ref<string | null>(null);
 
-const getDocId = (doc: MongoDocument, index: number): string | number => {
-  return doc?._id !== undefined && doc?._id !== null ? String(doc._id) : index;
+const getDocKey = (doc: MongoDocument, index: number): string => {
+  return doc?._id !== undefined && doc?._id !== null
+    ? getMongoDocumentKey(doc._id)
+    : `index:${index}`;
 };
 
-const isExpanded = (docId: string | number) => expandedDocIds.value.has(docId);
+const isExpanded = (docKey: string) => expandedDocIds.value.has(docKey);
 
-const toggleExpandDocument = (docId: string | number) => {
+const toggleExpandDocument = (docKey: string) => {
   const next = new Set(expandedDocIds.value);
-  if (next.has(docId)) {
-    next.delete(docId);
+  if (next.has(docKey)) {
+    next.delete(docKey);
   } else {
-    next.add(docId);
+    next.add(docKey);
   }
   expandedDocIds.value = next;
 };
 
-const onStartEdit = (docId: string) => {
-  activeEditDocId.value = docId;
+const onStartEdit = (docId: unknown) => {
+  activeEditDocId.value = getMongoDocumentKey(docId);
 };
 
 const onCancelEdit = () => {
   activeEditDocId.value = null;
 };
 
-const onSaveDocument = (docId: string, updatedDoc: Record<string, unknown>) => {
+const onSaveDocument = (
+  docId: unknown,
+  updatedDoc: Record<string, unknown>
+) => {
   emit('update-document', { id: docId, document: updatedDoc });
 };
 
-const onDeleteDocument = (docId: string) => {
+const onDeleteDocument = (docId: unknown) => {
   emit('delete-document', docId);
 };
 
-const onExitEditMode = (docId: string) => {
-  if (activeEditDocId.value === docId) {
+const onExitEditMode = (docId: unknown) => {
+  if (activeEditDocId.value === getMongoDocumentKey(docId)) {
     activeEditDocId.value = null;
   }
 };
@@ -140,43 +146,32 @@ defineExpose({ scrollToTop, onExitEditMode });
         <MongoCollectionListItem
           :document="documents[virtualRow.index]"
           :is-expanded="
-            isExpanded(getDocId(documents[virtualRow.index], virtualRow.index))
+            isExpanded(getDocKey(documents[virtualRow.index], virtualRow.index))
           "
           :is-editing="
             activeEditDocId ===
-            String(getDocId(documents[virtualRow.index], virtualRow.index))
+            getDocKey(documents[virtualRow.index], virtualRow.index)
           "
           :is-saving="
             savingDocId ===
-            String(getDocId(documents[virtualRow.index], virtualRow.index))
+            getDocKey(documents[virtualRow.index], virtualRow.index)
           "
           :is-deleting="
             deletingDocId ===
-            String(getDocId(documents[virtualRow.index], virtualRow.index))
+            getDocKey(documents[virtualRow.index], virtualRow.index)
           "
           @toggle-expand="
             toggleExpandDocument(
-              getDocId(documents[virtualRow.index], virtualRow.index)
+              getDocKey(documents[virtualRow.index], virtualRow.index)
             )
           "
-          @start-edit="
-            onStartEdit(
-              String(getDocId(documents[virtualRow.index], virtualRow.index))
-            )
-          "
+          @start-edit="onStartEdit(documents[virtualRow.index]._id)"
           @cancel-edit="onCancelEdit"
           @save="
             updatedDoc =>
-              onSaveDocument(
-                String(getDocId(documents[virtualRow.index], virtualRow.index)),
-                updatedDoc
-              )
+              onSaveDocument(documents[virtualRow.index]._id, updatedDoc)
           "
-          @delete="
-            onDeleteDocument(
-              String(getDocId(documents[virtualRow.index], virtualRow.index))
-            )
-          "
+          @delete="onDeleteDocument(documents[virtualRow.index]._id)"
           @resize="() => onItemResize(virtualRow.key)"
         />
       </div>

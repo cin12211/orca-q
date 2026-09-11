@@ -309,7 +309,10 @@ export function mongoExecuteKeymap(onExecute: () => void): Extension {
 /**
  * Main extension bundle for MongoDB Query language matching RawQuery structure
  */
-export function mongoQuery(fields?: string[] | (() => string[])): Extension[] {
+export function mongoQuery(
+  fields?: string[] | (() => string[]),
+  validateQuery?: (query: string) => void
+): Extension[] {
   const getFields = typeof fields === 'function' ? fields : () => fields || [];
   const jsonLang = json();
 
@@ -323,7 +326,26 @@ export function mongoQuery(fields?: string[] | (() => string[])): Extension[] {
       { key: 'Tab', run: acceptCompletion },
     ]),
     ...sqlAutoCompletion(),
-    linter(jsonParseLinter()),
+    linter(view => {
+      try {
+        if (validateQuery) {
+          validateQuery(view.state.doc.toString());
+          return [];
+        } else {
+          return jsonParseLinter()(view);
+        }
+      } catch (error) {
+        return [
+          {
+            from: 0,
+            to: view.state.doc.length,
+            severity: 'error',
+            message:
+              error instanceof Error ? error.message : 'Invalid MongoDB query',
+          },
+        ];
+      }
+    }),
     mongoQueryEditorTheme,
   ];
 }

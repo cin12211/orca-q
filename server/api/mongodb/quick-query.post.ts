@@ -25,28 +25,51 @@ export default defineEventHandler(async event => {
 
   const limit = Math.min(Math.max(body.limit ?? 100, 1), 500);
   const skip = Math.max(body.skip ?? 0, 0);
-  const filter = normalizeMongoFilter(body.filter);
+  let filter: Record<string, unknown>;
+  try {
+    filter = normalizeMongoFilter(body.filter);
+  } catch (error) {
+    throw createError({
+      statusCode: 400,
+      statusMessage: 'Bad Request',
+      message:
+        error instanceof Error ? error.message : 'Invalid MongoDB filter',
+    });
+  }
+
   const startedAt = performance.now();
 
-  const result = await withMongoDatabase(body, async database => {
-    const collection = database.collection(body.collection);
-    const [documents, total] = await Promise.all([
-      collection
-        .find(filter)
-        .sort(body.sort ?? { _id: 1 })
-        .skip(skip)
-        .limit(limit)
-        .toArray(),
-      collection.countDocuments(filter),
-    ]);
-    return {
-      documents: documents.map(document => serializeMongoDocument(document)),
-      total,
-    };
-  });
+  try {
+    const result = await withMongoDatabase(body, async database => {
+      const collection = database.collection(body.collection);
+      const [documents, total] = await Promise.all([
+        collection
+          .find(filter)
+          .sort(body.sort ?? { _id: 1 })
+          .skip(skip)
+          .limit(limit)
+          .toArray(),
+        collection.countDocuments(filter),
+      ]);
+      return {
+        documents: documents.map(document => serializeMongoDocument(document)),
+        total,
+      };
+    });
 
-  return {
-    ...result,
-    queryTime: Number((performance.now() - startedAt).toFixed(2)),
-  };
+    return {
+      ...result,
+      queryTime: Number((performance.now() - startedAt).toFixed(2)),
+    };
+  } catch (error: any) {
+    if (error?.statusCode) throw error;
+    throw createError({
+      statusCode: 400,
+      statusMessage: 'Bad Request',
+      message:
+        error instanceof Error
+          ? error.message
+          : 'Failed to execute MongoDB query',
+    });
+  }
 });

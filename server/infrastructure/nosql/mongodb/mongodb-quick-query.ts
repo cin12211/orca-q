@@ -1,4 +1,4 @@
-import { ObjectId } from 'mongodb';
+import { BSON, ObjectId } from 'mongodb';
 
 const ALLOWED_OPERATORS = new Set([
   '$and',
@@ -15,51 +15,128 @@ const ALLOWED_OPERATORS = new Set([
   '$regex',
 ]);
 
+const ARRAY_VALUE_OPERATORS = new Set([
+  '$and',
+  '$or',
+  '$in',
+  '$nin',
+  '$all',
+  '$mod',
+]);
+
+const OBJECT_ID_LITERAL = /^ObjectId\((['"])([0-9a-fA-F]{24})\1\)$/;
+const ISO_DATE_LITERAL = /^ISODate\((['"])(.+)\1\)$/;
+
 type MongoFilter = Record<string, unknown>;
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return !!value && typeof value === 'object' && !Array.isArray(value);
+}
+
+function isBsonValue(value: unknown): boolean {
+  return (
+    value instanceof Date ||
+    (isRecord(value) && typeof value._bsontype === 'string')
+  );
+}
+
+function deserializeMongoEjson(value: unknown): unknown {
+  if (!isRecord(value) && !Array.isArray(value)) return value;
+  return BSON.EJSON.deserialize(value as Record<string, unknown>, {
+    relaxed: false,
+  });
+}
+
+function parseMongoLiteral(value: string): unknown {
+  const objectIdMatch = value.match(OBJECT_ID_LITERAL);
+  if (objectIdMatch) {
+    return new ObjectId(objectIdMatch[2]);
+  }
+
+  const isoDateMatch = value.match(ISO_DATE_LITERAL);
+  if (isoDateMatch) {
+    const date = new Date(isoDateMatch[2]);
+    if (!Number.isNaN(date.getTime())) return date;
+  }
+
+  return value;
+}
 
 function normalizeValue(field: string, value: unknown): unknown {
   if (field === '_id' && typeof value === 'string') {
-    if (!ObjectId.isValid(value)) {
-      throw new Error('Invalid MongoDB document _id');
+    if (ObjectId.isValid(value)) {
+      return new ObjectId(value);
     }
-    return new ObjectId(value);
+
+    const parsedLiteral = parseMongoLiteral(value);
+    if (parsedLiteral instanceof ObjectId) return parsedLiteral;
+
+    throw new Error(
+      `Invalid MongoDB document _id: "${value}". Expected a 24-character hexadecimal string or ObjectId("...").`
+    );
   }
 
   if (Array.isArray(value)) {
     return value.map(item => normalizeValue(field, item));
   }
 
+  if (isBsonValue(value)) return value;
+
   if (value && typeof value === 'object') {
     return normalizeMongoFilter(value as MongoFilter);
   }
+
+  if (typeof value === 'string') return parseMongoLiteral(value);
 
   return value;
 }
 
 export function normalizeMongoFilter(filter: MongoFilter = {}): MongoFilter {
+  const deserializedFilter = deserializeMongoEjson(filter);
+  if (!isRecord(deserializedFilter)) {
+    throw new Error('MongoDB filter must be an object');
+  }
+
   return Object.fromEntries(
-    Object.entries(filter).map(([key, value]) => {
+    Object.entries(deserializedFilter).map(([key, value]) => {
       if (key.startsWith('$') && !ALLOWED_OPERATORS.has(key)) {
         throw new Error(`Unsupported MongoDB filter operator: ${key}`);
       }
 
-      if (key.startsWith('$') && !Array.isArray(value) && key !== '$regex') {
+      if (
+        key.startsWith('$') &&
+        ARRAY_VALUE_OPERATORS.has(key) &&
+        !Array.isArray(value)
+      ) {
         throw new Error(
           `MongoDB filter operator ${key} requires an array value`
         );
       }
 
-      return [key, normalizeValue(key === '_id' ? '_id' : '', value)];
+      return [
+        key,
+        key === '$regex'
+          ? value
+          : normalizeValue(key === '_id' ? '_id' : '', value),
+      ];
     })
   );
 }
 
-export function buildMongoDocumentSelector(id: string) {
-  if (!ObjectId.isValid(id)) {
+export function buildMongoDocumentSelector(id: unknown): { _id: any } {
+  if (id === undefined) {
     throw new Error('Invalid MongoDB document _id');
   }
 
-  return { _id: new ObjectId(id) };
+  const deserializedId = deserializeMongoEjson(id);
+  const normalizedId =
+    typeof deserializedId === 'string'
+      ? ObjectId.isValid(deserializedId)
+        ? new ObjectId(deserializedId)
+        : parseMongoLiteral(deserializedId)
+      : deserializedId;
+
+  return { _id: normalizedId as any };
 }
 
 export interface MongoCollectionSummary {
@@ -324,10 +401,35 @@ export async function getMongoCollectionValidation(
 }
 
 export function serializeMongoDocument(document: Record<string, unknown>) {
-  return Object.fromEntries(
-    Object.entries(document).map(([key, value]) => [
-      key,
-      value instanceof ObjectId ? value.toHexString() : value,
-    ])
-  );
+  return BSON.EJSON.serialize(document, { relaxed: false });
+}
+
+export function serializeMongoValue(value: unknown) {
+  return BSON.EJSON.serialize(value, { relaxed: false });
+}
+
+export function normalizeMongoDocument(document: Record<string, unknown>) {
+  const normalizeValueDeep = (value: unknown): unknown => {
+    if (Array.isArray(value)) return value.map(normalizeValueDeep);
+
+    if (isBsonValue(value)) return value;
+
+    if (value && typeof value === 'object') {
+      return Object.fromEntries(
+        Object.entries(value).map(([key, nestedValue]) => [
+          key,
+          normalizeValueDeep(nestedValue),
+        ])
+      );
+    }
+
+    return typeof value === 'string' ? parseMongoLiteral(value) : value;
+  };
+
+  const deserializedDocument = deserializeMongoEjson(document);
+  if (!isRecord(deserializedDocument)) {
+    throw new Error('MongoDB document must be an object');
+  }
+
+  return normalizeValueDeep(deserializedDocument) as Record<string, unknown>;
 }

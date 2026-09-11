@@ -97,14 +97,14 @@ const {
 
 const deleteDialogState = ref<{
   open: boolean;
-  docId: string | null;
+  docId: unknown | null;
 }>({
   open: false,
   docId: null,
 });
 
 const handleUpdateDocument = async (payload: {
-  id: string;
+  id: unknown;
   document: Record<string, unknown>;
 }) => {
   const success = await updateDocument(payload.id, payload.document);
@@ -113,7 +113,7 @@ const handleUpdateDocument = async (payload: {
   }
 };
 
-const onRequestDeleteDocument = (id: string) => {
+const onRequestDeleteDocument = (id: unknown) => {
   deleteDialogState.value = {
     open: true,
     docId: id,
@@ -121,7 +121,7 @@ const onRequestDeleteDocument = (id: string) => {
 };
 
 const handleConfirmDelete = async () => {
-  if (!deleteDialogState.value.docId) return;
+  if (deleteDialogState.value.docId === null) return;
   const docIdToDelete = deleteDialogState.value.docId;
   const success = await deleteDocument(docIdToDelete);
   if (success) {
@@ -189,6 +189,7 @@ watch([databaseName, collectionName], fetchDocuments, { immediate: true });
         :documents="documents"
         :is-loading="isLoading"
         :persist-key="filterPersistKey"
+        :error="error"
         @apply-filter="applyFilter"
       />
     </div>

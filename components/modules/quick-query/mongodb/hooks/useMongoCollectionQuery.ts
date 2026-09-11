@@ -3,6 +3,7 @@ import { DEFAULT_QUERY_SIZE } from '~/core/constants';
 import { getConnectionParams } from '~/core/helpers/connection-helper';
 import type { Connection } from '~/core/stores';
 import type { MongoDocument } from '../types';
+import { getMongoErrorMessage } from '../utils';
 
 interface MongoQuickQueryResponse {
   documents: MongoDocument[];
@@ -50,8 +51,7 @@ export function useMongoCollectionQuery(params: {
       total.value = response.total;
       queryTime.value = response.queryTime;
     } catch (fetchError) {
-      error.value =
-        fetchError instanceof Error ? fetchError.message : 'Unknown error';
+      error.value = getMongoErrorMessage(fetchError);
     } finally {
       isLoading.value = false;
     }

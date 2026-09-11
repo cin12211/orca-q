@@ -7,6 +7,7 @@ import {
   mongoExecuteKeymap,
   mongoQuery,
 } from '~/components/base/code-editor/extensions/mongoQueryLanguage';
+import { parseMongoRawFilter } from '../utils';
 
 const props = withDefaults(
   defineProps<{
@@ -31,7 +32,7 @@ const editorRef =
 
 const extensions = computed(() => {
   const exts: Extension[] = [
-    ...mongoQuery(() => props.fields || []),
+    ...mongoQuery(() => props.fields || [], parseMongoRawFilter),
     mongoExecuteKeymap(() => emit('execute')),
   ];
   if (props.placeholder) {

@@ -1,7 +1,10 @@
 import type { ColDef } from 'ag-grid-community';
 import type { MongoDocument } from '../types';
+import { formatMongoEjsonValue } from './mongoEjsonUtils';
 
 function formatCellValue(value: unknown): unknown {
+  const formatted = formatMongoEjsonValue(value);
+  if (formatted) return formatted;
   if (value !== null && typeof value === 'object') {
     return JSON.stringify(value);
   }

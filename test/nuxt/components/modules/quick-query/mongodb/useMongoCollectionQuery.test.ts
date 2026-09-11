@@ -56,4 +56,26 @@ describe('useMongoCollectionQuery', () => {
       expect.objectContaining({ body: expect.objectContaining({ skip: 100 }) })
     );
   });
+
+  it('extracts descriptive error message from fetch error data when query fails', async () => {
+    const fetchError = Object.assign(
+      new Error('[POST] "/api/mongodb/quick-query": 400 Bad Request'),
+      {
+        data: {
+          statusCode: 400,
+          message: 'Invalid MongoDB document _id: "not-an-id"',
+        },
+      }
+    );
+    mockFetch.mockRejectedValueOnce(fetchError);
+
+    const { error, fetchDocuments } = useMongoCollectionQuery({
+      connection: ref({ id: 'c1', database: 'shop' } as any),
+      collectionName: ref('users'),
+    });
+
+    await fetchDocuments();
+
+    expect(error.value).toBe('Invalid MongoDB document _id: "not-an-id"');
+  });
 });

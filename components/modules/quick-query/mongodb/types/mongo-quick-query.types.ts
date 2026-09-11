@@ -1,5 +1,5 @@
 export interface MongoDocument {
-  _id: string;
+  _id: unknown;
   [key: string]: unknown;
 }
 

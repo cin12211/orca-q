@@ -40,6 +40,9 @@ describe('MongoDB Quick Query E2E', async () => {
 
       expect(res.total).toBe(3);
       expect(res.documents).toHaveLength(3);
+      expect(res.documents[0]._id).toEqual({
+        $oid: expect.stringMatching(/^[0-9a-f]{24}$/),
+      });
       expect(res.documents.map(document => document.name)).toEqual([
         'Alice',
         'Bob',

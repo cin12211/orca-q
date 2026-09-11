@@ -36,6 +36,7 @@ const props = defineProps<{
   isLoading?: boolean;
   /** Storage key for persisting filter state across reloads. Omit to disable persistence. */
   persistKey?: string;
+  error?: string;
 }>();
 
 const isShowFilters = defineModel<boolean>('isShowFilters', { default: false });
@@ -48,6 +49,10 @@ const quickQueryFilterRef = ref<HTMLElement>();
 const mode = ref<MongoFilterMode>(MongoFilterMode.Visual);
 const rawJsonQuery = ref('');
 const rawJsonError = ref<string | undefined>();
+
+const filterErrorMessage = computed(
+  () => rawJsonError.value || (isShowFilters.value ? props.error : undefined)
+);
 
 const availableFields = computed(() =>
   extractFieldsFromDocuments(props.documents)
@@ -130,6 +135,7 @@ const focusSearchByIndex = async (index: number) => {
 const getNextFilters = () => filterRows.value.map(row => ({ ...row }));
 
 const updateFilter = (index: number, patch: Partial<MongoFilterRow>) => {
+  rawJsonError.value = undefined;
   const nextRows = getNextFilters();
   const row = nextRows[index];
   if (!row) return;
@@ -398,6 +404,14 @@ defineExpose({
           </TooltipContent>
         </Tooltip>
       </div>
+
+      <div
+        v-if="filterErrorMessage"
+        class="flex items-center gap-1.5 text-xs text-destructive font-mono px-1 pt-1"
+      >
+        <Icon name="hugeicons:alert-02" class="size-3.5 shrink-0" />
+        <span class="break-all">{{ filterErrorMessage }}</span>
+      </div>
     </template>
 
     <!-- Raw BSON JSON Mode -->
@@ -408,9 +422,13 @@ defineExpose({
         placeholder='{ "status": "active", "qty": { "$gte": 10 } }'
         @execute="onExecuteSearch"
       />
-      <span class="text-xs text-destructive font-mono" v-if="rawJsonError">
-        {{ rawJsonError }}
-      </span>
+      <div
+        v-if="filterErrorMessage"
+        class="flex items-center gap-1.5 text-xs text-destructive font-mono px-1"
+      >
+        <Icon name="hugeicons:alert-02" class="size-3.5 shrink-0" />
+        <span class="break-all">{{ filterErrorMessage }}</span>
+      </div>
     </div>
 
     <!-- Shortcut Info & Mode Selector (matching QuickQueryFilterGuide) -->

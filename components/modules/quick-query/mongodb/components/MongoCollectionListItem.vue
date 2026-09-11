@@ -11,14 +11,14 @@ import {
 import { json, jsonParseLinter } from '@codemirror/lang-json';
 import { linter, lintGutter } from '@codemirror/lint';
 import { keymap } from '@codemirror/view';
-import VueJsonPretty from 'vue-json-pretty';
 import { toast } from 'vue-sonner';
 import { cn } from '@/lib/utils';
 import BaseCodeEditor from '~/components/base/code-editor/BaseCodeEditor.vue';
 import { currentStatementLineGutterExtension } from '~/components/base/code-editor/extensions';
 import { useCopyToClipboard } from '~/core/composables/useCopyToClipboard';
-import { useVueJsonPrettyTheme } from '~/core/composables/useVueJsonPrettyTheme';
 import type { MongoDocument } from '../types';
+import { formatMongoEjsonValue, getMongoDocumentKey } from '../utils';
+import MongoDocumentJsonViewer from './MongoDocumentJsonViewer.vue';
 
 const props = withDefaults(
   defineProps<{
@@ -45,11 +45,18 @@ const emit = defineEmits<{
 const { handleCopyWithKey, isCopied, getCopyIcon, getCopyTooltip } =
   useCopyToClipboard();
 
-const { themeMode, themeClass, themeStyle } = useVueJsonPrettyTheme();
+const documentKey = computed(() => getMongoDocumentKey(props.document._id));
+const documentIdLabel = computed(() => {
+  const formatted = formatMongoEjsonValue(props.document._id);
+  if (formatted) return formatted;
+  return typeof props.document._id === 'string'
+    ? props.document._id
+    : JSON.stringify(props.document._id);
+});
 
 const onCopyDocument = () => {
   const jsonStr = JSON.stringify(props.document, null, 2);
-  return handleCopyWithKey(props.document._id, jsonStr);
+  return handleCopyWithKey(documentKey.value, jsonStr);
 };
 
 const formatDocumentJson = (doc: MongoDocument) => {
@@ -181,7 +188,7 @@ const editorExtensions = [
       <div
         :class="
           cn(
-            'flex items-center justify-between px-3 py-1 bg-muted/50 border-b border-border/40 text-xs select-none flex-shrink-0',
+            'flex items-center justify-between px-2 py-0.5 bg-muted/50 border-b border-border/40 text-xs select-none flex-shrink-0',
             isFullscreen ? 'rounded-t border' : ''
           )
         "
@@ -193,7 +200,7 @@ const editorExtensions = [
             "
             class="size-4!"
           />
-          <span>_id: {{ document._id }}</span>
+          <span>_id: {{ documentIdLabel }}</span>
         </div>
 
         <div class="flex items-center gap-1">
@@ -316,10 +323,10 @@ const editorExtensions = [
                   @click="onCopyDocument"
                 >
                   <Icon
-                    :name="getCopyIcon(isCopied(document._id))"
+                    :name="getCopyIcon(isCopied(documentKey))"
                     :class="[
                       'size-3.5',
-                      isCopied(document._id) && 'text-emerald-500 font-bold',
+                      isCopied(documentKey) && 'text-emerald-500 font-bold',
                     ]"
                   />
                 </Button>
@@ -327,7 +334,7 @@ const editorExtensions = [
               <TooltipContent>
                 <p>
                   {{
-                    getCopyTooltip(isCopied(document._id), 'Copy document JSON')
+                    getCopyTooltip(isCopied(documentKey), 'Copy document JSON')
                   }}
                 </p>
               </TooltipContent>
@@ -427,16 +434,9 @@ const editorExtensions = [
             )
           "
         >
-          <VueJsonPretty
-            :data="document"
-            :deep="isExpanded || isFullscreen ? 99 : 1"
-            :show-double-quotes="true"
-            :show-length="false"
-            :show-line="false"
-            :show-icon="true"
-            :theme="themeMode"
-            :class="themeClass"
-            :style="themeStyle"
+          <MongoDocumentJsonViewer
+            :document="document"
+            :is-expanded="isExpanded || isFullscreen"
           />
         </div>
       </div>
