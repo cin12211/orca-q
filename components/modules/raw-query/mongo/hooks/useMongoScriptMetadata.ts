@@ -1,4 +1,5 @@
 import { computed, ref, watch, type Ref } from 'vue';
+import { getConnectionParams } from '~/core/helpers/connection-helper';
 import type { Connection } from '~/core/types/entities/connection.entity';
 import type { MongoRawQueryMetadata } from '~/core/types/mongodb-raw-query.types';
 
@@ -35,6 +36,7 @@ export function useMongoScriptMetadata(options: {
           method: 'POST',
           body: {
             connectionId: options.connection.value.id,
+            ...getConnectionParams(options.connection.value),
             database: options.databaseName.value,
             collectionContext: options.collectionContext.value,
           },

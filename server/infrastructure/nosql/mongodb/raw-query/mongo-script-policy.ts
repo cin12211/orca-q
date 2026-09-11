@@ -103,6 +103,14 @@ function findCallChain(node: ts.CallExpression) {
   return { method, collection, args: node.arguments };
 }
 
+function findCollectionReference(node: ts.CallExpression) {
+  if (!ts.isPropertyAccessExpression(node.expression)) return undefined;
+  if (node.expression.name.text !== 'collection') return undefined;
+  if (!ts.isIdentifier(node.expression.expression)) return undefined;
+  if (node.expression.expression.text !== 'db') return undefined;
+  return { collection: literalString(node.arguments[0]) };
+}
+
 function normalizeId(
   target: MongoRawQueryOperation['target'],
   method: string,
@@ -132,6 +140,7 @@ export function analyzeMongoScript(source: string): MongoScriptAnalysis {
   if (diagnostics.length) throw new Error(diagnostics[0]?.message);
 
   const operations = new Map<string, MongoRawQueryOperation>();
+  const aliases = new Map<string, string | undefined>();
   let hasReturn = false;
   const visit = (node: ts.Node) => {
     if (ts.isReturnStatement(node)) hasReturn = true;
@@ -181,7 +190,21 @@ export function analyzeMongoScript(source: string): MongoScriptAnalysis {
       );
     }
     if (ts.isCallExpression(node)) {
-      const chain = findCallChain(node);
+      let chain = findCallChain(node);
+      if (
+        !chain &&
+        ts.isPropertyAccessExpression(node.expression) &&
+        ts.isIdentifier(node.expression.expression)
+      ) {
+        const collection = aliases.get(node.expression.expression.text);
+        if (aliases.has(node.expression.expression.text)) {
+          chain = {
+            method: node.expression.name.text,
+            collection,
+            args: node.arguments,
+          };
+        }
+      }
       if (
         chain &&
         (isMongoWriteMethod(chain.method) || chain.method === 'aggregate')
@@ -196,7 +219,7 @@ export function analyzeMongoScript(source: string): MongoScriptAnalysis {
           firstArg &&
           ts.isArrayLiteralExpression(firstArg)
         ) {
-          const hasMerge = firstArg.elements.some(
+          const aggregateWriteStage = firstArg.elements.find(
             element =>
               ts.isObjectLiteralExpression(element) &&
               element.properties.some(
@@ -206,11 +229,28 @@ export function analyzeMongoScript(source: string): MongoScriptAnalysis {
                   ['$merge', '$out'].includes(property.name.text)
               )
           );
-          if (!hasMerge) {
+          if (
+            !aggregateWriteStage ||
+            !ts.isObjectLiteralExpression(aggregateWriteStage)
+          ) {
             ts.forEachChild(node, visit);
             return;
           }
-          method = `aggregate:${hasMerge ? '$merge' : '$out'}`;
+          const stageProperty = aggregateWriteStage.properties.find(
+            property =>
+              ts.isPropertyAssignment(property) &&
+              ts.isIdentifier(property.name) &&
+              ['$merge', '$out'].includes(property.name.text)
+          );
+          if (
+            !stageProperty ||
+            !ts.isPropertyAssignment(stageProperty) ||
+            !ts.isIdentifier(stageProperty.name)
+          ) {
+            ts.forEachChild(node, visit);
+            return;
+          }
+          method = `aggregate:${stageProperty.name.text}`;
         }
         const operation: MongoRawQueryOperation = {
           id: normalizeId('collection', method, chain.collection),
@@ -257,6 +297,15 @@ export function analyzeMongoScript(source: string): MongoScriptAnalysis {
           operations.set(operation.id, operation);
         }
       }
+    }
+    if (
+      ts.isVariableDeclaration(node) &&
+      ts.isIdentifier(node.name) &&
+      node.initializer &&
+      ts.isCallExpression(node.initializer)
+    ) {
+      const reference = findCollectionReference(node.initializer);
+      if (reference) aliases.set(node.name.text, reference.collection);
     }
     ts.forEachChild(node, visit);
   };

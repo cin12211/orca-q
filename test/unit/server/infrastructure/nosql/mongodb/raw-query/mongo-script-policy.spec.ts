@@ -20,6 +20,17 @@ describe('Mongo raw query script policy', () => {
     ]);
   });
 
+  it('classifies writes through a collection alias', () => {
+    const analysis = analyzeMongoScript(`
+      const users = db.collection('users');
+      return users.updateMany({}, { $set: { active: true } });
+    `);
+
+    expect(analysis.operations).toEqual([
+      expect.objectContaining({ method: 'updateMany', collection: 'users' }),
+    ]);
+  });
+
   it.each([
     `import fs from 'node:fs'`,
     `return require('node:fs')`,
@@ -37,6 +48,14 @@ describe('Mongo raw query script policy', () => {
         `return db.collection('users').aggregate([{ $merge: 'archive' }])`
       ).operations
     ).toEqual([expect.objectContaining({ method: 'aggregate:$merge' })]);
+  });
+
+  it('classifies aggregation $out separately from $merge', () => {
+    expect(
+      analyzeMongoScript(
+        `return db.collection('users').aggregate([{ $out: 'archive' }])`
+      ).operations
+    ).toEqual([expect.objectContaining({ method: 'aggregate:$out' })]);
   });
 
   it('redacts and bounds operation summaries', () => {

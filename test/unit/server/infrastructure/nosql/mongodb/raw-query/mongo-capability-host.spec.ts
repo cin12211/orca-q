@@ -62,4 +62,32 @@ describe('Mongo capability host', () => {
       })
     ).rejects.toThrow('Write operation is not approved');
   });
+
+  it('rejects an unapproved aggregation write at runtime', async () => {
+    const database = {
+      collection: vi.fn().mockReturnValue({
+        aggregate: vi.fn().mockReturnValue({ next: vi.fn(), close: vi.fn() }),
+      }),
+    };
+    const host = createMongoCapabilityHost(database as any, {
+      approvedOperations: [],
+      maxDocuments: 10,
+    });
+
+    await expect(
+      host.execute({
+        id: 'rpc-3',
+        kind: 'cursor-open',
+        descriptor: {
+          source: {
+            target: 'collection',
+            collection: 'users',
+            method: 'aggregate',
+            args: [[{ $out: 'archive' }]],
+          },
+          modifiers: [],
+        },
+      })
+    ).rejects.toThrow('Write operation is not approved');
+  });
 });

@@ -42,6 +42,19 @@ const ejsonDeserialize = (value: unknown): any =>
 const ejsonSerialize = (value: unknown): any =>
   bsonEjson?.serialize(value, { relaxed: false }) ?? value;
 
+const aggregateWriteMethod = (
+  args: unknown[]
+): '$merge' | '$out' | undefined => {
+  const pipeline = args[0];
+  if (!Array.isArray(pipeline)) return undefined;
+  for (const stage of pipeline) {
+    if (!stage || typeof stage !== 'object' || Array.isArray(stage)) continue;
+    if ('$merge' in stage) return '$merge';
+    if ('$out' in stage) return '$out';
+  }
+  return undefined;
+};
+
 export class MongoCapabilityHost implements MongoCapabilityHostContract {
   private readonly cursors = new Map<string, NativeCursor>();
   private cursorSequence = 0;
@@ -93,6 +106,22 @@ export class MongoCapabilityHost implements MongoCapabilityHostContract {
     }
   }
 
+  private assertAggregateWriteApproved(
+    target: 'database' | 'collection',
+    method: string,
+    collection: string | undefined,
+    args: unknown[]
+  ) {
+    if (target !== 'collection' || method !== 'aggregate') return;
+    const writeMethod = aggregateWriteMethod(args);
+    if (
+      writeMethod &&
+      !this.isApproved(target, `aggregate:${writeMethod}`, collection)
+    ) {
+      throw new Error('Write operation is not approved');
+    }
+  }
+
   async execute(
     request: MongoSandboxRpcRequest
   ): Promise<MongoSandboxRpcResponse> {
@@ -108,6 +137,12 @@ export class MongoCapabilityHost implements MongoCapabilityHostContract {
       target,
       request.method,
       request.kind === 'collection-call' ? request.collection : undefined
+    );
+    this.assertAggregateWriteApproved(
+      target,
+      request.method,
+      request.kind === 'collection-call' ? request.collection : undefined,
+      request.args
     );
     const owner =
       request.kind === 'database-call'
@@ -131,6 +166,12 @@ export class MongoCapabilityHost implements MongoCapabilityHostContract {
   ): Promise<MongoSandboxRpcResponse> {
     const { source } = descriptor;
     this.assertMethod(source.target, source.method);
+    this.assertAggregateWriteApproved(
+      source.target,
+      source.method,
+      source.target === 'collection' ? source.collection : undefined,
+      source.args.map(ejsonDeserialize)
+    );
     const owner =
       source.target === 'database'
         ? this.database
