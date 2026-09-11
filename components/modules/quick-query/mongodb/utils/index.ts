@@ -1,4 +1,3 @@
-export * from './buildMongoColumnDefs';
 export * from './mongoInfoTableSizing';
 export * from './mongoEjsonUtils';
 export * from './mongoFilterUtils';

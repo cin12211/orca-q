@@ -12,7 +12,7 @@ const mockFetch = vi.fn().mockResolvedValue({
 vi.stubGlobal('$fetch', mockFetch);
 
 describe('MongoCollectionDetail', () => {
-  it('renders the list view by default and switches to table view on mode change', async () => {
+  it('renders the list view by default and switches to info view on mode change', async () => {
     const wrapper = mount(
       {
         components: { MongoCollectionDetail, TooltipProvider },
@@ -34,14 +34,14 @@ describe('MongoCollectionDetail', () => {
     ).toBe(true);
 
     const switcher = wrapper.findComponent({ name: 'MongoViewModeSwitcher' });
-    switcher.vm.$emit('update:modelValue', MongoCollectionViewMode.Table);
+    switcher.vm.$emit('update:modelValue', MongoCollectionViewMode.Info);
     await flushPromises();
 
     expect(
       wrapper.findComponent({ name: 'MongoCollectionListView' }).exists()
     ).toBe(false);
     expect(
-      wrapper.findComponent({ name: 'MongoCollectionTableView' }).exists()
+      wrapper.findComponent({ name: 'MongoCollectionInfoView' }).exists()
     ).toBe(true);
   });
 });

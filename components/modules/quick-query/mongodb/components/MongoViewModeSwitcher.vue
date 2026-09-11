@@ -12,7 +12,7 @@ const emit = defineEmits<{ 'update:modelValue': [MongoCollectionViewMode] }>();
       emit('update:modelValue', $event as MongoCollectionViewMode)
     "
   >
-    <TabsList size="xxs" class="grid w-full grid-cols-3">
+    <TabsList size="xxs" class="grid w-full grid-cols-2">
       <TabsTrigger
         size="xxs"
         :value="MongoCollectionViewMode.List"
@@ -20,14 +20,6 @@ const emit = defineEmits<{ 'update:modelValue': [MongoCollectionViewMode] }>();
         class="font-medium cursor-pointer text-primary/80"
       >
         List
-      </TabsTrigger>
-      <TabsTrigger
-        size="xxs"
-        :value="MongoCollectionViewMode.Table"
-        data-testid="mongo-view-mode-table"
-        class="font-medium cursor-pointer text-primary/80"
-      >
-        Table
       </TabsTrigger>
       <TabsTrigger
         size="xxs"

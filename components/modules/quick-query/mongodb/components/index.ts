@@ -1,6 +1,5 @@
 export { default as MongoViewModeSwitcher } from './MongoViewModeSwitcher.vue';
 export { default as MongoQuickQueryControlBar } from './MongoQuickQueryControlBar.vue';
-export { default as MongoCollectionTableView } from './MongoCollectionTableView.vue';
 export { default as MongoCollectionListView } from './MongoCollectionListView.vue';
 export { default as MongoCollectionObjectListView } from './MongoCollectionObjectListView.vue';
 export { default as MongoCollectionFilter } from './MongoCollectionFilter.vue';
@@ -12,3 +11,5 @@ export { default as MongoValidationTab } from './MongoValidationTab.vue';
 export { default as MongoCollectionListItem } from './MongoCollectionListItem.vue';
 export { default as MongoDocumentJsonViewer } from './MongoDocumentJsonViewer.vue';
 export { default as MongoDeleteDocumentDialog } from './MongoDeleteDocumentDialog.vue';
+export { default as MongoInsertModal } from './MongoInsertModal.vue';
+export { default as MongoExportModal } from './MongoExportModal.vue';

@@ -6,7 +6,7 @@ import { MongoCollectionViewMode } from '~/components/modules/quick-query/mongod
 describe('MongoViewModeSwitcher', () => {
   it('emits update:modelValue with the clicked mode', async () => {
     const wrapper = mount(MongoViewModeSwitcher, {
-      props: { modelValue: MongoCollectionViewMode.Table },
+      props: { modelValue: MongoCollectionViewMode.Info },
     });
 
     await wrapper

@@ -2,6 +2,10 @@
 import {
   Button,
   ContextMenuShortcut,
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
   Icon,
   Tooltip,
   TooltipContent,
@@ -29,6 +33,8 @@ const emit = defineEmits<{
   onRefresh: [];
   onToggleFilter: [];
   onPaginate: [value: { limit: number; offset: number }];
+  onInsertClick: [];
+  openExport: [scope: 'current' | 'full'];
   'update:viewMode': [MongoCollectionViewMode];
 }>();
 </script>
@@ -49,6 +55,16 @@ const emit = defineEmits<{
       </Tooltip>
 
       <RefreshButton @on-refresh="emit('onRefresh')" />
+
+      <Button
+        variant="outline"
+        size="xxs"
+        class="gap-1 h-7"
+        @click="emit('onInsertClick')"
+      >
+        <Icon name="hugeicons:plus-sign" class="size-3.5" />
+        <span>Insert</span>
+      </Button>
     </div>
 
     <div class="flex items-center gap-2">
@@ -104,6 +120,24 @@ const emit = defineEmits<{
         :model-value="props.viewMode"
         @update:model-value="mode => emit('update:viewMode', mode)"
       />
+
+      <DropdownMenu>
+        <DropdownMenuTrigger as-child>
+          <Button variant="outline" size="xxs" class="gap-1 h-7">
+            <Icon name="hugeicons:file-download" class="size-3.5" />
+            <span>Export</span>
+            <Icon name="lucide:chevron-down" class="size-3 text-muted-foreground" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          <DropdownMenuItem @click="emit('openExport', 'current')">
+            Current results
+          </DropdownMenuItem>
+          <DropdownMenuItem @click="emit('openExport', 'full')">
+            Full collections
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
     </div>
   </div>
 </template>

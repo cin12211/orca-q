@@ -3,6 +3,7 @@ import { computed, ref, toRef, watch } from 'vue';
 import type { ColDef, GridApi, RowClickedEvent } from 'ag-grid-community';
 import BaseDataGrid from '~/components/base/data-grid/BaseDataGrid.vue';
 import { useDataGridAutoSizing } from '~/components/base/data-grid/hooks';
+import { createHashIndexColumnDef } from '~/components/base/data-grid/utils/gridColumnDefs';
 import { useTabManagement } from '~/core/composables/useTabManagement';
 import { formatBytes } from '~/core/helpers/bytes-formatter';
 import { useManagementConnectionStore } from '~/core/stores/managementConnectionStore';
@@ -34,6 +35,10 @@ const defaultColDef: ColDef = {
 };
 
 const columnDefs: ColDef<MongoCollectionSummary>[] = [
+  createHashIndexColumnDef({
+    valueGetter: params =>
+      params.node?.rowIndex != null ? params.node.rowIndex + 1 : '',
+  }),
   {
     field: 'name',
     headerName: 'Collection name',

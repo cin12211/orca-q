@@ -34,7 +34,6 @@ export interface MongoCollectionSummary {
 }
 
 export enum MongoCollectionViewMode {
-  Table = 'table',
   List = 'list',
   Info = 'info',
 }
