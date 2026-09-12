@@ -26,6 +26,7 @@ describe('connection capabilities', () => {
     expect(profile.supportsRawSql).toBe(false);
     expect(profile.supportsQueryFiles).toBe(true);
     expect(profile.supportsErd).toBe(false);
+    expect(profile.visibleActivityItems).toContain('Explorer');
   });
 
   it('exposes MongoDB database and collection tab types', () => {
