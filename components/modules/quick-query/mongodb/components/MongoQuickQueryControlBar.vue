@@ -25,6 +25,7 @@ const props = defineProps<{
   viewMode: MongoCollectionViewMode;
   isShowFilters?: boolean;
   activeFilterCount?: number;
+  isShowMoreOptions?: boolean;
 }>();
 
 const emit = defineEmits<{
@@ -32,6 +33,7 @@ const emit = defineEmits<{
   onPreviousPage: [];
   onRefresh: [];
   onToggleFilter: [];
+  onToggleMoreOptions: [];
   onPaginate: [value: { limit: number; offset: number }];
   onInsertClick: [];
   openExport: [scope: MongoExportScope];
@@ -55,7 +57,7 @@ const emit = defineEmits<{
             <Icon name="lucide:filter" />
             <span
               v-if="props.activeFilterCount"
-              class="ml-1 text-[10px] font-semibold"
+              class="ml-1 text-xxs font-semibold"
             >
               {{ props.activeFilterCount }}
             </span>
@@ -136,6 +138,28 @@ const emit = defineEmits<{
         :total-rows="props.totalRows"
         @on-paginate="value => emit('onPaginate', value)"
       />
+
+      <Tooltip>
+        <TooltipTrigger as-child>
+          <Button
+            variant="ghost"
+            size="xxs"
+            :class="
+              props.isShowMoreOptions ? 'bg-accent text-accent-foreground' : ''
+            "
+            class="font-normal"
+            @click="emit('onToggleMoreOptions')"
+          >
+            <span>Options</span>
+            <Icon name="hugeicons:arrow-down-01" />
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent>
+          <p>
+            Toggle query options (Project, Sort, Collation, Hint, MaxTimeMS)
+          </p>
+        </TooltipContent>
+      </Tooltip>
     </div>
 
     <div class="flex items-center gap-1">

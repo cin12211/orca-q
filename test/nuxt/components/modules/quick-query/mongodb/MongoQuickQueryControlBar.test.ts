@@ -77,4 +77,15 @@ describe('MongoQuickQueryControlBar', () => {
       MongoCollectionViewMode.Info,
     ]);
   });
+
+  it('renders Options button and emits onToggleMoreOptions when clicked', async () => {
+    const wrapper = mountControlBar();
+    const moreBtn = wrapper
+      .findAll('button')
+      .find(b => b.text().includes('Options'));
+    expect(moreBtn?.exists()).toBe(true);
+
+    await moreBtn!.trigger('click');
+    expect(wrapper.emitted('onToggleMoreOptions')).toBeTruthy();
+  });
 });

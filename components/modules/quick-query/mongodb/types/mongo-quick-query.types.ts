@@ -100,3 +100,19 @@ export enum MongoExtendedJsonMode {
   Relaxed = 'relaxed',
   Canonical = 'canonical',
 }
+
+export interface MongoQueryMoreOptionsPayload {
+  project?: Record<string, unknown>;
+  sort?: Record<string, 1 | -1 | unknown>;
+  collation?: Record<string, unknown>;
+  hint?: string | Record<string, unknown>;
+  maxTimeMS?: number;
+}
+
+export interface MongoQueryMoreOptionsRawInput {
+  project?: string;
+  sort?: string;
+  collation?: string;
+  hint?: string;
+  maxTimeMS?: number | string;
+}

@@ -420,7 +420,7 @@ defineExpose({
         :model-value="getSearchInputValue(value.search)"
         type="text"
         :placeholder="getPlaceholderSearchByOperator(value.operator || '')"
-        class="w-full h-6 px-2"
+        size="xxs"
         ref="filterSearchRefs"
         @keyup.enter.stop="() => onExecuteSearch()"
         @update:model-value="updateSearchValue(index, String($event))"

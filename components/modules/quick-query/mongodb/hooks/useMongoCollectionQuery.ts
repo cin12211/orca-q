@@ -2,7 +2,7 @@ import { ref, type Ref } from 'vue';
 import { DEFAULT_QUERY_SIZE } from '~/core/constants';
 import { getConnectionParams } from '~/core/helpers/connection-helper';
 import type { Connection } from '~/core/stores';
-import type { MongoDocument } from '../types';
+import type { MongoDocument, MongoQueryMoreOptionsPayload } from '../types';
 import { getMongoErrorMessage } from '../utils';
 
 interface MongoQuickQueryResponse {
@@ -24,6 +24,9 @@ export function useMongoCollectionQuery(params: {
   const limit = ref(DEFAULT_QUERY_SIZE);
   const skip = ref(0);
   const activeFilterPayload = ref<Record<string, unknown> | undefined>();
+  const activeMoreOptionsPayload = ref<
+    MongoQueryMoreOptionsPayload | undefined
+  >();
 
   const fetchDocuments = async () => {
     isLoading.value = true;
@@ -42,6 +45,21 @@ export function useMongoCollectionQuery(params: {
             ...(activeFilterPayload.value
               ? { filter: activeFilterPayload.value }
               : {}),
+            ...(activeMoreOptionsPayload.value?.project
+              ? { project: activeMoreOptionsPayload.value.project }
+              : {}),
+            ...(activeMoreOptionsPayload.value?.sort
+              ? { sort: activeMoreOptionsPayload.value.sort }
+              : {}),
+            ...(activeMoreOptionsPayload.value?.collation
+              ? { collation: activeMoreOptionsPayload.value.collation }
+              : {}),
+            ...(activeMoreOptionsPayload.value?.hint
+              ? { hint: activeMoreOptionsPayload.value.hint }
+              : {}),
+            ...(activeMoreOptionsPayload.value?.maxTimeMS
+              ? { maxTimeMS: activeMoreOptionsPayload.value.maxTimeMS }
+              : {}),
             skip: skip.value,
             limit: limit.value,
           },
@@ -57,8 +75,20 @@ export function useMongoCollectionQuery(params: {
     }
   };
 
-  const applyFilter = (filter?: Record<string, unknown>) => {
+  const applyFilter = (
+    filter?: Record<string, unknown>,
+    options?: MongoQueryMoreOptionsPayload
+  ) => {
     activeFilterPayload.value = filter;
+    if (options !== undefined) {
+      activeMoreOptionsPayload.value = options;
+    }
+    skip.value = 0;
+    return fetchDocuments();
+  };
+
+  const applyMoreOptions = (options?: MongoQueryMoreOptionsPayload) => {
+    activeMoreOptionsPayload.value = options;
     skip.value = 0;
     return fetchDocuments();
   };
@@ -86,7 +116,9 @@ export function useMongoCollectionQuery(params: {
     limit,
     skip,
     activeFilterPayload,
+    activeMoreOptionsPayload,
     applyFilter,
+    applyMoreOptions,
     fetchDocuments,
     onNextPage,
     onPreviousPage,

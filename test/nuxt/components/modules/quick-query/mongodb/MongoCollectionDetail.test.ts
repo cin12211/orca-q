@@ -44,4 +44,53 @@ describe('MongoCollectionDetail', () => {
       wrapper.findComponent({ name: 'MongoCollectionInfoView' }).exists()
     ).toBe(true);
   });
+
+  it('toggles More options panel and applies options', async () => {
+    const wrapper = mount(
+      {
+        components: { MongoCollectionDetail, TooltipProvider },
+        template: `<TooltipProvider><MongoCollectionDetail v-bind="$attrs" /></TooltipProvider>`,
+      },
+      {
+        attrs: {
+          connectionId: 'c1',
+          workspaceId: 'w1',
+          databaseName: 'shop',
+          collectionName: 'users',
+        },
+      }
+    );
+    await flushPromises();
+
+    // Initially more options is not shown
+    expect(
+      wrapper.findComponent({ name: 'MongoQueryMoreOptions' }).exists()
+    ).toBe(false);
+
+    // Toggle more options
+    const controlBar = wrapper.findComponent({
+      name: 'MongoQuickQueryControlBar',
+    });
+    controlBar.vm.$emit('onToggleMoreOptions');
+    await flushPromises();
+
+    const moreOptions = wrapper.findComponent({
+      name: 'MongoQueryMoreOptions',
+    });
+    expect(moreOptions.exists()).toBe(true);
+
+    // Apply more options via filter
+    const filter = wrapper.findComponent({ name: 'MongoCollectionFilter' });
+    filter.vm.$emit('applyFilter', undefined, { project: { name: 1 } });
+    await flushPromises();
+
+    expect(mockFetch).toHaveBeenCalledWith(
+      '/api/mongodb/quick-query',
+      expect.objectContaining({
+        body: expect.objectContaining({
+          project: { name: 1 },
+        }),
+      })
+    );
+  });
 });

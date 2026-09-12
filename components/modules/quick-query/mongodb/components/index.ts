@@ -13,3 +13,4 @@ export { default as MongoDocumentJsonViewer } from './MongoDocumentJsonViewer.vu
 export { default as MongoDeleteDocumentDialog } from './MongoDeleteDocumentDialog.vue';
 export { default as MongoInsertModal } from './MongoInsertModal.vue';
 export { default as MongoExportModal } from './MongoExportModal.vue';
+export { default as MongoQueryMoreOptions } from './MongoQueryMoreOptions.vue';

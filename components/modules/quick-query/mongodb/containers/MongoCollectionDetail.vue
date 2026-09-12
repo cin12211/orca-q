@@ -33,6 +33,7 @@ const containerRef = ref<HTMLElement>();
 const mongoFilterRef =
   useTemplateRef<InstanceType<typeof MongoCollectionFilter>>('mongoFilterRef');
 const isShowFilters = ref(false);
+const isShowMoreOptions = ref(false);
 
 const {
   documents,
@@ -42,6 +43,7 @@ const {
   skip,
   activeFilterPayload,
   applyFilter,
+  applyMoreOptions,
   fetchDocuments,
   onNextPage,
   onPreviousPage,
@@ -173,6 +175,7 @@ watch([databaseName, collectionName], fetchDocuments, { immediate: true });
         :is-loading="isLoading"
         :view-mode="viewMode"
         :is-show-filters="isShowFilters"
+        :is-show-more-options="isShowMoreOptions"
         :active-filter-count="activeFilterCount"
         @on-next-page="onNextPage"
         @on-previous-page="onPreviousPage"
@@ -188,12 +191,24 @@ watch([databaseName, collectionName], fetchDocuments, { immediate: true });
             }
           }
         "
+        @on-toggle-more-options="
+          () => {
+            if (!isShowMoreOptions) {
+              isShowMoreOptions = true;
+              isShowFilters = true;
+            } else {
+              isShowMoreOptions = false;
+            }
+          }
+        "
         @update:view-mode="mode => (viewMode = mode)"
       />
 
       <MongoCollectionFilter
+        v-if="isShowFilters"
         ref="mongoFilterRef"
         v-model:is-show-filters="isShowFilters"
+        v-model:is-show-more-options="isShowMoreOptions"
         :documents="documents"
         :is-loading="isLoading"
         :persist-key="filterPersistKey"
