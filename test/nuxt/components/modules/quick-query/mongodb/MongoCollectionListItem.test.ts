@@ -1,3 +1,4 @@
+import { isVNode } from 'vue';
 import { flushPromises, mount } from '@vue/test-utils';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import VueJsonPretty from 'vue-json-pretty';
@@ -52,6 +53,169 @@ describe('MongoCollectionListItem', () => {
 
     const itemComponent = wrapper.findComponent(MongoCollectionListItem);
     expect(itemComponent.emitted('start-edit')).toBeTruthy();
+  });
+
+  it('renders MongoDB ObjectId and ISODate literals with custom ISODate UTC view', async () => {
+    const wrapper = mount({
+      components: { MongoCollectionListItem, TooltipProvider },
+      template: `
+          <TooltipProvider>
+            <MongoCollectionListItem
+              :document="doc"
+              :is-expanded="true"
+              :is-editing="false"
+              :is-saving="false"
+            />
+          </TooltipProvider>
+        `,
+      setup() {
+        return {
+          doc: {
+            _id: 'doc-123',
+            createdAt: "ISODate('2026-08-27T08:04:10.633Z')",
+            createdById: "ObjectId('6a8e51bc8597426727b81a7b')",
+          },
+        };
+      },
+    });
+    await flushPromises();
+
+    const jsonPretty = wrapper.findComponent(VueJsonPretty);
+    expect(jsonPretty.vm.$slots.renderNodeValue).toBeDefined();
+
+    const utcView = wrapper.find('[data-testid="mongo-isodate-utc-view"]');
+    expect(utcView.exists()).toBe(true);
+    expect(utcView.text()).toBe('(2026-08-27 08:04:10.633 UTC)');
+
+    expect(wrapper.text()).toContain("ObjectId('6a8e51bc8597426727b81a7b')");
+  });
+
+  it('renders MongoDB type of key info badge on the right in VueJsonPretty', async () => {
+    const wrapper = mount({
+      components: { MongoCollectionListItem, TooltipProvider },
+      template: `
+          <TooltipProvider>
+            <MongoCollectionListItem
+              :document="doc"
+              :is-expanded="true"
+              :is-editing="false"
+              :is-saving="false"
+            />
+          </TooltipProvider>
+        `,
+      setup() {
+        return {
+          doc: {
+            _id: '65dc0bbc24edc357f3c23be1',
+            title: 'Sample Item',
+            count: 42,
+            isActive: true,
+            createdAt: "ISODate('2026-08-27T08:04:10.633Z')",
+          },
+        };
+      },
+    });
+    await flushPromises();
+
+    const jsonPretty = wrapper.findComponent(VueJsonPretty);
+    expect(jsonPretty.classes()).toContain('mongo-json-tree');
+
+    const slot = jsonPretty.vm.$slots.renderNodeActions;
+    expect(slot).toBeDefined();
+
+    // Verify type resolution via slot #renderNodeActions
+    const objectIdVNodes = slot!({
+      node: {
+        content: "ObjectId('65dc0bbc24edc357f3c23be1')",
+        type: 'content',
+        key: '_id',
+        level: 1,
+      },
+    });
+    expect(objectIdVNodes.length).toBe(1);
+    expect(objectIdVNodes[0].props?.class).toContain('mongo-type-info');
+    expect(objectIdVNodes[0].props?.class).not.toContain('border');
+    expect(objectIdVNodes[0].props?.class).not.toContain('bg-');
+
+    const stringVNodes = slot!({
+      node: {
+        content: 'Sample Item',
+        type: 'content',
+        key: 'title',
+        level: 1,
+      },
+    });
+    expect(stringVNodes.length).toBe(1);
+    expect(stringVNodes[0].props?.class).toContain('mongo-type-info');
+
+    const numberVNodes = slot!({
+      node: {
+        content: 42,
+        type: 'content',
+        key: 'count',
+        level: 1,
+      },
+    });
+    expect(numberVNodes.length).toBe(1);
+    expect(numberVNodes[0].props?.class).toContain('mongo-type-info');
+
+    const closingVNodes = slot!({
+      node: {
+        type: 'objectEnd',
+        content: '}',
+        level: 0,
+      },
+    });
+    const renderedClosingInfo = closingVNodes.find((v: any) =>
+      v.props?.class?.includes('mongo-type-info')
+    );
+    expect(renderedClosingInfo).toBeUndefined();
+
+    // Verify rendered type info in DOM
+    const typeElements = wrapper.findAll(
+      '[data-testid="mongo-node-type-info"]'
+    );
+    expect(typeElements.length).toBeGreaterThan(0);
+    const typeTexts = typeElements.map(b => b.text());
+    expect(typeTexts).toContain('String');
+    expect(typeTexts).toContain('Number');
+    expect(typeTexts).toContain('Boolean');
+    expect(typeTexts).toContain('Date');
+  });
+
+  it('renders nested Canonical EJSON values with Compass-style BSON literals', async () => {
+    const wrapper = mount({
+      components: { MongoCollectionListItem, TooltipProvider },
+      template: `
+          <TooltipProvider>
+            <MongoCollectionListItem
+              :document="doc"
+              :is-expanded="true"
+              :is-editing="false"
+              :is-saving="false"
+            />
+          </TooltipProvider>
+        `,
+      setup() {
+        return {
+          doc: {
+            _id: { $oid: '65c19f4018898af31684c4a7' },
+            audit: { owner: { $oid: '6a8e51bc8597426727b81a7b' } },
+            total: { $numberDecimal: '1.50' },
+          },
+        };
+      },
+    });
+    await flushPromises();
+
+    const jsonPretty = wrapper.findComponent(VueJsonPretty);
+    expect(jsonPretty.props('data')).toEqual({
+      _id: "__orcaq_bson_literal__:ObjectId('65c19f4018898af31684c4a7')",
+      audit: {
+        owner: "__orcaq_bson_literal__:ObjectId('6a8e51bc8597426727b81a7b')",
+      },
+      total: "__orcaq_bson_literal__:Decimal128('1.50')",
+    });
   });
 
   it('shows Cancel and only shows Save button when content is dirty in edit mode', async () => {

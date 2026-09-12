@@ -4,6 +4,7 @@ import type {
   MongoFilterOperator,
   MongoFilterRow,
 } from '../types';
+import { parseMongoRawFilter } from './mongoEjsonUtils';
 
 export const mongoOperatorSeparatorRow = {
   value: 'SEPARATOR_ROW' as const,
@@ -144,24 +145,25 @@ export function buildMongoFilterPayload(
     const trimmed = rawQueryText.trim();
     if (!trimmed) return undefined;
     try {
-      const parsed = JSON.parse(trimmed);
-      if (
-        typeof parsed === 'object' &&
-        parsed !== null &&
-        !Array.isArray(parsed)
-      ) {
-        return parsed as Record<string, unknown>;
-      }
-      throw new Error(
-        'Filter must be a JSON object e.g. { "status": "active" }'
-      );
+      return parseMongoRawFilter(trimmed);
     } catch (err) {
       if (err instanceof Error) throw err;
       throw new Error('Invalid JSON filter format');
     }
   }
 
-  const activeRows = rows.filter(r => r.isSelect && r.field.trim() !== '');
+  const activeRows = rows.filter(r => {
+    if (!r.isSelect || r.field.trim() === '') return false;
+    // An empty _id value in visual mode is an unfilled row; skip it unless using $exists
+    if (
+      r.field.trim() === '_id' &&
+      r.value.trim() === '' &&
+      r.operator !== '$exists'
+    ) {
+      return false;
+    }
+    return true;
+  });
   if (activeRows.length === 0) return undefined;
 
   const result: Record<string, unknown> = {};
@@ -169,6 +171,47 @@ export function buildMongoFilterPayload(
   for (const row of activeRows) {
     const field = row.field.trim();
     const parsedVal = parseValue(row.value, row.operator);
+
+    // Client-side validation for _id is commented out to avoid blocking user input on FE.
+    // Invalid filter values are sent to the server and handled via server response errors.
+    /*
+    if (
+      field === '_id' &&
+      (row.operator === '$eq' || row.operator === '$ne') &&
+      typeof parsedVal === 'string' &&
+      parsedVal.trim() !== ''
+    ) {
+      const isObjectId =
+        /^[0-9a-fA-F]{24}$/.test(parsedVal) ||
+        /^ObjectId\((['"])[0-9a-fA-F]{24}\1\)$/.test(parsedVal);
+      if (!isObjectId) {
+        throw new Error(
+          `Invalid MongoDB document _id: "${parsedVal}". Expected a 24-character hexadecimal string or ObjectId("...").`
+        );
+      }
+    }
+
+    if (
+      field === '_id' &&
+      (row.operator === '$in' ||
+        row.operator === '$nin' ||
+        row.operator === '$all') &&
+      Array.isArray(parsedVal)
+    ) {
+      for (const item of parsedVal) {
+        if (typeof item === 'string' && item.trim() !== '') {
+          const isObjectId =
+            /^[0-9a-fA-F]{24}$/.test(item) ||
+            /^ObjectId\((['"])[0-9a-fA-F]{24}\1\)$/.test(item);
+          if (!isObjectId) {
+            throw new Error(
+              `Invalid MongoDB document _id: "${item}". Expected a 24-character hexadecimal string or ObjectId("...").`
+            );
+          }
+        }
+      }
+    }
+    */
 
     if (row.operator === '$eq') {
       result[field] = parsedVal;

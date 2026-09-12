@@ -3,8 +3,9 @@ import { computed, ref, toRef, watch } from 'vue';
 import type { ColDef, GridApi, RowClickedEvent } from 'ag-grid-community';
 import BaseDataGrid from '~/components/base/data-grid/BaseDataGrid.vue';
 import { useDataGridAutoSizing } from '~/components/base/data-grid/hooks';
+import { createHashIndexColumnDef } from '~/components/base/data-grid/utils/gridColumnDefs';
 import { useTabManagement } from '~/core/composables/useTabManagement';
-import { formatBytes } from '~/core/helpers/bytes-formatter';
+import { formatBytes } from '~/core/helpers';
 import { useManagementConnectionStore } from '~/core/stores/managementConnectionStore';
 import { useMongoDatabaseCollections } from '../hooks';
 import type { MongoCollectionSummary } from '../types';
@@ -34,6 +35,10 @@ const defaultColDef: ColDef = {
 };
 
 const columnDefs: ColDef<MongoCollectionSummary>[] = [
+  createHashIndexColumnDef({
+    valueGetter: params =>
+      params.node?.rowIndex != null ? params.node.rowIndex + 1 : '',
+  }),
   {
     field: 'name',
     headerName: 'Collection name',
@@ -122,7 +127,7 @@ watch(() => props.databaseName, fetchCollections, { immediate: true });
   <div class="flex flex-col h-full w-full relative">
     <LoadingOverlay :visible="isLoading" />
 
-    <div class="flex-1 overflow-hidden px-1 mb-0.5">
+    <div class="flex-1 overflow-hidden p-1">
       <BaseEmpty
         v-if="isEmpty"
         title="No collections found"

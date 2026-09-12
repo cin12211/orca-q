@@ -1,3 +1,4 @@
+import { BSONRegExp, Decimal128, Long, ObjectId, Timestamp } from 'mongodb';
 import { describe, expect, it, vi } from 'vitest';
 import {
   buildMongoDocumentSelector,
@@ -11,6 +12,7 @@ import {
   listMongoDatabases,
   normalizeMongoFilter,
   renameMongoCollection,
+  serializeMongoDocument,
 } from '~/server/infrastructure/nosql/mongodb/mongodb-quick-query';
 
 describe('MongoDB Quick Query request helpers', () => {
@@ -24,19 +26,88 @@ describe('MongoDB Quick Query request helpers', () => {
     expect(filter._id?.toHexString()).toBe('507f1f77bcf86cd799439011');
   });
 
+  it('converts ObjectId and ISODate literals on any filter field', () => {
+    const filter = normalizeMongoFilter({
+      createdById: 'ObjectId("6634895985e5985522f7047e")',
+      createdAt: { $gte: "ISODate('2026-08-27T08:04:10.633Z')" },
+      relatedIds: {
+        $in: ["ObjectId('6a8e51bc8597426727b81a7b')"],
+      },
+    });
+
+    expect(filter.createdById).toBeInstanceOf(ObjectId);
+    expect((filter.createdById as ObjectId).toHexString()).toBe(
+      '6634895985e5985522f7047e'
+    );
+    expect(filter.createdAt).toEqual({
+      $gte: new Date('2026-08-27T08:04:10.633Z'),
+    });
+    expect((filter.relatedIds as { $in: ObjectId[] }).$in[0]).toBeInstanceOf(
+      ObjectId
+    );
+  });
+
+  it('deserializes Canonical EJSON filter values without losing BSON types', () => {
+    const filter = normalizeMongoFilter({
+      businessId: { $oid: '65c19f4018898af31684c4a7' },
+      total: { $gte: { $numberDecimal: '1.50' } },
+      sequence: { $numberLong: '9007199254740993' },
+    });
+
+    expect(filter.businessId).toBeInstanceOf(ObjectId);
+    expect((filter.total as { $gte: unknown }).$gte).toBeInstanceOf(Decimal128);
+    expect(filter.sequence).toBeInstanceOf(Long);
+  });
+
+  it('still rejects malformed _id values', () => {
+    expect(() => normalizeMongoFilter({ _id: 'not-an-object-id' })).toThrow(
+      'Invalid MongoDB document _id'
+    );
+  });
+
   it('rejects Mongo operators outside the Quick Query allowlist', () => {
     expect(() => normalizeMongoFilter({ $where: 'sleep(1)' })).toThrow(
       'Unsupported MongoDB filter operator: $where'
     );
   });
 
-  it('creates a mutation selector only from a valid document id', () => {
+  it('creates a mutation selector from Canonical EJSON document ids', () => {
     expect(
       buildMongoDocumentSelector('507f1f77bcf86cd799439011')._id.toHexString()
     ).toBe('507f1f77bcf86cd799439011');
-    expect(() => buildMongoDocumentSelector('not-an-object-id')).toThrow(
-      'Invalid MongoDB document _id'
-    );
+    expect(buildMongoDocumentSelector('plain-string-id')).toEqual({
+      _id: 'plain-string-id',
+    });
+    expect(
+      buildMongoDocumentSelector({ $numberLong: '9007199254740993' })
+    ).toEqual({ _id: Long.fromString('9007199254740993') });
+  });
+});
+
+describe('serializeMongoDocument', () => {
+  it('serializes nested BSON values to Canonical EJSON for the document preview', () => {
+    const documentId = new ObjectId('6a8e51bc8597426727b81a7b');
+    const serialized = serializeMongoDocument({
+      _id: documentId,
+      createdAt: new Date('2026-08-27T08:04:10.633Z'),
+      audit: { createdById: documentId },
+      relatedIds: [documentId],
+      total: Decimal128.fromString('1.50'),
+      sequence: Long.fromString('9007199254740993'),
+      timestamp: new Timestamp({ t: 12, i: 34 }),
+      pattern: new BSONRegExp('^orca$', 'i'),
+    });
+
+    expect(serialized).toEqual({
+      _id: { $oid: '6a8e51bc8597426727b81a7b' },
+      createdAt: { $date: { $numberLong: '1787817850633' } },
+      audit: { createdById: { $oid: '6a8e51bc8597426727b81a7b' } },
+      relatedIds: [{ $oid: '6a8e51bc8597426727b81a7b' }],
+      total: { $numberDecimal: '1.50' },
+      sequence: { $numberLong: '9007199254740993' },
+      timestamp: { $timestamp: { t: 12, i: 34 } },
+      pattern: { $regularExpression: { pattern: '^orca$', options: 'i' } },
+    });
   });
 });
 

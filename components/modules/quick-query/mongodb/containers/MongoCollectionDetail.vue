@@ -6,15 +6,16 @@ import { useManagementConnectionStore } from '~/core/stores/managementConnection
 import MongoCollectionFilter from '../components/MongoCollectionFilter.vue';
 import MongoCollectionInfoView from '../components/MongoCollectionInfoView.vue';
 import MongoCollectionListView from '../components/MongoCollectionListView.vue';
-import MongoCollectionTableView from '../components/MongoCollectionTableView.vue';
 import MongoDeleteDocumentDialog from '../components/MongoDeleteDocumentDialog.vue';
+import MongoExportModal from '../components/MongoExportModal.vue';
+import MongoInsertModal from '../components/MongoInsertModal.vue';
 import MongoQuickQueryControlBar from '../components/MongoQuickQueryControlBar.vue';
 import {
   useMongoCollectionQuery,
   useMongoCollectionShortcuts,
   useMongoDocumentMutation,
 } from '../hooks';
-import { MongoCollectionViewMode } from '../types';
+import { MongoCollectionViewMode, MongoExportScope } from '../types';
 
 const props = defineProps<{
   connectionId: string;
@@ -32,6 +33,7 @@ const containerRef = ref<HTMLElement>();
 const mongoFilterRef =
   useTemplateRef<InstanceType<typeof MongoCollectionFilter>>('mongoFilterRef');
 const isShowFilters = ref(false);
+const isShowMoreOptions = ref(false);
 
 const {
   documents,
@@ -41,6 +43,7 @@ const {
   skip,
   activeFilterPayload,
   applyFilter,
+  applyMoreOptions,
   fetchDocuments,
   onNextPage,
   onPreviousPage,
@@ -49,6 +52,14 @@ const {
 } = useMongoCollectionQuery({ connection, collectionName, databaseName });
 
 const openErrorModal = ref(false);
+const isInsertModalOpen = ref(false);
+const exportModalState = ref<{
+  open: boolean;
+  scope: MongoExportScope;
+}>({
+  open: false,
+  scope: MongoExportScope.Current,
+});
 
 watch(error, newError => {
   if (newError) {
@@ -71,14 +82,8 @@ const filterPersistKey = computed(() =>
   )
 );
 
-const activeFilterCount = computed(() =>
-  activeFilterPayload.value ? Object.keys(activeFilterPayload.value).length : 0
-);
-
 const viewMode = ref<MongoCollectionViewMode>(MongoCollectionViewMode.List);
 
-const tableViewRef =
-  useTemplateRef<InstanceType<typeof MongoCollectionTableView>>('tableViewRef');
 const listViewRef =
   useTemplateRef<InstanceType<typeof MongoCollectionListView>>('listViewRef');
 
@@ -97,14 +102,14 @@ const {
 
 const deleteDialogState = ref<{
   open: boolean;
-  docId: string | null;
+  docId: unknown | null;
 }>({
   open: false,
   docId: null,
 });
 
 const handleUpdateDocument = async (payload: {
-  id: string;
+  id: unknown;
   document: Record<string, unknown>;
 }) => {
   const success = await updateDocument(payload.id, payload.document);
@@ -113,7 +118,7 @@ const handleUpdateDocument = async (payload: {
   }
 };
 
-const onRequestDeleteDocument = (id: string) => {
+const onRequestDeleteDocument = (id: unknown) => {
   deleteDialogState.value = {
     open: true,
     docId: id,
@@ -121,7 +126,7 @@ const onRequestDeleteDocument = (id: string) => {
 };
 
 const handleConfirmDelete = async () => {
-  if (!deleteDialogState.value.docId) return;
+  if (deleteDialogState.value.docId === null) return;
   const docIdToDelete = deleteDialogState.value.docId;
   const success = await deleteDocument(docIdToDelete);
   if (success) {
@@ -137,7 +142,6 @@ const handleConfirmDelete = async () => {
 };
 
 watch(skip, () => {
-  tableViewRef.value?.scrollToTop();
   listViewRef.value?.scrollToTop();
 });
 
@@ -167,11 +171,13 @@ watch([databaseName, collectionName], fetchDocuments, { immediate: true });
         :is-loading="isLoading"
         :view-mode="viewMode"
         :is-show-filters="isShowFilters"
-        :active-filter-count="activeFilterCount"
+        :is-show-more-options="isShowMoreOptions"
         @on-next-page="onNextPage"
         @on-previous-page="onPreviousPage"
         @on-refresh="onRefresh"
         @on-paginate="onPaginate"
+        @on-insert-click="isInsertModalOpen = true"
+        @open-export="scope => (exportModalState = { open: true, scope })"
         @on-toggle-filter="
           () => {
             isShowFilters = !isShowFilters;
@@ -180,15 +186,28 @@ watch([databaseName, collectionName], fetchDocuments, { immediate: true });
             }
           }
         "
+        @on-toggle-more-options="
+          () => {
+            if (!isShowMoreOptions) {
+              isShowMoreOptions = true;
+              isShowFilters = true;
+            } else {
+              isShowMoreOptions = false;
+            }
+          }
+        "
         @update:view-mode="mode => (viewMode = mode)"
       />
 
       <MongoCollectionFilter
+        v-if="isShowFilters"
         ref="mongoFilterRef"
         v-model:is-show-filters="isShowFilters"
+        v-model:is-show-more-options="isShowMoreOptions"
         :documents="documents"
         :is-loading="isLoading"
         :persist-key="filterPersistKey"
+        :error="error"
         @apply-filter="applyFilter"
       />
     </div>
@@ -226,22 +245,15 @@ watch([databaseName, collectionName], fetchDocuments, { immediate: true });
             >View Details</Button
           >
         </div>
-        <template v-else>
-          <MongoCollectionTableView
-            v-if="viewMode === MongoCollectionViewMode.Table"
-            ref="tableViewRef"
-            :documents="documents"
-          />
-          <MongoCollectionListView
-            v-else-if="viewMode === MongoCollectionViewMode.List"
-            ref="listViewRef"
-            :documents="documents"
-            :saving-doc-id="savingDocId"
-            :deleting-doc-id="deletingDocId"
-            @update-document="handleUpdateDocument"
-            @delete-document="onRequestDeleteDocument"
-          />
-        </template>
+        <MongoCollectionListView
+          v-else
+          ref="listViewRef"
+          :documents="documents"
+          :saving-doc-id="savingDocId"
+          :deleting-doc-id="deletingDocId"
+          @update-document="handleUpdateDocument"
+          @delete-document="onRequestDeleteDocument"
+        />
       </template>
     </div>
 
@@ -252,6 +264,25 @@ watch([databaseName, collectionName], fetchDocuments, { immediate: true });
       @update:open="val => (deleteDialogState.open = val)"
       @confirm="handleConfirmDelete"
       @cancel="deleteDialogState.open = false"
+    />
+
+    <MongoInsertModal
+      :open="isInsertModalOpen"
+      :connection="connection"
+      :database-name="databaseName"
+      :collection-name="collectionName"
+      @update:open="val => (isInsertModalOpen = val)"
+      @inserted="fetchDocuments"
+    />
+
+    <MongoExportModal
+      :open="exportModalState.open"
+      :export-scope="exportModalState.scope"
+      :database-name="databaseName"
+      :collection-name="collectionName"
+      :active-filter-payload="activeFilterPayload"
+      :connection="connection"
+      @update:open="val => (exportModalState.open = val)"
     />
   </div>
 </template>

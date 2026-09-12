@@ -20,6 +20,8 @@ import type {
   MongoDocument,
   MongoFilterOperator,
   MongoFilterRow,
+  MongoQueryMoreOptionsPayload,
+  MongoQueryMoreOptionsRawInput,
 } from '../types';
 import {
   buildMongoFilterPayload,
@@ -27,27 +29,51 @@ import {
   formatMongoFilterToRaw,
   MONGO_FILTER_OPERATORS,
 } from '../utils/mongoFilterUtils';
+import { parseMongoMoreOptionsInput } from '../utils/mongoMoreOptionsUtils';
 import MongoColumnSelector from './MongoColumnSelector.vue';
 import MongoFilterOperatorSelector from './MongoFilterOperatorSelector.vue';
 import MongoQueryEditor from './MongoQueryEditor.vue';
+import MongoQueryMoreOptions from './MongoQueryMoreOptions.vue';
 
 const props = defineProps<{
   documents: MongoDocument[];
   isLoading?: boolean;
   /** Storage key for persisting filter state across reloads. Omit to disable persistence. */
   persistKey?: string;
+  error?: string;
 }>();
 
 const isShowFilters = defineModel<boolean>('isShowFilters', { default: false });
+const isShowMoreOptions = defineModel<boolean>('isShowMoreOptions', {
+  default: false,
+});
 
 const emit = defineEmits<{
-  (e: 'applyFilter', filter?: Record<string, unknown>): void;
+  (
+    e: 'applyFilter',
+    filter?: Record<string, unknown>,
+    options?: MongoQueryMoreOptionsPayload
+  ): void;
 }>();
 
 const quickQueryFilterRef = ref<HTMLElement>();
 const mode = ref<MongoFilterMode>(MongoFilterMode.Visual);
 const rawJsonQuery = ref('');
 const rawJsonError = ref<string | undefined>();
+const rawMoreOptionsInput = ref<MongoQueryMoreOptionsRawInput>({
+  project: '',
+  sort: '',
+  collation: '',
+  hint: '',
+  maxTimeMS: '',
+});
+const moreOptionsErrors = ref<
+  Partial<Record<keyof MongoQueryMoreOptionsRawInput, string>>
+>({});
+
+const filterErrorMessage = computed(
+  () => rawJsonError.value || (isShowFilters.value ? props.error : undefined)
+);
 
 const availableFields = computed(() =>
   extractFieldsFromDocuments(props.documents)
@@ -62,6 +88,7 @@ interface PersistedMongoFilterState {
   mode?: MongoFilterMode;
   rawJsonQuery?: string;
   isShowFilters?: boolean;
+  rawMoreOptionsInput?: MongoQueryMoreOptionsRawInput;
 }
 
 // Filter state is UI-only and intentionally bypasses the backup / Electron
@@ -83,6 +110,9 @@ const loadPersistedState = () => {
     }
     if (persisted.rawJsonQuery !== undefined) {
       rawJsonQuery.value = persisted.rawJsonQuery;
+    }
+    if (persisted.rawMoreOptionsInput) {
+      rawMoreOptionsInput.value = persisted.rawMoreOptionsInput;
     }
     if (persisted.isShowFilters) {
       isShowFilters.value = true;
@@ -130,6 +160,7 @@ const focusSearchByIndex = async (index: number) => {
 const getNextFilters = () => filterRows.value.map(row => ({ ...row }));
 
 const updateFilter = (index: number, patch: Partial<MongoFilterRow>) => {
+  rawJsonError.value = undefined;
   const nextRows = getNextFilters();
   const row = nextRows[index];
   if (!row) return;
@@ -182,13 +213,24 @@ const onApplyFilter = (index: number) => {
 
 const onExecuteSearch = () => {
   rawJsonError.value = undefined;
+  moreOptionsErrors.value = {};
+
+  const { payload: moreOptionsPayload, errors } = parseMongoMoreOptionsInput(
+    rawMoreOptionsInput.value
+  );
+
+  if (isShowMoreOptions.value && Object.keys(errors).length > 0) {
+    moreOptionsErrors.value = errors;
+    return;
+  }
+
   try {
     const payload = buildMongoFilterPayload(
       filterRows.value,
       rawJsonQuery.value,
       mode.value
     );
-    emit('applyFilter', payload);
+    emit('applyFilter', payload, moreOptionsPayload);
   } catch (err) {
     if (err instanceof Error) {
       rawJsonError.value = err.message;
@@ -253,8 +295,12 @@ useHotkeys(
     {
       key: 'escape',
       callback: () => {
-        isShowFilters.value = false;
-        onExecuteSearch();
+        if (isShowMoreOptions.value) {
+          isShowMoreOptions.value = false;
+        } else {
+          isShowFilters.value = false;
+          onExecuteSearch();
+        }
       },
     },
   ],
@@ -280,7 +326,7 @@ watch(
 );
 
 watch(
-  [filterRows, mode, rawJsonQuery, isShowFilters],
+  [filterRows, mode, rawJsonQuery, isShowFilters, rawMoreOptionsInput],
   debounce(() => {
     if (!props.persistKey) return;
 
@@ -291,6 +337,7 @@ watch(
         mode: mode.value,
         rawJsonQuery: rawJsonQuery.value,
         isShowFilters: isShowFilters.value,
+        rawMoreOptionsInput: rawMoreOptionsInput.value,
       })
     );
   }, DEFAULT_DEBOUNCE_INPUT),
@@ -303,9 +350,33 @@ onMounted(() => {
   }
 });
 
+const onResetFilter = () => {
+  rawJsonError.value = undefined;
+  moreOptionsErrors.value = {};
+  const defaultField = availableFields.value[0] || '_id';
+  filterRows.value = [
+    {
+      isSelect: true,
+      field: defaultField,
+      operator: '$eq',
+      value: '',
+    },
+  ];
+  rawJsonQuery.value = '';
+  rawMoreOptionsInput.value = {
+    project: '',
+    sort: '',
+    collation: '',
+    hint: '',
+    maxTimeMS: '',
+  };
+  emit('applyFilter', undefined, {});
+};
+
 defineExpose({
   onShowSearch,
   onExecuteSearch,
+  onResetFilter,
 });
 </script>
 
@@ -313,7 +384,7 @@ defineExpose({
   <div
     ref="quickQueryFilterRef"
     v-if="isShowFilters"
-    :class="['h-fit space-y-1', filterRows.length && 'pb-2']"
+    :class="['h-fit space-y-1', filterRows.length && 'pb-0']"
   >
     <!-- Visual Builder Mode -->
     <template v-if="mode === MongoFilterMode.Visual">
@@ -354,8 +425,8 @@ defineExpose({
         <Input
           :model-value="value.value"
           type="text"
+          size="xxs"
           :placeholder="getOperatorPlaceholder(value.operator)"
-          class="w-full h-6 px-2 text-xs"
           ref="filterInputRefs"
           @keyup.enter.stop="() => onExecuteSearch()"
           @update:model-value="updateSearchValue(index, String($event))"
@@ -408,10 +479,14 @@ defineExpose({
         placeholder='{ "status": "active", "qty": { "$gte": 10 } }'
         @execute="onExecuteSearch"
       />
-      <span class="text-xs text-destructive font-mono" v-if="rawJsonError">
-        {{ rawJsonError }}
-      </span>
     </div>
+
+    <!-- More Options Panel -->
+    <MongoQueryMoreOptions
+      v-if="isShowMoreOptions"
+      v-model="rawMoreOptionsInput"
+      :errors="moreOptionsErrors"
+    />
 
     <!-- Shortcut Info & Mode Selector (matching QuickQueryFilterGuide) -->
     <div
@@ -461,18 +536,33 @@ defineExpose({
         <div><ContextMenuShortcut>⌘⌫</ContextMenuShortcut>: Delete</div>
         <div><ContextMenuShortcut>⌘↵</ContextMenuShortcut>: Apply all</div>
       </div>
-      <div v-else class="text-xs text-muted-foreground">
-        Press Meta+Enter or Ctrl+Enter to execute query.
+      <div v-else class="text-xs flex items-center gap-2">
+        <div><ContextMenuShortcut>Esc</ContextMenuShortcut>: Exit</div>
+        <Separator orientation="vertical" class="h-3/4!" />
+        <div><ContextMenuShortcut>⌘↵</ContextMenuShortcut>: Execute query</div>
       </div>
-      <Button
-        v-if="mode === MongoFilterMode.Raw"
-        size="xs"
-        variant="secondary"
-        @click="onExecuteSearch"
-      >
-        Execute Filter
-      </Button>
-      <div v-else></div>
+      <div class="flex items-center gap-2">
+        <Button variant="ghost" size="xxs" @click="onResetFilter">
+          Reset
+        </Button>
+        <Button
+          size="xxs"
+          variant="outline"
+          :disabled="props.isLoading"
+          @click="onExecuteSearch"
+        >
+          Apply Filter
+        </Button>
+      </div>
+    </div>
+
+    <!-- Error Message Display -->
+    <div
+      v-if="filterErrorMessage"
+      class="flex items-center gap-1.5 text-xs text-destructive font-mono px-1 pt-1"
+    >
+      <Icon name="hugeicons:alert-02" class="size-3.5 shrink-0" />
+      <span class="break-all">{{ filterErrorMessage }}</span>
     </div>
   </div>
 </template>

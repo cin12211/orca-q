@@ -40,6 +40,18 @@ describe('mongoFilterUtils', () => {
     });
   });
 
+  it('parses Mongo shell ObjectId shorthand into Canonical EJSON', () => {
+    const filter = buildMongoFilterPayload(
+      [],
+      '{ "businessId": ObjectId(\'65c19f4018898af31684c4a7\') }',
+      MongoFilterMode.Raw
+    );
+
+    expect(filter).toEqual({
+      businessId: { $oid: '65c19f4018898af31684c4a7' },
+    });
+  });
+
   it('throws error for invalid raw JSON filter', () => {
     expect(() =>
       buildMongoFilterPayload([], '{ invalid: json }', MongoFilterMode.Raw)
@@ -87,5 +99,46 @@ describe('mongoFilterUtils', () => {
     ];
     const raw = formatMongoFilterToRaw(rows);
     expect(JSON.parse(raw)).toEqual({ role: 'admin' });
+  });
+
+  it('skips unfilled _id visual filter rows when value is empty', () => {
+    const rows = [
+      {
+        isSelect: true,
+        field: '_id',
+        operator: '$eq' as const,
+        value: '',
+      },
+    ];
+    const filter = buildMongoFilterPayload(rows, '', MongoFilterMode.Visual);
+    expect(filter).toBeUndefined();
+  });
+
+  it('does not block invalid _id on FE, letting it pass to server validation', () => {
+    const rows = [
+      {
+        isSelect: true,
+        field: '_id',
+        operator: '$eq' as const,
+        value: 'not-an-object-id',
+      },
+    ];
+    const filter = buildMongoFilterPayload(rows, '', MongoFilterMode.Visual);
+    expect(filter).toEqual({ _id: 'not-an-object-id' });
+  });
+
+  it('accepts valid 24-character hex ObjectId in visual mode', () => {
+    const rows = [
+      {
+        isSelect: true,
+        field: '_id',
+        operator: '$eq' as const,
+        value: '507f1f77bcf86cd799439011',
+      },
+    ];
+    const filter = buildMongoFilterPayload(rows, '', MongoFilterMode.Visual);
+    expect(filter).toEqual({
+      _id: '507f1f77bcf86cd799439011',
+    });
   });
 });

@@ -1,5 +1,5 @@
 export interface MongoDocument {
-  _id: string;
+  _id: unknown;
   [key: string]: unknown;
 }
 
@@ -34,7 +34,6 @@ export interface MongoCollectionSummary {
 }
 
 export enum MongoCollectionViewMode {
-  Table = 'table',
   List = 'list',
   Info = 'info',
 }
@@ -79,4 +78,41 @@ export interface MongoFilterRow {
 export enum MongoFilterMode {
   Visual = 'visual',
   Raw = 'raw',
+}
+
+export enum MongoInsertTab {
+  Document = 'document',
+  Import = 'import',
+}
+
+export enum MongoExportScope {
+  Current = 'current',
+  All = 'all',
+}
+
+export enum MongoExportFormat {
+  Json = 'json',
+  Csv = 'csv',
+}
+
+export enum MongoExtendedJsonMode {
+  Default = 'default',
+  Relaxed = 'relaxed',
+  Canonical = 'canonical',
+}
+
+export interface MongoQueryMoreOptionsPayload {
+  project?: Record<string, unknown>;
+  sort?: Record<string, 1 | -1 | unknown>;
+  collation?: Record<string, unknown>;
+  hint?: string | Record<string, unknown>;
+  maxTimeMS?: number;
+}
+
+export interface MongoQueryMoreOptionsRawInput {
+  project?: string;
+  sort?: string;
+  collation?: string;
+  hint?: string;
+  maxTimeMS?: number | string;
 }

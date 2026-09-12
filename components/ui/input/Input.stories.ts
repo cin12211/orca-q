@@ -10,7 +10,7 @@ const meta = {
     defaultValue: { control: 'text' },
     size: {
       control: 'select',
-      options: ['lg', 'default', 'sm', 'xs'],
+      options: ['lg', 'default', 'sm', 'xs', 'xxs'],
     },
   },
 } satisfies Meta<typeof Input>;
@@ -66,6 +66,7 @@ export const Sizes: Story = {
           default: 'Default input',
           sm: 'Small input',
           xs: 'Compact input',
+          xxs: 'Extra small input',
         },
       };
     },
@@ -89,6 +90,11 @@ export const Sizes: Story = {
         <div class="flex flex-col gap-1.5">
           <span class="text-sm text-muted-foreground">xs</span>
           <Input v-model="values.xs" size="xs" />
+        </div>
+
+        <div class="flex flex-col gap-1.5">
+          <span class="text-sm text-muted-foreground">xxs</span>
+          <Input v-model="values.xxs" size="xxs" />
         </div>
       </div>
     `,

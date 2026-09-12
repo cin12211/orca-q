@@ -3,10 +3,11 @@ import { toast } from 'vue-sonner';
 import { getConnectionParams } from '~/core/helpers/connection-helper';
 import type { Connection } from '~/core/stores';
 import type { MongoDocument } from '../types';
+import { getMongoDocumentKey, getMongoErrorMessage } from '../utils';
 
 interface MongoQuickQueryMutationResponse {
   document?: MongoDocument | null;
-  id?: string;
+  id?: unknown;
   deletedCount?: number;
 }
 
@@ -21,11 +22,12 @@ export function useMongoDocumentMutation(params: {
   const deletingDocId = ref<string | null>(null);
 
   const updateDocument = async (
-    id: string,
+    id: unknown,
     updatedDoc: Record<string, unknown>
   ): Promise<boolean> => {
+    const documentKey = getMongoDocumentKey(id);
     isMutating.value = true;
-    savingDocId.value = id;
+    savingDocId.value = documentKey;
 
     // Omit _id from update payload so MongoDB does not reject immutable field changes
     const { _id: _ignored, ...updates } = updatedDoc;
@@ -49,7 +51,7 @@ export function useMongoDocumentMutation(params: {
       );
 
       const docIndex = params.documents.value.findIndex(
-        doc => String(doc._id) === String(id)
+        doc => getMongoDocumentKey(doc._id) === documentKey
       );
 
       if (docIndex !== -1) {
@@ -66,8 +68,7 @@ export function useMongoDocumentMutation(params: {
       toast.success('Document updated successfully!');
       return true;
     } catch (fetchError) {
-      const errorMessage =
-        fetchError instanceof Error ? fetchError.message : 'Unknown error';
+      const errorMessage = getMongoErrorMessage(fetchError);
       toast.error(errorMessage);
       return false;
     } finally {
@@ -76,9 +77,10 @@ export function useMongoDocumentMutation(params: {
     }
   };
 
-  const deleteDocument = async (id: string): Promise<boolean> => {
+  const deleteDocument = async (id: unknown): Promise<boolean> => {
+    const documentKey = getMongoDocumentKey(id);
     isMutating.value = true;
-    deletingDocId.value = id;
+    deletingDocId.value = documentKey;
 
     try {
       await $fetch<MongoQuickQueryMutationResponse>(
@@ -98,14 +100,13 @@ export function useMongoDocumentMutation(params: {
       );
 
       params.documents.value = params.documents.value.filter(
-        doc => String(doc._id) !== String(id)
+        doc => getMongoDocumentKey(doc._id) !== documentKey
       );
 
       toast.success('Document deleted successfully!');
       return true;
     } catch (fetchError) {
-      const errorMessage =
-        fetchError instanceof Error ? fetchError.message : 'Unknown error';
+      const errorMessage = getMongoErrorMessage(fetchError);
       toast.error(errorMessage);
       return false;
     } finally {

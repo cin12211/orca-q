@@ -9,7 +9,7 @@ function mutate<T>(body: Record<string, unknown>) {
   });
 }
 
-async function deleteById(collection: string, id: string) {
+async function deleteById(collection: string, id: unknown) {
   await mutate({ collection, operation: 'delete', id });
 }
 
@@ -17,19 +17,21 @@ describe('MongoDB Quick Query Mutation E2E', async () => {
   await setup();
 
   it('inserts a document and returns its id', async () => {
-    const inserted = await mutate<{ id: string }>({
+    const inserted = await mutate<{ id: { $oid: string } }>({
       collection: 'users',
       operation: 'insert',
       document: { name: 'Dave', email: 'dave@example.com', age: 40 },
     });
 
-    expect(inserted.id).toMatch(/^[0-9a-f]{24}$/);
+    expect(inserted.id).toEqual({
+      $oid: expect.stringMatching(/^[0-9a-f]{24}$/),
+    });
 
     await deleteById('users', inserted.id);
   });
 
   it('updates a document by id with $set semantics', async () => {
-    const inserted = await mutate<{ id: string }>({
+    const inserted = await mutate<{ id: { $oid: string } }>({
       collection: 'users',
       operation: 'insert',
       document: { name: 'Erin', age: 20 },
@@ -49,7 +51,7 @@ describe('MongoDB Quick Query Mutation E2E', async () => {
   });
 
   it('deletes a document by id', async () => {
-    const inserted = await mutate<{ id: string }>({
+    const inserted = await mutate<{ id: { $oid: string } }>({
       collection: 'users',
       operation: 'insert',
       document: { name: 'Frank', age: 50 },

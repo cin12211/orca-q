@@ -21,6 +21,37 @@ beforeEach(() => {
 });
 
 describe('useMongoDocumentMutation', () => {
+  it('uses a stable UI key while preserving a Canonical EJSON id in mutation requests', async () => {
+    const documentId = { $oid: '65c19f4018898af31684c4a7' };
+    const documents = ref([{ _id: documentId, name: 'Alice' }]);
+    let resolveRequest: (value: unknown) => void;
+    mockFetch.mockReturnValueOnce(
+      new Promise(resolve => {
+        resolveRequest = resolve;
+      })
+    );
+
+    const { savingDocId, updateDocument } = useMongoDocumentMutation({
+      connection: ref({ id: 'c1', type: 'mongodb' } as any),
+      databaseName: ref('testdb'),
+      collectionName: ref('users'),
+      documents,
+    });
+
+    const updatePromise = updateDocument(documentId, { name: 'Alice Updated' });
+
+    expect(savingDocId.value).toBe('{"$oid":"65c19f4018898af31684c4a7"}');
+    expect(mockFetch).toHaveBeenCalledWith(
+      '/api/mongodb/quick-query-mutation',
+      expect.objectContaining({
+        body: expect.objectContaining({ id: documentId }),
+      })
+    );
+
+    resolveRequest!({ document: { _id: documentId, name: 'Alice Updated' } });
+    await expect(updatePromise).resolves.toBe(true);
+  });
+
   it('calls quick-query-mutation with operation update and updates document in-place', async () => {
     const documents = ref([
       { _id: 'doc-1', name: 'Alice', age: 25 },

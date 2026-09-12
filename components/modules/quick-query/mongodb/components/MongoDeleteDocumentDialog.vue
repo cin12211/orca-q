@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { computed } from 'vue';
 import { Button, Icon } from '#components';
 import {
   AlertDialog,
@@ -9,15 +10,25 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '~/components/ui/alert-dialog';
+import { formatMongoEjsonValue } from '../utils';
 
 interface Props {
   open: boolean;
-  docId: string | null;
+  docId: unknown | null;
   loading?: boolean;
 }
 
-withDefaults(defineProps<Props>(), {
+const props = withDefaults(defineProps<Props>(), {
   loading: false,
+});
+
+const documentIdLabel = computed(() => {
+  if (props.docId === null) return '';
+  const formatted = formatMongoEjsonValue(props.docId);
+  if (formatted) return formatted;
+  return typeof props.docId === 'string'
+    ? props.docId
+    : JSON.stringify(props.docId);
 });
 
 const emit = defineEmits<{
@@ -38,7 +49,10 @@ const emit = defineEmits<{
         <AlertDialogDescription class="space-y-2">
           <p class="text-sm">
             Are you sure you want to delete document with _id:
-            <span class="font-medium text-foreground">{{ docId }}</span> ?
+            <span class="font-medium text-foreground">{{
+              documentIdLabel
+            }}</span>
+            ?
           </p>
           <p class="text-xs text-muted-foreground">
             This action cannot be undone.
