@@ -120,7 +120,7 @@ defineExpose({ scrollToTop, onExitEditMode });
 <template>
   <div
     ref="parentRef"
-    class="h-full overflow-auto contain-strict [overflow-anchor:none] p-2"
+    class="h-full overflow-auto contain-strict [overflow-anchor:none] pt-2"
   >
     <div
       :style="{

@@ -9,7 +9,7 @@ describe('MongoQueryMoreOptions', () => {
     expect(wrapper.text()).toContain('Sort');
     expect(wrapper.text()).toContain('Collation');
     expect(wrapper.text()).toContain('Index Hint');
-    expect(wrapper.text()).toContain('Max Time MS');
+    expect(wrapper.text()).toContain('Max Time');
   });
 
   it('uses h-6 for inputs and does not render Reset and Apply buttons', () => {
@@ -24,20 +24,30 @@ describe('MongoQueryMoreOptions', () => {
     expect(buttons.length).toBe(0);
   });
 
-  it('emits execute on Enter keypress in input', async () => {
-    const wrapper = mount(MongoQueryMoreOptions);
-    const projectInput = wrapper.find<HTMLInputElement>('input#more-project');
-    await projectInput.trigger('keyup.enter');
-    expect(wrapper.emitted('execute')).toBeTruthy();
+  it('binds initial modelValue to inputs', () => {
+    const wrapper = mount(MongoQueryMoreOptions, {
+      props: {
+        modelValue: {
+          sort: '{ "createdAt": 1 }',
+          project: '{ "name": 1 }',
+          collation: '',
+          hint: '',
+          maxTimeMS: '5000',
+        },
+      },
+    });
+    expect(
+      wrapper.find<HTMLInputElement>('input#more-sort').element.value
+    ).toBe('{ "createdAt": 1 }');
+    expect(
+      wrapper.find<HTMLInputElement>('input#more-project').element.value
+    ).toBe('{ "name": 1 }');
+    expect(
+      wrapper.find<HTMLInputElement>('input#more-maxtimems').element.value
+    ).toBe('5000');
   });
 
-  it('emits close on Escape keydown', async () => {
-    const wrapper = mount(MongoQueryMoreOptions);
-    await wrapper.trigger('keydown', { key: 'Escape' });
-    expect(wrapper.emitted('close')).toBeTruthy();
-  });
-
-  it('displays error messages when errors prop is provided', () => {
+  it('marks input with border-destructive when errors prop is provided', () => {
     const wrapper = mount(MongoQueryMoreOptions, {
       props: {
         errors: {
@@ -47,7 +57,14 @@ describe('MongoQueryMoreOptions', () => {
       },
     });
 
-    expect(wrapper.text()).toContain('Invalid JSON syntax');
-    expect(wrapper.text()).toContain('Sort must be a JSON object');
+    expect(wrapper.find('input#more-project').classes()).toContain(
+      'border-destructive'
+    );
+    expect(wrapper.find('input#more-sort').classes()).toContain(
+      'border-destructive'
+    );
+    expect(wrapper.find('input#more-collation').classes()).not.toContain(
+      'border-destructive'
+    );
   });
 });

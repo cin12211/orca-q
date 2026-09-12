@@ -384,7 +384,7 @@ defineExpose({
   <div
     ref="quickQueryFilterRef"
     v-if="isShowFilters"
-    :class="['h-fit space-y-1', filterRows.length && 'pb-2']"
+    :class="['h-fit space-y-1', filterRows.length && 'pb-0']"
   >
     <!-- Visual Builder Mode -->
     <template v-if="mode === MongoFilterMode.Visual">
@@ -486,8 +486,6 @@ defineExpose({
       v-if="isShowMoreOptions"
       v-model="rawMoreOptionsInput"
       :errors="moreOptionsErrors"
-      @execute="onExecuteSearch"
-      @close="isShowMoreOptions = false"
     />
 
     <!-- Shortcut Info & Mode Selector (matching QuickQueryFilterGuide) -->
@@ -553,11 +551,6 @@ defineExpose({
           :disabled="props.isLoading"
           @click="onExecuteSearch"
         >
-          <Icon
-            v-if="props.isLoading"
-            name="hugeicons:loading-03"
-            class="size-3 mr-1 animate-spin"
-          />
           Apply Filter
         </Button>
       </div>

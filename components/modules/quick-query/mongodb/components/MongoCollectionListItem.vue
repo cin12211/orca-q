@@ -178,7 +178,7 @@ const editorExtensions = [
         cn(
           'rounded-md border border-border/60 bg-card shadow-xs mb-2 transition-all duration-200',
           isFullscreen
-            ? 'fixed inset-0 z-[999] p-4 bg-background flex flex-col h-screen w-screen m-0 rounded-none border-0'
+            ? 'fixed inset-0 z-[999] p-4 pt-8 bg-background flex flex-col h-screen w-screen m-0 rounded-none border-0'
             : ''
         )
       "

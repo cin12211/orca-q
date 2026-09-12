@@ -14,7 +14,6 @@ const defaultProps = {
   isLoading: false,
   viewMode: MongoCollectionViewMode.List,
   isShowFilters: false,
-  activeFilterCount: 0,
 };
 
 const mountControlBar = (props: Record<string, unknown> = {}) =>

@@ -24,7 +24,6 @@ const props = defineProps<{
   isLoading: boolean;
   viewMode: MongoCollectionViewMode;
   isShowFilters?: boolean;
-  activeFilterCount?: number;
   isShowMoreOptions?: boolean;
 }>();
 
@@ -55,12 +54,6 @@ const emit = defineEmits<{
             @click="emit('onToggleFilter')"
           >
             <Icon name="lucide:filter" />
-            <span
-              v-if="props.activeFilterCount"
-              class="ml-1 text-xxs font-semibold"
-            >
-              {{ props.activeFilterCount }}
-            </span>
             <ContextMenuShortcut>⌘F</ContextMenuShortcut>
           </Button>
         </TooltipTrigger>

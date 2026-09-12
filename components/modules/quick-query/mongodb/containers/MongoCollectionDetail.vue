@@ -82,10 +82,6 @@ const filterPersistKey = computed(() =>
   )
 );
 
-const activeFilterCount = computed(() =>
-  activeFilterPayload.value ? Object.keys(activeFilterPayload.value).length : 0
-);
-
 const viewMode = ref<MongoCollectionViewMode>(MongoCollectionViewMode.List);
 
 const listViewRef =
@@ -176,7 +172,6 @@ watch([databaseName, collectionName], fetchDocuments, { immediate: true });
         :view-mode="viewMode"
         :is-show-filters="isShowFilters"
         :is-show-more-options="isShowMoreOptions"
-        :active-filter-count="activeFilterCount"
         @on-next-page="onNextPage"
         @on-previous-page="onPreviousPage"
         @on-refresh="onRefresh"
