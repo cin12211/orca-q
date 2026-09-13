@@ -79,5 +79,10 @@ export const MONGO_SCRIPT_BSON_HELPERS: MongoScriptCatalogEntry[] = [
   { label: 'UUID', type: 'class', detail: 'BSON UUID constructor' },
 ];
 
-export const MONGO_SCRIPT_PLACEHOLDER =
-  "return db.collection('COLLECTION').find({}).limit(100)";
+export const MONGO_SCRIPT_PLACEHOLDER = `/*
+ * db is initialized with the active MongoDB database.
+ * Use getSiblingDB() when you want to query a different database.
+ */
+const database = db.getSiblingDB('DATABASE');
+const collection = database.collection('COLLECTION');
+return collection.find({});`;

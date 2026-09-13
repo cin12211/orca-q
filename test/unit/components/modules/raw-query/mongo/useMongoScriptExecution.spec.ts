@@ -53,6 +53,57 @@ describe('useMongoScriptExecution', () => {
     globalThis.fetch = originalFetch;
   });
 
+  it('keeps Mongo console entries in the stream order for its result tab', async () => {
+    const originalFetch = globalThis.fetch;
+    globalThis.fetch = vi.fn().mockResolvedValue(
+      new Response(
+        [
+          JSON.stringify({
+            type: 'log',
+            entry: { level: 'log', args: ['one'] },
+          }),
+          JSON.stringify({
+            type: 'log',
+            entry: { level: 'warn', args: ['two'] },
+          }),
+          JSON.stringify({
+            type: 'done',
+            rowCount: 0,
+            queryTime: 5,
+            truncated: false,
+          }),
+          '',
+        ].join('\n')
+      )
+    );
+    const resultTabs = {
+      addResultTab: vi.fn(),
+      refreshResultTab: vi.fn(),
+    } as any;
+    const hook = useMongoScriptExecution({
+      connection: ref({
+        id: 'c1',
+        type: 'mongodb',
+        method: 'direct',
+        database: 'db',
+      } as any),
+      databaseName: ref('db'),
+      collectionContext: ref('users'),
+      documentText: ref("console.log('one'); console.warn('two');"),
+      fileVariables: ref('{}'),
+      fieldDefs: ref([]),
+      resultTabs,
+    });
+
+    await hook.execute();
+
+    expect(resultTabs.addResultTab.mock.calls[0][0].metadata.logs).toEqual([
+      { level: 'log', args: ['one'] },
+      { level: 'warn', args: ['two'] },
+    ]);
+    globalThis.fetch = originalFetch;
+  });
+
   it('resets the execute state when a running script is cancelled', async () => {
     const originalFetch = globalThis.fetch;
     globalThis.fetch = vi.fn().mockReturnValue(new Promise(() => undefined));

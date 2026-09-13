@@ -70,9 +70,7 @@ const mongoDatabaseName = computed(
 const mongoCollectionContext = computed(
   () => mongoQueryContext.value?.collectionName
 );
-const isFormatSupported = computed(
-  () => !isRedisConnection.value && !isMongoConnection.value
-);
+const isFormatSupported = computed(() => !isRedisConnection.value);
 const isSqliteConnection = computed(() =>
   [DatabaseClientType.SQLITE3, DatabaseClientType.BETTER_SQLITE3].includes(
     connection.value?.type as DatabaseClientType

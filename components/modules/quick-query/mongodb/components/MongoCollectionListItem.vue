@@ -20,16 +20,21 @@ import type { MongoDocument } from '../types';
 import { formatMongoEjsonValue, getMongoDocumentKey } from '../utils';
 import MongoDocumentJsonViewer from './MongoDocumentJsonViewer.vue';
 
+type DisplayDocument = MongoDocument | Record<string, unknown>;
+
 const props = withDefaults(
   defineProps<{
-    document: MongoDocument;
+    document: DisplayDocument;
+    documentLabel?: string;
     isExpanded: boolean;
     isEditing: boolean;
     isSaving: boolean;
     isDeleting?: boolean;
+    isReadOnly?: boolean;
   }>(),
   {
     isDeleting: false,
+    isReadOnly: false,
   }
 );
 
@@ -51,15 +56,18 @@ const documentIdLabel = computed(() => {
   if (formatted) return formatted;
   return typeof props.document._id === 'string'
     ? props.document._id
-    : JSON.stringify(props.document._id);
+    : (JSON.stringify(props.document._id) ?? 'undefined');
 });
+const documentHeader = computed(
+  () => props.documentLabel ?? `_id: ${documentIdLabel.value}`
+);
 
 const onCopyDocument = () => {
   const jsonStr = JSON.stringify(props.document, null, 2);
   return handleCopyWithKey(documentKey.value, jsonStr);
 };
 
-const formatDocumentJson = (doc: MongoDocument) => {
+const formatDocumentJson = (doc: DisplayDocument) => {
   return JSON.stringify(doc, null, 2);
 };
 
@@ -115,6 +123,8 @@ const onDiscard = () => {
 };
 
 const onSave = () => {
+  if (props.isReadOnly) return;
+
   try {
     const parsed = JSON.parse(draftJson.value);
     if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
@@ -137,7 +147,12 @@ const handleKeyDown = (e: KeyboardEvent) => {
   }
 
   if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 's') {
-    if (props.isEditing && isDirty.value && !props.isSaving) {
+    if (
+      props.isEditing &&
+      !props.isReadOnly &&
+      isDirty.value &&
+      !props.isSaving
+    ) {
       e.preventDefault();
       onSave();
     }
@@ -161,7 +176,7 @@ const editorExtensions = [
     {
       key: 'Mod-s',
       run: () => {
-        if (isDirty.value && !props.isSaving) {
+        if (isDirty.value && !props.isReadOnly && !props.isSaving) {
           onSave();
         }
         return true;
@@ -196,16 +211,18 @@ const editorExtensions = [
         <div class="flex items-center gap-2 font-medium">
           <Icon
             :name="
-              isEditing ? 'hugeicons:pencil-edit-02' : 'hugeicons:files-01'
+              isEditing && !isReadOnly
+                ? 'hugeicons:pencil-edit-02'
+                : 'hugeicons:files-01'
             "
             class="size-4!"
           />
-          <span>_id: {{ documentIdLabel }}</span>
+          <span>{{ documentHeader }}</span>
         </div>
 
         <div class="flex items-center gap-1">
           <!-- Edit Mode Actions -->
-          <template v-if="isEditing">
+          <template v-if="isEditing && !isReadOnly">
             <Tooltip v-if="isDirty">
               <TooltipTrigger as-child>
                 <Button
@@ -269,7 +286,7 @@ const editorExtensions = [
 
           <!-- Read Mode Actions -->
           <template v-else>
-            <Tooltip>
+            <Tooltip v-if="!isReadOnly">
               <TooltipTrigger as-child>
                 <Button
                   variant="ghost"
@@ -340,7 +357,7 @@ const editorExtensions = [
               </TooltipContent>
             </Tooltip>
 
-            <Tooltip>
+            <Tooltip v-if="!isReadOnly">
               <TooltipTrigger as-child>
                 <Button
                   variant="ghost"

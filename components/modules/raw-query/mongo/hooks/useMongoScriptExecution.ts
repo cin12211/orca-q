@@ -132,6 +132,11 @@ export function useMongoScriptExecution(options: {
         currentRawQueryResult.value = rows;
         options.resultTabs.refreshResultTab(item.id, item);
       },
+      onLog: entry => {
+        item.metadata.logs ??= [];
+        item.metadata.logs.push(entry);
+        options.resultTabs.refreshResultTab(item.id, item);
+      },
       onResult: message => {
         item.metadata.rawResult = message.data;
         item.result = Array.isArray(message.data)

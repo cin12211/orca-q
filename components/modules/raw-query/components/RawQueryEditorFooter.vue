@@ -67,11 +67,11 @@ defineEmits<{
               class="rounded-r-none"
             >
               <Icon name="hugeicons:magic-wand-01"> </Icon>
-              Format
+              {{ isMongoConnection ? 'Format script' : 'Format' }}
               <ContextMenuShortcut>⌘S</ContextMenuShortcut>
             </Button>
 
-            <DropdownMenu>
+            <DropdownMenu v-if="!isMongoConnection">
               <DropdownMenuTrigger as-child>
                 <Button
                   variant="outline"
@@ -110,7 +110,13 @@ defineEmits<{
           </div>
         </TooltipTrigger>
         <TooltipContent>
-          <p>Format current statement (⌘S)</p>
+          <p>
+            {{
+              isMongoConnection
+                ? 'Format MongoDB script (⌘S)'
+                : 'Format current statement (⌘S)'
+            }}
+          </p>
         </TooltipContent>
       </Tooltip>
 

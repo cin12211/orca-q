@@ -15,13 +15,17 @@ export function useMongoScriptEditorExtensions(options: {
   collectionContext: Ref<string | undefined>;
   metadata?: Ref<MongoRawQueryMetadata>;
   onExecuteCurrent: () => void | Promise<void>;
+  onFormat: () => void | Promise<void>;
 }) {
   const extensions: Extension[] = [
     javascript({ typescript: true }),
     placeholder(
       MONGO_SCRIPT_PLACEHOLDER.replace(
+        'DATABASE',
+        options.databaseName.value || '<database_name>'
+      ).replace(
         'COLLECTION',
-        options.collectionContext.value || 'COLLECTION'
+        options.collectionContext.value || '<collection_name>'
       )
     ),
     autocompletion({
@@ -49,6 +53,13 @@ export function useMongoScriptEditorExtensions(options: {
         key: 'Mod-Enter',
         run: () => {
           void options.onExecuteCurrent();
+          return true;
+        },
+      },
+      {
+        key: 'Mod-s',
+        run: () => {
+          void options.onFormat();
           return true;
         },
       },

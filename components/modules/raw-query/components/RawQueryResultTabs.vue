@@ -17,6 +17,8 @@ import {
 } from '../interfaces';
 import { ChartBuilder } from '../modules/chart-builder';
 import { ExplainQuery } from '../modules/explain-query';
+import MongoRawQueryConsole from '../mongo/components/MongoRawQueryConsole.vue';
+import MongoRawQueryResultView from '../mongo/components/MongoRawQueryResultView.vue';
 import { formatColumnsInfo } from '../utils/formatColumnsInfo';
 import { normalizeResultRows } from '../utils/normalizeResultRows';
 import ResultTabErrorView from './result-tab/ResultTabErrorView.vue';
@@ -64,7 +66,7 @@ const isHaveRightItem = computed(() => {
   return currentIndex >= 0 && currentIndex < tabIds.length - 1;
 });
 
-const viewModes: { value: ViewMode; label: string }[] = [
+const defaultViewModes: { value: ViewMode; label: string }[] = [
   { value: ViewMode.RESULT, label: 'Result' },
   { value: ViewMode.EXPLAIN, label: 'Explain' },
   { value: ViewMode.RAW, label: 'Raw' },
@@ -84,6 +86,20 @@ let rafId: number | null = null;
 const activeTab = computed(() => {
   if (!props.activeTabId) return null;
   return props.executedResults.get(props.activeTabId) || null;
+});
+
+const isMongoResult = (tab: ExecutedResultItem) =>
+  tab.metadata.connection?.type === DatabaseClientType.MONGODB;
+
+const viewModes = computed(() => {
+  if (!activeTab.value || !isMongoResult(activeTab.value)) {
+    return defaultViewModes;
+  }
+
+  return [
+    ...defaultViewModes.filter(mode => mode.value !== ViewMode.CHART),
+    { value: ViewMode.CONSOLE, label: 'Console' },
+  ];
 });
 
 watch(
@@ -213,7 +229,7 @@ const hasErrors = (tab: ExecutedResultItem) => {
         v-for="mode in viewModes"
         :key="mode.value"
         @click="
-          // Disable result/raw/chart if has errors, disable error if no errors
+          // Disable result/raw/chart if has errors, disable error if no errors.
           hasErrors(activeTab) &&
           (mode.value === ViewMode.RESULT ||
             mode.value === ViewMode.RAW ||
@@ -382,6 +398,15 @@ const hasErrors = (tab: ExecutedResultItem) => {
         />
 
         <!-- Result View -->
+        <MongoRawQueryResultView
+          v-else-if="
+            activeTab &&
+            isMongoResult(activeTab) &&
+            currentView === ViewMode.RESULT
+          "
+          :documents="formattedData"
+        />
+
         <ResultTabResultView
           v-else-if="activeTab && currentView === ViewMode.RESULT"
           :active-tab="activeTab"
@@ -412,6 +437,12 @@ const hasErrors = (tab: ExecutedResultItem) => {
           :active-tab="activeTab"
           :active-tab-columns="activeTabColumns"
           :formatted-data="formattedData"
+        />
+
+        <!-- Mongo Console View -->
+        <MongoRawQueryConsole
+          v-else-if="activeTab && currentView === ViewMode.CONSOLE"
+          :logs="activeTab.metadata.logs"
         />
 
         <!-- Info View -->

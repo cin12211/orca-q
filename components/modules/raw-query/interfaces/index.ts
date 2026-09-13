@@ -49,6 +49,7 @@ export enum ViewMode {
   RAW = 'raw',
   EXPLAIN = 'explain',
   CHART = 'chart',
+  CONSOLE = 'console',
 }
 
 export interface ExecutedResultItem {

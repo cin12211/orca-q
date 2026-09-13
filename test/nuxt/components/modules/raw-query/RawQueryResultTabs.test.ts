@@ -3,6 +3,7 @@ import { nextTick } from 'vue';
 import { mount } from '@vue/test-utils';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import RawQueryResultTabs from '~/components/modules/raw-query/components/RawQueryResultTabs.vue';
+import { DatabaseClientType } from '~/core/constants/database-client-type';
 import { useSchemaStore } from '~/core/stores';
 import type { Schema } from '~/core/types';
 
@@ -176,5 +177,48 @@ describe('RawQueryResultTabs', () => {
         connectionId: 'conn-1',
       })
     );
+  });
+
+  it('shows Console instead of Chart for MongoDB results', async () => {
+    const pinia = createPinia();
+    setActivePinia(pinia);
+    const executedResults = createExecutedResults();
+    const mongoTab = executedResults.get('query-1')!;
+    mongoTab.metadata.connection = {
+      id: 'mongo-1',
+      workspaceId: 'workspace',
+      type: DatabaseClientType.MONGODB,
+    } as any;
+
+    const wrapper = mount(RawQueryResultTabs, {
+      props: {
+        executedResults,
+        activeTabId: 'query-1',
+        executeLoading: false,
+        isStreaming: false,
+      },
+      global: {
+        plugins: [pinia],
+        stubs: {
+          BaseEmpty: true,
+          ContextMenu: { template: '<div><slot /></div>' },
+          ContextMenuContent: true,
+          ContextMenuItem: true,
+          ContextMenuTrigger: { template: '<div><slot /></div>' },
+          Icon: true,
+          LoadingOverlay: true,
+          ResultTabErrorView: true,
+          ResultTabInfoView: true,
+          ResultTabRawView: true,
+          ResultTabResultView: true,
+          Tooltip: { template: '<div><slot /></div>' },
+          TooltipContent: true,
+          TooltipTrigger: { template: '<div><slot /></div>' },
+        },
+      },
+    });
+
+    expect(wrapper.text()).toContain('Console');
+    expect(wrapper.text()).not.toContain('Chart');
   });
 });

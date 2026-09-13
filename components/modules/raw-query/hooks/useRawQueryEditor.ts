@@ -11,6 +11,7 @@ import {
   useMongoScriptMetadata,
 } from '../mongo/hooks';
 import { resolveMongoScriptSource } from '../mongo/utils';
+import { formatMongoScript } from '../mongo/utils/formatMongoScript';
 import { useQueryExecution } from './useQueryExecution';
 import { useRawQueryExplainAnalyzeOptions } from './useRawQueryExplainAnalyzeOptions';
 import { useResultTabs } from './useResultTabs';
@@ -86,6 +87,35 @@ export function useRawQueryEditor({
   const collectionContext =
     collectionContextRef ?? ref<string | undefined>(undefined);
   const documentText = documentTextRef ?? ref('');
+  const formatMongoScriptDocument = async () => {
+    const editorView = getEditorView();
+    if (!editorView) return;
+
+    try {
+      const source = editorView.state.doc.toString();
+      const formatted = await formatMongoScript(source);
+      if (formatted === source) {
+        editorView.focus();
+        return;
+      }
+
+      const selection = editorView.state.selection.main;
+      editorView.dispatch({
+        changes: {
+          from: 0,
+          to: editorView.state.doc.length,
+          insert: formatted,
+        },
+        selection: {
+          anchor: Math.min(selection.anchor, formatted.length),
+          head: Math.min(selection.head, formatted.length),
+        },
+      });
+      editorView.focus();
+    } catch (error) {
+      console.error('[RawQueryEditor] Failed to format Mongo script', error);
+    }
+  };
   const mongoExecution = useMongoScriptExecution({
     connection,
     databaseName,
@@ -118,6 +148,7 @@ export function useRawQueryEditor({
       if (editorView)
         await mongoExecution.execute(resolveMongoScriptSource(editorView));
     },
+    onFormat: formatMongoScriptDocument,
   });
   const editorModeCompartment = new Compartment();
   const activeModeExtensions = () =>
@@ -173,8 +204,20 @@ export function useRawQueryEditor({
     extensions,
     sqlCompartment: sqlEditor.sqlCompartment,
     cursorInfo: sqlEditor.cursorInfo,
-    onHandleFormatCode: sqlEditor.onHandleFormatCode,
-    onHandleFormatCurrentStatement: sqlEditor.onHandleFormatCurrentStatement,
+    onHandleFormatCode: () => {
+      if (isMongoConnection.value) {
+        void formatMongoScriptDocument();
+        return;
+      }
+      sqlEditor.onHandleFormatCode();
+    },
+    onHandleFormatCurrentStatement: () => {
+      if (isMongoConnection.value) {
+        void formatMongoScriptDocument();
+        return;
+      }
+      sqlEditor.onHandleFormatCurrentStatement();
+    },
     onExplainAnalyzeCurrent: queryExecution.onExplainAnalyzeCurrent,
     explainAnalyzeOptionItems,
     serializeMode,

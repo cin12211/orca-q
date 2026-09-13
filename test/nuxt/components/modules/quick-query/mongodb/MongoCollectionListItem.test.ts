@@ -55,6 +55,62 @@ describe('MongoCollectionListItem', () => {
     expect(itemComponent.emitted('start-edit')).toBeTruthy();
   });
 
+  it('hides document mutation actions in read-only mode', async () => {
+    const wrapper = mount({
+      components: { MongoCollectionListItem, TooltipProvider },
+      template: `
+          <TooltipProvider>
+            <MongoCollectionListItem
+              :document="doc"
+              :is-expanded="false"
+              :is-editing="false"
+              :is-saving="false"
+              is-read-only
+            />
+          </TooltipProvider>
+        `,
+      setup() {
+        return { doc: sampleDoc };
+      },
+    });
+    await flushPromises();
+
+    expect(wrapper.find('[data-testid="btn-edit-document"]').exists()).toBe(
+      false
+    );
+    expect(wrapper.find('[data-testid="btn-delete-document"]').exists()).toBe(
+      false
+    );
+    expect(wrapper.find('[data-testid="btn-copy-document"]').exists()).toBe(
+      true
+    );
+  });
+
+  it('uses a supplied label when a result document has no _id', async () => {
+    const wrapper = mount({
+      components: { MongoCollectionListItem, TooltipProvider },
+      template: `
+          <TooltipProvider>
+            <MongoCollectionListItem
+              :document="doc"
+              document-label="Document 1"
+              :is-expanded="false"
+              :is-editing="false"
+              :is-saving="false"
+              is-read-only
+            />
+          </TooltipProvider>
+        `,
+      setup() {
+        return { doc: { title: 'Result without an id' } };
+      },
+    });
+    await flushPromises();
+
+    expect(wrapper.text()).toContain('Document 1');
+    expect(wrapper.text()).not.toContain('_id:');
+  });
+
   it('renders MongoDB ObjectId and ISODate literals with custom ISODate UTC view', async () => {
     const wrapper = mount({
       components: { MongoCollectionListItem, TooltipProvider },
