@@ -13,13 +13,13 @@ import {
 } from '../rawQueryResultDefaults';
 
 const lazyRedisHeaderExtension = defineAsyncComponent(
-  () => import('../../components/RawQueryRedisHeaderExtension.vue')
+  () => import('../../components/redis/RawQueryRedisHeaderExtension.vue')
 );
 const lazyCursorInfo = defineAsyncComponent(
-  () => import('../../components/RawQueryCursorInfo.vue')
+  () => import('../../components/common/RawQueryCursorInfo.vue')
 );
 const lazyExecuteAction = defineAsyncComponent(
-  () => import('../../components/RawQueryExecuteAction.vue')
+  () => import('../../components/common/RawQueryExecuteAction.vue')
 );
 
 const successOnly = {

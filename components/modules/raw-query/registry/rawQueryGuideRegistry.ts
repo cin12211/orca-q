@@ -2,7 +2,7 @@ import { defineAsyncComponent, type Component } from 'vue';
 import { DatabaseClientType } from '~/core/constants/database-client-type';
 
 const lazySqlGuide = defineAsyncComponent(
-  () => import('../components/RawQueryVariableUsageGuidePopover.vue')
+  () => import('../components/common/RawQueryVariableUsageGuidePopover.vue')
 );
 const lazyMongoGuide = defineAsyncComponent(
   () => import('../mongo/components/MongoRawQueryVariableUsageGuidePopover.vue')

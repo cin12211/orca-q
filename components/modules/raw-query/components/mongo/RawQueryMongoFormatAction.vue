@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Tooltip, TooltipContent, TooltipTrigger } from '#components';
-import type { RawQueryFooterContext } from '../registry/rawQueryProfile.types';
+import ContextMenuShortcut from '~/components/ui/context-menu/ContextMenuShortcut.vue';
+import type { RawQueryFooterContext } from '../../registry/rawQueryProfile.types';
 
 const props = defineProps<{
   context: RawQueryFooterContext;

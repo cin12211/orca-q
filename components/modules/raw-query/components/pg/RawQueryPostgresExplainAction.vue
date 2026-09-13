@@ -18,8 +18,8 @@ import type {
   ExplainAnalyzeOptionItem,
   ExplainAnalyzeSerializeMode,
   ExplainAnalyzeToggleOptionKey,
-} from '../interfaces';
-import type { RawQueryFooterContext } from '../registry/rawQueryProfile.types';
+} from '../../interfaces';
+import type { RawQueryFooterContext } from '../../registry/rawQueryProfile.types';
 
 const props = defineProps<{
   context?: RawQueryFooterContext;

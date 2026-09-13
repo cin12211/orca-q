@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { computed, ref, type Component } from 'vue';
 import { Tooltip, TooltipContent, TooltipTrigger } from '#components';
-import RedisDBSelector from '~/components/modules/selectors/RedisDBSelector.vue';
 import type { DatabaseClientType } from '~/core/constants/database-client-type';
 import { type Connection, type RowQueryFile } from '~/core/stores';
 import type { RedisDatabaseOption } from '~/core/types/redis-workspace.types';
@@ -20,8 +19,6 @@ const props = defineProps<{
   connections: Connection[];
   connection?: Connection;
   databaseType?: DatabaseClientType;
-  isRedisConnection?: boolean;
-  isMongoConnection?: boolean;
   isSupportVariable?: boolean;
   redisDatabases?: RedisDatabaseOption[];
   redisDatabaseIndex?: number;
@@ -183,16 +180,6 @@ const openConfigModal = () => {
         :key="`right-${index}`"
         :is="comp"
         :context="headerContext"
-      />
-      <!-- Fallback if rightComponents is empty and isRedisConnection is true -->
-      <RedisDBSelector
-        v-if="rightComponents.length === 0 && isRedisConnection"
-        compact
-        trigger-id="raw-query-redis-db-index"
-        trigger-class="bg-background"
-        :databases="redisDatabases || []"
-        :database-index="redisDatabaseIndex ?? 0"
-        @update:database-index="$emit('update:redisDatabaseIndex', $event)"
       />
       <slot name="right" :context="headerContext" />
 

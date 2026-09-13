@@ -13,19 +13,19 @@ import {
 } from '../rawQueryResultDefaults';
 
 const lazyCursorInfo = defineAsyncComponent(
-  () => import('../../components/RawQueryCursorInfo.vue')
+  () => import('../../components/common/RawQueryCursorInfo.vue')
 );
 const lazySqlGuide = defineAsyncComponent(
-  () => import('../../components/RawQueryVariableUsageGuidePopover.vue')
+  () => import('../../components/common/RawQueryVariableUsageGuidePopover.vue')
 );
 const lazySqlFormatAction = defineAsyncComponent(
-  () => import('../../components/RawQuerySqlFormatAction.vue')
+  () => import('../../components/common/RawQuerySqlFormatAction.vue')
 );
 const lazyPostgresExplainAction = defineAsyncComponent(
-  () => import('../../components/RawQueryPostgresExplainAction.vue')
+  () => import('../../components/pg/RawQueryPostgresExplainAction.vue')
 );
 const lazyExecuteAction = defineAsyncComponent(
-  () => import('../../components/RawQueryExecuteAction.vue')
+  () => import('../../components/common/RawQueryExecuteAction.vue')
 );
 
 const successOnly = {

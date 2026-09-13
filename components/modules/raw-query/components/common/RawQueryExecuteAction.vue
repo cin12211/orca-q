@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Tooltip, TooltipContent, TooltipTrigger } from '#components';
-import type { RawQueryFooterContext } from '../registry/rawQueryProfile.types';
+import type { RawQueryFooterContext } from '../../registry/rawQueryProfile.types';
 
 const props = withDefaults(
   defineProps<{

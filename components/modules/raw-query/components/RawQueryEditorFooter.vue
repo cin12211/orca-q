@@ -19,7 +19,6 @@ const props = defineProps<{
   isSupportFormat?: boolean;
   isSupportVariable?: boolean;
   isExplainSupported?: boolean;
-  isMongoConnection?: boolean;
   databaseType?: DatabaseClientType;
   customLeftComponents?: Component[];
   customRightComponents?: Component[];
@@ -45,7 +44,6 @@ const footerContext = computed<RawQueryFooterContext>(() => ({
   isStreaming: props.isStreaming,
   isRawViewMode: props.isRawViewMode,
   databaseType: props.databaseType,
-  isMongoConnection: props.isMongoConnection,
   explainAnalyzeOptionItems: props.explainAnalyzeOptionItems,
   serializeMode: props.serializeMode,
   onFormatCurrentStatement: () => emit('onFormatCurrentStatement'),

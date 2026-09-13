@@ -21,20 +21,20 @@ const MongoConsoleTabRenderer = defineAsyncComponent(
     import('../../components/result-tab/adapters/MongoConsoleTabRenderer.vue')
 );
 const lazyMongoHeaderBadge = defineAsyncComponent(
-  () => import('../../components/RawQueryMongoHeaderBadge.vue')
+  () => import('../../components/mongo/RawQueryMongoHeaderBadge.vue')
 );
 const lazyCursorInfo = defineAsyncComponent(
-  () => import('../../components/RawQueryCursorInfo.vue')
+  () => import('../../components/common/RawQueryCursorInfo.vue')
 );
 const lazyMongoGuide = defineAsyncComponent(
   () =>
     import('../../mongo/components/MongoRawQueryVariableUsageGuidePopover.vue')
 );
 const lazyMongoFormatAction = defineAsyncComponent(
-  () => import('../../components/RawQueryMongoFormatAction.vue')
+  () => import('../../components/mongo/RawQueryMongoFormatAction.vue')
 );
 const lazyMongoExecuteAction = defineAsyncComponent(
-  () => import('../../components/RawQueryMongoExecuteAction.vue')
+  () => import('../../components/mongo/RawQueryMongoExecuteAction.vue')
 );
 
 const successOnly = {

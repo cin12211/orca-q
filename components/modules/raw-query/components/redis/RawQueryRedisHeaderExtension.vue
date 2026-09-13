@@ -2,7 +2,7 @@
 import { computed } from 'vue';
 import RedisDBSelector from '~/components/modules/selectors/RedisDBSelector.vue';
 import type { RedisDatabaseOption } from '~/core/types/redis-workspace.types';
-import type { RawQueryHeaderContext } from '../registry/rawQueryProfile.types';
+import type { RawQueryHeaderContext } from '../../registry/rawQueryProfile.types';
 
 const props = defineProps<{
   context?: RawQueryHeaderContext;

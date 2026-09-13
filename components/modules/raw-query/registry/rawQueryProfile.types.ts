@@ -61,8 +61,6 @@ export interface RawQueryFooterContext {
   explainAnalyzeOptionItems?: ExplainAnalyzeOptionItem[];
   serializeMode?: ExplainAnalyzeSerializeMode;
   databaseType?: DatabaseClientType;
-  isMongoConnection?: boolean;
-  isRedisConnection?: boolean;
   onFormatCurrentStatement?: () => void;
   onFormatAll?: () => void;
   onExplainAnalyzeCurrent?: () => void;

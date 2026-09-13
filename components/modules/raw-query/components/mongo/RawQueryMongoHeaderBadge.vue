@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Badge } from '#components';
-import type { RawQueryHeaderContext } from '../registry/rawQueryProfile.types';
+import type { RawQueryHeaderContext } from '../../registry/rawQueryProfile.types';
 
 defineProps<{
   context?: RawQueryHeaderContext;
