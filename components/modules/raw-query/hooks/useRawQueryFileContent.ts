@@ -1,4 +1,3 @@
-import type { FieldDef } from 'pg';
 import { useWorkspaceConnectionRoute } from '~/core/composables/useWorkspaceConnectionRoute';
 import { useExplorerFileStore } from '~/core/stores';
 import { useManagementConnectionStore } from '~/core/stores/managementConnectionStore';
@@ -16,8 +15,6 @@ export function useRawQueryFileContent() {
   const fileContents = ref(cachedContent?.contents ?? '');
   const fileVariables = ref('');
   const selectedConnectionId = ref('');
-
-  const fieldDefs = ref<FieldDef[]>([]);
 
   const currentFile = computed(() => {
     return explorerFileStore?.flatNodes?.find(
@@ -106,18 +103,7 @@ export function useRawQueryFileContent() {
     fileVariables.value = currentFile.value?.variables || '';
   };
 
-  //TODO: for edit inline table after query
-  // const mappedColumns = computed<MappedRawColumn[]>(() => {
-  //   return formatColumnsInfo({
-  //     activeSchema: activeSchema.value,
-  //     fieldDefs: fieldDefs.value,
-  //     getTableInfoById: schemaStore.getTableInfoById,
-  //   });
-  // });
-
   return {
-    fieldDefs,
-    // mappedColumns,
     fileContents,
     fileVariables,
     currentFile,

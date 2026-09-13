@@ -2,7 +2,6 @@ import type { ComputedRef, InjectionKey, Ref } from 'vue';
 import { inject, provide } from 'vue';
 import { DatabaseClientType } from '~/core/constants/database-client-type';
 import type { Connection, RowQueryFile } from '~/core/stores';
-import type { RedisDatabaseOption } from '~/core/types/redis-workspace.types';
 import type { RawQueryEditorLayout } from '../constants';
 import type { RawQueryEditor } from './useRawQueryEditor';
 
@@ -26,13 +25,6 @@ export interface RawQueryContext {
   fileVariables: Ref<string>;
   updateFileContent: (value: string) => void;
   updateFileVariables: (variables: string) => Promise<void>;
-
-  // Redis workspace info
-  redisDatabases:
-    | Ref<RedisDatabaseOption[]>
-    | ComputedRef<RedisDatabaseOption[]>;
-  redisDatabaseIndex: Ref<number>;
-  updateRedisDatabaseIndex: (index: number) => void;
 
   // Feature support flags
   isVariableSupported: ComputedRef<boolean> | Ref<boolean>;

@@ -22,43 +22,29 @@ import type {
 import type { RawQueryFooterContext } from '../../registry/rawQueryProfile.types';
 
 const props = defineProps<{
-  context?: RawQueryFooterContext;
-  explainAnalyzeOptionItems?: ExplainAnalyzeOptionItem[];
-  serializeMode?: ExplainAnalyzeSerializeMode;
-}>();
-
-const emit = defineEmits<{
-  (e: 'onExplainAnalyzeCurrent'): void;
-  (e: 'toggleExplainOption', value: ExplainAnalyzeToggleOptionKey): void;
-  (e: 'update:serializeMode', value: ExplainAnalyzeSerializeMode): void;
+  context: RawQueryFooterContext;
 }>();
 
 const isExplainAnalyzeMenuOpen = ref(false);
 
 const options = computed<ExplainAnalyzeOptionItem[]>(
-  () =>
-    props.context?.explainAnalyzeOptionItems ??
-    props.explainAnalyzeOptionItems ??
-    []
+  () => props.context.explainAnalyzeOptionItems ?? []
 );
 
 const currentSerializeMode = computed<ExplainAnalyzeSerializeMode>(
-  () => props.context?.serializeMode ?? props.serializeMode ?? 'NONE'
+  () => props.context.serializeMode ?? 'NONE'
 );
 
 const onExplain = () => {
-  props.context?.onExplainAnalyzeCurrent?.();
-  emit('onExplainAnalyzeCurrent');
+  props.context.onExplainAnalyzeCurrent?.();
 };
 
 const onToggle = (key: ExplainAnalyzeToggleOptionKey) => {
-  props.context?.toggleExplainOption?.(key);
-  emit('toggleExplainOption', key);
+  props.context.toggleExplainOption?.(key);
 };
 
 const onUpdateSerialize = (value: ExplainAnalyzeSerializeMode) => {
-  props.context?.updateSerializeMode?.(value);
-  emit('update:serializeMode', value);
+  props.context.updateSerializeMode?.(value);
 };
 </script>
 

@@ -1,31 +1,31 @@
 <script setup lang="ts">
 import { computed } from 'vue';
+import { useRedisWorkspace } from '~/components/modules/redis-workspace/hooks/useRedisWorkspace';
 import RedisDBSelector from '~/components/modules/selectors/RedisDBSelector.vue';
-import type { RedisDatabaseOption } from '~/core/types/redis-workspace.types';
+import { DatabaseClientType } from '~/core/constants/database-client-type';
 import type { RawQueryHeaderContext } from '../../registry/rawQueryProfile.types';
 
 const props = defineProps<{
-  context?: RawQueryHeaderContext;
-  redisDatabases?: RedisDatabaseOption[];
-  redisDatabaseIndex?: number;
+  context: RawQueryHeaderContext;
 }>();
 
-const emit = defineEmits<{
-  (e: 'update:redisDatabaseIndex', databaseIndex: number): void;
-}>();
+const isRedisConnection = computed(
+  () => props.context.connection?.type === DatabaseClientType.REDIS
+);
 
-const databases = computed(
-  () => props.context?.redisDatabases ?? props.redisDatabases ?? []
+const redisConnection = computed(() =>
+  isRedisConnection.value ? props.context.connection : undefined
 );
-const databaseIndex = computed(
-  () => props.context?.redisDatabaseIndex ?? props.redisDatabaseIndex ?? 0
-);
+
+const redisWorkspace = useRedisWorkspace({
+  connection: redisConnection,
+  mode: 'meta',
+});
+
+const databases = computed(() => redisWorkspace.databases.value ?? []);
 
 const handleUpdateDatabaseIndex = (index: number) => {
-  if (props.context?.onUpdateRedisDatabaseIndex) {
-    props.context.onUpdateRedisDatabaseIndex(index);
-  }
-  emit('update:redisDatabaseIndex', index);
+  redisWorkspace.selectedDatabaseIndex.value = index;
 };
 </script>
 
@@ -35,7 +35,7 @@ const handleUpdateDatabaseIndex = (index: number) => {
     trigger-id="raw-query-redis-db-index"
     trigger-class="bg-background"
     :databases="databases"
-    :database-index="databaseIndex"
+    :database-index="redisWorkspace.selectedDatabaseIndex.value"
     @update:database-index="handleUpdateDatabaseIndex"
   />
 </template>

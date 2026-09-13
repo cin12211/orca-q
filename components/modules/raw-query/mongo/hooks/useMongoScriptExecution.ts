@@ -15,7 +15,7 @@ export function useMongoScriptExecution(options: {
   collectionContext?: Ref<string | undefined>;
   documentText: Ref<string>;
   fileVariables: Ref<string>;
-  fieldDefs: Ref<FieldDef[]>;
+  fieldDefs?: Ref<FieldDef[]>;
   resultTabs: any;
   beforeExecute?: () => Promise<boolean>;
 }) {
@@ -121,7 +121,9 @@ export function useMongoScriptExecution(options: {
       approvalToken,
       onMeta: message => {
         item.metadata.resultKind = message.resultKind;
-        options.fieldDefs.value = message.fields as any;
+        if (options.fieldDefs) {
+          options.fieldDefs.value = message.fields as any;
+        }
         item.metadata.fieldDefs = message.fields as any;
         options.resultTabs.refreshResultTab(item.id, item);
       },

@@ -31,11 +31,6 @@ const fileVariables = computed(() => context?.fileVariables.value ?? '');
 const codeEditorLayout = computed(
   () => context?.codeEditorLayout.value ?? RawQueryEditorLayout.horizontal
 );
-const redisDatabases = computed(() => context?.redisDatabases.value ?? []);
-const redisDatabaseIndex = computed(
-  () => context?.redisDatabaseIndex.value ?? 0
-);
-
 const rawQueryProfile = computed(() => getRawQueryProfile(databaseType.value));
 const headerProfile = computed(() => rawQueryProfile.value.header);
 
@@ -45,10 +40,6 @@ const isVariableSupported = computed(
 
 const handleUpdateConnectionId = (connectionId: string) => {
   context?.updateSelectedConnection(connectionId);
-};
-
-const handleUpdateRedisDatabaseIndex = (databaseIndex: number) => {
-  context?.updateRedisDatabaseIndex(databaseIndex);
 };
 
 const handleUpdateFileVariables = async (variables: string): Promise<void> => {
@@ -65,12 +56,9 @@ const headerContext = computed<RawQueryHeaderContext>(() => ({
   currentFileInfo: currentFileInfo.value,
   fileVariables: fileVariables.value,
   codeEditorLayout: codeEditorLayout.value,
-  redisDatabases: redisDatabases.value,
-  redisDatabaseIndex: redisDatabaseIndex.value,
   rawQueryEditor: editor.value,
   editor: editor.value,
   onUpdateConnectionId: handleUpdateConnectionId,
-  onUpdateRedisDatabaseIndex: handleUpdateRedisDatabaseIndex,
   onUpdateFileVariables: handleUpdateFileVariables,
 }));
 

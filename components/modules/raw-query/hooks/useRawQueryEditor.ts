@@ -25,8 +25,6 @@ import { useSqlEditorExtensions } from './useSqlEditorExtensions';
 export function useRawQueryEditor({
   fileVariables,
   connection,
-  redisDatabaseIndex,
-  fieldDefs,
   beforeExecute,
   promptMissingVariables,
   onUpdateVariables,
@@ -34,8 +32,6 @@ export function useRawQueryEditor({
 }: {
   fileVariables: Ref<string>;
   connection: Ref<Connection | undefined>;
-  redisDatabaseIndex?: Ref<number>;
-  fieldDefs: Ref<FieldDef[]>;
   beforeExecute?: () => Promise<boolean>;
   promptMissingVariables?: (
     missing: string[]
@@ -43,6 +39,7 @@ export function useRawQueryEditor({
   onUpdateVariables?: (value: string) => void;
   documentText?: Ref<string>;
 }) {
+  const fieldDefs = ref<FieldDef[]>([]);
   const codeEditorRef = ref<InstanceType<typeof BaseCodeEditor> | null>(null);
 
   const {
@@ -61,7 +58,6 @@ export function useRawQueryEditor({
   const queryExecution = useQueryExecution({
     getEditorView,
     connection,
-    redisDatabaseIndex,
     fileVariables,
     fieldDefs,
     resultTabs,
@@ -221,6 +217,7 @@ export function useRawQueryEditor({
     pendingMongoApproval: mongoExecution.pendingApproval,
     confirmMongoWrite: mongoExecution.confirmPendingWrite,
     cancelMongoWrite: mongoExecution.cancelPendingWrite,
+    fieldDefs,
 
     // Results tab management
     executedResults: resultTabs.executedResults,

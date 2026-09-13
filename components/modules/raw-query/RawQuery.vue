@@ -2,7 +2,6 @@
 import { LoadingOverlay } from '#components';
 import type { EditorView } from '@codemirror/view';
 import BaseCodeEditor from '~/components/base/code-editor/BaseCodeEditor.vue';
-import { useRedisWorkspace } from '~/components/modules/redis-workspace/hooks/useRedisWorkspace';
 import { useHotkeys } from '~/core/composables/useHotKeys';
 import { DatabaseClientType } from '~/core/constants/database-client-type';
 import { useEnvironmentTagStore } from '~/core/stores';
@@ -44,7 +43,6 @@ const {
   updateFileContent,
   updateFileVariables,
   connectionsByWsId,
-  fieldDefs,
 } = rawQueryFileContent;
 
 const isCurrentConnectionStrictMode = computed(() => {
@@ -56,10 +54,6 @@ const isCurrentConnectionStrictMode = computed(() => {
     .getTagsByIds(currentOpenedConnection.value.tagIds ?? [])
     .some(tag => tag.strictMode);
 });
-
-const isRedisConnection = computed(
-  () => connection.value?.type === DatabaseClientType.REDIS
-);
 
 const rawQueryProfile = computed(() =>
   getRawQueryProfile(connection.value?.type)
@@ -81,18 +75,6 @@ watchEffect(() => {
     ? fileVariables.value
     : '';
 });
-
-const redisConnection = computed(() =>
-  isRedisConnection.value ? connection.value : undefined
-);
-const redisWorkspace = useRedisWorkspace({
-  connection: redisConnection,
-  mode: 'meta',
-});
-
-const updateRedisDatabaseIndex = (value: number) => {
-  redisWorkspace.selectedDatabaseIndex.value = value;
-};
 
 const isMissingVariablesOpen = ref(false);
 const missingVariablesList = ref<string[]>([]);
@@ -130,8 +112,6 @@ const onCancelMissingVariables = () => {
 
 const rawQueryEditor = useRawQueryEditor({
   connection,
-  redisDatabaseIndex: redisWorkspace.selectedDatabaseIndex,
-  fieldDefs,
   fileVariables: effectiveFileVariables,
   beforeExecute: () => requestConnectionExecutionConfirm(),
   promptMissingVariables,
@@ -152,9 +132,6 @@ provideRawQueryContext({
   fileVariables,
   updateFileContent,
   updateFileVariables,
-  redisDatabases: redisWorkspace.databases,
-  redisDatabaseIndex: redisWorkspace.selectedDatabaseIndex,
-  updateRedisDatabaseIndex,
   isVariableSupported,
   isFormatSupported,
   isExplainSupported,
@@ -166,12 +143,6 @@ const {
   cursorInfo,
   extensions,
   codeEditorRef,
-  onExecuteCurrent,
-  onHandleFormatCode,
-  onHandleFormatCurrentStatement,
-  onExplainAnalyzeCurrent,
-  explainAnalyzeOptionItems,
-  serializeMode,
   queryProcessState,
   executedResults,
   activeResultTabId,

@@ -1,7 +1,6 @@
 import type { Component } from 'vue';
 import type { DatabaseClientType } from '~/core/constants/database-client-type';
 import type { Connection, RowQueryFile } from '~/core/stores';
-import type { RedisDatabaseOption } from '~/core/types/redis-workspace.types';
 import type { RawQueryEditorLayout } from '../constants';
 import type { RawQueryEditor } from '../hooks/useRawQueryEditor';
 import type {
@@ -77,12 +76,9 @@ export interface RawQueryHeaderContext {
   currentFileInfo?: RowQueryFile;
   fileVariables: string;
   codeEditorLayout: RawQueryEditorLayout;
-  redisDatabases?: RedisDatabaseOption[];
-  redisDatabaseIndex?: number;
   rawQueryEditor?: RawQueryEditor;
   editor?: RawQueryEditor;
   onUpdateConnectionId?: (connectionId: string) => void;
-  onUpdateRedisDatabaseIndex?: (databaseIndex: number) => void;
   onUpdateFileVariables?: (variables: string) => Promise<void> | void;
 }
 
