@@ -33,4 +33,32 @@ describe('MONGO_SCRIPT_PLACEHOLDER', () => {
       "const collection = database.collection('myColl');"
     );
   });
+
+  it('substitutes only databaseName when collectionName is omitted', () => {
+    const result = getMongoScriptPlaceholder('myDb');
+    expect(result).toContain("const database = db.getSiblingDB('myDb');");
+    expect(result).toContain(
+      "const collection = database.collection('<collectionName>');"
+    );
+  });
+
+  it('substitutes only collectionName when databaseName is omitted', () => {
+    const result = getMongoScriptPlaceholder(undefined, 'myColl');
+    expect(result).toContain(
+      "const database = db.getSiblingDB('<databaseName>');"
+    );
+    expect(result).toContain(
+      "const collection = database.collection('myColl');"
+    );
+  });
+
+  it('preserves default placeholders when both are omitted', () => {
+    const result = getMongoScriptPlaceholder();
+    expect(result).toContain(
+      "const database = db.getSiblingDB('<databaseName>');"
+    );
+    expect(result).toContain(
+      "const collection = database.collection('<collectionName>');"
+    );
+  });
 });

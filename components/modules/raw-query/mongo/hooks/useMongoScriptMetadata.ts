@@ -10,8 +10,8 @@ const pendingDatabaseKeys = new Set<string>();
 
 export function useMongoScriptMetadata(options: {
   connection: Ref<Connection | undefined>;
-  databaseName: Ref<string | undefined>;
-  collectionContext: Ref<string | undefined>;
+  databaseName?: Ref<string | undefined>;
+  collectionContext?: Ref<string | undefined>;
 }) {
   const metadata = ref<MongoRawQueryMetadata>({
     collections: [],
@@ -77,8 +77,9 @@ export function useMongoScriptMetadata(options: {
             ...getConnectionParams(options.connection.value),
             database: databaseName,
             collectionContext:
+              options.databaseName?.value &&
               databaseName === options.databaseName.value
-                ? options.collectionContext.value
+                ? options.collectionContext?.value
                 : undefined,
           },
         }
@@ -88,7 +89,11 @@ export function useMongoScriptMetadata(options: {
         ...metadataByDatabase.value,
         [databaseName]: value,
       };
-      if (databaseName === options.databaseName.value) metadata.value = value;
+      if (
+        options.databaseName?.value &&
+        databaseName === options.databaseName.value
+      )
+        metadata.value = value;
       return value;
     } catch (cause) {
       error.value = cause instanceof Error ? cause : new Error(String(cause));
@@ -100,7 +105,7 @@ export function useMongoScriptMetadata(options: {
 
   const refresh = async () => {
     await fetchDatabaseNames();
-    if (!options.databaseName.value) return;
+    if (!options.databaseName?.value) return;
     const value = await ensureDatabaseMetadata(options.databaseName.value);
     if (value) metadata.value = value;
   };
@@ -127,7 +132,7 @@ export function useMongoScriptMetadata(options: {
   );
 
   watch(
-    () => [options.databaseName.value, options.collectionContext.value],
+    () => [options.databaseName?.value, options.collectionContext?.value],
     () => {
       void refresh();
     }

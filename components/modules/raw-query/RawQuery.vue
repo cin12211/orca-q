@@ -5,7 +5,7 @@ import BaseCodeEditor from '~/components/base/code-editor/BaseCodeEditor.vue';
 import { useRedisWorkspace } from '~/components/modules/redis-workspace/hooks/useRedisWorkspace';
 import { useHotkeys } from '~/core/composables/useHotKeys';
 import { DatabaseClientType } from '~/core/constants/database-client-type';
-import { useEnvironmentTagStore, useTabViewsStore } from '~/core/stores';
+import { useEnvironmentTagStore } from '~/core/stores';
 import { useAppConfigStore } from '~/core/stores/appConfigStore';
 import IntroRawQuery from './components/IntroRawQuery.vue';
 import MissingVariablesDialog from './components/MissingVariablesDialog.vue';
@@ -36,7 +36,6 @@ const workspaceId = computed(() => {
 });
 const appConfigStore = useAppConfigStore();
 const tagStore = useEnvironmentTagStore();
-const tabViewsStore = useTabViewsStore();
 const rawQueryFileContent = useRawQueryFileContent();
 const {
   connection,
@@ -57,18 +56,6 @@ const isRedisConnection = computed(
 );
 const isMongoConnection = computed(
   () => connection.value?.type === DatabaseClientType.MONGODB
-);
-const mongoQueryContext = computed(() => {
-  const metadata = tabViewsStore.activeTab?.metadata as any;
-  return metadata?.queryContext?.kind === 'mongodb'
-    ? metadata.queryContext
-    : undefined;
-});
-const mongoDatabaseName = computed(
-  () => mongoQueryContext.value?.databaseName || connection.value?.database
-);
-const mongoCollectionContext = computed(
-  () => mongoQueryContext.value?.collectionName
 );
 const isFormatSupported = computed(() => !isRedisConnection.value);
 const isSqliteConnection = computed(() =>
@@ -147,8 +134,6 @@ const rawQueryEditor = useRawQueryEditor({
   beforeExecute: () => requestConnectionExecutionConfirm(),
   promptMissingVariables,
   onUpdateVariables: updateFileVariables,
-  databaseName: mongoDatabaseName,
-  collectionContext: mongoCollectionContext,
   documentText: fileContents,
 });
 const {
@@ -161,7 +146,6 @@ const {
   onExplainAnalyzeCurrent,
   explainAnalyzeOptionItems,
   serializeMode,
-  currentRawQueryResult,
   queryProcessState,
   executedResults,
   activeResultTabId,
@@ -347,7 +331,6 @@ onBeforeUnmount(() => {
             :disable-connection-switch="isCurrentConnectionStrictMode"
             :is-redis-connection="isRedisConnection"
             :is-mongo-connection="isMongoConnection"
-            :mongo-database-name="mongoDatabaseName"
             :redis-databases="redisWorkspace.databases.value"
             :redis-database-index="redisWorkspace.selectedDatabaseIndex.value"
             :workspaceId="workspaceId"

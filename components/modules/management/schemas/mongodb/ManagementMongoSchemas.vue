@@ -193,6 +193,12 @@ const contextMenuItems = computed<ContextMenuItem[]>(() => {
       },
       {
         type: ContextMenuItemType.ACTION,
+        title: 'New Raw Query',
+        icon: 'hugeicons:code',
+        select: () => openNewMongoQueryTab({ databaseName: node.name }),
+      },
+      {
+        type: ContextMenuItemType.ACTION,
         title: 'Create Collection',
         icon: 'hugeicons:add-01',
         select: () => onRequestCreateCollection(node),
@@ -348,6 +354,13 @@ const contextMenuItems = computed<ContextMenuItem[]>(() => {
                   >
                     <Icon name="hugeicons:link-circle-02" class="size-4 mr-2" />
                     View Database
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    :data-testid="`new-mongo-raw-query-db-${node.name}`"
+                    @click="openNewMongoQueryTab({ databaseName: node.name })"
+                  >
+                    <Icon name="hugeicons:code" class="size-4 mr-2" />
+                    New Raw Query
                   </DropdownMenuItem>
                   <DropdownMenuItem @click="onRequestCreateCollection(node)">
                     <Icon name="hugeicons:add-01" class="size-4 mr-2" />

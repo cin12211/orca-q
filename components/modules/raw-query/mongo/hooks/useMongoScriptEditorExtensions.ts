@@ -12,8 +12,8 @@ import { createMongoScriptCompletionSource } from '../utils/createMongoScriptCom
 export function useMongoScriptEditorExtensions(options: {
   codeEditorRef: Ref<InstanceType<typeof BaseCodeEditor> | null>;
   fileVariables: Ref<string>;
-  databaseName: Ref<string | undefined>;
-  collectionContext: Ref<string | undefined>;
+  databaseName?: Ref<string | undefined>;
+  collectionContext?: Ref<string | undefined>;
   metadata?: Ref<MongoRawQueryMetadata>;
   databases?: Ref<string[]>;
   metadataByDatabase?: Ref<Record<string, MongoRawQueryMetadata>>;
@@ -37,8 +37,8 @@ export function useMongoScriptEditorExtensions(options: {
     javascript({ typescript: true }),
     placeholder(
       getMongoScriptPlaceholder(
-        options.databaseName.value,
-        options.collectionContext.value
+        options.databaseName?.value,
+        options.collectionContext?.value
       )
     ),
     ...sqlAutoCompletion({

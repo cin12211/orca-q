@@ -72,13 +72,6 @@ export interface CodeQueryMetadata extends BaseTabMetadata {
   tableName?: string;
   queryId?: string;
   fileSource?: WorkspaceSqlFileSource;
-  queryContext?: MongoCodeQueryContext;
-}
-
-export interface MongoCodeQueryContext {
-  kind: 'mongodb';
-  databaseName: string;
-  collectionName?: string;
 }
 
 export interface AgentChatMetadata extends BaseTabMetadata {

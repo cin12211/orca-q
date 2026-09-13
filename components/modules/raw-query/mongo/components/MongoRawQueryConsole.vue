@@ -68,7 +68,7 @@ watch(
 
 <template>
   <div
-    class="flex h-full min-h-0 flex-col overflow-hidden bg-background text-foreground shadow-xs"
+    class="flex h-full min-h-0 flex-col overflow-hidden bg-background text-foreground"
     data-testid="mongo-raw-query-console"
     aria-live="polite"
   >
@@ -139,7 +139,7 @@ watch(
         >
           <div
             data-testid="mongo-console-entry"
-            class="flex items-start gap-2 rounded px-2 py-1 text-xs leading-5 whitespace-pre-wrap break-words transition-colors hover:bg-muted/45"
+            class="flex items-start gap-2 rounded px-2 text-xs leading-5 whitespace-pre-wrap break-words transition-colors hover:bg-muted/45"
             :class="{
               'text-destructive': entries[virtualRow.index].level === 'error',
               'text-amber-600 dark:text-amber-400':

@@ -30,8 +30,6 @@ export function useRawQueryEditor({
   beforeExecute,
   promptMissingVariables,
   onUpdateVariables,
-  databaseName: databaseNameRef,
-  collectionContext: collectionContextRef,
   documentText: documentTextRef,
 }: {
   fileVariables: Ref<string>;
@@ -43,8 +41,6 @@ export function useRawQueryEditor({
     missing: string[]
   ) => Promise<{ values: Record<string, any>; insertBack: boolean } | null>;
   onUpdateVariables?: (value: string) => void;
-  databaseName?: Ref<string | undefined>;
-  collectionContext?: Ref<string | undefined>;
   documentText?: Ref<string>;
 }) {
   const codeEditorRef = ref<InstanceType<typeof BaseCodeEditor> | null>(null);
@@ -83,9 +79,6 @@ export function useRawQueryEditor({
     onExplainAnalyzeCurrent: queryExecution.onExplainAnalyzeCurrent,
   });
 
-  const databaseName = databaseNameRef ?? ref<string | undefined>(undefined);
-  const collectionContext =
-    collectionContextRef ?? ref<string | undefined>(undefined);
   const documentText = documentTextRef ?? ref('');
   const formatMongoScriptDocument = async () => {
     const editorView = getEditorView();
@@ -118,8 +111,6 @@ export function useRawQueryEditor({
   };
   const mongoExecution = useMongoScriptExecution({
     connection,
-    databaseName,
-    collectionContext,
     documentText,
     fileVariables,
     fieldDefs,
@@ -128,8 +119,6 @@ export function useRawQueryEditor({
   });
   const mongoMetadata = useMongoScriptMetadata({
     connection,
-    databaseName,
-    collectionContext,
   });
   const isMongoConnection = computed(
     () => connection.value?.type === DatabaseClientType.MONGODB
@@ -137,8 +126,6 @@ export function useRawQueryEditor({
   const mongoEditor = useMongoScriptEditorExtensions({
     codeEditorRef,
     fileVariables,
-    databaseName,
-    collectionContext,
     metadata: mongoMetadata.metadata,
     databases: mongoMetadata.databases,
     metadataByDatabase: mongoMetadata.metadataByDatabase,
@@ -164,11 +151,9 @@ export function useRawQueryEditor({
       effects: editorModeCompartment.reconfigure(activeModeExtensions()),
     });
   };
-  watch(
-    () => [connection.value?.type, databaseName.value, collectionContext.value],
-    reloadLanguageCompartment,
-    { flush: 'post' }
-  );
+  watch(() => connection.value?.type, reloadLanguageCompartment, {
+    flush: 'post',
+  });
   const onExecuteCurrent = async () => {
     if (isMongoConnection.value) {
       const editorView = getEditorView();
@@ -188,6 +173,7 @@ export function useRawQueryEditor({
 
   return {
     codeEditorRef,
+    //TODO: waiting for delete because not usage
     currentRawQueryResult: computed(() =>
       isMongoConnection.value
         ? mongoExecution.currentRawQueryResult.value

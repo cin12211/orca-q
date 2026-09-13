@@ -11,8 +11,8 @@ import { parseMongoEjsonVariables } from '../utils/mongoEjson';
 
 export function useMongoScriptExecution(options: {
   connection: Ref<Connection | undefined>;
-  databaseName: Ref<string | undefined>;
-  collectionContext: Ref<string | undefined>;
+  databaseName?: Ref<string | undefined>;
+  collectionContext?: Ref<string | undefined>;
   documentText: Ref<string>;
   fileVariables: Ref<string>;
   fieldDefs: Ref<FieldDef[]>;
@@ -48,7 +48,7 @@ export function useMongoScriptExecution(options: {
       hasSource: Boolean(source),
       hasConnection: Boolean(options.connection.value),
       connectionId: options.connection.value?.id,
-      databaseName: options.databaseName.value,
+      databaseName: options.databaseName?.value,
       documentLength: options.documentText.value.length,
       hasApprovalToken: Boolean(approvalToken),
     });
@@ -107,15 +107,15 @@ export function useMongoScriptExecution(options: {
     const connParams = getConnectionParams(options.connection.value);
     console.log('[MongoScriptExecution] calling raw-query API', {
       connectionId: options.connection.value.id,
-      database: options.databaseName.value,
+      database: options.databaseName?.value,
       scriptLength: resolvedSource.text.length,
       hasApprovalToken: Boolean(approvalToken),
     });
     activeExecution.value = executeMongoRawQuery({
       ...connParams,
       connectionId: options.connection.value.id,
-      database: options.databaseName.value,
-      collectionContext: options.collectionContext.value,
+      database: options.databaseName?.value,
+      collectionContext: options.collectionContext?.value,
       script: resolvedSource.text,
       params,
       approvalToken,
