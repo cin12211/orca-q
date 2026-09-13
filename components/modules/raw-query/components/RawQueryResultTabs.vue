@@ -15,15 +15,15 @@ import {
   type ExecutedResultItem,
   type MappedRawColumn,
 } from '../interfaces';
-import type {
-  RawQueryResultViewContext,
-  ResolvedRawQueryResultViewDefinition,
-} from '../registry/rawQueryResult.types';
+import {
+  getRawQueryResultProfile,
+  type RawQueryResultViewContext,
+  type ResolvedRawQueryResultViewDefinition,
+} from '../registry';
 import {
   resolveActiveRawQueryResultView,
   resolveRawQueryResultViews,
 } from '../registry/rawQueryResultDefaults';
-import { getRawQueryResultProfile } from '../registry/rawQueryResultRegistry';
 import { formatColumnsInfo } from '../utils/formatColumnsInfo';
 import { normalizeResultRows } from '../utils/normalizeResultRows';
 

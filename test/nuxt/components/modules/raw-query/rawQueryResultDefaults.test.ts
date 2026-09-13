@@ -3,7 +3,7 @@ import { ViewMode } from '~/components/modules/raw-query/interfaces';
 import {
   RawQueryResultExecutionPolicy,
   type RawQueryResultViewContext,
-} from '~/components/modules/raw-query/registry/rawQueryResult.types';
+} from '~/components/modules/raw-query/registry';
 import {
   defineRawQueryResultProfile,
   defineRawQueryResultView,

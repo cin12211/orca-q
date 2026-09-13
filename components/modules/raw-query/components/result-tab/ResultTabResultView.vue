@@ -14,7 +14,7 @@ import {
   useRawQueryMutation,
   useRawQueryRelationPreview,
 } from '../../hooks';
-import type { RawQueryResultViewContext } from '../../registry/rawQueryResult.types';
+import type { RawQueryResultViewContext } from '../../registry';
 import {
   buildRawQueryColumnDefs,
   type RawQueryDirtyTracker,

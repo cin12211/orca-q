@@ -4,7 +4,7 @@ import { mount } from '@vue/test-utils';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { DEFAULT_HASH_INDEX_WIDTH } from '~/components/base/data-grid/constants';
 import { ViewMode } from '~/components/modules/raw-query/interfaces';
-import type { RawQueryResultViewContext } from '~/components/modules/raw-query/registry/rawQueryResult.types';
+import type { RawQueryResultViewContext } from '~/components/modules/raw-query/registry';
 import { DatabaseClientType } from '~/core/constants/database-client-type';
 import { useSchemaStore } from '~/core/stores';
 

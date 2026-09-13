@@ -1,14 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import { ViewMode } from '~/components/modules/raw-query/interfaces';
-import type { RawQueryResultViewContext } from '~/components/modules/raw-query/registry/rawQueryResult.types';
+import {
+  RAW_QUERY_REGISTRY,
+  getRawQueryResultProfile,
+  type RawQueryResultViewContext,
+} from '~/components/modules/raw-query/registry';
 import {
   DEFAULT_RAW_QUERY_RESULT_RENDERERS,
   resolveRawQueryResultViewAvailability,
 } from '~/components/modules/raw-query/registry/rawQueryResultDefaults';
-import {
-  RAW_QUERY_RESULT_REGISTRY,
-  getRawQueryResultProfile,
-} from '~/components/modules/raw-query/registry/rawQueryResultRegistry';
 import { DatabaseClientType } from '~/core/constants/database-client-type';
 
 const modesFor = (databaseType: DatabaseClientType) =>
@@ -45,7 +45,7 @@ const createContext = (
 
 describe('raw query result registry', () => {
   it('registers every DatabaseClientType', () => {
-    expect(Object.keys(RAW_QUERY_RESULT_REGISTRY).sort()).toEqual(
+    expect(Object.keys(RAW_QUERY_REGISTRY).sort()).toEqual(
       Object.values(DatabaseClientType).sort()
     );
   });

@@ -1,11 +1,11 @@
 import { defineAsyncComponent } from 'vue';
 import { DatabaseClientType } from '~/core/constants/database-client-type';
 import { ViewMode } from '../../interfaces';
-import type { RawQueryProfile } from '../rawQueryProfile.types';
 import {
   RawQueryResultExecutionPolicy,
+  type RawQueryProfile,
   type RawQueryResultProfile,
-} from '../rawQueryResult.types';
+} from '../rawQueryProfile.types';
 import {
   DEFAULT_RAW_QUERY_RESULT_RENDERERS,
   defineRawQueryResultProfile,
@@ -75,6 +75,3 @@ export const redisRawQueryProfile: RawQueryProfile = {
   },
   result: redisResultProfile,
 };
-
-/** @deprecated Backward compatible export */
-export const redisProfile: RawQueryResultProfile = redisResultProfile;

@@ -7,7 +7,7 @@ import {
   ViewMode,
   type ExecutedResultItem,
 } from '~/components/modules/raw-query/interfaces';
-import type { RawQueryResultViewContext } from '~/components/modules/raw-query/registry/rawQueryResult.types';
+import type { RawQueryResultViewContext } from '~/components/modules/raw-query/registry';
 import { DatabaseClientType } from '~/core/constants/database-client-type';
 import { useSchemaStore } from '~/core/stores';
 import type { Schema } from '~/core/types';

@@ -5,7 +5,10 @@ import {
   postgresRawQueryProfile,
   redisRawQueryProfile,
 } from './profiles';
-import type { RawQueryProfile } from './rawQueryProfile.types';
+import type {
+  RawQueryProfile,
+  RawQueryResultProfile,
+} from './rawQueryProfile.types';
 
 export const RAW_QUERY_REGISTRY: Record<DatabaseClientType, RawQueryProfile> = {
   [DatabaseClientType.POSTGRES]: postgresRawQueryProfile,
@@ -47,4 +50,10 @@ export function getRawQueryProfile(
     RAW_QUERY_REGISTRY[databaseType] ??
     RAW_QUERY_REGISTRY[DatabaseClientType.MYSQL]
   );
+}
+
+export function getRawQueryResultProfile(
+  databaseType?: DatabaseClientType
+): RawQueryResultProfile {
+  return getRawQueryProfile(databaseType).result;
 }

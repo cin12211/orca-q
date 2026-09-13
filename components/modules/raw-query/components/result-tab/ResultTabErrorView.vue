@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, nextTick, watch } from 'vue';
 import type { DecorationItem } from 'shiki';
-import type { RawQueryResultViewContext } from '../../registry/rawQueryResult.types';
+import type { RawQueryResultViewContext } from '../../registry';
 
 const props = defineProps<{
   context: RawQueryResultViewContext;

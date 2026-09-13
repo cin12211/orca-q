@@ -6,7 +6,7 @@ import MongoResultTabRenderer from '~/components/modules/raw-query/components/re
 import ResultTabChartRenderer from '~/components/modules/raw-query/components/result-tab/adapters/ResultTabChartRenderer.vue';
 import ResultTabExplainRenderer from '~/components/modules/raw-query/components/result-tab/adapters/ResultTabExplainRenderer.vue';
 import { ViewMode } from '~/components/modules/raw-query/interfaces';
-import type { RawQueryResultViewContext } from '~/components/modules/raw-query/registry/rawQueryResult.types';
+import type { RawQueryResultViewContext } from '~/components/modules/raw-query/registry';
 import { DatabaseClientType } from '~/core/constants/database-client-type';
 
 const createContext = (

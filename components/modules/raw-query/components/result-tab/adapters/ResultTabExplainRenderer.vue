@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ExplainQuery } from '../../../modules/explain-query';
-import type { RawQueryResultViewContext } from '../../../registry/rawQueryResult.types';
+import type { RawQueryResultViewContext } from '../../../registry';
 
 defineProps<{ context: RawQueryResultViewContext }>();
 </script>

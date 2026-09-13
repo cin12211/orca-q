@@ -2,7 +2,7 @@
 import { computed } from 'vue';
 import { formatBytes } from '~/core/helpers';
 import { formatNumber, formatQueryTime } from '~/core/helpers/format';
-import type { RawQueryResultViewContext } from '../../registry/rawQueryResult.types';
+import type { RawQueryResultViewContext } from '../../registry';
 
 const props = defineProps<{
   context: RawQueryResultViewContext;

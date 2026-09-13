@@ -6,11 +6,63 @@ import type { RawQueryEditorLayout } from '../constants';
 import type { RawQueryEditor } from '../hooks/useRawQueryEditor';
 import type {
   EditorCursor,
+  ExecutedResultItem,
   ExplainAnalyzeOptionItem,
   ExplainAnalyzeSerializeMode,
   ExplainAnalyzeToggleOptionKey,
+  MappedRawColumn,
+  ViewMode,
 } from '../interfaces';
-import type { RawQueryResultProfile } from './rawQueryResult.types';
+
+/**
+ * Context passed to raw query result renderers and views
+ */
+export interface RawQueryResultViewContext {
+  activeTab: ExecutedResultItem;
+  databaseType: DatabaseClientType;
+  activeTabColumns: MappedRawColumn[];
+  formattedData: Record<string, unknown>[];
+  executeLoading: boolean;
+  isStreaming: boolean;
+  changeView(view: ViewMode): void;
+}
+
+export enum RawQueryResultExecutionPolicy {
+  ALWAYS = 'always',
+  SUCCESS_ONLY = 'success-only',
+  ERROR_ONLY = 'error-only',
+}
+
+export interface RawQueryResultViewAvailability {
+  enabled: boolean;
+  reason?: string;
+}
+
+export interface RawQueryResultViewAvailabilityConfig {
+  execution?: RawQueryResultExecutionPolicy;
+  when?: (context: RawQueryResultViewContext) => RawQueryResultViewAvailability;
+  disabledReason?: string;
+}
+
+export interface RawQueryResultViewDefinition {
+  mode: ViewMode;
+  label: string;
+  renderer: Component;
+  component?: Component;
+  availability?: RawQueryResultViewAvailabilityConfig;
+}
+
+export type RawQueryResultTabDefinition = RawQueryResultViewDefinition;
+
+export interface ResolvedRawQueryResultViewDefinition
+  extends RawQueryResultViewDefinition {
+  availabilityState: RawQueryResultViewAvailability;
+}
+
+export interface RawQueryResultProfile {
+  views: readonly RawQueryResultViewDefinition[];
+  tabs?: readonly RawQueryResultTabDefinition[];
+}
 
 /**
  * Context passed to all header registered components (badges, status indicators, custom selectors)

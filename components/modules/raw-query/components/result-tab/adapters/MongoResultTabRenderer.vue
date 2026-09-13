@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { MongoRawQueryResultView } from '../../../mongo';
-import type { RawQueryResultViewContext } from '../../../registry/rawQueryResult.types';
+import type { RawQueryResultViewContext } from '../../../registry';
 
 defineProps<{ context: RawQueryResultViewContext }>();
 </script>

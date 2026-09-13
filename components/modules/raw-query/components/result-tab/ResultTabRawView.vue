@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import JsonEditorVue from 'json-editor-vue';
-import type { RawQueryResultViewContext } from '../../registry/rawQueryResult.types';
+import type { RawQueryResultViewContext } from '../../registry';
 
 const props = defineProps<{
   context: RawQueryResultViewContext;
