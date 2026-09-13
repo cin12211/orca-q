@@ -26,7 +26,7 @@
         </p>
 
         <p class="mb-3 text-muted-foreground">
-          Mongo scripts must return a value. Use the injected handles and
+          Mongo scripts must return a value. Use the injected variables and
           helpers below; output from
           <code class="rounded bg-muted px-1">console</code>
           appears in the Console result tab.
@@ -34,39 +34,46 @@
 
         <div class="space-y-3">
           <div>
-            <p class="mb-1 font-medium">Available runtime variables</p>
+            <p class="mb-1 font-medium">Injected runtime variables</p>
             <pre
               class="overflow-x-auto whitespace-pre-wrap rounded bg-muted p-2 text-xs"
             >
-db       active database handle
-database database handle created in the example
-collection collection handle created in the example
-console   console.log/info/warn/error for debugging
+db      active database (selected in connection panel)
+console console.log/info/warn/error for debugging
 ObjectId, Long, Int32, Double, Decimal128, Binary, UUID, Timestamp
 BSON, EJSON</pre
             >
           </div>
 
           <div>
-            <p class="mb-1 font-medium">Return a query result</p>
+            <p class="mb-1 font-medium">Query the active database</p>
             <pre
               class="overflow-x-auto whitespace-pre-wrap rounded bg-muted p-2 text-xs"
             >
-const database = db.getSiblingDB('&lt;database_name&gt;')
-const collection = database.collection('&lt;collection_name&gt;')
-console.log('querying', collection)
-return collection.find({})</pre
+// db is already set to the active database
+return db.collection('&lt;collection_name&gt;').find({})</pre
             >
           </div>
 
           <div>
-            <p class="mb-1 font-medium">Switch database and inspect BSON</p>
+            <p class="mb-1 font-medium">Switch to another database</p>
             <pre
               class="overflow-x-auto whitespace-pre-wrap rounded bg-muted p-2 text-xs"
             >
-const analytics = db.getSiblingDB('&lt;database_name&gt;')
-const events = analytics.collection('&lt;collection_name&gt;')
-return events.find({ _id: new ObjectId('&lt;object_id&gt;') })</pre
+// getSiblingDB() returns a db handle — assign it to a local const
+const other = db.getSiblingDB('&lt;database_name&gt;')
+return other.collection('&lt;collection_name&gt;').find({})</pre
+            >
+          </div>
+
+          <div>
+            <p class="mb-1 font-medium">Use params &amp; BSON helpers</p>
+            <pre
+              class="overflow-x-auto whitespace-pre-wrap rounded bg-muted p-2 text-xs"
+            >
+// params come from the Variables tab as Extended JSON
+const id = new ObjectId(params.id)
+return db.collection('users').findOne({ _id: id })</pre
             >
           </div>
         </div>
@@ -76,7 +83,7 @@ return events.find({ _id: new ObjectId('&lt;object_id&gt;') })</pre
             href="https://www.mongodb.com/docs/drivers/node/current/databases-collections/"
             target="_blank"
             rel="noreferrer"
-            class="text-primary underline-offset-2 hover:underline"
+            class="text-primary underline underline-offset-2"
           >
             Database &amp; collection docs
           </a>
@@ -84,7 +91,7 @@ return events.find({ _id: new ObjectId('&lt;object_id&gt;') })</pre
             href="https://www.mongodb.com/docs/drivers/node/current/data-formats/bson/"
             target="_blank"
             rel="noreferrer"
-            class="text-primary underline-offset-2 hover:underline"
+            class="text-primary underline underline-offset-2"
           >
             BSON / EJSON docs
           </a>
