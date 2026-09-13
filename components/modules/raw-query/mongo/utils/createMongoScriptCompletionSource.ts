@@ -8,29 +8,82 @@ import {
   MONGO_SCRIPT_COLLECTION_METHODS,
   MONGO_SCRIPT_DATABASE_METHODS,
 } from '../constants/mongoScriptCatalog';
+import {
+  createMongoCatalogSuggestionInfo,
+  createMongoCollectionSuggestionInfo,
+  createMongoDatabaseSuggestionInfo,
+} from './createMongoSuggestionInfo';
+
+type MongoScriptCompletionOptions = {
+  getMetadata: (databaseName?: string) => MongoRawQueryMetadata;
+  databases: () => string[];
+  ensureDatabaseMetadata?: (databaseName: string) => void | Promise<unknown>;
+};
 
 export function createMongoScriptCompletionSource(
-  metadata: MongoRawQueryMetadata
+  options: MongoScriptCompletionOptions | MongoRawQueryMetadata
 ) {
+  const completion =
+    'collections' in options
+      ? {
+          getMetadata: () => options,
+          databases: () => [],
+        }
+      : options;
   return (context: CompletionContext): CompletionResult | null => {
     const before = context.state.sliceDoc(0, context.pos);
     const word = before.match(/[\w$]*$/)?.[0] ?? '';
     const prefix = before.slice(0, -word.length);
-    let options = MONGO_SCRIPT_BSON_HELPERS;
-    if (/db\.collection\(['"][^'"]*$/.test(before)) {
-      options = metadata.collections.map(label => ({
+    let completionOptions = MONGO_SCRIPT_BSON_HELPERS;
+    const databaseMatch = before.match(/db\.getSiblingDB\(['"][^'"]*$/);
+    const databaseAliases = new Map(
+      [
+        ...before.matchAll(
+          /\b(?:const|let|var)\s+([A-Za-z_$][\w$]*)\s*=\s*db\.getSiblingDB\(['"]([^'"]+)['"]\)/g
+        ),
+      ].map(match => [match[1], match[2]])
+    );
+    const collectionOwner = before.match(
+      /\b([A-Za-z_$][\w$]*)\.collection\(['"][^'"]*$/
+    )?.[1];
+    const collectionDatabase =
+      collectionOwner && collectionOwner !== 'db'
+        ? databaseAliases.get(collectionOwner)
+        : undefined;
+    if (databaseMatch) {
+      completionOptions = completion.databases().map(label => ({
+        label,
+        type: 'class',
+        detail: 'MongoDB database',
+        info: () => createMongoDatabaseSuggestionInfo(label),
+      }));
+    } else if (collectionOwner) {
+      const metadata = completion.getMetadata(collectionDatabase);
+      if (collectionDatabase)
+        void completion.ensureDatabaseMetadata?.(collectionDatabase);
+      completionOptions = metadata.collections.map(label => ({
         label,
         type: 'class',
         detail: 'MongoDB collection',
+        info: () =>
+          createMongoCollectionSuggestionInfo(
+            label,
+            collectionDatabase,
+            metadata.fieldsByCollection[label] ?? []
+          ),
       }));
     } else if (/\bdb\.$/.test(before)) {
-      options = MONGO_SCRIPT_DATABASE_METHODS;
+      completionOptions = MONGO_SCRIPT_DATABASE_METHODS;
     } else if (/\b(?:db\.collection\(['"][^'"]+['"]\)|\w+)\.$/.test(before)) {
-      options = MONGO_SCRIPT_COLLECTION_METHODS;
+      completionOptions = MONGO_SCRIPT_COLLECTION_METHODS;
     }
+    completionOptions = completionOptions.map(entry => ({
+      ...entry,
+      info: entry.info ?? (() => createMongoCatalogSuggestionInfo(entry)),
+    }));
     return {
       from: context.pos - word.length,
-      options: options.filter(item => item.label.startsWith(word)),
+      options: completionOptions.filter(item => item.label.startsWith(word)),
       validFor: /^\w*$/,
     };
   };

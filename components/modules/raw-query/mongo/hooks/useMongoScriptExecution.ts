@@ -7,6 +7,7 @@ import type { MongoRawQueryOperation } from '~/core/types/mongodb-raw-query.type
 import { ViewMode, type ExecutedResultItem } from '../../interfaces';
 import { approveMongoRawQuery, executeMongoRawQuery } from '../api';
 import { resolveMongoScriptSource } from '../utils';
+import { parseMongoEjsonVariables } from '../utils/mongoEjson';
 
 export function useMongoScriptExecution(options: {
   connection: Ref<Connection | undefined>;
@@ -70,9 +71,9 @@ export function useMongoScriptExecution(options: {
     }
     let params: Record<string, unknown> = {};
     try {
-      params = JSON.parse(options.fileVariables.value || '{}');
+      params = parseMongoEjsonVariables(options.fileVariables.value);
     } catch {
-      throw new Error('Mongo variables must be valid JSON');
+      throw new Error('Mongo variables must be valid Extended JSON');
     }
     const resolvedSource = source ?? {
       text: options.documentText.value,

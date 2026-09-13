@@ -1,5 +1,6 @@
 import { mount } from '@vue/test-utils';
 import { describe, expect, it } from 'vitest';
+import MongoCollectionListView from '~/components/modules/quick-query/mongodb/components/MongoCollectionListView.vue';
 import MongoRawQueryResultView from '~/components/modules/raw-query/mongo/components/MongoRawQueryResultView.vue';
 
 describe('MongoRawQueryResultView', () => {
@@ -10,18 +11,20 @@ describe('MongoRawQueryResultView', () => {
       },
       global: {
         stubs: {
-          MongoCollectionListItem: {
-            name: 'MongoCollectionListItem',
-            props: ['document', 'documentLabel', 'isReadOnly'],
-            template: '<div data-test="document">{{ documentLabel }}</div>',
+          MongoCollectionListView: {
+            name: 'MongoCollectionListView',
+            props: ['documents', 'isReadOnly', 'getDocumentLabel'],
+            template: '<div data-test="list" />',
           },
         },
       },
     });
 
-    const document = wrapper.getComponent({ name: 'MongoCollectionListItem' });
-    expect(document.props('document')).toEqual({ title: 'Alpha' });
-    expect(document.props('documentLabel')).toBe('Document 1');
-    expect(document.props('isReadOnly')).toBe(true);
+    const list = wrapper.getComponent(MongoCollectionListView);
+    expect(list.props('documents')).toEqual([{ title: 'Alpha' }]);
+    expect(list.props('isReadOnly')).toBe(true);
+    expect(list.props('getDocumentLabel')({ title: 'Alpha' }, 0)).toBe(
+      'Document 1'
+    );
   });
 });

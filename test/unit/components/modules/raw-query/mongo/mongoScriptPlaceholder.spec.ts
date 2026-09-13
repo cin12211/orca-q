@@ -14,4 +14,32 @@ describe('MONGO_SCRIPT_PLACEHOLDER', () => {
     );
     expect(MONGO_SCRIPT_PLACEHOLDER).toContain('return collection.find({});');
   });
+
+  it('documents the injected helpers and official MongoDB references', () => {
+    for (const helper of [
+      'db',
+      'database',
+      'collection',
+      'console',
+      'ObjectId',
+      'Long',
+      'Int32',
+      'Double',
+      'Decimal128',
+      'Binary',
+      'UUID',
+      'Timestamp',
+      'BSON',
+      'EJSON',
+    ]) {
+      expect(MONGO_SCRIPT_PLACEHOLDER).toContain(helper);
+    }
+
+    expect(MONGO_SCRIPT_PLACEHOLDER).toContain(
+      'https://www.mongodb.com/docs/drivers/node/current/databases-collections/'
+    );
+    expect(MONGO_SCRIPT_PLACEHOLDER).toContain(
+      'https://www.mongodb.com/docs/drivers/node/current/data-formats/bson/'
+    );
+  });
 });

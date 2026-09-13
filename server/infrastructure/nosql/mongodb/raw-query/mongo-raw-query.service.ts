@@ -22,6 +22,17 @@ const writeNdjson = (event: H3Event, value: MongoRawQueryStreamMessage) => {
   event.node.res.write(`${JSON.stringify(value)}\n`);
 };
 
+export const serializeMongoRawQueryValue = (value: unknown) =>
+  BSON.EJSON.serialize(value, { relaxed: false });
+
+export const serializeMongoRawQueryLogArgument = (value: unknown) => {
+  try {
+    return serializeMongoRawQueryValue(value);
+  } catch {
+    return '[Unserializable Mongo value]';
+  }
+};
+
 const validateRequest = (request: MongoRawQueryRequest) => {
   if (!request || typeof request.script !== 'string' || !request.connectionId) {
     throw createError({
@@ -109,26 +120,43 @@ export async function streamMongoRawQuery(
       try {
         const consoleFacade = {
           log: (...args: unknown[]) =>
-            writeNdjson(event, { type: 'log', entry: { level: 'log', args } }),
+            writeNdjson(event, {
+              type: 'log',
+              entry: {
+                level: 'log',
+                args: args.map(serializeMongoRawQueryLogArgument),
+              },
+            }),
           info: (...args: unknown[]) =>
             writeNdjson(event, {
               type: 'log',
-              entry: { level: 'info', args },
+              entry: {
+                level: 'info',
+                args: args.map(serializeMongoRawQueryLogArgument),
+              },
             }),
           warn: (...args: unknown[]) =>
             writeNdjson(event, {
               type: 'log',
-              entry: { level: 'warn', args },
+              entry: {
+                level: 'warn',
+                args: args.map(serializeMongoRawQueryLogArgument),
+              },
             }),
           error: (...args: unknown[]) =>
             writeNdjson(event, {
               type: 'log',
-              entry: { level: 'error', args },
+              entry: {
+                level: 'error',
+                args: args.map(serializeMongoRawQueryLogArgument),
+              },
             }),
         } satisfies Pick<Console, 'log' | 'info' | 'warn' | 'error'>;
         const result = await executeMongoScript(compiled, {
           db: host.createFacade(),
-          params: request.params ?? {},
+          params: BSON.EJSON.deserialize(request.params ?? {}, {
+            relaxed: false,
+          }),
           ObjectId: BSON.ObjectId,
           Decimal128: BSON.Decimal128,
           Binary: BSON.Binary,
@@ -156,7 +184,7 @@ export async function streamMongoRawQuery(
         } else {
           let value = result;
           try {
-            value = BSON.EJSON.serialize(value, { relaxed: false });
+            value = serializeMongoRawQueryValue(value);
           } catch {
             /* primitive fallback */
           }

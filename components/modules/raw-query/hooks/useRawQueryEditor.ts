@@ -140,6 +140,9 @@ export function useRawQueryEditor({
     databaseName,
     collectionContext,
     metadata: mongoMetadata.metadata,
+    databases: mongoMetadata.databases,
+    metadataByDatabase: mongoMetadata.metadataByDatabase,
+    ensureDatabaseMetadata: mongoMetadata.ensureDatabaseMetadata,
     onExecuteCurrent: async () => {
       const editorView = getEditorView();
 

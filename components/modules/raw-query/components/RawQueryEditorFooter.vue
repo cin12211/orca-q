@@ -13,16 +13,18 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '#components';
+import { DatabaseClientType } from '~/core/constants/database-client-type';
 import type {
   EditorCursor,
   ExplainAnalyzeOptionItem,
   ExplainAnalyzeSerializeMode,
   ExplainAnalyzeToggleOptionKey,
 } from '../interfaces';
+import { getRawQueryGuide } from '../registry/rawQueryGuideRegistry';
 
 const isExplainAnalyzeMenuOpen = ref(false);
 
-defineProps<{
+const props = defineProps<{
   cursorInfo: EditorCursor;
   executeLoading: boolean;
   isStreaming: boolean;
@@ -33,7 +35,13 @@ defineProps<{
   isSupportVariable?: boolean;
   isExplainSupported?: boolean;
   isMongoConnection?: boolean;
+  databaseType?: DatabaseClientType;
 }>();
+
+const rawQueryGuide = computed(() => {
+  if (!props.isSupportVariable) return null;
+  return getRawQueryGuide(props.databaseType);
+});
 
 defineEmits<{
   (e: 'onFormatCurrentStatement'): void;
@@ -53,7 +61,7 @@ defineEmits<{
         Ln {{ cursorInfo.line }}, Col {{ cursorInfo.column }}
       </div>
 
-      <RawQueryVariableUsageGuidePopover v-if="isSupportVariable" />
+      <component :is="rawQueryGuide" v-if="rawQueryGuide" />
     </div>
 
     <div class="flex gap-1">

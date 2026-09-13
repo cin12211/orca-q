@@ -5,7 +5,7 @@ import type { Extension } from '@codemirror/state';
 import { keymap, placeholder } from '@codemirror/view';
 import type BaseCodeEditor from '~/components/base/code-editor/BaseCodeEditor.vue';
 import type { MongoRawQueryMetadata } from '~/core/types/mongodb-raw-query.types';
-import { MONGO_SCRIPT_PLACEHOLDER } from '../constants/mongoScriptCatalog';
+import { getMongoScriptPlaceholder } from '../constants/mongoScriptCatalog';
 import { createMongoScriptCompletionSource } from '../utils/createMongoScriptCompletionSource';
 
 export function useMongoScriptEditorExtensions(options: {
@@ -14,25 +14,32 @@ export function useMongoScriptEditorExtensions(options: {
   databaseName: Ref<string | undefined>;
   collectionContext: Ref<string | undefined>;
   metadata?: Ref<MongoRawQueryMetadata>;
+  databases?: Ref<string[]>;
+  metadataByDatabase?: Ref<Record<string, MongoRawQueryMetadata>>;
+  ensureDatabaseMetadata?: (databaseName: string) => void | Promise<unknown>;
   onExecuteCurrent: () => void | Promise<void>;
   onFormat: () => void | Promise<void>;
 }) {
   const extensions: Extension[] = [
     javascript({ typescript: true }),
     placeholder(
-      MONGO_SCRIPT_PLACEHOLDER.replace(
-        'DATABASE',
-        options.databaseName.value || '<database_name>'
-      ).replace(
-        'COLLECTION',
-        options.collectionContext.value || '<collection_name>'
+      getMongoScriptPlaceholder(
+        options.databaseName.value,
+        options.collectionContext.value
       )
     ),
     autocompletion({
       override: [
-        createMongoScriptCompletionSource(
-          options.metadata?.value ?? { collections: [], fieldsByCollection: {} }
-        ),
+        createMongoScriptCompletionSource({
+          getMetadata: databaseName =>
+            options.metadataByDatabase?.value[databaseName ?? ''] ??
+            options.metadata?.value ?? {
+              collections: [],
+              fieldsByCollection: {},
+            },
+          databases: () => options.databases?.value ?? [],
+          ensureDatabaseMetadata: options.ensureDatabaseMetadata,
+        }),
       ],
     }),
     lintGutter(),

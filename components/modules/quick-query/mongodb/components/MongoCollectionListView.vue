@@ -12,10 +12,17 @@ const props = withDefaults(
     documents: MongoDocument[];
     savingDocId?: string | null;
     deletingDocId?: string | null;
+    isReadOnly?: boolean;
+    getDocumentLabel?: (
+      document: MongoDocument,
+      index: number
+    ) => string | undefined;
   }>(),
   {
     savingDocId: null,
     deletingDocId: null,
+    isReadOnly: false,
+    getDocumentLabel: undefined,
   }
 );
 
@@ -49,6 +56,7 @@ const toggleExpandDocument = (docKey: string) => {
 };
 
 const onStartEdit = (docId: unknown) => {
+  if (props.isReadOnly) return;
   activeEditDocId.value = getMongoDocumentKey(docId);
 };
 
@@ -145,12 +153,17 @@ defineExpose({ scrollToTop, onExitEditMode });
       >
         <MongoCollectionListItem
           :document="documents[virtualRow.index]"
+          :document-label="
+            getDocumentLabel?.(documents[virtualRow.index], virtualRow.index)
+          "
+          :is-read-only="isReadOnly"
           :is-expanded="
             isExpanded(getDocKey(documents[virtualRow.index], virtualRow.index))
           "
           :is-editing="
+            !isReadOnly &&
             activeEditDocId ===
-            getDocKey(documents[virtualRow.index], virtualRow.index)
+              getDocKey(documents[virtualRow.index], virtualRow.index)
           "
           :is-saving="
             savingDocId ===

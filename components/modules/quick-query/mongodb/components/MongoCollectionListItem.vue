@@ -50,7 +50,12 @@ const emit = defineEmits<{
 const { handleCopyWithKey, isCopied, getCopyIcon, getCopyTooltip } =
   useCopyToClipboard();
 
-const documentKey = computed(() => getMongoDocumentKey(props.document._id));
+const documentKey = computed(
+  () =>
+    getMongoDocumentKey(props.document._id) ||
+    props.documentLabel ||
+    'mongo-document'
+);
 const documentIdLabel = computed(() => {
   const formatted = formatMongoEjsonValue(props.document._id);
   if (formatted) return formatted;
