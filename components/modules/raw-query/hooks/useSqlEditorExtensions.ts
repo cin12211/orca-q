@@ -6,7 +6,6 @@ import { Compartment } from '@codemirror/state';
 import { EditorView, keymap } from '@codemirror/view';
 import { sqlExtension } from '@marimo-team/codemirror-sql';
 import type BaseCodeEditor from '~/components/base/code-editor/BaseCodeEditor.vue';
-import { SQLDialectSupport } from '~/components/base/code-editor/constants';
 import {
   currentStatementLineGutterExtension,
   currentStatementLineHighlightExtension,

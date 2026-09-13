@@ -14,7 +14,6 @@ import {
 } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import BaseCodeEditor from '~/components/base/code-editor/BaseCodeEditor.vue';
-import { currentStatementLineGutterExtension } from '~/components/base/code-editor/extensions';
 import { formatBytes } from '~/core/helpers';
 import { getConnectionParams } from '~/core/helpers/connection-helper';
 import type { Connection } from '~/core/stores';
@@ -50,11 +49,7 @@ const fileInputRef = ref<HTMLInputElement | null>(null);
 const editorRef = ref<InstanceType<typeof BaseCodeEditor> | null>(null);
 const isLoading = ref(false);
 
-const editorExtensions = [
-  json(),
-  lintGutter(),
-  currentStatementLineGutterExtension,
-];
+const editorExtensions = [json(), lintGutter()];
 
 const resetState = () => {
   editorContent.value = JSON.stringify(

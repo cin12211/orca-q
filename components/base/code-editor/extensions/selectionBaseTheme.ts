@@ -11,4 +11,8 @@ export const selectionBaseTheme = EditorView.baseTheme({
   '&dark .cm-selectionBackground': {
     backgroundColor: 'rgba(255, 255, 255, 0.3) !important;',
   },
+  '.cm-gutters': {
+    backgroundColor: `unset !important`,
+    border: `none !important`,
+  },
 });

@@ -14,7 +14,6 @@ import { keymap } from '@codemirror/view';
 import { toast } from 'vue-sonner';
 import { cn } from '@/lib/utils';
 import BaseCodeEditor from '~/components/base/code-editor/BaseCodeEditor.vue';
-import { currentStatementLineGutterExtension } from '~/components/base/code-editor/extensions';
 import { useCopyToClipboard } from '~/core/composables/useCopyToClipboard';
 import type { MongoDocument } from '../types';
 import { formatMongoEjsonValue, getMongoDocumentKey } from '../utils';
@@ -176,7 +175,6 @@ const editorExtensions = [
   json(),
   lintGutter(),
   linter(jsonParseLinter()),
-  currentStatementLineGutterExtension,
   keymap.of([
     {
       key: 'Mod-s',
