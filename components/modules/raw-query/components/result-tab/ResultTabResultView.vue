@@ -14,7 +14,7 @@ import {
   useRawQueryMutation,
   useRawQueryRelationPreview,
 } from '../../hooks';
-import type { ExecutedResultItem, MappedRawColumn } from '../../interfaces';
+import type { RawQueryResultViewContext } from '../../registry/rawQueryResult.types';
 import {
   buildRawQueryColumnDefs,
   type RawQueryDirtyTracker,
@@ -27,12 +27,14 @@ import RawQueryResultControlBar from './RawQueryResultControlBar.vue';
 import RawQueryUpdatePreviewDialog from './RawQueryUpdatePreviewDialog.vue';
 
 const props = defineProps<{
-  activeTab: ExecutedResultItem;
-  activeTabColumns: MappedRawColumn[];
-  formattedData: Record<string, any>[];
-  executeLoading: boolean;
-  isStreaming: boolean;
+  context: RawQueryResultViewContext;
 }>();
+
+const activeTab = computed(() => props.context.activeTab);
+const activeTabColumns = computed(() => props.context.activeTabColumns);
+const formattedData = computed(() => props.context.formattedData);
+const executeLoading = computed(() => props.context.executeLoading);
+const isStreaming = computed(() => props.context.isStreaming);
 
 const rawQueryTableRef = ref<InstanceType<typeof BaseDataGrid>>();
 const containerRef = ref<HTMLElement>();
@@ -46,9 +48,9 @@ const onSelectedRowsChange = (rows: unknown[]) => {
 };
 
 const downloadResults = (format: 'csv' | 'json' | 'text') => {
-  const rows = props.formattedData;
+  const rows = formattedData.value;
   const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
-  const filename = `query_result_tab_${props.activeTab.seqIndex}_${timestamp}`;
+  const filename = `query_result_tab_${activeTab.value.seqIndex}_${timestamp}`;
 
   const formatMap: Record<'csv' | 'json' | 'text', ExportFormat> = {
     csv: ExportFormat.CSV_WITH_HEADER,
@@ -58,7 +60,7 @@ const downloadResults = (format: 'csv' | 'json' | 'text') => {
 
   exportData(
     rows,
-    `query_result_tab_${props.activeTab.seqIndex}`,
+    `query_result_tab_${activeTab.value.seqIndex}`,
     formatMap[format],
     'all',
     undefined,
@@ -68,25 +70,25 @@ const downloadResults = (format: 'csv' | 'json' | 'text') => {
 
 const commandResult = computed(() =>
   createCommandResultFactory(
-    props.activeTab.metadata.command || '',
-    props.activeTab.metadata.rowCount || 0,
-    props.activeTab.metadata.connection?.type as DatabaseClientType
+    activeTab.value.metadata.command || '',
+    activeTab.value.metadata.rowCount || 0,
+    activeTab.value.metadata.connection?.type as DatabaseClientType
   )
 );
 
 const isMutation = computed(() => commandResult.value.isMutation);
 const mutationMessage = computed(() => commandResult.value.message);
-const hasResultColumns = computed(() => props.activeTabColumns.length > 0);
+const hasResultColumns = computed(() => activeTabColumns.value.length > 0);
 const showNoResultsEmptyState = computed(
   () =>
-    props.activeTab.result.length === 0 &&
+    activeTab.value.result.length === 0 &&
     !hasResultColumns.value &&
-    !props.executeLoading &&
-    !props.isStreaming
+    !executeLoading.value &&
+    !isStreaming.value
 );
 
 const reservedTables = computed(() => {
-  const connectionId = props.activeTab.metadata.connection?.id;
+  const connectionId = activeTab.value.metadata.connection?.id;
   if (!connectionId) return [];
   return reservedSchemas.value[connectionId] || [];
 });
@@ -96,10 +98,10 @@ const reservedTables = computed(() => {
  * (schema, table) AND that table has a primary-key column in the
  * result so we can build a safe WHERE clause.
  * ------------------------------------------------------------------ */
-const tableGroups = computed(() => groupColumnsByTable(props.activeTabColumns));
+const tableGroups = computed(() => groupColumnsByTable(activeTabColumns.value));
 
 const isEditingEnabled = computed(() => {
-  if (props.isStreaming) return false;
+  if (isStreaming.value) return false;
   for (const [, group] of tableGroups.value) {
     if (group.primaryKeyFields.length > 0) return true;
   }
@@ -134,9 +136,9 @@ const mergeTrackedCells = (
   return [...merged.values()];
 };
 
-const activeTabColumnsRef = computed(() => props.activeTabColumns);
+const activeTabColumnsRef = activeTabColumns;
 const formattedDataRef = computed<RawQueryRow[]>(
-  () => props.formattedData || []
+  () => (formattedData.value as RawQueryRow[]) || []
 );
 
 /**
@@ -180,7 +182,7 @@ const acceptPendingChanges = () => {
 
   baselineRows.value = stripGridMetaFromRows(rowData.value);
 
-  acceptedCells.value = [];
+  acceptedCells.value = mergeTrackedCells(acceptedCells.value, pendingCells);
   clearEditedCells();
 };
 
@@ -190,7 +192,7 @@ const discardPendingChanges = () => {
   refreshDirtyCells();
 };
 
-watch([formattedDataRef, () => props.activeTab.id], ([rows]) => {
+watch([formattedDataRef, () => activeTab.value.id], ([rows]) => {
   baselineRows.value = cloneRawQueryRows(rows);
   acceptedCells.value = [];
   clearEditedCells();
@@ -216,7 +218,7 @@ watch(
   { immediate: true }
 );
 
-const connectionRef = computed(() => props.activeTab.metadata.connection);
+const connectionRef = computed(() => activeTab.value.metadata.connection);
 
 const selectedRowsRef = computed(() => selectedRows.value);
 
@@ -276,7 +278,7 @@ const {
 
 const columnDefs = computed(() =>
   buildRawQueryColumnDefs({
-    columns: props.activeTabColumns,
+    columns: activeTabColumns.value,
     rows: baselineRows.value,
     reservedTables: reservedTables.value,
     isEditingEnabled: isEditingEnabled.value,

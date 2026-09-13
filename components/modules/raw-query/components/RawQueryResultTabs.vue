@@ -15,21 +15,21 @@ import {
   type ExecutedResultItem,
   type MappedRawColumn,
 } from '../interfaces';
-import { ChartBuilder } from '../modules/chart-builder';
-import { ExplainQuery } from '../modules/explain-query';
-import MongoRawQueryConsole from '../mongo/components/MongoRawQueryConsole.vue';
-import MongoRawQueryResultView from '../mongo/components/MongoRawQueryResultView.vue';
+import type {
+  RawQueryResultViewContext,
+  ResolvedRawQueryResultViewDefinition,
+} from '../registry/rawQueryResult.types';
+import {
+  resolveActiveRawQueryResultView,
+  resolveRawQueryResultViews,
+} from '../registry/rawQueryResultDefaults';
+import { getRawQueryResultProfile } from '../registry/rawQueryResultRegistry';
 import { formatColumnsInfo } from '../utils/formatColumnsInfo';
 import { normalizeResultRows } from '../utils/normalizeResultRows';
-import ResultTabErrorView from './result-tab/ResultTabErrorView.vue';
-import ResultTabInfoView from './result-tab/ResultTabInfoView.vue';
-import ResultTabRawView from './result-tab/ResultTabRawView.vue';
-import ResultTabResultView from './result-tab/ResultTabResultView.vue';
 
 const props = defineProps<{
   executedResults: Map<string, ExecutedResultItem>;
   activeTabId: string | null;
-  // mappedColumns: MappedRawColumn[];
   executeLoading: boolean;
   isStreaming: boolean;
 }>();
@@ -66,15 +66,6 @@ const isHaveRightItem = computed(() => {
   return currentIndex >= 0 && currentIndex < tabIds.length - 1;
 });
 
-const defaultViewModes: { value: ViewMode; label: string }[] = [
-  { value: ViewMode.RESULT, label: 'Result' },
-  { value: ViewMode.EXPLAIN, label: 'Explain' },
-  { value: ViewMode.RAW, label: 'Raw' },
-  { value: ViewMode.INFO, label: 'Info' },
-  { value: ViewMode.CHART, label: 'Chart' },
-  { value: ViewMode.ERROR, label: 'Errors' },
-];
-
 // Cache key: tabId + resultLength for case (streaming)
 const formattedDataCache = new Map<string, Record<string, any>[]>();
 
@@ -88,19 +79,85 @@ const activeTab = computed(() => {
   return props.executedResults.get(props.activeTabId) || null;
 });
 
-const isMongoResult = (tab: ExecutedResultItem) =>
-  tab.metadata.connection?.type === DatabaseClientType.MONGODB;
+const activeDatabaseType = computed(
+  () => activeTab.value?.metadata.connection?.type
+);
 
-const viewModes = computed(() => {
-  if (!activeTab.value || !isMongoResult(activeTab.value)) {
-    return defaultViewModes;
+// Switch view mode
+const setViewMode = (view: ViewMode) => {
+  if (props.activeTabId) {
+    emit('update:view', props.activeTabId, view);
   }
+};
 
-  return [
-    ...defaultViewModes.filter(mode => mode.value !== ViewMode.CHART),
-    { value: ViewMode.CONSOLE, label: 'Console' },
-  ];
+const selectView = (view: ResolvedRawQueryResultViewDefinition) => {
+  if (!view.availabilityState.enabled) return;
+  setViewMode(view.mode);
+};
+
+// Check if tab has errors
+const hasErrors = (tab: ExecutedResultItem) => {
+  return !!tab.metadata.executeErrors;
+};
+
+// Derive columns from active tab's fieldDefs (not global mappedColumns)
+const activeTabColumns = computed<MappedRawColumn[]>(() => {
+  if (!activeTab.value?.metadata.fieldDefs) return [];
+
+  const connectionId = activeTab.value.metadata.connection?.id;
+
+  return formatColumnsInfo({
+    fieldDefs: activeTab.value.metadata.fieldDefs,
+    statementQuery: activeTab.value.metadata.statementQuery,
+    schemas: connectionId ? schemas.value[connectionId] || [] : [],
+    getTableInfoById: schemaStore.getTableInfoById,
+  });
 });
+
+const resultViewContext = computed<RawQueryResultViewContext | null>(() => {
+  const tab = activeTab.value;
+  const databaseType = activeDatabaseType.value;
+  if (!tab || !databaseType) return null;
+
+  return {
+    activeTab: tab,
+    databaseType,
+    activeTabColumns: activeTabColumns.value,
+    formattedData: formattedData.value,
+    executeLoading: props.executeLoading,
+    isStreaming: props.isStreaming,
+    changeView: setViewMode,
+  };
+});
+
+const resolvedViews = computed(() => {
+  const context = resultViewContext.value;
+  if (!context) return [];
+  const profile = getRawQueryResultProfile(context.databaseType);
+  if (!profile) return [];
+  return resolveRawQueryResultViews(profile, context);
+});
+
+// Get current view mode for active tab
+const currentView = computed(() => activeTab.value?.view || ViewMode.RESULT);
+
+const activeView = computed(() =>
+  resolveActiveRawQueryResultView(
+    resolvedViews.value,
+    currentView.value,
+    Boolean(activeTab.value?.metadata.executeErrors)
+  )
+);
+
+watch(
+  () => [props.activeTabId, activeView.value?.mode] as const,
+  ([tabId, resolvedMode]) => {
+    if (tabId && resolvedMode && activeTab.value?.view !== resolvedMode) {
+      emit('update:view', tabId, resolvedMode);
+    }
+  },
+  { immediate: true }
+);
 
 watch(
   () => activeTab.value?.metadata.connection,
@@ -132,23 +189,6 @@ watch(
   },
   { immediate: true }
 );
-
-// Get current view mode for active tab
-const currentView = computed(() => activeTab.value?.view || ViewMode.RESULT);
-
-// Derive columns from active tab's fieldDefs (not global mappedColumns)
-const activeTabColumns = computed<MappedRawColumn[]>(() => {
-  if (!activeTab.value?.metadata.fieldDefs) return [];
-
-  const connectionId = activeTab.value.metadata.connection?.id;
-
-  return formatColumnsInfo({
-    fieldDefs: activeTab.value.metadata.fieldDefs,
-    statementQuery: activeTab.value.metadata.statementQuery,
-    schemas: connectionId ? schemas.value[connectionId] || [] : [],
-    getTableInfoById: schemaStore.getTableInfoById,
-  });
-});
 
 const getFormattedData = (tab: ExecutedResultItem): Record<string, any>[] => {
   const resultLength = tab.result?.length || 0;
@@ -201,17 +241,6 @@ onUnmounted(() => {
   window.removeEventListener('keydown', handleKeyDown);
   if (rafId) cancelAnimationFrame(rafId);
 });
-
-// Switch view mode
-const setViewMode = (view: ViewMode) => {
-  if (props.activeTabId) {
-    emit('update:view', props.activeTabId, view);
-  }
-};
-// Check if tab has errors
-const hasErrors = (tab: ExecutedResultItem) => {
-  return !!tab.metadata.executeErrors;
-};
 </script>
 
 <template>
@@ -224,65 +253,39 @@ const hasErrors = (tab: ExecutedResultItem) => {
     "
   >
     <!-- Vertical view tabs (left side) -->
-    <div class="flex mt-7 [writing-mode:vertical-rl]" v-if="activeTab">
-      <div
-        v-for="mode in viewModes"
-        :key="mode.value"
-        @click="
-          // Disable result/raw/chart if has errors, disable error if no errors.
-          hasErrors(activeTab) &&
-          (mode.value === ViewMode.RESULT ||
-            mode.value === ViewMode.RAW ||
-            mode.value === ViewMode.CHART)
-            ? null
-            : mode.value === ViewMode.ERROR && !hasErrors(activeTab)
-              ? null
-              : setViewMode(mode.value)
-        "
-        :class="
-          cn(
-            'border px-1 text-xs font-normal transition-colors',
-            currentView === mode.value
-              ? 'bg-muted border-transparent border-r-border'
-              : 'border-transparent',
-            // Error tab styling
-            mode.value === ViewMode.ERROR && hasErrors(activeTab)
-              ? 'hover:bg-muted cursor-pointer'
-              : mode.value === ViewMode.EXPLAIN &&
-                  !activeTab.metadata.statementQuery.startsWith('EXPLAIN')
-                ? null
-                : '',
-            mode.value === ViewMode.ERROR && !hasErrors(activeTab)
-              ? 'opacity-40 cursor-not-allowed'
-              : '',
-            // Result/Raw/Chart disabled when errors
-            (mode.value === ViewMode.RESULT ||
-              mode.value === ViewMode.RAW ||
-              mode.value === ViewMode.CHART) &&
-              hasErrors(activeTab)
-              ? 'opacity-40 cursor-not-allowed'
-              : '',
-            mode.value === ViewMode.EXPLAIN &&
-              !activeTab.metadata.statementQuery.startsWith('EXPLAIN')
-              ? 'opacity-40 cursor-not-allowed'
-              : '',
-            // Normal hover state for enabled tabs
-            !(
-              (mode.value === ViewMode.ERROR && !hasErrors(activeTab)) ||
-              ((mode.value === ViewMode.RESULT ||
-                mode.value === ViewMode.RAW ||
-                mode.value === ViewMode.CHART) &&
-                hasErrors(activeTab)) ||
-              (mode.value === ViewMode.EXPLAIN &&
-                !activeTab.metadata.statementQuery.startsWith('EXPLAIN'))
-            )
-              ? 'hover:bg-muted cursor-pointer'
-              : ''
-          )
-        "
-      >
-        {{ mode.label }}
-      </div>
+    <div
+      class="flex mt-7 [writing-mode:vertical-rl]"
+      v-if="resolvedViews.length > 0"
+    >
+      <Tooltip v-for="view in resolvedViews" :key="view.mode">
+        <TooltipTrigger as-child>
+          <span>
+            <button
+              type="button"
+              :data-view-mode="view.mode"
+              :disabled="!view.availabilityState.enabled"
+              :title="view.availabilityState.reason"
+              @click="selectView(view)"
+              :class="
+                cn(
+                  'border px-1 text-xs font-normal transition-colors',
+                  activeView?.mode === view.mode
+                    ? 'bg-muted border-transparent border-r-border'
+                    : 'border-transparent',
+                  view.availabilityState.enabled
+                    ? 'hover:bg-muted cursor-pointer'
+                    : 'opacity-40 cursor-not-allowed'
+                )
+              "
+            >
+              {{ view.label }}
+            </button>
+          </span>
+        </TooltipTrigger>
+        <TooltipContent v-if="view.availabilityState.reason">
+          {{ view.availabilityState.reason }}
+        </TooltipContent>
+      </Tooltip>
     </div>
 
     <div class="h-full w-full flex flex-col min-w-0">
@@ -397,65 +400,20 @@ const hasErrors = (tab: ExecutedResultItem) => {
           desc="Execute a query to see results"
         />
 
-        <!-- Result View -->
-        <MongoRawQueryResultView
-          v-else-if="
-            activeTab &&
-            isMongoResult(activeTab) &&
-            currentView === ViewMode.RESULT
-          "
-          :documents="formattedData"
+        <!-- Unsupported database state -->
+        <BaseEmpty
+          v-else-if="!activeDatabaseType || !activeView"
+          title="Unsupported database"
+          desc="This database type is not supported for query results"
+          data-test="unsupported-database"
         />
 
-        <ResultTabResultView
-          v-else-if="activeTab && currentView === ViewMode.RESULT"
-          :active-tab="activeTab"
-          :active-tab-columns="activeTabColumns"
-          :formatted-data="formattedData"
-          :execute-loading="executeLoading"
-          :is-streaming="isStreaming"
-          :raw-data="activeTab.metadata.rawResult"
-          :key="activeTab.id"
-        />
-
-        <ExplainQuery
-          v-else-if="activeTab && currentView === ViewMode.EXPLAIN"
-          :active-tab="activeTab"
-        />
-
-        <!-- Raw View (JSON) -->
-        <ResultTabRawView
-          v-else-if="activeTab && currentView === ViewMode.RAW"
-          :formatted-data="formattedData"
-          :execute-loading="executeLoading"
-          :is-streaming="isStreaming"
-        />
-
-        <!-- Chart View -->
-        <ChartBuilder
-          v-else-if="activeTab && currentView === ViewMode.CHART"
-          :active-tab="activeTab"
-          :active-tab-columns="activeTabColumns"
-          :formatted-data="formattedData"
-        />
-
-        <!-- Mongo Console View -->
-        <MongoRawQueryConsole
-          v-else-if="activeTab && currentView === ViewMode.CONSOLE"
-          :logs="activeTab.metadata.logs"
-        />
-
-        <!-- Info View -->
-        <ResultTabInfoView
-          v-else-if="activeTab && currentView === ViewMode.INFO"
-          :active-tab="activeTab"
-        />
-
-        <!-- Errors View -->
-        <ResultTabErrorView
-          v-else-if="activeTab && currentView === ViewMode.ERROR"
-          :active-tab="activeTab"
-          @onChangeView="setViewMode($event)"
+        <!-- Dynamic active view renderer -->
+        <component
+          :is="activeView.renderer"
+          v-else-if="activeView && resultViewContext"
+          :key="`${resultViewContext.activeTab.id}:${activeView.mode}`"
+          :context="resultViewContext"
         />
       </div>
     </div>

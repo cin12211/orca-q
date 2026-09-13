@@ -249,7 +249,7 @@ export function useQueryExecution({
         executedAt: new Date(),
         executeErrors: undefined,
         fieldDefs: undefined,
-        connection: undefined,
+        connection: connection.value,
       },
       result: [],
       view: executedResultView,

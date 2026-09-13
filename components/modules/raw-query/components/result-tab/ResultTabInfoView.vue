@@ -2,18 +2,19 @@
 import { computed } from 'vue';
 import { formatBytes } from '~/core/helpers';
 import { formatNumber, formatQueryTime } from '~/core/helpers/format';
-import type { ExecutedResultItem } from '../../interfaces';
-import MongoRawQueryConsole from '../../mongo/components/MongoRawQueryConsole.vue';
+import type { RawQueryResultViewContext } from '../../registry/rawQueryResult.types';
 
 const props = defineProps<{
-  activeTab: ExecutedResultItem;
+  context: RawQueryResultViewContext;
 }>();
+
+const activeTab = computed(() => props.context.activeTab);
 
 const textEncoder =
   typeof TextEncoder !== 'undefined' ? new TextEncoder() : null;
 
 const resultSize = computed(() => {
-  const data = props.activeTab?.result ?? [];
+  const data = activeTab.value?.result ?? [];
 
   if (!textEncoder) {
     return { bytes: 0, formatted: 'N/A' };
@@ -127,7 +128,6 @@ const resultSize = computed(() => {
       Truncated at
       {{ formatNumber(activeTab.metadata.rowCount || 0) }} documents
     </div>
-    <MongoRawQueryConsole :logs="activeTab.metadata.logs" />
 
     <div v-if="activeTab.metadata.fieldDefs?.length" class="pt-3 border-t">
       <div class="text-sm text-muted-foreground mb-2">Fields:</div>

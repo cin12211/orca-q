@@ -3,6 +3,8 @@ import { nextTick, ref } from 'vue';
 import { mount } from '@vue/test-utils';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { DEFAULT_HASH_INDEX_WIDTH } from '~/components/base/data-grid/constants';
+import { ViewMode } from '~/components/modules/raw-query/interfaces';
+import type { RawQueryResultViewContext } from '~/components/modules/raw-query/registry/rawQueryResult.types';
 import { DatabaseClientType } from '~/core/constants/database-client-type';
 import { useSchemaStore } from '~/core/stores';
 
@@ -67,8 +69,8 @@ vi.mock('~/components/modules/raw-query/hooks', async () => {
   };
 });
 
-const buildResultTabProps = () => ({
-  activeTab: {
+const buildResultTabProps = () => {
+  const activeTab = {
     id: 'query-1',
     metadata: {
       queryTime: 12,
@@ -85,9 +87,10 @@ const buildResultTabProps = () => ({
     },
     result: [{ id: 1, title: 'alpha' }],
     seqIndex: 1,
-    view: 'result',
-  },
-  activeTabColumns: [
+    view: ViewMode.RESULT,
+  };
+
+  const activeTabColumns = [
     {
       originalName: 'id',
       aliasFieldName: 'id',
@@ -112,11 +115,20 @@ const buildResultTabProps = () => ({
       type: 'text',
       short_type_name: 'text',
     },
-  ],
-  formattedData: [{ id: 1, title: 'alpha' }],
-  executeLoading: false,
-  isStreaming: false,
-});
+  ];
+
+  return {
+    context: {
+      activeTab,
+      databaseType: DatabaseClientType.POSTGRES,
+      activeTabColumns,
+      formattedData: [{ id: 1, title: 'alpha' }],
+      executeLoading: false,
+      isStreaming: false,
+      changeView: vi.fn(),
+    },
+  };
+};
 
 describe('ResultTabResultView', () => {
   let pinia: ReturnType<typeof createPinia>;
@@ -145,15 +157,21 @@ describe('ResultTabResultView', () => {
     getContextSpy.mockRestore();
   });
 
-  const mountView = async (overrideProps: Record<string, unknown> = {}) => {
+  const mountView = async (
+    overrideProps: { context?: Partial<RawQueryResultViewContext> } = {}
+  ) => {
     const { default: ResultTabResultView } = await import(
       '~/components/modules/raw-query/components/result-tab/ResultTabResultView.vue'
     );
 
+    const defaultProps = buildResultTabProps();
+
     return mount(ResultTabResultView, {
       props: {
-        ...buildResultTabProps(),
-        ...overrideProps,
+        context: {
+          ...defaultProps.context,
+          ...(overrideProps.context ?? {}),
+        },
       },
       global: {
         plugins: [pinia],
@@ -231,36 +249,39 @@ describe('ResultTabResultView', () => {
   };
 
   it('keeps estimated widths when relation columns switch raw query to override column defs', async () => {
+    const defaultProps = buildResultTabProps();
     const wrapper = await mountView({
-      activeTab: {
-        ...buildResultTabProps().activeTab,
-        metadata: {
-          ...buildResultTabProps().activeTab.metadata,
-          statementQuery: 'SELECT p.author_id AS author FROM posts p',
-        },
-        result: [{ author: 123456789 }],
-      },
-      activeTabColumns: [
-        {
-          originalName: 'author',
-          aliasFieldName: 'author',
-          queryFieldName: 'author',
-          isPrimaryKey: false,
-          isForeignKey: true,
-          tableName: 'posts',
-          schemaName: 'public',
-          sourceColumnName: 'author_id',
-          type: 'uuid',
-          short_type_name: 'uuid',
-          foreignKey: {
-            column: 'author_id',
-            referenced_column: 'id',
-            referenced_table: 'users',
-            referenced_table_schema: 'public',
+      context: {
+        activeTab: {
+          ...defaultProps.context.activeTab,
+          metadata: {
+            ...defaultProps.context.activeTab.metadata,
+            statementQuery: 'SELECT p.author_id AS author FROM posts p',
           },
+          result: [{ author: 123456789 }],
         },
-      ],
-      formattedData: [{ author: 123456789 }],
+        activeTabColumns: [
+          {
+            originalName: 'author',
+            aliasFieldName: 'author',
+            queryFieldName: 'author',
+            isPrimaryKey: false,
+            isForeignKey: true,
+            tableName: 'posts',
+            schemaName: 'public',
+            sourceColumnName: 'author_id',
+            type: 'uuid',
+            short_type_name: 'uuid',
+            foreignKey: {
+              column: 'author_id',
+              referenced_column: 'id',
+              referenced_table: 'users',
+              referenced_table_schema: 'public',
+            },
+          },
+        ],
+        formattedData: [{ author: 123456789 }],
+      },
     });
 
     const baseDataGrid = getBaseDataGrid(wrapper);
@@ -276,17 +297,19 @@ describe('ResultTabResultView', () => {
   });
 
   it('keeps the grid mounted for empty result sets so column headers remain available', async () => {
-    const props = buildResultTabProps();
+    const defaultProps = buildResultTabProps();
     const wrapper = await mountView({
-      activeTab: {
-        ...props.activeTab,
-        metadata: {
-          ...props.activeTab.metadata,
-          rowCount: 0,
+      context: {
+        activeTab: {
+          ...defaultProps.context.activeTab,
+          metadata: {
+            ...defaultProps.context.activeTab.metadata,
+            rowCount: 0,
+          },
+          result: [],
         },
-        result: [],
+        formattedData: [],
       },
-      formattedData: [],
     });
 
     const baseDataGrid = getBaseDataGrid(wrapper);
@@ -309,12 +332,15 @@ describe('ResultTabResultView', () => {
   });
 
   it('renders null result cells with the same muted foreground used by quick query', async () => {
+    const defaultProps = buildResultTabProps();
     const wrapper = await mountView({
-      activeTab: {
-        ...buildResultTabProps().activeTab,
-        result: [{ id: 1, title: null }],
+      context: {
+        activeTab: {
+          ...defaultProps.context.activeTab,
+          result: [{ id: 1, title: null }],
+        },
+        formattedData: [{ id: 1, title: null }],
       },
-      formattedData: [{ id: 1, title: null }],
     });
 
     expect(getEditableColumnStyle(wrapper)).toEqual({
