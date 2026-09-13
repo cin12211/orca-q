@@ -83,9 +83,10 @@ export const mongoResultProfile: RawQueryResultProfile =
  */
 export const mongoRawQueryProfile: RawQueryProfile = {
   databaseType: DatabaseClientType.MONGODB,
+  isFormatSupported: true,
+  isVariableSupported: false,
   header: {
     leftComponents: [lazyMongoHeaderBadge],
-    supportsVariables: false,
   },
   footer: {
     leftComponents: [lazyCursorInfo, lazyMongoGuide],

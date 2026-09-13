@@ -64,9 +64,10 @@ export const redisResultProfile: RawQueryResultProfile =
  */
 export const redisRawQueryProfile: RawQueryProfile = {
   databaseType: DatabaseClientType.REDIS,
+  isFormatSupported: false,
+  isVariableSupported: false,
   header: {
     rightComponents: [lazyRedisHeaderExtension],
-    supportsVariables: false,
   },
   footer: {
     leftComponents: [lazyCursorInfo],

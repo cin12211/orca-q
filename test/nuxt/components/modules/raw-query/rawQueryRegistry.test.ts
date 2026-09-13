@@ -15,7 +15,7 @@ describe('Raw Query Registry (Master & Layout UI)', () => {
   it('falls back to default SQL profile when databaseType is undefined', () => {
     const profile = getRawQueryProfile(undefined);
     expect(profile).toBeDefined();
-    expect(profile.header.supportsVariables).toBe(true);
+    expect(profile.isVariableSupported).toBe(true);
     expect(profile.footer.leftComponents.length).toBeGreaterThan(0);
     expect(profile.footer.rightComponents.length).toBeGreaterThan(0);
   });
@@ -24,11 +24,12 @@ describe('Raw Query Registry (Master & Layout UI)', () => {
     it('configures MongoDB header layout correctly with leftComponents', () => {
       const profile = getRawQueryProfile(DatabaseClientType.MONGODB);
       expect(profile.header.leftComponents?.length).toBe(1);
-      expect(profile.header.supportsVariables).toBe(false);
+      expect(profile.isVariableSupported).toBe(false);
     });
 
     it('registers cursor info, guide and Mongo actions in footer', () => {
       const profile = getRawQueryProfile(DatabaseClientType.MONGODB);
+      expect(profile.isFormatSupported).toBe(true);
       expect(profile.footer.leftComponents.length).toBe(2); // CursorInfo + MongoGuide
       expect(profile.footer.rightComponents.length).toBe(2); // MongoFormat + MongoExecute
     });
@@ -39,7 +40,8 @@ describe('Raw Query Registry (Master & Layout UI)', () => {
       const profile = getRawQueryProfile(DatabaseClientType.POSTGRES);
       expect(profile.header.leftComponents).toBeUndefined();
       expect(profile.header.rightComponents).toBeUndefined();
-      expect(profile.header.supportsVariables).toBe(true);
+      expect(profile.isVariableSupported).toBe(true);
+      expect(profile.isFormatSupported).toBe(true);
     });
 
     it('registers cursor info, SQL guide, format, explain and execute in footer', () => {
@@ -52,8 +54,9 @@ describe('Raw Query Registry (Master & Layout UI)', () => {
   describe('Redis Profile', () => {
     it('configures Redis header layout correctly with rightComponents', () => {
       const profile = getRawQueryProfile(DatabaseClientType.REDIS);
-      expect(profile.header.supportsVariables).toBe(false);
+      expect(profile.isVariableSupported).toBe(false);
       expect(profile.header.rightComponents?.length).toBe(1);
+      expect(profile.isFormatSupported).toBe(false);
     });
 
     it('registers only cursor info on left and execute on right in footer', () => {
@@ -66,14 +69,16 @@ describe('Raw Query Registry (Master & Layout UI)', () => {
   describe('Standard SQL Profiles', () => {
     it('configures MySQL with guide and format/execute actions', () => {
       const profile = getRawQueryProfile(DatabaseClientType.MYSQL);
-      expect(profile.header.supportsVariables).toBe(true);
+      expect(profile.isVariableSupported).toBe(true);
+      expect(profile.isFormatSupported).toBe(true);
       expect(profile.footer.leftComponents.length).toBe(2); // CursorInfo + SqlGuide
       expect(profile.footer.rightComponents.length).toBe(2); // SqlFormat + Execute
     });
 
     it('configures SQLite3 without guide popover', () => {
       const profile = getRawQueryProfile(DatabaseClientType.SQLITE3);
-      expect(profile.header.supportsVariables).toBe(false);
+      expect(profile.isVariableSupported).toBe(false);
+      expect(profile.isFormatSupported).toBe(true);
       expect(profile.footer.leftComponents.length).toBe(1); // CursorInfo only
       expect(profile.footer.rightComponents.length).toBe(2); // SqlFormat + Execute
     });

@@ -78,9 +78,9 @@ export const createStandardSqlRawQueryProfile = (
 
   return {
     databaseType,
-    header: {
-      supportsVariables: !isSqlite,
-    },
+    isFormatSupported: true,
+    isVariableSupported: !isSqlite,
+    header: {},
     footer: {
       leftComponents: isSqlite
         ? [lazyCursorInfo]

@@ -3,6 +3,7 @@ import type { DatabaseClientType } from '~/core/constants/database-client-type';
 import type { Connection, RowQueryFile } from '~/core/stores';
 import type { RedisDatabaseOption } from '~/core/types/redis-workspace.types';
 import type { RawQueryEditorLayout } from '../constants';
+import type { RawQueryEditor } from '../hooks/useRawQueryEditor';
 import type {
   EditorCursor,
   ExplainAnalyzeOptionItem,
@@ -26,9 +27,11 @@ export interface RawQueryHeaderContext {
   codeEditorLayout: RawQueryEditorLayout;
   redisDatabases?: RedisDatabaseOption[];
   redisDatabaseIndex?: number;
+  rawQueryEditor?: RawQueryEditor;
+  editor?: RawQueryEditor;
   onUpdateConnectionId?: (connectionId: string) => void;
   onUpdateRedisDatabaseIndex?: (databaseIndex: number) => void;
-  onUpdateFileVariables?: (variables: string) => Promise<void>;
+  onUpdateFileVariables?: (variables: string) => Promise<void> | void;
 }
 
 export interface RawQueryHeaderProfile {
@@ -43,11 +46,6 @@ export interface RawQueryHeaderProfile {
    * e.g. custom database/replica selectors, extra toolbar buttons
    */
   rightComponents?: Component[];
-
-  /**
-   * Whether query variables are supported for this database client
-   */
-  supportsVariables?: boolean;
 }
 
 /**
@@ -61,6 +59,8 @@ export interface RawQueryFooterContext {
   explainAnalyzeOptionItems?: ExplainAnalyzeOptionItem[];
   serializeMode?: ExplainAnalyzeSerializeMode;
   databaseType?: DatabaseClientType;
+  rawQueryEditor?: RawQueryEditor;
+  editor?: RawQueryEditor;
   onFormatCurrentStatement?: () => void;
   onFormatAll?: () => void;
   onExplainAnalyzeCurrent?: () => void;
@@ -91,6 +91,14 @@ export interface RawQueryProfile {
   header: RawQueryHeaderProfile;
   footer: RawQueryFooterProfile;
   result: RawQueryResultProfile;
+  /**
+   * Whether statement/code formatting is supported for this database client
+   */
+  isFormatSupported?: boolean;
+  /**
+   * Whether query variables are supported for this database client
+   */
+  isVariableSupported?: boolean;
 }
 
 export function defineRawQueryProfile(

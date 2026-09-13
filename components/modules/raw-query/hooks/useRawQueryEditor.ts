@@ -232,3 +232,5 @@ export function useRawQueryEditor({
     updateResultTabView: resultTabs.updateResultTabView,
   };
 }
+
+export type RawQueryEditor = ReturnType<typeof useRawQueryEditor>;

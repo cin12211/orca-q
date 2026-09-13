@@ -89,9 +89,9 @@ export const postgresResultProfile: RawQueryResultProfile =
  */
 export const postgresRawQueryProfile: RawQueryProfile = {
   databaseType: DatabaseClientType.POSTGRES,
-  header: {
-    supportsVariables: true,
-  },
+  isFormatSupported: true,
+  isVariableSupported: true,
+  header: {},
   footer: {
     leftComponents: [lazyCursorInfo, lazySqlGuide],
     rightComponents: [

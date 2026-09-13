@@ -8,3 +8,4 @@ export * from './useSqlEditorExtensions';
 export * from './useRawQueryRelationPreview';
 export * from './useRawQueryEditedCells';
 export * from './useRawQueryMutation';
+export * from './useRawQueryContext';

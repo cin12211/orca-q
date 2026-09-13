@@ -1,73 +1,77 @@
 <script setup lang="ts">
 import { computed, ref, type Component } from 'vue';
 import { Tooltip, TooltipContent, TooltipTrigger } from '#components';
-import type { DatabaseClientType } from '~/core/constants/database-client-type';
-import { type Connection, type RowQueryFile } from '~/core/stores';
-import type { RedisDatabaseOption } from '~/core/types/redis-workspace.types';
 import PureConnectionSelector from '../../selectors/PureConnectionSelector.vue';
 import { RawQueryEditorLayout } from '../constants';
+import { useRawQueryContext } from '../hooks';
 import { getRawQueryProfile, type RawQueryHeaderContext } from '../registry';
 import AddVariableModal from './AddVariableModal.vue';
 import RawQueryConfigModal from './RawQueryConfigModal.vue';
 
 const props = defineProps<{
-  currentFileInfo?: RowQueryFile;
-  fileVariables: string;
-  workspaceId: string;
-  selectedConnectionId: string;
-  disableConnectionSwitch: boolean;
-  connections: Connection[];
-  connection?: Connection;
-  databaseType?: DatabaseClientType;
-  isSupportVariable?: boolean;
-  redisDatabases?: RedisDatabaseOption[];
-  redisDatabaseIndex?: number;
-  codeEditorLayout: RawQueryEditorLayout;
   customLeftComponents?: Component[];
   customRightComponents?: Component[];
 }>();
 
-const emit = defineEmits<{
-  (e: 'update:connectionId', connectionId: string): void;
-  (e: 'update:redisDatabaseIndex', databaseIndex: number): void;
-  (e: 'update:updateFileVariables', fileVariablesValue: string): Promise<void>;
-}>();
+const context = useRawQueryContext();
 
-const effectiveDatabaseType = computed(
-  () =>
-    props.databaseType ??
-    (props.connection?.type as DatabaseClientType | undefined)
+const editor = computed(() => context?.rawQueryEditor);
+const workspaceId = computed(() => context?.workspaceId.value ?? '');
+const selectedConnectionId = computed(
+  () => context?.selectedConnectionId.value ?? ''
+);
+const connections = computed(() => context?.connections.value ?? []);
+const connection = computed(() => context?.connection.value);
+const disableConnectionSwitch = computed(
+  () => context?.disableConnectionSwitch.value ?? false
+);
+const databaseType = computed(() => context?.databaseType.value);
+const currentFileInfo = computed(() => context?.currentFile.value);
+const fileVariables = computed(() => context?.fileVariables.value ?? '');
+const codeEditorLayout = computed(
+  () => context?.codeEditorLayout.value ?? RawQueryEditorLayout.horizontal
+);
+const redisDatabases = computed(() => context?.redisDatabases.value ?? []);
+const redisDatabaseIndex = computed(
+  () => context?.redisDatabaseIndex.value ?? 0
 );
 
-const rawQueryProfile = computed(() =>
-  getRawQueryProfile(effectiveDatabaseType.value)
-);
+const rawQueryProfile = computed(() => getRawQueryProfile(databaseType.value));
 const headerProfile = computed(() => rawQueryProfile.value.header);
 
-const supportsVariables = computed(() =>
-  headerProfile.value.supportsVariables !== undefined
-    ? headerProfile.value.supportsVariables
-    : props.isSupportVariable
+const isVariableSupported = computed(
+  () => context?.isVariableSupported.value ?? true
 );
 
+const handleUpdateConnectionId = (connectionId: string) => {
+  context?.updateSelectedConnection(connectionId);
+};
+
+const handleUpdateRedisDatabaseIndex = (databaseIndex: number) => {
+  context?.updateRedisDatabaseIndex(databaseIndex);
+};
+
+const handleUpdateFileVariables = async (variables: string): Promise<void> => {
+  await context?.updateFileVariables(variables);
+};
+
 const headerContext = computed<RawQueryHeaderContext>(() => ({
-  workspaceId: props.workspaceId,
-  selectedConnectionId: props.selectedConnectionId,
-  connection: props.connection,
-  connections: props.connections,
-  disableConnectionSwitch: props.disableConnectionSwitch,
-  databaseType: effectiveDatabaseType.value,
-  currentFileInfo: props.currentFileInfo,
-  fileVariables: props.fileVariables,
-  codeEditorLayout: props.codeEditorLayout,
-  redisDatabases: props.redisDatabases,
-  redisDatabaseIndex: props.redisDatabaseIndex,
-  onUpdateConnectionId: (connectionId: string) =>
-    emit('update:connectionId', connectionId),
-  onUpdateRedisDatabaseIndex: (databaseIndex: number) =>
-    emit('update:redisDatabaseIndex', databaseIndex),
-  onUpdateFileVariables: (variables: string) =>
-    emit('update:updateFileVariables', variables),
+  workspaceId: workspaceId.value,
+  selectedConnectionId: selectedConnectionId.value,
+  connection: connection.value,
+  connections: connections.value,
+  disableConnectionSwitch: disableConnectionSwitch.value,
+  databaseType: databaseType.value,
+  currentFileInfo: currentFileInfo.value,
+  fileVariables: fileVariables.value,
+  codeEditorLayout: codeEditorLayout.value,
+  redisDatabases: redisDatabases.value,
+  redisDatabaseIndex: redisDatabaseIndex.value,
+  rawQueryEditor: editor.value,
+  editor: editor.value,
+  onUpdateConnectionId: handleUpdateConnectionId,
+  onUpdateRedisDatabaseIndex: handleUpdateRedisDatabaseIndex,
+  onUpdateFileVariables: handleUpdateFileVariables,
 }));
 
 const leftComponents = computed<Component[]>(() => [
@@ -95,7 +99,7 @@ const openConfigModal = () => {
 
 <template>
   <AddVariableModal
-    @updateVariables="$emit('update:updateFileVariables', $event)"
+    @updateVariables="handleUpdateFileVariables"
     :file-variables="fileVariables"
     v-model:open="isOpenAddVariableModal"
   />
@@ -129,7 +133,7 @@ const openConfigModal = () => {
       <!-- Query variables button if supported by layout and profile -->
       <Tooltip
         v-if="
-          supportsVariables &&
+          isVariableSupported &&
           codeEditorLayout === RawQueryEditorLayout.horizontal
         "
       >
@@ -157,7 +161,7 @@ const openConfigModal = () => {
         <TooltipTrigger as-child>
           <PureConnectionSelector
             :connectionId="selectedConnectionId"
-            @update:connectionId="$emit('update:connectionId', $event)"
+            @update:connectionId="handleUpdateConnectionId"
             :connections="connections"
             :connection="connection"
             :disabled="disableConnectionSwitch"

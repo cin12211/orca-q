@@ -1,59 +1,52 @@
 <script setup lang="ts">
-import { computed, type Component } from 'vue';
-import { DatabaseClientType } from '~/core/constants/database-client-type';
-import type {
-  EditorCursor,
-  ExplainAnalyzeOptionItem,
-  ExplainAnalyzeSerializeMode,
-  ExplainAnalyzeToggleOptionKey,
-} from '../interfaces';
+import { computed, unref, type Component } from 'vue';
+import { useRawQueryContext } from '../hooks';
 import { getRawQueryProfile, type RawQueryFooterContext } from '../registry';
 
 const props = defineProps<{
-  cursorInfo: EditorCursor;
-  executeLoading: boolean;
-  isStreaming: boolean;
-  isRawViewMode?: boolean;
-  explainAnalyzeOptionItems?: ExplainAnalyzeOptionItem[];
-  serializeMode?: ExplainAnalyzeSerializeMode;
-  isSupportFormat?: boolean;
-  isSupportVariable?: boolean;
-  isExplainSupported?: boolean;
-  databaseType?: DatabaseClientType;
   customLeftComponents?: Component[];
   customRightComponents?: Component[];
 }>();
 
-const emit = defineEmits<{
-  (e: 'onFormatCurrentStatement'): void;
-  (e: 'onFormatAll'): void;
-  (e: 'onExplainAnalyzeCurrent'): void;
-  (e: 'toggleExplainOption', value: ExplainAnalyzeToggleOptionKey): void;
-  (e: 'update:serializeMode', value: ExplainAnalyzeSerializeMode): void;
-  (e: 'onExecuteCurrent'): void;
-  (e: 'update:isRawViewMode', value: boolean): void;
-  (e: 'onCancelQuery'): void;
-}>();
+const context = useRawQueryContext();
 
-const rawQueryProfile = computed(() => getRawQueryProfile(props.databaseType));
+const editor = computed(() => context?.rawQueryEditor);
+const databaseType = computed(() => context?.databaseType.value);
+
+const rawQueryProfile = computed(() => getRawQueryProfile(databaseType.value));
 const footerProfile = computed(() => rawQueryProfile.value.footer);
 
 const footerContext = computed<RawQueryFooterContext>(() => ({
-  cursorInfo: props.cursorInfo,
-  executeLoading: props.executeLoading,
-  isStreaming: props.isStreaming,
-  isRawViewMode: props.isRawViewMode,
-  databaseType: props.databaseType,
-  explainAnalyzeOptionItems: props.explainAnalyzeOptionItems,
-  serializeMode: props.serializeMode,
-  onFormatCurrentStatement: () => emit('onFormatCurrentStatement'),
-  onFormatAll: () => emit('onFormatAll'),
-  onExplainAnalyzeCurrent: () => emit('onExplainAnalyzeCurrent'),
-  toggleExplainOption: key => emit('toggleExplainOption', key),
-  updateSerializeMode: mode => emit('update:serializeMode', mode),
-  onExecuteCurrent: () => emit('onExecuteCurrent'),
-  updateRawViewMode: val => emit('update:isRawViewMode', val),
-  onCancelQuery: () => emit('onCancelQuery'),
+  cursorInfo: editor.value?.cursorInfo.value ?? { line: 1, column: 1 },
+  executeLoading: editor.value?.queryProcessState.value.executeLoading ?? false,
+  isStreaming: editor.value?.queryProcessState.value.isStreaming ?? false,
+  databaseType: databaseType.value,
+  explainAnalyzeOptionItems:
+    unref(editor.value?.explainAnalyzeOptionItems) ?? [],
+  serializeMode: editor.value?.serializeMode.value,
+  rawQueryEditor: editor.value,
+  editor: editor.value,
+  onFormatCurrentStatement: () => {
+    editor.value?.onHandleFormatCurrentStatement();
+  },
+  onFormatAll: () => {
+    editor.value?.onHandleFormatCode();
+  },
+  onExplainAnalyzeCurrent: () => {
+    editor.value?.onExplainAnalyzeCurrent();
+  },
+  toggleExplainOption: key => {
+    editor.value?.toggleExplainOption(key);
+  },
+  updateSerializeMode: mode => {
+    editor.value?.setSerializeMode(mode);
+  },
+  onExecuteCurrent: () => {
+    editor.value?.onExecuteCurrent();
+  },
+  onCancelQuery: () => {
+    editor.value?.cancelStreamingQuery();
+  },
 }));
 
 const leftComponents = computed<Component[]>(() => [
