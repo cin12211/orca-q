@@ -90,12 +90,11 @@ const isLiteralNode = (node: NodeDataType): boolean => {
       <!-- 1. ISODate with UTC annotation -->
       <span
         v-if="getNodeUtcDate(node)"
-        class="inline-flex items-baseline gap-1 flex-wrap"
         data-testid="mongo-isodate-value-container"
       >
         <span>{{ getNodeRawContent(node) }}</span>
         <span
-          class="text-[11px] font-mono text-muted-foreground/60 select-none"
+          class="text-muted-foreground/60 select-none"
           data-testid="mongo-isodate-utc-view"
         >
           ({{ getNodeUtcDate(node) }})
@@ -116,7 +115,7 @@ const isLiteralNode = (node: NodeDataType): boolean => {
     <template #renderNodeActions="{ node }">
       <span
         v-if="getMongoNodeType(node)"
-        class="mongo-type-info text-[11px] font-mono text-muted-foreground/80 select-none tracking-tight flex-shrink-0"
+        class="mongo-type-info text-[11px] text-muted-foreground/80 select-none tracking-tight flex-shrink-0"
         data-testid="mongo-node-type-info"
       >
         {{ getMongoNodeType(node) }}

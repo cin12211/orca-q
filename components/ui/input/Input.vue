@@ -7,7 +7,7 @@ const props = defineProps<{
   defaultValue?: string | number;
   modelValue?: string | number;
   class?: HTMLAttributes['class'];
-  size?: 'xs' | 'sm' | 'default' | 'lg';
+  size?: 'xxs' | 'xs' | 'sm' | 'default' | 'lg';
 }>();
 
 const emits = defineEmits<{
@@ -23,6 +23,8 @@ const inputRef = ref<HTMLInputElement | null>(null);
 
 const sizeClass = computed(() => {
   switch (props.size) {
+    case 'xxs':
+      return 'h-6 px-2 py-0.5 text-xs';
     case 'xs':
       return 'h-7 px-2 py-0.5 text-xs';
     case 'sm':

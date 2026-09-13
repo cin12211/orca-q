@@ -9,7 +9,11 @@ import { withMongoDatabase } from '~/server/infrastructure/nosql/mongodb/mongodb
 interface RequestBody extends DatabaseMetadataRequestParams {
   collection: string;
   filter?: Record<string, unknown>;
+  project?: Record<string, unknown>;
   sort?: Record<string, 1 | -1>;
+  collation?: Record<string, unknown>;
+  hint?: string | Record<string, unknown>;
+  maxTimeMS?: number;
   limit?: number;
   skip?: number;
 }
@@ -42,13 +46,32 @@ export default defineEventHandler(async event => {
   try {
     const result = await withMongoDatabase(body, async database => {
       const collection = database.collection(body.collection);
+      let cursor = collection.find(filter);
+
+      if (body.project && Object.keys(body.project).length > 0) {
+        cursor = cursor.project(body.project);
+      }
+
+      if (body.sort && Object.keys(body.sort).length > 0) {
+        cursor = cursor.sort(body.sort);
+      } else {
+        cursor = cursor.sort({ _id: 1 });
+      }
+
+      if (body.collation && Object.keys(body.collation).length > 0) {
+        cursor = cursor.collation(body.collation as any);
+      }
+
+      if (body.hint) {
+        cursor = cursor.hint(body.hint as any);
+      }
+
+      if (body.maxTimeMS && body.maxTimeMS > 0) {
+        cursor = cursor.maxTimeMS(body.maxTimeMS);
+      }
+
       const [documents, total] = await Promise.all([
-        collection
-          .find(filter)
-          .sort(body.sort ?? { _id: 1 })
-          .skip(skip)
-          .limit(limit)
-          .toArray(),
+        cursor.skip(skip).limit(limit).toArray(),
         collection.countDocuments(filter),
       ]);
       return {

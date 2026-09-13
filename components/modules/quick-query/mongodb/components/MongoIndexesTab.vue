@@ -39,7 +39,7 @@ const { indexes, isLoading, error, fetchIndexes } = useMongoCollectionIndexes({
 });
 
 const rows = computed<Record<string, unknown>[]>(() =>
-  indexes.value.map(index => ({
+  (indexes.value ?? []).map(index => ({
     name: index.name,
     key: JSON.stringify(index.key),
     unique: index.unique ?? false,

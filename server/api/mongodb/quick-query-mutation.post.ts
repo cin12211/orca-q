@@ -12,7 +12,7 @@ interface RequestBody extends DatabaseMetadataRequestParams {
   collection: string;
   operation: 'insert' | 'update' | 'delete';
   id?: unknown;
-  document?: Record<string, unknown>;
+  document?: Record<string, unknown> | Record<string, unknown>[];
 }
 
 export default defineEventHandler(async event => {
@@ -32,6 +32,24 @@ export default defineEventHandler(async event => {
             statusCode: 400,
             message: 'document is required',
           });
+
+        if (Array.isArray(body.document)) {
+          if (body.document.length === 0) {
+            throw createError({
+              statusCode: 400,
+              message: 'document array cannot be empty',
+            });
+          }
+          const normalizedDocs = body.document.map(doc =>
+            normalizeMongoDocument(doc)
+          );
+          const result = await collection.insertMany(normalizedDocs);
+          return {
+            insertedCount: result.insertedCount,
+            ids: Object.values(result.insertedIds).map(serializeMongoValue),
+          };
+        }
+
         const result = await collection.insertOne(
           normalizeMongoDocument(body.document)
         );
@@ -47,8 +65,11 @@ export default defineEventHandler(async event => {
         return {
           deletedCount: (await collection.deleteOne(selector)).deletedCount,
         };
-      if (!body.document)
-        throw createError({ statusCode: 400, message: 'document is required' });
+      if (!body.document || Array.isArray(body.document))
+        throw createError({
+          statusCode: 400,
+          message: 'document must be an object for update operation',
+        });
       const { _id: _ignored, ...updates } = body.document;
       const result = await collection.findOneAndUpdate(
         selector,

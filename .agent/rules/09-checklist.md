@@ -23,7 +23,7 @@ Mandatory checklist before delivering code.
 
 ## UI/UX (if applicable)
 
-- [ ] Follows Design System
+- [ ] Follows Design System (uses `text-xxs` for 10px text, no arbitrary `text-[10px]`)
 - [ ] Responsive (mobile-first)
 - [ ] Loading states
 - [ ] Error states

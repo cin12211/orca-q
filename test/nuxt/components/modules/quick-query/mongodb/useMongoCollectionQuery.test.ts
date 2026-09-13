@@ -78,4 +78,45 @@ describe('useMongoCollectionQuery', () => {
 
     expect(error.value).toBe('Invalid MongoDB document _id: "not-an-id"');
   });
+
+  it('applies more options, resets skip to 0, and sends options in request body', async () => {
+    mockFetch.mockResolvedValue({ documents: [], total: 0, queryTime: 0 });
+
+    const { activeMoreOptionsPayload, applyMoreOptions, skip } =
+      useMongoCollectionQuery({
+        connection: ref({ id: 'c1', database: 'shop' } as any),
+        collectionName: ref('users'),
+      });
+
+    skip.value = 200;
+
+    const moreOptions = {
+      project: { name: 1, email: 1 },
+      sort: { createdAt: -1 as const },
+      collation: { locale: 'en' },
+      hint: 'email_1',
+      maxTimeMS: 5000,
+    };
+
+    await applyMoreOptions(moreOptions);
+
+    expect(skip.value).toBe(0);
+    expect(activeMoreOptionsPayload.value).toEqual(moreOptions);
+    expect(mockFetch).toHaveBeenCalledWith(
+      '/api/mongodb/quick-query',
+      expect.objectContaining({
+        method: 'POST',
+        body: expect.objectContaining({
+          collection: 'users',
+          skip: 0,
+          limit: 100,
+          project: { name: 1, email: 1 },
+          sort: { createdAt: -1 },
+          collation: { locale: 'en' },
+          hint: 'email_1',
+          maxTimeMS: 5000,
+        }),
+      })
+    );
+  });
 });

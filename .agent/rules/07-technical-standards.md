@@ -59,3 +59,8 @@ function process(order) {
 
 - **Why > What:** Comments explain the REASON, not the WHAT
 - **TODO/FIXME:** Mark incomplete work
+
+## 6. Styling & Typography
+
+- **10px Typography:** Always use `text-xxs` instead of arbitrary font sizes like `text-[10px]` or `text-10`.
+- **Component Sizing:** For compact controls (height 24px), use `size="xxs"` on UI components (e.g. `Input`, `Button`) instead of custom utility overrides like `h-6 px-2 text-xs`.

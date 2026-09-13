@@ -16,6 +16,7 @@ const ctx = canvas.getContext('2d') as CanvasRenderingContext2D;
  * @param font - CSS font string (e.g. "500 12px system-ui")
  */
 export function measureTextWidth(text: string, font: string): number {
+  if (!ctx) return text.length * 8;
   ctx.font = font;
   const width = Math.round(ctx.measureText(text).width);
 

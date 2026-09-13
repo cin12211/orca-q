@@ -42,4 +42,15 @@ describe('MongoDatabaseOverview', () => {
       collectionName: 'users',
     });
   });
+
+  it('includes hash index column # at first position in columnDefs', async () => {
+    const wrapper = mount(MongoDatabaseOverview, {
+      props: { connectionId: 'c1', workspaceId: 'w1', databaseName: 'shop' },
+    });
+    await flushPromises();
+
+    const grid = wrapper.findComponent({ name: 'BaseDataGrid' });
+    const columnDefs = grid.props('columnDefs') as any[];
+    expect(columnDefs[0].headerName).toBe('#');
+  });
 });

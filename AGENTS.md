@@ -56,6 +56,11 @@ desktop support.
   verified Hugeicons equivalent, and use that collection prefix explicitly (for
   example `lucide:chart-pie`).
 
+## Typography & Styling Rules
+
+- When 10px font size is needed (text 10), always use `text-xxs` (defined in `tailwind.css` as `0.625rem`). Never use arbitrary classes like `text-[10px]` or `text-10`.
+- For compact controls (height 24px), use component size prop `size="xxs"` (e.g. `Input`, `Button`) instead of custom size utility overrides.
+
 ## How To Run The Project
 
 Commands are defined in `package.json`. This repo supports Bun, npm scripts, and
@@ -111,6 +116,7 @@ This project has a knowledge graph at graphify-out/ with god nodes, community st
 When the user types `/graphify`, invoke the `skill` tool with `skill: "graphify"` before doing anything else.
 
 Rules:
+
 - For codebase questions, first run `graphify query "<question>"` when graphify-out/graph.json exists. Use `graphify path "<A>" "<B>"` for relationships and `graphify explain "<concept>"` for focused concepts. These return a scoped subgraph, usually much smaller than GRAPH_REPORT.md or raw grep output.
 - Dirty graphify-out/ files are expected after hooks or incremental updates; dirty graph files are not a reason to skip graphify. Only skip graphify if the task is about stale or incorrect graph output, or the user explicitly says not to use it.
 - If graphify-out/wiki/index.md exists, use it for broad navigation instead of raw source browsing.
