@@ -1,4 +1,4 @@
-import type { Completion } from '@codemirror/autocomplete';
+import { snippetCompletion, type Completion } from '@codemirror/autocomplete';
 import { CompletionIcon } from '~/components/base/code-editor/constants';
 
 export interface MongoScriptCatalogEntry {
@@ -726,12 +726,45 @@ export const MONGO_SCRIPT_JS_KEYWORDS: MongoScriptCatalogEntry[] = [
   },
 ];
 
+export const MONGO_QUERY_SNIPPET = `const database = db.getSiblingDB('\${1:<databaseName>}');
+const collection = database.collection('\${2:<collectionName>}');
+
+console.log('Query started');
+const result = collection.find({});
+console.log('Query finished');
+
+return result;`;
+
+export const MONGO_SCRIPT_SNIPPETS: Completion[] = [
+  snippetCompletion(MONGO_QUERY_SNIPPET, {
+    label: 'mquery',
+    type: CompletionIcon.Keyword,
+    detail: 'Mongo query template',
+    boost: 100,
+    info: () => {
+      if (typeof document === 'undefined') return {} as HTMLElement;
+      const container = document.createElement('div');
+      container.className = 'gap-1 flex flex-col text-sm min-w-[18rem]';
+      const title = document.createElement('div');
+      title.className = 'font-medium text-sm mb-1';
+      title.textContent = 'mquery (shortcut)';
+      container.appendChild(title);
+      const desc = document.createElement('div');
+      desc.className = 'text-xs text-muted-foreground';
+      desc.textContent = 'Shortcut to insert standard MongoDB query template';
+      container.appendChild(desc);
+      return container;
+    },
+  }),
+];
+
 export const MONGO_SCRIPT_PLACEHOLDER = `/*
  * db is initialized for the selected database.
  * 
  * Supported: BSON helpers, console.log/info/warn/error().
  * 
  * Note: Return a "result" to display data in Results.
+ * Shortcut: 'mquery' -> quickly generate query template.
  */
 const database = db.getSiblingDB('<databaseName>');
 const collection = database.collection('<collectionName>');
@@ -747,6 +780,6 @@ export const getMongoScriptPlaceholder = (
   collectionName?: string
 ) =>
   MONGO_SCRIPT_PLACEHOLDER.replace(
-    'DATABASE',
-    databaseName || '<database_name>'
-  ).replace('COLLECTION', collectionName || '<collection_name>');
+    '<databaseName>',
+    databaseName || '<databaseName>'
+  ).replace('<collectionName>', collectionName || '<collectionName>');

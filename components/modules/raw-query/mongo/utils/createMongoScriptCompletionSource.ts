@@ -19,6 +19,7 @@ import {
   MONGO_SCRIPT_JSON_METHODS,
   MONGO_SCRIPT_JS_KEYWORDS,
   MONGO_SCRIPT_MATH_METHODS,
+  MONGO_SCRIPT_SNIPPETS,
   MONGO_SCRIPT_TOP_LEVEL_HELPERS,
 } from '../constants/mongoScriptCatalog';
 import {
@@ -532,6 +533,7 @@ export function createMongoScriptCompletionSource(
         if (localRes?.options) {
           const knownLabels = new Set([
             ...topLevelOptions.map(o => o.label),
+            ...MONGO_SCRIPT_SNIPPETS.map(o => o.label),
             ...bsonOptions.map(o => o.label),
             ...jsKeywordOptions.map(o => o.label),
             ...aliasOptions.map(o => o.label),
@@ -551,6 +553,7 @@ export function createMongoScriptCompletionSource(
 
       completionOptions = [
         ...topLevelOptions,
+        ...MONGO_SCRIPT_SNIPPETS,
         ...bsonOptions,
         ...jsKeywordOptions,
         ...aliasOptions,

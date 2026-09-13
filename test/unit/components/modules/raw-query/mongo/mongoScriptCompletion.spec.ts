@@ -360,4 +360,9 @@ describe('Mongo script completion', () => {
     );
     expect(options).toContain('collection');
   });
+
+  it('suggests mquery snippet shortcut at top level', () => {
+    const options = labels('mqu');
+    expect(options).toContain('mquery');
+  });
 });
