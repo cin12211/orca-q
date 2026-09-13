@@ -1,18 +1,5 @@
 <script setup lang="ts">
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-  DropdownMenu,
-  DropdownMenuCheckboxItem,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuRadioGroup,
-  DropdownMenuRadioItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '#components';
+import { computed, type Component } from 'vue';
 import { DatabaseClientType } from '~/core/constants/database-client-type';
 import type {
   EditorCursor,
@@ -20,30 +7,25 @@ import type {
   ExplainAnalyzeSerializeMode,
   ExplainAnalyzeToggleOptionKey,
 } from '../interfaces';
-import { getRawQueryGuide } from '../registry/rawQueryGuideRegistry';
-
-const isExplainAnalyzeMenuOpen = ref(false);
+import { getRawQueryProfile, type RawQueryFooterContext } from '../registry';
 
 const props = defineProps<{
   cursorInfo: EditorCursor;
   executeLoading: boolean;
   isStreaming: boolean;
   isRawViewMode?: boolean;
-  explainAnalyzeOptionItems: ExplainAnalyzeOptionItem[];
-  serializeMode: ExplainAnalyzeSerializeMode;
+  explainAnalyzeOptionItems?: ExplainAnalyzeOptionItem[];
+  serializeMode?: ExplainAnalyzeSerializeMode;
   isSupportFormat?: boolean;
   isSupportVariable?: boolean;
   isExplainSupported?: boolean;
   isMongoConnection?: boolean;
   databaseType?: DatabaseClientType;
+  customLeftComponents?: Component[];
+  customRightComponents?: Component[];
 }>();
 
-const rawQueryGuide = computed(() => {
-  if (!props.isSupportVariable) return null;
-  return getRawQueryGuide(props.databaseType);
-});
-
-defineEmits<{
+const emit = defineEmits<{
   (e: 'onFormatCurrentStatement'): void;
   (e: 'onFormatAll'): void;
   (e: 'onExplainAnalyzeCurrent'): void;
@@ -53,187 +35,63 @@ defineEmits<{
   (e: 'update:isRawViewMode', value: boolean): void;
   (e: 'onCancelQuery'): void;
 }>();
+
+const rawQueryProfile = computed(() => getRawQueryProfile(props.databaseType));
+const footerProfile = computed(() => rawQueryProfile.value.footer);
+
+const footerContext = computed<RawQueryFooterContext>(() => ({
+  cursorInfo: props.cursorInfo,
+  executeLoading: props.executeLoading,
+  isStreaming: props.isStreaming,
+  isRawViewMode: props.isRawViewMode,
+  databaseType: props.databaseType,
+  isMongoConnection: props.isMongoConnection,
+  explainAnalyzeOptionItems: props.explainAnalyzeOptionItems,
+  serializeMode: props.serializeMode,
+  onFormatCurrentStatement: () => emit('onFormatCurrentStatement'),
+  onFormatAll: () => emit('onFormatAll'),
+  onExplainAnalyzeCurrent: () => emit('onExplainAnalyzeCurrent'),
+  toggleExplainOption: key => emit('toggleExplainOption', key),
+  updateSerializeMode: mode => emit('update:serializeMode', mode),
+  onExecuteCurrent: () => emit('onExecuteCurrent'),
+  updateRawViewMode: val => emit('update:isRawViewMode', val),
+  onCancelQuery: () => emit('onCancelQuery'),
+}));
+
+const leftComponents = computed<Component[]>(() => [
+  ...(footerProfile.value.leftComponents ?? []),
+  ...(props.customLeftComponents ?? []),
+]);
+
+const rightComponents = computed<Component[]>(() => [
+  ...(footerProfile.value.rightComponents ?? []),
+  ...(props.customRightComponents ?? []),
+]);
 </script>
+
 <template>
   <div class="h-fit py-1 flex items-center justify-between px-2">
+    <!-- Left Zone: Pure dynamic registration -->
     <div class="flex items-center gap-2">
-      <div class="font-normal text-xs text-muted-foreground">
-        Ln {{ cursorInfo.line }}, Col {{ cursorInfo.column }}
-      </div>
-
-      <component :is="rawQueryGuide" v-if="rawQueryGuide" />
+      <component
+        v-for="(comp, index) in leftComponents"
+        :key="index"
+        :is="comp"
+        :context="footerContext"
+      />
+      <slot name="left" :context="footerContext" />
     </div>
 
-    <div class="flex gap-1">
-      <Tooltip v-if="isSupportFormat">
-        <TooltipTrigger>
-          <div class="flex items-center">
-            <Button
-              @click="$emit('onFormatCurrentStatement')"
-              variant="outline"
-              size="xxs"
-              class="rounded-r-none"
-            >
-              <Icon name="hugeicons:magic-wand-01"> </Icon>
-              {{ isMongoConnection ? 'Format script' : 'Format' }}
-              <ContextMenuShortcut>⌘S</ContextMenuShortcut>
-            </Button>
-
-            <DropdownMenu v-if="!isMongoConnection">
-              <DropdownMenuTrigger as-child>
-                <Button
-                  variant="outline"
-                  size="iconSm"
-                  class="rounded-l-none border-l-0 px-2"
-                >
-                  <Icon
-                    name="hugeicons:arrow-down-01"
-                    class="size-4! min-w-4"
-                  />
-                </Button>
-              </DropdownMenuTrigger>
-
-              <DropdownMenuContent align="end" class="min-w-44">
-                <DropdownMenuLabel class="py-0"
-                  >Format Options
-                </DropdownMenuLabel>
-                <DropdownMenuSeparator />
-
-                <DropdownMenuItem
-                  @click="$emit('onFormatCurrentStatement')"
-                  class="h-6 cursor-pointer"
-                >
-                  Current Statement
-                  <ContextMenuShortcut>⌘S</ContextMenuShortcut>
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  @click="$emit('onFormatAll')"
-                  class="h-6 cursor-pointer"
-                >
-                  All Statement
-                  <ContextMenuShortcut>⇧⌥F</ContextMenuShortcut>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-        </TooltipTrigger>
-        <TooltipContent>
-          <p>
-            {{
-              isMongoConnection
-                ? 'Format MongoDB script (⌘S)'
-                : 'Format current statement (⌘S)'
-            }}
-          </p>
-        </TooltipContent>
-      </Tooltip>
-
-      <Tooltip v-if="isExplainSupported">
-        <TooltipTrigger>
-          <div class="flex items-center">
-            <Button
-              @click="$emit('onExplainAnalyzeCurrent')"
-              variant="outline"
-              size="xxs"
-              class="rounded-r-none"
-            >
-              <Icon name="hugeicons:analytics-up"> </Icon>
-              Explain
-              <ContextMenuShortcut>⌘E</ContextMenuShortcut>
-            </Button>
-
-            <DropdownMenu v-model:open="isExplainAnalyzeMenuOpen">
-              <DropdownMenuTrigger as-child>
-                <Button
-                  variant="outline"
-                  size="iconSm"
-                  class="rounded-l-none border-l-0 px-2"
-                >
-                  <Icon
-                    name="hugeicons:arrow-down-01"
-                    class="size-4! min-w-4"
-                  />
-                </Button>
-              </DropdownMenuTrigger>
-
-              <DropdownMenuContent align="end" class="min-w-52">
-                <DropdownMenuLabel class="py-0"
-                  >Explain Analyze Options</DropdownMenuLabel
-                >
-
-                <DropdownMenuSeparator />
-
-                <DropdownMenuCheckboxItem
-                  v-for="item in explainAnalyzeOptionItems"
-                  :key="item.key"
-                  :model-value="item.checked"
-                  @select.prevent
-                  @update:model-value="$emit('toggleExplainOption', item.key)"
-                  class="h-6 cursor-pointer"
-                >
-                  {{ item.label }}
-                </DropdownMenuCheckboxItem>
-
-                <DropdownMenuSeparator />
-
-                <DropdownMenuLabel class="py-0">Serialize</DropdownMenuLabel>
-                <DropdownMenuRadioGroup
-                  :model-value="serializeMode"
-                  @update:model-value="
-                    $emit(
-                      'update:serializeMode',
-                      $event as ExplainAnalyzeSerializeMode
-                    )
-                  "
-                >
-                  <DropdownMenuRadioItem value="NONE" class="h-6 cursor-pointer"
-                    >None</DropdownMenuRadioItem
-                  >
-                  <DropdownMenuRadioItem value="TEXT" class="h-6 cursor-pointer"
-                    >Text</DropdownMenuRadioItem
-                  >
-                  <DropdownMenuRadioItem
-                    value="BINARY"
-                    class="h-6 cursor-pointer"
-                    >Binary</DropdownMenuRadioItem
-                  >
-                </DropdownMenuRadioGroup>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-        </TooltipTrigger>
-        <TooltipContent>
-          <p>Run Explain Analyze (⌘E) or open options</p>
-        </TooltipContent>
-      </Tooltip>
-
-      <Tooltip>
-        <TooltipTrigger as-child>
-          <Button
-            v-if="isStreaming || executeLoading"
-            @click="$emit('onCancelQuery')"
-            variant="outline"
-            size="xxs"
-          >
-            <Icon name="hugeicons:stop" class="size-4! text-red-500" />
-            Cancel query
-          </Button>
-          <Button
-            v-else
-            @click="$emit('onExecuteCurrent')"
-            variant="outline"
-            size="xxs"
-          >
-            <Icon name="hugeicons:play" />
-            {{ isMongoConnection ? 'Execute script' : 'Execute current' }}
-            <ContextMenuShortcut>⌘↵</ContextMenuShortcut>
-          </Button>
-        </TooltipTrigger>
-        <TooltipContent>
-          <p v-if="isStreaming || executeLoading">Cancel query</p>
-          <p v-else>Execute Query (⌘↵)</p>
-        </TooltipContent>
-      </Tooltip>
+    <!-- Right Zone: Pure dynamic registration -->
+    <div class="flex gap-1 items-center">
+      <slot name="before-actions" :context="footerContext" />
+      <component
+        v-for="(comp, index) in rightComponents"
+        :key="index"
+        :is="comp"
+        :context="footerContext"
+      />
+      <slot name="right" :context="footerContext" />
     </div>
   </div>
 </template>

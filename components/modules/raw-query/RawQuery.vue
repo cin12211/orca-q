@@ -327,6 +327,7 @@ onBeforeUnmount(() => {
             @update:connectionId="updateSelectedConnection"
             :connections="connectionsByWsId"
             :connection="connection"
+            :database-type="connection?.type"
             :selected-connection-id="selectedConnectionId"
             :disable-connection-switch="isCurrentConnectionStrictMode"
             :is-redis-connection="isRedisConnection"

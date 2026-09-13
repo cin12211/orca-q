@@ -1,5 +1,7 @@
 import { defineAsyncComponent } from 'vue';
+import { DatabaseClientType } from '~/core/constants/database-client-type';
 import { ViewMode } from '../../interfaces';
+import type { RawQueryProfile } from '../rawQueryProfile.types';
 import {
   RawQueryResultExecutionPolicy,
   type RawQueryResultProfile,
@@ -18,6 +20,22 @@ const MongoConsoleTabRenderer = defineAsyncComponent(
   () =>
     import('../../components/result-tab/adapters/MongoConsoleTabRenderer.vue')
 );
+const lazyMongoHeaderBadge = defineAsyncComponent(
+  () => import('../../components/RawQueryMongoHeaderBadge.vue')
+);
+const lazyCursorInfo = defineAsyncComponent(
+  () => import('../../components/RawQueryCursorInfo.vue')
+);
+const lazyMongoGuide = defineAsyncComponent(
+  () =>
+    import('../../mongo/components/MongoRawQueryVariableUsageGuidePopover.vue')
+);
+const lazyMongoFormatAction = defineAsyncComponent(
+  () => import('../../components/RawQueryMongoFormatAction.vue')
+);
+const lazyMongoExecuteAction = defineAsyncComponent(
+  () => import('../../components/RawQueryMongoExecuteAction.vue')
+);
 
 const successOnly = {
   execution: RawQueryResultExecutionPolicy.SUCCESS_ONLY,
@@ -34,27 +52,47 @@ const errorOnly = {
  * Tabs: Result (Mongo document renderer), Raw, Info, Console (Mongo console), Error
  * Each tab maps to its dedicated renderer component dynamically.
  */
-export const mongoProfile: RawQueryResultProfile = defineRawQueryResultProfile({
-  tabs: [
-    defineRawQueryResultView(ViewMode.RESULT, {
-      component: MongoResultTabRenderer,
-      availability: { execution: RawQueryResultExecutionPolicy.ALWAYS },
-    }),
-    defineRawQueryResultView(ViewMode.RAW, {
-      component: DEFAULT_RAW_QUERY_RESULT_RENDERERS[ViewMode.RAW],
-      availability: successOnly,
-    }),
-    defineRawQueryResultView(ViewMode.INFO, {
-      component: DEFAULT_RAW_QUERY_RESULT_RENDERERS[ViewMode.INFO],
-      availability: { execution: RawQueryResultExecutionPolicy.ALWAYS },
-    }),
-    defineRawQueryResultView(ViewMode.CONSOLE, {
-      component: MongoConsoleTabRenderer,
-      availability: { execution: RawQueryResultExecutionPolicy.ALWAYS },
-    }),
-    defineRawQueryResultView(ViewMode.ERROR, {
-      component: DEFAULT_RAW_QUERY_RESULT_RENDERERS[ViewMode.ERROR],
-      availability: errorOnly,
-    }),
-  ],
-});
+export const mongoResultProfile: RawQueryResultProfile =
+  defineRawQueryResultProfile({
+    tabs: [
+      defineRawQueryResultView(ViewMode.RESULT, {
+        component: MongoResultTabRenderer,
+        availability: { execution: RawQueryResultExecutionPolicy.ALWAYS },
+      }),
+      defineRawQueryResultView(ViewMode.RAW, {
+        component: DEFAULT_RAW_QUERY_RESULT_RENDERERS[ViewMode.RAW],
+        availability: successOnly,
+      }),
+      defineRawQueryResultView(ViewMode.INFO, {
+        component: DEFAULT_RAW_QUERY_RESULT_RENDERERS[ViewMode.INFO],
+        availability: { execution: RawQueryResultExecutionPolicy.ALWAYS },
+      }),
+      defineRawQueryResultView(ViewMode.CONSOLE, {
+        component: MongoConsoleTabRenderer,
+        availability: { execution: RawQueryResultExecutionPolicy.ALWAYS },
+      }),
+      defineRawQueryResultView(ViewMode.ERROR, {
+        component: DEFAULT_RAW_QUERY_RESULT_RENDERERS[ViewMode.ERROR],
+        availability: errorOnly,
+      }),
+    ],
+  });
+
+/**
+ * Master MongoDB Profile
+ */
+export const mongoRawQueryProfile: RawQueryProfile = {
+  databaseType: DatabaseClientType.MONGODB,
+  header: {
+    leftComponents: [lazyMongoHeaderBadge],
+    supportsVariables: false,
+  },
+  footer: {
+    leftComponents: [lazyCursorInfo, lazyMongoGuide],
+    rightComponents: [lazyMongoFormatAction, lazyMongoExecuteAction],
+  },
+  result: mongoResultProfile,
+};
+
+/** @deprecated Backward compatible export */
+export const mongoProfile: RawQueryResultProfile = mongoResultProfile;

@@ -1,4 +1,7 @@
+import { defineAsyncComponent } from 'vue';
+import { DatabaseClientType } from '~/core/constants/database-client-type';
 import { ViewMode } from '../../interfaces';
+import type { RawQueryProfile } from '../rawQueryProfile.types';
 import {
   RawQueryResultExecutionPolicy,
   type RawQueryResultProfile,
@@ -8,6 +11,22 @@ import {
   defineRawQueryResultProfile,
   defineRawQueryResultView,
 } from '../rawQueryResultDefaults';
+
+const lazyCursorInfo = defineAsyncComponent(
+  () => import('../../components/RawQueryCursorInfo.vue')
+);
+const lazySqlGuide = defineAsyncComponent(
+  () => import('../../components/RawQueryVariableUsageGuidePopover.vue')
+);
+const lazySqlFormatAction = defineAsyncComponent(
+  () => import('../../components/RawQuerySqlFormatAction.vue')
+);
+const lazyPostgresExplainAction = defineAsyncComponent(
+  () => import('../../components/RawQueryPostgresExplainAction.vue')
+);
+const lazyExecuteAction = defineAsyncComponent(
+  () => import('../../components/RawQueryExecuteAction.vue')
+);
 
 const successOnly = {
   execution: RawQueryResultExecutionPolicy.SUCCESS_ONLY,
@@ -24,7 +43,7 @@ const errorOnly = {
  * Tabs: Result, Explain, Raw, Info, Chart, Error
  * Each tab maps to its dedicated renderer component dynamically.
  */
-export const postgresProfile: RawQueryResultProfile =
+export const postgresResultProfile: RawQueryResultProfile =
   defineRawQueryResultProfile({
     tabs: [
       defineRawQueryResultView(ViewMode.RESULT, {
@@ -64,3 +83,25 @@ export const postgresProfile: RawQueryResultProfile =
       }),
     ],
   });
+
+/**
+ * Master PostgreSQL Profile
+ */
+export const postgresRawQueryProfile: RawQueryProfile = {
+  databaseType: DatabaseClientType.POSTGRES,
+  header: {
+    supportsVariables: true,
+  },
+  footer: {
+    leftComponents: [lazyCursorInfo, lazySqlGuide],
+    rightComponents: [
+      lazySqlFormatAction,
+      lazyPostgresExplainAction,
+      lazyExecuteAction,
+    ],
+  },
+  result: postgresResultProfile,
+};
+
+/** @deprecated Backward compatible export */
+export const postgresProfile: RawQueryResultProfile = postgresResultProfile;
