@@ -36,10 +36,12 @@ Inside both the `onResponseError` callback (Fetch) and `onError` callback (Strea
 
 ## 5. MongoDB TypeScript mode
 
-Mongo scripts execute the non-empty CodeMirror selection, or the complete file
-when there is no selection. The worker receives only `db`, immutable `params`,
-bounded `console`, and BSON constructors. Native Mongo calls remain in the
-parent capability host, which re-authorizes every operation.
+Mongo scripts always execute the complete CodeMirror file, regardless of the
+current selection. The server transpiles the content, creates one
+async function, and calls it with `db`, `params`, BSON constructors, and
+`console`. Native Mongo calls remain behind the capability host, which
+re-authorizes every operation. The script may choose its database with
+`db.getSiblingDB('database_name')`; the UI database context is optional.
 
 Writes pause before opening MongoDB and display a redacted operation manifest.
 Confirmation returns a short-lived, one-use token bound to the exact source,

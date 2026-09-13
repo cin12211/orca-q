@@ -112,6 +112,9 @@ export function useRawQueryEditor({
     metadata: mongoMetadata.metadata,
     onExecuteCurrent: async () => {
       const editorView = getEditorView();
+
+      console.log('editorView', editorView);
+
       if (editorView)
         await mongoExecution.execute(resolveMongoScriptSource(editorView));
     },
@@ -135,6 +138,9 @@ export function useRawQueryEditor({
   const onExecuteCurrent = async () => {
     if (isMongoConnection.value) {
       const editorView = getEditorView();
+
+      console.log('editorView', editorView);
+
       if (editorView)
         await mongoExecution.execute(resolveMongoScriptSource(editorView));
       return;

@@ -1,10 +1,11 @@
-import ts from 'typescript';
+import type * as TypeScript from 'typescript';
 import { MONGO_RAW_QUERY_LIMITS } from '~/core/constants/mongodb-raw-query';
 import type {
   MongoRawQueryAnalysis,
   MongoRawQueryDiagnostic,
   MongoRawQueryOperation,
 } from '~/core/types/mongodb-raw-query.types';
+import { typeScriptCompiler as ts } from '~/server/utils/load-typescript';
 import {
   isMongoWriteCommand,
   isMongoWriteMethod,
@@ -13,13 +14,11 @@ import {
 } from './mongo-operation-catalog';
 
 export interface MongoScriptAnalysis extends MongoRawQueryAnalysis {
-  sourceFile: ts.SourceFile;
+  sourceFile: TypeScript.SourceFile;
 }
 
 export interface CompiledMongoScript {
   code: string;
-  sourceMap: string;
-  wrapperLineOffset: number;
   analysis: MongoScriptAnalysis;
 }
 
@@ -42,7 +41,10 @@ const FORBIDDEN_IDENTIFIERS = new Set([
 const SECRET_KEY =
   /(pass(word)?|token|secret|api[-_]?key|credential|authorization)/i;
 
-const sourcePosition = (sourceFile: ts.SourceFile, node: ts.Node) => {
+const sourcePosition = (
+  sourceFile: TypeScript.SourceFile,
+  node: TypeScript.Node
+) => {
   const start = sourceFile.getLineAndCharacterOfPosition(
     node.getStart(sourceFile)
   );
@@ -50,8 +52,8 @@ const sourcePosition = (sourceFile: ts.SourceFile, node: ts.Node) => {
 };
 
 const diagnostic = (
-  sourceFile: ts.SourceFile,
-  node: ts.Node,
+  sourceFile: TypeScript.SourceFile,
+  node: TypeScript.Node,
   message: string,
   code?: number
 ): MongoRawQueryDiagnostic => ({
@@ -60,17 +62,19 @@ const diagnostic = (
   code,
 });
 
-function literalString(node: ts.Expression | undefined): string | undefined {
+function literalString(
+  node: TypeScript.Expression | undefined
+): string | undefined {
   return node && ts.isStringLiteral(node) ? node.text : undefined;
 }
 
-function expressionText(node: ts.Node): string {
+function expressionText(node: TypeScript.Node): string {
   return ts
     .createPrinter()
     .printNode(ts.EmitHint.Unspecified, node, node.getSourceFile());
 }
 
-function redactedExpressionText(node: ts.Node): string {
+function redactedExpressionText(node: TypeScript.Node): string {
   return expressionText(node)
     .replace(
       /(pass(?:word)?|token|secret|api[-_]?key|credential|authorization)\s*:\s*(['"])(?:\\.|(?!\2).)*\2/gi,
@@ -85,7 +89,55 @@ function classifyMethod(method: string): MongoRawQueryOperation['risk'] {
     : 'write';
 }
 
-function findCallChain(node: ts.CallExpression) {
+interface MongoDatabaseReference {
+  database?: string;
+  dynamicDatabase: boolean;
+}
+
+interface MongoCollectionReference extends MongoDatabaseReference {
+  collection?: string;
+}
+
+function findDatabaseReference(
+  expression: TypeScript.Expression,
+  aliases?: ReadonlyMap<string, MongoDatabaseReference>
+): MongoDatabaseReference | undefined {
+  if (ts.isIdentifier(expression) && expression.text === 'db') {
+    return { dynamicDatabase: false };
+  }
+  if (ts.isIdentifier(expression)) return aliases?.get(expression.text);
+  if (
+    !ts.isCallExpression(expression) ||
+    !ts.isPropertyAccessExpression(expression.expression) ||
+    expression.expression.name.text !== 'getSiblingDB'
+  ) {
+    return undefined;
+  }
+  const parent = findDatabaseReference(
+    expression.expression.expression,
+    aliases
+  );
+  if (!parent) return undefined;
+  const database = literalString(expression.arguments[0]);
+  return { database, dynamicDatabase: !database };
+}
+
+function isGetSiblingDbCall(node: TypeScript.CallExpression) {
+  return (
+    ts.isPropertyAccessExpression(node.expression) &&
+    node.expression.name.text === 'getSiblingDB'
+  );
+}
+
+function findCallChain(
+  node: TypeScript.CallExpression,
+  databaseAliases: ReadonlyMap<string, MongoDatabaseReference>
+):
+  | (MongoCollectionReference & {
+      method: string;
+      args: readonly TypeScript.Expression[];
+    })
+  | undefined {
   const expression = node.expression;
   if (!ts.isPropertyAccessExpression(expression)) return undefined;
   const method = expression.name.text;
@@ -94,29 +146,39 @@ function findCallChain(node: ts.CallExpression) {
   if (!ts.isPropertyAccessExpression(receiver.expression)) return undefined;
   const collectionAccess = receiver.expression;
   if (collectionAccess.name.text !== 'collection') return undefined;
-  if (
-    !ts.isIdentifier(collectionAccess.expression) ||
-    collectionAccess.expression.text !== 'db'
-  )
-    return undefined;
+  const databaseReference = findDatabaseReference(
+    collectionAccess.expression,
+    databaseAliases
+  );
+  if (!databaseReference) return undefined;
   const collection = literalString(receiver.arguments[0]);
-  return { method, collection, args: node.arguments };
+  return { ...databaseReference, method, collection, args: node.arguments };
 }
 
-function findCollectionReference(node: ts.CallExpression) {
+function findCollectionReference(
+  node: TypeScript.CallExpression,
+  databaseAliases: ReadonlyMap<string, MongoDatabaseReference>
+): MongoCollectionReference | undefined {
   if (!ts.isPropertyAccessExpression(node.expression)) return undefined;
   if (node.expression.name.text !== 'collection') return undefined;
-  if (!ts.isIdentifier(node.expression.expression)) return undefined;
-  if (node.expression.expression.text !== 'db') return undefined;
-  return { collection: literalString(node.arguments[0]) };
+  const databaseReference = findDatabaseReference(
+    node.expression.expression,
+    databaseAliases
+  );
+  if (!databaseReference) return undefined;
+  return {
+    ...databaseReference,
+    collection: literalString(node.arguments[0]),
+  };
 }
 
 function normalizeId(
   target: MongoRawQueryOperation['target'],
   method: string,
+  database?: string,
   collection?: string
 ) {
-  return `${target}:${method}:${collection ?? '*'}`;
+  return `${target}:${method}:${database ?? '*'}:${collection ?? '*'}`;
 }
 
 export function analyzeMongoScript(source: string): MongoScriptAnalysis {
@@ -140,9 +202,10 @@ export function analyzeMongoScript(source: string): MongoScriptAnalysis {
   if (diagnostics.length) throw new Error(diagnostics[0]?.message);
 
   const operations = new Map<string, MongoRawQueryOperation>();
-  const aliases = new Map<string, string | undefined>();
+  const databaseAliases = new Map<string, MongoDatabaseReference>();
+  const aliases = new Map<string, MongoCollectionReference>();
   let hasReturn = false;
-  const visit = (node: ts.Node) => {
+  const visit = (node: TypeScript.Node) => {
     if (ts.isReturnStatement(node)) hasReturn = true;
     if (ts.isIdentifier(node) && FORBIDDEN_IDENTIFIERS.has(node.text)) {
       throw new Error(
@@ -190,17 +253,17 @@ export function analyzeMongoScript(source: string): MongoScriptAnalysis {
       );
     }
     if (ts.isCallExpression(node)) {
-      let chain = findCallChain(node);
+      let chain = findCallChain(node, databaseAliases);
       if (
         !chain &&
         ts.isPropertyAccessExpression(node.expression) &&
         ts.isIdentifier(node.expression.expression)
       ) {
-        const collection = aliases.get(node.expression.expression.text);
-        if (aliases.has(node.expression.expression.text)) {
+        const alias = aliases.get(node.expression.expression.text);
+        if (alias) {
           chain = {
+            ...alias,
             method: node.expression.name.text,
-            collection,
             args: node.arguments,
           };
         }
@@ -253,9 +316,16 @@ export function analyzeMongoScript(source: string): MongoScriptAnalysis {
           method = `aggregate:${stageProperty.name.text}`;
         }
         const operation: MongoRawQueryOperation = {
-          id: normalizeId('collection', method, chain.collection),
+          id: normalizeId(
+            'collection',
+            method,
+            chain.database,
+            chain.collection
+          ),
           target: 'collection',
           method,
+          database: chain.database,
+          dynamicDatabase: chain.dynamicDatabase,
           collection: chain.collection,
           dynamicTarget: !chain.collection,
           risk,
@@ -265,10 +335,16 @@ export function analyzeMongoScript(source: string): MongoScriptAnalysis {
       }
       if (
         ts.isPropertyAccessExpression(node.expression) &&
-        ts.isPropertyAccessExpression(node.expression.expression) &&
-        node.expression.expression.name.text === 'db' &&
         node.expression.name.text === 'command'
       ) {
+        const databaseReference = findDatabaseReference(
+          node.expression.expression,
+          databaseAliases
+        );
+        if (!databaseReference) {
+          ts.forEachChild(node, visit);
+          return;
+        }
         const commandArg = node.arguments[0];
         const command =
           commandArg && ts.isObjectLiteralExpression(commandArg)
@@ -282,9 +358,15 @@ export function analyzeMongoScript(source: string): MongoScriptAnalysis {
         const commandName = command ? 'drop' : 'command';
         if (isMongoWriteCommand(commandName) || commandName === 'command') {
           const operation: MongoRawQueryOperation = {
-            id: normalizeId('database', commandName),
+            id: normalizeId(
+              'database',
+              commandName,
+              databaseReference.database
+            ),
             target: 'database',
             method: commandName,
+            database: databaseReference.database,
+            dynamicDatabase: databaseReference.dynamicDatabase,
             dynamicTarget: commandName === 'command',
             risk: MONGO_DESTRUCTIVE_COMMANDS.has(commandName)
               ? 'destructive'
@@ -304,8 +386,18 @@ export function analyzeMongoScript(source: string): MongoScriptAnalysis {
       node.initializer &&
       ts.isCallExpression(node.initializer)
     ) {
-      const reference = findCollectionReference(node.initializer);
-      if (reference) aliases.set(node.name.text, reference.collection);
+      const databaseReference = findDatabaseReference(
+        node.initializer,
+        databaseAliases
+      );
+      if (databaseReference && isGetSiblingDbCall(node.initializer)) {
+        databaseAliases.set(node.name.text, databaseReference);
+      }
+      const reference = findCollectionReference(
+        node.initializer,
+        databaseAliases
+      );
+      if (reference) aliases.set(node.name.text, reference);
     }
     ts.forEachChild(node, visit);
   };
@@ -331,8 +423,6 @@ export function compileMongoScript(source: string): CompiledMongoScript {
     compilerOptions: {
       target: ts.ScriptTarget.ES2022,
       module: ts.ModuleKind.ESNext,
-      sourceMap: true,
-      inlineSources: true,
     },
     fileName: 'mongo-raw-query.ts',
     reportDiagnostics: true,
@@ -344,8 +434,6 @@ export function compileMongoScript(source: string): CompiledMongoScript {
   }
   return {
     code: output.outputText,
-    sourceMap: output.sourceMapText || '',
-    wrapperLineOffset: 1,
     analysis,
   };
 }

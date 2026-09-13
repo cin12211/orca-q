@@ -2,12 +2,27 @@ import { describe, expect, it, vi } from 'vitest';
 import { createMongoCapabilityHost } from '~/server/infrastructure/nosql/mongodb/raw-query/mongo-capability-host';
 
 describe('Mongo capability host', () => {
-  it('opens and advances a bounded cursor', async () => {
+  it('creates a direct db facade for script execution', async () => {
+    const findOne = vi.fn().mockResolvedValue({ name: 'Alice' });
+    const database = {
+      collection: vi.fn().mockReturnValue({ findOne }),
+    };
+    const host = createMongoCapabilityHost(database as any, {
+      approvedOperations: [],
+      maxDocuments: 10,
+    });
+
+    const db = host.createFacade();
+    const result = await db.collection('users').findOne({ active: true });
+
+    expect(result).toEqual({ name: 'Alice' });
+    expect(findOne).toHaveBeenCalledWith({ active: true });
+  });
+
+  it('streams and closes a direct cursor facade', async () => {
     const close = vi.fn();
     const cursor = {
-      sort: vi.fn().mockReturnThis(),
       limit: vi.fn().mockReturnThis(),
-      batchSize: vi.fn().mockReturnThis(),
       next: vi
         .fn()
         .mockResolvedValueOnce({ name: 'Alice' })
@@ -24,22 +39,16 @@ describe('Mongo capability host', () => {
       maxDocuments: 10,
     });
 
-    const opened = await host.execute({
-      id: 'rpc-1',
-      kind: 'cursor-open',
-      descriptor: {
-        source: {
-          target: 'collection',
-          collection: 'users',
-          method: 'find',
-          args: [{ active: true }],
-        },
-        modifiers: [{ method: 'limit', args: [5] }],
-      },
-    });
+    const db = host.createFacade();
+    const result = db.collection('users').find({}).limit(5);
+    const rows: Record<string, unknown>[] = [];
+    const streamed = await host.streamCursor(result, batch =>
+      rows.push(...batch)
+    );
 
-    expect(opened).toMatchObject({ ok: true, cursorId: expect.any(String) });
-    await host.closeAll();
+    expect(result).not.toHaveProperty('cursor');
+    expect(streamed).toEqual({ rowCount: 1, truncated: false });
+    expect(rows).toEqual([{ name: 'Alice' }]);
     expect(close).toHaveBeenCalledOnce();
   });
 
@@ -53,41 +62,65 @@ describe('Mongo capability host', () => {
     });
 
     await expect(
-      host.execute({
-        id: 'rpc-2',
-        kind: 'collection-call',
-        collection: 'users',
-        method: 'updateMany',
-        args: [{}, { $set: { active: true } }],
-      })
+      host
+        .createFacade()
+        .collection('users')
+        .updateMany({}, { $set: { active: true } })
     ).rejects.toThrow('Write operation is not approved');
   });
 
-  it('rejects an unapproved aggregation write at runtime', async () => {
+  it('rejects an unapproved aggregation write at runtime', () => {
     const database = {
-      collection: vi.fn().mockReturnValue({
-        aggregate: vi.fn().mockReturnValue({ next: vi.fn(), close: vi.fn() }),
-      }),
+      collection: vi.fn().mockReturnValue({ aggregate: vi.fn() }),
     };
     const host = createMongoCapabilityHost(database as any, {
       approvedOperations: [],
       maxDocuments: 10,
     });
 
+    expect(() =>
+      host
+        .createFacade()
+        .collection('users')
+        .aggregate([{ $out: 'archive' }])
+    ).toThrow('Write operation is not approved');
+  });
+
+  it('requires approval before executing a database command', async () => {
+    const database = { command: vi.fn() };
+    const host = createMongoCapabilityHost(database as any, {
+      approvedOperations: [],
+      maxDocuments: 10,
+    });
+
     await expect(
-      host.execute({
-        id: 'rpc-3',
-        kind: 'cursor-open',
-        descriptor: {
-          source: {
-            target: 'collection',
-            collection: 'users',
-            method: 'aggregate',
-            args: [[{ $out: 'archive' }]],
-          },
-          modifiers: [],
-        },
-      })
+      host.createFacade().command({ dropDatabase: 1 })
     ).rejects.toThrow('Write operation is not approved');
+    expect(database.command).not.toHaveBeenCalled();
+  });
+
+  it('switches databases through the script facade', async () => {
+    const findOne = vi.fn().mockResolvedValue({ name: 'Alice' });
+    const databases = {
+      default: { collection: vi.fn() },
+      analytics: {
+        collection: vi.fn().mockReturnValue({ findOne }),
+      },
+    };
+    const host = createMongoCapabilityHost(databases.default as any, {
+      approvedOperations: [],
+      maxDocuments: 10,
+      databaseName: 'default',
+      getDatabase: name => databases[name as 'default' | 'analytics'],
+    });
+
+    const result = await host
+      .createFacade()
+      .getSiblingDB('analytics')
+      .collection('users')
+      .findOne({ active: true });
+
+    expect(result).toEqual({ name: 'Alice' });
+    expect(findOne).toHaveBeenCalledWith({ active: true });
   });
 });

@@ -10,10 +10,14 @@ const view = (source: string, from = 0, to = 0) =>
   }) as any;
 
 describe('resolveMongoScriptSource', () => {
-  it('uses selected text when the selection is non-empty', () => {
+  it('uses the full file even when the selection is non-empty', () => {
     expect(
       resolveMongoScriptSource(view('const a = 1\nreturn a', 12, 20))
-    ).toEqual({ text: 'return a', from: 12, to: 20 });
+    ).toEqual({
+      text: 'const a = 1\nreturn a',
+      from: 0,
+      to: 'const a = 1\nreturn a'.length,
+    });
   });
 
   it('uses the full file when there is no selection', () => {

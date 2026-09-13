@@ -22,6 +22,8 @@ export interface MongoRawQueryOperation {
   id: string;
   target: 'database' | 'collection';
   method: string;
+  database?: string;
+  dynamicDatabase: boolean;
   collection?: string;
   dynamicTarget: boolean;
   risk: 'write' | 'destructive';
@@ -34,7 +36,6 @@ export interface MongoRawQueryRequest extends DatabaseMetadataRequestParams {
   params?: Record<string, unknown>;
   collectionContext?: string;
   approvalToken?: string;
-  timeoutMs?: number;
 }
 
 export interface MongoRawQueryMetadataRequest

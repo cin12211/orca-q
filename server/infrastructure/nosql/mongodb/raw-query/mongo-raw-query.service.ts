@@ -6,29 +6,27 @@ import type {
   MongoRawQueryRequest,
   MongoRawQueryStreamMessage,
 } from '~/core/types/mongodb-raw-query.types';
-import { withMongoDatabase } from '../mongodb.client';
+import { withMongoClient } from '../mongodb.client';
 import {
   mongoApprovalRegistry,
   createMongoApprovalBinding,
 } from './mongo-approval-registry';
-import { createMongoCapabilityHost } from './mongo-capability-host';
-import { createMongoSandboxExecution } from './mongo-sandbox-runner';
+import {
+  createMongoCapabilityHost,
+  isMongoDirectCursor,
+} from './mongo-capability-host';
 import { compileMongoScript } from './mongo-script-policy';
+import { executeMongoScript } from './mongo-script-runtime';
 
 const writeNdjson = (event: H3Event, value: MongoRawQueryStreamMessage) => {
   event.node.res.write(`${JSON.stringify(value)}\n`);
 };
 
 const validateRequest = (request: MongoRawQueryRequest) => {
-  if (
-    !request ||
-    typeof request.script !== 'string' ||
-    !request.connectionId ||
-    !request.database
-  ) {
+  if (!request || typeof request.script !== 'string' || !request.connectionId) {
     throw createError({
       statusCode: 400,
-      message: 'connectionId, database, and script are required',
+      message: 'connectionId and script are required',
     });
   }
   if (
@@ -97,37 +95,57 @@ export async function streamMongoRawQuery(
   }
 
   try {
-    await withMongoDatabase(request, async database => {
+    await withMongoClient(request, async client => {
+      const database = request.database
+        ? client.db(request.database)
+        : client.db();
       const host = createMongoCapabilityHost(database, {
         approvedOperations: compiled.analysis.operations,
         maxDocuments: MONGO_RAW_QUERY_LIMITS.maxDocuments,
         maxValueBytes: MONGO_RAW_QUERY_LIMITS.maxValueBytes,
-      });
-      const execution = createMongoSandboxExecution({
-        compiled,
-        params: request.params ?? {},
-        timeoutMs: Math.min(
-          Math.max(
-            request.timeoutMs ?? MONGO_RAW_QUERY_LIMITS.defaultTimeoutMs,
-            1
-          ),
-          MONGO_RAW_QUERY_LIMITS.maxTimeoutMs
-        ),
-        onRpc: rpc => host.execute(rpc),
-        onLog: entry => writeNdjson(event, { type: 'log', entry }),
+        databaseName: request.database,
+        getDatabase: databaseName => client.db(databaseName),
       });
       try {
-        const result = await execution.result;
-        if (result.kind === 'cursor') {
+        const consoleFacade = {
+          log: (...args: unknown[]) =>
+            writeNdjson(event, { type: 'log', entry: { level: 'log', args } }),
+          info: (...args: unknown[]) =>
+            writeNdjson(event, {
+              type: 'log',
+              entry: { level: 'info', args },
+            }),
+          warn: (...args: unknown[]) =>
+            writeNdjson(event, {
+              type: 'log',
+              entry: { level: 'warn', args },
+            }),
+          error: (...args: unknown[]) =>
+            writeNdjson(event, {
+              type: 'log',
+              entry: { level: 'error', args },
+            }),
+        } satisfies Pick<Console, 'log' | 'info' | 'warn' | 'error'>;
+        const result = await executeMongoScript(compiled, {
+          db: host.createFacade(),
+          params: request.params ?? {},
+          ObjectId: BSON.ObjectId,
+          Decimal128: BSON.Decimal128,
+          Binary: BSON.Binary,
+          UUID: BSON.UUID,
+          BSON,
+          EJSON: BSON.EJSON,
+          console: consoleFacade,
+        });
+        if (isMongoDirectCursor(result)) {
           writeNdjson(event, {
             type: 'meta',
             resultKind: 'cursor',
             fields: [],
             command: 'MONGODB',
           });
-          const streamed = await host.streamDescriptor(
-            result.descriptor,
-            rows => writeNdjson(event, { type: 'rows', data: rows })
+          const streamed = await host.streamCursor(result, rows =>
+            writeNdjson(event, { type: 'rows', data: rows })
           );
           writeNdjson(event, {
             type: 'done',
@@ -136,7 +154,7 @@ export async function streamMongoRawQuery(
             truncated: streamed.truncated,
           });
         } else {
-          let value = result.value;
+          let value = result;
           try {
             value = BSON.EJSON.serialize(value, { relaxed: false });
           } catch {

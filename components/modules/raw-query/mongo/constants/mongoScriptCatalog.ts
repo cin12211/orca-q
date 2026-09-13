@@ -63,6 +63,7 @@ export const MONGO_SCRIPT_COLLECTION_METHODS: MongoScriptCatalogEntry[] = [
 
 export const MONGO_SCRIPT_DATABASE_METHODS: MongoScriptCatalogEntry[] = [
   { label: 'collection', type: 'method', detail: '(name) => Collection' },
+  { label: 'getSiblingDB', type: 'method', detail: '(name) => Database' },
   {
     label: 'command',
     type: 'method',

@@ -10,19 +10,32 @@ import {
   MONGO_COLLECTION_READ_METHODS,
   MONGO_COLLECTION_WRITE_METHODS,
 } from './mongo-operation-catalog';
-import type {
-  MongoCapabilityHostContract,
-  MongoCursorDescriptor,
-  MongoRuntimeOptions,
-  MongoSandboxRpcRequest,
-  MongoSandboxRpcResponse,
-} from './mongo-sandbox-protocol';
 
 type NativeCursor = {
   next(): Promise<unknown>;
   close?(): Promise<void> | void;
   [key: string]: any;
 };
+
+export type MongoDirectCursor = {
+  __mongoCursor: true;
+  [key: string]: any;
+};
+
+export interface MongoDbFacade {
+  collection(name: string): Record<string, (...args: any[]) => any>;
+  listCollections: (...args: any[]) => MongoDirectCursor;
+  command: (...args: any[]) => Promise<unknown>;
+  getSiblingDB(name: string): MongoDbFacade;
+}
+
+export interface MongoRuntimeOptions {
+  approvedOperations: MongoRawQueryOperation[];
+  maxDocuments: number;
+  maxValueBytes?: number;
+  databaseName?: string;
+  getDatabase?: (databaseName: string) => any;
+}
 
 let bsonEjson:
   | {
@@ -55,9 +68,9 @@ const aggregateWriteMethod = (
   return undefined;
 };
 
-export class MongoCapabilityHost implements MongoCapabilityHostContract {
-  private readonly cursors = new Map<string, NativeCursor>();
-  private cursorSequence = 0;
+export class MongoCapabilityHost {
+  private readonly directCursors = new Set<NativeCursor>();
+  private readonly directCursorMap = new WeakMap<object, NativeCursor>();
   private readonly database: any;
   private readonly options: MongoRuntimeOptions;
 
@@ -69,14 +82,33 @@ export class MongoCapabilityHost implements MongoCapabilityHostContract {
   private isApproved(
     target: 'database' | 'collection',
     method: string,
-    collection?: string
+    collection?: string,
+    databaseName?: string
   ) {
     return this.options.approvedOperations.some(
       operation =>
         operation.target === target &&
         operation.method === method &&
+        (operation.dynamicDatabase ||
+          operation.database === databaseName ||
+          (!operation.database &&
+            databaseName === this.options.databaseName)) &&
         (operation.dynamicTarget || operation.collection === collection)
     );
+  }
+
+  private resolveDatabase(databaseName?: string) {
+    if (
+      databaseName === this.options.databaseName ||
+      (!databaseName && !this.options.databaseName)
+    ) {
+      return this.database;
+    }
+    const database = this.options.getDatabase?.(databaseName as string);
+    if (!database) {
+      throw new Error(`Mongo database is unavailable: ${databaseName}`);
+    }
+    return database;
   }
 
   private assertMethod(target: 'database' | 'collection', method: string) {
@@ -95,13 +127,15 @@ export class MongoCapabilityHost implements MongoCapabilityHostContract {
   private assertWriteApproved(
     target: 'database' | 'collection',
     method: string,
-    collection?: string
+    collection?: string,
+    databaseName?: string
   ) {
     if (
       (target === 'collection' && isMongoWriteMethod(method)) ||
-      (target === 'database' && isMongoWriteCommand(method))
+      (target === 'database' &&
+        (isMongoWriteCommand(method) || method === 'command'))
     ) {
-      if (!this.isApproved(target, method, collection))
+      if (!this.isApproved(target, method, collection, databaseName))
         throw new Error('Write operation is not approved');
     }
   }
@@ -110,47 +144,45 @@ export class MongoCapabilityHost implements MongoCapabilityHostContract {
     target: 'database' | 'collection',
     method: string,
     collection: string | undefined,
-    args: unknown[]
+    args: unknown[],
+    databaseName?: string
   ) {
     if (target !== 'collection' || method !== 'aggregate') return;
     const writeMethod = aggregateWriteMethod(args);
     if (
       writeMethod &&
-      !this.isApproved(target, `aggregate:${writeMethod}`, collection)
+      !this.isApproved(
+        target,
+        `aggregate:${writeMethod}`,
+        collection,
+        databaseName
+      )
     ) {
       throw new Error('Write operation is not approved');
     }
   }
 
-  async execute(
-    request: MongoSandboxRpcRequest
-  ): Promise<MongoSandboxRpcResponse> {
-    if (request.kind === 'cursor-open')
-      return this.openCursor(request.descriptor);
-    if (request.kind === 'cursor-next')
-      return this.nextCursor(request.cursorId, request.batchSize);
-    if (request.kind === 'cursor-close')
-      return this.closeCursor(request.cursorId);
-    const target = request.kind === 'database-call' ? 'database' : 'collection';
-    this.assertMethod(target, request.method);
-    this.assertWriteApproved(
-      target,
-      request.method,
-      request.kind === 'collection-call' ? request.collection : undefined
-    );
+  private async callNative(
+    target: 'database' | 'collection',
+    method: string,
+    args: unknown[],
+    collection?: string,
+    databaseName?: string
+  ) {
+    this.assertMethod(target, method);
+    this.assertWriteApproved(target, method, collection, databaseName);
     this.assertAggregateWriteApproved(
       target,
-      request.method,
-      request.kind === 'collection-call' ? request.collection : undefined,
-      request.args
+      method,
+      collection,
+      args,
+      databaseName
     );
     const owner =
-      request.kind === 'database-call'
-        ? this.database
-        : this.database.collection(request.collection);
-    const value = await owner[request.method](
-      ...request.args.map(ejsonDeserialize)
-    );
+      target === 'database'
+        ? this.resolveDatabase(databaseName)
+        : this.resolveDatabase(databaseName).collection(collection);
+    const value = await owner[method](...args.map(ejsonDeserialize));
     const serialized = ejsonSerialize(value);
     if (
       Buffer.byteLength(JSON.stringify(serialized), 'utf8') >
@@ -158,86 +190,115 @@ export class MongoCapabilityHost implements MongoCapabilityHostContract {
     ) {
       throw new Error('Mongo result exceeds the configured value limit');
     }
-    return { ok: true, value: serialized };
+    return serialized;
   }
 
-  private async openCursor(
-    descriptor: MongoCursorDescriptor
-  ): Promise<MongoSandboxRpcResponse> {
-    const { source } = descriptor;
-    this.assertMethod(source.target, source.method);
+  private createDirectCursor(
+    target: 'database' | 'collection',
+    method: string,
+    args: unknown[],
+    collection?: string,
+    databaseName?: string
+  ): MongoDirectCursor {
+    this.assertMethod(target, method);
     this.assertAggregateWriteApproved(
-      source.target,
-      source.method,
-      source.target === 'collection' ? source.collection : undefined,
-      source.args.map(ejsonDeserialize)
+      target,
+      method,
+      collection,
+      args,
+      databaseName
     );
     const owner =
-      source.target === 'database'
-        ? this.database
-        : this.database.collection(source.collection);
-    const cursor = owner[source.method](
-      ...source.args.map(ejsonDeserialize)
-    ) as NativeCursor;
-    const allowed = MONGO_CURSOR_MODIFIERS_BY_SOURCE[
-      source.method
-    ] as readonly string[];
-    for (const modifier of descriptor.modifiers) {
-      if (!allowed.includes(modifier.method))
-        throw new Error(`Unsupported cursor modifier: ${modifier.method}`);
-      cursor[modifier.method](...modifier.args.map(ejsonDeserialize));
+      target === 'database'
+        ? this.resolveDatabase(databaseName)
+        : this.resolveDatabase(databaseName).collection(collection);
+    const cursor = owner[method](...args.map(ejsonDeserialize)) as NativeCursor;
+    const facade: MongoDirectCursor = {
+      __mongoCursor: true,
+    };
+    this.directCursors.add(cursor);
+    this.directCursorMap.set(facade, cursor);
+    const cursorModifiers = MONGO_CURSOR_MODIFIERS_BY_SOURCE as Record<
+      string,
+      readonly string[]
+    >;
+    const allowed = cursorModifiers[method] ?? [];
+    for (const modifier of allowed) {
+      facade[modifier] = (...modifierArgs: unknown[]) => {
+        cursor[modifier](...modifierArgs.map(ejsonDeserialize));
+        return facade;
+      };
     }
-    const cursorId = `cursor-${++this.cursorSequence}`;
-    this.cursors.set(cursorId, cursor);
-    return { ok: true, cursorId };
+    return facade;
   }
 
-  private async nextCursor(
-    cursorId: string,
-    batchSize: number
-  ): Promise<MongoSandboxRpcResponse> {
-    const cursor = this.cursors.get(cursorId);
-    if (!cursor) throw new Error('Cursor is missing or closed');
-    const rows: any[] = [];
-    const count = Math.max(
-      1,
-      Math.min(batchSize || 1, this.options.maxDocuments)
-    );
-    for (let index = 0; index < count; index += 1) {
-      const value = await cursor.next();
-      if (value == null) break;
-      rows.push(ejsonSerialize(value));
-    }
-    return { ok: true, value: rows };
+  createFacade(databaseName = this.options.databaseName): MongoDbFacade {
+    const collection = (name: string) => {
+      const facade: Record<string, (...args: any[]) => any> = {};
+      for (const method of [
+        ...MONGO_COLLECTION_READ_METHODS,
+        ...MONGO_COLLECTION_CURSOR_SOURCE_METHODS,
+        ...MONGO_COLLECTION_WRITE_METHODS,
+      ]) {
+        facade[method] = (...args: unknown[]) =>
+          (
+            MONGO_COLLECTION_CURSOR_SOURCE_METHODS as readonly string[]
+          ).includes(method)
+            ? this.createDirectCursor(
+                'collection',
+                method,
+                args,
+                name,
+                databaseName
+              )
+            : this.callNative('collection', method, args, name, databaseName);
+      }
+      return facade;
+    };
+
+    return {
+      collection,
+      listCollections: (...args) =>
+        this.createDirectCursor(
+          'database',
+          'listCollections',
+          args,
+          undefined,
+          databaseName
+        ),
+      command: (...args) =>
+        this.callNative('database', 'command', args, undefined, databaseName),
+      getSiblingDB: name => {
+        if (!name || typeof name !== 'string') {
+          throw new Error('Mongo database name must be a non-empty string');
+        }
+        if (!this.options.getDatabase) {
+          throw new Error('Mongo database switching is unavailable');
+        }
+        return this.createFacade(name);
+      },
+    };
   }
 
-  private async closeCursor(
-    cursorId: string
-  ): Promise<MongoSandboxRpcResponse> {
-    const cursor = this.cursors.get(cursorId);
-    if (cursor) {
-      await cursor.close?.();
-      this.cursors.delete(cursorId);
-    }
-    return { ok: true };
-  }
-
-  async streamDescriptor(
-    descriptor: MongoCursorDescriptor,
+  async streamCursor(
+    facade: MongoDirectCursor,
     onBatch: (rows: Record<string, unknown>[]) => Promise<void> | void
   ) {
-    const opened = await this.openCursor(descriptor);
-    if (!opened.ok || !opened.cursorId)
-      throw new Error('Unable to open Mongo cursor');
+    if (!isMongoDirectCursor(facade)) throw new Error('Invalid Mongo cursor');
+    const cursor = this.directCursorMap.get(facade);
+    if (!cursor) throw new Error('Mongo cursor is missing or closed');
     let rowCount = 0;
     let truncated = false;
     try {
       while (rowCount < this.options.maxDocuments) {
-        const next = await this.nextCursor(
-          opened.cursorId,
-          Math.min(100, this.options.maxDocuments - rowCount)
-        );
-        const rows = (next.ok ? next.value : []) as Record<string, unknown>[];
+        const rows: Record<string, unknown>[] = [];
+        while (
+          rows.length < Math.min(100, this.options.maxDocuments - rowCount)
+        ) {
+          const value = await cursor.next();
+          if (value == null) break;
+          rows.push(ejsonSerialize(value));
+        }
         if (!rows.length) break;
         rowCount += rows.length;
         await onBatch(rows);
@@ -245,15 +306,29 @@ export class MongoCapabilityHost implements MongoCapabilityHostContract {
       truncated = rowCount >= this.options.maxDocuments;
       return { rowCount, truncated };
     } finally {
-      await this.closeCursor(opened.cursorId);
+      await cursor.close?.();
+      this.directCursors.delete(cursor);
     }
   }
 
   async closeAll() {
     await Promise.all(
-      [...this.cursors.keys()].map(cursorId => this.closeCursor(cursorId))
+      [...this.directCursors].map(async cursor => {
+        await cursor.close?.();
+        this.directCursors.delete(cursor);
+      })
     );
   }
+}
+
+export function isMongoDirectCursor(
+  value: unknown
+): value is MongoDirectCursor {
+  return Boolean(
+    value &&
+      typeof value === 'object' &&
+      (value as MongoDirectCursor).__mongoCursor === true
+  );
 }
 
 export function createMongoCapabilityHost(

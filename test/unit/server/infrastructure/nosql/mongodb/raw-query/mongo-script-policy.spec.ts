@@ -3,8 +3,22 @@ import {
   analyzeMongoScript,
   compileMongoScript,
 } from '~/server/infrastructure/nosql/mongodb/raw-query/mongo-script-policy';
+import { typeScriptCompiler } from '~/server/utils/load-typescript';
 
 describe('Mongo raw query script policy', () => {
+  it('loads the TypeScript compiler through the Node CommonJS boundary', () => {
+    expect(typeScriptCompiler.version).toMatch(/^\d+\.\d+\.\d+$/);
+    expect(() =>
+      typeScriptCompiler.createSourceFile(
+        'mongo-raw-query.ts',
+        'return db.collection("users").find({})',
+        typeScriptCompiler.ScriptTarget.ES2022,
+        true,
+        typeScriptCompiler.ScriptKind.TS
+      )
+    ).not.toThrow();
+  });
+
   it('classifies a collection update before execution', () => {
     const analysis = analyzeMongoScript(`
       return db.collection('users').updateMany({}, { $set: { active: true } })
@@ -28,6 +42,44 @@ describe('Mongo raw query script policy', () => {
 
     expect(analysis.operations).toEqual([
       expect.objectContaining({ method: 'updateMany', collection: 'users' }),
+    ]);
+  });
+
+  it('classifies a write against the database selected in the script', () => {
+    const analysis = analyzeMongoScript(`
+      return db.getSiblingDB('analytics').collection('users').updateMany(
+        {},
+        { $set: { active: true } }
+      )
+    `);
+
+    expect(analysis.operations).toEqual([
+      expect.objectContaining({
+        target: 'collection',
+        database: 'analytics',
+        dynamicDatabase: false,
+        collection: 'users',
+        method: 'updateMany',
+      }),
+    ]);
+  });
+
+  it('classifies writes through a database alias selected in the script', () => {
+    const analysis = analyzeMongoScript(`
+      const analytics = db.getSiblingDB('analytics');
+      return analytics.collection('users').updateMany(
+        {},
+        { $set: { active: true } }
+      )
+    `);
+
+    expect(analysis.operations).toEqual([
+      expect.objectContaining({
+        database: 'analytics',
+        dynamicDatabase: false,
+        collection: 'users',
+        method: 'updateMany',
+      }),
     ]);
   });
 
@@ -76,7 +128,6 @@ describe('Mongo raw query script policy', () => {
     );
 
     expect(compiled.code).toContain('async');
-    expect(compiled.sourceMap).toContain('version');
     expect(compiled.analysis.hasReturn).toBe(true);
   });
 });

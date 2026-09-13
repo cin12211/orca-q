@@ -19,7 +19,11 @@ export const MONGO_DATABASE_CURSOR_SOURCE_METHODS = [
   'listCollections',
 ] as const;
 
-export const MONGO_DATABASE_METHODS = ['collection', 'command'] as const;
+export const MONGO_DATABASE_METHODS = [
+  'collection',
+  'command',
+  'getSiblingDB',
+] as const;
 
 export const MONGO_COLLECTION_WRITE_METHODS = [
   'insertOne',

@@ -43,8 +43,31 @@ export function useMongoScriptExecution(options: {
     source?: { text: string; from: number; to: number },
     approvalToken?: string
   ) => {
-    if (!options.connection.value || !options.databaseName.value) return;
-    if (options.beforeExecute && !(await options.beforeExecute())) return;
+    console.log('[MongoScriptExecution] execute entered', {
+      hasSource: Boolean(source),
+      hasConnection: Boolean(options.connection.value),
+      connectionId: options.connection.value?.id,
+      databaseName: options.databaseName.value,
+      documentLength: options.documentText.value.length,
+      hasApprovalToken: Boolean(approvalToken),
+    });
+
+    if (!options.connection.value) {
+      console.warn('[MongoScriptExecution] skipped: missing connection');
+      return;
+    }
+
+    if (options.beforeExecute) {
+      console.log('[MongoScriptExecution] waiting for execution confirmation');
+      const canExecute = await options.beforeExecute();
+      console.log('[MongoScriptExecution] execution confirmation result', {
+        canExecute,
+      });
+      if (!canExecute) {
+        console.warn('[MongoScriptExecution] skipped: execution not confirmed');
+        return;
+      }
+    }
     let params: Record<string, unknown> = {};
     try {
       params = JSON.parse(options.fileVariables.value || '{}');
@@ -56,6 +79,9 @@ export function useMongoScriptExecution(options: {
       from: 0,
       to: options.documentText.value.length,
     };
+
+    console.log('[MongoScriptExecution] resolvedSource:::', resolvedSource);
+
     pendingSource = resolvedSource;
     sequence += 1;
     const item: ExecutedResultItem = {
@@ -78,6 +104,12 @@ export function useMongoScriptExecution(options: {
     const rows: Record<string, unknown>[] = [];
     queryProcessState.executeLoading = true;
     const connParams = getConnectionParams(options.connection.value);
+    console.log('[MongoScriptExecution] calling raw-query API', {
+      connectionId: options.connection.value.id,
+      database: options.databaseName.value,
+      scriptLength: resolvedSource.text.length,
+      hasApprovalToken: Boolean(approvalToken),
+    });
     activeExecution.value = executeMongoRawQuery({
       ...connParams,
       connectionId: options.connection.value.id,
@@ -149,7 +181,12 @@ export function useMongoScriptExecution(options: {
     pendingApproval.value = null;
     pendingSource = null;
   };
-  const cancel = () => activeExecution.value?.abort();
+  const cancel = () => {
+    activeExecution.value?.abort();
+    activeExecution.value = null;
+    queryProcessState.executeLoading = false;
+    queryProcessState.isStreaming = false;
+  };
   return {
     execute,
     cancel,

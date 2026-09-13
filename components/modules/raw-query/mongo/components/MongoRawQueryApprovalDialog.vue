@@ -39,6 +39,8 @@ const emit = defineEmits<{ confirm: []; cancel: [] }>();
         >
           <div class="flex items-center gap-2">
             <code>{{ operation.method }}</code
+            ><span v-if="operation.database" class="text-muted-foreground"
+              >in {{ operation.database }}</span
             ><span v-if="operation.collection" class="text-muted-foreground"
               >on {{ operation.collection }}</span
             ><Badge variant="destructive">{{ operation.risk }}</Badge>
