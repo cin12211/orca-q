@@ -1,9 +1,10 @@
-import { autocompletion, startCompletion } from '@codemirror/autocomplete';
+import { acceptCompletion, startCompletion } from '@codemirror/autocomplete';
 import { javascript } from '@codemirror/lang-javascript';
 import { lintGutter, linter } from '@codemirror/lint';
 import type { Extension } from '@codemirror/state';
 import { keymap, placeholder } from '@codemirror/view';
 import type BaseCodeEditor from '~/components/base/code-editor/BaseCodeEditor.vue';
+import { sqlAutoCompletion } from '~/components/base/code-editor/extensions';
 import type { MongoRawQueryMetadata } from '~/core/types/mongodb-raw-query.types';
 import { getMongoScriptPlaceholder } from '../constants/mongoScriptCatalog';
 import { createMongoScriptCompletionSource } from '../utils/createMongoScriptCompletionSource';
@@ -20,6 +21,18 @@ export function useMongoScriptEditorExtensions(options: {
   onExecuteCurrent: () => void | Promise<void>;
   onFormat: () => void | Promise<void>;
 }) {
+  const completionSource = createMongoScriptCompletionSource({
+    getMetadata: databaseName =>
+      options.metadataByDatabase?.value[databaseName ?? ''] ??
+      options.metadata?.value ?? {
+        collections: [],
+        fieldsByCollection: {},
+      },
+    databases: () => options.databases?.value ?? [],
+    fileVariables: () => options.fileVariables.value,
+    ensureDatabaseMetadata: options.ensureDatabaseMetadata,
+  });
+
   const extensions: Extension[] = [
     javascript({ typescript: true }),
     placeholder(
@@ -28,19 +41,8 @@ export function useMongoScriptEditorExtensions(options: {
         options.collectionContext.value
       )
     ),
-    autocompletion({
-      override: [
-        createMongoScriptCompletionSource({
-          getMetadata: databaseName =>
-            options.metadataByDatabase?.value[databaseName ?? ''] ??
-            options.metadata?.value ?? {
-              collections: [],
-              fieldsByCollection: {},
-            },
-          databases: () => options.databases?.value ?? [],
-          ensureDatabaseMetadata: options.ensureDatabaseMetadata,
-        }),
-      ],
+    ...sqlAutoCompletion({
+      override: [completionSource],
     }),
     lintGutter(),
     linter(view =>
@@ -71,6 +73,7 @@ export function useMongoScriptEditorExtensions(options: {
         },
       },
       { key: 'Mod-i', run: startCompletion },
+      { key: 'Tab', run: acceptCompletion },
     ]),
   ];
   return { extensions, reloadMongoCompartment: () => undefined };
