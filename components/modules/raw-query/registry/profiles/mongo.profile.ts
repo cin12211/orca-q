@@ -1,6 +1,9 @@
 import { defineAsyncComponent } from 'vue';
 import { ViewMode } from '../../interfaces';
-import type { RawQueryResultProfile } from '../rawQueryResult.types';
+import {
+  RawQueryResultExecutionPolicy,
+  type RawQueryResultProfile,
+} from '../rawQueryResult.types';
 import {
   DEFAULT_RAW_QUERY_RESULT_RENDERERS,
   defineRawQueryResultProfile,
@@ -17,12 +20,12 @@ const MongoConsoleTabRenderer = defineAsyncComponent(
 );
 
 const successOnly = {
-  execution: 'success-only' as const,
+  execution: RawQueryResultExecutionPolicy.SUCCESS_ONLY,
   disabledReason: 'The query execution contains an error',
 };
 
 const errorOnly = {
-  execution: 'error-only' as const,
+  execution: RawQueryResultExecutionPolicy.ERROR_ONLY,
   disabledReason: 'This execution has no errors',
 };
 
@@ -35,7 +38,7 @@ export const mongoProfile: RawQueryResultProfile = defineRawQueryResultProfile({
   tabs: [
     defineRawQueryResultView(ViewMode.RESULT, {
       component: MongoResultTabRenderer,
-      availability: { execution: 'always' },
+      availability: { execution: RawQueryResultExecutionPolicy.ALWAYS },
     }),
     defineRawQueryResultView(ViewMode.RAW, {
       component: DEFAULT_RAW_QUERY_RESULT_RENDERERS[ViewMode.RAW],
@@ -43,11 +46,11 @@ export const mongoProfile: RawQueryResultProfile = defineRawQueryResultProfile({
     }),
     defineRawQueryResultView(ViewMode.INFO, {
       component: DEFAULT_RAW_QUERY_RESULT_RENDERERS[ViewMode.INFO],
-      availability: { execution: 'always' },
+      availability: { execution: RawQueryResultExecutionPolicy.ALWAYS },
     }),
     defineRawQueryResultView(ViewMode.CONSOLE, {
       component: MongoConsoleTabRenderer,
-      availability: { execution: 'always' },
+      availability: { execution: RawQueryResultExecutionPolicy.ALWAYS },
     }),
     defineRawQueryResultView(ViewMode.ERROR, {
       component: DEFAULT_RAW_QUERY_RESULT_RENDERERS[ViewMode.ERROR],

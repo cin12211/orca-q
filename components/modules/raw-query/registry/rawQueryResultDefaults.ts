@@ -4,13 +4,14 @@ import ResultTabInfoView from '../components/result-tab/ResultTabInfoView.vue';
 import ResultTabRawView from '../components/result-tab/ResultTabRawView.vue';
 import ResultTabResultView from '../components/result-tab/ResultTabResultView.vue';
 import { ViewMode } from '../interfaces';
-import type {
-  RawQueryResultProfile,
-  RawQueryResultTabDefinition,
-  RawQueryResultViewAvailability,
-  RawQueryResultViewContext,
-  RawQueryResultViewDefinition,
-  ResolvedRawQueryResultViewDefinition,
+import {
+  RawQueryResultExecutionPolicy,
+  type RawQueryResultProfile,
+  type RawQueryResultTabDefinition,
+  type RawQueryResultViewAvailability,
+  type RawQueryResultViewContext,
+  type RawQueryResultViewDefinition,
+  type ResolvedRawQueryResultViewDefinition,
 } from './rawQueryResult.types';
 
 const ResultTabChartRenderer = defineAsyncComponent(
@@ -109,10 +110,10 @@ export function resolveRawQueryResultViewAvailability(
   context: RawQueryResultViewContext
 ): RawQueryResultViewAvailability {
   const config = definition.availability;
-  const execution = config?.execution ?? 'always';
+  const execution = config?.execution ?? RawQueryResultExecutionPolicy.ALWAYS;
   const hasError = Boolean(context.activeTab.metadata.executeErrors);
 
-  if (execution === 'success-only' && hasError) {
+  if (execution === RawQueryResultExecutionPolicy.SUCCESS_ONLY && hasError) {
     return {
       enabled: false,
       reason:
@@ -120,7 +121,7 @@ export function resolveRawQueryResultViewAvailability(
     };
   }
 
-  if (execution === 'error-only' && !hasError) {
+  if (execution === RawQueryResultExecutionPolicy.ERROR_ONLY && !hasError) {
     return {
       enabled: false,
       reason: config?.disabledReason ?? 'This view requires an execution error',

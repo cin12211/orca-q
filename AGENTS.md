@@ -74,6 +74,12 @@ desktop support.
   - Unknown objects or variables must return empty suggestions `[]` instead of incorrectly falling back to database/collection methods.
   - Leverage `@codemirror/lang-javascript` (`completionPath`, `localCompletionSource`) for AST-aware member resolution and local variable discovery whenever applicable.
 
+## TypeScript Enum & Type Standards
+
+- **Enum Over String Literal Unions:** Always use TypeScript `enum` (with `PascalCase` enum name and `SCREAMING_SNAKE_CASE` keys) for fixed sets of domain values, options, policies, view modes, status flags, and registry configurations. NEVER declare string literal union types (e.g. `type ExecutionPolicy = 'always' | 'success-only' | 'error-only'`).
+- **Enforce Enum References Across Codebase:** When declaring configurations, options, props, or conditional checks, always reference the enum values directly (e.g. `RawQueryResultExecutionPolicy.ALWAYS`, `ViewMode.RESULT`) instead of raw string literals or type assertions (`'always' as const`).
+- **Export Through Folder Index:** Enums must be exported through their module/folder `index.ts` so all external consumers import them cleanly and uniformly.
+
 ## Mistake Tracking & Logging Rule
 
 - **Mandatory Self-Logging on User Feedback:** Whenever the user points out an error, bug, incorrect implementation, poor styling, or reminds the agent about something that was done wrong, the agent MUST automatically log the mistake into the folder:

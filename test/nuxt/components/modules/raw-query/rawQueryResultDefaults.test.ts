@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { ViewMode } from '~/components/modules/raw-query/interfaces';
-import type { RawQueryResultViewContext } from '~/components/modules/raw-query/registry/rawQueryResult.types';
+import {
+  RawQueryResultExecutionPolicy,
+  type RawQueryResultViewContext,
+} from '~/components/modules/raw-query/registry/rawQueryResult.types';
 import {
   defineRawQueryResultProfile,
   defineRawQueryResultView,
@@ -53,12 +56,12 @@ describe('raw query result defaults', () => {
   });
 
   it.each([
-    ['always', false, true],
-    ['always', true, true],
-    ['success-only', false, true],
-    ['success-only', true, false],
-    ['error-only', false, false],
-    ['error-only', true, true],
+    [RawQueryResultExecutionPolicy.ALWAYS, false, true],
+    [RawQueryResultExecutionPolicy.ALWAYS, true, true],
+    [RawQueryResultExecutionPolicy.SUCCESS_ONLY, false, true],
+    [RawQueryResultExecutionPolicy.SUCCESS_ONLY, true, false],
+    [RawQueryResultExecutionPolicy.ERROR_ONLY, false, false],
+    [RawQueryResultExecutionPolicy.ERROR_ONLY, true, true],
   ] as const)(
     'resolves %s with hasError=%s to enabled=%s',
     (execution, hasError, enabled) => {
@@ -82,7 +85,7 @@ describe('raw query result defaults', () => {
   it('applies the custom predicate after execution policy passes', () => {
     const definition = defineRawQueryResultView(ViewMode.RESULT, {
       availability: {
-        execution: 'success-only',
+        execution: RawQueryResultExecutionPolicy.SUCCESS_ONLY,
         when: context =>
           context.activeTab.metadata.statementQuery.startsWith('EXPLAIN')
             ? { enabled: true }
@@ -103,11 +106,11 @@ describe('raw query result defaults', () => {
     };
     const profile = defineRawQueryResultProfile([
       defineRawQueryResultView(ViewMode.RESULT, {
-        availability: { execution: 'success-only' },
+        availability: { execution: RawQueryResultExecutionPolicy.SUCCESS_ONLY },
       }),
       defineRawQueryResultView(ViewMode.INFO),
       defineRawQueryResultView(ViewMode.ERROR, {
-        availability: { execution: 'error-only' },
+        availability: { execution: RawQueryResultExecutionPolicy.ERROR_ONLY },
       }),
     ]);
     const views = resolveRawQueryResultViews(profile, context);

@@ -16,10 +16,11 @@ export interface RawQueryResultViewContext {
   changeView(view: ViewMode): void;
 }
 
-export type RawQueryResultExecutionPolicy =
-  | 'always'
-  | 'success-only'
-  | 'error-only';
+export enum RawQueryResultExecutionPolicy {
+  ALWAYS = 'always',
+  SUCCESS_ONLY = 'success-only',
+  ERROR_ONLY = 'error-only',
+}
 
 export interface RawQueryResultViewAvailability {
   enabled: boolean;

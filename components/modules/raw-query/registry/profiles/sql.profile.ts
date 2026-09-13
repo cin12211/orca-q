@@ -1,5 +1,8 @@
 import { ViewMode } from '../../interfaces';
-import type { RawQueryResultProfile } from '../rawQueryResult.types';
+import {
+  RawQueryResultExecutionPolicy,
+  type RawQueryResultProfile,
+} from '../rawQueryResult.types';
 import {
   DEFAULT_RAW_QUERY_RESULT_RENDERERS,
   defineRawQueryResultProfile,
@@ -7,12 +10,12 @@ import {
 } from '../rawQueryResultDefaults';
 
 const successOnly = {
-  execution: 'success-only' as const,
+  execution: RawQueryResultExecutionPolicy.SUCCESS_ONLY,
   disabledReason: 'The query execution contains an error',
 };
 
 const errorOnly = {
-  execution: 'error-only' as const,
+  execution: RawQueryResultExecutionPolicy.ERROR_ONLY,
   disabledReason: 'This execution has no errors',
 };
 
