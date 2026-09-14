@@ -27,6 +27,8 @@ interface Props {
   autoScrollSpeed?: number;
   overscan?: number;
   persistenceExtension?: TreePersistenceExtension;
+  searchQuery?: string;
+  autoExpandOnSearch?: boolean;
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -41,6 +43,8 @@ const props = withDefaults(defineProps<Props>(), {
   autoScrollThreshold: 50,
   autoScrollSpeed: 10,
   overscan: 10,
+  searchQuery: '',
+  autoExpandOnSearch: true,
   persistenceExtension: () =>
     createTreePersistencePlugin({
       mode: 'web',
@@ -775,6 +779,13 @@ const startEditing = (nodeId: string) => {
 watch(
   () => Array.from(expandedIds.value),
   newVal => {
+    if (
+      props.autoExpandOnSearch &&
+      props.searchQuery &&
+      props.searchQuery.trim()
+    ) {
+      return;
+    }
     expandedIdsPersistenceStrategy.value?.save(newVal);
   }
 );
@@ -803,9 +814,13 @@ watch(
   newData => {
     if (newData) {
       nodes.value = newData;
-      // Preserve or reset selection/expansion if needed?
-      // For now, let's keep expansion state as is, but validate if IDs still exist?
-      // Simple approach: just update data. virtualization and computed will handle the rest.
+      if (
+        props.autoExpandOnSearch &&
+        props.searchQuery &&
+        props.searchQuery.trim()
+      ) {
+        expandAll();
+      }
     }
   },
   { deep: true }
@@ -843,6 +858,33 @@ const isExpandedAll = computed(() => {
 
   return true;
 });
+
+// Auto-expand on search and restore expansion on search clear
+const savedExpandedIdsBeforeSearch = ref<Set<string> | null>(null);
+
+watch(
+  () => props.searchQuery,
+  (newQuery, oldQuery) => {
+    if (!props.autoExpandOnSearch) {
+      return;
+    }
+
+    const hasNew = Boolean(newQuery && newQuery.trim());
+    const hadOld = Boolean(oldQuery && oldQuery.trim());
+
+    if (hasNew) {
+      if (!hadOld) {
+        savedExpandedIdsBeforeSearch.value = new Set(expandedIds.value);
+      }
+      expandAll();
+    } else if (hadOld && !hasNew) {
+      if (savedExpandedIdsBeforeSearch.value) {
+        expandedIds.value = new Set(savedExpandedIdsBeforeSearch.value);
+        savedExpandedIdsBeforeSearch.value = null;
+      }
+    }
+  }
+);
 
 const focusItem = (nodeId: string) => {
   // Check if node exists

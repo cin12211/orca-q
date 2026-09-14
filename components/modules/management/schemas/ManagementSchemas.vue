@@ -356,6 +356,7 @@ watch(
           :init-expanded-ids="[defaultFolderOpenId]"
           :initial-data="fileTreeData"
           :storage-key="`${connectionId}-schemas-tree`"
+          :search-query="debouncedSearch"
           :allow-drag-and-drop="false"
           :delay-focus="0"
           @click="handleTreeClick"

@@ -285,6 +285,7 @@ watch(
       :init-expanded-ids="defaultExpandedKeys"
       :storage-key="`${connectionId}-erd-tree`"
       :initial-data="fileTreeData"
+      :search-query="debouncedSearch"
       :allow-drag-and-drop="false"
       @click="handleTreeClick"
     />

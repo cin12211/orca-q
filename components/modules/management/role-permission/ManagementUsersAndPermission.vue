@@ -304,6 +304,7 @@ const onDeleteUser = async (role: DatabaseRole) => {
           ref="userRolesTreeRef"
           :roles="filteredRoles"
           :loading="isLoadingRoles"
+          :search-query="debouncedSearch"
           :onCreateUser="onOpenCreateModal"
           :canCreateUser="canCreateUser"
           :createUserDisabledReason="createUserDisabledReason"
