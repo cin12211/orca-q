@@ -3,6 +3,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { useQueryExecution } from '~/components/modules/raw-query/hooks/useQueryExecution';
 import * as streamingQuery from '~/components/modules/raw-query/hooks/useStreamingQuery';
 import { DatabaseClientType } from '~/core/constants/database-client-type';
+import { useRedisWorkspaceStore } from '~/core/stores/useRedisWorkspaceStore';
 import { EConnectionMethod } from '~/core/types/entities/connection.entity';
 
 // Mock dependencies
@@ -279,6 +280,10 @@ describe('useQueryExecution', () => {
       connectionString: 'redis://127.0.0.1:6379/0',
     };
     const connection = ref(connectionValue);
+    const redisWorkspaceStore = useRedisWorkspaceStore();
+    redisWorkspaceStore.sessions[connectionValue.id] = {
+      selectedDatabaseIndex: 5,
+    } as any;
     const redisDatabaseIndex = ref(5);
     const fileVariables = ref('{}');
     const fieldDefs = ref([]);

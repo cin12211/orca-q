@@ -1,6 +1,7 @@
 import { defineAsyncComponent } from 'vue';
 import { DatabaseClientType } from '~/core/constants/database-client-type';
 import { ViewMode } from '../../interfaces';
+import { redisPlugin } from '../plugins/redis.plugin';
 import {
   RawQueryResultExecutionPolicy,
   type RawQueryProfile,
@@ -64,6 +65,7 @@ export const redisResultProfile: RawQueryResultProfile =
  */
 export const redisRawQueryProfile: RawQueryProfile = {
   databaseType: DatabaseClientType.REDIS,
+  plugin: redisPlugin,
   isFormatSupported: false,
   isVariableSupported: false,
   header: {

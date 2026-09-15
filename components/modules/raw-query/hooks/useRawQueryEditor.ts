@@ -1,4 +1,4 @@
-import { computed, watch } from 'vue';
+import { computed, ref, watch, type Ref } from 'vue';
 import { Compartment } from '@codemirror/state';
 import type { EditorView } from '@codemirror/view';
 import type { FieldDef } from 'pg';
@@ -14,7 +14,7 @@ import { resolveMongoScriptSource } from '../mongo/utils';
 import { formatMongoScript } from '../mongo/utils/formatMongoScript';
 import { useQueryExecution } from './useQueryExecution';
 import { useRawQueryExplainAnalyzeOptions } from './useRawQueryExplainAnalyzeOptions';
-import { useResultTabs } from './useResultTabs';
+import { useRawQueryKernel } from './useRawQueryKernel';
 import { useSqlEditorExtensions } from './useSqlEditorExtensions';
 
 /**
@@ -39,8 +39,17 @@ export function useRawQueryEditor({
   onUpdateVariables?: (value: string) => void;
   documentText?: Ref<string>;
 }) {
+  const kernel = useRawQueryKernel({
+    fileVariables,
+    connection,
+    beforeExecute,
+    promptMissingVariables,
+    onUpdateVariables,
+    documentText: documentTextRef,
+  });
+
+  const { codeEditorRef, resultTabs, cursorInfo, getEditorView } = kernel;
   const fieldDefs = ref<FieldDef[]>([]);
-  const codeEditorRef = ref<InstanceType<typeof BaseCodeEditor> | null>(null);
 
   const {
     explainAnalyzeOptionItems,
@@ -49,11 +58,6 @@ export function useRawQueryEditor({
     setSerializeMode,
     buildExplainAnalyzePrefix,
   } = useRawQueryExplainAnalyzeOptions();
-
-  const resultTabs = useResultTabs();
-
-  const getEditorView = () =>
-    (codeEditorRef.value?.editorView as EditorView | undefined) ?? null;
 
   const queryExecution = useQueryExecution({
     getEditorView,
@@ -188,7 +192,7 @@ export function useRawQueryEditor({
     onExecuteCurrent,
     extensions,
     sqlCompartment: sqlEditor.sqlCompartment,
-    cursorInfo: sqlEditor.cursorInfo,
+    cursorInfo,
     onHandleFormatCode: () => {
       if (isMongoConnection.value) {
         void formatMongoScriptDocument();
@@ -224,6 +228,7 @@ export function useRawQueryEditor({
     closeOtherResultTabs: resultTabs.closeOtherResultTabs,
     closeResultTabsToRight: resultTabs.closeResultTabsToRight,
     updateResultTabView: resultTabs.updateResultTabView,
+    kernel,
   };
 }
 

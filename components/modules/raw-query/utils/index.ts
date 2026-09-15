@@ -8,3 +8,4 @@ export * from './isCellEditable';
 export * from './buildRawQueryUpdates';
 export * from './buildRawQueryColumnDefs';
 export * from './extractVariables';
+export * from './rawQueryContextMenu';

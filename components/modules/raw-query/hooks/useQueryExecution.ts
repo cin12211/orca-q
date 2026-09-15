@@ -1,3 +1,4 @@
+import { reactive, ref, shallowRef, type Ref } from 'vue';
 import type { EditorView } from '@codemirror/view';
 import type { FieldDef } from 'pg';
 import type { SyntaxTreeNodeData } from '~/components/base/code-editor/extensions';

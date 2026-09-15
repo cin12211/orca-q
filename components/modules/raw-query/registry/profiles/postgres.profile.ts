@@ -1,6 +1,7 @@
 import { defineAsyncComponent } from 'vue';
 import { DatabaseClientType } from '~/core/constants/database-client-type';
 import { ViewMode } from '../../interfaces';
+import { postgresPlugin } from '../plugins/postgres.plugin';
 import {
   RawQueryResultExecutionPolicy,
   type RawQueryProfile,
@@ -89,6 +90,7 @@ export const postgresResultProfile: RawQueryResultProfile =
  */
 export const postgresRawQueryProfile: RawQueryProfile = {
   databaseType: DatabaseClientType.POSTGRES,
+  plugin: postgresPlugin,
   isFormatSupported: true,
   isVariableSupported: true,
   header: {},

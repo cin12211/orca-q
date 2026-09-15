@@ -1,4 +1,5 @@
 import { storeToRefs } from 'pinia';
+import { computed, ref, watch, type Ref } from 'vue';
 import { acceptCompletion, startCompletion } from '@codemirror/autocomplete';
 import { sql } from '@codemirror/lang-sql';
 import { lintGutter } from '@codemirror/lint';

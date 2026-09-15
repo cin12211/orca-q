@@ -1,6 +1,7 @@
-import { defineAsyncComponent, ref, type Ref } from 'vue';
+import { defineAsyncComponent } from 'vue';
 import { DatabaseClientType } from '~/core/constants/database-client-type';
 import { ViewMode } from '../../interfaces';
+import { mongoPlugin, type MongoDialectState } from '../plugins/mongo.plugin';
 import {
   RawQueryResultExecutionPolicy,
   type RawQueryProfile,
@@ -78,51 +79,16 @@ export const mongoResultProfile: RawQueryResultProfile =
     ],
   });
 
-import { useMongoApproval, type MongoPendingApproval } from '../../mongo';
-
-export interface MongoDialectState {
-  badgeText: Ref<string>;
-  clickCount: Ref<number>;
-  incrementCount: () => void;
-  resetCount: () => void;
-  pendingApproval?: Ref<MongoPendingApproval | null>;
-  confirmPendingWrite?: () => Promise<unknown>;
-  cancelPendingWrite?: () => void;
-}
+export type { MongoDialectState };
 
 /**
  * Master MongoDB Profile
  */
 export const mongoRawQueryProfile: RawQueryProfile<MongoDialectState> = {
   databaseType: DatabaseClientType.MONGODB,
+  plugin: mongoPlugin,
   isFormatSupported: true,
   isVariableSupported: false,
-  /**
-   * Reactive dialect state factory scoped to each MongoDB raw query session
-   */
-  createDialectState: (): MongoDialectState => {
-    const badgeText = ref('MongoDB Beta');
-    const clickCount = ref(0);
-    const approval = useMongoApproval();
-
-    const incrementCount = () => {
-      clickCount.value++;
-    };
-
-    const resetCount = () => {
-      clickCount.value = 0;
-    };
-
-    return {
-      badgeText,
-      clickCount,
-      incrementCount,
-      resetCount,
-      pendingApproval: approval.pendingApproval,
-      confirmPendingWrite: approval.confirmPendingWrite,
-      cancelPendingWrite: approval.cancelPendingWrite,
-    };
-  },
   header: {
     leftComponents: [lazyMongoHeaderBadge],
   },

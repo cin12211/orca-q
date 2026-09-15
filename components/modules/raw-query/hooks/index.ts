@@ -9,3 +9,4 @@ export * from './useRawQueryRelationPreview';
 export * from './useRawQueryEditedCells';
 export * from './useRawQueryMutation';
 export * from './useRawQueryContext';
+export * from './useRawQueryKernel';

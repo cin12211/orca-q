@@ -12,6 +12,7 @@ import type {
   MappedRawColumn,
   ViewMode,
 } from '../interfaces';
+import type { RawQueryDialectPlugin } from './rawQueryPlugin.types';
 
 export enum RawQueryResultExecutionPolicy {
   ALWAYS = 'always',
@@ -151,19 +152,15 @@ export interface RawQueryFooterProfile {
 /**
  * Master interface for Raw Query Database Profile
  */
-export interface RawQueryProfile<TState = Record<string, any>> {
+export interface RawQueryProfile<TState = any> {
   databaseType: DatabaseClientType;
   header: RawQueryHeaderProfile;
   footer: RawQueryFooterProfile;
   result: RawQueryResultProfile;
   /**
-   * Factory function to instantiate reactive dialect state scoped to each raw query session
+   * Optional dialect plugin handling lifecycle hooks, statement resolution, execution and formatting
    */
-  createDialectState?: () => TState;
-  /**
-   * Pre-instantiated dialect state or static state object
-   */
-  dialectState?: TState;
+  plugin?: RawQueryDialectPlugin<TState>;
   /**
    * Whether statement/code formatting is supported for this database client
    */
@@ -174,7 +171,7 @@ export interface RawQueryProfile<TState = Record<string, any>> {
   isVariableSupported?: boolean;
 }
 
-export function defineRawQueryProfile<TState = Record<string, any>>(
+export function defineRawQueryProfile<TState = any>(
   profile: RawQueryProfile<TState>
 ): RawQueryProfile<TState> {
   return profile;

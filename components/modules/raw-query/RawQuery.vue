@@ -58,6 +58,7 @@ const isCurrentConnectionStrictMode = computed(() => {
 const rawQueryProfile = computed(() =>
   getRawQueryProfile(connection.value?.type)
 );
+const currentProfile = rawQueryProfile;
 
 const isFormatSupported = computed(
   () => rawQueryProfile.value.isFormatSupported ?? true
@@ -73,10 +74,11 @@ const dialectState = shallowRef<Record<string, any>>({});
 watch(
   () => rawQueryProfile.value,
   newProfile => {
-    if (typeof newProfile?.createDialectState === 'function') {
-      dialectState.value = newProfile.createDialectState();
-    } else if (newProfile?.dialectState) {
-      dialectState.value = newProfile.dialectState;
+    const plugin = newProfile?.plugin;
+    if (typeof plugin?.createDialectState === 'function') {
+      dialectState.value = plugin.createDialectState();
+    } else if (plugin?.dialectState) {
+      dialectState.value = plugin.dialectState;
     } else {
       dialectState.value = {};
     }
@@ -175,6 +177,8 @@ const { contextMenuItems, onContextMenuOpen } = useRawQueryEditorContextMenu({
   isExplainSupported,
   getEditorView: () =>
     codeEditorRef.value?.editorView as EditorView | null | undefined,
+  plugin: computed(() => currentProfile.value?.plugin),
+  context: rawQueryContext,
 });
 
 const scrollTop = ref(0);

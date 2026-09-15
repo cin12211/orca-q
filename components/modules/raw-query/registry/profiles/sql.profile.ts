@@ -1,6 +1,7 @@
 import { defineAsyncComponent } from 'vue';
 import { DatabaseClientType } from '~/core/constants/database-client-type';
 import { ViewMode } from '../../interfaces';
+import { postgresPlugin, sqlitePlugin } from '../plugins';
 import {
   RawQueryResultExecutionPolicy,
   type RawQueryProfile,
@@ -78,6 +79,7 @@ export const createStandardSqlRawQueryProfile = (
 
   return {
     databaseType,
+    plugin: isSqlite ? sqlitePlugin : postgresPlugin,
     isFormatSupported: true,
     isVariableSupported: !isSqlite,
     header: {},

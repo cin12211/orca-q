@@ -1,3 +1,4 @@
+import { ref, shallowRef } from 'vue';
 import type { ExecutedResultItem } from '../interfaces';
 
 /**

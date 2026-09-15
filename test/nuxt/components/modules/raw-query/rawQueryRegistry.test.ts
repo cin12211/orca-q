@@ -83,4 +83,37 @@ describe('Raw Query Registry (Master & Layout UI)', () => {
       expect(profile.footer.rightComponents.length).toBe(2); // SqlFormat + Execute
     });
   });
+
+  describe('Profile Plugin Attachments', () => {
+    it('attaches postgresPlugin to postgresRawQueryProfile', () => {
+      const profile = getRawQueryProfile(DatabaseClientType.POSTGRES);
+      expect(profile.plugin?.name).toBe('postgres-plugin');
+    });
+
+    it('attaches mongoPlugin to mongoRawQueryProfile', () => {
+      const profile = getRawQueryProfile(DatabaseClientType.MONGODB);
+      expect(profile.plugin?.name).toBe('mongo-plugin');
+    });
+
+    it('attaches redisPlugin to redisRawQueryProfile', () => {
+      const profile = getRawQueryProfile(DatabaseClientType.REDIS);
+      expect(profile.plugin?.name).toBe('redis-plugin');
+    });
+
+    it('attaches sqlitePlugin to sqlite profile and postgresPlugin to standard sql profiles', () => {
+      const sqliteProfile = getRawQueryProfile(DatabaseClientType.SQLITE3);
+      expect(sqliteProfile.plugin?.name).toBe('sqlite-plugin');
+
+      const betterSqliteProfile = getRawQueryProfile(
+        DatabaseClientType.BETTER_SQLITE3
+      );
+      expect(betterSqliteProfile.plugin?.name).toBe('sqlite-plugin');
+
+      const mysqlProfile = getRawQueryProfile(DatabaseClientType.MYSQL);
+      expect(mysqlProfile.plugin?.name).toBe('postgres-plugin');
+
+      const mariadbProfile = getRawQueryProfile(DatabaseClientType.MARIADB);
+      expect(mariadbProfile.plugin?.name).toBe('postgres-plugin');
+    });
+  });
 });

@@ -1,3 +1,4 @@
+import { computed, ref } from 'vue';
 import { EXPLAIN_ANALYZE_OPTIONS } from '../constants';
 import type {
   ExplainAnalyzeSerializeMode,
