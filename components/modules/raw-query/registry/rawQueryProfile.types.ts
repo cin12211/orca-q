@@ -64,22 +64,62 @@ export interface RawQueryResultProfile {
 }
 
 /**
- * Context passed to all header registered components (badges, status indicators, custom selectors)
+ * Master Context for Raw Query
+ * Shared universally across Header, Footer, Result, and Dialect extension components.
+ * Supports generic TDialectState to ensure 100% type-safe access to dialect-specific state.
  */
-export interface RawQueryHeaderContext {
+export interface RawQueryContext<TDialectState = Record<string, any>> {
+  // Routing & Workspace
   workspaceId: string;
+
+  // Connection info
   selectedConnectionId: string;
   connection?: Connection;
   connections: Connection[];
   disableConnectionSwitch: boolean;
   databaseType?: DatabaseClientType;
+
+  // File info
   currentFileInfo?: RowQueryFile;
+  currentFile?: RowQueryFile;
+  fileContents: string;
   fileVariables: string;
+
+  // Layout & UI
   codeEditorLayout: RawQueryEditorLayout;
+
+  // Feature support flags
+  isFormatSupported: boolean;
+  isVariableSupported: boolean;
+  isExplainSupported: boolean;
+
+  // Editor instance
   rawQueryEditor?: RawQueryEditor;
   editor?: RawQueryEditor;
+
+  // Execution & Cursor state
+  cursorInfo: EditorCursor;
+  executeLoading: boolean;
+  isStreaming: boolean;
+  isRawViewMode?: boolean;
+  explainAnalyzeOptionItems?: ExplainAnalyzeOptionItem[];
+  serializeMode?: ExplainAnalyzeSerializeMode;
+
+  // Dialect registered reactive state with generic type support
+  dialectState?: TDialectState;
+
+  // Actions & Callbacks
   onUpdateConnectionId?: (connectionId: string) => void;
   onUpdateFileVariables?: (variables: string) => Promise<void> | void;
+  onUpdateFileContent?: (value: string) => void;
+  onFormatCurrentStatement?: () => void;
+  onFormatAll?: () => void;
+  onExplainAnalyzeCurrent?: () => void;
+  toggleExplainOption?: (value: ExplainAnalyzeToggleOptionKey) => void;
+  updateSerializeMode?: (value: ExplainAnalyzeSerializeMode) => void;
+  onExecuteCurrent?: () => void;
+  updateRawViewMode?: (value: boolean) => void;
+  onCancelQuery?: () => void;
 }
 
 export interface RawQueryHeaderProfile {
@@ -94,29 +134,6 @@ export interface RawQueryHeaderProfile {
    * e.g. custom database/replica selectors, extra toolbar buttons
    */
   rightComponents?: Component[];
-}
-
-/**
- * Context passed to all footer components
- */
-export interface RawQueryFooterContext {
-  cursorInfo: EditorCursor;
-  executeLoading: boolean;
-  isStreaming: boolean;
-  isRawViewMode?: boolean;
-  explainAnalyzeOptionItems?: ExplainAnalyzeOptionItem[];
-  serializeMode?: ExplainAnalyzeSerializeMode;
-  databaseType?: DatabaseClientType;
-  rawQueryEditor?: RawQueryEditor;
-  editor?: RawQueryEditor;
-  onFormatCurrentStatement?: () => void;
-  onFormatAll?: () => void;
-  onExplainAnalyzeCurrent?: () => void;
-  toggleExplainOption?: (value: ExplainAnalyzeToggleOptionKey) => void;
-  updateSerializeMode?: (value: ExplainAnalyzeSerializeMode) => void;
-  onExecuteCurrent?: () => void;
-  updateRawViewMode?: (value: boolean) => void;
-  onCancelQuery?: () => void;
 }
 
 export interface RawQueryFooterProfile {
@@ -134,11 +151,19 @@ export interface RawQueryFooterProfile {
 /**
  * Master interface for Raw Query Database Profile
  */
-export interface RawQueryProfile {
+export interface RawQueryProfile<TState = Record<string, any>> {
   databaseType: DatabaseClientType;
   header: RawQueryHeaderProfile;
   footer: RawQueryFooterProfile;
   result: RawQueryResultProfile;
+  /**
+   * Factory function to instantiate reactive dialect state scoped to each raw query session
+   */
+  createDialectState?: () => TState;
+  /**
+   * Pre-instantiated dialect state or static state object
+   */
+  dialectState?: TState;
   /**
    * Whether statement/code formatting is supported for this database client
    */
@@ -149,8 +174,8 @@ export interface RawQueryProfile {
   isVariableSupported?: boolean;
 }
 
-export function defineRawQueryProfile(
-  profile: RawQueryProfile
-): RawQueryProfile {
+export function defineRawQueryProfile<TState = Record<string, any>>(
+  profile: RawQueryProfile<TState>
+): RawQueryProfile<TState> {
   return profile;
 }

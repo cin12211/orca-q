@@ -3,10 +3,10 @@ import { computed } from 'vue';
 import { useRedisWorkspace } from '~/components/modules/redis-workspace/hooks/useRedisWorkspace';
 import RedisDBSelector from '~/components/modules/selectors/RedisDBSelector.vue';
 import { DatabaseClientType } from '~/core/constants/database-client-type';
-import type { RawQueryHeaderContext } from '../../registry/rawQueryProfile.types';
+import type { RawQueryContext } from '../../registry/rawQueryProfile.types';
 
 const props = defineProps<{
-  context: RawQueryHeaderContext;
+  context: RawQueryContext;
 }>();
 
 const isRedisConnection = computed(

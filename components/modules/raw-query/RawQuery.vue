@@ -16,6 +16,7 @@ import RawQueryLayout from './components/RawQueryLayout.vue';
 import RawQueryResultTabs from './components/RawQueryResultTabs.vue';
 import VariableEditor from './components/VariableEditor.vue';
 import {
+  createRawQueryContext,
   provideRawQueryContext,
   useRawQueryEditor,
   useRawQueryFileContent,
@@ -68,6 +69,21 @@ const isVariableSupported = computed(
 const isExplainSupported = computed(
   () => connection.value?.type === DatabaseClientType.POSTGRES
 );
+const dialectState = shallowRef<Record<string, any>>({});
+
+watch(
+  () => rawQueryProfile.value,
+  newProfile => {
+    if (typeof newProfile?.createDialectState === 'function') {
+      dialectState.value = newProfile.createDialectState();
+    } else if (newProfile?.dialectState) {
+      dialectState.value = newProfile.dialectState;
+    } else {
+      dialectState.value = {};
+    }
+  },
+  { immediate: true }
+);
 const effectiveFileVariables = ref('');
 
 watchEffect(() => {
@@ -119,7 +135,7 @@ const rawQueryEditor = useRawQueryEditor({
   documentText: fileContents,
 });
 
-provideRawQueryContext({
+const rawQueryContext = createRawQueryContext({
   workspaceId,
   connection,
   connections: connectionsByWsId,
@@ -137,7 +153,10 @@ provideRawQueryContext({
   isExplainSupported,
   rawQueryEditor,
   codeEditorLayout: computed(() => appConfigStore.codeEditorLayout),
+  dialectState,
 });
+
+provideRawQueryContext(rawQueryContext);
 
 const {
   cursorInfo,

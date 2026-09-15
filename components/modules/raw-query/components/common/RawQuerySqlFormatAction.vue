@@ -10,10 +10,10 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '#components';
-import type { RawQueryFooterContext } from '../../registry/rawQueryProfile.types';
+import type { RawQueryContext } from '../../registry/rawQueryProfile.types';
 
 const props = defineProps<{
-  context: RawQueryFooterContext;
+  context: RawQueryContext;
 }>();
 
 const onFormatCurrent = () => {

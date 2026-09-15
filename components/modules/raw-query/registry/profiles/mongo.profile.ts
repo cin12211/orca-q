@@ -1,4 +1,4 @@
-import { defineAsyncComponent } from 'vue';
+import { defineAsyncComponent, ref, type Ref } from 'vue';
 import { DatabaseClientType } from '~/core/constants/database-client-type';
 import { ViewMode } from '../../interfaces';
 import {
@@ -78,13 +78,42 @@ export const mongoResultProfile: RawQueryResultProfile =
     ],
   });
 
+export interface MongoDialectState {
+  badgeText: Ref<string>;
+  clickCount: Ref<number>;
+  incrementCount: () => void;
+  resetCount: () => void;
+}
+
 /**
  * Master MongoDB Profile
  */
-export const mongoRawQueryProfile: RawQueryProfile = {
+export const mongoRawQueryProfile: RawQueryProfile<MongoDialectState> = {
   databaseType: DatabaseClientType.MONGODB,
   isFormatSupported: true,
   isVariableSupported: false,
+  /**
+   * Reactive dialect state factory scoped to each MongoDB raw query session
+   */
+  createDialectState: (): MongoDialectState => {
+    const badgeText = ref('MongoDB Beta');
+    const clickCount = ref(0);
+
+    const incrementCount = () => {
+      clickCount.value++;
+    };
+
+    const resetCount = () => {
+      clickCount.value = 0;
+    };
+
+    return {
+      badgeText,
+      clickCount,
+      incrementCount,
+      resetCount,
+    };
+  },
   header: {
     leftComponents: [lazyMongoHeaderBadge],
   },

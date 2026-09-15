@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import type { RawQueryFooterContext } from '../../registry/rawQueryProfile.types';
+import type { RawQueryContext } from '../../registry/rawQueryProfile.types';
 
 defineProps<{
-  context: RawQueryFooterContext;
+  context: RawQueryContext;
 }>();
 </script>
 

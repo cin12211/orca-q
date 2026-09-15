@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import { computed, ref, type Component } from 'vue';
+import { computed, ref, toValue, type Component } from 'vue';
 import { Tooltip, TooltipContent, TooltipTrigger } from '#components';
 import PureConnectionSelector from '../../selectors/PureConnectionSelector.vue';
 import { RawQueryEditorLayout } from '../constants';
 import { useRawQueryContext } from '../hooks';
-import { getRawQueryProfile, type RawQueryHeaderContext } from '../registry';
+import { getRawQueryProfile } from '../registry';
 import AddVariableModal from './AddVariableModal.vue';
 import RawQueryConfigModal from './RawQueryConfigModal.vue';
 
@@ -15,52 +15,38 @@ const props = defineProps<{
 
 const context = useRawQueryContext();
 
-const editor = computed(() => context?.rawQueryEditor);
-const workspaceId = computed(() => context?.workspaceId.value ?? '');
-const selectedConnectionId = computed(
-  () => context?.selectedConnectionId.value ?? ''
-);
-const connections = computed(() => context?.connections.value ?? []);
-const connection = computed(() => context?.connection.value);
-const disableConnectionSwitch = computed(
-  () => context?.disableConnectionSwitch.value ?? false
-);
-const databaseType = computed(() => context?.databaseType.value);
-const currentFileInfo = computed(() => context?.currentFile.value);
-const fileVariables = computed(() => context?.fileVariables.value ?? '');
-const codeEditorLayout = computed(
-  () => context?.codeEditorLayout.value ?? RawQueryEditorLayout.horizontal
-);
+const databaseType = computed(() => toValue(context?.databaseType));
 const rawQueryProfile = computed(() => getRawQueryProfile(databaseType.value));
 const headerProfile = computed(() => rawQueryProfile.value.header);
 
+const workspaceId = computed(() => toValue(context?.workspaceId) ?? '');
+const selectedConnectionId = computed(
+  () => toValue(context?.selectedConnectionId) ?? ''
+);
+const connections = computed(() => toValue(context?.connections) ?? []);
+const connection = computed(() => toValue(context?.connection));
+const disableConnectionSwitch = computed(
+  () => toValue(context?.disableConnectionSwitch) ?? false
+);
+const currentFileInfo = computed(
+  () => toValue(context?.currentFileInfo) ?? toValue(context?.currentFile)
+);
+const fileVariables = computed(() => toValue(context?.fileVariables) ?? '');
+const codeEditorLayout = computed(
+  () => toValue(context?.codeEditorLayout) ?? RawQueryEditorLayout.horizontal
+);
+
 const isVariableSupported = computed(
-  () => context?.isVariableSupported.value ?? true
+  () => toValue(context?.isVariableSupported) ?? true
 );
 
 const handleUpdateConnectionId = (connectionId: string) => {
-  context?.updateSelectedConnection(connectionId);
+  context?.onUpdateConnectionId?.(connectionId);
 };
 
 const handleUpdateFileVariables = async (variables: string): Promise<void> => {
-  await context?.updateFileVariables(variables);
+  await context?.onUpdateFileVariables?.(variables);
 };
-
-const headerContext = computed<RawQueryHeaderContext>(() => ({
-  workspaceId: workspaceId.value,
-  selectedConnectionId: selectedConnectionId.value,
-  connection: connection.value,
-  connections: connections.value,
-  disableConnectionSwitch: disableConnectionSwitch.value,
-  databaseType: databaseType.value,
-  currentFileInfo: currentFileInfo.value,
-  fileVariables: fileVariables.value,
-  codeEditorLayout: codeEditorLayout.value,
-  rawQueryEditor: editor.value,
-  editor: editor.value,
-  onUpdateConnectionId: handleUpdateConnectionId,
-  onUpdateFileVariables: handleUpdateFileVariables,
-}));
 
 const leftComponents = computed<Component[]>(() => [
   ...(headerProfile.value.leftComponents ?? []),
@@ -111,9 +97,9 @@ const openConfigModal = () => {
         v-for="(comp, index) in leftComponents"
         :key="`left-${index}`"
         :is="comp"
-        :context="headerContext"
+        :context="context"
       />
-      <slot name="left" :context="headerContext" />
+      <slot name="left" :context="context" />
     </div>
 
     <!-- Right Zone: Actions, Selectors, Right Header Components, Settings -->
@@ -171,9 +157,9 @@ const openConfigModal = () => {
         v-for="(comp, index) in rightComponents"
         :key="`right-${index}`"
         :is="comp"
-        :context="headerContext"
+        :context="context"
       />
-      <slot name="right" :context="headerContext" />
+      <slot name="right" :context="context" />
 
       <Tooltip>
         <TooltipTrigger as-child>
