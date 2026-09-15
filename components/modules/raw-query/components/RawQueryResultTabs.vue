@@ -19,7 +19,6 @@ import {
 import { cn } from '@/lib/utils';
 import { DatabaseClientType } from '~/core/constants/database-client-type';
 import { useSchemaStore } from '~/core/stores';
-import { RawQueryEditorLayout } from '../constants';
 import { useRawQueryContext } from '../hooks';
 import {
   ViewMode,
@@ -38,29 +37,10 @@ import {
 import { formatColumnsInfo } from '../utils/formatColumnsInfo';
 import { normalizeResultRows } from '../utils/normalizeResultRows';
 
-const props = withDefaults(
-  defineProps<{
-    context?: RawQueryContext<any>;
-    executedResults?: Map<string, ExecutedResultItem>;
-    activeTabId?: string | null;
-    executeLoading?: boolean;
-    isStreaming?: boolean;
-  }>(),
-  {
-    context: undefined,
-    executedResults: undefined,
-    activeTabId: undefined,
-    executeLoading: undefined,
-    isStreaming: undefined,
-  }
-);
-
-const injectedContext = useRawQueryContext();
-const rawQueryContext = computed(() => props.context ?? injectedContext);
+const rawQueryContext = useRawQueryContext();
 
 const executedResults = computed<Map<string, ExecutedResultItem>>(() => {
-  if (props.executedResults) return toValue(props.executedResults);
-  const fromEditor = rawQueryContext.value?.rawQueryEditor?.executedResults;
+  const fromEditor = rawQueryContext?.rawQueryEditor?.executedResults;
   return (
     (toValue(fromEditor) as Map<string, ExecutedResultItem>) ??
     new Map<string, ExecutedResultItem>()
@@ -68,66 +48,46 @@ const executedResults = computed<Map<string, ExecutedResultItem>>(() => {
 });
 
 const activeTabId = computed<string | null>(() => {
-  if (props.activeTabId !== undefined) {
-    const val = toValue(props.activeTabId);
-    return (val as string | null) ?? null;
-  }
-  const fromEditor = rawQueryContext.value?.rawQueryEditor?.activeResultTabId;
+  const fromEditor = rawQueryContext?.rawQueryEditor?.activeResultTabId;
   const val = toValue(fromEditor);
   return (val as string | null) ?? null;
 });
 
 const executeLoading = computed<boolean>(() => {
-  if (props.executeLoading !== undefined)
-    return Boolean(toValue(props.executeLoading));
   const editorState = toValue(
-    rawQueryContext.value?.rawQueryEditor?.queryProcessState
+    rawQueryContext?.rawQueryEditor?.queryProcessState
   );
   if (editorState?.executeLoading !== undefined)
     return Boolean(editorState.executeLoading);
-  return Boolean(toValue(rawQueryContext.value?.executeLoading));
+  return Boolean(toValue(rawQueryContext?.executeLoading));
 });
 
 const isStreaming = computed<boolean>(() => {
-  if (props.isStreaming !== undefined)
-    return Boolean(toValue(props.isStreaming));
   const editorState = toValue(
-    rawQueryContext.value?.rawQueryEditor?.queryProcessState
+    rawQueryContext?.rawQueryEditor?.queryProcessState
   );
   if (editorState?.isStreaming !== undefined)
     return Boolean(editorState.isStreaming);
-  return Boolean(toValue(rawQueryContext.value?.isStreaming));
+  return Boolean(toValue(rawQueryContext?.isStreaming));
 });
 
 const schemaStore = useSchemaStore();
 const { schemas } = storeToRefs(schemaStore);
 
-const emit = defineEmits<{
-  (e: 'update:activeTab', id: string): void;
-  (e: 'close-tab', id: string): void;
-  (e: 'close-other-tabs', id: string): void;
-  (e: 'close-tabs-to-right', id: string): void;
-  (e: 'update:view', tabId: string, view: ExecutedResultItem['view']): void;
-}>();
-
 const handleSelectActiveTab = (id: string) => {
-  emit('update:activeTab', id);
-  rawQueryContext.value?.rawQueryEditor?.setActiveResultTab?.(id);
+  rawQueryContext?.rawQueryEditor?.setActiveResultTab?.(id);
 };
 
 const handleCloseTab = (id: string) => {
-  emit('close-tab', id);
-  rawQueryContext.value?.rawQueryEditor?.closeResultTab?.(id);
+  rawQueryContext?.rawQueryEditor?.closeResultTab?.(id);
 };
 
 const handleCloseOtherTabs = (id: string) => {
-  emit('close-other-tabs', id);
-  rawQueryContext.value?.rawQueryEditor?.closeOtherResultTabs?.(id);
+  rawQueryContext?.rawQueryEditor?.closeOtherResultTabs?.(id);
 };
 
 const handleCloseTabsToRight = (id: string) => {
-  emit('close-tabs-to-right', id);
-  rawQueryContext.value?.rawQueryEditor?.closeResultTabsToRight?.(id);
+  rawQueryContext?.rawQueryEditor?.closeResultTabsToRight?.(id);
 };
 
 // Context menu state
@@ -172,11 +132,7 @@ const activeDatabaseType = computed(
 const setViewMode = (view: ViewMode) => {
   const currentId = activeTabId.value;
   if (currentId) {
-    emit('update:view', currentId, view);
-    rawQueryContext.value?.rawQueryEditor?.updateResultTabView?.(
-      currentId,
-      view
-    );
+    rawQueryContext?.rawQueryEditor?.updateResultTabView?.(currentId, view);
   }
 };
 
@@ -209,32 +165,17 @@ const resultViewContext = computed<RawQueryContext<any> | null>(() => {
   const databaseType = activeDatabaseType.value;
   if (!tab || !databaseType) return null;
 
-  const base = rawQueryContext.value;
   return {
-    ...(base ?? {}),
-    workspaceId: base?.workspaceId ?? '',
-    selectedConnectionId: base?.selectedConnectionId ?? '',
-    connections: base?.connections ?? [],
-    disableConnectionSwitch: base?.disableConnectionSwitch ?? false,
+    ...(rawQueryContext ?? {}),
     databaseType,
-    fileContents: base?.fileContents ?? '',
-    fileVariables: base?.fileVariables ?? '',
-    codeEditorLayout: base?.codeEditorLayout ?? RawQueryEditorLayout.horizontal,
-    isFormatSupported: base?.isFormatSupported ?? true,
-    isVariableSupported: base?.isVariableSupported ?? true,
-    isExplainSupported: base?.isExplainSupported ?? true,
-    rawQueryEditor: base?.rawQueryEditor,
-    editor: base?.editor ?? base?.rawQueryEditor,
-    cursorInfo: base?.cursorInfo ?? { line: 1, column: 1 },
     executeLoading: executeLoading.value,
     isStreaming: isStreaming.value,
-    dialectState: base?.dialectState,
     activeTab: tab,
     activeResultTab: tab,
     activeTabColumns: activeTabColumns.value,
     formattedData: formattedData.value,
     changeView: setViewMode,
-  };
+  } as RawQueryContext<any>;
 });
 
 const resolvedViews = computed(() => {
@@ -257,10 +198,13 @@ const activeView = computed(() =>
 );
 
 watch(
-  () => [props.activeTabId, activeView.value?.mode] as const,
+  () => [activeTabId.value, activeView.value?.mode] as const,
   ([tabId, resolvedMode]) => {
     if (tabId && resolvedMode && activeTab.value?.view !== resolvedMode) {
-      emit('update:view', tabId, resolvedMode);
+      rawQueryContext?.rawQueryEditor?.updateResultTabView?.(
+        tabId,
+        resolvedMode
+      );
     }
   },
   { immediate: true }
@@ -366,28 +310,26 @@ onUnmounted(() => {
     >
       <Tooltip v-for="view in resolvedViews" :key="view.mode">
         <TooltipTrigger as-child>
-          <span>
-            <button
-              type="button"
-              :data-view-mode="view.mode"
-              :disabled="!view.availabilityState.enabled"
-              :title="view.availabilityState.reason"
-              @click="selectView(view)"
-              :class="
-                cn(
-                  'border px-1 text-xs font-normal transition-colors',
-                  activeView?.mode === view.mode
-                    ? 'bg-muted border-transparent border-r-border'
-                    : 'border-transparent',
-                  view.availabilityState.enabled
-                    ? 'hover:bg-muted cursor-pointer'
-                    : 'opacity-40 cursor-not-allowed'
-                )
-              "
-            >
-              {{ view.label }}
-            </button>
-          </span>
+          <button
+            type="button"
+            :data-view-mode="view.mode"
+            :disabled="!view.availabilityState.enabled"
+            :title="view.availabilityState.reason"
+            @click="selectView(view)"
+            :class="
+              cn(
+                'border px-1 text-xs font-normal transition-colors',
+                activeView?.mode === view.mode
+                  ? 'bg-muted border-transparent border-r-border'
+                  : 'border-transparent',
+                view.availabilityState.enabled
+                  ? 'hover:bg-muted cursor-pointer'
+                  : 'opacity-40 cursor-not-allowed'
+              )
+            "
+          >
+            {{ view.label }}
+          </button>
         </TooltipTrigger>
         <TooltipContent v-if="view.availabilityState.reason">
           {{ view.availabilityState.reason }}
@@ -467,13 +409,6 @@ onUnmounted(() => {
             </ContextMenuContent>
           </ContextMenu>
         </div>
-
-        <!-- Extra actions slot -->
-        <slot
-          name="extra-actions"
-          :context="resultViewContext"
-          :raw-query-context="rawQueryContext"
-        />
 
         <!-- Fullscreen Button -->
         <div class="flex items-center gap-1.5 px-2 pb-1.5 flex-shrink-0">

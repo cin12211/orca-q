@@ -1,5 +1,5 @@
 import { createPinia, setActivePinia } from 'pinia';
-import { nextTick } from 'vue';
+import { nextTick, ref } from 'vue';
 import { mount, type VueWrapper } from '@vue/test-utils';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import RawQueryResultTabs from '~/components/modules/raw-query/components/RawQueryResultTabs.vue';
@@ -8,6 +8,7 @@ import {
   type ExecutedResultItem,
 } from '~/components/modules/raw-query/interfaces';
 import type { RawQueryResultViewContext } from '~/components/modules/raw-query/registry';
+import { RAW_QUERY_CONTEXT_KEY } from '~/components/modules/raw-query/hooks/useRawQueryContext';
 import { DatabaseClientType } from '~/core/constants/database-client-type';
 import { useSchemaStore } from '~/core/stores';
 import type { Schema } from '~/core/types';
@@ -180,15 +181,40 @@ function mountResultTabs(options: MountOptions = {}) {
     executedResults.set(tabId, tab);
   }
 
-  return mount(RawQueryResultTabs, {
-    props: {
-      executedResults,
-      activeTabId: tabId,
+  const mockEditor = {
+    executedResults: ref(executedResults),
+    activeResultTabId: ref(tabId),
+    queryProcessState: ref({
       executeLoading: options.executeLoading ?? false,
       isStreaming: options.isStreaming ?? false,
-    },
+    }),
+    updateResultTabView: vi.fn(),
+    setActiveResultTab: vi.fn(),
+    closeResultTab: vi.fn(),
+    closeOtherResultTabs: vi.fn(),
+    closeResultTabsToRight: vi.fn(),
+  };
+
+  const mockContext = {
+    workspaceId: 'workspace',
+    selectedConnectionId: 'conn-1',
+    connections: [],
+    disableConnectionSwitch: false,
+    databaseType: options.databaseType,
+    fileContents: '',
+    fileVariables: '',
+    rawQueryEditor: mockEditor,
+    editor: mockEditor,
+    executeLoading: options.executeLoading ?? false,
+    isStreaming: options.isStreaming ?? false,
+  };
+
+  const wrapper = mount(RawQueryResultTabs, {
     global: {
       plugins: [pinia],
+      provide: {
+        [RAW_QUERY_CONTEXT_KEY as symbol]: mockContext,
+      },
       stubs: {
         BaseEmpty: {
           props: ['title', 'desc'],
@@ -215,6 +241,8 @@ function mountResultTabs(options: MountOptions = {}) {
       },
     },
   });
+
+  return Object.assign(wrapper, { mockEditor });
 }
 
 const viewModes = (wrapper: VueWrapper<any>) =>
@@ -250,15 +278,40 @@ describe('RawQueryResultTabs', () => {
       .spyOn(schemaStore, 'fetchReservedSchemas')
       .mockResolvedValue(undefined);
 
-    const wrapper = mount(RawQueryResultTabs, {
-      props: {
-        executedResults: createExecutedResults(),
-        activeTabId: 'query-1',
+    const executedResults = createExecutedResults();
+    const mockEditor = {
+      executedResults: ref(executedResults),
+      activeResultTabId: ref('query-1'),
+      queryProcessState: ref({
         executeLoading: false,
         isStreaming: false,
-      },
+      }),
+      updateResultTabView: vi.fn(),
+      setActiveResultTab: vi.fn(),
+      closeResultTab: vi.fn(),
+      closeOtherResultTabs: vi.fn(),
+      closeResultTabsToRight: vi.fn(),
+    };
+    const mockContext = {
+      workspaceId: 'workspace',
+      selectedConnectionId: 'conn-1',
+      connections: [],
+      disableConnectionSwitch: false,
+      databaseType: DatabaseClientType.POSTGRES,
+      fileContents: '',
+      fileVariables: '',
+      rawQueryEditor: mockEditor,
+      editor: mockEditor,
+      executeLoading: false,
+      isStreaming: false,
+    };
+
+    const wrapper = mount(RawQueryResultTabs, {
       global: {
         plugins: [pinia],
+        provide: {
+          [RAW_QUERY_CONTEXT_KEY as symbol]: mockContext,
+        },
         stubs: {
           BaseEmpty: { template: '<div data-test="empty" />' },
           ContextMenu: { template: '<div><slot /></div>' },
@@ -354,7 +407,7 @@ describe('RawQueryResultTabs', () => {
     });
 
     await wrapper.get('[data-view-mode="result"]').trigger('click');
-    expect(wrapper.emitted('update:view')).toBeUndefined();
+    expect(wrapper.mockEditor.updateResultTabView).not.toHaveBeenCalled();
     expect(
       wrapper.get('[data-view-mode="result"]').attributes('disabled')
     ).toBeDefined();
@@ -370,10 +423,10 @@ describe('RawQueryResultTabs', () => {
     });
 
     await wrapper.get('[data-view-mode="info"]').trigger('click');
-    expect(wrapper.emitted('update:view')).toContainEqual([
+    expect(wrapper.mockEditor.updateResultTabView).toHaveBeenCalledWith(
       'query-1',
-      ViewMode.INFO,
-    ]);
+      ViewMode.INFO
+    );
   });
 
   it('passes complete view context to the active renderer', async () => {
@@ -407,10 +460,10 @@ describe('RawQueryResultTabs', () => {
     expect(typeof context.changeView).toBe('function');
 
     context.changeView(ViewMode.INFO);
-    expect(wrapper.emitted('update:view')).toContainEqual([
+    expect(wrapper.mockEditor.updateResultTabView).toHaveBeenCalledWith(
       'query-1',
-      ViewMode.INFO,
-    ]);
+      ViewMode.INFO
+    );
   });
 
   it('auto-reconciles to Error view and emits update:view on failed execution', async () => {
@@ -435,10 +488,10 @@ describe('RawQueryResultTabs', () => {
     await nextTick();
 
     expect(wrapper.findComponent(StubErrorRenderer).exists()).toBe(true);
-    expect(wrapper.emitted('update:view')).toContainEqual([
+    expect(wrapper.mockEditor.updateResultTabView).toHaveBeenCalledWith(
       'query-1',
-      ViewMode.ERROR,
-    ]);
+      ViewMode.ERROR
+    );
   });
 
   it('renders explicit unsupported state and hides view navigation when database type is missing', async () => {

@@ -157,14 +157,8 @@ const rawQueryContext = createRawQueryContext({
 
 provideRawQueryContext(rawQueryContext);
 
-const {
-  cursorInfo,
-  extensions,
-  codeEditorRef,
-  queryProcessState,
-  executedResults,
-  activeResultTabId,
-} = rawQueryEditor;
+const { cursorInfo, extensions, codeEditorRef, executedResults } =
+  rawQueryEditor;
 
 const { contextMenuItems, onContextMenuOpen } = useRawQueryEditorContextMenu({
   onExecuteCurrent: rawQueryEditor.onExecuteCurrent,
@@ -376,20 +370,7 @@ onBeforeUnmount(() => {
 
     <template #result>
       <IntroRawQuery v-if="executedResults.size === 0" />
-
-      <RawQueryResultTabs
-        v-else
-        :context="rawQueryContext"
-        :executed-results="executedResults"
-        :active-tab-id="activeResultTabId"
-        :execute-loading="queryProcessState.executeLoading"
-        :is-streaming="queryProcessState.isStreaming"
-        @update:active-tab="rawQueryEditor.setActiveResultTab"
-        @close-tab="rawQueryEditor.closeResultTab"
-        @close-other-tabs="rawQueryEditor.closeOtherResultTabs"
-        @close-tabs-to-right="rawQueryEditor.closeResultTabsToRight"
-        @update:view="rawQueryEditor.updateResultTabView"
-      />
+      <RawQueryResultTabs v-else />
     </template>
   </RawQueryLayout>
 </template>
