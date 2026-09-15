@@ -3,7 +3,7 @@ import { inject, provide, reactive, toValue } from 'vue';
 import type { DatabaseClientType } from '~/core/constants/database-client-type';
 import type { Connection, RowQueryFile } from '~/core/stores';
 import { RawQueryEditorLayout } from '../constants';
-import type { RawQueryContext } from '../registry/rawQueryProfile.types';
+import type { RawQueryContext } from '../registry/rawQueryPlugin.types';
 import type { RawQueryEditor } from './useRawQueryEditor';
 
 export interface CreateRawQueryContextOptions<

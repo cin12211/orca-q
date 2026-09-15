@@ -1,18 +1,20 @@
 import { DatabaseClientType } from '~/core/constants/database-client-type';
-import type { RawQueryDialectPlugin } from '../rawQueryPlugin.types';
+import type { RawQueryPlugin } from '../rawQueryPlugin.types';
 import { mongoPlugin } from './mongo.plugin';
 import { postgresPlugin } from './postgres.plugin';
 import { redisPlugin } from './redis.plugin';
+import { createStandardSqlPlugin } from './sql.plugin';
 import { sqlitePlugin } from './sqlite.plugin';
 
 export * from './postgres.plugin';
 export * from './mongo.plugin';
 export * from './redis.plugin';
 export * from './sqlite.plugin';
+export * from './sql.plugin';
 
 export function getRawQueryPlugin(
   databaseType?: DatabaseClientType
-): RawQueryDialectPlugin<any> {
+): RawQueryPlugin {
   switch (databaseType) {
     case DatabaseClientType.MONGODB:
       return mongoPlugin;
@@ -21,7 +23,9 @@ export function getRawQueryPlugin(
     case DatabaseClientType.SQLITE3:
     case DatabaseClientType.BETTER_SQLITE3:
       return sqlitePlugin;
-    default:
+    case DatabaseClientType.POSTGRES:
       return postgresPlugin;
+    default:
+      return createStandardSqlPlugin(databaseType ?? DatabaseClientType.MYSQL);
   }
 }

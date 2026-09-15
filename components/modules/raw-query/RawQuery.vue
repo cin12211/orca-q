@@ -22,7 +22,7 @@ import {
   useRawQueryFileContent,
 } from './hooks';
 import { useRawQueryEditorContextMenu } from './hooks/useRawQueryEditorContextMenu';
-import { getRawQueryProfile } from './registry';
+import { getRawQueryPlugin } from './registry';
 
 const route = useRoute('workspaceId-connectionId-explorer-fileId');
 const workspaceId = computed(() => {
@@ -55,16 +55,15 @@ const isCurrentConnectionStrictMode = computed(() => {
     .some(tag => tag.strictMode);
 });
 
-const rawQueryProfile = computed(() =>
-  getRawQueryProfile(connection.value?.type)
+const rawQueryPlugin = computed(() =>
+  getRawQueryPlugin(connection.value?.type)
 );
-const currentProfile = rawQueryProfile;
 
 const isFormatSupported = computed(
-  () => rawQueryProfile.value.isFormatSupported ?? true
+  () => rawQueryPlugin.value.isFormatSupported ?? true
 );
 const isVariableSupported = computed(
-  () => rawQueryProfile.value.isVariableSupported ?? true
+  () => rawQueryPlugin.value.isVariableSupported ?? true
 );
 const isExplainSupported = computed(
   () => connection.value?.type === DatabaseClientType.POSTGRES
@@ -72,13 +71,12 @@ const isExplainSupported = computed(
 const dialectState = shallowRef<Record<string, any>>({});
 
 watch(
-  () => rawQueryProfile.value,
-  newProfile => {
-    const plugin = newProfile?.plugin;
-    if (typeof plugin?.createDialectState === 'function') {
-      dialectState.value = plugin.createDialectState();
-    } else if (plugin?.dialectState) {
-      dialectState.value = plugin.dialectState;
+  () => rawQueryPlugin.value,
+  newPlugin => {
+    if (typeof newPlugin?.createDialectState === 'function') {
+      dialectState.value = newPlugin.createDialectState();
+    } else if (newPlugin?.dialectState) {
+      dialectState.value = newPlugin.dialectState;
     } else {
       dialectState.value = {};
     }
@@ -177,7 +175,7 @@ const { contextMenuItems, onContextMenuOpen } = useRawQueryEditorContextMenu({
   isExplainSupported,
   getEditorView: () =>
     codeEditorRef.value?.editorView as EditorView | null | undefined,
-  plugin: computed(() => currentProfile.value?.plugin),
+  plugin: rawQueryPlugin,
   context: rawQueryContext,
 });
 

@@ -10,7 +10,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '#components';
-import type { RawQueryContext } from '../../registry/rawQueryProfile.types';
+import type { RawQueryContext } from '../../registry/rawQueryPlugin.types';
 
 const props = defineProps<{
   context: RawQueryContext;

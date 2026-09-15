@@ -4,11 +4,11 @@ import type { EditorView } from '@codemirror/view';
 import { getCurrentStatement } from '~/components/base/code-editor/utils';
 import type { ContextMenuItem } from '~/components/base/context-menu/menuContext.type';
 import { postgresPlugin } from '../registry/plugins/postgres.plugin';
-import {
-  type RawQueryContextMenuContext,
-  type RawQueryDialectPlugin,
+import type {
+  RawQueryContext,
+  RawQueryContextMenuContext,
+  RawQueryDialectPlugin,
 } from '../registry/rawQueryPlugin.types';
-import type { RawQueryContext } from '../registry/rawQueryProfile.types';
 import { buildContextMenuItems } from '../utils/rawQueryContextMenu';
 
 export interface EditorContextMenuActions {

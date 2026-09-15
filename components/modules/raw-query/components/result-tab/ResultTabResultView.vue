@@ -9,12 +9,10 @@ import { useHotkeys } from '~/core/composables/useHotKeys';
 import { DatabaseClientType } from '~/core/constants/database-client-type';
 import { exportData, ExportFormat } from '~/core/helpers/copyData';
 import { useSchemaStore } from '~/core/stores';
-import {
-  useRawQueryEditedCells,
-  useRawQueryMutation,
-  useRawQueryRelationPreview,
-} from '../../hooks';
-import type { RawQueryContext } from '../../registry';
+import { useRawQueryEditedCells } from '../../hooks/useRawQueryEditedCells';
+import { useRawQueryMutation } from '../../hooks/useRawQueryMutation';
+import { useRawQueryRelationPreview } from '../../hooks/useRawQueryRelationPreview';
+import type { RawQueryContext } from '../../registry/rawQueryPlugin.types';
 import {
   buildRawQueryColumnDefs,
   type RawQueryDirtyTracker,

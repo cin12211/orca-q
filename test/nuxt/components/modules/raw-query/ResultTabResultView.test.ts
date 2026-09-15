@@ -40,6 +40,30 @@ vi.mock('~/components/modules/quick-query/hooks', () => ({
   }),
 }));
 
+const mockUseRawQueryMutation = ({ onSaved }: { onSaved: () => void }) => {
+  rawQueryMutationControls.setOnSaved(onSaved);
+
+  return {
+    isPreviewOpen: ref(false),
+    isMutating: ref(false),
+    pendingAction: ref('update'),
+    previewGroups: ref([]),
+    hasNoPkWarning: ref(false),
+    totalUpdateCount: ref(0),
+    requestSave: rawQueryMutationControls.requestSave,
+    deleteGroups: ref([]),
+    deleteHasNoPkWarning: ref(false),
+    totalDeleteCount: ref(0),
+    requestDelete: rawQueryMutationControls.requestDelete,
+    cancelPreview: rawQueryMutationControls.cancelPreview,
+    confirmAndExecute: rawQueryMutationControls.confirmAndExecute,
+  };
+};
+
+vi.mock('~/components/modules/raw-query/hooks/useRawQueryMutation', () => ({
+  useRawQueryMutation: mockUseRawQueryMutation,
+}));
+
 vi.mock('~/components/modules/raw-query/hooks', async () => {
   const actual = await vi.importActual<
     typeof import('~/components/modules/raw-query/hooks')
@@ -47,25 +71,7 @@ vi.mock('~/components/modules/raw-query/hooks', async () => {
 
   return {
     ...actual,
-    useRawQueryMutation: ({ onSaved }: { onSaved: () => void }) => {
-      rawQueryMutationControls.setOnSaved(onSaved);
-
-      return {
-        isPreviewOpen: ref(false),
-        isMutating: ref(false),
-        pendingAction: ref('update'),
-        previewGroups: ref([]),
-        hasNoPkWarning: ref(false),
-        totalUpdateCount: ref(0),
-        requestSave: rawQueryMutationControls.requestSave,
-        deleteGroups: ref([]),
-        deleteHasNoPkWarning: ref(false),
-        totalDeleteCount: ref(0),
-        requestDelete: rawQueryMutationControls.requestDelete,
-        cancelPreview: rawQueryMutationControls.cancelPreview,
-        confirmAndExecute: rawQueryMutationControls.confirmAndExecute,
-      };
-    },
+    useRawQueryMutation: mockUseRawQueryMutation,
   };
 });
 

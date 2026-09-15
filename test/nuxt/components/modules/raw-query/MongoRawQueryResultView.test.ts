@@ -135,7 +135,9 @@ describe('MongoRawQueryResultView', () => {
     });
 
     const list = wrapper.getComponent(MongoCollectionListView);
-    expect(list.props('documents')).toEqual([{ _id: 'doc-1', title: 'Context Item' }]);
+    expect(list.props('documents')).toEqual([
+      { _id: 'doc-1', title: 'Context Item' },
+    ]);
 
     const dialog = wrapper.getComponent(MongoRawQueryApprovalDialog);
     expect(dialog.props('open')).toBe(true);

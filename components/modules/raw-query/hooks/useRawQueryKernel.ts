@@ -6,10 +6,10 @@ import type { Connection } from '~/core/stores';
 import type { EditorCursor } from '../interfaces';
 import { getRawQueryPlugin } from '../registry/plugins';
 import type {
+  RawQueryContext,
   RawQueryDialectPlugin,
   RawQueryExecutionContext,
 } from '../registry/rawQueryPlugin.types';
-import type { RawQueryContext } from '../registry/rawQueryProfile.types';
 import { useResultTabs } from './useResultTabs';
 
 export interface UseRawQueryKernelOptions<TDialectState = unknown> {

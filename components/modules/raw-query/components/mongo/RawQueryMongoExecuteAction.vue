@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Tooltip, TooltipContent, TooltipTrigger } from '#components';
 import ContextMenuShortcut from '~/components/ui/context-menu/ContextMenuShortcut.vue';
-import type { RawQueryContext } from '../../registry/rawQueryProfile.types';
+import type { RawQueryContext } from '../../registry/rawQueryPlugin.types';
 
 const props = defineProps<{
   context: RawQueryContext;

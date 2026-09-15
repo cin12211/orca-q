@@ -3,7 +3,7 @@ import { computed } from 'vue';
 import { useRedisWorkspace } from '~/components/modules/redis-workspace/hooks/useRedisWorkspace';
 import RedisDBSelector from '~/components/modules/selectors/RedisDBSelector.vue';
 import { DatabaseClientType } from '~/core/constants/database-client-type';
-import type { RawQueryContext } from '../../registry/rawQueryProfile.types';
+import type { RawQueryContext } from '../../registry/rawQueryPlugin.types';
 
 const props = defineProps<{
   context: RawQueryContext;

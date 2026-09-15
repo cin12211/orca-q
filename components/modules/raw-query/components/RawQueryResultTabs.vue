@@ -1,6 +1,14 @@
 <script setup lang="ts">
-import { computed, ref, shallowRef, toValue, onMounted, onUnmounted, watch } from 'vue';
 import { storeToRefs } from 'pinia';
+import {
+  computed,
+  ref,
+  shallowRef,
+  toValue,
+  onMounted,
+  onUnmounted,
+  watch,
+} from 'vue';
 import {
   ContextMenu,
   ContextMenuContent,
@@ -12,12 +20,12 @@ import { cn } from '@/lib/utils';
 import { DatabaseClientType } from '~/core/constants/database-client-type';
 import { useSchemaStore } from '~/core/stores';
 import { RawQueryEditorLayout } from '../constants';
+import { useRawQueryContext } from '../hooks';
 import {
   ViewMode,
   type ExecutedResultItem,
   type MappedRawColumn,
 } from '../interfaces';
-import { useRawQueryContext } from '../hooks';
 import {
   getRawQueryResultProfile,
   type RawQueryContext,
@@ -53,7 +61,10 @@ const rawQueryContext = computed(() => props.context ?? injectedContext);
 const executedResults = computed<Map<string, ExecutedResultItem>>(() => {
   if (props.executedResults) return toValue(props.executedResults);
   const fromEditor = rawQueryContext.value?.rawQueryEditor?.executedResults;
-  return (toValue(fromEditor) as Map<string, ExecutedResultItem>) ?? new Map<string, ExecutedResultItem>();
+  return (
+    (toValue(fromEditor) as Map<string, ExecutedResultItem>) ??
+    new Map<string, ExecutedResultItem>()
+  );
 });
 
 const activeTabId = computed<string | null>(() => {
@@ -67,16 +78,24 @@ const activeTabId = computed<string | null>(() => {
 });
 
 const executeLoading = computed<boolean>(() => {
-  if (props.executeLoading !== undefined) return Boolean(toValue(props.executeLoading));
-  const editorState = toValue(rawQueryContext.value?.rawQueryEditor?.queryProcessState);
-  if (editorState?.executeLoading !== undefined) return Boolean(editorState.executeLoading);
+  if (props.executeLoading !== undefined)
+    return Boolean(toValue(props.executeLoading));
+  const editorState = toValue(
+    rawQueryContext.value?.rawQueryEditor?.queryProcessState
+  );
+  if (editorState?.executeLoading !== undefined)
+    return Boolean(editorState.executeLoading);
   return Boolean(toValue(rawQueryContext.value?.executeLoading));
 });
 
 const isStreaming = computed<boolean>(() => {
-  if (props.isStreaming !== undefined) return Boolean(toValue(props.isStreaming));
-  const editorState = toValue(rawQueryContext.value?.rawQueryEditor?.queryProcessState);
-  if (editorState?.isStreaming !== undefined) return Boolean(editorState.isStreaming);
+  if (props.isStreaming !== undefined)
+    return Boolean(toValue(props.isStreaming));
+  const editorState = toValue(
+    rawQueryContext.value?.rawQueryEditor?.queryProcessState
+  );
+  if (editorState?.isStreaming !== undefined)
+    return Boolean(editorState.isStreaming);
   return Boolean(toValue(rawQueryContext.value?.isStreaming));
 });
 
@@ -431,9 +450,7 @@ onUnmounted(() => {
               class="w-56"
               v-if="currentTabMenuContext"
             >
-              <ContextMenuItem
-                @select="handleCloseTab(currentTabMenuContext!)"
-              >
+              <ContextMenuItem @select="handleCloseTab(currentTabMenuContext!)">
                 Close
               </ContextMenuItem>
               <ContextMenuItem

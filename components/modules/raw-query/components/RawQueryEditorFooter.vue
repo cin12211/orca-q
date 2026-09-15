@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, toValue, type Component } from 'vue';
 import { useRawQueryContext } from '../hooks';
-import { getRawQueryProfile } from '../registry';
+import { getRawQueryPlugin } from '../registry';
 
 const props = defineProps<{
   customLeftComponents?: Component[];
@@ -11,16 +11,16 @@ const props = defineProps<{
 const context = useRawQueryContext();
 
 const databaseType = computed(() => toValue(context?.databaseType));
-const rawQueryProfile = computed(() => getRawQueryProfile(databaseType.value));
-const footerProfile = computed(() => rawQueryProfile.value.footer);
+const rawQueryPlugin = computed(() => getRawQueryPlugin(databaseType.value));
+const footerConfig = computed(() => rawQueryPlugin.value?.footer);
 
 const leftComponents = computed<Component[]>(() => [
-  ...(footerProfile.value.leftComponents ?? []),
+  ...(footerConfig.value?.leftComponents ?? []),
   ...(props.customLeftComponents ?? []),
 ]);
 
 const rightComponents = computed<Component[]>(() => [
-  ...(footerProfile.value.rightComponents ?? []),
+  ...(footerConfig.value?.rightComponents ?? []),
   ...(props.customRightComponents ?? []),
 ]);
 </script>

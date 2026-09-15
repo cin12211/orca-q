@@ -4,7 +4,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '#components';
 import PureConnectionSelector from '../../selectors/PureConnectionSelector.vue';
 import { RawQueryEditorLayout } from '../constants';
 import { useRawQueryContext } from '../hooks';
-import { getRawQueryProfile } from '../registry';
+import { getRawQueryPlugin } from '../registry';
 import AddVariableModal from './AddVariableModal.vue';
 import RawQueryConfigModal from './RawQueryConfigModal.vue';
 
@@ -16,8 +16,8 @@ const props = defineProps<{
 const context = useRawQueryContext();
 
 const databaseType = computed(() => toValue(context?.databaseType));
-const rawQueryProfile = computed(() => getRawQueryProfile(databaseType.value));
-const headerProfile = computed(() => rawQueryProfile.value.header);
+const rawQueryPlugin = computed(() => getRawQueryPlugin(databaseType.value));
+const headerConfig = computed(() => rawQueryPlugin.value?.header);
 
 const workspaceId = computed(() => toValue(context?.workspaceId) ?? '');
 const selectedConnectionId = computed(
@@ -49,12 +49,12 @@ const handleUpdateFileVariables = async (variables: string): Promise<void> => {
 };
 
 const leftComponents = computed<Component[]>(() => [
-  ...(headerProfile.value.leftComponents ?? []),
+  ...(headerConfig.value?.leftComponents ?? []),
   ...(props.customLeftComponents ?? []),
 ]);
 
 const rightComponents = computed<Component[]>(() => [
-  ...(headerProfile.value.rightComponents ?? []),
+  ...(headerConfig.value?.rightComponents ?? []),
   ...(props.customRightComponents ?? []),
 ]);
 

@@ -19,7 +19,7 @@ import type {
   ExplainAnalyzeSerializeMode,
   ExplainAnalyzeToggleOptionKey,
 } from '../../interfaces';
-import type { RawQueryContext } from '../../registry/rawQueryProfile.types';
+import type { RawQueryContext } from '../../registry/rawQueryPlugin.types';
 
 const props = defineProps<{
   context: RawQueryContext;

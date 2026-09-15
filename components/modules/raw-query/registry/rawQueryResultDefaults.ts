@@ -12,7 +12,7 @@ import {
   type RawQueryResultViewAvailability,
   type RawQueryResultViewDefinition,
   type ResolvedRawQueryResultViewDefinition,
-} from './rawQueryProfile.types';
+} from './rawQueryPlugin.types';
 
 const ResultTabChartRenderer = defineAsyncComponent(
   () => import('../components/result-tab/adapters/ResultTabChartRenderer.vue')

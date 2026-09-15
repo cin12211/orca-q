@@ -1,59 +1,52 @@
 import { DatabaseClientType } from '~/core/constants/database-client-type';
 import {
-  createStandardSqlRawQueryProfile,
-  mongoRawQueryProfile,
-  postgresRawQueryProfile,
-  redisRawQueryProfile,
-} from './profiles';
+  createStandardSqlPlugin,
+  getRawQueryPlugin,
+  mongoPlugin,
+  postgresPlugin,
+  redisPlugin,
+  sqlitePlugin,
+} from './plugins';
 import type {
-  RawQueryProfile,
+  RawQueryPlugin,
   RawQueryResultProfile,
-} from './rawQueryProfile.types';
+} from './rawQueryPlugin.types';
 
-export const RAW_QUERY_REGISTRY: Record<DatabaseClientType, RawQueryProfile> = {
-  [DatabaseClientType.POSTGRES]: postgresRawQueryProfile,
-  [DatabaseClientType.MYSQL]: createStandardSqlRawQueryProfile(
-    DatabaseClientType.MYSQL
-  ),
-  [DatabaseClientType.MYSQL2]: createStandardSqlRawQueryProfile(
+export const RAW_QUERY_PLUGIN_REGISTRY: Record<
+  DatabaseClientType,
+  RawQueryPlugin
+> = {
+  [DatabaseClientType.POSTGRES]: postgresPlugin,
+  [DatabaseClientType.MYSQL]: createStandardSqlPlugin(DatabaseClientType.MYSQL),
+  [DatabaseClientType.MYSQL2]: createStandardSqlPlugin(
     DatabaseClientType.MYSQL2
   ),
-  [DatabaseClientType.MARIADB]: createStandardSqlRawQueryProfile(
+  [DatabaseClientType.MARIADB]: createStandardSqlPlugin(
     DatabaseClientType.MARIADB
   ),
-  [DatabaseClientType.REDIS]: redisRawQueryProfile,
-  [DatabaseClientType.MONGODB]: mongoRawQueryProfile,
-  [DatabaseClientType.SQLITE3]: createStandardSqlRawQueryProfile(
-    DatabaseClientType.SQLITE3
-  ),
-  [DatabaseClientType.BETTER_SQLITE3]: createStandardSqlRawQueryProfile(
-    DatabaseClientType.BETTER_SQLITE3
-  ),
-  [DatabaseClientType.SNOWFLAKE]: createStandardSqlRawQueryProfile(
+  [DatabaseClientType.REDIS]: redisPlugin,
+  [DatabaseClientType.MONGODB]: mongoPlugin,
+  [DatabaseClientType.SQLITE3]: sqlitePlugin,
+  [DatabaseClientType.BETTER_SQLITE3]: sqlitePlugin,
+  [DatabaseClientType.SNOWFLAKE]: createStandardSqlPlugin(
     DatabaseClientType.SNOWFLAKE
   ),
-  [DatabaseClientType.MSSQL]: createStandardSqlRawQueryProfile(
-    DatabaseClientType.MSSQL
-  ),
-  [DatabaseClientType.ORACLE]: createStandardSqlRawQueryProfile(
+  [DatabaseClientType.MSSQL]: createStandardSqlPlugin(DatabaseClientType.MSSQL),
+  [DatabaseClientType.ORACLE]: createStandardSqlPlugin(
     DatabaseClientType.ORACLE
   ),
 };
 
-export function getRawQueryProfile(
-  databaseType?: DatabaseClientType
-): RawQueryProfile {
-  if (!databaseType) {
-    return RAW_QUERY_REGISTRY[DatabaseClientType.MYSQL];
-  }
-  return (
-    RAW_QUERY_REGISTRY[databaseType] ??
-    RAW_QUERY_REGISTRY[DatabaseClientType.MYSQL]
-  );
-}
+// Backward-compatible registry alias
+export const RAW_QUERY_REGISTRY = RAW_QUERY_PLUGIN_REGISTRY;
+
+export { getRawQueryPlugin };
+export const getRawQueryProfile = getRawQueryPlugin;
 
 export function getRawQueryResultProfile(
   databaseType?: DatabaseClientType
 ): RawQueryResultProfile {
-  return getRawQueryProfile(databaseType).result;
+  return getRawQueryPlugin(databaseType).result!;
 }
+
+export const getRawQueryResultConfig = getRawQueryResultProfile;

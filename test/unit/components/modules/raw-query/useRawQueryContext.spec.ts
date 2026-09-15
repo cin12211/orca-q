@@ -7,10 +7,10 @@ import {
   useRawQueryContext,
 } from '~/components/modules/raw-query/hooks/useRawQueryContext';
 import {
-  mongoRawQueryProfile,
+  mongoPlugin,
   type MongoDialectState,
-} from '~/components/modules/raw-query/registry/profiles/mongo.profile';
-import type { RawQueryContext } from '~/components/modules/raw-query/registry/rawQueryProfile.types';
+} from '~/components/modules/raw-query/registry/plugins/mongo.plugin';
+import type { RawQueryContext } from '~/components/modules/raw-query/registry/rawQueryPlugin.types';
 import { DatabaseClientType } from '~/core/constants/database-client-type';
 import type { Connection } from '~/core/stores';
 

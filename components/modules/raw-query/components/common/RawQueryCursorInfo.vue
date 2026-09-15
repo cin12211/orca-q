@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { RawQueryContext } from '../../registry/rawQueryProfile.types';
+import type { RawQueryContext } from '../../registry/rawQueryPlugin.types';
 
 defineProps<{
   context: RawQueryContext;
