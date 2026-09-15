@@ -1,10 +1,13 @@
 <script setup lang="ts">
 import { MongoRawQueryResultView } from '../../../mongo';
-import type { RawQueryResultViewContext } from '../../../registry';
+import type { MongoDialectState, RawQueryContext } from '../../../registry';
 
-defineProps<{ context: RawQueryResultViewContext }>();
+defineProps<{ context: RawQueryContext<MongoDialectState> }>();
 </script>
 
 <template>
-  <MongoRawQueryResultView :documents="context.formattedData" />
+  <MongoRawQueryResultView
+    :documents="context.formattedData"
+    :context="context"
+  />
 </template>

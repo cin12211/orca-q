@@ -1,15 +1,15 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import JsonEditorVue from 'json-editor-vue';
-import type { RawQueryResultViewContext } from '../../registry';
+import type { RawQueryContext } from '../../registry';
 
 const props = defineProps<{
-  context: RawQueryResultViewContext;
+  context: RawQueryContext;
 }>();
 
 const displayData = computed(
   () =>
-    props.context.activeTab.metadata.rawResult ?? props.context.formattedData
+    props.context.activeTab?.metadata?.rawResult ?? props.context.formattedData
 );
 </script>
 
@@ -17,7 +17,7 @@ const displayData = computed(
   <div class="h-full flex flex-col flex-1 overflow-hidden">
     <BaseEmpty
       v-if="
-        props.context.formattedData.length === 0 &&
+        (props.context.formattedData?.length ?? 0) === 0 &&
         !props.context.executeLoading &&
         !props.context.isStreaming
       "

@@ -14,7 +14,7 @@ import {
   useRawQueryMutation,
   useRawQueryRelationPreview,
 } from '../../hooks';
-import type { RawQueryResultViewContext } from '../../registry';
+import type { RawQueryContext } from '../../registry';
 import {
   buildRawQueryColumnDefs,
   type RawQueryDirtyTracker,
@@ -27,12 +27,12 @@ import RawQueryResultControlBar from './RawQueryResultControlBar.vue';
 import RawQueryUpdatePreviewDialog from './RawQueryUpdatePreviewDialog.vue';
 
 const props = defineProps<{
-  context: RawQueryResultViewContext;
+  context: RawQueryContext;
 }>();
 
-const activeTab = computed(() => props.context.activeTab);
-const activeTabColumns = computed(() => props.context.activeTabColumns);
-const formattedData = computed(() => props.context.formattedData);
+const activeTab = computed(() => props.context.activeTab!);
+const activeTabColumns = computed(() => props.context.activeTabColumns || []);
+const formattedData = computed(() => props.context.formattedData || []);
 const executeLoading = computed(() => props.context.executeLoading);
 const isStreaming = computed(() => props.context.isStreaming);
 

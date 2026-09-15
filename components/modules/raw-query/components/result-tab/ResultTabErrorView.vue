@@ -1,13 +1,13 @@
 <script setup lang="ts">
 import { computed, nextTick, watch } from 'vue';
 import type { DecorationItem } from 'shiki';
-import type { RawQueryResultViewContext } from '../../registry';
+import type { RawQueryContext } from '../../registry';
 
 const props = defineProps<{
-  context: RawQueryResultViewContext;
+  context: RawQueryContext;
 }>();
 
-const activeTab = computed(() => props.context.activeTab);
+const activeTab = computed(() => props.context.activeTab!);
 
 // Get error position from normalized error
 const getErrorPosition = computed(() => {

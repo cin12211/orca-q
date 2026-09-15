@@ -1,6 +1,23 @@
 import { mount } from '@vue/test-utils';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import MongoRawQueryConsole from '~/components/modules/raw-query/mongo/components/MongoRawQueryConsole.vue';
+
+vi.mock('@tanstack/vue-virtual', () => ({
+  useVirtualizer: (options: any) => ({
+    value: {
+      getVirtualItems: () =>
+        Array.from({ length: options?.count ?? 0 }, (_, i) => ({
+          index: i,
+          key: i,
+          start: i * 32,
+        })),
+      getTotalSize: () => (options?.count ?? 0) * 32,
+      measureElement: () => {},
+      measure: () => {},
+      scrollToIndex: () => {},
+    },
+  }),
+}));
 
 describe('MongoRawQueryConsole', () => {
   it('renders streamed log entries in order with inspectable object values', () => {
@@ -11,6 +28,14 @@ describe('MongoRawQueryConsole', () => {
           { level: 'warn', args: ['slow cursor'] },
           { level: 'error', args: ['query failed'] },
         ],
+      },
+      global: {
+        stubs: {
+          Tooltip: { template: '<div><slot /></div>' },
+          TooltipTrigger: { template: '<div><slot /></div>' },
+          TooltipContent: { template: '<div><slot /></div>' },
+          Icon: true,
+        },
       },
     });
 

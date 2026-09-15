@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { ExplainQuery } from '../../../modules/explain-query';
-import type { RawQueryResultViewContext } from '../../../registry';
+import type { RawQueryContext } from '../../../registry';
 
-defineProps<{ context: RawQueryResultViewContext }>();
+defineProps<{ context: RawQueryContext }>();
 </script>
 
 <template>
-  <ExplainQuery :active-tab="context.activeTab" />
+  <ExplainQuery v-if="context.activeTab" :active-tab="context.activeTab" />
 </template>

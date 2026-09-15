@@ -22,7 +22,6 @@ import {
   useRawQueryFileContent,
 } from './hooks';
 import { useRawQueryEditorContextMenu } from './hooks/useRawQueryEditorContextMenu';
-import MongoRawQueryApprovalDialog from './mongo/components/MongoRawQueryApprovalDialog.vue';
 import { getRawQueryProfile } from './registry';
 
 const route = useRoute('workspaceId-connectionId-explorer-fileId');
@@ -165,7 +164,6 @@ const {
   queryProcessState,
   executedResults,
   activeResultTabId,
-  pendingMongoApproval,
 } = rawQueryEditor;
 
 const { contextMenuItems, onContextMenuOpen } = useRawQueryEditorContextMenu({
@@ -300,12 +298,6 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <MongoRawQueryApprovalDialog
-    :open="Boolean(pendingMongoApproval)"
-    :operations="pendingMongoApproval?.operations || []"
-    @confirm="rawQueryEditor.confirmMongoWrite"
-    @cancel="rawQueryEditor.cancelMongoWrite"
-  />
   <RawQueryConnectionConfirmDialog
     :open="isConnectionExecutionConfirmOpen"
     :target-connection-name="executionConfirmTargetConnectionName"
@@ -385,6 +377,7 @@ onBeforeUnmount(() => {
 
       <RawQueryResultTabs
         v-else
+        :context="rawQueryContext"
         :executed-results="executedResults"
         :active-tab-id="activeResultTabId"
         :execute-loading="queryProcessState.executeLoading"

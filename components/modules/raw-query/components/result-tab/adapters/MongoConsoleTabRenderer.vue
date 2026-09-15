@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { MongoRawQueryConsole } from '../../../mongo';
-import type { RawQueryResultViewContext } from '../../../registry';
+import type { RawQueryContext } from '../../../registry';
 
-defineProps<{ context: RawQueryResultViewContext }>();
+defineProps<{ context: RawQueryContext }>();
 </script>
 
 <template>
-  <MongoRawQueryConsole :logs="context.activeTab.metadata.logs" />
+  <MongoRawQueryConsole :logs="context.activeTab?.metadata.logs" />
 </template>

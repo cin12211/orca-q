@@ -8,6 +8,7 @@ import { ViewMode, type ExecutedResultItem } from '../../interfaces';
 import { approveMongoRawQuery, executeMongoRawQuery } from '../api';
 import { resolveMongoScriptSource } from '../utils';
 import { parseMongoEjsonVariables } from '../utils/mongoEjson';
+import { useMongoApproval } from './useMongoApproval';
 
 export function useMongoScriptExecution(options: {
   connection: Ref<Connection | undefined>;
@@ -19,12 +20,9 @@ export function useMongoScriptExecution(options: {
   resultTabs: any;
   beforeExecute?: () => Promise<boolean>;
 }) {
+  const approval = useMongoApproval();
   const currentRawQueryResult = shallowRef<Record<string, unknown>[]>([]);
   const rawResponse = shallowRef<Record<string, unknown>>({});
-  const pendingApproval = ref<{
-    challengeId: string;
-    operations: MongoRawQueryOperation[];
-  } | null>(null);
   const activeExecution = shallowRef<ReturnType<
     typeof executeMongoRawQuery
   > | null>(null);
@@ -151,7 +149,7 @@ export function useMongoScriptExecution(options: {
         options.resultTabs.refreshResultTab(item.id, item);
       },
       onApprovalRequired: message => {
-        pendingApproval.value = message;
+        approval.setPendingApproval(message);
         queryProcessState.executeLoading = false;
       },
       onDone: message => {
@@ -176,29 +174,36 @@ export function useMongoScriptExecution(options: {
     await activeExecution.value.finished;
   };
   const confirmPendingWrite = async () => {
-    if (!pendingApproval.value || !pendingSource) return;
-    const approval = await approveMongoRawQuery(
-      pendingApproval.value.challengeId
+    if (!approval.pendingApproval.value || !pendingSource) return;
+    const approvalRes = await approveMongoRawQuery(
+      approval.pendingApproval.value.challengeId
     );
     const source = pendingSource;
-    pendingApproval.value = null;
-    await execute(source, approval.approvalToken);
-    return approval;
+    approval.setPendingApproval(null);
+    await execute(source, approvalRes.approvalToken);
+    return approvalRes;
   };
   const cancelPendingWrite = () => {
-    pendingApproval.value = null;
+    approval.setPendingApproval(null);
     pendingSource = null;
   };
+
+  approval.registerApprovalHandlers({
+    confirm: confirmPendingWrite,
+    cancel: cancelPendingWrite,
+  });
+
   const cancel = () => {
     activeExecution.value?.abort();
     activeExecution.value = null;
     queryProcessState.executeLoading = false;
     queryProcessState.isStreaming = false;
+    cancelPendingWrite();
   };
   return {
     execute,
     cancel,
-    pendingApproval,
+    pendingApproval: approval.pendingApproval,
     confirmPendingWrite,
     cancelPendingWrite,
     queryProcessState,

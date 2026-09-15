@@ -8,11 +8,19 @@ const props = defineProps<{
 }>();
 
 const onExecute = () => {
-  props.context.onExecuteCurrent?.();
+  if (props.context.onExecuteCurrent) {
+    props.context.onExecuteCurrent();
+  } else {
+    props.context.rawQueryEditor?.onExecuteCurrent?.();
+  }
 };
 
 const onCancel = () => {
-  props.context.onCancelQuery?.();
+  if (props.context.onCancelQuery) {
+    props.context.onCancelQuery();
+  } else {
+    props.context.rawQueryEditor?.cancelStreamingQuery?.();
+  }
 };
 </script>
 

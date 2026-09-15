@@ -8,7 +8,11 @@ const props = defineProps<{
 }>();
 
 const onFormatScript = () => {
-  props.context.onFormatCurrentStatement?.();
+  if (props.context.onFormatCurrentStatement) {
+    props.context.onFormatCurrentStatement();
+  } else {
+    props.context.rawQueryEditor?.onHandleFormatCurrentStatement?.();
+  }
 };
 </script>
 

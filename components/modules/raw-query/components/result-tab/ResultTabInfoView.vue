@@ -2,13 +2,13 @@
 import { computed } from 'vue';
 import { formatBytes } from '~/core/helpers';
 import { formatNumber, formatQueryTime } from '~/core/helpers/format';
-import type { RawQueryResultViewContext } from '../../registry';
+import type { RawQueryContext } from '../../registry';
 
 const props = defineProps<{
-  context: RawQueryResultViewContext;
+  context: RawQueryContext;
 }>();
 
-const activeTab = computed(() => props.context.activeTab);
+const activeTab = computed(() => props.context.activeTab!);
 
 const textEncoder =
   typeof TextEncoder !== 'undefined' ? new TextEncoder() : null;

@@ -76,7 +76,10 @@ describe('RawQueryEditorFooter', () => {
     expect(wrapper.text()).toContain('Format script');
     expect(wrapper.text()).not.toContain('Format Options');
 
-    await wrapper.get('button').trigger('click');
+    const formatBtn = wrapper
+      .findAll('button')
+      .find(b => b.text().includes('Format script'));
+    await formatBtn?.trigger('click');
     expect(onHandleFormatCurrentStatement).toHaveBeenCalledTimes(1);
   });
 

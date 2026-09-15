@@ -214,9 +214,6 @@ export function useRawQueryEditor({
         : sqlEditor.reloadSqlCompartment(),
     reloadLanguageCompartment,
     cancelStreamingQuery,
-    pendingMongoApproval: mongoExecution.pendingApproval,
-    confirmMongoWrite: mongoExecution.confirmPendingWrite,
-    cancelMongoWrite: mongoExecution.cancelPendingWrite,
     fieldDefs,
 
     // Results tab management

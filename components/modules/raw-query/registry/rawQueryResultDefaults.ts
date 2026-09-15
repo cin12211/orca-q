@@ -6,10 +6,10 @@ import ResultTabResultView from '../components/result-tab/ResultTabResultView.vu
 import { ViewMode } from '../interfaces';
 import {
   RawQueryResultExecutionPolicy,
+  type RawQueryContext,
   type RawQueryResultProfile,
   type RawQueryResultTabDefinition,
   type RawQueryResultViewAvailability,
-  type RawQueryResultViewContext,
   type RawQueryResultViewDefinition,
   type ResolvedRawQueryResultViewDefinition,
 } from './rawQueryProfile.types';
@@ -97,7 +97,7 @@ export function defineRawQueryResultProfile(
 
 export function resolveRawQueryResultViews(
   profile: RawQueryResultProfile,
-  context: RawQueryResultViewContext
+  context: RawQueryContext
 ): ResolvedRawQueryResultViewDefinition[] {
   return profile.views.map(view => ({
     ...view,
@@ -107,11 +107,11 @@ export function resolveRawQueryResultViews(
 
 export function resolveRawQueryResultViewAvailability(
   definition: RawQueryResultViewDefinition,
-  context: RawQueryResultViewContext
+  context: RawQueryContext
 ): RawQueryResultViewAvailability {
   const config = definition.availability;
   const execution = config?.execution ?? RawQueryResultExecutionPolicy.ALWAYS;
-  const hasError = Boolean(context.activeTab.metadata.executeErrors);
+  const hasError = Boolean(context.activeTab?.metadata?.executeErrors);
 
   if (execution === RawQueryResultExecutionPolicy.SUCCESS_ONLY && hasError) {
     return {

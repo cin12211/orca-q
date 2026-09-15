@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { computed, ref, shallowRef, toValue, onMounted, onUnmounted, watch } from 'vue';
 import { storeToRefs } from 'pinia';
 import {
   ContextMenu,
@@ -10,14 +11,16 @@ import {
 import { cn } from '@/lib/utils';
 import { DatabaseClientType } from '~/core/constants/database-client-type';
 import { useSchemaStore } from '~/core/stores';
+import { RawQueryEditorLayout } from '../constants';
 import {
   ViewMode,
   type ExecutedResultItem,
   type MappedRawColumn,
 } from '../interfaces';
+import { useRawQueryContext } from '../hooks';
 import {
   getRawQueryResultProfile,
-  type RawQueryResultViewContext,
+  type RawQueryContext,
   type ResolvedRawQueryResultViewDefinition,
 } from '../registry';
 import {
@@ -27,12 +30,55 @@ import {
 import { formatColumnsInfo } from '../utils/formatColumnsInfo';
 import { normalizeResultRows } from '../utils/normalizeResultRows';
 
-const props = defineProps<{
-  executedResults: Map<string, ExecutedResultItem>;
-  activeTabId: string | null;
-  executeLoading: boolean;
-  isStreaming: boolean;
-}>();
+const props = withDefaults(
+  defineProps<{
+    context?: RawQueryContext<any>;
+    executedResults?: Map<string, ExecutedResultItem>;
+    activeTabId?: string | null;
+    executeLoading?: boolean;
+    isStreaming?: boolean;
+  }>(),
+  {
+    context: undefined,
+    executedResults: undefined,
+    activeTabId: undefined,
+    executeLoading: undefined,
+    isStreaming: undefined,
+  }
+);
+
+const injectedContext = useRawQueryContext();
+const rawQueryContext = computed(() => props.context ?? injectedContext);
+
+const executedResults = computed<Map<string, ExecutedResultItem>>(() => {
+  if (props.executedResults) return toValue(props.executedResults);
+  const fromEditor = rawQueryContext.value?.rawQueryEditor?.executedResults;
+  return (toValue(fromEditor) as Map<string, ExecutedResultItem>) ?? new Map<string, ExecutedResultItem>();
+});
+
+const activeTabId = computed<string | null>(() => {
+  if (props.activeTabId !== undefined) {
+    const val = toValue(props.activeTabId);
+    return (val as string | null) ?? null;
+  }
+  const fromEditor = rawQueryContext.value?.rawQueryEditor?.activeResultTabId;
+  const val = toValue(fromEditor);
+  return (val as string | null) ?? null;
+});
+
+const executeLoading = computed<boolean>(() => {
+  if (props.executeLoading !== undefined) return Boolean(toValue(props.executeLoading));
+  const editorState = toValue(rawQueryContext.value?.rawQueryEditor?.queryProcessState);
+  if (editorState?.executeLoading !== undefined) return Boolean(editorState.executeLoading);
+  return Boolean(toValue(rawQueryContext.value?.executeLoading));
+});
+
+const isStreaming = computed<boolean>(() => {
+  if (props.isStreaming !== undefined) return Boolean(toValue(props.isStreaming));
+  const editorState = toValue(rawQueryContext.value?.rawQueryEditor?.queryProcessState);
+  if (editorState?.isStreaming !== undefined) return Boolean(editorState.isStreaming);
+  return Boolean(toValue(rawQueryContext.value?.isStreaming));
+});
 
 const schemaStore = useSchemaStore();
 const { schemas } = storeToRefs(schemaStore);
@@ -44,6 +90,26 @@ const emit = defineEmits<{
   (e: 'close-tabs-to-right', id: string): void;
   (e: 'update:view', tabId: string, view: ExecutedResultItem['view']): void;
 }>();
+
+const handleSelectActiveTab = (id: string) => {
+  emit('update:activeTab', id);
+  rawQueryContext.value?.rawQueryEditor?.setActiveResultTab?.(id);
+};
+
+const handleCloseTab = (id: string) => {
+  emit('close-tab', id);
+  rawQueryContext.value?.rawQueryEditor?.closeResultTab?.(id);
+};
+
+const handleCloseOtherTabs = (id: string) => {
+  emit('close-other-tabs', id);
+  rawQueryContext.value?.rawQueryEditor?.closeOtherResultTabs?.(id);
+};
+
+const handleCloseTabsToRight = (id: string) => {
+  emit('close-tabs-to-right', id);
+  rawQueryContext.value?.rawQueryEditor?.closeResultTabsToRight?.(id);
+};
 
 // Context menu state
 const currentTabMenuContext = ref<string | null>(null);
@@ -60,7 +126,7 @@ const handleKeyDown = (e: KeyboardEvent) => {
 const isHaveRightItem = computed(() => {
   if (!currentTabMenuContext.value) return false;
 
-  const tabIds = Array.from(props.executedResults.keys());
+  const tabIds = Array.from(executedResults.value.keys());
   const currentIndex = tabIds.indexOf(currentTabMenuContext.value);
 
   return currentIndex >= 0 && currentIndex < tabIds.length - 1;
@@ -75,8 +141,8 @@ let rafId: number | null = null;
 
 // Get the active tab data
 const activeTab = computed(() => {
-  if (!props.activeTabId) return null;
-  return props.executedResults.get(props.activeTabId) || null;
+  if (!activeTabId.value) return null;
+  return executedResults.value.get(activeTabId.value) || null;
 });
 
 const activeDatabaseType = computed(
@@ -85,8 +151,13 @@ const activeDatabaseType = computed(
 
 // Switch view mode
 const setViewMode = (view: ViewMode) => {
-  if (props.activeTabId) {
-    emit('update:view', props.activeTabId, view);
+  const currentId = activeTabId.value;
+  if (currentId) {
+    emit('update:view', currentId, view);
+    rawQueryContext.value?.rawQueryEditor?.updateResultTabView?.(
+      currentId,
+      view
+    );
   }
 };
 
@@ -114,18 +185,35 @@ const activeTabColumns = computed<MappedRawColumn[]>(() => {
   });
 });
 
-const resultViewContext = computed<RawQueryResultViewContext | null>(() => {
+const resultViewContext = computed<RawQueryContext<any> | null>(() => {
   const tab = activeTab.value;
   const databaseType = activeDatabaseType.value;
   if (!tab || !databaseType) return null;
 
+  const base = rawQueryContext.value;
   return {
-    activeTab: tab,
+    ...(base ?? {}),
+    workspaceId: base?.workspaceId ?? '',
+    selectedConnectionId: base?.selectedConnectionId ?? '',
+    connections: base?.connections ?? [],
+    disableConnectionSwitch: base?.disableConnectionSwitch ?? false,
     databaseType,
+    fileContents: base?.fileContents ?? '',
+    fileVariables: base?.fileVariables ?? '',
+    codeEditorLayout: base?.codeEditorLayout ?? RawQueryEditorLayout.horizontal,
+    isFormatSupported: base?.isFormatSupported ?? true,
+    isVariableSupported: base?.isVariableSupported ?? true,
+    isExplainSupported: base?.isExplainSupported ?? true,
+    rawQueryEditor: base?.rawQueryEditor,
+    editor: base?.editor ?? base?.rawQueryEditor,
+    cursorInfo: base?.cursorInfo ?? { line: 1, column: 1 },
+    executeLoading: executeLoading.value,
+    isStreaming: isStreaming.value,
+    dialectState: base?.dialectState,
+    activeTab: tab,
+    activeResultTab: tab,
     activeTabColumns: activeTabColumns.value,
     formattedData: formattedData.value,
-    executeLoading: props.executeLoading,
-    isStreaming: props.isStreaming,
     changeView: setViewMode,
   };
 });
@@ -298,7 +386,7 @@ onUnmounted(() => {
               <Tooltip v-for="[tabId, tab] in executedResults" :key="tabId">
                 <TooltipTrigger as-child>
                   <div
-                    @click="$emit('update:activeTab', tabId)"
+                    @click="handleSelectActiveTab(tabId)"
                     @contextmenu="currentTabMenuContext = tabId"
                     :class="
                       cn(
@@ -324,7 +412,7 @@ onUnmounted(() => {
                     </div>
 
                     <div
-                      @click.stop="$emit('close-tab', tabId)"
+                      @click.stop="handleCloseTab(tabId)"
                       class="hover:bg-accent h-5 w-5 flex items-center justify-center rounded-full opacity-0"
                     >
                       <Icon name="lucide:x" class="stroke-[2.5]! size-3!" />
@@ -344,24 +432,31 @@ onUnmounted(() => {
               v-if="currentTabMenuContext"
             >
               <ContextMenuItem
-                @select="$emit('close-tab', currentTabMenuContext!)"
+                @select="handleCloseTab(currentTabMenuContext!)"
               >
                 Close
               </ContextMenuItem>
               <ContextMenuItem
-                @select="$emit('close-other-tabs', currentTabMenuContext!)"
+                @select="handleCloseOtherTabs(currentTabMenuContext!)"
               >
                 Close Others
               </ContextMenuItem>
               <ContextMenuItem
                 :disabled="!isHaveRightItem"
-                @select="$emit('close-tabs-to-right', currentTabMenuContext!)"
+                @select="handleCloseTabsToRight(currentTabMenuContext!)"
               >
                 Close to the Right
               </ContextMenuItem>
             </ContextMenuContent>
           </ContextMenu>
         </div>
+
+        <!-- Extra actions slot -->
+        <slot
+          name="extra-actions"
+          :context="resultViewContext"
+          :raw-query-context="rawQueryContext"
+        />
 
         <!-- Fullscreen Button -->
         <div class="flex items-center gap-1.5 px-2 pb-1.5 flex-shrink-0">
@@ -409,12 +504,18 @@ onUnmounted(() => {
         />
 
         <!-- Dynamic active view renderer -->
-        <component
-          :is="activeView.renderer"
-          v-else-if="activeView && resultViewContext"
-          :key="`${resultViewContext.activeTab.id}:${activeView.mode}`"
+        <slot
+          v-if="activeView && resultViewContext"
+          name="active-view"
+          :active-view="activeView"
           :context="resultViewContext"
-        />
+        >
+          <component
+            :is="activeView.renderer"
+            :key="`${resultViewContext.activeTab?.id ?? 'tab'}:${activeView.mode}`"
+            :context="resultViewContext"
+          />
+        </slot>
       </div>
     </div>
   </div>

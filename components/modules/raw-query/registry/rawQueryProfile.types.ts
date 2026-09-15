@@ -1,4 +1,4 @@
-import type { Component } from 'vue';
+import type { Component, ShallowRef } from 'vue';
 import type { DatabaseClientType } from '~/core/constants/database-client-type';
 import type { Connection, RowQueryFile } from '~/core/stores';
 import type { RawQueryEditorLayout } from '../constants';
@@ -13,19 +13,6 @@ import type {
   ViewMode,
 } from '../interfaces';
 
-/**
- * Context passed to raw query result renderers and views
- */
-export interface RawQueryResultViewContext {
-  activeTab: ExecutedResultItem;
-  databaseType: DatabaseClientType;
-  activeTabColumns: MappedRawColumn[];
-  formattedData: Record<string, unknown>[];
-  executeLoading: boolean;
-  isStreaming: boolean;
-  changeView(view: ViewMode): void;
-}
-
 export enum RawQueryResultExecutionPolicy {
   ALWAYS = 'always',
   SUCCESS_ONLY = 'success-only',
@@ -39,7 +26,7 @@ export interface RawQueryResultViewAvailability {
 
 export interface RawQueryResultViewAvailabilityConfig {
   execution?: RawQueryResultExecutionPolicy;
-  when?: (context: RawQueryResultViewContext) => RawQueryResultViewAvailability;
+  when?: (context: RawQueryContext) => RawQueryResultViewAvailability;
   disabledReason?: string;
 }
 
@@ -108,6 +95,13 @@ export interface RawQueryContext<TDialectState = Record<string, any>> {
   // Dialect registered reactive state with generic type support
   dialectState?: TDialectState;
 
+  // Result tab & data properties
+  activeTab?: ExecutedResultItem;
+  activeResultTab?: ExecutedResultItem;
+  activeTabColumns?: MappedRawColumn[];
+  formattedData?: Record<string, any>[];
+  changeView?: (view: ViewMode) => void;
+
   // Actions & Callbacks
   onUpdateConnectionId?: (connectionId: string) => void;
   onUpdateFileVariables?: (variables: string) => Promise<void> | void;
@@ -121,6 +115,12 @@ export interface RawQueryContext<TDialectState = Record<string, any>> {
   updateRawViewMode?: (value: boolean) => void;
   onCancelQuery?: () => void;
 }
+
+/**
+ * Single unified context alias: RawQueryResultViewContext is RawQueryContext.
+ */
+export type RawQueryResultViewContext<TDialectState = Record<string, any>> =
+  RawQueryContext<TDialectState>;
 
 export interface RawQueryHeaderProfile {
   /**

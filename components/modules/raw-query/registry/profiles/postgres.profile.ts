@@ -55,7 +55,7 @@ export const postgresResultProfile: RawQueryResultProfile =
         availability: {
           ...successOnly,
           when: context =>
-            context.activeTab.metadata.statementQuery
+            context.activeTab?.metadata.statementQuery
               ?.trimStart()
               .toUpperCase()
               .startsWith('EXPLAIN')

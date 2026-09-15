@@ -78,11 +78,16 @@ export const mongoResultProfile: RawQueryResultProfile =
     ],
   });
 
+import { useMongoApproval, type MongoPendingApproval } from '../../mongo';
+
 export interface MongoDialectState {
   badgeText: Ref<string>;
   clickCount: Ref<number>;
   incrementCount: () => void;
   resetCount: () => void;
+  pendingApproval?: Ref<MongoPendingApproval | null>;
+  confirmPendingWrite?: () => Promise<unknown>;
+  cancelPendingWrite?: () => void;
 }
 
 /**
@@ -98,6 +103,7 @@ export const mongoRawQueryProfile: RawQueryProfile<MongoDialectState> = {
   createDialectState: (): MongoDialectState => {
     const badgeText = ref('MongoDB Beta');
     const clickCount = ref(0);
+    const approval = useMongoApproval();
 
     const incrementCount = () => {
       clickCount.value++;
@@ -112,6 +118,9 @@ export const mongoRawQueryProfile: RawQueryProfile<MongoDialectState> = {
       clickCount,
       incrementCount,
       resetCount,
+      pendingApproval: approval.pendingApproval,
+      confirmPendingWrite: approval.confirmPendingWrite,
+      cancelPendingWrite: approval.cancelPendingWrite,
     };
   },
   header: {

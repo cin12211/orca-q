@@ -38,3 +38,9 @@ It behaves as the bridge mapping the:
   active connection is MongoDB
 
 The `RawQuery.vue` calls `useRawQueryEditor()` once, and simply unpacks specific values to pass visually to the `.vue` template components using `toRefs()`.
+
+> [!IMPORTANT]
+> **Hệ thống đang chuyển đổi sang mô hình Minikernel & Pluggable Dialect Registry:**
+> Chi tiết kiến trúc tách `useRawQueryKernel` và hệ thống Lifecycle Hooks (`preloadSchema`, `loadSchema`, `resolveStatement`, `execute`,...) được đặc tả đầy đủ tại:
+> 👉 [05-raw-query-kernel-pluginable-architecture.md](./05-raw-query-kernel-pluginable-architecture.md)
+
