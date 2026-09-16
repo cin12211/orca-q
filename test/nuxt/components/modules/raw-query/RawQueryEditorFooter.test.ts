@@ -1,7 +1,7 @@
 import { computed, ref } from 'vue';
 import { flushPromises, mount } from '@vue/test-utils';
 import { describe, expect, it, vi } from 'vitest';
-import RawQueryEditorFooter from '~/components/modules/raw-query/components/RawQueryEditorFooter.vue';
+import RawQueryEditorFooter from '~/components/modules/raw-query/components/layout/RawQueryEditorFooter.vue';
 import RawQueryMongoFormatAction from '~/components/modules/raw-query/components/mongo/RawQueryMongoFormatAction.vue';
 import {
   type RawQueryEditor,

@@ -1,12 +1,12 @@
 <script setup lang="ts">
 import { computed, ref, toValue, type Component } from 'vue';
 import { Tooltip, TooltipContent, TooltipTrigger } from '#components';
-import PureConnectionSelector from '../../selectors/PureConnectionSelector.vue';
-import { RawQueryEditorLayout } from '../constants';
-import { useRawQueryContext } from '../hooks';
-import { getRawQueryPlugin } from '../registry';
-import AddVariableModal from './AddVariableModal.vue';
-import RawQueryConfigModal from './RawQueryConfigModal.vue';
+import PureConnectionSelector from '~/components/modules/selectors/PureConnectionSelector.vue';
+import { RawQueryEditorLayout } from '../../constants';
+import { useRawQueryContext } from '../../hooks';
+import { getRawQueryPlugin } from '../../registry';
+import AddVariableModal from '../AddVariableModal.vue';
+import RawQueryConfigModal from '../RawQueryConfigModal.vue';
 
 const props = defineProps<{
   customLeftComponents?: Component[];

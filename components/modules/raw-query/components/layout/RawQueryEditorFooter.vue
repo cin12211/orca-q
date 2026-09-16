@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, toValue, type Component } from 'vue';
-import { useRawQueryContext } from '../hooks';
-import { getRawQueryPlugin } from '../registry';
+import { useRawQueryContext } from '../../hooks';
+import { getRawQueryPlugin } from '../../registry';
 
 const props = defineProps<{
   customLeftComponents?: Component[];

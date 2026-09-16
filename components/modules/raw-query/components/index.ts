@@ -1,7 +1,4 @@
-export { default as RawQueryEditorHeader } from './RawQueryEditorHeader.vue';
-export { default as RawQueryEditorFooter } from './RawQueryEditorFooter.vue';
-export { default as RawQueryLayout } from './RawQueryLayout.vue';
-export { default as RawQueryResultTabs } from './RawQueryResultTabs.vue';
+export * from './layout';
 export { default as RawQueryContextMenu } from './RawQueryContextMenu.vue';
 export { default as RawQueryEditorContextMenu } from './RawQueryEditorContextMenu.vue';
 export { default as RawQueryConfigModal } from './RawQueryConfigModal.vue';

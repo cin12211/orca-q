@@ -1,7 +1,7 @@
 import { computed, markRaw, ref } from 'vue';
 import { flushPromises, mount } from '@vue/test-utils';
 import { describe, expect, it, vi } from 'vitest';
-import RawQueryEditorHeader from '~/components/modules/raw-query/components/RawQueryEditorHeader.vue';
+import RawQueryEditorHeader from '~/components/modules/raw-query/components/layout/RawQueryEditorHeader.vue';
 import { RawQueryEditorLayout } from '~/components/modules/raw-query/constants';
 import { RAW_QUERY_CONTEXT_KEY } from '~/components/modules/raw-query/hooks';
 import { DatabaseClientType } from '~/core/constants/database-client-type';

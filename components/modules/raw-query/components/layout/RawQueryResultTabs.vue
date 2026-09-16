@@ -19,23 +19,23 @@ import {
 import { cn } from '@/lib/utils';
 import { DatabaseClientType } from '~/core/constants/database-client-type';
 import { useSchemaStore } from '~/core/stores';
-import { useRawQueryContext } from '../hooks';
+import { useRawQueryContext } from '../../hooks';
 import {
   ViewMode,
   type ExecutedResultItem,
   type MappedRawColumn,
-} from '../interfaces';
+} from '../../interfaces';
 import {
   getRawQueryResultProfile,
   type RawQueryContext,
   type ResolvedRawQueryResultViewDefinition,
-} from '../registry';
+} from '../../registry';
 import {
   resolveActiveRawQueryResultView,
   resolveRawQueryResultViews,
-} from '../registry/rawQueryResultDefaults';
-import { formatColumnsInfo } from '../utils/formatColumnsInfo';
-import { normalizeResultRows } from '../utils/normalizeResultRows';
+} from '../../registry/rawQueryResultDefaults';
+import { formatColumnsInfo } from '../../utils/formatColumnsInfo';
+import { normalizeResultRows } from '../../utils/normalizeResultRows';
 
 const rawQueryContext = useRawQueryContext();
 

@@ -10,11 +10,13 @@ import IntroRawQuery from './components/IntroRawQuery.vue';
 import MissingVariablesDialog from './components/MissingVariablesDialog.vue';
 import RawQueryConnectionConfirmDialog from './components/RawQueryConnectionConfirmDialog.vue';
 import RawQueryEditorContextMenu from './components/RawQueryEditorContextMenu.vue';
-import RawQueryEditorFooter from './components/RawQueryEditorFooter.vue';
-import RawQueryEditorHeader from './components/RawQueryEditorHeader.vue';
-import RawQueryLayout from './components/RawQueryLayout.vue';
-import RawQueryResultTabs from './components/RawQueryResultTabs.vue';
-import VariableEditor from './components/VariableEditor.vue';
+import {
+  RawQueryEditorFooter,
+  RawQueryEditorHeader,
+  RawQueryLayout,
+  RawQueryResultTabs,
+  RawQueryVariablesPanel,
+} from './components/layout';
 import {
   createRawQueryContext,
   provideRawQueryContext,
@@ -343,29 +345,7 @@ onBeforeUnmount(() => {
     </template>
 
     <template #variables>
-      <div class="flex flex-col h-full border rounded-md bg-muted">
-        <div class="flex items-center gap-1 font-normal text-sm px-2 py-1">
-          <Icon name="hugeicons:absolute" />
-          Variables
-        </div>
-
-        <div class="h-full flex flex-col overflow-y-auto">
-          <BaseEmpty
-            v-if="!isVariableSupported"
-            title="Variables not supported"
-            desc="Variables are not available for Redis and SQLite connections."
-            icon="icons:ghost"
-          />
-
-          <VariableEditor
-            v-else
-            :variables="fileVariables"
-            @update:variables="updateFileVariables"
-            @updateVariables="updateFileVariables"
-            :file-variables="fileVariables"
-          />
-        </div>
-      </div>
+      <RawQueryVariablesPanel />
     </template>
 
     <template #result>

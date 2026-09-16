@@ -7,7 +7,7 @@ import { useAppConfigStore } from '~/core/stores/appConfigStore';
 import {
   RawQueryEditorLayout,
   type CustomLayoutDefinition,
-} from '../constants';
+} from '../../constants';
 
 const props = defineProps<{
   layout: RawQueryEditorLayout;

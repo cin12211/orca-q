@@ -2,13 +2,13 @@ import { createPinia, setActivePinia } from 'pinia';
 import { nextTick, ref } from 'vue';
 import { mount, type VueWrapper } from '@vue/test-utils';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import RawQueryResultTabs from '~/components/modules/raw-query/components/RawQueryResultTabs.vue';
+import RawQueryResultTabs from '~/components/modules/raw-query/components/layout/RawQueryResultTabs.vue';
+import { RAW_QUERY_CONTEXT_KEY } from '~/components/modules/raw-query/hooks/useRawQueryContext';
 import {
   ViewMode,
   type ExecutedResultItem,
 } from '~/components/modules/raw-query/interfaces';
 import type { RawQueryResultViewContext } from '~/components/modules/raw-query/registry';
-import { RAW_QUERY_CONTEXT_KEY } from '~/components/modules/raw-query/hooks/useRawQueryContext';
 import { DatabaseClientType } from '~/core/constants/database-client-type';
 import { useSchemaStore } from '~/core/stores';
 import type { Schema } from '~/core/types';
