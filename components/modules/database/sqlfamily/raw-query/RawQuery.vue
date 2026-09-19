@@ -1,0 +1,381 @@
+<script setup lang="ts">
+import { LoadingOverlay } from '#components';
+import type { EditorView } from '@codemirror/view';
+import BaseCodeEditor from '~/components/base/code-editor/BaseCodeEditor.vue';
+import { useHotkeys } from '~/core/composables/useHotKeys';
+import { DatabaseClientType } from '~/core/constants/database-client-type';
+import { useEnvironmentTagStore } from '~/core/stores';
+import { useAppConfigStore } from '~/core/stores/appConfigStore';
+import IntroRawQuery from './components/IntroRawQuery.vue';
+import MissingVariablesDialog from './components/MissingVariablesDialog.vue';
+import RawQueryConnectionConfirmDialog from './components/RawQueryConnectionConfirmDialog.vue';
+import RawQueryEditorContextMenu from './components/RawQueryEditorContextMenu.vue';
+import RawQueryEditorFooter from './components/RawQueryEditorFooter.vue';
+import RawQueryEditorHeader from './components/RawQueryEditorHeader.vue';
+import RawQueryLayout from './components/RawQueryLayout.vue';
+import RawQueryResultTabs from './components/RawQueryResultTabs.vue';
+import VariableEditor from './components/VariableEditor.vue';
+import {
+  provideRawQueryContext,
+  useRawQueryEditor,
+  useRawQueryFileContent,
+} from './hooks';
+import { useRawQueryEditorContextMenu } from './hooks/useRawQueryEditorContextMenu';
+import MongoRawQueryApprovalDialog from './mongo/components/MongoRawQueryApprovalDialog.vue';
+import { getRawQueryProfile } from './registry';
+
+const route = useRoute('workspaceId-connectionId-explorer-fileId');
+const workspaceId = computed(() => {
+  const value = route.params.workspaceId;
+  return Array.isArray(value) ? (value[0] ?? '') : (value ?? '');
+});
+const appConfigStore = useAppConfigStore();
+const tagStore = useEnvironmentTagStore();
+const rawQueryFileContent = useRawQueryFileContent();
+const {
+  connection,
+  currentFile,
+  currentOpenedConnection,
+  fileContents,
+  fileVariables,
+  selectedConnectionId,
+  updateSelectedConnection,
+  updateFileContent,
+  updateFileVariables,
+  connectionsByWsId,
+} = rawQueryFileContent;
+
+const isCurrentConnectionStrictMode = computed(() => {
+  if (!currentOpenedConnection.value) {
+    return false;
+  }
+
+  return tagStore
+    .getTagsByIds(currentOpenedConnection.value.tagIds ?? [])
+    .some(tag => tag.strictMode);
+});
+
+const rawQueryProfile = computed(() =>
+  getRawQueryProfile(connection.value?.type)
+);
+
+const isFormatSupported = computed(
+  () => rawQueryProfile.value.isFormatSupported ?? true
+);
+const isVariableSupported = computed(
+  () => rawQueryProfile.value.isVariableSupported ?? true
+);
+const isExplainSupported = computed(
+  () => connection.value?.type === DatabaseClientType.POSTGRES
+);
+const effectiveFileVariables = ref('');
+
+watchEffect(() => {
+  effectiveFileVariables.value = isVariableSupported.value
+    ? fileVariables.value
+    : '';
+});
+
+const isMissingVariablesOpen = ref(false);
+const missingVariablesList = ref<string[]>([]);
+let resolveMissingVariables:
+  | ((
+      value: { values: Record<string, any>; insertBack: boolean } | null
+    ) => void)
+  | null = null;
+
+const promptMissingVariables = (missing: string[]) => {
+  missingVariablesList.value = missing;
+  isMissingVariablesOpen.value = true;
+  return new Promise<{
+    values: Record<string, any>;
+    insertBack: boolean;
+  } | null>(resolve => {
+    resolveMissingVariables = resolve;
+  });
+};
+
+const onConfirmMissingVariables = (
+  values: Record<string, any>,
+  insertBack: boolean
+) => {
+  isMissingVariablesOpen.value = false;
+  resolveMissingVariables?.({ values, insertBack });
+  resolveMissingVariables = null;
+};
+
+const onCancelMissingVariables = () => {
+  isMissingVariablesOpen.value = false;
+  resolveMissingVariables?.(null);
+  resolveMissingVariables = null;
+};
+
+const rawQueryEditor = useRawQueryEditor({
+  connection,
+  fileVariables: effectiveFileVariables,
+  beforeExecute: () => requestConnectionExecutionConfirm(),
+  promptMissingVariables,
+  onUpdateVariables: updateFileVariables,
+  documentText: fileContents,
+});
+
+provideRawQueryContext({
+  workspaceId,
+  connection,
+  connections: connectionsByWsId,
+  selectedConnectionId,
+  databaseType: computed(() => connection.value?.type),
+  disableConnectionSwitch: isCurrentConnectionStrictMode,
+  updateSelectedConnection,
+  currentFile,
+  fileContents,
+  fileVariables,
+  updateFileContent,
+  updateFileVariables,
+  isVariableSupported,
+  isFormatSupported,
+  isExplainSupported,
+  rawQueryEditor,
+  codeEditorLayout: computed(() => appConfigStore.codeEditorLayout),
+});
+
+const {
+  cursorInfo,
+  extensions,
+  codeEditorRef,
+  queryProcessState,
+  executedResults,
+  activeResultTabId,
+  pendingMongoApproval,
+} = rawQueryEditor;
+
+const { contextMenuItems, onContextMenuOpen } = useRawQueryEditorContextMenu({
+  onExecuteCurrent: rawQueryEditor.onExecuteCurrent,
+  onExplainAnalyzeCurrent: rawQueryEditor.onExplainAnalyzeCurrent,
+  onHandleFormatCurrentStatement: rawQueryEditor.onHandleFormatCurrentStatement,
+  onHandleFormatCode: rawQueryEditor.onHandleFormatCode,
+  isFormatSupported,
+  isExplainSupported,
+  getEditorView: () =>
+    codeEditorRef.value?.editorView as EditorView | null | undefined,
+});
+
+const scrollTop = ref(0);
+
+const showResultPanel = ref(true);
+const isConnectionExecutionConfirmOpen = ref(false);
+const executionConfirmTargetConnectionName = ref('');
+const executionConfirmCurrentConnectionName = ref('');
+let resolveConnectionExecutionConfirm: ((value: boolean) => void) | null = null;
+
+const requestConnectionExecutionConfirm = () => {
+  const selectedConnection = connection.value;
+  const currentConnection = currentOpenedConnection.value;
+
+  if (
+    !selectedConnection ||
+    !currentConnection ||
+    selectedConnection.id === currentConnection.id
+  ) {
+    return Promise.resolve(true);
+  }
+
+  if (isConnectionExecutionConfirmOpen.value) {
+    return Promise.resolve(false);
+  }
+
+  executionConfirmTargetConnectionName.value = selectedConnection.name;
+  executionConfirmCurrentConnectionName.value = currentConnection.name;
+  isConnectionExecutionConfirmOpen.value = true;
+
+  return new Promise<boolean>(resolve => {
+    resolveConnectionExecutionConfirm = resolve;
+  });
+};
+
+const onConfirmConnectionExecution = () => {
+  isConnectionExecutionConfirmOpen.value = false;
+  resolveConnectionExecutionConfirm?.(true);
+  resolveConnectionExecutionConfirm = null;
+};
+
+const onCancelConnectionExecution = () => {
+  isConnectionExecutionConfirmOpen.value = false;
+  resolveConnectionExecutionConfirm?.(false);
+  resolveConnectionExecutionConfirm = null;
+};
+
+useHotkeys([
+  {
+    key: 'mod+j',
+    callback: () => {
+      showResultPanel.value = !showResultPanel.value;
+    },
+  },
+  {
+    key: 'ctrl+j',
+    callback: () => {
+      showResultPanel.value = !showResultPanel.value;
+    },
+  },
+]);
+
+watch(effectiveFileVariables, () => {
+  rawQueryEditor.reloadSqlCompartment();
+});
+
+const onUpdateCursorInfo = ({
+  column,
+  from,
+  line,
+  to,
+}: {
+  line: number;
+  column: number;
+  from: number;
+  to: number;
+}) => {
+  cursorInfo.value = {
+    column,
+    line,
+  };
+
+  rawQueryFileContent.updateFileCursorPos({
+    from,
+    to,
+  });
+};
+
+const restoreCursorPos = (allowScroll = true) => {
+  if (!currentFile.value?.cursorPos || !codeEditorRef.value?.editorView) return;
+  const from = currentFile.value.cursorPos.from ?? 0;
+  const to = currentFile.value.cursorPos.to || 0;
+  codeEditorRef.value.setCursorPosition({ from, to, allowScroll });
+};
+
+const isEditorLoading = ref(!rawQueryFileContent.isFromCache);
+
+onMounted(async () => {
+  if (isEditorLoading.value) {
+    await rawQueryFileContent.loadFileContent();
+    isEditorLoading.value = false;
+    await nextTick();
+  }
+  restoreCursorPos();
+});
+
+onActivated(async () => {
+  await nextTick();
+  restoreCursorPos(false);
+  if (codeEditorRef.value?.editorView) {
+    codeEditorRef.value.editorView.scrollDOM.scrollTop = scrollTop.value;
+  }
+});
+
+onBeforeUnmount(() => {
+  if (resolveConnectionExecutionConfirm) {
+    resolveConnectionExecutionConfirm(false);
+    resolveConnectionExecutionConfirm = null;
+  }
+});
+</script>
+
+<template>
+  <MongoRawQueryApprovalDialog
+    :open="Boolean(pendingMongoApproval)"
+    :operations="pendingMongoApproval?.operations || []"
+    @confirm="rawQueryEditor.confirmMongoWrite"
+    @cancel="rawQueryEditor.cancelMongoWrite"
+  />
+  <RawQueryConnectionConfirmDialog
+    :open="isConnectionExecutionConfirmOpen"
+    :target-connection-name="executionConfirmTargetConnectionName"
+    :current-connection-name="executionConfirmCurrentConnectionName"
+    @confirm="onConfirmConnectionExecution"
+    @cancel="onCancelConnectionExecution"
+  />
+
+  <MissingVariablesDialog
+    :open="isMissingVariablesOpen"
+    :missing-variables="missingVariablesList"
+    @confirm="onConfirmMissingVariables"
+    @cancel="onCancelMissingVariables"
+  />
+
+  <RawQueryLayout
+    :layout="appConfigStore.codeEditorLayout"
+    :customLayout="appConfigStore.activeCustomLayout"
+    :show-result-panel="showResultPanel"
+  >
+    <template #content>
+      <div class="flex flex-col h-full p-1">
+        <div class="flex flex-col h-full border rounded-md">
+          <RawQueryEditorHeader />
+          <div class="h-full flex flex-col overflow-y-auto">
+            <RawQueryEditorContextMenu
+              :context-menu-items="contextMenuItems"
+              @update:open="onContextMenuOpen"
+            >
+              <LoadingOverlay v-if="isEditorLoading" visible />
+
+              <BaseCodeEditor
+                v-else
+                @update:modelValue="updateFileContent"
+                @update:cursorInfo="onUpdateCursorInfo"
+                @update:onScrollTop="scrollTop = $event"
+                :modelValue="fileContents"
+                :extensions="extensions"
+                ref="codeEditorRef"
+              />
+            </RawQueryEditorContextMenu>
+          </div>
+
+          <RawQueryEditorFooter />
+        </div>
+      </div>
+    </template>
+
+    <template #variables>
+      <div class="flex flex-col h-full border rounded-md bg-muted">
+        <div class="flex items-center gap-1 font-normal text-sm px-2 py-1">
+          <Icon name="hugeicons:absolute" />
+          Variables
+        </div>
+
+        <div class="h-full flex flex-col overflow-y-auto">
+          <BaseEmpty
+            v-if="!isVariableSupported"
+            title="Variables not supported"
+            desc="Variables are not available for Redis and SQLite connections."
+            icon="icons:ghost"
+          />
+
+          <VariableEditor
+            v-else
+            :variables="fileVariables"
+            @update:variables="updateFileVariables"
+            @updateVariables="updateFileVariables"
+            :file-variables="fileVariables"
+          />
+        </div>
+      </div>
+    </template>
+
+    <template #result>
+      <IntroRawQuery v-if="executedResults.size === 0" />
+
+      <RawQueryResultTabs
+        v-else
+        :executed-results="executedResults"
+        :active-tab-id="activeResultTabId"
+        :execute-loading="queryProcessState.executeLoading"
+        :is-streaming="queryProcessState.isStreaming"
+        @update:active-tab="rawQueryEditor.setActiveResultTab"
+        @close-tab="rawQueryEditor.closeResultTab"
+        @close-other-tabs="rawQueryEditor.closeOtherResultTabs"
+        @close-tabs-to-right="rawQueryEditor.closeResultTabsToRight"
+        @update:view="rawQueryEditor.updateResultTabView"
+      />
+    </template>
+  </RawQueryLayout>
+</template>

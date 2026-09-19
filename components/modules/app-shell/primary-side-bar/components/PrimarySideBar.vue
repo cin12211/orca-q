@@ -5,7 +5,7 @@ import { ManagementDatabaseTools } from '~/components/modules/management/databas
 import { ManagementUsersAndPermission } from '~/components/modules/management/role-permission';
 import { ManagementAgent } from '~/components/modules/management/agent';
 import { ManagementRedisTools } from '~/components/modules/management/redis-tools';
-import ManagementSchemas from '~/components/modules/database/postgres/schemas/ManagementSchemas.vue';
+import ManagementSchemas from '~/components/modules/database/sqlfamily/schemas/ManagementSchemas.vue';
 import ManagementRedisBrowser from '~/components/modules/database/redis/schemas/ManagementRedisBrowser.vue';
 import ManagementMongoSchemas from '~/components/modules/database/mongo/schemas/ManagementMongoSchemas.vue';
 import {

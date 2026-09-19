@@ -1,0 +1,352 @@
+<script setup lang="ts">
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuLabel,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+  Icon,
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '#components';
+import { NULL_ORDER_OPTIONS } from '~/components/modules/settings/constants/settings.constants';
+import { NullOrderPreference } from '~/components/modules/settings/types';
+import { useSettingsModal } from '~/core/contexts/useSettingsModal';
+import { useAppConfigStore } from '~/core/stores/appConfigStore';
+import { QuickQueryTabView } from '../constants';
+import QuickPagination from './QuickPagination.vue';
+import RefreshButton from './RefreshButton.vue';
+
+const appConfigStore = useAppConfigStore();
+const { openSettings } = useSettingsModal();
+
+const props = defineProps<{
+  isAllowNextPage: boolean;
+  isAllowPreviousPage: boolean;
+  totalRows: number;
+  limit: number;
+  offset: number;
+  currentTotalRows: number;
+  totalSelectedRows: number;
+  hasEditedRows: boolean;
+  pendingChangesCount: number;
+  tabView: QuickQueryTabView;
+  isViewVirtualTable?: boolean;
+}>();
+
+const emit = defineEmits<{
+  (e: 'onRefresh'): void;
+  (e: 'onPaginate', value: { limit: number; offset: number }): void;
+  (e: 'onNextPage'): void;
+  (e: 'onPreviousPage'): void;
+  (e: 'onShowFilter'): void;
+  (e: 'onSaveData'): void;
+  (e: 'onAddEmptyRow'): void;
+  (e: 'onDiscardChanges'): void;
+  (e: 'onDeleteRows'): void;
+  (e: 'onToggleHistoryPanel'): void;
+  (e: 'update:tabView', value: QuickQueryTabView): void;
+}>();
+
+const quickQueryControlBarRef = ref<HTMLElement>();
+
+const isDataView = computed(() => {
+  return props.tabView === QuickQueryTabView.Data;
+});
+
+const currentNullOrderLabel = computed(() => {
+  return (
+    NULL_ORDER_OPTIONS.find(
+      option =>
+        option.value ===
+        appConfigStore.tableAppearanceConfigs.nullOrderPreference
+    )?.label || 'Unset'
+  );
+});
+</script>
+
+<template>
+  <div
+    ref="quickQueryControlBarRef"
+    :class="['w-full select-none h-9 flex items-center justify-between']"
+  >
+    <!-- TODO: review to sort button position for each function-->
+    <div class="flex items-center gap-1" v-auto-animate v-if="isDataView">
+      <Tooltip>
+        <TooltipTrigger as-child>
+          <Button variant="outline" size="xxs" @click="emit('onShowFilter')">
+            <Icon name="lucide:filter"> </Icon>
+            <ContextMenuShortcut>⌘F</ContextMenuShortcut>
+            <!-- Filter -->
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent>
+          <p>Filter data</p>
+        </TooltipContent>
+      </Tooltip>
+
+      <RefreshButton @on-refresh="emit('onRefresh')" />
+
+      <Tooltip>
+        <TooltipTrigger as-child>
+          <Button
+            variant="outline"
+            size="xxs"
+            @click="emit('onToggleHistoryPanel')"
+          >
+            <Icon name="lucide:terminal"> </Icon>
+            <ContextMenuShortcut>⌘j</ContextMenuShortcut>
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent>
+          <p>History logs</p>
+        </TooltipContent>
+      </Tooltip>
+
+      <Tooltip v-if="!isViewVirtualTable">
+        <TooltipTrigger as-child>
+          <Button
+            variant="outline"
+            class="font-normal"
+            size="xxs"
+            @click="emit('onAddEmptyRow')"
+          >
+            <Icon name="hugeicons:plus-sign"> </Icon> Row
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent>
+          <p>Add new record</p>
+        </TooltipContent>
+      </Tooltip>
+
+      <Tooltip v-if="hasEditedRows && !isViewVirtualTable">
+        <TooltipTrigger as-child>
+          <Button
+            variant="outline"
+            size="xxs"
+            class="relative overflow-visible"
+            @click="emit('onSaveData')"
+          >
+            <Icon name="lucide:save"> </Icon>
+            <span
+              v-if="pendingChangesCount"
+              class="absolute -right-1.5 -top-1.5 min-w-4 rounded-full bg-green-700 px-1 text-xxs font-medium leading-4 text-white"
+            >
+              {{ pendingChangesCount }}
+            </span>
+            <ContextMenuShortcut>⌘S</ContextMenuShortcut>
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent>
+          <p>Save changes</p>
+        </TooltipContent>
+      </Tooltip>
+
+      <Tooltip v-if="hasEditedRows && !isViewVirtualTable">
+        <TooltipTrigger as-child>
+          <Button
+            variant="outline"
+            size="xxs"
+            class="font-normal"
+            @click="emit('onDiscardChanges')"
+          >
+            <Icon name="hugeicons:undo-02"> </Icon>
+            Discard
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent>
+          <p>Discard changes</p>
+        </TooltipContent>
+      </Tooltip>
+
+      <Tooltip v-if="totalSelectedRows && !isViewVirtualTable">
+        <TooltipTrigger as-child>
+          <Button variant="outline" size="xxs" @click="emit('onDeleteRows')">
+            <Icon name="lucide:trash"> </Icon>
+            <ContextMenuShortcut>⌥⌘⌫</ContextMenuShortcut>
+            <!-- Delete -->
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent>
+          <p>Delete {{ totalSelectedRows }} selected rows</p>
+        </TooltipContent>
+      </Tooltip>
+
+      <p class="font-normal text-xs text-primary/60" v-if="totalSelectedRows">
+        Selected
+      </p>
+      <p class="font-normal text-sm text-primary" v-if="totalSelectedRows">
+        {{ totalSelectedRows }}
+      </p>
+
+      <!-- TODO: Config export to excel or csv -->
+      <!-- <Button variant="outline" size="iconSm">
+        <Icon name="hugeicons:file-download"> </Icon>
+      </Button> -->
+    </div>
+    <div v-else></div>
+
+    <div class="flex items-center gap-2" v-if="isDataView">
+      <Tooltip>
+        <TooltipTrigger as-child>
+          <Button
+            variant="outline"
+            size="iconSm"
+            :disabled="!isAllowPreviousPage"
+            @click="emit('onPreviousPage')"
+          >
+            <Icon name="lucide:chevron-left"> </Icon>
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent>
+          <p>Previous page</p>
+        </TooltipContent>
+      </Tooltip>
+
+      <div class="font-normal text-sm text-primary/80">
+        {{ offset + 1 }}-{{ offset + currentTotalRows }}
+        <p class="font-normal text-xs text-primary/60 inline">of</p>
+        {{ totalRows }}
+        <p class="font-normal text-xs text-primary/60 inline">rows</p>
+      </div>
+
+      <Tooltip>
+        <TooltipTrigger as-child>
+          <Button
+            variant="outline"
+            size="iconSm"
+            :disabled="!isAllowNextPage"
+            @click="emit('onNextPage')"
+          >
+            <Icon name="lucide:chevron-right"> </Icon>
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent>
+          <p>Next page</p>
+        </TooltipContent>
+      </Tooltip>
+
+      <QuickPagination
+        :limit="limit"
+        :offset="offset"
+        :totalRows="totalRows"
+        @onPaginate="value => emit('onPaginate', value)"
+      />
+    </div>
+    <div v-else></div>
+
+    <div class="flex items-center gap-1">
+      <Tabs
+        :model-value="tabView"
+        @update:model-value="
+          $emit('update:tabView', $event as QuickQueryTabView)
+        "
+      >
+        <TabsList size="xxs" class="grid w-full grid-cols-3">
+          <TabsTrigger
+            size="xxs"
+            :value="QuickQueryTabView.Data"
+            class="font-medium cursor-pointer text-primary/80"
+          >
+            Data
+          </TabsTrigger>
+          <TabsTrigger
+            size="xxs"
+            :value="QuickQueryTabView.Structure"
+            class="font-medium cursor-pointer text-primary/80"
+          >
+            Structure
+          </TabsTrigger>
+          <TabsTrigger
+            size="xxs"
+            :value="QuickQueryTabView.Erd"
+            class="font-medium cursor-pointer text-primary/80"
+            :disabled="isViewVirtualTable"
+          >
+            ERD
+          </TabsTrigger>
+        </TabsList>
+      </Tabs>
+
+      <!-- Safe Mode Status Icon -->
+      <Tooltip>
+        <TooltipTrigger as-child>
+          <Button
+            variant="ghost"
+            size="iconSm"
+            @click="openSettings('Quick Query')"
+          >
+            <Icon
+              v-if="appConfigStore.quickQuerySafeModeEnabled"
+              name="hugeicons:security-check"
+              class="size-4!"
+            />
+            <Icon
+              v-else
+              name="lucide:shield-minus"
+              class="size-4! text-muted-foreground"
+            />
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent>
+          <p>
+            Safe Mode:
+            {{
+              appConfigStore.quickQuerySafeModeEnabled ? 'Enabled' : 'Disabled'
+            }}
+          </p>
+          <p class="text-xs text-muted-foreground">Click to configure</p>
+        </TooltipContent>
+      </Tooltip>
+
+      <!-- Table Appearance Settings shortcut -->
+      <DropdownMenu>
+        <DropdownMenuTrigger as-child>
+          <Button variant="ghost" size="xxs">
+            <Icon name="hugeicons:arrow-up-down" class="size-4!" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" class="min-w-44">
+          <DropdownMenuLabel class="py-0">Null ordering</DropdownMenuLabel>
+          <DropdownMenuSeparator />
+          <DropdownMenuRadioGroup
+            :model-value="
+              appConfigStore.tableAppearanceConfigs.nullOrderPreference
+            "
+            @update:model-value="
+              appConfigStore.tableAppearanceConfigs.nullOrderPreference =
+                $event as NullOrderPreference
+            "
+          >
+            <DropdownMenuRadioItem
+              v-for="option in NULL_ORDER_OPTIONS"
+              :key="option.value"
+              :value="option.value"
+              class="h-7 cursor-pointer"
+            >
+              {{ option.label }}
+            </DropdownMenuRadioItem>
+          </DropdownMenuRadioGroup>
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      <Tooltip>
+        <TooltipTrigger as-child>
+          <Button
+            variant="ghost"
+            size="iconSm"
+            @click="openSettings('Appearance')"
+          >
+            <Icon name="hugeicons:settings-04" class="size-4!" />
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent>
+          <p>Table appearance settings</p>
+        </TooltipContent>
+      </Tooltip>
+    </div>
+  </div>
+</template>

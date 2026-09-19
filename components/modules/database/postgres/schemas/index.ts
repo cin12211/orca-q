@@ -1,5 +1,3 @@
-export { default as ManagementSchemas } from './ManagementSchemas.vue';
-export { default as PostgresSchemas } from './ManagementSchemas.vue';
-export * from './hooks';
-export * from './utils';
-export * from './dialogs';
+export { default as ManagementSchemas } from '~/components/modules/database/sqlfamily/schemas/ManagementSchemas.vue';
+export * from '~/components/modules/database/sqlfamily/schemas/hooks';
+export * from '~/components/modules/database/sqlfamily/schemas/utils';

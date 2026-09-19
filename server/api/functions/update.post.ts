@@ -2,7 +2,7 @@ import { defineEventHandler, readBody, createError } from 'h3';
 import {
   generateRoutineUpdateSQL,
   getRoutineDefinitionType,
-} from '~/components/modules/database/postgres/schemas/utils';
+} from '~/components/modules/database/sqlfamily/schemas/utils';
 import { DatabaseClientType } from '~/core/constants/database-client-type';
 import type { DatabaseMetadataRequestParams } from '~/core/types';
 import { createFunctionAdapter } from '~/server/infrastructure/database/adapters/functions';

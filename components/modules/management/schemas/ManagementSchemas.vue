@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import PostgresSchemas from '~/components/modules/database/postgres/schemas/ManagementSchemas.vue';
+import PostgresSchemas from '~/components/modules/database/sqlfamily/schemas/ManagementSchemas.vue';
 </script>
 
 <template>
