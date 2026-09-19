@@ -74,6 +74,17 @@ export const useSchemaStore = defineStore(
 
     const schemas = ref<Record<string, Schema[]>>({});
 
+    // Tracks which schemas have had their full table/view/function detail
+    // loaded, keyed by `${connectionId}::${schemaName}`. `fetchSchemas` only
+    // populates lightweight schema names; `fetchSchemaDetail` lazily loads
+    // full metadata for one schema and marks it here so repeat selections
+    // don't refetch.
+    const schemaDetailLoaded = ref<Record<string, boolean>>({});
+    // In-flight per-schema detail requests, used to dedupe concurrent calls
+    // for the same schema (e.g. rapid clicks) without persisting Promises in
+    // reactive state.
+    const schemaDetailRequests = new Map<string, Promise<void>>();
+
     // Store reserved schemas per connection: Record<string (connectionId), ReservedTableSchemas[]>
     const reservedSchemas = ref<Record<string, ReservedTableSchemas[]>>({});
 
@@ -202,6 +213,10 @@ export const useSchemaStore = defineStore(
       if (isRefresh) {
         delete schemas.value[connId];
         delete reservedSchemas.value[connId];
+        const detailKeyPrefix = `${connId}::`;
+        Object.keys(schemaDetailLoaded.value)
+          .filter(key => key.startsWith(detailKeyPrefix))
+          .forEach(key => delete schemaDetailLoaded.value[key]);
       } else {
         if (schemas.value[connId]?.length) {
           upsertSchemaLoadSession(connId, {
@@ -243,6 +258,7 @@ export const useSchemaStore = defineStore(
           method: 'POST',
           body: {
             ...getConnectionParams(connection),
+            namesOnly: true,
           },
         });
 
@@ -265,6 +281,7 @@ export const useSchemaStore = defineStore(
             workspaceId: wsId,
             connectionId: connId,
             name: schema.name,
+            isSystem: schema.is_system ?? false,
             functions: schema.functions || [],
             tables: schema.tables || [],
             views: schema.views || [],
@@ -310,6 +327,111 @@ export const useSchemaStore = defineStore(
       }
     };
 
+    /**
+     * Lazily fetch full table/view/function metadata for a single schema.
+     * `fetchSchemas` only loads lightweight schema names at connect time; a
+     * schema's full detail (tables, columns, views, functions) is fetched
+     * only when the user selects that schema (e.g. via the schema selector
+     * or the connect flow's default active schema). Results are memoized
+     * per `connectionId + schemaName` so repeat selections don't refetch,
+     * and concurrent calls for the same schema share one in-flight request.
+     */
+    const fetchSchemaDetail = async ({
+      connectionId: connId,
+      workspaceId: wsId,
+      connection,
+      schemaName,
+      isRefresh = false,
+    }: {
+      connectionId: string;
+      workspaceId: string;
+      connection?: Connection;
+      schemaName: string;
+      isRefresh?: boolean;
+    }): Promise<void> => {
+      if (
+        !connId ||
+        !wsId ||
+        !schemaName ||
+        !supportsSchemaMetadata(connection)
+      ) {
+        return;
+      }
+
+      const key = `${connId}::${schemaName}`;
+
+      if (!isRefresh && schemaDetailLoaded.value[key]) {
+        return;
+      }
+
+      const pending = schemaDetailRequests.get(key);
+      if (!isRefresh && pending) {
+        return pending;
+      }
+
+      const request = (async () => {
+        try {
+          const databaseSource = await $fetch('/api/metadata/meta-data', {
+            method: 'POST',
+            body: {
+              ...getConnectionParams(connection),
+              schemaName,
+            },
+          });
+
+          const detail =
+            databaseSource.find(schema => schema.name === schemaName) ??
+            databaseSource[0];
+
+          if (!detail) {
+            return;
+          }
+
+          const existing = schemas.value[connId] || [];
+          const index = existing.findIndex(
+            schema => schema.name === schemaName
+          );
+          const id =
+            index >= 0 ? existing[index].id : `${wsId}-${connId}-${schemaName}`;
+
+          const updatedSchema: Schema = {
+            id,
+            workspaceId: wsId,
+            connectionId: connId,
+            name: schemaName,
+            isSystem: index >= 0 ? existing[index].isSystem : false,
+            functions: detail.functions || [],
+            tables: detail.tables || [],
+            views: detail.views || [],
+            tableDetails: detail?.table_details || null,
+            viewDetails: detail?.view_details || null,
+          };
+
+          const nextSchemas = [...existing];
+          if (index >= 0) {
+            nextSchemas.splice(index, 1, updatedSchema);
+          } else {
+            nextSchemas.push(updatedSchema);
+          }
+          schemas.value[connId] = nextSchemas;
+
+          schemaDetailLoaded.value[key] = true;
+        } catch (error) {
+          console.error('Failed to fetch schema detail:', error);
+          throw error;
+        } finally {
+          schemaDetailRequests.delete(key);
+        }
+      })();
+
+      schemaDetailRequests.set(key, request);
+      return request;
+    };
+
+    const isSchemaDetailLoaded = (connId: string, schemaName: string) => {
+      return !!schemaDetailLoaded.value[`${connId}::${schemaName}`];
+    };
+
     const getTableInfoById = (
       tableId: string,
       schema: Schema
@@ -340,6 +462,7 @@ export const useSchemaStore = defineStore(
       schemas, // Expose raw per-connection map
       loading, // Expose raw per-connection map
       schemaLoadSessions,
+      schemaDetailLoaded, // Expose raw `${connId}::${schemaName}` -> loaded map
       indexesMap,
       rlsMap,
       rulesMap,
@@ -356,6 +479,8 @@ export const useSchemaStore = defineStore(
 
       // Actions
       fetchSchemas,
+      fetchSchemaDetail,
+      isSchemaDetailLoaded,
       fetchReservedSchemas,
       getTableInfoById,
     };

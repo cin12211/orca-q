@@ -4,10 +4,16 @@
  * Supports multiple database types via adapter pattern
  */
 import { DatabaseClientType } from '~/core/constants/database-client-type';
-import type { GrantRevokeRequest, GrantRevokeResponse, DatabaseMetadataRequestParams } from '~/core/types';
+import type {
+  GrantRevokeRequest,
+  GrantRevokeResponse,
+  DatabaseMetadataRequestParams,
+} from '~/core/types';
 import { createRoleAdapter } from '~/server/infrastructure/database/adapters/database-roles';
 
-interface RequestBody extends GrantRevokeRequest, DatabaseMetadataRequestParams {
+interface RequestBody
+  extends GrantRevokeRequest,
+    Omit<DatabaseMetadataRequestParams, 'schemaName'> {
   dbType?: DatabaseClientType;
 }
 
@@ -22,10 +28,7 @@ export default defineEventHandler(
       });
     }
 
-    const adapter = await createRoleAdapter(
-      body.type || body.dbType,
-      body
-    );
+    const adapter = await createRoleAdapter(body.type || body.dbType, body);
 
     return adapter.grantPermission({
       roleName: body.roleName,

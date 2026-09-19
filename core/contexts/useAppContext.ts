@@ -37,6 +37,21 @@ export const useAppContext = () => {
       connectionId: connectionId.value,
       workspaceId: workspaceId.value,
     });
+
+    // Selecting a schema (e.g. via the schema selector) is the trigger for
+    // lazily loading that schema's full table/view/function metadata —
+    // `fetchSchemas` only loaded lightweight names at connect time.
+    const connectionsByWsId = connectionStore.getConnectionsByWorkspaceId(
+      workspaceId.value
+    );
+    const connection = connectionsByWsId.find(c => c.id === connectionId.value);
+
+    void schemaStore.fetchSchemaDetail({
+      connectionId: connectionId.value,
+      workspaceId: workspaceId.value,
+      connection,
+      schemaName: schemaId,
+    });
   };
 
   const connectToConnection = async ({
@@ -115,6 +130,27 @@ export const useAppContext = () => {
           schemaId: includedPublic
             ? PUBLIC_SCHEMA_ID
             : firstSchemaName || PUBLIC_SCHEMA_ID,
+        });
+      }
+
+      // `fetchSchemas` above only loads lightweight schema names. Eagerly
+      // load full metadata for the resolved active schema so features that
+      // read `activeSchema` (Quick Query structure tabs, ERD, raw-query
+      // autocomplete, the schema selector) keep working immediately after
+      // connecting, without waiting on the user to explicitly reselect it.
+      const resolvedSchemaId =
+        currentSchema?.schemaId ||
+        wsStateStore
+          .getStateById({ workspaceId: wsId, connectionId: connId })
+          ?.connectionStates?.find(cs => cs.id === connId)?.schemaId;
+
+      if (resolvedSchemaId) {
+        await schemaStore.fetchSchemaDetail({
+          connectionId: connId,
+          workspaceId: wsId,
+          connection,
+          schemaName: resolvedSchemaId,
+          isRefresh,
         });
       }
 

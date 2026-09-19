@@ -13,6 +13,7 @@ import { resolveMetadataTypeAlias } from '../type-alias.constants';
 import type {
   DatabaseMetadataAdapterParams,
   IDatabaseMetadataAdapter,
+  SchemaMetadataQueryOptions,
 } from '../types';
 import {
   buildTableDetailFromCreateSql,
@@ -124,11 +125,30 @@ export class SqliteMetadataAdapter
     );
   }
 
-  async getSchemaMetaData(): Promise<SchemaMetaData[]> {
+  async getSchemaMetaData(
+    options?: SchemaMetadataQueryOptions
+  ): Promise<SchemaMetaData[]> {
     const databases = await this.getDatabases();
+    const scopedDatabases = databases.filter(
+      db =>
+        db.name !== 'temp' &&
+        (!options?.schemaName || db.name === options.schemaName)
+    );
+
+    if (options?.namesOnly) {
+      return scopedDatabases.map(database => ({
+        name: database.name,
+        tables: null,
+        views: null,
+        functions: null,
+        table_details: null,
+        view_details: null,
+      }));
+    }
+
     const schemaMeta: SchemaMetaData[] = [];
 
-    for (const database of databases.filter(db => db.name !== 'temp')) {
+    for (const database of scopedDatabases) {
       const objects = await this.getSchemaObjects(database.name);
       const tables = objects.filter(object => object.type === 'table');
       const views = objects.filter(object => object.type === 'view');

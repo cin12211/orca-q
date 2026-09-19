@@ -1,6 +1,13 @@
 <script setup lang="ts">
 import { storeToRefs } from 'pinia';
-import { Select, SelectGroup, SelectItem, SelectTrigger } from '#components';
+import {
+  Select,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectSeparator,
+  SelectTrigger,
+} from '#components';
 import { cn } from '@/lib/utils';
 import { useAppContext } from '~/core/contexts/useAppContext';
 import { useSchemaStore, useWSStateStore } from '~/core/stores';
@@ -13,6 +20,15 @@ const wsStateStore = useWSStateStore();
 
 const { activeSchema, schemasByContext } = storeToRefs(schemaStore);
 const { schemaId } = storeToRefs(wsStateStore);
+
+// User schemas first, built-in system schemas (e.g. pg_catalog) in their own
+// group so they stay selectable without cluttering the main list.
+const userSchemas = computed(() =>
+  schemasByContext.value.filter(schema => !schema.isSystem)
+);
+const systemSchemas = computed(() =>
+  schemasByContext.value.filter(schema => schema.isSystem)
+);
 </script>
 <template>
   <Select
@@ -34,12 +50,29 @@ const { schemaId } = storeToRefs(wsStateStore);
       <SelectGroup>
         <SelectItem
           :value="schema.name"
-          v-for="schema in schemasByContext"
+          v-for="schema in userSchemas"
+          :key="schema.id"
           class="cursor-pointer"
         >
           {{ schema.name }}
         </SelectItem>
       </SelectGroup>
+      <template v-if="systemSchemas.length">
+        <SelectSeparator />
+        <SelectGroup>
+          <SelectLabel class="text-xxs! tracking-wider text-muted-foreground"
+            >System</SelectLabel
+          >
+          <SelectItem
+            :value="schema.name"
+            v-for="schema in systemSchemas"
+            :key="schema.id"
+            class="cursor-pointer"
+          >
+            {{ schema.name }}
+          </SelectItem>
+        </SelectGroup>
+      </template>
     </SelectContent>
   </Select>
 </template>
