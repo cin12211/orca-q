@@ -1,6 +1,6 @@
 import { mount } from '@vue/test-utils';
 import { describe, expect, it } from 'vitest';
-import RedisDeleteKeyDialog from '~/components/modules/redis-workspace/components/RedisDeleteKeyDialog.vue';
+import RedisDeleteKeyDialog from '~/components/modules/database/redis/quick-query/components/RedisDeleteKeyDialog.vue';
 
 const mountDialog = (props: Record<string, unknown>) =>
   mount(RedisDeleteKeyDialog, {

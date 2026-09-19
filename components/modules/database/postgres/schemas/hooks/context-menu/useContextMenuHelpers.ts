@@ -1,0 +1,177 @@
+import { toRaw, toRef } from 'vue';
+import { toast } from 'vue-sonner';
+import { QuickQueryMutationAction } from '~/components/modules/quick-query/constants';
+import { useAppConfigStore } from '~/core/stores/appConfigStore';
+import type {
+  SchemaColumnMetadata as ColumnShortMetadata,
+  SchemaForeignKeyMetadata as ForeignKeyMetadata,
+  SchemaPrimaryKey as PrimaryKey,
+  TableDetailMetadata,
+} from '~/core/types';
+import type {
+  ContextMenuState,
+  SchemaContextMenuOptions,
+  SchemaContextMenuSelection,
+} from './types';
+
+export function useContextMenuHelpers(
+  options: SchemaContextMenuOptions,
+  state: ContextMenuState
+) {
+  const appConfigStore = useAppConfigStore();
+  const safeModeEnabled = toRef(appConfigStore, 'quickQuerySafeModeEnabled');
+  const safeModeLoading = ref(false);
+
+  /**
+   * Get the actual schema name from activeSchema
+   */
+  const getSchemaName = (): string => {
+    return options.activeSchema.value?.name || 'public';
+  };
+
+  /**
+   * Get table metadata from schema (columns, primary keys, etc.)
+   */
+  const getTableMetadata = (tableName: string): TableDetailMetadata | null => {
+    const schema = options.activeSchema.value;
+    if (!schema?.tableDetails) return null;
+    return schema.tableDetails[tableName] || null;
+  };
+
+  /**
+   * Get columns for a table with full metadata
+   */
+  const getTableColumnsMetadata = (
+    tableName: string
+  ): ColumnShortMetadata[] => {
+    const metadata = getTableMetadata(tableName);
+    if (!metadata?.columns) return [];
+    return metadata.columns.sort(
+      (a, b) => a.ordinal_position - b.ordinal_position
+    );
+  };
+
+  /**
+   * Get column names for a table
+   */
+  const getTableColumns = (tableName: string): string[] => {
+    return getTableColumnsMetadata(tableName).map(col => col.name);
+  };
+
+  /**
+   * Get primary key columns for a table
+   */
+  const getPrimaryKeyColumns = (tableName: string): string[] => {
+    const metadata = getTableMetadata(tableName);
+    if (!metadata?.primary_keys) return [];
+    return metadata.primary_keys.map(pk => pk.column);
+  };
+
+  /**
+   * Get placeholder value for a column based on its properties
+   */
+  const getColumnPlaceholder = (col: ColumnShortMetadata): string => {
+    if (col.default_value) {
+      return col.default_value;
+    }
+    if (col.is_nullable) {
+      return 'NULL';
+    }
+    return `:${col.name}`;
+  };
+
+  /**
+   * Handle right-click on item
+   */
+  const onRightClickItem = (
+    _: MouseEvent,
+    item: SchemaContextMenuSelection
+  ) => {
+    state.selectedItem.value = toRaw(item.value);
+  };
+
+  /**
+   * Show SQL in preview dialog
+   */
+  const showSqlPreview = (sql: string, title: string) => {
+    state.sqlPreviewDialogSQL.value = sql;
+    state.sqlPreviewDialogTitle.value = title;
+    state.sqlPreviewDialogOpen.value = true;
+  };
+
+  /**
+   * Execute action with safe mode check
+   */
+  const executeWithSafeMode = async (
+    sql: string,
+    type: QuickQueryMutationAction,
+    action: () => Promise<void>
+  ) => {
+    if (safeModeEnabled.value) {
+      state.safeModeDialogSQL.value = sql;
+      state.safeModeDialogType.value = type;
+      state.pendingAction.value = action;
+      state.safeModeDialogOpen.value = true;
+    } else {
+      await action();
+    }
+  };
+
+  /**
+   * Confirm safe mode action
+   */
+  const onSafeModeConfirm = async () => {
+    if (state.pendingAction.value) {
+      safeModeLoading.value = true;
+      await state.pendingAction.value();
+      safeModeLoading.value = false;
+      state.pendingAction.value = null;
+    }
+    state.safeModeDialogOpen.value = false;
+  };
+
+  /**
+   * Cancel safe mode action
+   */
+  const onSafeModeCancel = () => {
+    state.pendingAction.value = null;
+    state.safeModeDialogOpen.value = false;
+  };
+
+  /**
+   * Execute an async action with loading state and error handling
+   */
+  const executeWithLoading = async (
+    action: () => Promise<void>,
+    loadingRef: Ref<boolean> = state.isFetching,
+    errorMessage = 'An error occurred'
+  ) => {
+    try {
+      loadingRef.value = true;
+      await action();
+    } catch (e: unknown) {
+      console.error(e);
+      const error = e as { message?: string };
+      toast.error(error.message || errorMessage);
+      state.sqlPreviewDialogOpen.value = false;
+    } finally {
+      loadingRef.value = false;
+    }
+  };
+
+  return {
+    getSchemaName,
+    getTableMetadata,
+    getTableColumnsMetadata,
+    getTableColumns,
+    getPrimaryKeyColumns,
+    getColumnPlaceholder,
+    onRightClickItem,
+    showSqlPreview,
+    executeWithSafeMode,
+    onSafeModeConfirm,
+    onSafeModeCancel,
+    executeWithLoading,
+    safeModeLoading,
+  };
+}

@@ -1,15 +1,13 @@
 <script setup lang="ts">
-import {
-  ManagementErdDiagram,
-  ManagementExplorer,
-  ManagementSchemas,
-  ManagementDatabaseTools,
-  ManagementUsersAndPermission,
-  ManagementAgent,
-  ManagementRedisBrowser,
-  ManagementRedisTools,
-  ManagementMongoSchemas,
-} from '#components';
+import { ManagementErdDiagram } from '~/components/modules/management/erd-diagram';
+import { ManagementExplorer } from '~/components/modules/management/explorer';
+import { ManagementDatabaseTools } from '~/components/modules/management/database-tools';
+import { ManagementUsersAndPermission } from '~/components/modules/management/role-permission';
+import { ManagementAgent } from '~/components/modules/management/agent';
+import { ManagementRedisTools } from '~/components/modules/management/redis-tools';
+import ManagementSchemas from '~/components/modules/database/postgres/schemas/ManagementSchemas.vue';
+import ManagementRedisBrowser from '~/components/modules/database/redis/schemas/ManagementRedisBrowser.vue';
+import ManagementMongoSchemas from '~/components/modules/database/mongo/schemas/ManagementMongoSchemas.vue';
 import {
   getConnectionCapabilityProfile,
   resolveConnectionFamily,

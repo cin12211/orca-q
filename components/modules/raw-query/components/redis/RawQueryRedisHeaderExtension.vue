@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue';
-import { useRedisWorkspace } from '~/components/modules/redis-workspace/hooks/useRedisWorkspace';
+import { useRedisWorkspace } from '~/components/modules/database/redis/quick-query/hooks/useRedisWorkspace';
 import RedisDBSelector from '~/components/modules/selectors/RedisDBSelector.vue';
 import { DatabaseClientType } from '~/core/constants/database-client-type';
 import type { RawQueryHeaderContext } from '../../registry/rawQueryProfile.types';

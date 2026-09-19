@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { ContextMenuItemType } from '~/components/base/context-menu/menuContext.type';
-import { useRedisTreeContextMenu } from '~/components/modules/management/redis-browser/hooks/useRedisTreeContextMenu';
-import { RedisKeyType } from '~/components/modules/management/redis-browser/hooks/useRedisTreeData';
+import { useRedisTreeContextMenu } from '~/components/modules/database/redis/schemas/hooks/useRedisTreeContextMenu';
+import { RedisKeyType } from '~/components/modules/database/redis/schemas/hooks/useRedisTreeData';
 
 describe('useRedisTreeContextMenu', () => {
   it('builds a Delete action for a key node and calls onDeleteKey with its redis key', () => {

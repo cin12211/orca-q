@@ -1,3 +1,2 @@
-export * from './generateFunctionSQL';
-export * from './generateTableSQL';
-export * from './generateViewSQL';
+// Deprecated: use ~/components/modules/database/postgres/schemas/utils instead
+export * from '~/components/modules/database/postgres/schemas/utils';

@@ -6,7 +6,7 @@
 // import {
 //   getRedisKeyIcon,
 //   getRedisKeyIconClass,
-// } from '~/components/modules/management/redis-browser/hooks/useRedisTreeData';
+// } from '~/components/modules/database/redis/schemas/hooks/useRedisTreeData';
 // import {
 //   Table,
 //   TableBody,

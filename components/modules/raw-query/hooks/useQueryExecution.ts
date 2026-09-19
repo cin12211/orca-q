@@ -7,7 +7,7 @@ import {
   getCurrentStatement,
 } from '~/components/base/code-editor/utils';
 import type { RowData } from '~/components/base/data-grid/utils';
-import { parseRedisDatabaseIndex } from '~/components/modules/redis-workspace/utils/redisWorkspace';
+import { parseRedisDatabaseIndex } from '~/components/modules/database/redis/quick-query/utils/redisWorkspace';
 import { DatabaseClientType } from '~/core/constants/database-client-type';
 import { uuidv4 } from '~/core/helpers';
 import { getConnectionParams } from '~/core/helpers/connection-helper';

@@ -1,7 +1,7 @@
 import { ref } from 'vue';
 import { flushPromises } from '@vue/test-utils';
 import { describe, expect, it, vi } from 'vitest';
-import { useMongoSchemaTreeData } from '~/components/modules/management/schemas/mongodb/hooks/useMongoSchemaTreeData';
+import { useMongoSchemaTreeData } from '~/components/modules/database/mongo/schemas/hooks/useMongoSchemaTreeData';
 import { TabViewType } from '~/core/types/entities/tab-view.entity';
 
 const mockFetch = vi.fn(async (url: string, options: any) => {

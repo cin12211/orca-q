@@ -10,7 +10,7 @@ const workspaceMock = {
   selectedDatabaseIndex: ref(3),
 };
 
-vi.mock('~/components/modules/redis-workspace/hooks/useRedisWorkspace', () => ({
+vi.mock('~/components/modules/database/redis/quick-query/hooks/useRedisWorkspace', () => ({
   useRedisWorkspace: () => workspaceMock,
 }));
 

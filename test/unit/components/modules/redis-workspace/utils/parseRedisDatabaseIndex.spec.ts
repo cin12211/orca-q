@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { parseRedisDatabaseIndex } from '~/components/modules/redis-workspace/utils/redisWorkspace';
+import { parseRedisDatabaseIndex } from '~/components/modules/database/redis/quick-query/utils/redisWorkspace';
 
 describe('parseRedisDatabaseIndex (frontend util)', () => {
   it('parses numeric string database values', () => {

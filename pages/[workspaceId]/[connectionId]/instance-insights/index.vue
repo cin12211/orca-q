@@ -3,7 +3,7 @@ import { storeToRefs } from 'pinia';
 import InstanceInsightsPanel from '~/components/modules/instance-insights/InstanceInsightsPanel.vue';
 import MultiDbInstanceInsightsPanel from '~/components/modules/instance-insights/MultiDbInstanceInsightsPanel.vue';
 import RedisInstanceInsightsPanel from '~/components/modules/instance-insights/RedisInstanceInsightsPanel.vue';
-import { useRedisWorkspace } from '~/components/modules/redis-workspace/hooks/useRedisWorkspace';
+import { useRedisWorkspace } from '~/components/modules/database/redis/quick-query/hooks/useRedisWorkspace';
 import { DatabaseClientType } from '~/core/constants/database-client-type';
 import { useManagementConnectionStore } from '~/core/stores/managementConnectionStore';
 import { useTabViewsStore } from '~/core/stores/useTabViewsStore';

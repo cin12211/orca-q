@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import RedisWorkspace from '~/components/modules/redis-workspace/RedisWorkspace.vue';
+import RedisWorkspace from '~/components/modules/database/redis/quick-query/RedisWorkspace.vue';
 import { DEFAULT_MAX_KEEP_ALIVE } from '~/core/constants';
 import { useManagementConnectionStore } from '~/core/stores/managementConnectionStore';
 import { useTabViewsStore } from '~/core/stores/useTabViewsStore';

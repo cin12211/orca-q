@@ -2,7 +2,7 @@
 import {
   getRedisKeyIcon,
   getRedisKeyIconClass,
-} from '~/components/modules/management/redis-browser/hooks/useRedisTreeData';
+} from '~/components/modules/database/redis/schemas/hooks/useRedisTreeData';
 import type { RedisKeyspaceInsight } from '~/core/types/instance-insights.types';
 import InsightKpiCard from './InsightKpiCard.vue';
 import InsightScopeBadge from './InsightScopeBadge.vue';

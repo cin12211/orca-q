@@ -1,7 +1,7 @@
 import { ref } from 'vue';
 import { flushPromises, mount } from '@vue/test-utils';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import ManagementRedisBrowser from '~/components/modules/management/redis-browser/ManagementRedisBrowser.vue';
+import ManagementRedisBrowser from '~/components/modules/database/redis/schemas/ManagementRedisBrowser.vue';
 import { TabViewType } from '~/core/stores/useTabViewsStore';
 
 const openRedisTabMock = vi.fn();
@@ -31,7 +31,7 @@ const workspaceMock = {
   isDeletingKey: ref(false),
 };
 
-vi.mock('~/components/modules/redis-workspace/hooks/useRedisWorkspace', () => ({
+vi.mock('~/components/modules/database/redis/quick-query/hooks/useRedisWorkspace', () => ({
   useRedisWorkspace: () => workspaceMock,
 }));
 

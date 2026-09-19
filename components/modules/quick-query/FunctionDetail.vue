@@ -38,7 +38,7 @@ import { pgKeywordCompletion } from '~/components/base/code-editor/utils/pgKeywo
 import {
   generateRoutineUpdateSQL,
   getRoutineDefinitionType,
-} from '~/components/modules/management/schemas/utils';
+} from '~/components/modules/database/postgres/schemas/utils';
 import QuickQueryErrorPopup from '~/components/modules/quick-query/QuickQueryErrorPopup.vue';
 import FunctionControlBar from '~/components/modules/quick-query/function-control-bar/FunctionControlBar.vue';
 import { mappedSchemaSuggestion } from '~/components/modules/raw-query/utils/getMappedSchemaSuggestion';
