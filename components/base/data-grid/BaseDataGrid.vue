@@ -59,6 +59,14 @@ const props = withDefaults(
     enableCopyHotkey?: boolean;
     enableClickOutside?: boolean;
     allowEditing?: boolean;
+    /**
+     * Keep each column's own `editable` when `allowEditing` is false, so
+     * read-only grids can still open popup editors (e.g. JSON preview).
+     * The consumer's column defs must reject the write themselves
+     * (`valueSetter` returning false); cell changes are never emitted while
+     * `allowEditing` is false.
+     */
+    allowCellPreview?: boolean;
     suppressScrollOnNewData?: boolean;
     copyHeadersToClipboard?: boolean;
     emptyTitle?: string;
@@ -71,6 +79,7 @@ const props = withDefaults(
     enableCopyHotkey: true,
     enableClickOutside: false,
     allowEditing: false,
+    allowCellPreview: false,
     suppressScrollOnNewData: true,
     copyHeadersToClipboard: false,
     emptyTitle: 'No data found',
@@ -216,7 +225,7 @@ const mergedGridOptions = computed<GridOptions>(() => {
 });
 
 const effectiveColumnDefs = computed<ColDef[]>(() => {
-  if (props.allowEditing) {
+  if (props.allowEditing || props.allowCellPreview) {
     return props.columnDefs;
   }
 
