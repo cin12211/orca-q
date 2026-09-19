@@ -6,8 +6,25 @@ export interface MongoDocument {
 export interface MongoCollectionName {
   name: string;
   properties: string[];
-  size: number;
+  size?: number;
   count?: number;
+}
+
+export interface MongoCollectionStatItem {
+  name: string;
+  size: number;
+  count: number;
+}
+
+export interface MongoDatabaseBatchCollections {
+  database: string;
+  collections: MongoCollectionName[];
+}
+
+export interface MongoDatabaseBatchStats {
+  database: string;
+  totalSize: number;
+  collections: MongoCollectionStatItem[];
 }
 
 export interface MongoDatabaseStats {

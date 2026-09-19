@@ -13,14 +13,13 @@ export function useMongoServerDatabases(params: {
     isLoading.value = true;
     error.value = undefined;
     try {
-      const response = await $fetch<{ databases: string[] }>(
-        '/api/mongodb/databases',
-        {
-          method: 'POST',
-          body: getConnectionParams(params.connection.value),
-        }
-      );
-      databases.value = response.databases;
+      const response = await $fetch<{
+        databases: Array<{ database: string }>;
+      }>('/api/mongodb/schemas', {
+        method: 'POST',
+        body: getConnectionParams(params.connection.value),
+      });
+      databases.value = (response.databases || []).map(item => item.database);
     } catch (fetchError) {
       error.value =
         fetchError instanceof Error ? fetchError.message : 'Unknown error';

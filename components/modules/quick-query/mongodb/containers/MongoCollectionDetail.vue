@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { computed, ref, toRef, useTemplateRef, watch } from 'vue';
 import QuickQueryErrorPopup from '~/components/modules/quick-query/QuickQueryErrorPopup.vue';
-import { LocalStorageManager } from '~/core/persist/LocalStorageManager';
 import { useManagementConnectionStore } from '~/core/stores/managementConnectionStore';
 import MongoCollectionFilter from '../components/MongoCollectionFilter.vue';
 import MongoCollectionInfoView from '../components/MongoCollectionInfoView.vue';
@@ -16,6 +15,7 @@ import {
   useMongoDocumentMutation,
 } from '../hooks';
 import { MongoCollectionViewMode, MongoExportScope } from '../types';
+import { getMongoQueryBuilderKey } from '../utils';
 
 const props = defineProps<{
   connectionId: string;
@@ -74,7 +74,7 @@ useMongoCollectionShortcuts({
 });
 
 const filterPersistKey = computed(() =>
-  LocalStorageManager.mongoQueryBuilderKey(
+  getMongoQueryBuilderKey(
     props.workspaceId,
     props.connectionId,
     databaseName.value,

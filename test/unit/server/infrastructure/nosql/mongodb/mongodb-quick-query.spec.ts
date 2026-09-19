@@ -8,6 +8,7 @@ import {
   getMongoDatabaseStats,
   getMongoDatabaseTotalSize,
   listMongoCollectionNames,
+  listMongoCollectionStats,
   listMongoCollections,
   listMongoDatabases,
   normalizeMongoFilter,
@@ -184,7 +185,42 @@ describe('listMongoCollections', () => {
 });
 
 describe('listMongoCollectionNames', () => {
-  it('returns collection names with derived properties and size, sorted by name', async () => {
+  it('returns collection names with derived properties without executing collStats', async () => {
+    const commandFn = vi.fn();
+    const fakeDatabase = {
+      listCollections: () => ({
+        toArray: async () => [
+          { name: 'users', type: 'collection' },
+          { name: 'archive', type: 'collection', options: { capped: true } },
+        ],
+      }),
+      command: commandFn,
+    };
+
+    expect(await listMongoCollectionNames(fakeDatabase as any)).toEqual([
+      { name: 'archive', properties: ['Capped'] },
+      { name: 'users', properties: [] },
+    ]);
+    expect(commandFn).not.toHaveBeenCalled();
+  });
+
+  it('returns empty array when listCollections fails (e.g. Unauthorized on local database)', async () => {
+    const fakeDatabase = {
+      listCollections: () => ({
+        toArray: async () => {
+          throw new Error(
+            '(Unauthorized) not authorized on local to execute command'
+          );
+        },
+      }),
+    };
+
+    expect(await listMongoCollectionNames(fakeDatabase as any)).toEqual([]);
+  });
+});
+
+describe('listMongoCollectionStats', () => {
+  it('returns collection sizes and counts using collStats, sorted by name', async () => {
     const fakeDatabase = {
       listCollections: () => ({
         toArray: async () => [
@@ -198,10 +234,24 @@ describe('listMongoCollectionNames', () => {
       }),
     };
 
-    expect(await listMongoCollectionNames(fakeDatabase as any)).toEqual([
-      { name: 'archive', properties: ['Capped'], size: 2048, count: 5 },
-      { name: 'users', properties: [], size: 4096, count: 42 },
+    expect(await listMongoCollectionStats(fakeDatabase as any)).toEqual([
+      { name: 'archive', size: 2048, count: 5 },
+      { name: 'users', size: 4096, count: 42 },
     ]);
+  });
+
+  it('returns empty array when listCollections fails (e.g. Unauthorized on local database)', async () => {
+    const fakeDatabase = {
+      listCollections: () => ({
+        toArray: async () => {
+          throw new Error(
+            '(Unauthorized) not authorized on local to execute command'
+          );
+        },
+      }),
+    };
+
+    expect(await listMongoCollectionStats(fakeDatabase as any)).toEqual([]);
   });
 });
 
@@ -253,6 +303,18 @@ describe('getMongoDatabaseTotalSize', () => {
 
   it('defaults to 0 when totalSize is missing', async () => {
     const fakeDatabase = { command: async () => ({}) };
+
+    expect(await getMongoDatabaseTotalSize(fakeDatabase as any)).toBe(0);
+  });
+
+  it('returns 0 when dbStats command throws an error (e.g. Unauthorized on local database)', async () => {
+    const fakeDatabase = {
+      command: async () => {
+        throw new Error(
+          '(Unauthorized) not authorized on local to execute command'
+        );
+      },
+    };
 
     expect(await getMongoDatabaseTotalSize(fakeDatabase as any)).toBe(0);
   });

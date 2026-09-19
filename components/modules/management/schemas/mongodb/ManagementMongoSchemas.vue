@@ -22,6 +22,7 @@ import {
   RenameCollectionDialog,
 } from './dialogs';
 import { useMongoSchemaTreeData } from './hooks';
+import { getMongoSchemasTreeStorageKey } from './utils';
 
 const connectionStore = useManagementConnectionStore();
 const { workspaceId } = useWorkspaceConnectionRoute();
@@ -32,8 +33,21 @@ const isRefreshing = ref(false);
 const searchInput = shallowRef('');
 const debouncedSearch = refDebounced(searchInput, DEFAULT_DEBOUNCE_INPUT);
 
-const { fileTreeData, isLoading, defaultFolderOpenId, fetchDatabases } =
-  useMongoSchemaTreeData(connection, debouncedSearch);
+const fileTreeRef = useTemplateRef<typeof FileTree | null>('fileTreeRef');
+
+const {
+  fileTreeData,
+  isLoading,
+  defaultFolderOpenId,
+  databases,
+  fetchDatabases,
+  fetchDatabaseStats,
+  fetchDatabasesStats,
+} = useMongoSchemaTreeData(
+  connection,
+  debouncedSearch,
+  () => fileTreeRef.value?.getExpandedIds?.() ?? []
+);
 
 const {
   isMutating,
@@ -42,10 +56,12 @@ const {
   deleteCollection,
   deleteDatabase,
 } = useMongoCollectionMutation({ connection });
-
-const fileTreeRef = useTemplateRef<typeof FileTree | null>('fileTreeRef');
 const isTreeCollapsed = ref(false);
 const selectedNode = ref<FileNode | null>(null);
+
+const treeStorageKey = computed(() =>
+  getMongoSchemasTreeStorageKey(connection.value?.id)
+);
 
 const hasTreeData = computed(() => Object.keys(fileTreeData.value).length > 0);
 
@@ -61,9 +77,16 @@ const onToggleCollapse = () => {
   if (isTreeCollapsed.value) {
     fileTreeRef.value.expandAll();
     isTreeCollapsed.value = false;
+    fetchDatabasesStats(databases.value);
   } else {
     fileTreeRef.value.collapseAll();
     isTreeCollapsed.value = true;
+  }
+};
+
+const handleTreeToggle = (nodeId: string, isExpanded: boolean) => {
+  if (isExpanded && databases.value.includes(nodeId)) {
+    fetchDatabaseStats(nodeId);
   }
 };
 
@@ -74,6 +97,7 @@ const handleTreeClick = async (nodeId: string) => {
   const tabViewType = node.data?.tabViewType as TabViewType | undefined;
 
   if (tabViewType === TabViewType.MongoDatabaseOverview) {
+    fetchDatabaseStats(node.name);
     await openMongoDatabaseTab({ databaseName: node.name });
     return;
   }
@@ -293,22 +317,28 @@ const contextMenuItems = computed<ContextMenuItem[]>(() => {
           ref="fileTreeRef"
           :init-expanded-ids="[defaultFolderOpenId]"
           :initial-data="fileTreeData as unknown as Record<string, FileNode>"
-          :storage-key="`${connectionStore.selectedConnection?.id}-mongo-schemas-tree`"
+          :storage-key="treeStorageKey"
           :search-query="debouncedSearch"
           :allow-drag-and-drop="false"
           :delay-focus="0"
           @click="handleTreeClick"
+          @toggle="handleTreeToggle"
           @contextmenu="handleTreeContextMenu"
         >
           <template #meta="{ node }">
             <span
-              v-if="(node.data as any)?.totalSize !== undefined"
+              v-if="
+                node.data?.tabViewType === TabViewType.MongoDatabaseOverview
+              "
               class="text-xs text-muted-foreground"
             >
-              {{ formatBytes(((node.data as any)?.totalSize as number) || 0) }}
+              {{ (node.data as any)?.totalCollections ?? 0 }}
             </span>
             <span
-              v-else-if="(node.data as any)?.size !== undefined"
+              v-else-if="
+                node.data?.tabViewType === TabViewType.MongoCollectionDetail &&
+                (node.data as any)?.size !== undefined
+              "
               class="text-xs text-muted-foreground"
             >
               <template v-if="(node.data as any)?.count !== undefined">

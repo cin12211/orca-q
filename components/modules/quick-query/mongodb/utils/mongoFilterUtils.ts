@@ -275,3 +275,16 @@ export function extractFieldsFromDocuments(
     return a.localeCompare(b);
   });
 }
+
+/**
+ * Composite key for MongoDB Quick Query filter persisted state.
+ * Format: `mongo-${workspaceId}-${connectionId}-${databaseName}-${collectionName}`
+ */
+export function getMongoQueryBuilderKey(
+  workspaceId: string,
+  connectionId: string,
+  databaseName: string,
+  collectionName: string
+): string {
+  return `mongo-${workspaceId}-${connectionId}-${databaseName}-${collectionName}`;
+}

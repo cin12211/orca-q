@@ -65,6 +65,7 @@ const emit = defineEmits<{
   rename: [nodeId: string, newName: string];
   'cancel-rename': [nodeId: string];
   delete: [nodeId: string, event: KeyboardEvent];
+  toggle: [nodeId: string, isExpanded: boolean];
 }>();
 
 const {
@@ -136,6 +137,11 @@ const { focusItem } = useTreeFocusItem(props, emit, {
   scrollToItem,
 });
 
+const handleToggle = (nodeId: string) => {
+  toggleExpansion(nodeId);
+  emit('toggle', nodeId, expandedIds.value.has(nodeId));
+};
+
 defineExpose({
   expandAll,
   collapseAll,
@@ -144,6 +150,8 @@ defineExpose({
   startEditing,
   isMouseInside,
   isExpandedAll,
+  expandedIds,
+  getExpandedIds: () => Array.from(expandedIds.value),
 });
 </script>
 
@@ -211,7 +219,7 @@ defineExpose({
           :allow-drag-and-drop="props.allowDragAndDrop"
           @click="handleRowClick($event, visibleNodeIds[item.index])"
           @dblclick="handleRowDblClick(visibleNodeIds[item.index])"
-          @toggle="toggleExpansion(visibleNodeIds[item.index])"
+          @toggle="handleToggle(visibleNodeIds[item.index])"
           @dragstart="handleDragStart($event, visibleNodeIds[item.index])"
           @dragover="handleDragOver($event, visibleNodeIds[item.index])"
           @dragleave="handleDragLeave"
