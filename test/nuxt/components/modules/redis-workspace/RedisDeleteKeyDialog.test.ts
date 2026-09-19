@@ -24,6 +24,12 @@ const mountDialog = (props: Record<string, unknown>) =>
             '<button :disabled="disabled" @click="$emit(\'click\')"><slot /></button>',
         },
         LoadingOverlay: { template: '<div />' },
+        Checkbox: {
+          props: ['modelValue'],
+          emits: ['update:modelValue'],
+          template:
+            '<input type="checkbox" :checked="modelValue === true" @change="$emit(\'update:modelValue\', $event.target.checked)" />',
+        },
       },
     },
   });
@@ -128,5 +134,80 @@ describe('RedisDeleteKeyDialog', () => {
     expect(wrapper.text()).not.toContain('Counting keys');
     expect(wrapper.find('ul').exists()).toBe(true);
     expect(wrapper.text()).toContain('orders:1');
+  });
+});
+
+describe('RedisDeleteKeyDialog key selection', () => {
+  it('defaults every key to checked and confirms with the full list', async () => {
+    const wrapper = mountDialog({
+      mode: 'group',
+      targetKeys: ['orders:1', 'orders:2', 'orders:3'],
+    });
+
+    const checkboxes = wrapper.findAll('input[type="checkbox"]');
+    // one "select all" checkbox + one per key
+    expect(checkboxes).toHaveLength(4);
+    checkboxes.forEach(checkbox => {
+      expect((checkbox.element as HTMLInputElement).checked).toBe(true);
+    });
+
+    await wrapper.find('button:last-of-type').trigger('click');
+
+    expect(wrapper.emitted('confirm')?.[0]).toEqual([
+      ['orders:1', 'orders:2', 'orders:3'],
+    ]);
+  });
+
+  it('excludes unchecked keys from the confirm payload (N keys, M unchecked -> N-M)', async () => {
+    const wrapper = mountDialog({
+      mode: 'group',
+      targetKeys: ['orders:1', 'orders:2', 'orders:3'],
+    });
+
+    const keyCheckboxes = wrapper.findAll('input[type="checkbox"]').slice(1);
+    await keyCheckboxes[1]?.setValue(false);
+
+    await wrapper.find('button:last-of-type').trigger('click');
+
+    expect(wrapper.emitted('confirm')?.[0]).toEqual([['orders:1', 'orders:3']]);
+  });
+
+  it('unchecks every key when "select all" is toggled off, and disables confirm', async () => {
+    const wrapper = mountDialog({
+      mode: 'group',
+      targetKeys: ['orders:1', 'orders:2'],
+    });
+
+    const selectAllCheckbox = wrapper.findAll('input[type="checkbox"]')[0];
+    await selectAllCheckbox?.setValue(false);
+
+    const keyCheckboxes = wrapper.findAll('input[type="checkbox"]').slice(1);
+    keyCheckboxes.forEach(checkbox => {
+      expect((checkbox.element as HTMLInputElement).checked).toBe(false);
+    });
+
+    const buttons = wrapper.findAll('button');
+    const confirmButton = buttons[buttons.length - 1];
+    expect(confirmButton?.attributes('disabled')).toBeDefined();
+  });
+
+  it('resets selection to fully checked when the key list changes', async () => {
+    const wrapper = mountDialog({
+      mode: 'group',
+      targetKeys: ['orders:1', 'orders:2'],
+    });
+
+    const keyCheckboxes = () =>
+      wrapper.findAll('input[type="checkbox"]').slice(1);
+    await keyCheckboxes()[0]?.setValue(false);
+    expect((keyCheckboxes()[0].element as HTMLInputElement).checked).toBe(
+      false
+    );
+
+    await wrapper.setProps({ targetKeys: ['inventory:1', 'inventory:2'] });
+
+    keyCheckboxes().forEach(checkbox => {
+      expect((checkbox.element as HTMLInputElement).checked).toBe(true);
+    });
   });
 });

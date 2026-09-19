@@ -27,6 +27,7 @@ export function resolveRouteNameForTabType(type: TabViewType): RoutesNamesList {
       return 'workspaceId-connectionId-agent-tabViewId';
     case TabViewType.RedisBrowser:
     case TabViewType.RedisPubSub:
+    case TabViewType.RedisGroupOverview:
       return 'workspaceId-connectionId-redis-tabViewId' as RoutesNamesList;
     case TabViewType.MongoDatabaseOverview:
     case TabViewType.MongoCollectionDetail:
@@ -167,7 +168,10 @@ export const useTabManagement = () => {
   const openRedisTab = async (params: {
     id: string;
     name: string;
-    type: TabViewType.RedisBrowser | TabViewType.RedisPubSub;
+    type:
+      | TabViewType.RedisBrowser
+      | TabViewType.RedisPubSub
+      | TabViewType.RedisGroupOverview;
     icon?: string;
     iconClass?: string;
     metadata?: Record<string, any>;

@@ -212,6 +212,7 @@ export function useRedisWorkspace(options: {
     saveSelectedValue: browser.saveSelectedValue,
     deleteKey: browser.deleteKey,
     deleteKeys: browser.deleteKeys,
+    listGroupKeys: browser.listGroupKeys,
     previewGroupKeys: browser.previewGroupKeys,
   };
 }
