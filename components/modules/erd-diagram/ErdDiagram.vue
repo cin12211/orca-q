@@ -17,7 +17,10 @@ import {
   ROW_WIDTH,
 } from '~/components/modules/erd-diagram/constants/index';
 import '~/components/modules/erd-diagram/style/vue-flow.css';
-import type { ErdDiagramProps } from '~/components/modules/erd-diagram/type';
+import type {
+  ErdDiagramProps,
+  NodePosition,
+} from '~/components/modules/erd-diagram/type';
 import ErdControls from './components/Controls/ErdControls.vue';
 import CustomEdge from './components/CustomEdge.vue';
 import ErdFilterPanal from './components/ErdFilterPanal.vue';
@@ -40,6 +43,8 @@ const emit = defineEmits<{
   (e: 'collapse', tableId: string): void;
   (e: 'toggleCollapseHeader', tableId: string): void;
   (e: 'toggleCollapseAll'): void;
+  (e: 'updateNodePosition', tableId: string, position: NodePosition): void;
+  (e: 'resetPositionOverrides'): void;
 }>();
 
 const {
@@ -57,7 +62,11 @@ const {
   getNodes,
   fitView,
   onfocusNode,
-} = useErdFlow(props);
+} = useErdFlow(props, {
+  onNodePositionChange: (tableId, position) => {
+    emit('updateNodePosition', tableId, position);
+  },
+});
 
 const onArrangeDiagram = () => {
   getNodes.value?.forEach(node => {
@@ -66,6 +75,10 @@ const onArrangeDiagram = () => {
       node.position = position;
     }
   });
+
+  // Drop any recorded drag overrides so a later recompute (e.g. toggling a
+  // node's collapse header) doesn't resurrect the position we just discarded.
+  emit('resetPositionOverrides');
 
   fitView({ duration: DEFAULT_ZOOM_DURATION });
 };

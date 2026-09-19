@@ -2,7 +2,7 @@ import { computed, ref, watch, type ComputedRef, type Ref } from 'vue';
 import type { Edge } from '@vue-flow/core';
 import type { TableMetadata } from '~/core/types';
 import { DEFAULT_VUE_FLOW_LAYOUT_CONFIG } from '../constants';
-import type { MatrixTablePosition, TableNode } from '../type';
+import type { MatrixTablePosition, NodePosition, TableNode } from '../type';
 import {
   buildTableNodeId,
   createEdges,
@@ -35,6 +35,8 @@ export interface ExpandableErdReturn {
   collapseAllVisibleTables: () => void;
   expandAllVisibleTables: () => void;
   areAllVisibleTablesCollapsed: ComputedRef<boolean>;
+  updateNodePosition: (tableId: string, position: NodePosition) => void;
+  clearDraggedPositions: () => void;
 }
 
 /**
@@ -202,6 +204,13 @@ export function useExpandableErd(
   // Matrix position for layout using original algorithm
   const matrixPosition = ref<MatrixTablePosition>({});
 
+  // Live position overrides for tables the user has manually dragged.
+  // Kept separate from `matrixPosition` so the "Arrange" action can still
+  // reset nodes back to the originally-computed layout (see onArrangeDiagram
+  // in ErdDiagram.vue), while `visibleNodes` still renders the up-to-date
+  // dragged position across unrelated recomputes (e.g. toggleCollapseHeader).
+  const draggedPositions = ref<MatrixTablePosition>({});
+
   // Track next Y offset per layer (depth) to prevent overlaps
   const layerNextY = ref(new Map<number, number>());
 
@@ -218,6 +227,7 @@ export function useExpandableErd(
     expandedTables.value.clear();
     addedByMap.value.clear();
     matrixPosition.value = {};
+    draggedPositions.value = {};
     layerNextY.value.clear();
     // Single-table mode: default all tables expanded (fewer tables, easier to read)
     collapsedHeaderTables.value = new Set<string>();
@@ -266,6 +276,7 @@ export function useExpandableErd(
     expandedTables.value.clear();
     addedByMap.value.clear();
     matrixPosition.value = {};
+    draggedPositions.value = {};
     layerNextY.value.clear();
     collapsedHeaderTables.value = new Set<string>();
 
@@ -421,10 +432,18 @@ export function useExpandableErd(
   });
 
   // Compute visible nodes
+  // Dragged positions take priority over the computed layout so that
+  // recomputes triggered by unrelated state (e.g. collapsedHeaderTables via
+  // toggleCollapseHeader) don't discard the user's manual drag.
   const visibleNodes = computed<TableNode[]>(() => {
+    const effectivePositions: MatrixTablePosition = {
+      ...matrixPosition.value,
+      ...draggedPositions.value,
+    };
+
     return createNodes(
       visibleTablesData.value,
-      matrixPosition.value,
+      effectivePositions,
       collapsedHeaderTables.value
     );
   });
@@ -546,6 +565,7 @@ export function useExpandableErd(
         if (addedBy.size === 0 && tId !== initialTableId.value) {
           visibleTableIds.value.delete(tId);
           delete matrixPosition.value[tId];
+          delete draggedPositions.value[tId];
           addedByMap.value.delete(tId);
 
           // Also collapse this table if it was expanded
@@ -589,6 +609,24 @@ export function useExpandableErd(
       )
   );
 
+  /**
+   * Record a table's live position after the user drags its node.
+   * Called from onNodesChange (useErdControl.ts) for 'position' type changes.
+   */
+  const updateNodePosition = (tableId: string, position: NodePosition) => {
+    draggedPositions.value[tableId] = position;
+  };
+
+  /**
+   * Discard all recorded drag overrides so visibleNodes falls back to the
+   * originally-computed matrixPosition again. Called after the explicit
+   * "Arrange" action re-applies the computed layout, so a later recompute
+   * (e.g. toggleCollapseHeader) doesn't resurrect the discarded drag.
+   */
+  const clearDraggedPositions = () => {
+    draggedPositions.value = {};
+  };
+
   return {
     expandedTables,
     collapsedHeaderTables,
@@ -603,5 +641,7 @@ export function useExpandableErd(
     collapseAllVisibleTables,
     expandAllVisibleTables,
     areAllVisibleTablesCollapsed,
+    updateNodePosition,
+    clearDraggedPositions,
   };
 }
