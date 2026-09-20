@@ -4,7 +4,7 @@ import { computed } from 'vue';
 import {
   MongoCollectionDetail,
   MongoDatabaseOverview,
-} from '~/components/modules/quick-query/mongodb/containers';
+} from '~/components/modules/driver/mongodb/quick-query/containers';
 import { DEFAULT_MAX_KEEP_ALIVE } from '~/core/constants';
 import { TabViewType, useTabViewsStore } from '~/core/stores/useTabViewsStore';
 import type {
