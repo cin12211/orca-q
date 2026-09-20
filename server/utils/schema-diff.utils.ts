@@ -8,7 +8,7 @@ import type {
   FunctionDiff,
   DiffStatus,
   SQLStatement,
-} from '~/components/modules/database-tools';
+} from '~/components/modules/driver/shared/sql/database-tools';
 import type {
   SchemaMetaData,
   SchemaColumnMetadata,

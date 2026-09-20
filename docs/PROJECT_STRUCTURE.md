@@ -63,7 +63,6 @@ components/
 │   ├── quick-query/           # SQL table data browsing & editing
 │   ├── raw-query/             # SQL / Redis code editor
 │   ├── connection/            # Database connections
-│   ├── database-tools/        # SQL backup/restore and schema diff pages
 │   ├── erd-diagram/           # Entity-relationship diagrams
 │   ├── agent/                 # AI agent chat
 │   ├── workspace/             # Workspace management
@@ -79,7 +78,8 @@ components/
 │   ├── redis/      primary-panel/{schemas,database-tools}, quick-query, instance-insights
 │   ├── mongodb/    primary-panel/{schemas,database-tools}, quick-query, instance-insights
 │   └── shared/     primary-panel/{explorer,schemas,agent,shared},
-│                   sql/{primary-panel,instance-insights}, instance-insights
+│                   sql/{primary-panel,instance-insights,database-tools},
+│                   instance-insights
 │
 ├── ui/                        # shadcn-vue UI components (33+)
 │   ├── button/

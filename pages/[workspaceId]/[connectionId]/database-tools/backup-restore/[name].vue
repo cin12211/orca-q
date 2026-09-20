@@ -2,7 +2,7 @@
 import {
   BackupRestoreContainer,
   type BackupRestoreTab,
-} from '~/components/modules/database-tools';
+} from '~/components/modules/driver/shared/sql/database-tools';
 
 definePageMeta({
   keepalive: true,

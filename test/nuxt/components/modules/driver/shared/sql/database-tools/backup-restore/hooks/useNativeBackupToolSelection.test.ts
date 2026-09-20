@@ -1,6 +1,6 @@
 import { nextTick, ref } from 'vue';
 import { describe, expect, it } from 'vitest';
-import { useNativeBackupToolSelection } from '~/components/modules/database-tools/backup-restore/hooks/useNativeBackupToolSelection';
+import { useNativeBackupToolSelection } from '~/components/modules/driver/shared/sql/database-tools/backup-restore/hooks/useNativeBackupToolSelection';
 
 describe('useNativeBackupToolSelection', () => {
   it('uses the first detected executable when desktop runtime selection is enabled', () => {
