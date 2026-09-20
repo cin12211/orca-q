@@ -4,14 +4,14 @@ import {
   buildDynamicRowData,
   DYNAMIC_COLUMN_TYPES,
 } from '~/components/base/data-grid/utils';
-import { buildMappedColumnsFromRows as buildColumnsFromRows } from '~/core/helpers';
-import type { InstanceInsightsState, InstanceSessionRow } from '~/core/types';
 import {
   compactSql,
   formatDateTime,
   formatDuration,
   isIdleInTransaction,
-} from '../utils/formatters';
+} from '~/components/modules/driver/shared/instance-insights/utils/formatters';
+import { buildMappedColumnsFromRows as buildColumnsFromRows } from '~/core/helpers';
+import type { InstanceInsightsState, InstanceSessionRow } from '~/core/types';
 
 const props = defineProps<{
   state: InstanceInsightsState | null;

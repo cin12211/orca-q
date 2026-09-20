@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { toast } from 'vue-sonner';
+import InsightKpiCard from '~/components/modules/driver/shared/instance-insights/components/InsightKpiCard.vue';
 import {
   Table,
   TableBody,
@@ -14,7 +15,6 @@ import {
   TooltipTrigger,
 } from '~/components/ui/tooltip';
 import type { RedisPerformanceInsight } from '~/core/types/instance-insights.types';
-import InsightKpiCard from './InsightKpiCard.vue';
 
 const props = defineProps<{
   performance: RedisPerformanceInsight | undefined;

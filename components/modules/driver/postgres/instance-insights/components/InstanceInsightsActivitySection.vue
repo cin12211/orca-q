@@ -11,8 +11,12 @@ import {
 import { use as useECharts } from 'echarts/core';
 import { CanvasRenderer } from 'echarts/renderers';
 import VChart from 'vue-echarts';
+import {
+  formatNumber,
+  formatPercent,
+  formatRate,
+} from '~/components/modules/driver/shared/instance-insights/utils/formatters';
 import type { InstanceInsightsDashboard } from '~/core/types';
-import { formatNumber, formatPercent, formatRate } from '../utils/formatters';
 
 useECharts([
   CanvasRenderer,

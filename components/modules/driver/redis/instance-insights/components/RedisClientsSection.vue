@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import InsightKpiCard from '~/components/modules/driver/shared/instance-insights/components/InsightKpiCard.vue';
 import {
   Table,
   TableBody,
@@ -9,7 +10,6 @@ import {
   TableRow,
 } from '~/components/ui/table';
 import type { RedisClientInsight } from '~/core/types/instance-insights.types';
-import InsightKpiCard from './InsightKpiCard.vue';
 
 const props = defineProps<{
   clients: RedisClientInsight | undefined;

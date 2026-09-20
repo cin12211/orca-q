@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import { storeToRefs } from 'pinia';
+import { getDatabaseSupportByType } from '~/components/modules/connection';
+import { formatDateTime } from '~/components/modules/driver/shared/instance-insights/utils/formatters';
 import { DatabaseClientType } from '~/core/constants/database-client-type';
 import { useManagementConnectionStore } from '~/core/stores/managementConnectionStore';
-import { getDatabaseSupportByType } from '../connection';
 import InstanceInsightsSectionRenderer from './components/InstanceInsightsSectionRenderer.vue';
 import { useMultiDbInstanceInsights } from './hooks/useMultiDbInstanceInsights';
-import { formatDateTime } from './utils/formatters';
 
 const props = defineProps<{
   dbConnectionString: string;

@@ -2,10 +2,10 @@
 import {
   getRedisKeyIcon,
   getRedisKeyIconClass,
-} from '~/components/modules/management/redis-browser/hooks/useRedisTreeData';
+} from '~/components/modules/driver/redis/primary-panel/schemas/hooks/useRedisTreeData';
+import InsightKpiCard from '~/components/modules/driver/shared/instance-insights/components/InsightKpiCard.vue';
+import InsightScopeBadge from '~/components/modules/driver/shared/instance-insights/components/InsightScopeBadge.vue';
 import type { RedisKeyspaceInsight } from '~/core/types/instance-insights.types';
-import InsightKpiCard from './InsightKpiCard.vue';
-import InsightScopeBadge from './InsightScopeBadge.vue';
 
 const props = defineProps<{
   keyspace: RedisKeyspaceInsight | undefined;

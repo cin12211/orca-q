@@ -1,14 +1,14 @@
 <script setup lang="ts">
+import { getDatabaseSupportByType } from '~/components/modules/connection';
+import { formatDateTime } from '~/components/modules/driver/shared/instance-insights/utils/formatters';
 import { DatabaseClientType } from '~/core/constants/database-client-type';
 import { useManagementConnectionStore } from '~/core/stores/managementConnectionStore';
 import type { ReplicationSlotDesiredStatus } from '~/core/types';
-import { getDatabaseSupportByType } from '../connection';
 import InstanceInsightsActivitySection from './components/InstanceInsightsActivitySection.vue';
 import InstanceInsightsConfigurationSection from './components/InstanceInsightsConfigurationSection.vue';
 import InstanceInsightsReplicationSection from './components/InstanceInsightsReplicationSection.vue';
 import InstanceInsightsStateSection from './components/InstanceInsightsStateSection.vue';
 import { useInstanceInsights } from './hooks/useInstanceInsights';
-import { formatDateTime } from './utils/formatters';
 
 const props = defineProps<{
   dbConnectionString: string;

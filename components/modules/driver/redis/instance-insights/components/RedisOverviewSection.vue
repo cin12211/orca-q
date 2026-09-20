@@ -1,10 +1,10 @@
 <script setup lang="ts">
+import InsightKpiCard from '~/components/modules/driver/shared/instance-insights/components/InsightKpiCard.vue';
+import { formatDuration } from '~/components/modules/driver/shared/instance-insights/utils/formatters';
 import type {
   RedisKeyspaceInsight,
   RedisOverviewMetrics,
 } from '~/core/types/instance-insights.types';
-import { formatDuration } from '../utils/formatters';
-import InsightKpiCard from './InsightKpiCard.vue';
 
 const props = defineProps<{
   overview: RedisOverviewMetrics | undefined;

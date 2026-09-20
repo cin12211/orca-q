@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import InsightKpiCard from '~/components/modules/driver/shared/instance-insights/components/InsightKpiCard.vue';
 import {
   Table,
   TableBody,
@@ -8,7 +9,6 @@ import {
   TableRow,
 } from '~/components/ui/table';
 import type { RedisReplicationInsight } from '~/core/types/instance-insights.types';
-import InsightKpiCard from './InsightKpiCard.vue';
 
 defineProps<{
   replication: RedisReplicationInsight | undefined;

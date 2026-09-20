@@ -5,6 +5,10 @@ import {
   DYNAMIC_COLUMN_TYPES,
 } from '~/components/base/data-grid/utils';
 import {
+  formatBytes,
+  formatDateTime,
+} from '~/components/modules/driver/shared/instance-insights/utils/formatters';
+import {
   buildMappedColumnsFromKeys as buildColumnsFromKeys,
   buildMappedColumnsFromRows as buildColumnsFromRows,
 } from '~/core/helpers';
@@ -13,7 +17,6 @@ import type {
   ReplicationSlotDesiredStatus,
   ReplicationSlotRow,
 } from '~/core/types';
-import { formatBytes, formatDateTime } from '../utils/formatters';
 
 const props = defineProps<{
   replication: InstanceInsightsReplication | null;

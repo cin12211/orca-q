@@ -1,6 +1,6 @@
 <script setup lang="ts">
+import InsightKpiCard from '~/components/modules/driver/shared/instance-insights/components/InsightKpiCard.vue';
 import type { RedisPersistenceInsight } from '~/core/types/instance-insights.types';
-import InsightKpiCard from './InsightKpiCard.vue';
 
 defineProps<{
   persistence: RedisPersistenceInsight | undefined;
