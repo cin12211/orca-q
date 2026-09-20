@@ -11,7 +11,7 @@ Detailed business flows for each major module with sequence diagrams.
 
 1. [Quick Query Module](#1-quick-query-module)
 2. [Raw Query Module](#2-raw-query-module)
-3. [Management Schemas Module](#3-management-schemas-module)
+3. [Schemas Panel Module](#3-schemas-panel-module)
 4. [ERD Diagram Module](#4-erd-diagram-module)
 5. [Connection Management](#5-connection-management)
 6. [Workspace Management](#6-workspace-management)
@@ -200,20 +200,20 @@ sequenceDiagram
 
 ---
 
-## 3. Management Schemas Module
+## 3. Schemas Panel Module
 
 ### Overview
 
 Schema explorer tree with context menu actions for tables, views, and functions.
 
-**Location:** `/components/modules/management-schemas/`
+**Location:** `/components/modules/driver/shared/primary-panel/schemas/`
 
 ### Schema Tree Loading
 
 ```mermaid
 sequenceDiagram
     participant U as User
-    participant MS as ManagementSchemas
+    participant MS as SqlSchemasPanel
     participant Context as useAppContext
     participant Store as SchemaStore
     participant API as Server API
@@ -449,7 +449,7 @@ flowchart LR
     subgraph "UI Layer"
         A[QuickQuery]
         B[RawQuery]
-        C[ManagementSchemas]
+        C[SqlSchemasPanel]
         D[ErdDiagram]
     end
 
@@ -483,7 +483,7 @@ flowchart LR
 | ----------- | -------------------------- | ----------------------- | ---------------------- |
 | Quick Query | `QuickQuery.vue`           | `useQuickQueryMutation` | TabViews, Schema       |
 | Raw Query   | `RawQuery.vue`             | `useRawQueryEditor`     | TabViews, ExplorerFile |
-| Schemas     | `ManagementSchemas.vue`    | `useSchemaContextMenu`  | Schema, WSState        |
+| Schemas     | `SqlSchemasPanel.vue`      | `useSchemaContextMenu`  | Schema, WSState        |
 | ERD         | `ErdDiagram.vue`           | `useErdDiagram`         | ERD, Schema            |
 | Connection  | `ManagementConnection.vue` | -                       | Connection             |
 | Workspace   | `WorkspaceList.vue`        | -                       | Workspaces             |

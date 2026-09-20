@@ -16,8 +16,13 @@ This repo is a Nuxt 3 + Vue 3 + TypeScript with Electron desktop support.
   `components/base/data-grid/docs/USAGE_GUIDE.md` before changing shared grid
   behavior or adding a new generic grid feature.
 - `components/modules/` contains feature modules. Important modules include
-  `quick-query`, `raw-query`, `management-connection`, `management-schemas`,
-  `management-explorer`, `erd-diagram`, `workspace`, and `settings`.
+  `app-shell`, `driver`, `quick-query`, `raw-query`, `connection`,
+  `erd-diagram`, `workspace`, and `settings`.
+- `components/modules/driver/` groups engine-specific UI by driver
+  (`postgres`, `redis`, `mongodb`, `shared`). Primary sidebar panels live in
+  `driver/<engine>/primary-panel/<activity>/`. Read
+  `components/modules/app-shell/primary-side-bar/docs/PRIMARY_SIDEBAR_FLOW.md`
+  before adding or changing a sidebar panel.
 - `components/modules/quick-query/` is the table browsing/editing feature. Keep
   extracted composables in its `hooks/` directory and pure helpers in its
   `utils/` directory.
@@ -43,6 +48,7 @@ This repo is a Nuxt 3 + Vue 3 + TypeScript with Electron desktop support.
 ### Vue Components
 
 All components use `<script setup lang="ts">` with this order:
+
 1. Imports
 2. Props & Emits (`defineProps`, `defineEmits`)
 3. Stores & Composables
@@ -69,12 +75,12 @@ Component file structure order: `<script setup>`, then `<template>`, then `<styl
 
 ### State Management
 
-| State Type | Use For | Location |
-|------------|---------|----------|
-| Local `ref`/`reactive` | UI state (modals, forms, temp) | Component |
-| Pinia Store | Shared state across components | `/shared/stores/` |
-| Composable | Reusable logic with local state | `/composables/` |
-| Provide/Inject | Deep component tree data | `/shared/contexts/` |
+| State Type             | Use For                         | Location            |
+| ---------------------- | ------------------------------- | ------------------- |
+| Local `ref`/`reactive` | UI state (modals, forms, temp)  | Component           |
+| Pinia Store            | Shared state across components  | `/shared/stores/`   |
+| Composable             | Reusable logic with local state | `/composables/`     |
+| Provide/Inject         | Deep component tree data        | `/shared/contexts/` |
 
 Use `storeToRefs()` when accessing store state for reactivity: `const { workspaceId } = storeToRefs(wsStateStore)`
 
@@ -122,7 +128,8 @@ Prefer Tailwind utilities. Use `<style scoped>` only for complex styles not achi
 
 ### Database Family Gating
 
-- Connection family drives visible tabs, sidebar panels, empty states, and unsupported-feature fallbacks
+- Connection family drives visible tabs, empty states, and unsupported-feature fallbacks
+- Primary sidebar activities are configured per `DatabaseClientType` in `core/constants/connection-capabilities.ts` (`CONNECTION_CAPABILITY_REGISTRY`)
 - D1 and Turso stay on `sqlite3` type but resolve to the `sql` family
 - Redis hides SQL-only surfaces: `Schemas`, `ERD`, `UsersRoles`, schema diff, SQL backup/restore
 - Provider-limited SQL tools for D1/Turso must show clear unavailable state instead of redirecting away from SQL family
@@ -197,6 +204,7 @@ Single-context — root `CONTEXT.md` + `docs/adr/`. See `docs/agents/domain.md`.
 This project has a knowledge graph at graphify-out/ with god nodes, community structure, and cross-file relationships.
 
 Rules:
+
 - For codebase questions, first run `graphify query "<question>"` when graphify-out/graph.json exists. Use `graphify path "<A>" "<B>"` for relationships and `graphify explain "<concept>"` for focused concepts. These return a scoped subgraph, usually much smaller than GRAPH_REPORT.md or raw grep output.
 - If graphify-out/wiki/index.md exists, use it for broad navigation instead of raw source browsing.
 - Read graphify-out/GRAPH_REPORT.md only for broad architecture review or when query/path/explain do not surface enough context.

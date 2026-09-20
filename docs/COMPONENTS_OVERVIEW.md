@@ -90,13 +90,13 @@ Feature-specific modules containing related components, hooks, and logic.
 
 ### Management Schemas Module
 
-**Location:** `/components/modules/management-schemas/` (14 files)
+**Location:** `/components/modules/driver/shared/primary-panel/schemas/` (`SqlSchemasPanel`)
 
-| Component               | Purpose                      |
-| ----------------------- | ---------------------------- |
-| `ManagementSchemas.vue` | Schema explorer tree         |
-| `RenameDialog.vue`      | Rename table/function dialog |
-| `ExportDataDialog.vue`  | Export options dialog        |
+| Component              | Purpose                      |
+| ---------------------- | ---------------------------- |
+| `SqlSchemasPanel.vue`  | Schema explorer tree         |
+| `RenameDialog.vue`     | Rename table/function dialog |
+| `ExportDataDialog.vue` | Export options dialog        |
 
 **Hooks:**
 
@@ -126,7 +126,7 @@ Feature-specific modules containing related components, hooks, and logic.
 
 ### Connection Management Module
 
-**Location:** `/components/modules/management-connection/` (7 files)
+**Location:** `/components/modules/connection/`
 
 | Component                   | Purpose                   |
 | --------------------------- | ------------------------- |
@@ -164,16 +164,15 @@ Feature-specific modules containing related components, hooks, and logic.
 
 ### Other Modules
 
-| Module                       | Location                             | Files | Purpose                                                 |
-| ---------------------------- | ------------------------------------ | ----- | ------------------------------------------------------- |
-| **management-users**         | `/modules/management-users/`         | 5     | User permissions & roles                                |
-| **management-explorer**      | `/modules/management-explorer/`      | 1     | SQL file explorer                                       |
-| **management-export**        | `/modules/management-export/`        | 3     | Database export tools                                   |
-| **management-erd-diagram**   | `/modules/management-erd-diagram/`   | 1     | ERD panel wrapper                                       |
-| **management/redis-browser** | `/modules/management/redis-browser/` | 3+    | Redis key browser, filters, and key tree                |
-| **redis-workspace**          | `/modules/redis-workspace/`          | 5+    | Redis value editor, workbench, analysis, and safeguards |
-| **changelog**                | `/modules/changelog/`                | 1     | Version changelog display                               |
-| **selectors**                | `/modules/selectors/`                | 7     | Custom select components                                |
+| Module                          | Location                                | Files  | Purpose                                                    |
+| ------------------------------- | --------------------------------------- | ------ | ---------------------------------------------------------- |
+| **driver/shared/primary-panel** | `/modules/driver/shared/primary-panel/` | 4 dirs | Explorer, SQL schemas, agent panels + `PrimaryPanelHeader` |
+| **driver/shared/sql**           | `/modules/driver/shared/sql/`           | 3 dirs | ERD + database tools panels, SQL instance insights         |
+| **driver/postgres**             | `/modules/driver/postgres/`             | 3 dirs | Users & roles panel, role detail page, PG insights         |
+| **driver/redis**                | `/modules/driver/redis/`                | 3 dirs | Key browser, tools panel, workspace, Redis insights        |
+| **driver/mongodb**              | `/modules/driver/mongodb/`              | 3 dirs | Schemas + tools panels, quick query, Mongo insights        |
+| **changelog**                   | `/modules/changelog/`                   | 1      | Version changelog display                                  |
+| **selectors**                   | `/modules/selectors/`                   | 7      | Custom select components                                   |
 
 ### Connection Family Notes
 
@@ -250,8 +249,8 @@ graph TD
     B --> F[SecondarySidebar]
     B --> G[StatusBar]
 
-    D --> H[ManagementSchemas]
-    D --> I[ManagementExplorer]
+    D --> H[SqlSchemasPanel]
+    D --> I[ExplorerPanel]
 
     E --> J[QuickQuery]
     E --> K[RawQuery]
