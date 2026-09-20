@@ -1,6 +1,10 @@
 import { storeToRefs } from 'pinia';
 import type { RoutesNamesList } from '@typed-router/__routes';
 import { useWorkspaceConnectionRoute } from '~/core/composables/useWorkspaceConnectionRoute';
+import {
+  DEFAULT_TAB_VIEW_ROUTE_NAME,
+  TAB_VIEW_ROUTE_NAMES,
+} from '~/core/constants/tab-view-routes';
 import { useManagementConnectionStore } from '~/core/stores/managementConnectionStore';
 import { useExplorerFileStore } from '~/core/stores/useExplorerFileStore';
 import { TabViewType, useTabViewsStore } from '~/core/stores/useTabViewsStore';
@@ -22,19 +26,7 @@ export interface OpenTabOptions {
 }
 
 export function resolveRouteNameForTabType(type: TabViewType): RoutesNamesList {
-  switch (type) {
-    case TabViewType.AgentChat:
-      return 'workspaceId-connectionId-agent-tabViewId';
-    case TabViewType.RedisBrowser:
-    case TabViewType.RedisPubSub:
-    case TabViewType.RedisGroupOverview:
-      return 'workspaceId-connectionId-redis-tabViewId' as RoutesNamesList;
-    case TabViewType.MongoDatabaseOverview:
-    case TabViewType.MongoCollectionDetail:
-      return 'workspaceId-connectionId-mongodb-tabViewId' as RoutesNamesList;
-    default:
-      return 'workspaceId-connectionId-quick-query-tabViewId';
-  }
+  return TAB_VIEW_ROUTE_NAMES[type] ?? DEFAULT_TAB_VIEW_ROUTE_NAME;
 }
 
 export const useTabManagement = () => {

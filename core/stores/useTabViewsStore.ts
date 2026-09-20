@@ -3,6 +3,7 @@ import { ref } from 'vue';
 import { reorder } from '@atlaskit/pragmatic-drag-and-drop/reorder';
 import type { RoutesNamesList } from '@typed-router/__routes';
 import { useWorkspaceConnectionRoute } from '~/core/composables/useWorkspaceConnectionRoute';
+import { TAB_VIEW_ROUTE_NAMES } from '~/core/constants/tab-view-routes';
 import { createStorageApis } from '~/core/storage';
 import {
   TabViewType,
@@ -214,12 +215,40 @@ export const useTabViewsStore = defineStore(
       await storageApis.tabViewStorage.create({ ...tab });
     };
 
+    // Tabs persisted before a page split still carry the old route name, so the
+    // tab type stays authoritative and the stored name is only a fallback.
+    // Imported backups can still carry a route that no longer exists, so the
+    // resolved name is checked against the router before navigating.
+    const resolveTabRouteName = (tab: TabView): RoutesNamesList | null => {
+      const routeName = TAB_VIEW_ROUTE_NAMES[tab.type] ?? tab.routeName;
+
+      if (!routeName || !useRouter().hasRoute(routeName)) {
+        return null;
+      }
+
+      return routeName;
+    };
+
     const selectTab = async (tabId: string) => {
       const tab = getTabById(tabId);
 
       if (tab) {
+        const routeName = resolveTabRouteName(tab);
+
+        if (!routeName) {
+          console.error(
+            `Tab with ID ${tabId} points at an unknown route: ${tab.routeName}`
+          );
+
+          await navigateToConnectionRoot({
+            workspaceId: tab.workspaceId,
+            connectionId: tab.connectionId,
+          });
+          return;
+        }
+
         await navigateTo({
-          name: tab.routeName,
+          name: routeName,
           params: {
             ...tab.routeParams,
             workspaceId: tab.workspaceId,

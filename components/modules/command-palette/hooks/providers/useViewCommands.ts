@@ -1,3 +1,4 @@
+import { resolveRouteNameForTabType } from '~/core/composables/useTabManagement';
 import { useWorkspaceConnectionRoute } from '~/core/composables/useWorkspaceConnectionRoute';
 import { useSchemaStore } from '~/core/stores/useSchemaStore';
 import { TabViewType, useTabViewsStore } from '~/core/stores/useTabViewsStore';
@@ -53,7 +54,7 @@ export function useViewCommands(): CommandProvider {
                   icon,
                   iconClass,
                   type: TabViewType.ViewDetail,
-                  routeName: 'workspaceId-connectionId-quick-query-tabViewId',
+                  routeName: resolveRouteNameForTabType(TabViewType.ViewDetail),
                   routeParams: { tabViewId: tabId },
                   connectionId: connectionId.value,
                   schemaId: schema.name,

@@ -223,7 +223,8 @@ describe('useRedisWorkspace', () => {
         name: 'Redis Browser',
         icon: 'hugeicons:database-sync-01',
         type: TabViewType.RedisBrowser,
-        routeName: 'workspaceId-connectionId-redis-tabViewId',
+        routeName:
+          'workspaceId-connectionId-quick-query-redis-browser-tabViewId',
         routeParams: {
           workspaceId: 'ws-1',
           connectionId: 'redis-conn',
@@ -315,7 +316,7 @@ describe('useRedisWorkspace', () => {
       name: 'Redis Browser',
       icon: 'hugeicons:database-sync-01',
       type: TabViewType.RedisBrowser,
-      routeName: 'workspaceId-connectionId-redis-tabViewId',
+      routeName: 'workspaceId-connectionId-quick-query-redis-browser-tabViewId',
       routeParams: {
         workspaceId: 'ws-1',
         connectionId: 'redis-conn',

@@ -5,18 +5,27 @@ import {
   type RedisWorkspaceSession,
   useRedisWorkspaceStore,
 } from '~/core/stores/useRedisWorkspaceStore';
-import { TabViewType, type TabView } from '~/core/stores/useTabViewsStore';
+import { type TabView } from '~/core/stores/useTabViewsStore';
 import { parseRedisDatabaseIndex } from '../utils/redisWorkspace';
 import { useRedisWorkspaceBrowser } from './useRedisWorkspaceBrowser';
+
+/**
+ * Which surface the workspace is driving. Callers state it explicitly so the
+ * hook never has to infer behaviour from the active tab type.
+ */
+export type RedisWorkspaceMode = 'browser' | 'pubsub' | 'group' | 'meta';
 
 export function useRedisWorkspace(options: {
   connection: MaybeRefOrGetter<Connection | undefined>;
   tabInfo?: MaybeRefOrGetter<TabView | undefined>;
-  mode?: 'browser' | 'meta';
+  mode?: MaybeRefOrGetter<RedisWorkspaceMode>;
 }) {
   const connection = toRef(options.connection);
   const tabInfo = options.tabInfo ? toRef(options.tabInfo) : undefined;
-  const mode = options.mode ?? 'browser';
+  const mode = toRef(options.mode ?? 'browser');
+  const isBrowserMode = computed(() => mode.value === 'browser');
+  const isPubSubMode = computed(() => mode.value === 'pubsub');
+  const isMetaMode = computed(() => mode.value === 'meta');
   const store = useRedisWorkspaceStore();
 
   const session = computed<RedisWorkspaceSession | null>(() => {
@@ -68,13 +77,13 @@ export function useRedisWorkspace(options: {
   const isSyncingBrowserTabState = ref(false);
 
   watch(
-    () => tabInfo?.value,
-    async value => {
+    () => [tabInfo?.value, mode.value] as const,
+    async ([value]) => {
       if (!session.value || !value) {
         return;
       }
 
-      if (value.type === TabViewType.RedisPubSub) {
+      if (isPubSubMode.value) {
         store.patchSession(session.value.connectionId, {
           activeTool: 'pubsub',
           selectedDatabaseIndex:
@@ -118,7 +127,7 @@ export function useRedisWorkspace(options: {
     ([nextDatabaseIndex, nextKeyPattern], previousValue) => {
       if (
         !tabInfo?.value ||
-        tabInfo.value.type !== TabViewType.RedisBrowser ||
+        !isBrowserMode.value ||
         isSyncingBrowserTabState.value
       ) {
         return;
@@ -142,7 +151,7 @@ export function useRedisWorkspace(options: {
     (nextSelectedKey, previousSelectedKey) => {
       if (
         !tabInfo?.value ||
-        tabInfo.value.type !== TabViewType.RedisBrowser ||
+        !isBrowserMode.value ||
         isSyncingBrowserTabState.value ||
         nextSelectedKey === previousSelectedKey
       ) {
@@ -161,14 +170,14 @@ export function useRedisWorkspace(options: {
       }
 
       if (tabInfo?.value) {
-        if (tabInfo.value.type === TabViewType.RedisPubSub) {
+        if (isPubSubMode.value) {
           void browser.refreshDatabases();
         }
 
         return;
       }
 
-      if (mode === 'meta') {
+      if (isMetaMode.value) {
         void browser.refreshDatabases();
       }
     }
@@ -181,7 +190,7 @@ export function useRedisWorkspace(options: {
         return;
       }
 
-      if (mode === 'meta') {
+      if (isMetaMode.value) {
         void browser.refreshDatabases();
         return;
       }
