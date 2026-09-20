@@ -5,9 +5,9 @@ import {
   createMongoCollection,
   dropMongoCollection,
   dropMongoDatabase,
+  getMongoCollectionsStats,
   getMongoDatabaseStats,
-  getMongoDatabaseTotalSize,
-  listMongoCollectionNames,
+  listMongoCollectionInfos,
   listMongoCollections,
   listMongoDatabases,
   normalizeMongoFilter,
@@ -183,7 +183,28 @@ describe('listMongoCollections', () => {
   });
 });
 
-describe('listMongoCollectionNames', () => {
+describe('listMongoCollectionInfos', () => {
+  it('returns collection names/properties only, sorted by name, without calling collStats', async () => {
+    const command = vi.fn();
+    const fakeDatabase = {
+      listCollections: () => ({
+        toArray: async () => [
+          { name: 'users', type: 'collection' },
+          { name: 'archive', type: 'collection', options: { capped: true } },
+        ],
+      }),
+      command,
+    };
+
+    expect(await listMongoCollectionInfos(fakeDatabase as any)).toEqual([
+      { name: 'archive', properties: ['Capped'] },
+      { name: 'users', properties: [] },
+    ]);
+    expect(command).not.toHaveBeenCalled();
+  });
+});
+
+describe('getMongoCollectionsStats', () => {
   it('returns collection names with derived properties and size, sorted by name', async () => {
     const fakeDatabase = {
       listCollections: () => ({
@@ -198,7 +219,7 @@ describe('listMongoCollectionNames', () => {
       }),
     };
 
-    expect(await listMongoCollectionNames(fakeDatabase as any)).toEqual([
+    expect(await getMongoCollectionsStats(fakeDatabase as any)).toEqual([
       { name: 'archive', properties: ['Capped'], size: 2048, count: 5 },
       { name: 'users', properties: [], size: 4096, count: 42 },
     ]);
@@ -239,22 +260,6 @@ describe('dropMongoDatabase', () => {
     const dropDatabase = vi.fn().mockResolvedValue(undefined);
     await dropMongoDatabase({ dropDatabase } as any);
     expect(dropDatabase).toHaveBeenCalledWith();
-  });
-});
-
-describe('getMongoDatabaseTotalSize', () => {
-  it('returns the totalSize field from the dbStats command', async () => {
-    const fakeDatabase = {
-      command: async () => ({ totalSize: 16384, storageSize: 8192 }),
-    };
-
-    expect(await getMongoDatabaseTotalSize(fakeDatabase as any)).toBe(16384);
-  });
-
-  it('defaults to 0 when totalSize is missing', async () => {
-    const fakeDatabase = { command: async () => ({}) };
-
-    expect(await getMongoDatabaseTotalSize(fakeDatabase as any)).toBe(0);
   });
 });
 

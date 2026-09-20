@@ -14,6 +14,7 @@ interface Props {
   persistenceExtension?: TreePersistenceExtension;
   contextMenuItems: ContextMenuItem[];
   validateRename: (nodeId: string, newName: string) => true | string;
+  searchQuery?: string;
 }
 
 const props = defineProps<Props>();
@@ -81,6 +82,7 @@ defineExpose({
           ref="fileTreeRef"
           class="pt-1"
           :initial-data="treeData"
+          :search-query="props.searchQuery"
           :allow-drag-and-drop="true"
           :allow-sort="false"
           :validate-rename="validateRename"
