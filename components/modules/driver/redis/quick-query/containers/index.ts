@@ -1,3 +1,3 @@
-export { default as RedisBrowserWorkspace } from './RedisBrowserWorkspace.vue';
-export { default as RedisGroupWorkspace } from './RedisGroupWorkspace.vue';
-export { default as RedisPubSubWorkspace } from './RedisPubSubWorkspace.vue';
+export { default as RedisGroupKeys } from './RedisGroupKeys.vue';
+export { default as RedisKeyDetail } from './RedisKeyDetail.vue';
+export { default as RedisPubSub } from './RedisPubSub.vue';

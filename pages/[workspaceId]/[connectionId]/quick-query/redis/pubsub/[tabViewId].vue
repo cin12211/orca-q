@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { RedisPubSubWorkspace } from '~/components/modules/driver/redis/quick-query/containers';
+import { RedisPubSub } from '~/components/modules/driver/redis/quick-query/containers';
 import { useTabViewPage } from '~/core/composables/useTabViewPage';
 import { DEFAULT_MAX_KEEP_ALIVE } from '~/core/constants';
 import { useManagementConnectionStore } from '~/core/stores/managementConnectionStore';
@@ -15,7 +15,7 @@ const { tabInfo } = useTabViewPage();
 </script>
 
 <template>
-  <RedisPubSubWorkspace
+  <RedisPubSub
     :connection="connectionStore.selectedConnection"
     :tab-info="tabInfo"
   />

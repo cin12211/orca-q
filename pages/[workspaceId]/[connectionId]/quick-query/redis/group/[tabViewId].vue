@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { RedisGroupWorkspace } from '~/components/modules/driver/redis/quick-query/containers';
+import { RedisGroupKeys } from '~/components/modules/driver/redis/quick-query/containers';
 import { useTabViewPage } from '~/core/composables/useTabViewPage';
 import { DEFAULT_MAX_KEEP_ALIVE } from '~/core/constants';
 import { useManagementConnectionStore } from '~/core/stores/managementConnectionStore';
@@ -15,7 +15,7 @@ const { tabInfo } = useTabViewPage();
 </script>
 
 <template>
-  <RedisGroupWorkspace
+  <RedisGroupKeys
     :connection="connectionStore.selectedConnection"
     :tab-info="tabInfo"
   />
