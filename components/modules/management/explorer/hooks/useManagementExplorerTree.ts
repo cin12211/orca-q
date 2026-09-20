@@ -333,6 +333,7 @@ export const useManagementExplorerTree = ({
     onMoveNode,
     onRenameFile,
     onTreeContextMenu: explorerContextMenu.onRightClickItem,
+    debouncedSearch,
     searchInput,
     validateRename,
   };

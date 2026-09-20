@@ -294,6 +294,7 @@ const contextMenuItems = computed<ContextMenuItem[]>(() => {
           :init-expanded-ids="[defaultFolderOpenId]"
           :initial-data="fileTreeData as unknown as Record<string, FileNode>"
           :storage-key="`${connectionStore.selectedConnection?.id}-mongo-schemas-tree`"
+          :search-query="debouncedSearch"
           :allow-drag-and-drop="false"
           :delay-focus="0"
           @click="handleTreeClick"
