@@ -3,7 +3,7 @@ import { LoadingOverlay } from '#components';
 import {
   getRedisKeyIcon,
   getRedisKeyIconClass,
-} from '~/components/modules/management/redis-browser/hooks/useRedisTreeData';
+} from '~/components/modules/driver/redis/primary-panel/schemas/hooks/useRedisTreeData';
 import type {
   RedisKeyDetail,
   RedisKeyInfo,

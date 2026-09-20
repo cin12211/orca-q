@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import { Button } from '@/components/ui/button';
-import { useRedisWorkspace } from '~/components/modules/redis-workspace/hooks/useRedisWorkspace';
+import { useRedisWorkspace } from '~/components/modules/driver/redis/quick-query/hooks/useRedisWorkspace';
+import { PrimaryPanelHeader } from '~/components/modules/driver/shared/primary-panel/shared';
 import { useTabManagement } from '~/core/composables/useTabManagement';
 import { useWorkspaceConnectionRoute } from '~/core/composables/useWorkspaceConnectionRoute';
 import { useManagementConnectionStore } from '~/core/stores';
 import { TabViewType } from '~/core/stores/useTabViewsStore';
-import { ManagementSidebarHeader } from '../shared';
 
 const connectionStore = useManagementConnectionStore();
 const { openInstanceInsightsTab, openRedisTab } = useTabManagement();
@@ -36,7 +36,7 @@ const openInstanceInsights = async () => {
 
 <template>
   <div class="flex flex-col h-full w-full overflow-hidden">
-    <ManagementSidebarHeader
+    <PrimaryPanelHeader
       title="Redis Tools"
       :show-connection="true"
       :workspace-id="workspaceId"

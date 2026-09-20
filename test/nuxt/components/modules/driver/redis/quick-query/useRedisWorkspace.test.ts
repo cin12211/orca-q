@@ -2,7 +2,7 @@ import { createPinia, setActivePinia } from 'pinia';
 import { nextTick, ref } from 'vue';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { toast } from 'vue-sonner';
-import { useRedisWorkspace } from '~/components/modules/redis-workspace/hooks/useRedisWorkspace';
+import { useRedisWorkspace } from '~/components/modules/driver/redis/quick-query/hooks/useRedisWorkspace';
 import { DatabaseClientType } from '~/core/constants/database-client-type';
 import { TabViewType } from '~/core/stores/useTabViewsStore';
 import { EConnectionMethod } from '~/core/types/entities/connection.entity';

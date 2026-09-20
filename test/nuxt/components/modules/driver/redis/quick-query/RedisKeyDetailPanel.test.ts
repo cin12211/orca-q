@@ -1,6 +1,6 @@
 import { mount } from '@vue/test-utils';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import RedisKeyDetailPanel from '~/components/modules/redis-workspace/components/RedisKeyDetailPanel.vue';
+import RedisKeyDetailPanel from '~/components/modules/driver/redis/quick-query/components/RedisKeyDetailPanel.vue';
 
 const detail = {
   key: 'orders:1',

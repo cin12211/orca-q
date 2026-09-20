@@ -1,7 +1,7 @@
 import { ref } from 'vue';
 import { flushPromises, mount } from '@vue/test-utils';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import ManagementRedisBrowser from '~/components/modules/management/redis-browser/ManagementRedisBrowser.vue';
+import RedisSchemasPanel from '~/components/modules/driver/redis/primary-panel/schemas/RedisSchemasPanel.vue';
 import { TabViewType } from '~/core/stores/useTabViewsStore';
 
 const openRedisTabMock = vi.fn();
@@ -31,9 +31,12 @@ const workspaceMock = {
   isDeletingKey: ref(false),
 };
 
-vi.mock('~/components/modules/redis-workspace/hooks/useRedisWorkspace', () => ({
-  useRedisWorkspace: () => workspaceMock,
-}));
+vi.mock(
+  '~/components/modules/driver/redis/quick-query/hooks/useRedisWorkspace',
+  () => ({
+    useRedisWorkspace: () => workspaceMock,
+  })
+);
 
 vi.mock('~/core/persist/storage-adapter', () => ({
   initPlatformStorage: vi.fn().mockResolvedValue(undefined),
@@ -91,7 +94,7 @@ vi.mock('~/core/stores', async importOriginal => {
   };
 });
 
-describe('ManagementRedisBrowser', () => {
+describe('RedisSchemasPanel', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     workspaceMock.selectedDatabaseIndex.value = 2;
@@ -100,7 +103,7 @@ describe('ManagementRedisBrowser', () => {
   });
 
   const mountComponent = () =>
-    mount(ManagementRedisBrowser, {
+    mount(RedisSchemasPanel, {
       global: {
         stubs: {
           Button: {
@@ -116,7 +119,7 @@ describe('ManagementRedisBrowser', () => {
           TooltipContent: {
             template: '<div><slot /></div>',
           },
-          ManagementSidebarHeader: {
+          PrimaryPanelHeader: {
             template: '<div><slot name="actions" /></div>',
           },
           RedisDBSelector: {

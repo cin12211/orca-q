@@ -1,8 +1,8 @@
 import { defineComponent, h, KeepAlive, ref } from 'vue';
 import { mount } from '@vue/test-utils';
 import { describe, expect, it, vi } from 'vitest';
-import RedisKeyTree from '~/components/modules/management/redis-browser/components/RedisKeyTree.vue';
-import { useRedisTreeData } from '~/components/modules/management/redis-browser/hooks/useRedisTreeData';
+import RedisKeyTree from '~/components/modules/driver/redis/primary-panel/schemas/components/RedisKeyTree.vue';
+import { useRedisTreeData } from '~/components/modules/driver/redis/primary-panel/schemas/hooks/useRedisTreeData';
 
 const redisKeys = [
   {

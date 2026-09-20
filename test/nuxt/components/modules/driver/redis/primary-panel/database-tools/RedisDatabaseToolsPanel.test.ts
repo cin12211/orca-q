@@ -1,7 +1,7 @@
 import { ref } from 'vue';
 import { mount } from '@vue/test-utils';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import ManagementRedisTools from '~/components/modules/management/redis-tools/ManagementRedisTools.vue';
+import RedisDatabaseToolsPanel from '~/components/modules/driver/redis/primary-panel/database-tools/RedisDatabaseToolsPanel.vue';
 
 const openRedisTabMock = vi.fn();
 const openInstanceInsightsTabMock = vi.fn();
@@ -10,9 +10,12 @@ const workspaceMock = {
   selectedDatabaseIndex: ref(3),
 };
 
-vi.mock('~/components/modules/redis-workspace/hooks/useRedisWorkspace', () => ({
-  useRedisWorkspace: () => workspaceMock,
-}));
+vi.mock(
+  '~/components/modules/driver/redis/quick-query/hooks/useRedisWorkspace',
+  () => ({
+    useRedisWorkspace: () => workspaceMock,
+  })
+);
 
 vi.mock('~/core/persist/storage-adapter', () => ({
   initPlatformStorage: vi.fn().mockResolvedValue(undefined),
@@ -60,21 +63,21 @@ vi.mock('~/core/stores', async importOriginal => {
   };
 });
 
-describe('ManagementRedisTools', () => {
+describe('RedisDatabaseToolsPanel', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     workspaceMock.selectedDatabaseIndex.value = 3;
   });
 
   it('opens Redis instance insights with the active database index', async () => {
-    const wrapper = mount(ManagementRedisTools, {
+    const wrapper = mount(RedisDatabaseToolsPanel, {
       global: {
         stubs: {
           Button: {
             template: '<button @click="$emit(\'click\')"><slot /></button>',
           },
           Icon: true,
-          ManagementSidebarHeader: {
+          PrimaryPanelHeader: {
             template: '<div />',
           },
         },
@@ -90,14 +93,14 @@ describe('ManagementRedisTools', () => {
   });
 
   it('opens the Redis Pub/Sub tab with the active database index', async () => {
-    const wrapper = mount(ManagementRedisTools, {
+    const wrapper = mount(RedisDatabaseToolsPanel, {
       global: {
         stubs: {
           Button: {
             template: '<button @click="$emit(\'click\')"><slot /></button>',
           },
           Icon: true,
-          ManagementSidebarHeader: {
+          PrimaryPanelHeader: {
             template: '<div />',
           },
         },

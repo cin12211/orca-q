@@ -4,7 +4,7 @@ import {
   buildRedisGroupOverviewColumnDefs,
   buildRedisGroupOverviewRows,
   formatRedisTtl,
-} from '~/components/modules/redis-workspace/utils/redisGroupOverview';
+} from '~/components/modules/driver/redis/quick-query/utils/redisGroupOverview';
 import type { RedisKeyListItem } from '~/core/types/redis-workspace.types';
 
 const item = (overrides: Partial<RedisKeyListItem> = {}): RedisKeyListItem => ({

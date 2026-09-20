@@ -1,6 +1,6 @@
 import { mount } from '@vue/test-utils';
 import { describe, expect, it } from 'vitest';
-import RedisGroupOverview from '~/components/modules/redis-workspace/components/RedisGroupOverview.vue';
+import RedisGroupOverview from '~/components/modules/driver/redis/quick-query/components/RedisGroupOverview.vue';
 import type { RedisKeyListItem } from '~/core/types/redis-workspace.types';
 
 const items: RedisKeyListItem[] = [

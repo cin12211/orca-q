@@ -1,13 +1,13 @@
 <script setup lang="ts">
-import RedisDeleteKeyDialog from '~/components/modules/redis-workspace/components/RedisDeleteKeyDialog.vue';
-import { useRedisWorkspace } from '~/components/modules/redis-workspace/hooks/useRedisWorkspace';
+import RedisDeleteKeyDialog from '~/components/modules/driver/redis/quick-query/components/RedisDeleteKeyDialog.vue';
+import { useRedisWorkspace } from '~/components/modules/driver/redis/quick-query/hooks/useRedisWorkspace';
+import { PrimaryPanelHeader } from '~/components/modules/driver/shared/primary-panel/shared';
 import RedisDBSelector from '~/components/modules/selectors/RedisDBSelector.vue';
 import { useTabManagement } from '~/core/composables/useTabManagement';
 import { useWorkspaceConnectionRoute } from '~/core/composables/useWorkspaceConnectionRoute';
 import { useManagementConnectionStore } from '~/core/stores';
 import { RedisBrowserViewMode } from '~/core/stores/useRedisWorkspaceStore';
 import { TabViewType, useTabViewsStore } from '~/core/stores/useTabViewsStore';
-import { ManagementSidebarHeader } from '../shared';
 import RedisKeyTree from './components/RedisKeyTree.vue';
 
 const connectionStore = useManagementConnectionStore();
@@ -228,7 +228,7 @@ const deleteDialogTargetKeys = computed(() =>
 
 <template>
   <div class="flex flex-col h-full w-full overflow-hidden">
-    <ManagementSidebarHeader
+    <PrimaryPanelHeader
       title="Redis Browser"
       :show-connection="true"
       :workspace-id="workspaceId"
@@ -300,7 +300,7 @@ const deleteDialogTargetKeys = computed(() =>
           <TooltipContent>Refresh Keys</TooltipContent>
         </Tooltip>
       </template>
-    </ManagementSidebarHeader>
+    </PrimaryPanelHeader>
 
     <div class="flex min-h-0 flex-1 flex-col overflow-hidden px-2 pb-3">
       <RedisKeyTree

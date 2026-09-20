@@ -1,5 +1,5 @@
-import type { Connection } from '~/core/stores';
 import { parseConnectionString } from '~/core/helpers/parser-connection-string';
+import type { Connection } from '~/core/stores';
 
 export const parseRedisDatabaseIndex = (
   value?: string | null,

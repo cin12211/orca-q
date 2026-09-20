@@ -2,7 +2,7 @@
 import { LoadingOverlay } from '#components';
 import type { EditorView } from '@codemirror/view';
 import BaseCodeEditor from '~/components/base/code-editor/BaseCodeEditor.vue';
-import { useRedisWorkspace } from '~/components/modules/redis-workspace/hooks/useRedisWorkspace';
+import { useRedisWorkspace } from '~/components/modules/driver/redis/quick-query/hooks/useRedisWorkspace';
 import { useHotkeys } from '~/core/composables/useHotKeys';
 import { DatabaseClientType } from '~/core/constants/database-client-type';
 import { useEnvironmentTagStore } from '~/core/stores';

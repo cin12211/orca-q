@@ -1,6 +1,6 @@
 import { mount } from '@vue/test-utils';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import RedisPubSubPanel from '~/components/modules/redis-workspace/components/RedisPubSubPanel.vue';
+import RedisPubSubPanel from '~/components/modules/driver/redis/quick-query/components/RedisPubSubPanel.vue';
 
 const fetchMock = vi.fn();
 const activeSubscription = {
