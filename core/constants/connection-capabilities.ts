@@ -1,3 +1,4 @@
+import { ActivityBarItemType } from '../types/entities/activity-bar.entity';
 import {
   EConnectionFamily,
   EConnectionMethod,
@@ -5,41 +6,19 @@ import {
   EManagedSqliteProvider,
   type Connection,
 } from '../types/entities/connection.entity';
-import { TabViewType } from '../types/entities/tab-view.entity';
 import {
   DatabaseClientType,
   NOSQL_DATABASE_CLIENT_TYPES,
   SQL_DATABASE_CLIENT_TYPES,
 } from './database-client-type';
 
-export type ConnectionActivityItem =
-  | 'Explorer'
-  | 'Schemas'
-  | 'ERDiagram'
-  | 'UsersRoles'
-  | 'DatabaseTools'
-  | 'Agent';
-
-export type ConnectionPrimaryQuerySurface =
-  | 'sql-editor'
-  | 'raw-query'
-  | 'quick-query';
-
 export interface ConnectionCapabilityProfile {
   family: EConnectionFamily;
-  visibleActivityItems: ConnectionActivityItem[];
-  allowedTabTypes: TabViewType[];
-  defaultActivityItem: ConnectionActivityItem;
-  primaryQuerySurface: ConnectionPrimaryQuerySurface;
-  supportsRawSql: boolean;
+  /** Primary sidebar activities shown for this database type, in order. */
+  visibleActivityItems: ActivityBarItemType[];
+  /** Fallback activity when the active one is not visible for this type. */
+  defaultActivityItem: ActivityBarItemType;
   supportsQueryFiles: boolean;
-  supportsSchemaTree: boolean;
-  supportsErd: boolean;
-  supportsUsersRoles: boolean;
-  supportsDatabaseTools: boolean;
-  hiddenFeatureReasons: Partial<
-    Record<ConnectionActivityItem | TabViewType, string>
-  >;
 }
 
 type ConnectionContextInput = Pick<
@@ -47,106 +26,69 @@ type ConnectionContextInput = Pick<
   'type' | 'method' | 'providerKind' | 'managedSqlite'
 >;
 
-const SQL_TAB_TYPES = [
-  TabViewType.AllERD,
-  TabViewType.DetailERD,
-  TabViewType.TableOverview,
-  TabViewType.TableDetail,
-  TabViewType.FunctionsOverview,
-  TabViewType.FunctionsDetail,
-  TabViewType.ViewOverview,
-  TabViewType.ViewDetail,
-  TabViewType.CodeQuery,
-  TabViewType.UserPermissions,
-  TabViewType.DatabaseTools,
-  TabViewType.InstanceInsights,
-  TabViewType.SchemaDiff,
-  TabViewType.Connection,
-  TabViewType.Explorer,
-  TabViewType.Export,
-  TabViewType.AgentChat,
-] as const;
+export const DEFAULT_CONNECTION_CONTEXT = {
+  type: DatabaseClientType.POSTGRES,
+  method: EConnectionMethod.STRING,
+};
 
-const REDIS_TAB_TYPES = [
-  TabViewType.CodeQuery,
-  TabViewType.Connection,
-  TabViewType.Explorer,
-  TabViewType.AgentChat,
-  TabViewType.RedisBrowser,
-  TabViewType.RedisPubSub,
-  TabViewType.InstanceInsights,
-] as const;
+const { Explorer, Schemas, ErdDiagram, UsersRoles, DatabaseTools, Agent } =
+  ActivityBarItemType;
 
-const MONGODB_TAB_TYPES = [
-  TabViewType.MongoDatabaseOverview,
-  TabViewType.MongoCollectionDetail,
-  TabViewType.Connection,
-  TabViewType.Explorer,
-  TabViewType.AgentChat,
-] as const;
+const SQL_PROFILE: ConnectionCapabilityProfile = {
+  family: EConnectionFamily.SQL,
+  visibleActivityItems: [
+    Explorer,
+    Schemas,
+    ErdDiagram,
+    UsersRoles,
+    DatabaseTools,
+    Agent,
+  ],
+  defaultActivityItem: Schemas,
+  supportsQueryFiles: true,
+};
 
-export const CONNECTION_CAPABILITY_REGISTRY: Record<
-  EConnectionFamily,
+// SQL engines without a users/roles adapter or AI agent support.
+const SQL_BASIC_PROFILE: ConnectionCapabilityProfile = {
+  ...SQL_PROFILE,
+  visibleActivityItems: [Explorer, Schemas, ErdDiagram, DatabaseTools],
+};
+
+// Keyed by every DatabaseClientType so adding a type without a profile fails
+// the typecheck.
+const CONNECTION_CAPABILITY_REGISTRY: Record<
+  DatabaseClientType,
   ConnectionCapabilityProfile
 > = {
-  [EConnectionFamily.SQL]: {
-    family: EConnectionFamily.SQL,
+  [DatabaseClientType.POSTGRES]: SQL_PROFILE,
+  [DatabaseClientType.MSSQL]: SQL_PROFILE,
+  [DatabaseClientType.SNOWFLAKE]: SQL_PROFILE,
+  [DatabaseClientType.ORACLE]: {
+    ...SQL_PROFILE,
     visibleActivityItems: [
-      'Explorer',
-      'Schemas',
-      'ERDiagram',
-      'UsersRoles',
-      'DatabaseTools',
-      'Agent',
+      Explorer,
+      Schemas,
+      ErdDiagram,
+      UsersRoles,
+      DatabaseTools,
     ],
-    allowedTabTypes: [...SQL_TAB_TYPES],
-    defaultActivityItem: 'Schemas',
-    primaryQuerySurface: 'sql-editor',
-    supportsRawSql: true,
-    supportsQueryFiles: true,
-    supportsSchemaTree: true,
-    supportsErd: true,
-    supportsUsersRoles: true,
-    supportsDatabaseTools: true,
-    hiddenFeatureReasons: {
-      [TabViewType.RedisBrowser]:
-        'Redis tools are only available for Redis connections.',
-    },
   },
-  [EConnectionFamily.REDIS]: {
+  [DatabaseClientType.MYSQL]: SQL_BASIC_PROFILE,
+  [DatabaseClientType.MYSQL2]: SQL_BASIC_PROFILE,
+  [DatabaseClientType.MARIADB]: SQL_BASIC_PROFILE,
+  [DatabaseClientType.SQLITE3]: SQL_BASIC_PROFILE,
+  [DatabaseClientType.BETTER_SQLITE3]: SQL_BASIC_PROFILE,
+  [DatabaseClientType.REDIS]: {
     family: EConnectionFamily.REDIS,
-    visibleActivityItems: ['Explorer', 'Schemas', 'DatabaseTools', 'Agent'],
-    allowedTabTypes: [...REDIS_TAB_TYPES],
-    defaultActivityItem: 'Schemas',
-    primaryQuerySurface: 'raw-query',
-    supportsRawSql: false,
+    visibleActivityItems: [Explorer, Schemas, DatabaseTools],
+    defaultActivityItem: Schemas,
     supportsQueryFiles: true,
-    supportsSchemaTree: false,
-    supportsErd: false,
-    supportsUsersRoles: false,
-    supportsDatabaseTools: true,
-    hiddenFeatureReasons: {
-      Schemas: 'Schema metadata is only available for SQL connections.',
-      ERDiagram: 'ER diagrams are only available for SQL connections.',
-      UsersRoles: 'Users & Roles is only available for SQL connections.',
-    },
   },
-  [EConnectionFamily.MONGODB]: {
+  [DatabaseClientType.MONGODB]: {
     family: EConnectionFamily.MONGODB,
-    visibleActivityItems: ['Schemas'],
-    allowedTabTypes: [...MONGODB_TAB_TYPES],
-    defaultActivityItem: 'Schemas',
-    primaryQuerySurface: 'quick-query',
-    supportsRawSql: false,
+    visibleActivityItems: [Schemas, DatabaseTools],
+    defaultActivityItem: Schemas,
     supportsQueryFiles: false,
-    supportsSchemaTree: true,
-    supportsErd: false,
-    supportsUsersRoles: false,
-    supportsDatabaseTools: false,
-    hiddenFeatureReasons: {
-      ERDiagram: 'ER diagrams are not available for MongoDB collections.',
-      UsersRoles: 'Users & Roles is not available for MongoDB connections.',
-    },
   },
 };
 
@@ -212,11 +154,20 @@ export function resolveConnectionFamily(
   return EConnectionFamily.SQL;
 }
 
+/**
+ * Capability profile for a connection's database type. Falls back to the
+ * PostgreSQL profile when no connection is selected or the type is unknown.
+ */
 export function getConnectionCapabilityProfile(
-  input: ConnectionContextInput
+  input?: Pick<Connection, 'type'> | null
 ): ConnectionCapabilityProfile {
-  const family = resolveConnectionFamily(input);
-  return CONNECTION_CAPABILITY_REGISTRY[family];
+  const type = (input?.type ??
+    DEFAULT_CONNECTION_CONTEXT.type) as DatabaseClientType;
+
+  return (
+    CONNECTION_CAPABILITY_REGISTRY[type] ??
+    CONNECTION_CAPABILITY_REGISTRY[DEFAULT_CONNECTION_CONTEXT.type]
+  );
 }
 
 export function isSqlFamilyConnection(input: ConnectionContextInput) {

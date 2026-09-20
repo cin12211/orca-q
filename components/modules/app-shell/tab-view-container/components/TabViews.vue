@@ -25,14 +25,12 @@ import { useHotkeys } from '~/core/composables/useHotKeys';
 import { useTabManagement } from '~/core/composables/useTabManagement';
 import { useWorkspaceConnectionRoute } from '~/core/composables/useWorkspaceConnectionRoute';
 import { getConnectionCapabilityProfile } from '~/core/constants/connection-capabilities';
-import { DatabaseClientType } from '~/core/constants/database-client-type';
 import { isElectron } from '~/core/helpers';
 import {
   useManagementConnectionStore,
   useTabViewsStore,
   type TabView,
 } from '~/core/stores';
-import { EConnectionMethod } from '~/core/types/entities/connection.entity';
 import ElectronUpdateIndicator from '../../status-bar/components/ElectronUpdateIndicator.vue';
 import TabViewItem from './TabViewItem.vue';
 import TabViewOpenActions from './TabViewOpenActions.vue';
@@ -72,12 +70,7 @@ const { width: tabsTrackWidth } = useElementSize(tabsTrackRef);
 const { width: actionsMeasureWidth } = useElementSize(actionsMeasureRef);
 
 const capabilityProfile = computed(() =>
-  getConnectionCapabilityProfile(
-    connectionStore.selectedConnection ?? {
-      type: DatabaseClientType.POSTGRES,
-      method: EConnectionMethod.STRING,
-    }
-  )
+  getConnectionCapabilityProfile(connectionStore.selectedConnection)
 );
 
 const canOpenWorkspaceTabs = computed(

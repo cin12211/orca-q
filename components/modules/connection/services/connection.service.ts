@@ -1,5 +1,4 @@
 import {
-  getConnectionCapabilityProfile,
   resolveConnectionFamily,
   resolveConnectionProviderKind,
 } from '~/core/constants/connection-capabilities';
@@ -87,12 +86,6 @@ export function resolveConnectionHealthCheckBody(
     providerKind,
     family,
   };
-}
-
-export function getConnectionHealthCheckCapabilities(
-  body: ConnectionHealthCheckBody
-) {
-  return getConnectionCapabilityProfile(resolveConnectionHealthCheckBody(body));
 }
 
 export interface ConnectionHealthCheckResult {

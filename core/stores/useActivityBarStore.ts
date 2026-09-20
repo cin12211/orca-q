@@ -1,14 +1,9 @@
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
+import { ActivityBarItemType } from '../types/entities/activity-bar.entity';
 
-export enum ActivityBarItemType {
-  Explorer = 'Explorer',
-  Schemas = 'Schemas',
-  ErdDiagram = 'ERDiagram',
-  UsersRoles = 'UsersRoles',
-  DatabaseTools = 'DatabaseTools',
-  Agent = 'Agent',
-}
+// Re-exported so existing `~/core/stores` imports keep working.
+export { ActivityBarItemType };
 
 //TODO: refactor
 export const useActivityBarStore = defineStore(
