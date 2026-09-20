@@ -1,1 +1,1 @@
-export { default as PrimarySideBar } from './components/PrimarySideBar.vue';
+export { PrimarySideBar } from './container';
