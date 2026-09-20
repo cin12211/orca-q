@@ -1,16 +1,6 @@
 <script setup lang="ts">
+import type { RoleInfo } from '../types';
 import PermissionBadge from './PermissionBadge.vue';
-
-interface RoleInfo {
-  isSuperuser: boolean;
-  canLogin: boolean;
-  canCreateDb: boolean;
-  canCreateRole: boolean;
-  isReplication: boolean;
-  connectionLimit: number;
-  validUntil: string | null;
-  memberOf: string[];
-}
 
 interface Props {
   roleInfo: RoleInfo | null;

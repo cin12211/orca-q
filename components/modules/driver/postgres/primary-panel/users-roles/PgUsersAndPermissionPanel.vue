@@ -1,5 +1,13 @@
 <script setup lang="ts">
 import { refDebounced } from '@vueuse/core';
+import {
+  useDatabaseRoles,
+  useRoleMutations,
+  useDatabases,
+  useSchemas,
+  useBulkGrantPermissions,
+} from '~/components/modules/driver/postgres/user-permissions';
+import { PrimaryPanelHeader } from '~/components/modules/driver/shared/primary-panel/shared';
 import { useWorkspaceConnectionRoute } from '~/core/composables/useWorkspaceConnectionRoute';
 import { DEFAULT_DEBOUNCE_INPUT } from '~/core/constants';
 import { useManagementConnectionStore } from '~/core/stores/managementConnectionStore';
@@ -10,16 +18,8 @@ import type {
   ObjectGrant,
   PrivilegeType,
 } from '~/core/types';
-import { ManagementSidebarHeader } from '../shared';
 import CreateUserModal from './components/CreateUserModal.vue';
 import UserRolesTree from './components/UserRolesTree.vue';
-import {
-  useDatabaseRoles,
-  useRoleMutations,
-  useDatabases,
-  useSchemas,
-  useBulkGrantPermissions,
-} from './hooks/useDatabaseRoles';
 
 const connectionStore = useManagementConnectionStore();
 const { connectionId, workspaceId } = useWorkspaceConnectionRoute();
@@ -227,7 +227,7 @@ const onDeleteUser = async (role: DatabaseRole) => {
 
 <template>
   <div class="flex flex-col h-full w-full overflow-hidden">
-    <ManagementSidebarHeader
+    <PrimaryPanelHeader
       v-model:search="searchInput"
       title="Users & Roles"
       :show-connection="true"
@@ -287,7 +287,7 @@ const onDeleteUser = async (role: DatabaseRole) => {
           <TooltipContent>Refresh Roles</TooltipContent>
         </Tooltip>
       </template>
-    </ManagementSidebarHeader>
+    </PrimaryPanelHeader>
 
     <!-- No Connection State -->
     <BaseEmpty
