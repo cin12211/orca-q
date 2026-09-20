@@ -31,6 +31,11 @@ const emit = defineEmits<{
   (e: 'select', key: string): void;
   (e: 'delete-key', key: string, options: { immediate: boolean }): void;
   (e: 'delete-group', prefix: string): void;
+  (
+    e: 'open-group',
+    prefix: string,
+    stats: { keyCount?: number; memoryUsage?: number | null }
+  ): void;
 }>();
 
 const fileTreeRef = useTemplateRef<typeof FileTree | null>('fileTreeRef');
@@ -142,6 +147,11 @@ const { contextMenuItems, onRightClickItem, onClearContextMenu } =
     onDeleteGroup: prefix => emit('delete-group', prefix),
   });
 
+const getGroupPrefix = (nodeId: string) =>
+  nodeId.startsWith('redis-group:')
+    ? nodeId.slice('redis-group:'.length)
+    : nodeId;
+
 const handleTreeDelete = (nodeId: string, event: KeyboardEvent) => {
   const data = resolveNode(nodeId);
 
@@ -157,10 +167,7 @@ const handleTreeDelete = (nodeId: string, event: KeyboardEvent) => {
   }
 
   if (data.kind === 'group') {
-    const prefix = nodeId.startsWith('redis-group:')
-      ? nodeId.slice('redis-group:'.length)
-      : nodeId;
-    emit('delete-group', prefix);
+    emit('delete-group', getGroupPrefix(nodeId));
   }
 };
 
@@ -178,11 +185,19 @@ const handleListClick = (nodeId: string) => {
 
 const handleTreeClick = (nodeId: string) => {
   const node = fileTreeData.value[nodeId];
-  const redisKey = node?.data?.redisKey;
+  const data = getRedisNodeData(node);
 
-  if (node?.data?.kind === 'key' && redisKey) {
+  if (data?.kind === 'key' && data.redisKey) {
     isLocalSelection.value = true;
-    emit('select', redisKey);
+    emit('select', data.redisKey);
+    return;
+  }
+
+  if (data?.kind === 'group') {
+    emit('open-group', getGroupPrefix(nodeId), {
+      keyCount: data.keyCount,
+      memoryUsage: data.memoryUsage,
+    });
   }
 };
 

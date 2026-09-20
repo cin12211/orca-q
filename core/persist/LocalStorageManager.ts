@@ -50,25 +50,57 @@ export class LocalStorageManager {
   }
 
   /**
-   * Composite key for MongoDB Quick Query filter persisted state.
-   * Format: `mongo-${workspaceId}-${connectionId}-${databaseName}-${collectionName}`
+   * Expanded-node key for tree-folder persistence plugin.
+   * Format: `${storageKey}_expanded_expanded`
    */
-  static mongoQueryBuilderKey(
-    workspaceId: string,
-    connectionId: string,
-    databaseName: string,
-    collectionName: string
-  ): string {
-    return `mongo-${workspaceId}-${connectionId}-${databaseName}-${collectionName}`;
+  static treeExpandedKey(storageKey: string): string {
+    return `${storageKey}_expanded_expanded`;
+  }
+
+  /** Read a raw string value from localStorage by arbitrary key. */
+  static getItem(key: string): string | null {
+    if (typeof window === 'undefined') return null;
+    try {
+      return getPlatformStorage().getItem(key);
+    } catch {
+      return null;
+    }
+  }
+
+  /** Write a raw string value to localStorage by arbitrary key. */
+  static setItem(key: string, value: string): void {
+    if (typeof window === 'undefined') return;
+    try {
+      getPlatformStorage().setItem(key, value);
+    } catch {
+      // no-op
+    }
+  }
+
+  /** Remove a raw key from localStorage. */
+  static removeItem(key: string): void {
+    if (typeof window === 'undefined') return;
+    try {
+      getPlatformStorage().removeItem(key);
+    } catch {
+      // no-op
+    }
   }
 
   /**
-   * Expanded-node key for tree-folder persistence plugin.
-   * Format: `${storageKey}_expanded`
-   * Note: tree-persistence.ts uses this format directly via its own adapter;
-   * listed here for documentation only.
+   * Reads persisted expanded node IDs for any FileTree storage key.
    */
-  static treeExpandedKey(storageKey: string): string {
-    return `${storageKey}_expanded`;
+  static getTreeExpandedIds(storageKey: string): string[] {
+    if (!storageKey || typeof window === 'undefined') return [];
+    try {
+      const raw = this.getItem(this.treeExpandedKey(storageKey));
+      if (!raw) return [];
+      const parsed = JSON.parse(raw);
+      return Array.isArray(parsed)
+        ? parsed.filter((id): id is string => typeof id === 'string')
+        : [];
+    } catch {
+      return [];
+    }
   }
 }

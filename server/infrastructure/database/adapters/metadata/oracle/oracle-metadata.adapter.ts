@@ -15,6 +15,7 @@ import { resolveMetadataTypeAlias } from '../type-alias.constants';
 import type {
   DatabaseMetadataAdapterParams,
   IDatabaseMetadataAdapter,
+  SchemaMetadataQueryOptions,
 } from '../types';
 
 const SYSTEM_SCHEMAS = [
@@ -137,50 +138,77 @@ export class OracleMetadataAdapter
     return new OracleMetadataAdapter(adapter);
   }
 
-  private async loadMetadataRows() {
-    const schemaPlaceholders = buildBindPlaceholders(SYSTEM_SCHEMAS.length);
+  private buildSchemaCondition(
+    column: string,
+    options?: SchemaMetadataQueryOptions
+  ): { condition: string; bindings: string[] } {
+    if (options?.schemaName) {
+      return { condition: `${column} = :1`, bindings: [options.schemaName] };
+    }
 
-    const [
-      schemas,
-      tables,
-      views,
-      columns,
-      primaryKeys,
-      foreignKeys,
-      routines,
-    ] = await Promise.all([
-      this.adapter.rawQuery<{ schema_name: string }>(
-        `
+    return {
+      condition: `${column} NOT IN (${buildBindPlaceholders(SYSTEM_SCHEMAS.length)})`,
+      bindings: SYSTEM_SCHEMAS,
+    };
+  }
+
+  private async loadMetadataRows(options?: SchemaMetadataQueryOptions) {
+    const schemaFilter = this.buildSchemaCondition('username', options);
+
+    const schemas = await this.adapter.rawQuery<{ schema_name: string }>(
+      `
             SELECT username AS schema_name
             FROM all_users
-            WHERE username NOT IN (${schemaPlaceholders})
+            WHERE ${schemaFilter.condition}
             ORDER BY username
           `,
-        SYSTEM_SCHEMAS
-      ),
-      this.adapter.rawQuery<OracleTableRow>(
-        `
+      schemaFilter.bindings
+    );
+
+    if (options?.namesOnly) {
+      return {
+        schemas,
+        tables: [] as OracleTableRow[],
+        views: [] as OracleViewRow[],
+        columns: [] as OracleColumnRow[],
+        primaryKeys: [] as OraclePrimaryKeyRow[],
+        foreignKeys: [] as OracleForeignKeyRow[],
+        routines: [] as OracleRoutineRow[],
+      };
+    }
+
+    const ownerFilter = this.buildSchemaCondition('t.owner', options);
+    const viewOwnerFilter = this.buildSchemaCondition('owner', options);
+    const columnOwnerFilter = this.buildSchemaCondition('owner', options);
+    const pkOwnerFilter = this.buildSchemaCondition('ac.owner', options);
+    const fkOwnerFilter = this.buildSchemaCondition('ac.owner', options);
+    const routineOwnerFilter = this.buildSchemaCondition('owner', options);
+
+    const [tables, views, columns, primaryKeys, foreignKeys, routines] =
+      await Promise.all([
+        this.adapter.rawQuery<OracleTableRow>(
+          `
             SELECT t.owner, t.table_name, t.num_rows, c.comments
             FROM all_tables t
             LEFT JOIN all_tab_comments c
               ON c.owner = t.owner
               AND c.table_name = t.table_name
-            WHERE t.owner NOT IN (${schemaPlaceholders})
+            WHERE ${ownerFilter.condition}
             ORDER BY t.owner, t.table_name
           `,
-        SYSTEM_SCHEMAS
-      ),
-      this.adapter.rawQuery<OracleViewRow>(
-        `
+          ownerFilter.bindings
+        ),
+        this.adapter.rawQuery<OracleViewRow>(
+          `
             SELECT owner, view_name
             FROM all_views
-            WHERE owner NOT IN (${schemaPlaceholders})
+            WHERE ${viewOwnerFilter.condition}
             ORDER BY owner, view_name
           `,
-        SYSTEM_SCHEMAS
-      ),
-      this.adapter.rawQuery<OracleColumnRow>(
-        `
+          viewOwnerFilter.bindings
+        ),
+        this.adapter.rawQuery<OracleColumnRow>(
+          `
             SELECT
               owner,
               table_name,
@@ -193,26 +221,26 @@ export class OracleMetadataAdapter
               nullable,
               TRIM(data_default) AS data_default
             FROM all_tab_columns
-            WHERE owner NOT IN (${schemaPlaceholders})
+            WHERE ${columnOwnerFilter.condition}
             ORDER BY owner, table_name, column_id
           `,
-        SYSTEM_SCHEMAS
-      ),
-      this.adapter.rawQuery<OraclePrimaryKeyRow>(
-        `
+          columnOwnerFilter.bindings
+        ),
+        this.adapter.rawQuery<OraclePrimaryKeyRow>(
+          `
             SELECT acc.owner, acc.table_name, acc.column_name
             FROM all_constraints ac
             JOIN all_cons_columns acc
               ON acc.owner = ac.owner
               AND acc.constraint_name = ac.constraint_name
             WHERE ac.constraint_type = 'P'
-              AND ac.owner NOT IN (${schemaPlaceholders})
+              AND ${pkOwnerFilter.condition}
             ORDER BY acc.owner, acc.table_name, acc.position
           `,
-        SYSTEM_SCHEMAS
-      ),
-      this.adapter.rawQuery<OracleForeignKeyRow>(
-        `
+          pkOwnerFilter.bindings
+        ),
+        this.adapter.rawQuery<OracleForeignKeyRow>(
+          `
             SELECT
               acc.owner,
               acc.table_name,
@@ -232,22 +260,22 @@ export class OracleMetadataAdapter
               AND r_acc.constraint_name = r_ac.constraint_name
               AND r_acc.position = acc.position
             WHERE ac.constraint_type = 'R'
-              AND ac.owner NOT IN (${schemaPlaceholders})
+              AND ${fkOwnerFilter.condition}
             ORDER BY acc.owner, acc.table_name, acc.position
           `,
-        SYSTEM_SCHEMAS
-      ),
-      this.adapter.rawQuery<OracleRoutineRow>(
-        `
+          fkOwnerFilter.bindings
+        ),
+        this.adapter.rawQuery<OracleRoutineRow>(
+          `
             SELECT owner, object_name, object_type
             FROM all_objects
             WHERE object_type IN ('FUNCTION', 'PROCEDURE')
-              AND owner NOT IN (${schemaPlaceholders})
+              AND ${routineOwnerFilter.condition}
             ORDER BY owner, object_name
           `,
-        SYSTEM_SCHEMAS
-      ),
-    ]);
+          routineOwnerFilter.bindings
+        ),
+      ]);
 
     return {
       schemas,
@@ -260,7 +288,9 @@ export class OracleMetadataAdapter
     };
   }
 
-  async getSchemaMetaData(): Promise<SchemaMetaData[]> {
+  async getSchemaMetaData(
+    options?: SchemaMetadataQueryOptions
+  ): Promise<SchemaMetaData[]> {
     const {
       schemas,
       tables,
@@ -269,7 +299,18 @@ export class OracleMetadataAdapter
       primaryKeys,
       foreignKeys,
       routines,
-    } = await this.loadMetadataRows();
+    } = await this.loadMetadataRows(options);
+
+    if (options?.namesOnly) {
+      return schemas.map(({ schema_name }) => ({
+        name: schema_name,
+        tables: null,
+        views: null,
+        functions: null,
+        table_details: null,
+        view_details: null,
+      }));
+    }
 
     return schemas.map(({ schema_name }) => {
       const schemaTables = tables.filter(table => table.owner === schema_name);

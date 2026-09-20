@@ -1,34 +1,65 @@
 import { ref } from 'vue';
 import { flushPromises } from '@vue/test-utils';
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { useMongoSchemaTreeData } from '~/components/modules/management/schemas/mongodb/hooks/useMongoSchemaTreeData';
+import * as mongoSchemaTreeStorage from '~/components/modules/management/schemas/mongodb/utils';
 import { TabViewType } from '~/core/types/entities/tab-view.entity';
 
-const mockFetch = vi.fn(async (url: string, options: any) => {
-  if (url === '/api/mongodb/databases') {
-    return { databases: ['admin', 'orcaq_fixture'] };
-  }
-
-  if (options.body.database === 'orcaq_fixture') {
+const mockFetch = vi.fn(async (url: string) => {
+  if (url === '/api/mongodb/schemas') {
     return {
-      collections: [{ name: 'users', properties: [], size: 4096, count: 10 }],
-      totalSize: 16384,
+      databases: [
+        { database: 'admin', collections: [] },
+        {
+          database: 'orcaq_fixture',
+          collections: [{ name: 'users', properties: [] }],
+        },
+      ],
     };
   }
 
-  return { collections: [], totalSize: 0 };
+  if (url === '/api/mongodb/collection-stats') {
+    return {
+      databases: [
+        { database: 'admin', totalSize: 0, collections: [] },
+        {
+          database: 'orcaq_fixture',
+          totalSize: 16384,
+          collections: [{ name: 'users', size: 4096, count: 10 }],
+        },
+      ],
+    };
+  }
+
+  return {};
 });
+
 vi.stubGlobal('$fetch', mockFetch);
 
 describe('useMongoSchemaTreeData', () => {
-  it('builds one folder node per database (with totalSize) and collection leaf nodes tagged with TabViewType, size, and count', async () => {
-    const connection = ref({ id: 'c1' } as any);
-    const { fileTreeData } = useMongoSchemaTreeData(connection);
+  beforeEach(() => {
+    mockFetch.mockClear();
+  });
+
+  it('builds one folder node per database with totalCollections and collection leaf nodes tagged with TabViewType, size, and count', async () => {
+    const connection = ref({ id: 'c1', database: 'orcaq_fixture' } as any);
+    const { fileTreeData, fetchDatabaseStats } =
+      useMongoSchemaTreeData(connection);
     await flushPromises();
 
     expect(mockFetch).toHaveBeenCalledWith(
-      '/api/mongodb/collection-names',
+      '/api/mongodb/schemas',
       expect.anything()
+    );
+    expect(mockFetch).toHaveBeenCalledWith(
+      '/api/mongodb/collection-stats',
+      expect.objectContaining({
+        body: expect.objectContaining({
+          databases: expect.arrayContaining([
+            expect.objectContaining({ database: 'orcaq_fixture' }),
+          ]),
+        }),
+      })
     );
 
     const adminFolder = fileTreeData.value.admin;
@@ -38,10 +69,14 @@ describe('useMongoSchemaTreeData', () => {
     expect(adminFolder.data?.tabViewType).toBe(
       TabViewType.MongoDatabaseOverview
     );
-    expect(adminFolder.data?.totalSize).toBe(0);
+    expect(adminFolder.data?.totalCollections).toBe(0);
     expect(adminFolder.children).toEqual([]);
 
+    await fetchDatabaseStats('orcaq_fixture');
+    await flushPromises();
+
     const fixtureFolder = fileTreeData.value.orcaq_fixture;
+    expect(fixtureFolder.data?.totalCollections).toBe(1);
     expect(fixtureFolder.data?.totalSize).toBe(16384);
     expect(fixtureFolder.children).toEqual(['orcaq_fixture.users']);
 
@@ -58,22 +93,38 @@ describe('useMongoSchemaTreeData', () => {
   });
 
   it('filters to databases with a matching collection when search is set', async () => {
-    mockFetch.mockImplementation(async (url: string, options: any) => {
-      if (url === '/api/mongodb/databases') {
-        return { databases: ['admin', 'orcaq_fixture'] };
-      }
-
-      if (options.body.database === 'orcaq_fixture') {
+    mockFetch.mockImplementation(async (url: string) => {
+      if (url === '/api/mongodb/schemas') {
         return {
-          collections: [
-            { name: 'users', properties: [], size: 4096 },
-            { name: 'orders', properties: [], size: 2048 },
+          databases: [
+            { database: 'admin', collections: [] },
+            {
+              database: 'orcaq_fixture',
+              collections: [
+                { name: 'users', properties: [] },
+                { name: 'orders', properties: [] },
+              ],
+            },
           ],
-          totalSize: 16384,
         };
       }
 
-      return { collections: [], totalSize: 0 };
+      if (url === '/api/mongodb/collection-stats') {
+        return {
+          databases: [
+            {
+              database: 'orcaq_fixture',
+              totalSize: 16384,
+              collections: [
+                { name: 'users', size: 4096, count: 10 },
+                { name: 'orders', size: 2048, count: 5 },
+              ],
+            },
+          ],
+        };
+      }
+
+      return {};
     });
 
     const connection = ref({ id: 'c1' } as any);
@@ -85,5 +136,58 @@ describe('useMongoSchemaTreeData', () => {
       'orcaq_fixture',
       'orcaq_fixture.orders',
     ]);
+  });
+
+  it('fetches stats for databases restored from LocalStorageManager expanded state', async () => {
+    mockFetch.mockImplementation(async (url: string) => {
+      if (url === '/api/mongodb/schemas') {
+        return {
+          databases: [
+            { database: 'admin', collections: [] },
+            {
+              database: 'persisted_db',
+              collections: [{ name: 'products', properties: [] }],
+            },
+          ],
+        };
+      }
+      if (url === '/api/mongodb/collection-stats') {
+        return {
+          databases: [
+            {
+              database: 'persisted_db',
+              totalSize: 5000,
+              collections: [{ name: 'products', size: 5000, count: 50 }],
+            },
+          ],
+        };
+      }
+      return {};
+    });
+
+    const getSpy = vi
+      .spyOn(mongoSchemaTreeStorage, 'getMongoSchemasTreeExpandedIds')
+      .mockReturnValue(['persisted_db']);
+
+    const connection = ref({ id: 'c_persisted' } as any);
+    useMongoSchemaTreeData(connection);
+    await flushPromises();
+
+    expect(getSpy).toHaveBeenCalledWith('c_persisted');
+    expect(mockFetch).toHaveBeenCalledWith(
+      '/api/mongodb/collection-stats',
+      expect.objectContaining({
+        body: expect.objectContaining({
+          databases: [
+            {
+              database: 'persisted_db',
+              collections: ['products'],
+            },
+          ],
+        }),
+      })
+    );
+
+    getSpy.mockRestore();
   });
 });

@@ -15,6 +15,7 @@ import { resolveMetadataTypeAlias } from '../type-alias.constants';
 import type {
   DatabaseMetadataAdapterParams,
   IDatabaseMetadataAdapter,
+  SchemaMetadataQueryOptions,
 } from '../types';
 
 const EXCLUDED_SCHEMAS = [
@@ -24,6 +25,9 @@ const EXCLUDED_SCHEMAS = [
   'sys',
 ];
 const EXCLUDED_SCHEMA_PLACEHOLDERS = EXCLUDED_SCHEMAS.map(() => '?').join(', ');
+
+const isSystemSchema = (schemaName: string) =>
+  EXCLUDED_SCHEMAS.includes(schemaName.toLowerCase());
 
 interface MysqlTableRow {
   table_schema: string;
@@ -92,18 +96,55 @@ export class MysqlMetadataAdapter
     return new MysqlMetadataAdapter(adapter, dbType);
   }
 
-  private async loadMetadataRows() {
-    const [schemas, tables, columns, primaryKeys, foreignKeys, routines] =
-      await Promise.all([
-        this.adapter.rawQuery<{ schema_name: string }>(
-          `
+  private buildSchemaCondition(
+    column: string,
+    options?: SchemaMetadataQueryOptions
+  ): { condition: string; bindings: string[] } {
+    if (options?.schemaName) {
+      return { condition: `${column} = ?`, bindings: [options.schemaName] };
+    }
+
+    // Name listing includes system schemas so users can select them; their
+    // tables/views are still only loaded on demand via `schemaName`.
+    if (options?.namesOnly) {
+      return { condition: '1 = 1', bindings: [] };
+    }
+
+    return {
+      condition: `${column} NOT IN (${EXCLUDED_SCHEMA_PLACEHOLDERS})`,
+      bindings: EXCLUDED_SCHEMAS,
+    };
+  }
+
+  private async loadMetadataRows(options?: SchemaMetadataQueryOptions) {
+    const schemaFilter = this.buildSchemaCondition('schema_name', options);
+
+    const schemas = await this.adapter.rawQuery<{ schema_name: string }>(
+      `
             SELECT schema_name AS schema_name
             FROM information_schema.schemata
-            WHERE schema_name NOT IN (${EXCLUDED_SCHEMA_PLACEHOLDERS})
+            WHERE ${schemaFilter.condition}
             ORDER BY schema_name
           `,
-          EXCLUDED_SCHEMAS
-        ),
+      schemaFilter.bindings
+    );
+
+    if (options?.namesOnly) {
+      return {
+        schemas,
+        tables: [] as MysqlTableRow[],
+        columns: [] as MysqlColumnRow[],
+        primaryKeys: [] as MysqlPrimaryKeyRow[],
+        foreignKeys: [] as MysqlForeignKeyRow[],
+        routines: [] as MysqlRoutineRow[],
+      };
+    }
+
+    const tableFilter = this.buildSchemaCondition('table_schema', options);
+    const routineFilter = this.buildSchemaCondition('routine_schema', options);
+
+    const [tables, columns, primaryKeys, foreignKeys, routines] =
+      await Promise.all([
         this.adapter.rawQuery<MysqlTableRow>(
           `
             SELECT
@@ -113,10 +154,10 @@ export class MysqlMetadataAdapter
               table_rows AS table_rows,
               table_comment AS table_comment
             FROM information_schema.tables
-            WHERE table_schema NOT IN (${EXCLUDED_SCHEMA_PLACEHOLDERS})
+            WHERE ${tableFilter.condition}
             ORDER BY table_schema, table_name
           `,
-          EXCLUDED_SCHEMAS
+          tableFilter.bindings
         ),
         this.adapter.rawQuery<MysqlColumnRow>(
           `
@@ -130,10 +171,10 @@ export class MysqlMetadataAdapter
               is_nullable AS is_nullable,
               column_default AS column_default
             FROM information_schema.columns
-            WHERE table_schema NOT IN (${EXCLUDED_SCHEMA_PLACEHOLDERS})
+            WHERE ${tableFilter.condition}
             ORDER BY table_schema, table_name, ordinal_position
           `,
-          EXCLUDED_SCHEMAS
+          tableFilter.bindings
         ),
         this.adapter.rawQuery<MysqlPrimaryKeyRow>(
           `
@@ -143,10 +184,10 @@ export class MysqlMetadataAdapter
               column_name AS column_name
             FROM information_schema.key_column_usage
             WHERE constraint_name = 'PRIMARY'
-              AND table_schema NOT IN (${EXCLUDED_SCHEMA_PLACEHOLDERS})
+              AND ${tableFilter.condition}
             ORDER BY table_schema, table_name, ordinal_position
           `,
-          EXCLUDED_SCHEMAS
+          tableFilter.bindings
         ),
         this.adapter.rawQuery<MysqlForeignKeyRow>(
           `
@@ -159,10 +200,10 @@ export class MysqlMetadataAdapter
               referenced_column_name AS referenced_column_name
             FROM information_schema.key_column_usage
             WHERE referenced_table_name IS NOT NULL
-              AND table_schema NOT IN (${EXCLUDED_SCHEMA_PLACEHOLDERS})
+              AND ${tableFilter.condition}
             ORDER BY table_schema, table_name, ordinal_position
           `,
-          EXCLUDED_SCHEMAS
+          tableFilter.bindings
         ),
         this.adapter.rawQuery<MysqlRoutineRow>(
           `
@@ -171,10 +212,10 @@ export class MysqlMetadataAdapter
               routine_name AS routine_name,
               routine_type AS routine_type
             FROM information_schema.routines
-            WHERE routine_schema NOT IN (${EXCLUDED_SCHEMA_PLACEHOLDERS})
+            WHERE ${routineFilter.condition}
             ORDER BY routine_schema, routine_name
           `,
-          EXCLUDED_SCHEMAS
+          routineFilter.bindings
         ),
       ]);
 
@@ -188,9 +229,25 @@ export class MysqlMetadataAdapter
     };
   }
 
-  async getSchemaMetaData(): Promise<SchemaMetaData[]> {
+  async getSchemaMetaData(
+    options?: SchemaMetadataQueryOptions
+  ): Promise<SchemaMetaData[]> {
     const { schemas, tables, columns, primaryKeys, foreignKeys, routines } =
-      await this.loadMetadataRows();
+      await this.loadMetadataRows(options);
+
+    if (options?.namesOnly) {
+      return schemas
+        .map(({ schema_name }) => ({
+          name: schema_name,
+          is_system: isSystemSchema(schema_name),
+          tables: null,
+          views: null,
+          functions: null,
+          table_details: null,
+          view_details: null,
+        }))
+        .sort((a, b) => Number(a.is_system) - Number(b.is_system));
+    }
 
     return schemas.map(({ schema_name }) => {
       const schemaTables = tables.filter(

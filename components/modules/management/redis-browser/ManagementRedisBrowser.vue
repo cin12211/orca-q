@@ -126,6 +126,27 @@ const openSelectedKey = async (key: string) => {
   await tabViewStore.updateTabName(tabId, key);
 };
 
+const openGroupOverview = async (
+  prefix: string,
+  stats: { keyCount?: number; memoryUsage?: number | null }
+) => {
+  const connectionId = connection.value?.id || 'redis';
+  const tabId = `redis-group-overview-${connectionId}-${prefix}`;
+
+  await openRedisTab({
+    id: tabId,
+    name: prefix,
+    type: TabViewType.RedisGroupOverview,
+    icon: 'material-icon-theme:folder-database',
+    metadata: {
+      type: TabViewType.RedisGroupOverview,
+      prefix,
+      keyCount: stats.keyCount,
+      memoryUsage: stats.memoryUsage,
+    },
+  });
+};
+
 const deleteDialogState = ref<
   | { open: false }
   | { open: true; mode: 'key'; key: string }
@@ -174,7 +195,7 @@ const onDeleteGroupRequest = async (prefix: string) => {
   }
 };
 
-const onConfirmDelete = async () => {
+const onConfirmDelete = async (selectedKeys?: string[]) => {
   const state = deleteDialogState.value;
 
   if (!state.open) {
@@ -184,7 +205,7 @@ const onConfirmDelete = async () => {
   if (state.mode === 'key') {
     await workspace.deleteKey(state.key);
   } else {
-    await workspace.deleteKeys(state.keys);
+    await workspace.deleteKeys(selectedKeys ?? state.keys);
   }
 
   closeDeleteDialog();
@@ -292,6 +313,7 @@ const deleteDialogTargetKeys = computed(() =>
         @select="openSelectedKey"
         @delete-key="onDeleteKeyRequest"
         @delete-group="onDeleteGroupRequest"
+        @open-group="openGroupOverview"
       />
     </div>
 

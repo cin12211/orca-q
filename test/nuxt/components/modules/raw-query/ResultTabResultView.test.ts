@@ -167,6 +167,7 @@ describe('ResultTabResultView', () => {
               'selectedRows',
               'gridOptions',
               'allowEditing',
+              'allowCellPreview',
               'suppressScrollOnNewData',
               'emptyTitle',
               'emptyDescription',
@@ -267,12 +268,21 @@ describe('ResultTabResultView', () => {
     const columnDefs = baseDataGrid.props('columnDefs') as Array<{
       field?: string;
       width?: number;
+      editable?: unknown;
     }>;
     const authorColumn = columnDefs.find(column => column.field === 'author');
 
     expect(authorColumn?.width).toBeTypeOf('number');
     expect(authorColumn?.width).toBeGreaterThan(DEFAULT_HASH_INDEX_WIDTH);
+    // Read-only result: mutation disabled, but cell preview stays on so JSON
+    // popups open; per-cell writes are rejected by the column defs.
     expect(baseDataGrid.props('allowEditing')).toBe(false);
+    expect(baseDataGrid.props('allowCellPreview')).toBe(true);
+    expect(
+      (authorColumn?.editable as (p: unknown) => boolean)({
+        data: { author: 123456789 },
+      })
+    ).toBe(false);
   });
 
   it('keeps the grid mounted for empty result sets so column headers remain available', async () => {

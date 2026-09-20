@@ -1,4 +1,23 @@
-export const getSchemaMetaDataQuery = `
+/**
+ * Lists every schema the current user can use, including the PostgreSQL system
+ * schemas users may want to browse (`pg_catalog`, `information_schema`), so the
+ * schema selector can offer them. Their tables/views are only loaded on demand
+ * via `buildSchemaMetaDataQuery(schemaName)`. Internal `pg_toast*` / `pg_temp*`
+ * schemas stay hidden: they are never browsable and only add noise.
+ */
+export const getSchemaNamesQuery = `
+      SELECT
+        nsp.nspname AS name,
+        nsp.nspname IN ('pg_catalog', 'information_schema') AS is_system
+      FROM pg_namespace nsp
+      WHERE
+        has_schema_privilege(current_user, nsp.nspname, 'USAGE')
+        AND nsp.nspname NOT LIKE 'pg\\_toast%'
+        AND nsp.nspname NOT LIKE 'pg\\_temp\\_%'
+      ORDER BY is_system, nsp.nspname;
+`;
+
+const SCHEMA_METADATA_SELECT = `
       SELECT
         nsp.nspname AS name,
         -- tables
@@ -153,8 +172,34 @@ export const getSchemaMetaDataQuery = `
             AND pn.nspname = nsp.nspname
         ) AS table_details
       FROM pg_namespace nsp
+`;
+
+const USER_SCHEMAS_FILTER = `
       WHERE
         has_schema_privilege(current_user, nsp.nspname, 'USAGE')
         AND nsp.nspname NOT LIKE 'pg_%'
-        AND nsp.nspname <> 'information_schema';
+        AND nsp.nspname <> 'information_schema'
 `;
+
+const SINGLE_SCHEMA_FILTER = `
+      WHERE
+        has_schema_privilege(current_user, nsp.nspname, 'USAGE')
+        AND nsp.nspname = ?
+`;
+
+/** Metadata for every non-system schema (eager, connect-time path). */
+export const getSchemaMetaDataQuery = `${SCHEMA_METADATA_SELECT}${USER_SCHEMAS_FILTER}`;
+
+/**
+ * Builds the full schema metadata query, optionally scoped to a single
+ * schema. When `schemaName` is provided the query uses a single `?` binding
+ * and skips the system-schema exclusion, so a user-selected system schema
+ * (e.g. `pg_catalog`) can still be loaded on demand.
+ */
+export function buildSchemaMetaDataQuery(schemaName?: string): string {
+  if (!schemaName) {
+    return `${getSchemaMetaDataQuery};`;
+  }
+
+  return `${SCHEMA_METADATA_SELECT}${SINGLE_SCHEMA_FILTER.trimEnd()};`;
+}

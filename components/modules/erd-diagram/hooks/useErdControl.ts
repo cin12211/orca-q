@@ -5,6 +5,7 @@ import {
   type EdgeMouseEvent,
   type NodeChange,
   type NodeMouseEvent,
+  type NodePositionChange,
   type NodeSelectionChange,
   type VueFlowStore,
 } from '@vue-flow/core';
@@ -13,10 +14,25 @@ import type {
   ActiveTable,
   BackGroundGridStatus,
   ErdDiagramProps,
+  NodePosition,
 } from '../type';
 import { activeEdgeAnimated, buildNodeHandId, focusNodeById } from '../utils';
 
-export function useErdFlow(props: ErdDiagramProps) {
+export interface UseErdFlowOptions {
+  /**
+   * Called for every 'position' type node change (i.e. a drag), so the
+   * caller can persist the new position into its own source-of-truth
+   * (matrixPosition in useExpandableErd) instead of letting it live only
+   * in VueFlow's transient internal node state.
+   */
+  onNodePositionChange?: (tableId: string, position: NodePosition) => void;
+}
+
+export function useErdFlow(
+  props: ErdDiagramProps,
+  options: UseErdFlowOptions = {}
+) {
+  const { onNodePositionChange } = options;
   const isHand = ref(false);
   const isUseMiniMap = ref(true);
   const isUseBgGrid = ref<BackGroundGridStatus>('dots');
@@ -76,6 +92,20 @@ export function useErdFlow(props: ErdDiagramProps) {
   };
 
   const onNodesChange = (nodes: NodeChange[]) => {
+    // Persist drag positions back into the composable's source of truth.
+    // Without this, a dragged node's position only lives in VueFlow's
+    // transient internal state, and gets silently discarded the next time
+    // visibleNodes rebuilds nodes from matrixPosition (e.g. on collapse
+    // header toggle).
+    (nodes as NodePositionChange[])
+      .filter(node => node.type === 'position')
+      .forEach(node => {
+        onNodePositionChange?.(node.id, {
+          x: node.position.x,
+          y: node.position.y,
+        });
+      });
+
     const orderedNodes = (nodes as NodeSelectionChange[]).sort(
       (a, b) => Number(a.selected) - Number(b.selected) // false first
     );

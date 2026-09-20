@@ -1,5 +1,5 @@
-import { type FunctionSchemaEnum, type ViewSchemaEnum } from '~/core/types';
 import type { DatabaseClientType } from '~/core/constants/database-client-type';
+import { type FunctionSchemaEnum, type ViewSchemaEnum } from '~/core/types';
 import type {
   EConnectionProviderKind,
   IManagedSqliteConfig,
@@ -21,6 +21,18 @@ export interface DatabaseMetadataRequestParams {
   managedSqlite?: IManagedSqliteConfig;
   ssl?: ISSLConfig;
   ssh?: ISSHConfig;
+  /**
+   * When true, skip fetching tables/views/functions/details and return only
+   * lightweight schema names. Used to populate the Schemas sidebar quickly
+   * at connect time.
+   */
+  namesOnly?: boolean;
+  /**
+   * When set (and `namesOnly` is not), scope the full metadata fetch to a
+   * single schema instead of every schema on the connection. Used for the
+   * lazy per-schema detail load triggered when a user selects a schema.
+   */
+  schemaName?: string;
 }
 
 export interface SchemaColumnMetadata {
@@ -80,6 +92,8 @@ export interface ViewSchema {
 
 export interface SchemaMetaData {
   name: string;
+  /** True for built-in system schemas (e.g. pg_catalog); set by names-only fetches. */
+  is_system?: boolean;
   tables: string[] | null;
   views: ViewSchema[] | null;
   functions: FunctionSchema[] | null;
@@ -92,6 +106,8 @@ export interface Schema {
   connectionId: string;
   workspaceId: string;
   name: string;
+  /** Built-in system schema; shown under a "System" group in the selector. */
+  isSystem?: boolean;
   tableDetails?: TableDetails | null;
   tables: string[];
   views: ViewSchema[];

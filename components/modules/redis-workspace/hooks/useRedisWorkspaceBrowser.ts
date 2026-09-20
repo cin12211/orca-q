@@ -371,7 +371,7 @@ export function useRedisWorkspaceBrowser({
     }
   };
 
-  const previewGroupKeys = async (prefix: string): Promise<string[]> => {
+  const listGroupKeys = async (prefix: string): Promise<RedisKeyListItem[]> => {
     if (!connection.value || !session.value) {
       return [];
     }
@@ -385,7 +385,12 @@ export function useRedisWorkspaceBrowser({
       },
     });
 
-    return result.keys.map(item => item.key);
+    return result.keys;
+  };
+
+  const previewGroupKeys = async (prefix: string): Promise<string[]> => {
+    const items = await listGroupKeys(prefix);
+    return items.map(item => item.key);
   };
 
   return {
@@ -409,6 +414,7 @@ export function useRedisWorkspaceBrowser({
     saveSelectedValue,
     deleteKey,
     deleteKeys,
+    listGroupKeys,
     previewGroupKeys,
   };
 }

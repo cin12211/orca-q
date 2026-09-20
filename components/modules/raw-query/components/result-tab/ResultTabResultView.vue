@@ -394,6 +394,11 @@ useHotkeys(
         @onClearContextMenu="rawQueryTableRef?.clearCellContextMenu()"
         class="flex-1 min-h-0"
       >
+        <!--
+          allow-cell-preview: read-only results (no PK / function columns) still
+          open the JSON preview popup. Per-cell editability and write blocking
+          live in buildRawQueryColumnDefs (editable / valueSetter).
+        -->
         <BaseDataGrid
           ref="rawQueryTableRef"
           :column-defs="columnDefs"
@@ -404,6 +409,7 @@ useHotkeys(
           empty-description="The query returned no records."
           class="h-full"
           :allow-editing="isEditingEnabled"
+          :allow-cell-preview="true"
           :suppress-scroll-on-new-data="true"
           @selection-changed="onSelectedRowsChange"
           @cell-value-changed="onCellValueChanged"

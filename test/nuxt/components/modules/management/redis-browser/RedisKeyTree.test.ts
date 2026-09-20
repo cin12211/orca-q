@@ -208,6 +208,41 @@ const createBaseContextMenuStub = () => {
   return { stub, getLastItems: () => lastItems };
 };
 
+describe('RedisKeyTree group click', () => {
+  it('emits open-group with the prefix and stats when a folder node is clicked in tree view', async () => {
+    const { stub } = createFileTreeStub();
+    const wrapper = mount(RedisKeyTree, {
+      props: { keys: redisKeys, viewMode: 'tree' },
+      global: { stubs: { FileTree: stub } },
+    });
+
+    await wrapper.vm.$nextTick();
+    const fileTreeStub = wrapper.findComponent(stub);
+    await fileTreeStub.vm.$emit('click', 'redis-group:orders');
+
+    expect(wrapper.emitted('open-group')?.[0]).toEqual([
+      'orders',
+      { keyCount: 2, memoryUsage: 1280 },
+    ]);
+    expect(wrapper.emitted('select')).toBeUndefined();
+  });
+
+  it('does not emit select when a folder node is clicked', async () => {
+    const { stub } = createFileTreeStub();
+    const wrapper = mount(RedisKeyTree, {
+      props: { keys: redisKeys, viewMode: 'tree' },
+      global: { stubs: { FileTree: stub } },
+    });
+
+    await wrapper.vm.$nextTick();
+    const fileTreeStub = wrapper.findComponent(stub);
+    await fileTreeStub.vm.$emit('click', 'redis-key:orders:1');
+
+    expect(wrapper.emitted('select')).toEqual([['orders:1']]);
+    expect(wrapper.emitted('open-group')).toBeUndefined();
+  });
+});
+
 describe('RedisKeyTree delete', () => {
   it('emits delete-key with immediate:false on a plain Delete keypress for a focused key', async () => {
     const { stub } = createFileTreeStub();

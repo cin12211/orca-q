@@ -12,6 +12,7 @@ export {
 export type {
   IDatabaseMetadataAdapter,
   DatabaseMetadataAdapterParams,
+  SchemaMetadataQueryOptions,
   MetadataTypeAliasDatabaseFamily,
   MetadataTypeAliasMatchKind,
   MetadataTypeAliasRule,

@@ -9,9 +9,11 @@ import { resolveMetadataTypeAlias } from '../type-alias.constants';
 import type {
   IDatabaseMetadataAdapter,
   DatabaseMetadataAdapterParams,
+  SchemaMetadataQueryOptions,
 } from '../types';
 import {
-  getSchemaMetaDataQuery,
+  buildSchemaMetaDataQuery,
+  getSchemaNamesQuery,
   getErdDataQuery,
   getReverseSchemasQuery,
 } from './constants';
@@ -83,10 +85,32 @@ export class PostgresMetadataAdapter
     return new PostgresMetadataAdapter(adapter);
   }
 
-  async getSchemaMetaData(): Promise<SchemaMetaData[]> {
+  async getSchemaMetaData(
+    options?: SchemaMetadataQueryOptions
+  ): Promise<SchemaMetaData[]> {
+    if (options?.namesOnly) {
+      const names = await this.adapter.rawQuery<{
+        name: string;
+        is_system: boolean;
+      }>(getSchemaNamesQuery, []);
+
+      return names.map(({ name, is_system }) => ({
+        name,
+        is_system,
+        tables: null,
+        views: null,
+        functions: null,
+        table_details: null,
+        view_details: null,
+      }));
+    }
+
+    const query = buildSchemaMetaDataQuery(options?.schemaName);
+    const bindings = options?.schemaName ? [options.schemaName] : [];
+
     const metadata = await this.adapter.rawQuery<SchemaMetaData>(
-      getSchemaMetaDataQuery,
-      []
+      query,
+      bindings
     );
 
     return metadata.map(schema => ({

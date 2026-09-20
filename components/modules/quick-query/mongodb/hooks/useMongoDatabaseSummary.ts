@@ -21,18 +21,24 @@ export function useMongoDatabaseSummary(params: {
     isLoading.value = true;
     error.value = undefined;
     try {
-      const response = await $fetch<MongoDatabaseSummaryResponse>(
-        '/api/mongodb/collection-names',
-        {
-          method: 'POST',
-          body: {
-            ...getConnectionParams(params.connection.value),
-            database: params.databaseName.value,
-          },
-        }
-      );
-      collections.value = response.collections;
-      totalSize.value = response.totalSize;
+      const response = await $fetch<{
+        databases: Array<{
+          database: string;
+          collections: MongoCollectionName[];
+        }>;
+      }>('/api/mongodb/schemas', {
+        method: 'POST',
+        body: {
+          ...getConnectionParams(params.connection.value),
+          database: params.databaseName.value,
+        },
+      });
+      const dbItem =
+        (response.databases || []).find(
+          item => item.database === params.databaseName.value
+        ) || response.databases?.[0];
+      collections.value = dbItem?.collections ?? [];
+      totalSize.value = 0;
     } catch (fetchError) {
       error.value =
         fetchError instanceof Error ? fetchError.message : 'Unknown error';

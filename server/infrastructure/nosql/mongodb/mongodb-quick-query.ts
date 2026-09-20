@@ -208,31 +208,66 @@ export async function listMongoCollections(
 export interface MongoCollectionName {
   name: string;
   properties: string[];
+}
+
+export interface MongoCollectionStatItem {
+  name: string;
   size: number;
   count: number;
 }
 
+interface MongoListCollectionsSource {
+  listCollections(): { toArray(): Promise<MongoCollectionListInfo[]> };
+}
+
 export async function listMongoCollectionNames(
-  database: MongoCollectionsSource
+  database: MongoListCollectionsSource
 ): Promise<MongoCollectionName[]> {
-  const collectionInfos = await database.listCollections().toArray();
+  try {
+    const collectionInfos = await database.listCollections().toArray();
 
-  const collections = await Promise.all(
-    collectionInfos.map(async info => {
-      const stats = await database
-        .command({ collStats: info.name })
-        .catch(() => ({}) as MongoCollStats);
+    const collections = collectionInfos.map(info => ({
+      name: info.name,
+      properties: buildCollectionProperties(info),
+    }));
 
-      return {
-        name: info.name,
-        properties: buildCollectionProperties(info),
-        size: stats.storageSize ?? 0,
-        count: stats.count ?? 0,
-      };
-    })
-  );
+    return collections.sort((a, b) => a.name.localeCompare(b.name));
+  } catch {
+    return [];
+  }
+}
 
-  return collections.sort((a, b) => a.name.localeCompare(b.name));
+export async function listMongoCollectionStats(
+  database: MongoCollectionsSource,
+  collectionNames?: string[]
+): Promise<MongoCollectionStatItem[]> {
+  try {
+    let names = collectionNames;
+    if (!names) {
+      const collectionInfos = await database.listCollections().toArray();
+      names = collectionInfos
+        .filter(info => info.type !== 'view')
+        .map(info => info.name);
+    }
+
+    const collections = await Promise.all(
+      names.map(async name => {
+        const stats = await database
+          .command({ collStats: name })
+          .catch(() => ({}) as MongoCollStats);
+
+        return {
+          name,
+          size: stats.storageSize ?? 0,
+          count: stats.count ?? 0,
+        };
+      })
+    );
+
+    return collections.sort((a, b) => a.name.localeCompare(b.name));
+  } catch {
+    return [];
+  }
 }
 
 interface MongoDatabaseStatsSource {
@@ -242,8 +277,12 @@ interface MongoDatabaseStatsSource {
 export async function getMongoDatabaseTotalSize(
   database: MongoDatabaseStatsSource
 ): Promise<number> {
-  const stats = await database.command({ dbStats: 1 });
-  return stats.totalSize ?? 0;
+  try {
+    const stats = await database.command({ dbStats: 1 });
+    return stats.totalSize ?? 0;
+  } catch {
+    return 0;
+  }
 }
 
 export interface MongoDatabaseStats {

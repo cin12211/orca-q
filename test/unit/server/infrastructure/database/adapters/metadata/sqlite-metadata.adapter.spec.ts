@@ -62,4 +62,59 @@ describe('SqliteMetadataAdapter', () => {
 
     await expect(adapter.getSchemaMetaData()).rejects.toThrow('SQLITE_AUTH');
   });
+
+  it('returns only schema names and skips table/view queries when namesOnly is set', async () => {
+    const rawQueryMock = vi.fn().mockResolvedValueOnce([
+      { seq: 0, name: 'main', file: '/tmp/db.sqlite' },
+      { seq: 1, name: 'temp', file: '' },
+    ]);
+
+    const adapter = new (SqliteMetadataAdapter as any)({
+      connection: ':memory:',
+      rawQuery: rawQueryMock,
+    });
+
+    const result = await adapter.getSchemaMetaData({ namesOnly: true });
+
+    expect(result).toEqual([
+      {
+        name: 'main',
+        tables: null,
+        views: null,
+        functions: null,
+        table_details: null,
+        view_details: null,
+      },
+    ]);
+    // Only PRAGMA database_list should run — no per-table/view PRAGMA calls.
+    expect(rawQueryMock).toHaveBeenCalledTimes(1);
+    expect(rawQueryMock).toHaveBeenCalledWith('PRAGMA database_list');
+  });
+
+  it('scopes getSchemaMetaData to a single schema when schemaName is set', async () => {
+    const rawQueryMock = vi
+      .fn()
+      .mockResolvedValueOnce([
+        { seq: 0, name: 'main', file: '/tmp/db.sqlite' },
+        { seq: 1, name: 'analytics', file: '/tmp/analytics.sqlite' },
+      ])
+      .mockResolvedValueOnce([]); // sqlite_master for the scoped schema
+
+    const adapter = new (SqliteMetadataAdapter as any)({
+      connection: ':memory:',
+      rawQuery: rawQueryMock,
+    });
+
+    const result = await adapter.getSchemaMetaData({
+      schemaName: 'analytics',
+    });
+
+    expect(result).toHaveLength(1);
+    expect(result[0]?.name).toBe('analytics');
+    expect(rawQueryMock).toHaveBeenCalledTimes(2);
+    expect(rawQueryMock).toHaveBeenNthCalledWith(
+      2,
+      expect.stringContaining('FROM "analytics".sqlite_master')
+    );
+  });
 });
