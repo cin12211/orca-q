@@ -1,17 +1,19 @@
 import { ref, type Ref } from 'vue';
 import { getConnectionParams } from '~/core/helpers/connection-helper';
 import type { Connection } from '~/core/stores';
-import type { MongoCollectionInfo } from '../types';
+import type { MongoCollectionName } from '../types';
 
 interface MongoDatabaseSummaryResponse {
-  collections: MongoCollectionInfo[];
+  collections: MongoCollectionName[];
+  totalSize: number;
 }
 
 export function useMongoDatabaseSummary(params: {
   connection: Ref<Connection | undefined>;
   databaseName: Ref<string>;
 }) {
-  const collections = ref<MongoCollectionInfo[]>([]);
+  const collections = ref<MongoCollectionName[]>([]);
+  const totalSize = ref(0);
   const isLoading = ref(false);
   const error = ref<string | undefined>();
 
@@ -30,6 +32,7 @@ export function useMongoDatabaseSummary(params: {
         }
       );
       collections.value = response.collections;
+      totalSize.value = response.totalSize;
     } catch (fetchError) {
       error.value =
         fetchError instanceof Error ? fetchError.message : 'Unknown error';
@@ -38,5 +41,5 @@ export function useMongoDatabaseSummary(params: {
     }
   };
 
-  return { collections, isLoading, error, fetchSummary };
+  return { collections, totalSize, isLoading, error, fetchSummary };
 }

@@ -4,17 +4,14 @@ import type { ContextMenuItem } from '~/components/base/context-menu/menuContext
 import FileTree from '~/components/base/tree-folder/FileTree.vue';
 import type { FileNode } from '~/components/base/tree-folder/types';
 
-interface Props {
+defineProps<{
   contextMenuItems: ContextMenuItem[];
   historySectionId: string;
   storageKey: string;
   treeData: Record<string, FileNode>;
   initExpandedIds: string[];
   validateRename?: (nodeId: string, newName: string) => true | string;
-  searchQuery?: string;
-}
-
-const props = defineProps<Props>();
+}>();
 
 const emit = defineEmits<{
   (e: 'clear-context-menu'): void;
@@ -56,7 +53,6 @@ defineExpose({
           :storage-key="storageKey"
           :initial-data="treeData"
           :init-expanded-ids="initExpandedIds"
-          :search-query="searchQuery"
           :allow-drag-and-drop="false"
           :allow-sort="false"
           :validate-rename="validateRename"
