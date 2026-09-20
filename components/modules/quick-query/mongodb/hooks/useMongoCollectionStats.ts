@@ -1,26 +1,32 @@
 import { ref, type Ref } from 'vue';
 import { getConnectionParams } from '~/core/helpers/connection-helper';
 import type { Connection } from '~/core/stores';
-import type { MongoCollectionInfo } from '../types';
+import type { MongoCollectionName } from '../types';
 
-interface MongoDatabaseSummaryResponse {
-  collections: MongoCollectionInfo[];
+interface MongoCollectionStatsResponse {
+  collections: MongoCollectionName[];
 }
 
-export function useMongoDatabaseSummary(params: {
+/**
+ * Per-collection size/count for one database, fetched separately from the
+ * fast collection listing (`useMongoDatabaseSummary`) — this runs a
+ * `collStats` command per collection, so it's only worth calling for the
+ * database the user actually selects.
+ */
+export function useMongoCollectionStats(params: {
   connection: Ref<Connection | undefined>;
   databaseName: Ref<string>;
 }) {
-  const collections = ref<MongoCollectionInfo[]>([]);
+  const collections = ref<MongoCollectionName[]>([]);
   const isLoading = ref(false);
   const error = ref<string | undefined>();
 
-  const fetchSummary = async () => {
+  const fetchStats = async () => {
     isLoading.value = true;
     error.value = undefined;
     try {
-      const response = await $fetch<MongoDatabaseSummaryResponse>(
-        '/api/mongodb/collection-names',
+      const response = await $fetch<MongoCollectionStatsResponse>(
+        '/api/mongodb/collection-stats',
         {
           method: 'POST',
           body: {
@@ -38,5 +44,5 @@ export function useMongoDatabaseSummary(params: {
     }
   };
 
-  return { collections, isLoading, error, fetchSummary };
+  return { collections, isLoading, error, fetchStats };
 }
