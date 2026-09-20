@@ -33,7 +33,6 @@ const {
   onRenameHistory,
   onToggleCollapseHistory,
   onTreeContextMenu,
-  debouncedSearch,
   searchInput,
 } = useManagementAgentHistoryTree({
   focusNode: nodeId => treePanelRef.value?.focusItem(nodeId),
@@ -116,7 +115,6 @@ const isHistoryEmpty = computed(() => {
           :storage-key="historyStorageKey"
           :tree-data="filteredHistoryTreeData"
           :init-expanded-ids="defaultExpandedNodeIds"
-          :search-query="debouncedSearch"
           @click-node="onClickNode"
           @context-node="onTreeContextMenu"
           @clear-context-menu="onClearContextMenu"

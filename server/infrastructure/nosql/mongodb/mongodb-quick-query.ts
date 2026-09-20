@@ -205,29 +205,6 @@ export async function listMongoCollections(
   return collections.sort((a, b) => a.name.localeCompare(b.name));
 }
 
-export interface MongoCollectionInfo {
-  name: string;
-  properties: string[];
-}
-
-/**
- * Cheap collection listing — just `listCollections()`, no per-collection
- * `collStats` round-trip. Used to populate the schema tree fast; size/count
- * are fetched separately, only for the database the user selects.
- */
-export async function listMongoCollectionInfos(
-  database: MongoCollectionsSource
-): Promise<MongoCollectionInfo[]> {
-  const collectionInfos = await database.listCollections().toArray();
-
-  return collectionInfos
-    .map(info => ({
-      name: info.name,
-      properties: buildCollectionProperties(info),
-    }))
-    .sort((a, b) => a.name.localeCompare(b.name));
-}
-
 export interface MongoCollectionName {
   name: string;
   properties: string[];
@@ -235,7 +212,7 @@ export interface MongoCollectionName {
   count: number;
 }
 
-export async function getMongoCollectionsStats(
+export async function listMongoCollectionNames(
   database: MongoCollectionsSource
 ): Promise<MongoCollectionName[]> {
   const collectionInfos = await database.listCollections().toArray();
@@ -256,6 +233,17 @@ export async function getMongoCollectionsStats(
   );
 
   return collections.sort((a, b) => a.name.localeCompare(b.name));
+}
+
+interface MongoDatabaseStatsSource {
+  command(command: Record<string, unknown>): Promise<{ totalSize?: number }>;
+}
+
+export async function getMongoDatabaseTotalSize(
+  database: MongoDatabaseStatsSource
+): Promise<number> {
+  const stats = await database.command({ dbStats: 1 });
+  return stats.totalSize ?? 0;
 }
 
 export interface MongoDatabaseStats {
