@@ -3,16 +3,11 @@ export interface MongoDocument {
   [key: string]: unknown;
 }
 
-export interface MongoCollectionInfo {
-  name: string;
-  properties: string[];
-}
-
 export interface MongoCollectionName {
   name: string;
   properties: string[];
   size: number;
-  count: number;
+  count?: number;
 }
 
 export interface MongoDatabaseStats {

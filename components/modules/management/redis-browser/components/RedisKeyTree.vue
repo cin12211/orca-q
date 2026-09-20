@@ -223,6 +223,18 @@ onActivated(() => {
   }
 });
 
+watch(
+  () => props.searchQuery,
+  async query => {
+    if (!fileTreeRef.value || !query.trim()) {
+      return;
+    }
+
+    await nextTick();
+    fileTreeRef.value.expandAll();
+  }
+);
+
 const collapseAll = () => {
   fileTreeRef.value?.collapseAll();
 };
@@ -265,7 +277,6 @@ defineExpose({
           :init-expanded-ids="defaultFolderOpenIds"
           :initial-data="fileTreeData"
           storage-key="redis-key-tree"
-          :search-query="props.searchQuery"
           :allow-drag-and-drop="false"
           :delay-focus="0"
           @click="handleTreeClick"

@@ -26,7 +26,6 @@ const {
   onRenameFile,
   onSelectNode,
   onTreeContextMenu,
-  debouncedSearch,
   searchInput,
   validateRename,
 } = useManagementExplorerTree({
@@ -131,7 +130,6 @@ watch(
       ref="treePanelRef"
       :tree-data="mappedExplorerFileTreeData"
       :storage-key="explorerStorageKey"
-      :search-query="debouncedSearch"
       :context-menu-items="contextMenuItems"
       :validate-rename="validateRename"
       @click-node="onClickNode"
