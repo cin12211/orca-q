@@ -2,6 +2,7 @@ export * from './useMongoDatabaseCollections';
 export * from './useMongoCollectionQuery';
 export * from './useMongoServerDatabases';
 export * from './useMongoDatabaseSummary';
+export * from './useMongoCollectionStats';
 export * from './useMongoCollectionMutation';
 export * from './useMongoDatabaseStats';
 export * from './useMongoCollectionShortcuts';

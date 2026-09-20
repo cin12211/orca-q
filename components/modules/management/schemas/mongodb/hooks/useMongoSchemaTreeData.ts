@@ -1,16 +1,17 @@
 import { computed, ref, watch, type Ref } from 'vue';
 import type { FileNode } from '~/components/base/tree-folder/types';
 import {
+  useMongoCollectionStats,
   useMongoDatabaseSummary,
   useMongoServerDatabases,
 } from '~/components/modules/quick-query/mongodb/hooks';
-import type { MongoCollectionName } from '~/components/modules/quick-query/mongodb/types';
+import type { MongoCollectionInfo } from '~/components/modules/quick-query/mongodb/types';
 import type { Connection } from '~/core/stores';
 import { TabViewType } from '~/core/types/entities/tab-view.entity';
 
 interface MongoNodeData {
   tabViewType: TabViewType;
-  totalSize?: number;
+  collectionCount?: number;
   size?: number;
   count?: number;
 }
@@ -18,8 +19,7 @@ interface MongoNodeData {
 type MongoFileNode = FileNode<MongoNodeData>;
 
 interface DatabaseSummary {
-  collections: MongoCollectionName[];
-  totalSize: number;
+  collections: MongoCollectionInfo[];
 }
 
 export function useMongoSchemaTreeData(
@@ -32,6 +32,9 @@ export function useMongoSchemaTreeData(
     fetchDatabases,
   } = useMongoServerDatabases({ connection });
   const summaryByDatabase = ref<Record<string, DatabaseSummary>>({});
+  const statsByDatabase = ref<
+    Record<string, Record<string, { size: number; count: number }>>
+  >({});
   const isLoadingSummaries = ref(false);
 
   const isLoading = computed(
@@ -41,6 +44,7 @@ export function useMongoSchemaTreeData(
   const loadTree = async () => {
     if (!connection.value) {
       summaryByDatabase.value = {};
+      statsByDatabase.value = {};
       return;
     }
 
@@ -50,23 +54,48 @@ export function useMongoSchemaTreeData(
     isLoadingSummaries.value = true;
 
     await fetchDatabases();
+    statsByDatabase.value = {};
 
     const entries = await Promise.all(
       databases.value.map(async databaseName => {
-        const { collections, totalSize, fetchSummary } =
-          useMongoDatabaseSummary({
-            connection,
-            databaseName: ref(databaseName),
-          });
+        const { collections, fetchSummary } = useMongoDatabaseSummary({
+          connection,
+          databaseName: ref(databaseName),
+        });
         await fetchSummary();
-        return [
-          databaseName,
-          { collections: collections.value, totalSize: totalSize.value },
-        ] as const;
+        return [databaseName, { collections: collections.value }] as const;
       })
     );
     summaryByDatabase.value = Object.fromEntries(entries);
     isLoadingSummaries.value = false;
+  };
+
+  /**
+   * Fetches per-collection size/count for one database. This runs a
+   * `collStats` command per collection server-side, so it's only called for
+   * the database the user actually selects — not eagerly for every database
+   * like `loadTree` does. Memoized per database name.
+   */
+  const loadCollectionStats = async (databaseName: string) => {
+    if (!connection.value || statsByDatabase.value[databaseName]) {
+      return;
+    }
+
+    const { collections, fetchStats } = useMongoCollectionStats({
+      connection,
+      databaseName: ref(databaseName),
+    });
+    await fetchStats();
+
+    statsByDatabase.value = {
+      ...statsByDatabase.value,
+      [databaseName]: Object.fromEntries(
+        collections.value.map(collection => [
+          collection.name,
+          { size: collection.size, count: collection.count },
+        ])
+      ),
+    };
   };
 
   const fileTreeData = computed<Record<string, MongoFileNode>>(() => {
@@ -74,6 +103,7 @@ export function useMongoSchemaTreeData(
 
     for (const databaseName of databases.value) {
       const summary = summaryByDatabase.value[databaseName];
+      const stats = statsByDatabase.value[databaseName];
 
       nodes[databaseName] = {
         id: databaseName,
@@ -87,12 +117,14 @@ export function useMongoSchemaTreeData(
         children: [],
         data: {
           tabViewType: TabViewType.MongoDatabaseOverview,
-          totalSize: summary?.totalSize,
+          collectionCount: summary?.collections.length ?? 0,
         },
       };
 
       for (const collection of summary?.collections || []) {
         const nodeId = `${databaseName}.${collection.name}`;
+        const collectionStats = stats?.[collection.name];
+
         nodes[nodeId] = {
           id: nodeId,
           parentId: databaseName,
@@ -104,8 +136,8 @@ export function useMongoSchemaTreeData(
           iconClass: 'text-emerald-500',
           data: {
             tabViewType: TabViewType.MongoCollectionDetail,
-            size: collection.size,
-            count: collection.count,
+            size: collectionStats?.size,
+            count: collectionStats?.count,
           },
         };
         nodes[databaseName].children!.push(nodeId);
@@ -147,5 +179,6 @@ export function useMongoSchemaTreeData(
     isLoading,
     defaultFolderOpenId,
     fetchDatabases: loadTree,
+    loadCollectionStats,
   };
 }
