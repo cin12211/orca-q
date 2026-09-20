@@ -23,7 +23,6 @@ interface Props {
   createUserDisabledReason?: string;
   onDeleteUser?: (role: DatabaseRole) => Promise<any>;
   onRefresh?: () => void;
-  searchQuery?: string;
 }
 
 const props = defineProps<Props>();
@@ -390,7 +389,6 @@ defineExpose({
             ref="fileTreeRef"
             :init-expanded-ids="defaultExpandedKeys"
             :initial-data="fileTreeData"
-            :search-query="props.searchQuery"
             :allow-drag-and-drop="false"
             :delay-focus="0"
             :storage-key="`${connectionId}-user-roles-tree`"

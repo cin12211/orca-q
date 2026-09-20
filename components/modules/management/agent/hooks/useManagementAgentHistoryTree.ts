@@ -297,7 +297,6 @@ export const useManagementAgentHistoryTree = (
     onRenameHistory,
     onToggleCollapseHistory,
     onTreeContextMenu,
-    debouncedSearch,
     searchInput,
   };
 };

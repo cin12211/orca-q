@@ -32,13 +32,8 @@ const isRefreshing = ref(false);
 const searchInput = shallowRef('');
 const debouncedSearch = refDebounced(searchInput, DEFAULT_DEBOUNCE_INPUT);
 
-const {
-  fileTreeData,
-  isLoading,
-  defaultFolderOpenId,
-  fetchDatabases,
-  loadCollectionStats,
-} = useMongoSchemaTreeData(connection, debouncedSearch);
+const { fileTreeData, isLoading, defaultFolderOpenId, fetchDatabases } =
+  useMongoSchemaTreeData(connection, debouncedSearch);
 
 const {
   isMutating,
@@ -79,7 +74,6 @@ const handleTreeClick = async (nodeId: string) => {
   const tabViewType = node.data?.tabViewType as TabViewType | undefined;
 
   if (tabViewType === TabViewType.MongoDatabaseOverview) {
-    void loadCollectionStats(node.name);
     await openMongoDatabaseTab({ databaseName: node.name });
     return;
   }
@@ -300,7 +294,6 @@ const contextMenuItems = computed<ContextMenuItem[]>(() => {
           :init-expanded-ids="[defaultFolderOpenId]"
           :initial-data="fileTreeData as unknown as Record<string, FileNode>"
           :storage-key="`${connectionStore.selectedConnection?.id}-mongo-schemas-tree`"
-          :search-query="debouncedSearch"
           :allow-drag-and-drop="false"
           :delay-focus="0"
           @click="handleTreeClick"
@@ -308,15 +301,10 @@ const contextMenuItems = computed<ContextMenuItem[]>(() => {
         >
           <template #meta="{ node }">
             <span
-              v-if="node.type === 'folder'"
+              v-if="(node.data as any)?.totalSize !== undefined"
               class="text-xs text-muted-foreground"
             >
-              {{
-                (
-                  ((node.data as any)?.collectionCount as number) ?? 0
-                ).toLocaleString()
-              }}
-              collections
+              {{ formatBytes(((node.data as any)?.totalSize as number) || 0) }}
             </span>
             <span
               v-else-if="(node.data as any)?.size !== undefined"
