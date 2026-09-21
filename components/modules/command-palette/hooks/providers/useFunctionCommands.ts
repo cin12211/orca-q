@@ -1,3 +1,4 @@
+import { resolveRouteNameForTabType } from '~/core/composables/useTabManagement';
 import { useWorkspaceConnectionRoute } from '~/core/composables/useWorkspaceConnectionRoute';
 import { useSchemaStore } from '~/core/stores/useSchemaStore';
 import { TabViewType, useTabViewsStore } from '~/core/stores/useTabViewsStore';
@@ -52,7 +53,9 @@ export function useFunctionCommands(): CommandProvider {
                   icon: 'gravity-ui:function',
                   iconClass,
                   type: TabViewType.FunctionsDetail,
-                  routeName: 'workspaceId-connectionId-quick-query-tabViewId',
+                  routeName: resolveRouteNameForTabType(
+                    TabViewType.FunctionsDetail
+                  ),
                   routeParams: { tabViewId: tabId },
                   connectionId: connectionId.value,
                   schemaId: schema.name,

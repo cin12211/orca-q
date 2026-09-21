@@ -354,7 +354,7 @@ const result = TableSchema.parse(await $fetch('/api/get-tables'));
 
 - `/shared/types/database-roles.types.ts`
 - `/server/api/get-schema-meta-data.ts` (inline types)
-- `/components/modules/management-schemas/hooks/` (local types)
+- `/components/modules/driver/shared/primary-panel/schemas/hooks/` (local types)
 
 **Recommendation:** Centralize in `/shared/types/`
 

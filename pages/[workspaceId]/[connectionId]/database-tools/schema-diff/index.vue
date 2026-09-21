@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { SchemaDiffContainer } from '~/components/modules/database-tools';
+import { SchemaDiffContainer } from '~/components/modules/driver/shared/sql/database-tools';
 
 definePageMeta({
   keepalive: true,

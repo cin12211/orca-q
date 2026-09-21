@@ -151,9 +151,11 @@
   - Loading overlays
   - Empty states
 - `/modules` - Feature-specific modules
-  - `/management-connection` - Connection CRUD operations
-  - `/management-explorer` - File/folder explorer
-  - `/management-schemas` - Schema management
+  - `/connection` - Connection CRUD operations
+  - `/app-shell` - Activity bar, primary sidebar, tab views, status bar
+  - `/driver` - Engine-specific panels, quick query and instance insights
+    (sidebar panels live in `driver/<engine>/primary-panel/` and
+    `driver/shared/primary-panel/`)
   - `/quick-query` - Interactive table queries
   - `/raw-query` - SQL editor
   - `/erd-diagram` - Entity-relationship diagrams

@@ -57,19 +57,29 @@ components/
 │   ├── BaseEmpty.vue          # Empty state
 │   └── LoadingOverlay.vue     # Loading spinner
 │
-├── modules/                   # Feature modules (13 modules)
-│   ├── quick-query/           # Table data browsing & editing
-│   ├── raw-query/             # SQL code editor
-│   ├── management-schemas/    # Schema tree explorer
-│   ├── management-connection/ # Database connections
-│   ├── management-users/      # User permissions
-│   ├── management-explorer/   # File explorer
-│   ├── management-export/     # Data export
+├── modules/                   # Feature modules
+│   ├── app-shell/             # Activity bar, primary sidebar, tab views, status bar
+│   ├── driver/                # Engine-specific UI (see below)
+│   ├── quick-query/           # SQL table data browsing & editing
+│   ├── raw-query/             # SQL / Redis code editor
+│   ├── connection/            # Database connections
 │   ├── erd-diagram/           # Entity-relationship diagrams
+│   ├── agent/                 # AI agent chat
 │   ├── workspace/             # Workspace management
 │   ├── settings/              # Application settings
+│   ├── command-palette/       # Command palette
+│   ├── environment-tag/       # Environment tags
 │   ├── changelog/             # Version changelog
-│   └── selectors/             # Custom select components
+│   ├── selectors/             # Custom select components
+│   └── shared/                # Cross-module helpers
+│
+│   driver/
+│   ├── postgres/   primary-panel/users-roles, user-permissions, instance-insights
+│   ├── redis/      primary-panel/{schemas,database-tools}, quick-query, instance-insights
+│   ├── mongodb/    primary-panel/{schemas,database-tools}, quick-query, instance-insights
+│   └── shared/     primary-panel/{explorer,schemas,agent,shared},
+│                   sql/{primary-panel,instance-insights,database-tools},
+│                   instance-insights
 │
 ├── ui/                        # shadcn-vue UI components (33+)
 │   ├── button/

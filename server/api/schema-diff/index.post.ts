@@ -3,7 +3,7 @@ import type { ISSLConfig, ISSHConfig } from '~/components/modules/connection';
 import type {
   SchemaDiffRequest,
   SchemaDiffResponse,
-} from '~/components/modules/database-tools';
+} from '~/components/modules/driver/shared/sql/database-tools';
 import { DatabaseClientType } from '~/core/constants/database-client-type';
 import { createMetadataAdapter } from '~/server/infrastructure/database/adapters/metadata';
 import { computeSchemaDiff } from '~/server/utils/schema-diff.utils';

@@ -9,3 +9,4 @@ export * from './app-config.entity';
 export * from './agent-state.entity';
 export * from './query-builder-state.entity';
 export * from './migration-state.entity';
+export * from './activity-bar.entity';
