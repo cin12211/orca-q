@@ -11,6 +11,7 @@ interface EditorContextMenuActions {
   onExplainAnalyzeCurrent: () => void;
   onHandleFormatCurrentStatement: () => void;
   onHandleFormatCode: () => void;
+  isFormatSupported?: Ref<boolean>;
   isSupportFormat?: Ref<boolean>;
   isExplainSupported?: Ref<boolean>;
   // Accepts any EditorView-like object (including readonly refs)
@@ -128,7 +129,7 @@ export function useRawQueryEditorContextMenu(
           ]
         : []),
       { type: ContextMenuItemType.SEPARATOR },
-      ...(actions.isSupportFormat?.value
+      ...((actions.isFormatSupported?.value ?? actions.isSupportFormat?.value)
         ? [
             {
               type: ContextMenuItemType.ACTION,

@@ -2,17 +2,19 @@
 import { computed } from 'vue';
 import { formatBytes } from '~/core/helpers';
 import { formatNumber, formatQueryTime } from '~/core/helpers/format';
-import type { ExecutedResultItem } from '../../interfaces';
+import type { RawQueryResultViewContext } from '../../registry';
 
 const props = defineProps<{
-  activeTab: ExecutedResultItem;
+  context: RawQueryResultViewContext;
 }>();
+
+const activeTab = computed(() => props.context.activeTab);
 
 const textEncoder =
   typeof TextEncoder !== 'undefined' ? new TextEncoder() : null;
 
 const resultSize = computed(() => {
-  const data = props.activeTab?.result ?? [];
+  const data = activeTab.value?.result ?? [];
 
   if (!textEncoder) {
     return { bytes: 0, formatted: 'N/A' };
@@ -100,6 +102,31 @@ const resultSize = computed(() => {
     <div class="pt-3 border-t">
       <div class="text-sm text-muted-foreground mb-2">Query:</div>
       <CodeHighlightPreview :code="activeTab.metadata.statementQuery || ''" />
+    </div>
+
+    <div
+      v-if="activeTab.metadata.mutationSummary"
+      class="pt-3 border-t text-sm space-y-1"
+    >
+      <div class="font-medium">Mutation</div>
+      <div v-if="activeTab.metadata.mutationSummary.matchedCount !== undefined">
+        Matched: {{ activeTab.metadata.mutationSummary.matchedCount }}
+      </div>
+      <div
+        v-if="activeTab.metadata.mutationSummary.modifiedCount !== undefined"
+      >
+        Modified: {{ activeTab.metadata.mutationSummary.modifiedCount }}
+      </div>
+      <div v-if="activeTab.metadata.mutationSummary.deletedCount !== undefined">
+        Deleted: {{ activeTab.metadata.mutationSummary.deletedCount }}
+      </div>
+    </div>
+    <div
+      v-if="activeTab.metadata.truncated"
+      class="pt-3 border-t text-sm text-amber-600"
+    >
+      Truncated at
+      {{ formatNumber(activeTab.metadata.rowCount || 0) }} documents
     </div>
 
     <div v-if="activeTab.metadata.fieldDefs?.length" class="pt-3 border-t">

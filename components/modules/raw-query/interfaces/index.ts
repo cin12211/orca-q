@@ -1,6 +1,11 @@
 import type { FieldDef } from 'pg';
 import type { DatabaseDriverError } from '~/core/types';
 import type { Connection } from '~/core/types/entities';
+import type {
+  MongoRawQueryLogEntry,
+  MongoRawQueryMutationSummary,
+  MongoRawQueryResultKind,
+} from '~/core/types/mongodb-raw-query.types';
 
 export type { MappedRawColumn } from '~/core/types/mapped-column.types';
 
@@ -44,6 +49,7 @@ export enum ViewMode {
   RAW = 'raw',
   EXPLAIN = 'explain',
   CHART = 'chart',
+  CONSOLE = 'console',
 }
 
 export interface ExecutedResultItem {
@@ -62,6 +68,11 @@ export interface ExecutedResultItem {
     connection?: Connection | undefined;
     command?: string;
     rowCount?: number;
+    resultKind?: MongoRawQueryResultKind;
+    rawResult?: unknown;
+    logs?: MongoRawQueryLogEntry[];
+    mutationSummary?: MongoRawQueryMutationSummary;
+    truncated?: boolean;
   };
   result: RowData[];
   seqIndex: number;

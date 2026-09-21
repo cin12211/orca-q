@@ -33,3 +33,17 @@ Inside both the `onResponseError` callback (Fetch) and `onError` callback (Strea
 
 - A red `Diagnostic` syntax underline matches the exact character boundary dynamically shifted by `mapErrorPosition()`.
 - Standard hover tooltips allow the user to immediately identify precisely why execution halted (e.g., `severity` = `ERROR`, `length`, `routine = check_stack_depth`, etc.).
+
+## 5. MongoDB TypeScript mode
+
+Mongo scripts always execute the complete CodeMirror file, regardless of the
+current selection. The server transpiles the content, creates one
+async function, and calls it with `db`, `params`, BSON constructors, and
+`console`. Native Mongo calls remain behind the capability host, which
+re-authorizes every operation. The script may choose its database with
+`db.getSiblingDB('database_name')`; the UI database context is optional.
+
+Writes pause before opening MongoDB and display a redacted operation manifest.
+Confirmation returns a short-lived, one-use token bound to the exact source,
+parameters, target database, and manifest. Results stream as NDJSON events and
+preserve BSON values as Canonical Extended JSON.

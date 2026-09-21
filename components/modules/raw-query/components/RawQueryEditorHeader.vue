@@ -1,33 +1,76 @@
 <script setup lang="ts">
+import { computed, ref, type Component } from 'vue';
 import { Tooltip, TooltipContent, TooltipTrigger } from '#components';
-import RedisDBSelector from '~/components/modules/selectors/RedisDBSelector.vue';
-import { type Connection, type RowQueryFile } from '~/core/stores';
-import type { RedisDatabaseOption } from '~/core/types/redis-workspace.types';
 import PureConnectionSelector from '../../selectors/PureConnectionSelector.vue';
 import { RawQueryEditorLayout } from '../constants';
+import { useRawQueryContext } from '../hooks';
+import { getRawQueryProfile, type RawQueryHeaderContext } from '../registry';
 import AddVariableModal from './AddVariableModal.vue';
 import RawQueryConfigModal from './RawQueryConfigModal.vue';
 
-defineProps<{
-  currentFileInfo?: RowQueryFile;
-  fileVariables: string;
-  workspaceId: string;
-  selectedConnectionId: string;
-  disableConnectionSwitch: boolean;
-  connections: Connection[];
-  connection?: Connection;
-  isRedisConnection?: boolean;
-  isSupportVariable?: boolean;
-  redisDatabases?: RedisDatabaseOption[];
-  redisDatabaseIndex?: number;
-  codeEditorLayout: RawQueryEditorLayout;
+const props = defineProps<{
+  customLeftComponents?: Component[];
+  customRightComponents?: Component[];
 }>();
 
-defineEmits<{
-  (e: 'update:connectionId', connectionId: string): void;
-  (e: 'update:redisDatabaseIndex', databaseIndex: number): void;
-  (e: 'update:updateFileVariables', fileVariablesValue: string): Promise<void>;
-}>();
+const context = useRawQueryContext();
+
+const editor = computed(() => context?.rawQueryEditor);
+const workspaceId = computed(() => context?.workspaceId.value ?? '');
+const selectedConnectionId = computed(
+  () => context?.selectedConnectionId.value ?? ''
+);
+const connections = computed(() => context?.connections.value ?? []);
+const connection = computed(() => context?.connection.value);
+const disableConnectionSwitch = computed(
+  () => context?.disableConnectionSwitch.value ?? false
+);
+const databaseType = computed(() => context?.databaseType.value);
+const currentFileInfo = computed(() => context?.currentFile.value);
+const fileVariables = computed(() => context?.fileVariables.value ?? '');
+const codeEditorLayout = computed(
+  () => context?.codeEditorLayout.value ?? RawQueryEditorLayout.horizontal
+);
+const rawQueryProfile = computed(() => getRawQueryProfile(databaseType.value));
+const headerProfile = computed(() => rawQueryProfile.value.header);
+
+const isVariableSupported = computed(
+  () => context?.isVariableSupported.value ?? true
+);
+
+const handleUpdateConnectionId = (connectionId: string) => {
+  context?.updateSelectedConnection(connectionId);
+};
+
+const handleUpdateFileVariables = async (variables: string): Promise<void> => {
+  await context?.updateFileVariables(variables);
+};
+
+const headerContext = computed<RawQueryHeaderContext>(() => ({
+  workspaceId: workspaceId.value,
+  selectedConnectionId: selectedConnectionId.value,
+  connection: connection.value,
+  connections: connections.value,
+  disableConnectionSwitch: disableConnectionSwitch.value,
+  databaseType: databaseType.value,
+  currentFileInfo: currentFileInfo.value,
+  fileVariables: fileVariables.value,
+  codeEditorLayout: codeEditorLayout.value,
+  rawQueryEditor: editor.value,
+  editor: editor.value,
+  onUpdateConnectionId: handleUpdateConnectionId,
+  onUpdateFileVariables: handleUpdateFileVariables,
+}));
+
+const leftComponents = computed<Component[]>(() => [
+  ...(headerProfile.value.leftComponents ?? []),
+  ...(props.customLeftComponents ?? []),
+]);
+
+const rightComponents = computed<Component[]>(() => [
+  ...(headerProfile.value.rightComponents ?? []),
+  ...(props.customRightComponents ?? []),
+]);
 
 const isOpenAddVariableModal = ref(false);
 const isOpenConfigModal = ref(false);
@@ -41,17 +84,18 @@ const openConfigModal = () => {
   isOpenConfigModal.value = true;
 };
 </script>
+
 <template>
   <AddVariableModal
-    @updateVariables="$emit('update:updateFileVariables', $event)"
+    @updateVariables="handleUpdateFileVariables"
     :file-variables="fileVariables"
     v-model:open="isOpenAddVariableModal"
   />
   <RawQueryConfigModal v-model:open="isOpenConfigModal" />
 
-  <!-- {{ currentFileInfo }} -->
   <div class="flex items-center justify-between p-1 rounded-md bg-muted">
-    <div>
+    <!-- Left Zone: Breadcrumb + Left Header Components -->
+    <div class="flex items-center gap-2">
       <Breadcrumb>
         <BreadcrumbList class="gap-0!">
           <BreadcrumbItem>
@@ -62,12 +106,22 @@ const openConfigModal = () => {
           </BreadcrumbItem>
         </BreadcrumbList>
       </Breadcrumb>
+
+      <component
+        v-for="(comp, index) in leftComponents"
+        :key="`left-${index}`"
+        :is="comp"
+        :context="headerContext"
+      />
+      <slot name="left" :context="headerContext" />
     </div>
 
+    <!-- Right Zone: Actions, Selectors, Right Header Components, Settings -->
     <div class="flex gap-2 items-center">
+      <!-- Query variables button if supported by layout and profile -->
       <Tooltip
         v-if="
-          isSupportVariable &&
+          isVariableSupported &&
           codeEditorLayout === RawQueryEditorLayout.horizontal
         "
       >
@@ -95,7 +149,7 @@ const openConfigModal = () => {
         <TooltipTrigger as-child>
           <PureConnectionSelector
             :connectionId="selectedConnectionId"
-            @update:connectionId="$emit('update:connectionId', $event)"
+            @update:connectionId="handleUpdateConnectionId"
             :connections="connections"
             :connection="connection"
             :disabled="disableConnectionSwitch"
@@ -112,15 +166,14 @@ const openConfigModal = () => {
         </TooltipContent>
       </Tooltip>
 
-      <RedisDBSelector
-        v-if="isRedisConnection"
-        compact
-        trigger-id="raw-query-redis-db-index"
-        trigger-class="bg-background"
-        :databases="redisDatabases || []"
-        :database-index="redisDatabaseIndex ?? 0"
-        @update:database-index="$emit('update:redisDatabaseIndex', $event)"
+      <!-- Registry-driven right header components (e.g. Redis DB Selector) -->
+      <component
+        v-for="(comp, index) in rightComponents"
+        :key="`right-${index}`"
+        :is="comp"
+        :context="headerContext"
       />
+      <slot name="right" :context="headerContext" />
 
       <Tooltip>
         <TooltipTrigger as-child>
@@ -132,10 +185,6 @@ const openConfigModal = () => {
           <p>Query Settings</p>
         </TooltipContent>
       </Tooltip>
-
-      <!-- <Button @click="openAddVariableModal" variant="outline" size="iconSm">
-        <Icon name="hugeicons:settings-01" />
-      </Button> -->
     </div>
   </div>
 </template>

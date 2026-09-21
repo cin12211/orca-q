@@ -38,7 +38,13 @@ describe('useQueryExecution', () => {
   });
 
   it('handles normal query execution via streaming', async () => {
-    const connection = ref({ connectionString: 'test-conn' });
+    const connectionValue = {
+      id: 'connection-1',
+      workspaceId: 'workspace-1',
+      type: DatabaseClientType.POSTGRES,
+      connectionString: 'postgres://localhost/orcaq',
+    };
+    const connection = ref(connectionValue);
     const fileVariables = ref('{}');
     const fieldDefs = ref([]);
 
@@ -61,6 +67,14 @@ describe('useQueryExecution', () => {
         { text: 'SELECT * FROM users', from: 0, to: 18, type: 'Statement' },
       ],
     });
+
+    expect(resultTabsMock.addResultTab).toHaveBeenCalledWith(
+      expect.objectContaining({
+        metadata: expect.objectContaining({
+          connection: connectionValue,
+        }),
+      })
+    );
 
     expect(streamingQuery.executeStreamingQuery).toHaveBeenCalled();
     const callArgs = (streamingQuery.executeStreamingQuery as any).mock
@@ -257,19 +271,24 @@ describe('useQueryExecution', () => {
   });
 
   it('executes Redis commands through the workbench endpoint without streaming', async () => {
-    const connection = ref({
+    const connectionValue = {
+      id: 'redis-1',
+      workspaceId: 'workspace-1',
       type: DatabaseClientType.REDIS,
       method: EConnectionMethod.STRING,
       connectionString: 'redis://127.0.0.1:6379/0',
-    });
+    };
+    const connection = ref(connectionValue);
     const redisDatabaseIndex = ref(5);
     const fileVariables = ref('{}');
     const fieldDefs = ref([]);
 
-    mockFetch.mockResolvedValue({
-      command: ['PING'],
-      result: 'PONG',
-    });
+    let resolveFetch!: (val: any) => void;
+    mockFetch.mockReturnValue(
+      new Promise(resolve => {
+        resolveFetch = resolve;
+      })
+    );
 
     const { executeCurrentStatement } = useQueryExecution({
       getEditorView: getEditorViewMock,
@@ -281,9 +300,23 @@ describe('useQueryExecution', () => {
       buildExplainAnalyzePrefix: () => 'EXPLAIN ANALYZE',
     });
 
-    await executeCurrentStatement({
+    const executionPromise = executeCurrentStatement({
       currentStatements: [{ text: 'PING', from: 0, to: 4, type: 'Statement' }],
     });
+
+    expect(resultTabsMock.addResultTab).toHaveBeenCalledWith(
+      expect.objectContaining({
+        metadata: expect.objectContaining({
+          connection: connectionValue,
+        }),
+      })
+    );
+
+    resolveFetch({
+      command: ['PING'],
+      result: 'PONG',
+    });
+    await executionPromise;
 
     expect(streamingQuery.executeStreamingQuery).not.toHaveBeenCalled();
     expect(mockFetch).toHaveBeenCalledWith(

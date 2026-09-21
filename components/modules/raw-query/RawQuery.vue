@@ -2,7 +2,6 @@
 import { LoadingOverlay } from '#components';
 import type { EditorView } from '@codemirror/view';
 import BaseCodeEditor from '~/components/base/code-editor/BaseCodeEditor.vue';
-import { useRedisWorkspace } from '~/components/modules/redis-workspace/hooks/useRedisWorkspace';
 import { useHotkeys } from '~/core/composables/useHotKeys';
 import { DatabaseClientType } from '~/core/constants/database-client-type';
 import { useEnvironmentTagStore } from '~/core/stores';
@@ -16,17 +15,14 @@ import RawQueryEditorHeader from './components/RawQueryEditorHeader.vue';
 import RawQueryLayout from './components/RawQueryLayout.vue';
 import RawQueryResultTabs from './components/RawQueryResultTabs.vue';
 import VariableEditor from './components/VariableEditor.vue';
-import { useRawQueryEditor, useRawQueryFileContent } from './hooks';
+import {
+  provideRawQueryContext,
+  useRawQueryEditor,
+  useRawQueryFileContent,
+} from './hooks';
 import { useRawQueryEditorContextMenu } from './hooks/useRawQueryEditorContextMenu';
-
-const props = withDefaults(
-  defineProps<{
-    isSupportVariable?: boolean;
-  }>(),
-  {
-    isSupportVariable: true,
-  }
-);
+import MongoRawQueryApprovalDialog from './mongo/components/MongoRawQueryApprovalDialog.vue';
+import { getRawQueryProfile } from './registry';
 
 const route = useRoute('workspaceId-connectionId-explorer-fileId');
 const workspaceId = computed(() => {
@@ -47,23 +43,27 @@ const {
   updateFileContent,
   updateFileVariables,
   connectionsByWsId,
-  fieldDefs,
 } = rawQueryFileContent;
 
-const isRedisConnection = computed(
-  () => connection.value?.type === DatabaseClientType.REDIS
+const isCurrentConnectionStrictMode = computed(() => {
+  if (!currentOpenedConnection.value) {
+    return false;
+  }
+
+  return tagStore
+    .getTagsByIds(currentOpenedConnection.value.tagIds ?? [])
+    .some(tag => tag.strictMode);
+});
+
+const rawQueryProfile = computed(() =>
+  getRawQueryProfile(connection.value?.type)
 );
-const isFormatSupported = computed(() => !isRedisConnection.value);
-const isSqliteConnection = computed(() =>
-  [DatabaseClientType.SQLITE3, DatabaseClientType.BETTER_SQLITE3].includes(
-    connection.value?.type as DatabaseClientType
-  )
+
+const isFormatSupported = computed(
+  () => rawQueryProfile.value.isFormatSupported ?? true
 );
 const isVariableSupported = computed(
-  () =>
-    props.isSupportVariable &&
-    !isRedisConnection.value &&
-    !isSqliteConnection.value
+  () => rawQueryProfile.value.isVariableSupported ?? true
 );
 const isExplainSupported = computed(
   () => connection.value?.type === DatabaseClientType.POSTGRES
@@ -75,18 +75,6 @@ watchEffect(() => {
     ? fileVariables.value
     : '';
 });
-
-const redisConnection = computed(() =>
-  isRedisConnection.value ? connection.value : undefined
-);
-const redisWorkspace = useRedisWorkspace({
-  connection: redisConnection,
-  mode: 'meta',
-});
-
-const updateRedisDatabaseIndex = (value: number) => {
-  redisWorkspace.selectedDatabaseIndex.value = value;
-};
 
 const isMissingVariablesOpen = ref(false);
 const missingVariablesList = ref<string[]>([]);
@@ -124,27 +112,41 @@ const onCancelMissingVariables = () => {
 
 const rawQueryEditor = useRawQueryEditor({
   connection,
-  redisDatabaseIndex: redisWorkspace.selectedDatabaseIndex,
-  fieldDefs,
   fileVariables: effectiveFileVariables,
   beforeExecute: () => requestConnectionExecutionConfirm(),
   promptMissingVariables,
   onUpdateVariables: updateFileVariables,
+  documentText: fileContents,
 });
+
+provideRawQueryContext({
+  workspaceId,
+  connection,
+  connections: connectionsByWsId,
+  selectedConnectionId,
+  databaseType: computed(() => connection.value?.type),
+  disableConnectionSwitch: isCurrentConnectionStrictMode,
+  updateSelectedConnection,
+  currentFile,
+  fileContents,
+  fileVariables,
+  updateFileContent,
+  updateFileVariables,
+  isVariableSupported,
+  isFormatSupported,
+  isExplainSupported,
+  rawQueryEditor,
+  codeEditorLayout: computed(() => appConfigStore.codeEditorLayout),
+});
+
 const {
   cursorInfo,
   extensions,
   codeEditorRef,
-  onExecuteCurrent,
-  onHandleFormatCode,
-  onHandleFormatCurrentStatement,
-  onExplainAnalyzeCurrent,
-  explainAnalyzeOptionItems,
-  serializeMode,
-  currentRawQueryResult,
   queryProcessState,
   executedResults,
   activeResultTabId,
+  pendingMongoApproval,
 } = rawQueryEditor;
 
 const { contextMenuItems, onContextMenuOpen } = useRawQueryEditorContextMenu({
@@ -152,7 +154,7 @@ const { contextMenuItems, onContextMenuOpen } = useRawQueryEditorContextMenu({
   onExplainAnalyzeCurrent: rawQueryEditor.onExplainAnalyzeCurrent,
   onHandleFormatCurrentStatement: rawQueryEditor.onHandleFormatCurrentStatement,
   onHandleFormatCode: rawQueryEditor.onHandleFormatCode,
-  isSupportFormat: isFormatSupported,
+  isFormatSupported,
   isExplainSupported,
   getEditorView: () =>
     codeEditorRef.value?.editorView as EditorView | null | undefined,
@@ -165,16 +167,6 @@ const isConnectionExecutionConfirmOpen = ref(false);
 const executionConfirmTargetConnectionName = ref('');
 const executionConfirmCurrentConnectionName = ref('');
 let resolveConnectionExecutionConfirm: ((value: boolean) => void) | null = null;
-
-const isCurrentConnectionStrictMode = computed(() => {
-  if (!currentOpenedConnection.value) {
-    return false;
-  }
-
-  return tagStore
-    .getTagsByIds(currentOpenedConnection.value.tagIds ?? [])
-    .some(tag => tag.strictMode);
-});
 
 const requestConnectionExecutionConfirm = () => {
   const selectedConnection = connection.value;
@@ -289,6 +281,12 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
+  <MongoRawQueryApprovalDialog
+    :open="Boolean(pendingMongoApproval)"
+    :operations="pendingMongoApproval?.operations || []"
+    @confirm="rawQueryEditor.confirmMongoWrite"
+    @cancel="rawQueryEditor.cancelMongoWrite"
+  />
   <RawQueryConnectionConfirmDialog
     :open="isConnectionExecutionConfirmOpen"
     :target-connection-name="executionConfirmTargetConnectionName"
@@ -312,23 +310,7 @@ onBeforeUnmount(() => {
     <template #content>
       <div class="flex flex-col h-full p-1">
         <div class="flex flex-col h-full border rounded-md">
-          <RawQueryEditorHeader
-            @update:connectionId="updateSelectedConnection"
-            :connections="connectionsByWsId"
-            :connection="connection"
-            :selected-connection-id="selectedConnectionId"
-            :disable-connection-switch="isCurrentConnectionStrictMode"
-            :is-redis-connection="isRedisConnection"
-            :redis-databases="redisWorkspace.databases.value"
-            :redis-database-index="redisWorkspace.selectedDatabaseIndex.value"
-            :workspaceId="workspaceId"
-            :file-variables="fileVariables"
-            :code-editor-layout="appConfigStore.codeEditorLayout"
-            :currentFileInfo="currentFile"
-            :is-support-variable="isVariableSupported"
-            @update:redis-database-index="updateRedisDatabaseIndex"
-            @update:update-file-variables="updateFileVariables"
-          />
+          <RawQueryEditorHeader />
           <div class="h-full flex flex-col overflow-y-auto">
             <RawQueryEditorContextMenu
               :context-menu-items="contextMenuItems"
@@ -348,23 +330,7 @@ onBeforeUnmount(() => {
             </RawQueryEditorContextMenu>
           </div>
 
-          <RawQueryEditorFooter
-            :cursor-info="cursorInfo"
-            :execute-loading="queryProcessState.executeLoading"
-            :is-streaming="queryProcessState.isStreaming"
-            :explain-analyze-option-items="explainAnalyzeOptionItems"
-            :serialize-mode="serializeMode"
-            :is-support-format="isFormatSupported"
-            :is-support-variable="isVariableSupported"
-            :is-explain-supported="isExplainSupported"
-            @on-format-current-statement="onHandleFormatCurrentStatement"
-            @on-format-all="onHandleFormatCode"
-            @on-explain-analyze-current="onExplainAnalyzeCurrent"
-            @toggle-explain-option="rawQueryEditor.toggleExplainOption"
-            @update:serialize-mode="rawQueryEditor.setSerializeMode"
-            @on-execute-current="onExecuteCurrent"
-            @on-cancel-query="rawQueryEditor.cancelStreamingQuery"
-          />
+          <RawQueryEditorFooter />
         </div>
       </div>
     </template>

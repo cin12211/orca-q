@@ -1,5 +1,9 @@
 import { storeToRefs } from 'pinia';
 import type { RoutesNamesList } from '@typed-router/__routes';
+import {
+  MONGO_SCRIPT_PLACEHOLDER,
+  getMongoScriptPlaceholder,
+} from '~/components/modules/raw-query/mongo/constants/mongoScriptCatalog';
 import { useWorkspaceConnectionRoute } from '~/core/composables/useWorkspaceConnectionRoute';
 import { useManagementConnectionStore } from '~/core/stores/managementConnectionStore';
 import { useExplorerFileStore } from '~/core/stores/useExplorerFileStore';
@@ -127,6 +131,58 @@ export const useTabManagement = () => {
       metadata: {
         fileSource: WorkspaceSqlFileSource.ManualCreate,
         openAction: WorkspaceTabOpenAction.NewSqlFile,
+      },
+    });
+  };
+
+  const openNewMongoQueryTab = async (params?: {
+    databaseName?: string;
+    collectionName?: string;
+  }) => {
+    const collectionName = params?.collectionName;
+    const databaseName = params?.databaseName;
+
+    let file;
+    const targetName = collectionName || databaseName;
+    if (targetName) {
+      const fileName = `query-${targetName}`;
+      const existing = explorerFileStore.getFileByTitle(fileName);
+      if (existing) {
+        file = existing;
+      } else {
+        file = await explorerFileStore.createRawQueryFile({
+          title: fileName,
+        });
+        if (file) {
+          await explorerFileStore.updateFileContent({
+            id: file.id,
+            contents: getMongoScriptPlaceholder(databaseName, collectionName),
+          });
+        }
+      }
+    } else {
+      file = await explorerFileStore.createNextQueryFile({
+        starterFileName: 'sample',
+        newFileBaseName: 'new-file',
+        extension: undefined,
+      });
+      if (file) {
+        await explorerFileStore.updateFileContent({
+          id: file.id,
+          contents: getMongoScriptPlaceholder(),
+        });
+      }
+    }
+
+    if (!file) return;
+
+    await openCodeQueryTab({
+      id: file.id,
+      name: file.title,
+      icon: file.icon,
+      metadata: {
+        fileSource: WorkspaceSqlFileSource.ManualCreate,
+        openAction: WorkspaceTabOpenAction.MongoCollectionRawQuery,
       },
     });
   };
@@ -355,6 +411,7 @@ export const useTabManagement = () => {
     openCodeQueryTab,
     openStarterSqlTab,
     openNewSqlFileTab,
+    openNewMongoQueryTab,
     openSchemaItemTab,
     openRedisTab,
     openMongoDatabaseTab,

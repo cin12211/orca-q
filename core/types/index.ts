@@ -10,3 +10,4 @@ export * from './database-metrics.types';
 export * from './instance-insights.types';
 export * from './redis-workspace.types';
 export * from './mapped-column.types';
+export * from './mongodb-raw-query.types';

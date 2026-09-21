@@ -15,6 +15,10 @@ raw-query/
 └── RawQuery.vue          # The main Entrypoint Orchestrator
 ```
 
+MongoDB uses the same facade and extensionless workspace query files. The
+active connection selects a TypeScript CodeMirror mode; tab metadata supplies
+the database/collection context without changing the persisted file name.
+
 ## 2. Key UI Principles
 
 1. **Dumb Components**: Files like `RawQueryEditorHeader.vue` and `RawQueryEditorFooter.vue` do not fetch data or manage connections. Instead, they strictly consume `v-model` properties and `emits` events (e.g. `@on-execute-current`).
@@ -30,5 +34,7 @@ It behaves as the bridge mapping the:
 - CodeMirror extension configurations (`useSqlEditorExtensions`)
 - NDJSON Execution lifecycle handlers (`useQueryExecution`)
 - Active and cached SQL Output Tabs (`useResultTabs`)
+- Mongo execution, metadata completions, and one-time write approvals when the
+  active connection is MongoDB
 
 The `RawQuery.vue` calls `useRawQueryEditor()` once, and simply unpacks specific values to pass visually to the `.vue` template components using `toRefs()`.

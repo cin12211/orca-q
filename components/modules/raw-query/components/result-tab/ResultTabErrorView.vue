@@ -1,40 +1,33 @@
 <script setup lang="ts">
-import { computed, nextTick, ref, watch } from 'vue';
+import { computed, nextTick, watch } from 'vue';
 import type { DecorationItem } from 'shiki';
-import { Button } from '~/components/ui/button';
-import type { ExecutedResultItem } from '../../interfaces';
+import type { RawQueryResultViewContext } from '../../registry';
 
 const props = defineProps<{
-  activeTab: ExecutedResultItem;
+  context: RawQueryResultViewContext;
 }>();
 
-const emits = defineEmits<{
-  (e: 'onChangeView', view: ExecutedResultItem['view']): void;
-}>();
-
-const hasErrors = (tab: ExecutedResultItem) => {
-  return !!tab.metadata.executeErrors;
-};
+const activeTab = computed(() => props.context.activeTab);
 
 // Get error position from normalized error
 const getErrorPosition = computed(() => {
-  const errorData = props.activeTab.metadata.executeErrors?.data as any;
+  const errorData = activeTab.value.metadata.executeErrors?.data as any;
   return errorData?.normalizeError?.position || null;
 });
 
 const getErrorMessage = computed(() => {
-  const executeErrors = props.activeTab.metadata.executeErrors;
+  const executeErrors = activeTab.value.metadata.executeErrors;
   const errorData = executeErrors?.data as any;
   return errorData?.normalizeError?.message || executeErrors?.message || '';
 });
 
 const getErrorHint = computed(() => {
-  const errorData = props.activeTab.metadata.executeErrors?.data as any;
+  const errorData = activeTab.value.metadata.executeErrors?.data as any;
   return errorData?.normalizeError?.hint || null;
 });
 
 const errorDecorations = computed(() => {
-  const query = props.activeTab.metadata.statementQuery;
+  const query = activeTab.value.metadata.statementQuery;
   if (!query) {
     return [];
   }
@@ -101,7 +94,7 @@ watch(
 
 const errorDetails = computed(() => {
   const data = {
-    ...(props.activeTab.metadata.executeErrors?.data || {}),
+    ...(activeTab.value.metadata.executeErrors?.data || {}),
   } as any;
 
   delete data?.normalizeError;
@@ -110,13 +103,13 @@ const errorDetails = computed(() => {
 });
 
 const executedQuery = computed(() => {
-  return props.activeTab.metadata.statementQuery || '';
+  return activeTab.value.metadata.statementQuery || '';
 });
 </script>
 
 <template>
   <div class="h-full p-2 overflow-y-auto">
-    <div v-if="hasErrors(activeTab)" class="space-y-2">
+    <div v-if="activeTab.metadata.executeErrors" class="space-y-2">
       <!-- Error Message Section -->
       <div class="flex items-center justify-between gap-2">
         <div>

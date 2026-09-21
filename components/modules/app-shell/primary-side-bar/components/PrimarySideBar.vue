@@ -80,6 +80,10 @@ watch(
 
 const current = computed(() => {
   if (currentFamily.value === EConnectionFamily.MONGODB) {
+    if (activityStore.activityActive === ActivityBarItemType.Explorer) {
+      return ManagementExplorer;
+    }
+
     if (activityStore.activityActive === ActivityBarItemType.Schemas) {
       return ManagementMongoSchemas;
     }

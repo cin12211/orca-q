@@ -31,6 +31,7 @@ export enum WorkspaceTabOpenAction {
   SqlShortcut = 'sql-shortcut',
   NewSqlFile = 'new-sql-file',
   InstanceInsights = 'instance-insights',
+  MongoCollectionRawQuery = 'mongo-collection-raw-query',
 }
 
 export enum WorkspaceSqlFileSource {

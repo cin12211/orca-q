@@ -4,6 +4,7 @@ import { resolve } from 'node:path';
 import { getLatestVersion } from '../../core/data/changelogs/changelog';
 import {
   getRedisFixtureConfig,
+  getMongoFixtureConfig,
   getSqlFixtureCatalog,
   hasD1LiveConnection,
   hasOracleLiveConnection,
@@ -31,6 +32,17 @@ function sanitizeSqlFixture(
 
 function sanitizeRedisFixture(
   config: ReturnType<typeof getRedisFixtureConfig>
+) {
+  return {
+    host: config.host,
+    port: config.port,
+    database: config.database,
+    source: config.source,
+  };
+}
+
+function sanitizeMongoFixture(
+  config: ReturnType<typeof getMongoFixtureConfig>
 ) {
   return {
     host: config.host,
@@ -121,6 +133,7 @@ export default async function globalSetup(config: FullConfig) {
           mysql: sanitizeSqlFixture(sqlFixtures.mysql),
           mariadb: sanitizeSqlFixture(sqlFixtures.mariadb),
           redis: sanitizeRedisFixture(getRedisFixtureConfig()),
+          mongodb: sanitizeMongoFixture(getMongoFixtureConfig()),
         },
       },
       null,

@@ -7,10 +7,12 @@ import {
   getCurrentStatement,
 } from '~/components/base/code-editor/utils';
 import type { RowData } from '~/components/base/data-grid/utils';
+import { parseRedisDatabaseIndex } from '~/components/modules/redis-workspace/utils/redisWorkspace';
 import { DatabaseClientType } from '~/core/constants/database-client-type';
 import { uuidv4 } from '~/core/helpers';
 import { getConnectionParams } from '~/core/helpers/connection-helper';
 import type { Connection } from '~/core/stores';
+import { useRedisWorkspaceStore } from '~/core/stores/useRedisWorkspaceStore';
 import type { DatabaseDriverError } from '~/core/types';
 import { ViewMode, type ExecutedResultItem } from '../interfaces';
 import { extractParamsFromSql } from '../utils';
@@ -20,9 +22,8 @@ import { executeStreamingQuery } from './useStreamingQuery';
 interface UseQueryExecutionParams {
   getEditorView: () => EditorView | null;
   connection: Ref<Connection | undefined>;
-  redisDatabaseIndex?: Ref<number>;
   fileVariables: Ref<string>;
-  fieldDefs: Ref<FieldDef[]>;
+  fieldDefs?: Ref<FieldDef[]>;
   resultTabs: ResultTabsReturn;
   buildExplainAnalyzePrefix: () => string;
   beforeExecute?: () => Promise<boolean>;
@@ -100,15 +101,16 @@ const normalizeRedisResult = (
 export function useQueryExecution({
   getEditorView,
   connection,
-  redisDatabaseIndex,
   fileVariables,
-  fieldDefs,
+  fieldDefs: fieldDefsProp,
   resultTabs,
   buildExplainAnalyzePrefix,
   beforeExecute,
   promptMissingVariables,
   onUpdateVariables,
 }: UseQueryExecutionParams) {
+  const redisWorkspaceStore = useRedisWorkspaceStore();
+  const fieldDefs = fieldDefsProp ?? ref<FieldDef[]>([]);
   const currentRawQueryResult = shallowRef<RowData[]>([]);
   const rawResponse = shallowRef<
     | {
@@ -249,7 +251,7 @@ export function useQueryExecution({
         executedAt: new Date(),
         executeErrors: undefined,
         fieldDefs: undefined,
-        connection: undefined,
+        connection: connection.value,
       },
       result: [],
       view: executedResultView,
@@ -277,7 +279,14 @@ export function useQueryExecution({
               username: connection.value?.username,
               password: connection.value?.password,
               database: connection.value?.database,
-              databaseIndex: redisDatabaseIndex?.value,
+              databaseIndex: connection.value?.id
+                ? (redisWorkspaceStore.sessions[connection.value.id]
+                    ?.selectedDatabaseIndex ??
+                  parseRedisDatabaseIndex(
+                    connection.value?.database,
+                    connection.value?.connectionString
+                  ))
+                : 0,
               ssl: connection.value?.ssl,
               ssh: connection.value?.ssh,
               command: executeQuery,

@@ -61,6 +61,37 @@ desktop support.
 - When 10px font size is needed (text 10), always use `text-xxs` (defined in `tailwind.css` as `0.625rem`). Never use arbitrary classes like `text-[10px]` or `text-10`.
 - For compact controls (height 24px), use component size prop `size="xxs"` (e.g. `Input`, `Button`) instead of custom size utility overrides.
 
+## Raw Query Autocomplete & Suggestion Rules
+
+- **Always Use Custom Theming:** All autocomplete implementations in Raw Query editors (SQL, MongoDB, Redis, etc.) MUST use the OrcaQ custom autocomplete styling extension (`...sqlAutoCompletion({ override: [completionSource] })` from `~/components/base/code-editor/extensions`). NEVER use raw or unstyled `@codemirror/autocomplete` (`autocompletion()`).
+- **Valid Icon Types:** Every completion item `type` MUST map to an existing `CompletionIcon` enum value (`CompletionIcon.Keyword`, `CompletionIcon.Table`, `CompletionIcon.Database`, `CompletionIcon.Method`, `CompletionIcon.Variable`, `CompletionIcon.Type`, `CompletionIcon.Field`) so custom SVG icons render properly. Never use arbitrary or unmapped string literals like `'class'`.
+- **Structured Tooltips:** Suggestion detail/info popovers MUST use styled DOM structures matching OrcaQ design system (`min-w-[...]`, `font-medium text-sm`, `text-xs text-muted-foreground`, badges, and relevant documentation links). Never attach irrelevant documentation links (e.g. do not link MongoDB CRUD docs to console methods or JS keywords).
+- **Strict Receiver & Context Scoping:** Dot-completion (`object.`) MUST be strictly scoped:
+  - Top-level language helpers (`console.`) must only suggest their actual methods (`log`, `warn`, `error`, etc.).
+  - Database instances (`db.`, `<dbAlias>.`) must only suggest database methods and collections of that specific database — NEVER collection CRUD methods (`find`, `aggregate`, etc.).
+  - Collection instances (`db.<collection>.`, `db.collection('...').`, or collection variables) are the ONLY entities that suggest collection CRUD methods.
+  - Chained cursor calls (`.find().`) must suggest cursor methods (`sort`, `limit`, `toArray`, etc.).
+  - Unknown objects or variables must return empty suggestions `[]` instead of incorrectly falling back to database/collection methods.
+  - Leverage `@codemirror/lang-javascript` (`completionPath`, `localCompletionSource`) for AST-aware member resolution and local variable discovery whenever applicable.
+
+## TypeScript Enum & Type Standards
+
+- **Enum Over String Literal Unions:** Always use TypeScript `enum` (with `PascalCase` enum name and `SCREAMING_SNAKE_CASE` keys) for fixed sets of domain values, options, policies, view modes, status flags, and registry configurations. NEVER declare string literal union types (e.g. `type ExecutionPolicy = 'always' | 'success-only' | 'error-only'`).
+- **Enforce Enum References Across Codebase:** When declaring configurations, options, props, or conditional checks, always reference the enum values directly (e.g. `RawQueryResultExecutionPolicy.ALWAYS`, `ViewMode.RESULT`) instead of raw string literals or type assertions (`'always' as const`).
+- **Export Through Folder Index:** Enums must be exported through their module/folder `index.ts` so all external consumers import them cleanly and uniformly.
+
+## Mistake Tracking & Logging Rule
+
+- **Mandatory Self-Logging on User Feedback:** Whenever the user points out an error, bug, incorrect implementation, poor styling, or reminds the agent about something that was done wrong, the agent MUST automatically log the mistake into the folder:
+  `docs/.mistake/`
+- **File Naming & Format:** Create a new markdown file named `YYYY-MM-DD-<short-topic-slug>.md` (e.g. `docs/.mistake/2026-09-13-raw-query-suggestion-scoping.md`).
+- **Content Requirements:** Every mistake log must include:
+  1. **Date & Context:** When it occurred, feature/files involved.
+  2. **User Feedback / Complaint:** Exact issue reported by the user.
+  3. **Root Cause & Agent Mistake:** Why the mistake happened and what the agent overlooked.
+  4. **Resolution Applied:** How it was fixed.
+  5. **Prevention Checklist & Lessons Learned:** Concrete rules to prevent repeating the mistake in future tasks.
+
 ## How To Run The Project
 
 Commands are defined in `package.json`. This repo supports Bun, npm scripts, and

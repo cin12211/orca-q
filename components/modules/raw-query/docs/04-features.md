@@ -27,3 +27,17 @@ The `raw-query` module is built to provide a powerful, IDE-like experience for w
 
 - **Native Underline Tracebacks**: Instead of a generic "Query Failed" toast, the query engine extracts precise `DatabaseError` properties from the Postgres AST.
 - **Offset Mapping**: The CodeMirror interface automatically draws a squiggly red line exactly underneath the faulty syntax (shifted mapped coordinates), accompanied by detailed hover hints containing the `Code`, `Position`, and Postgres `Hint`.
+
+## 6. MongoDB Raw Query (Beta)
+
+- MongoDB collection actions create extensionless query files and open them in
+  TypeScript mode with collection, field, BSON, cursor, and operator
+  suggestions.
+- The placeholder is `return db.collection('COLLECTION').find({}).limit(100)`;
+  it is ghost text only and never changes the file.
+- Supported V1 capabilities are bounded reads/cursors and explicit native
+  writes with confirmation. Use `db.getSiblingDB('database_name')` to select a
+  database in the script. Sessions, transactions, GridFS, change streams,
+  `$where`, `$function`, and map-reduce are unsupported.
+- Default limits are 10,000 documents, 20 MB values, 1 MB source, 2 MB
+  parameters, and 100 manifest operations.
