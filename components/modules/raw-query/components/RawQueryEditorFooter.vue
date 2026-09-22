@@ -4,42 +4,26 @@ import {
   TooltipContent,
   TooltipTrigger,
   DropdownMenu,
-  DropdownMenuCheckboxItem,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
-  DropdownMenuRadioGroup,
-  DropdownMenuRadioItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '#components';
-import type {
-  EditorCursor,
-  ExplainAnalyzeOptionItem,
-  ExplainAnalyzeSerializeMode,
-  ExplainAnalyzeToggleOptionKey,
-} from '../interfaces';
-
-const isExplainAnalyzeMenuOpen = ref(false);
+import type { EditorCursor } from '../interfaces';
 
 defineProps<{
   cursorInfo: EditorCursor;
   executeLoading: boolean;
   isStreaming: boolean;
   isRawViewMode?: boolean;
-  explainAnalyzeOptionItems: ExplainAnalyzeOptionItem[];
-  serializeMode: ExplainAnalyzeSerializeMode;
   isSupportFormat?: boolean;
   isSupportVariable?: boolean;
-  isExplainSupported?: boolean;
 }>();
 
 defineEmits<{
   (e: 'onFormatCurrentStatement'): void;
   (e: 'onFormatAll'): void;
-  (e: 'onExplainAnalyzeCurrent'): void;
-  (e: 'toggleExplainOption', value: ExplainAnalyzeToggleOptionKey): void;
-  (e: 'update:serializeMode', value: ExplainAnalyzeSerializeMode): void;
   (e: 'onExecuteCurrent'): void;
   (e: 'update:isRawViewMode', value: boolean): void;
   (e: 'onCancelQuery'): void;
@@ -113,84 +97,7 @@ defineEmits<{
         </TooltipContent>
       </Tooltip>
 
-      <Tooltip v-if="isExplainSupported">
-        <TooltipTrigger>
-          <div class="flex items-center">
-            <Button
-              @click="$emit('onExplainAnalyzeCurrent')"
-              variant="outline"
-              size="xxs"
-              class="rounded-r-none"
-            >
-              <Icon name="hugeicons:analytics-up"> </Icon>
-              Explain
-              <ContextMenuShortcut>⌘E</ContextMenuShortcut>
-            </Button>
-
-            <DropdownMenu v-model:open="isExplainAnalyzeMenuOpen">
-              <DropdownMenuTrigger as-child>
-                <Button
-                  variant="outline"
-                  size="iconSm"
-                  class="rounded-l-none border-l-0 px-2"
-                >
-                  <Icon
-                    name="hugeicons:arrow-down-01"
-                    class="size-4! min-w-4"
-                  />
-                </Button>
-              </DropdownMenuTrigger>
-
-              <DropdownMenuContent align="end" class="min-w-52">
-                <DropdownMenuLabel class="py-0"
-                  >Explain Analyze Options</DropdownMenuLabel
-                >
-
-                <DropdownMenuSeparator />
-
-                <DropdownMenuCheckboxItem
-                  v-for="item in explainAnalyzeOptionItems"
-                  :key="item.key"
-                  :model-value="item.checked"
-                  @select.prevent
-                  @update:model-value="$emit('toggleExplainOption', item.key)"
-                  class="h-6 cursor-pointer"
-                >
-                  {{ item.label }}
-                </DropdownMenuCheckboxItem>
-
-                <DropdownMenuSeparator />
-
-                <DropdownMenuLabel class="py-0">Serialize</DropdownMenuLabel>
-                <DropdownMenuRadioGroup
-                  :model-value="serializeMode"
-                  @update:model-value="
-                    $emit(
-                      'update:serializeMode',
-                      $event as ExplainAnalyzeSerializeMode
-                    )
-                  "
-                >
-                  <DropdownMenuRadioItem value="NONE" class="h-6 cursor-pointer"
-                    >None</DropdownMenuRadioItem
-                  >
-                  <DropdownMenuRadioItem value="TEXT" class="h-6 cursor-pointer"
-                    >Text</DropdownMenuRadioItem
-                  >
-                  <DropdownMenuRadioItem
-                    value="BINARY"
-                    class="h-6 cursor-pointer"
-                    >Binary</DropdownMenuRadioItem
-                  >
-                </DropdownMenuRadioGroup>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-        </TooltipTrigger>
-        <TooltipContent>
-          <p>Run Explain Analyze (⌘E) or open options</p>
-        </TooltipContent>
-      </Tooltip>
+      <slot name="extra" />
 
       <Tooltip>
         <TooltipTrigger as-child>

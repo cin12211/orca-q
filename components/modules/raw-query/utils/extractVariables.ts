@@ -1,4 +1,4 @@
-import { DatabaseClientType } from '~/core/constants/database-client-type';
+import type { ParameterStyle } from '../contracts';
 
 interface ParameterExtractor {
   extract(sql: string): string[];
@@ -202,15 +202,18 @@ class MssqlExtractor implements ParameterExtractor {
 }
 
 export class ParameterExtractorFactory {
-  static getExtractor(dbType?: string): ParameterExtractor {
-    if (dbType === DatabaseClientType.MSSQL) {
+  static getExtractor(parameterStyle?: ParameterStyle): ParameterExtractor {
+    if (parameterStyle === 'at') {
       return new MssqlExtractor();
     }
     return new StandardColonExtractor();
   }
 }
 
-export function extractParamsFromSql(sql: string, dbType?: string): string[] {
-  const extractor = ParameterExtractorFactory.getExtractor(dbType);
+export function extractParamsFromSql(
+  sql: string,
+  parameterStyle?: ParameterStyle
+): string[] {
+  const extractor = ParameterExtractorFactory.getExtractor(parameterStyle);
   return extractor.extract(sql);
 }

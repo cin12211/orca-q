@@ -8,11 +8,11 @@ import {
 
 interface EditorContextMenuActions {
   onExecuteCurrent: () => void;
-  onExplainAnalyzeCurrent: () => void;
   onHandleFormatCurrentStatement: () => void;
   onHandleFormatCode: () => void;
   isSupportFormat?: Ref<boolean>;
-  isExplainSupported?: Ref<boolean>;
+  /** Items contributed by the engine, e.g. PostgreSQL's Analyze Query entry. */
+  extraItems?: Ref<ContextMenuItem[]>;
   // Accepts any EditorView-like object (including readonly refs)
   getEditorView: () => EditorView | null | undefined;
 }
@@ -105,6 +105,13 @@ export function useRawQueryEditorContextMenu(
   const contextMenuItems = computed<ContextMenuItem[]>(() => {
     const noStatement = !hasStatement.value;
     const noContent = !hasContent.value;
+    // Contributed actions act on the current statement, like Execute, so they
+    // are disabled together with it.
+    const contributedItems = (actions.extraItems?.value ?? []).map(item =>
+      item.type === ContextMenuItemType.ACTION
+        ? { ...item, disabled: item.disabled || noStatement }
+        : item
+    );
 
     return [
       {
@@ -115,18 +122,7 @@ export function useRawQueryEditorContextMenu(
         select: actions.onExecuteCurrent,
         disabled: noStatement,
       },
-      ...(actions.isExplainSupported?.value
-        ? [
-            {
-              type: ContextMenuItemType.ACTION,
-              title: 'Analyze Query',
-              icon: 'hugeicons:analytics-01',
-              shortcut: '⌘E',
-              select: actions.onExplainAnalyzeCurrent,
-              disabled: noStatement,
-            } satisfies ContextMenuItem,
-          ]
-        : []),
+      ...contributedItems,
       { type: ContextMenuItemType.SEPARATOR },
       ...(actions.isSupportFormat?.value
         ? [

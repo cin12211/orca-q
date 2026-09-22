@@ -7,24 +7,22 @@ import {
   getCurrentStatement,
 } from '~/components/base/code-editor/utils';
 import type { RowData } from '~/components/base/data-grid/utils';
-import { DatabaseClientType } from '~/core/constants/database-client-type';
+import type { DatabaseClientType } from '~/core/constants/database-client-type';
 import { uuidv4 } from '~/core/helpers';
-import { getConnectionParams } from '~/core/helpers/connection-helper';
 import type { Connection } from '~/core/stores';
-import type { DatabaseDriverError } from '~/core/types';
+import type { RawQueryCapabilities, RawQueryExecutor } from '../contracts';
 import { ViewMode, type ExecutedResultItem } from '../interfaces';
 import { extractParamsFromSql } from '../utils';
 import type { ResultTabsReturn } from './useResultTabs';
-import { executeStreamingQuery } from './useStreamingQuery';
 
 interface UseQueryExecutionParams {
   getEditorView: () => EditorView | null;
   connection: Ref<Connection | undefined>;
-  redisDatabaseIndex?: Ref<number>;
+  capabilities: Ref<RawQueryCapabilities>;
+  executor: Ref<RawQueryExecutor>;
   fileVariables: Ref<string>;
   fieldDefs: Ref<FieldDef[]>;
   resultTabs: ResultTabsReturn;
-  buildExplainAnalyzePrefix: () => string;
   beforeExecute?: () => Promise<boolean>;
   promptMissingVariables?: (
     missing: string[]
@@ -32,79 +30,18 @@ interface UseQueryExecutionParams {
   onUpdateVariables?: (value: string) => void;
 }
 
-type RedisCommandResponse = {
-  command?: string[];
-  result: unknown;
-};
-
-const isPlainObject = (value: unknown): value is Record<string, unknown> => {
-  if (value === null || typeof value !== 'object') {
-    return false;
-  }
-
-  const prototype = Object.getPrototypeOf(value);
-  return prototype === Object.prototype || prototype === null;
-};
-
-const toFieldDefs = (fieldNames: string[]) =>
-  fieldNames.map(name => ({ name }) as FieldDef);
-
-const normalizeRedisResult = (
-  value: unknown
-): {
-  rows: RowData[];
-  fields: FieldDef[];
-} => {
-  if (Array.isArray(value)) {
-    if (value.every(item => isPlainObject(item))) {
-      const rows = value as RowData[];
-      const fieldNames = Array.from(
-        new Set(
-          rows.flatMap(row => Object.keys(row as Record<string, unknown>))
-        )
-      );
-
-      return {
-        rows,
-        fields: toFieldDefs(fieldNames),
-      };
-    }
-
-    return {
-      rows: value.map((item, index) => ({
-        index,
-        value: item,
-      })),
-      fields: toFieldDefs(['index', 'value']),
-    };
-  }
-
-  if (isPlainObject(value)) {
-    const rows = [value as RowData];
-    return {
-      rows,
-      fields: toFieldDefs(Object.keys(value)),
-    };
-  }
-
-  return {
-    rows: [{ value }],
-    fields: toFieldDefs(['value']),
-  };
-};
-
 /**
  * Handles the full SQL query execution lifecycle:
- * prepare → execute (fetch / streaming) → update result tabs → abort.
+ * prepare → execute (injected executor) → update result tabs → abort.
  */
 export function useQueryExecution({
   getEditorView,
   connection,
-  redisDatabaseIndex,
+  capabilities,
+  executor,
   fileVariables,
   fieldDefs,
   resultTabs,
-  buildExplainAnalyzePrefix,
   beforeExecute,
   promptMissingVariables,
   onUpdateVariables,
@@ -148,9 +85,13 @@ export function useQueryExecution({
   const executeCurrentStatement = async ({
     currentStatements,
     queryPrefix,
+    executor: overrideExecutor,
+    resultView,
   }: {
     currentStatements: SyntaxTreeNodeData[];
     queryPrefix?: string;
+    executor?: RawQueryExecutor;
+    resultView?: ViewMode;
   }) => {
     if (!currentStatements.length) {
       return;
@@ -179,18 +120,12 @@ export function useQueryExecution({
       console.log('fileParameters error::', e);
     }
 
-    const isRedisConnection =
-      connection.value?.type === DatabaseClientType.REDIS;
-    const isSqliteConnection = [
-      DatabaseClientType.SQLITE3,
-      DatabaseClientType.BETTER_SQLITE3,
-    ].includes(connection.value?.type as DatabaseClientType);
-    const isVariableSupported = !isRedisConnection && !isSqliteConnection;
+    const isVariableSupported = capabilities.value.supportsVariables;
 
     if (isVariableSupported && promptMissingVariables) {
       const extracted = extractParamsFromSql(
         executeQuery,
-        connection.value?.type
+        capabilities.value.parameterStyle
       );
       const missing = extracted.filter(param => !(param in fileParameters));
       if (missing.length > 0) {
@@ -217,13 +152,11 @@ export function useQueryExecution({
       }
     }
 
-    let executedResultView: ExecutedResultItem['view'] = ViewMode.RESULT;
+    const executedResultView: ExecutedResultItem['view'] =
+      resultView ?? ViewMode.RESULT;
 
-    if (queryPrefix && !isRedisConnection) {
+    if (queryPrefix) {
       executeQuery = `${queryPrefix} ${executeQuery}`;
-      if (queryPrefix.startsWith('EXPLAIN')) {
-        executedResultView = ViewMode.EXPLAIN;
-      }
     }
 
     fieldDefs.value = [];
@@ -262,211 +195,98 @@ export function useQueryExecution({
 
     const rowBuffer: RowData[] = []; // accumulator, không reactive
 
-    if (isRedisConnection) {
-      try {
-        const startedAt = Date.now();
-        const redisResponse = await $fetch<RedisCommandResponse>(
-          '/api/redis/workbench/execute',
-          {
-            method: 'POST',
-            body: {
-              method: connection.value?.method,
-              stringConnection: connection.value?.connectionString,
-              host: connection.value?.host,
-              port: connection.value?.port,
-              username: connection.value?.username,
-              password: connection.value?.password,
-              database: connection.value?.database,
-              databaseIndex: redisDatabaseIndex?.value,
-              ssl: connection.value?.ssl,
-              ssh: connection.value?.ssh,
-              command: executeQuery,
-            },
+    const activeExecutor = overrideExecutor ?? executor.value;
+    queryProcessState.isStreaming = activeExecutor.streaming === true;
+    queryProcessState.executeLoading = !queryProcessState.isStreaming;
+    // Handlers can fire synchronously, so track ownership without the `abort` const (TDZ).
+    let ownAbort: (() => void) | null = null;
+    const releaseOwnAbort = () => {
+      if (activeStreamAbort === ownAbort) activeStreamAbort = null;
+    };
+
+    const { abort } = activeExecutor.execute(
+      {
+        connection: connection.value,
+        query: executeQuery,
+        params: fileParameters,
+      },
+      {
+        onMeta: (fields, command) => {
+          fieldDefs.value = fields;
+          executedResultItem.metadata.fieldDefs = fields;
+          executedResultItem.metadata.connection = connection.value;
+          executedResultItem.metadata.command = command;
+          resultTabs.refreshResultTab(
+            executedResultItem.id,
+            executedResultItem
+          );
+        },
+        onRows: (batch, totalSoFar) => {
+          rowBuffer.push(...batch);
+          queryProcessState.streamingRowCount = totalSoFar;
+          executedResultItem.result = rowBuffer;
+          executedResultItem.metadata.rowCount = totalSoFar;
+          currentRawQueryResult.value = rowBuffer;
+          resultTabs.refreshResultTab(
+            executedResultItem.id,
+            executedResultItem
+          );
+        },
+        onComplete: ({ rowCount, queryTime }) => {
+          queryProcessState.executeLoading = false;
+          queryProcessState.isStreaming = false;
+          queryProcessState.queryTime = queryTime;
+          queryProcessState.executeErrors = undefined;
+          queryProcessState.streamingRowCount = rowCount;
+
+          executedResultItem.metadata.queryTime = queryTime;
+          executedResultItem.metadata.rowCount = rowCount;
+
+          rawResponse.value = {
+            rows: executedResultItem.result,
+            fields: fieldDefs.value,
+            queryTime,
+          };
+
+          resultTabs.refreshResultTab(
+            executedResultItem.id,
+            executedResultItem
+          );
+          releaseOwnAbort();
+        },
+        onError: ({ message, detail }) => {
+          const resolvedError = { message, data: detail || { message } };
+
+          queryProcessState.executeLoading = false;
+          queryProcessState.isStreaming = false;
+          queryProcessState.executeErrors = resolvedError;
+          executedResultItem.metadata.executeErrors = resolvedError;
+          executedResultItem.view = ViewMode.ERROR;
+
+          const editorView = getEditorView();
+          if (editorView && detail && capabilities.value.language !== 'redis') {
+            applySqlErrorDiagnostics({
+              editorView: editorView as EditorView,
+              originalSql: currentStatement.text,
+              statementFrom: Number(currentStatement.from),
+              fileParameters,
+              errorDetail: detail,
+              clientType: connection.value?.type as DatabaseClientType,
+              // The util concatenates this verbatim; `undefined` would become the text "undefined".
+              queryPrefix: queryPrefix ?? '',
+            });
           }
-        );
 
-        const normalizedResult = normalizeRedisResult(redisResponse.result);
-        const queryTime = Date.now() - startedAt;
-
-        fieldDefs.value = normalizedResult.fields;
-        executedResultItem.metadata.fieldDefs = normalizedResult.fields;
-        executedResultItem.metadata.connection = connection.value;
-        executedResultItem.metadata.command =
-          redisResponse.command?.[0] ||
-          executeQuery.trim().split(/\s+/)[0]?.toUpperCase() ||
-          'REDIS';
-        executedResultItem.metadata.queryTime = queryTime;
-        executedResultItem.metadata.rowCount = normalizedResult.rows.length;
-        executedResultItem.result = normalizedResult.rows;
-
-        rawResponse.value = {
-          rows: normalizedResult.rows,
-          fields: normalizedResult.fields,
-          queryTime,
-        };
-        currentRawQueryResult.value = normalizedResult.rows;
-        queryProcessState.executeLoading = false;
-        queryProcessState.isStreaming = false;
-        queryProcessState.streamingRowCount = normalizedResult.rows.length;
-        queryProcessState.queryTime = queryTime;
-        queryProcessState.executeErrors = undefined;
-
-        resultTabs.refreshResultTab(executedResultItem.id, executedResultItem);
-      } catch (error: any) {
-        const message =
-          error?.data?.message ||
-          error?.message ||
-          'Failed to execute Redis command.';
-
-        queryProcessState.executeLoading = false;
-        queryProcessState.isStreaming = false;
-        queryProcessState.executeErrors = {
-          message,
-          data: error?.data || { message },
-        };
-        executedResultItem.metadata.executeErrors =
-          queryProcessState.executeErrors;
-        executedResultItem.view = ViewMode.ERROR;
-
-        resultTabs.refreshResultTab(executedResultItem.id, executedResultItem);
+          resultTabs.refreshResultTab(
+            executedResultItem.id,
+            executedResultItem
+          );
+          releaseOwnAbort();
+        },
       }
+    );
 
-      return;
-    }
-
-    if (queryPrefix && executedResultView === ViewMode.EXPLAIN) {
-      try {
-        const connParams = getConnectionParams(connection.value);
-        const result = await $fetch('/api/query/raw-execute', {
-          method: 'POST',
-          body: {
-            ...connParams,
-            query: executeQuery,
-            params: fileParameters,
-          },
-
-          onResponseError: ({ response }) => {
-            const errorDetail = response._data?.data as DatabaseDriverError;
-            const editorView = getEditorView();
-            if (editorView && errorDetail) {
-              applySqlErrorDiagnostics({
-                editorView: editorView as EditorView,
-                originalSql: currentStatement.text,
-                statementFrom: Number(currentStatement.from),
-                fileParameters,
-                errorDetail,
-                clientType:
-                  (connection.value?.type as unknown as DatabaseClientType) ||
-                  DatabaseClientType.POSTGRES,
-                queryPrefix,
-              });
-            }
-          },
-        });
-
-        fieldDefs.value = result.fields;
-        executedResultItem.metadata.fieldDefs = result.fields;
-        executedResultItem.result = result.rows;
-        executedResultItem.metadata.queryTime = result.queryTime || 0;
-        executedResultItem.metadata.connection = connection.value;
-
-        rawResponse.value = result;
-        currentRawQueryResult.value = result.rows as RowData[];
-        queryProcessState.executeErrors = undefined;
-        queryProcessState.queryTime = result.queryTime || 0;
-      } catch (e: any) {
-        queryProcessState.executeErrors = e.data;
-        executedResultItem.metadata.executeErrors = e.data;
-        executedResultItem.view = ViewMode.ERROR;
-      }
-
-      queryProcessState.executeLoading = false;
-
-      // Refresh the tab with final data
-      resultTabs.refreshResultTab(executedResultItem.id, executedResultItem);
-      return;
-    }
-
-    // Regular queries: use streaming for progressive rendering
-    queryProcessState.isStreaming = true;
-    queryProcessState.executeLoading = false;
-
-    const connParams = getConnectionParams(connection.value);
-    const { abort } = executeStreamingQuery({
-      query: executeQuery,
-      ...connParams,
-      params: fileParameters,
-      onMeta: (fields, command) => {
-        fieldDefs.value = fields;
-        executedResultItem.metadata.fieldDefs = fields;
-        executedResultItem.metadata.connection = connection.value;
-        executedResultItem.metadata.command = command;
-
-        // Refresh tab to show column headers
-        resultTabs.refreshResultTab(executedResultItem.id, executedResultItem);
-      },
-      onRows: (batch, totalSoFar) => {
-        rowBuffer.push(...batch);
-        queryProcessState.streamingRowCount = totalSoFar;
-        executedResultItem.result = rowBuffer;
-        executedResultItem.metadata.rowCount = totalSoFar;
-        currentRawQueryResult.value = rowBuffer;
-        resultTabs.refreshResultTab(executedResultItem.id, executedResultItem);
-      },
-      onDone: (rowCount, queryTime) => {
-        queryProcessState.executeLoading = false;
-        queryProcessState.isStreaming = false;
-        queryProcessState.queryTime = queryTime;
-        queryProcessState.executeErrors = undefined;
-        queryProcessState.streamingRowCount = rowCount;
-
-        executedResultItem.metadata.queryTime = queryTime;
-        executedResultItem.metadata.rowCount = rowCount;
-
-        rawResponse.value = {
-          rows: executedResultItem.result,
-          fields: fieldDefs.value,
-          queryTime,
-        };
-
-        // Final refresh
-        resultTabs.refreshResultTab(executedResultItem.id, executedResultItem);
-
-        activeStreamAbort = null;
-      },
-      onError: (message, errorDetail) => {
-        const resolvedError = {
-          message,
-          data: errorDetail || { message },
-        };
-
-        queryProcessState.executeLoading = false;
-        queryProcessState.isStreaming = false;
-        queryProcessState.executeErrors = resolvedError;
-        executedResultItem.metadata.executeErrors = resolvedError;
-        executedResultItem.view = ViewMode.ERROR;
-
-        const editorView = getEditorView();
-        if (editorView && errorDetail) {
-          applySqlErrorDiagnostics({
-            editorView: editorView as EditorView,
-            originalSql: currentStatement.text,
-            statementFrom: Number(currentStatement.from),
-            fileParameters,
-            errorDetail: errorDetail,
-            clientType:
-              (connection.value?.type as unknown as DatabaseClientType) ||
-              DatabaseClientType.POSTGRES,
-          });
-        }
-
-        // Refresh tab to show error
-        resultTabs.refreshResultTab(executedResultItem.id, executedResultItem);
-
-        activeStreamAbort = null;
-      },
-    });
-
+    ownAbort = abort;
     activeStreamAbort = abort;
   };
 
@@ -481,21 +301,6 @@ export function useQueryExecution({
 
     executeCurrentStatement({
       currentStatements,
-    });
-  };
-
-  /**
-   * Execute EXPLAIN ANALYZE for the SQL statement at current cursor position.
-   */
-  const onExplainAnalyzeCurrent = () => {
-    const editorView = getEditorView();
-    if (!editorView) return;
-
-    const { currentStatements } = getCurrentStatement(editorView);
-
-    executeCurrentStatement({
-      currentStatements,
-      queryPrefix: buildExplainAnalyzePrefix(),
     });
   };
 
@@ -517,7 +322,6 @@ export function useQueryExecution({
     queryProcessState,
     executeCurrentStatement,
     onExecuteCurrent,
-    onExplainAnalyzeCurrent,
     cancelStreamingQuery,
   };
 }

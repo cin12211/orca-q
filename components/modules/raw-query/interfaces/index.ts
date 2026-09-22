@@ -12,31 +12,6 @@ export interface EditorCursor {
   column: number;
 }
 
-export type ExplainAnalyzeOptionKey =
-  | 'BUFFERS'
-  | 'COSTS'
-  | 'GENERIC_PLAN'
-  | 'MEMORY'
-  | 'SERIALIZE'
-  | 'SETTINGS'
-  | 'SUMMARY'
-  | 'TIMING'
-  | 'VERBOSE'
-  | 'WAL';
-
-export type ExplainAnalyzeToggleOptionKey = Exclude<
-  ExplainAnalyzeOptionKey,
-  'SERIALIZE'
->;
-
-export type ExplainAnalyzeSerializeMode = 'NONE' | 'TEXT' | 'BINARY';
-
-export interface ExplainAnalyzeOptionItem {
-  key: ExplainAnalyzeToggleOptionKey;
-  label: string;
-  checked: boolean;
-}
-
 export enum ViewMode {
   RESULT = 'result',
   ERROR = 'error',

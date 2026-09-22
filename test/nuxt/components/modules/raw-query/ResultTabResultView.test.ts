@@ -3,6 +3,7 @@ import { nextTick, ref } from 'vue';
 import { mount } from '@vue/test-utils';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { DEFAULT_HASH_INDEX_WIDTH } from '~/components/base/data-grid/constants';
+import { postgresCommandResult } from '~/components/modules/driver/postgres/raw-query/services';
 import { DatabaseClientType } from '~/core/constants/database-client-type';
 import { useSchemaStore } from '~/core/stores';
 
@@ -116,6 +117,7 @@ const buildResultTabProps = () => ({
   formattedData: [{ id: 1, title: 'alpha' }],
   executeLoading: false,
   isStreaming: false,
+  resolveCommandResultHandler: () => postgresCommandResult,
 });
 
 describe('ResultTabResultView', () => {

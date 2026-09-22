@@ -16,7 +16,7 @@ The `raw-query` module is built to provide a powerful, IDE-like experience for w
 ## 3. Advanced Execution & Analysis
 
 - **Streaming NDJSON Results**: Instead of waiting for a 1-million-row dataset to fully resolve in memory, the engine streams the dataset via `pg-query-stream` in chunks. The UI renders rows progressively, saving browser memory and keeping the application responsive.
-- **EXPLAIN ANALYZE Generation**: Single-click toggles translate any query into a rich database execution plan, exposing underlying table scans, memory costs, and timing.
+- **EXPLAIN ANALYZE Generation** (PostgreSQL): Single-click toggles translate any query into a rich database execution plan, exposing underlying table scans, memory costs, and timing.
 
 ## 4. Multi-Tab Result Tracking
 

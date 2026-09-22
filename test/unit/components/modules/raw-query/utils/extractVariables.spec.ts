@@ -1,6 +1,5 @@
 import { describe, it, expect } from 'vitest';
 import { extractParamsFromSql } from '~/components/modules/raw-query/utils/extractVariables';
-import { DatabaseClientType } from '~/core/constants/database-client-type';
 
 describe('extractParamsFromSql', () => {
   describe('Standard Colon Extractor (Postgres, MySQL, Oracle, etc.)', () => {
@@ -101,10 +100,7 @@ describe('extractParamsFromSql', () => {
   describe('MSSQL Extractor (@)', () => {
     it('16. extracts basic parameters with @', () => {
       const sql = 'SELECT * FROM users WHERE id = @id AND status = @status';
-      expect(extractParamsFromSql(sql, DatabaseClientType.MSSQL)).toEqual([
-        'id',
-        'status',
-      ]);
+      expect(extractParamsFromSql(sql, 'at')).toEqual(['id', 'status']);
     });
 
     it('17. ignores @ parameters inside strings and comments', () => {
@@ -114,31 +110,74 @@ describe('extractParamsFromSql', () => {
         AND email = 'test@example.com'
         AND status = @status
       `;
-      expect(extractParamsFromSql(sql, DatabaseClientType.MSSQL)).toEqual([
-        'id',
-        'status',
-      ]);
+      expect(extractParamsFromSql(sql, 'at')).toEqual(['id', 'status']);
     });
 
     it('18. returns unique MSSQL parameters only', () => {
       const sql = 'SELECT * FROM users WHERE id = @id OR parent_id = @id';
-      expect(extractParamsFromSql(sql, DatabaseClientType.MSSQL)).toEqual([
-        'id',
-      ]);
+      expect(extractParamsFromSql(sql, 'at')).toEqual(['id']);
     });
 
     it('19. extracts MSSQL parameters without whitespace formatting (e.g. id=@id)', () => {
       const sql = 'SELECT * FROM users WHERE id=@id';
-      expect(extractParamsFromSql(sql, DatabaseClientType.MSSQL)).toEqual([
-        'id',
-      ]);
+      expect(extractParamsFromSql(sql, 'at')).toEqual(['id']);
     });
 
     it('20. extracts MSSQL parameters with complex names and underscores', () => {
       const sql = 'SELECT * FROM logs WHERE level = @log_level_99';
-      expect(extractParamsFromSql(sql, DatabaseClientType.MSSQL)).toEqual([
-        'log_level_99',
-      ]);
+      expect(extractParamsFromSql(sql, 'at')).toEqual(['log_level_99']);
+    });
+  });
+});
+
+describe('extractParamsFromSql — keyed by parameter style', () => {
+  it('reads @name parameters when the style is "at"', () => {
+    expect(
+      extractParamsFromSql('SELECT * FROM users WHERE id = @userId', 'at')
+    ).toEqual(['userId']);
+  });
+
+  it('reads :name parameters when the style is "colon"', () => {
+    expect(
+      extractParamsFromSql('SELECT * FROM users WHERE id = :userId', 'colon')
+    ).toEqual(['userId']);
+  });
+
+  it('defaults to the colon style when none is given', () => {
+    expect(
+      extractParamsFromSql('SELECT * FROM users WHERE id = :userId')
+    ).toEqual(['userId']);
+  });
+
+  describe('SQLite-flavoured SQL (colon style)', () => {
+    it('extracts a named parameter', () => {
+      expect(
+        extractParamsFromSql('SELECT * FROM t WHERE id = :id', 'colon')
+      ).toEqual(['id']);
+    });
+
+    it('ignores time literals inside string literals', () => {
+      expect(
+        extractParamsFromSql(
+          "SELECT * FROM t WHERE ts > '12:30' AND id = :id",
+          'colon'
+        )
+      ).toEqual(['id']);
+    });
+
+    it('handles CAST expressions', () => {
+      expect(
+        extractParamsFromSql(
+          'SELECT CAST(x AS TEXT) FROM t WHERE a = :a',
+          'colon'
+        )
+      ).toEqual(['a']);
+    });
+
+    it('returns nothing for parameterless SQLite functions', () => {
+      expect(extractParamsFromSql('SELECT sqlite_version()', 'colon')).toEqual(
+        []
+      );
     });
   });
 });
