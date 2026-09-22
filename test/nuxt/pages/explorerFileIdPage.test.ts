@@ -36,7 +36,7 @@ const connections = [
   { id: 'pg-1', name: 'PG one', type: DatabaseClientType.POSTGRES },
   { id: 'pg-2', name: 'PG two', type: DatabaseClientType.POSTGRES },
   { id: 'redis-1', name: 'Redis', type: DatabaseClientType.REDIS },
-  { id: 'mongo-1', name: 'Mongo', type: DatabaseClientType.MONGODB },
+  { id: 'snowflake-1', name: 'Snowflake', type: DatabaseClientType.SNOWFLAKE },
 ];
 
 const selectedConnectionId = ref('');
@@ -165,7 +165,7 @@ describe('explorer [fileId] page', () => {
   });
 
   it('shows the unsupported state for an engine without a raw query editor', async () => {
-    selectedConnectionId.value = 'mongo-1';
+    selectedConnectionId.value = 'snowflake-1';
 
     const wrapper = mountPage();
     await settleUntil(() =>

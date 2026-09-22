@@ -85,6 +85,13 @@ const redisEntry = defineEngineEntry(
     )
 );
 
+const mongoEntry = defineEngineEntry(
+  () =>
+    import(
+      '~/components/modules/driver/mongodb/raw-query/containers/MongoRawQuery.vue'
+    )
+);
+
 const RAW_QUERY_COMPONENTS: Partial<Record<DatabaseClientType, Component>> = {
   [DatabaseClientType.POSTGRES]: postgresEntry,
   [DatabaseClientType.MYSQL]: mysqlEntry,
@@ -95,6 +102,7 @@ const RAW_QUERY_COMPONENTS: Partial<Record<DatabaseClientType, Component>> = {
   [DatabaseClientType.ORACLE]: oracleEntry,
   [DatabaseClientType.MSSQL]: mssqlEntry,
   [DatabaseClientType.REDIS]: redisEntry,
+  [DatabaseClientType.MONGODB]: mongoEntry,
 };
 
 /**

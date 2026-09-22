@@ -1,6 +1,10 @@
 import type { FieldDef } from 'pg';
 import type { DatabaseDriverError } from '~/core/types';
 import type { Connection } from '~/core/types/entities';
+import type {
+  MongoRawQueryLogEntry,
+  MongoRawQueryMutationSummary,
+} from '~/core/types/mongodb-raw-query.types';
 
 export type { MappedRawColumn } from '~/core/types/mapped-column.types';
 
@@ -19,6 +23,8 @@ export enum ViewMode {
   RAW = 'raw',
   EXPLAIN = 'explain',
   CHART = 'chart',
+  /** MongoDB script execution log output. */
+  CONSOLE = 'console',
 }
 
 export interface ExecutedResultItem {
@@ -37,6 +43,16 @@ export interface ExecutedResultItem {
     connection?: Connection | undefined;
     command?: string;
     rowCount?: number;
+    /** MongoDB: the shape of the script's return value (cursor, document, scalar, ...). */
+    resultKind?: string;
+    /** MongoDB: console.log/info/warn/error calls captured during script execution. */
+    logs?: MongoRawQueryLogEntry[];
+    /** MongoDB: summary of an insert/update/delete operation's effect. */
+    mutationSummary?: MongoRawQueryMutationSummary;
+    /** MongoDB: the raw (non-cursor) value the script returned. */
+    rawResult?: unknown;
+    /** MongoDB: whether the result set was truncated by the server-side row cap. */
+    truncated?: boolean;
   };
   result: RowData[];
   seqIndex: number;

@@ -1,4 +1,5 @@
 import { MARIADB_RAW_QUERY_DESCRIPTOR } from '~/components/modules/driver/mariadb/raw-query/descriptors';
+import { MONGODB_RAW_QUERY_CAPABILITIES } from '~/components/modules/driver/mongodb/raw-query/capabilities';
 import { MSSQL_RAW_QUERY_DESCRIPTOR } from '~/components/modules/driver/mssql/raw-query/descriptors';
 import { MYSQL_RAW_QUERY_CAPABILITIES } from '~/components/modules/driver/mysql/raw-query/capabilities';
 import { MYSQL_RAW_QUERY_DESCRIPTOR } from '~/components/modules/driver/mysql/raw-query/descriptors';
@@ -7,6 +8,7 @@ import { ORACLE_RAW_QUERY_DESCRIPTOR } from '~/components/modules/driver/oracle/
 import { POSTGRES_RAW_QUERY_CAPABILITIES } from '~/components/modules/driver/postgres/raw-query/capabilities';
 import { postgresCommandResult } from '~/components/modules/driver/postgres/raw-query/services';
 import { REDIS_RAW_QUERY_DESCRIPTOR } from '~/components/modules/driver/redis/raw-query/descriptors';
+import { genericCommandResult } from '~/components/modules/driver/shared/raw-query/services';
 import { SQLITE_RAW_QUERY_CAPABILITIES } from '~/components/modules/driver/sqlite/raw-query/capabilities';
 import { SQLITE_RAW_QUERY_DESCRIPTOR } from '~/components/modules/driver/sqlite/raw-query/descriptors';
 import { betterSqlite3CommandResult } from '~/components/modules/driver/sqlite/raw-query/services';
@@ -45,6 +47,10 @@ const RAW_QUERY_DESCRIPTORS: Partial<
   [DatabaseClientType.ORACLE]: ORACLE_RAW_QUERY_DESCRIPTOR,
   [DatabaseClientType.MSSQL]: MSSQL_RAW_QUERY_DESCRIPTOR,
   [DatabaseClientType.REDIS]: REDIS_RAW_QUERY_DESCRIPTOR,
+  [DatabaseClientType.MONGODB]: {
+    capabilities: MONGODB_RAW_QUERY_CAPABILITIES,
+    commandResultHandler: genericCommandResult,
+  },
 };
 
 export function resolveRawQueryDescriptor(

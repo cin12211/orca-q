@@ -167,3 +167,13 @@ The shell takes `descriptor`, `executor`, `resolveCommandResultHandler`, and opt
 - `REDIS_RAW_QUERY_DESCRIPTOR` with `language: 'redis'` (line-per-command statements, no SQL diagnostics, no variables, no formatting).
 
 Rules that apply either way: the entry may not import another engine; state that must survive an engine swap (file content, result tabs) comes from the page-level contexts via the core, never from the entry.
+
+## 9. When an engine doesn't fit the shared pipeline
+
+Both patterns above assume the engine executes SQL-shaped statements with colon- or at-style named parameters, split by CodeMirror's SQL statement tree. Ask: does this engine fit that model? If yes, use `BaseSqlRawQuery` or `RawQueryShell`. If the engine's editor language, statement model, or variable handling is fundamentally different, compose a container directly from the shared primitives instead, bypassing `RawQueryShell`/`useRawQueryCore`/`useQueryExecution` entirely.
+
+MongoDB (`driver/mongodb/raw-query/containers/MongoRawQuery.vue`) is the worked example: it runs a JavaScript/TypeScript script (not SQL statements), takes its whole variables blob as one parsed Extended JSON object (not colon-extracted parameters), and has an approval step for destructive operations that the shared pipeline has no concept of. Its container is adapted directly from `RawQueryShell.vue`'s own structure (layout, header/footer wiring, connection-confirm dialog, hotkeys, cursor/scroll restore) with the execution/editor/variable pipeline swapped for its own hooks (`useMongoScriptExecution`, `useMongoScriptEditorExtensions`, `useMongoApproval`).
+
+The primitives that are safe to reuse directly regardless of which pattern an engine follows: `RawQueryLayout`, `RawQueryEditorHeader`/`RawQueryEditorFooter` (via their `header-extra`/`footer-extra` slots), `RawQueryResultTabs` (via its `result-view` slot), `RawQueryConnectionConfirmDialog`, `useRawQueryFileContentContext`, `useRawQueryResultTabsContext`.
+
+A descriptor/capabilities object is still required either way, because `resolveRawQueryDescriptor` needs one for per-tab command-result summaries even when nothing else in the engine reads it. `driver/mongodb/raw-query/capabilities/mongo.capabilities.ts` is the example: it exists only to satisfy that map's shape, with a comment saying so, since MongoDB's own pipeline never reads `RawQueryCapabilities`.

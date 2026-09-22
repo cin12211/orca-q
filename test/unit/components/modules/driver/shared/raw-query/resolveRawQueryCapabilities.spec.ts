@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { resolveRawQueryCapabilities } from '~/components/modules/driver/shared/raw-query';
+import { MONGODB_RAW_QUERY_CAPABILITIES } from '~/components/modules/driver/mongodb/raw-query/capabilities';
+import {
+  resolveRawQueryCapabilities,
+  resolveRawQueryDescriptor,
+} from '~/components/modules/driver/shared/raw-query';
 import { DatabaseClientType } from '~/core/constants/database-client-type';
 
 describe('resolveRawQueryCapabilities', () => {
@@ -56,11 +60,20 @@ describe('resolveRawQueryCapabilities', () => {
 
   it('returns undefined for engines raw query does not support', () => {
     expect(
-      resolveRawQueryCapabilities(DatabaseClientType.MONGODB)
-    ).toBeUndefined();
-    expect(
       resolveRawQueryCapabilities(DatabaseClientType.SNOWFLAKE)
     ).toBeUndefined();
     expect(resolveRawQueryCapabilities(undefined)).toBeUndefined();
+  });
+});
+
+describe('MongoDB capabilities', () => {
+  it('resolves a descriptor for MONGODB with the generic command result handler', () => {
+    const descriptor = resolveRawQueryDescriptor(DatabaseClientType.MONGODB);
+
+    expect(descriptor).toBeDefined();
+    expect(descriptor?.capabilities).toBe(MONGODB_RAW_QUERY_CAPABILITIES);
+    expect(
+      descriptor?.commandResultHandler('MONGODB', 3).category
+    ).toBeDefined();
   });
 });

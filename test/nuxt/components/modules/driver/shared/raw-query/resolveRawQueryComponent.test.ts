@@ -4,6 +4,7 @@ import type { Component } from 'vue';
 import { mount } from '@vue/test-utils';
 import { describe, expect, it, vi } from 'vitest';
 import MariadbRawQuery from '~/components/modules/driver/mariadb/raw-query/containers/MariadbRawQuery.vue';
+import MongoRawQuery from '~/components/modules/driver/mongodb/raw-query/containers/MongoRawQuery.vue';
 import MssqlRawQuery from '~/components/modules/driver/mssql/raw-query/containers/MssqlRawQuery.vue';
 import MysqlRawQuery from '~/components/modules/driver/mysql/raw-query/containers/MysqlRawQuery.vue';
 import OracleRawQuery from '~/components/modules/driver/oracle/raw-query/containers/OracleRawQuery.vue';
@@ -45,6 +46,7 @@ describe('resolveRawQueryComponent', () => {
     DatabaseClientType.ORACLE,
     DatabaseClientType.MSSQL,
     DatabaseClientType.REDIS,
+    DatabaseClientType.MONGODB,
   ])('resolves a real entry for %s', type => {
     expect(resolveRawQueryComponent(type)).not.toBe(UnsupportedRawQuery);
   });
@@ -71,19 +73,19 @@ describe('resolveRawQueryComponent', () => {
     [DatabaseClientType.ORACLE, OracleRawQuery],
     [DatabaseClientType.MSSQL, MssqlRawQuery],
     [DatabaseClientType.REDIS, RedisRawQuery],
+    [DatabaseClientType.MONGODB, MongoRawQuery],
   ])('lazy-loads the %s entry from its own container', async (type, entry) => {
     await expect(loadEntry(resolveRawQueryComponent(type))).resolves.toBe(
       entry
     );
   });
 
-  it.each([
-    DatabaseClientType.MONGODB,
-    DatabaseClientType.SNOWFLAKE,
-    undefined,
-  ])('falls back to the unsupported state for %s', type => {
-    expect(resolveRawQueryComponent(type)).toBe(UnsupportedRawQuery);
-  });
+  it.each([DatabaseClientType.SNOWFLAKE, undefined])(
+    'falls back to the unsupported state for %s',
+    type => {
+      expect(resolveRawQueryComponent(type)).toBe(UnsupportedRawQuery);
+    }
+  );
 
   it('tells the user raw query is unavailable for this engine', async () => {
     const wrapper = await mountSuspended(UnsupportedRawQuery);

@@ -1,8 +1,16 @@
 import type { Completion } from '@codemirror/autocomplete';
 import type { SQLDialect } from '@codemirror/lang-sql';
 
-/** Statement language the editor and the statement splitter operate in. */
-export type RawQueryLanguage = 'sql' | 'redis';
+/**
+ * Statement language the editor and the statement splitter operate in.
+ *
+ * 'mongo' exists only so a descriptor's `language` field is honest for
+ * MongoDB in the shared driver registry (`resolveRawQueryDescriptor`). No
+ * core code branches on it: MongoDB's own raw-query pipeline does not read
+ * `RawQueryCapabilities` at all — it composes its own editor, execution, and
+ * variable handling (see `components/modules/driver/mongodb/raw-query/`).
+ */
+export type RawQueryLanguage = 'sql' | 'redis' | 'mongo';
 
 /** Named-parameter syntax the engine accepts. */
 export type ParameterStyle = 'colon' | 'at';
