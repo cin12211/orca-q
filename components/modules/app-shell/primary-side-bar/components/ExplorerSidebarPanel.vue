@@ -10,7 +10,6 @@ const props = defineProps<{
 const current = computed<Component | null>(() => {
   switch (props.dbType) {
     case DatabaseClientType.MONGODB:
-      return null;
     case DatabaseClientType.REDIS:
       return ExplorerPanel;
     case DatabaseClientType.POSTGRES:
@@ -30,6 +29,6 @@ const current = computed<Component | null>(() => {
 
 <template>
   <KeepAlive>
-    <component :is="current" v-if="current" />
+    <component :is="current" v-if="current" :key="props.dbType" />
   </KeepAlive>
 </template>

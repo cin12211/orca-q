@@ -30,6 +30,6 @@ const current = computed<Component | null>(() => {
 
 <template>
   <KeepAlive>
-    <component :is="current" v-if="current" />
+    <component :is="current" v-if="current" :key="props.dbType" />
   </KeepAlive>
 </template>

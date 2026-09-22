@@ -39,7 +39,7 @@ describe('connection capabilities', () => {
       [Explorer, Schemas, ErdDiagram, UsersRoles, DatabaseTools],
     ],
     [DatabaseClientType.REDIS, [Explorer, Schemas, DatabaseTools]],
-    [DatabaseClientType.MONGODB, [Schemas, DatabaseTools]],
+    [DatabaseClientType.MONGODB, [Explorer, Schemas, DatabaseTools]],
   ])('shows the expected activities for %s', (type, expected) => {
     expect(
       getConnectionCapabilityProfile({ type }).visibleActivityItems
@@ -76,7 +76,7 @@ describe('connection capabilities', () => {
     ).toBe(EConnectionFamily.MONGODB);
   });
 
-  it('keeps query files for SQL and Redis but not MongoDB', () => {
+  it('keeps query files for SQL, Redis and MongoDB', () => {
     expect(
       getConnectionCapabilityProfile({ type: DatabaseClientType.REDIS })
         .supportsQueryFiles
@@ -88,7 +88,7 @@ describe('connection capabilities', () => {
     expect(
       getConnectionCapabilityProfile({ type: DatabaseClientType.MONGODB })
         .supportsQueryFiles
-    ).toBe(false);
+    ).toBe(true);
   });
 
   it('treats only SQL engines as the SQL family', () => {

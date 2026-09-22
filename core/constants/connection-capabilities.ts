@@ -86,9 +86,9 @@ const CONNECTION_CAPABILITY_REGISTRY: Record<
   },
   [DatabaseClientType.MONGODB]: {
     family: EConnectionFamily.MONGODB,
-    visibleActivityItems: [Schemas, DatabaseTools],
+    visibleActivityItems: [Explorer, Schemas, DatabaseTools],
     defaultActivityItem: Schemas,
-    supportsQueryFiles: false,
+    supportsQueryFiles: true,
   },
 };
 

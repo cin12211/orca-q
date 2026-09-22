@@ -78,7 +78,11 @@ const placeholderCopy = computed<SidebarPlaceholderCopy | null>(() => {
 <template>
   <div class="w-full h-full flex flex-col" v-if="appConfigStore.layoutSize[0]">
     <KeepAlive v-if="current">
-      <component :is="current" :db-type="selectedConnectionType"></component>
+      <component
+        :is="current"
+        :key="activityStore.activityActive"
+        :db-type="selectedConnectionType"
+      ></component>
     </KeepAlive>
 
     <div
