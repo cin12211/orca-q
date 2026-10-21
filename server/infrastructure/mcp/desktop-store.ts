@@ -110,23 +110,23 @@ function isSameHash(a: string, b: string) {
   return left.length === right.length && timingSafeEqual(left, right);
 }
 
-/** Session that owns this bearer token, or null when the token is unknown. */
-export function findMcpSessionByTokenHash(
-  configs: McpServerConfigs,
-  tokenHash: string
-): McpSession | null {
-  return (
-    configs.sessions.find(session =>
-      isSameHash(session.tokenHash, tokenHash)
-    ) ?? null
-  );
-}
-
+/**
+ * Session that owns this bearer token, or null when the token is unknown.
+ * Hashes are compared in constant time so response timing leaks nothing.
+ */
 export async function findMcpSessionByToken(
   configs: McpServerConfigs,
   token: string
 ): Promise<McpSession | null> {
-  return findMcpSessionByTokenHash(configs, await hashMcpToken(token));
+  const tokenHash = await hashMcpToken(token);
+
+  for (const session of configs.sessions) {
+    if (isSameHash(await hashMcpToken(session.token), tokenHash)) {
+      return session;
+    }
+  }
+
+  return null;
 }
 
 /**

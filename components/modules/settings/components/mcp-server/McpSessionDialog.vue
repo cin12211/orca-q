@@ -261,7 +261,7 @@ watch(
           :disabled="!canSubmit"
           @click="handleSubmit"
         >
-          {{ isEditing ? 'Save' : 'Create & show token' }}
+          {{ isEditing ? 'Save' : 'Create session' }}
         </Button>
       </DialogFooter>
     </DialogContent>

@@ -5,7 +5,6 @@ import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { hashMcpToken } from '~/core/helpers/mcp-token';
 import type { McpSession } from '~/core/persist/normalize';
 import {
   createOrcaqMcpServer,
@@ -90,8 +89,7 @@ async function seedDatabases() {
   const session = {
     id: 'session-1',
     name: 'Claude Code',
-    tokenHash: await hashMcpToken(SESSION_TOKEN),
-    tokenPreview: 'orcaq_…oken',
+    token: SESSION_TOKEN,
     createdAt: '2026-10-21',
     workspaceAccess: { 'ws-1': 'read' },
     connectionAccess: { 'conn-rw': 'write' },
@@ -100,7 +98,7 @@ async function seedDatabases() {
     ...session,
     id: 'session-2',
     name: 'Other',
-    tokenHash: await hashMcpToken(OTHER_TOKEN),
+    token: OTHER_TOKEN,
     workspaceAccess: { 'ws-2': 'read' },
     connectionAccess: {},
   };

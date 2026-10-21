@@ -1,8 +1,4 @@
-import {
-  generateMcpToken,
-  getMcpTokenPreview,
-  hashMcpToken,
-} from '~/core/helpers/mcp-token';
+import { generateMcpToken } from '~/core/helpers/mcp-token';
 import { uuidv4 } from '~/core/helpers/uuid';
 import type {
   McpConnectionAccess,
@@ -16,10 +12,7 @@ export interface McpSessionDraft {
   connectionAccess: Record<string, McpConnectionAccess>;
 }
 
-/**
- * MCP session CRUD. Tokens are returned to the caller exactly once; only
- * their hash is persisted, so a lost token must be regenerated.
- */
+/** MCP session CRUD for Settings → MCP Server. */
 export function useMcpSessions() {
   const appConfigStore = useAppConfigStore();
 
@@ -30,29 +23,18 @@ export function useMcpSessions() {
       session => session.id === sessionId
     );
 
-  const issueToken = async () => {
-    const token = generateMcpToken();
-    return {
-      token,
-      tokenHash: await hashMcpToken(token),
-      tokenPreview: getMcpTokenPreview(token),
-    };
-  };
-
-  const createSession = async (draft: McpSessionDraft): Promise<string> => {
-    const { token, tokenHash, tokenPreview } = await issueToken();
+  const createSession = (draft: McpSessionDraft): McpSession => {
     const session: McpSession = {
       id: uuidv4(),
       name: draft.name.trim() || 'MCP session',
-      tokenHash,
-      tokenPreview,
+      token: generateMcpToken(),
       createdAt: new Date().toISOString(),
       workspaceAccess: { ...draft.workspaceAccess },
       connectionAccess: { ...draft.connectionAccess },
     };
 
     appConfigStore.mcpServerConfigs.sessions.push(session);
-    return token;
+    return session;
   };
 
   const updateSession = (sessionId: string, draft: McpSessionDraft) => {
@@ -64,14 +46,10 @@ export function useMcpSessions() {
     session.connectionAccess = { ...draft.connectionAccess };
   };
 
-  const regenerateToken = async (sessionId: string): Promise<string | null> => {
+  /** Issue a new token; the previous one stops working immediately. */
+  const regenerateToken = (sessionId: string) => {
     const session = findSession(sessionId);
-    if (!session) return null;
-
-    const { token, tokenHash, tokenPreview } = await issueToken();
-    session.tokenHash = tokenHash;
-    session.tokenPreview = tokenPreview;
-    return token;
+    if (session) session.token = generateMcpToken();
   };
 
   const deleteSession = (sessionId: string) => {

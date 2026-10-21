@@ -103,16 +103,15 @@ export interface TableAppearanceConfigs {
 }
 
 /**
- * An MCP session is what an MCP client authenticates as. Its bearer token is
- * shown once on creation; only the SHA-256 hash is persisted.
+ * An MCP session is what an MCP client authenticates as with its bearer
+ * token. The token stays viewable in Settings (local-only app data).
  * A connection's access comes from `connectionAccess`, then from its
  * workspace in `workspaceAccess`, otherwise it is off.
  */
 export interface McpSession {
   id: string;
   name: string;
-  tokenHash: string;
-  tokenPreview: string;
+  token: string;
   createdAt: string;
   workspaceAccess: Record<string, McpConnectionAccess>;
   connectionAccess: Record<string, McpConnectionAccess>;
@@ -289,7 +288,7 @@ const normalizeAccessMap = (
 
 const normalizeMcpSession = (value: unknown): McpSession[] => {
   if (!isRecord(value)) return [];
-  if (typeof value.id !== 'string' || typeof value.tokenHash !== 'string') {
+  if (typeof value.id !== 'string' || typeof value.token !== 'string') {
     return [];
   }
 
@@ -297,9 +296,7 @@ const normalizeMcpSession = (value: unknown): McpSession[] => {
     {
       id: value.id,
       name: typeof value.name === 'string' ? value.name : 'MCP session',
-      tokenHash: value.tokenHash,
-      tokenPreview:
-        typeof value.tokenPreview === 'string' ? value.tokenPreview : '',
+      token: value.token,
       createdAt: typeof value.createdAt === 'string' ? value.createdAt : '',
       workspaceAccess: normalizeAccessMap(value.workspaceAccess),
       connectionAccess: normalizeAccessMap(value.connectionAccess),

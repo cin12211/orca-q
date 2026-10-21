@@ -1,10 +1,9 @@
 /**
- * MCP session tokens. Uses Web Crypto so the renderer (token creation) and
- * the Nitro server (token check) share one implementation.
+ * MCP session tokens. Uses Web Crypto so the renderer and the Nitro server
+ * share one implementation.
  */
 export const MCP_TOKEN_PREFIX = 'orcaq_';
 const MCP_TOKEN_BYTES = 32;
-const MCP_TOKEN_PREVIEW_LENGTH = 4;
 
 const toBase64Url = (bytes: Uint8Array) =>
   btoa(String.fromCharCode(...bytes))
@@ -30,7 +29,7 @@ export async function hashMcpToken(token: string): Promise<string> {
   ).join('');
 }
 
-/** Short, non-secret hint shown in the session list, e.g. `orcaq_…x9Qa`. */
-export function getMcpTokenPreview(token: string): string {
-  return `${MCP_TOKEN_PREFIX}…${token.slice(-MCP_TOKEN_PREVIEW_LENGTH)}`;
+/** Masked form shown until the user reveals the token, e.g. `orcaq_••••x9Qa`. */
+export function maskMcpToken(token: string): string {
+  return `${MCP_TOKEN_PREFIX}••••••••${token.slice(-4)}`;
 }

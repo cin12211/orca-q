@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import {
   generateMcpToken,
-  getMcpTokenPreview,
   hashMcpToken,
+  maskMcpToken,
   MCP_TOKEN_PREFIX,
 } from '~/core/helpers/mcp-token';
 import {
@@ -25,8 +25,10 @@ describe('mcp-token', () => {
     );
   });
 
-  it('builds a short preview without leaking the token', () => {
-    expect(getMcpTokenPreview('orcaq_secretvalueXYZW')).toBe('orcaq_…XYZW');
+  it('masks all but the last characters', () => {
+    const masked = maskMcpToken('orcaq_secretvalueXYZW');
+    expect(masked).toBe('orcaq_••••••••XYZW');
+    expect(masked).not.toContain('secret');
   });
 });
 
@@ -58,7 +60,7 @@ describe('MCP session access', () => {
     const configs = normalizeMcpServerConfigs({
       enabled: true,
       sessions: [
-        { id: 's1', tokenHash: 'h', workspaceAccess: { w: 'admin' } },
+        { id: 's1', token: 't', workspaceAccess: { w: 'admin' } },
         { name: 'missing id' },
       ],
     });

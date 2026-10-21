@@ -10,13 +10,13 @@ import {
 import { useAppConfigStore } from '~/core/stores/appConfigStore';
 import { useManagementConnectionStore } from '~/core/stores/managementConnectionStore';
 import { useWorkspacesStore } from '~/core/stores/useWorkspacesStore';
-import {
-  buildMcpClientSnippets,
-  MCP_ENDPOINT_PATH,
-  type McpWorkspaceOption,
-} from '../constants';
+import { MCP_ENDPOINT_PATH, type McpWorkspaceOption } from '../constants';
 import { useMcpSessions, type McpSessionDraft } from '../hooks';
-import { McpSessionDialog, McpSessionTokenDialog } from './mcp-server';
+import {
+  McpSessionDialog,
+  McpSessionTokenDialog,
+  McpTokenField,
+} from './mcp-server';
 
 const appConfigStore = useAppConfigStore();
 const connectionStore = useManagementConnectionStore();
@@ -31,7 +31,7 @@ const {
 
 const isSessionDialogOpen = ref(false);
 const editingSessionId = ref<string | null>(null);
-const issuedToken = ref<{ sessionName: string; token: string } | null>(null);
+const setupSessionId = ref<string | null>(null);
 
 const endpointUrl = computed(
   () => `${window.location.origin}${MCP_ENDPOINT_PATH}`
@@ -64,10 +64,8 @@ const editingDraft = computed<McpSessionDraft | null>(() => {
   };
 });
 
-const issuedSnippets = computed(() =>
-  issuedToken.value
-    ? buildMcpClientSnippets(endpointUrl.value, issuedToken.value.token)
-    : []
+const setupSession = computed(
+  () => sessions.value.find(item => item.id === setupSessionId.value) ?? null
 );
 
 const getSessionSummary = (session: McpSession) => {
@@ -111,7 +109,7 @@ const openEditDialog = (sessionId: string) => {
   isSessionDialogOpen.value = true;
 };
 
-const handleSubmitSession = async (draft: McpSessionDraft) => {
+const handleSubmitSession = (draft: McpSessionDraft) => {
   isSessionDialogOpen.value = false;
 
   if (editingSessionId.value) {
@@ -120,16 +118,14 @@ const handleSubmitSession = async (draft: McpSessionDraft) => {
     return;
   }
 
-  const token = await createSession(draft);
-  issuedToken.value = { sessionName: draft.name.trim(), token };
+  setupSessionId.value = createSession(draft).id;
 };
 
-const handleRegenerateToken = async (session: McpSession) => {
-  const token = await regenerateToken(session.id);
-  if (!token) return;
-
-  issuedToken.value = { sessionName: session.name, token };
-  toast('New token issued. The old token no longer works.');
+const handleRegenerateToken = (session: McpSession) => {
+  regenerateToken(session.id);
+  toast(
+    'New token issued. Update your MCP client; the old token no longer works.'
+  );
 };
 
 const handleDeleteSession = (session: McpSession) => {
@@ -210,45 +206,58 @@ const handleDeleteSession = (session: McpSession) => {
         <div
           v-for="session in sessions"
           :key="session.id"
-          class="flex items-center justify-between gap-4 rounded-md border px-3 py-1.5"
+          class="flex flex-col gap-1.5 rounded-md border px-3 py-2"
         >
-          <div class="flex flex-col min-w-0">
-            <span class="text-sm truncate">{{ session.name }}</span>
-            <span class="text-xs text-muted-foreground truncate">
-              {{ session.tokenPreview }} · {{ getSessionSummary(session) }} ·
-              {{ formatDate(session.createdAt) }}
-            </span>
+          <div class="flex items-center justify-between gap-4">
+            <div class="flex flex-col min-w-0">
+              <span class="text-sm truncate">{{ session.name }}</span>
+              <span class="text-xs text-muted-foreground truncate">
+                {{ getSessionSummary(session) }} ·
+                {{ formatDate(session.createdAt) }}
+              </span>
+            </div>
+
+            <div class="flex items-center gap-1 shrink-0">
+              <Button
+                type="button"
+                size="iconSm"
+                variant="ghost"
+                title="Connect a client"
+                @click="setupSessionId = session.id"
+              >
+                <Icon name="hugeicons:code" class="size-4!" />
+              </Button>
+              <Button
+                type="button"
+                size="iconSm"
+                variant="ghost"
+                title="Edit access"
+                @click="openEditDialog(session.id)"
+              >
+                <Icon name="hugeicons:edit-02" class="size-4!" />
+              </Button>
+              <Button
+                type="button"
+                size="iconSm"
+                variant="ghost"
+                title="Regenerate token"
+                @click="handleRegenerateToken(session)"
+              >
+                <Icon name="hugeicons:refresh" class="size-4!" />
+              </Button>
+              <Button
+                type="button"
+                size="iconSm"
+                variant="ghost"
+                title="Revoke session"
+                @click="handleDeleteSession(session)"
+              >
+                <Icon name="hugeicons:delete-02" class="size-4!" />
+              </Button>
+            </div>
           </div>
 
-          <div class="flex items-center gap-1 shrink-0">
-            <Button
-              type="button"
-              size="iconSm"
-              variant="ghost"
-              title="Edit access"
-              @click="openEditDialog(session.id)"
-            >
-              <Icon name="hugeicons:edit-02" class="size-4!" />
-            </Button>
-            <Button
-              type="button"
-              size="iconSm"
-              variant="ghost"
-              title="Regenerate token"
-              @click="handleRegenerateToken(session)"
-            >
-              <Icon name="hugeicons:refresh" class="size-4!" />
-            </Button>
-            <Button
-              type="button"
-              size="iconSm"
-              variant="ghost"
-              title="Revoke session"
-              @click="handleDeleteSession(session)"
-            >
-              <Icon name="hugeicons:delete-02" class="size-4!" />
-            </Button>
-          </div>
+          <McpTokenField :token="session.token" @copy="handleCopy" />
         </div>
       </div>
     </template>
@@ -261,11 +270,11 @@ const handleDeleteSession = (session: McpSession) => {
     />
 
     <McpSessionTokenDialog
-      :open="Boolean(issuedToken)"
-      :session-name="issuedToken?.sessionName ?? ''"
-      :token="issuedToken?.token ?? ''"
-      :snippets="issuedSnippets"
-      @update:open="!$event && (issuedToken = null)"
+      :open="Boolean(setupSession)"
+      :session-name="setupSession?.name ?? ''"
+      :token="setupSession?.token ?? ''"
+      :endpoint-url="endpointUrl"
+      @update:open="!$event && (setupSessionId = null)"
       @copy="handleCopy"
     />
   </div>
