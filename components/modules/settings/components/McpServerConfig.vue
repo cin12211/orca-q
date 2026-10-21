@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Switch } from '#components';
 import { toast } from 'vue-sonner';
+import { DEFAULT_WORKSPACE_ICON } from '~/core/constants/workspace-icon-constants';
 import { copyToClipboard } from '~/core/helpers/copyData';
 import {
   McpConnectionAccess,
@@ -41,6 +42,7 @@ const workspaceOptions = computed<McpWorkspaceOption[]>(() =>
   workspacesStore.workspaces.map(workspace => ({
     id: workspace.id,
     name: workspace.name,
+    icon: workspace.icon || DEFAULT_WORKSPACE_ICON,
     connections: connectionStore.connections
       .filter(connection => connection.workspaceId === workspace.id)
       .map(connection => ({
@@ -266,6 +268,7 @@ const handleDeleteSession = (session: McpSession) => {
       v-model:open="isSessionDialogOpen"
       :workspaces="workspaceOptions"
       :initial-draft="editingDraft"
+      :default-name="`MCP session ${sessions.length + 1}`"
       @submit="handleSubmitSession"
     />
 

@@ -40,7 +40,7 @@ const snippets = computed(() => {
 
 <template>
   <Dialog :open="props.open" @update:open="emit('update:open', $event)">
-    <DialogContent class="border max-w-xl">
+    <DialogContent size="xl" class="border">
       <DialogHeader>
         <DialogTitle>Connect "{{ props.sessionName }}"</DialogTitle>
         <DialogDescription>

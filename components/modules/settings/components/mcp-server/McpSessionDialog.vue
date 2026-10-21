@@ -9,6 +9,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
+import { getDatabaseSupportByType } from '~/components/modules/connection';
 import {
   McpConnectionAccess,
   resolveMcpConnectionAccess,
@@ -26,6 +27,7 @@ const props = defineProps<{
   open: boolean;
   workspaces: McpWorkspaceOption[];
   initialDraft?: McpSessionDraft | null;
+  defaultName?: string;
 }>();
 
 const emit = defineEmits<{
@@ -119,7 +121,7 @@ watch(
   isOpen => {
     if (!isOpen) return;
 
-    name.value = props.initialDraft?.name ?? '';
+    name.value = props.initialDraft?.name ?? props.defaultName ?? '';
     workspaceAccess.value = { ...(props.initialDraft?.workspaceAccess ?? {}) };
     connectionAccess.value = {
       ...(props.initialDraft?.connectionAccess ?? {}),
@@ -140,7 +142,7 @@ watch(
 
 <template>
   <Dialog :open="props.open" @update:open="emit('update:open', $event)">
-    <DialogContent class="border max-w-xl">
+    <DialogContent size="2xl" class="border">
       <DialogHeader>
         <DialogTitle>
           {{ isEditing ? 'Edit MCP session' : 'Create MCP session' }}
@@ -192,6 +194,7 @@ watch(
                   "
                   class="size-4! shrink-0"
                 />
+                <Icon :name="workspace.icon" class="size-4! shrink-0" />
                 <span class="text-sm truncate">{{ workspace.name }}</span>
                 <span class="text-xs text-muted-foreground shrink-0">
                   {{ workspace.connections.length }} connections
@@ -222,11 +225,20 @@ watch(
                 :key="connection.id"
                 class="flex items-center justify-between gap-3 pl-8 pr-3 py-1.5"
               >
-                <div class="flex flex-col min-w-0">
-                  <span class="text-sm truncate">{{ connection.name }}</span>
-                  <span class="text-xs text-muted-foreground">
-                    {{ connection.type }}
-                  </span>
+                <div class="flex items-center gap-2 min-w-0">
+                  <component
+                    :is="getDatabaseSupportByType(connection.type)?.icon"
+                    class="size-4! shrink-0"
+                  />
+                  <div class="flex flex-col min-w-0">
+                    <span class="text-sm truncate">{{ connection.name }}</span>
+                    <span class="text-xs text-muted-foreground">
+                      {{
+                        getDatabaseSupportByType(connection.type)?.name ??
+                        connection.type
+                      }}
+                    </span>
+                  </div>
                 </div>
                 <McpAccessSelect
                   :model-value="

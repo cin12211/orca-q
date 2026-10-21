@@ -1,3 +1,4 @@
+import type { DatabaseClientType } from '~/core/constants/database-client-type';
 import { McpConnectionAccess } from '~/core/persist/store-state';
 
 export const MCP_ENDPOINT_PATH = '/mcp';
@@ -23,7 +24,8 @@ export const MCP_ACCESS_LABELS: Record<McpConnectionAccess, string> = {
 export interface McpWorkspaceOption {
   id: string;
   name: string;
-  connections: Array<{ id: string; name: string; type: string }>;
+  icon: string;
+  connections: Array<{ id: string; name: string; type: DatabaseClientType }>;
 }
 
 export interface McpClientSnippet {
