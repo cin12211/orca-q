@@ -24,7 +24,7 @@ This document defines the coding standards, naming conventions, and best practic
 
 | Type                    | Convention | Example                               |
 | ----------------------- | ---------- | ------------------------------------- |
-| **Module folders**      | kebab-case | `quick-query/`, `management-schemas/` |
+| **Module folders**      | kebab-case | `quick-query/`, `instance-insights/`  |
 | **Sub-feature folders** | kebab-case | `quick-query-filter/`, `code-editor/` |
 
 ---
@@ -297,6 +297,7 @@ const connectionSchema = z.object({
 
 <!-- Child -->
 <script setup>
+
 
 
 

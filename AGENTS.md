@@ -13,8 +13,13 @@ desktop support.
   `components/base/data-grid/docs/USAGE_GUIDE.md` before changing shared grid
   behavior or adding a new generic grid feature.
 - `components/modules/` contains feature modules. Important modules include
-  `quick-query`, `raw-query`, `management-connection`, `management-schemas`,
-  `management-explorer`, `erd-diagram`, `workspace`, and `settings`.
+  `app-shell`, `driver`, `quick-query`, `raw-query`, `connection`,
+  `erd-diagram`, `workspace`, and `settings`.
+- `components/modules/driver/` groups engine-specific UI by driver
+  (`postgres`, `redis`, `mongodb`, `shared`). Primary sidebar panels live in
+  `driver/<engine>/primary-panel/<activity>/`. Read
+  `components/modules/app-shell/primary-side-bar/docs/PRIMARY_SIDEBAR_FLOW.md`
+  before adding or changing a sidebar panel.
 - `components/modules/quick-query/` is the table browsing/editing feature. Keep
   extracted composables in its `hooks/` directory and pure helpers in its
   `utils/` directory.

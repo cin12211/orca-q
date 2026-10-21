@@ -1,0 +1,396 @@
+<script setup lang="ts">
+import { refDebounced } from '@vueuse/core';
+import { storeToRefs } from 'pinia';
+import BaseContextMenu from '~/components/base/context-menu/BaseContextMenu.vue';
+import FileTree from '~/components/base/tree-folder/FileTree.vue';
+import { useSchemaTreeData } from '~/components/modules/driver/shared/primary-panel/schemas/hooks/useSchemaTreeData';
+import SafeModeConfirmDialog from '~/components/modules/quick-query/SafeModeConfirmDialog.vue';
+import { useTabManagement } from '~/core/composables/useTabManagement';
+import { useWorkspaceConnectionRoute } from '~/core/composables/useWorkspaceConnectionRoute';
+import { DEFAULT_DEBOUNCE_INPUT } from '~/core/constants';
+import { useAppContext } from '~/core/contexts/useAppContext';
+import { useSchemaStore, useWSStateStore } from '~/core/stores';
+import { TabViewType, useTabViewsStore } from '~/core/stores/useTabViewsStore';
+import { PrimaryPanelHeader } from '../shared';
+import RenameDialog from './dialogs/RenameDialog.vue';
+import SqlPreviewDialog from './dialogs/SqlPreviewDialog.vue';
+import { useSchemaContextMenu } from './hooks/useSchemaContextMenu';
+
+const { connectToConnection } = useAppContext();
+const schemaStore = useSchemaStore();
+const wsStateStore = useWSStateStore();
+
+const tabViewStore = useTabViewsStore();
+
+const { openSchemaItemTab } = useTabManagement();
+
+const { activeSchema, activeLoadSession } = storeToRefs(schemaStore);
+const { connectionId, workspaceId } = useWorkspaceConnectionRoute();
+const { schemaId } = storeToRefs(wsStateStore);
+
+const isRefreshing = ref(false);
+
+const fileTreeRef = useTemplateRef<typeof FileTree | null>('fileTreeRef');
+const isTreeCollapsed = ref(false);
+
+const searchInput = shallowRef('');
+const debouncedSearch = refDebounced(searchInput, DEFAULT_DEBOUNCE_INPUT);
+
+const { fileTreeData, defaultFolderOpenId } = useSchemaTreeData(
+  activeSchema,
+  debouncedSearch
+);
+
+const hasTreeData = computed(() => Object.keys(fileTreeData.value).length > 0);
+
+const loadSessionState = computed(
+  () => activeLoadSession.value?.status || 'idle'
+);
+
+const loadSessionIcon = computed(() => {
+  switch (loadSessionState.value) {
+    case 'loading':
+    case 'waiting':
+      return 'hugeicons:loading-03';
+    case 'completed':
+      return 'lucide:circle-check-big';
+    case 'failed':
+      return 'lucide:triangle-alert';
+    default:
+      return 'hugeicons:database';
+  }
+});
+
+const loadSessionTitle = computed(() => {
+  switch (loadSessionState.value) {
+    case 'loading':
+      return 'Loading schemas';
+    case 'waiting':
+      return 'Still loading schemas';
+    case 'completed':
+      return 'Schemas ready';
+    case 'failed':
+      return 'Schema load failed';
+    default:
+      return '';
+  }
+});
+
+const loadSessionMessage = computed(() => {
+  if (!activeLoadSession.value) {
+    return '';
+  }
+
+  if (loadSessionState.value === 'failed') {
+    return (
+      activeLoadSession.value.errorMessage ||
+      activeLoadSession.value.statusMessage ||
+      'Failed to load schemas for this connection.'
+    );
+  }
+
+  return activeLoadSession.value.statusMessage || '';
+});
+
+const showLoadSessionBanner = computed(
+  () => !!activeLoadSession.value && loadSessionState.value !== 'idle'
+);
+
+const emptyStateTitle = computed(() => {
+  if (loadSessionState.value === 'failed') {
+    return 'Schema load failed';
+  }
+
+  if (
+    loadSessionState.value === 'loading' ||
+    loadSessionState.value === 'waiting'
+  ) {
+    return 'Loading schemas';
+  }
+
+  return 'No data found';
+});
+
+const emptyStateDescription = computed(() => {
+  if (loadSessionMessage.value) {
+    return loadSessionMessage.value;
+  }
+
+  return 'There is no schemas data available for this connection.';
+});
+
+const onRefreshSchema = async () => {
+  if (!connectionId.value) {
+    throw new Error('No connection selected');
+    return;
+  }
+
+  isRefreshing.value = true;
+  await connectToConnection({
+    wsId: workspaceId.value,
+    connId: connectionId.value,
+    isRefresh: true,
+  });
+
+  isRefreshing.value = false;
+};
+
+const onToggleCollapse = () => {
+  if (!fileTreeRef.value) return;
+
+  if (isTreeCollapsed.value) {
+    fileTreeRef.value.expandAll();
+    isTreeCollapsed.value = false;
+  } else {
+    fileTreeRef.value.collapseAll();
+    isTreeCollapsed.value = true;
+  }
+};
+
+// Context menu setup
+const schemaName = computed(() => activeSchema.value?.name || 'public');
+
+const {
+  selectedItem,
+  contextMenuItems,
+  safeModeDialogOpen,
+  safeModeDialogSQL,
+  safeModeDialogType,
+  onSafeModeConfirm,
+  onSafeModeCancel,
+  renameDialogType,
+  renameDialogOpen,
+  renameDialogValue,
+
+  onConfirmRename,
+  sqlPreviewDialogOpen,
+  sqlPreviewDialogSQL,
+  sqlPreviewDialogTitle,
+  onRightClickItem,
+  isFetching,
+  safeModeLoading,
+} = useSchemaContextMenu({
+  schemaName,
+  activeSchema,
+  onRefreshSchema,
+});
+
+const handleTreeClick = async (nodeId: string) => {
+  const node = fileTreeData.value[nodeId];
+  if (!node) return;
+
+  const tabViewType: TabViewType | undefined = node.data?.tabViewType as
+    | TabViewType
+    | undefined;
+
+  const itemValue = (node.data as any)?.itemValue as
+    | {
+        id?: string | number;
+        icon?: string;
+        iconClass?: string;
+        tabViewType?: TabViewType;
+        name?: string;
+        title?: string;
+      }
+    | undefined;
+
+  if (!schemaId.value || !tabViewType) {
+    return;
+  }
+
+  await openSchemaItemTab({
+    id: nodeId,
+    name: node.name,
+    type: tabViewType,
+    icon: itemValue?.icon || node.iconOpen || node.iconClose,
+    iconClass: itemValue?.iconClass || node.iconClass,
+    itemValueId: itemValue?.id,
+    treeNodeId: node.id,
+  });
+};
+
+const handleTreeContextMenu = (nodeId: string, event: MouseEvent) => {
+  const node = fileTreeData.value[nodeId];
+  if (!node) return;
+
+  const itemValue = (node.data as any)?.itemValue || {
+    title: node.name,
+    name: node.name,
+    id: node.id,
+    tabViewType: (node.data as any)?.tabViewType,
+    icon: node.iconOpen || node.iconClose,
+    iconClass: node.iconClass,
+  };
+
+  // Reuse existing context menu helper signature
+  onRightClickItem(event, { value: itemValue } as any);
+};
+
+watch(
+  () => tabViewStore.activeTab,
+  activeTab => {
+    if (!activeTab) {
+      fileTreeRef.value?.clearSelection();
+      return;
+    }
+
+    if (fileTreeRef.value?.isMouseInside) return;
+
+    if (
+      activeTab?.type === TabViewType.TableDetail ||
+      activeTab?.type === TabViewType.TableOverview ||
+      activeTab?.type === TabViewType.ViewDetail ||
+      activeTab?.type === TabViewType.ViewOverview ||
+      activeTab?.type === TabViewType.FunctionsDetail ||
+      activeTab?.type === TabViewType.FunctionsOverview
+    ) {
+      const nodeId = activeTab.metadata?.treeNodeId;
+
+      if (typeof nodeId === 'string') {
+        fileTreeRef.value?.focusItem(nodeId);
+      }
+    }
+  },
+  { flush: 'post', immediate: true }
+);
+</script>
+
+<template>
+  <div class="flex flex-col h-full w-full overflow-y-auto relative">
+    <PrimaryPanelHeader
+      v-model:search="searchInput"
+      title="Schemas"
+      :show-connection="true"
+      :show-schema="true"
+      :workspace-id="workspaceId"
+      :show-search="true"
+      search-placeholder="Search in all tables or functions"
+    >
+      <template #actions>
+        <Tooltip>
+          <TooltipTrigger as-child>
+            <Button size="iconSm" variant="ghost" @click="onToggleCollapse">
+              <Icon
+                :name="
+                  isTreeCollapsed
+                    ? 'hugeicons:unfold-more'
+                    : 'hugeicons:unfold-less'
+                "
+                class="size-4! min-w-4"
+              />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>
+            {{ isTreeCollapsed ? 'Expand All' : 'Collapse All' }}
+          </TooltipContent>
+        </Tooltip>
+
+        <Tooltip>
+          <TooltipTrigger as-child>
+            <Button size="iconSm" variant="ghost" @click="onRefreshSchema">
+              <Icon
+                name="hugeicons:redo"
+                :class="['size-4! min-w-4', isRefreshing && 'animate-spin']"
+              />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent> Refresh Schema </TooltipContent>
+        </Tooltip>
+      </template>
+    </PrimaryPanelHeader>
+
+    <div
+      v-if="showLoadSessionBanner"
+      class="mx-2 mb-2 rounded-md border bg-background/80 px-3 py-2"
+    >
+      <div class="flex items-start gap-2">
+        <Icon
+          :name="loadSessionIcon"
+          :class="[
+            'size-4 min-w-4 mt-0.5',
+            (loadSessionState === 'loading' ||
+              loadSessionState === 'waiting') &&
+              'animate-spin',
+            loadSessionState === 'completed' && 'text-emerald-500',
+            loadSessionState === 'failed' && 'text-destructive',
+          ]"
+        />
+        <div class="min-w-0">
+          <p class="text-xs font-medium">
+            {{ loadSessionTitle }}
+            <span
+              v-if="
+                loadSessionState === 'completed' &&
+                activeLoadSession?.schemaCount !== undefined
+              "
+              class="text-muted-foreground font-normal"
+            >
+              • {{ activeLoadSession.schemaCount }} schema{{
+                activeLoadSession.schemaCount === 1 ? '' : 's'
+              }}
+            </span>
+          </p>
+          <p class="text-xs text-muted-foreground break-words">
+            {{ loadSessionMessage }}
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- TODO: check flow when change connection  -->
+    <!-- TODO: check flow when change schema  -->
+    <BaseEmpty
+      v-if="!hasTreeData"
+      :title="emptyStateTitle"
+      :desc="emptyStateDescription"
+    />
+
+    <!-- Context Menu Wrapper -->
+    <BaseContextMenu
+      :context-menu-items="contextMenuItems"
+      @on-clear-context-menu="selectedItem = null"
+    >
+      <div class="h-full">
+        <FileTree
+          ref="fileTreeRef"
+          :init-expanded-ids="[defaultFolderOpenId]"
+          :initial-data="fileTreeData"
+          :storage-key="`${connectionId}-schemas-tree`"
+          :search-query="debouncedSearch"
+          :allow-drag-and-drop="false"
+          :delay-focus="0"
+          @click="handleTreeClick"
+          @contextmenu="handleTreeContextMenu"
+        />
+      </div>
+    </BaseContextMenu>
+
+    <!-- Safe Mode Confirm Dialog -->
+    <SafeModeConfirmDialog
+      :loading="safeModeLoading"
+      :open="safeModeDialogOpen"
+      :sql="safeModeDialogSQL"
+      :type="safeModeDialogType"
+      @update:open="safeModeDialogOpen = $event"
+      @confirm="onSafeModeConfirm"
+      @cancel="onSafeModeCancel"
+    />
+
+    <!-- Rename Dialog -->
+    <RenameDialog
+      v-model:open="renameDialogOpen"
+      :tabViewType="renameDialogType"
+      :current-name="renameDialogValue"
+      @confirm="onConfirmRename"
+    />
+
+    <!-- SQL Preview Dialog -->
+    <SqlPreviewDialog
+      :open="sqlPreviewDialogOpen"
+      :sql="sqlPreviewDialogSQL"
+      :title="sqlPreviewDialogTitle"
+      :isLoading="isFetching"
+      @update:open="sqlPreviewDialogOpen = $event"
+    />
+  </div>
+</template>

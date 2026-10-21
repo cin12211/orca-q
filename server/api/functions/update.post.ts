@@ -2,7 +2,7 @@ import { defineEventHandler, readBody, createError } from 'h3';
 import {
   generateRoutineUpdateSQL,
   getRoutineDefinitionType,
-} from '~/components/modules/management/schemas/utils';
+} from '~/components/modules/driver/shared/primary-panel/schemas/utils';
 import { DatabaseClientType } from '~/core/constants/database-client-type';
 import type { DatabaseMetadataRequestParams } from '~/core/types';
 import { createFunctionAdapter } from '~/server/infrastructure/database/adapters/functions';
@@ -32,10 +32,7 @@ export default defineEventHandler(async event => {
     });
   }
 
-  const adapter = await createFunctionAdapter(
-    body.type,
-    body
-  );
+  const adapter = await createFunctionAdapter(body.type, body);
 
   return await adapter.updateFunction(updateSql);
 });

@@ -3,7 +3,7 @@ import { acceptCompletion, startCompletion } from '@codemirror/autocomplete';
 import { sql } from '@codemirror/lang-sql';
 import { lintGutter } from '@codemirror/lint';
 import { Compartment } from '@codemirror/state';
-import { EditorView, keymap } from '@codemirror/view';
+import { EditorView, keymap, type KeyBinding } from '@codemirror/view';
 import { sqlExtension } from '@marimo-team/codemirror-sql';
 import type BaseCodeEditor from '~/components/base/code-editor/BaseCodeEditor.vue';
 import { SQLDialectSupport } from '~/components/base/code-editor/constants';
@@ -16,21 +16,19 @@ import {
   type SyntaxTreeNodeData,
 } from '~/components/base/code-editor/extensions';
 import {
-  resolveParserDialect,
-  resolveHighlightDialect,
-} from '~/components/base/code-editor/states/sqlParserConfig';
-import {
-  pgKeywordCompletion,
   rawQueryEditorFormat,
   sqlParserConfigField,
   updateSqlParserConfigEffect,
 } from '~/components/base/code-editor/utils';
-import { DatabaseClientType } from '~/core/constants/database-client-type';
 import { useSchemaStore } from '~/core/stores';
-import type { Connection } from '~/core/stores';
+import type { RawQueryCapabilities } from '../contracts';
 import type { EditorCursor } from '../interfaces';
 import { createCteAwareCompletionSource } from '../utils/cteAwareCompletionSource';
 import { mappedSchemaSuggestion } from '../utils/getMappedSchemaSuggestion';
+import {
+  isRedisLanguage,
+  resolveStatementMode,
+} from '../utils/resolveStatementMode';
 
 const getKeywordDocs = async () => {
   const keywords = await import(
@@ -42,15 +40,16 @@ const getKeywordDocs = async () => {
 interface UseSqlEditorExtensionsParams {
   codeEditorRef: Ref<InstanceType<typeof BaseCodeEditor> | null>;
   fileVariables: Ref<string>;
-  /** Active workspace connection — used to resolve the correct SQL dialect. */
-  connection?: Ref<Connection | undefined>;
+  /** Drives dialect, language and formatting support. */
+  capabilities: Ref<RawQueryCapabilities>;
+  /** Extra keybindings contributed by the engine, e.g. PostgreSQL's Mod-e. */
+  extraKeymap?: KeyBinding[];
   /** Callback wired to useQueryExecution.executeCurrentStatement */
   onExecuteStatement: (params: {
     currentStatements: SyntaxTreeNodeData[];
     treeNodes: SyntaxTreeNodeData[];
     queryPrefix?: string;
   }) => void;
-  onExplainAnalyzeCurrent: () => void;
 }
 
 /**
@@ -60,9 +59,9 @@ interface UseSqlEditorExtensionsParams {
 export function useSqlEditorExtensions({
   codeEditorRef,
   fileVariables,
-  connection,
+  capabilities,
+  extraKeymap,
   onExecuteStatement,
-  onExplainAnalyzeCurrent,
 }: UseSqlEditorExtensionsParams) {
   const schemaStore = useSchemaStore();
   const { schemasByContext: connectionSchemas, activeSchema } =
@@ -76,13 +75,8 @@ export function useSqlEditorExtensions({
   const defaultSchemaName = computed(
     () => activeSchema.value?.name || connectionSchemas.value?.[0]?.name
   );
-  const isRedisConnection = computed(
-    () => connection?.value?.type === DatabaseClientType.REDIS
-  );
-  const isFormatSupported = computed(() => !isRedisConnection.value);
-  const isExplainSupported = computed(
-    () => connection?.value?.type === DatabaseClientType.POSTGRES
-  );
+  const isRedis = computed(() => isRedisLanguage(capabilities.value));
+  const isFormatSupported = computed(() => capabilities.value.supportsFormat);
 
   const schemaConfig = computed(() => {
     return mappedSchemaSuggestion({
@@ -98,39 +92,36 @@ export function useSqlEditorExtensions({
 
   const buildSqlLanguageExtension = () =>
     sql({
-      dialect: resolveHighlightDialect(connection?.value?.type),
+      // `highlightDialect` is optional on the contract because non-SQL
+      // languages omit it; this builder only runs for SQL, where it is set.
+      dialect:
+        capabilities.value.highlightDialect ??
+        SQLDialectSupport.PostgreSQLHighlightDialect,
       upperCaseKeywords: true,
-      keywordCompletion:
-        !connection?.value?.type ||
-        connection.value.type === DatabaseClientType.POSTGRES
-          ? pgKeywordCompletion
-          : undefined,
+      keywordCompletion: capabilities.value.keywordCompletion,
       schema: schemaConfig.value.schema,
       defaultSchema: schemaConfig.value.defaultSchema,
     });
 
-  const buildLanguageExtension = () => {
-    if (isRedisConnection.value) {
-      return redis();
-    }
-
-    return buildSqlLanguageExtension();
-  };
+  const buildLanguageExtension = () =>
+    isRedis.value ? redis() : buildSqlLanguageExtension();
 
   const buildCompletionExtension = () => {
-    if (isRedisConnection.value) {
-      return [];
-    }
+    if (isRedis.value) return [];
 
-    return resolveHighlightDialect(connection?.value?.type).language.data.of({
+    // Unreachable for non-SQL languages, which are the only ones that may
+    // omit `highlightDialect`.
+    const dialect =
+      capabilities.value.highlightDialect ??
+      SQLDialectSupport.PostgreSQLHighlightDialect;
+
+    return dialect.language.data.of({
       autocomplete: buildCteAwareCompletionSource(),
     });
   };
 
   const buildHoverExtension = () => {
-    if (isRedisConnection.value) {
-      return [];
-    }
+    if (isRedis.value) return [];
 
     return sqlExtension({
       enableLinting: false,
@@ -201,18 +192,7 @@ export function useSqlEditorExtensions({
         },
         preventDefault: true,
       },
-      {
-        key: 'Mod-e',
-        run: () => {
-          if (!isExplainSupported.value) {
-            return true;
-          }
-
-          onExplainAnalyzeCurrent();
-          return true;
-        },
-        preventDefault: true,
-      },
+      ...(extraKeymap ?? []),
       { key: 'Mod-i', run: startCompletion },
       { key: 'Tab', run: acceptCompletion },
     ]),
@@ -234,15 +214,19 @@ export function useSqlEditorExtensions({
     const editorView = getEditorView();
     if (!editorView) return;
 
-    const parserDialect = resolveParserDialect(connection?.value?.type);
-    const statementMode = isRedisConnection.value ? 'line' : 'sql';
+    // Non-SQL languages omit `parserDialect`; the parser is disabled for them
+    // (`isEnable: false`), so the value below is inert and only keeps the
+    // effect payload well-typed.
+    const parserDialect =
+      capabilities.value.parserDialect ??
+      SQLDialectSupport.PostgreSQLParserDialect;
 
     editorView.dispatch({
       effects: [
         updateSqlParserConfigEffect.of({
           dialect: parserDialect,
-          isEnable: !isRedisConnection.value,
-          statementMode,
+          isEnable: !isRedis.value,
+          statementMode: resolveStatementMode(capabilities.value),
         }),
         sqlCompartment.reconfigure(buildLanguageExtension()),
         sqlCompletionCompartment.reconfigure(buildCompletionExtension()),
@@ -264,15 +248,13 @@ export function useSqlEditorExtensions({
     }
   );
 
-  // Auto-reload when the active connection's DB type changes (e.g. switching workspaces)
-  if (connection) {
-    watch(
-      () => connection.value?.type,
-      () => {
-        reloadSqlCompartment();
-      }
-    );
-  }
+  // Auto-reload when the active connection's capabilities change (e.g. switching workspaces)
+  watch(
+    () => capabilities.value,
+    () => {
+      reloadSqlCompartment();
+    }
+  );
 
   watch(
     () => codeEditorRef.value?.editorView,

@@ -5,8 +5,8 @@ import type BaseDataGrid from '~/components/base/data-grid/BaseDataGrid.vue';
 import { HASH_INDEX_ID } from '~/components/base/data-grid/constants';
 import { buildDynamicRowData } from '~/components/base/data-grid/utils';
 import PreviewRelationTable from '~/components/modules/quick-query/previewRelationTable/PreviewRelationTable.vue';
+import type { CommandResultHandlerResolver } from '~/components/modules/raw-query/contracts';
 import { useHotkeys } from '~/core/composables/useHotKeys';
-import { DatabaseClientType } from '~/core/constants/database-client-type';
 import { exportData, ExportFormat } from '~/core/helpers/copyData';
 import { useSchemaStore } from '~/core/stores';
 import {
@@ -20,7 +20,6 @@ import {
   type RawQueryDirtyTracker,
 } from '../../utils/buildRawQueryColumnDefs';
 import { type RawQueryEditedCell } from '../../utils/buildRawQueryUpdates';
-import { createCommandResultFactory } from '../../utils/commandType';
 import { groupColumnsByTable } from '../../utils/isCellEditable';
 import RawQueryContextMenu from '../RawQueryContextMenu.vue';
 import RawQueryResultControlBar from './RawQueryResultControlBar.vue';
@@ -32,6 +31,7 @@ const props = defineProps<{
   formattedData: Record<string, any>[];
   executeLoading: boolean;
   isStreaming: boolean;
+  resolveCommandResultHandler: CommandResultHandlerResolver;
 }>();
 
 const rawQueryTableRef = ref<InstanceType<typeof BaseDataGrid>>();
@@ -67,10 +67,9 @@ const downloadResults = (format: 'csv' | 'json' | 'text') => {
 };
 
 const commandResult = computed(() =>
-  createCommandResultFactory(
+  props.resolveCommandResultHandler(props.activeTab.metadata.connection?.type)(
     props.activeTab.metadata.command || '',
-    props.activeTab.metadata.rowCount || 0,
-    props.activeTab.metadata.connection?.type as DatabaseClientType
+    props.activeTab.metadata.rowCount || 0
   )
 );
 

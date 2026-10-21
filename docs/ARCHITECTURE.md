@@ -86,7 +86,7 @@ Pages are thin routing shells. Feature modules encapsulate UI + hooks. Core prov
 
 ### Connection Families
 
-OrcaQ now treats connection type and provider kind as a capability problem instead of a flat driver list. D1 and Turso resolve to the `sql` family and reuse SQL explorer/query modules with provider-aware transport. Redis resolves to a dedicated family with its own sidebar panels, routes, and unavailable-state rules so it never falls back to PostgreSQL-oriented flows.
+OrcaQ now treats connection type and provider kind as a capability problem instead of a flat driver list. D1 and Turso resolve to the `sql` family and reuse SQL explorer/query modules with provider-aware transport. Redis resolves to a dedicated family with its own sidebar panels, routes, and unavailable-state rules so it never falls back to PostgreSQL-oriented flows. Primary sidebar activities are configured per `DatabaseClientType` in `core/constants/connection-capabilities.ts`.
 
 ### Separation of Concerns
 
@@ -277,30 +277,39 @@ Interactive Entity-Relationship Diagram:
 - SQLite: desktop-only file-based connections with raw query and minimum metadata or table browsing
 - Advanced administration areas such as roles, metrics, and instance insights remain explicitly PostgreSQL-first unless an engine-specific adapter exists
 
-### 4.9 Feature: Management (`components/modules/management/`)
+### 4.9 Feature: Driver (`components/modules/driver/`)
 
 **Layer: Feature**
 
-Database administration tools:
+Engine-specific UI, grouped by database driver. Each driver folder is split by
+the app surface it serves:
 
-| Sub-module         | Responsibility                  |
-| ------------------ | ------------------------------- |
-| `explorer/`        | File/SQL script explorer tree   |
-| `schemas/`         | Schema browser and management   |
-| `role-permission/` | Role & permission management UI |
-| `erd-diagram/`     | ERD from management sidebar     |
-| `export/`          | Database export configuration   |
-| `shared/`          | Shared management components    |
+| Folder                        | Responsibility                                                      |
+| ----------------------------- | ------------------------------------------------------------------- |
+| `<driver>/primary-panel/`     | Primary sidebar panels, one sub-folder per activity (`schemas/`, …) |
+| `<driver>/quick-query/`       | Main tab content for browsing data (Redis keys, Mongo collections)  |
+| `<driver>/instance-insights/` | Instance monitoring dashboard for that engine                       |
+| `postgres/user-permissions/`  | Role detail page (`/user-permissions/[roleName]`)                   |
+| `shared/primary-panel/`       | Panels shared by several drivers (explorer, agent, SQL schemas)     |
+| `shared/sql/`                 | Panels and insights shared by the SQL family (ERD, database tools)  |
+| `shared/instance-insights/`   | KPI card and formatters reused by every insights dashboard          |
 
-### 4.10 Feature: Instance Insights (`components/modules/instance-insights/`)
+The primary sidebar picks a panel per activity and then per `DatabaseClientType`;
+see [`app-shell/primary-side-bar/docs/PRIMARY_SIDEBAR_FLOW.md`](../components/modules/app-shell/primary-side-bar/docs/PRIMARY_SIDEBAR_FLOW.md).
+
+### 4.10 Feature: Instance Insights
 
 **Layer: Feature**
 
-Real-time database monitoring dashboard:
+Real-time database monitoring, one dashboard per engine, routed by
+`pages/[workspaceId]/[connectionId]/instance-insights/index.vue`:
 
-- Active connections, replication status, configuration
-- Query cancellation, connection termination
-- ECharts-based metric visualization
+| Engine     | Panel                        | Location                               |
+| ---------- | ---------------------------- | -------------------------------------- |
+| PostgreSQL | `PgInstanceInsightsPanel`    | `driver/postgres/instance-insights/`   |
+| Redis      | `RedisInstanceInsightsPanel` | `driver/redis/instance-insights/`      |
+| MongoDB    | `MongoInstanceInsightsPanel` | `driver/mongodb/instance-insights/`    |
+| Other SQL  | `SqlInstanceInsightsPanel`   | `driver/shared/sql/instance-insights/` |
 
 ### 4.11 Feature: Settings (`components/modules/settings/`)
 

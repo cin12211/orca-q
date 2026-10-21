@@ -431,3 +431,41 @@ export interface RedisInstanceInsights {
   replication: RedisReplicationInsight;
   config: RedisConfigEntry[];
 }
+
+// ─── MongoDB ─────────────────────────────────────────────────────────────
+
+export type MongoTopology = 'standalone' | 'replicaSet' | 'sharded';
+
+export interface MongoConnectionsMetric {
+  current: number;
+  available: number;
+  totalCreated: number;
+}
+
+export interface MongoMemoryMetric {
+  residentMb: number;
+  virtualMb: number;
+}
+
+export interface MongoCacheMetric {
+  usedBytes: number;
+  maxBytes: number;
+  dirtyBytes: number;
+}
+
+export interface MongoOverviewInsight {
+  version: string;
+  host: string;
+  uptimeSeconds: number;
+  storageEngine: string | null;
+  topology: MongoTopology;
+  replicaSetName: string | null;
+  connections: MongoConnectionsMetric | null;
+  memory: MongoMemoryMetric | null;
+  cache: MongoCacheMetric | null;
+  warnings: string[];
+}
+
+export interface MongoInstanceInsights {
+  overview: MongoOverviewInsight;
+}

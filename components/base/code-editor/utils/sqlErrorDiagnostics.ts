@@ -11,7 +11,8 @@ export interface ApplySqlErrorDiagnosticsOptions {
   statementFrom: number;
   fileParameters?: Record<string, unknown>;
   errorDetail?: DatabaseDriverError;
-  clientType: DatabaseClientType;
+  /** Defaults to PostgreSQL when the connection carries no type. */
+  clientType?: DatabaseClientType;
   queryPrefix?: string;
 }
 
@@ -257,10 +258,12 @@ export function applySqlErrorDiagnostics({
   statementFrom,
   fileParameters = {},
   errorDetail,
-  clientType,
+  clientType: requestedClientType,
   queryPrefix,
 }: ApplySqlErrorDiagnosticsOptions): void {
   if (!editorView || !errorDetail) return;
+
+  const clientType = requestedClientType || DatabaseClientType.POSTGRES;
 
   const { message, position: numericPosition } =
     (errorDetail as any).normalizeError ||

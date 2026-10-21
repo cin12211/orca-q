@@ -1,0 +1,1 @@
+export { resolveRawQueryComponent } from './resolveRawQueryComponent';

@@ -40,10 +40,8 @@ const {
     >
       <DialogHeader class="flex-shrink-0">
         <div class="flex items-center gap-3">
-          <div
-            class="p-2.5 rounded-xl bg-gradient-to-br from-violet-500/20 to-fuchsia-500/20"
-          >
-            <Sparkles class="size-5 text-violet-500" />
+          <div class="p-2.5 rounded-xl border">
+            <Sparkles class="size-5" />
           </div>
           <div>
             <DialogTitle class="text-xl font-semibold">What's New</DialogTitle>

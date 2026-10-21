@@ -421,7 +421,7 @@
 
 **Tech Evidence:**
 
-- Files: `components/modules/database-tools/schema-diff/`
+- Files: `components/modules/driver/shared/sql/database-tools/schema-diff/`
 - Components: `SchemaDiffTree.vue`, `SchemaDiffSqlPanel.vue`, `SchemaDiffConnectionSelector.vue`
 - API: `server/api/schema-diff/index.post.ts`
 - Server utility: `server/utils/schema-diff.utils.ts`
@@ -454,7 +454,7 @@
 
 **Tech Evidence:**
 
-- Files: `components/modules/database-tools/backup-restore/`
+- Files: `components/modules/driver/shared/sql/database-tools/backup-restore/`
 - Components: `ExportOptionsForm.vue`, `ImportOptionsForm.vue`, `ImportFileDropzone.vue`, `TransferProgressCard.vue`, `RestoreConfirmDialog.vue`
 - API: `server/api/database-export/export-database.ts`, `server/api/database-import/import-database.ts`
 - Backend: `server/infrastructure/database/backup/native-backup-jobs.ts`
@@ -840,7 +840,6 @@ Feature Modules:
     changelog/              → What's new popup
     command-palette/        → CMD+K interface
     connection/             → Connection form & management
-    database-tools/         → Backup/restore + schema diff
     environment-tag/        → Color-coded env tags
     erd-diagram/            → ERD canvas
     instance-insights/      → DB server monitoring

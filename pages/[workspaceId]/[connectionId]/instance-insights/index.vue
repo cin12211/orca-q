@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import { storeToRefs } from 'pinia';
-import InstanceInsightsPanel from '~/components/modules/instance-insights/InstanceInsightsPanel.vue';
-import MultiDbInstanceInsightsPanel from '~/components/modules/instance-insights/MultiDbInstanceInsightsPanel.vue';
-import RedisInstanceInsightsPanel from '~/components/modules/instance-insights/RedisInstanceInsightsPanel.vue';
-import { useRedisWorkspace } from '~/components/modules/redis-workspace/hooks/useRedisWorkspace';
+import { MongoInstanceInsightsPanel } from '~/components/modules/driver/mongodb/instance-insights';
+import PgInstanceInsightsPanel from '~/components/modules/driver/postgres/instance-insights/PgInstanceInsightsPanel.vue';
+import RedisInstanceInsightsPanel from '~/components/modules/driver/redis/instance-insights/RedisInstanceInsightsPanel.vue';
+import { useRedisWorkspace } from '~/components/modules/driver/redis/quick-query/hooks/useRedisWorkspace';
+import SqlInstanceInsightsPanel from '~/components/modules/driver/shared/sql/instance-insights/SqlInstanceInsightsPanel.vue';
 import { DatabaseClientType } from '~/core/constants/database-client-type';
 import { useManagementConnectionStore } from '~/core/stores/managementConnectionStore';
 import { useTabViewsStore } from '~/core/stores/useTabViewsStore';
@@ -85,14 +86,18 @@ watch(
       "
     />
 
-    <InstanceInsightsPanel
+    <MongoInstanceInsightsPanel
+      v-else-if="dbType === DatabaseClientType.MONGODB"
+    />
+
+    <PgInstanceInsightsPanel
       v-else-if="dbType === DatabaseClientType.POSTGRES"
       :db-connection-string="dbConnectionString"
       :database-name="databaseName"
       :db-type="dbType"
     />
 
-    <MultiDbInstanceInsightsPanel
+    <SqlInstanceInsightsPanel
       v-else
       :db-connection-string="dbConnectionString"
       :database-name="databaseName"

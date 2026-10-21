@@ -8,6 +8,7 @@ import {
   Button,
 } from '#components';
 import { cn } from '@/lib/utils';
+import type { CommandResultHandlerResolver } from '~/components/modules/raw-query/contracts';
 import { useSchemaStore } from '~/core/stores';
 import {
   ViewMode,
@@ -15,7 +16,6 @@ import {
   type MappedRawColumn,
 } from '../interfaces';
 import { ChartBuilder } from '../modules/chart-builder';
-import { ExplainQuery } from '../modules/explain-query';
 import { formatColumnsInfo } from '../utils/formatColumnsInfo';
 import { normalizeResultRows } from '../utils/normalizeResultRows';
 import ResultTabErrorView from './result-tab/ResultTabErrorView.vue';
@@ -29,6 +29,9 @@ const props = defineProps<{
   // mappedColumns: MappedRawColumn[];
   executeLoading: boolean;
   isStreaming: boolean;
+  resolveCommandResultHandler: CommandResultHandlerResolver;
+  /** View tabs the calling engine supports, in display order. */
+  supportedViews: ViewMode[];
 }>();
 
 const schemaStore = useSchemaStore();
@@ -63,14 +66,19 @@ const isHaveRightItem = computed(() => {
   return currentIndex >= 0 && currentIndex < tabIds.length - 1;
 });
 
-const viewModes: { value: ViewMode; label: string }[] = [
-  { value: ViewMode.RESULT, label: 'Result' },
-  { value: ViewMode.EXPLAIN, label: 'Explain' },
-  { value: ViewMode.RAW, label: 'Raw' },
-  { value: ViewMode.INFO, label: 'Info' },
-  { value: ViewMode.CHART, label: 'Chart' },
-  { value: ViewMode.ERROR, label: 'Errors' },
-];
+const VIEW_MODE_LABELS: Record<ViewMode, string> = {
+  [ViewMode.RESULT]: 'Result',
+  [ViewMode.EXPLAIN]: 'Explain',
+  [ViewMode.RAW]: 'Raw',
+  [ViewMode.INFO]: 'Info',
+  [ViewMode.CHART]: 'Chart',
+  [ViewMode.CONSOLE]: 'Console',
+  [ViewMode.ERROR]: 'Errors',
+};
+
+const visibleViewModes = computed(() =>
+  props.supportedViews.map(value => ({ value, label: VIEW_MODE_LABELS[value] }))
+);
 
 // Cache key: tabId + resultLength for case (streaming)
 const formattedDataCache = new Map<string, Record<string, any>[]>();
@@ -208,7 +216,7 @@ const hasErrors = (tab: ExecutedResultItem) => {
     <!-- Vertical view tabs (left side) -->
     <div class="flex mt-7 [writing-mode:vertical-rl]" v-if="activeTab">
       <div
-        v-for="mode in viewModes"
+        v-for="mode in visibleViewModes"
         :key="mode.value"
         @click="
           // Disable result/raw/chart if has errors, disable error if no errors
@@ -379,50 +387,67 @@ const hasErrors = (tab: ExecutedResultItem) => {
           desc="Execute a query to see results"
         />
 
-        <!-- Result View -->
-        <ResultTabResultView
-          v-else-if="activeTab && currentView === ViewMode.RESULT"
-          :active-tab="activeTab"
-          :active-tab-columns="activeTabColumns"
+        <!--
+          Engines may contribute their own view for the active tab. The slot
+          falls back to the built-in view set when it is absent or renders
+          nothing (e.g. a `v-if`-false engine view).
+        -->
+        <slot
+          v-else
+          name="result-view"
+          :tab="activeTab"
+          :view="currentView"
           :formatted-data="formattedData"
-          :execute-loading="executeLoading"
-          :is-streaming="isStreaming"
-          :key="activeTab.id"
-        />
+          :columns="activeTabColumns"
+        >
+          <!-- Result View -->
+          <ResultTabResultView
+            v-if="currentView === ViewMode.RESULT"
+            :active-tab="activeTab"
+            :active-tab-columns="activeTabColumns"
+            :formatted-data="formattedData"
+            :execute-loading="executeLoading"
+            :is-streaming="isStreaming"
+            :resolve-command-result-handler="resolveCommandResultHandler"
+            :key="activeTab.id"
+          />
 
-        <ExplainQuery
-          v-else-if="activeTab && currentView === ViewMode.EXPLAIN"
-          :active-tab="activeTab"
-        />
+          <!-- Raw View (JSON) -->
+          <ResultTabRawView
+            v-else-if="currentView === ViewMode.RAW"
+            :formatted-data="formattedData"
+            :execute-loading="executeLoading"
+            :is-streaming="isStreaming"
+          />
 
-        <!-- Raw View (JSON) -->
-        <ResultTabRawView
-          v-else-if="activeTab && currentView === ViewMode.RAW"
-          :formatted-data="formattedData"
-          :execute-loading="executeLoading"
-          :is-streaming="isStreaming"
-        />
+          <!-- Chart View -->
+          <ChartBuilder
+            v-else-if="currentView === ViewMode.CHART"
+            :active-tab="activeTab"
+            :active-tab-columns="activeTabColumns"
+            :formatted-data="formattedData"
+          />
 
-        <!-- Chart View -->
-        <ChartBuilder
-          v-else-if="activeTab && currentView === ViewMode.CHART"
-          :active-tab="activeTab"
-          :active-tab-columns="activeTabColumns"
-          :formatted-data="formattedData"
-        />
+          <!-- Info View -->
+          <ResultTabInfoView
+            v-else-if="currentView === ViewMode.INFO"
+            :active-tab="activeTab"
+          />
 
-        <!-- Info View -->
-        <ResultTabInfoView
-          v-else-if="activeTab && currentView === ViewMode.INFO"
-          :active-tab="activeTab"
-        />
+          <!-- Errors View -->
+          <ResultTabErrorView
+            v-else-if="currentView === ViewMode.ERROR"
+            :active-tab="activeTab"
+            @onChangeView="setViewMode($event)"
+          />
 
-        <!-- Errors View -->
-        <ResultTabErrorView
-          v-else-if="activeTab && currentView === ViewMode.ERROR"
-          :active-tab="activeTab"
-          @onChangeView="setViewMode($event)"
-        />
+          <!-- Views only an engine can render (e.g. EXPLAIN kept across a connection switch) -->
+          <BaseEmpty
+            v-else
+            title="View not available"
+            desc="This view is not available for the current connection."
+          />
+        </slot>
       </div>
     </div>
   </div>

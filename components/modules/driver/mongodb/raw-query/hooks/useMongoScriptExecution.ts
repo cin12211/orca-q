@@ -1,0 +1,189 @@
+import { reactive, ref, shallowRef, type Ref } from 'vue';
+import type { FieldDef } from 'pg';
+import type { ResultTabsReturn } from '~/components/modules/raw-query/hooks';
+import {
+  ViewMode,
+  type ExecutedResultItem,
+} from '~/components/modules/raw-query/interfaces';
+import { uuidv4 } from '~/core/helpers';
+import { getConnectionParams } from '~/core/helpers/connection-helper';
+import type { Connection } from '~/core/stores';
+import { approveMongoRawQuery, executeMongoRawQuery } from '../api';
+import { parseMongoEjsonVariables } from '../utils/mongoEjson';
+import { useMongoApproval } from './useMongoApproval';
+
+export function useMongoScriptExecution(options: {
+  connection: Ref<Connection | undefined>;
+  databaseName?: Ref<string | undefined>;
+  collectionContext?: Ref<string | undefined>;
+  documentText: Ref<string>;
+  fileVariables: Ref<string>;
+  fieldDefs?: Ref<FieldDef[]>;
+  resultTabs: ResultTabsReturn;
+  beforeExecute?: () => Promise<boolean>;
+}) {
+  const approval = useMongoApproval();
+  const currentRawQueryResult = shallowRef<Record<string, unknown>[]>([]);
+  const rawResponse = shallowRef<Record<string, unknown>>({});
+  const activeExecution = shallowRef<ReturnType<
+    typeof executeMongoRawQuery
+  > | null>(null);
+  const queryProcessState = reactive({
+    isHaveOneExecute: false,
+    executeLoading: false,
+    isStreaming: false,
+    streamingRowCount: 0,
+    queryTime: 0,
+    executeErrors: undefined as ExecutedResultItem['metadata']['executeErrors'],
+    currentStatementQuery: '',
+  });
+  let sequence = 0;
+  let pendingSource: { text: string; from: number; to: number } | null = null;
+
+  const execute = async (
+    source?: { text: string; from: number; to: number },
+    approvalToken?: string
+  ) => {
+    if (!options.connection.value) return;
+
+    if (options.beforeExecute) {
+      const canExecute = await options.beforeExecute();
+      if (!canExecute) return;
+    }
+
+    let params: Record<string, unknown> = {};
+    try {
+      params = parseMongoEjsonVariables(options.fileVariables.value);
+    } catch {
+      throw new Error('Mongo variables must be valid Extended JSON');
+    }
+    const resolvedSource = source ?? {
+      text: options.documentText.value,
+      from: 0,
+      to: options.documentText.value.length,
+    };
+
+    pendingSource = resolvedSource;
+    sequence += 1;
+    const item: ExecutedResultItem = {
+      id: uuidv4(),
+      metadata: {
+        queryTime: 0,
+        statementQuery: resolvedSource.text,
+        executedAt: new Date(),
+        executeErrors: undefined,
+        connection: options.connection.value,
+        command: 'MONGODB',
+        rowCount: 0,
+        resultKind: 'cursor',
+      },
+      result: [],
+      seqIndex: sequence,
+      view: ViewMode.RESULT,
+    };
+    options.resultTabs.addResultTab(item);
+    const rows: Record<string, unknown>[] = [];
+    queryProcessState.executeLoading = true;
+    const connParams = getConnectionParams(options.connection.value);
+    activeExecution.value = executeMongoRawQuery({
+      ...connParams,
+      connectionId: options.connection.value.id,
+      database: options.databaseName?.value,
+      collectionContext: options.collectionContext?.value,
+      script: resolvedSource.text,
+      params,
+      approvalToken,
+      onMeta: message => {
+        item.metadata.resultKind = message.resultKind;
+        if (options.fieldDefs) {
+          options.fieldDefs.value = message.fields as FieldDef[];
+        }
+        item.metadata.fieldDefs = message.fields as FieldDef[];
+        options.resultTabs.refreshResultTab(item.id, item);
+      },
+      onRows: (batch, total) => {
+        rows.push(...batch);
+        item.result = rows;
+        item.metadata.rowCount = total;
+        queryProcessState.streamingRowCount = total;
+        currentRawQueryResult.value = rows;
+        options.resultTabs.refreshResultTab(item.id, item);
+      },
+      onLog: entry => {
+        item.metadata.logs ??= [];
+        item.metadata.logs.push(entry);
+        options.resultTabs.refreshResultTab(item.id, item);
+      },
+      onResult: message => {
+        item.metadata.rawResult = message.data;
+        item.result = Array.isArray(message.data)
+          ? (message.data as Record<string, unknown>[])
+          : [{ value: message.data }];
+        rawResponse.value = message.data as Record<string, unknown>;
+        if (message.mutationSummary)
+          item.metadata.mutationSummary = message.mutationSummary;
+        options.resultTabs.refreshResultTab(item.id, item);
+      },
+      onApprovalRequired: message => {
+        approval.setPendingApproval(message);
+        queryProcessState.executeLoading = false;
+      },
+      onDone: message => {
+        queryProcessState.executeLoading = false;
+        queryProcessState.isStreaming = false;
+        queryProcessState.queryTime = message.queryTime;
+        item.metadata.queryTime = message.queryTime;
+        item.metadata.truncated = message.truncated;
+        item.metadata.rowCount = message.rowCount;
+        options.resultTabs.refreshResultTab(item.id, item);
+      },
+      onError: error => {
+        queryProcessState.executeLoading = false;
+        item.metadata.executeErrors = {
+          message: error.message,
+          data: { message: error.message },
+        };
+        item.view = ViewMode.ERROR;
+        options.resultTabs.refreshResultTab(item.id, item);
+      },
+    });
+    await activeExecution.value.finished;
+  };
+  const confirmPendingWrite = async () => {
+    if (!approval.pendingApproval.value || !pendingSource) return;
+    const approvalRes = await approveMongoRawQuery(
+      approval.pendingApproval.value.challengeId
+    );
+    const source = pendingSource;
+    approval.setPendingApproval(null);
+    await execute(source, approvalRes.approvalToken);
+    return approvalRes;
+  };
+  const cancelPendingWrite = () => {
+    approval.setPendingApproval(null);
+    pendingSource = null;
+  };
+
+  approval.registerApprovalHandlers({
+    confirm: confirmPendingWrite,
+    cancel: cancelPendingWrite,
+  });
+
+  const cancel = () => {
+    activeExecution.value?.abort();
+    activeExecution.value = null;
+    queryProcessState.executeLoading = false;
+    queryProcessState.isStreaming = false;
+    cancelPendingWrite();
+  };
+  return {
+    execute,
+    cancel,
+    pendingApproval: approval.pendingApproval,
+    confirmPendingWrite,
+    cancelPendingWrite,
+    queryProcessState,
+    currentRawQueryResult,
+    rawResponse,
+  };
+}

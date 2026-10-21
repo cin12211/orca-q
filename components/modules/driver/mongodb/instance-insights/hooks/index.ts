@@ -1,0 +1,1 @@
+export { useMongoInstanceInsights } from './useMongoInstanceInsights';

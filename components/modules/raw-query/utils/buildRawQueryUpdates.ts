@@ -1,4 +1,4 @@
-import { DatabaseClientType } from '~/core/constants/database-client-type';
+import type { DatabaseClientType } from '~/core/constants/database-client-type';
 import {
   buildDeleteStatements,
   buildUpdateStatements,

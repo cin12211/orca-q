@@ -1,3 +1,4 @@
+import { resolveRouteNameForTabType } from '~/core/composables/useTabManagement';
 import { useWorkspaceConnectionRoute } from '~/core/composables/useWorkspaceConnectionRoute';
 import { useSchemaStore } from '~/core/stores/useSchemaStore';
 import { TabViewType, useTabViewsStore } from '~/core/stores/useTabViewsStore';
@@ -45,7 +46,7 @@ export function useTableCommands(): CommandProvider {
                 icon: 'hugeicons:grid-table',
                 iconClass: 'text-yellow-400',
                 type: TabViewType.TableDetail,
-                routeName: 'workspaceId-connectionId-quick-query-tabViewId',
+                routeName: resolveRouteNameForTabType(TabViewType.TableDetail),
                 routeParams: { tabViewId: tabId },
                 connectionId: connectionId.value,
                 schemaId: schema.name,

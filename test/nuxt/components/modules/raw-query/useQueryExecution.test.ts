@@ -1,9 +1,11 @@
 import { reactive, ref, shallowRef } from 'vue';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { applySqlErrorDiagnostics } from '~/components/base/code-editor/utils';
+import type { RawQueryCapabilities } from '~/components/modules/raw-query/contracts';
 import { useQueryExecution } from '~/components/modules/raw-query/hooks/useQueryExecution';
 import * as streamingQuery from '~/components/modules/raw-query/hooks/useStreamingQuery';
-import { DatabaseClientType } from '~/core/constants/database-client-type';
-import { EConnectionMethod } from '~/core/types/entities/connection.entity';
+import { ViewMode } from '~/components/modules/raw-query/interfaces';
+import { sqlStreamingExecutor } from '~/components/modules/raw-query/services';
 
 // Mock dependencies
 vi.mock('~/components/modules/raw-query/hooks/useStreamingQuery', () => ({
@@ -17,9 +19,12 @@ vi.mock('~/components/base/code-editor/utils', () => ({
   getTreeNodes: vi.fn(),
 }));
 
-// Mock $fetch globally
-const mockFetch = vi.fn();
-(global as any).$fetch = mockFetch;
+const sqlCapabilities = ref<RawQueryCapabilities | undefined>({
+  language: 'sql',
+  supportsVariables: true,
+  supportsFormat: true,
+  parameterStyle: 'colon',
+});
 
 describe('useQueryExecution', () => {
   let resultTabsMock: any;
@@ -45,10 +50,11 @@ describe('useQueryExecution', () => {
     const { executeCurrentStatement } = useQueryExecution({
       getEditorView: getEditorViewMock,
       connection: connection as any,
+      capabilities: sqlCapabilities,
       fileVariables,
       fieldDefs: fieldDefs as any,
       resultTabs: resultTabsMock,
-      buildExplainAnalyzePrefix: () => 'EXPLAIN ANALYZE',
+      executor: ref(sqlStreamingExecutor),
     });
 
     const abortMock = vi.fn();
@@ -83,10 +89,11 @@ describe('useQueryExecution', () => {
     const { executeCurrentStatement } = useQueryExecution({
       getEditorView: getEditorViewMock,
       connection: connection as any,
+      capabilities: sqlCapabilities,
       fileVariables,
       fieldDefs: fieldDefs as any,
       resultTabs: resultTabsMock,
-      buildExplainAnalyzePrefix: () => 'EXPLAIN ANALYZE',
+      executor: ref(sqlStreamingExecutor),
     });
 
     (streamingQuery.executeStreamingQuery as any).mockReturnValue({
@@ -121,10 +128,11 @@ describe('useQueryExecution', () => {
     const { executeCurrentStatement } = useQueryExecution({
       getEditorView: getEditorViewMock,
       connection: connection as any,
+      capabilities: sqlCapabilities,
       fileVariables,
       fieldDefs: fieldDefs as any,
       resultTabs: resultTabsMock,
-      buildExplainAnalyzePrefix: () => 'EXPLAIN ANALYZE',
+      executor: ref(sqlStreamingExecutor),
     });
 
     (streamingQuery.executeStreamingQuery as any).mockReturnValue({
@@ -150,41 +158,6 @@ describe('useQueryExecution', () => {
     expect(resultTabsMock.refreshResultTab).toHaveBeenCalled();
   });
 
-  it('handles explain query execution via $fetch', async () => {
-    const connection = ref({ connectionString: 'test-conn' });
-    const fileVariables = ref('{}');
-    const fieldDefs = ref([]);
-
-    const { executeCurrentStatement } = useQueryExecution({
-      getEditorView: getEditorViewMock,
-      connection: connection as any,
-      fileVariables,
-      fieldDefs: fieldDefs as any,
-      resultTabs: resultTabsMock,
-      buildExplainAnalyzePrefix: () => 'EXPLAIN ANALYZE',
-    });
-
-    mockFetch.mockResolvedValue({
-      rows: [{ 'QUERY PLAN': 'Seq Scan on users' }],
-      fields: [{ name: 'QUERY PLAN' }],
-      queryTime: 10,
-    });
-
-    await executeCurrentStatement({
-      currentStatements: [
-        { text: 'SELECT * FROM users', from: 0, to: 18, type: 'Statement' },
-      ],
-
-      queryPrefix: 'EXPLAIN',
-    });
-
-    expect(mockFetch).toHaveBeenCalledWith(
-      '/api/query/raw-execute',
-      expect.any(Object)
-    );
-    expect(resultTabsMock.refreshResultTab).toHaveBeenCalled();
-  });
-
   it('handles query with variables', async () => {
     const connection = ref({ connectionString: 'test-conn' });
     const fileVariables = ref(JSON.stringify({ id: 1 }));
@@ -193,10 +166,11 @@ describe('useQueryExecution', () => {
     const { executeCurrentStatement } = useQueryExecution({
       getEditorView: getEditorViewMock,
       connection: connection as any,
+      capabilities: sqlCapabilities,
       fileVariables,
       fieldDefs: fieldDefs as any,
       resultTabs: resultTabsMock,
-      buildExplainAnalyzePrefix: () => 'EXPLAIN ANALYZE',
+      executor: ref(sqlStreamingExecutor),
     });
 
     (streamingQuery.executeStreamingQuery as any).mockReturnValue({
@@ -227,10 +201,11 @@ describe('useQueryExecution', () => {
     const { executeCurrentStatement } = useQueryExecution({
       getEditorView: getEditorViewMock,
       connection: connection as any,
+      capabilities: sqlCapabilities,
       fileVariables,
       fieldDefs: fieldDefs as any,
       resultTabs: resultTabsMock,
-      buildExplainAnalyzePrefix: () => 'EXPLAIN ANALYZE',
+      executor: ref(sqlStreamingExecutor),
     });
 
     (streamingQuery.executeStreamingQuery as any).mockReturnValue({
@@ -256,58 +231,132 @@ describe('useQueryExecution', () => {
     expect(streamingQuery.executeStreamingQuery).toHaveBeenCalled();
   });
 
-  it('executes Redis commands through the workbench endpoint without streaming', async () => {
-    const connection = ref({
-      type: DatabaseClientType.REDIS,
-      method: EConnectionMethod.STRING,
-      connectionString: 'redis://127.0.0.1:6379/0',
-    });
-    const redisDatabaseIndex = ref(5);
-    const fileVariables = ref('{}');
-    const fieldDefs = ref([]);
-
-    mockFetch.mockResolvedValue({
-      command: ['PING'],
-      result: 'PONG',
-    });
+  it('uses the executor passed to executeCurrentStatement over the default', async () => {
+    const overrideExecute = vi.fn(() => ({ abort: vi.fn() }));
+    const connection = ref({ connectionString: 'test-conn' });
 
     const { executeCurrentStatement } = useQueryExecution({
       getEditorView: getEditorViewMock,
       connection: connection as any,
-      redisDatabaseIndex,
-      fileVariables,
-      fieldDefs: fieldDefs as any,
+      capabilities: sqlCapabilities,
+      fileVariables: ref('{}'),
+      fieldDefs: ref([]) as any,
       resultTabs: resultTabsMock,
-      buildExplainAnalyzePrefix: () => 'EXPLAIN ANALYZE',
+      executor: ref(sqlStreamingExecutor),
     });
 
     await executeCurrentStatement({
-      currentStatements: [{ text: 'PING', from: 0, to: 4, type: 'Statement' }],
+      currentStatements: [
+        { text: 'SELECT 1', from: 0, to: 8, type: 'Statement' },
+      ],
+      queryPrefix: 'EXPLAIN (ANALYZE)',
+      executor: { execute: overrideExecute },
+      resultView: ViewMode.EXPLAIN,
     });
 
-    expect(streamingQuery.executeStreamingQuery).not.toHaveBeenCalled();
-    expect(mockFetch).toHaveBeenCalledWith(
-      '/api/redis/workbench/execute',
-      expect.objectContaining({
-        method: 'POST',
-        body: expect.objectContaining({
-          command: 'PING',
-          method: EConnectionMethod.STRING,
-          stringConnection: 'redis://127.0.0.1:6379/0',
-          databaseIndex: 5,
-        }),
-      })
+    expect(overrideExecute).toHaveBeenCalledWith(
+      expect.objectContaining({ query: 'EXPLAIN (ANALYZE) SELECT 1' }),
+      expect.anything()
     );
+    expect(streamingQuery.executeStreamingQuery).not.toHaveBeenCalled();
+  });
 
-    expect(resultTabsMock.refreshResultTab).toHaveBeenCalled();
-    expect(
-      resultTabsMock.refreshResultTab.mock.calls.at(-1)?.[1]
-    ).toMatchObject({
-      result: [{ value: 'PONG' }],
-      metadata: expect.objectContaining({
-        command: 'PING',
-        rowCount: 1,
-      }),
+  describe('error diagnostics per language', () => {
+    const runWithError = async (caps: RawQueryCapabilities) => {
+      const executedItems: any[] = [];
+      resultTabsMock.addResultTab = vi.fn((item: any) =>
+        executedItems.push(item)
+      );
+      const { executeCurrentStatement, queryProcessState } = useQueryExecution({
+        getEditorView: getEditorViewMock,
+        connection: ref({ connectionString: 'test-conn' }) as any,
+        capabilities: ref(caps),
+        fileVariables: ref('{}'),
+        fieldDefs: ref([]) as any,
+        resultTabs: resultTabsMock,
+        executor: ref({
+          execute: (_req, handlers) => {
+            handlers.onError({
+              message: 'boom',
+              detail: { message: 'boom' } as any,
+            });
+            return { abort: vi.fn() };
+          },
+        }),
+      });
+      await executeCurrentStatement({
+        currentStatements: [{ text: 'X', from: 0, to: 1, type: 'Statement' }],
+      });
+      return { item: executedItems[0], queryProcessState };
+    };
+
+    it('skips SQL diagnostics for Redis but still shows the error view', async () => {
+      const { item, queryProcessState } = await runWithError({
+        language: 'redis',
+        supportsVariables: false,
+        supportsFormat: false,
+        parameterStyle: 'colon',
+      });
+      expect(applySqlErrorDiagnostics).not.toHaveBeenCalled();
+      expect(item.view).toBe(ViewMode.ERROR);
+      expect(queryProcessState.executeErrors).toEqual({
+        message: 'boom',
+        data: { message: 'boom' },
+      });
+    });
+
+    it('applies SQL diagnostics for SQL capabilities', async () => {
+      await runWithError(sqlCapabilities.value);
+      expect(applySqlErrorDiagnostics).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('in-flight state and abort ownership', () => {
+    const build = (executor: any) =>
+      useQueryExecution({
+        getEditorView: getEditorViewMock,
+        connection: ref({ connectionString: 'test-conn' }) as any,
+        capabilities: sqlCapabilities,
+        fileVariables: ref('{}'),
+        fieldDefs: ref([]) as any,
+        resultTabs: resultTabsMock,
+        executor: ref(executor),
+      });
+    const stmt = [{ text: 'X', from: 0, to: 1, type: 'Statement' }] as any;
+
+    it('marks isStreaming only for streaming executors', async () => {
+      const streaming = build({
+        streaming: true,
+        execute: () => ({ abort: vi.fn() }),
+      });
+      await streaming.executeCurrentStatement({ currentStatements: stmt });
+      expect(streaming.queryProcessState.isStreaming).toBe(true);
+      expect(streaming.queryProcessState.executeLoading).toBe(false);
+
+      const plain = build({ execute: () => ({ abort: vi.fn() }) });
+      await plain.executeCurrentStatement({ currentStatements: stmt });
+      expect(plain.queryProcessState.isStreaming).toBe(false);
+      expect(plain.queryProcessState.executeLoading).toBe(true);
+    });
+
+    it('a late completion of an older executor keeps the newer abort handle', async () => {
+      let lateHandlers: any;
+      const newerAbort = vi.fn();
+      const hook = build({
+        execute: (_r: any, h: any) => {
+          lateHandlers = h;
+          return { abort: vi.fn() };
+        },
+      });
+      await hook.executeCurrentStatement({ currentStatements: stmt });
+      await hook.executeCurrentStatement({
+        currentStatements: stmt,
+        executor: { execute: () => ({ abort: newerAbort }) },
+      });
+
+      lateHandlers.onComplete({ rowCount: 0, queryTime: 1 });
+      hook.cancelStreamingQuery();
+      expect(newerAbort).toHaveBeenCalled();
     });
   });
 });

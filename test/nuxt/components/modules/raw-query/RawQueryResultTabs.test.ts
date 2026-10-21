@@ -2,6 +2,7 @@ import { createPinia, setActivePinia } from 'pinia';
 import { nextTick } from 'vue';
 import { mount } from '@vue/test-utils';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { postgresCommandResult } from '~/components/modules/driver/postgres/raw-query/services';
 import RawQueryResultTabs from '~/components/modules/raw-query/components/RawQueryResultTabs.vue';
 import { useSchemaStore } from '~/core/stores';
 import type { Schema } from '~/core/types';
@@ -124,6 +125,7 @@ describe('RawQueryResultTabs', () => {
         activeTabId: 'query-1',
         executeLoading: false,
         isStreaming: false,
+        resolveCommandResultHandler: () => postgresCommandResult,
       },
       global: {
         plugins: [pinia],
@@ -136,7 +138,6 @@ describe('RawQueryResultTabs', () => {
           Icon: true,
           LoadingOverlay: { template: '<div data-test="loading" />' },
           ResultTabErrorView: true,
-          ResultTabExplainView: true,
           ResultTabInfoView: true,
           ResultTabRawView: true,
           ResultTabResultView: {

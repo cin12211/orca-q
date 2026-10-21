@@ -117,3 +117,8 @@
   border: none !important;
   box-shadow: none !important;
 }
+
+.cm-gutters {
+  background-color: unset !important;
+  border: none !important;
+}

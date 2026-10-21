@@ -1,28 +1,16 @@
 <script setup lang="ts">
-import RedisWorkspace from '~/components/modules/redis-workspace/RedisWorkspace.vue';
-import { DEFAULT_MAX_KEEP_ALIVE } from '~/core/constants';
-import { useManagementConnectionStore } from '~/core/stores/managementConnectionStore';
-import { useTabViewsStore } from '~/core/stores/useTabViewsStore';
-
-definePageMeta({
-  keepalive: {
-    max: DEFAULT_MAX_KEEP_ALIVE,
-  },
-});
-
-const route = useRoute('workspaceId-connectionId-redis-tabViewId');
-const tabViewStore = useTabViewsStore();
-const connectionStore = useManagementConnectionStore();
-const { tabViews } = storeToRefs(tabViewStore);
-
-const tabInfo = computed(() =>
-  tabViews.value.find(tab => tab.id === route.params.tabViewId)
-);
+/**
+ * RETIRED ROUTE — do not add logic here.
+ *
+ * This page used to render every tab type served by this route. Each type now
+ * has its own page under quick-query/redis/{browser,pubsub,group}.
+ * Persisted tabs are moved over by MigrateTabViewRouteNames1740477873008, so
+ * the only visitors left are stale history entries and hand-typed URLs. The
+ * page exists purely to show them a way out.
+ */
+import { RetiredTabViewPage } from '~/components/base/tab-view-not-found';
 </script>
 
 <template>
-  <RedisWorkspace
-    :connection="connectionStore.selectedConnection"
-    :tab-info="tabInfo"
-  />
+  <RetiredTabViewPage />
 </template>

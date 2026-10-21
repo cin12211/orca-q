@@ -1,0 +1,70 @@
+export type CommandCategory =
+  | 'DML'
+  | 'DDL'
+  | 'DCL'
+  | 'TCL'
+  | 'SYSTEM'
+  | 'UNKNOWN';
+
+export const COMMAND_CATEGORIES: Record<string, CommandCategory> = {
+  // Data Manipulation (DML)
+  SELECT: 'DML',
+  INSERT: 'DML',
+  UPDATE: 'DML',
+  DELETE: 'DML',
+  MERGE: 'DML',
+  VALUES: 'DML',
+  TRUNCATE: 'DML',
+  COPY: 'DML',
+
+  // Data Definition (DDL)
+  CREATE: 'DDL',
+  ALTER: 'DDL',
+  DROP: 'DDL',
+  COMMENT: 'DDL',
+  ANALYZE: 'DDL',
+  VACUUM: 'DDL',
+  REINDEX: 'DDL',
+  CLUSTER: 'DDL',
+  'REFRESH MATERIALIZED VIEW': 'DDL',
+  'IMPORT FOREIGN SCHEMA': 'DDL',
+  'SECURITY LABEL': 'DDL',
+
+  // Data Control (DCL)
+  GRANT: 'DCL',
+  REVOKE: 'DCL',
+
+  // Transaction Control (TCL)
+  BEGIN: 'TCL',
+  COMMIT: 'TCL',
+  ROLLBACK: 'TCL',
+  SAVEPOINT: 'TCL',
+  'RELEASE SAVEPOINT': 'TCL',
+  'ROLLBACK TO SAVEPOINT': 'TCL',
+  'PREPARE TRANSACTION': 'TCL',
+  'COMMIT PREPARED': 'TCL',
+  'ROLLBACK PREPARED': 'TCL',
+  'SET TRANSACTION': 'TCL',
+
+  // Session / System
+  SET: 'SYSTEM',
+  SHOW: 'SYSTEM',
+  RESET: 'SYSTEM',
+  DISCARD: 'SYSTEM',
+  EXPLAIN: 'SYSTEM',
+  LOAD: 'SYSTEM',
+  LOCK: 'SYSTEM',
+  MOVE: 'SYSTEM',
+  FETCH: 'SYSTEM',
+  CLOSE: 'SYSTEM',
+  DECLARE: 'SYSTEM',
+  DEALLOCATE: 'SYSTEM',
+  PREPARE: 'SYSTEM',
+  EXECUTE: 'SYSTEM',
+  LISTEN: 'SYSTEM',
+  UNLISTEN: 'SYSTEM',
+  NOTIFY: 'SYSTEM',
+  DO: 'SYSTEM',
+  ABORT: 'SYSTEM',
+  CHECKPOINT: 'SYSTEM',
+};

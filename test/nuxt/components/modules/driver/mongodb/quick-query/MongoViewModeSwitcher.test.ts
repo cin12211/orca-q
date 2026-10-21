@@ -1,0 +1,32 @@
+import { mount } from '@vue/test-utils';
+import { describe, expect, it } from 'vitest';
+import MongoViewModeSwitcher from '~/components/modules/driver/mongodb/quick-query/components/MongoViewModeSwitcher.vue';
+import { MongoCollectionViewMode } from '~/components/modules/driver/mongodb/quick-query/types';
+
+describe('MongoViewModeSwitcher', () => {
+  it('emits update:modelValue with the clicked mode', async () => {
+    const wrapper = mount(MongoViewModeSwitcher, {
+      props: { modelValue: MongoCollectionViewMode.Info },
+    });
+
+    await wrapper
+      .get('[data-testid="mongo-view-mode-list"]')
+      .trigger('mousedown', { button: 0 });
+
+    expect(wrapper.emitted('update:modelValue')?.[0]).toEqual([
+      MongoCollectionViewMode.List,
+    ]);
+  });
+
+  it('marks the active mode tab as selected', () => {
+    const wrapper = mount(MongoViewModeSwitcher, {
+      props: { modelValue: MongoCollectionViewMode.Info },
+    });
+
+    expect(
+      wrapper
+        .get('[data-testid="mongo-view-mode-info"]')
+        .attributes('aria-selected')
+    ).toBe('true');
+  });
+});
