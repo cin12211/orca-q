@@ -1,6 +1,7 @@
 export {
   DESKTOP_PERSIST_DB_PATH_ENV,
   findMcpSessionByToken,
+  findTokenlessMcpSession,
   getDesktopPersistDbPath,
   getMcpServerConfigs,
 } from './desktop-store';

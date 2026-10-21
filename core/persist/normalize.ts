@@ -107,11 +107,14 @@ export interface TableAppearanceConfigs {
  * token. The token stays viewable in Settings (local-only app data).
  * A connection's access comes from `connectionAccess`, then from its
  * workspace in `workspaceAccess`, otherwise it is off.
+ * With `requireToken: false`, requests without a token use this session;
+ * at most one session may do that.
  */
 export interface McpSession {
   id: string;
   name: string;
   token: string;
+  requireToken: boolean;
   createdAt: string;
   workspaceAccess: Record<string, McpConnectionAccess>;
   connectionAccess: Record<string, McpConnectionAccess>;
@@ -297,6 +300,7 @@ const normalizeMcpSession = (value: unknown): McpSession[] => {
       id: value.id,
       name: typeof value.name === 'string' ? value.name : 'MCP session',
       token: value.token,
+      requireToken: value.requireToken !== false,
       createdAt: typeof value.createdAt === 'string' ? value.createdAt : '',
       workspaceAccess: normalizeAccessMap(value.workspaceAccess),
       connectionAccess: normalizeAccessMap(value.connectionAccess),

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { Switch } from '#components';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -28,6 +29,8 @@ const props = defineProps<{
   workspaces: McpWorkspaceOption[];
   initialDraft?: McpSessionDraft | null;
   defaultName?: string;
+  /** Another session that currently accepts requests without a token. */
+  tokenlessSessionName?: string | null;
 }>();
 
 const emit = defineEmits<{
@@ -36,6 +39,7 @@ const emit = defineEmits<{
 }>();
 
 const name = ref('');
+const requireToken = ref(true);
 const workspaceAccess = ref<Record<string, McpConnectionAccess>>({});
 const connectionAccess = ref<Record<string, McpConnectionAccess>>({});
 const expandedWorkspaceIds = ref<Set<string>>(new Set());
@@ -107,6 +111,7 @@ function handleSubmit() {
 
   emit('submit', {
     name: name.value,
+    requireToken: requireToken.value,
     workspaceAccess: Object.fromEntries(
       Object.entries(workspaceAccess.value).filter(
         ([, access]) => access !== McpConnectionAccess.Off
@@ -122,6 +127,7 @@ watch(
     if (!isOpen) return;
 
     name.value = props.initialDraft?.name ?? props.defaultName ?? '';
+    requireToken.value = props.initialDraft?.requireToken ?? true;
     workspaceAccess.value = { ...(props.initialDraft?.workspaceAccess ?? {}) };
     connectionAccess.value = {
       ...(props.initialDraft?.connectionAccess ?? {}),
@@ -162,6 +168,31 @@ watch(
             v-model="name"
             size="sm"
             placeholder="e.g. Claude Code on my laptop"
+          />
+        </div>
+
+        <div class="flex items-start justify-between gap-4">
+          <div class="flex flex-col gap-0.5">
+            <label for="mcp-session-require-token" class="text-sm">
+              Require auth token
+            </label>
+            <p class="text-xs text-muted-foreground">
+              When off, MCP clients on this computer can connect without an
+              Authorization header and get this session's access. Only one
+              session can work without a token.
+            </p>
+            <p
+              v-if="!requireToken && props.tokenlessSessionName"
+              class="text-xs text-amber-600"
+            >
+              "{{ props.tokenlessSessionName }}" will require its token again.
+            </p>
+          </div>
+          <Switch
+            id="mcp-session-require-token"
+            class="cursor-pointer"
+            :model-value="requireToken"
+            @update:model-value="requireToken = $event"
           />
         </div>
 

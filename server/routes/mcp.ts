@@ -9,6 +9,7 @@ import {
 import {
   createOrcaqMcpServer,
   findMcpSessionByToken,
+  findTokenlessMcpSession,
   getBearerToken,
   getDesktopPersistDbPath,
   getMcpServerConfigs,
@@ -46,14 +47,16 @@ export default defineEventHandler(async event => {
   }
 
   const token = getBearerToken(event);
-  const session = token ? await findMcpSessionByToken(configs, token) : null;
+  const session = token
+    ? await findMcpSessionByToken(configs, token)
+    : findTokenlessMcpSession(configs);
 
   if (!session) {
     setResponseHeader(event, 'WWW-Authenticate', 'Bearer realm="orcaq"');
     throw createError({
       statusCode: 401,
       statusMessage:
-        'Missing or invalid bearer token. Create an MCP session in OrcaQ Settings → MCP Server and send its token as "Authorization: Bearer <token>".',
+        'Missing or invalid bearer token. Create an MCP session in OrcaQ Settings → MCP Server and send its token as "Authorization: Bearer <token>", or turn off "Require auth token" for that session.',
     });
   }
 

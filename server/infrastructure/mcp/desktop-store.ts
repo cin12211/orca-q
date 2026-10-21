@@ -114,6 +114,13 @@ function isSameHash(a: string, b: string) {
  * Session that owns this bearer token, or null when the token is unknown.
  * Hashes are compared in constant time so response timing leaks nothing.
  */
+/** Session used for requests that carry no bearer token, if one allows it. */
+export function findTokenlessMcpSession(
+  configs: McpServerConfigs
+): McpSession | null {
+  return configs.sessions.find(session => !session.requireToken) ?? null;
+}
+
 export async function findMcpSessionByToken(
   configs: McpServerConfigs,
   token: string

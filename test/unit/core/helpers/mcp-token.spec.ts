@@ -67,4 +67,17 @@ describe('MCP session access', () => {
     expect(configs.sessions).toHaveLength(1);
     expect(configs.sessions[0]?.workspaceAccess).toEqual({});
   });
+
+  it('requires a token unless explicitly turned off', () => {
+    const configs = normalizeMcpServerConfigs({
+      sessions: [
+        { id: 'a', token: 't1' },
+        { id: 'b', token: 't2', requireToken: false },
+      ],
+    });
+    expect(configs.sessions.map(session => session.requireToken)).toEqual([
+      true,
+      false,
+    ]);
+  });
 });

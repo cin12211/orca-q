@@ -16,6 +16,7 @@ const props = defineProps<{
   open: boolean;
   sessionName: string;
   token: string;
+  requireToken: boolean;
   endpointUrl: string;
 }>();
 
@@ -26,11 +27,12 @@ const emit = defineEmits<{
 
 // Snippets are displayed with a masked token; copying uses the real one.
 const snippets = computed(() => {
-  const realSnippets = buildMcpClientSnippets(props.endpointUrl, props.token);
+  const token = props.requireToken ? props.token : null;
+  const realSnippets = buildMcpClientSnippets(props.endpointUrl, token);
 
   return buildMcpClientSnippets(
     props.endpointUrl,
-    maskMcpToken(props.token)
+    token && maskMcpToken(token)
   ).map((snippet, index) => ({
     ...snippet,
     copyCode: realSnippets[index]?.code ?? '',
@@ -46,6 +48,10 @@ const snippets = computed(() => {
         <DialogDescription>
           Add this session to your MCP client. You can come back here any time
           from the session list.
+          <template v-if="!props.requireToken">
+            This session does not require a token, so the commands below have no
+            Authorization header. The token still works if you add it.
+          </template>
         </DialogDescription>
       </DialogHeader>
 

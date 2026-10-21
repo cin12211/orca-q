@@ -10,6 +10,7 @@ import {
   createOrcaqMcpServer,
   DESKTOP_PERSIST_DB_PATH_ENV,
   findMcpSessionByToken,
+  findTokenlessMcpSession,
   getMcpServerConfigs,
 } from '~/server/infrastructure/mcp';
 
@@ -214,6 +215,21 @@ describe('OrcaQ MCP server', () => {
       'orcaq_wrong'
     );
     expect(session).toBeNull();
+  });
+
+  it('has no tokenless session unless one opts out of the token', async () => {
+    const configs = await getMcpServerConfigs();
+    expect(findTokenlessMcpSession(configs)).toBeNull();
+
+    const tokenless = findTokenlessMcpSession({
+      ...configs,
+      sessions: configs.sessions.map(session =>
+        session.id === 'session-2'
+          ? { ...session, requireToken: false }
+          : session
+      ),
+    });
+    expect(tokenless?.name).toBe('Other');
   });
 
   it('scopes connections to the session', async () => {

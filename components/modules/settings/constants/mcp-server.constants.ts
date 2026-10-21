@@ -33,10 +33,39 @@ export interface McpClientSnippet {
   code: string;
 }
 
+/** Pass `token: null` for sessions that do not require an auth token. */
 export function buildMcpClientSnippets(
   endpointUrl: string,
-  token: string
+  token: string | null
 ): McpClientSnippet[] {
+  if (token === null) {
+    return [
+      {
+        name: 'Claude Code',
+        code: `claude mcp add --transport http ${MCP_SERVER_NAME} ${endpointUrl}`,
+      },
+      {
+        name: 'Codex (~/.codex/config.toml)',
+        code: `[mcp_servers.${MCP_SERVER_NAME}]\nurl = "${endpointUrl}"`,
+      },
+      {
+        name: 'Claude Desktop / Cursor (JSON)',
+        code: JSON.stringify(
+          {
+            mcpServers: {
+              [MCP_SERVER_NAME]: {
+                command: 'npx',
+                args: ['-y', 'mcp-remote', endpointUrl],
+              },
+            },
+          },
+          null,
+          2
+        ),
+      },
+    ];
+  }
+
   return [
     {
       name: 'Claude Code',

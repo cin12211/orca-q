@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Switch } from '#components';
 import { toast } from 'vue-sonner';
+import { Badge } from '@/components/ui/badge';
 import { DEFAULT_WORKSPACE_ICON } from '~/core/constants/workspace-icon-constants';
 import { copyToClipboard } from '~/core/helpers/copyData';
 import {
@@ -61,10 +62,18 @@ const editingDraft = computed<McpSessionDraft | null>(() => {
 
   return {
     name: session.name,
+    requireToken: session.requireToken,
     workspaceAccess: session.workspaceAccess,
     connectionAccess: session.connectionAccess,
   };
 });
+
+const tokenlessSessionName = computed(
+  () =>
+    sessions.value.find(
+      session => !session.requireToken && session.id !== editingSessionId.value
+    )?.name ?? null
+);
 
 const setupSession = computed(
   () => sessions.value.find(item => item.id === setupSessionId.value) ?? null
@@ -212,7 +221,16 @@ const handleDeleteSession = (session: McpSession) => {
         >
           <div class="flex items-center justify-between gap-4">
             <div class="flex flex-col min-w-0">
-              <span class="text-sm truncate">{{ session.name }}</span>
+              <span class="flex items-center gap-2 min-w-0">
+                <span class="text-sm truncate">{{ session.name }}</span>
+                <Badge
+                  v-if="!session.requireToken"
+                  variant="outline"
+                  class="shrink-0 text-amber-600"
+                >
+                  No token required
+                </Badge>
+              </span>
               <span class="text-xs text-muted-foreground truncate">
                 {{ getSessionSummary(session) }} ·
                 {{ formatDate(session.createdAt) }}
@@ -269,6 +287,7 @@ const handleDeleteSession = (session: McpSession) => {
       :workspaces="workspaceOptions"
       :initial-draft="editingDraft"
       :default-name="`MCP session ${sessions.length + 1}`"
+      :tokenless-session-name="tokenlessSessionName"
       @submit="handleSubmitSession"
     />
 
@@ -276,6 +295,7 @@ const handleDeleteSession = (session: McpSession) => {
       :open="Boolean(setupSession)"
       :session-name="setupSession?.name ?? ''"
       :token="setupSession?.token ?? ''"
+      :require-token="setupSession?.requireToken ?? true"
       :endpoint-url="endpointUrl"
       @update:open="!$event && (setupSessionId = null)"
       @copy="handleCopy"

@@ -8,6 +8,7 @@ import { useAppConfigStore } from '~/core/stores/appConfigStore';
 
 export interface McpSessionDraft {
   name: string;
+  requireToken: boolean;
   workspaceAccess: Record<string, McpConnectionAccess>;
   connectionAccess: Record<string, McpConnectionAccess>;
 }
@@ -23,16 +24,25 @@ export function useMcpSessions() {
       session => session.id === sessionId
     );
 
+  /** Only one session may accept requests without a token. */
+  const releaseTokenlessSlot = (exceptSessionId: string) => {
+    for (const session of appConfigStore.mcpServerConfigs.sessions) {
+      if (session.id !== exceptSessionId) session.requireToken = true;
+    }
+  };
+
   const createSession = (draft: McpSessionDraft): McpSession => {
     const session: McpSession = {
       id: uuidv4(),
       name: draft.name.trim() || 'MCP session',
       token: generateMcpToken(),
+      requireToken: draft.requireToken,
       createdAt: new Date().toISOString(),
       workspaceAccess: { ...draft.workspaceAccess },
       connectionAccess: { ...draft.connectionAccess },
     };
 
+    if (!session.requireToken) releaseTokenlessSlot(session.id);
     appConfigStore.mcpServerConfigs.sessions.push(session);
     return session;
   };
@@ -44,6 +54,8 @@ export function useMcpSessions() {
     session.name = draft.name.trim() || session.name;
     session.workspaceAccess = { ...draft.workspaceAccess };
     session.connectionAccess = { ...draft.connectionAccess };
+    session.requireToken = draft.requireToken;
+    if (!session.requireToken) releaseTokenlessSlot(session.id);
   };
 
   /** Issue a new token; the previous one stops working immediately. */
