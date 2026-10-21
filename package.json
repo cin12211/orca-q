@@ -18,7 +18,7 @@
     "nuxt:build-web": "nuxt build",
     "nuxt:generate": "nuxt generate",
     "postinstall": "electron-builder install-app-deps",
-    "electron:dev": "node scripts/electron-compile-dev.mjs && concurrently -n nuxt,electron -c cyan,yellow \"cross-env ORCAQ_PERSIST_DB_PATH=.sqlite3/orcaq.db nuxt dev\" \"wait-on http://localhost:3000 out/electron/main.js && cross-env NODE_ENV=development ELECTRON_DEV_SERVER_URL=http://localhost:3000 electron out/electron/main.js\"",
+    "electron:dev": "node scripts/electron-compile-dev.mjs && concurrently -n nuxt,electron -c cyan,yellow \"cross-env ORCAQ_DESKTOP_RUNTIME=1 ORCAQ_PERSIST_DB_PATH=.sqlite3/orcaq.db nuxt dev\" \"wait-on http://localhost:3000 out/electron/main.js && cross-env NODE_ENV=development ELECTRON_DEV_SERVER_URL=http://localhost:3000 electron out/electron/main.js\"",
     "electron:compile": "tsc -p electron/tsconfig.json",
     "electron:build": "node scripts/electron-before-build.mjs && electron-builder",
     "electron:build:mac-m": "node scripts/electron-before-build.mjs && electron-builder --mac --arm64",

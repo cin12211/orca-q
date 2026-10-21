@@ -15,11 +15,17 @@ import {
 import type { Connection } from '~/core/types/entities/connection.entity';
 
 /**
- * Path to the Electron persistence database (orcaq.db). Electron main sets it
- * when spawning the Nitro sidecar; the web/npx runtime never has it, so the
- * MCP endpoint stays disabled there.
+ * Both variables are set only by the Electron app when it spawns the Nitro
+ * sidecar (and by `electron:dev`). The web / npx / Docker builds run on a
+ * server that other people can reach, so the MCP feature must stay off there
+ * even if a deployment happens to define a database path.
  */
+export const DESKTOP_RUNTIME_ENV = 'ORCAQ_DESKTOP_RUNTIME';
 export const DESKTOP_PERSIST_DB_PATH_ENV = 'ORCAQ_PERSIST_DB_PATH';
+
+export function isDesktopRuntime(): boolean {
+  return process.env[DESKTOP_RUNTIME_ENV] === '1';
+}
 
 export interface McpConnectionEntry {
   connection: Connection;
@@ -29,6 +35,8 @@ export interface McpConnectionEntry {
 let persistDb: Knex | null = null;
 
 export function getDesktopPersistDbPath(): string | null {
+  if (!isDesktopRuntime()) return null;
+
   const dbPath = process.env[DESKTOP_PERSIST_DB_PATH_ENV];
   return dbPath && existsSync(dbPath) ? dbPath : null;
 }

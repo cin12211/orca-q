@@ -1,5 +1,7 @@
 export {
   DESKTOP_PERSIST_DB_PATH_ENV,
+  DESKTOP_RUNTIME_ENV,
+  isDesktopRuntime,
   findMcpSessionByToken,
   findTokenlessMcpSession,
   getDesktopPersistDbPath,

@@ -9,6 +9,8 @@ import type { McpSession } from '~/core/persist/normalize';
 import {
   createOrcaqMcpServer,
   DESKTOP_PERSIST_DB_PATH_ENV,
+  DESKTOP_RUNTIME_ENV,
+  getDesktopPersistDbPath,
   findMcpSessionByToken,
   findTokenlessMcpSession,
   listMcpSessions,
@@ -159,10 +161,12 @@ describe('OrcaQ MCP server', () => {
   beforeAll(async () => {
     await seedDatabases();
     process.env[DESKTOP_PERSIST_DB_PATH_ENV] = persistDbPath;
+    process.env[DESKTOP_RUNTIME_ENV] = '1';
   });
 
   afterAll(() => {
     delete process.env[DESKTOP_PERSIST_DB_PATH_ENV];
+    delete process.env[DESKTOP_RUNTIME_ENV];
     rmSync(tempDir, { recursive: true, force: true });
   });
 
@@ -217,6 +221,17 @@ describe('OrcaQ MCP server', () => {
 
     expect(isError).toBe(false);
     expect(JSON.parse(text)).toMatchObject({ access: 'write', rowCount: 1 });
+  });
+
+  it('stays off outside the desktop runtime (web build)', async () => {
+    delete process.env[DESKTOP_RUNTIME_ENV];
+
+    try {
+      expect(getDesktopPersistDbPath()).toBeNull();
+      expect(await listMcpSessions()).toEqual([]);
+    } finally {
+      process.env[DESKTOP_RUNTIME_ENV] = '1';
+    }
   });
 
   it('rejects unknown tokens', async () => {
