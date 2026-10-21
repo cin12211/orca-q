@@ -60,6 +60,12 @@ export enum NullOrderPreference {
   NullsLast = 'nulls-last',
 }
 
+export enum McpConnectionAccess {
+  Off = 'off',
+  Read = 'read',
+  Write = 'write',
+}
+
 // ── Shared interfaces ─────────────────────────────────────────────────────────
 
 export interface CodeEditorConfigs {
@@ -94,6 +100,15 @@ export interface TableAppearanceConfigs {
   headerFontWeight: number;
   headerBackgroundColorLight: string;
   headerBackgroundColorDark: string;
+}
+
+/**
+ * Built-in MCP server (desktop only). Connections missing from
+ * `connectionAccess` are exposed read-only.
+ */
+export interface McpServerConfigs {
+  enabled: boolean;
+  connectionAccess: Record<string, McpConnectionAccess>;
 }
 
 export interface CustomLayoutSizeEntry {
@@ -149,6 +164,7 @@ export interface AppConfigPersistedState {
   customLayouts: CustomLayoutDefinition[];
   activeCustomLayoutId: string | null;
   customLayoutSizes: Record<string, CustomLayoutSizeEntry>;
+  mcpServerConfigs: McpServerConfigs;
 }
 
 export interface AgentPersistedState {
@@ -246,6 +262,24 @@ function normalizeObject<T extends object>(value: unknown, fallback: T): T {
   if (!isRecord(value)) return clone(fallback);
   return { ...clone(fallback), ...(value as object) } as T;
 }
+
+const MCP_CONNECTION_ACCESS_VALUES = Object.values(McpConnectionAccess);
+
+export const normalizeMcpServerConfigs = (value: unknown): McpServerConfigs => {
+  const source = isRecord(value) ? value : {};
+  const access = isRecord(source.connectionAccess)
+    ? source.connectionAccess
+    : {};
+
+  return {
+    enabled: source.enabled === true,
+    connectionAccess: Object.fromEntries(
+      Object.entries(access).filter(([, mode]) =>
+        MCP_CONNECTION_ACCESS_VALUES.includes(mode as McpConnectionAccess)
+      )
+    ) as Record<string, McpConnectionAccess>,
+  };
+};
 
 // ── Agent message sanitisation helpers (private) ──────────────────────────────
 
@@ -372,6 +406,7 @@ export const createDefaultAppConfigState = (): AppConfigPersistedState => ({
   customLayouts: [],
   activeCustomLayoutId: null,
   customLayoutSizes: {},
+  mcpServerConfigs: { enabled: false, connectionAccess: {} },
 });
 
 export const normalizeAppConfigState = (
@@ -478,6 +513,7 @@ export const normalizeAppConfigState = (
         ? source.activeCustomLayoutId
         : fallback.activeCustomLayoutId,
     customLayoutSizes,
+    mcpServerConfigs: normalizeMcpServerConfigs(source.mcpServerConfigs),
   };
 };
 

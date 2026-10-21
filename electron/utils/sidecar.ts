@@ -1,6 +1,7 @@
 import { spawn } from 'node:child_process';
 import type { ChildProcess } from 'node:child_process';
 import { createLogger } from '../logger';
+import { getPersistDbPath } from '../persist/knex-db';
 import {
   findFreePort,
   getRuntimeBinaryPath,
@@ -45,6 +46,8 @@ export async function spawnSidecar(): Promise<string> {
       PORT: String(port),
       NITRO_HOST: RUNTIME_HOST,
       NITRO_PORT: String(port),
+      // Lets the built-in MCP endpoint read saved connections and settings.
+      ORCAQ_PERSIST_DB_PATH: getPersistDbPath(),
     },
     stdio: ['ignore', 'pipe', 'pipe'],
   });

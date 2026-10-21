@@ -24,6 +24,7 @@ import {
 import {
   normalizeAppConfigState,
   type AppConfigPersistedState,
+  type McpServerConfigs,
 } from '~/core/persist/store-state';
 import { createStorageApis } from '~/core/storage';
 
@@ -178,6 +179,12 @@ export const useAppConfigStore = defineStore('app-config-store', () => {
   // Desktop update settings
   const autoDownloadUpdates = ref<boolean>(true);
 
+  // Built-in MCP server settings (desktop only)
+  const mcpServerConfigs = reactive<McpServerConfigs>({
+    enabled: false,
+    connectionAccess: {},
+  });
+
   // Space display setting
   const spaceDisplay = ref<SpaceDisplay>(SpaceDisplay.Default);
 
@@ -314,6 +321,7 @@ export const useAppConfigStore = defineStore('app-config-store', () => {
       customLayouts: customLayouts.value,
       activeCustomLayoutId: activeCustomLayoutId.value,
       customLayoutSizes: customLayoutSizes.value,
+      mcpServerConfigs,
     });
 
   const applyPersistedState = (state: AppConfigPersistedState) => {
@@ -339,6 +347,7 @@ export const useAppConfigStore = defineStore('app-config-store', () => {
     customLayouts.value = normalized.customLayouts as CustomLayoutDefinition[];
     activeCustomLayoutId.value = normalized.activeCustomLayoutId;
     customLayoutSizes.value = normalized.customLayoutSizes;
+    Object.assign(mcpServerConfigs, normalized.mcpServerConfigs);
   };
 
   const persistState = useDebounceFn(async (state: AppConfigPersistedState) => {
@@ -397,6 +406,7 @@ export const useAppConfigStore = defineStore('app-config-store', () => {
     agentSelectedModel,
     quickQuerySafeModeEnabled,
     autoDownloadUpdates,
+    mcpServerConfigs,
     // Custom Layouts
     customLayouts,
     activeCustomLayoutId,
