@@ -11,6 +11,7 @@ import {
   appConfigSQLiteStorage,
   agentStateSQLiteStorage,
   migrationStateSQLiteStorage,
+  mcpSessionSQLiteStorage,
 } from './entities';
 import { getKnex } from './knex-db';
 
@@ -63,6 +64,8 @@ function getAdapter(collection: PersistCollection): StorageAdapter | null {
       return environmentTagSQLiteStorage as unknown as StorageAdapter;
     case 'migrationState':
       return migrationStateSQLiteStorage as unknown as StorageAdapter;
+    case 'mcpSessions':
+      return mcpSessionSQLiteStorage as unknown as StorageAdapter;
     default:
       return null;
   }
@@ -283,6 +286,7 @@ export async function clearPersistedUserData(): Promise<void> {
     await trx('workspaces').del();
 
     await trx('environment_tags').del();
+    await trx('mcp_sessions').del();
     await trx('migration_state').del();
     await trx('app_config').del();
     await trx('agent_state').del();

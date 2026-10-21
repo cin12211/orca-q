@@ -120,28 +120,46 @@ const openEditDialog = (sessionId: string) => {
   isSessionDialogOpen.value = true;
 };
 
+const runSessionAction = async (action: () => Promise<void>) => {
+  try {
+    await action();
+  } catch (error) {
+    console.error('[MCP Server] Failed to save MCP session', error);
+    toast('Could not save the MCP session', {
+      description: error instanceof Error ? error.message : String(error),
+    });
+  }
+};
+
 const handleSubmitSession = (draft: McpSessionDraft) => {
   isSessionDialogOpen.value = false;
+  const sessionId = editingSessionId.value;
 
-  if (editingSessionId.value) {
-    updateSession(editingSessionId.value, draft);
-    toast('MCP session updated');
-    return;
-  }
+  void runSessionAction(async () => {
+    if (sessionId) {
+      await updateSession(sessionId, draft);
+      toast('MCP session updated');
+      return;
+    }
 
-  setupSessionId.value = createSession(draft).id;
+    setupSessionId.value = (await createSession(draft)).id;
+  });
 };
 
 const handleRegenerateToken = (session: McpSession) => {
-  regenerateToken(session.id);
-  toast(
-    'New token issued. Update your MCP client; the old token no longer works.'
-  );
+  void runSessionAction(async () => {
+    await regenerateToken(session.id);
+    toast(
+      'New token issued. Update your MCP client; the old token no longer works.'
+    );
+  });
 };
 
 const handleDeleteSession = (session: McpSession) => {
-  deleteSession(session.id);
-  toast(`Revoked "${session.name}"`);
+  void runSessionAction(async () => {
+    await deleteSession(session.id);
+    toast(`Revoked "${session.name}"`);
+  });
 };
 </script>
 

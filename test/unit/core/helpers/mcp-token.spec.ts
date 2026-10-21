@@ -7,7 +7,7 @@ import {
 } from '~/core/helpers/mcp-token';
 import {
   McpConnectionAccess,
-  normalizeMcpServerConfigs,
+  normalizeMcpSession,
   resolveMcpConnectionAccess,
 } from '~/core/persist/normalize';
 
@@ -57,27 +57,23 @@ describe('MCP session access', () => {
   });
 
   it('drops malformed sessions and access values', () => {
-    const configs = normalizeMcpServerConfigs({
-      enabled: true,
-      sessions: [
-        { id: 's1', token: 't', workspaceAccess: { w: 'admin' } },
-        { name: 'missing id' },
-      ],
-    });
-    expect(configs.sessions).toHaveLength(1);
-    expect(configs.sessions[0]?.workspaceAccess).toEqual({});
+    expect(normalizeMcpSession({ name: 'missing id' })).toBeNull();
+    expect(
+      normalizeMcpSession({
+        id: 's1',
+        token: 't',
+        workspaceAccess: { w: 'admin' },
+      })?.workspaceAccess
+    ).toEqual({});
   });
 
   it('requires a token unless explicitly turned off', () => {
-    const configs = normalizeMcpServerConfigs({
-      sessions: [
-        { id: 'a', token: 't1' },
-        { id: 'b', token: 't2', requireToken: false },
-      ],
-    });
-    expect(configs.sessions.map(session => session.requireToken)).toEqual([
-      true,
-      false,
-    ]);
+    expect(normalizeMcpSession({ id: 'a', token: 't1' })?.requireToken).toBe(
+      true
+    );
+    expect(
+      normalizeMcpSession({ id: 'b', token: 't2', requireToken: false })
+        ?.requireToken
+    ).toBe(false);
   });
 });

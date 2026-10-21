@@ -182,7 +182,6 @@ export const useAppConfigStore = defineStore('app-config-store', () => {
   // Built-in MCP server settings (desktop only)
   const mcpServerConfigs = reactive<McpServerConfigs>({
     enabled: false,
-    sessions: [],
   });
 
   // Space display setting

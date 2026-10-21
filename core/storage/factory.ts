@@ -11,6 +11,7 @@ import {
   appConfigElectronAdapter,
   connectionElectronAdapter,
   environmentTagElectronAdapter,
+  mcpSessionElectronAdapter,
   quickQueryLogsElectronAdapter,
   rowQueryFilesElectronAdapter,
   tabViewsElectronAdapter,
@@ -40,6 +41,7 @@ import {
   appConfigStorage,
   agentStateStorage,
   migrationStateStorage,
+  mcpSessionStorage,
 } from './entities';
 import type { StorageApis } from './types';
 
@@ -100,6 +102,13 @@ function createIDBStorageApis(): StorageApis {
       get: () => migrationStateStorage.get(),
       save: names => migrationStateStorage.save(names),
       clear: () => migrationStateStorage.clear(),
+    },
+    mcpSessionStorage: {
+      getAll: () => mcpSessionStorage.getAll(),
+      upsert: session => mcpSessionStorage.upsert(session),
+      delete: async id => {
+        await mcpSessionStorage.delete(id);
+      },
     },
   };
 }
@@ -185,6 +194,7 @@ function createElectronStorageApis(): StorageApis {
         await persistReplaceAll('migrationState', []);
       },
     },
+    mcpSessionStorage: mcpSessionElectronAdapter,
   };
 }
 

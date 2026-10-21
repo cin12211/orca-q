@@ -58,6 +58,11 @@ export const MIGRATION_STATE_IDB = {
   storeName: 'migrationState',
 } as const satisfies IDBStoreConfig;
 
+export const MCP_SESSION_IDB = {
+  dbName: 'mcpSessionIDB',
+  storeName: 'mcpSessions',
+} as const satisfies IDBStoreConfig;
+
 export const PERSIST_COLLECTIONS = [
   'appConfig',
   'agentState',
@@ -70,6 +75,7 @@ export const PERSIST_COLLECTIONS = [
   'rowQueryFileContents',
   'environment-tags',
   'migrationState',
+  'mcpSessions',
 ] as const;
 
 export type PersistCollection = (typeof PERSIST_COLLECTIONS)[number];
@@ -90,4 +96,5 @@ export const PERSIST_IDB_STORES = {
   rowQueryFileContents: ROW_QUERY_FILE_CONTENT_IDB,
   'environment-tags': ENVIRONMENT_TAG_IDB,
   migrationState: MIGRATION_STATE_IDB,
+  mcpSessions: MCP_SESSION_IDB,
 } as const satisfies Record<PersistCollection, IDBStoreConfig>;

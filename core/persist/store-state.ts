@@ -17,6 +17,7 @@ export {
   RawQueryEditorLayout,
   ThinkingStyle,
   McpConnectionAccess,
+  normalizeMcpSession,
   resolveMcpConnectionAccess,
   createDefaultAppConfigState,
   normalizeAppConfigState,

@@ -10,3 +10,4 @@ export * from './app-config';
 export * from './agent-state';
 export * from './migration-state';
 export * from './schema-versions';
+export * from './mcp-sessions';

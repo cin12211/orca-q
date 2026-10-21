@@ -7,3 +7,4 @@ export { rowQueryFilesElectronAdapter } from './row-query-files';
 export { tabViewsElectronAdapter } from './tab-views';
 export { workspaceElectronAdapter } from './workspace';
 export { workspaceStateElectronAdapter } from './workspace-state';
+export { mcpSessionElectronAdapter } from './mcp-session';

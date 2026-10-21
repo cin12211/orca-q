@@ -1,3 +1,4 @@
+import type { McpSession } from '~/core/persist/normalize';
 import type { DeleteTabViewProps } from '~/core/persist/types';
 import type {
   Workspace,
@@ -127,6 +128,14 @@ export interface MigrationStateStorageApi {
   clear(): Promise<void>;
 }
 
+// ── 4.12 McpSessionStorageApi ────────────────────────────────────────────────
+
+export interface McpSessionStorageApi {
+  getAll(): Promise<McpSession[]>;
+  upsert(session: McpSession): Promise<McpSession>;
+  delete(id: string): Promise<void>;
+}
+
 // ── 5. StorageApis — Factory Return Type ──────────────────────────────────────
 
 export interface StorageApis {
@@ -140,4 +149,5 @@ export interface StorageApis {
   appConfigStorage: AppConfigStorageApi;
   agentStorage: AgentStateStorageApi;
   migrationStateStorage: MigrationStateStorageApi;
+  mcpSessionStorage: McpSessionStorageApi;
 }

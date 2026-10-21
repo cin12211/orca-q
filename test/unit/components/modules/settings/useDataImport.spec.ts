@@ -180,6 +180,6 @@ describe('useDataImport', () => {
 
     expect(dataImport.error.value).toBeNull();
     expect(dataImport.success.value).toBe(true);
-    expect(idbMergeAllMock).toHaveBeenCalledTimes(10);
+    expect(idbMergeAllMock).toHaveBeenCalledTimes(11);
   });
 });

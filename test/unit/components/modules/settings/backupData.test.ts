@@ -25,6 +25,7 @@ function createPersist(): Record<PersistCollection, unknown[]> {
     rowQueryFileContents: [],
     'environment-tags': [],
     migrationState: [],
+    mcpSessions: [],
   };
 }
 
@@ -93,6 +94,7 @@ describe('backupData helpers', () => {
         { collection: 'rowQueryFileContents', count: 0 },
         { collection: 'environment-tags', count: 0 },
         { collection: 'migrationState', count: 0 },
+        { collection: 'mcpSessions', count: 0 },
       ],
       totalCollections: 2,
       totalRecords: 3,

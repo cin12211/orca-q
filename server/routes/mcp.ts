@@ -14,6 +14,7 @@ import {
   getDesktopPersistDbPath,
   getMcpServerConfigs,
   isLocalMcpRequest,
+  listMcpSessions,
 } from '~/server/infrastructure/mcp';
 
 /**
@@ -46,10 +47,11 @@ export default defineEventHandler(async event => {
     });
   }
 
+  const sessions = await listMcpSessions();
   const token = getBearerToken(event);
   const session = token
-    ? await findMcpSessionByToken(configs, token)
-    : findTokenlessMcpSession(configs);
+    ? await findMcpSessionByToken(sessions, token)
+    : findTokenlessMcpSession(sessions);
 
   if (!session) {
     setResponseHeader(event, 'WWW-Authenticate', 'Bearer realm="orcaq"');

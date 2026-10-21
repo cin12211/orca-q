@@ -4,6 +4,7 @@ export {
   findTokenlessMcpSession,
   getDesktopPersistDbPath,
   getMcpServerConfigs,
+  listMcpSessions,
 } from './desktop-store';
 export { createOrcaqMcpServer } from './mcp-server';
 export { assertReadOnlySql, ReadOnlySqlError } from './read-only-sql';

@@ -11,7 +11,7 @@ import {
   DESKTOP_PERSIST_DB_PATH_ENV,
   findMcpSessionByToken,
   findTokenlessMcpSession,
-  getMcpServerConfigs,
+  listMcpSessions,
 } from '~/server/infrastructure/mcp';
 
 const SESSION_TOKEN = 'orcaq_test-token';
@@ -105,18 +105,28 @@ async function seedDatabases() {
   };
   await persist('app_config').insert({
     id: 'app-config',
-    data: JSON.stringify({
-      mcpServerConfigs: { enabled: true, sessions: [session, otherSession] },
-    }),
+    data: JSON.stringify({ mcpServerConfigs: { enabled: true } }),
   });
+  await persist.raw(`CREATE TABLE IF NOT EXISTS mcp_sessions (
+    id TEXT PRIMARY KEY, name TEXT, token TEXT, require_token INTEGER,
+    workspace_access TEXT, connection_access TEXT, created_at TEXT,
+    updated_at TEXT)`);
+  await persist('mcp_sessions').insert(
+    [session, otherSession].map(item => ({
+      id: item.id,
+      name: item.name,
+      token: item.token,
+      require_token: 1,
+      workspace_access: JSON.stringify(item.workspaceAccess),
+      connection_access: JSON.stringify(item.connectionAccess),
+      created_at: item.id === 'session-1' ? '2026-10-21' : '2026-10-22',
+    }))
+  );
   await persist.destroy();
 }
 
 async function getSession(token: string): Promise<McpSession> {
-  const session = await findMcpSessionByToken(
-    await getMcpServerConfigs(),
-    token
-  );
+  const session = await findMcpSessionByToken(await listMcpSessions(), token);
   if (!session) throw new Error('session not found');
   return session;
 }
@@ -211,24 +221,23 @@ describe('OrcaQ MCP server', () => {
 
   it('rejects unknown tokens', async () => {
     const session = await findMcpSessionByToken(
-      await getMcpServerConfigs(),
+      await listMcpSessions(),
       'orcaq_wrong'
     );
     expect(session).toBeNull();
   });
 
   it('has no tokenless session unless one opts out of the token', async () => {
-    const configs = await getMcpServerConfigs();
-    expect(findTokenlessMcpSession(configs)).toBeNull();
+    const sessions = await listMcpSessions();
+    expect(findTokenlessMcpSession(sessions)).toBeNull();
 
-    const tokenless = findTokenlessMcpSession({
-      ...configs,
-      sessions: configs.sessions.map(session =>
+    const tokenless = findTokenlessMcpSession(
+      sessions.map(session =>
         session.id === 'session-2'
           ? { ...session, requireToken: false }
           : session
-      ),
-    });
+      )
+    );
     expect(tokenless?.name).toBe('Other');
   });
 

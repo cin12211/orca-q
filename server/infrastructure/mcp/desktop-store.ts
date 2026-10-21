@@ -7,6 +7,7 @@ import {
   APP_CONFIG_PERSIST_ID,
   McpConnectionAccess,
   normalizeMcpServerConfigs,
+  normalizeMcpSession,
   resolveMcpConnectionAccess,
   type McpServerConfigs,
   type McpSession,
@@ -110,24 +111,53 @@ function isSameHash(a: string, b: string) {
   return left.length === right.length && timingSafeEqual(left, right);
 }
 
+const MCP_SESSIONS_TABLE = 'mcp_sessions';
+
+/** Sessions from the `mcp_sessions` table (created by Electron migration v3). */
+export async function listMcpSessions(): Promise<McpSession[]> {
+  if (!getDesktopPersistDbPath()) return [];
+
+  const db = getPersistDb();
+  if (!(await db.schema.hasTable(MCP_SESSIONS_TABLE))) return [];
+
+  const rows = (await db(MCP_SESSIONS_TABLE).orderBy(
+    'created_at',
+    'asc'
+  )) as Record<string, unknown>[];
+
+  return rows.flatMap(row => {
+    const session = normalizeMcpSession({
+      id: row.id,
+      name: row.name,
+      token: row.token,
+      requireToken: Boolean(row.require_token),
+      workspaceAccess: parseJson(row.workspace_access),
+      connectionAccess: parseJson(row.connection_access),
+      createdAt: row.created_at,
+      updatedAt: row.updated_at ?? undefined,
+    });
+    return session ? [session] : [];
+  });
+}
+
+/** Session used for requests that carry no bearer token, if one allows it. */
+export function findTokenlessMcpSession(
+  sessions: McpSession[]
+): McpSession | null {
+  return sessions.find(session => !session.requireToken) ?? null;
+}
+
 /**
  * Session that owns this bearer token, or null when the token is unknown.
  * Hashes are compared in constant time so response timing leaks nothing.
  */
-/** Session used for requests that carry no bearer token, if one allows it. */
-export function findTokenlessMcpSession(
-  configs: McpServerConfigs
-): McpSession | null {
-  return configs.sessions.find(session => !session.requireToken) ?? null;
-}
-
 export async function findMcpSessionByToken(
-  configs: McpServerConfigs,
+  sessions: McpSession[],
   token: string
 ): Promise<McpSession | null> {
   const tokenHash = await hashMcpToken(token);
 
-  for (const session of configs.sessions) {
+  for (const session of sessions) {
     if (isSameHash(await hashMcpToken(session.token), tokenHash)) {
       return session;
     }
@@ -143,8 +173,11 @@ export async function findMcpSessionByToken(
 export async function listMcpConnections(
   sessionId: string
 ): Promise<McpConnectionEntry[]> {
-  const configs = await getMcpServerConfigs();
-  const session = configs.sessions.find(item => item.id === sessionId);
+  const [configs, sessions] = await Promise.all([
+    getMcpServerConfigs(),
+    listMcpSessions(),
+  ]);
+  const session = sessions.find(item => item.id === sessionId);
 
   if (!configs.enabled || !session) {
     throw new Error('This MCP session was revoked or the MCP server is off.');

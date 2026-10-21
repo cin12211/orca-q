@@ -104,7 +104,9 @@ export interface TableAppearanceConfigs {
 
 /**
  * An MCP session is what an MCP client authenticates as with its bearer
- * token. The token stays viewable in Settings (local-only app data).
+ * token. Sessions live in their own `mcp_sessions` table (desktop SQLite);
+ * the token stays viewable in Settings because the data never leaves the
+ * user's machine.
  * A connection's access comes from `connectionAccess`, then from its
  * workspace in `workspaceAccess`, otherwise it is off.
  * With `requireToken: false`, requests without a token use this session;
@@ -116,14 +118,14 @@ export interface McpSession {
   token: string;
   requireToken: boolean;
   createdAt: string;
+  updatedAt?: string;
   workspaceAccess: Record<string, McpConnectionAccess>;
   connectionAccess: Record<string, McpConnectionAccess>;
 }
 
-/** Built-in MCP server (desktop only). */
+/** Built-in MCP server switch (desktop only); sessions are stored separately. */
 export interface McpServerConfigs {
   enabled: boolean;
-  sessions: McpSession[];
 }
 
 export interface CustomLayoutSizeEntry {
@@ -289,34 +291,30 @@ const normalizeAccessMap = (
     )
   ) as Record<string, McpConnectionAccess>;
 
-const normalizeMcpSession = (value: unknown): McpSession[] => {
-  if (!isRecord(value)) return [];
+/** Returns null for records that are not a usable session. */
+export const normalizeMcpSession = (value: unknown): McpSession | null => {
+  if (!isRecord(value)) return null;
   if (typeof value.id !== 'string' || typeof value.token !== 'string') {
-    return [];
+    return null;
   }
 
-  return [
-    {
-      id: value.id,
-      name: typeof value.name === 'string' ? value.name : 'MCP session',
-      token: value.token,
-      requireToken: value.requireToken !== false,
-      createdAt: typeof value.createdAt === 'string' ? value.createdAt : '',
-      workspaceAccess: normalizeAccessMap(value.workspaceAccess),
-      connectionAccess: normalizeAccessMap(value.connectionAccess),
-    },
-  ];
+  return {
+    id: value.id,
+    name: typeof value.name === 'string' ? value.name : 'MCP session',
+    token: value.token,
+    requireToken: value.requireToken !== false,
+    createdAt: typeof value.createdAt === 'string' ? value.createdAt : '',
+    updatedAt:
+      typeof value.updatedAt === 'string' ? value.updatedAt : undefined,
+    workspaceAccess: normalizeAccessMap(value.workspaceAccess),
+    connectionAccess: normalizeAccessMap(value.connectionAccess),
+  };
 };
 
 export const normalizeMcpServerConfigs = (value: unknown): McpServerConfigs => {
   const source = isRecord(value) ? value : {};
 
-  return {
-    enabled: source.enabled === true,
-    sessions: Array.isArray(source.sessions)
-      ? source.sessions.flatMap(normalizeMcpSession)
-      : [],
-  };
+  return { enabled: source.enabled === true };
 };
 
 /** Effective access of one connection for a session. */
@@ -453,7 +451,7 @@ export const createDefaultAppConfigState = (): AppConfigPersistedState => ({
   customLayouts: [],
   activeCustomLayoutId: null,
   customLayoutSizes: {},
-  mcpServerConfigs: { enabled: false, sessions: [] },
+  mcpServerConfigs: { enabled: false },
 });
 
 export const normalizeAppConfigState = (
