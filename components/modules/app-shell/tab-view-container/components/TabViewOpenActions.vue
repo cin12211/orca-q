@@ -81,7 +81,9 @@ const emit = defineEmits<{
         </DropdownMenuTrigger>
 
         <DropdownMenuContent align="end" class="min-w-52">
-          <DropdownMenuLabel class="py-0">Open new tab</DropdownMenuLabel>
+          <DropdownMenuLabel class="py-0 font-normal"
+            >Open new tab</DropdownMenuLabel
+          >
           <DropdownMenuSeparator />
 
           <DropdownMenuItem

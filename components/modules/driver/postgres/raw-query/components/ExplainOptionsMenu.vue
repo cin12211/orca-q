@@ -58,7 +58,7 @@ defineEmits<{
           </DropdownMenuTrigger>
 
           <DropdownMenuContent align="end" class="min-w-52">
-            <DropdownMenuLabel class="py-0"
+            <DropdownMenuLabel class="py-0 font-normal"
               >Explain Analyze Options</DropdownMenuLabel
             >
 
@@ -77,7 +77,9 @@ defineEmits<{
 
             <DropdownMenuSeparator />
 
-            <DropdownMenuLabel class="py-0">Serialize</DropdownMenuLabel>
+            <DropdownMenuLabel class="py-0 font-normal"
+              >Serialize</DropdownMenuLabel
+            >
             <DropdownMenuRadioGroup
               :model-value="serializeMode"
               @update:model-value="

@@ -310,7 +310,9 @@ const currentNullOrderLabel = computed(() => {
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" class="min-w-44">
-          <DropdownMenuLabel class="py-0">Null ordering</DropdownMenuLabel>
+          <DropdownMenuLabel class="py-0 font-normal"
+            >Null ordering</DropdownMenuLabel
+          >
           <DropdownMenuSeparator />
           <DropdownMenuRadioGroup
             :model-value="

@@ -36,7 +36,9 @@ defineEmits<{
         Ln {{ cursorInfo.line }}, Col {{ cursorInfo.column }}
       </div>
 
-      <RawQueryVariableUsageGuidePopover v-if="isSupportVariable" />
+      <slot name="usage-guide">
+        <RawQueryVariableUsageGuidePopover v-if="isSupportVariable" />
+      </slot>
     </div>
 
     <div class="flex gap-1">
@@ -69,7 +71,7 @@ defineEmits<{
               </DropdownMenuTrigger>
 
               <DropdownMenuContent align="end" class="min-w-44">
-                <DropdownMenuLabel class="py-0"
+                <DropdownMenuLabel class="py-0 font-normal"
                   >Format Options
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />

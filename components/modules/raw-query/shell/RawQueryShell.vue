@@ -22,6 +22,7 @@ import type {
 } from '../contracts';
 import { useRawQueryCore, useRawQueryFileContentContext } from '../hooks';
 import { useRawQueryEditorContextMenu } from '../hooks/useRawQueryEditorContextMenu';
+import { ViewMode } from '../interfaces';
 
 const props = withDefaults(
   defineProps<{
@@ -66,6 +67,20 @@ const {
 
 const capabilities = computed(() => props.descriptor.capabilities);
 const isFormatSupported = computed(() => capabilities.value.supportsFormat);
+// Explain is SQL-only; Redis has no query plan to show.
+const supportedViews = computed(() => {
+  const views = [
+    ViewMode.RESULT,
+    ViewMode.EXPLAIN,
+    ViewMode.RAW,
+    ViewMode.INFO,
+    ViewMode.CHART,
+    ViewMode.ERROR,
+  ];
+  return capabilities.value.language === 'sql'
+    ? views
+    : views.filter(view => view !== ViewMode.EXPLAIN);
+});
 const isVariableSupported = computed(
   () => props.isSupportVariable && capabilities.value.supportsVariables
 );
@@ -399,6 +414,7 @@ defineExpose({
         :execute-loading="queryProcessState.executeLoading"
         :is-streaming="queryProcessState.isStreaming"
         :resolve-command-result-handler="resolveCommandResultHandler"
+        :supported-views="supportedViews"
         @update:active-tab="rawQueryEditor.setActiveResultTab"
         @close-tab="rawQueryEditor.closeResultTab"
         @close-other-tabs="rawQueryEditor.closeOtherResultTabs"

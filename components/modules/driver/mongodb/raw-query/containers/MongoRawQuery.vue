@@ -10,6 +10,9 @@ import RawQueryEditorHeader from '~/components/modules/raw-query/components/RawQ
 import RawQueryLayout from '~/components/modules/raw-query/components/RawQueryLayout.vue';
 import RawQueryResultTabs from '~/components/modules/raw-query/components/RawQueryResultTabs.vue';
 import VariableEditor from '~/components/modules/raw-query/components/VariableEditor.vue';
+import ResultTabErrorView from '~/components/modules/raw-query/components/result-tab/ResultTabErrorView.vue';
+import ResultTabInfoView from '~/components/modules/raw-query/components/result-tab/ResultTabInfoView.vue';
+import ResultTabRawView from '~/components/modules/raw-query/components/result-tab/ResultTabRawView.vue';
 import {
   useRawQueryFileContentContext,
   useRawQueryResultTabsContext,
@@ -18,6 +21,7 @@ import { ViewMode } from '~/components/modules/raw-query/interfaces';
 import { useHotkeys } from '~/core/composables/useHotKeys';
 import { useEnvironmentTagStore } from '~/core/stores';
 import { useAppConfigStore } from '~/core/stores/appConfigStore';
+import { MONGODB_RAW_QUERY_CAPABILITIES } from '../capabilities';
 import {
   MongoRawQueryApprovalDialog,
   MongoRawQueryConsole,
@@ -31,6 +35,20 @@ import {
   useMongoScriptMetadata,
 } from '../hooks';
 import { formatMongoScript } from '../utils';
+
+// MongoDB has no query plan (Explain); Console carries its script log output.
+const MONGO_SUPPORTED_VIEWS = [
+  ViewMode.RESULT,
+  ViewMode.RAW,
+  ViewMode.INFO,
+  ViewMode.CHART,
+  ViewMode.CONSOLE,
+  ViewMode.ERROR,
+];
+
+// Same capability flags the shared shell reads for SQL/Redis engines.
+const isVariableSupported = MONGODB_RAW_QUERY_CAPABILITIES.supportsVariables;
+const isFormatSupported = MONGODB_RAW_QUERY_CAPABILITIES.supportsFormat;
 
 const route = useRoute('workspaceId-connectionId-explorer-fileId');
 const workspaceId = computed(() => {
@@ -242,7 +260,7 @@ onBeforeUnmount(() => {
             :file-variables="fileVariables"
             :code-editor-layout="appConfigStore.codeEditorLayout"
             :currentFileInfo="currentFile"
-            :is-support-variable="true"
+            :is-support-variable="isVariableSupported"
             @update:update-file-variables="updateFileVariables"
           />
           <div class="h-full flex flex-col overflow-y-auto">
@@ -263,14 +281,14 @@ onBeforeUnmount(() => {
             :cursor-info="cursorInfo"
             :execute-loading="mongoExecution.queryProcessState.executeLoading"
             :is-streaming="mongoExecution.queryProcessState.isStreaming"
-            :is-support-format="true"
-            :is-support-variable="false"
+            :is-support-format="isFormatSupported"
+            :is-support-variable="isVariableSupported"
             @on-format-current-statement="formatScript"
             @on-format-all="formatScript"
             @on-execute-current="runScript"
             @on-cancel-query="mongoExecution.cancel"
           >
-            <template #extra>
+            <template #usage-guide>
               <MongoRawQueryVariableUsageGuidePopover />
             </template>
           </RawQueryEditorFooter>
@@ -286,7 +304,15 @@ onBeforeUnmount(() => {
         </div>
 
         <div class="h-full flex flex-col overflow-y-auto">
+          <BaseEmpty
+            v-if="!isVariableSupported"
+            title="Variables not supported"
+            desc="Variables are not available for MongoDB connections."
+            icon="icons:ghost"
+          />
+
           <VariableEditor
+            v-else
             :variables="fileVariables"
             @update:variables="updateFileVariables"
             @updateVariables="updateFileVariables"
@@ -306,20 +332,41 @@ onBeforeUnmount(() => {
         :execute-loading="mongoExecution.queryProcessState.executeLoading"
         :is-streaming="mongoExecution.queryProcessState.isStreaming"
         :resolve-command-result-handler="resolveCommandResultHandler"
+        :supported-views="MONGO_SUPPORTED_VIEWS"
         @update:active-tab="resultTabs.setActiveResultTab"
         @close-tab="resultTabs.closeResultTab"
         @close-other-tabs="resultTabs.closeOtherResultTabs"
         @close-tabs-to-right="resultTabs.closeResultTabsToRight"
         @update:view="resultTabs.updateResultTabView"
       >
-        <template #result-view="{ tab, view }">
+        <template #result-view="{ tab, view, formattedData }">
           <MongoRawQueryConsole
             v-if="view === ViewMode.CONSOLE"
             :logs="tab.metadata.logs"
           />
           <MongoRawQueryResultView
-            v-else
+            v-else-if="view === ViewMode.RESULT"
             :documents="asMongoDocuments(tab.result)"
+          />
+          <ResultTabRawView
+            v-else-if="view === ViewMode.RAW"
+            :formatted-data="formattedData"
+            :execute-loading="mongoExecution.queryProcessState.executeLoading"
+            :is-streaming="mongoExecution.queryProcessState.isStreaming"
+          />
+          <ResultTabInfoView
+            v-else-if="view === ViewMode.INFO"
+            :active-tab="tab"
+          />
+          <ResultTabErrorView
+            v-else-if="view === ViewMode.ERROR"
+            :active-tab="tab"
+            @onChangeView="resultTabs.updateResultTabView(tab.id, $event)"
+          />
+          <BaseEmpty
+            v-else
+            title="View not available"
+            desc="This view is not available for MongoDB."
           />
         </template>
       </RawQueryResultTabs>

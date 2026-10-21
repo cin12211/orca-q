@@ -42,10 +42,6 @@ const currentStatementBaseTheme = EditorView.baseTheme({
     height: '100%',
     backgroundColor: `var(--color-amber-400)`,
   },
-  '.cm-gutters': {
-    backgroundColor: `unset !important`,
-    border: `none !important`,
-  },
   // '.cm-line': {
   //   paddingLeft: `4px !important`,
   // },

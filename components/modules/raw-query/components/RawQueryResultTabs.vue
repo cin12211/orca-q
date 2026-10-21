@@ -30,6 +30,8 @@ const props = defineProps<{
   executeLoading: boolean;
   isStreaming: boolean;
   resolveCommandResultHandler: CommandResultHandlerResolver;
+  /** View tabs the calling engine supports, in display order. */
+  supportedViews: ViewMode[];
 }>();
 
 const schemaStore = useSchemaStore();
@@ -64,14 +66,19 @@ const isHaveRightItem = computed(() => {
   return currentIndex >= 0 && currentIndex < tabIds.length - 1;
 });
 
-const viewModes: { value: ViewMode; label: string }[] = [
-  { value: ViewMode.RESULT, label: 'Result' },
-  { value: ViewMode.EXPLAIN, label: 'Explain' },
-  { value: ViewMode.RAW, label: 'Raw' },
-  { value: ViewMode.INFO, label: 'Info' },
-  { value: ViewMode.CHART, label: 'Chart' },
-  { value: ViewMode.ERROR, label: 'Errors' },
-];
+const VIEW_MODE_LABELS: Record<ViewMode, string> = {
+  [ViewMode.RESULT]: 'Result',
+  [ViewMode.EXPLAIN]: 'Explain',
+  [ViewMode.RAW]: 'Raw',
+  [ViewMode.INFO]: 'Info',
+  [ViewMode.CHART]: 'Chart',
+  [ViewMode.CONSOLE]: 'Console',
+  [ViewMode.ERROR]: 'Errors',
+};
+
+const visibleViewModes = computed(() =>
+  props.supportedViews.map(value => ({ value, label: VIEW_MODE_LABELS[value] }))
+);
 
 // Cache key: tabId + resultLength for case (streaming)
 const formattedDataCache = new Map<string, Record<string, any>[]>();
@@ -209,7 +216,7 @@ const hasErrors = (tab: ExecutedResultItem) => {
     <!-- Vertical view tabs (left side) -->
     <div class="flex mt-7 [writing-mode:vertical-rl]" v-if="activeTab">
       <div
-        v-for="mode in viewModes"
+        v-for="mode in visibleViewModes"
         :key="mode.value"
         @click="
           // Disable result/raw/chart if has errors, disable error if no errors
@@ -385,7 +392,14 @@ const hasErrors = (tab: ExecutedResultItem) => {
           falls back to the built-in view set when it is absent or renders
           nothing (e.g. a `v-if`-false engine view).
         -->
-        <slot v-else name="result-view" :tab="activeTab" :view="currentView">
+        <slot
+          v-else
+          name="result-view"
+          :tab="activeTab"
+          :view="currentView"
+          :formatted-data="formattedData"
+          :columns="activeTabColumns"
+        >
           <!-- Result View -->
           <ResultTabResultView
             v-if="currentView === ViewMode.RESULT"
