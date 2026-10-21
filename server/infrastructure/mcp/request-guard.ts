@@ -26,10 +26,10 @@ function getClientAddress(event: H3Event): string {
 }
 
 /**
- * The MCP endpoint has no auth token, so it must only ever answer local
- * clients: the client address must be loopback (dev server binds 0.0.0.0),
- * and the Host/Origin headers must be loopback too to block DNS-rebinding
- * from websites open in a browser.
+ * Bearer tokens are not enough on their own: the endpoint must only ever
+ * answer local clients. The client address must be loopback (dev server
+ * binds 0.0.0.0), and the Host/Origin headers must be loopback too to block
+ * DNS-rebinding from websites open in a browser.
  */
 export function isLocalMcpRequest(event: H3Event): boolean {
   const remoteAddress = getClientAddress(event);
@@ -39,4 +39,10 @@ export function isLocalMcpRequest(event: H3Event): boolean {
     isLoopbackHostname(getRequestHeader(event, 'host'), false) &&
     isLoopbackHostname(getRequestHeader(event, 'origin'), true)
   );
+}
+
+export function getBearerToken(event: H3Event): string | null {
+  const authorization = getRequestHeader(event, 'authorization') ?? '';
+  const match = authorization.match(/^Bearer\s+(\S+)$/i);
+  return match?.[1] ?? null;
 }

@@ -1,83 +1,140 @@
 <script setup lang="ts">
 import { Switch } from '#components';
 import { toast } from 'vue-sonner';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { copyToClipboard } from '~/core/helpers/copyData';
-import { McpConnectionAccess } from '~/core/persist/store-state';
+import {
+  McpConnectionAccess,
+  resolveMcpConnectionAccess,
+  type McpSession,
+} from '~/core/persist/store-state';
 import { useAppConfigStore } from '~/core/stores/appConfigStore';
 import { useManagementConnectionStore } from '~/core/stores/managementConnectionStore';
 import { useWorkspacesStore } from '~/core/stores/useWorkspacesStore';
 import {
-  MCP_CONNECTION_ACCESS_OPTIONS,
+  buildMcpClientSnippets,
   MCP_ENDPOINT_PATH,
-  MCP_SERVER_NAME,
+  type McpWorkspaceOption,
 } from '../constants';
+import { useMcpSessions, type McpSessionDraft } from '../hooks';
+import { McpSessionDialog, McpSessionTokenDialog } from './mcp-server';
 
 const appConfigStore = useAppConfigStore();
 const connectionStore = useManagementConnectionStore();
 const workspacesStore = useWorkspacesStore();
+const {
+  sessions,
+  createSession,
+  updateSession,
+  regenerateToken,
+  deleteSession,
+} = useMcpSessions();
+
+const isSessionDialogOpen = ref(false);
+const editingSessionId = ref<string | null>(null);
+const issuedToken = ref<{ sessionName: string; token: string } | null>(null);
 
 const endpointUrl = computed(
   () => `${window.location.origin}${MCP_ENDPOINT_PATH}`
 );
 
-const clientSnippets = computed(() => [
-  {
-    name: 'Claude Code',
-    code: `claude mcp add --transport http ${MCP_SERVER_NAME} ${endpointUrl.value}`,
-  },
-  {
-    name: 'Codex (~/.codex/config.toml)',
-    code: `[mcp_servers.${MCP_SERVER_NAME}]\nurl = "${endpointUrl.value}"`,
-  },
-  {
-    name: 'Claude Desktop / Cursor (JSON)',
-    code: JSON.stringify(
-      {
-        mcpServers: {
-          [MCP_SERVER_NAME]: {
-            command: 'npx',
-            args: ['-y', 'mcp-remote', endpointUrl.value],
-          },
-        },
-      },
-      null,
-      2
-    ),
-  },
-]);
+const workspaceOptions = computed<McpWorkspaceOption[]>(() =>
+  workspacesStore.workspaces.map(workspace => ({
+    id: workspace.id,
+    name: workspace.name,
+    connections: connectionStore.connections
+      .filter(connection => connection.workspaceId === workspace.id)
+      .map(connection => ({
+        id: connection.id,
+        name: connection.name,
+        type: connection.type,
+      })),
+  }))
+);
 
-const connectionRows = computed(() => {
-  const workspaceNames = new Map(
-    workspacesStore.workspaces.map(workspace => [workspace.id, workspace.name])
+const editingDraft = computed<McpSessionDraft | null>(() => {
+  const session = sessions.value.find(
+    item => item.id === editingSessionId.value
   );
+  if (!session) return null;
 
-  return connectionStore.connections.map(connection => ({
-    id: connection.id,
-    name: connection.name,
-    type: connection.type,
-    workspaceName: workspaceNames.get(connection.workspaceId) ?? '',
-  }));
+  return {
+    name: session.name,
+    workspaceAccess: session.workspaceAccess,
+    connectionAccess: session.connectionAccess,
+  };
 });
 
-const getConnectionAccess = (connectionId: string) =>
-  appConfigStore.mcpServerConfigs.connectionAccess[connectionId] ??
-  McpConnectionAccess.Read;
+const issuedSnippets = computed(() =>
+  issuedToken.value
+    ? buildMcpClientSnippets(endpointUrl.value, issuedToken.value.token)
+    : []
+);
 
-const setConnectionAccess = (connectionId: string, value: unknown) => {
-  appConfigStore.mcpServerConfigs.connectionAccess[connectionId] =
-    value as McpConnectionAccess;
+const getSessionSummary = (session: McpSession) => {
+  let readCount = 0;
+  let writeCount = 0;
+
+  for (const connection of connectionStore.connections) {
+    const access = resolveMcpConnectionAccess(session, connection);
+    if (access === McpConnectionAccess.Read) readCount += 1;
+    if (access === McpConnectionAccess.Write) writeCount += 1;
+  }
+
+  if (readCount + writeCount === 0) return 'No connections';
+  return [
+    readCount ? `${readCount} read only` : '',
+    writeCount ? `${writeCount} read & write` : '',
+  ]
+    .filter(Boolean)
+    .join(' · ');
 };
+
+const formatDate = (value: string) =>
+  value
+    ? new Intl.DateTimeFormat(undefined, { dateStyle: 'medium' }).format(
+        new Date(value)
+      )
+    : '';
 
 const handleCopy = async (text: string) => {
   await copyToClipboard(text);
   toast('Copied to clipboard');
+};
+
+const openCreateDialog = () => {
+  editingSessionId.value = null;
+  isSessionDialogOpen.value = true;
+};
+
+const openEditDialog = (sessionId: string) => {
+  editingSessionId.value = sessionId;
+  isSessionDialogOpen.value = true;
+};
+
+const handleSubmitSession = async (draft: McpSessionDraft) => {
+  isSessionDialogOpen.value = false;
+
+  if (editingSessionId.value) {
+    updateSession(editingSessionId.value, draft);
+    toast('MCP session updated');
+    return;
+  }
+
+  const token = await createSession(draft);
+  issuedToken.value = { sessionName: draft.name.trim(), token };
+};
+
+const handleRegenerateToken = async (session: McpSession) => {
+  const token = await regenerateToken(session.id);
+  if (!token) return;
+
+  issuedToken.value = { sessionName: session.name, token };
+  toast('New token issued. The old token no longer works.');
+};
+
+const handleDeleteSession = (session: McpSession) => {
+  deleteSession(session.id);
+  toast(`Revoked "${session.name}"`);
 };
 </script>
 
@@ -95,7 +152,8 @@ const handleCopy = async (text: string) => {
           <p class="text-sm">Enable MCP server</p>
           <p class="text-xs text-muted-foreground">
             Let AI clients such as Claude Code, Codex or Cursor query your saved
-            connections. Only requests from this computer are accepted.
+            connections through a session token. Only requests from this
+            computer are accepted.
           </p>
         </div>
         <Switch
@@ -127,83 +185,88 @@ const handleCopy = async (text: string) => {
       </div>
 
       <div class="flex flex-col gap-2">
-        <p class="text-sm">Connect a client</p>
+        <div class="flex items-center justify-between gap-4">
+          <div class="flex flex-col gap-0.5">
+            <p class="text-sm">Sessions</p>
+            <p class="text-xs text-muted-foreground">
+              Each session has its own bearer token and its own access to
+              workspaces and connections.
+            </p>
+          </div>
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            @click="openCreateDialog"
+          >
+            <Icon name="hugeicons:add-01" class="size-4!" /> Create session
+          </Button>
+        </div>
+
+        <p v-if="sessions.length === 0" class="text-xs text-muted-foreground">
+          No sessions yet. Create one to get a token for your MCP client.
+        </p>
+
         <div
-          v-for="snippet in clientSnippets"
-          :key="snippet.name"
-          class="rounded-md border"
+          v-for="session in sessions"
+          :key="session.id"
+          class="flex items-center justify-between gap-4 rounded-md border px-3 py-1.5"
         >
-          <div class="flex items-center justify-between px-3 py-1 border-b">
-            <span class="text-xs text-muted-foreground">{{
-              snippet.name
-            }}</span>
+          <div class="flex flex-col min-w-0">
+            <span class="text-sm truncate">{{ session.name }}</span>
+            <span class="text-xs text-muted-foreground truncate">
+              {{ session.tokenPreview }} · {{ getSessionSummary(session) }} ·
+              {{ formatDate(session.createdAt) }}
+            </span>
+          </div>
+
+          <div class="flex items-center gap-1 shrink-0">
             <Button
               type="button"
               size="iconSm"
               variant="ghost"
-              @click="handleCopy(snippet.code)"
+              title="Edit access"
+              @click="openEditDialog(session.id)"
             >
-              <Icon name="hugeicons:copy-01" class="size-4!" />
+              <Icon name="hugeicons:edit-02" class="size-4!" />
+            </Button>
+            <Button
+              type="button"
+              size="iconSm"
+              variant="ghost"
+              title="Regenerate token"
+              @click="handleRegenerateToken(session)"
+            >
+              <Icon name="hugeicons:refresh" class="size-4!" />
+            </Button>
+            <Button
+              type="button"
+              size="iconSm"
+              variant="ghost"
+              title="Revoke session"
+              @click="handleDeleteSession(session)"
+            >
+              <Icon name="hugeicons:delete-02" class="size-4!" />
             </Button>
           </div>
-          <pre class="text-xs px-3 py-2 overflow-x-auto">{{
-            snippet.code
-          }}</pre>
-        </div>
-      </div>
-
-      <div class="flex flex-col gap-2">
-        <div class="flex flex-col gap-0.5">
-          <p class="text-sm">Connection access</p>
-          <p class="text-xs text-muted-foreground">
-            Read only runs queries in a read-only transaction. Read & write lets
-            the AI client change data and schema, so enable it only for
-            connections you can afford to modify.
-          </p>
-        </div>
-
-        <p
-          v-if="connectionRows.length === 0"
-          class="text-xs text-muted-foreground"
-        >
-          No saved connections yet.
-        </p>
-
-        <div
-          v-for="connection in connectionRows"
-          :key="connection.id"
-          class="flex items-center justify-between gap-4 rounded-md border px-3 py-1.5"
-        >
-          <div class="flex flex-col min-w-0">
-            <span class="text-sm truncate">{{ connection.name }}</span>
-            <span class="text-xs text-muted-foreground truncate">
-              {{ connection.type }}
-              <template v-if="connection.workspaceName">
-                · {{ connection.workspaceName }}
-              </template>
-            </span>
-          </div>
-
-          <Select
-            size="xs"
-            :model-value="getConnectionAccess(connection.id)"
-            @update:model-value="setConnectionAccess(connection.id, $event)"
-          >
-            <SelectTrigger class="min-w-32 cursor-pointer">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem
-                v-for="option in MCP_CONNECTION_ACCESS_OPTIONS"
-                :key="option.value"
-                :value="option.value"
-              >
-                {{ option.label }}
-              </SelectItem>
-            </SelectContent>
-          </Select>
         </div>
       </div>
     </template>
+
+    <McpSessionDialog
+      v-model:open="isSessionDialogOpen"
+      :workspaces="workspaceOptions"
+      :initial-draft="editingDraft"
+      @submit="handleSubmitSession"
+    />
+
+    <McpSessionTokenDialog
+      :open="Boolean(issuedToken)"
+      :session-name="issuedToken?.sessionName ?? ''"
+      :token="issuedToken?.token ?? ''"
+      :snippets="issuedSnippets"
+      @update:open="!$event && (issuedToken = null)"
+      @copy="handleCopy"
+    />
   </div>
 </template>

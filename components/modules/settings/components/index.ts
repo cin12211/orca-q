@@ -9,3 +9,4 @@ export { default as TableAppearanceConfig } from './TableAppearanceConfig.vue';
 export { default as TableAppearancePreview } from './TableAppearancePreview.vue';
 export * from './backup-restore';
 export * from './layout-builder';
+export * from './mcp-server';

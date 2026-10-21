@@ -1,11 +1,15 @@
 import knex, { type Knex } from 'knex';
+import { timingSafeEqual } from 'node:crypto';
 import { existsSync } from 'node:fs';
 import { DatabaseClientType } from '~/core/constants/database-client-type';
+import { hashMcpToken } from '~/core/helpers/mcp-token';
 import {
   APP_CONFIG_PERSIST_ID,
   McpConnectionAccess,
   normalizeMcpServerConfigs,
+  resolveMcpConnectionAccess,
   type McpServerConfigs,
+  type McpSession,
 } from '~/core/persist/normalize';
 import type { Connection } from '~/core/types/entities/connection.entity';
 
@@ -100,16 +104,45 @@ export async function getMcpServerConfigs(): Promise<McpServerConfigs> {
   return normalizeMcpServerConfigs(appConfig?.mcpServerConfigs);
 }
 
-export function resolveConnectionAccess(
-  configs: McpServerConfigs,
-  connectionId: string
-): McpConnectionAccess {
-  return configs.connectionAccess[connectionId] ?? McpConnectionAccess.Read;
+function isSameHash(a: string, b: string) {
+  const left = Buffer.from(a);
+  const right = Buffer.from(b);
+  return left.length === right.length && timingSafeEqual(left, right);
 }
 
-/** Connections exposed to MCP clients (access mode other than `off`). */
-export async function listMcpConnections(): Promise<McpConnectionEntry[]> {
+/** Session that owns this bearer token, or null when the token is unknown. */
+export function findMcpSessionByTokenHash(
+  configs: McpServerConfigs,
+  tokenHash: string
+): McpSession | null {
+  return (
+    configs.sessions.find(session =>
+      isSameHash(session.tokenHash, tokenHash)
+    ) ?? null
+  );
+}
+
+export async function findMcpSessionByToken(
+  configs: McpServerConfigs,
+  token: string
+): Promise<McpSession | null> {
+  return findMcpSessionByTokenHash(configs, await hashMcpToken(token));
+}
+
+/**
+ * Connections the session may use. Settings are re-read on every call so a
+ * revoked session or narrowed access applies to the very next tool call.
+ */
+export async function listMcpConnections(
+  sessionId: string
+): Promise<McpConnectionEntry[]> {
   const configs = await getMcpServerConfigs();
+  const session = configs.sessions.find(item => item.id === sessionId);
+
+  if (!configs.enabled || !session) {
+    throw new Error('This MCP session was revoked or the MCP server is off.');
+  }
+
   const rows = (await getPersistDb()('connections').orderBy(
     'created_at',
     'asc'
@@ -120,22 +153,23 @@ export async function listMcpConnections(): Promise<McpConnectionEntry[]> {
       const connection = fromConnectionRow(row);
       return {
         connection,
-        access: resolveConnectionAccess(configs, connection.id),
+        access: resolveMcpConnectionAccess(session, connection),
       };
     })
     .filter(entry => entry.access !== McpConnectionAccess.Off);
 }
 
 export async function getMcpConnection(
+  sessionId: string,
   connectionId: string
 ): Promise<McpConnectionEntry> {
-  const entry = (await listMcpConnections()).find(
+  const entry = (await listMcpConnections(sessionId)).find(
     item => item.connection.id === connectionId
   );
 
   if (!entry) {
     throw new Error(
-      `Connection "${connectionId}" was not found or is not shared with MCP. Call list_connections to see available connections.`
+      `Connection "${connectionId}" was not found or this MCP session has no access to it. Call list_connections to see available connections.`
     );
   }
 

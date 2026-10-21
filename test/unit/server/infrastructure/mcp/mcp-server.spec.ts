@@ -5,16 +5,23 @@ import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { hashMcpToken } from '~/core/helpers/mcp-token';
+import type { McpSession } from '~/core/persist/normalize';
 import {
   createOrcaqMcpServer,
   DESKTOP_PERSIST_DB_PATH_ENV,
+  findMcpSessionByToken,
+  getMcpServerConfigs,
 } from '~/server/infrastructure/mcp';
+
+const SESSION_TOKEN = 'orcaq_test-token';
+const OTHER_TOKEN = 'orcaq_other-token';
 
 const tempDir = mkdtempSync(path.join(tmpdir(), 'orcaq-mcp-'));
 const persistDbPath = path.join(tempDir, 'orcaq.db');
 const targetDbPath = path.join(tempDir, 'shop.sqlite');
 
-async function seedDatabases(access: Record<string, string>) {
+async function seedDatabases() {
   const target = knex({
     client: 'sqlite3',
     connection: { filename: targetDbPath },
@@ -46,7 +53,10 @@ async function seedDatabases(access: Record<string, string>) {
     username TEXT, password TEXT, database TEXT, service_name TEXT,
     file_path TEXT, managed_sqlite TEXT, ssl TEXT, ssh TEXT, tag_ids TEXT,
     created_at TEXT, updated_at TEXT)`);
-  await persist('workspaces').insert({ id: 'ws-1', name: 'Shop' });
+  await persist('workspaces').insert([
+    { id: 'ws-1', name: 'Shop' },
+    { id: 'ws-2', name: 'Private' },
+  ]);
   await persist('connections').insert([
     {
       id: 'conn-ro',
@@ -69,7 +79,7 @@ async function seedDatabases(access: Record<string, string>) {
     },
     {
       id: 'conn-off',
-      workspace_id: 'ws-1',
+      workspace_id: 'ws-2',
       name: 'Hidden',
       type: 'sqlite3',
       method: 'file',
@@ -77,17 +87,47 @@ async function seedDatabases(access: Record<string, string>) {
       created_at: '2026-01-03',
     },
   ]);
+  const session = {
+    id: 'session-1',
+    name: 'Claude Code',
+    tokenHash: await hashMcpToken(SESSION_TOKEN),
+    tokenPreview: 'orcaq_…oken',
+    createdAt: '2026-10-21',
+    workspaceAccess: { 'ws-1': 'read' },
+    connectionAccess: { 'conn-rw': 'write' },
+  };
+  const otherSession = {
+    ...session,
+    id: 'session-2',
+    name: 'Other',
+    tokenHash: await hashMcpToken(OTHER_TOKEN),
+    workspaceAccess: { 'ws-2': 'read' },
+    connectionAccess: {},
+  };
   await persist('app_config').insert({
     id: 'app-config',
     data: JSON.stringify({
-      mcpServerConfigs: { enabled: true, connectionAccess: access },
+      mcpServerConfigs: { enabled: true, sessions: [session, otherSession] },
     }),
   });
   await persist.destroy();
 }
 
-async function callTool(name: string, args: Record<string, unknown> = {}) {
-  const server = createOrcaqMcpServer();
+async function getSession(token: string): Promise<McpSession> {
+  const session = await findMcpSessionByToken(
+    await getMcpServerConfigs(),
+    token
+  );
+  if (!session) throw new Error('session not found');
+  return session;
+}
+
+async function callTool(
+  name: string,
+  args: Record<string, unknown> = {},
+  token = SESSION_TOKEN
+) {
+  const server = createOrcaqMcpServer(await getSession(token));
   const client = new Client({ name: 'test', version: '1.0.0' });
   const [clientTransport, serverTransport] =
     InMemoryTransport.createLinkedPair();
@@ -108,7 +148,7 @@ async function callTool(name: string, args: Record<string, unknown> = {}) {
 
 describe('OrcaQ MCP server', () => {
   beforeAll(async () => {
-    await seedDatabases({ 'conn-rw': 'write', 'conn-off': 'off' });
+    await seedDatabases();
     process.env[DESKTOP_PERSIST_DB_PATH_ENV] = persistDbPath;
   });
 
@@ -170,14 +210,29 @@ describe('OrcaQ MCP server', () => {
     expect(JSON.parse(text)).toMatchObject({ access: 'write', rowCount: 1 });
   });
 
-  it('hides connections set to off', async () => {
+  it('rejects unknown tokens', async () => {
+    const session = await findMcpSessionByToken(
+      await getMcpServerConfigs(),
+      'orcaq_wrong'
+    );
+    expect(session).toBeNull();
+  });
+
+  it('scopes connections to the session', async () => {
+    const other = JSON.parse(
+      (await callTool('list_connections', {}, OTHER_TOKEN)).text
+    );
+    expect(other.map((c: { id: string }) => c.id)).toEqual(['conn-off']);
+  });
+
+  it('hides connections outside the session', async () => {
     const { isError, text } = await callTool('list_tables', {
       connectionId: 'conn-off',
       schema: 'main',
     });
 
     expect(isError).toBe(true);
-    expect(text).toContain('not shared with MCP');
+    expect(text).toContain('has no access');
   });
 
   it('lists tables and describes columns', async () => {

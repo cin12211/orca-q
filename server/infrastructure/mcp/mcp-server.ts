@@ -3,7 +3,7 @@ import type { CallToolResult } from '@modelcontextprotocol/sdk/types.js';
 import { z } from 'zod';
 import { DatabaseClientType } from '~/core/constants/database-client-type';
 import { getConnectionParams } from '~/core/helpers/connection-helper';
-import { McpConnectionAccess } from '~/core/persist/normalize';
+import { McpConnectionAccess, type McpSession } from '~/core/persist/normalize';
 import type { Connection } from '~/core/types/entities/connection.entity';
 import {
   createMetadataAdapter,
@@ -40,7 +40,7 @@ const SERVER_INFO = { name: 'orcaq', version: '1.0.0' };
 const SERVER_INSTRUCTIONS =
   'OrcaQ exposes the database connections saved in the OrcaQ desktop app. ' +
   'Start with list_connections, then explore with list_schemas, list_tables and describe_table before writing SQL. ' +
-  'run_query is read-only unless the connection was granted write access in OrcaQ Settings → MCP Server.';
+  'run_query is read-only unless this session was granted write access to the connection in OrcaQ Settings → MCP Server.';
 
 const connectionIdSchema = z
   .string()
@@ -67,8 +67,8 @@ async function withToolErrors(
   }
 }
 
-async function getSqlConnection(connectionId: string) {
-  const entry = await getMcpConnection(connectionId);
+async function getSqlConnection(sessionId: string, connectionId: string) {
+  const entry = await getMcpConnection(sessionId, connectionId);
 
   if (!isSupportedConnectionType(entry.connection.type)) {
     throw new Error(
@@ -83,9 +83,9 @@ function toAdapterParams(connection: Connection) {
   return getConnectionParams(connection);
 }
 
-export function createOrcaqMcpServer(): McpServer {
+export function createOrcaqMcpServer(session: McpSession): McpServer {
   const server = new McpServer(SERVER_INFO, {
-    instructions: SERVER_INSTRUCTIONS,
+    instructions: `${SERVER_INSTRUCTIONS} You are connected as MCP session "${session.name}".`,
   });
 
   server.registerTool(
@@ -93,13 +93,13 @@ export function createOrcaqMcpServer(): McpServer {
     {
       title: 'List connections',
       description:
-        'List database connections shared with MCP from the OrcaQ desktop app. Credentials are never returned.',
+        'List the database connections this MCP session can access, with its access level (read or write). Credentials are never returned.',
       annotations: { readOnlyHint: true },
     },
     () =>
       withToolErrors(async () => {
         const [entries, workspaceNames] = await Promise.all([
-          listMcpConnections(),
+          listMcpConnections(session.id),
           getWorkspaceNames(),
         ]);
 
@@ -126,7 +126,7 @@ export function createOrcaqMcpServer(): McpServer {
     },
     ({ connectionId }) =>
       withToolErrors(async () => {
-        const { connection } = await getSqlConnection(connectionId);
+        const { connection } = await getSqlConnection(session.id, connectionId);
         const adapter = await createMetadataAdapter(
           connection.type,
           toAdapterParams(connection)
@@ -155,7 +155,7 @@ export function createOrcaqMcpServer(): McpServer {
     },
     ({ connectionId, schema }) =>
       withToolErrors(async () => {
-        const { connection } = await getSqlConnection(connectionId);
+        const { connection } = await getSqlConnection(session.id, connectionId);
         const adapter = await createMetadataAdapter(
           connection.type,
           toAdapterParams(connection)
@@ -187,7 +187,7 @@ export function createOrcaqMcpServer(): McpServer {
     },
     ({ connectionId, schema, table }) =>
       withToolErrors(async () => {
-        const { connection } = await getSqlConnection(connectionId);
+        const { connection } = await getSqlConnection(session.id, connectionId);
         const adapter = await createTableAdapter(
           connection.type,
           toAdapterParams(connection)
@@ -208,7 +208,7 @@ export function createOrcaqMcpServer(): McpServer {
       description:
         `Run one SQL statement and return rows as JSON (default 100 rows, max ${MCP_MAX_ROW_LIMIT}). ` +
         'Read-only connections only accept SELECT/WITH/SHOW/DESCRIBE/EXPLAIN/PRAGMA and run inside a read-only transaction. ' +
-        'Connections with write access run any statement and changes are committed.',
+        'Connections this session can write to run any statement and changes are committed.',
       inputSchema: {
         connectionId: connectionIdSchema,
         sql: z.string().describe('A single SQL statement.'),
@@ -223,7 +223,10 @@ export function createOrcaqMcpServer(): McpServer {
     },
     ({ connectionId, sql, limit }) =>
       withToolErrors(async () => {
-        const { connection, access } = await getSqlConnection(connectionId);
+        const { connection, access } = await getSqlConnection(
+          session.id,
+          connectionId
+        );
         const adapter = await getDatabaseSource(toAdapterParams(connection));
         const rowLimit = clampRowLimit(limit);
 
@@ -254,7 +257,7 @@ export function createOrcaqMcpServer(): McpServer {
     },
     ({ connectionId, sql }) =>
       withToolErrors(async () => {
-        const { connection } = await getSqlConnection(connectionId);
+        const { connection } = await getSqlConnection(session.id, connectionId);
         const adapter = await getDatabaseSource(toAdapterParams(connection));
         const explainSql = buildExplainSql(connection, assertReadOnlySql(sql));
         const result = await executeReadOnlyQuery(

@@ -43,7 +43,7 @@ export function assertReadOnlySql(sql: string): string {
 
   if (!READ_ONLY_LEADING_PATTERN.test(unquoted)) {
     throw new ReadOnlySqlError(
-      'This connection is read-only for MCP. Only SELECT, WITH, SHOW, DESCRIBE, EXPLAIN and PRAGMA statements are allowed.'
+      'This MCP session has read-only access to this connection. Only SELECT, WITH, SHOW, DESCRIBE, EXPLAIN and PRAGMA statements are allowed.'
     );
   }
 
@@ -51,7 +51,7 @@ export function assertReadOnlySql(sql: string): string {
 
   if (writeKeyword || (/^pragma\b/i.test(unquoted) && unquoted.includes('='))) {
     throw new ReadOnlySqlError(
-      `This connection is read-only for MCP and the statement contains "${(writeKeyword ?? '=').toUpperCase()}". Enable write access for this connection in OrcaQ Settings → MCP Server to run it.`
+      `This MCP session has read-only access to this connection and the statement contains "${(writeKeyword ?? '=').toUpperCase()}". Grant this MCP session write access to the connection in OrcaQ Settings → MCP Server to run it.`
     );
   }
 

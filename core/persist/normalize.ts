@@ -103,12 +103,25 @@ export interface TableAppearanceConfigs {
 }
 
 /**
- * Built-in MCP server (desktop only). Connections missing from
- * `connectionAccess` are exposed read-only.
+ * An MCP session is what an MCP client authenticates as. Its bearer token is
+ * shown once on creation; only the SHA-256 hash is persisted.
+ * A connection's access comes from `connectionAccess`, then from its
+ * workspace in `workspaceAccess`, otherwise it is off.
  */
+export interface McpSession {
+  id: string;
+  name: string;
+  tokenHash: string;
+  tokenPreview: string;
+  createdAt: string;
+  workspaceAccess: Record<string, McpConnectionAccess>;
+  connectionAccess: Record<string, McpConnectionAccess>;
+}
+
+/** Built-in MCP server (desktop only). */
 export interface McpServerConfigs {
   enabled: boolean;
-  connectionAccess: Record<string, McpConnectionAccess>;
+  sessions: McpSession[];
 }
 
 export interface CustomLayoutSizeEntry {
@@ -265,21 +278,54 @@ function normalizeObject<T extends object>(value: unknown, fallback: T): T {
 
 const MCP_CONNECTION_ACCESS_VALUES = Object.values(McpConnectionAccess);
 
+const normalizeAccessMap = (
+  value: unknown
+): Record<string, McpConnectionAccess> =>
+  Object.fromEntries(
+    Object.entries(isRecord(value) ? value : {}).filter(([, mode]) =>
+      MCP_CONNECTION_ACCESS_VALUES.includes(mode as McpConnectionAccess)
+    )
+  ) as Record<string, McpConnectionAccess>;
+
+const normalizeMcpSession = (value: unknown): McpSession[] => {
+  if (!isRecord(value)) return [];
+  if (typeof value.id !== 'string' || typeof value.tokenHash !== 'string') {
+    return [];
+  }
+
+  return [
+    {
+      id: value.id,
+      name: typeof value.name === 'string' ? value.name : 'MCP session',
+      tokenHash: value.tokenHash,
+      tokenPreview:
+        typeof value.tokenPreview === 'string' ? value.tokenPreview : '',
+      createdAt: typeof value.createdAt === 'string' ? value.createdAt : '',
+      workspaceAccess: normalizeAccessMap(value.workspaceAccess),
+      connectionAccess: normalizeAccessMap(value.connectionAccess),
+    },
+  ];
+};
+
 export const normalizeMcpServerConfigs = (value: unknown): McpServerConfigs => {
   const source = isRecord(value) ? value : {};
-  const access = isRecord(source.connectionAccess)
-    ? source.connectionAccess
-    : {};
 
   return {
     enabled: source.enabled === true,
-    connectionAccess: Object.fromEntries(
-      Object.entries(access).filter(([, mode]) =>
-        MCP_CONNECTION_ACCESS_VALUES.includes(mode as McpConnectionAccess)
-      )
-    ) as Record<string, McpConnectionAccess>,
+    sessions: Array.isArray(source.sessions)
+      ? source.sessions.flatMap(normalizeMcpSession)
+      : [],
   };
 };
+
+/** Effective access of one connection for a session. */
+export const resolveMcpConnectionAccess = (
+  session: Pick<McpSession, 'workspaceAccess' | 'connectionAccess'>,
+  connection: { id: string; workspaceId: string }
+): McpConnectionAccess =>
+  session.connectionAccess[connection.id] ??
+  session.workspaceAccess[connection.workspaceId] ??
+  McpConnectionAccess.Off;
 
 // ── Agent message sanitisation helpers (private) ──────────────────────────────
 
@@ -406,7 +452,7 @@ export const createDefaultAppConfigState = (): AppConfigPersistedState => ({
   customLayouts: [],
   activeCustomLayoutId: null,
   customLayoutSizes: {},
-  mcpServerConfigs: { enabled: false, connectionAccess: {} },
+  mcpServerConfigs: { enabled: false, sessions: [] },
 });
 
 export const normalizeAppConfigState = (
