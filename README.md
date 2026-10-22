@@ -72,6 +72,10 @@ docker run -d \
 
 Open [http://localhost:9432](http://localhost:9432).
 
+## One-Click Deploy
+
+[![Deploy on RepoCloud](https://d16t0pc4846x52.cloudfront.net/deploylobe.svg)](https://repocloud.io/details/OrcaQ/)
+
 
 ## <img src="https://api.iconify.design/hugeicons:database.svg" width="22" alt="Database icon" /> Supported Databases
 
