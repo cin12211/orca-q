@@ -2,7 +2,10 @@
 import { Icon, Tooltip, TooltipContent, TooltipTrigger } from '#components';
 import type { Input } from '~/components/ui/input';
 import { ComposeOperator, EExtendedField, OperatorSet } from '~/core/constants';
-import { DatabaseClientType } from '~/core/constants/database-client-type';
+import {
+  DatabaseClientType,
+  isPostgresCompatibleClientType,
+} from '~/core/constants/database-client-type';
 import {
   formatWhereClause,
   getPlaceholderSearchByOperator,
@@ -71,7 +74,7 @@ const insert = (index: number, filter: FilterSchema) => {
 };
 
 const getDefaultContainsOperator = () =>
-  props.dbType === DatabaseClientType.POSTGRES
+  isPostgresCompatibleClientType(props.dbType)
     ? OperatorSet.ILIKE_CONTAINS
     : OperatorSet.LIKE_CONTAINS;
 

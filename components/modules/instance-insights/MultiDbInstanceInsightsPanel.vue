@@ -83,15 +83,7 @@ const actionBadgeClass = (
 
           <div v-if="view?.version" class="flex items-center gap-1.5 mt-0.5">
             <Badge variant="outline" class="text-xxs h-5 px-1.5 font-normal">
-              {{
-                dbType === DatabaseClientType.MARIADB
-                  ? 'MariaDB'
-                  : dbType === DatabaseClientType.ORACLE
-                    ? 'Oracle'
-                    : dbType === DatabaseClientType.SQLITE3
-                      ? 'SQLite'
-                      : 'MySQL'
-              }}
+              {{ dbType ? getDatabaseSupportByType(dbType)?.name : '' }}
               {{ view.version }}
             </Badge>
           </div>

@@ -1,5 +1,7 @@
 import { DatabaseClientType } from '~/core/constants/database-client-type';
 import { createDomainAdapter } from '../shared';
+import { CockroachInstanceInsightsAdapter } from './cockroachdb/cockroachdb-instance-insights.adapter';
+import { MssqlInstanceInsightsAdapter } from './mssql/mssql-instance-insights.adapter';
 import { MysqlInstanceInsightsAdapter } from './mysql/mysql-instance-insights.adapter';
 import { OracleInstanceInsightsAdapter } from './oracle/oracle-instance-insights.adapter';
 import { PostgresInstanceInsightsAdapter } from './postgres/postgres-instance-insights.adapter';
@@ -26,5 +28,7 @@ export async function createInstanceInsightsAdapter(
       ),
     oracledb: OracleInstanceInsightsAdapter.create,
     sqlite3: SqliteInstanceInsightsAdapter.create,
+    cockroachdb: CockroachInstanceInsightsAdapter.create,
+    mssql: MssqlInstanceInsightsAdapter.create,
   });
 }

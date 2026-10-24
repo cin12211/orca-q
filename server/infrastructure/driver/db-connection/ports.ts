@@ -8,6 +8,7 @@ const DEFAULT_PORTS: Partial<Record<DatabaseClientType, number>> = {
   [DatabaseClientType.REDIS]: 6379,
   [DatabaseClientType.MSSQL]: 1433,
   [DatabaseClientType.ORACLE]: 1521,
+  [DatabaseClientType.COCKROACHDB]: 26257,
   [DatabaseClientType.SNOWFLAKE]: 443,
   [DatabaseClientType.BETTER_SQLITE3]: 0,
   [DatabaseClientType.SQLITE3]: 0,

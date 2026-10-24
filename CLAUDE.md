@@ -43,6 +43,7 @@ This repo is a Nuxt 3 + Vue 3 + TypeScript with Electron desktop support.
 ### Vue Components
 
 All components use `<script setup lang="ts">` with this order:
+
 1. Imports
 2. Props & Emits (`defineProps`, `defineEmits`)
 3. Stores & Composables
@@ -69,12 +70,12 @@ Component file structure order: `<script setup>`, then `<template>`, then `<styl
 
 ### State Management
 
-| State Type | Use For | Location |
-|------------|---------|----------|
-| Local `ref`/`reactive` | UI state (modals, forms, temp) | Component |
-| Pinia Store | Shared state across components | `/shared/stores/` |
-| Composable | Reusable logic with local state | `/composables/` |
-| Provide/Inject | Deep component tree data | `/shared/contexts/` |
+| State Type             | Use For                         | Location            |
+| ---------------------- | ------------------------------- | ------------------- |
+| Local `ref`/`reactive` | UI state (modals, forms, temp)  | Component           |
+| Pinia Store            | Shared state across components  | `/shared/stores/`   |
+| Composable             | Reusable logic with local state | `/composables/`     |
+| Provide/Inject         | Deep component tree data        | `/shared/contexts/` |
 
 Use `storeToRefs()` when accessing store state for reactivity: `const { workspaceId } = storeToRefs(wsStateStore)`
 
@@ -107,16 +108,20 @@ Prefer Tailwind utilities. Use `<style scoped>` only for complex styles not achi
 
 ### Database Connections
 
-- Supported types: `postgres`, `mysql`, `mariadb`, `oracledb`, `sqlite3`, `redis`
+- Supported types: `postgres`, `mysql`, `mariadb`, `oracledb`, `sqlite3`, `redis`, `mssql`, `cockroachdb`
 - Connection string formats:
   - PostgreSQL: `postgresql://user:password@host:port/database`
   - MySQL: `mysql://user:password@host:port/database`
   - MariaDB: `mariadb://user:password@host:port/database`
   - Oracle: `oracledb://user:password@host:port/serviceName`
   - SQLite: `sqlite3:///absolute/path/to/database.sqlite`
+  - SQL Server: `Server=host,1433;Database=db;User Id=user;Password=…` (ADO.NET) or `sqlserver://user:password@host:1433/database`
+  - CockroachDB: `postgresql://user:password@host:26257/database?sslmode=verify-full` (with the CockroachDB type selected)
 - Oracle structured-form connections use `serviceName` instead of `database`
 - Managed SQLite (Cloudflare D1, Turso) uses `managed` method and stays on SQL family path
 - Local SQLite uses `file` method (desktop runtime only)
+- SQL Server and CockroachDB enforce a minimum server version (SQL Server 2017+ or Azure SQL, CockroachDB v23.2+); older servers fail the health check and every data request
+- SQL Server and CockroachDB hide Users & Roles, AI Agent, Backup & Restore, and Schema Diff; their Instance Insights is read-only
 - Failed health checks return actionable driver messages but connections are still saved
 - A failed re-test must not delete or mutate an already saved connection record
 
@@ -197,6 +202,7 @@ Single-context — root `CONTEXT.md` + `docs/adr/`. See `docs/agents/domain.md`.
 This project has a knowledge graph at graphify-out/ with god nodes, community structure, and cross-file relationships.
 
 Rules:
+
 - For codebase questions, first run `graphify query "<question>"` when graphify-out/graph.json exists. Use `graphify path "<A>" "<B>"` for relationships and `graphify explain "<concept>"` for focused concepts. These return a scoped subgraph, usually much smaller than GRAPH_REPORT.md or raw grep output.
 - If graphify-out/wiki/index.md exists, use it for broad navigation instead of raw source browsing.
 - Read graphify-out/GRAPH_REPORT.md only for broad architecture review or when query/path/explain do not surface enough context.

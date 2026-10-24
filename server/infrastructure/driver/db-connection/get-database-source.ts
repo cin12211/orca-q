@@ -209,6 +209,14 @@ export const getDatabaseSource = async ({
     managedSqlite,
   });
 
+  try {
+    await newAdapter.assertSupportedServerVersion?.();
+  } catch (error) {
+    await newAdapter.destroy().catch(() => {});
+    if (sshTunnelClose) await sshTunnelClose().catch(() => {});
+    throw error;
+  }
+
   adapterCache.set(cacheKey, {
     adapter: newAdapter,
     lastUsed: Date.now(),

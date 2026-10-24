@@ -21,6 +21,10 @@ function getDatabaseLabel(dbType: DatabaseClientType): string {
       return 'Oracle';
     case DatabaseClientType.SQLITE3:
       return 'SQLite';
+    case DatabaseClientType.MSSQL:
+      return 'SQL Server';
+    case DatabaseClientType.COCKROACHDB:
+      return 'CockroachDB';
     default:
       return dbType;
   }

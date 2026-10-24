@@ -1,6 +1,9 @@
 import type { Diagnostic } from '@codemirror/lint';
 import type { EditorView } from '@codemirror/view';
-import { DatabaseClientType } from '~/core/constants/database-client-type';
+import {
+  DatabaseClientType,
+  isPostgresCompatibleClientType,
+} from '~/core/constants/database-client-type';
 import { DatabaseDriverNormalizerError as ErrorNormalizer } from '~/core/helpers';
 import type { DatabaseDriverError } from '~/core/types';
 import { pushDiagnostics } from './diagnostic-lint';
@@ -52,7 +55,7 @@ export interface SubstituteParamsOptions {
 export function getDialectStyle(
   clientType: DatabaseClientType
 ): SqlDialectStyle {
-  if (clientType === DatabaseClientType.POSTGRES) {
+  if (isPostgresCompatibleClientType(clientType)) {
     return 'postgres-positional';
   }
 
@@ -125,7 +128,7 @@ export function substituteParams(
     }
 
     // ── PostgreSQL Dollar-quoted strings ($tag$ ... $tag$): skip entire span ──
-    if (ch === '$' && clientType === DatabaseClientType.POSTGRES) {
+    if (ch === '$' && isPostgresCompatibleClientType(clientType)) {
       const start = i;
       let tag = '$';
       let j = i + 1;

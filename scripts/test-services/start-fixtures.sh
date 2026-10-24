@@ -6,6 +6,7 @@
 #   bash scripts/test-services/start-fixtures.sh --profile <profile>
 #
 # Profiles: postgres | mysql | mariadb | sql | redis | mongodb | sqlite | all
+#           cockroachdb | mssql (opt-in, not part of sql/all)
 # ──────────────────────────────────────────────────────────────────────────────
 
 set -euo pipefail
@@ -37,6 +38,9 @@ export ORCAQ_MARIADB_DATABASE="${ORCAQ_MARIADB_DATABASE:-sakila}"
 export ORCAQ_MARIADB_USER="${ORCAQ_MARIADB_USER:-orcaq}"
 export ORCAQ_MARIADB_PASSWORD="${ORCAQ_MARIADB_PASSWORD:-orcaq}"
 export ORCAQ_MARIADB_ROOT_PASSWORD="${ORCAQ_MARIADB_ROOT_PASSWORD:-root}"
+export ORCAQ_COCKROACHDB_PORT="${ORCAQ_COCKROACHDB_PORT:-26257}"
+export ORCAQ_MSSQL_PORT="${ORCAQ_MSSQL_PORT:-1433}"
+export ORCAQ_MSSQL_PASSWORD="${ORCAQ_MSSQL_PASSWORD:-OrcaQ_Passw0rd!}"
 export ORCAQ_REDIS_PORT="${ORCAQ_REDIS_PORT:-6379}"
 export ORCAQ_MONGODB_PORT="${ORCAQ_MONGODB_PORT:-27017}"
 export ORCAQ_MONGODB_DATABASE="${ORCAQ_MONGODB_DATABASE:-orcaq_fixture}"
@@ -171,6 +175,54 @@ start_sql_profile() {
   "${compose_cmd[@]}" -p "${sql_project}" -f "${sql_compose_file}" --profile "${docker_profile}" ps
 }
 
+start_cockroachdb() {
+  echo "Starting CockroachDB fixture"
+  "${compose_cmd[@]}" -p "${sql_project}" -f "${sql_compose_file}" --profile cockroachdb down --volumes --remove-orphans >/dev/null 2>&1 || true
+  "${compose_cmd[@]}" -p "${sql_project}" -f "${sql_compose_file}" --profile cockroachdb up -d --remove-orphans
+
+  local attempt=0
+  echo "Waiting for CockroachDB..."
+  until "${compose_cmd[@]}" -p "${sql_project}" -f "${sql_compose_file}" exec -T cockroachdb \
+    ./cockroach sql --insecure -e 'SELECT 1' >/dev/null 2>&1; do
+    attempt=$((attempt + 1))
+    if [ "${attempt}" -ge 60 ]; then
+      echo 'CockroachDB fixture did not become ready in time.' >&2
+      exit 1
+    fi
+    sleep 2
+  done
+
+  "${compose_cmd[@]}" -p "${sql_project}" -f "${sql_compose_file}" exec -T cockroachdb \
+    ./cockroach sql --insecure -f /fixtures/01-sakila-lite.sql >/dev/null
+  echo "CockroachDB is ready on port ${ORCAQ_COCKROACHDB_PORT}"
+}
+
+start_mssql() {
+  echo "Starting SQL Server fixture"
+  "${compose_cmd[@]}" -p "${sql_project}" -f "${sql_compose_file}" --profile mssql down --volumes --remove-orphans >/dev/null 2>&1 || true
+  "${compose_cmd[@]}" -p "${sql_project}" -f "${sql_compose_file}" --profile mssql up -d --remove-orphans
+
+  local sqlcmd=(/opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa -P "${ORCAQ_MSSQL_PASSWORD}")
+  local attempt=0
+  echo "Waiting for SQL Server..."
+  until "${compose_cmd[@]}" -p "${sql_project}" -f "${sql_compose_file}" exec -T mssql \
+    "${sqlcmd[@]}" -Q 'SELECT 1' >/dev/null 2>&1; do
+    attempt=$((attempt + 1))
+    if [ "${attempt}" -ge 90 ]; then
+      echo 'SQL Server fixture did not become ready in time.' >&2
+      "${compose_cmd[@]}" -p "${sql_project}" -f "${sql_compose_file}" logs --tail=80 mssql >&2 || true
+      exit 1
+    fi
+    sleep 2
+  done
+
+  "${compose_cmd[@]}" -p "${sql_project}" -f "${sql_compose_file}" exec -T mssql \
+    "${sqlcmd[@]}" -b -i /fixtures/sql-server-sakila-schema.sql >/dev/null
+  "${compose_cmd[@]}" -p "${sql_project}" -f "${sql_compose_file}" exec -T mssql \
+    "${sqlcmd[@]}" -b -d sakila -i /fixtures/sql-server-sakila-insert-data-optimized.sql >/dev/null
+  echo "SQL Server is ready on port ${ORCAQ_MSSQL_PORT}"
+}
+
 start_redis() {
   echo "Starting Redis fixture"
 
@@ -252,6 +304,13 @@ case "${profile}" in
   sql)
     node "${script_dir}/generate-optimized-sql-fixtures.mjs" 2>/dev/null || true
     start_sql_profile "sql"
+    ;;
+  cockroachdb)
+    start_cockroachdb
+    ;;
+  mssql)
+    node "${script_dir}/generate-optimized-sql-fixtures.mjs" 2>/dev/null || true
+    start_mssql
     ;;
   redis)
     start_redis

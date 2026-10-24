@@ -54,6 +54,10 @@ export const oracleDialect: SqlDialect = {
     return `:${index}`;
   },
 
+  supportsNullsOrdering(): boolean {
+    return true;
+  },
+
   mapDbTypeToTsType(typeName: string): string {
     const normalized = typeName.toLowerCase();
     return ORACLE_TYPE_MAP[normalized] ?? 'unknown';

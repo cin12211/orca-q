@@ -1,6 +1,9 @@
 import { PostgreSQL, type SQLDialect } from '@codemirror/lang-sql';
 import { StateEffect, StateField } from '@codemirror/state';
-import { DatabaseClientType } from '~/core/constants/database-client-type';
+import {
+  DatabaseClientType,
+  isPostgresCompatibleClientType,
+} from '~/core/constants/database-client-type';
 import { SQLDialectSupport } from '../constants';
 
 // ---------------------------------------------------------------------------
@@ -27,6 +30,8 @@ export const SQL_DIALECT_BY_DB_TYPE: Record<string, SQLDialect> = {
   [DatabaseClientType.MARIADB]: SQLDialectSupport.MariaSQL,
   [DatabaseClientType.SQLITE3]: SQLDialectSupport.SQLite,
   [DatabaseClientType.ORACLE]: SQLDialectSupport.PLSQL,
+  [DatabaseClientType.MSSQL]: SQLDialectSupport.MSSQL,
+  [DatabaseClientType.COCKROACHDB]: SQLDialectSupport.PostgreSQLParserDialect,
 } as const;
 
 /**
@@ -36,7 +41,7 @@ export const SQL_DIALECT_BY_DB_TYPE: Record<string, SQLDialect> = {
 export function resolveParserDialect(
   dbType: DatabaseClientType | undefined
 ): SQLDialect {
-  if (!dbType || dbType === DatabaseClientType.POSTGRES) {
+  if (!dbType || isPostgresCompatibleClientType(dbType)) {
     return SQLDialectSupport.PostgreSQLParserDialect;
   }
   return (
@@ -51,7 +56,7 @@ export function resolveParserDialect(
 export function resolveHighlightDialect(
   dbType: DatabaseClientType | undefined
 ): SQLDialect {
-  if (!dbType || dbType === DatabaseClientType.POSTGRES) {
+  if (!dbType || isPostgresCompatibleClientType(dbType)) {
     return SQLDialectSupport.PostgreSQLHighlightDialect;
   }
   return (

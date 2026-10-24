@@ -21,3 +21,5 @@ export { PostgresMetadataAdapter } from './postgres/postgres-metadata.adapter';
 export { MysqlMetadataAdapter } from './mysql/mysql-metadata.adapter';
 export { OracleMetadataAdapter } from './oracle/oracle-metadata.adapter';
 export { SqliteMetadataAdapter } from './sqlite/sqlite-metadata.adapter';
+export { MssqlMetadataAdapter } from './mssql/mssql-metadata.adapter';
+export { CockroachMetadataAdapter } from './cockroachdb/cockroachdb-metadata.adapter';

@@ -221,7 +221,43 @@ export const operatorSets: Record<
     { value: OperatorSet.LIKE_PREFIX, label: 'Has prefix' },
     { value: OperatorSet.LIKE_SUFFIX, label: 'Has suffix' },
   ],
+  // SQL Server: comparison, IN, BETWEEN, IS NULL, LIKE (no ILIKE; case sensitivity follows the column collation)
+  [DatabaseClientType.MSSQL]: [
+    { value: OperatorSet.EQUAL, label: '=' },
+    { value: OperatorSet.NOT_EQUAL, label: '<>' },
+    { value: OperatorSet.LESS, label: '<' },
+    { value: OperatorSet.GREATER, label: '>' },
+    { value: OperatorSet.LESS_EQUAL, label: '<=' },
+    { value: OperatorSet.GREATER_EQUAL, label: '>=' },
+
+    separatorRow,
+
+    { value: OperatorSet.IN, label: 'IN' },
+    { value: OperatorSet.NOT_IN, label: 'NOT IN' },
+
+    separatorRow,
+
+    { value: OperatorSet.IS_NULL, label: 'IS NULL' },
+    { value: OperatorSet.IS_NOT_NULL, label: 'IS NOT NULL' },
+
+    separatorRow,
+
+    { value: OperatorSet.BETWEEN, label: 'Between' },
+    { value: OperatorSet.NOT_BETWEEN, label: 'Not between' },
+
+    separatorRow,
+
+    { value: OperatorSet.LIKE, label: 'LIKE' },
+    { value: OperatorSet.LIKE_CONTAINS, label: 'Contains' },
+    { value: OperatorSet.NOT_LIKE_CONTAINS, label: 'Not contains' },
+    { value: OperatorSet.LIKE_PREFIX, label: 'Has prefix' },
+    { value: OperatorSet.LIKE_SUFFIX, label: 'Has suffix' },
+  ],
 };
+
+// CockroachDB speaks the Postgres dialect, including ILIKE.
+operatorSets[DatabaseClientType.COCKROACHDB] =
+  operatorSets[DatabaseClientType.POSTGRES];
 
 export const extendedFields = [
   {

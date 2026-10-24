@@ -147,6 +147,16 @@ export function buildInsertStatements({
 
   const dialect = getSqlDialect(dbType);
 
+  // SQL Server rejects explicit values (even NULL) for IDENTITY, computed and
+  // rowversion columns. Leaving unset columns out lets their defaults apply.
+  if (dbType === DatabaseClientType.MSSQL) {
+    insertData = Object.fromEntries(
+      Object.entries(insertData).filter(
+        ([, value]) => value !== null && value !== undefined
+      )
+    );
+  }
+
   if (!Object.keys(insertData).length) {
     return `INSERT INTO ${dialect.qualifyTableName(tableName, schemaName)} DEFAULT VALUES`;
   }

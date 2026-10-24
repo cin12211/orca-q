@@ -14,6 +14,7 @@ import {
   type NormalizedConnectionError,
 } from '../connection-error';
 import { createDatabaseAdapter } from '../factory';
+import type { IDatabaseAdapter } from '../types';
 import { resolveHealthCheckConnection } from './health-check-connection';
 import { resolveRuntimeContext } from './runtime-context';
 import { isSslEnabled } from './ssl';
@@ -54,6 +55,7 @@ export async function healthCheckConnection({
   { isConnectedSuccess: boolean } & Partial<NormalizedConnectionError>
 > {
   let sshTunnelClose: (() => Promise<void>) | undefined;
+  let adapter: IDatabaseAdapter | undefined;
 
   try {
     const runtimeContext = resolveRuntimeContext({
@@ -142,7 +144,7 @@ export async function healthCheckConnection({
     const { connection } = resolvedConnection;
     sshTunnelClose = resolvedConnection.sshTunnelClose;
 
-    const adapter = createDatabaseAdapter(type, connection, {
+    adapter = createDatabaseAdapter(type, connection, {
       providerKind: runtimeContext.providerKind,
       managedSqlite,
     });
@@ -157,6 +159,9 @@ export async function healthCheckConnection({
     };
   } catch (error: unknown) {
     console.error('Database connection failed:', error);
+    // A connection can open fine and still be rejected (e.g. server version
+    // too old); release its pool before reporting.
+    await adapter?.destroy().catch(() => {});
     if (sshTunnelClose) await sshTunnelClose();
     return {
       isConnectedSuccess: false,

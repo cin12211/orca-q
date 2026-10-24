@@ -79,7 +79,10 @@ const getStructuredTargetKey = (type: DatabaseClientType | null) => {
 const getConnectionStringScheme = (type: DatabaseClientType | null) => {
   switch (type) {
     case DatabaseClientType.POSTGRES:
+    case DatabaseClientType.COCKROACHDB:
       return 'postgresql';
+    case DatabaseClientType.MSSQL:
+      return 'sqlserver';
     case DatabaseClientType.MARIADB:
       return 'mariadb';
     case DatabaseClientType.ORACLE:
@@ -514,6 +517,10 @@ export function useConnectionForm(props: {
         return 'mariadb://username:password@localhost:3306/database';
       case DatabaseClientType.ORACLE:
         return 'oracledb://username:password@localhost:1521/ORCLPDB1';
+      case DatabaseClientType.COCKROACHDB:
+        return 'postgresql://username:password@localhost:26257/defaultdb?sslmode=verify-full';
+      case DatabaseClientType.MSSQL:
+        return 'Server=localhost,1433;Database=master;User Id=sa;Password=…;TrustServerCertificate=true';
       case DatabaseClientType.REDIS:
         return 'redis://username:password@localhost:6379';
       case DatabaseClientType.MONGODB:
