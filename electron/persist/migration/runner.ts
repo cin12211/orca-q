@@ -4,6 +4,7 @@ import { createTableIfMissing } from '../schema/shared';
 import { up as v001 } from './versions/v001-initial-schema';
 import { up as v002 } from './versions/v002-expand-connections-for-managed-and-nosql';
 import { up as v003 } from './versions/v003-create-mcp-sessions';
+import { up as v004 } from './versions/v004-add-connection-broker';
 
 interface Migration {
   version: number;
@@ -14,6 +15,7 @@ const MIGRATIONS: Migration[] = [
   { version: 1, up: v001 },
   { version: 2, up: v002 },
   { version: 3, up: v003 },
+  { version: 4, up: v004 },
 ];
 
 export async function runMigrations(knex: Knex): Promise<void> {

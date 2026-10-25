@@ -28,6 +28,7 @@ import ConnectionSSHTunnel from './ConnectionSSHTunnel.vue';
 import ConnectionSSLConfig from './ConnectionSSLConfig.vue';
 import ConnectionStatusSection from './ConnectionStatusSection.vue';
 import ConnectionStepType from './ConnectionStepType.vue';
+import { KafkaConnectionForm, RabbitConnectionForm } from './broker';
 
 const props = defineProps<{
   open: boolean;
@@ -136,6 +137,16 @@ const structuredTargetModel = computed({
   },
 });
 
+const handleBrokerSave = (connection: Connection, isEdit: boolean) => {
+  if (isEdit) {
+    emit('update', connection);
+  } else {
+    emit('addNew', connection);
+  }
+
+  handleClose();
+};
+
 const handleSubmit = () => {
   if (isFormValid.value && testStatus.value !== 'testing') {
     handleCreateConnection();
@@ -169,6 +180,22 @@ watch(testStatus, status => {
           @close="handleClose"
         />
       </template>
+
+      <RabbitConnectionForm
+        v-else-if="dbType === DatabaseClientType.RABBITMQ"
+        :editing-connection="editingConnection"
+        :workspace-id="workspaceId"
+        @back="handleBack"
+        @save="handleBrokerSave"
+      />
+
+      <KafkaConnectionForm
+        v-else-if="dbType === DatabaseClientType.KAFKA"
+        :editing-connection="editingConnection"
+        :workspace-id="workspaceId"
+        @back="handleBack"
+        @save="handleBrokerSave"
+      />
 
       <template v-else>
         <form

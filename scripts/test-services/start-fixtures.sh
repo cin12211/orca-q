@@ -6,6 +6,7 @@
 #   bash scripts/test-services/start-fixtures.sh --profile <profile>
 #
 # Profiles: postgres | mysql | mariadb | sql | redis | mongodb | sqlite | all
+#           rabbitmq | kafka (opt-in, not part of all)
 # ──────────────────────────────────────────────────────────────────────────────
 
 set -euo pipefail
@@ -40,6 +41,8 @@ export ORCAQ_MARIADB_ROOT_PASSWORD="${ORCAQ_MARIADB_ROOT_PASSWORD:-root}"
 export ORCAQ_REDIS_PORT="${ORCAQ_REDIS_PORT:-6379}"
 export ORCAQ_MONGODB_PORT="${ORCAQ_MONGODB_PORT:-27017}"
 export ORCAQ_MONGODB_DATABASE="${ORCAQ_MONGODB_DATABASE:-orcaq_fixture}"
+export ORCAQ_RABBITMQ_MANAGEMENT_PORT="${ORCAQ_RABBITMQ_MANAGEMENT_PORT:-15672}"
+export ORCAQ_KAFKA_PORT="${ORCAQ_KAFKA_PORT:-9092}"
 
 # ─── Docker compose resolution ───────────────────────────────────────────────
 sql_compose_file="${repo_root}/test/fixtures/containers/sql-services.compose.yml"
@@ -48,6 +51,8 @@ sql_project="${ORCAQ_SQL_FIXTURE_PROJECT:-orcaq-sql-fixtures}"
 redis_project="${ORCAQ_REDIS_FIXTURE_PROJECT:-orcaq-redis-fixture}"
 mongo_compose_file="${repo_root}/test/fixtures/containers/nosql-services.compose.yml"
 mongo_project="${ORCAQ_MONGODB_FIXTURE_PROJECT:-orcaq-mongodb-fixture}"
+broker_compose_file="${repo_root}/test/fixtures/containers/nosql-services.compose.yml"
+broker_project="${ORCAQ_BROKER_FIXTURE_PROJECT:-orcaq-broker-fixtures}"
 
 compose_cmd=()
 
@@ -232,6 +237,17 @@ start_mongo() {
   echo "MongoDB fixture is ready at mongodb://127.0.0.1:${ORCAQ_MONGODB_PORT}/${ORCAQ_MONGODB_DATABASE}"
 }
 
+start_broker() {
+  local broker_profile="$1"
+  echo "Starting ${broker_profile} fixture"
+
+  "${compose_cmd[@]}" -p "${broker_project}" -f "${broker_compose_file}" --profile "${broker_profile}" up -d --remove-orphans "${broker_profile}"
+
+  # Seed scripts wait for the broker to accept requests before seeding.
+  (cd "${repo_root}" && node "${script_dir}/seed-${broker_profile}-fixture.mjs")
+  echo "${broker_profile} fixture is ready"
+}
+
 start_sqlite() {
   echo "Preparing SQLite fixture"
   bash "${script_dir}/prepare-sample-data.sh"
@@ -258,6 +274,9 @@ case "${profile}" in
     ;;
   mongodb)
     start_mongo
+    ;;
+  rabbitmq|kafka)
+    start_broker "${profile}"
     ;;
   sqlite)
     node "${script_dir}/generate-optimized-sql-fixtures.mjs" 2>/dev/null || true

@@ -5,6 +5,8 @@ export {
   EManagedSqliteProvider,
   ESSLMode,
   ESSHAuthMethod,
+  EKafkaSaslMechanism,
+  type IBrokerConfig,
   type IManagedSqliteConfig,
   type ISSLConfig,
   type ISSHConfig,

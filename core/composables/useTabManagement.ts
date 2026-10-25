@@ -32,6 +32,17 @@ export function resolveRouteNameForTabType(type: TabViewType): RoutesNamesList {
     case TabViewType.MongoDatabaseOverview:
     case TabViewType.MongoCollectionDetail:
       return 'workspaceId-connectionId-mongodb-tabViewId' as RoutesNamesList;
+    case TabViewType.RabbitQueueList:
+    case TabViewType.RabbitQueueDetail:
+    case TabViewType.RabbitExchangeDetail:
+    case TabViewType.RabbitConnections:
+      return 'workspaceId-connectionId-rabbitmq-tabViewId' as RoutesNamesList;
+    case TabViewType.KafkaTopicList:
+    case TabViewType.KafkaTopicDetail:
+    case TabViewType.KafkaConsumerGroupList:
+    case TabViewType.KafkaConsumerGroupDetail:
+    case TabViewType.KafkaLive:
+      return 'workspaceId-connectionId-kafka-tabViewId' as RoutesNamesList;
     default:
       return 'workspaceId-connectionId-quick-query-tabViewId';
   }
@@ -187,6 +198,22 @@ export const useTabManagement = () => {
         tabViewId: params.id,
       },
       metadata: params.metadata,
+    });
+  };
+
+  /** Open a RabbitMQ or Kafka tab; the id doubles as the route param. */
+  const openBrokerTab = async (params: {
+    id: string;
+    name: string;
+    type: TabViewType;
+    icon: string;
+    iconClass?: string;
+    metadata?: Record<string, unknown>;
+  }) => {
+    await openTab({
+      ...params,
+      routeName: resolveRouteNameForTabType(params.type),
+      routeParams: { tabViewId: params.id },
     });
   };
 
@@ -357,6 +384,7 @@ export const useTabManagement = () => {
     openNewSqlFileTab,
     openSchemaItemTab,
     openRedisTab,
+    openBrokerTab,
     openMongoDatabaseTab,
     openMongoCollectionTab,
     openUserPermissionsTab,

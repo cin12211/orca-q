@@ -9,6 +9,9 @@ import {
   ManagementRedisBrowser,
   ManagementRedisTools,
   ManagementMongoSchemas,
+  ManagementRabbitBrowser,
+  ManagementKafkaBrowser,
+  ManagementBrokerTools,
 } from '#components';
 import {
   getConnectionCapabilityProfile,
@@ -82,6 +85,23 @@ const current = computed(() => {
   if (currentFamily.value === EConnectionFamily.MONGODB) {
     if (activityStore.activityActive === ActivityBarItemType.Schemas) {
       return ManagementMongoSchemas;
+    }
+
+    return null;
+  }
+
+  if (
+    currentFamily.value === EConnectionFamily.RABBITMQ ||
+    currentFamily.value === EConnectionFamily.KAFKA
+  ) {
+    if (activityStore.activityActive === ActivityBarItemType.Schemas) {
+      return currentFamily.value === EConnectionFamily.KAFKA
+        ? ManagementKafkaBrowser
+        : ManagementRabbitBrowser;
+    }
+
+    if (activityStore.activityActive === ActivityBarItemType.DatabaseTools) {
+      return ManagementBrokerTools;
     }
 
     return null;

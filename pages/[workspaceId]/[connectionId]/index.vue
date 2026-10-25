@@ -31,6 +31,22 @@ const emptyStateCopy = computed(() => {
     };
   }
 
+  if (currentFamily.value === EConnectionFamily.RABBITMQ) {
+    return {
+      title: 'No RabbitMQ tab is open',
+      description:
+        'Pick a queue or exchange from the sidebar, or open the Overview from Tools.',
+    };
+  }
+
+  if (currentFamily.value === EConnectionFamily.KAFKA) {
+    return {
+      title: 'No Kafka tab is open',
+      description:
+        'Pick a topic or consumer group from the sidebar, or open the Cluster Overview from Tools.',
+    };
+  }
+
   return {
     title: 'No table is open',
     description: 'Click on a database table from the sidebar to begin',

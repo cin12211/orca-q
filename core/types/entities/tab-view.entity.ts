@@ -25,6 +25,15 @@ export enum TabViewType {
   RedisGroupOverview = 'RedisGroupOverview',
   MongoDatabaseOverview = 'MongoDatabaseOverview',
   MongoCollectionDetail = 'MongoCollectionDetail',
+  RabbitQueueList = 'RabbitQueueList',
+  RabbitQueueDetail = 'RabbitQueueDetail',
+  RabbitExchangeDetail = 'RabbitExchangeDetail',
+  RabbitConnections = 'RabbitConnections',
+  KafkaTopicList = 'KafkaTopicList',
+  KafkaTopicDetail = 'KafkaTopicDetail',
+  KafkaConsumerGroupList = 'KafkaConsumerGroupList',
+  KafkaConsumerGroupDetail = 'KafkaConsumerGroupDetail',
+  KafkaLive = 'KafkaLive',
 }
 
 export enum WorkspaceTabOpenAction {
@@ -109,6 +118,33 @@ export interface MongoCollectionDetailMetadata extends BaseTabMetadata {
   collectionName: string;
 }
 
+export interface RabbitQueueListMetadata extends BaseTabMetadata {
+  type: TabViewType.RabbitQueueList;
+  vhost: string;
+}
+
+export interface RabbitQueueDetailMetadata extends BaseTabMetadata {
+  type: TabViewType.RabbitQueueDetail;
+  vhost: string;
+  queueName: string;
+}
+
+export interface RabbitExchangeDetailMetadata extends BaseTabMetadata {
+  type: TabViewType.RabbitExchangeDetail;
+  vhost: string;
+  exchangeName: string;
+}
+
+export interface KafkaTopicDetailMetadata extends BaseTabMetadata {
+  type: TabViewType.KafkaTopicDetail;
+  topicName: string;
+}
+
+export interface KafkaConsumerGroupDetailMetadata extends BaseTabMetadata {
+  type: TabViewType.KafkaConsumerGroupDetail;
+  groupId: string;
+}
+
 export type TabMetadata =
   | TableDetailMetadata
   | ViewDetailMetadata
@@ -121,6 +157,11 @@ export type TabMetadata =
   | RedisGroupOverviewMetadata
   | MongoDatabaseOverviewMetadata
   | MongoCollectionDetailMetadata
+  | RabbitQueueListMetadata
+  | RabbitQueueDetailMetadata
+  | RabbitExchangeDetailMetadata
+  | KafkaTopicDetailMetadata
+  | KafkaConsumerGroupDetailMetadata
   | BaseTabMetadata;
 
 export type TabView = {

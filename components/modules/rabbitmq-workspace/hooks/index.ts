@@ -1,0 +1,1 @@
+export { useRabbitTabs } from './useRabbitTabs';

@@ -85,6 +85,32 @@ const MONGODB_TAB_TYPES = [
   TabViewType.AgentChat,
 ] as const;
 
+const RABBITMQ_TAB_TYPES = [
+  TabViewType.Connection,
+  TabViewType.InstanceInsights,
+  TabViewType.RabbitQueueList,
+  TabViewType.RabbitQueueDetail,
+  TabViewType.RabbitExchangeDetail,
+  TabViewType.RabbitConnections,
+] as const;
+
+const KAFKA_TAB_TYPES = [
+  TabViewType.Connection,
+  TabViewType.InstanceInsights,
+  TabViewType.KafkaTopicList,
+  TabViewType.KafkaTopicDetail,
+  TabViewType.KafkaConsumerGroupList,
+  TabViewType.KafkaConsumerGroupDetail,
+  TabViewType.KafkaLive,
+] as const;
+
+const MESSAGE_BROKER_HIDDEN_REASONS = {
+  ERDiagram: 'ER diagrams are not available for message brokers.',
+  UsersRoles: 'Users & Roles is not available for message brokers.',
+  Explorer: 'Query files are not available for message brokers.',
+  Agent: 'AI Agent is not available for message brokers yet.',
+} as const;
+
 export const CONNECTION_CAPABILITY_REGISTRY: Record<
   EConnectionFamily,
   ConnectionCapabilityProfile
@@ -148,6 +174,34 @@ export const CONNECTION_CAPABILITY_REGISTRY: Record<
       UsersRoles: 'Users & Roles is not available for MongoDB connections.',
     },
   },
+  [EConnectionFamily.RABBITMQ]: {
+    family: EConnectionFamily.RABBITMQ,
+    visibleActivityItems: ['Schemas', 'DatabaseTools'],
+    allowedTabTypes: [...RABBITMQ_TAB_TYPES],
+    defaultActivityItem: 'Schemas',
+    primaryQuerySurface: 'quick-query',
+    supportsRawSql: false,
+    supportsQueryFiles: false,
+    supportsSchemaTree: false,
+    supportsErd: false,
+    supportsUsersRoles: false,
+    supportsDatabaseTools: true,
+    hiddenFeatureReasons: { ...MESSAGE_BROKER_HIDDEN_REASONS },
+  },
+  [EConnectionFamily.KAFKA]: {
+    family: EConnectionFamily.KAFKA,
+    visibleActivityItems: ['Schemas', 'DatabaseTools'],
+    allowedTabTypes: [...KAFKA_TAB_TYPES],
+    defaultActivityItem: 'Schemas',
+    primaryQuerySurface: 'quick-query',
+    supportsRawSql: false,
+    supportsQueryFiles: false,
+    supportsSchemaTree: false,
+    supportsErd: false,
+    supportsUsersRoles: false,
+    supportsDatabaseTools: true,
+    hiddenFeatureReasons: { ...MESSAGE_BROKER_HIDDEN_REASONS },
+  },
 };
 
 export function resolveConnectionProviderKind(
@@ -181,6 +235,14 @@ export function resolveConnectionProviderKind(
     return EConnectionProviderKind.MONGODB_DIRECT;
   }
 
+  if (input.type === DatabaseClientType.RABBITMQ) {
+    return EConnectionProviderKind.RABBITMQ_DIRECT;
+  }
+
+  if (input.type === DatabaseClientType.KAFKA) {
+    return EConnectionProviderKind.KAFKA_DIRECT;
+  }
+
   return EConnectionProviderKind.DIRECT_SQL;
 }
 
@@ -195,6 +257,14 @@ export function resolveConnectionFamily(
 
   if (providerKind === EConnectionProviderKind.MONGODB_DIRECT) {
     return EConnectionFamily.MONGODB;
+  }
+
+  if (providerKind === EConnectionProviderKind.RABBITMQ_DIRECT) {
+    return EConnectionFamily.RABBITMQ;
+  }
+
+  if (providerKind === EConnectionProviderKind.KAFKA_DIRECT) {
+    return EConnectionFamily.KAFKA;
   }
 
   if (input.type === DatabaseClientType.MONGODB) {

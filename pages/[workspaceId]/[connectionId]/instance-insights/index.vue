@@ -3,6 +3,8 @@ import { storeToRefs } from 'pinia';
 import InstanceInsightsPanel from '~/components/modules/instance-insights/InstanceInsightsPanel.vue';
 import MultiDbInstanceInsightsPanel from '~/components/modules/instance-insights/MultiDbInstanceInsightsPanel.vue';
 import RedisInstanceInsightsPanel from '~/components/modules/instance-insights/RedisInstanceInsightsPanel.vue';
+import { KafkaOverviewPanel } from '~/components/modules/kafka-workspace';
+import { RabbitOverviewPanel } from '~/components/modules/rabbitmq-workspace';
 import { useRedisWorkspace } from '~/components/modules/redis-workspace/hooks/useRedisWorkspace';
 import { DatabaseClientType } from '~/core/constants/database-client-type';
 import { useManagementConnectionStore } from '~/core/stores/managementConnectionStore';
@@ -83,6 +85,16 @@ watch(
       @update:database-index="
         redisWorkspace.selectedDatabaseIndex.value = $event
       "
+    />
+
+    <RabbitOverviewPanel
+      v-else-if="dbType === DatabaseClientType.RABBITMQ"
+      :connection="connectionData"
+    />
+
+    <KafkaOverviewPanel
+      v-else-if="dbType === DatabaseClientType.KAFKA"
+      :connection="connectionData"
     />
 
     <InstanceInsightsPanel
