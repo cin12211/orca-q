@@ -6,6 +6,7 @@ import { DatabaseClientType } from '~/core/constants/database-client-type';
 import type { DatabaseField } from '~/core/types';
 import { BaseDatabaseAdapter } from './base.adapter';
 import { normalizeMssqlConnection } from './mssql/connection';
+import { mapArrayRowsToObjects } from './result-rows';
 import { assertMinimumServerVersion } from './server-version';
 import type { RawQueryResult } from './types';
 
@@ -56,8 +57,12 @@ function normalizeColumnValue(value: unknown): unknown {
   return value;
 }
 
-function inferCommand(sql: string): string {
-  return sql.trim().split(/\s+/, 1)[0]?.toUpperCase() || '';
+/** First keyword of a statement, ignoring leading comments (e.g. `SELECT`). */
+export function inferMssqlCommand(sql: string): string {
+  const withoutComments = sql
+    .replace(/\/\*[\s\S]*?\*\//g, ' ')
+    .replace(/--.*$/gm, ' ');
+  return withoutComments.trim().split(/\s+/, 1)[0]?.toUpperCase() || 'QUERY';
 }
 
 function bindParameter(request: Request, index: number, value: unknown) {
@@ -327,12 +332,7 @@ export class MssqlAdapter extends BaseDatabaseAdapter {
       return [];
     }
 
-    return resultSet.rows.map(
-      row =>
-        Object.fromEntries(
-          resultSet.fields.map((field, index) => [field.name, row[index]])
-        ) as T
-    );
+    return mapArrayRowsToObjects(resultSet.rows, resultSet.fields) as T[];
   }
 
   protected async _rawOut<T = any>(
@@ -350,7 +350,7 @@ export class MssqlAdapter extends BaseDatabaseAdapter {
       rows: (resultSet?.rows ?? []) as T[],
       fields: resultSet?.fields ?? [],
       rowCount: resultSet ? resultSet.rows.length : result.rowsAffected,
-      command: inferCommand(sql),
+      command: inferMssqlCommand(sql),
     };
   }
 

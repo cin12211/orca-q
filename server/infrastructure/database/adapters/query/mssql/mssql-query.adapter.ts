@@ -10,8 +10,10 @@ import type {
 import type { IDatabaseAdapter } from '~/server/infrastructure/driver';
 import {
   MssqlAdapter,
+  inferMssqlCommand,
   type MssqlResultSet,
 } from '~/server/infrastructure/driver/mssql.adapter';
+import { mapArrayRowsToObjects } from '~/server/infrastructure/driver/result-rows';
 import { BaseDomainAdapter } from '../../shared';
 import type {
   DatabaseQueryAdapterParams,
@@ -24,23 +26,6 @@ const STREAM_BATCH_SIZE = 10_000;
 interface ScriptResult {
   resultSet?: MssqlResultSet;
   rowsAffected: number;
-}
-
-function toRowObjects(resultSet?: MssqlResultSet): Record<string, unknown>[] {
-  if (!resultSet) return [];
-
-  return resultSet.rows.map(row =>
-    Object.fromEntries(
-      resultSet.fields.map((field, index) => [field.name, row[index]])
-    )
-  );
-}
-
-function inferCommand(sql: string): string {
-  const withoutComments = sql
-    .replace(/\/\*[\s\S]*?\*\//g, ' ')
-    .replace(/--.*$/gm, ' ');
-  return withoutComments.trim().split(/\s+/, 1)[0]?.toUpperCase() || 'QUERY';
 }
 
 export class MssqlQueryAdapter
@@ -136,7 +121,10 @@ export class MssqlQueryAdapter
     );
 
     return {
-      rows: toRowObjects(result.resultSet),
+      rows: mapArrayRowsToObjects(
+        result.resultSet?.rows ?? [],
+        result.resultSet?.fields ?? []
+      ),
       fields: (result.resultSet?.fields ?? []) as DatabaseField[],
       queryTime,
     };
@@ -171,7 +159,7 @@ export class MssqlQueryAdapter
       writeLine({
         type: 'meta',
         fields: resultSet?.fields ?? [],
-        command: inferCommand(query),
+        command: inferMssqlCommand(query),
       });
 
       const rows = resultSet?.rows ?? [];

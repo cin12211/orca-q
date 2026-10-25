@@ -1,5 +1,8 @@
 import { createError } from 'h3';
+import Papa from 'papaparse';
 import { DatabaseClientType } from '~/core/constants/database-client-type';
+import { formatBytes } from '~/core/helpers/bytes-formatter';
+import { getSqlDialect } from '~/core/sql-dialect';
 import type {
   BulkUpdateResponse,
   RLSPolicy,
@@ -56,40 +59,18 @@ interface IndexRow {
   filter_definition: string | null;
 }
 
-function formatKilobytes(value: number | null | undefined): string {
-  const kilobytes = Number(value ?? 0);
+const dialect = getSqlDialect(DatabaseClientType.MSSQL);
 
-  if (kilobytes >= 1024 * 1024) {
-    return `${(kilobytes / 1024 / 1024).toFixed(2)} GB`;
-  }
+// sys.allocation_units reports kilobytes.
+const formatKilobytes = (value: number | null | undefined) =>
+  formatBytes(Number(value ?? 0) * 1024);
 
-  if (kilobytes >= 1024) {
-    return `${(kilobytes / 1024).toFixed(2)} MB`;
-  }
-
-  return `${kilobytes} kB`;
-}
-
-function quoteName(name: string): string {
-  return `[${name.replace(/\]/g, ']]')}]`;
-}
-
-function csvCell(value: unknown): string {
-  if (value === null || value === undefined) return '';
-
-  const text = value instanceof Date ? value.toISOString() : String(value);
-  return /[",\n\r]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
-}
-
-function sqlLiteral(value: unknown): string {
-  if (value === null || value === undefined) return 'NULL';
-  if (typeof value === 'number') return String(value);
-  if (typeof value === 'boolean') return value ? '1' : '0';
-  if (value instanceof Date) return `'${value.toISOString()}'`;
-  // Binary values are already rendered as 0x… hex literals by the driver.
-  if (typeof value === 'string' && /^0x[0-9A-F]*$/.test(value)) return value;
-  return `N'${String(value).replace(/'/g, "''")}'`;
-}
+// Binary values are already rendered as 0x… hex literals by the driver and
+// must stay unquoted to round-trip into varbinary columns.
+const toExportLiteral = (value: unknown) =>
+  typeof value === 'string' && /^0x[0-9A-F]*$/.test(value)
+    ? value
+    : dialect.toLiteral(value);
 
 export class MssqlTableAdapter
   extends BaseDomainAdapter
@@ -261,7 +242,7 @@ export class MssqlTableAdapter
       schema,
       tableName,
     ]);
-    const table = `${quoteName(schema)}.${quoteName(tableName)}`;
+    const table = dialect.qualifyTableName(tableName, schema);
 
     return rows.map(row => {
       const include = row.included_columns
@@ -276,7 +257,7 @@ export class MssqlTableAdapter
         isUnique: Boolean(row.is_unique),
         isPrimary: Boolean(row.is_primary_key),
         method: row.type_desc.toLowerCase(),
-        definition: `CREATE ${row.is_unique ? 'UNIQUE ' : ''}${row.type_desc} INDEX ${quoteName(row.index_name)} ON ${table} (${row.key_columns})${include}${where}`,
+        definition: `CREATE ${row.is_unique ? 'UNIQUE ' : ''}${row.type_desc} INDEX ${dialect.quoteIdentifier(row.index_name)} ON ${table} (${row.key_columns})${include}${where}`,
       };
     });
   }
@@ -353,7 +334,7 @@ export class MssqlTableAdapter
     tableName: string,
     format: string
   ): Promise<string> {
-    const table = `${quoteName(schema)}.${quoteName(tableName)}`;
+    const table = dialect.qualifyTableName(tableName, schema);
     const result = await this.adapter.rawOut<unknown[]>(
       `SELECT * FROM ${table}`
     );
@@ -361,11 +342,7 @@ export class MssqlTableAdapter
     const names = fields.map(field => field.name);
 
     if (format === 'csv') {
-      const lines = [
-        names.map(csvCell).join(','),
-        ...result.rows.map(row => row.map(csvCell).join(',')),
-      ];
-      return `${lines.join('\n')}\n`;
+      return Papa.unparse({ fields: names, data: result.rows });
     }
 
     if (format === 'json') {
@@ -376,10 +353,12 @@ export class MssqlTableAdapter
     }
 
     if (format === 'sql') {
-      const columns = names.map(quoteName).join(', ');
+      const columns = names
+        .map(name => dialect.quoteIdentifier(name))
+        .join(', ');
       const inserts = result.rows.map(
         row =>
-          `INSERT INTO ${table} (${columns}) VALUES (${row.map(sqlLiteral).join(', ')});`
+          `INSERT INTO ${table} (${columns}) VALUES (${row.map(toExportLiteral).join(', ')});`
       );
 
       return [

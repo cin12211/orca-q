@@ -1,5 +1,6 @@
 import { createError } from 'h3';
 import { DatabaseClientType } from '~/core/constants/database-client-type';
+import { getSqlDialect } from '~/core/sql-dialect';
 import type {
   TableMeta,
   TableOverviewMetadata,
@@ -222,7 +223,10 @@ export class CockroachTableAdapter extends PostgresTableAdapter {
     schema: string,
     tableName: string
   ): Promise<string> {
-    const qualifiedName = `"${schema.replace(/"/g, '""')}"."${tableName.replace(/"/g, '""')}"`;
+    const qualifiedName = getSqlDialect(this.dbType).qualifyTableName(
+      tableName,
+      schema
+    );
     const [row] = await this.adapter.rawQuery<{ create_statement: string }>(
       `SHOW CREATE TABLE ${qualifiedName}`
     );

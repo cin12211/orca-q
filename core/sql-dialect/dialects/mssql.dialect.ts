@@ -59,6 +59,11 @@ export const mssqlDialect: SqlDialect = {
     if (typeof value === 'boolean') {
       return value ? '1' : '0';
     }
+    // ISO 8601 with `T` is the only format every date/time type accepts
+    // regardless of the session's DATEFORMAT and language.
+    if (value instanceof Date) {
+      return `'${value.toISOString()}'`;
+    }
     // N-prefix keeps non-ASCII text intact when compared against nvarchar.
     if (typeof value === 'string') {
       return `N'${value.replace(/'/g, "''")}'`;

@@ -1,3 +1,5 @@
+import { DatabaseClientType } from '~/core/constants/database-client-type';
+import { getSqlDialect } from '~/core/sql-dialect';
 import { formatMssqlType } from '../../metadata/mssql/mssql-catalog';
 
 export interface MssqlDdlColumn {
@@ -36,10 +38,10 @@ export interface MssqlDdlForeignKey {
   on_update: string;
 }
 
-const quoteName = (name: string) => `[${name.replace(/\]/g, ']]')}]`;
+const dialect = getSqlDialect(DatabaseClientType.MSSQL);
 
 function columnDefinition(column: MssqlDdlColumn): string {
-  const name = quoteName(column.column_name);
+  const name = dialect.quoteIdentifier(column.column_name);
 
   if (column.is_computed && column.computed_definition) {
     return `\t${name} AS ${column.computed_definition}`;
@@ -58,7 +60,7 @@ function columnDefinition(column: MssqlDdlColumn): string {
   if (column.default_value) {
     parts.push(
       column.default_name
-        ? `CONSTRAINT ${quoteName(column.default_name)} DEFAULT ${column.default_value}`
+        ? `CONSTRAINT ${dialect.quoteIdentifier(column.default_name)} DEFAULT ${column.default_value}`
         : `DEFAULT ${column.default_value}`
     );
   }
@@ -79,21 +81,21 @@ export function buildMssqlTableDdl(args: {
   checks: Array<{ name: string; definition: string }>;
   foreignKeys: MssqlDdlForeignKey[];
 }): string {
-  const table = `${quoteName(args.schema)}.${quoteName(args.tableName)}`;
+  const table = dialect.qualifyTableName(args.tableName, args.schema);
   const definitions = args.columns.map(columnDefinition);
 
   for (const index of args.indexes) {
     if (index.isPrimaryKey || index.isUniqueConstraint) {
       const kind = index.isPrimaryKey ? 'PRIMARY KEY' : 'UNIQUE';
       definitions.push(
-        `\tCONSTRAINT ${quoteName(index.name)} ${kind} ${index.typeDesc} (${index.keyColumns})`
+        `\tCONSTRAINT ${dialect.quoteIdentifier(index.name)} ${kind} ${index.typeDesc} (${index.keyColumns})`
       );
     }
   }
 
   for (const check of args.checks) {
     definitions.push(
-      `\tCONSTRAINT ${quoteName(check.name)} CHECK ${check.definition}`
+      `\tCONSTRAINT ${dialect.quoteIdentifier(check.name)} CHECK ${check.definition}`
     );
   }
 
@@ -118,7 +120,7 @@ export function buildMssqlTableDdl(args: {
         : '';
       const where = index.filter ? ` WHERE ${index.filter}` : '';
       lines.push(
-        `CREATE ${index.isUnique ? 'UNIQUE ' : ''}${index.typeDesc} INDEX ${quoteName(index.name)} ON ${table} (${index.keyColumns})${include}${where};`
+        `CREATE ${index.isUnique ? 'UNIQUE ' : ''}${index.typeDesc} INDEX ${dialect.quoteIdentifier(index.name)} ON ${table} (${index.keyColumns})${include}${where};`
       );
     }
   }
@@ -127,7 +129,7 @@ export function buildMssqlTableDdl(args: {
     lines.push('', `-- ${args.schema}.${args.tableName} foreign keys`, '');
     for (const fk of args.foreignKeys) {
       lines.push(
-        `ALTER TABLE ${table} ADD CONSTRAINT ${quoteName(fk.name)} FOREIGN KEY (${fk.columns}) REFERENCES ${fk.referenced_table} (${fk.referenced_columns}) ON DELETE ${fk.on_delete} ON UPDATE ${fk.on_update};`
+        `ALTER TABLE ${table} ADD CONSTRAINT ${dialect.quoteIdentifier(fk.name)} FOREIGN KEY (${fk.columns}) REFERENCES ${fk.referenced_table} (${fk.referenced_columns}) ON DELETE ${fk.on_delete} ON UPDATE ${fk.on_update};`
       );
     }
   }

@@ -31,18 +31,16 @@ import {
 
 const objectKey = (schema: string, name: string) => `${schema}\u0000${name}`;
 
-function groupBy<T>(rows: T[], key: (row: T) => string): Map<string, T[]> {
-  const groups = new Map<string, T[]>();
+// lodash-es is a frontend-only devDependency and is not bundled into the
+// server runtime, so the grouping stays local.
+function groupBy<T>(
+  rows: T[],
+  key: (row: T) => string
+): Record<string, T[]> {
+  const groups: Record<string, T[]> = {};
 
   for (const row of rows) {
-    const groupKey = key(row);
-    const group = groups.get(groupKey);
-
-    if (group) {
-      group.push(row);
-    } else {
-      groups.set(groupKey, [row]);
-    }
+    (groups[key(row)] ??= []).push(row);
   }
 
   return groups;
@@ -137,13 +135,13 @@ export class MssqlMetadataAdapter
           const key = objectKey(schema_name, table.object_name);
           const detail: TableDetailMetadata = {
             table_id: String(table.object_id),
-            columns: (columnsByObject.get(key) ?? []).map(column =>
+            columns: (columnsByObject[key] ?? []).map(column =>
               this.toSchemaColumn(column)
             ),
-            primary_keys: (pksByTable.get(key) ?? []).map(pk => ({
+            primary_keys: (pksByTable[key] ?? []).map(pk => ({
               column: pk.column_name,
             })),
-            foreign_keys: (fksByTable.get(key) ?? []).map(fk => ({
+            foreign_keys: (fksByTable[key] ?? []).map(fk => ({
               column: fk.column_name,
               referenced_column: fk.referenced_column,
               referenced_table: fk.referenced_table,
@@ -161,8 +159,7 @@ export class MssqlMetadataAdapter
             view_id: String(view.object_id),
             type: ViewSchemaEnum.View,
             columns: (
-              columnsByObject.get(objectKey(schema_name, view.object_name)) ??
-              []
+              columnsByObject[objectKey(schema_name, view.object_name)] ?? []
             ).map(column => this.toSchemaColumn(column)),
           };
 
@@ -216,13 +213,13 @@ export class MssqlMetadataAdapter
     const columnsByObject = groupBy(columns, row =>
       objectKey(row.schema_name, row.object_name)
     );
-    const pksByTable = groupBy<MssqlKeyColumnRow>(primaryKeys, row =>
+    const pksByTable = groupBy(primaryKeys, row =>
       objectKey(row.schema_name, row.table_name)
     );
-    const fksByTable = groupBy<MssqlForeignKeyRow>(foreignKeys, row =>
+    const fksByTable = groupBy(foreignKeys, row =>
       objectKey(row.schema_name, row.table_name)
     );
-    const indexesByTable = groupBy<MssqlIndexColumnRow>(indexes, row =>
+    const indexesByTable = groupBy(indexes, row =>
       objectKey(row.schema_name, row.table_name)
     );
 
@@ -236,7 +233,7 @@ export class MssqlMetadataAdapter
         rows: Number(table.row_count ?? 0),
         type: 'BASE TABLE',
         comment: table.comment ?? null,
-        columns: (columnsByObject.get(key) ?? []).map(column => {
+        columns: (columnsByObject[key] ?? []).map(column => {
           const rawType = formatMssqlType(column);
           const isNumeric = ['decimal', 'numeric'].includes(
             column.type_name.toLowerCase()
@@ -259,7 +256,7 @@ export class MssqlMetadataAdapter
             comment: column.comment,
           };
         }),
-        foreign_keys: (fksByTable.get(key) ?? []).map(fk => ({
+        foreign_keys: (fksByTable[key] ?? []).map(fk => ({
           foreign_key_name: fk.constraint_name,
           column: fk.column_name,
           reference_schema: fk.referenced_schema,
@@ -267,11 +264,11 @@ export class MssqlMetadataAdapter
           reference_column: fk.referenced_column,
           fk_def: `FOREIGN KEY (${fk.column_name}) REFERENCES ${fk.referenced_schema}.${fk.referenced_table}(${fk.referenced_column}) ON DELETE ${fk.delete_action} ON UPDATE ${fk.update_action}`,
         })),
-        primary_keys: (pksByTable.get(key) ?? []).map(pk => ({
+        primary_keys: (pksByTable[key] ?? []).map(pk => ({
           column: pk.column_name,
           pk_def: `PRIMARY KEY (${pk.column_name})`,
         })),
-        indexes: (indexesByTable.get(key) ?? []).map<IndexMetadata>(index => ({
+        indexes: (indexesByTable[key] ?? []).map<IndexMetadata>(index => ({
           index_name: index.index_name,
           column: index.column_name,
           index_type: index.index_type,
@@ -319,10 +316,10 @@ export class MssqlMetadataAdapter
         table: table.object_name,
         rows: Number(table.row_count ?? 0),
         type: 'BASE TABLE',
-        primary_keys: (pksByTable.get(key) ?? []).map(pk => ({
+        primary_keys: (pksByTable[key] ?? []).map(pk => ({
           column: pk.column_name,
         })),
-        used_by: (referencedBy.get(key) ?? []).map(fk => ({
+        used_by: (referencedBy[key] ?? []).map(fk => ({
           referencing_schema: fk.schema_name,
           referencing_table: fk.table_name,
           foreign_key_name: fk.constraint_name,

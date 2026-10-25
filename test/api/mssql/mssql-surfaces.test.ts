@@ -138,6 +138,45 @@ describe('SQL Server API surfaces', async () => {
     });
   });
 
+  describe('export', () => {
+    it('exports CSV with a header row', async () => {
+      const res = await $fetch('/api/tables/export', {
+        method: 'POST',
+        body: {
+          ...mssqlBody(),
+          schemaName: 'dbo',
+          tableName: 'language',
+          format: 'csv',
+        },
+        responseType: 'text',
+      });
+
+      expect(String(res).split(/\r?\n/)[0]).toBe(
+        'language_id,name,last_update'
+      );
+    });
+
+    it('exports INSERT statements SQL Server can parse', async () => {
+      const res = String(
+        await $fetch('/api/tables/export', {
+          method: 'POST',
+          body: {
+            ...mssqlBody(),
+            schemaName: 'dbo',
+            tableName: 'language',
+            format: 'sql',
+          },
+          responseType: 'text',
+        })
+      );
+      const insert = res
+        .split('\n')
+        .find(line => line.startsWith('INSERT INTO [dbo].[language]'));
+
+      expect(insert).toMatch(/VALUES \(1, N'English\s*', '\d{4}-\d{2}-\d{2}T/);
+    });
+  });
+
   describe('schemas and ERD', () => {
     it('lists schemas without role schemas', async () => {
       const res = await $fetch('/api/metadata/meta-data', {

@@ -1,5 +1,6 @@
 import { createError } from 'h3';
 import { DatabaseClientType } from '~/core/constants/database-client-type';
+import { getSqlDialect } from '~/core/sql-dialect';
 import type { ViewMeta, ViewOverviewMetadata } from '~/core/types';
 import { PostgresViewAdapter } from '../postgres/postgres-view.adapter';
 import type { DatabaseViewAdapterParams } from '../types';
@@ -88,7 +89,10 @@ export class CockroachViewAdapter extends PostgresViewAdapter {
     schema: string,
     viewName: string
   ): Promise<string> {
-    const qualifiedName = `"${schema.replace(/"/g, '""')}"."${viewName.replace(/"/g, '""')}"`;
+    const qualifiedName = getSqlDialect(this.dbType).qualifyTableName(
+      viewName,
+      schema
+    );
     const rows = await this.adapter.rawQuery<{ info: string }>(
       `EXPLAIN SELECT * FROM ${qualifiedName}`
     );
