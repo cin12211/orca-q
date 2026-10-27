@@ -35,6 +35,12 @@ export const SETTINGS_NAV_ITEMS: SettingsNavItem[] = [
     desktopOnly: true,
   },
   {
+    name: 'MCP Server',
+    icon: 'hugeicons:mcp-server',
+    componentKey: SettingsComponentKey.McpServerConfig,
+    desktopOnly: true,
+  },
+  {
     name: 'Environment Tags',
     icon: 'hugeicons:tag-01',
     componentKey: SettingsComponentKey.EnvironmentTagsConfig,

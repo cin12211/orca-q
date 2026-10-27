@@ -20,6 +20,7 @@ export {
   normalizeAppConfigState,
   createDefaultAgentState,
   normalizeAgentState,
+  normalizeMcpSession,
 } from '../../../core/persist/normalize';
 
 export type {
@@ -32,4 +33,5 @@ export type {
   TableAppearanceConfigs,
   CustomLayoutSizeEntry,
   CustomLayoutDefinition,
+  McpSession,
 } from '../../../core/persist/normalize';

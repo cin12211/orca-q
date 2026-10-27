@@ -1,7 +1,9 @@
+import { isDesktopApp } from '~/core/helpers/environment';
 import {
   useAppConfigStore,
   useAgentStore,
   useEnvironmentTagStore,
+  useMcpSessionStore,
   useWorkspacesStore,
   useManagementConnectionStore,
   useWSStateStore,
@@ -18,6 +20,7 @@ export default defineNuxtPlugin(async () => {
   const connectionStore = useManagementConnectionStore();
   const wsStateStore = useWSStateStore();
   const envTagStore = useEnvironmentTagStore();
+  const mcpSessionStore = useMcpSessionStore();
 
   try {
     await Promise.all([
@@ -27,6 +30,8 @@ export default defineNuxtPlugin(async () => {
       connectionStore.loadPersistData(),
       wsStateStore.loadPersistData(),
       envTagStore.loadTags(),
+      // MCP server is desktop-only; the web build never loads its sessions.
+      ...(isDesktopApp() ? [mcpSessionStore.loadPersistData()] : []),
     ]);
     console.log('[Init Plugin] Essential stores hydrated.');
   } catch (error) {

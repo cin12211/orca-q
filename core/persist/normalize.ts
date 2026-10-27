@@ -60,6 +60,12 @@ export enum NullOrderPreference {
   NullsLast = 'nulls-last',
 }
 
+export enum McpConnectionAccess {
+  Off = 'off',
+  Read = 'read',
+  Write = 'write',
+}
+
 // ── Shared interfaces ─────────────────────────────────────────────────────────
 
 export interface CodeEditorConfigs {
@@ -94,6 +100,32 @@ export interface TableAppearanceConfigs {
   headerFontWeight: number;
   headerBackgroundColorLight: string;
   headerBackgroundColorDark: string;
+}
+
+/**
+ * An MCP session is what an MCP client authenticates as with its bearer
+ * token. Sessions live in their own `mcp_sessions` table (desktop SQLite);
+ * the token stays viewable in Settings because the data never leaves the
+ * user's machine.
+ * A connection's access comes from `connectionAccess`, then from its
+ * workspace in `workspaceAccess`, otherwise it is off.
+ * With `requireToken: false`, requests without a token use this session;
+ * at most one session may do that.
+ */
+export interface McpSession {
+  id: string;
+  name: string;
+  token: string;
+  requireToken: boolean;
+  createdAt: string;
+  updatedAt?: string;
+  workspaceAccess: Record<string, McpConnectionAccess>;
+  connectionAccess: Record<string, McpConnectionAccess>;
+}
+
+/** Built-in MCP server switch (desktop only); sessions are stored separately. */
+export interface McpServerConfigs {
+  enabled: boolean;
 }
 
 export interface CustomLayoutSizeEntry {
@@ -149,6 +181,7 @@ export interface AppConfigPersistedState {
   customLayouts: CustomLayoutDefinition[];
   activeCustomLayoutId: string | null;
   customLayoutSizes: Record<string, CustomLayoutSizeEntry>;
+  mcpServerConfigs: McpServerConfigs;
 }
 
 export interface AgentPersistedState {
@@ -246,6 +279,52 @@ function normalizeObject<T extends object>(value: unknown, fallback: T): T {
   if (!isRecord(value)) return clone(fallback);
   return { ...clone(fallback), ...(value as object) } as T;
 }
+
+const MCP_CONNECTION_ACCESS_VALUES = Object.values(McpConnectionAccess);
+
+const normalizeAccessMap = (
+  value: unknown
+): Record<string, McpConnectionAccess> =>
+  Object.fromEntries(
+    Object.entries(isRecord(value) ? value : {}).filter(([, mode]) =>
+      MCP_CONNECTION_ACCESS_VALUES.includes(mode as McpConnectionAccess)
+    )
+  ) as Record<string, McpConnectionAccess>;
+
+/** Returns null for records that are not a usable session. */
+export const normalizeMcpSession = (value: unknown): McpSession | null => {
+  if (!isRecord(value)) return null;
+  if (typeof value.id !== 'string' || typeof value.token !== 'string') {
+    return null;
+  }
+
+  return {
+    id: value.id,
+    name: typeof value.name === 'string' ? value.name : 'MCP session',
+    token: value.token,
+    requireToken: value.requireToken !== false,
+    createdAt: typeof value.createdAt === 'string' ? value.createdAt : '',
+    updatedAt:
+      typeof value.updatedAt === 'string' ? value.updatedAt : undefined,
+    workspaceAccess: normalizeAccessMap(value.workspaceAccess),
+    connectionAccess: normalizeAccessMap(value.connectionAccess),
+  };
+};
+
+export const normalizeMcpServerConfigs = (value: unknown): McpServerConfigs => {
+  const source = isRecord(value) ? value : {};
+
+  return { enabled: source.enabled === true };
+};
+
+/** Effective access of one connection for a session. */
+export const resolveMcpConnectionAccess = (
+  session: Pick<McpSession, 'workspaceAccess' | 'connectionAccess'>,
+  connection: { id: string; workspaceId: string }
+): McpConnectionAccess =>
+  session.connectionAccess[connection.id] ??
+  session.workspaceAccess[connection.workspaceId] ??
+  McpConnectionAccess.Off;
 
 // ── Agent message sanitisation helpers (private) ──────────────────────────────
 
@@ -372,6 +451,7 @@ export const createDefaultAppConfigState = (): AppConfigPersistedState => ({
   customLayouts: [],
   activeCustomLayoutId: null,
   customLayoutSizes: {},
+  mcpServerConfigs: { enabled: false },
 });
 
 export const normalizeAppConfigState = (
@@ -478,6 +558,7 @@ export const normalizeAppConfigState = (
         ? source.activeCustomLayoutId
         : fallback.activeCustomLayoutId,
     customLayoutSizes,
+    mcpServerConfigs: normalizeMcpServerConfigs(source.mcpServerConfigs),
   };
 };
 

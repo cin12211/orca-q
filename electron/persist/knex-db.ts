@@ -37,15 +37,19 @@ function camelizeResult<T>(value: T): T {
   ) as T;
 }
 
-export function getKnex(): Knex {
-  if (_knex) return _knex;
-
+export function getPersistDbPath(): string {
   const IS_DEV = process.env.NODE_ENV === 'development';
   const dir = IS_DEV
     ? path.join(process.cwd(), '.sqlite3')
     : app.getPath('userData');
   fs.mkdirSync(dir, { recursive: true });
-  const dbPath = path.join(dir, 'orcaq.db');
+  return path.join(dir, 'orcaq.db');
+}
+
+export function getKnex(): Knex {
+  if (_knex) return _knex;
+
+  const dbPath = getPersistDbPath();
 
   _knex = knexLib({
     client: 'better-sqlite3',

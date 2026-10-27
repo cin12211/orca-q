@@ -19,6 +19,7 @@ import {
   BackupRestoreConfig,
   DesktopConfig,
   EditorConfig,
+  McpServerConfig,
   QuickQueryConfig,
   TableAppearanceConfig,
 } from '../components';
@@ -34,6 +35,7 @@ const SETTINGS_COMPONENTS: Record<SettingsComponentKey, Component> = {
   TableAppearanceConfig,
   BackupRestoreConfig,
   EnvironmentTagsConfig: TagManagementContainer,
+  McpServerConfig,
 };
 
 const settingNavs = SETTINGS_NAV_ITEMS.filter(

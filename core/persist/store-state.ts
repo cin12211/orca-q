@@ -16,6 +16,9 @@ export {
   EditorTheme,
   RawQueryEditorLayout,
   ThinkingStyle,
+  McpConnectionAccess,
+  normalizeMcpSession,
+  resolveMcpConnectionAccess,
   createDefaultAppConfigState,
   normalizeAppConfigState,
   createDefaultAgentState,
@@ -32,6 +35,8 @@ export type {
   TableAppearanceConfigs,
   CustomLayoutSizeEntry,
   CustomLayoutDefinition,
+  McpServerConfigs,
+  McpSession,
 } from './normalize';
 
 // ── Web-renderer-only constants ───────────────────────────────────────────────

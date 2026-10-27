@@ -10,3 +10,4 @@ export * from './useExplorerFileStore';
 export * from './agentStore';
 export * from './appConfigStore';
 export * from './useEnvironmentTagStore';
+export * from './useMcpSessionStore';
