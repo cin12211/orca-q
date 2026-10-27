@@ -119,11 +119,19 @@ export const useTableQueryBuilder = ({
     });
   });
 
+  // A persisted sort can point at a column that was dropped since it was saved.
+  // Only trust it once the column list is known and still contains it.
+  const isKnownColumn = (columnName?: string): columnName is string =>
+    !!columnName &&
+    (columns.value.length === 0 || columns.value.includes(columnName));
+
   const queryString = computed(() => {
     let orderClauses = '';
-    const resolvedOrder = orderBy?.order || 'ASC';
-    const orderColumn =
-      orderBy?.columnName || primaryKeys.value[0] || columns.value[0];
+    const hasValidOrderColumn = isKnownColumn(orderBy?.columnName);
+    const resolvedOrder = (hasValidOrderColumn && orderBy?.order) || 'ASC';
+    const orderColumn = hasValidOrderColumn
+      ? orderBy.columnName
+      : primaryKeys.value[0] || columns.value[0];
     const q = quoteIdent.value;
 
     if (orderColumn) {
@@ -384,6 +392,19 @@ export const useTableQueryBuilder = ({
   };
 
   onLoadPersistedState();
+
+  // Clear a stale sort so the header indicator and persisted state stop
+  // referencing a column that no longer exists.
+  watch(
+    columns,
+    () => {
+      if (orderBy.columnName && !isKnownColumn(orderBy.columnName)) {
+        orderBy.columnName = undefined;
+        orderBy.order = undefined;
+      }
+    },
+    { immediate: true }
+  );
 
   const isFetchingTableData = computed(() => {
     return (
