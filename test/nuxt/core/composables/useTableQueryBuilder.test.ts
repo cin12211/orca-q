@@ -113,6 +113,49 @@ describe('useTableQueryBuilder', () => {
     expect(composable.queryString.value).toContain('ORDER BY "name" ASC');
   });
 
+  it('ignores a persisted order column that no longer exists in the table', async () => {
+    localStorage.setItem(
+      'ws-1-conn-1-public-users',
+      JSON.stringify({
+        orderBy: { columnName: 'deleted_col', order: 'DESC' },
+      })
+    );
+
+    const composable = createComposable({
+      isPersist: true,
+      primaryKeys: ['id'],
+      columns: ['id', 'name'],
+    });
+
+    expect(composable.queryString.value).toContain('ORDER BY "id" ASC');
+    expect(composable.queryString.value).not.toContain('deleted_col');
+    expect(composable.orderBy.columnName).toBeUndefined();
+    expect(composable.orderBy.order).toBeUndefined();
+
+    await vi.advanceTimersByTimeAsync(DEFAULT_DEBOUNCE_INPUT + 1);
+
+    expect(
+      JSON.parse(localStorage.getItem('ws-1-conn-1-public-users') || '{}')
+        .orderBy
+    ).toEqual({});
+  });
+
+  it('keeps a persisted order column that still exists', () => {
+    localStorage.setItem(
+      'ws-1-conn-1-public-users',
+      JSON.stringify({
+        orderBy: { columnName: 'name', order: 'DESC' },
+      })
+    );
+
+    const composable = createComposable({
+      isPersist: true,
+      columns: ['id', 'name'],
+    });
+
+    expect(composable.queryString.value).toContain('ORDER BY "name" DESC');
+  });
+
   it('appends NULLS LAST when the global preference is enabled for postgres', () => {
     const store = useAppConfigStore();
     store.tableAppearanceConfigs.nullOrderPreference =
