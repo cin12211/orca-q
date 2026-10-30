@@ -6,6 +6,7 @@ import type {
   QueryResult,
   RawQueryResultWithMetadata,
 } from '~/core/types';
+import type { DuckDbAdapter } from '~/server/infrastructure/driver/duckdb.adapter';
 import type { RawQueryResult } from '~/server/infrastructure/driver/types';
 import { BaseDomainAdapter } from '../../shared';
 import type {
@@ -23,6 +24,39 @@ function serializeDuckDbValue(value: unknown): unknown {
   return typeof value === 'object' && value !== null && !Array.isArray(value)
     ? JSON.stringify(value)
     : value;
+}
+
+// Strings, comments, casts, slices and struct literals pass through untouched,
+// so `[1:n]` and `{'k': v}` are not read as variables.
+const NAMED_PARAM_TOKENS =
+  /'(?:[^']|'')*'|"(?:[^"]|"")*"|--[^\n]*|\/\*[\s\S]*?\*\/|::|\[[^\]]*\]|\{[^}]*\}|(?<![\w:]):([A-Za-z_]\w*)/g;
+
+function compileNamedParams(
+  query: string,
+  params: Record<string, any>
+): { sql: string; bindings: unknown[] } {
+  const bindings: unknown[] = [];
+
+  const sql = query.replace(
+    NAMED_PARAM_TOKENS,
+    (token, name: string | undefined) => {
+      if (!name || !(name in params)) {
+        return token;
+      }
+
+      const value = params[name];
+
+      if (Array.isArray(value)) {
+        bindings.push(...value);
+        return value.map(() => '?').join(', ');
+      }
+
+      bindings.push(value);
+      return '?';
+    }
+  );
+
+  return { sql, bindings };
 }
 
 function arrayRowsToObjects(
@@ -56,6 +90,10 @@ export class DuckDbQueryAdapter
     return new DuckDbQueryAdapter(adapter);
   }
 
+  private get driver() {
+    return this.adapter as DuckDbAdapter;
+  }
+
   private resolveStatement(
     query: string,
     params?: any[] | Record<string, any>
@@ -64,26 +102,11 @@ export class DuckDbQueryAdapter
       return { sql: query, bindings: params };
     }
 
-    // Without named params the text must reach DuckDB untouched: Knex would
-    // rewrite `?` and treat `:name` in slices and struct literals as bindings.
     if (!params || !Object.keys(params).length) {
       return { sql: query, bindings: [] };
     }
 
-    const mappingParams = Object.fromEntries(
-      Object.entries(params).map(([key, value]) => [
-        key,
-        Array.isArray(value)
-          ? this.adapter.knex.raw(value.map(() => '?').join(', '), value)
-          : value,
-      ])
-    );
-    const nativeSql = this.adapter.getNativeSql(query, mappingParams);
-
-    return {
-      sql: nativeSql.sql,
-      bindings: Array.from(nativeSql.bindings ?? []),
-    };
+    return compileNamedParams(query, params);
   }
 
   private async runRawOut(
@@ -99,12 +122,18 @@ export class DuckDbQueryAdapter
   }
 
   async execute(query: string): Promise<QueryResult> {
-    const { output, queryTime } = await this.runRawOut(query);
+    const { result, queryTime } = await this.withTiming(() =>
+      this.adapter.rawQuery<Record<string, unknown>>(query)
+    );
 
     return {
-      result: arrayRowsToObjects(
-        output.rows,
-        (output.fields ?? []) as DatabaseField[]
+      result: result.map(row =>
+        Object.fromEntries(
+          Object.entries(row).map(([key, value]) => [
+            key,
+            serializeDuckDbValue(value),
+          ])
+        )
       ),
       queryTime,
     };
@@ -136,40 +165,84 @@ export class DuckDbQueryAdapter
     res.setHeader('Transfer-Encoding', 'chunked');
     res.setHeader('X-Content-Type-Options', 'nosniff');
 
-    const writeLine = (data: Record<string, unknown>) => {
-      res.write(JSON.stringify(data) + '\n');
+    let isClientGone = false;
+    const onClose = () => {
+      isClientGone = true;
+      void this.driver.interruptQuery();
+    };
+
+    res.once('close', onClose);
+
+    // Honours backpressure so a slow client cannot pile results up in memory.
+    const writeLine = async (data: Record<string, unknown>) => {
+      if (res.write(JSON.stringify(data) + '\n') || isClientGone) {
+        return;
+      }
+
+      await new Promise<void>(resolve => {
+        res.once('drain', resolve);
+        res.once('close', resolve);
+      });
+    };
+
+    const startTime = performance.now();
+    let fields: DatabaseField[] = [];
+    let pendingRows: Record<string, unknown>[] = [];
+
+    const flushRows = async () => {
+      if (pendingRows.length) {
+        const data = pendingRows;
+        pendingRows = [];
+        await writeLine({ type: 'rows', data });
+      }
     };
 
     try {
-      const { output, queryTime } = await this.runRawOut(query, params);
-      const fields = (output.fields ?? []) as DatabaseField[];
-      const rows = arrayRowsToObjects(output.rows, fields);
+      const { sql, bindings } = this.resolveStatement(query, params);
 
-      writeLine({ type: 'meta', fields, command: output.command || 'QUERY' });
+      for await (const event of this.driver.streamResult(sql, bindings)) {
+        if (isClientGone) {
+          break;
+        }
 
-      for (let index = 0; index < rows.length; index += STREAM_BATCH_SIZE) {
-        writeLine({
-          type: 'rows',
-          data: rows.slice(index, index + STREAM_BATCH_SIZE),
-        });
+        if (event.type === 'meta') {
+          fields = event.fields;
+          await writeLine({
+            type: 'meta',
+            fields,
+            command: event.command || 'QUERY',
+          });
+        } else if (event.type === 'rows') {
+          pendingRows.push(...arrayRowsToObjects(event.rows, fields));
+
+          if (pendingRows.length >= STREAM_BATCH_SIZE) {
+            await flushRows();
+          }
+        } else {
+          await flushRows();
+          await writeLine({
+            type: 'done',
+            rowCount: event.rowCount,
+            queryTime: Number((performance.now() - startTime).toFixed(2)),
+          });
+        }
       }
-
-      writeLine({
-        type: 'done',
-        rowCount: output.rowCount ?? rows.length,
-        queryTime,
-      });
 
       res.end();
     } catch (error: unknown) {
       const message =
         error instanceof Error ? error.message : 'Unknown query error';
+      if (isClientGone) {
+        res.end();
+        return;
+      }
+
       const normalizeError = new ErrorNormalizer({
         dbType: this.dbType,
         message,
       }).nomaltliztionErrror;
 
-      writeLine({
+      await writeLine({
         type: 'error',
         message,
         error: {
@@ -182,6 +255,8 @@ export class DuckDbQueryAdapter
         },
       });
       res.end();
+    } finally {
+      res.off('close', onClose);
     }
   }
 }

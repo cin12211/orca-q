@@ -120,7 +120,7 @@ Prefer Tailwind utilities. Use `<style scoped>` only for complex styles not achi
 - Managed SQLite (Cloudflare D1, Turso) uses `managed` method and stays on SQL family path
 - Local SQLite uses `file` method (desktop runtime only)
 - DuckDB (beta) uses `file` method only (desktop runtime only), including `:memory:`; the file must already exist. It shares `NUXT_PUBLIC_SQLITE3_CONNECTIONS_ENABLED` with SQLite
-- DuckDB hides Users & Roles and AI Agent, and disables Backup & Restore and Schema Diff; the built-in MCP server does not serve it
+- DuckDB hides Users & Roles and AI Agent, and disables Backup & Restore; the built-in MCP server does not serve it
 - Failed health checks return actionable driver messages but connections are still saved
 - A failed re-test must not delete or mutate an already saved connection record
 

@@ -181,12 +181,11 @@ export function useQueryExecution({
 
     const isRedisConnection =
       connection.value?.type === DatabaseClientType.REDIS;
-    const isFileDatabaseConnection = [
+    const isSqliteConnection = [
       DatabaseClientType.SQLITE3,
       DatabaseClientType.BETTER_SQLITE3,
-      DatabaseClientType.DUCKDB,
     ].includes(connection.value?.type as DatabaseClientType);
-    const isVariableSupported = !isRedisConnection && !isFileDatabaseConnection;
+    const isVariableSupported = !isRedisConnection && !isSqliteConnection;
 
     if (isVariableSupported && promptMissingVariables) {
       const extracted = extractParamsFromSql(

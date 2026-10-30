@@ -268,6 +268,8 @@ describe('DuckDB domain adapters', () => {
             setHeader: vi.fn(),
             write: (chunk: string) => chunks.push(chunk),
             end: vi.fn(),
+            once: vi.fn(),
+            off: vi.fn(),
           },
         },
       };
@@ -313,6 +315,17 @@ describe('DuckDB domain adapters', () => {
       expect(result.rows).toEqual([{ id: '1' }, { id: '3' }]);
     });
 
+    it('keeps literals and syntax intact when variables are bound', async () => {
+      const result = await query().rawExecute(
+        `SELECT :v AS bound, '?:v' AS text, [1, 2, 3][1:2] AS sliced, 1::VARCHAR AS casted`,
+        { v: 7, unused: 1 }
+      );
+
+      expect(result.rows).toEqual([
+        { bound: 7, text: '?:v', sliced: [1, 2], casted: '1' },
+      ]);
+    });
+
     it('binds positional params', async () => {
       const result = await query().rawExecute(
         'SELECT id FROM sales.orders WHERE id = ?',
@@ -331,6 +344,17 @@ describe('DuckDB domain adapters', () => {
       expect(lines[0]).toMatchObject({ command: 'SELECT' });
       expect(lines[1].data).toEqual([{ id: 1 }, { id: 2 }]);
       expect(lines[2].rowCount).toBe(2);
+    });
+
+    it('streams large results in batches', async () => {
+      const lines = await runStream('SELECT * FROM range(25000)');
+      const batches = lines.filter(line => line.type === 'rows');
+
+      expect(batches.length).toBeGreaterThan(1);
+      expect(
+        batches.reduce((total, batch) => total + batch.data.length, 0)
+      ).toBe(25000);
+      expect(lines.at(-1)).toMatchObject({ type: 'done', rowCount: 25000 });
     });
 
     it('streams the affected row count of a mutation', async () => {

@@ -89,6 +89,10 @@ function normalizeDuckDbBinding(value: unknown): DuckDBValue {
   return value as DuckDBValue;
 }
 
+function toDuckDbBindings(bindings: unknown[]) {
+  return bindings.length ? bindings.map(normalizeDuckDbBinding) : undefined;
+}
+
 function createSyntheticFields(columnNames: string[]): DatabaseField[] {
   return columnNames.map((name, index) => ({
     name,
@@ -118,11 +122,81 @@ async function loadDuckDbDriver() {
   }
 }
 
+/**
+ * One connection running one statement at a time, so temp tables, `USE` and
+ * `SET` carry across statements the way they do in a SQL console.
+ */
+class DuckDbSession {
+  private connection?: Promise<DuckDBConnection>;
+  private queue: Promise<void> = Promise.resolve();
+
+  constructor(private readonly connect: () => Promise<DuckDBConnection>) {}
+
+  getConnection(): Promise<DuckDBConnection> {
+    this.connection ??= this.connect().catch(error => {
+      this.connection = undefined;
+      throw error;
+    });
+
+    return this.connection;
+  }
+
+  async lock(): Promise<() => void> {
+    const previous = this.queue;
+    let release: () => void = () => {};
+
+    this.queue = new Promise<void>(resolve => {
+      release = resolve;
+    });
+    await previous;
+
+    return release;
+  }
+
+  async run<T>(task: (connection: DuckDBConnection) => Promise<T>): Promise<T> {
+    const release = await this.lock();
+
+    try {
+      return await task(await this.getConnection());
+    } finally {
+      release();
+    }
+  }
+
+  async interrupt(): Promise<void> {
+    const connection = await this.connection?.catch(() => undefined);
+    connection?.interrupt();
+  }
+
+  async close(): Promise<void> {
+    const release = await this.lock();
+
+    try {
+      const connection = await this.connection?.catch(() => undefined);
+      connection?.closeSync();
+      this.connection = undefined;
+    } finally {
+      release();
+    }
+  }
+}
+
+export type DuckDbStreamEvent =
+  | { type: 'meta'; fields: DatabaseField[]; command: string }
+  | { type: 'rows'; rows: unknown[][] }
+  | { type: 'done'; rowCount: number };
+
 export class DuckDbAdapter extends BaseDatabaseAdapter {
   private readonly filename: string;
-  private instance?: DuckDBInstance;
-  private sessionConnection?: Promise<DuckDBConnection>;
-  private sessionQueue: Promise<void> = Promise.resolve();
+  private instance?: Promise<DuckDBInstance>;
+  // User statements run on their own session so a long query never holds up
+  // schema browsing and table reads, which stay on the catalog session.
+  private readonly querySession = new DuckDbSession(() =>
+    this.openConnection()
+  );
+  private readonly catalogSession = new DuckDbSession(() =>
+    this.openConnection()
+  );
   private releaseRawSession?: () => void;
 
   constructor(connection: string | Knex.Config['connection']) {
@@ -139,70 +213,30 @@ export class DuckDbAdapter extends BaseDatabaseAdapter {
     this.filename = filename;
   }
 
-  private async openConnection(): Promise<DuckDBConnection> {
-    const { DuckDBInstance } = await loadDuckDbDriver();
-
+  private getInstance(): Promise<DuckDBInstance> {
     // fromCache shares one database per path inside this process, which is what
     // lets a health check open a file already held by a cached adapter.
-    this.instance = await DuckDBInstance.fromCache(this.filename);
+    this.instance ??= loadDuckDbDriver()
+      .then(({ DuckDBInstance }) => DuckDBInstance.fromCache(this.filename))
+      .catch(error => {
+        this.instance = undefined;
+        throw error;
+      });
 
-    return this.instance.connect();
+    return this.instance;
   }
 
-  private getConnection(): Promise<DuckDBConnection> {
-    this.sessionConnection ??= this.openConnection().catch(error => {
-      this.sessionConnection = undefined;
-      throw error;
-    });
-
-    return this.sessionConnection;
-  }
-
-  /**
-   * One connection serves the adapter, one statement at a time, so temp tables,
-   * `USE` and `SET` carry across queries the way they do in a SQL console.
-   */
-  private async lockSession(): Promise<() => void> {
-    const previous = this.sessionQueue;
-    let release: () => void = () => {};
-
-    this.sessionQueue = new Promise<void>(resolve => {
-      release = resolve;
-    });
-    await previous;
-
-    return release;
-  }
-
-  private async withSession<T>(
-    task: (connection: DuckDBConnection) => Promise<T>
-  ): Promise<T> {
-    const release = await this.lockSession();
-
-    try {
-      return await task(await this.getConnection());
-    } finally {
-      release();
-    }
-  }
-
-  private async readAll(
-    sql: string,
-    bindings: unknown[]
-  ): Promise<DuckDBResultReader> {
-    return this.withSession(connection =>
-      connection.runAndReadAll(
-        sql,
-        bindings.length ? bindings.map(normalizeDuckDbBinding) : undefined
-      )
-    );
+  private async openConnection(): Promise<DuckDBConnection> {
+    return (await this.getInstance()).connect();
   }
 
   protected async _rawQuery<T = any>(
     sql: string,
     bindings: any[] = []
   ): Promise<T[]> {
-    const reader = await this.readAll(sql, bindings);
+    const reader = await this.catalogSession.run(connection =>
+      connection.runAndReadAll(sql, toDuckDbBindings(bindings))
+    );
     const columnNames = reader.deduplicatedColumnNames();
 
     return reader
@@ -217,7 +251,9 @@ export class DuckDbAdapter extends BaseDatabaseAdapter {
     bindings: any[] = []
   ): Promise<RawQueryResult<T>> {
     const { ResultReturnType } = await loadDuckDbDriver();
-    const reader = await this.readAll(sql, bindings);
+    const reader = await this.querySession.run(connection =>
+      connection.runAndReadAll(sql, toDuckDbBindings(bindings))
+    );
     const command = inferDuckDbCommand(sql);
 
     if (reader.returnType !== ResultReturnType.QUERY_RESULT) {
@@ -232,6 +268,53 @@ export class DuckDbAdapter extends BaseDatabaseAdapter {
       rowCount: rows.length,
       command,
     };
+  }
+
+  /** Reads a result chunk by chunk, holding the query session until it ends. */
+  async *streamResult(
+    sql: string,
+    bindings: unknown[] = []
+  ): AsyncGenerator<DuckDbStreamEvent> {
+    const { ResultReturnType } = await loadDuckDbDriver();
+    const release = await this.querySession.lock();
+
+    try {
+      const connection = await this.querySession.getConnection();
+      const result = await connection.stream(sql, toDuckDbBindings(bindings));
+      const command = inferDuckDbCommand(sql);
+
+      try {
+        if (result.returnType !== ResultReturnType.QUERY_RESULT) {
+          yield { type: 'meta', fields: [], command };
+          yield { type: 'done', rowCount: result.rowsChanged };
+          return;
+        }
+
+        yield {
+          type: 'meta',
+          fields: createSyntheticFields(result.deduplicatedColumnNames()),
+          command,
+        };
+
+        let rowCount = 0;
+
+        for await (const rows of result.yieldRowsJson()) {
+          rowCount += rows.length;
+          yield { type: 'rows', rows };
+        }
+
+        yield { type: 'done', rowCount };
+      } finally {
+        result.closeSync();
+      }
+    } finally {
+      release();
+    }
+  }
+
+  /** Stops the statement running on the query session, if any. */
+  interruptQuery(): Promise<void> {
+    return this.querySession.interrupt();
   }
 
   protected _streamQuery(
@@ -255,12 +338,12 @@ export class DuckDbAdapter extends BaseDatabaseAdapter {
     return this.knex.raw(sql, bindings).toSQL().toNative();
   }
 
-  /** Holds the session until `releaseRawConnection`, e.g. for a transaction. */
+  /** Holds the query session until `releaseRawConnection`, e.g. for a transaction. */
   override async acquireRawConnection(): Promise<DuckDBConnection> {
-    const release = await this.lockSession();
+    const release = await this.querySession.lock();
 
     try {
-      const connection = await this.getConnection();
+      const connection = await this.querySession.getConnection();
       this.releaseRawSession = release;
       return connection;
     } catch (error) {
@@ -275,23 +358,17 @@ export class DuckDbAdapter extends BaseDatabaseAdapter {
   }
 
   override async verifyConnection(): Promise<void> {
-    await this.readAll('SELECT 1', []);
+    await this._rawQuery('SELECT 1');
   }
 
   override async destroy(): Promise<void> {
-    const release = await this.lockSession();
+    await Promise.all([this.querySession.close(), this.catalogSession.close()]);
 
-    try {
-      const connection = await this.sessionConnection?.catch(() => undefined);
-      connection?.closeSync();
-      // Only drops this adapter's handle; the database closes, and its file
-      // lock is freed, once no other adapter shares it through the cache.
-      this.instance?.closeSync();
-      this.sessionConnection = undefined;
-      this.instance = undefined;
-      await this.knex.destroy();
-    } finally {
-      release();
-    }
+    const instance = await this.instance?.catch(() => undefined);
+    // Only drops this adapter's handle; the database closes, and its file lock
+    // is freed, once no other adapter shares it through the cache.
+    instance?.closeSync();
+    this.instance = undefined;
+    await this.knex.destroy();
   }
 }

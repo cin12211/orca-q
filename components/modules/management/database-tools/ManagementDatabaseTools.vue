@@ -38,7 +38,7 @@ const isDuckDbConnection = computed(
 
 const unavailableReason = computed(() => {
   if (isDuckDbConnection.value) {
-    return 'DuckDB beta does not support backup and schema diff yet.';
+    return 'DuckDB beta does not support backup yet.';
   }
 
   if (
@@ -128,9 +128,7 @@ const openDatabaseTools = async () => {
         <!-- Schema Diff -->
         <button
           class="w-full flex items-center gap-3 rounded-lg border bg-background p-3 text-left transition-colors hover:bg-muted/20 disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
-          :disabled="
-            !hasConnection || isManagedSqliteLimited || isDuckDbConnection
-          "
+          :disabled="!hasConnection || isManagedSqliteLimited"
           @click="openSchemaDiffTab()"
         >
           <Button size="iconMd" variant="outline">

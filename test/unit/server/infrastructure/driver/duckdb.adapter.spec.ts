@@ -56,12 +56,12 @@ describe('DuckDbAdapter', () => {
   it('keeps session state across queries', async () => {
     adapter = new DuckDbAdapter(':memory:');
 
-    await adapter.rawQuery('CREATE TEMP TABLE session_scoped (id INTEGER)');
-    await adapter.rawQuery('INSERT INTO session_scoped VALUES (1)');
+    await adapter.rawOut('CREATE TEMP TABLE session_scoped (id INTEGER)');
+    await adapter.rawOut('INSERT INTO session_scoped VALUES (1)');
 
     await expect(
-      adapter.rawQuery('SELECT id FROM session_scoped')
-    ).resolves.toEqual([{ id: 1 }]);
+      adapter.rawOut('SELECT id FROM session_scoped')
+    ).resolves.toMatchObject({ rows: [[1]] });
   });
 
   it('serializes types JSON cannot carry losslessly', async () => {
@@ -133,11 +133,43 @@ describe('DuckDbAdapter', () => {
     await connection.run('BEGIN TRANSACTION');
     await connection.run('INSERT INTO t VALUES (1)');
 
-    const pending = adapter.rawQuery('SELECT COUNT(*) AS total FROM t');
+    const pending = adapter.rawOut('SELECT COUNT(*) AS total FROM t');
     await connection.run('ROLLBACK');
     await adapter.releaseRawConnection();
 
-    await expect(pending).resolves.toEqual([{ total: '0' }]);
+    await expect(pending).resolves.toMatchObject({ rows: [['0']] });
+  });
+
+  it('keeps browsing responsive while a long query runs', async () => {
+    adapter = new DuckDbAdapter(':memory:');
+
+    const longQuery = adapter.rawOut(
+      'SELECT COUNT(*) FROM range(100000000000) a, range(1000) b'
+    );
+    await new Promise(resolve => setTimeout(resolve, 100));
+
+    await expect(adapter.rawQuery('SELECT 1 AS ok')).resolves.toEqual([
+      { ok: 1 },
+    ]);
+
+    await adapter.interruptQuery();
+    await expect(longQuery).rejects.toThrow(/interrupt/i);
+  });
+
+  it('frees the query session when a stream is abandoned', async () => {
+    adapter = new DuckDbAdapter(':memory:');
+
+    for await (const event of adapter.streamResult(
+      'SELECT * FROM range(100000)'
+    )) {
+      if (event.type === 'rows') {
+        break;
+      }
+    }
+
+    await expect(adapter.rawOut('SELECT 1 AS ok')).resolves.toMatchObject({
+      rows: [[1]],
+    });
   });
 
   it('recovers after a failed statement', async () => {

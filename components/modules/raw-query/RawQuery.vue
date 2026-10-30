@@ -54,18 +54,16 @@ const isRedisConnection = computed(
   () => connection.value?.type === DatabaseClientType.REDIS
 );
 const isFormatSupported = computed(() => !isRedisConnection.value);
-const isFileDatabaseConnection = computed(() =>
-  [
-    DatabaseClientType.SQLITE3,
-    DatabaseClientType.BETTER_SQLITE3,
-    DatabaseClientType.DUCKDB,
-  ].includes(connection.value?.type as DatabaseClientType)
+const isSqliteConnection = computed(() =>
+  [DatabaseClientType.SQLITE3, DatabaseClientType.BETTER_SQLITE3].includes(
+    connection.value?.type as DatabaseClientType
+  )
 );
 const isVariableSupported = computed(
   () =>
     props.isSupportVariable &&
     !isRedisConnection.value &&
-    !isFileDatabaseConnection.value
+    !isSqliteConnection.value
 );
 const isExplainSupported = computed(
   () => connection.value?.type === DatabaseClientType.POSTGRES
@@ -382,7 +380,7 @@ onBeforeUnmount(() => {
           <BaseEmpty
             v-if="!isVariableSupported"
             title="Variables not supported"
-            desc="Variables are not available for Redis, SQLite and DuckDB connections."
+            desc="Variables are not available for Redis and SQLite connections."
             icon="icons:ghost"
           />
 
