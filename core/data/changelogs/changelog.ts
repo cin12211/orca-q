@@ -10,6 +10,7 @@ export interface ChangelogEntry {
 // Define changelog versions and their metadata
 // The markdown content will be imported at build time
 export const changelogMeta: Array<{ version: string; date: string }> = [
+  { version: '1.1.15', date: '2026-10-31' },
   { version: '1.1.14', date: '2026-10-21' },
   { version: '1.1.13', date: '2026-09-19' },
   { version: '1.1.12', date: '2026-09-08' },
