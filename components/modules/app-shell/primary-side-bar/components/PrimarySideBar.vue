@@ -12,6 +12,7 @@ import {
   ManagementRabbitBrowser,
   ManagementKafkaBrowser,
   ManagementBrokerTools,
+  ManagementRabbitUsers,
 } from '#components';
 import {
   getConnectionCapabilityProfile,
@@ -81,6 +82,7 @@ watch(
   }
 );
 
+//TODO: refactor let remove check by currentFamily.value,currentFamily.value only keep activityStore.activityActive
 const current = computed(() => {
   if (currentFamily.value === EConnectionFamily.MONGODB) {
     if (activityStore.activityActive === ActivityBarItemType.Schemas) {
@@ -102,6 +104,13 @@ const current = computed(() => {
 
     if (activityStore.activityActive === ActivityBarItemType.DatabaseTools) {
       return ManagementBrokerTools;
+    }
+
+    if (
+      activityStore.activityActive === ActivityBarItemType.UsersRoles &&
+      currentFamily.value === EConnectionFamily.RABBITMQ
+    ) {
+      return ManagementRabbitUsers;
     }
 
     return null;

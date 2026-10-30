@@ -3,7 +3,7 @@ import {
   BrokerMessageDetail,
   BrokerMessageTable,
   getBrokerErrorMessage,
-} from '~/components/modules/message-broker';
+} from '~/components/modules/shared/message-broker';
 import { useCopyToClipboard } from '~/core/composables/useCopyToClipboard';
 import type { Connection } from '~/core/stores';
 import type { BrokerMessage } from '~/core/types/broker-message.types';
@@ -55,8 +55,8 @@ const peek = async () => {
 
     <div class="flex flex-wrap items-center gap-2 text-xs">
       <Label for="rabbit-peek-count">Messages</Label>
-      <Select v-model="count">
-        <SelectTrigger id="rabbit-peek-count" size="sm" class="w-20">
+      <Select v-model="count" size="xxs">
+        <SelectTrigger id="rabbit-peek-count" size="xxs" class="w-20">
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
@@ -96,7 +96,6 @@ const peek = async () => {
       v-if="hasLoaded && !messages.length && !error"
       title="Queue is empty"
       desc="There are no ready messages to peek."
-      icon="hugeicons:inbox"
     />
 
     <div

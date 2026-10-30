@@ -78,6 +78,22 @@ await api('PUT', `/permissions/${v}/orcaq_viewer`, {
   read: '.*',
 });
 
+// Policies and limits for the Instance Insights tabs.
+await api('PUT', `/policies/${v}/orders-max-length`, {
+  pattern: '^orders\\.',
+  'apply-to': 'queues',
+  priority: 1,
+  definition: { 'max-length': 100000 },
+});
+await api('PUT', `/operator-policies/${v}/cap-length`, {
+  pattern: '.*',
+  'apply-to': 'queues',
+  priority: 0,
+  definition: { 'max-length': 1000000 },
+});
+await api('PUT', `/vhost-limits/${v}/max-connections`, { value: 500 });
+await api('PUT', '/user-limits/orcaq_viewer/max-channels', { value: 50 });
+
 const exchanges = [
   ['orders.direct', 'direct'],
   ['events.topic', 'topic'],
@@ -124,6 +140,13 @@ for (const [source, queue, routingKey] of bindings) {
     { routing_key: routingKey, arguments: {} }
   );
 }
+
+// A topic permission so the Users & Permissions view has something to show.
+await api('PUT', `/topic-permissions/${v}/orcaq_viewer`, {
+  exchange: 'events.topic',
+  write: '',
+  read: '^audit\\..*',
+});
 
 async function publish(exchange, routingKey, payload, extra = {}) {
   await api('POST', `/exchanges/${v}/${encodeURIComponent(exchange)}/publish`, {

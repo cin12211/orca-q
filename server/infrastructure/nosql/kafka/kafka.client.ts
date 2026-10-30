@@ -99,6 +99,24 @@ export async function withKafkaAdmin<T>(
   }
 }
 
+/**
+ * Topic metadata, with the client's "Unknown topic <name>." error turned
+ * into a readable not-found error instead of a generic connection failure.
+ */
+export async function readKafkaTopicMetadata(admin: Admin, topics: string[]) {
+  try {
+    return await admin.metadata({ topics });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : '';
+    const missing = topics.find(topic =>
+      message.startsWith(`Unknown topic ${topic}`)
+    );
+
+    if (missing === undefined) throw error;
+    throw new BrokerConnectionError(`Topic "${missing}" was not found.`);
+  }
+}
+
 export async function createKafkaReader(
   input: BrokerConnectionInput
 ): Promise<Consumer> {

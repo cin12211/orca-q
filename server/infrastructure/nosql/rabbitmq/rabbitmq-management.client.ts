@@ -15,6 +15,8 @@ type QueryValue = string | number | boolean | undefined;
 export interface RabbitManagementClient {
   get: <T>(path: string, query?: Record<string, QueryValue>) => Promise<T>;
   post: <T>(path: string, body: unknown) => Promise<T>;
+  put: <T>(path: string, body: unknown) => Promise<T>;
+  delete: <T>(path: string, headers?: Record<string, string>) => Promise<T>;
   close: () => Promise<void>;
 }
 
@@ -103,7 +105,12 @@ export async function createRabbitManagementClient(
     `${input.username ?? ''}:${input.password ?? ''}`
   ).toString('base64')}`;
 
-  const request = <T>(method: 'GET' | 'POST', path: string, body?: unknown) =>
+  const request = <T>(
+    method: 'GET' | 'POST' | 'PUT' | 'DELETE',
+    path: string,
+    body?: unknown,
+    extraHeaders: Record<string, string> = {}
+  ) =>
     new Promise<T>((resolve, reject) => {
       const payload = body === undefined ? undefined : JSON.stringify(body);
       const req = transport.request(
@@ -117,8 +124,10 @@ export async function createRabbitManagementClient(
           agent: false,
           timeout: REQUEST_TIMEOUT_MS,
           headers: {
+            ...extraHeaders,
             authorization,
-            accept: 'application/json',
+            // Some endpoints (user-limits) answer 406 to a strict JSON accept.
+            accept: 'application/json, */*',
             ...(payload
               ? {
                   'content-type': 'application/json',
@@ -179,6 +188,8 @@ export async function createRabbitManagementClient(
   return {
     get: (path, query) => request('GET', `${path}${buildQueryString(query)}`),
     post: (path, body) => request('POST', path, body),
+    put: (path, body) => request('PUT', path, body),
+    delete: (path, headers) => request('DELETE', path, undefined, headers),
     close: async () => {
       if (closeTunnel) await closeTunnel();
     },
@@ -196,4 +207,33 @@ export async function withRabbitManagement<T>(
   } finally {
     await client.close();
   }
+}
+
+/** Admin-only endpoints answer 401 "Not administrator" to other users. */
+export const isRabbitPermissionError = (error: unknown) =>
+  error instanceof BrokerConnectionError &&
+  (error.code === 'RABBITMQ_401' || error.code === 'RABBITMQ_403');
+
+/**
+ * Run a change that needs a management tag and explain a 401/403 instead of
+ * showing the raw "Not administrator" answer.
+ */
+export function withRabbitTaggedAction<T>(
+  input: BrokerConnectionInput,
+  action: string,
+  run: (client: RabbitManagementClient) => Promise<T>,
+  requiredTag = 'administrator'
+) {
+  return withRabbitManagement(input, async client => {
+    try {
+      return await run(client);
+    } catch (error) {
+      if (!isRabbitPermissionError(error)) throw error;
+      throw new BrokerConnectionError(
+        `${action} needs the "${requiredTag}" tag on this RabbitMQ user.`,
+        undefined,
+        'RABBITMQ_FORBIDDEN'
+      );
+    }
+  });
 }

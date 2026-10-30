@@ -10,6 +10,9 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { BROKER_CONNECTION_METHODS } from '../../hooks/useBrokerConnectionForm';
+import { EConnectionMethod } from '../../types';
 import ConnectionStatusSection from '../ConnectionStatusSection.vue';
 
 const props = defineProps<{
@@ -21,6 +24,8 @@ const props = defineProps<{
   errorMessage?: string;
   errorHint?: string;
   errorDetail?: string;
+  connectionStringExample: string;
+  connectionStringError?: string;
 }>();
 
 const emit = defineEmits<{
@@ -33,6 +38,12 @@ const connectionName = defineModel<string>('connectionName', {
   required: true,
 });
 const tagIds = defineModel<string[]>('tagIds', { required: true });
+const connectionMethod = defineModel<EConnectionMethod>('connectionMethod', {
+  required: true,
+});
+const connectionString = defineModel<string>('connectionString', {
+  required: true,
+});
 
 const statusSectionRef = ref<HTMLElement | null>(null);
 
@@ -63,30 +74,74 @@ watch(
     </DialogHeader>
 
     <div class="flex-1 overflow-y-auto p-4 space-y-4">
-      <div class="grid grid-cols-3 gap-3">
-        <div class="col-span-2 space-y-2">
-          <Label for="broker-connection-name" class="flex items-center gap-2">
-            <Icon
-              name="hugeicons:database"
-              class="h-3.5 w-3.5 text-muted-foreground"
-            />
-            Connection Name <span class="text-destructive">*</span>
-          </Label>
-          <Input id="broker-connection-name" v-model="connectionName" />
-        </div>
-        <div class="col-span-1 space-y-2">
-          <Label class="flex items-center gap-2">
-            <Icon
-              name="hugeicons:tag-01"
-              class="h-3.5 w-3.5 text-muted-foreground"
-            />
-            Environment Tags
-          </Label>
-          <EnvTagPicker v-model="tagIds" />
-        </div>
-      </div>
+      <Tabs v-model="connectionMethod" class="w-full">
+        <TabsList class="grid w-fit grid-cols-2">
+          <TabsTrigger
+            v-for="method in BROKER_CONNECTION_METHODS"
+            :key="method"
+            :value="method"
+            class="cursor-pointer"
+          >
+            {{
+              method === EConnectionMethod.STRING
+                ? 'Connection String'
+                : 'Connection Form'
+            }}
+          </TabsTrigger>
+        </TabsList>
 
-      <slot />
+        <div class="grid grid-cols-3 gap-3 mt-2">
+          <div class="col-span-2 space-y-2">
+            <Label for="broker-connection-name" class="flex items-center gap-2">
+              <Icon
+                name="hugeicons:database"
+                class="h-3.5 w-3.5 text-muted-foreground"
+              />
+              Connection Name <span class="text-destructive">*</span>
+            </Label>
+            <Input id="broker-connection-name" v-model="connectionName" />
+          </div>
+          <div class="col-span-1 space-y-2">
+            <Label class="flex items-center gap-2">
+              <Icon
+                name="hugeicons:tag-01"
+                class="h-3.5 w-3.5 text-muted-foreground"
+              />
+              Environment Tags
+            </Label>
+            <EnvTagPicker v-model="tagIds" />
+          </div>
+        </div>
+
+        <TabsContent :value="EConnectionMethod.STRING" class="space-y-2 pt-4">
+          <Label for="broker-connection-string" class="flex items-center gap-2">
+            <Icon
+              name="hugeicons:connect"
+              class="h-3.5 w-3.5 text-muted-foreground"
+            />
+            Connection String <span class="text-destructive">*</span>
+          </Label>
+          <Input
+            id="broker-connection-string"
+            v-model="connectionString"
+            :placeholder="connectionStringExample"
+            class="font-mono text-sm"
+          />
+          <p v-if="connectionStringError" class="text-xs text-destructive">
+            {{ connectionStringError }}
+          </p>
+          <p v-else class="text-xs text-muted-foreground">
+            Example: {{ connectionStringExample }}
+          </p>
+          <slot name="string-help" />
+        </TabsContent>
+
+        <TabsContent :value="EConnectionMethod.FORM" class="space-y-4 pt-4">
+          <slot />
+        </TabsContent>
+      </Tabs>
+
+      <slot name="network" />
 
       <div ref="statusSectionRef">
         <ConnectionStatusSection

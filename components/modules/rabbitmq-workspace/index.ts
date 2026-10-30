@@ -1,5 +1,15 @@
-export { default as RabbitWorkspace } from './RabbitWorkspace.vue';
-export { RabbitOverviewPanel } from './components';
-export { isBuiltInRabbitExchange } from './constants';
-export { useRabbitTabs } from './hooks';
+export { RabbitInstanceInsightsPanel, RabbitWorkspace } from './containers';
+export { RabbitCreateUserDialog, RabbitDeleteUserDialog } from './components';
+export {
+  isBuiltInRabbitExchange,
+  RABBIT_ICON_CLASS,
+  RABBIT_TAB_ICONS,
+  RABBIT_USER_GROUPS,
+} from './constants';
+export {
+  useRabbitTabs,
+  useRabbitUserActions,
+  useRabbitUsersChanged,
+} from './hooks';
 export { rabbitmqService } from './services';
+export { getRabbitUserAppearance, getRabbitUserGroupId } from './utils';

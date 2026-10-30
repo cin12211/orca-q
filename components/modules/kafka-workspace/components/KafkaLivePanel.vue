@@ -3,7 +3,7 @@ import {
   BrokerMessageDetail,
   BrokerMessageTable,
   useBrokerRequest,
-} from '~/components/modules/message-broker';
+} from '~/components/modules/shared/message-broker';
 import type { Connection } from '~/core/stores';
 import type { BrokerMessage } from '~/core/types/broker-message.types';
 import { useKafkaLive } from '../hooks';

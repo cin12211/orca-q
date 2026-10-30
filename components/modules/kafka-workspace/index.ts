@@ -1,4 +1,3 @@
-export { default as KafkaWorkspace } from './KafkaWorkspace.vue';
-export { KafkaOverviewPanel } from './components';
+export { KafkaInstanceInsightsPanel, KafkaWorkspace } from './containers';
 export { useKafkaTabs } from './hooks';
 export { kafkaService } from './services';

@@ -131,6 +131,9 @@ Prefer Tailwind utilities. Use `<style scoped>` only for complex styles not achi
 - Redis hides SQL-only surfaces: `Schemas`, `ERD`, `UsersRoles`, schema diff, SQL backup/restore
 - RabbitMQ and Kafka have their own families: the Schemas activity shows the broker browser, Database Tools shows broker tools; no SQL surfaces
 - Broker features stay non-destructive: browse, peek (RabbitMQ requeues, Kafka reads without committing), and test publish/produce guarded by Strict Mode. No delete, purge or offset reset
+- Exception: RabbitMQ Instance Insights can add/edit/delete virtual hosts and policies (user and operator), set/clear vhost and user limits, enable feature flags, force-close connections and rename the cluster, all guarded by Strict Mode; deleting a vhost needs its name typed
+- Exception: RabbitMQ Users & Permissions supports full user management (create, edit tags/password, set/clear permissions, topic permissions and user limits, delete user) for `administrator` users, guarded by Strict Mode; deleting needs the user name typed, and the connected user can neither delete itself nor drop its own `administrator` tag
+- The built-in MCP server (desktop only) serves RabbitMQ and Kafka through read-only `rabbitmq_*` / `kafka_*` tools (overview, queues, exchanges, peek, users, policies; topics, read messages, consumer groups). `list_connections` reports each connection's `family` (`sql`, `rabbitmq`, `kafka`). Broker tools never write, whatever the session's access level
 - Provider-limited SQL tools for D1/Turso must show clear unavailable state instead of redirecting away from SQL family
 
 ### Workspaces

@@ -5,9 +5,9 @@ import {
   formatMessageRate,
   useAutoRefresh,
   useBrokerRequest,
-} from '~/components/modules/message-broker';
+} from '~/components/modules/shared/message-broker';
 import type { Connection } from '~/core/stores';
-import { RABBIT_DEFAULT_EXCHANGE_LABEL } from '../constants';
+import { RABBIT_DEFAULT_EXCHANGE_LABEL, RABBIT_TAB_ICONS } from '../constants';
 import { useRabbitTabs } from '../hooks';
 import { rabbitmqService } from '../services';
 import RabbitBindingsTable from './RabbitBindingsTable.vue';
@@ -34,7 +34,7 @@ onMounted(() => exchange.load());
 <template>
   <div class="flex h-full min-h-0 flex-col gap-3 overflow-y-auto p-3">
     <ToolPageHeader
-      icon="hugeicons:arrow-data-transfer-horizontal"
+      :icon="RABBIT_TAB_ICONS.exchange"
       :title="exchangeName || RABBIT_DEFAULT_EXCHANGE_LABEL"
     >
       <template #context>

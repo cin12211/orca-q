@@ -4,7 +4,7 @@ import {
   BrokerMessageTable,
   getBrokerErrorMessage,
   previewBrokerPayload,
-} from '~/components/modules/message-broker';
+} from '~/components/modules/shared/message-broker';
 import { useCopyToClipboard } from '~/core/composables/useCopyToClipboard';
 import type { Connection } from '~/core/stores';
 import type { BrokerMessage } from '~/core/types/broker-message.types';

@@ -9,7 +9,7 @@ import type { ConnectionHealthCheckResult } from './connection.service';
 
 export interface BrokerHealthCheckBody {
   type: DatabaseClientType.RABBITMQ | DatabaseClientType.KAFKA;
-  method: EConnectionMethod.FORM;
+  method: EConnectionMethod.FORM | EConnectionMethod.STRING;
   host?: string;
   port?: string;
   username?: string;

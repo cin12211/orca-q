@@ -11,7 +11,7 @@ import {
   formatNumber,
   useAutoRefresh,
   useBrokerRequest,
-} from '~/components/modules/message-broker';
+} from '~/components/modules/shared/message-broker';
 import type { Connection } from '~/core/stores';
 import { useKafkaTabs } from '../hooks';
 import { kafkaService } from '../services';

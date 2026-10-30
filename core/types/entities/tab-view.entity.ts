@@ -29,6 +29,8 @@ export enum TabViewType {
   RabbitQueueDetail = 'RabbitQueueDetail',
   RabbitExchangeDetail = 'RabbitExchangeDetail',
   RabbitConnections = 'RabbitConnections',
+  RabbitUserDetail = 'RabbitUserDetail',
+  RabbitDefinitions = 'RabbitDefinitions',
   KafkaTopicList = 'KafkaTopicList',
   KafkaTopicDetail = 'KafkaTopicDetail',
   KafkaConsumerGroupList = 'KafkaConsumerGroupList',
@@ -135,6 +137,16 @@ export interface RabbitExchangeDetailMetadata extends BaseTabMetadata {
   exchangeName: string;
 }
 
+export interface RabbitUserDetailMetadata extends BaseTabMetadata {
+  type: TabViewType.RabbitUserDetail;
+  userName: string;
+}
+
+export interface RabbitDefinitionsMetadata extends BaseTabMetadata {
+  type: TabViewType.RabbitDefinitions;
+  mode: 'export' | 'import';
+}
+
 export interface KafkaTopicDetailMetadata extends BaseTabMetadata {
   type: TabViewType.KafkaTopicDetail;
   topicName: string;
@@ -160,6 +172,8 @@ export type TabMetadata =
   | RabbitQueueListMetadata
   | RabbitQueueDetailMetadata
   | RabbitExchangeDetailMetadata
+  | RabbitUserDetailMetadata
+  | RabbitDefinitionsMetadata
   | KafkaTopicDetailMetadata
   | KafkaConsumerGroupDetailMetadata
   | BaseTabMetadata;

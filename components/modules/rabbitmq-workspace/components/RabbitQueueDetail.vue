@@ -18,8 +18,9 @@ import {
   formatSeconds,
   useAutoRefresh,
   useBrokerRequest,
-} from '~/components/modules/message-broker';
+} from '~/components/modules/shared/message-broker';
 import type { Connection } from '~/core/stores';
+import { RABBIT_TAB_ICONS } from '../constants';
 import { useRabbitTabs } from '../hooks';
 import { rabbitmqService } from '../services';
 import RabbitBindingsTable from './RabbitBindingsTable.vue';
@@ -55,15 +56,12 @@ const drainText = computed(() => {
 const hasBacklogWithoutConsumers = computed(
   () => (data.value?.messagesReady ?? 0) > 0 && data.value?.consumers === 0
 );
-const sampleValues = (items?: { value: number }[]) =>
-  items?.map(item => item.value) ?? [];
-
 onMounted(() => queue.load());
 </script>
 
 <template>
   <div class="flex h-full min-h-0 flex-col gap-3 overflow-hidden p-3">
-    <ToolPageHeader icon="hugeicons:inbox" :title="queueName">
+    <ToolPageHeader :icon="RABBIT_TAB_ICONS.queue" :title="queueName">
       <template #context>
         <span class="font-mono">vhost {{ vhost }}</span>
         <template v-if="data">
@@ -160,21 +158,18 @@ onMounted(() => queue.load());
         </div>
 
         <div class="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-          <BrokerSparkline
-            label="Ready"
-            :values="sampleValues(data?.samples.ready)"
-          />
+          <BrokerSparkline label="Ready" :samples="data?.samples.ready ?? []" />
           <BrokerSparkline
             label="Unacked"
-            :values="sampleValues(data?.samples.unacknowledged)"
+            :samples="data?.samples.unacknowledged ?? []"
           />
           <BrokerSparkline
             label="Publish /s"
-            :values="sampleValues(data?.samples.publish)"
+            :samples="data?.samples.publish ?? []"
           />
           <BrokerSparkline
             label="Deliver /s"
-            :values="sampleValues(data?.samples.deliver)"
+            :samples="data?.samples.deliver ?? []"
           />
         </div>
 

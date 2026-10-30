@@ -92,6 +92,8 @@ const RABBITMQ_TAB_TYPES = [
   TabViewType.RabbitQueueDetail,
   TabViewType.RabbitExchangeDetail,
   TabViewType.RabbitConnections,
+  TabViewType.RabbitUserDetail,
+  TabViewType.RabbitDefinitions,
 ] as const;
 
 const KAFKA_TAB_TYPES = [
@@ -106,7 +108,6 @@ const KAFKA_TAB_TYPES = [
 
 const MESSAGE_BROKER_HIDDEN_REASONS = {
   ERDiagram: 'ER diagrams are not available for message brokers.',
-  UsersRoles: 'Users & Roles is not available for message brokers.',
   Explorer: 'Query files are not available for message brokers.',
   Agent: 'AI Agent is not available for message brokers yet.',
 } as const;
@@ -176,7 +177,7 @@ export const CONNECTION_CAPABILITY_REGISTRY: Record<
   },
   [EConnectionFamily.RABBITMQ]: {
     family: EConnectionFamily.RABBITMQ,
-    visibleActivityItems: ['Schemas', 'DatabaseTools'],
+    visibleActivityItems: ['Schemas', 'UsersRoles', 'DatabaseTools'],
     allowedTabTypes: [...RABBITMQ_TAB_TYPES],
     defaultActivityItem: 'Schemas',
     primaryQuerySurface: 'quick-query',
@@ -184,7 +185,7 @@ export const CONNECTION_CAPABILITY_REGISTRY: Record<
     supportsQueryFiles: false,
     supportsSchemaTree: false,
     supportsErd: false,
-    supportsUsersRoles: false,
+    supportsUsersRoles: true,
     supportsDatabaseTools: true,
     hiddenFeatureReasons: { ...MESSAGE_BROKER_HIDDEN_REASONS },
   },
@@ -200,7 +201,10 @@ export const CONNECTION_CAPABILITY_REGISTRY: Record<
     supportsErd: false,
     supportsUsersRoles: false,
     supportsDatabaseTools: true,
-    hiddenFeatureReasons: { ...MESSAGE_BROKER_HIDDEN_REASONS },
+    hiddenFeatureReasons: {
+      ...MESSAGE_BROKER_HIDDEN_REASONS,
+      UsersRoles: 'Users & Roles is not available for Kafka connections.',
+    },
   },
 };
 

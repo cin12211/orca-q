@@ -15,7 +15,11 @@ import {
 } from './kafka-message.service';
 import { KAFKA_LATEST_TIMESTAMP, listPartitionOffsets } from './kafka-offsets';
 import { decodeRecordBatches } from './kafka-record';
-import { createKafkaReader, withKafkaAdmin } from './kafka.client';
+import {
+  createKafkaReader,
+  readKafkaTopicMetadata,
+  withKafkaAdmin,
+} from './kafka.client';
 
 const MAX_BUFFERED_MESSAGES = 500;
 const MAX_LIVE_SESSIONS = 20;
@@ -134,7 +138,7 @@ export async function startKafkaLive(
   }
 
   const { targets, ends } = await withKafkaAdmin(input, async admin => {
-    const metadata = await admin.metadata({ topics: [options.topic] });
+    const metadata = await readKafkaTopicMetadata(admin, [options.topic]);
     const resolved = resolveFetchTargets(
       options.topic,
       metadata.topics.get(options.topic),

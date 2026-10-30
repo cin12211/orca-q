@@ -1,7 +1,11 @@
 import { useTabManagement } from '~/core/composables/useTabManagement';
 import { useManagementConnectionStore } from '~/core/stores';
 import { TabViewType } from '~/core/types/entities/tab-view.entity';
-import { RABBIT_DEFAULT_EXCHANGE_LABEL, RABBIT_TAB_ICONS } from '../constants';
+import {
+  RABBIT_DEFAULT_EXCHANGE_LABEL,
+  RABBIT_ICON_CLASS,
+  RABBIT_TAB_ICONS,
+} from '../constants';
 
 /** Tab ids include the connection so two brokers never share a tab. */
 export function useRabbitTabs() {
@@ -9,6 +13,8 @@ export function useRabbitTabs() {
   const connectionStore = useManagementConnectionStore();
   const connectionId = () =>
     connectionStore.selectedConnection?.id ?? 'rabbitmq';
+  const userTabId = (userName: string) =>
+    `rabbit-user-${connectionId()}-${userName}`;
 
   const openQueue = (vhost: string, queueName: string) =>
     openBrokerTab({
@@ -16,7 +22,7 @@ export function useRabbitTabs() {
       name: queueName,
       type: TabViewType.RabbitQueueDetail,
       icon: RABBIT_TAB_ICONS.queue,
-      iconClass: 'text-orange-500',
+      iconClass: RABBIT_ICON_CLASS,
       metadata: { vhost, queueName },
     });
 
@@ -26,7 +32,7 @@ export function useRabbitTabs() {
       name: exchangeName || RABBIT_DEFAULT_EXCHANGE_LABEL,
       type: TabViewType.RabbitExchangeDetail,
       icon: RABBIT_TAB_ICONS.exchange,
-      iconClass: 'text-orange-500',
+      iconClass: RABBIT_ICON_CLASS,
       metadata: { vhost, exchangeName },
     });
 
@@ -39,6 +45,29 @@ export function useRabbitTabs() {
       metadata: { vhost },
     });
 
+  const openUser = (
+    userName: string,
+    appearance: { icon: string; iconClass: string } = {
+      icon: RABBIT_TAB_ICONS.user,
+      iconClass: RABBIT_ICON_CLASS,
+    }
+  ) =>
+    openBrokerTab({
+      id: userTabId(userName),
+      name: userName,
+      type: TabViewType.RabbitUserDetail,
+      ...appearance,
+      metadata: { userName },
+    });
+
+  const openDefinitions = () =>
+    openBrokerTab({
+      id: `rabbit-definitions-${connectionId()}`,
+      name: 'Management Definitions',
+      type: TabViewType.RabbitDefinitions,
+      icon: RABBIT_TAB_ICONS.definitions,
+    });
+
   const openConnections = () =>
     openBrokerTab({
       id: `rabbit-connections-${connectionId()}`,
@@ -47,5 +76,13 @@ export function useRabbitTabs() {
       icon: RABBIT_TAB_ICONS.connections,
     });
 
-  return { openQueue, openExchange, openQueueList, openConnections };
+  return {
+    openQueue,
+    openExchange,
+    openQueueList,
+    openConnections,
+    openUser,
+    openDefinitions,
+    userTabId,
+  };
 }

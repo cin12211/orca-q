@@ -1,13 +1,16 @@
 import type {
   RabbitBinding,
   RabbitChannelSummary,
+  RabbitChurnRates,
   RabbitConnectionSummary,
   RabbitConsumer,
   RabbitExchangeSummary,
+  RabbitListener,
   RabbitMessageRates,
   RabbitNode,
   RabbitQueueSummary,
   RabbitRateSample,
+  RabbitWebContext,
 } from '~/core/types/rabbitmq.types';
 
 /** Raw Management API JSON. Fields vary by version and stats mode. */
@@ -40,6 +43,22 @@ export const asNullableNumber = (value: unknown) => {
 export const asString = (value: unknown, fallback = '') =>
   typeof value === 'string' ? value : fallback;
 
+export const asArray = (value: unknown): RawRecord[] =>
+  Array.isArray(value) ? value.map(asRecord) : [];
+
+/** Tags arrive as an array (4.x) or a comma separated string (3.x). */
+export const asTagList = (value: unknown) =>
+  Array.isArray(value)
+    ? value.map(tag => String(tag)).filter(Boolean)
+    : String(value ?? '')
+        .split(',')
+        .map(tag => tag.trim())
+        .filter(Boolean);
+
+/** TLS listeners report protocols such as `amqp/ssl`, `https` or `mqtt/ssl`. */
+const isTlsProtocol = (protocol: string) =>
+  protocol.endsWith('/ssl') || protocol === 'https';
+
 const rateOf = (stats: RawRecord, key: string) =>
   asNullableNumber(asRecord(stats[`${key}_details`]).rate);
 
@@ -51,6 +70,44 @@ export function mapMessageRates(messageStats: unknown): RabbitMessageRates {
     deliver: rateOf(stats, 'deliver_get'),
     ack: rateOf(stats, 'ack'),
     redeliver: rateOf(stats, 'redeliver'),
+    confirm: rateOf(stats, 'confirm'),
+    get: rateOf(stats, 'get'),
+    getEmpty: rateOf(stats, 'get_empty'),
+    returnUnroutable: rateOf(stats, 'return_unroutable'),
+    dropUnroutable: rateOf(stats, 'drop_unroutable'),
+  };
+}
+
+export function mapChurnRates(churn: unknown): RabbitChurnRates {
+  const stats = asRecord(churn);
+
+  return {
+    connectionCreated: rateOf(stats, 'connection_created'),
+    connectionClosed: rateOf(stats, 'connection_closed'),
+    channelCreated: rateOf(stats, 'channel_created'),
+    channelClosed: rateOf(stats, 'channel_closed'),
+    queueDeclared: rateOf(stats, 'queue_declared'),
+    queueCreated: rateOf(stats, 'queue_created'),
+    queueDeleted: rateOf(stats, 'queue_deleted'),
+  };
+}
+
+export function mapListener(raw: RawRecord): RabbitListener {
+  return {
+    node: asString(raw.node),
+    protocol: asString(raw.protocol),
+    ipAddress: asString(raw.ip_address),
+    port: asNumber(raw.port),
+    isTls: isTlsProtocol(asString(raw.protocol)),
+  };
+}
+
+export function mapWebContext(raw: RawRecord): RabbitWebContext {
+  return {
+    description: asString(raw.description),
+    path: asString(raw.path),
+    port: String(raw.port ?? ''),
+    isTls: Boolean(raw.ssl) || isTlsProtocol(asString(raw.protocol)),
   };
 }
 
@@ -112,6 +169,9 @@ export function mapNode(raw: RawRecord): RabbitNode {
     processesUsed: asNumber(raw.proc_used),
     processesTotal: asNumber(raw.proc_total),
     uptimeMs: asNumber(raw.uptime),
+    type: asString(raw.type, 'disc'),
+    cores: asNullableNumber(raw.processors),
+    runQueue: asNullableNumber(raw.run_queue),
   };
 }
 
@@ -222,8 +282,17 @@ export function mapChannel(raw: RawRecord): RabbitChannelSummary {
     vhost: asString(raw.vhost),
     number: asNumber(raw.number),
     state: asString(raw.state, 'unknown'),
+    mode: raw.transactional
+      ? 'transactional'
+      : raw.confirm
+        ? 'confirm'
+        : 'normal',
     prefetchCount: asNumber(raw.prefetch_count),
     messagesUnacknowledged: asNumber(raw.messages_unacknowledged),
+    messagesUnconfirmed: asNumber(raw.messages_unconfirmed),
+    messagesUncommitted: asNumber(raw.messages_uncommitted),
+    acksUncommitted: asNumber(raw.acks_uncommitted),
     consumerCount: asNumber(raw.consumer_count),
+    rates: mapMessageRates(raw.message_stats),
   };
 }

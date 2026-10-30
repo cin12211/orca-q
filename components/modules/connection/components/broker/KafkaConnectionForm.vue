@@ -13,7 +13,10 @@ import { Textarea } from '@/components/ui/textarea';
 import { DatabaseClientType } from '~/core/constants/database-client-type';
 import type { Connection } from '~/core/stores';
 import { KAFKA_SASL_MECHANISM_OPTIONS } from '../../constants';
-import { useBrokerConnectionForm } from '../../hooks/useBrokerConnectionForm';
+import {
+  BROKER_CONNECTION_STRING_EXAMPLE,
+  useBrokerConnectionForm,
+} from '../../hooks/useBrokerConnectionForm';
 import ConnectionSSLConfig from '../ConnectionSSLConfig.vue';
 import BrokerConnectionFormShell from './BrokerConnectionFormShell.vue';
 import BrokerPasswordInput from './BrokerPasswordInput.vue';
@@ -32,6 +35,9 @@ const {
   connectionName,
   tagIds,
   formData,
+  connectionMethod,
+  connectionString,
+  connectionStringError,
   needsKafkaCredentials,
   isFormValid,
   testStatus,
@@ -52,6 +58,12 @@ const {
   <BrokerConnectionFormShell
     v-model:connection-name="connectionName"
     v-model:tag-ids="tagIds"
+    v-model:connection-method="connectionMethod"
+    v-model:connection-string="connectionString"
+    :connection-string-example="
+      BROKER_CONNECTION_STRING_EXAMPLE[DatabaseClientType.KAFKA]
+    "
+    :connection-string-error="connectionStringError"
     title="Apache Kafka Connection"
     description="Connect to Kafka 3.5 or newer (Confluent Platform 7.5+, Redpanda and other Kafka-compatible brokers)."
     :is-editing="Boolean(editingConnection)"
@@ -112,17 +124,27 @@ const {
       </div>
     </div>
 
-    <Accordion
-      type="single"
-      collapsible
-      class="w-full border px-4 rounded-lg shadow"
-    >
-      <ConnectionSSLConfig :form-data="formData" />
-    </Accordion>
+    <template #string-help>
+      <p class="text-xs text-muted-foreground">
+        Use <code>kafka+ssl://</code> or <code>?ssl=true</code> for TLS, and
+        <code>?sasl=PLAIN</code>, <code>SCRAM-SHA-256</code> or
+        <code>SCRAM-SHA-512</code> with credentials.
+      </p>
+    </template>
 
-    <p class="text-xs text-muted-foreground">
-      SSH tunnels are not available for Kafka: clients connect to every broker
-      address the cluster advertises.
-    </p>
+    <template #network>
+      <Accordion
+        type="single"
+        collapsible
+        class="w-full border px-4 rounded-lg shadow"
+      >
+        <ConnectionSSLConfig :form-data="formData" />
+      </Accordion>
+
+      <p class="text-xs text-muted-foreground">
+        SSH tunnels are not available for Kafka: clients connect to every broker
+        address the cluster advertises.
+      </p>
+    </template>
   </BrokerConnectionFormShell>
 </template>

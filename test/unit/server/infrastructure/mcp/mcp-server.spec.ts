@@ -299,4 +299,69 @@ describe('OrcaQ MCP server', () => {
       )
     ).toEqual(['id', 'name']);
   });
+
+  it('registers the read-only RabbitMQ and Kafka tools', async () => {
+    const server = createOrcaqMcpServer(await getSession(SESSION_TOKEN));
+    const client = new Client({ name: 'test', version: '1.0.0' });
+    const [clientTransport, serverTransport] =
+      InMemoryTransport.createLinkedPair();
+    await Promise.all([
+      server.connect(serverTransport),
+      client.connect(clientTransport),
+    ]);
+
+    try {
+      const { tools } = await client.listTools();
+      const brokerTools = tools.filter(tool =>
+        /^(rabbitmq|kafka)_/.test(tool.name)
+      );
+
+      expect(brokerTools.map(tool => tool.name).sort()).toEqual([
+        'kafka_describe_consumer_group',
+        'kafka_describe_topic',
+        'kafka_list_consumer_groups',
+        'kafka_list_topics',
+        'kafka_overview',
+        'kafka_read_messages',
+        'rabbitmq_describe_policy',
+        'rabbitmq_describe_queue',
+        'rabbitmq_describe_user',
+        'rabbitmq_list_exchanges',
+        'rabbitmq_list_policies',
+        'rabbitmq_list_queues',
+        'rabbitmq_list_users',
+        'rabbitmq_overview',
+        'rabbitmq_peek_messages',
+      ]);
+      expect(
+        brokerTools.every(tool => tool.annotations?.readOnlyHint === true)
+      ).toBe(true);
+    } finally {
+      await client.close();
+      await server.close();
+    }
+  });
+
+  it('marks SQL connections with the sql family', async () => {
+    const [connection] = JSON.parse((await callTool('list_connections')).text);
+    expect(connection).toMatchObject({ family: 'sql', supported: true });
+  });
+
+  it('refuses broker tools on a SQL connection', async () => {
+    const { isError, text } = await callTool('rabbitmq_overview', {
+      connectionId: 'conn-ro',
+    });
+
+    expect(isError).toBe(true);
+    expect(text).toContain('is sqlite3, not RabbitMQ');
+  });
+
+  it('hides broker tools from connections outside the session', async () => {
+    const { isError, text } = await callTool('kafka_list_topics', {
+      connectionId: 'conn-off',
+    });
+
+    expect(isError).toBe(true);
+    expect(text).toContain('has no access');
+  });
 });

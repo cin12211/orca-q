@@ -12,7 +12,7 @@ import { useStrictModeGuard } from '~/components/modules/environment-tag';
 import {
   getBrokerErrorMessage,
   parseBrokerHeaders,
-} from '~/components/modules/message-broker';
+} from '~/components/modules/shared/message-broker';
 import type { Connection } from '~/core/stores';
 import { RABBIT_DEFAULT_EXCHANGE_LABEL } from '../constants';
 import { rabbitmqService } from '../services';

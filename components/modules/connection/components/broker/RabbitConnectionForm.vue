@@ -4,7 +4,10 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { DatabaseClientType } from '~/core/constants/database-client-type';
 import type { Connection } from '~/core/stores';
-import { useBrokerConnectionForm } from '../../hooks/useBrokerConnectionForm';
+import {
+  BROKER_CONNECTION_STRING_EXAMPLE,
+  useBrokerConnectionForm,
+} from '../../hooks/useBrokerConnectionForm';
 import ConnectionSSHTunnel from '../ConnectionSSHTunnel.vue';
 import ConnectionSSLConfig from '../ConnectionSSLConfig.vue';
 import BrokerConnectionFormShell from './BrokerConnectionFormShell.vue';
@@ -24,6 +27,9 @@ const {
   connectionName,
   tagIds,
   formData,
+  connectionMethod,
+  connectionString,
+  connectionStringError,
   isFormValid,
   testStatus,
   testErrorMessage,
@@ -43,6 +49,12 @@ const {
   <BrokerConnectionFormShell
     v-model:connection-name="connectionName"
     v-model:tag-ids="tagIds"
+    v-model:connection-method="connectionMethod"
+    v-model:connection-string="connectionString"
+    :connection-string-example="
+      BROKER_CONNECTION_STRING_EXAMPLE[DatabaseClientType.RABBITMQ]
+    "
+    :connection-string-error="connectionStringError"
     title="RabbitMQ Connection"
     description="OrcaQ reads RabbitMQ through the Management HTTP API (plugin rabbitmq_management, port 15672 by default)."
     :is-editing="Boolean(editingConnection)"
@@ -98,20 +110,29 @@ const {
       </p>
     </div>
 
-    <Accordion
-      type="single"
-      collapsible
-      class="w-full border px-4 rounded-lg shadow"
-    >
-      <ConnectionSSLConfig :form-data="formData" />
-    </Accordion>
+    <template #string-help>
+      <p class="text-xs text-muted-foreground">
+        The AMQP port is not used: OrcaQ reads the Management API on 15672
+        (15671 for amqps). Add <code>?management_port=</code> to change it.
+      </p>
+    </template>
 
-    <Accordion
-      type="single"
-      collapsible
-      class="w-full border px-4 rounded-lg shadow"
-    >
-      <ConnectionSSHTunnel :form-data="formData" />
-    </Accordion>
+    <template #network>
+      <Accordion
+        type="single"
+        collapsible
+        class="w-full border px-4 rounded-lg shadow"
+      >
+        <ConnectionSSLConfig :form-data="formData" />
+      </Accordion>
+
+      <Accordion
+        type="single"
+        collapsible
+        class="w-full border px-4 rounded-lg shadow"
+      >
+        <ConnectionSSHTunnel :form-data="formData" />
+      </Accordion>
+    </template>
   </BrokerConnectionFormShell>
 </template>

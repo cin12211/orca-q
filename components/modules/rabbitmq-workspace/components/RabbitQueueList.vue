@@ -14,7 +14,7 @@ import {
   formatRatio,
   useAutoRefresh,
   useBrokerRequest,
-} from '~/components/modules/message-broker';
+} from '~/components/modules/shared/message-broker';
 import type { Connection } from '~/core/stores';
 import type { RabbitQueueSummary } from '~/core/types/rabbitmq.types';
 import { RABBIT_QUEUE_PAGE_SIZE } from '../constants';

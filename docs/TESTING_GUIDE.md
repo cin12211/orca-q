@@ -190,10 +190,15 @@ bash scripts/test-services/start-fixtures.sh --profile kafka
 # Integration tests (fixtures already up)
 bunx vitest --run --project integration test/api/rabbitmq test/api/kafka
 
+# MCP broker tools (needs both profiles up; calls the real /mcp endpoint)
+bunx vitest --run --project integration test/api/mcp
+
 # Stop when done
 bash scripts/test-services/stop-fixtures.sh --profile rabbitmq
 bash scripts/test-services/stop-fixtures.sh --profile kafka
 ```
+
+If another RabbitMQ already holds ports 5672/15672, start the fixture with `ORCAQ_RABBITMQ_AMQP_PORT=5673 ORCAQ_RABBITMQ_MANAGEMENT_PORT=15673` and pass the same `ORCAQ_RABBITMQ_MANAGEMENT_PORT` to the seed script and the test run.
 
 Both broker connections use the connection form (no connection string). Values for the default fixtures:
 
@@ -206,6 +211,7 @@ Both broker connections use the connection form (no connection string). Values f
 
 Seed data (re-run `node scripts/test-services/seed-rabbitmq-fixture.mjs` or `seed-kafka-fixture.mjs` to reset it):
 
+- RabbitMQ vhost `orcaq` also has a user policy `orders-max-length`, an operator policy `cap-length`, a vhost limit `max-connections = 500`, and `orcaq_viewer` has `max-channels = 50`.
 - RabbitMQ vhost `orcaq`: exchanges `orders.direct`, `events.topic`, `broadcast.fanout`, `orders.dlx`; queues `orders.created` (DLX + TTL), `orders.dead-letter`, `events.audit` (quorum), `backlog.no-consumer` (26 messages, no consumer, includes one binary message).
 - Kafka: topic `orcaq.orders` (3 partitions, 30 JSON messages with keys and headers), topic `orcaq.binary`, consumer group `orcaq-fixture-group` with a lag of 18.
 

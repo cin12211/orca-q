@@ -56,4 +56,19 @@ describe('message broker capabilities', () => {
     expect(isMessageBrokerClientType(DatabaseClientType.RABBITMQ)).toBe(true);
     expect(isMessageBrokerClientType(DatabaseClientType.REDIS)).toBe(false);
   });
+
+  it('shows Users & Roles for RabbitMQ only', () => {
+    const rabbit = getConnectionCapabilityProfile({
+      type: DatabaseClientType.RABBITMQ,
+      method: EConnectionMethod.FORM,
+    });
+    const kafka = getConnectionCapabilityProfile({
+      type: DatabaseClientType.KAFKA,
+      method: EConnectionMethod.FORM,
+    });
+
+    expect(rabbit.visibleActivityItems).toContain('UsersRoles');
+    expect(rabbit.allowedTabTypes).toContain(TabViewType.RabbitUserDetail);
+    expect(kafka.visibleActivityItems).not.toContain('UsersRoles');
+  });
 });

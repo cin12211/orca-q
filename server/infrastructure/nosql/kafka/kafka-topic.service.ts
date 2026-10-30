@@ -18,7 +18,7 @@ import {
   lagOf,
   listPartitionOffsets,
 } from './kafka-offsets';
-import { withKafkaAdmin } from './kafka.client';
+import { readKafkaTopicMetadata, withKafkaAdmin } from './kafka.client';
 
 const TOPIC_CONFIG_RESOURCE = 2;
 const DEFAULT_CONFIG_SOURCE = 5;
@@ -99,7 +99,7 @@ async function readTopicSnapshot(
   const topicNames =
     topicFilter ?? (await admin.listTopics({ includeInternals: true }));
   const internalTopicCount = topicNames.filter(isInternalKafkaTopic).length;
-  const metadata = await admin.metadata({ topics: topicNames });
+  const metadata = await readKafkaTopicMetadata(admin, topicNames);
   const partitionsByTopic = new Map<string, number[]>();
 
   for (const name of topicNames) {

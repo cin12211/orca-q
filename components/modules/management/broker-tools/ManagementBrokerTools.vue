@@ -1,4 +1,8 @@
 <script setup lang="ts">
+import {
+  RABBIT_TAB_ICONS,
+  useRabbitTabs,
+} from '~/components/modules/rabbitmq-workspace';
 import { useTabManagement } from '~/core/composables/useTabManagement';
 import { useWorkspaceConnectionRoute } from '~/core/composables/useWorkspaceConnectionRoute';
 import { DatabaseClientType } from '~/core/constants/database-client-type';
@@ -17,6 +21,7 @@ interface ToolItem {
 const connectionStore = useManagementConnectionStore();
 const { openInstanceInsightsTab, openBrokerTab } = useTabManagement();
 const { workspaceId } = useWorkspaceConnectionRoute();
+const { openDefinitions } = useRabbitTabs();
 const connection = computed(() => connectionStore.selectedConnection);
 const isKafka = computed(
   () => connection.value?.type === DatabaseClientType.KAFKA
@@ -51,6 +56,14 @@ const rabbitTools: ToolItem[] = [
         type: TabViewType.RabbitConnections,
         icon: 'hugeicons:plug-socket',
       }),
+  },
+  {
+    id: 'definitions',
+    title: 'Management Definitions',
+    description:
+      'Export or import users, vhosts, permissions, queues, exchanges and policies as JSON.',
+    icon: RABBIT_TAB_ICONS.definitions,
+    open: openDefinitions,
   },
 ];
 

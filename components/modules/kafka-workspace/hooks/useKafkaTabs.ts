@@ -14,7 +14,6 @@ export function useKafkaTabs() {
       name: topicName,
       type: TabViewType.KafkaTopicDetail,
       icon: KAFKA_TAB_ICONS.topic,
-      iconClass: 'text-sky-500',
       metadata: { topicName },
     });
 
@@ -24,7 +23,6 @@ export function useKafkaTabs() {
       name: groupId,
       type: TabViewType.KafkaConsumerGroupDetail,
       icon: KAFKA_TAB_ICONS.group,
-      iconClass: 'text-sky-500',
       metadata: { groupId },
     });
 

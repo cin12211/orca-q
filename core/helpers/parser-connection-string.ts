@@ -40,6 +40,7 @@ const DEFAULT_PORTS: Partial<Record<DatabaseClientType, number>> = {
   [DatabaseClientType.BETTER_SQLITE3]: 0, // No port for SQLite
   [DatabaseClientType.SQLITE3]: 0,
   [DatabaseClientType.SNOWFLAKE]: 443,
+  [DatabaseClientType.RABBITMQ]: 5672,
 };
 
 function parseQueryString(raw: string): Record<string, string> {
@@ -293,6 +294,14 @@ const SCHEME_MAP: Record<
   libsql: {
     type: DatabaseClientType.SQLITE3,
     providerKind: EConnectionProviderKind.TURSO,
+  },
+  amqp: {
+    type: DatabaseClientType.RABBITMQ,
+    providerKind: EConnectionProviderKind.RABBITMQ_DIRECT,
+  },
+  amqps: {
+    type: DatabaseClientType.RABBITMQ,
+    providerKind: EConnectionProviderKind.RABBITMQ_DIRECT,
   },
 };
 

@@ -18,6 +18,7 @@ import {
 import { decodeRecordBatches, type DecodedKafkaRecord } from './kafka-record';
 import {
   createKafkaReader,
+  readKafkaTopicMetadata,
   withKafkaAdmin,
   withKafkaProducer,
 } from './kafka.client';
@@ -140,7 +141,7 @@ export async function readKafkaMessages(
     const reader = await createKafkaReader(input);
 
     try {
-      const metadata = await admin.metadata({ topics: [query.topic] });
+      const metadata = await readKafkaTopicMetadata(admin, [query.topic]);
       const targets = resolveFetchTargets(
         query.topic,
         metadata.topics.get(query.topic),

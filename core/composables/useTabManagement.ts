@@ -36,6 +36,8 @@ export function resolveRouteNameForTabType(type: TabViewType): RoutesNamesList {
     case TabViewType.RabbitQueueDetail:
     case TabViewType.RabbitExchangeDetail:
     case TabViewType.RabbitConnections:
+    case TabViewType.RabbitUserDetail:
+    case TabViewType.RabbitDefinitions:
       return 'workspaceId-connectionId-rabbitmq-tabViewId' as RoutesNamesList;
     case TabViewType.KafkaTopicList:
     case TabViewType.KafkaTopicDetail:

@@ -10,13 +10,18 @@ import {
   type RabbitManagementClient,
 } from './rabbitmq-management.client';
 import {
+  asArray,
   asNumber,
   asRecord,
   asString,
+  asTagList,
+  mapChurnRates,
   mapLengthSamples,
+  mapListener,
   mapMessageRates,
   mapNode,
   mapRateSamples,
+  mapWebContext,
   RABBIT_SAMPLE_QUERY,
   type RawRecord,
 } from './rabbitmq-mappers';
@@ -73,7 +78,7 @@ export async function getRabbitOverview(
     const queueTotals = asRecord(overview.queue_totals);
     const messageStats = asRecord(overview.message_stats);
 
-    const [nodesResult, vhosts] = await Promise.all([
+    const [nodesResult, vhosts, whoami] = await Promise.all([
       client
         .get<RawRecord[]>(rabbitApiPath('nodes'))
         .then(nodes => ({ nodes, reason: null as string | null }))
@@ -93,6 +98,7 @@ export async function getRabbitOverview(
           throw error;
         }),
       client.get<RawRecord[]>(rabbitApiPath('vhosts')),
+      client.get<RawRecord>(rabbitApiPath('whoami')),
     ]);
 
     return {
@@ -124,6 +130,13 @@ export async function getRabbitOverview(
       nodes: nodesResult.nodes.map(mapNode),
       nodesUnavailableReason: nodesResult.reason,
       vhosts: vhosts.map(vhost => asString(vhost.name)).sort(),
+      churn: mapChurnRates(overview.churn_rates),
+      listeners: asArray(overview.listeners).map(mapListener),
+      contexts: asArray(overview.contexts).map(mapWebContext),
+      currentUser: {
+        name: asString(whoami.name),
+        tags: asTagList(whoami.tags),
+      },
     };
   });
 }

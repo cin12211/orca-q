@@ -24,7 +24,12 @@ import {
   ESSLMode,
   type IBrokerConfig,
 } from '../types';
-import { parseBrokerList } from '../utils';
+import {
+  parseBrokerList,
+  parseKafkaConnectionString,
+  parseRabbitConnectionString,
+  type ParsedBrokerConnection,
+} from '../utils';
 
 export type BrokerClientType =
   | DatabaseClientType.RABBITMQ
@@ -36,6 +41,18 @@ const DEFAULT_CONNECTION_NAME = {
   [DatabaseClientType.RABBITMQ]: 'my-rabbitmq',
   [DatabaseClientType.KAFKA]: 'my-kafka',
 } as const;
+export const BROKER_CONNECTION_METHODS = [
+  EConnectionMethod.STRING,
+  EConnectionMethod.FORM,
+] as const;
+
+export const BROKER_CONNECTION_STRING_EXAMPLE = {
+  [DatabaseClientType.RABBITMQ]:
+    'amqp://username:password@localhost:5672/vhost',
+  [DatabaseClientType.KAFKA]:
+    'kafka://username:password@broker-1:9092,broker-2:9092?sasl=SCRAM-SHA-256',
+} as const;
+
 const DEFAULT_ERROR_MESSAGE =
   'Connection failed. Please check your details and try again.';
 
@@ -81,6 +98,8 @@ export function useBrokerConnectionForm(props: {
   const connectionName = ref<string>(DEFAULT_CONNECTION_NAME[type.value]);
   const tagIds = ref<string[]>([]);
   const formData = reactive(createFormState(type.value));
+  const connectionMethod = ref<EConnectionMethod>(EConnectionMethod.STRING);
+  const connectionString = ref('');
   const testStatus = ref<TestStatus>('idle');
   const testErrorMessage = ref('');
   const testErrorHint = ref('');
@@ -91,8 +110,51 @@ export function useBrokerConnectionForm(props: {
     () => formData.saslMechanism !== EKafkaSaslMechanism.NONE
   );
 
+  const isStringMethod = computed(
+    () => connectionMethod.value === EConnectionMethod.STRING
+  );
+
+  const parsedString = computed<
+    { value: ParsedBrokerConnection } | { error: string } | null
+  >(() => {
+    if (!isStringMethod.value || !connectionString.value.trim()) return null;
+
+    try {
+      return {
+        value: isKafka.value
+          ? parseKafkaConnectionString(connectionString.value)
+          : parseRabbitConnectionString(connectionString.value),
+      };
+    } catch (error) {
+      return { error: (error as Error).message };
+    }
+  });
+
+  const connectionStringError = computed(() =>
+    parsedString.value && 'error' in parsedString.value
+      ? parsedString.value.error
+      : ''
+  );
+
+  const isSshValid = computed(
+    () =>
+      isKafka.value ||
+      !formData.sshEnabled ||
+      Boolean(
+        formData.sshHost &&
+          formData.sshUsername &&
+          (formData.sshUseKey ? formData.sshPrivateKey : formData.sshPassword)
+      )
+  );
+
   const isFormValid = computed(() => {
     if (!connectionName.value) return false;
+
+    if (isStringMethod.value) {
+      return Boolean(
+        parsedString.value && 'value' in parsedString.value && isSshValid.value
+      );
+    }
 
     if (isKafka.value) {
       return (
@@ -102,15 +164,7 @@ export function useBrokerConnectionForm(props: {
       );
     }
 
-    const isSshValid =
-      !formData.sshEnabled ||
-      Boolean(
-        formData.sshHost &&
-          formData.sshUsername &&
-          (formData.sshUseKey ? formData.sshPrivateKey : formData.sshPassword)
-      );
-
-    return Boolean(formData.host && formData.username && isSshValid);
+    return Boolean(formData.host && formData.username && isSshValid.value);
   });
 
   const resetTestState = () => {
@@ -158,7 +212,32 @@ export function useBrokerConnectionForm(props: {
         }
       : { rabbitmq: { vhost: formData.vhost || '/' } };
 
-  const buildHealthCheckBody = (): BrokerHealthCheckBody => ({
+  /** TLS from the SSL section, or a plain "require" when the string asks for it. */
+  const buildStringSSLConfig = (useTls: boolean) =>
+    buildSSLConfig() ??
+    (useTls ? { mode: ESSLMode.REQUIRE, rejectUnauthorized: true } : undefined);
+
+  const buildHealthCheckBody = (): BrokerHealthCheckBody => {
+    const parsed = parsedString.value;
+
+    if (isStringMethod.value && parsed && 'value' in parsed) {
+      return {
+        type: type.value,
+        method: EConnectionMethod.STRING,
+        host: parsed.value.host,
+        port: parsed.value.port,
+        username: parsed.value.username,
+        password: parsed.value.password,
+        ssl: buildStringSSLConfig(parsed.value.useTls),
+        ssh: buildSSHConfig(),
+        broker: parsed.value.broker,
+      };
+    }
+
+    return buildFormHealthCheckBody();
+  };
+
+  const buildFormHealthCheckBody = (): BrokerHealthCheckBody => ({
     type: type.value,
     method: EConnectionMethod.FORM,
     host: isKafka.value ? undefined : formData.host,
@@ -215,11 +294,14 @@ export function useBrokerConnectionForm(props: {
       workspaceId: workspaceId.value,
       name: connectionName.value,
       type: type.value,
-      method: EConnectionMethod.FORM,
+      method: body.method,
+      connectionString: isStringMethod.value
+        ? connectionString.value.trim()
+        : undefined,
       providerKind: isKafka.value
         ? EConnectionProviderKind.KAFKA_DIRECT
         : EConnectionProviderKind.RABBITMQ_DIRECT,
-      host: isKafka.value ? parseBrokerList(formData.brokers)[0] : body.host,
+      host: isKafka.value ? body.broker.kafka?.brokers[0] : body.host,
       port: body.port,
       username: body.username,
       password: body.password,
@@ -235,6 +317,11 @@ export function useBrokerConnectionForm(props: {
 
   const fillFromConnection = (connection: Connection) => {
     connectionName.value = connection.name;
+    connectionMethod.value =
+      connection.method === EConnectionMethod.STRING
+        ? EConnectionMethod.STRING
+        : EConnectionMethod.FORM;
+    connectionString.value = connection.connectionString || '';
     tagIds.value = [...(connection.tagIds ?? [])];
     formData.host = connection.host || '';
     formData.port = connection.port || DEFAULT_DB_PORTS[type.value] || '';
@@ -264,6 +351,8 @@ export function useBrokerConnectionForm(props: {
     [type, editingConnection],
     () => {
       Object.assign(formData, createFormState(type.value));
+      connectionMethod.value = EConnectionMethod.STRING;
+      connectionString.value = '';
       resetTestState();
 
       if (editingConnection.value?.type === type.value) {
@@ -278,7 +367,7 @@ export function useBrokerConnectionForm(props: {
     { immediate: true }
   );
 
-  watch(formData, () => {
+  watch([formData, connectionString, connectionMethod], () => {
     if (testStatus.value !== 'testing') resetTestState();
   });
 
@@ -286,6 +375,10 @@ export function useBrokerConnectionForm(props: {
     connectionName,
     tagIds,
     formData,
+    connectionMethod,
+    connectionString,
+    connectionStringError,
+    isStringMethod,
     isKafka,
     needsKafkaCredentials,
     isFormValid,
