@@ -1,5 +1,6 @@
 import { DatabaseClientType } from '~/core/constants/database-client-type';
 import { createDomainAdapter } from '../shared';
+import { DuckDbViewAdapter } from './duckdb/duckdb-view.adapter';
 import { MysqlViewAdapter } from './mysql/mysql-view.adapter';
 import { OracleViewAdapter } from './oracle/oracle-view.adapter';
 import { PostgresViewAdapter } from './postgres/postgres-view.adapter';
@@ -21,6 +22,7 @@ export async function createViewAdapter(
         MysqlViewAdapter.create(createParams, DatabaseClientType.MARIADB),
       oracledb: OracleViewAdapter.create,
       sqlite3: SqliteViewAdapter.create,
+      duckdb: DuckDbViewAdapter.create,
     }
   );
 }

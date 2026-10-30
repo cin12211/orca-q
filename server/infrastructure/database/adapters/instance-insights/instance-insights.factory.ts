@@ -1,5 +1,6 @@
 import { DatabaseClientType } from '~/core/constants/database-client-type';
 import { createDomainAdapter } from '../shared';
+import { DuckDbInstanceInsightsAdapter } from './duckdb/duckdb-instance-insights.adapter';
 import { MysqlInstanceInsightsAdapter } from './mysql/mysql-instance-insights.adapter';
 import { OracleInstanceInsightsAdapter } from './oracle/oracle-instance-insights.adapter';
 import { PostgresInstanceInsightsAdapter } from './postgres/postgres-instance-insights.adapter';
@@ -26,5 +27,6 @@ export async function createInstanceInsightsAdapter(
       ),
     oracledb: OracleInstanceInsightsAdapter.create,
     sqlite3: SqliteInstanceInsightsAdapter.create,
+    duckdb: DuckDbInstanceInsightsAdapter.create,
   });
 }

@@ -7,3 +7,4 @@ export { MysqlMetricsAdapter } from './mysql/mysql-metrics.adapter';
 export { OracleMetricsAdapter } from './oracle/oracle-metrics.adapter';
 export { PostgresMetricsAdapter } from './postgres/postgres-metrics.adapter';
 export { SqliteMetricsAdapter } from './sqlite/sqlite-metrics.adapter';
+export { DuckDbMetricsAdapter } from './duckdb/duckdb-metrics.adapter';

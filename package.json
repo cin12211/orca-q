@@ -49,6 +49,7 @@
     "test:fixtures:down": "bash scripts/test-services/stop-fixtures.sh"
   },
   "dependencies": {
+    "@duckdb/node-api": "^2.0.0-r.1",
     "@libsql/client": "^0.15.15",
     "better-sqlite3": "^12.9.0",
     "electron-log": "^5.4.3",

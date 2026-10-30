@@ -6,6 +6,7 @@ import {
   type ManagedSqliteAdapterOptions,
 } from '~/server/infrastructure/driver/managed-sqlite';
 import { isNoSqlClientType } from '~/server/infrastructure/nosql';
+import { DuckDbAdapter } from './duckdb.adapter';
 import { MysqlAdapter } from './mysql.adapter';
 import { OracleAdapter } from './oracle.adapter';
 import { PostgresAdapter } from './postgres.adapter';
@@ -23,6 +24,7 @@ const ADAPTER_FACTORIES: Partial<Record<DatabaseClientType, AdapterFactory>> = {
     new MysqlAdapter(connection, DatabaseClientType.MARIADB),
   [DatabaseClientType.ORACLE]: connection => new OracleAdapter(connection),
   [DatabaseClientType.SQLITE3]: connection => new SqliteAdapter(connection),
+  [DatabaseClientType.DUCKDB]: connection => new DuckDbAdapter(connection),
 };
 
 export function createDatabaseAdapter(

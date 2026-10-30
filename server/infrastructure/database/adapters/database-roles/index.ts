@@ -9,3 +9,4 @@ export { MysqlRoleAdapter } from './mysql/mysql-role.adapter';
 export { OracleRoleAdapter } from './oracle/oracle-role.adapter';
 export { PostgresRoleAdapter } from './postgres/postgres-role.adapter';
 export { SqliteRoleAdapter } from './sqlite/sqlite-role.adapter';
+export { DuckDbRoleAdapter } from './duckdb/duckdb-role.adapter';

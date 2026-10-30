@@ -87,7 +87,7 @@ const getFormTarget = (connection: Connection) => {
 
 const getConnectionDetails = (connection: Connection) => {
   if (connection.method === EConnectionMethod.FILE) {
-    const filePath = connection.filePath || 'SQLite file not selected';
+    const filePath = connection.filePath || 'Database file not selected';
 
     return {
       summary: filePath,

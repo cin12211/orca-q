@@ -90,7 +90,9 @@ const actionBadgeClass = (
                     ? 'Oracle'
                     : dbType === DatabaseClientType.SQLITE3
                       ? 'SQLite'
-                      : 'MySQL'
+                      : dbType === DatabaseClientType.DUCKDB
+                        ? 'DuckDB'
+                        : 'MySQL'
               }}
               {{ view.version }}
             </Badge>

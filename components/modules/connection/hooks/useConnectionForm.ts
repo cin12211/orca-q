@@ -31,10 +31,16 @@ type FormHealthCheckBody = Extract<
   { method: EConnectionMethod.FORM }
 >;
 type FormConnectionPayload = Omit<FormHealthCheckBody, 'type' | 'method'>;
+type FileDatabaseClientType =
+  | DatabaseClientType.SQLITE3
+  | DatabaseClientType.DUCKDB;
 type ManagedConnectionProviderKind = Extract<
   ConnectionHealthCheckBody,
   { method: EConnectionMethod.MANAGED }
 >['providerKind'];
+
+const DEFAULT_CONNECTION_NAME = 'my-abc-db';
+const DUCKDB_IN_MEMORY_PATH = ':memory:';
 
 const NETWORK_CONNECTION_METHODS = new Set([
   EConnectionMethod.STRING,
@@ -48,6 +54,10 @@ const getSupportedConnectionMethods = (
 
   if (type === DatabaseClientType.SQLITE3) {
     return [EConnectionMethod.FILE, EConnectionMethod.MANAGED];
+  }
+
+  if (type === DatabaseClientType.DUCKDB) {
+    return [EConnectionMethod.FILE];
   }
 
   return [EConnectionMethod.STRING, EConnectionMethod.FORM];
@@ -98,15 +108,18 @@ const getConnectionStringScheme = (type: DatabaseClientType | null) => {
   }
 };
 
-const buildSqliteConnectionString = (filePath: string) => {
+const buildFileConnectionString = (
+  type: FileDatabaseClientType,
+  filePath: string
+) => {
   const normalizedPath = filePath.replace(/\\/g, '/');
   const prefix = normalizedPath.startsWith('/') ? '' : '/';
-  return `sqlite3://${prefix}${normalizedPath}`;
+  return `${type}://${prefix}${normalizedPath}`;
 };
 
 const getFileNameStem = (filePath: string) => {
   const name = filePath.split(/[\\/]/).pop() || '';
-  return name.replace(/\.(sqlite3?|db3?)$/i, '') || name;
+  return name.replace(/\.(sqlite3?|db3?|duckdb|ddb)$/i, '') || name;
 };
 
 export function useConnectionForm(props: {
@@ -123,7 +136,7 @@ export function useConnectionForm(props: {
 
   const step = ref<1 | 2>(1);
   const dbType = ref<DatabaseClientType | null>(DatabaseClientType.POSTGRES);
-  const connectionName = ref('my-abc-db');
+  const connectionName = ref(DEFAULT_CONNECTION_NAME);
   const connectionMethod = ref<EConnectionMethod>(EConnectionMethod.STRING);
   const connectionString = ref('');
   const formData = reactive({
@@ -175,13 +188,33 @@ export function useConnectionForm(props: {
   const isFileMethod = computed(
     () => connectionMethod.value === EConnectionMethod.FILE
   );
-  const canPickSqliteFile = computed(
-    () =>
-      dbType.value === DatabaseClientType.SQLITE3 &&
-      isElectronRuntime.value &&
-      typeof window !== 'undefined' &&
-      typeof window.electronAPI?.window.pickSqliteFile === 'function'
+  const isDuckDb = computed(() => dbType.value === DatabaseClientType.DUCKDB);
+  const fileDatabaseLabel = computed(() =>
+    isDuckDb.value ? 'DuckDB' : 'SQLite'
   );
+  const pickDatabaseFilePath = () => {
+    const electronWindow = window.electronAPI?.window;
+
+    return isDuckDb.value
+      ? electronWindow?.pickDuckdbFile?.()
+      : electronWindow?.pickSqliteFile?.();
+  };
+  const canPickDatabaseFile = computed(() => {
+    if (!isElectronRuntime.value || typeof window === 'undefined') {
+      return false;
+    }
+
+    const electronWindow = window.electronAPI?.window;
+
+    if (isDuckDb.value) {
+      return typeof electronWindow?.pickDuckdbFile === 'function';
+    }
+
+    return (
+      dbType.value === DatabaseClientType.SQLITE3 &&
+      typeof electronWindow?.pickSqliteFile === 'function'
+    );
+  });
   const usesServiceName = computed(
     () => getStructuredTargetKey(dbType.value) === 'serviceName'
   );
@@ -325,7 +358,9 @@ export function useConnectionForm(props: {
 
     if (connectionMethod.value === EConnectionMethod.FILE) {
       return {
-        type: DatabaseClientType.SQLITE3,
+        type: isDuckDb.value
+          ? DatabaseClientType.DUCKDB
+          : DatabaseClientType.SQLITE3,
         method: EConnectionMethod.FILE,
         filePath: formData.filePath,
       };
@@ -350,7 +385,7 @@ export function useConnectionForm(props: {
   const resetForm = () => {
     step.value = 1;
     dbType.value = DatabaseClientType.POSTGRES;
-    connectionName.value = 'my-abc-db';
+    connectionName.value = DEFAULT_CONNECTION_NAME;
     connectionMethod.value = EConnectionMethod.STRING;
     connectionString.value = '';
 
@@ -405,8 +440,7 @@ export function useConnectionForm(props: {
       !isElectronRuntime.value
     ) {
       testStatus.value = 'error';
-      testErrorMessage.value =
-        'SQLite file connections are available only in the desktop app.';
+      testErrorMessage.value = `${fileDatabaseLabel.value} file connections are available only in the desktop app.`;
       testErrorHint.value = '';
       testErrorDetail.value = '';
       return false;
@@ -471,10 +505,13 @@ export function useConnectionForm(props: {
       connection.ssh = buildSSHConfig();
     } else if (connectionMethod.value === EConnectionMethod.FILE) {
       connection.filePath = formData.filePath;
-      connection.connectionString = buildSqliteConnectionString(
+      connection.connectionString = buildFileConnectionString(
+        isDuckDb.value ? DatabaseClientType.DUCKDB : DatabaseClientType.SQLITE3,
         formData.filePath
       );
-      connection.providerKind = EConnectionProviderKind.SQLITE_FILE;
+      connection.providerKind = isDuckDb.value
+        ? EConnectionProviderKind.DUCKDB_FILE
+        : EConnectionProviderKind.SQLITE_FILE;
     } else if (connectionMethod.value === EConnectionMethod.MANAGED) {
       connection.providerKind = getManagedSqliteProviderKind(
         managedSqlite.provider
@@ -522,29 +559,42 @@ export function useConnectionForm(props: {
         return 'snowflake://username:password@account.snowflakecomputing.com:443/database';
       case DatabaseClientType.SQLITE3:
         return '/Users/you/data/app.sqlite';
+      case DatabaseClientType.DUCKDB:
+        return '/Users/you/data/analytics.duckdb';
       default:
         return '';
     }
   };
 
-  const pickSqliteFile = async () => {
-    if (!canPickSqliteFile.value) {
+  const applyDatabaseFilePath = (filePath: string, suggestedName: string) => {
+    formData.filePath = filePath;
+
+    if (
+      !editingConnection.value &&
+      connectionName.value === DEFAULT_CONNECTION_NAME
+    ) {
+      connectionName.value = suggestedName;
+    }
+
+    resetTestState();
+  };
+
+  const pickDatabaseFile = async () => {
+    if (!canPickDatabaseFile.value) {
       return;
     }
 
-    const selectedPath = await window.electronAPI?.window.pickSqliteFile();
+    const selectedPath = await pickDatabaseFilePath();
 
     if (!selectedPath) {
       return;
     }
 
-    formData.filePath = selectedPath;
+    applyDatabaseFilePath(selectedPath, getFileNameStem(selectedPath));
+  };
 
-    if (!editingConnection.value && connectionName.value === 'my-abc-db') {
-      connectionName.value = getFileNameStem(selectedPath);
-    }
-
-    resetTestState();
+  const selectInMemoryDatabase = () => {
+    applyDatabaseFilePath(DUCKDB_IN_MEMORY_PATH, 'in-memory');
   };
 
   const isFormValid = computed(() => {
@@ -600,7 +650,10 @@ export function useConnectionForm(props: {
       connectionMethod.value = supportedMethods[0];
     }
 
-    if (newType === DatabaseClientType.SQLITE3) {
+    if (
+      newType === DatabaseClientType.SQLITE3 ||
+      newType === DatabaseClientType.DUCKDB
+    ) {
       formData.host = '';
       formData.port = '';
       formData.username = '';
@@ -716,10 +769,13 @@ export function useConnectionForm(props: {
     structuredTargetLabel,
     structuredTargetPlaceholder,
     canUseNetworkOptions,
-    canPickSqliteFile,
+    canPickDatabaseFile,
+    fileDatabaseLabel,
+    isDuckDb,
     isFileMethod,
     isFormValid,
-    pickSqliteFile,
+    pickDatabaseFile,
+    selectInMemoryDatabase,
     resetForm,
   };
 }

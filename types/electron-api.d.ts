@@ -96,6 +96,7 @@ interface ElectronWindowAPI {
   maximize: () => Promise<void>;
   close: () => Promise<void>;
   pickSqliteFile: () => Promise<string | null>;
+  pickDuckdbFile: () => Promise<string | null>;
   pickSaveFile: (options?: ElectronSaveDialogOptions) => Promise<string | null>;
   pickDirectory: () => Promise<string | null>;
   writeFile: (filePath: string, data: Uint8Array) => Promise<void>;

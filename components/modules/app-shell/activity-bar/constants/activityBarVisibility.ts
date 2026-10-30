@@ -60,6 +60,7 @@ export const AGENT_HIDDEN_CONNECTION_TYPES = new Set<DatabaseClientType>([
   DatabaseClientType.ORACLE,
   DatabaseClientType.SQLITE3,
   DatabaseClientType.BETTER_SQLITE3,
+  DatabaseClientType.DUCKDB,
   DatabaseClientType.REDIS,
 ]);
 
@@ -69,5 +70,6 @@ export const USERS_ROLES_HIDDEN_CONNECTION_TYPES = new Set<DatabaseClientType>([
   DatabaseClientType.MARIADB,
   DatabaseClientType.SQLITE3,
   DatabaseClientType.BETTER_SQLITE3,
+  DatabaseClientType.DUCKDB,
   DatabaseClientType.REDIS,
 ]);

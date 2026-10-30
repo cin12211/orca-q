@@ -5,3 +5,4 @@ export { MysqlViewAdapter } from './mysql/mysql-view.adapter';
 export { OracleViewAdapter } from './oracle/oracle-view.adapter';
 export { PostgresViewAdapter } from './postgres/postgres-view.adapter';
 export { SqliteViewAdapter } from './sqlite/sqlite-view.adapter';
+export { DuckDbViewAdapter } from './duckdb/duckdb-view.adapter';

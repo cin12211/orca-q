@@ -21,3 +21,4 @@ export { PostgresMetadataAdapter } from './postgres/postgres-metadata.adapter';
 export { MysqlMetadataAdapter } from './mysql/mysql-metadata.adapter';
 export { OracleMetadataAdapter } from './oracle/oracle-metadata.adapter';
 export { SqliteMetadataAdapter } from './sqlite/sqlite-metadata.adapter';
+export { DuckDbMetadataAdapter } from './duckdb/duckdb-metadata.adapter';

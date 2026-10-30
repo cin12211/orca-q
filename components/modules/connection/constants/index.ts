@@ -63,6 +63,14 @@ export const databaseSupports: IDBSupport[] = [
     description: 'Local file database',
   },
   {
+    type: DatabaseClientType.DUCKDB,
+    name: 'DuckDB',
+    icon: h(Icon, { name: 'simple-icons:duckdb' }),
+    isSupport: true,
+    isBeta: true,
+    description: 'Local analytical database file',
+  },
+  {
     type: DatabaseClientType.SQLITE3,
     managedProvider: EManagedSqliteProvider.CLOUDFLARE_D1,
     name: 'Cloudflare D1',
@@ -130,6 +138,7 @@ export const DEFAULT_DB_PORTS: Record<string, string> = {
   [DatabaseClientType.ORACLE]: '1521',
   [DatabaseClientType.BETTER_SQLITE3]: '0',
   [DatabaseClientType.SQLITE3]: '0',
+  [DatabaseClientType.DUCKDB]: '0',
   [DatabaseClientType.SNOWFLAKE]: '443',
 };
 
@@ -142,11 +151,15 @@ export const isSqlite3ConnectionsEnabled = (value: unknown) => {
   return value !== false && value !== 'false' && value !== '0';
 };
 
+// DuckDB shares the SQLite switch: both open files on the machine running the
+// server, and DuckDB SQL can additionally read arbitrary paths (read_csv, ...).
 export const isSqliteConnectionDisabled = (
   connection: { type: DatabaseClientType | string },
   sqlite3ConnectionsEnabled: boolean
 ) => {
   return (
-    connection.type === DatabaseClientType.SQLITE3 && !sqlite3ConnectionsEnabled
+    (connection.type === DatabaseClientType.SQLITE3 ||
+      connection.type === DatabaseClientType.DUCKDB) &&
+    !sqlite3ConnectionsEnabled
   );
 };

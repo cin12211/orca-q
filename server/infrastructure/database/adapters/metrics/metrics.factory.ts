@@ -1,5 +1,6 @@
 import { DatabaseClientType } from '~/core/constants/database-client-type';
 import { createDomainAdapter } from '../shared';
+import { DuckDbMetricsAdapter } from './duckdb/duckdb-metrics.adapter';
 import { MysqlMetricsAdapter } from './mysql/mysql-metrics.adapter';
 import { OracleMetricsAdapter } from './oracle/oracle-metrics.adapter';
 import { PostgresMetricsAdapter } from './postgres/postgres-metrics.adapter';
@@ -23,5 +24,6 @@ export async function createMetricsAdapter(
       MysqlMetricsAdapter.create(createParams, DatabaseClientType.MARIADB),
     oracledb: OracleMetricsAdapter.create,
     sqlite3: SqliteMetricsAdapter.create,
+    duckdb: DuckDbMetricsAdapter.create,
   });
 }

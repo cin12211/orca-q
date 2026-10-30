@@ -47,6 +47,7 @@ const installElectronMock = () => {
       maximize: async () => undefined,
       close: async () => undefined,
       pickSqliteFile: async () => null,
+      pickDuckdbFile: async () => null,
       pickSaveFile: async () => null,
       pickDirectory: async () => null,
       writeFile: async () => undefined,

@@ -75,9 +75,12 @@ const {
   structuredTargetLabel,
   structuredTargetPlaceholder,
   canUseNetworkOptions,
-  canPickSqliteFile,
+  canPickDatabaseFile,
+  fileDatabaseLabel,
+  isDuckDb,
   isFormValid,
-  pickSqliteFile,
+  pickDatabaseFile,
+  selectInMemoryDatabase,
   resetForm,
 } = useConnectionForm({
   open: () => props.open,
@@ -368,35 +371,52 @@ watch(testStatus, status => {
                       name="hugeicons:file-01"
                       class="h-3.5 w-3.5 text-muted-foreground"
                     />
-                    SQLite File <span class="text-destructive">*</span>
+                    {{ fileDatabaseLabel }} File
+                    <span class="text-destructive">*</span>
                   </Label>
                   <div class="flex gap-2">
                     <Input
                       id="file-path"
-                      placeholder="/Users/you/data/app.sqlite"
+                      :placeholder="getConnectionPlaceholder()"
                       v-model="formData.filePath"
-                      :readonly="canPickSqliteFile"
+                      :readonly="canPickDatabaseFile"
                     />
                     <Button
-                      v-if="canPickSqliteFile"
+                      v-if="canPickDatabaseFile"
                       type="button"
                       variant="outline"
-                      @click="pickSqliteFile"
+                      @click="pickDatabaseFile"
                     >
                       Browse
                     </Button>
+                    <Button
+                      v-if="isDuckDb"
+                      type="button"
+                      variant="outline"
+                      @click="selectInMemoryDatabase"
+                    >
+                      In-memory
+                    </Button>
                   </div>
                   <p class="text-xs text-muted-foreground">
-                    <template v-if="canPickSqliteFile">
-                      Choose a local SQLite database file from the desktop app.
+                    <template v-if="canPickDatabaseFile">
+                      Choose a local {{ fileDatabaseLabel }} database file from
+                      the desktop app.
                     </template>
                     <template v-else-if="sqlite3ConnectionsEnabled">
-                      Enter a SQLite file path that this app runtime can read.
-                      In hosted web deployments, this path is on the server.
+                      Enter a {{ fileDatabaseLabel }} file path that this app
+                      runtime can read. In hosted web deployments, this path is
+                      on the server.
                     </template>
                     <template v-else>
-                      SQLite file connections are disabled in this deployment.
+                      {{ fileDatabaseLabel }} file connections are disabled in
+                      this deployment.
                     </template>
+                  </p>
+                  <p v-if="isDuckDb" class="text-xs text-muted-foreground">
+                    The file stays locked for other programs while OrcaQ has it
+                    open. In-memory data is lost after 5 idle minutes or when
+                    the app closes.
                   </p>
                 </div>
               </TabsContent>

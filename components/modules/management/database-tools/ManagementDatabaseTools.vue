@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { useTabManagement } from '~/core/composables/useTabManagement';
 import { useWorkspaceConnectionRoute } from '~/core/composables/useWorkspaceConnectionRoute';
+import { DatabaseClientType } from '~/core/constants/database-client-type';
 import { useManagementConnectionStore } from '~/core/stores/managementConnectionStore';
 import { EConnectionProviderKind } from '~/core/types/entities/connection.entity';
 import { ManagementSidebarHeader } from '../shared';
@@ -31,7 +32,15 @@ const isManagedSqliteLimited = computed(() => {
   );
 });
 
+const isDuckDbConnection = computed(
+  () => connectionData.value?.type === DatabaseClientType.DUCKDB
+);
+
 const unavailableReason = computed(() => {
+  if (isDuckDbConnection.value) {
+    return 'DuckDB beta does not support backup and schema diff yet.';
+  }
+
   if (
     connectionData.value?.providerKind === EConnectionProviderKind.CLOUDFLARE_D1
   ) {
@@ -74,8 +83,8 @@ const openDatabaseTools = async () => {
       <div class="space-y-2 mt-3">
         <!-- Dump & Restore -->
         <button
-          class="w-full flex items-center gap-3 rounded-lg border bg-background p-3 text-left transition-colors hover:bg-muted/20 cursor-pointer"
-          :disabled="isManagedSqliteLimited"
+          class="w-full flex items-center gap-3 rounded-lg border bg-background p-3 text-left transition-colors hover:bg-muted/20 disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
+          :disabled="isManagedSqliteLimited || isDuckDbConnection"
           @click="openDatabaseTools()"
         >
           <Button size="iconMd" variant="outline">
@@ -119,7 +128,9 @@ const openDatabaseTools = async () => {
         <!-- Schema Diff -->
         <button
           class="w-full flex items-center gap-3 rounded-lg border bg-background p-3 text-left transition-colors hover:bg-muted/20 disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
-          :disabled="!hasConnection || isManagedSqliteLimited"
+          :disabled="
+            !hasConnection || isManagedSqliteLimited || isDuckDbConnection
+          "
           @click="openSchemaDiffTab()"
         >
           <Button size="iconMd" variant="outline">
@@ -138,7 +149,10 @@ const openDatabaseTools = async () => {
           />
         </button>
 
-        <BaseNotice v-if="isManagedSqliteLimited" variant="secondary">
+        <BaseNotice
+          v-if="isManagedSqliteLimited || isDuckDbConnection"
+          variant="secondary"
+        >
           {{ unavailableReason }}
         </BaseNotice>
       </div>

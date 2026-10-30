@@ -11,6 +11,7 @@ const DEFAULT_PORTS: Partial<Record<DatabaseClientType, number>> = {
   [DatabaseClientType.SNOWFLAKE]: 443,
   [DatabaseClientType.BETTER_SQLITE3]: 0,
   [DatabaseClientType.SQLITE3]: 0,
+  [DatabaseClientType.DUCKDB]: 0,
 };
 
 export function getDefaultPort(type: DatabaseClientType) {

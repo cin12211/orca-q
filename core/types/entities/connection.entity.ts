@@ -10,6 +10,7 @@ export enum EConnectionMethod {
 export enum EConnectionProviderKind {
   DIRECT_SQL = 'direct-sql',
   SQLITE_FILE = 'sqlite-file',
+  DUCKDB_FILE = 'duckdb-file',
   CLOUDFLARE_D1 = 'cloudflare-d1',
   TURSO = 'turso',
   REDIS_DIRECT = 'redis-direct',

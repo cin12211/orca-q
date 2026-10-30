@@ -34,7 +34,7 @@ export type ConnectionHealthCheckBody =
       ssh?: ISSHConfig;
     }
   | {
-      type: DatabaseClientType.SQLITE3;
+      type: DatabaseClientType.SQLITE3 | DatabaseClientType.DUCKDB;
       method: EConnectionMethod.FILE;
       filePath: string;
     }
