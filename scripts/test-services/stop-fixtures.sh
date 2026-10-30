@@ -7,6 +7,7 @@
 #
 # Profiles: postgres | mysql | mariadb | sql | redis | mongodb | all
 #           cockroachdb | mssql
+#           rabbitmq | kafka
 # ──────────────────────────────────────────────────────────────────────────────
 
 set -euo pipefail
@@ -29,6 +30,8 @@ sql_project="${ORCAQ_SQL_FIXTURE_PROJECT:-orcaq-sql-fixtures}"
 redis_project="${ORCAQ_REDIS_FIXTURE_PROJECT:-orcaq-redis-fixture}"
 mongo_compose_file="${repo_root}/test/fixtures/containers/nosql-services.compose.yml"
 mongo_project="${ORCAQ_MONGODB_FIXTURE_PROJECT:-orcaq-mongodb-fixture}"
+broker_compose_file="${repo_root}/test/fixtures/containers/nosql-services.compose.yml"
+broker_project="${ORCAQ_BROKER_FIXTURE_PROJECT:-orcaq-broker-fixtures}"
 
 compose_cmd=()
 
@@ -61,6 +64,11 @@ stop_mongo() {
   "${compose_cmd[@]}" -p "${mongo_project}" -f "${mongo_compose_file}" --profile mongodb down --volumes --remove-orphans
 }
 
+stop_broker() {
+  echo "Stopping $1 fixture"
+  "${compose_cmd[@]}" -p "${broker_project}" -f "${broker_compose_file}" --profile "$1" rm --force --stop --volumes "$1"
+}
+
 # ─── Main ────────────────────────────────────────────────────────────────────
 resolve_compose_cmd
 
@@ -76,6 +84,9 @@ case "${profile}" in
     ;;
   mongodb)
     stop_mongo
+    ;;
+  rabbitmq|kafka)
+    stop_broker "${profile}"
     ;;
   all)
     stop_redis 2>/dev/null || true

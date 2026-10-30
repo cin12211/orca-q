@@ -1,7 +1,7 @@
 import type { RendererElement, RendererNode } from 'vue';
 import { Icon } from '#components';
 import { DatabaseClientType } from '~/core/constants/database-client-type';
-import { EManagedSqliteProvider } from '../types';
+import { EKafkaSaslMechanism, EManagedSqliteProvider } from '../types';
 
 export interface IDBSupport {
   type: DatabaseClientType;
@@ -115,7 +115,29 @@ export const databaseSupports: IDBSupport[] = [
     isBeta: true,
     description: 'Document collections and Quick Query',
   },
-
+  {
+    type: DatabaseClientType.RABBITMQ,
+    name: 'RabbitMQ',
+    icon: h(Icon, { name: 'logos:rabbitmq-icon' }),
+    isSupport: true,
+    isBeta: true,
+    description: 'Queues, exchanges, message peek',
+  },
+  {
+    type: DatabaseClientType.KAFKA,
+    name: 'Apache Kafka',
+    icon: h(Icon, { name: 'logos:kafka-icon', class: 'dark:invert' }),
+    isSupport: true,
+    isBeta: true,
+    description: 'Topics, messages, consumer lag',
+  },
+  {
+    type: DatabaseClientType.MSSQL,
+    name: 'SQL Server',
+    icon: h(Icon, { name: 'simple-icons:microsoftsqlserver' }),
+    isSupport: false,
+    unsupportedLabel: 'Coming soon',
+  },
   {
     type: DatabaseClientType.SNOWFLAKE,
     name: 'Snowflake',
@@ -145,7 +167,16 @@ export const DEFAULT_DB_PORTS: Record<string, string> = {
   [DatabaseClientType.BETTER_SQLITE3]: '0',
   [DatabaseClientType.SQLITE3]: '0',
   [DatabaseClientType.SNOWFLAKE]: '443',
+  [DatabaseClientType.RABBITMQ]: '15672',
+  [DatabaseClientType.KAFKA]: '9092',
 };
+
+export const KAFKA_SASL_MECHANISM_OPTIONS = [
+  { value: EKafkaSaslMechanism.NONE, label: 'None (PLAINTEXT)' },
+  { value: EKafkaSaslMechanism.PLAIN, label: 'SASL/PLAIN' },
+  { value: EKafkaSaslMechanism.SCRAM_SHA_256, label: 'SASL/SCRAM-SHA-256' },
+  { value: EKafkaSaslMechanism.SCRAM_SHA_512, label: 'SASL/SCRAM-SHA-512' },
+] as const;
 
 export const getDatabaseSupportByType = (type: DatabaseClientType) => {
   const normalizedType = DATABASE_SUPPORT_TYPE_ALIASES[type] ?? type;

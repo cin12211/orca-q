@@ -16,6 +16,13 @@ export function buildUnsupportedConnectionMessage(input: {
     return 'Redis connections are supported, but they cannot be created through the SQL adapter stack.';
   }
 
+  if (
+    input.family === EConnectionFamily.RABBITMQ ||
+    input.family === EConnectionFamily.KAFKA
+  ) {
+    return 'Message broker connections use the /api/rabbitmq and /api/kafka routes, not the SQL adapter stack.';
+  }
+
   return 'Only SQL-family connections are wired through the current runtime adapter stack.';
 }
 

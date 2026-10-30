@@ -143,7 +143,12 @@ const RULES: Rule[] = [
       lower.includes('ora-01017') ||
       // MSSQL login failed (a missing database also says "login failed")
       (lower.includes('login failed for user') &&
-        !lower.includes('cannot open database')),
+        !lower.includes('cannot open database')) ||
+      // MSSQL login failed
+      lower.includes('login failed for user') ||
+      // Kafka SASL
+      lower.includes('sasl authentication failed') ||
+      lower.includes('authentication failed during authentication'),
     build: () => ({
       message: 'Authentication failed — wrong username or password.',
       hint: 'Double-check the database username and password.',

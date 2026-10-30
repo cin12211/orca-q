@@ -83,21 +83,23 @@ bunx playwright test test/e2e/postgres/table-browser.spec.ts
 
 ## Fixture Management
 
-Fixtures are Docker containers (PostgreSQL 16, MySQL 8.4, MariaDB 11.4, Redis 7.4, MongoDB 7) plus SQLite file preparation.
+Fixtures are Docker containers (PostgreSQL 16, MySQL 8.4, MariaDB 11.4, Redis 7.4, MongoDB 7, RabbitMQ 4, Kafka 3.9) plus SQLite file preparation.
 
 ### Profiles
 
-| Profile    | What starts                  |
-| ---------- | ---------------------------- |
-| `postgres` | PostgreSQL only              |
-| `mysql`    | MySQL only                   |
-| `mariadb`  | MariaDB only                 |
-| `sql`      | PostgreSQL + MySQL + MariaDB |
-| `redis`    | Redis only                   |
-| `mongodb`  | MongoDB only                 |
-| `sqlite`   | SQLite prep only (no Docker) |
-| `all`      | Everything above             |
-| `none`     | Nothing — fixtures skipped   |
+| Profile    | What starts                                        |
+| ---------- | -------------------------------------------------- |
+| `postgres` | PostgreSQL only                                    |
+| `mysql`    | MySQL only                                         |
+| `mariadb`  | MariaDB only                                       |
+| `sql`      | PostgreSQL + MySQL + MariaDB                       |
+| `redis`    | Redis only                                         |
+| `mongodb`  | MongoDB only                                       |
+| `sqlite`   | SQLite prep only (no Docker)                       |
+| `rabbitmq` | RabbitMQ only (opt-in)                             |
+| `kafka`    | Kafka only (opt-in)                                |
+| `all`      | Everything above except the opt-in broker profiles |
+| `none`     | Nothing — fixtures skipped                         |
 
 ### Manual fixture control
 
@@ -132,25 +134,32 @@ ORCAQ_KEEP_FIXTURES=1 bash scripts/test-services/run-tests.sh --fixtures=postgre
 
 All fixture env vars use the `ORCAQ_` prefix. Defaults are set automatically when fixtures start.
 
-| Variable                  | Default         | Description                               |
-| ------------------------- | --------------- | ----------------------------------------- |
-| `ORCAQ_POSTGRES_PORT`     | `5432`          | PostgreSQL port                           |
-| `ORCAQ_POSTGRES_DATABASE` | `pagila`        | Default database                          |
-| `ORCAQ_POSTGRES_USER`     | `orcaq`         | Username                                  |
-| `ORCAQ_POSTGRES_PASSWORD` | `orcaq`         | Password                                  |
-| `ORCAQ_MYSQL_PORT`        | `3306`          | MySQL port                                |
-| `ORCAQ_MYSQL_DATABASE`    | `sakila`        | Default database                          |
-| `ORCAQ_MYSQL_USER`        | `orcaq`         | Username                                  |
-| `ORCAQ_MYSQL_PASSWORD`    | `orcaq`         | Password                                  |
-| `ORCAQ_MARIADB_PORT`      | `3307`          | MariaDB port                              |
-| `ORCAQ_MARIADB_DATABASE`  | `sakila`        | Default database                          |
-| `ORCAQ_MARIADB_USER`      | `orcaq`         | Username                                  |
-| `ORCAQ_MARIADB_PASSWORD`  | `orcaq`         | Password                                  |
-| `ORCAQ_REDIS_PORT`        | `6379`          | Redis port                                |
-| `ORCAQ_MONGODB_PORT`      | `27017`         | MongoDB port                              |
-| `ORCAQ_MONGODB_DATABASE`  | `orcaq_fixture` | Default database                          |
-| `ORCAQ_KEEP_FIXTURES`     | unset           | Set to `1` to keep containers after a run |
-| `ORCAQ_FIXTURE_PROFILE`   | `all`           | Override fixture profile via env          |
+| Variable                         | Default         | Description                               |
+| -------------------------------- | --------------- | ----------------------------------------- |
+| `ORCAQ_POSTGRES_PORT`            | `5432`          | PostgreSQL port                           |
+| `ORCAQ_POSTGRES_DATABASE`        | `pagila`        | Default database                          |
+| `ORCAQ_POSTGRES_USER`            | `orcaq`         | Username                                  |
+| `ORCAQ_POSTGRES_PASSWORD`        | `orcaq`         | Password                                  |
+| `ORCAQ_MYSQL_PORT`               | `3306`          | MySQL port                                |
+| `ORCAQ_MYSQL_DATABASE`           | `sakila`        | Default database                          |
+| `ORCAQ_MYSQL_USER`               | `orcaq`         | Username                                  |
+| `ORCAQ_MYSQL_PASSWORD`           | `orcaq`         | Password                                  |
+| `ORCAQ_MARIADB_PORT`             | `3307`          | MariaDB port                              |
+| `ORCAQ_MARIADB_DATABASE`         | `sakila`        | Default database                          |
+| `ORCAQ_MARIADB_USER`             | `orcaq`         | Username                                  |
+| `ORCAQ_MARIADB_PASSWORD`         | `orcaq`         | Password                                  |
+| `ORCAQ_REDIS_PORT`               | `6379`          | Redis port                                |
+| `ORCAQ_MONGODB_PORT`             | `27017`         | MongoDB port                              |
+| `ORCAQ_MONGODB_DATABASE`         | `orcaq_fixture` | Default database                          |
+| `ORCAQ_RABBITMQ_MANAGEMENT_PORT` | `15672`         | RabbitMQ Management API port              |
+| `ORCAQ_RABBITMQ_AMQP_PORT`       | `5672`          | RabbitMQ AMQP port                        |
+| `ORCAQ_RABBITMQ_USER`            | `orcaq`         | Username                                  |
+| `ORCAQ_RABBITMQ_PASSWORD`        | `orcaq`         | Password                                  |
+| `ORCAQ_RABBITMQ_VHOST`           | `orcaq`         | Seeded virtual host                       |
+| `ORCAQ_KAFKA_PORT`               | `9092`          | Kafka PLAINTEXT listener                  |
+| `ORCAQ_KAFKA_SASL_PORT`          | `9094`          | Kafka SASL/PLAIN listener                 |
+| `ORCAQ_KEEP_FIXTURES`            | unset           | Set to `1` to keep containers after a run |
+| `ORCAQ_FIXTURE_PROFILE`          | `all`           | Override fixture profile via env          |
 
 Override any value inline:
 
@@ -169,6 +178,42 @@ When running locally with the default fixture setup, you can connect to the data
 | **MariaDB**    | `mysql://orcaq:orcaq@127.0.0.1:3307/sakila` (Note: Uses `mysql` protocol)                                                                                            |
 | **Redis**      | `redis://127.0.0.1:6379/0`                                                                                                                                           |
 | **SQLite**     | `test/fixtures/datasets/.tmp/sqlite/sakila.sqlite` (Relative to repo root)<br>Or absolute: `sqlite:///path/to/repo/test/fixtures/datasets/.tmp/sqlite/sakila.sqlite` |
+
+### Message Broker Fixtures (RabbitMQ, Kafka)
+
+The broker profiles are opt-in and are not part of `all`. Start them when you need to test or review the RabbitMQ / Kafka connections:
+
+```bash
+bash scripts/test-services/start-fixtures.sh --profile rabbitmq
+bash scripts/test-services/start-fixtures.sh --profile kafka
+
+# Integration tests (fixtures already up)
+bunx vitest --run --project integration test/api/rabbitmq test/api/kafka
+
+# MCP broker tools (needs both profiles up; calls the real /mcp endpoint)
+bunx vitest --run --project integration test/api/mcp
+
+# Stop when done
+bash scripts/test-services/stop-fixtures.sh --profile rabbitmq
+bash scripts/test-services/stop-fixtures.sh --profile kafka
+```
+
+If another RabbitMQ already holds ports 5672/15672, start the fixture with `ORCAQ_RABBITMQ_AMQP_PORT=5673 ORCAQ_RABBITMQ_MANAGEMENT_PORT=15673` and pass the same `ORCAQ_RABBITMQ_MANAGEMENT_PORT` to the seed script and the test run.
+
+Both broker connections use the connection form (no connection string). Values for the default fixtures:
+
+| Connection                    | Form values                                                                                                                         |
+| ----------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| **RabbitMQ**                  | Host `localhost`, Management Port `15672`, User `orcaq`, Password `orcaq`, Default Virtual Host `orcaq`                             |
+| **RabbitMQ (read-only user)** | Same as above with User `orcaq_viewer`, Password `orcaq_viewer` (only the `management` tag, so node data shows a permission notice) |
+| **Kafka**                     | Bootstrap Servers `localhost:9092`, Authentication `None (PLAINTEXT)`                                                               |
+| **Kafka (SASL)**              | Bootstrap Servers `localhost:9094`, Authentication `SASL/PLAIN`, Username `orcaq`, Password `orcaq`                                 |
+
+Seed data (re-run `node scripts/test-services/seed-rabbitmq-fixture.mjs` or `seed-kafka-fixture.mjs` to reset it):
+
+- RabbitMQ vhost `orcaq` also has a user policy `orders-max-length`, an operator policy `cap-length`, a vhost limit `max-connections = 500`, and `orcaq_viewer` has `max-channels = 50`.
+- RabbitMQ vhost `orcaq`: exchanges `orders.direct`, `events.topic`, `broadcast.fanout`, `orders.dlx`; queues `orders.created` (DLX + TTL), `orders.dead-letter`, `events.audit` (quorum), `backlog.no-consumer` (26 messages, no consumer, includes one binary message).
+- Kafka: topic `orcaq.orders` (3 partitions, 30 JSON messages with keys and headers), topic `orcaq.binary`, consumer group `orcaq-fixture-group` with a lag of 18.
 
 For external/live databases (enabled when environment variables are set):
 

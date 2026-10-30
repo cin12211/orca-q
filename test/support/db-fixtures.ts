@@ -480,3 +480,48 @@ export function hasOracleLiveConnection() {
         config.serviceName)
   );
 }
+
+export interface RabbitMqFixtureConfig {
+  host: string;
+  managementPort: number;
+  username: string;
+  password: string;
+  vhost: string;
+}
+
+export function getRabbitMqFixtureConfig(): RabbitMqFixtureConfig {
+  return {
+    host: readEnv('ORCAQ_RABBITMQ_HOST', 'RABBITMQ_HOST') || '127.0.0.1',
+    managementPort: parseInteger(
+      readEnv('ORCAQ_RABBITMQ_MANAGEMENT_PORT', 'RABBITMQ_MANAGEMENT_PORT'),
+      15672,
+      'ORCAQ_RABBITMQ_MANAGEMENT_PORT'
+    ),
+    username: readEnv('ORCAQ_RABBITMQ_USER', 'RABBITMQ_USER') || 'orcaq',
+    password:
+      readEnv('ORCAQ_RABBITMQ_PASSWORD', 'RABBITMQ_PASSWORD') || 'orcaq',
+    vhost: readEnv('ORCAQ_RABBITMQ_VHOST') || 'orcaq',
+  };
+}
+
+export interface KafkaFixtureConfig {
+  host: string;
+  port: number;
+  saslPort: number;
+  saslUsername: string;
+  saslPassword: string;
+}
+
+export function getKafkaFixtureConfig(): KafkaFixtureConfig {
+  return {
+    host: readEnv('ORCAQ_KAFKA_HOST', 'KAFKA_HOST') || '127.0.0.1',
+    port: parseInteger(readEnv('ORCAQ_KAFKA_PORT'), 9092, 'ORCAQ_KAFKA_PORT'),
+    saslPort: parseInteger(
+      readEnv('ORCAQ_KAFKA_SASL_PORT'),
+      9094,
+      'ORCAQ_KAFKA_SASL_PORT'
+    ),
+    saslUsername: readEnv('ORCAQ_KAFKA_SASL_USER') || 'orcaq',
+    saslPassword: readEnv('ORCAQ_KAFKA_SASL_PASSWORD') || 'orcaq',
+  };
+}

@@ -3,11 +3,15 @@ import {
   EConnectionFamily,
   EConnectionMethod,
   type EConnectionProviderKind,
+  type IBrokerConfig,
   type IManagedSqliteConfig,
   type ISSLConfig,
   type ISSHConfig,
 } from '~/core/types/entities/connection.entity';
+import { BrokerConnectionError } from '~/server/infrastructure/nosql/broker/broker-connection';
+import { verifyKafkaConnection } from '~/server/infrastructure/nosql/kafka/kafka.client';
 import { pingMongoConnection } from '~/server/infrastructure/nosql/mongodb/mongodb.client';
+import { verifyRabbitConnection } from '~/server/infrastructure/nosql/rabbitmq/rabbitmq-overview.service';
 import { pingRedisConnection } from '~/server/infrastructure/nosql/redis/redis.client';
 import {
   normalizeConnectionError,
@@ -33,6 +37,7 @@ export async function healthCheckConnection({
   providerKind,
   family,
   managedSqlite,
+  broker,
   ssl,
   ssh,
 }: {
@@ -49,6 +54,7 @@ export async function healthCheckConnection({
   providerKind?: EConnectionProviderKind;
   family?: EConnectionFamily;
   managedSqlite?: IManagedSqliteConfig;
+  broker?: IBrokerConfig;
   ssl?: ISSLConfig;
   ssh?: ISSHConfig;
 }): Promise<
@@ -85,6 +91,53 @@ export async function healthCheckConnection({
         };
       } catch (error: unknown) {
         console.error('Redis connection failed:', error);
+        return {
+          isConnectedSuccess: false,
+          ...normalizeConnectionError(error, {
+            type,
+            sslEnabled: isSslEnabled(ssl),
+            sshEnabled: Boolean(ssh?.enabled),
+          }),
+        };
+      }
+    }
+
+    if (
+      runtimeContext.family === EConnectionFamily.RABBITMQ ||
+      runtimeContext.family === EConnectionFamily.KAFKA
+    ) {
+      const brokerInput = {
+        method,
+        host,
+        port,
+        username,
+        password,
+        ssl,
+        ssh,
+        broker,
+      };
+
+      try {
+        if (runtimeContext.family === EConnectionFamily.RABBITMQ) {
+          await verifyRabbitConnection(brokerInput);
+        } else {
+          await verifyKafkaConnection(brokerInput);
+        }
+
+        return { isConnectedSuccess: true };
+      } catch (error: unknown) {
+        console.error(`${type} connection failed:`, error);
+
+        if (error instanceof BrokerConnectionError) {
+          return {
+            isConnectedSuccess: false,
+            message: error.message,
+            hint: error.hint,
+            code: error.code,
+            detail: error.detail,
+          };
+        }
+
         return {
           isConnectedSuccess: false,
           ...normalizeConnectionError(error, {
