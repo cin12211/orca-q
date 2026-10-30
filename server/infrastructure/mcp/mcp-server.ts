@@ -30,6 +30,8 @@ const MCP_SUPPORTED_CLIENT_TYPES: DatabaseClientType[] = [
   DatabaseClientType.MARIADB,
   DatabaseClientType.SQLITE3,
   DatabaseClientType.ORACLE,
+  DatabaseClientType.MSSQL,
+  DatabaseClientType.COCKROACHDB,
 ];
 
 const MCP_BROKER_FAMILIES: Partial<Record<DatabaseClientType, string>> = {
@@ -65,7 +67,7 @@ async function getSqlConnection(sessionId: string, connectionId: string) {
 
   if (!isSupportedConnectionType(entry.connection.type)) {
     throw new Error(
-      `Connection "${entry.connection.name}" is ${entry.connection.type}; SQL tools support PostgreSQL, MySQL, MariaDB, SQLite and Oracle. Use the tools matching its family from list_connections.`
+      `Connection "${entry.connection.name}" is ${entry.connection.type}; SQL tools support PostgreSQL, CockroachDB, MySQL, MariaDB, SQL Server, SQLite and Oracle. Use the tools matching its family from list_connections.`
     );
   }
 
@@ -273,9 +275,12 @@ export function createOrcaqMcpServer(session: McpSession): McpServer {
 function buildExplainSql(connection: Connection, sql: string) {
   if (connection.type === DatabaseClientType.SQLITE3)
     return `EXPLAIN QUERY PLAN ${sql}`;
-  if (connection.type === DatabaseClientType.ORACLE) {
+  if (
+    connection.type === DatabaseClientType.ORACLE ||
+    connection.type === DatabaseClientType.MSSQL
+  ) {
     throw new Error(
-      'explain_query is not available for Oracle yet; use run_query with your own plan query.'
+      `explain_query is not available for ${connection.type === DatabaseClientType.MSSQL ? 'SQL Server' : 'Oracle'} yet; use run_query with your own plan query.`
     );
   }
   return `EXPLAIN ${sql}`;

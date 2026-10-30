@@ -1,6 +1,8 @@
 import QueryStream from 'pg-query-stream';
 import { DatabaseClientType } from '~/core/constants/database-client-type';
 import type { IDatabaseAdapter } from '~/server/infrastructure/driver';
+import { runMssqlRequest } from '~/server/infrastructure/driver/mssql.adapter';
+import { mapArrayRowsToObjects } from '~/server/infrastructure/driver/result-rows';
 
 export const MCP_DEFAULT_ROW_LIMIT = 100;
 export const MCP_MAX_ROW_LIMIT = 500;
@@ -203,6 +205,46 @@ async function readOracle(
   }
 }
 
+async function readMssql(
+  connection: RawConnection,
+  sql: string,
+  fetchCount: number
+): Promise<FetchedRows> {
+  // SQL Server has no read-only transaction. The statement runs inside a
+  // transaction that is always rolled back (DDL included), after the SQL guard
+  // (assertReadOnlySql) has rejected writes. ROWCOUNT caps rows server-side.
+  await runMssqlRequest(
+    connection,
+    `SET XACT_ABORT ON; SET LOCK_TIMEOUT ${MCP_QUERY_TIMEOUT_MS}; SET ROWCOUNT ${fetchCount}; BEGIN TRANSACTION;`,
+    []
+  );
+
+  try {
+    const result = await runMssqlRequest(
+      connection,
+      sql,
+      [],
+      undefined,
+      MCP_QUERY_TIMEOUT_MS
+    );
+    const resultSet = result.resultSets.at(-1);
+    const fields = resultSet?.fields ?? [];
+
+    return {
+      columns: fields.map(field => field.name),
+      rows: mapArrayRowsToObjects(resultSet?.rows ?? [], fields),
+    };
+  } finally {
+    // Pooled connections are reused: always undo the transaction and restore
+    // the session settings.
+    await runMssqlRequest(
+      connection,
+      'IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION; SET ROWCOUNT 0; SET LOCK_TIMEOUT -1;',
+      []
+    ).catch(() => {});
+  }
+}
+
 const READ_ONLY_READERS: Partial<
   Record<
     DatabaseClientType,
@@ -218,6 +260,9 @@ const READ_ONLY_READERS: Partial<
   [DatabaseClientType.MARIADB]: readMysql,
   [DatabaseClientType.SQLITE3]: readSqlite,
   [DatabaseClientType.ORACLE]: readOracle,
+  // CockroachDB speaks the Postgres protocol and supports BEGIN READ ONLY.
+  [DatabaseClientType.COCKROACHDB]: readPostgres,
+  [DatabaseClientType.MSSQL]: readMssql,
 };
 
 /** Adapters without a pooled raw connection (Cloudflare D1, Turso) expose no knex client. */

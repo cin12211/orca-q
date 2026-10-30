@@ -115,6 +115,82 @@ function bindParameter(request: Request, index: number, value: unknown) {
 }
 
 /**
+ * Runs one statement on a raw tedious connection and collects every result
+ * set, the affected-row count and PRINT/info messages. `timeoutMs` bounds the
+ * request on the client side (0 = no limit).
+ */
+export function runMssqlRequest(
+  connection: TediousConnection,
+  sql: string,
+  bindings: unknown[],
+  stream?: MssqlRowStreamHandlers,
+  timeoutMs = 0
+): Promise<MssqlBatchResult> {
+  return new Promise((resolve, reject) => {
+    const resultSets: MssqlResultSet[] = [];
+    const messages: string[] = [];
+    let rowsAffected = 0;
+    let current: MssqlResultSet | null = null;
+
+    const request = new Request(sql, error => {
+      connection.removeListener('infoMessage', onInfo);
+
+      if (error) {
+        reject(error);
+        return;
+      }
+
+      resolve({ resultSets, rowsAffected, messages });
+    });
+
+    const onInfo = (info: { message: string }) => {
+      messages.push(info.message);
+    };
+
+    connection.on('infoMessage', onInfo);
+
+    request.on('columnMetadata', (columns: ColumnMetadata[] | object) => {
+      const list = Array.isArray(columns)
+        ? columns
+        : (Object.values(columns) as ColumnMetadata[]);
+      current = { fields: toDatabaseFields(list), rows: [] };
+      resultSets.push(current);
+      stream?.onColumns(current.fields);
+    });
+
+    request.on('row', (columns: TediousColumnValue[]) => {
+      const row = columns.map(column => normalizeColumnValue(column.value));
+
+      if (stream) {
+        stream.onRow(row);
+        return;
+      }
+
+      current?.rows.push(row);
+    });
+
+    const countRows = (rowCount: number | undefined) => {
+      if (typeof rowCount === 'number') rowsAffected += rowCount;
+    };
+
+    request.on('done', countRows);
+    request.on('doneInProc', countRows);
+
+    // execSql wraps the text in sp_executesql, which scopes it like a
+    // procedure: BEGIN/COMMIT TRANSACTION split across calls then fails with
+    // error 266. Parameterless SQL runs as a plain batch instead.
+    if (bindings.length === 0) {
+      connection.execSqlBatch(request);
+      return;
+    }
+
+    bindings.forEach((value, index) => bindParameter(request, index, value));
+
+    connection.execSql(request);
+  });
+}
+
+/**
  * SQL Server adapter. Connections are pooled through knex's `mssql` client
  * (tedious), but statements run on the raw tedious connection so that every
  * result set of a batch, the affected-row count and PRINT messages are kept.
@@ -191,7 +267,7 @@ export class MssqlAdapter extends BaseDatabaseAdapter {
     const connection = (await this.acquireRawConnection()) as TediousConnection;
 
     try {
-      return await this.runRequest(connection, sql, bindings, stream);
+      return await runMssqlRequest(connection, sql, bindings, stream);
     } finally {
       await this.releaseRawConnection(connection);
     }
@@ -208,20 +284,20 @@ export class MssqlAdapter extends BaseDatabaseAdapter {
     const results: MssqlBatchResult[] = [];
 
     try {
-      await this.runRequest(
+      await runMssqlRequest(
         connection,
         'SET XACT_ABORT ON; BEGIN TRANSACTION;',
         []
       );
 
       for (const statement of statements) {
-        results.push(await this.runRequest(connection, statement, []));
+        results.push(await runMssqlRequest(connection, statement, []));
       }
 
-      await this.runRequest(connection, 'COMMIT TRANSACTION;', []);
+      await runMssqlRequest(connection, 'COMMIT TRANSACTION;', []);
       return results;
     } catch (error) {
-      await this.runRequest(
+      await runMssqlRequest(
         connection,
         'IF @@TRANCOUNT > 0 ROLLBACK TRANSACTION;',
         []
@@ -230,76 +306,6 @@ export class MssqlAdapter extends BaseDatabaseAdapter {
     } finally {
       await this.releaseRawConnection(connection);
     }
-  }
-
-  private runRequest(
-    connection: TediousConnection,
-    sql: string,
-    bindings: unknown[],
-    stream?: MssqlRowStreamHandlers
-  ): Promise<MssqlBatchResult> {
-    return new Promise((resolve, reject) => {
-      const resultSets: MssqlResultSet[] = [];
-      const messages: string[] = [];
-      let rowsAffected = 0;
-      let current: MssqlResultSet | null = null;
-
-      const request = new Request(sql, error => {
-        connection.removeListener('infoMessage', onInfo);
-
-        if (error) {
-          reject(error);
-          return;
-        }
-
-        resolve({ resultSets, rowsAffected, messages });
-      });
-
-      const onInfo = (info: { message: string }) => {
-        messages.push(info.message);
-      };
-
-      connection.on('infoMessage', onInfo);
-
-      request.on('columnMetadata', (columns: ColumnMetadata[] | object) => {
-        const list = Array.isArray(columns)
-          ? columns
-          : (Object.values(columns) as ColumnMetadata[]);
-        current = { fields: toDatabaseFields(list), rows: [] };
-        resultSets.push(current);
-        stream?.onColumns(current.fields);
-      });
-
-      request.on('row', (columns: TediousColumnValue[]) => {
-        const row = columns.map(column => normalizeColumnValue(column.value));
-
-        if (stream) {
-          stream.onRow(row);
-          return;
-        }
-
-        current?.rows.push(row);
-      });
-
-      const countRows = (rowCount: number | undefined) => {
-        if (typeof rowCount === 'number') rowsAffected += rowCount;
-      };
-
-      request.on('done', countRows);
-      request.on('doneInProc', countRows);
-
-      // execSql wraps the text in sp_executesql, which scopes it like a
-      // procedure: BEGIN/COMMIT TRANSACTION split across calls then fails with
-      // error 266. Parameterless SQL runs as a plain batch instead.
-      if (bindings.length === 0) {
-        connection.execSqlBatch(request);
-        return;
-      }
-
-      bindings.forEach((value, index) => bindParameter(request, index, value));
-
-      connection.execSql(request);
-    });
   }
 
   // Without bindings the SQL runs verbatim, so a literal `?` in user SQL is
