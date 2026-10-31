@@ -4,7 +4,6 @@ import {
   resolveConnectionProviderKind,
 } from '~/core/constants/connection-capabilities';
 import { DatabaseClientType } from '~/core/constants/database-client-type';
-import type { DatabaseFileOptions } from '~/core/constants/database-file-options';
 import {
   EConnectionFamily,
   EConnectionMethod,
@@ -108,20 +107,7 @@ export interface ConnectionHealthCheckResult {
   detail?: string;
 }
 
-export interface CreateDatabaseFileBody {
-  type: DatabaseClientType.SQLITE3 | DatabaseClientType.DUCKDB;
-  directory: string;
-  fileName: string;
-  options?: DatabaseFileOptions;
-}
-
 export const connectionService = {
-  createDatabaseFile: (body: CreateDatabaseFileBody) =>
-    $fetch<{ filePath: string }>(
-      '/api/managment-connection/create-database-file',
-      { method: 'POST', body }
-    ),
-
   healthCheck: (body: ConnectionHealthCheckBody) =>
     $fetch<ConnectionHealthCheckResult>(
       '/api/managment-connection/health-check',

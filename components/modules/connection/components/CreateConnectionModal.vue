@@ -23,13 +23,13 @@ import {
   isDesktopOnlyConnection,
   isSqliteConnectionDisabled,
 } from '../constants';
+import { CreateDatabaseFileDialog } from '../create-database-file';
 import { useConnectionForm } from '../hooks/useConnectionForm';
 import { EConnectionMethod, EManagedSqliteProvider } from '../types';
 import ConnectionSSHTunnel from './ConnectionSSHTunnel.vue';
 import ConnectionSSLConfig from './ConnectionSSLConfig.vue';
 import ConnectionStatusSection from './ConnectionStatusSection.vue';
 import ConnectionStepType from './ConnectionStepType.vue';
-import CreateDatabaseFileDialog from './CreateDatabaseFileDialog.vue';
 
 const props = defineProps<{
   open: boolean;
@@ -80,11 +80,10 @@ const {
   canUseNetworkOptions,
   canCreateDatabaseFile,
   canPickDatabaseFile,
-  createDatabaseFile,
+  applyCreatedDatabaseFile,
   fileDatabaseLabel,
   isDuckDb,
   isFormValid,
-  pickDatabaseDirectory,
   pickDatabaseFile,
   selectInMemoryDatabase,
   resetForm,
@@ -666,7 +665,6 @@ watch(testStatus, status => {
     :database-type="
       isDuckDb ? DatabaseClientType.DUCKDB : DatabaseClientType.SQLITE3
     "
-    :pick-directory="pickDatabaseDirectory"
-    :create-file="createDatabaseFile"
+    @created="applyCreatedDatabaseFile"
   />
 </template>

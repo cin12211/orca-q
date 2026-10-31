@@ -8,7 +8,6 @@ import {
 } from 'vue';
 import dayjs from 'dayjs';
 import { DatabaseClientType } from '~/core/constants/database-client-type';
-import type { DatabaseFileOptions } from '~/core/constants/database-file-options';
 import { uuidv4 } from '~/core/helpers';
 import { isElectron } from '~/core/helpers/environment';
 import type { Connection } from '~/core/stores';
@@ -600,21 +599,7 @@ export function useConnectionForm(props: {
       typeof window.electronAPI?.window.pickDirectory === 'function'
   );
 
-  const pickDatabaseDirectory = () =>
-    window.electronAPI?.window.pickDirectory();
-
-  const createDatabaseFile = async (input: {
-    directory: string;
-    fileName: string;
-    options: DatabaseFileOptions;
-  }) => {
-    const { filePath } = await connectionService.createDatabaseFile({
-      type: isDuckDb.value
-        ? DatabaseClientType.DUCKDB
-        : DatabaseClientType.SQLITE3,
-      ...input,
-    });
-
+  const applyCreatedDatabaseFile = (filePath: string) => {
     applyDatabaseFilePath(filePath, getFileNameStem(filePath));
   };
 
@@ -796,12 +781,11 @@ export function useConnectionForm(props: {
     canUseNetworkOptions,
     canCreateDatabaseFile,
     canPickDatabaseFile,
-    createDatabaseFile,
+    applyCreatedDatabaseFile,
     fileDatabaseLabel,
     isDuckDb,
     isFileMethod,
     isFormValid,
-    pickDatabaseDirectory,
     pickDatabaseFile,
     selectInMemoryDatabase,
     resetForm,

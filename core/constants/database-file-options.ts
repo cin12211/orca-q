@@ -17,7 +17,7 @@ export interface DatabaseFileOptionField {
   choices: { value: string; label: string }[];
 }
 
-const SQLITE_FILE_OPTION_FIELDS: DatabaseFileOptionField[] = [
+export const SQLITE_FILE_OPTION_FIELDS: DatabaseFileOptionField[] = [
   {
     key: 'journalMode',
     label: 'Journal mode',
@@ -60,7 +60,7 @@ const SQLITE_FILE_OPTION_FIELDS: DatabaseFileOptionField[] = [
   },
 ];
 
-const DUCKDB_FILE_OPTION_FIELDS: DatabaseFileOptionField[] = [
+export const DUCKDB_FILE_OPTION_FIELDS: DatabaseFileOptionField[] = [
   {
     key: 'storageVersion',
     label: 'Compatible with',
