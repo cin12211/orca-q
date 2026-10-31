@@ -299,17 +299,14 @@ export class DuckDbTableAdapter
         console.error('[DuckDbTableAdapter] Rollback failed', rollbackError);
       }
 
-      const message =
-        error instanceof Error ? error.message : 'Failed to execute statements';
-
-      // The client only surfaces failures sent as an HTTP error; a 200 with
-      // `success: false` would read as "saved" while nothing was written.
-      throw createError({
-        statusCode: 422,
-        statusMessage: 'Failed to execute statements',
-        message,
-        data: { driverError: { dbType: this.dbType, message } },
-      });
+      return {
+        success: false,
+        error:
+          error instanceof Error
+            ? error.message
+            : 'Failed to execute statements',
+        queryTime: Number((performance.now() - startTime).toFixed(2)),
+      };
     } finally {
       await this.adapter.releaseRawConnection(connection);
     }

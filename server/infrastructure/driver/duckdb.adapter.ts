@@ -210,6 +210,25 @@ class DuckDbSession {
   }
 }
 
+/** Creates an empty, valid database file; the caller guarantees it is new. */
+export async function createDuckDbFile(filePath: string): Promise<void> {
+  const { DuckDBInstance } = await loadDuckDbDriver();
+  const instance = await DuckDBInstance.create(filePath);
+
+  try {
+    const connection = await instance.connect();
+
+    try {
+      // Without a checkpoint the header check would reject the new file.
+      await connection.run('CHECKPOINT');
+    } finally {
+      connection.closeSync();
+    }
+  } finally {
+    instance.closeSync();
+  }
+}
+
 export type DuckDbStreamEvent =
   | { type: 'meta'; fields: DatabaseField[]; command: string }
   | { type: 'rows'; rows: unknown[][] }

@@ -69,6 +69,7 @@ function setElectronWindowApi(overrides?: {
       window: {
         pickSqliteFile: overrides?.pickSqliteFile || vi.fn(),
         pickDuckdbFile: overrides?.pickDuckdbFile || vi.fn(),
+        pickDirectory: vi.fn(),
       },
     },
   });
@@ -396,6 +397,24 @@ describe('useConnectionForm', () => {
     expect(pickSqliteFile).not.toHaveBeenCalled();
     expect(formData.filePath).toBe('/tmp/analytics.duckdb');
     expect(connectionName.value).toBe('analytics');
+  });
+
+  it('offers creating a file only for local file databases', async () => {
+    setElectronWindowApi();
+
+    const { canCreateDatabaseFile, dbType } = createForm();
+
+    dbType.value = DatabaseClientType.DUCKDB;
+    await nextTick();
+    expect(canCreateDatabaseFile.value).toBe(true);
+
+    dbType.value = DatabaseClientType.SQLITE3;
+    await nextTick();
+    expect(canCreateDatabaseFile.value).toBe(true);
+
+    dbType.value = DatabaseClientType.POSTGRES;
+    await nextTick();
+    expect(canCreateDatabaseFile.value).toBe(false);
   });
 
   it('selects an in-memory DuckDB database', async () => {

@@ -72,6 +72,14 @@ export const databaseSupports: IDBSupport[] = [
     description: 'Local analytical database file',
   },
   {
+    type: DatabaseClientType.DUCKDB,
+    name: 'MotherDuck',
+    icon: h(Icon, { name: 'simple-icons:duckdb', class: 'text-[#ff9538]' }),
+    isSupport: false,
+    unsupportedLabel: 'Coming soon',
+    description: 'Cloud DuckDB',
+  },
+  {
     type: DatabaseClientType.SQLITE3,
     managedProvider: EManagedSqliteProvider.CLOUDFLARE_D1,
     name: 'Cloudflare D1',

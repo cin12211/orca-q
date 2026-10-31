@@ -67,8 +67,11 @@ export async function skipWithoutDesktopServer(request: APIRequestContext) {
  * Stands in for the Electron preload bridge, keeping persisted records in
  * localStorage so connections survive the reloads a workspace session does.
  */
-export async function installDesktopBridge(page: Page) {
-  await page.addInitScript(() => {
+export async function installDesktopBridge(
+  page: Page,
+  options: { pickedDirectory?: string } = {}
+) {
+  await page.addInitScript(({ pickedDirectory }) => {
     const STORE_KEY = 'orcaq-e2e-persist';
     type Row = Record<string, unknown>;
     type Filter = { field: string; value: unknown };
@@ -160,13 +163,14 @@ export async function installDesktopBridge(page: Page) {
         close: async () => undefined,
         pickSqliteFile: async () => null,
         pickDuckdbFile: async () => null,
+        pickDirectory: async () => pickedDirectory ?? null,
         getStoragePath: async () => '/tmp',
         openStoragePath: async () => undefined,
         resetAllData: async () => undefined,
         onOpenSettings: noopSubscribe,
       },
     } as unknown as typeof window.electronAPI;
-  });
+  }, options);
 }
 
 export async function openWorkspace(page: Page, workspaceName: string) {

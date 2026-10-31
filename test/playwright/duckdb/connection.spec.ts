@@ -29,6 +29,15 @@ test.describe('DuckDB connection', () => {
     );
   });
 
+  test('lists MotherDuck as coming soon', async ({ page }) => {
+    await openWorkspace(page, `DuckDB cards ${Date.now()}`);
+    await page.getByTestId('connection-add-button').first().click();
+
+    await expect(page.getByTestId('db-type-card-motherduck')).toContainText(
+      /coming soon/i
+    );
+  });
+
   test.describe('desktop runtime', () => {
     test.beforeEach(async ({ page, request }) => {
       await skipWithoutDesktopServer(request);

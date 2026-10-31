@@ -29,6 +29,7 @@ import ConnectionSSHTunnel from './ConnectionSSHTunnel.vue';
 import ConnectionSSLConfig from './ConnectionSSLConfig.vue';
 import ConnectionStatusSection from './ConnectionStatusSection.vue';
 import ConnectionStepType from './ConnectionStepType.vue';
+import CreateDatabaseFileDialog from './CreateDatabaseFileDialog.vue';
 
 const props = defineProps<{
   open: boolean;
@@ -48,6 +49,7 @@ const handleClose = () => {
 };
 
 const showPassword = ref(false);
+const isCreateFileDialogOpen = ref(false);
 const config = useRuntimeConfig();
 const sqlite3ConnectionsEnabled = computed(() =>
   isSqlite3ConnectionsEnabled(config.public.sqlite3ConnectionsEnabled)
@@ -76,10 +78,13 @@ const {
   structuredTargetLabel,
   structuredTargetPlaceholder,
   canUseNetworkOptions,
+  canCreateDatabaseFile,
   canPickDatabaseFile,
+  createDatabaseFile,
   fileDatabaseLabel,
   isDuckDb,
   isFormValid,
+  pickDatabaseDirectory,
   pickDatabaseFile,
   selectInMemoryDatabase,
   resetForm,
@@ -94,10 +99,9 @@ const {
 
 const databaseOptions = computed(() =>
   databaseSupports.map(e => {
-    const isSqliteDisabled = isSqliteConnectionDisabled(
-      e,
-      sqlite3ConnectionsEnabled.value
-    );
+    const isSqliteDisabled =
+      e.isSupport &&
+      isSqliteConnectionDisabled(e, sqlite3ConnectionsEnabled.value);
     const isManagedSqliteActive =
       dbType.value === DatabaseClientType.SQLITE3 &&
       connectionMethod.value === EConnectionMethod.MANAGED;
@@ -121,7 +125,10 @@ const databaseOptions = computed(() =>
         if (e.managedProvider) {
           connectionMethod.value = EConnectionMethod.MANAGED;
           managedSqlite.provider = e.managedProvider;
-        } else if (e.type === DatabaseClientType.SQLITE3) {
+        } else if (
+          e.type === DatabaseClientType.SQLITE3 ||
+          e.type === DatabaseClientType.DUCKDB
+        ) {
           connectionMethod.value = EConnectionMethod.FILE;
         }
       },
@@ -397,6 +404,15 @@ watch(testStatus, status => {
                       Browse
                     </Button>
                     <Button
+                      v-if="canCreateDatabaseFile"
+                      data-testid="connection-create-file-button"
+                      type="button"
+                      variant="outline"
+                      @click="isCreateFileDialogOpen = true"
+                    >
+                      Create new
+                    </Button>
+                    <Button
                       v-if="isDuckDb"
                       data-testid="connection-in-memory-button"
                       type="button"
@@ -643,4 +659,11 @@ watch(testStatus, status => {
       </template>
     </DialogContent>
   </Dialog>
+
+  <CreateDatabaseFileDialog
+    v-model:open="isCreateFileDialogOpen"
+    :database-label="fileDatabaseLabel"
+    :pick-directory="pickDatabaseDirectory"
+    :create-file="createDatabaseFile"
+  />
 </template>

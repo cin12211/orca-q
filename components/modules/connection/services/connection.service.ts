@@ -107,7 +107,19 @@ export interface ConnectionHealthCheckResult {
   detail?: string;
 }
 
+export interface CreateDatabaseFileBody {
+  type: DatabaseClientType.SQLITE3 | DatabaseClientType.DUCKDB;
+  directory: string;
+  fileName: string;
+}
+
 export const connectionService = {
+  createDatabaseFile: (body: CreateDatabaseFileBody) =>
+    $fetch<{ filePath: string }>(
+      '/api/managment-connection/create-database-file',
+      { method: 'POST', body }
+    ),
+
   healthCheck: (body: ConnectionHealthCheckBody) =>
     $fetch<ConnectionHealthCheckResult>(
       '/api/managment-connection/health-check',

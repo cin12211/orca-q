@@ -1,8 +1,12 @@
 import { defineEventHandler, readBody, createError } from 'h3';
 import { DatabaseClientType } from '~/core/constants/database-client-type';
 import { buildUpdateStatements } from '~/core/helpers/sql-mutation-statements';
-import type { BulkUpdateResponse, DatabaseMetadataRequestParams } from '~/core/types';
+import type {
+  BulkUpdateResponse,
+  DatabaseMetadataRequestParams,
+} from '~/core/types';
 import { createTableAdapter } from '~/server/infrastructure/database/adapters/tables';
+import { assertBulkSuccess } from '~/server/utils/assert-bulk-success';
 
 interface RequestBody extends DatabaseMetadataRequestParams {
   tableName: string;
@@ -62,25 +66,19 @@ export default defineEventHandler(async event => {
     }).sql;
   });
 
-  const adapter = await createTableAdapter(
-    body.type,
-    body
-  );
+  const adapter = await createTableAdapter(body.type, body);
 
   const chunks = chunkArray(allStatements, BULK_CHUNK_SIZE);
 
   if (chunks.length === 1) {
-    return await adapter.executeBulkUpdate(chunks[0]);
+    return assertBulkSuccess(await adapter.executeBulkUpdate(chunks[0]));
   }
 
   const startTime = performance.now();
   const aggregatedData: NonNullable<BulkUpdateResponse['data']> = [];
 
   for (const chunk of chunks) {
-    const result = await adapter.executeBulkUpdate(chunk);
-    if (!result.success) {
-      return result;
-    }
+    const result = assertBulkSuccess(await adapter.executeBulkUpdate(chunk));
     if (result.data) {
       aggregatedData.push(...result.data);
     }

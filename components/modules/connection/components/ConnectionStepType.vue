@@ -121,8 +121,8 @@ useHotkeys([
       >
         <DatabaseTypeCard
           v-for="option in databaseOptions"
-          :key="`${option.type}-${option.managedProvider ?? 'default'}`"
-          :data-testid="`db-type-card-${option.managedProvider ?? option.type}`"
+          :key="option.name"
+          :data-testid="`db-type-card-${option.name.toLowerCase().replaceAll(' ', '-')}`"
           :name="option.name"
           :icon="option.icon"
           :description="option.description"

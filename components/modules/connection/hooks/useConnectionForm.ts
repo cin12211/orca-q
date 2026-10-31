@@ -593,6 +593,29 @@ export function useConnectionForm(props: {
     applyDatabaseFilePath(selectedPath, getFileNameStem(selectedPath));
   };
 
+  const canCreateDatabaseFile = computed(
+    () =>
+      canPickDatabaseFile.value &&
+      typeof window.electronAPI?.window.pickDirectory === 'function'
+  );
+
+  const pickDatabaseDirectory = () =>
+    window.electronAPI?.window.pickDirectory();
+
+  const createDatabaseFile = async (input: {
+    directory: string;
+    fileName: string;
+  }) => {
+    const { filePath } = await connectionService.createDatabaseFile({
+      type: isDuckDb.value
+        ? DatabaseClientType.DUCKDB
+        : DatabaseClientType.SQLITE3,
+      ...input,
+    });
+
+    applyDatabaseFilePath(filePath, getFileNameStem(filePath));
+  };
+
   const selectInMemoryDatabase = () => {
     applyDatabaseFilePath(DUCKDB_IN_MEMORY_PATH, 'in-memory');
   };
@@ -769,11 +792,14 @@ export function useConnectionForm(props: {
     structuredTargetLabel,
     structuredTargetPlaceholder,
     canUseNetworkOptions,
+    canCreateDatabaseFile,
     canPickDatabaseFile,
+    createDatabaseFile,
     fileDatabaseLabel,
     isDuckDb,
     isFileMethod,
     isFormValid,
+    pickDatabaseDirectory,
     pickDatabaseFile,
     selectInMemoryDatabase,
     resetForm,

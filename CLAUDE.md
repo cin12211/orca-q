@@ -119,7 +119,7 @@ Prefer Tailwind utilities. Use `<style scoped>` only for complex styles not achi
 - Oracle structured-form connections use `serviceName` instead of `database`
 - Managed SQLite (Cloudflare D1, Turso) uses `managed` method and stays on SQL family path
 - Local SQLite uses `file` method (desktop runtime only)
-- DuckDB (beta) uses `file` method only (desktop runtime only), including `:memory:`; the file must already exist. The server refuses it unless `ORCAQ_DESKTOP_RUNTIME=1`, because DuckDB SQL can read any file the server can reach
+- DuckDB (beta) uses `file` method only (desktop runtime only), including `:memory:`; a typed path must already exist, and "Create new" (SQLite and DuckDB) creates an empty file in a chosen folder without overwriting anything. The server refuses it unless `ORCAQ_DESKTOP_RUNTIME=1`, because DuckDB SQL can read any file the server can reach
 - DuckDB hides Users & Roles and AI Agent, and disables Backup & Restore
 - The built-in MCP server keeps DuckDB read-only whatever the session's access level: each query opens a throwaway read-only instance with `enable_external_access=false`, so it cannot read files outside the database. In-memory databases are not reachable
 - Failed health checks return actionable driver messages but connections are still saved

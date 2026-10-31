@@ -195,15 +195,13 @@ describe('DuckDB domain adapters', () => {
     it('rolls bulk statements back on failure and frees the session', async () => {
       await driver.rawQuery('CREATE TABLE bulk_fail (id INTEGER)');
 
-      await expect(
-        tables().executeBulkDelete([
-          'INSERT INTO bulk_fail VALUES (1)',
-          'DELETE FROM missing_table',
-        ])
-      ).rejects.toMatchObject({
-        statusCode: 422,
-        message: expect.stringContaining('missing_table'),
-      });
+      const result = await tables().executeBulkDelete([
+        'INSERT INTO bulk_fail VALUES (1)',
+        'DELETE FROM missing_table',
+      ]);
+
+      expect(result.success).toBe(false);
+      expect(result.error).toContain('missing_table');
       await expect(driver.rawQuery('SELECT * FROM bulk_fail')).resolves.toEqual(
         []
       );
