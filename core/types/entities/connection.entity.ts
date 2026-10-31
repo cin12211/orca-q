@@ -15,12 +15,16 @@ export enum EConnectionProviderKind {
   TURSO = 'turso',
   REDIS_DIRECT = 'redis-direct',
   MONGODB_DIRECT = 'mongodb-direct',
+  RABBITMQ_DIRECT = 'rabbitmq-direct',
+  KAFKA_DIRECT = 'kafka-direct',
 }
 
 export enum EConnectionFamily {
   SQL = 'sql',
   REDIS = 'redis',
   MONGODB = 'mongodb',
+  RABBITMQ = 'rabbitmq',
+  KAFKA = 'kafka',
 }
 
 export enum EManagedSqliteProvider {
@@ -72,6 +76,31 @@ export interface IManagedSqliteConfig {
   branchName?: string;
 }
 
+export enum EKafkaSaslMechanism {
+  NONE = 'none',
+  PLAIN = 'PLAIN',
+  SCRAM_SHA_256 = 'SCRAM-SHA-256',
+  SCRAM_SHA_512 = 'SCRAM-SHA-512',
+}
+
+export interface IRabbitMqConfig {
+  /** Virtual host selected by default in the browser. */
+  vhost?: string;
+}
+
+export interface IKafkaConfig {
+  /** Bootstrap servers as `host:port`. */
+  brokers: string[];
+  clientId?: string;
+  saslMechanism?: EKafkaSaslMechanism;
+}
+
+/** Message broker specific settings (RabbitMQ / Kafka). */
+export interface IBrokerConfig {
+  rabbitmq?: IRabbitMqConfig;
+  kafka?: IKafkaConfig;
+}
+
 export interface Connection {
   id: string;
   workspaceId: string;
@@ -88,6 +117,7 @@ export interface Connection {
   serviceName?: string;
   filePath?: string;
   managedSqlite?: IManagedSqliteConfig;
+  broker?: IBrokerConfig;
   ssl?: ISSLConfig;
   ssh?: ISSHConfig;
   tagIds?: string[];

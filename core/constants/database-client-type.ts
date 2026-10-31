@@ -21,6 +21,8 @@ export enum DatabaseClientType {
   DUCKDB = 'duckdb',
   MSSQL = 'mssql',
   ORACLE = 'oracledb',
+  RABBITMQ = 'rabbitmq',
+  KAFKA = 'kafka',
 }
 
 export const SQL_DATABASE_CLIENT_TYPES = [
@@ -39,3 +41,11 @@ export const NOSQL_DATABASE_CLIENT_TYPES = [
   DatabaseClientType.REDIS,
   DatabaseClientType.MONGODB,
 ] as const;
+
+export const MESSAGE_BROKER_CLIENT_TYPES = [
+  DatabaseClientType.RABBITMQ,
+  DatabaseClientType.KAFKA,
+] as const;
+
+export const isMessageBrokerClientType = (type?: DatabaseClientType | string) =>
+  MESSAGE_BROKER_CLIENT_TYPES.includes(type as never);

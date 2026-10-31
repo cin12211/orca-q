@@ -91,6 +91,7 @@ function fromConnectionRow(row: Record<string, unknown>): Connection {
     serviceName: toOptionalString(row.service_name),
     filePath: toOptionalString(row.file_path),
     managedSqlite: parseJson(row.managed_sqlite),
+    broker: parseJson(row.broker),
     ssl: parseJson(row.ssl),
     ssh: parseJson(row.ssh),
     tagIds: parseJson(row.tag_ids),

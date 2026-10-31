@@ -1,5 +1,4 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import type { CallToolResult } from '@modelcontextprotocol/sdk/types.js';
 import { z } from 'zod';
 import { DatabaseClientType } from '~/core/constants/database-client-type';
 import { getConnectionParams } from '~/core/helpers/connection-helper';
@@ -11,11 +10,13 @@ import {
 } from '~/server/infrastructure/database/adapters';
 import { getDatabaseSource } from '~/server/infrastructure/driver';
 import { DUCKDB_IN_MEMORY_PATH } from '~/server/infrastructure/driver/duckdb.adapter';
+import { registerKafkaTools, registerRabbitTools } from './broker';
 import {
   getMcpConnection,
   getWorkspaceNames,
   listMcpConnections,
 } from './desktop-store';
+import { jsonResult, withToolErrors } from './mcp-tool-result';
 import {
   clampRowLimit,
   executeDuckDbSandboxedQuery,
@@ -34,49 +35,41 @@ const MCP_SUPPORTED_CLIENT_TYPES: DatabaseClientType[] = [
   DatabaseClientType.ORACLE,
 ];
 
+const MCP_BROKER_FAMILIES: Partial<Record<DatabaseClientType, string>> = {
+  [DatabaseClientType.RABBITMQ]: 'rabbitmq',
+  [DatabaseClientType.KAFKA]: 'kafka',
+};
+
 function isSupportedConnectionType(type: DatabaseClientType) {
   return MCP_SUPPORTED_CLIENT_TYPES.includes(type);
+}
+
+/** Which tool group serves a connection: `sql`, `rabbitmq`, `kafka` or null. */
+function getConnectionFamily(type: DatabaseClientType) {
+  if (isSupportedConnectionType(type)) return 'sql';
+  return MCP_BROKER_FAMILIES[type] ?? null;
 }
 
 const SERVER_INFO = { name: 'orcaq', version: '1.0.0' };
 
 const SERVER_INSTRUCTIONS =
   'OrcaQ exposes the database connections saved in the OrcaQ desktop app. ' +
-  'Start with list_connections, then explore with list_schemas, list_tables and describe_table before writing SQL. ' +
-  'run_query is read-only unless this session was granted write access to the connection in OrcaQ Settings → MCP Server. ' +
-  'DuckDB connections are always read-only and cannot read files outside the database.';
+  'Start with list_connections; its family field says which tools fit each connection. ' +
+  'sql: explore with list_schemas, list_tables and describe_table before writing SQL; run_query is read-only unless this session was granted write access to the connection in OrcaQ Settings → MCP Server. ' +
+  'DuckDB connections are always read-only and cannot read files outside the database. ' +
+  'rabbitmq: rabbitmq_* tools (overview, queues, exchanges, peek, users, policies). ' +
+  'kafka: kafka_* tools (overview, topics, read messages, consumer groups). Broker tools only read: peeked RabbitMQ messages are requeued and Kafka reads never commit offsets.';
 
 const connectionIdSchema = z
   .string()
   .describe('Connection id from list_connections.');
-
-function jsonResult(value: unknown): CallToolResult {
-  return {
-    content: [{ type: 'text', text: JSON.stringify(value, null, 2) }],
-  };
-}
-
-function errorResult(error: unknown): CallToolResult {
-  const message = error instanceof Error ? error.message : String(error);
-  return { content: [{ type: 'text', text: message }], isError: true };
-}
-
-async function withToolErrors(
-  run: () => Promise<CallToolResult>
-): Promise<CallToolResult> {
-  try {
-    return await run();
-  } catch (error) {
-    return errorResult(error);
-  }
-}
 
 async function getSqlConnection(sessionId: string, connectionId: string) {
   const entry = await getMcpConnection(sessionId, connectionId);
 
   if (!isSupportedConnectionType(entry.connection.type)) {
     throw new Error(
-      `Connection "${entry.connection.name}" is ${entry.connection.type}; OrcaQ MCP currently supports PostgreSQL, MySQL, MariaDB, SQLite, DuckDB and Oracle.`
+      `Connection "${entry.connection.name}" is ${entry.connection.type}; SQL tools support PostgreSQL, MySQL, MariaDB, SQLite, DuckDB and Oracle. Use the tools matching its family from list_connections.`
     );
   }
 
@@ -111,7 +104,7 @@ export function createOrcaqMcpServer(session: McpSession): McpServer {
     {
       title: 'List connections',
       description:
-        'List the database connections this MCP session can access, with its access level (read or write). Credentials are never returned.',
+        'List the connections this MCP session can access, with access level (read or write) and family (sql, rabbitmq, kafka) that picks the tools to use. Credentials are never returned.',
       annotations: { readOnlyHint: true },
     },
     () =>
@@ -128,7 +121,8 @@ export function createOrcaqMcpServer(session: McpSession): McpServer {
             type: connection.type,
             workspace: workspaceNames.get(connection.workspaceId) ?? null,
             access: resolveAccess(connection, access),
-            supported: isSupportedConnectionType(connection.type),
+            family: getConnectionFamily(connection.type),
+            supported: getConnectionFamily(connection.type) !== null,
           }))
         );
       })
@@ -311,6 +305,9 @@ export function createOrcaqMcpServer(session: McpSession): McpServer {
         return jsonResult(result);
       })
   );
+
+  registerRabbitTools(server, session);
+  registerKafkaTools(server, session);
 
   return server;
 }

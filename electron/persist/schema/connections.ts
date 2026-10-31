@@ -21,6 +21,7 @@ export async function createConnectionsTable(knex: Knex): Promise<void> {
     t.text('service_name').nullable();
     t.text('file_path').nullable();
     t.text('managed_sqlite').nullable();
+    t.text('broker').nullable();
     t.text('ssl').nullable();
     t.text('ssh').nullable();
     t.text('tag_ids').nullable();

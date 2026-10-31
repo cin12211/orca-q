@@ -3,6 +3,7 @@ import {
   EConnectionFamily,
   EConnectionProviderKind,
   EManagedSqliteProvider,
+  type IBrokerConfig,
   type IManagedSqliteConfig,
 } from '~/core/types/entities/connection.entity';
 import {
@@ -33,6 +34,7 @@ export default defineEventHandler(
       providerKind?: EConnectionProviderKind;
       family?: EConnectionFamily;
       managedSqlite?: IManagedSqliteConfig;
+      broker?: IBrokerConfig;
       ssl?: ISSLConfig;
       ssh?: ISSHConfig;
     } = await readBody(event);
@@ -55,6 +57,7 @@ export default defineEventHandler(
       providerKind: body.providerKind,
       family: body.family,
       managedSqlite: body.managedSqlite,
+      broker: body.broker,
       ssl: body.ssl,
       ssh: body.ssh,
     });

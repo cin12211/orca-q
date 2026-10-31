@@ -400,7 +400,7 @@
 
 **Tech Evidence:**
 
-- Files: `components/modules/instance-insights/InstanceInsightsPanel.vue`
+- Files: `components/modules/instance-insights/PostgresInstanceInsightsPanel.vue`
 - Components: `InstanceInsightsActivitySection.vue`, `InstanceInsightsStateSection.vue`, `InstanceInsightsConfigurationSection.vue`, `InstanceInsightsReplicationSection.vue`
 - API: `server/api/instance-insights/` (dashboard, state, configuration, replication, terminate-connection, cancel-query, drop-slot, toggle-slot-status)
 

@@ -19,6 +19,7 @@ export function getConnectionParams(connection?: Connection) {
     type: connection.type,
     providerKind: connection.providerKind,
     managedSqlite: connection.managedSqlite,
+    broker: connection.broker,
     ssl: connection.ssl,
     ssh: connection.ssh,
   };

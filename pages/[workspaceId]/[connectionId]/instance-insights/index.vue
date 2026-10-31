@@ -1,8 +1,11 @@
 <script setup lang="ts">
 import { storeToRefs } from 'pinia';
-import InstanceInsightsPanel from '~/components/modules/instance-insights/InstanceInsightsPanel.vue';
-import MultiDbInstanceInsightsPanel from '~/components/modules/instance-insights/MultiDbInstanceInsightsPanel.vue';
-import RedisInstanceInsightsPanel from '~/components/modules/instance-insights/RedisInstanceInsightsPanel.vue';
+import type { Component } from 'vue';
+import GenericSqlInstanceInsightsPanel from '~/components/modules/instance-insights/GenericSqlInstanceInsightsPanel.vue';
+import PostgresInstanceInsightsPanel from '~/components/modules/instance-insights/PostgresInstanceInsightsPanel.vue';
+import { KafkaInstanceInsightsPanel } from '~/components/modules/kafka-workspace';
+import { RabbitInstanceInsightsPanel } from '~/components/modules/rabbitmq-workspace';
+import { RedisInstanceInsightsPanel } from '~/components/modules/redis-workspace/containers';
 import { useRedisWorkspace } from '~/components/modules/redis-workspace/hooks/useRedisWorkspace';
 import { DatabaseClientType } from '~/core/constants/database-client-type';
 import { useManagementConnectionStore } from '~/core/stores/managementConnectionStore';
@@ -53,6 +56,49 @@ const redisWorkspace = useRedisWorkspace({
   mode: 'meta',
 });
 
+const sqlPanelProps = computed(() => ({
+  dbConnectionString: dbConnectionString.value,
+  databaseName: databaseName.value,
+  dbType: dbType.value,
+}));
+
+const brokerPanelProps = computed(() => ({
+  connection: connectionData.value,
+}));
+
+const redisPanelProps = computed(() => ({
+  databaseName: databaseName.value,
+  databaseIndex: redisWorkspace.selectedDatabaseIndex.value,
+  databases: redisWorkspace.databases.value,
+  dbType: dbType.value,
+  'onUpdate:databaseIndex': (value: number) => {
+    redisWorkspace.selectedDatabaseIndex.value = value;
+  },
+}));
+
+interface InsightsPanel {
+  is: Component;
+  props: Record<string, unknown>;
+}
+
+const panel = computed<InsightsPanel>(() => {
+  switch (dbType.value) {
+    case DatabaseClientType.REDIS:
+      return { is: RedisInstanceInsightsPanel, props: redisPanelProps.value };
+    case DatabaseClientType.RABBITMQ:
+      return { is: RabbitInstanceInsightsPanel, props: brokerPanelProps.value };
+    case DatabaseClientType.KAFKA:
+      return { is: KafkaInstanceInsightsPanel, props: brokerPanelProps.value };
+    case DatabaseClientType.POSTGRES:
+      return { is: PostgresInstanceInsightsPanel, props: sqlPanelProps.value };
+    default:
+      return {
+        is: GenericSqlInstanceInsightsPanel,
+        props: sqlPanelProps.value,
+      };
+  }
+});
+
 watch(
   () => activeTab.value?.metadata?.databaseIndex,
   value => {
@@ -74,29 +120,6 @@ watch(
       <p class="text-sm">Select a connection to open Instance Insights</p>
     </div>
 
-    <RedisInstanceInsightsPanel
-      v-else-if="dbType === DatabaseClientType.REDIS"
-      :database-name="databaseName"
-      :database-index="redisWorkspace.selectedDatabaseIndex.value"
-      :databases="redisWorkspace.databases.value"
-      :db-type="dbType"
-      @update:database-index="
-        redisWorkspace.selectedDatabaseIndex.value = $event
-      "
-    />
-
-    <InstanceInsightsPanel
-      v-else-if="dbType === DatabaseClientType.POSTGRES"
-      :db-connection-string="dbConnectionString"
-      :database-name="databaseName"
-      :db-type="dbType"
-    />
-
-    <MultiDbInstanceInsightsPanel
-      v-else
-      :db-connection-string="dbConnectionString"
-      :database-name="databaseName"
-      :db-type="dbType"
-    />
+    <component :is="panel.is" v-else v-bind="panel.props" />
   </div>
 </template>

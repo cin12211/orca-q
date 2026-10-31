@@ -1,0 +1,88 @@
+import { useTabManagement } from '~/core/composables/useTabManagement';
+import { useManagementConnectionStore } from '~/core/stores';
+import { TabViewType } from '~/core/types/entities/tab-view.entity';
+import {
+  RABBIT_DEFAULT_EXCHANGE_LABEL,
+  RABBIT_ICON_CLASS,
+  RABBIT_TAB_ICONS,
+} from '../constants';
+
+/** Tab ids include the connection so two brokers never share a tab. */
+export function useRabbitTabs() {
+  const { openBrokerTab } = useTabManagement();
+  const connectionStore = useManagementConnectionStore();
+  const connectionId = () =>
+    connectionStore.selectedConnection?.id ?? 'rabbitmq';
+  const userTabId = (userName: string) =>
+    `rabbit-user-${connectionId()}-${userName}`;
+
+  const openQueue = (vhost: string, queueName: string) =>
+    openBrokerTab({
+      id: `rabbit-queue-${connectionId()}-${vhost}-${queueName}`,
+      name: queueName,
+      type: TabViewType.RabbitQueueDetail,
+      icon: RABBIT_TAB_ICONS.queue,
+      iconClass: RABBIT_ICON_CLASS,
+      metadata: { vhost, queueName },
+    });
+
+  const openExchange = (vhost: string, exchangeName: string) =>
+    openBrokerTab({
+      id: `rabbit-exchange-${connectionId()}-${vhost}-${exchangeName}`,
+      name: exchangeName || RABBIT_DEFAULT_EXCHANGE_LABEL,
+      type: TabViewType.RabbitExchangeDetail,
+      icon: RABBIT_TAB_ICONS.exchange,
+      iconClass: RABBIT_ICON_CLASS,
+      metadata: { vhost, exchangeName },
+    });
+
+  const openQueueList = (vhost: string) =>
+    openBrokerTab({
+      id: `rabbit-queues-${connectionId()}-${vhost}`,
+      name: `Queues - ${vhost}`,
+      type: TabViewType.RabbitQueueList,
+      icon: RABBIT_TAB_ICONS.queueList,
+      metadata: { vhost },
+    });
+
+  const openUser = (
+    userName: string,
+    appearance: { icon: string; iconClass: string } = {
+      icon: RABBIT_TAB_ICONS.user,
+      iconClass: RABBIT_ICON_CLASS,
+    }
+  ) =>
+    openBrokerTab({
+      id: userTabId(userName),
+      name: userName,
+      type: TabViewType.RabbitUserDetail,
+      ...appearance,
+      metadata: { userName },
+    });
+
+  const openDefinitions = () =>
+    openBrokerTab({
+      id: `rabbit-definitions-${connectionId()}`,
+      name: 'Management Definitions',
+      type: TabViewType.RabbitDefinitions,
+      icon: RABBIT_TAB_ICONS.definitions,
+    });
+
+  const openConnections = () =>
+    openBrokerTab({
+      id: `rabbit-connections-${connectionId()}`,
+      name: 'Connections',
+      type: TabViewType.RabbitConnections,
+      icon: RABBIT_TAB_ICONS.connections,
+    });
+
+  return {
+    openQueue,
+    openExchange,
+    openQueueList,
+    openConnections,
+    openUser,
+    openDefinitions,
+    userTabId,
+  };
+}
