@@ -69,6 +69,78 @@ describe('createDatabaseFile', () => {
     }
   });
 
+  it('applies the chosen SQLite options', async () => {
+    const filePath = await createDatabaseFile({
+      type: DatabaseClientType.SQLITE3,
+      directory,
+      fileName: uniqueName(),
+      options: {
+        journalMode: 'WAL',
+        pageSize: '8192',
+        encoding: 'UTF-16',
+        autoVacuum: 'FULL',
+      },
+    });
+    const adapter = new SqliteAdapter({ filename: filePath });
+
+    try {
+      await expect(adapter.rawQuery('PRAGMA journal_mode')).resolves.toEqual([
+        { journal_mode: 'wal' },
+      ]);
+      await expect(adapter.rawQuery('PRAGMA page_size')).resolves.toEqual([
+        { page_size: 8192 },
+      ]);
+      await expect(adapter.rawQuery('PRAGMA auto_vacuum')).resolves.toEqual([
+        { auto_vacuum: 1 },
+      ]);
+      const [{ encoding }] = await adapter.rawQuery('PRAGMA encoding');
+      expect(encoding).toMatch(/^UTF-16/);
+      await expect(
+        adapter.rawQuery('SELECT name FROM sqlite_master')
+      ).resolves.toEqual([]);
+    } finally {
+      await adapter.destroy();
+    }
+  });
+
+  it('applies the chosen DuckDB options', async () => {
+    const filePath = await createDatabaseFile({
+      type: DatabaseClientType.DUCKDB,
+      directory,
+      fileName: uniqueName(),
+      options: { storageVersion: 'v1.0.0', blockSize: '16384' },
+    });
+    const adapter = new DuckDbAdapter({ filename: filePath });
+
+    try {
+      const [database] = await adapter.rawQuery<{
+        tags: { key: string; value: string }[];
+      }>('SELECT tags FROM duckdb_databases() WHERE NOT internal');
+      const [size] = await adapter.rawQuery(
+        'SELECT block_size FROM pragma_database_size()'
+      );
+
+      expect(database?.tags).toContainEqual({
+        key: 'storage_version',
+        value: 'v1.0.0+',
+      });
+      expect(size).toEqual({ block_size: '16384' });
+    } finally {
+      await adapter.destroy();
+    }
+  });
+
+  it('refuses values outside the offered choices', async () => {
+    await expect(
+      createDatabaseFile({
+        type: DatabaseClientType.SQLITE3,
+        directory,
+        fileName: uniqueName(),
+        options: { journalMode: 'WAL; DROP TABLE x' },
+      })
+    ).rejects.toMatchObject({ statusCode: 400 });
+  });
+
   it('keeps an extension the user typed', async () => {
     const fileName = `${uniqueName()}.db`;
 

@@ -1,4 +1,9 @@
-import { expect, test, type Page } from '@playwright/test';
+import {
+  expect,
+  test,
+  type APIRequestContext,
+  type Page,
+} from '@playwright/test';
 import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -20,6 +25,17 @@ async function confirmCreateFile(page: Page, fileName: string) {
   await page.getByTestId('create-database-file-name').fill(fileName);
   await page.getByTestId('create-database-file-browse').click();
   await page.getByTestId('create-database-file-confirm').click();
+}
+
+async function chooseOption(page: Page, key: string, value: string) {
+  await page.getByTestId(`create-database-file-${key}`).click();
+  await page.getByTestId(`create-database-file-${key}-${value}`).click();
+}
+
+async function query(request: APIRequestContext, data: object) {
+  const response = await request.post('/api/query/execute', { data });
+
+  return (await response.json()).result;
 }
 
 test.describe('Create new database file', () => {
@@ -60,6 +76,50 @@ test.describe('Create new database file', () => {
       });
     });
   }
+
+  test('applies advanced DuckDB options', async ({ page, request }) => {
+    await openCreateFileDialog(page, 'db-type-card-duckdb');
+    await page.getByTestId('create-database-file-advanced').click();
+    await chooseOption(page, 'storageVersion', 'v1.0.0');
+    await chooseOption(page, 'blockSize', '16384');
+    await confirmCreateFile(page, 'advanced');
+    await expect(page.getByTestId('create-database-file-dialog')).toBeHidden();
+
+    const [row] = await query(request, {
+      type: 'duckdb',
+      filePath: join(directory, 'advanced.duckdb'),
+      query:
+        "SELECT (SELECT block_size FROM pragma_database_size()) AS block_size, (SELECT tags['storage_version'] FROM duckdb_databases() WHERE NOT internal) AS version",
+    });
+
+    expect(row).toEqual({ block_size: '16384', version: 'v1.0.0+' });
+  });
+
+  test('applies advanced SQLite options', async ({ page, request }) => {
+    await openCreateFileDialog(page, 'db-type-card-sqlite');
+    await page.getByTestId('create-database-file-advanced').click();
+    await chooseOption(page, 'journalMode', 'WAL');
+    await chooseOption(page, 'pageSize', '8192');
+    await confirmCreateFile(page, 'advanced');
+    await expect(page.getByTestId('create-database-file-dialog')).toBeHidden();
+
+    const filePath = join(directory, 'advanced.sqlite');
+
+    expect(
+      await query(request, {
+        type: 'sqlite3',
+        filePath,
+        query: 'PRAGMA page_size',
+      })
+    ).toEqual([{ page_size: 8192 }]);
+    expect(
+      await query(request, {
+        type: 'sqlite3',
+        filePath,
+        query: 'PRAGMA journal_mode',
+      })
+    ).toEqual([{ journal_mode: 'wal' }]);
+  });
 
   test('refuses to overwrite an existing file', async ({ page }) => {
     await openCreateFileDialog(page, 'db-type-card-duckdb');

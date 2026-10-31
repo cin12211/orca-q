@@ -8,6 +8,7 @@ import {
 } from 'vue';
 import dayjs from 'dayjs';
 import { DatabaseClientType } from '~/core/constants/database-client-type';
+import type { DatabaseFileOptions } from '~/core/constants/database-file-options';
 import { uuidv4 } from '~/core/helpers';
 import { isElectron } from '~/core/helpers/environment';
 import type { Connection } from '~/core/stores';
@@ -605,6 +606,7 @@ export function useConnectionForm(props: {
   const createDatabaseFile = async (input: {
     directory: string;
     fileName: string;
+    options: DatabaseFileOptions;
   }) => {
     const { filePath } = await connectionService.createDatabaseFile({
       type: isDuckDb.value

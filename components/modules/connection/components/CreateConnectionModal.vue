@@ -663,6 +663,9 @@ watch(testStatus, status => {
   <CreateDatabaseFileDialog
     v-model:open="isCreateFileDialogOpen"
     :database-label="fileDatabaseLabel"
+    :database-type="
+      isDuckDb ? DatabaseClientType.DUCKDB : DatabaseClientType.SQLITE3
+    "
     :pick-directory="pickDatabaseDirectory"
     :create-file="createDatabaseFile"
   />

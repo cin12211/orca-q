@@ -211,9 +211,15 @@ class DuckDbSession {
 }
 
 /** Creates an empty, valid database file; the caller guarantees it is new. */
-export async function createDuckDbFile(filePath: string): Promise<void> {
+export async function createDuckDbFile(
+  filePath: string,
+  options: { storageVersion: string; blockSize: string }
+): Promise<void> {
   const { DuckDBInstance } = await loadDuckDbDriver();
-  const instance = await DuckDBInstance.create(filePath);
+  const instance = await DuckDBInstance.create(filePath, {
+    storage_compatibility_version: options.storageVersion,
+    default_block_size: options.blockSize,
+  });
 
   try {
     const connection = await instance.connect();
