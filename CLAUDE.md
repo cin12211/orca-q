@@ -43,6 +43,7 @@ This repo is a Nuxt 3 + Vue 3 + TypeScript with Electron desktop support.
 ### Vue Components
 
 All components use `<script setup lang="ts">` with this order:
+
 1. Imports
 2. Props & Emits (`defineProps`, `defineEmits`)
 3. Stores & Composables
@@ -69,12 +70,12 @@ Component file structure order: `<script setup>`, then `<template>`, then `<styl
 
 ### State Management
 
-| State Type | Use For | Location |
-|------------|---------|----------|
-| Local `ref`/`reactive` | UI state (modals, forms, temp) | Component |
-| Pinia Store | Shared state across components | `/shared/stores/` |
-| Composable | Reusable logic with local state | `/composables/` |
-| Provide/Inject | Deep component tree data | `/shared/contexts/` |
+| State Type             | Use For                         | Location            |
+| ---------------------- | ------------------------------- | ------------------- |
+| Local `ref`/`reactive` | UI state (modals, forms, temp)  | Component           |
+| Pinia Store            | Shared state across components  | `/shared/stores/`   |
+| Composable             | Reusable logic with local state | `/composables/`     |
+| Provide/Inject         | Deep component tree data        | `/shared/contexts/` |
 
 Use `storeToRefs()` when accessing store state for reactivity: `const { workspaceId } = storeToRefs(wsStateStore)`
 
@@ -107,7 +108,7 @@ Prefer Tailwind utilities. Use `<style scoped>` only for complex styles not achi
 
 ### Database Connections
 
-- Supported types: `postgres`, `mysql`, `mariadb`, `oracledb`, `sqlite3`, `redis`
+- Supported types: `postgres`, `mysql`, `mariadb`, `oracledb`, `sqlite3`, `redis`, `mongodb`, `rabbitmq`, `kafka`
 - Connection string formats:
   - PostgreSQL: `postgresql://user:password@host:port/database`
   - MySQL: `mysql://user:password@host:port/database`
@@ -117,6 +118,9 @@ Prefer Tailwind utilities. Use `<style scoped>` only for complex styles not achi
 - Oracle structured-form connections use `serviceName` instead of `database`
 - Managed SQLite (Cloudflare D1, Turso) uses `managed` method and stays on SQL family path
 - Local SQLite uses `file` method (desktop runtime only)
+- RabbitMQ and Kafka use the `form` method only, with broker settings in `connection.broker`:
+  - RabbitMQ goes through the Management HTTP API (port 15672); `broker.rabbitmq.vhost` is the default vhost. Requires RabbitMQ 3.12+
+  - Kafka uses `broker.kafka.brokers` (`host:port` list) and optional SASL PLAIN/SCRAM; no SSH tunnel. Requires Kafka 3.5+
 - Failed health checks return actionable driver messages but connections are still saved
 - A failed re-test must not delete or mutate an already saved connection record
 
@@ -125,6 +129,11 @@ Prefer Tailwind utilities. Use `<style scoped>` only for complex styles not achi
 - Connection family drives visible tabs, sidebar panels, empty states, and unsupported-feature fallbacks
 - D1 and Turso stay on `sqlite3` type but resolve to the `sql` family
 - Redis hides SQL-only surfaces: `Schemas`, `ERD`, `UsersRoles`, schema diff, SQL backup/restore
+- RabbitMQ and Kafka have their own families: the Schemas activity shows the broker browser, Database Tools shows broker tools; no SQL surfaces
+- Broker features stay non-destructive: browse, peek (RabbitMQ requeues, Kafka reads without committing), and test publish/produce guarded by Strict Mode. No delete, purge or offset reset
+- Exception: RabbitMQ Instance Insights can add/edit/delete virtual hosts and policies (user and operator), set/clear vhost and user limits, enable feature flags, force-close connections and rename the cluster, all guarded by Strict Mode; deleting a vhost needs its name typed
+- Exception: RabbitMQ Users & Permissions supports full user management (create, edit tags/password, set/clear permissions, topic permissions and user limits, delete user) for `administrator` users, guarded by Strict Mode; deleting needs the user name typed, and the connected user can neither delete itself nor drop its own `administrator` tag
+- The built-in MCP server (desktop only) serves RabbitMQ and Kafka through read-only `rabbitmq_*` / `kafka_*` tools (overview, queues, exchanges, peek, users, policies; topics, read messages, consumer groups). `list_connections` reports each connection's `family` (`sql`, `rabbitmq`, `kafka`). Broker tools never write, whatever the session's access level
 - Provider-limited SQL tools for D1/Turso must show clear unavailable state instead of redirecting away from SQL family
 
 ### Workspaces
@@ -197,6 +206,7 @@ Single-context — root `CONTEXT.md` + `docs/adr/`. See `docs/agents/domain.md`.
 This project has a knowledge graph at graphify-out/ with god nodes, community structure, and cross-file relationships.
 
 Rules:
+
 - For codebase questions, first run `graphify query "<question>"` when graphify-out/graph.json exists. Use `graphify path "<A>" "<B>"` for relationships and `graphify explain "<concept>"` for focused concepts. These return a scoped subgraph, usually much smaller than GRAPH_REPORT.md or raw grep output.
 - If graphify-out/wiki/index.md exists, use it for broad navigation instead of raw source browsing.
 - Read graphify-out/GRAPH_REPORT.md only for broad architecture review or when query/path/explain do not surface enough context.

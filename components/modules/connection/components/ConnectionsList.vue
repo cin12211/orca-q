@@ -95,6 +95,21 @@ const getConnectionDetails = (connection: Connection) => {
     };
   }
 
+  // Broker strings can carry credentials and several hosts, so show the
+  // parsed broker settings instead of the raw string.
+  if (connection.broker?.kafka) {
+    const brokers = connection.broker.kafka.brokers.join(', ');
+    return { summary: brokers, tooltip: brokers };
+  }
+
+  if (connection.broker?.rabbitmq) {
+    const vhost = connection.broker.rabbitmq.vhost || '/';
+    return {
+      summary: `${connection.host}:${vhost}`,
+      tooltip: `${connection.host}:${connection.port}/${vhost}`,
+    };
+  }
+
   if (connection.method === EConnectionMethod.STRING) {
     const parsed = getParsedConnection(connection);
     const fallback = connection.connectionString || 'Invalid connection string';
