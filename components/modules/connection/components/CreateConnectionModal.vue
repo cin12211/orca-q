@@ -234,12 +234,13 @@ watch(testStatus, status => {
                   v-if="canCreateDatabaseFile && isFileMethod"
                   data-testid="connection-create-file-button"
                   type="button"
+                  :title="`Create an empty ${fileDatabaseLabel} file`"
                   variant="outline"
                   size="sm"
                   @click="isCreateFileDialogOpen = true"
                 >
                   <Icon name="hugeicons:add-01" class="size-4" />
-                  Create new
+                  New database file
                 </Button>
               </div>
 

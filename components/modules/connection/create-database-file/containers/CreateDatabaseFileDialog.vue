@@ -48,7 +48,7 @@ const {
   <Dialog :open="open" @update:open="emit('update:open', $event)">
     <DialogContent class="max-w-md" data-testid="create-database-file-dialog">
       <DialogHeader>
-        <DialogTitle>Create {{ databaseLabel }} database</DialogTitle>
+        <DialogTitle>New {{ databaseLabel }} database file</DialogTitle>
         <DialogDescription>
           Creates an empty database file on this computer.
         </DialogDescription>
