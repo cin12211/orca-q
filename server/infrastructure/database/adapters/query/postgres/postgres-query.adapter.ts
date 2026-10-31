@@ -20,7 +20,7 @@ export class PostgresQueryAdapter
   extends BaseDomainAdapter
   implements IDatabaseQueryAdapter
 {
-  readonly dbType = DatabaseClientType.POSTGRES;
+  readonly dbType: DatabaseClientType = DatabaseClientType.POSTGRES;
 
   static async create(
     params: DatabaseQueryAdapterParams

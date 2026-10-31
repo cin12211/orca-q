@@ -15,6 +15,7 @@ import {
   type FilterSchema,
 } from '~/core/helpers/sql-where-clause';
 import { LocalStorageManager } from '~/core/persist/LocalStorageManager';
+import { getSqlDialect } from '~/core/sql-dialect';
 import { useQuickQueryLogs, type Connection } from '~/core/stores';
 import { useAppConfigStore } from '~/core/stores/appConfigStore';
 
@@ -73,8 +74,7 @@ export const useTableQueryBuilder = ({
 
     if (
       preference === NullOrderPreference.Unset ||
-      (dbType !== DatabaseClientType.POSTGRES &&
-        dbType !== DatabaseClientType.ORACLE)
+      !getSqlDialect(dbType).supportsNullsOrdering()
     ) {
       return '';
     }
@@ -84,19 +84,13 @@ export const useTableQueryBuilder = ({
       : 'NULLS LAST';
   });
 
-  // Returns a quoting function appropriate for the active connection's DB type.
-  // MySQL and MariaDB use backtick quoting; all others (Postgres, Oracle, SQLite) use double-quotes.
-  const quoteIdent = computed(() => {
-    const dbType = connection.value?.type;
-    if (
-      dbType === DatabaseClientType.MYSQL ||
-      dbType === DatabaseClientType.MYSQL2 ||
-      dbType === DatabaseClientType.MARIADB
-    ) {
-      return (name: string) => `\`${name}\``;
-    }
-    return (name: string) => `"${name}"`;
-  });
+  const sqlDialect = computed(() => getSqlDialect(connection.value?.type));
+
+  // Quoting follows the active connection's dialect: backticks for MySQL/MariaDB,
+  // brackets for SQL Server, double-quotes for the rest.
+  const quoteIdent = computed(
+    () => (name: string) => sqlDialect.value.quoteIdentifier(name)
+  );
 
   const baseQueryString = computed(() => {
     const q = quoteIdent.value;
@@ -140,12 +134,17 @@ export const useTableQueryBuilder = ({
       if (nullOrderClause.value) {
         orderClauses = `${orderClauses} ${nullOrderClause.value}`;
       }
+    } else if (sqlDialect.value.requiresOrderByForPagination()) {
+      // SQL Server rejects OFFSET/FETCH without an ORDER BY.
+      orderClauses = 'ORDER BY (SELECT NULL)';
     }
 
-    const limitClause = `LIMIT ${pagination.limit}`;
-    const offsetClause = `OFFSET ${pagination.offset}`;
+    const paginationClause = sqlDialect.value.buildPagination(
+      pagination.limit,
+      pagination.offset
+    );
 
-    return `${DEFAULT_QUERY} ${q(schemaName)}.${q(tableName)} ${whereClauses.value || ''} ${orderClauses} ${limitClause} ${offsetClause}`;
+    return `${DEFAULT_QUERY} ${q(schemaName)}.${q(tableName)} ${whereClauses.value || ''} ${orderClauses} ${paginationClause}`;
   });
 
   const queryCountString = computed(() => {

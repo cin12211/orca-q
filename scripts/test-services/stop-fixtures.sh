@@ -6,6 +6,7 @@
 #   bash scripts/test-services/stop-fixtures.sh --profile <profile>
 #
 # Profiles: postgres | mysql | mariadb | sql | redis | mongodb | all
+#           cockroachdb | mssql
 #           rabbitmq | kafka
 # ──────────────────────────────────────────────────────────────────────────────
 
@@ -75,7 +76,7 @@ case "${profile}" in
   none|sqlite)
     echo "No containers to stop"
     ;;
-  postgres|mysql|mariadb|sql)
+  postgres|mysql|mariadb|sql|cockroachdb|mssql)
     stop_sql "${profile}"
     ;;
   redis)

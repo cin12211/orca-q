@@ -8,6 +8,17 @@ type AdapterFactories<
   TParams extends BaseDatabaseAdapterParams,
 > = Partial<Record<DatabaseClientType, (params: TParams) => Promise<TAdapter>>>;
 
+// Known SQL engines get a 501 "not available" instead of a 400 so the UI can
+// show a clear unsupported-feature state for domains they do not implement.
+const KNOWN_SQL_DATABASE_TYPES = new Set<DatabaseClientType>([
+  DatabaseClientType.MYSQL,
+  DatabaseClientType.MARIADB,
+  DatabaseClientType.ORACLE,
+  DatabaseClientType.SQLITE3,
+  DatabaseClientType.MSSQL,
+  DatabaseClientType.COCKROACHDB,
+]);
+
 function getDatabaseLabel(dbType: DatabaseClientType): string {
   switch (dbType) {
     case DatabaseClientType.MYSQL:
@@ -18,6 +29,10 @@ function getDatabaseLabel(dbType: DatabaseClientType): string {
       return 'Oracle';
     case DatabaseClientType.SQLITE3:
       return 'SQLite';
+    case DatabaseClientType.MSSQL:
+      return 'SQL Server';
+    case DatabaseClientType.COCKROACHDB:
+      return 'CockroachDB';
     default:
       return dbType;
   }
@@ -45,28 +60,7 @@ export async function createDomainAdapter<
     return factory(params);
   }
 
-  if (normalizedDbType === DatabaseClientType.MYSQL) {
-    throw createError({
-      statusCode: 501,
-      statusMessage: `${getDatabaseLabel(normalizedDbType)} ${adapterName} support is not available`,
-    });
-  }
-
-  if (normalizedDbType === DatabaseClientType.MARIADB) {
-    throw createError({
-      statusCode: 501,
-      statusMessage: `${getDatabaseLabel(normalizedDbType)} ${adapterName} support is not available`,
-    });
-  }
-
-  if (normalizedDbType === DatabaseClientType.ORACLE) {
-    throw createError({
-      statusCode: 501,
-      statusMessage: `${getDatabaseLabel(normalizedDbType)} ${adapterName} support is not available`,
-    });
-  }
-
-  if (normalizedDbType === DatabaseClientType.SQLITE3) {
+  if (KNOWN_SQL_DATABASE_TYPES.has(normalizedDbType)) {
     throw createError({
       statusCode: 501,
       statusMessage: `${getDatabaseLabel(normalizedDbType)} ${adapterName} support is not available`,

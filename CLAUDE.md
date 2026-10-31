@@ -108,16 +108,20 @@ Prefer Tailwind utilities. Use `<style scoped>` only for complex styles not achi
 
 ### Database Connections
 
-- Supported types: `postgres`, `mysql`, `mariadb`, `oracledb`, `sqlite3`, `redis`, `mongodb`, `rabbitmq`, `kafka`
+- Supported types: `postgres`, `mysql`, `mariadb`, `oracledb`, `sqlite3`, `redis`, `mssql`, `cockroachdb`, `mongodb`, `rabbitmq`, `kafka`
 - Connection string formats:
   - PostgreSQL: `postgresql://user:password@host:port/database`
   - MySQL: `mysql://user:password@host:port/database`
   - MariaDB: `mariadb://user:password@host:port/database`
   - Oracle: `oracledb://user:password@host:port/serviceName`
   - SQLite: `sqlite3:///absolute/path/to/database.sqlite`
+  - SQL Server: `Server=host,1433;Database=db;User Id=user;Password=…` (ADO.NET) or `sqlserver://user:password@host:1433/database`
+  - CockroachDB: `postgresql://user:password@host:26257/database?sslmode=verify-full` (with the CockroachDB type selected)
 - Oracle structured-form connections use `serviceName` instead of `database`
 - Managed SQLite (Cloudflare D1, Turso) uses `managed` method and stays on SQL family path
 - Local SQLite uses `file` method (desktop runtime only)
+- SQL Server and CockroachDB enforce a minimum server version (SQL Server 2017+ or Azure SQL, CockroachDB v23.2+); older servers fail the health check and every data request
+- SQL Server and CockroachDB hide Users & Roles, AI Agent, Backup & Restore, and Schema Diff; their Instance Insights is read-only
 - RabbitMQ and Kafka use the `form` method only, with broker settings in `connection.broker`:
   - RabbitMQ goes through the Management HTTP API (port 15672); `broker.rabbitmq.vhost` is the default vhost. Requires RabbitMQ 3.12+
   - Kafka uses `broker.kafka.brokers` (`host:port` list) and optional SASL PLAIN/SCRAM; no SSH tunnel. Requires Kafka 3.5+
@@ -133,6 +137,7 @@ Prefer Tailwind utilities. Use `<style scoped>` only for complex styles not achi
 - Broker features stay non-destructive: browse, peek (RabbitMQ requeues, Kafka reads without committing), and test publish/produce guarded by Strict Mode. No delete, purge or offset reset
 - Exception: RabbitMQ Instance Insights can add/edit/delete virtual hosts and policies (user and operator), set/clear vhost and user limits, enable feature flags, force-close connections and rename the cluster, all guarded by Strict Mode; deleting a vhost needs its name typed
 - Exception: RabbitMQ Users & Permissions supports full user management (create, edit tags/password, set/clear permissions, topic permissions and user limits, delete user) for `administrator` users, guarded by Strict Mode; deleting needs the user name typed, and the connected user can neither delete itself nor drop its own `administrator` tag
+- The built-in MCP server (desktop only) serves SQL connections (PostgreSQL, CockroachDB, MySQL, MariaDB, SQL Server, SQLite, Oracle) through `list_schemas` / `list_tables` / `describe_table` / `run_query` / `explain_query`. Read-only sessions run inside a database read-only scope (SQL Server: a transaction that is always rolled back) after the SQL guard; `explain_query` is not available for SQL Server or Oracle
 - The built-in MCP server (desktop only) serves RabbitMQ and Kafka through read-only `rabbitmq_*` / `kafka_*` tools (overview, queues, exchanges, peek, users, policies; topics, read messages, consumer groups). `list_connections` reports each connection's `family` (`sql`, `rabbitmq`, `kafka`). Broker tools never write, whatever the session's access level
 - Provider-limited SQL tools for D1/Turso must show clear unavailable state instead of redirecting away from SQL family
 

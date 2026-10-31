@@ -215,6 +215,7 @@ const METADATA_TYPE_ALIAS_DATABASE_ALIASES: Partial<
 > = {
   [DatabaseClientType.MYSQL2]: DatabaseClientType.MYSQL,
   [DatabaseClientType.BETTER_SQLITE3]: DatabaseClientType.SQLITE3,
+  [DatabaseClientType.COCKROACHDB]: DatabaseClientType.POSTGRES,
 };
 
 const normalizeTypeAliasInput = (rawType: string) =>

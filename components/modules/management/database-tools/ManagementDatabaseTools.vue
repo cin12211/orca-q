@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { useTabManagement } from '~/core/composables/useTabManagement';
 import { useWorkspaceConnectionRoute } from '~/core/composables/useWorkspaceConnectionRoute';
+import { isInsightsOnlyDatabaseToolsClientType } from '~/core/constants/database-client-type';
 import { useManagementConnectionStore } from '~/core/stores/managementConnectionStore';
 import { EConnectionProviderKind } from '~/core/types/entities/connection.entity';
 import { ManagementSidebarHeader } from '../shared';
@@ -30,6 +31,11 @@ const isManagedSqliteLimited = computed(() => {
     connectionData.value?.providerKind === EConnectionProviderKind.TURSO
   );
 });
+
+// SQL Server and CockroachDB only support Instance Insights for now.
+const isInsightsOnly = computed(() =>
+  isInsightsOnlyDatabaseToolsClientType(connectionData.value?.type)
+);
 
 const unavailableReason = computed(() => {
   if (
@@ -74,6 +80,7 @@ const openDatabaseTools = async () => {
       <div class="space-y-2 mt-3">
         <!-- Dump & Restore -->
         <button
+          v-if="!isInsightsOnly"
           class="w-full flex items-center gap-3 rounded-lg border bg-background p-3 text-left transition-colors hover:bg-muted/20 cursor-pointer"
           :disabled="isManagedSqliteLimited"
           @click="openDatabaseTools()"
@@ -118,6 +125,7 @@ const openDatabaseTools = async () => {
 
         <!-- Schema Diff -->
         <button
+          v-if="!isInsightsOnly"
           class="w-full flex items-center gap-3 rounded-lg border bg-background p-3 text-left transition-colors hover:bg-muted/20 disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
           :disabled="!hasConnection || isManagedSqliteLimited"
           @click="openSchemaDiffTab()"
@@ -140,6 +148,11 @@ const openDatabaseTools = async () => {
 
         <BaseNotice v-if="isManagedSqliteLimited" variant="secondary">
           {{ unavailableReason }}
+        </BaseNotice>
+
+        <BaseNotice v-else-if="isInsightsOnly" variant="secondary">
+          Backup &amp; Restore and Schema Diff are not available for this
+          database type yet.
         </BaseNotice>
       </div>
     </div>

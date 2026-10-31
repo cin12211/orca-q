@@ -16,6 +16,7 @@ const dialectRegistry: Partial<Record<DatabaseClientType, SqlDialect>> = {
   [DatabaseClientType.BETTER_SQLITE3]: sqliteDialect,
   [DatabaseClientType.ORACLE]: oracleDialect,
   [DatabaseClientType.MSSQL]: mssqlDialect,
+  [DatabaseClientType.COCKROACHDB]: postgresDialect,
 };
 
 /**

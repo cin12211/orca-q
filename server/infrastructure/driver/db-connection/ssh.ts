@@ -5,6 +5,7 @@ import {
   type ISSLConfig,
 } from '~/core/types/entities/connection.entity';
 import { createSshTunnel } from '~/server/utils/ssh-tunnel';
+import { toMssqlUri } from '../mssql/connection';
 import { getDefaultPort } from './ports';
 import { applyConnectionStringSsl } from './ssl';
 
@@ -41,7 +42,10 @@ export async function resolveSshConnectionString({
     };
   }
 
-  const parsedUrl = new URL(url);
+  // ADO.NET strings have no URL form; rewrite them so host/port can be swapped.
+  const parsedUrl = new URL(
+    type === DatabaseClientType.MSSQL ? toMssqlUri(url) : url
+  );
   const targetHost = parsedUrl.hostname;
 
   if (!targetHost) {

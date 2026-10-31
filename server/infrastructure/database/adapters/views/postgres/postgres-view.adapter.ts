@@ -16,7 +16,7 @@ export class PostgresViewAdapter
   extends BaseDomainAdapter
   implements IDatabaseViewAdapter
 {
-  readonly dbType = DatabaseClientType.POSTGRES;
+  readonly dbType: DatabaseClientType = DatabaseClientType.POSTGRES;
 
   static async create(
     params: DatabaseViewAdapterParams

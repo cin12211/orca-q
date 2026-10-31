@@ -17,8 +17,6 @@
 
 </div>
 
-
-
 ## Overview
 
 **OrcaQ** is a modern database editor for managing, querying, and exploring PostgreSQL, MySQL, MariaDB, Oracle, local and managed SQLite, and Redis data in a fast, intuitive, and secure way.
@@ -76,17 +74,17 @@ Open [http://localhost:9432](http://localhost:9432).
 
 [![Deploy on RepoCloud](https://d16t0pc4846x52.cloudfront.net/deploylobe.svg)](https://repocloud.io/details/OrcaQ/)
 
-
 ## <img src="https://api.iconify.design/hugeicons:database.svg" width="22" alt="Database icon" /> Supported Databases
 
-| Database   | Connection Methods  | Core Workflows                                                  | Notes                                                             |
-| ---------- | ------------------- | --------------------------------------------------------------- | ----------------------------------------------------------------- |
-| <img src="https://api.iconify.design/devicon:postgresql.svg" width="16" alt="PostgreSQL" /> PostgreSQL | String, form | Connection test, raw query, schema browse, advanced admin tools | Broadest feature coverage |
-| <img src="https://api.iconify.design/devicon:mysql.svg" width="16" alt="MySQL" /> MySQL | String, form | Connection test, raw query, minimum metadata and table browsing | Advanced roles, metrics, and instance insights remain unsupported |
-| <img src="https://api.iconify.design/devicon:mariadb.svg" width="16" alt="MariaDB" /> MariaDB | String, form | Connection test, raw query, minimum metadata and table browsing | Uses a distinct persisted `mariadb` type |
-| <img src="https://api.iconify.design/logos:oracle.svg" width="16" alt="Oracle" /> Oracle | String, form | Connection test, raw query, minimum metadata and table browsing | Structured form uses `serviceName` |
-| <img src="https://api.iconify.design/devicon:sqlite.svg" width="16" alt="SQLite" /> SQLite | File (desktop only), managed | Connection test, raw query, metadata and table browsing | Local files stay desktop-only; Cloudflare D1 and Turso reuse the SQL family path |
-| Redis | String, form | Connection test, key browser, type-aware value inspection, workbench, analysis | SQL-only panels stay hidden for Redis sessions |
+| Database                                                                                               | Connection Methods           | Core Workflows                                                                 | Notes                                                                            |
+| ------------------------------------------------------------------------------------------------------ | ---------------------------- | ------------------------------------------------------------------------------ | -------------------------------------------------------------------------------- |
+| <img src="https://api.iconify.design/devicon:postgresql.svg" width="16" alt="PostgreSQL" /> PostgreSQL | String, form                 | Connection test, raw query, schema browse, advanced admin tools                | Broadest feature coverage                                                        |
+| <img src="https://api.iconify.design/devicon:mysql.svg" width="16" alt="MySQL" /> MySQL                | String, form                 | Connection test, raw query, minimum metadata and table browsing                | Advanced roles, metrics, and instance insights remain unsupported                |
+| <img src="https://api.iconify.design/devicon:mariadb.svg" width="16" alt="MariaDB" /> MariaDB          | String, form                 | Connection test, raw query, minimum metadata and table browsing                | Uses a distinct persisted `mariadb` type                                         |
+| <img src="https://api.iconify.design/logos:oracle.svg" width="16" alt="Oracle" /> Oracle               | String, form                 | Connection test, raw query, minimum metadata and table browsing                | Structured form uses `serviceName`                                               |
+| <img src="https://api.iconify.design/devicon:sqlite.svg" width="16" alt="SQLite" /> SQLite             | File (desktop only), managed | Connection test, raw query, metadata and table browsing                        | Local files stay desktop-only; Cloudflare D1 and Turso reuse the SQL family path |
+| Redis                                                                                                  | String, form                 | Connection test, key browser, type-aware value inspection, workbench, analysis | SQL-only panels stay hidden for Redis sessions                                   |
+
 Advanced database-administration features are still intentionally PostgreSQL-first unless a database-specific adapter exists.
 
 ## Features

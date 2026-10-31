@@ -1,5 +1,7 @@
 import { DatabaseClientType } from '~/core/constants/database-client-type';
 import { createDomainAdapter } from '../shared';
+import { CockroachQueryAdapter } from './cockroachdb/cockroachdb-query.adapter';
+import { MssqlQueryAdapter } from './mssql/mssql-query.adapter';
 import { MysqlQueryAdapter } from './mysql/mysql-query.adapter';
 import { OracleQueryAdapter } from './oracle/oracle-query.adapter';
 import { PostgresQueryAdapter } from './postgres/postgres-query.adapter';
@@ -25,6 +27,8 @@ export async function createQueryAdapter(
         MysqlQueryAdapter.create(params, DatabaseClientType.MARIADB),
       oracledb: OracleQueryAdapter.create,
       sqlite3: SqliteQueryAdapter.create,
+      cockroachdb: CockroachQueryAdapter.create,
+      mssql: MssqlQueryAdapter.create,
     }
   );
 }

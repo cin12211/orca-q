@@ -55,6 +55,25 @@ export const databaseSupports: IDBSupport[] = [
     description: 'Relational SQL workflows',
   },
   {
+    type: DatabaseClientType.MSSQL,
+    name: 'SQL Server',
+    icon: h(Icon, { name: 'devicon:microsoftsqlserver' }),
+    isSupport: true,
+    isBeta: true,
+    description: 'SQL Server 2017+ and Azure SQL',
+  },
+  {
+    type: DatabaseClientType.COCKROACHDB,
+    name: 'CockroachDB',
+    icon: h(Icon, {
+      name: 'simple-icons:cockroachlabs',
+      class: 'text-[#6933ff]',
+    }),
+    isSupport: true,
+    isBeta: true,
+    description: 'Distributed SQL, v23.2+',
+  },
+  {
     type: DatabaseClientType.SQLITE3,
     name: 'SQLite',
     icon: h(Icon, { name: 'file-icons:sqlite' }),
@@ -144,6 +163,7 @@ export const DEFAULT_DB_PORTS: Record<string, string> = {
   [DatabaseClientType.MONGODB]: '27017',
   [DatabaseClientType.MSSQL]: '1433',
   [DatabaseClientType.ORACLE]: '1521',
+  [DatabaseClientType.COCKROACHDB]: '26257',
   [DatabaseClientType.BETTER_SQLITE3]: '0',
   [DatabaseClientType.SQLITE3]: '0',
   [DatabaseClientType.SNOWFLAKE]: '443',

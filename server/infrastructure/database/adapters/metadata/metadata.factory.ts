@@ -1,5 +1,7 @@
 import { DatabaseClientType } from '~/core/constants/database-client-type';
 import { createDomainAdapter } from '../shared';
+import { CockroachMetadataAdapter } from './cockroachdb/cockroachdb-metadata.adapter';
+import { MssqlMetadataAdapter } from './mssql/mssql-metadata.adapter';
 import { MysqlMetadataAdapter } from './mysql/mysql-metadata.adapter';
 import { OracleMetadataAdapter } from './oracle/oracle-metadata.adapter';
 import { PostgresMetadataAdapter } from './postgres/postgres-metadata.adapter';
@@ -24,5 +26,7 @@ export async function createMetadataAdapter(
       MysqlMetadataAdapter.create(params, DatabaseClientType.MARIADB),
     oracledb: OracleMetadataAdapter.create,
     sqlite3: SqliteMetadataAdapter.create,
+    cockroachdb: CockroachMetadataAdapter.create,
+    mssql: MssqlMetadataAdapter.create,
   });
 }
