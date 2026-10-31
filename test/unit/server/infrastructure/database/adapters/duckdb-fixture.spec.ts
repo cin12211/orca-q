@@ -93,6 +93,17 @@ describe('DuckDB sample fixture', () => {
     }
   }, 60_000);
 
+  it('lists the sample macros', async () => {
+    const [sales] = await createMetadataAdapter(shop).getSchemaMetaData({
+      schemaName: 'sales',
+    });
+
+    expect(sales?.functions?.map(macro => macro.name)).toEqual([
+      'net_amount',
+      'orders_of',
+    ]);
+  });
+
   it('runs macros', async () => {
     await expect(
       shop.rawQuery('SELECT sales.net_amount(100, 2, 10) AS net')

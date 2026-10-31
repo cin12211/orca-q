@@ -162,6 +162,49 @@ test.describe('DuckDB schema browsing', () => {
     );
   });
 
+  test('lists macros and shows their definition', async ({ page }) => {
+    await selectSchema(page, 'sales');
+    await openSchemasSidebar(page);
+
+    await expect(page.getByTestId('tree-row-Functions')).toHaveCount(0);
+
+    await page
+      .getByTestId('tree-row-Macros')
+      .locator('.tree-row__chevron')
+      .click();
+    await expect(
+      page.getByTestId('tree-row-orders_of(target_customer_id)')
+    ).toBeVisible();
+
+    await page
+      .getByTestId('tree-row-net_amount(unit_price, quantity, discount_pct)')
+      .click();
+
+    await expect(page.getByTestId('macro-definition')).toContainText(
+      'CREATE MACRO',
+      { timeout: 30_000 }
+    );
+    await expect(page.getByTestId('macro-definition')).toContainText(
+      'net_amount'
+    );
+  });
+
+  test('keeps macros read-only', async ({ page }) => {
+    await selectSchema(page, 'sales');
+    await openSchemasSidebar(page);
+    await page
+      .getByTestId('tree-row-Macros')
+      .locator('.tree-row__chevron')
+      .click();
+    await page
+      .getByTestId('tree-row-orders_of(target_customer_id)')
+      .click({ button: 'right' });
+
+    await expect(page.getByRole('menuitem', { name: /delete/i })).toHaveCount(
+      0
+    );
+  });
+
   test('draws foreign keys in the ERD', async ({ page }) => {
     await selectSchema(page, 'sales');
     await openQuickQueryTable(page, 'orders');

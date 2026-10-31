@@ -7,8 +7,10 @@ import { useSchemaTreeData } from '~/components/modules/management/schemas/hooks
 import { useTabManagement } from '~/core/composables/useTabManagement';
 import { useWorkspaceConnectionRoute } from '~/core/composables/useWorkspaceConnectionRoute';
 import { DEFAULT_DEBOUNCE_INPUT } from '~/core/constants';
+import { DatabaseClientType } from '~/core/constants/database-client-type';
 import { useAppContext } from '~/core/contexts/useAppContext';
 import { useSchemaStore, useWSStateStore } from '~/core/stores';
+import { useManagementConnectionStore } from '~/core/stores/managementConnectionStore';
 import { TabViewType, useTabViewsStore } from '~/core/stores/useTabViewsStore';
 import SafeModeConfirmDialog from '../../quick-query/SafeModeConfirmDialog.vue';
 import { ManagementSidebarHeader } from '../shared';
@@ -33,12 +35,18 @@ const isRefreshing = ref(false);
 const fileTreeRef = useTemplateRef<typeof FileTree | null>('fileTreeRef');
 const isTreeCollapsed = ref(false);
 
+const connectionStore = useManagementConnectionStore();
+const isDuckDbConnection = computed(
+  () => connectionStore.selectedConnection?.type === DatabaseClientType.DUCKDB
+);
+
 const searchInput = shallowRef('');
 const debouncedSearch = refDebounced(searchInput, DEFAULT_DEBOUNCE_INPUT);
 
 const { fileTreeData, defaultFolderOpenId } = useSchemaTreeData(
   activeSchema,
-  debouncedSearch
+  debouncedSearch,
+  isDuckDbConnection
 );
 
 const hasTreeData = computed(() => Object.keys(fileTreeData.value).length > 0);
@@ -173,6 +181,7 @@ const {
   schemaName,
   activeSchema,
   onRefreshSchema,
+  hasReadOnlyRoutines: isDuckDbConnection,
 });
 
 const handleTreeClick = async (nodeId: string) => {

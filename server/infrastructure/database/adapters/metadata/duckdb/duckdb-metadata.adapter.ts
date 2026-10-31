@@ -8,7 +8,7 @@ import type {
   TableMetadata,
   ViewMetadata,
 } from '~/core/types';
-import { ViewSchemaEnum } from '~/core/types';
+import { FunctionSchemaEnum, ViewSchemaEnum } from '~/core/types';
 import { BaseDomainAdapter } from '../../shared';
 import { resolveMetadataTypeAlias } from '../type-alias.constants';
 import type {
@@ -29,6 +29,14 @@ interface DuckDbViewRow {
   view_name: string;
   view_oid: string;
   sql: string | null;
+}
+
+interface DuckDbMacroRow {
+  schema_name: string;
+  function_name: string;
+  function_type: string;
+  function_oid: string;
+  parameters: string;
 }
 
 interface DuckDbColumnRow {
@@ -117,6 +125,7 @@ export class DuckDbMetadataAdapter
     schemaName: string;
     tables: DuckDbTableRow[];
     views: DuckDbViewRow[];
+    macros: DuckDbMacroRow[];
     columnsByObject: Map<string, DuckDbColumnRow[]>;
     constraintsByTable: Map<string, DuckDbConstraintRow[]>;
   }): SchemaMetaData {
@@ -178,7 +187,17 @@ export class DuckDbMetadataAdapter
         type: ViewSchemaEnum.View,
         oid: view.view_oid,
       })),
-      functions: [],
+      functions: input.macros
+        .filter(row => row.schema_name === schemaName)
+        .map(row => ({
+          oId: row.function_oid,
+          name: row.function_name,
+          type:
+            row.function_type === 'macro'
+              ? FunctionSchemaEnum.Function
+              : FunctionSchemaEnum.Procedure,
+          parameters: row.parameters,
+        })),
       table_details,
       view_details,
     };
@@ -201,7 +220,7 @@ export class DuckDbMetadataAdapter
     }
 
     const catalogFilter = 'database_name = current_database() AND NOT internal';
-    const [tables, views, columns, constraints] = await Promise.all([
+    const [tables, views, macros, columns, constraints] = await Promise.all([
       this.adapter.rawQuery<DuckDbTableRow>(
         `
           SELECT schema_name, table_name
@@ -216,6 +235,20 @@ export class DuckDbMetadataAdapter
           FROM duckdb_views()
           WHERE ${catalogFilter}
           ORDER BY view_name
+        `
+      ),
+      this.adapter.rawQuery<DuckDbMacroRow>(
+        `
+          SELECT
+            schema_name,
+            function_name,
+            function_type,
+            CAST(function_oid AS VARCHAR) AS function_oid,
+            array_to_string(parameters, ', ') AS parameters
+          FROM duckdb_functions()
+          WHERE ${catalogFilter}
+            AND function_type IN ('macro', 'table_macro')
+          ORDER BY function_name
         `
       ),
       this.adapter.rawQuery<DuckDbColumnRow>(
@@ -257,6 +290,7 @@ export class DuckDbMetadataAdapter
         schemaName,
         tables,
         views,
+        macros,
         columnsByObject,
         constraintsByTable,
       })

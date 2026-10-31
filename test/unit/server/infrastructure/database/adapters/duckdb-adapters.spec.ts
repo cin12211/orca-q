@@ -22,6 +22,8 @@ const SEED_SQL = `
     amount DOUBLE
   );
   CREATE UNIQUE INDEX idx_customer_name ON sales.customer (name);
+  CREATE MACRO sales.discounted(amount, pct) AS amount * (1 - pct / 100);
+  CREATE MACRO sales.orders_above(minimum) AS TABLE SELECT * FROM sales.orders WHERE amount > minimum;
   CREATE VIEW sales.big_orders AS SELECT id, amount FROM sales.orders WHERE amount > 10;
   CREATE TABLE plain (id INTEGER);
   INSERT INTO sales.customer VALUES (1, 'ann', 12.50), (2, 'bob', 3.00);
@@ -407,18 +409,81 @@ describe('DuckDB domain adapters', () => {
     });
   });
 
-  describe('features DuckDB does not offer', () => {
-    it('answers function tooling with a 501', async () => {
-      const functions = await DuckDbFunctionAdapter.create({});
+  describe('DuckDbFunctionAdapter', () => {
+    const functions = () => createAdapter(DuckDbFunctionAdapter, driver);
+    const getMacros = async () => {
+      const [sales] = await createAdapter(
+        DuckDbMetadataAdapter,
+        driver
+      ).getSchemaMetaData({ schemaName: 'sales' });
+
+      return sales?.functions ?? [];
+    };
+
+    it('exposes scalar and table macros as schema functions', async () => {
+      const macros = await getMacros();
+
+      expect(macros.map(macro => [macro.name, macro.parameters])).toEqual([
+        ['discounted', 'amount, pct'],
+        ['orders_above', 'minimum'],
+      ]);
+    });
+
+    it('lists macros of a schema', async () => {
+      await expect(
+        functions().getOverviewFunctions('sales')
+      ).resolves.toMatchObject([
+        { name: 'discounted', schema: 'sales', kind: 'MACRO' },
+        { name: 'orders_above', schema: 'sales', kind: 'TABLE MACRO' },
+      ]);
+    });
+
+    it('rebuilds a scalar macro definition', async () => {
+      const [scalar] = await getMacros();
+      const definition = await functions().getOneFunction(
+        scalar?.oId as string
+      );
+
+      expect(definition).toMatch(
+        /^CREATE MACRO "sales"\."discounted"\(amount, pct\) AS .*amount/
+      );
+    });
+
+    it('rebuilds a table macro definition', async () => {
+      const [, table] = await getMacros();
 
       await expect(
-        functions.getOverviewFunctions('main')
-      ).rejects.toMatchObject({
-        statusCode: 501,
-        statusMessage: expect.stringContaining('DuckDB'),
+        functions().getOneFunction(table?.oId as string)
+      ).resolves.toContain('(minimum) AS TABLE SELECT');
+    });
+
+    it('reports a macro signature', async () => {
+      const [, table] = await getMacros();
+      const signature = await functions().getFunctionSignature(
+        table?.oId as string
+      );
+
+      expect(signature).toMatchObject({
+        name: 'orders_above',
+        return_type: 'TABLE',
+        parameters: [{ name: 'minimum', type: 'ANY' }],
       });
     });
 
+    it('404s on an unknown macro', async () => {
+      await expect(functions().getOneFunction('0')).rejects.toMatchObject({
+        statusCode: 404,
+      });
+    });
+
+    it('stays read-only', async () => {
+      await expect(
+        functions().deleteFunction('sales', 'x')
+      ).rejects.toMatchObject({ statusCode: 501 });
+    });
+  });
+
+  describe('features DuckDB does not offer', () => {
     it('answers role tooling with a 501', async () => {
       const roles = await DuckDbRoleAdapter.create({});
 

@@ -22,6 +22,8 @@ export interface SchemaContextMenuOptions {
   schemaName: Ref<string>;
   activeSchema: Ref<Schema | undefined>;
   onRefreshSchema: () => Promise<void>;
+  /** Routines can be opened but not called, renamed or dropped, e.g. DuckDB macros. */
+  hasReadOnlyRoutines?: Ref<boolean>;
 }
 
 export function useSchemaContextMenu(options: SchemaContextMenuOptions) {
@@ -97,7 +99,9 @@ export function useSchemaContextMenu(options: SchemaContextMenuOptions) {
 
     switch (type) {
       case TabViewType.FunctionsDetail:
-        return functionMenuItems.value;
+        return options.hasReadOnlyRoutines?.value
+          ? []
+          : functionMenuItems.value;
       case TabViewType.TableDetail:
         return tableMenuItems.value;
       case TabViewType.ViewDetail:
