@@ -5,7 +5,7 @@
 # Usage:
 #   bash scripts/test-services/run-tests.sh --fixtures=<profile> [--] <command...>
 #
-# Profiles: none | postgres | mysql | mariadb | sql | redis | mongodb | sqlite | all
+# Profiles: none | postgres | mysql | mariadb | sql | redis | mongodb | sqlite | duckdb | all
 #
 # Examples:
 #   bash scripts/test-services/run-tests.sh --fixtures=postgres -- playwright test --project postgres
@@ -64,6 +64,9 @@ start_fixtures() {
     sqlite)
       bash "${script_dir}/start-fixtures.sh" --profile sqlite
       ;;
+    duckdb)
+      bash "${script_dir}/start-fixtures.sh" --profile duckdb
+      ;;
     all)
       bash "${script_dir}/start-fixtures.sh" --profile all
       ;;
@@ -76,7 +79,7 @@ start_fixtures() {
 
 stop_fixtures() {
   case "${fixture_profile}" in
-    none|sqlite)
+    none|sqlite|duckdb)
       return 0
       ;;
     postgres|mysql|mariadb|sql)

@@ -96,6 +96,7 @@ Fixtures are Docker containers (PostgreSQL 16, MySQL 8.4, MariaDB 11.4, Redis 7.
 | `redis`    | Redis only                   |
 | `mongodb`  | MongoDB only                 |
 | `sqlite`   | SQLite prep only (no Docker) |
+| `duckdb`   | DuckDB prep only (no Docker) |
 | `all`      | Everything above             |
 | `none`     | Nothing — fixtures skipped   |
 
@@ -162,13 +163,14 @@ ORCAQ_POSTGRES_PORT=5433 bun test:api
 
 When running locally with the default fixture setup, you can connect to the databases using the following full connection strings:
 
-| Database       | Connection String / File Path                                                                                                                                        |
-| -------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **PostgreSQL** | `postgresql://orcaq:orcaq@127.0.0.1:5432/pagila`                                                                                                                     |
-| **MySQL**      | `mysql://orcaq:orcaq@127.0.0.1:3306/sakila`                                                                                                                          |
-| **MariaDB**    | `mysql://orcaq:orcaq@127.0.0.1:3307/sakila` (Note: Uses `mysql` protocol)                                                                                            |
-| **Redis**      | `redis://127.0.0.1:6379/0`                                                                                                                                           |
-| **SQLite**     | `test/fixtures/datasets/.tmp/sqlite/sakila.sqlite` (Relative to repo root)<br>Or absolute: `sqlite:///path/to/repo/test/fixtures/datasets/.tmp/sqlite/sakila.sqlite` |
+| Database       | Connection String / File Path                                                                                                                                            |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **PostgreSQL** | `postgresql://orcaq:orcaq@127.0.0.1:5432/pagila`                                                                                                                         |
+| **MySQL**      | `mysql://orcaq:orcaq@127.0.0.1:3306/sakila`                                                                                                                              |
+| **MariaDB**    | `mysql://orcaq:orcaq@127.0.0.1:3307/sakila` (Note: Uses `mysql` protocol)                                                                                                |
+| **Redis**      | `redis://127.0.0.1:6379/0`                                                                                                                                               |
+| **SQLite**     | `test/fixtures/datasets/.tmp/sqlite/sakila.sqlite` (Relative to repo root)<br>Or absolute: `sqlite:///path/to/repo/test/fixtures/datasets/.tmp/sqlite/sakila.sqlite`     |
+| **DuckDB**     | `test/fixtures/datasets/.tmp/duckdb/shop.duckdb` and `shop-staging.duckdb` (Relative to repo root). Build with `bun test:fixtures:up --profile duckdb`; desktop app only |
 
 For external/live databases (enabled when environment variables are set):
 

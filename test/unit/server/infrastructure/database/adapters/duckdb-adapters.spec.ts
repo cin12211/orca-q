@@ -287,6 +287,16 @@ describe('DuckDB domain adapters', () => {
       expect(result).toEqual([{ item: '{"k":1}', list: ['x'] }]);
     });
 
+    it('serializes MAP and LIST of STRUCT values as JSON', async () => {
+      const { rows } = await query().rawExecute(
+        `SELECT MAP {'a': 1} AS lookup, [{'k': 1}] AS entries`
+      );
+
+      expect(rows).toEqual([
+        { lookup: '[{"key":"a","value":1}]', entries: '[{"k":1}]' },
+      ]);
+    });
+
     it('returns row objects with fields', async () => {
       const result = await query().rawExecute(
         'SELECT id, amount FROM sales.orders ORDER BY id LIMIT 1'

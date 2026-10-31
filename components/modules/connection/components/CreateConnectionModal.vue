@@ -384,7 +384,7 @@ watch(testStatus, status => {
                       id="file-path"
                       :placeholder="getConnectionPlaceholder()"
                       v-model="formData.filePath"
-                      :readonly="canPickDatabaseFile"
+                      :readonly="canPickDatabaseFile && !isDuckDb"
                     />
                     <Button
                       v-if="canPickDatabaseFile"

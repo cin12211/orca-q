@@ -16,14 +16,19 @@ import type {
 
 const STREAM_BATCH_SIZE = 10_000;
 
+function isPlainObject(value: unknown) {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
 /**
- * STRUCT and MAP values arrive as plain objects, which the result grid would
- * show as "[object Object]"; their JSON text is what users can read and copy.
+ * STRUCT values, and the entry lists that MAP and LIST of STRUCT arrive as, would
+ * show as "[object Object]" in the result grid; their JSON text is readable.
  */
 function serializeDuckDbValue(value: unknown): unknown {
-  return typeof value === 'object' && value !== null && !Array.isArray(value)
-    ? JSON.stringify(value)
-    : value;
+  const isNested =
+    isPlainObject(value) || (Array.isArray(value) && value.some(isPlainObject));
+
+  return isNested ? JSON.stringify(value) : value;
 }
 
 // Strings, comments, casts, slices and struct literals pass through untouched,
