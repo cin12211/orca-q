@@ -417,26 +417,6 @@ describe('useConnectionForm', () => {
     expect(canCreateDatabaseFile.value).toBe(false);
   });
 
-  it('selects an in-memory DuckDB database', async () => {
-    setElectronWindowApi();
-
-    const {
-      connectionName,
-      dbType,
-      formData,
-      isFormValid,
-      selectInMemoryDatabase,
-    } = createForm();
-
-    dbType.value = DatabaseClientType.DUCKDB;
-    await nextTick();
-    selectInMemoryDatabase();
-
-    expect(formData.filePath).toBe(':memory:');
-    expect(connectionName.value).toBe('in-memory');
-    expect(isFormValid.value).toBe(true);
-  });
-
   it('sends managed SQLite payloads for Cloudflare D1 validation', async () => {
     mockHealthCheck.mockResolvedValue({ isConnectedSuccess: true });
 

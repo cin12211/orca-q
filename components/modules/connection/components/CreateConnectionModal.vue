@@ -83,9 +83,9 @@ const {
   applyCreatedDatabaseFile,
   fileDatabaseLabel,
   isDuckDb,
+  isFileMethod,
   isFormValid,
   pickDatabaseFile,
-  selectInMemoryDatabase,
   resetForm,
 } = useConnectionForm({
   open: () => props.open,
@@ -198,37 +198,50 @@ watch(testStatus, status => {
 
           <div class="flex-1 overflow-y-auto p-4 space-y-4">
             <Tabs v-model="connectionMethod" class="w-full">
-              <TabsList
-                class="grid w-fit"
-                :style="{
-                  gridTemplateColumns: `repeat(${availableConnectionMethods.length}, minmax(0, 1fr))`,
-                }"
-                id="tour-connection-method-tabs"
-              >
-                <TabsTrigger
-                  v-for="method in availableConnectionMethods"
-                  :key="method"
-                  :value="method"
-                  class="cursor-pointer"
+              <div class="flex items-center justify-between gap-2">
+                <TabsList
+                  class="grid w-fit"
+                  :style="{
+                    gridTemplateColumns: `repeat(${availableConnectionMethods.length}, minmax(0, 1fr))`,
+                  }"
+                  id="tour-connection-method-tabs"
                 >
-                  <span
-                    v-if="method === EConnectionMethod.STRING"
-                    id="tour-connection-string-tab"
+                  <TabsTrigger
+                    v-for="method in availableConnectionMethods"
+                    :key="method"
+                    :value="method"
+                    class="cursor-pointer"
                   >
-                    Connection String
-                  </span>
-                  <span
-                    v-else-if="method === EConnectionMethod.FORM"
-                    id="tour-connection-form-tab"
-                  >
-                    Connection Form
-                  </span>
-                  <span v-else-if="method === EConnectionMethod.MANAGED">
-                    Managed SQLite
-                  </span>
-                  <span v-else>Database File</span>
-                </TabsTrigger>
-              </TabsList>
+                    <span
+                      v-if="method === EConnectionMethod.STRING"
+                      id="tour-connection-string-tab"
+                    >
+                      Connection String
+                    </span>
+                    <span
+                      v-else-if="method === EConnectionMethod.FORM"
+                      id="tour-connection-form-tab"
+                    >
+                      Connection Form
+                    </span>
+                    <span v-else-if="method === EConnectionMethod.MANAGED">
+                      Managed SQLite
+                    </span>
+                    <span v-else>Database File</span>
+                  </TabsTrigger>
+                </TabsList>
+                <Button
+                  v-if="canCreateDatabaseFile && isFileMethod"
+                  data-testid="connection-create-file-button"
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  @click="isCreateFileDialogOpen = true"
+                >
+                  <Icon name="hugeicons:add-01" class="size-4" />
+                  Create new
+                </Button>
+              </div>
 
               <div class="grid grid-cols-3 gap-3 mt-2">
                 <div class="col-span-2 space-y-2">
@@ -402,24 +415,6 @@ watch(testStatus, status => {
                     >
                       Browse
                     </Button>
-                    <Button
-                      v-if="canCreateDatabaseFile"
-                      data-testid="connection-create-file-button"
-                      type="button"
-                      variant="outline"
-                      @click="isCreateFileDialogOpen = true"
-                    >
-                      Create new
-                    </Button>
-                    <Button
-                      v-if="isDuckDb"
-                      data-testid="connection-in-memory-button"
-                      type="button"
-                      variant="outline"
-                      @click="selectInMemoryDatabase"
-                    >
-                      In-memory
-                    </Button>
                   </div>
                   <p class="text-xs text-muted-foreground">
                     <template v-if="canPickDatabaseFile">
@@ -438,8 +433,7 @@ watch(testStatus, status => {
                   </p>
                   <p v-if="isDuckDb" class="text-xs text-muted-foreground">
                     The file stays locked for other programs while OrcaQ has it
-                    open. In-memory data is lost after 5 idle minutes or when
-                    the app closes.
+                    open.
                   </p>
                 </div>
               </TabsContent>

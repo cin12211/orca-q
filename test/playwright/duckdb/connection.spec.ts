@@ -100,17 +100,5 @@ test.describe('DuckDB connection', () => {
         { timeout: 30_000 }
       );
     });
-
-    test('selects an in-memory database', async ({ page }) => {
-      await fillDuckDbForm(page, {
-        connectionName: 'my-abc-db',
-        filePath: '',
-      });
-      await page.getByTestId('connection-in-memory-button').click();
-
-      await expect(page.getByTestId('connection-file-path-input')).toHaveValue(
-        ':memory:'
-      );
-    });
   });
 });

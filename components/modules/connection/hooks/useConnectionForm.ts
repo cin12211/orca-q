@@ -40,7 +40,6 @@ type ManagedConnectionProviderKind = Extract<
 >['providerKind'];
 
 const DEFAULT_CONNECTION_NAME = 'my-abc-db';
-const DUCKDB_IN_MEMORY_PATH = ':memory:';
 
 const NETWORK_CONNECTION_METHODS = new Set([
   EConnectionMethod.STRING,
@@ -603,10 +602,6 @@ export function useConnectionForm(props: {
     applyDatabaseFilePath(filePath, getFileNameStem(filePath));
   };
 
-  const selectInMemoryDatabase = () => {
-    applyDatabaseFilePath(DUCKDB_IN_MEMORY_PATH, 'in-memory');
-  };
-
   const isFormValid = computed(() => {
     if (!connectionName.value) return false;
 
@@ -787,7 +782,6 @@ export function useConnectionForm(props: {
     isFileMethod,
     isFormValid,
     pickDatabaseFile,
-    selectInMemoryDatabase,
     resetForm,
   };
 }
