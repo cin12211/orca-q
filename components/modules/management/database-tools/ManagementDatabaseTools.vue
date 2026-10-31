@@ -83,6 +83,7 @@ const openDatabaseTools = async () => {
       <div class="space-y-2 mt-3">
         <!-- Dump & Restore -->
         <button
+          data-testid="database-tool-backup"
           class="w-full flex items-center gap-3 rounded-lg border bg-background p-3 text-left transition-colors hover:bg-muted/20 disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
           :disabled="isManagedSqliteLimited || isDuckDbConnection"
           @click="openDatabaseTools()"
@@ -105,6 +106,7 @@ const openDatabaseTools = async () => {
 
         <!-- Instance Insights -->
         <button
+          data-testid="database-tool-instance-insights"
           class="w-full flex items-center gap-3 rounded-lg border bg-background p-3 text-left transition-colors hover:bg-muted/20 disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
           :disabled="!hasConnection || isManagedSqliteLimited"
           @click="openInstanceInsightsTab({ databaseName })"
@@ -127,6 +129,7 @@ const openDatabaseTools = async () => {
 
         <!-- Schema Diff -->
         <button
+          data-testid="database-tool-schema-diff"
           class="w-full flex items-center gap-3 rounded-lg border bg-background p-3 text-left transition-colors hover:bg-muted/20 disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
           :disabled="!hasConnection || isManagedSqliteLimited"
           @click="openSchemaDiffTab()"
@@ -149,6 +152,7 @@ const openDatabaseTools = async () => {
 
         <BaseNotice
           v-if="isManagedSqliteLimited || isDuckDbConnection"
+          data-testid="database-tools-notice"
           variant="secondary"
         >
           {{ unavailableReason }}

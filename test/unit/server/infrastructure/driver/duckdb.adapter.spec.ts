@@ -1,5 +1,5 @@
 import { DuckDBInstance } from '@duckdb/node-api';
-import { mkdtempSync, rmSync } from 'node:fs';
+import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import {
@@ -262,6 +262,20 @@ describe('DuckDbAdapter', () => {
       await expect(adapter.rawQuery('SELECT id FROM t')).resolves.toEqual([
         { id: 1 },
       ]);
+    });
+
+    it.each([
+      ['data.json', '{"a": 1}'],
+      ['data.csv', 'a,b\n1,2\n'],
+      ['empty.duckdb', ''],
+    ])('rejects %s, which is not a DuckDB file', (fileName, content) => {
+      adapter = new DuckDbAdapter(':memory:');
+      const path = join(directory, fileName);
+      writeFileSync(path, content);
+
+      expect(() => new DuckDbAdapter({ filename: path })).toThrow(
+        'Not a valid DuckDB database file'
+      );
     });
 
     it('reads a duckdb:// connection string', async () => {

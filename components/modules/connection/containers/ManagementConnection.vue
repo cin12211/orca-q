@@ -54,6 +54,7 @@ const handleDeleteConnection = (id: string) => {
         </div>
         <Button
           id="tour-add-connection-btn"
+          data-testid="connection-add-button"
           size="sm"
           variant="outline"
           @click="onOpenAddConnectionModal"

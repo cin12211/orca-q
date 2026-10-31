@@ -206,7 +206,10 @@ const currentNullOrderLabel = computed(() => {
         </TooltipContent>
       </Tooltip>
 
-      <div class="font-normal text-sm text-primary/80">
+      <div
+        data-testid="pagination-summary"
+        class="font-normal text-sm text-primary/80"
+      >
         {{ offset + 1 }}-{{ offset + currentTotalRows }}
         <p class="font-normal text-xs text-primary/60 inline">of</p>
         {{ totalRows }}
@@ -218,6 +221,7 @@ const currentNullOrderLabel = computed(() => {
           <Button
             variant="outline"
             size="iconSm"
+            data-testid="pagination-next"
             :disabled="!isAllowNextPage"
             @click="emit('onNextPage')"
           >

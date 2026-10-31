@@ -115,7 +115,7 @@ const executedQuery = computed(() => {
 </script>
 
 <template>
-  <div class="h-full p-2 overflow-y-auto">
+  <div data-testid="raw-query-error" class="h-full p-2 overflow-y-auto">
     <div v-if="hasErrors(activeTab)" class="space-y-2">
       <!-- Error Message Section -->
       <div class="flex items-center justify-between gap-2">

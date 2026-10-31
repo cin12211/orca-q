@@ -235,6 +235,7 @@ watch(testStatus, status => {
                   </Label>
                   <Input
                     id="connection-name"
+                    data-testid="connection-name-input"
                     placeholder="My Database Connection"
                     v-model="connectionName"
                   />
@@ -382,6 +383,7 @@ watch(testStatus, status => {
                   <div class="flex gap-2">
                     <Input
                       id="file-path"
+                      data-testid="connection-file-path-input"
                       :placeholder="getConnectionPlaceholder()"
                       v-model="formData.filePath"
                       :readonly="canPickDatabaseFile && !isDuckDb"
@@ -396,6 +398,7 @@ watch(testStatus, status => {
                     </Button>
                     <Button
                       v-if="isDuckDb"
+                      data-testid="connection-in-memory-button"
                       type="button"
                       variant="outline"
                       @click="selectInMemoryDatabase"
@@ -612,6 +615,7 @@ watch(testStatus, status => {
             <div class="flex space-x-2">
               <Button
                 type="button"
+                data-testid="connection-test-button"
                 variant="outline"
                 @click="handleTestConnection"
                 size="sm"
@@ -626,6 +630,7 @@ watch(testStatus, status => {
               </Button>
               <Button
                 id="tour-create-update-connection-btn"
+                data-testid="connection-submit-button"
                 type="submit"
                 size="sm"
                 :disabled="testStatus === 'testing' || !isFormValid"

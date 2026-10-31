@@ -11,6 +11,7 @@ const { activity, onChangeActivity } = useActivityMenu();
         <Button
           size="iconMd"
           :variant="item.isActive ? 'default' : 'ghost'"
+          :data-testid="`activity-item-${item.id}`"
           @click="onChangeActivity(item.id)"
         >
           <Icon :name="item.icon" :key="item.icon" class="size-5!" />

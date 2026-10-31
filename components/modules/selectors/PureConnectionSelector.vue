@@ -158,6 +158,7 @@ const getConnectionSupportIconProps = (connection?: Connection) => {
 
         <SelectItem
           class="cursor-pointer"
+          :data-testid="`connection-option-${connection.name}`"
           :value="connection.id"
           :disabled="isConnectionDisabled(connection)"
           v-for="connection in connections"

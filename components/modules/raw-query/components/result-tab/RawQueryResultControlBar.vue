@@ -140,7 +140,7 @@ const emit = defineEmits<{
       <span v-else-if="hasError">
         Query: 1 error in {{ formatQueryTime(queryTime) }}
       </span>
-      <span v-else>
+      <span v-else data-testid="raw-query-result-summary">
         Query success: {{ formatNumber(totalRows) }} rows in
         {{ formatQueryTime(queryTime) }}
       </span>

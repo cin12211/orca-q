@@ -45,7 +45,10 @@ const emit = defineEmits<{
     </div>
 
     <!-- Target -->
-    <div class="flex min-w-0 flex-1 flex-col gap-1.5">
+    <div
+      data-testid="schema-diff-target"
+      class="flex min-w-0 flex-1 flex-col gap-1.5"
+    >
       <Label class="text-xs font-medium text-muted-foreground">Target</Label>
       <PureConnectionSelector
         class="h-9 w-full"
@@ -67,6 +70,7 @@ const emit = defineEmits<{
     <!-- Run button -->
     <Button
       :disabled="!sourceConnection || !targetConnection || isLoading"
+      data-testid="schema-diff-run-button"
       size="sm"
       @click="emit('run')"
     >

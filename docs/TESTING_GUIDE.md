@@ -66,6 +66,7 @@ bash scripts/test-services/run-tests.sh --fixtures=postgres -- playwright test -
 bash scripts/test-services/run-tests.sh --fixtures=mysql   -- playwright test --project mysql
 bash scripts/test-services/run-tests.sh --fixtures=redis   -- playwright test --project redis
 bash scripts/test-services/run-tests.sh --fixtures=sqlite  -- playwright test --project sqlite
+bun test:e2e:duckdb # DuckDB needs a server in desktop mode, so it has its own script
 bash scripts/test-services/run-tests.sh --fixtures=all     -- playwright test --project common
 ```
 

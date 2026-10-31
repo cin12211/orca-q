@@ -147,6 +147,7 @@ defineExpose({
 <template>
   <div
     :class="rowClasses"
+    :data-testid="`tree-row-${node.name}`"
     :style="rowStyle"
     :draggable="allowDragAndDrop && !isEditing"
     @click="emit('click', $event)"

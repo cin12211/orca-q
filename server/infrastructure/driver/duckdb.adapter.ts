@@ -5,7 +5,13 @@ import type {
   DuckDBValue,
 } from '@duckdb/node-api';
 import knex, { type Knex } from 'knex';
-import { accessSync, constants as fsConstants } from 'node:fs';
+import {
+  accessSync,
+  closeSync,
+  constants as fsConstants,
+  openSync,
+  readSync,
+} from 'node:fs';
 import { Readable } from 'node:stream';
 import { DatabaseClientType } from '~/core/constants/database-client-type';
 import type { DatabaseField } from '~/core/types';
@@ -15,6 +21,8 @@ import type { RawQueryResult } from './types';
 export const DUCKDB_IN_MEMORY_PATH = ':memory:';
 
 const DUCKDB_URL_PREFIX = 'duckdb://';
+const DUCKDB_MAGIC = 'DUCK';
+const DUCKDB_MAGIC_OFFSET = 8;
 const LEADING_SQL_COMMENTS = /^(\s|--[^\n]*\n|\/\*[\s\S]*?\*\/)+/;
 
 function assertReadableDuckDbFile(filename: string) {
@@ -32,6 +40,27 @@ function assertReadableDuckDbFile(filename: string) {
     accessSync(filename, fsConstants.R_OK);
   } catch {
     throw new Error(`DuckDB database file is not readable: ${filename}`);
+  }
+
+  assertDuckDbFileHeader(filename);
+}
+
+/**
+ * DuckDB picks a storage reader from the file name, so `data.json` opens as an
+ * empty database and health checks pass. Only the file header can be trusted.
+ */
+function assertDuckDbFileHeader(filename: string) {
+  const header = Buffer.alloc(DUCKDB_MAGIC_OFFSET + DUCKDB_MAGIC.length);
+  const descriptor = openSync(filename, 'r');
+
+  try {
+    readSync(descriptor, header, 0, header.length, 0);
+  } finally {
+    closeSync(descriptor);
+  }
+
+  if (header.toString('latin1', DUCKDB_MAGIC_OFFSET) !== DUCKDB_MAGIC) {
+    throw new Error(`Not a valid DuckDB database file: ${filename}`);
   }
 }
 

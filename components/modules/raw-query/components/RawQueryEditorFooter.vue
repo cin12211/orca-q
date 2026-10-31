@@ -205,6 +205,7 @@ defineEmits<{
           </Button>
           <Button
             v-else
+            data-testid="raw-query-execute-button"
             @click="$emit('onExecuteCurrent')"
             variant="outline"
             size="xxs"
