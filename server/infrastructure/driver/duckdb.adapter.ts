@@ -186,6 +186,48 @@ export type DuckDbStreamEvent =
   | { type: 'rows'; rows: unknown[][] }
   | { type: 'done'; rowCount: number };
 
+/**
+ * Runs a task on a throwaway read-only instance that cannot touch anything but
+ * the database file: `enable_external_access` blocks read_text, read_csv, glob,
+ * ATTACH and extension installs, which a SQL-level guard could not catch.
+ *
+ * The instance is opened per call because it only sees the file as it was when
+ * opened, so a long-lived one would keep answering from a stale snapshot.
+ */
+export async function withDuckDbSandbox<T>(
+  filePath: string | undefined,
+  task: (connection: DuckDBConnection) => Promise<T>
+): Promise<T> {
+  const filename = resolveDuckDbFilename(
+    filePath ? { filename: filePath } : {}
+  );
+
+  if (filename === DUCKDB_IN_MEMORY_PATH) {
+    throw new Error('In-memory DuckDB databases cannot be opened read-only.');
+  }
+
+  assertReadableDuckDbFile(filename);
+
+  const { DuckDBInstance } = await loadDuckDbDriver();
+  const instance = await DuckDBInstance.create(filename, {
+    access_mode: 'READ_ONLY',
+    enable_external_access: 'false',
+    lock_configuration: 'true',
+  });
+
+  try {
+    const connection = await instance.connect();
+
+    try {
+      return await task(connection);
+    } finally {
+      connection.closeSync();
+    }
+  } finally {
+    instance.closeSync();
+  }
+}
+
 export class DuckDbAdapter extends BaseDatabaseAdapter {
   private readonly filename: string;
   private instance?: Promise<DuckDBInstance>;

@@ -1,5 +1,6 @@
 import { isProxy, nextTick, ref } from 'vue';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { isSqliteConnectionDisabled } from '~/components/modules/connection/constants';
 import { useConnectionForm } from '~/components/modules/connection/hooks/useConnectionForm';
 import {
   ESSHAuthMethod,
@@ -326,6 +327,20 @@ describe('useConnectionForm', () => {
     const body = mockHealthCheck.mock.calls[0][0];
     expect(body.method).toBe(EConnectionMethod.FILE);
     expect(body.filePath).toBe('/tmp/app.sqlite');
+  });
+
+  it('disables DuckDB outside the desktop app', () => {
+    Reflect.deleteProperty(window, 'electronAPI');
+
+    expect(
+      isSqliteConnectionDisabled({ type: DatabaseClientType.DUCKDB }, true)
+    ).toBe(true);
+
+    setElectronWindowApi();
+
+    expect(
+      isSqliteConnectionDisabled({ type: DatabaseClientType.DUCKDB }, false)
+    ).toBe(false);
   });
 
   it('offers only the file method for DuckDB', async () => {

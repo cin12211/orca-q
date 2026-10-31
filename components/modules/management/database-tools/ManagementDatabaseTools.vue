@@ -38,7 +38,7 @@ const isDuckDbConnection = computed(
 
 const unavailableReason = computed(() => {
   if (isDuckDbConnection.value) {
-    return 'DuckDB beta does not support backup yet.';
+    return 'Backup & Restore is not available for DuckDB connections.';
   }
 
   if (

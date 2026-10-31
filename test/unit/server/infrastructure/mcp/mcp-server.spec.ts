@@ -1,7 +1,8 @@
+import { DuckDBInstance } from '@duckdb/node-api';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { InMemoryTransport } from '@modelcontextprotocol/sdk/inMemory.js';
 import knex from 'knex';
-import { mkdtempSync, rmSync } from 'node:fs';
+import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
@@ -22,8 +23,22 @@ const OTHER_TOKEN = 'orcaq_other-token';
 const tempDir = mkdtempSync(path.join(tmpdir(), 'orcaq-mcp-'));
 const persistDbPath = path.join(tempDir, 'orcaq.db');
 const targetDbPath = path.join(tempDir, 'shop.sqlite');
+const duckDbPath = path.join(tempDir, 'shop.duckdb');
+const secretPath = path.join(tempDir, 'secret.txt');
+
+async function seedDuckDb() {
+  writeFileSync(secretPath, 'top secret\n');
+
+  const instance = await DuckDBInstance.create(duckDbPath);
+  const connection = await instance.connect();
+  await connection.run('CREATE TABLE orders AS SELECT 1 AS id');
+  connection.closeSync();
+  instance.closeSync();
+}
 
 async function seedDatabases() {
+  await seedDuckDb();
+
   const target = knex({
     client: 'sqlite3',
     connection: { filename: targetDbPath },
@@ -80,6 +95,24 @@ async function seedDatabases() {
       created_at: '2026-01-02',
     },
     {
+      id: 'conn-duck',
+      workspace_id: 'ws-1',
+      name: 'Shop analytics',
+      type: 'duckdb',
+      method: 'file',
+      file_path: duckDbPath,
+      created_at: '2026-01-04',
+    },
+    {
+      id: 'conn-duck-memory',
+      workspace_id: 'ws-1',
+      name: 'Scratch',
+      type: 'duckdb',
+      method: 'file',
+      file_path: ':memory:',
+      created_at: '2026-01-05',
+    },
+    {
       id: 'conn-off',
       workspace_id: 'ws-2',
       name: 'Hidden',
@@ -95,7 +128,7 @@ async function seedDatabases() {
     token: SESSION_TOKEN,
     createdAt: '2026-10-21',
     workspaceAccess: { 'ws-1': 'read' },
-    connectionAccess: { 'conn-rw': 'write' },
+    connectionAccess: { 'conn-rw': 'write', 'conn-duck': 'write' },
   };
   const otherSession = {
     ...session,
@@ -177,6 +210,8 @@ describe('OrcaQ MCP server', () => {
     expect(connections.map((c: { id: string }) => c.id)).toEqual([
       'conn-ro',
       'conn-rw',
+      'conn-duck',
+      'conn-duck-memory',
     ]);
     expect(connections[0]).toMatchObject({
       workspace: 'Shop',
@@ -298,5 +333,73 @@ describe('OrcaQ MCP server', () => {
         (column: { column_name: string }) => column.column_name
       )
     ).toEqual(['id', 'name']);
+  });
+
+  describe('DuckDB connections', () => {
+    it('reports them as read-only even with write access granted', async () => {
+      const { text } = await callTool('list_connections');
+      const duckDb = JSON.parse(text).find(
+        (connection: { id: string }) => connection.id === 'conn-duck'
+      );
+
+      expect(duckDb).toMatchObject({ access: 'read', supported: true });
+    });
+
+    it('lists tables and runs read queries', async () => {
+      const tables = await callTool('list_tables', {
+        connectionId: 'conn-duck',
+        schema: 'main',
+      });
+      const query = await callTool('run_query', {
+        connectionId: 'conn-duck',
+        sql: 'SELECT id FROM orders',
+      });
+
+      expect(JSON.parse(tables.text).tables).toEqual(['orders']);
+      expect(JSON.parse(query.text)).toMatchObject({
+        access: 'read',
+        rows: [{ id: 1 }],
+      });
+    });
+
+    it('explains queries', async () => {
+      const result = await callTool('explain_query', {
+        connectionId: 'conn-duck',
+        sql: 'SELECT id FROM orders',
+      });
+
+      expect(result.isError).toBe(false);
+      expect(JSON.parse(result.text).rowCount).toBeGreaterThan(0);
+    });
+
+    it('refuses writes despite the write grant', async () => {
+      const result = await callTool('run_query', {
+        connectionId: 'conn-duck',
+        sql: 'DELETE FROM orders',
+      });
+
+      expect(result.isError).toBe(true);
+    });
+
+    it('cannot read files outside the database', async () => {
+      const result = await callTool('run_query', {
+        connectionId: 'conn-duck',
+        sql: `SELECT * FROM read_text('${secretPath}')`,
+      });
+
+      expect(result.isError).toBe(true);
+      expect(result.text).not.toContain('top secret');
+      expect(result.text).toContain('disabled by configuration');
+    });
+
+    it('refuses in-memory databases', async () => {
+      const result = await callTool('run_query', {
+        connectionId: 'conn-duck-memory',
+        sql: 'SELECT 1',
+      });
+
+      expect(result.isError).toBe(true);
+      expect(result.text).toContain('in-memory');
+    });
   });
 });

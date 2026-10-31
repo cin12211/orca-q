@@ -2,11 +2,22 @@ import { DuckDBInstance } from '@duckdb/node-api';
 import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest';
+import {
+  afterAll,
+  afterEach,
+  beforeAll,
+  describe,
+  expect,
+  it,
+  vi,
+} from 'vitest';
 import { DatabaseClientType } from '~/core/constants/database-client-type';
 import { normalizeConnectionError } from '~/server/infrastructure/driver/connection-error';
 import { DuckDbAdapter } from '~/server/infrastructure/driver/duckdb.adapter';
-import { createDatabaseAdapter } from '~/server/infrastructure/driver/factory';
+import {
+  createDatabaseAdapter,
+  DUCKDB_DESKTOP_ONLY_MESSAGE,
+} from '~/server/infrastructure/driver/factory';
 import type { RawQueryResult } from '~/server/infrastructure/driver/types';
 
 describe('DuckDbAdapter', () => {
@@ -16,14 +27,30 @@ describe('DuckDbAdapter', () => {
     await adapter?.destroy();
   });
 
-  it('is created by the driver factory', () => {
-    adapter = createDatabaseAdapter(
-      DatabaseClientType.DUCKDB,
-      ':memory:'
-    ) as DuckDbAdapter;
+  describe('driver factory', () => {
+    afterEach(() => {
+      vi.unstubAllEnvs();
+    });
 
-    expect(adapter).toBeInstanceOf(DuckDbAdapter);
-    expect(adapter.dbType).toBe(DatabaseClientType.DUCKDB);
+    it('creates the adapter in the desktop runtime', () => {
+      vi.stubEnv('ORCAQ_DESKTOP_RUNTIME', '1');
+
+      adapter = createDatabaseAdapter(
+        DatabaseClientType.DUCKDB,
+        ':memory:'
+      ) as DuckDbAdapter;
+
+      expect(adapter).toBeInstanceOf(DuckDbAdapter);
+      expect(adapter.dbType).toBe(DatabaseClientType.DUCKDB);
+    });
+
+    it('refuses DuckDB on web deployments', () => {
+      vi.stubEnv('ORCAQ_DESKTOP_RUNTIME', '');
+
+      expect(() =>
+        createDatabaseAdapter(DatabaseClientType.DUCKDB, ':memory:')
+      ).toThrow(DUCKDB_DESKTOP_ONLY_MESSAGE);
+    });
   });
 
   it.each([
@@ -260,6 +287,10 @@ describe('normalizeConnectionError for DuckDB', () => {
     [
       'IO Error: The file "/tmp/a.db" exists, but it is not a valid DuckDB database file!',
       'This file is not a DuckDB database.',
+    ],
+    [
+      'DuckDB connections are available only in the desktop app.',
+      'DuckDB connections are available only in the desktop app.',
     ],
     [
       'Failed to load the DuckDB driver: no binding',

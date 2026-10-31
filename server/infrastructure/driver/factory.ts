@@ -5,6 +5,7 @@ import {
   isManagedSqliteProviderKind,
   type ManagedSqliteAdapterOptions,
 } from '~/server/infrastructure/driver/managed-sqlite';
+import { isDesktopRuntime } from '~/server/infrastructure/mcp/desktop-store';
 import { isNoSqlClientType } from '~/server/infrastructure/nosql';
 import { DuckDbAdapter } from './duckdb.adapter';
 import { MysqlAdapter } from './mysql.adapter';
@@ -12,6 +13,9 @@ import { OracleAdapter } from './oracle.adapter';
 import { PostgresAdapter } from './postgres.adapter';
 import { SqliteAdapter } from './sqlite.adapter';
 import type { IDatabaseAdapter } from './types';
+
+export const DUCKDB_DESKTOP_ONLY_MESSAGE =
+  'DuckDB connections are available only in the desktop app.';
 
 type AdapterFactory = (
   connection: string | Knex.Config['connection']
@@ -43,6 +47,12 @@ export function createDatabaseAdapter(
     isManagedSqliteProviderKind(options.providerKind)
   ) {
     return createManagedSqliteAdapter(options);
+  }
+
+  // DuckDB SQL reads any path the server can reach (read_text, read_csv, ...),
+  // so it must never be reachable on a hosted web deployment.
+  if (type === DatabaseClientType.DUCKDB && !isDesktopRuntime()) {
+    throw new Error(DUCKDB_DESKTOP_ONLY_MESSAGE);
   }
 
   const factory = ADAPTER_FACTORIES[type];

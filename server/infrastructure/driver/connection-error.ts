@@ -48,6 +48,14 @@ const RULES: Rule[] = [
   // ---- DuckDB file --------------------------------------------------------
   {
     when: ({ lower }) =>
+      lower.includes('duckdb connections are available only in the desktop'),
+    build: () => ({
+      message: 'DuckDB connections are available only in the desktop app.',
+      hint: 'Open this connection from the OrcaQ desktop app.',
+    }),
+  },
+  {
+    when: ({ lower }) =>
       lower.includes('duckdb database file was not found') ||
       lower.includes('duckdb database file is not readable'),
     build: () => ({
