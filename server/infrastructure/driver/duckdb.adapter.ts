@@ -14,11 +14,14 @@ import {
 } from 'node:fs';
 import { Readable } from 'node:stream';
 import { DatabaseClientType } from '~/core/constants/database-client-type';
+import { isDuckDbUnsupportedPlatform } from '~/core/helpers/environment';
 import type { DatabaseField } from '~/core/types';
 import { BaseDatabaseAdapter } from './base.adapter';
 import type { RawQueryResult } from './types';
 
 export const DUCKDB_IN_MEMORY_PATH = ':memory:';
+export const DUCKDB_UNSUPPORTED_PLATFORM_MESSAGE =
+  'DuckDB is not available on Intel Mac yet.';
 
 const DUCKDB_URL_PREFIX = 'duckdb://';
 const DUCKDB_MAGIC = 'DUCK';
@@ -141,6 +144,10 @@ function inferDuckDbCommand(sql: string) {
 }
 
 async function loadDuckDbDriver() {
+  if (isDuckDbUnsupportedPlatform(process.platform, process.arch)) {
+    throw new Error(DUCKDB_UNSUPPORTED_PLATFORM_MESSAGE);
+  }
+
   try {
     // Imported lazily so a platform without a native binding only fails DuckDB
     // connections rather than every server route sharing this module graph.

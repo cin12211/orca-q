@@ -11,6 +11,7 @@ import { CreateConnectionModal } from '../connection';
 import {
   getDatabaseSupportByType,
   isSqlite3ConnectionsEnabled,
+  getConnectionDisabledLabel,
   isSqliteConnectionDisabled,
 } from '../connection';
 
@@ -190,7 +191,7 @@ const getConnectionSupportIconProps = (connection?: Connection) => {
                   connection,
                   sqlite3ConnectionsEnabled
                 )
-                  ? 'Disabled'
+                  ? getConnectionDisabledLabel(connection)
                   : 'Not allowed'
               }}
             </span>

@@ -47,6 +47,13 @@ type Rule = {
 const RULES: Rule[] = [
   // ---- DuckDB file --------------------------------------------------------
   {
+    when: ({ lower }) => lower.includes('duckdb is not available on intel mac'),
+    build: () => ({
+      message: 'DuckDB is not available on Intel Mac yet.',
+      hint: 'Use OrcaQ on an Apple Silicon Mac, Linux, or connect to another database.',
+    }),
+  },
+  {
     when: ({ lower }) =>
       lower.includes('duckdb connections are available only in the desktop'),
     build: () => ({

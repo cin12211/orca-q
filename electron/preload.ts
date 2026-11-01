@@ -21,6 +21,8 @@ interface WindowSaveDialogOptions {
 // ─── electronAPI surface ──────────────────────────────────────────────────────
 
 const electronAPI = {
+  runtime: { platform: process.platform, arch: process.arch },
+
   persist: {
     getAll: (collection: PersistCollection) =>
       ipcRenderer.invoke('persist:get-all', { collection }),

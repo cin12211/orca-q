@@ -29,6 +29,18 @@ test.describe('DuckDB connection', () => {
     );
   });
 
+  test('Intel Mac shows the card as unavailable', async ({ page }) => {
+    await installDesktopBridge(page, {
+      runtime: { platform: 'darwin', arch: 'x64' },
+    });
+    await openWorkspace(page, `DuckDB intel ${Date.now()}`);
+    await page.getByTestId('connection-add-button').first().click();
+
+    await expect(page.getByTestId('db-type-card-duckdb')).toContainText(
+      /not available on intel mac/i
+    );
+  });
+
   test('lists MotherDuck as coming soon', async ({ page }) => {
     await openWorkspace(page, `DuckDB cards ${Date.now()}`);
     await page.getByTestId('connection-add-button').first().click();

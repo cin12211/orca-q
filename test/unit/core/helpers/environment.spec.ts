@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import * as env from '@/core/helpers/environment';
+import { isDuckDbUnsupportedPlatform } from '~/core/helpers/environment';
 
 const setNavigator = (value: any) => {
   Object.defineProperty(globalThis, 'navigator', {
@@ -50,5 +51,16 @@ describe('environment helpers', () => {
     });
 
     expect(env.isPWA()).toBe(false);
+  });
+});
+
+describe('isDuckDbUnsupportedPlatform', () => {
+  it.each([
+    ['darwin', 'x64', true],
+    ['darwin', 'arm64', false],
+    ['linux', 'x64', false],
+    ['win32', 'x64', false],
+  ])('%s %s is %s', (platform, arch, expected) => {
+    expect(isDuckDbUnsupportedPlatform(platform, arch)).toBe(expected);
   });
 });

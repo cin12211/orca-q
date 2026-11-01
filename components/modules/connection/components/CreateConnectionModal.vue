@@ -20,7 +20,7 @@ import type { Connection } from '~/core/stores';
 import {
   databaseSupports,
   isSqlite3ConnectionsEnabled,
-  isDesktopOnlyConnection,
+  getConnectionDisabledLabel,
   isSqliteConnectionDisabled,
 } from '../constants';
 import { CreateDatabaseFileDialog } from '../create-database-file';
@@ -110,9 +110,7 @@ const databaseOptions = computed(() =>
       ...e,
       isSupport: isSqliteDisabled ? false : e.isSupport,
       unsupportedLabel: isSqliteDisabled
-        ? isDesktopOnlyConnection(e)
-          ? 'Desktop only'
-          : 'Disabled'
+        ? getConnectionDisabledLabel(e)
         : e.unsupportedLabel,
       // Cloudflare D1, Turso, and local-file SQLite all share `type: SQLITE3`,
       // so "active" also has to match on the managed provider (or its absence).

@@ -34,6 +34,7 @@ import { EConnectionMethod } from '~/core/types/entities/connection.entity';
 import {
   getDatabaseSupportByType,
   isSqlite3ConnectionsEnabled,
+  getConnectionDisabledLabel,
   isSqliteConnectionDisabled,
 } from '../constants';
 
@@ -285,7 +286,7 @@ const onConnectConnection = async (connection: Connection) => {
                     item.connection,
                     sqlite3ConnectionsEnabled
                   )
-                    ? 'Disabled'
+                    ? getConnectionDisabledLabel(item.connection)
                     : 'Connect'
                 }}
               </Button>

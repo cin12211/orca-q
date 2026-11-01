@@ -110,6 +110,7 @@ interface ElectronWindowAPI {
 }
 
 interface ElectronAPI {
+  runtime?: { platform: string; arch: string };
   persist: ElectronPersistAPI;
   updater: ElectronUpdaterAPI;
   window: ElectronWindowAPI;

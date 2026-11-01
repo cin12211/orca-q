@@ -69,9 +69,12 @@ export async function skipWithoutDesktopServer(request: APIRequestContext) {
  */
 export async function installDesktopBridge(
   page: Page,
-  options: { pickedDirectory?: string } = {}
+  options: {
+    pickedDirectory?: string;
+    runtime?: { platform: string; arch: string };
+  } = {}
 ) {
-  await page.addInitScript(({ pickedDirectory }) => {
+  await page.addInitScript(({ pickedDirectory, runtime }) => {
     const STORE_KEY = 'orcaq-e2e-persist';
     type Row = Record<string, unknown>;
     type Filter = { field: string; value: unknown };
@@ -87,6 +90,7 @@ export async function installDesktopBridge(
     const noopSubscribe = () => () => undefined;
 
     window.electronAPI = {
+      runtime,
       persist: {
         getAll: async (collection: string) => readStore()[collection] ?? [],
         getOne: async (collection: string, id: string) =>

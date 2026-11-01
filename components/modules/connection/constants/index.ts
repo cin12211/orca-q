@@ -1,7 +1,10 @@
 import type { RendererElement, RendererNode } from 'vue';
 import { Icon } from '#components';
 import { DatabaseClientType } from '~/core/constants/database-client-type';
-import { isElectron } from '~/core/helpers/environment';
+import {
+  isDuckDbUnsupportedPlatform,
+  isElectron,
+} from '~/core/helpers/environment';
 import { EKafkaSaslMechanism, EManagedSqliteProvider } from '../types';
 
 export interface IDBSupport {
@@ -185,16 +188,30 @@ export const isSqlite3ConnectionsEnabled = (value: unknown) => {
   return value !== false && value !== 'false' && value !== '0';
 };
 
-export const isDesktopOnlyConnection = (connection: {
+const isDuckDbUnsupportedRuntime = () => {
+  const runtime = window.electronAPI?.runtime;
+
+  return (
+    !!runtime && isDuckDbUnsupportedPlatform(runtime.platform, runtime.arch)
+  );
+};
+
+export const getConnectionDisabledLabel = (connection: {
   type: DatabaseClientType | string;
-}) => connection.type === DatabaseClientType.DUCKDB;
+}) => {
+  if (connection.type !== DatabaseClientType.DUCKDB) {
+    return 'Disabled';
+  }
+
+  return isElectron() ? 'Not available on Intel Mac' : 'Desktop only';
+};
 
 export const isSqliteConnectionDisabled = (
   connection: { type: DatabaseClientType | string },
   sqlite3ConnectionsEnabled: boolean
 ) => {
-  if (isDesktopOnlyConnection(connection)) {
-    return !isElectron();
+  if (connection.type === DatabaseClientType.DUCKDB) {
+    return !isElectron() || isDuckDbUnsupportedRuntime();
   }
 
   return (

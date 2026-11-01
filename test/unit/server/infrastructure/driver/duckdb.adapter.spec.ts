@@ -13,7 +13,10 @@ import {
 } from 'vitest';
 import { DatabaseClientType } from '~/core/constants/database-client-type';
 import { normalizeConnectionError } from '~/server/infrastructure/driver/connection-error';
-import { DuckDbAdapter } from '~/server/infrastructure/driver/duckdb.adapter';
+import {
+  DUCKDB_UNSUPPORTED_PLATFORM_MESSAGE,
+  DuckDbAdapter,
+} from '~/server/infrastructure/driver/duckdb.adapter';
 import {
   createDatabaseAdapter,
   DUCKDB_DESKTOP_ONLY_MESSAGE,
@@ -62,6 +65,25 @@ describe('DuckDbAdapter', () => {
     adapter = new DuckDbAdapter(connection as string);
 
     await expect(adapter.verifyConnection()).resolves.toBeUndefined();
+  });
+
+  it('refuses to open on Intel Macs', async () => {
+    const platform = Object.getOwnPropertyDescriptor(process, 'platform')!;
+    const arch = Object.getOwnPropertyDescriptor(process, 'arch')!;
+
+    Object.defineProperty(process, 'platform', { value: 'darwin' });
+    Object.defineProperty(process, 'arch', { value: 'x64' });
+
+    try {
+      adapter = new DuckDbAdapter(':memory:');
+
+      await expect(adapter.verifyConnection()).rejects.toThrow(
+        DUCKDB_UNSUPPORTED_PLATFORM_MESSAGE
+      );
+    } finally {
+      Object.defineProperty(process, 'platform', platform);
+      Object.defineProperty(process, 'arch', arch);
+    }
   });
 
   it('rejects a missing file instead of creating one', () => {

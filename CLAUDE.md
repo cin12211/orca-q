@@ -121,6 +121,7 @@ Prefer Tailwind utilities. Use `<style scoped>` only for complex styles not achi
 - Local SQLite uses `file` method (desktop runtime only)
 - DuckDB (beta) uses `file` method only (desktop runtime only); a typed path must already exist, and "New database file" (SQLite and DuckDB) creates an empty file in a chosen folder without overwriting anything, with Advanced options written to the file at creation (SQLite journal mode, page size, encoding, auto vacuum; DuckDB storage compatibility, block size). The server refuses it unless `ORCAQ_DESKTOP_RUNTIME=1`, because DuckDB SQL can read any file the server can reach
 - DuckDB hides Users & Roles and AI Agent, and disables Backup & Restore
+- DuckDB is not available on Intel Mac: the release only ships the Apple Silicon binding, so the card and saved connections are locked there and the server refuses it
 - DuckDB shows a read-only Macros section in place of Functions: macros can be opened but not edited, renamed or dropped
 - The built-in MCP server keeps DuckDB read-only whatever the session's access level: each query opens a throwaway read-only instance with `enable_external_access=false`, so it cannot read files outside the database.
 - RabbitMQ and Kafka use the `form` method only, with broker settings in `connection.broker`:

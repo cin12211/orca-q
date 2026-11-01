@@ -38,3 +38,8 @@ export const isPWA = (): boolean => {
 
   return false;
 };
+
+/** DuckDB's native binding only ships for Apple Silicon in the macOS release. */
+export function isDuckDbUnsupportedPlatform(platform: string, arch: string) {
+  return platform === 'darwin' && arch === 'x64';
+}
