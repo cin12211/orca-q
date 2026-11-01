@@ -170,7 +170,7 @@ Nuxt/Electron workflows.
 
 ## Tests And Verification
 
-> **For any test-related task, load the skill first:** > `.github/skills/testing-orcaq/SKILL.md`
+> **For any test-related task, load the skill first:** > `.claude/skills/testing-orcaq/SKILL.md`
 > It contains the exact commands, fixture profiles, and decision rules.
 > Full reference: `docs/TESTING_GUIDE.md`
 
