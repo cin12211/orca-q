@@ -23,3 +23,4 @@ export { OracleMetadataAdapter } from './oracle/oracle-metadata.adapter';
 export { SqliteMetadataAdapter } from './sqlite/sqlite-metadata.adapter';
 export { MssqlMetadataAdapter } from './mssql/mssql-metadata.adapter';
 export { CockroachMetadataAdapter } from './cockroachdb/cockroachdb-metadata.adapter';
+export { DuckDbMetadataAdapter } from './duckdb/duckdb-metadata.adapter';

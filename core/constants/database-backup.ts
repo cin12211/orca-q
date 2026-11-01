@@ -109,6 +109,8 @@ export function getDatabaseClientLabel(type?: DatabaseClientType | null) {
       return 'MariaDB';
     case DatabaseClientType.SQLITE3:
       return 'SQLite';
+    case DatabaseClientType.DUCKDB:
+      return 'DuckDB';
     case DatabaseClientType.ORACLE:
       return 'Oracle';
     case DatabaseClientType.MSSQL:

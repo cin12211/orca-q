@@ -1,5 +1,8 @@
 import { getConnectionParams } from '~/core/helpers/connection-helper';
-import type { Connection } from '~/core/types/entities/connection.entity';
+import {
+  EConnectionMethod,
+  type Connection,
+} from '~/core/types/entities/connection.entity';
 import { schemaDiffService } from '../services/schemaDiff.service';
 import type {
   SchemaDiffResponse,
@@ -14,7 +17,9 @@ export function useSchemaDiff() {
 
   const buildParams = (conn: Connection): ConnectionParams => ({
     ...getConnectionParams(conn),
-    connectionString: conn.connectionString,
+    // File connections resolve from filePath, which also covers `:memory:`.
+    connectionString:
+      conn.method === EConnectionMethod.FILE ? '' : conn.connectionString,
   });
 
   const runDiff = async (source: Connection, target: Connection) => {

@@ -5,8 +5,12 @@ interface ParameterExtractor {
 }
 
 class StandardColonExtractor implements ParameterExtractor {
+  /** Brackets whose content uses `:` as syntax rather than as a variable. */
+  protected readonly literalBrackets: Record<string, string> = {};
+
   extract(sql: string): string[] {
     const params: string[] = [];
+    const openBrackets: string[] = [];
     let index = 0;
 
     while (index < sql.length) {
@@ -69,8 +73,20 @@ class StandardColonExtractor implements ParameterExtractor {
         continue;
       }
 
+      if (this.literalBrackets[current]) {
+        openBrackets.push(this.literalBrackets[current]);
+        index += 1;
+        continue;
+      }
+
+      if (current === openBrackets[openBrackets.length - 1]) {
+        openBrackets.pop();
+        index += 1;
+        continue;
+      }
+
       // Match parameter starting with ':'
-      if (current === ':') {
+      if (current === ':' && !openBrackets.length) {
         // Check if it's '::' (typecast)
         if (next === ':') {
           index += 2;
@@ -103,6 +119,11 @@ class StandardColonExtractor implements ParameterExtractor {
 
     return params;
   }
+}
+
+class DuckDbExtractor extends StandardColonExtractor {
+  // List slices `[1:n]` and struct literals `{'k': v}`
+  protected override readonly literalBrackets = { '[': ']', '{': '}' };
 }
 
 class MssqlExtractor implements ParameterExtractor {
@@ -205,6 +226,9 @@ export class ParameterExtractorFactory {
   static getExtractor(dbType?: string): ParameterExtractor {
     if (dbType === DatabaseClientType.MSSQL) {
       return new MssqlExtractor();
+    }
+    if (dbType === DatabaseClientType.DUCKDB) {
+      return new DuckDbExtractor();
     }
     return new StandardColonExtractor();
   }

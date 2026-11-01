@@ -108,18 +108,24 @@ Prefer Tailwind utilities. Use `<style scoped>` only for complex styles not achi
 
 ### Database Connections
 
-- Supported types: `postgres`, `mysql`, `mariadb`, `oracledb`, `sqlite3`, `redis`, `mssql`, `cockroachdb`, `mongodb`, `rabbitmq`, `kafka`
+- Supported types: `postgres`, `mysql`, `mariadb`, `oracledb`, `sqlite3`, `duckdb`, `redis`, `mssql`, `cockroachdb`, `mongodb`, `rabbitmq`, `kafka`
 - Connection string formats:
   - PostgreSQL: `postgresql://user:password@host:port/database`
   - MySQL: `mysql://user:password@host:port/database`
   - MariaDB: `mariadb://user:password@host:port/database`
   - Oracle: `oracledb://user:password@host:port/serviceName`
   - SQLite: `sqlite3:///absolute/path/to/database.sqlite`
+  - DuckDB: `duckdb:///absolute/path/to/database.duckdb`
   - SQL Server: `Server=host,1433;Database=db;User Id=user;Password=…` (ADO.NET) or `sqlserver://user:password@host:1433/database`
   - CockroachDB: `postgresql://user:password@host:26257/database?sslmode=verify-full` (with the CockroachDB type selected)
 - Oracle structured-form connections use `serviceName` instead of `database`
 - Managed SQLite (Cloudflare D1, Turso) uses `managed` method and stays on SQL family path
 - Local SQLite uses `file` method (desktop runtime only)
+- DuckDB (beta) uses `file` method only (desktop runtime only); a typed path must already exist, and "New database file" (SQLite and DuckDB) creates an empty file in a chosen folder without overwriting anything, with Advanced options written to the file at creation (SQLite journal mode, page size, encoding, auto vacuum; DuckDB storage compatibility, block size). The server refuses it unless `ORCAQ_DESKTOP_RUNTIME=1`, because DuckDB SQL can read any file the server can reach
+- DuckDB hides Users & Roles and AI Agent, and disables Backup & Restore
+- DuckDB is not available on Intel Mac: the release only ships the Apple Silicon binding, so the card and saved connections are locked there and the server refuses it
+- DuckDB shows a read-only Macros section in place of Functions: macros can be opened but not edited, renamed or dropped
+- The built-in MCP server keeps DuckDB read-only whatever the session's access level: each query opens a throwaway read-only instance with `enable_external_access=false`, so it cannot read files outside the database.
 - SQL Server and CockroachDB enforce a minimum server version (SQL Server 2017+ or Azure SQL, CockroachDB v23.2+); older servers fail the health check and every data request
 - SQL Server and CockroachDB hide Users & Roles, AI Agent, Backup & Restore, and Schema Diff; their Instance Insights is read-only
 - RabbitMQ and Kafka use the `form` method only, with broker settings in `connection.broker`:
@@ -137,7 +143,7 @@ Prefer Tailwind utilities. Use `<style scoped>` only for complex styles not achi
 - Broker features stay non-destructive: browse, peek (RabbitMQ requeues, Kafka reads without committing), and test publish/produce guarded by Strict Mode. No delete, purge or offset reset
 - Exception: RabbitMQ Instance Insights can add/edit/delete virtual hosts and policies (user and operator), set/clear vhost and user limits, enable feature flags, force-close connections and rename the cluster, all guarded by Strict Mode; deleting a vhost needs its name typed
 - Exception: RabbitMQ Users & Permissions supports full user management (create, edit tags/password, set/clear permissions, topic permissions and user limits, delete user) for `administrator` users, guarded by Strict Mode; deleting needs the user name typed, and the connected user can neither delete itself nor drop its own `administrator` tag
-- The built-in MCP server (desktop only) serves SQL connections (PostgreSQL, CockroachDB, MySQL, MariaDB, SQL Server, SQLite, Oracle) through `list_schemas` / `list_tables` / `describe_table` / `run_query` / `explain_query`. Read-only sessions run inside a database read-only scope (SQL Server: a transaction that is always rolled back) after the SQL guard; `explain_query` is not available for SQL Server or Oracle
+- The built-in MCP server (desktop only) serves SQL connections (PostgreSQL, CockroachDB, MySQL, MariaDB, SQL Server, SQLite, DuckDB, Oracle) through `list_schemas` / `list_tables` / `describe_table` / `run_query` / `explain_query`. Read-only sessions run inside a database read-only scope (SQL Server: a transaction that is always rolled back) after the SQL guard; `explain_query` is not available for SQL Server or Oracle
 - The built-in MCP server (desktop only) serves RabbitMQ and Kafka through read-only `rabbitmq_*` / `kafka_*` tools (overview, queues, exchanges, peek, users, policies; topics, read messages, consumer groups). `list_connections` reports each connection's `family` (`sql`, `rabbitmq`, `kafka`). Broker tools never write, whatever the session's access level
 - Provider-limited SQL tools for D1/Turso must show clear unavailable state instead of redirecting away from SQL family
 
@@ -169,7 +175,7 @@ Nuxt/Electron workflows.
 
 ## Tests And Verification
 
-> **For any test-related task, load the skill first:** > `.github/skills/testing-orcaq/SKILL.md`
+> **For any test-related task, load the skill first:** > `.claude/skills/testing-orcaq/SKILL.md`
 > It contains the exact commands, fixture profiles, and decision rules.
 > Full reference: `docs/TESTING_GUIDE.md`
 

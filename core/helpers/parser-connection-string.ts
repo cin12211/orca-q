@@ -40,6 +40,7 @@ const DEFAULT_PORTS: Partial<Record<DatabaseClientType, number>> = {
   [DatabaseClientType.COCKROACHDB]: 26257,
   [DatabaseClientType.BETTER_SQLITE3]: 0, // No port for SQLite
   [DatabaseClientType.SQLITE3]: 0,
+  [DatabaseClientType.DUCKDB]: 0,
   [DatabaseClientType.SNOWFLAKE]: 443,
   [DatabaseClientType.RABBITMQ]: 5672,
 };

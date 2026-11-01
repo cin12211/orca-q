@@ -19,6 +19,8 @@ function getDatabaseLabel(dbType: DatabaseClientType): string {
       return 'Oracle';
     case DatabaseClientType.SQLITE3:
       return 'SQLite';
+    case DatabaseClientType.DUCKDB:
+      return 'DuckDB';
     default:
       return dbType;
   }

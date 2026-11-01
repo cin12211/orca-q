@@ -1,6 +1,7 @@
 import { DatabaseClientType } from '~/core/constants/database-client-type';
 import { createDomainAdapter } from '../shared';
 import { CockroachMetadataAdapter } from './cockroachdb/cockroachdb-metadata.adapter';
+import { DuckDbMetadataAdapter } from './duckdb/duckdb-metadata.adapter';
 import { MssqlMetadataAdapter } from './mssql/mssql-metadata.adapter';
 import { MysqlMetadataAdapter } from './mysql/mysql-metadata.adapter';
 import { OracleMetadataAdapter } from './oracle/oracle-metadata.adapter';
@@ -28,5 +29,6 @@ export async function createMetadataAdapter(
     sqlite3: SqliteMetadataAdapter.create,
     cockroachdb: CockroachMetadataAdapter.create,
     mssql: MssqlMetadataAdapter.create,
+    duckdb: DuckDbMetadataAdapter.create,
   });
 }

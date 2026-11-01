@@ -53,15 +53,19 @@ export function registerWindowHandlers(
     mainWindow.close();
   });
 
-  ipcMain.handle('window:pick-sqlite-file', async () => {
+  const pickDatabaseFile = async (
+    title: string,
+    filterName: string,
+    extensions: string[]
+  ) => {
     const mainWindow = getMainWindow();
     const options: OpenDialogOptions = {
-      title: 'Select SQLite Database File',
+      title,
       properties: ['openFile'],
       filters: [
         {
-          name: 'SQLite Databases',
-          extensions: ['sqlite', 'sqlite3', 'db', 'db3'],
+          name: filterName,
+          extensions,
         },
         {
           name: 'All Files',
@@ -78,7 +82,24 @@ export function registerWindowHandlers(
     }
 
     return result.filePaths[0] || null;
-  });
+  };
+
+  ipcMain.handle('window:pick-sqlite-file', () =>
+    pickDatabaseFile('Select SQLite Database File', 'SQLite Databases', [
+      'sqlite',
+      'sqlite3',
+      'db',
+      'db3',
+    ])
+  );
+
+  ipcMain.handle('window:pick-duckdb-file', () =>
+    pickDatabaseFile('Select DuckDB Database File', 'DuckDB Databases', [
+      'duckdb',
+      'ddb',
+      'db',
+    ])
+  );
 
   ipcMain.handle(
     'window:pick-save-file',

@@ -7,7 +7,8 @@ import { SchemaFolderType } from '../constants';
 
 export const useSchemaTreeData = (
   activeSchema: Ref<any>,
-  debouncedSearch: Ref<string>
+  debouncedSearch: Ref<string>,
+  showMacros?: Ref<boolean>
 ) => {
   const defaultFolderOpenId = computed(
     () => `${activeSchema?.value?.schemaName}.${SchemaFolderType.Tables}`
@@ -22,7 +23,10 @@ export const useSchemaTreeData = (
     const nodes: Record<string, FileNode> = {};
 
     const formatFunctionName = (name: string, parameters: string) => {
-      const formatParameters = getFormatParameters(parameters);
+      // Macro parameters are bare names, without the types Postgres lists.
+      const formatParameters = showMacros?.value
+        ? parameters
+        : getFormatParameters(parameters);
       return `${name}(${formatParameters})`;
     };
 
@@ -54,7 +58,7 @@ export const useSchemaTreeData = (
 
     addFolder(
       functionParentId,
-      SchemaFolderType.Functions,
+      showMacros?.value ? SchemaFolderType.Macros : SchemaFolderType.Functions,
       'material-icon-theme:folder-functions-open',
       'material-icon-theme:folder-functions',
       TabViewType.FunctionsOverview

@@ -46,6 +46,53 @@ type Rule = {
 // Ordered most-specific first. SSL/SSH rules come before generic network rules
 // so a TLS or tunnel failure is reported as such instead of "host unreachable".
 const RULES: Rule[] = [
+  // ---- DuckDB file --------------------------------------------------------
+  {
+    when: ({ lower }) => lower.includes('duckdb is not available on intel mac'),
+    build: () => ({
+      message: 'DuckDB is not available on Intel Mac yet.',
+      hint: 'Use OrcaQ on an Apple Silicon Mac, Linux, or connect to another database.',
+    }),
+  },
+  {
+    when: ({ lower }) =>
+      lower.includes('duckdb connections are available only in the desktop'),
+    build: () => ({
+      message: 'DuckDB connections are available only in the desktop app.',
+      hint: 'Open this connection from the OrcaQ desktop app.',
+    }),
+  },
+  {
+    when: ({ lower }) =>
+      lower.includes('duckdb database file was not found') ||
+      lower.includes('duckdb database file is not readable'),
+    build: () => ({
+      message: 'The DuckDB file could not be opened.',
+      hint: 'Check the file path and that this app can read the file.',
+    }),
+  },
+  {
+    when: ({ lower }) => lower.includes('failed to load the duckdb driver'),
+    build: () => ({
+      message: 'DuckDB is not available on this platform.',
+      hint: 'The native DuckDB driver could not be loaded. See the details below.',
+    }),
+  },
+  {
+    when: ({ lower }) => lower.includes('could not set lock on file'),
+    build: () => ({
+      message: 'The DuckDB file is locked by another program.',
+      hint: 'Close the other process using this file (for example the DuckDB CLI), then try again.',
+    }),
+  },
+  {
+    when: ({ lower }) => lower.includes('not a valid duckdb database file'),
+    build: () => ({
+      message: 'This file is not a DuckDB database.',
+      hint: 'Choose a file created by DuckDB (.duckdb or .ddb).',
+    }),
+  },
+
   // ---- SSH tunnel ---------------------------------------------------------
   {
     when: ({ lower }) =>

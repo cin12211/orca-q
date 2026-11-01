@@ -12,6 +12,7 @@ const DEFAULT_PORTS: Partial<Record<DatabaseClientType, number>> = {
   [DatabaseClientType.SNOWFLAKE]: 443,
   [DatabaseClientType.BETTER_SQLITE3]: 0,
   [DatabaseClientType.SQLITE3]: 0,
+  [DatabaseClientType.DUCKDB]: 0,
   [DatabaseClientType.RABBITMQ]: 15672,
   [DatabaseClientType.KAFKA]: 9092,
 };

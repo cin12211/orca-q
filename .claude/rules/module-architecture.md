@@ -1,5 +1,9 @@
 ---
-trigger: always_on
+paths:
+  - 'components/modules/**'
+  - 'core/**'
+  - 'server/**'
+  - 'pages/**'
 ---
 
 # Module Architecture Guide

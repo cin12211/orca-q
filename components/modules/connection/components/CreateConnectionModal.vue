@@ -20,8 +20,10 @@ import type { Connection } from '~/core/stores';
 import {
   databaseSupports,
   isSqlite3ConnectionsEnabled,
+  getConnectionDisabledLabel,
   isSqliteConnectionDisabled,
 } from '../constants';
+import { CreateDatabaseFileDialog } from '../create-database-file';
 import { useConnectionForm } from '../hooks/useConnectionForm';
 import { EConnectionMethod, EManagedSqliteProvider } from '../types';
 import ConnectionSSHTunnel from './ConnectionSSHTunnel.vue';
@@ -48,6 +50,7 @@ const handleClose = () => {
 };
 
 const showPassword = ref(false);
+const isCreateFileDialogOpen = ref(false);
 const config = useRuntimeConfig();
 const sqlite3ConnectionsEnabled = computed(() =>
   isSqlite3ConnectionsEnabled(config.public.sqlite3ConnectionsEnabled)
@@ -76,9 +79,14 @@ const {
   structuredTargetLabel,
   structuredTargetPlaceholder,
   canUseNetworkOptions,
-  canPickSqliteFile,
+  canCreateDatabaseFile,
+  canPickDatabaseFile,
+  applyCreatedDatabaseFile,
+  fileDatabaseLabel,
+  isDuckDb,
+  isFileMethod,
   isFormValid,
-  pickSqliteFile,
+  pickDatabaseFile,
   resetForm,
 } = useConnectionForm({
   open: () => props.open,
@@ -91,10 +99,9 @@ const {
 
 const databaseOptions = computed(() =>
   databaseSupports.map(e => {
-    const isSqliteDisabled = isSqliteConnectionDisabled(
-      e,
-      sqlite3ConnectionsEnabled.value
-    );
+    const isSqliteDisabled =
+      e.isSupport &&
+      isSqliteConnectionDisabled(e, sqlite3ConnectionsEnabled.value);
     const isManagedSqliteActive =
       dbType.value === DatabaseClientType.SQLITE3 &&
       connectionMethod.value === EConnectionMethod.MANAGED;
@@ -102,7 +109,9 @@ const databaseOptions = computed(() =>
     return {
       ...e,
       isSupport: isSqliteDisabled ? false : e.isSupport,
-      unsupportedLabel: isSqliteDisabled ? 'Disabled' : e.unsupportedLabel,
+      unsupportedLabel: isSqliteDisabled
+        ? getConnectionDisabledLabel(e)
+        : e.unsupportedLabel,
       // Cloudflare D1, Turso, and local-file SQLite all share `type: SQLITE3`,
       // so "active" also has to match on the managed provider (or its absence).
       isActive: e.managedProvider
@@ -114,7 +123,10 @@ const databaseOptions = computed(() =>
         if (e.managedProvider) {
           connectionMethod.value = EConnectionMethod.MANAGED;
           managedSqlite.provider = e.managedProvider;
-        } else if (e.type === DatabaseClientType.SQLITE3) {
+        } else if (
+          e.type === DatabaseClientType.SQLITE3 ||
+          e.type === DatabaseClientType.DUCKDB
+        ) {
           connectionMethod.value = EConnectionMethod.FILE;
         }
       },
@@ -211,37 +223,51 @@ watch(testStatus, status => {
 
           <div class="flex-1 overflow-y-auto p-4 space-y-4">
             <Tabs v-model="connectionMethod" class="w-full">
-              <TabsList
-                class="grid w-fit"
-                :style="{
-                  gridTemplateColumns: `repeat(${availableConnectionMethods.length}, minmax(0, 1fr))`,
-                }"
-                id="tour-connection-method-tabs"
-              >
-                <TabsTrigger
-                  v-for="method in availableConnectionMethods"
-                  :key="method"
-                  :value="method"
-                  class="cursor-pointer"
+              <div class="flex items-center justify-between gap-2">
+                <TabsList
+                  class="grid w-fit"
+                  :style="{
+                    gridTemplateColumns: `repeat(${availableConnectionMethods.length}, minmax(0, 1fr))`,
+                  }"
+                  id="tour-connection-method-tabs"
                 >
-                  <span
-                    v-if="method === EConnectionMethod.STRING"
-                    id="tour-connection-string-tab"
+                  <TabsTrigger
+                    v-for="method in availableConnectionMethods"
+                    :key="method"
+                    :value="method"
+                    class="cursor-pointer"
                   >
-                    Connection String
-                  </span>
-                  <span
-                    v-else-if="method === EConnectionMethod.FORM"
-                    id="tour-connection-form-tab"
-                  >
-                    Connection Form
-                  </span>
-                  <span v-else-if="method === EConnectionMethod.MANAGED">
-                    Managed SQLite
-                  </span>
-                  <span v-else>Database File</span>
-                </TabsTrigger>
-              </TabsList>
+                    <span
+                      v-if="method === EConnectionMethod.STRING"
+                      id="tour-connection-string-tab"
+                    >
+                      Connection String
+                    </span>
+                    <span
+                      v-else-if="method === EConnectionMethod.FORM"
+                      id="tour-connection-form-tab"
+                    >
+                      Connection Form
+                    </span>
+                    <span v-else-if="method === EConnectionMethod.MANAGED">
+                      Managed SQLite
+                    </span>
+                    <span v-else>Database File</span>
+                  </TabsTrigger>
+                </TabsList>
+                <Button
+                  v-if="canCreateDatabaseFile && isFileMethod"
+                  data-testid="connection-create-file-button"
+                  type="button"
+                  :title="`Create an empty ${fileDatabaseLabel} file`"
+                  variant="outline"
+                  size="sm"
+                  @click="isCreateFileDialogOpen = true"
+                >
+                  <Icon name="hugeicons:add-01" class="size-4" />
+                  New database file
+                </Button>
+              </div>
 
               <div class="grid grid-cols-3 gap-3 mt-2">
                 <div class="col-span-2 space-y-2">
@@ -254,6 +280,7 @@ watch(testStatus, status => {
                   </Label>
                   <Input
                     id="connection-name"
+                    data-testid="connection-name-input"
                     placeholder="My Database Connection"
                     v-model="connectionName"
                   />
@@ -395,35 +422,44 @@ watch(testStatus, status => {
                       name="hugeicons:file-01"
                       class="h-3.5 w-3.5 text-muted-foreground"
                     />
-                    SQLite File <span class="text-destructive">*</span>
+                    {{ fileDatabaseLabel }} File
+                    <span class="text-destructive">*</span>
                   </Label>
                   <div class="flex gap-2">
                     <Input
                       id="file-path"
-                      placeholder="/Users/you/data/app.sqlite"
+                      data-testid="connection-file-path-input"
+                      :placeholder="getConnectionPlaceholder()"
                       v-model="formData.filePath"
-                      :readonly="canPickSqliteFile"
+                      :readonly="canPickDatabaseFile && !isDuckDb"
                     />
                     <Button
-                      v-if="canPickSqliteFile"
+                      v-if="canPickDatabaseFile"
                       type="button"
                       variant="outline"
-                      @click="pickSqliteFile"
+                      @click="pickDatabaseFile"
                     >
                       Browse
                     </Button>
                   </div>
                   <p class="text-xs text-muted-foreground">
-                    <template v-if="canPickSqliteFile">
-                      Choose a local SQLite database file from the desktop app.
+                    <template v-if="canPickDatabaseFile">
+                      Choose a local {{ fileDatabaseLabel }} database file from
+                      the desktop app.
                     </template>
                     <template v-else-if="sqlite3ConnectionsEnabled">
-                      Enter a SQLite file path that this app runtime can read.
-                      In hosted web deployments, this path is on the server.
+                      Enter a {{ fileDatabaseLabel }} file path that this app
+                      runtime can read. In hosted web deployments, this path is
+                      on the server.
                     </template>
                     <template v-else>
-                      SQLite file connections are disabled in this deployment.
+                      {{ fileDatabaseLabel }} file connections are disabled in
+                      this deployment.
                     </template>
+                  </p>
+                  <p v-if="isDuckDb" class="text-xs text-muted-foreground">
+                    The file stays locked for other programs while OrcaQ has it
+                    open.
                   </p>
                 </div>
               </TabsContent>
@@ -614,6 +650,7 @@ watch(testStatus, status => {
             <div class="flex space-x-2">
               <Button
                 type="button"
+                data-testid="connection-test-button"
                 variant="outline"
                 @click="handleTestConnection"
                 size="sm"
@@ -628,6 +665,7 @@ watch(testStatus, status => {
               </Button>
               <Button
                 id="tour-create-update-connection-btn"
+                data-testid="connection-submit-button"
                 type="submit"
                 size="sm"
                 :disabled="testStatus === 'testing' || !isFormValid"
@@ -640,4 +678,13 @@ watch(testStatus, status => {
       </template>
     </DialogContent>
   </Dialog>
+
+  <CreateDatabaseFileDialog
+    v-model:open="isCreateFileDialogOpen"
+    :database-label="fileDatabaseLabel"
+    :database-type="
+      isDuckDb ? DatabaseClientType.DUCKDB : DatabaseClientType.SQLITE3
+    "
+    @created="applyCreatedDatabaseFile"
+  />
 </template>

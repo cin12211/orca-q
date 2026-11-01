@@ -9,6 +9,7 @@ import {
   createTableAdapter,
 } from '~/server/infrastructure/database/adapters';
 import { getDatabaseSource } from '~/server/infrastructure/driver';
+import { DUCKDB_IN_MEMORY_PATH } from '~/server/infrastructure/driver/duckdb.adapter';
 import { registerKafkaTools, registerRabbitTools } from './broker';
 import {
   getMcpConnection,
@@ -18,6 +19,7 @@ import {
 import { jsonResult, withToolErrors } from './mcp-tool-result';
 import {
   clampRowLimit,
+  executeDuckDbSandboxedQuery,
   executeReadOnlyQuery,
   executeWriteQuery,
   MCP_MAX_ROW_LIMIT,
@@ -29,6 +31,7 @@ const MCP_SUPPORTED_CLIENT_TYPES: DatabaseClientType[] = [
   DatabaseClientType.MYSQL,
   DatabaseClientType.MARIADB,
   DatabaseClientType.SQLITE3,
+  DatabaseClientType.DUCKDB,
   DatabaseClientType.ORACLE,
   DatabaseClientType.MSSQL,
   DatabaseClientType.COCKROACHDB,
@@ -55,6 +58,7 @@ const SERVER_INSTRUCTIONS =
   'OrcaQ exposes the database connections saved in the OrcaQ desktop app. ' +
   'Start with list_connections; its family field says which tools fit each connection. ' +
   'sql: explore with list_schemas, list_tables and describe_table before writing SQL; run_query is read-only unless this session was granted write access to the connection in OrcaQ Settings → MCP Server. ' +
+  'DuckDB connections are always read-only and cannot read files outside the database. ' +
   'rabbitmq: rabbitmq_* tools (overview, queues, exchanges, peek, users, policies). ' +
   'kafka: kafka_* tools (overview, topics, read messages, consumer groups). Broker tools only read: peeked RabbitMQ messages are requeued and Kafka reads never commit offsets.';
 
@@ -67,11 +71,25 @@ async function getSqlConnection(sessionId: string, connectionId: string) {
 
   if (!isSupportedConnectionType(entry.connection.type)) {
     throw new Error(
-      `Connection "${entry.connection.name}" is ${entry.connection.type}; SQL tools support PostgreSQL, CockroachDB, MySQL, MariaDB, SQL Server, SQLite and Oracle. Use the tools matching its family from list_connections.`
+      `Connection "${entry.connection.name}" is ${entry.connection.type}; SQL tools support PostgreSQL, CockroachDB, MySQL, MariaDB, SQL Server, SQLite, DuckDB and Oracle. Use the tools matching its family from list_connections.`
+    );
+  }
+
+  if (entry.connection.filePath === DUCKDB_IN_MEMORY_PATH) {
+    throw new Error(
+      `Connection "${entry.connection.name}" is an in-memory DuckDB database, which OrcaQ MCP cannot reach.`
     );
   }
 
   return entry;
+}
+
+function isDuckDbConnection(connection: Connection) {
+  return connection.type === DatabaseClientType.DUCKDB;
+}
+
+function resolveAccess(connection: Connection, access: McpConnectionAccess) {
+  return isDuckDbConnection(connection) ? McpConnectionAccess.Read : access;
 }
 
 function toAdapterParams(connection: Connection) {
@@ -104,7 +122,7 @@ export function createOrcaqMcpServer(session: McpSession): McpServer {
             name: connection.name,
             type: connection.type,
             workspace: workspaceNames.get(connection.workspaceId) ?? null,
-            access,
+            access: resolveAccess(connection, access),
             family: getConnectionFamily(connection.type),
             supported: getConnectionFamily(connection.type) !== null,
           }))
@@ -204,7 +222,8 @@ export function createOrcaqMcpServer(session: McpSession): McpServer {
       description:
         `Run one SQL statement and return rows as JSON (default 100 rows, max ${MCP_MAX_ROW_LIMIT}). ` +
         'Read-only connections only accept SELECT/WITH/SHOW/DESCRIBE/EXPLAIN/PRAGMA and run inside a read-only transaction. ' +
-        'Connections this session can write to run any statement and changes are committed.',
+        'Connections this session can write to run any statement and changes are committed. ' +
+        'DuckDB connections are always read-only.',
       inputSchema: {
         connectionId: connectionIdSchema,
         sql: z.string().describe('A single SQL statement.'),
@@ -223,8 +242,20 @@ export function createOrcaqMcpServer(session: McpSession): McpServer {
           session.id,
           connectionId
         );
-        const adapter = await getDatabaseSource(toAdapterParams(connection));
         const rowLimit = clampRowLimit(limit);
+
+        if (isDuckDbConnection(connection)) {
+          return jsonResult({
+            access: McpConnectionAccess.Read,
+            ...(await executeDuckDbSandboxedQuery(
+              connection.filePath,
+              assertReadOnlySql(sql),
+              rowLimit
+            )),
+          });
+        }
+
+        const adapter = await getDatabaseSource(toAdapterParams(connection));
 
         const result =
           access === McpConnectionAccess.Write
@@ -254,8 +285,19 @@ export function createOrcaqMcpServer(session: McpSession): McpServer {
     ({ connectionId, sql }) =>
       withToolErrors(async () => {
         const { connection } = await getSqlConnection(session.id, connectionId);
-        const adapter = await getDatabaseSource(toAdapterParams(connection));
         const explainSql = buildExplainSql(connection, assertReadOnlySql(sql));
+
+        if (isDuckDbConnection(connection)) {
+          return jsonResult(
+            await executeDuckDbSandboxedQuery(
+              connection.filePath,
+              explainSql,
+              MCP_MAX_ROW_LIMIT
+            )
+          );
+        }
+
+        const adapter = await getDatabaseSource(toAdapterParams(connection));
         const result = await executeReadOnlyQuery(
           adapter,
           explainSql,

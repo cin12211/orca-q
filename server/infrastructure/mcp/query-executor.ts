@@ -1,6 +1,7 @@
 import QueryStream from 'pg-query-stream';
 import { DatabaseClientType } from '~/core/constants/database-client-type';
 import type { IDatabaseAdapter } from '~/server/infrastructure/driver';
+import { withDuckDbSandbox } from '~/server/infrastructure/driver/duckdb.adapter';
 import { runMssqlRequest } from '~/server/infrastructure/driver/mssql.adapter';
 import { mapArrayRowsToObjects } from '~/server/infrastructure/driver/result-rows';
 
@@ -295,6 +296,38 @@ export async function executeReadOnlyQuery(
   } finally {
     await adapter.releaseRawConnection(connection);
   }
+}
+
+/** DuckDB always runs here: there is no write path for it over MCP. */
+export async function executeDuckDbSandboxedQuery(
+  filePath: string | undefined,
+  sql: string,
+  limit: number
+): Promise<McpQueryResult> {
+  const startedAt = performance.now();
+
+  const fetched = await withDuckDbSandbox(filePath, async connection => {
+    const timeout = setTimeout(
+      () => connection.interrupt(),
+      MCP_QUERY_TIMEOUT_MS
+    );
+
+    try {
+      const reader = await connection.streamAndReadUntil(sql, limit + 1);
+      const columns = reader.deduplicatedColumnNames();
+      const rows = reader
+        .getRowsJson()
+        .map(row =>
+          Object.fromEntries(columns.map((name, i) => [name, row[i]]))
+        );
+
+      return { columns, rows };
+    } finally {
+      clearTimeout(timeout);
+    }
+  });
+
+  return finalize(fetched, limit, startedAt);
 }
 
 // ── Write execution: only for connections with write access. ────────────────

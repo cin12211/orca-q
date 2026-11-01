@@ -4,6 +4,7 @@
  */
 import { DatabaseClientType } from '~/core/constants/database-client-type';
 import { createDomainAdapter } from '../shared';
+import { DuckDbRoleAdapter } from './duckdb/duckdb-role.adapter';
 import { MysqlRoleAdapter } from './mysql/mysql-role.adapter';
 import { OracleRoleAdapter } from './oracle/oracle-role.adapter';
 import { PostgresRoleAdapter } from './postgres/postgres-role.adapter';
@@ -29,6 +30,7 @@ export async function createRoleAdapter(
         MysqlRoleAdapter.create(createParams, DatabaseClientType.MARIADB),
       oracledb: OracleRoleAdapter.create,
       sqlite3: SqliteRoleAdapter.create,
+      duckdb: DuckDbRoleAdapter.create,
     }
   );
 }

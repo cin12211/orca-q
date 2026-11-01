@@ -1,6 +1,7 @@
 import { DatabaseClientType } from '~/core/constants/database-client-type';
 import { createDomainAdapter } from '../shared';
 import { CockroachViewAdapter } from './cockroachdb/cockroachdb-view.adapter';
+import { DuckDbViewAdapter } from './duckdb/duckdb-view.adapter';
 import { MssqlViewAdapter } from './mssql/mssql-view.adapter';
 import { MysqlViewAdapter } from './mysql/mysql-view.adapter';
 import { OracleViewAdapter } from './oracle/oracle-view.adapter';
@@ -25,6 +26,7 @@ export async function createViewAdapter(
       sqlite3: SqliteViewAdapter.create,
       cockroachdb: CockroachViewAdapter.create,
       mssql: MssqlViewAdapter.create,
+      duckdb: DuckDbViewAdapter.create,
     }
   );
 }

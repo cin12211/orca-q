@@ -48,6 +48,7 @@ const handleCopyError = () => {
 
   <div
     v-if="testStatus === 'success'"
+    data-testid="connection-test-success"
     class="flex items-center gap-2 rounded-md border border-green-200 bg-green-50 p-3 text-sm text-green-600 dark:border-green-900 dark:bg-green-950/50 dark:text-green-400"
   >
     <Icon name="hugeicons:checkmark-circle-02" class="shrink-0 size-4" />

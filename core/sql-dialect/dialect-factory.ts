@@ -1,5 +1,6 @@
 import { DatabaseClientType } from '~/core/constants/database-client-type';
 import { baseDialect } from './dialects/base.dialect';
+import { duckdbDialect } from './dialects/duckdb.dialect';
 import { mssqlDialect } from './dialects/mssql.dialect';
 import { mysqlDialect } from './dialects/mysql.dialect';
 import { oracleDialect } from './dialects/oracle.dialect';
@@ -14,6 +15,7 @@ const dialectRegistry: Partial<Record<DatabaseClientType, SqlDialect>> = {
   [DatabaseClientType.MARIADB]: mysqlDialect,
   [DatabaseClientType.SQLITE3]: sqliteDialect,
   [DatabaseClientType.BETTER_SQLITE3]: sqliteDialect,
+  [DatabaseClientType.DUCKDB]: duckdbDialect,
   [DatabaseClientType.ORACLE]: oracleDialect,
   [DatabaseClientType.MSSQL]: mssqlDialect,
   [DatabaseClientType.COCKROACHDB]: postgresDialect,

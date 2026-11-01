@@ -5,6 +5,7 @@ export type MetadataTypeAliasDatabaseFamily =
   | DatabaseClientType.MYSQL
   | DatabaseClientType.MARIADB
   | DatabaseClientType.SQLITE3
+  | DatabaseClientType.DUCKDB
   | DatabaseClientType.ORACLE;
 
 export type MetadataTypeAliasMatchKind = 'exact' | 'prefix' | 'pattern';
@@ -191,11 +192,28 @@ const ORACLE_TYPE_ALIAS_RULES: MetadataTypeAliasRule[] = [
   { matchKind: 'exact', rawType: 'float', alias: 'float', priority: 100 },
 ];
 
+const DUCKDB_TYPE_ALIAS_RULES: MetadataTypeAliasRule[] = [
+  { matchKind: 'exact', rawType: 'integer', alias: 'int4', priority: 10 },
+  { matchKind: 'exact', rawType: 'bigint', alias: 'int8', priority: 20 },
+  { matchKind: 'exact', rawType: 'smallint', alias: 'int2', priority: 30 },
+  { matchKind: 'exact', rawType: 'tinyint', alias: 'int1', priority: 40 },
+  { matchKind: 'exact', rawType: 'double', alias: 'float8', priority: 50 },
+  { matchKind: 'exact', rawType: 'float', alias: 'float4', priority: 60 },
+  { matchKind: 'exact', rawType: 'boolean', alias: 'bool', priority: 70 },
+  {
+    matchKind: 'exact',
+    rawType: 'timestamp with time zone',
+    alias: 'timestamptz',
+    priority: 80,
+  },
+];
+
 export const METADATA_TYPE_ALIAS_FAMILIES: MetadataTypeAliasDatabaseFamily[] = [
   DatabaseClientType.POSTGRES,
   DatabaseClientType.MYSQL,
   DatabaseClientType.MARIADB,
   DatabaseClientType.SQLITE3,
+  DatabaseClientType.DUCKDB,
   DatabaseClientType.ORACLE,
 ];
 
@@ -207,6 +225,7 @@ export const METADATA_TYPE_ALIAS_RULES: Record<
   [DatabaseClientType.MYSQL]: MYSQL_FAMILY_TYPE_ALIAS_RULES,
   [DatabaseClientType.MARIADB]: MYSQL_FAMILY_TYPE_ALIAS_RULES,
   [DatabaseClientType.SQLITE3]: SQLITE_TYPE_ALIAS_RULES,
+  [DatabaseClientType.DUCKDB]: DUCKDB_TYPE_ALIAS_RULES,
   [DatabaseClientType.ORACLE]: ORACLE_TYPE_ALIAS_RULES,
 };
 

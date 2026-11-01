@@ -12,7 +12,7 @@ const emit = defineEmits<{
 </script>
 
 <template>
-  <div class="flex flex-col gap-3">
+  <div data-testid="schema-diff-sql" class="flex flex-col gap-3">
     <!-- Toolbar -->
     <div class="flex items-center gap-3">
       <div class="flex items-center gap-2 text-sm">

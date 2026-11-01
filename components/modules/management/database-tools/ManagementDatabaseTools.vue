@@ -1,7 +1,10 @@
 <script setup lang="ts">
 import { useTabManagement } from '~/core/composables/useTabManagement';
 import { useWorkspaceConnectionRoute } from '~/core/composables/useWorkspaceConnectionRoute';
-import { isInsightsOnlyDatabaseToolsClientType } from '~/core/constants/database-client-type';
+import {
+  DatabaseClientType,
+  isInsightsOnlyDatabaseToolsClientType,
+} from '~/core/constants/database-client-type';
 import { useManagementConnectionStore } from '~/core/stores/managementConnectionStore';
 import { EConnectionProviderKind } from '~/core/types/entities/connection.entity';
 import { ManagementSidebarHeader } from '../shared';
@@ -37,7 +40,15 @@ const isInsightsOnly = computed(() =>
   isInsightsOnlyDatabaseToolsClientType(connectionData.value?.type)
 );
 
+const isDuckDbConnection = computed(
+  () => connectionData.value?.type === DatabaseClientType.DUCKDB
+);
+
 const unavailableReason = computed(() => {
+  if (isDuckDbConnection.value) {
+    return 'Backup & Restore is not available for DuckDB connections.';
+  }
+
   if (
     connectionData.value?.providerKind === EConnectionProviderKind.CLOUDFLARE_D1
   ) {
@@ -81,8 +92,9 @@ const openDatabaseTools = async () => {
         <!-- Dump & Restore -->
         <button
           v-if="!isInsightsOnly"
-          class="w-full flex items-center gap-3 rounded-lg border bg-background p-3 text-left transition-colors hover:bg-muted/20 cursor-pointer"
-          :disabled="isManagedSqliteLimited"
+          data-testid="database-tool-backup"
+          class="w-full flex items-center gap-3 rounded-lg border bg-background p-3 text-left transition-colors hover:bg-muted/20 disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
+          :disabled="isManagedSqliteLimited || isDuckDbConnection"
           @click="openDatabaseTools()"
         >
           <Button size="iconMd" variant="outline">
@@ -103,6 +115,7 @@ const openDatabaseTools = async () => {
 
         <!-- Instance Insights -->
         <button
+          data-testid="database-tool-instance-insights"
           class="w-full flex items-center gap-3 rounded-lg border bg-background p-3 text-left transition-colors hover:bg-muted/20 disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
           :disabled="!hasConnection || isManagedSqliteLimited"
           @click="openInstanceInsightsTab({ databaseName })"
@@ -126,6 +139,7 @@ const openDatabaseTools = async () => {
         <!-- Schema Diff -->
         <button
           v-if="!isInsightsOnly"
+          data-testid="database-tool-schema-diff"
           class="w-full flex items-center gap-3 rounded-lg border bg-background p-3 text-left transition-colors hover:bg-muted/20 disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
           :disabled="!hasConnection || isManagedSqliteLimited"
           @click="openSchemaDiffTab()"
@@ -146,7 +160,11 @@ const openDatabaseTools = async () => {
           />
         </button>
 
-        <BaseNotice v-if="isManagedSqliteLimited" variant="secondary">
+        <BaseNotice
+          v-if="isManagedSqliteLimited || isDuckDbConnection"
+          data-testid="database-tools-notice"
+          variant="secondary"
+        >
           {{ unavailableReason }}
         </BaseNotice>
 

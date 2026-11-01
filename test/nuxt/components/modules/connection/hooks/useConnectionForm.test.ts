@@ -1,5 +1,6 @@
 import { isProxy, nextTick, ref } from 'vue';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { isSqliteConnectionDisabled } from '~/components/modules/connection/constants';
 import { useConnectionForm } from '~/components/modules/connection/hooks/useConnectionForm';
 import {
   ESSHAuthMethod,
@@ -60,12 +61,15 @@ function createForm(overrides?: {
 
 function setElectronWindowApi(overrides?: {
   pickSqliteFile?: ReturnType<typeof vi.fn>;
+  pickDuckdbFile?: ReturnType<typeof vi.fn>;
 }) {
   Object.defineProperty(window, 'electronAPI', {
     configurable: true,
     value: {
       window: {
         pickSqliteFile: overrides?.pickSqliteFile || vi.fn(),
+        pickDuckdbFile: overrides?.pickDuckdbFile || vi.fn(),
+        pickDirectory: vi.fn(),
       },
     },
   });
@@ -206,8 +210,12 @@ describe('useConnectionForm', () => {
   it('sends SSH config for STRING method health checks', async () => {
     mockHealthCheck.mockResolvedValue({ isConnectedSuccess: true });
 
-    const { connectionMethod, connectionString, formData, handleTestConnection } =
-      createForm();
+    const {
+      connectionMethod,
+      connectionString,
+      formData,
+      handleTestConnection,
+    } = createForm();
 
     connectionMethod.value = EConnectionMethod.STRING;
     connectionString.value = 'mysql://user:pass@mysql.internal:3306/app';
@@ -320,6 +328,93 @@ describe('useConnectionForm', () => {
     const body = mockHealthCheck.mock.calls[0][0];
     expect(body.method).toBe(EConnectionMethod.FILE);
     expect(body.filePath).toBe('/tmp/app.sqlite');
+  });
+
+  it('disables DuckDB outside the desktop app', () => {
+    Reflect.deleteProperty(window, 'electronAPI');
+
+    expect(
+      isSqliteConnectionDisabled({ type: DatabaseClientType.DUCKDB }, true)
+    ).toBe(true);
+
+    setElectronWindowApi();
+
+    expect(
+      isSqliteConnectionDisabled({ type: DatabaseClientType.DUCKDB }, false)
+    ).toBe(false);
+  });
+
+  it('offers only the file method for DuckDB', async () => {
+    const { availableConnectionMethods, connectionMethod, dbType } =
+      createForm();
+
+    dbType.value = DatabaseClientType.DUCKDB;
+    await nextTick();
+
+    expect(availableConnectionMethods.value).toEqual([EConnectionMethod.FILE]);
+    expect(connectionMethod.value).toBe(EConnectionMethod.FILE);
+  });
+
+  it('sends filePath with the DuckDB type for DuckDB file connections', async () => {
+    mockHealthCheck.mockResolvedValue({ isConnectedSuccess: true });
+    setElectronWindowApi();
+
+    const { formData, dbType, handleTestConnection } = createForm();
+
+    dbType.value = DatabaseClientType.DUCKDB;
+    await nextTick();
+    formData.filePath = '/tmp/analytics.duckdb';
+
+    await handleTestConnection();
+
+    const body = mockHealthCheck.mock.calls[0][0];
+    expect(body.type).toBe(DatabaseClientType.DUCKDB);
+    expect(body.method).toBe(EConnectionMethod.FILE);
+    expect(body.filePath).toBe('/tmp/analytics.duckdb');
+  });
+
+  it('picks a DuckDB file and names the connection after it', async () => {
+    const pickDuckdbFile = vi.fn().mockResolvedValue('/tmp/analytics.duckdb');
+    const pickSqliteFile = vi.fn();
+    setElectronWindowApi({ pickDuckdbFile, pickSqliteFile });
+
+    const {
+      canPickDatabaseFile,
+      connectionName,
+      dbType,
+      formData,
+      pickDatabaseFile,
+    } = createForm();
+
+    dbType.value = DatabaseClientType.DUCKDB;
+    await nextTick();
+
+    expect(canPickDatabaseFile.value).toBe(true);
+
+    await pickDatabaseFile();
+
+    expect(pickDuckdbFile).toHaveBeenCalledTimes(1);
+    expect(pickSqliteFile).not.toHaveBeenCalled();
+    expect(formData.filePath).toBe('/tmp/analytics.duckdb');
+    expect(connectionName.value).toBe('analytics');
+  });
+
+  it('offers creating a file only for local file databases', async () => {
+    setElectronWindowApi();
+
+    const { canCreateDatabaseFile, dbType } = createForm();
+
+    dbType.value = DatabaseClientType.DUCKDB;
+    await nextTick();
+    expect(canCreateDatabaseFile.value).toBe(true);
+
+    dbType.value = DatabaseClientType.SQLITE3;
+    await nextTick();
+    expect(canCreateDatabaseFile.value).toBe(true);
+
+    dbType.value = DatabaseClientType.POSTGRES;
+    await nextTick();
+    expect(canCreateDatabaseFile.value).toBe(false);
   });
 
   it('sends managed SQLite payloads for Cloudflare D1 validation', async () => {
@@ -861,6 +956,29 @@ describe('useConnectionForm', () => {
     expect(connection.type).toBe(DatabaseClientType.SQLITE3);
     expect(connection.filePath).toBe('/tmp/app.sqlite');
     expect(connection.connectionString).toBe('sqlite3:///tmp/app.sqlite');
+  });
+
+  it('stores filePath and duckdb connection string for DuckDB file connections', async () => {
+    mockHealthCheck.mockResolvedValue({ isConnectedSuccess: true });
+    setElectronWindowApi();
+
+    const onAddNew = vi.fn();
+
+    const { formData, connectionName, dbType, handleCreateConnection } =
+      createForm({ onAddNew, workspaceId: 'ws-123' });
+
+    dbType.value = DatabaseClientType.DUCKDB;
+    await nextTick();
+    connectionName.value = 'analytics';
+    formData.filePath = '/tmp/analytics.duckdb';
+
+    await handleCreateConnection();
+
+    const connection = onAddNew.mock.calls[0][0];
+    expect(connection.type).toBe(DatabaseClientType.DUCKDB);
+    expect(connection.method).toBe(EConnectionMethod.FILE);
+    expect(connection.providerKind).toBe(EConnectionProviderKind.DUCKDB_FILE);
+    expect(connection.connectionString).toBe('duckdb:///tmp/analytics.duckdb');
   });
 
   it('stores managed D1 connection metadata when creating a connection', async () => {

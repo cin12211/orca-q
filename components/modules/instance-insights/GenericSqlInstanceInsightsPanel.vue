@@ -82,7 +82,11 @@ const actionBadgeClass = (
           </div>
 
           <div v-if="view?.version" class="flex items-center gap-1.5 mt-0.5">
-            <Badge variant="outline" class="text-xxs h-5 px-1.5 font-normal">
+            <Badge
+              data-testid="instance-insights-version"
+              variant="outline"
+              class="text-xxs h-5 px-1.5 font-normal"
+            >
               {{ dbType ? getDatabaseSupportByType(dbType)?.name : '' }}
               {{ view.version }}
             </Badge>

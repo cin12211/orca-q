@@ -10,17 +10,17 @@ interface RequestBody extends DatabaseMetadataRequestParams {
 export default defineEventHandler(async event => {
   const body = await readBody<RequestBody>(event);
 
-  if ((!body.dbConnectionString && !body.host) || !body.functionId) {
+  if (
+    (!body.dbConnectionString && !body.host && !body.filePath) ||
+    !body.functionId
+  ) {
     throw createError({
       statusCode: 400,
       message: 'Missing (dbConnectionString or host) or functionId',
     });
   }
 
-  const adapter = await createFunctionAdapter(
-    body.type,
-    body
-  );
+  const adapter = await createFunctionAdapter(body.type, body);
 
   return await adapter.getFunctionSignature(body.functionId);
 });

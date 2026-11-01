@@ -142,3 +142,27 @@ describe('extractParamsFromSql', () => {
     });
   });
 });
+
+describe('extractParamsFromSql for DuckDB', () => {
+  const extractDuckDb = (sql: string) =>
+    extractParamsFromSql(sql, DatabaseClientType.DUCKDB);
+
+  it('finds variables outside literal brackets', () => {
+    expect(extractDuckDb('SELECT * FROM t WHERE id = :id AND n > :n')).toEqual([
+      'id',
+      'n',
+    ]);
+  });
+
+  it('ignores list slices and struct literals', () => {
+    expect(
+      extractDuckDb(`SELECT tags[1:n], {'k':v} FROM t WHERE id = :id`)
+    ).toEqual(['id']);
+  });
+
+  it('still reads bracketed variables for other databases', () => {
+    expect(
+      extractParamsFromSql('SELECT ARRAY[:n]', DatabaseClientType.POSTGRES)
+    ).toEqual(['n']);
+  });
+});

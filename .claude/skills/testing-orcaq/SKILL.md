@@ -109,6 +109,7 @@ bash scripts/test-services/run-tests.sh --fixtures=sqlite  -- playwright test --
 | `redis`    | Redis 7.4 only               |
 | `mongodb`  | MongoDB 7 only               |
 | `sqlite`   | File prep only (no Docker)   |
+| `duckdb`   | File prep only (no Docker)   |
 | `all`      | All of the above             |
 | `none`     | Nothing                      |
 

@@ -8,3 +8,4 @@ export { MysqlFunctionAdapter } from './mysql/mysql-function.adapter';
 export { OracleFunctionAdapter } from './oracle/oracle-function.adapter';
 export { PostgresFunctionAdapter } from './postgres/postgres-function.adapter';
 export { SqliteFunctionAdapter } from './sqlite/sqlite-function.adapter';
+export { DuckDbFunctionAdapter } from './duckdb/duckdb-function.adapter';

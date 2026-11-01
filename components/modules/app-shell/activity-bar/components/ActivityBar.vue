@@ -21,6 +21,7 @@ const colorMode = useColorMode();
           <TooltipTrigger as-child>
             <Button
               size="iconMd"
+              :data-testid="`activity-item-${item.id}`"
               :variant="item.isActive ? 'default' : 'ghost'"
               @click="onChangeActivity(item.id, true)"
             >

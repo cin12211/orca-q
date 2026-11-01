@@ -16,6 +16,7 @@ export default defineEventHandler(async (event): Promise<SchemaMetaData[]> => {
     username: body.username,
     password: body.password,
     database: body.database,
+    filePath: body.filePath,
     providerKind: body.providerKind,
     managedSqlite: body.managedSqlite,
     ssl: body.ssl,

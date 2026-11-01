@@ -21,6 +21,8 @@ interface WindowSaveDialogOptions {
 // ─── electronAPI surface ──────────────────────────────────────────────────────
 
 const electronAPI = {
+  runtime: { platform: process.platform, arch: process.arch },
+
   persist: {
     getAll: (collection: PersistCollection) =>
       ipcRenderer.invoke('persist:get-all', { collection }),
@@ -111,6 +113,7 @@ const electronAPI = {
     maximize: () => ipcRenderer.invoke('window:maximize'),
     close: () => ipcRenderer.invoke('window:close'),
     pickSqliteFile: () => ipcRenderer.invoke('window:pick-sqlite-file'),
+    pickDuckdbFile: () => ipcRenderer.invoke('window:pick-duckdb-file'),
     pickSaveFile: (options?: WindowSaveDialogOptions) =>
       ipcRenderer.invoke('window:pick-save-file', options),
     pickDirectory: () => ipcRenderer.invoke('window:pick-directory'),

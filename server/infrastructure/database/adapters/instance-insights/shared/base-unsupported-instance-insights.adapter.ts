@@ -25,6 +25,8 @@ function getDatabaseLabel(dbType: DatabaseClientType): string {
       return 'SQL Server';
     case DatabaseClientType.COCKROACHDB:
       return 'CockroachDB';
+    case DatabaseClientType.DUCKDB:
+      return 'DuckDB';
     default:
       return dbType;
   }

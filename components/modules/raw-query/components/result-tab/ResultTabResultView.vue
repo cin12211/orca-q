@@ -355,6 +355,7 @@ useHotkeys(
         !executeLoading &&
         !isStreaming
       "
+      data-testid="raw-query-mutation-message"
       :desc="mutationMessage"
       hiddenIcon
       class="h-full"

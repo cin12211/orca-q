@@ -299,7 +299,7 @@ defineExpose({
 </script>
 
 <template>
-  <div ref="containerRef" class="h-full">
+  <div ref="containerRef" data-testid="data-grid" class="h-full">
     <component
       :is="
         props.enableSimpleCopyContextMenu ? BaseDataGridCopyContextMenu : 'div'
