@@ -1,5 +1,5 @@
 import { createError, type H3Event } from 'h3';
-import * as oracledb from 'oracledb';
+import oracledb from 'oracledb';
 import { DatabaseClientType } from '~/core/constants/database-client-type';
 import { DatabaseDriverNormalizerError as ErrorNormalizer } from '~/core/helpers';
 import type {

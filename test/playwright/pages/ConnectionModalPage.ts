@@ -43,8 +43,9 @@ export class ConnectionModalPage {
   }
 
   async selectDbType(name: string) {
-    // Click the card that contains the DB type name text
-    await this.page.getByText(name, { exact: true }).click();
+    await this.page
+      .getByTestId(`db-type-card-${name.toLowerCase().replaceAll(' ', '-')}`)
+      .click();
   }
 
   async advanceToStep2() {

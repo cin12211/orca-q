@@ -1,5 +1,4 @@
 import { createError } from 'h3';
-import Papa from 'papaparse';
 import { DatabaseClientType } from '~/core/constants/database-client-type';
 import { formatBytes } from '~/core/helpers/bytes-formatter';
 import { getSqlDialect } from '~/core/sql-dialect';
@@ -20,6 +19,7 @@ import { MssqlAdapter } from '~/server/infrastructure/driver/mssql.adapter';
 import { formatMssqlType } from '../../metadata/mssql/mssql-catalog';
 import { resolveMetadataTypeAlias } from '../../metadata/type-alias.constants';
 import { BaseDomainAdapter, createDatabaseHttpError } from '../../shared';
+import { buildExportContent } from '../shared/export-content';
 import type {
   DatabaseTableAdapterParams,
   IDatabaseTableAdapter,
@@ -338,40 +338,15 @@ export class MssqlTableAdapter
     const result = await this.adapter.rawOut<unknown[]>(
       `SELECT * FROM ${table}`
     );
-    const fields = (result.fields ?? []) as Array<{ name: string }>;
-    const names = fields.map(field => field.name);
 
-    if (format === 'csv') {
-      return Papa.unparse({ fields: names, data: result.rows });
-    }
-
-    if (format === 'json') {
-      const objects = result.rows.map(row =>
-        Object.fromEntries(names.map((name, index) => [name, row[index]]))
-      );
-      return JSON.stringify(objects, null, 2);
-    }
-
-    if (format === 'sql') {
-      const columns = names
-        .map(name => dialect.quoteIdentifier(name))
-        .join(', ');
-      const inserts = result.rows.map(
-        row =>
-          `INSERT INTO ${table} (${columns}) VALUES (${row.map(toExportLiteral).join(', ')});`
-      );
-
-      return [
-        `-- Export of ${schema}.${tableName}`,
-        `-- Generated at ${new Date().toISOString()}`,
-        '',
-        ...inserts,
-        '',
-        `-- Total rows exported: ${result.rows.length}`,
-        '',
-      ].join('\n');
-    }
-
-    throw createError({ statusCode: 400, message: 'Invalid format' });
+    return buildExportContent({
+      dialect,
+      schema,
+      tableName,
+      columns: (result.fields ?? []).map(field => field.name),
+      rows: result.rows,
+      format,
+      toLiteral: toExportLiteral,
+    });
   }
 }

@@ -21,7 +21,7 @@ CREATE TABLE IF NOT EXISTS category (
 );
 
 CREATE TABLE IF NOT EXISTS actor (
-  actor_id INT8 PRIMARY KEY,
+  actor_id INT8 PRIMARY KEY DEFAULT unique_rowid(),
   first_name STRING(45) NOT NULL,
   last_name STRING(45) NOT NULL,
   last_update TIMESTAMPTZ NOT NULL DEFAULT now(),
@@ -90,8 +90,12 @@ FROM generate_series(1, 16) AS g(i)
 ON CONFLICT DO NOTHING;
 
 INSERT INTO actor (actor_id, first_name, last_name)
+VALUES (1, 'PENELOPE', 'GUINESS')
+ON CONFLICT DO NOTHING;
+
+INSERT INTO actor (actor_id, first_name, last_name)
 SELECT i, 'ACTOR_' || i::STRING, 'LAST_' || (i % 37)::STRING
-FROM generate_series(1, 200) AS g(i)
+FROM generate_series(2, 200) AS g(i)
 ON CONFLICT DO NOTHING;
 
 INSERT INTO film (film_id, title, description, release_year, language_id, rental_rate, length, rating, special_features, metadata)

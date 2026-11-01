@@ -8,7 +8,6 @@ import { getDatabaseSource } from '~/server/infrastructure/driver/db-connection'
 import { BaseUnsupportedInstanceInsightsAdapter } from '../shared/base-unsupported-instance-insights.adapter';
 import { trySafeQuery } from '../shared/safe-query';
 import {
-  createActionCapability,
   createInsightsCapabilities,
   createTable,
   createUnavailableSection,
@@ -71,14 +70,7 @@ export class MssqlInstanceInsightsAdapter extends BaseUnsupportedInstanceInsight
         supportsSessionInspection: true,
         supportsConfiguration: true,
       }),
-      actions: [
-        createActionCapability({
-          id: 'kill-session',
-          label: 'Kill Session',
-          state: 'unsupported',
-          description: 'Instance Insights is read-only for SQL Server.',
-        }),
-      ],
+      actions: [],
       sections: [overview, sessions, configuration],
     };
   }

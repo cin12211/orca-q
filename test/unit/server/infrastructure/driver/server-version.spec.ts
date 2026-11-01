@@ -64,3 +64,14 @@ describe('server version gate', () => {
     });
   });
 });
+
+describe('Oracle version gate', () => {
+  it('requires 19c', () => {
+    expect(() =>
+      assertMinimumServerVersion(DatabaseClientType.ORACLE, '19.0.0.0.0')
+    ).not.toThrow();
+    expect(() =>
+      assertMinimumServerVersion(DatabaseClientType.ORACLE, '18.0.0.0.0')
+    ).toThrow(/Oracle 19c or newer is required/);
+  });
+});

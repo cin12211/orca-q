@@ -17,9 +17,10 @@ export function useSchemaDiff() {
 
   const buildParams = (conn: Connection): ConnectionParams => ({
     ...getConnectionParams(conn),
-    // File connections resolve from filePath, which also covers `:memory:`.
+    // Only string connections use it: form connections keep a generated,
+    // unescaped string, and file connections resolve from filePath.
     connectionString:
-      conn.method === EConnectionMethod.FILE ? '' : conn.connectionString,
+      conn.method === EConnectionMethod.STRING ? conn.connectionString : '',
   });
 
   const runDiff = async (source: Connection, target: Connection) => {

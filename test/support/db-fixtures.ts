@@ -47,7 +47,8 @@ export type SqlFixtureEngine =
   | 'mysql'
   | 'mariadb'
   | 'cockroachdb'
-  | 'mssql';
+  | 'mssql'
+  | 'oracle';
 
 export type SqlFixtureConfig = {
   engine: SqlFixtureEngine;
@@ -139,12 +140,12 @@ function buildSqlUrl(config: {
     return `postgresql://${auth}@${config.host}:${config.port}/${config.database}?sslmode=disable`;
   }
 
-  const protocol =
-    config.engine === 'postgres'
-      ? 'postgresql'
-      : config.engine === 'mssql'
-        ? 'sqlserver'
-        : 'mysql';
+  const protocols: Partial<Record<SqlFixtureEngine, string>> = {
+    postgres: 'postgresql',
+    mssql: 'sqlserver',
+    oracle: 'oracledb',
+  };
+  const protocol = protocols[config.engine] ?? 'mysql';
 
   return `${protocol}://${username}:${password}@${config.host}:${config.port}/${config.database}`;
 }
@@ -263,6 +264,17 @@ export function getMssqlFixtureConfig() {
     defaultDatabase: 'sakila',
     defaultUsername: 'sa',
     defaultPassword: 'OrcaQ_Passw0rd!',
+  });
+}
+
+export function getOracleFixtureConfig() {
+  return buildSqlFixtureConfig({
+    engine: 'oracle',
+    envPrefixes: ['ORCAQ_ORACLE_FIXTURE'],
+    defaultPort: 1521,
+    defaultDatabase: 'FREEPDB1',
+    defaultUsername: 'orcaq',
+    defaultPassword: 'orcaq',
   });
 }
 

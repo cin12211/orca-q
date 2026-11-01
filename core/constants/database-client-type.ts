@@ -57,21 +57,19 @@ export function isPostgresCompatibleClientType(
   );
 }
 
-/**
- * SQL client types whose Database Tools panel only offers Instance Insights.
- * Backup/restore and schema diff are not implemented for them yet.
- */
-export const INSIGHTS_ONLY_DATABASE_TOOLS_CLIENT_TYPES = [
+/** SQL client types without Backup & Restore in the Database Tools panel. */
+export const BACKUP_UNSUPPORTED_CLIENT_TYPES = [
   DatabaseClientType.MSSQL,
   DatabaseClientType.COCKROACHDB,
+  DatabaseClientType.ORACLE,
 ] as const;
 
-export function isInsightsOnlyDatabaseToolsClientType(
+export function isBackupSupportedClientType(
   type?: DatabaseClientType | string | null
 ): boolean {
-  return (
-    INSIGHTS_ONLY_DATABASE_TOOLS_CLIENT_TYPES as readonly string[]
-  ).includes(type ?? '');
+  return !(BACKUP_UNSUPPORTED_CLIENT_TYPES as readonly string[]).includes(
+    type ?? ''
+  );
 }
 
 export const NOSQL_DATABASE_CLIENT_TYPES = [

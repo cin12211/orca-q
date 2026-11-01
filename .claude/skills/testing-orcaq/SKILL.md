@@ -100,18 +100,21 @@ bash scripts/test-services/run-tests.sh --fixtures=sqlite  -- playwright test --
 
 ## 5. Fixture Profile Reference
 
-| Profile    | Containers started           |
-| ---------- | ---------------------------- |
-| `postgres` | PostgreSQL 16 only           |
-| `mysql`    | MySQL 8.4 only               |
-| `mariadb`  | MariaDB 11.4 only            |
-| `sql`      | PostgreSQL + MySQL + MariaDB |
-| `redis`    | Redis 7.4 only               |
-| `mongodb`  | MongoDB 7 only               |
-| `sqlite`   | File prep only (no Docker)   |
-| `duckdb`   | File prep only (no Docker)   |
-| `all`      | All of the above             |
-| `none`     | Nothing                      |
+| Profile       | Containers started           |
+| ------------- | ---------------------------- |
+| `postgres`    | PostgreSQL 16 only           |
+| `mysql`       | MySQL 8.4 only               |
+| `mariadb`     | MariaDB 11.4 only            |
+| `sql`         | PostgreSQL + MySQL + MariaDB |
+| `cockroachdb` | CockroachDB v24.3 only       |
+| `mssql`       | SQL Server 2022 only         |
+| `oracle`      | Oracle Free 23 only          |
+| `redis`       | Redis 7.4 only               |
+| `mongodb`     | MongoDB 7 only               |
+| `sqlite`      | File prep only (no Docker)   |
+| `duckdb`      | File prep only (no Docker)   |
+| `all`         | All of the above             |
+| `none`        | Nothing                      |
 
 Manual fixture control:
 

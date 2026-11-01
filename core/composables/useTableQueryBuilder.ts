@@ -221,7 +221,9 @@ export const useTableQueryBuilder = ({
   });
 
   const totalRows = computed(() => {
-    return Number(dataCount.value?.result?.[0]?.count || 0);
+    // Oracle upper-cases unquoted aliases.
+    const row = dataCount.value?.result?.[0];
+    return Number(row?.count ?? row?.COUNT ?? 0);
   });
 
   const isAllowNextPage = computed(() => {

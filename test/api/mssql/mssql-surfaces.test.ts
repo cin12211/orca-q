@@ -1,6 +1,7 @@
 import { setup, $fetch } from '@nuxt/test-utils/e2e';
 import { describe, expect, it } from 'vitest';
 import { mssqlBody, mssqlStringBody } from '../support/mssql-connection';
+import { describeSqlObjectRoutes } from '../support/sql-object-routes';
 
 /**
  * Requires the SQL Server fixture:
@@ -206,14 +207,36 @@ describe('SQL Server API surfaces', async () => {
     });
   });
 
+  describeSqlObjectRoutes({
+    body: mssqlBody,
+    schema: 'dbo',
+    table: 'film',
+    view: 'film_list',
+    viewColumn: 'title',
+    csvHeader: 'film_id',
+  });
+
+  describe('schema diff', () => {
+    it('finds no changes against the same database', async () => {
+      const source = { ...mssqlBody(), connectionString: '' };
+      const res = await $fetch('/api/schema-diff', {
+        method: 'POST',
+        body: { source, target: source },
+      });
+
+      expect(res.summary).toMatchObject({ added: 0, removed: 0, modified: 0 });
+    });
+  });
+
   describe('instance insights', () => {
-    it('returns a read-only view', async () => {
+    it('returns a read-only view without action tags', async () => {
       const res = await $fetch('/api/instance-insights/view', {
         method: 'POST',
         body: mssqlBody(),
       });
 
       expect(res.dbType).toBe('mssql');
+      expect(res.actions).toEqual([]);
       expect(res.capabilities.supportsTerminateConnection).toBe(false);
       expect(res.sections[0].status).toBe('ready');
     }, 120_000);

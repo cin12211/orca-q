@@ -1,4 +1,5 @@
 import { DatabaseClientType } from '~/core/constants/database-client-type';
+import { MINIMUM_SERVER_VERSIONS } from '~/core/constants/minimum-server-versions';
 
 export const UNSUPPORTED_SERVER_VERSION_CODE =
   'ORCAQ_UNSUPPORTED_SERVER_VERSION';
@@ -7,27 +8,6 @@ export interface ServerVersion {
   major: number;
   minor: number;
 }
-
-interface MinimumServerVersion extends ServerVersion {
-  label: string;
-}
-
-/**
- * Oldest server versions OrcaQ supports per engine. Connections to older
- * servers are rejected up front instead of failing later on catalog queries
- * the server does not understand.
- */
-export const MINIMUM_SERVER_VERSIONS: Partial<
-  Record<DatabaseClientType, MinimumServerVersion>
-> = {
-  // SQL Server 2017 is major version 14.
-  [DatabaseClientType.MSSQL]: { major: 14, minor: 0, label: 'SQL Server 2017' },
-  [DatabaseClientType.COCKROACHDB]: {
-    major: 23,
-    minor: 2,
-    label: 'CockroachDB v23.2',
-  },
-};
 
 export class UnsupportedServerVersionError extends Error {
   readonly code = UNSUPPORTED_SERVER_VERSION_CODE;

@@ -6,7 +6,7 @@
 #   bash scripts/test-services/start-fixtures.sh --profile <profile>
 #
 # Profiles: postgres | mysql | mariadb | sql | redis | mongodb | sqlite | duckdb | all
-#           cockroachdb | mssql (opt-in, not part of sql/all)
+#           cockroachdb | mssql | oracle (part of all, not sql)
 #           rabbitmq | kafka (opt-in, not part of all)
 # ──────────────────────────────────────────────────────────────────────────────
 
@@ -42,6 +42,9 @@ export ORCAQ_MARIADB_ROOT_PASSWORD="${ORCAQ_MARIADB_ROOT_PASSWORD:-root}"
 export ORCAQ_COCKROACHDB_PORT="${ORCAQ_COCKROACHDB_PORT:-26257}"
 export ORCAQ_MSSQL_PORT="${ORCAQ_MSSQL_PORT:-1433}"
 export ORCAQ_MSSQL_PASSWORD="${ORCAQ_MSSQL_PASSWORD:-OrcaQ_Passw0rd!}"
+export ORCAQ_ORACLE_PORT="${ORCAQ_ORACLE_PORT:-1521}"
+export ORCAQ_ORACLE_USER="${ORCAQ_ORACLE_USER:-orcaq}"
+export ORCAQ_ORACLE_PASSWORD="${ORCAQ_ORACLE_PASSWORD:-orcaq}"
 export ORCAQ_REDIS_PORT="${ORCAQ_REDIS_PORT:-6379}"
 export ORCAQ_MONGODB_PORT="${ORCAQ_MONGODB_PORT:-27017}"
 export ORCAQ_MONGODB_DATABASE="${ORCAQ_MONGODB_DATABASE:-orcaq_fixture}"
@@ -177,6 +180,14 @@ start_sql_profile() {
       ;;
   esac
 
+  case "${docker_profile}" in
+    all)
+      seed_cockroachdb
+      seed_mssql
+      wait_for_oracle
+      ;;
+  esac
+
   "${compose_cmd[@]}" -p "${sql_project}" -f "${sql_compose_file}" --profile "${docker_profile}" ps
 }
 
@@ -184,7 +195,10 @@ start_cockroachdb() {
   echo "Starting CockroachDB fixture"
   "${compose_cmd[@]}" -p "${sql_project}" -f "${sql_compose_file}" --profile cockroachdb down --volumes --remove-orphans >/dev/null 2>&1 || true
   "${compose_cmd[@]}" -p "${sql_project}" -f "${sql_compose_file}" --profile cockroachdb up -d --remove-orphans
+  seed_cockroachdb
+}
 
+seed_cockroachdb() {
   local attempt=0
   echo "Waiting for CockroachDB..."
   until "${compose_cmd[@]}" -p "${sql_project}" -f "${sql_compose_file}" exec -T cockroachdb \
@@ -206,7 +220,10 @@ start_mssql() {
   echo "Starting SQL Server fixture"
   "${compose_cmd[@]}" -p "${sql_project}" -f "${sql_compose_file}" --profile mssql down --volumes --remove-orphans >/dev/null 2>&1 || true
   "${compose_cmd[@]}" -p "${sql_project}" -f "${sql_compose_file}" --profile mssql up -d --remove-orphans
+  seed_mssql
+}
 
+seed_mssql() {
   local sqlcmd=(/opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa -P "${ORCAQ_MSSQL_PASSWORD}")
   local attempt=0
   echo "Waiting for SQL Server..."
@@ -226,6 +243,29 @@ start_mssql() {
   "${compose_cmd[@]}" -p "${sql_project}" -f "${sql_compose_file}" exec -T mssql \
     "${sqlcmd[@]}" -b -d sakila -i /fixtures/sql-server-sakila-insert-data-optimized.sql >/dev/null
   echo "SQL Server is ready on port ${ORCAQ_MSSQL_PORT}"
+}
+
+start_oracle() {
+  echo "Starting Oracle fixture"
+  "${compose_cmd[@]}" -p "${sql_project}" -f "${sql_compose_file}" --profile oracle down --volumes --remove-orphans >/dev/null 2>&1 || true
+  "${compose_cmd[@]}" -p "${sql_project}" -f "${sql_compose_file}" --profile oracle up -d --remove-orphans
+  wait_for_oracle
+}
+
+wait_for_oracle() {
+  local attempt=0
+  echo "Waiting for Oracle (first start seeds the schema and takes a few minutes)..."
+  until "${compose_cmd[@]}" -p "${sql_project}" -f "${sql_compose_file}" exec -T oracle \
+    healthcheck.sh >/dev/null 2>&1; do
+    attempt=$((attempt + 1))
+    if [ "${attempt}" -ge 150 ]; then
+      echo 'Oracle fixture did not become ready in time.' >&2
+      "${compose_cmd[@]}" -p "${sql_project}" -f "${sql_compose_file}" logs --tail=80 oracle >&2 || true
+      exit 1
+    fi
+    sleep 4
+  done
+  echo "Oracle is ready on port ${ORCAQ_ORACLE_PORT}"
 }
 
 start_redis() {
@@ -339,6 +379,9 @@ case "${profile}" in
   mssql)
     node "${script_dir}/generate-optimized-sql-fixtures.mjs" 2>/dev/null || true
     start_mssql
+    ;;
+  oracle)
+    start_oracle
     ;;
   redis)
     start_redis

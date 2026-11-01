@@ -54,9 +54,9 @@ export const databaseSupports: IDBSupport[] = [
     type: DatabaseClientType.ORACLE,
     name: 'Oracle',
     icon: h(Icon, { name: 'simple-icons:oracle', class: 'text-red-500' }),
-    isSupport: false,
-    unsupportedLabel: 'Coming soon',
-    description: 'Relational SQL workflows',
+    isSupport: true,
+    isBeta: true,
+    description: 'Oracle 19c and newer',
   },
   {
     type: DatabaseClientType.MSSQL,
@@ -150,13 +150,6 @@ export const databaseSupports: IDBSupport[] = [
     isSupport: true,
     isBeta: true,
     description: 'Topics, messages, consumer lag',
-  },
-  {
-    type: DatabaseClientType.MSSQL,
-    name: 'SQL Server',
-    icon: h(Icon, { name: 'simple-icons:microsoftsqlserver' }),
-    isSupport: false,
-    unsupportedLabel: 'Coming soon',
   },
   {
     type: DatabaseClientType.SNOWFLAKE,

@@ -127,7 +127,7 @@ Prefer Tailwind utilities. Use `<style scoped>` only for complex styles not achi
 - DuckDB shows a read-only Macros section in place of Functions: macros can be opened but not edited, renamed or dropped
 - The built-in MCP server keeps DuckDB read-only whatever the session's access level: each query opens a throwaway read-only instance with `enable_external_access=false`, so it cannot read files outside the database.
 - SQL Server and CockroachDB enforce a minimum server version (SQL Server 2017+ or Azure SQL, CockroachDB v23.2+); older servers fail the health check and every data request
-- SQL Server and CockroachDB hide Users & Roles, AI Agent, Backup & Restore, and Schema Diff; their Instance Insights is read-only
+- SQL Server, CockroachDB and Oracle hide Users & Roles, AI Agent and Backup & Restore; they keep Schema Diff, and their Instance Insights is read-only
 - RabbitMQ and Kafka use the `form` method only, with broker settings in `connection.broker`:
   - RabbitMQ goes through the Management HTTP API (port 15672); `broker.rabbitmq.vhost` is the default vhost. Requires RabbitMQ 3.12+
   - Kafka uses `broker.kafka.brokers` (`host:port` list) and optional SASL PLAIN/SCRAM; no SSH tunnel. Requires Kafka 3.5+

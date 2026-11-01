@@ -8,7 +8,6 @@ import { getDatabaseSource } from '~/server/infrastructure/driver/db-connection'
 import { BaseUnsupportedInstanceInsightsAdapter } from '../shared/base-unsupported-instance-insights.adapter';
 import { trySafeQuery } from '../shared/safe-query';
 import {
-  createActionCapability,
   createInsightsCapabilities,
   createTable,
   createUnavailableSection,
@@ -69,14 +68,7 @@ export class CockroachInstanceInsightsAdapter extends BaseUnsupportedInstanceIns
         supportsSessionInspection: true,
         supportsConfiguration: true,
       }),
-      actions: [
-        createActionCapability({
-          id: 'cancel-query',
-          label: 'Cancel Query',
-          state: 'unsupported',
-          description: 'Instance Insights is read-only for CockroachDB.',
-        }),
-      ],
+      actions: [],
       sections: [overview, sessions, configuration],
     };
   }

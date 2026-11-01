@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { getVisibleActivityItems } from '~/components/modules/app-shell/activity-bar/utils/getVisibleActivityItems';
 import {
   DatabaseClientType,
-  isInsightsOnlyDatabaseToolsClientType,
+  isBackupSupportedClientType,
   isPostgresCompatibleClientType,
 } from '~/core/constants/database-client-type';
 import { ActivityBarItemType } from '~/core/stores/useActivityBarStore';
@@ -29,16 +29,13 @@ describe('SQL Server and CockroachDB feature gating', () => {
     }
   );
 
-  it('limits Database Tools to Instance Insights for the new engines only', () => {
-    expect(
-      isInsightsOnlyDatabaseToolsClientType(DatabaseClientType.MSSQL)
-    ).toBe(true);
-    expect(
-      isInsightsOnlyDatabaseToolsClientType(DatabaseClientType.COCKROACHDB)
-    ).toBe(true);
-    expect(
-      isInsightsOnlyDatabaseToolsClientType(DatabaseClientType.POSTGRES)
-    ).toBe(false);
+  it('has no Backup & Restore for the new engines only', () => {
+    expect(isBackupSupportedClientType(DatabaseClientType.MSSQL)).toBe(false);
+    expect(isBackupSupportedClientType(DatabaseClientType.COCKROACHDB)).toBe(
+      false
+    );
+    expect(isBackupSupportedClientType(DatabaseClientType.ORACLE)).toBe(false);
+    expect(isBackupSupportedClientType(DatabaseClientType.POSTGRES)).toBe(true);
   });
 
   it('treats CockroachDB as Postgres-compatible', () => {

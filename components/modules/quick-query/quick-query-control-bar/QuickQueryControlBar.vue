@@ -112,6 +112,7 @@ const currentNullOrderLabel = computed(() => {
             variant="outline"
             class="font-normal"
             size="xxs"
+            data-testid="quick-query-add-row"
             @click="emit('onAddEmptyRow')"
           >
             <Icon name="hugeicons:plus-sign"> </Icon> Row
@@ -128,6 +129,7 @@ const currentNullOrderLabel = computed(() => {
             variant="outline"
             size="xxs"
             class="relative overflow-visible"
+            data-testid="quick-query-save"
             @click="emit('onSaveData')"
           >
             <Icon name="lucide:save"> </Icon>
@@ -164,7 +166,12 @@ const currentNullOrderLabel = computed(() => {
 
       <Tooltip v-if="totalSelectedRows && !isViewVirtualTable">
         <TooltipTrigger as-child>
-          <Button variant="outline" size="xxs" @click="emit('onDeleteRows')">
+          <Button
+            variant="outline"
+            size="xxs"
+            data-testid="quick-query-delete-rows"
+            @click="emit('onDeleteRows')"
+          >
             <Icon name="lucide:trash"> </Icon>
             <ContextMenuShortcut>⌥⌘⌫</ContextMenuShortcut>
             <!-- Delete -->

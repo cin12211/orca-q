@@ -20,6 +20,7 @@ export default defineEventHandler(
         username: body.source.username,
         password: body.source.password,
         database: body.source.database,
+        serviceName: body.source.serviceName,
         filePath: body.source.filePath,
         ssl: body.source.ssl,
         ssh: body.source.ssh,
@@ -31,6 +32,7 @@ export default defineEventHandler(
         username: body.target.username,
         password: body.target.password,
         database: body.target.database,
+        serviceName: body.target.serviceName,
         filePath: body.target.filePath,
         ssl: body.target.ssl,
         ssh: body.target.ssh,
@@ -45,7 +47,8 @@ export default defineEventHandler(
     return computeSchemaDiff(
       sourceSchemas,
       targetSchemas,
-      body.safeMode ?? true
+      body.safeMode ?? true,
+      body.target.type
     );
   }
 );

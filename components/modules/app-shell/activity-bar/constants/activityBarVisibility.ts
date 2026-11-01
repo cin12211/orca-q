@@ -76,4 +76,5 @@ export const USERS_ROLES_HIDDEN_CONNECTION_TYPES = new Set<DatabaseClientType>([
   DatabaseClientType.REDIS,
   DatabaseClientType.MSSQL,
   DatabaseClientType.COCKROACHDB,
+  DatabaseClientType.ORACLE,
 ]);

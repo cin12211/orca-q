@@ -53,3 +53,24 @@ describe('SqlDialect pagination and ordering', () => {
     expect(dialect.quoteIdentifier('order]s')).toBe('[order]]s]');
   });
 });
+
+describe('Oracle dialect', () => {
+  const dialect = getSqlDialect(DatabaseClientType.ORACLE);
+
+  it('pages with OFFSET/FETCH', () => {
+    expect(dialect.buildPagination(25, 50)).toBe(
+      'OFFSET 50 ROWS FETCH NEXT 25 ROWS ONLY'
+    );
+  });
+
+  it('writes flags as numbers and ISO timestamps as TO_TIMESTAMP_TZ', () => {
+    expect(dialect.toLiteral(true)).toBe('1');
+    expect(dialect.toLiteral('2006-02-15T05:03:42.000Z')).toBe(
+      `TO_TIMESTAMP_TZ('2006-02-15T05:03:42.000Z', 'YYYY-MM-DD"T"HH24:MI:SS.FF"Z"')`
+    );
+    expect(dialect.toLiteral(new Date('2006-02-15T05:03:42.000Z'))).toContain(
+      'TO_TIMESTAMP_TZ'
+    );
+    expect(dialect.toLiteral("O'Brien")).toBe("'O''Brien'");
+  });
+});

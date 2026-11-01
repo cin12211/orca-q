@@ -22,3 +22,16 @@ export function mapArrayRowsToObjects(
     Object.fromEntries(fields.map((field, index) => [field.name, row[index]]))
   );
 }
+
+/**
+ * Oracle folds unquoted aliases to upper case; catalog code reads them in
+ * lower case. Not for user queries, whose column names must stay intact.
+ */
+export function lowerCaseRowKeys<T>(rows: Record<string, unknown>[]): T[] {
+  return rows.map(
+    row =>
+      Object.fromEntries(
+        Object.entries(row).map(([key, value]) => [key.toLowerCase(), value])
+      ) as T
+  );
+}
