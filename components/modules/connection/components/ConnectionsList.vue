@@ -34,6 +34,7 @@ import { EConnectionMethod } from '~/core/types/entities/connection.entity';
 import {
   getDatabaseSupportByType,
   isSqlite3ConnectionsEnabled,
+  getConnectionDisabledLabel,
   isSqliteConnectionDisabled,
 } from '../constants';
 
@@ -87,7 +88,7 @@ const getFormTarget = (connection: Connection) => {
 
 const getConnectionDetails = (connection: Connection) => {
   if (connection.method === EConnectionMethod.FILE) {
-    const filePath = connection.filePath || 'SQLite file not selected';
+    const filePath = connection.filePath || 'Database file not selected';
 
     return {
       summary: filePath,
@@ -184,7 +185,12 @@ const onConnectConnection = async (connection: Connection) => {
     title="No connections yet"
     desc="Click Add Connection to create your first database connection."
   >
-    <Button size="sm" variant="outline" @click="emit('create')">
+    <Button
+      data-testid="connection-add-button"
+      size="sm"
+      variant="outline"
+      @click="emit('create')"
+    >
       <Icon name="hugeicons:plus-sign" class="size-4!" />
       Add Connection
     </Button>
@@ -265,6 +271,7 @@ const onConnectConnection = async (connection: Connection) => {
               <Button
                 variant="default"
                 size="sm"
+                :data-testid="`connection-connect-${item.connection.name}`"
                 :disabled="
                   isSqliteConnectionDisabled(
                     item.connection,
@@ -279,7 +286,7 @@ const onConnectConnection = async (connection: Connection) => {
                     item.connection,
                     sqlite3ConnectionsEnabled
                   )
-                    ? 'Disabled'
+                    ? getConnectionDisabledLabel(item.connection)
                     : 'Connect'
                 }}
               </Button>

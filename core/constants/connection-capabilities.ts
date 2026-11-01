@@ -231,6 +231,13 @@ export function resolveConnectionProviderKind(
     }
   }
 
+  if (
+    input.type === DatabaseClientType.DUCKDB &&
+    input.method === EConnectionMethod.FILE
+  ) {
+    return EConnectionProviderKind.DUCKDB_FILE;
+  }
+
   if (input.type === DatabaseClientType.REDIS) {
     return EConnectionProviderKind.REDIS_DIRECT;
   }

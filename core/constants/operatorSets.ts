@@ -50,10 +50,43 @@ export enum OperatorSet {
 
 export const separatorRow = { value: 'SEPARATOR_ROW' as const, label: '' };
 
-export const operatorSets: Record<
-  string,
-  ({ value: OperatorSet; label: string } | typeof separatorRow)[]
-> = {
+type OperatorSetOption =
+  | { value: OperatorSet; label: string }
+  | typeof separatorRow;
+
+const SQLITE_OPERATORS: OperatorSetOption[] = [
+  { value: OperatorSet.EQUAL, label: '=' },
+  { value: OperatorSet.NOT_EQUAL, label: '<>' },
+  { value: OperatorSet.LESS, label: '<' },
+  { value: OperatorSet.GREATER, label: '>' },
+  { value: OperatorSet.LESS_EQUAL, label: '<=' },
+  { value: OperatorSet.GREATER_EQUAL, label: '>=' },
+
+  separatorRow,
+
+  { value: OperatorSet.IN, label: 'IN' },
+  { value: OperatorSet.NOT_IN, label: 'NOT IN' },
+
+  separatorRow,
+
+  { value: OperatorSet.IS_NULL, label: 'IS NULL' },
+  { value: OperatorSet.IS_NOT_NULL, label: 'IS NOT NULL' },
+
+  separatorRow,
+
+  { value: OperatorSet.BETWEEN, label: 'Between' },
+  { value: OperatorSet.NOT_BETWEEN, label: 'Not between' },
+
+  separatorRow,
+
+  { value: OperatorSet.LIKE, label: 'LIKE' },
+  { value: OperatorSet.LIKE_CONTAINS, label: 'Contains' },
+  { value: OperatorSet.NOT_LIKE_CONTAINS, label: 'Not contains' },
+  { value: OperatorSet.LIKE_PREFIX, label: 'Has prefix' },
+  { value: OperatorSet.LIKE_SUFFIX, label: 'Has suffix' },
+];
+
+export const operatorSets: Record<string, OperatorSetOption[]> = {
   [DatabaseClientType.MYSQL]: [
     { value: OperatorSet.EQUAL, label: '=' },
     { value: OperatorSet.NOT_EQUAL, label: '<>' },
@@ -158,37 +191,9 @@ export const operatorSets: Record<
     { value: OperatorSet.LIKE_SUFFIX, label: 'Has suffix' },
   ],
   // SQLite: comparison, IN, BETWEEN, IS NULL, LIKE (case-insensitive by default for ASCII)
-  [DatabaseClientType.SQLITE3]: [
-    { value: OperatorSet.EQUAL, label: '=' },
-    { value: OperatorSet.NOT_EQUAL, label: '<>' },
-    { value: OperatorSet.LESS, label: '<' },
-    { value: OperatorSet.GREATER, label: '>' },
-    { value: OperatorSet.LESS_EQUAL, label: '<=' },
-    { value: OperatorSet.GREATER_EQUAL, label: '>=' },
-
-    separatorRow,
-
-    { value: OperatorSet.IN, label: 'IN' },
-    { value: OperatorSet.NOT_IN, label: 'NOT IN' },
-
-    separatorRow,
-
-    { value: OperatorSet.IS_NULL, label: 'IS NULL' },
-    { value: OperatorSet.IS_NOT_NULL, label: 'IS NOT NULL' },
-
-    separatorRow,
-
-    { value: OperatorSet.BETWEEN, label: 'Between' },
-    { value: OperatorSet.NOT_BETWEEN, label: 'Not between' },
-
-    separatorRow,
-
-    { value: OperatorSet.LIKE, label: 'LIKE' },
-    { value: OperatorSet.LIKE_CONTAINS, label: 'Contains' },
-    { value: OperatorSet.NOT_LIKE_CONTAINS, label: 'Not contains' },
-    { value: OperatorSet.LIKE_PREFIX, label: 'Has prefix' },
-    { value: OperatorSet.LIKE_SUFFIX, label: 'Has suffix' },
-  ],
+  [DatabaseClientType.SQLITE3]: SQLITE_OPERATORS,
+  // DuckDB: same operator shape as SQLite
+  [DatabaseClientType.DUCKDB]: SQLITE_OPERATORS,
   // Oracle: comparison, IN, BETWEEN, IS NULL, LIKE (no ILIKE; case sensitivity handled externally)
   [DatabaseClientType.ORACLE]: [
     { value: OperatorSet.EQUAL, label: '=' },

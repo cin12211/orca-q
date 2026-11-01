@@ -6,21 +6,19 @@ import { createMetadataAdapter } from '~/server/infrastructure/database/adapters
 export default defineEventHandler(async event => {
   const body = await readBody<DatabaseMetadataRequestParams>(event);
 
-  const adapter = await createMetadataAdapter(
-    body.type,
-    {
-      dbConnectionString: body.dbConnectionString,
-      host: body.host,
-      port: body.port,
-      username: body.username,
-      password: body.password,
-      database: body.database,
-      providerKind: body.providerKind,
-      managedSqlite: body.managedSqlite,
-      ssl: body.ssl,
-      ssh: body.ssh,
-    }
-  );
+  const adapter = await createMetadataAdapter(body.type, {
+    dbConnectionString: body.dbConnectionString,
+    host: body.host,
+    port: body.port,
+    username: body.username,
+    password: body.password,
+    database: body.database,
+    filePath: body.filePath,
+    providerKind: body.providerKind,
+    managedSqlite: body.managedSqlite,
+    ssl: body.ssl,
+    ssh: body.ssh,
+  });
 
   const result = await adapter.getReverseSchemas();
   return { result };

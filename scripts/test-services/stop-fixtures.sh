@@ -72,7 +72,7 @@ stop_broker() {
 resolve_compose_cmd
 
 case "${profile}" in
-  none|sqlite)
+  none|sqlite|duckdb)
     echo "No containers to stop"
     ;;
   postgres|mysql|mariadb|sql)

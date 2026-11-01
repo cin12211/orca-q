@@ -1,6 +1,10 @@
 import type { RendererElement, RendererNode } from 'vue';
 import { Icon } from '#components';
 import { DatabaseClientType } from '~/core/constants/database-client-type';
+import {
+  isDuckDbUnsupportedPlatform,
+  isElectron,
+} from '~/core/helpers/environment';
 import { EKafkaSaslMechanism, EManagedSqliteProvider } from '../types';
 
 export interface IDBSupport {
@@ -61,6 +65,22 @@ export const databaseSupports: IDBSupport[] = [
     isSupport: true,
     isBeta: true,
     description: 'Local file database',
+  },
+  {
+    type: DatabaseClientType.DUCKDB,
+    name: 'DuckDB',
+    icon: h(Icon, { name: 'simple-icons:duckdb' }),
+    isSupport: true,
+    isBeta: true,
+    description: 'Local analytical database file',
+  },
+  {
+    type: DatabaseClientType.DUCKDB,
+    name: 'MotherDuck',
+    icon: h(Icon, { name: 'simple-icons:duckdb', class: 'text-[#ff9538]' }),
+    isSupport: false,
+    unsupportedLabel: 'Coming soon',
+    description: 'Cloud DuckDB',
   },
   {
     type: DatabaseClientType.SQLITE3,
@@ -146,6 +166,7 @@ export const DEFAULT_DB_PORTS: Record<string, string> = {
   [DatabaseClientType.ORACLE]: '1521',
   [DatabaseClientType.BETTER_SQLITE3]: '0',
   [DatabaseClientType.SQLITE3]: '0',
+  [DatabaseClientType.DUCKDB]: '0',
   [DatabaseClientType.SNOWFLAKE]: '443',
   [DatabaseClientType.RABBITMQ]: '15672',
   [DatabaseClientType.KAFKA]: '9092',
@@ -167,10 +188,32 @@ export const isSqlite3ConnectionsEnabled = (value: unknown) => {
   return value !== false && value !== 'false' && value !== '0';
 };
 
+const isDuckDbUnsupportedRuntime = () => {
+  const runtime = window.electronAPI?.runtime;
+
+  return (
+    !!runtime && isDuckDbUnsupportedPlatform(runtime.platform, runtime.arch)
+  );
+};
+
+export const getConnectionDisabledLabel = (connection: {
+  type: DatabaseClientType | string;
+}) => {
+  if (connection.type !== DatabaseClientType.DUCKDB) {
+    return 'Disabled';
+  }
+
+  return isElectron() ? 'Not available on Intel Mac' : 'Desktop only';
+};
+
 export const isSqliteConnectionDisabled = (
   connection: { type: DatabaseClientType | string },
   sqlite3ConnectionsEnabled: boolean
 ) => {
+  if (connection.type === DatabaseClientType.DUCKDB) {
+    return !isElectron() || isDuckDbUnsupportedRuntime();
+  }
+
   return (
     connection.type === DatabaseClientType.SQLITE3 && !sqlite3ConnectionsEnabled
   );

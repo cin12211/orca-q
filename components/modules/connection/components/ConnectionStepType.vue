@@ -121,7 +121,8 @@ useHotkeys([
       >
         <DatabaseTypeCard
           v-for="option in databaseOptions"
-          :key="`${option.type}-${option.managedProvider ?? 'default'}`"
+          :key="option.name"
+          :data-testid="`db-type-card-${option.name.toLowerCase().replaceAll(' ', '-')}`"
           :name="option.name"
           :icon="option.icon"
           :description="option.description"
@@ -141,6 +142,7 @@ useHotkeys([
       </Button>
       <Button
         id="tour-database-type-next"
+        data-testid="connection-step-next"
         @click="$emit('next')"
         :disabled="!dbType"
         size="sm"

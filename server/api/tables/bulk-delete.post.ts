@@ -3,6 +3,7 @@ import { DatabaseClientType } from '~/core/constants/database-client-type';
 import { buildDeleteStatements } from '~/core/helpers/sql-mutation-statements';
 import type { DatabaseMetadataRequestParams } from '~/core/types';
 import { createTableAdapter } from '~/server/infrastructure/database/adapters/tables';
+import { assertBulkSuccess } from '~/server/utils/assert-bulk-success';
 
 interface RequestBody extends DatabaseMetadataRequestParams {
   tableName: string;
@@ -42,9 +43,8 @@ export default defineEventHandler(async event => {
       }).sql
   );
 
-  const adapter = await createTableAdapter(
-    body.type,
-    body
+  const adapter = await createTableAdapter(body.type, body);
+  return assertBulkSuccess(
+    await adapter.executeBulkDelete(sqlDeleteStatements)
   );
-  return await adapter.executeBulkDelete(sqlDeleteStatements);
 });

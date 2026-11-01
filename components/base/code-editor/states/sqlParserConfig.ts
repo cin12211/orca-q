@@ -26,6 +26,8 @@ export const SQL_DIALECT_BY_DB_TYPE: Record<string, SQLDialect> = {
   [DatabaseClientType.MYSQL2]: SQLDialectSupport.MySQL,
   [DatabaseClientType.MARIADB]: SQLDialectSupport.MariaSQL,
   [DatabaseClientType.SQLITE3]: SQLDialectSupport.SQLite,
+  // DuckDB's grammar is derived from PostgreSQL's (dollar quoting, :: casts).
+  [DatabaseClientType.DUCKDB]: SQLDialectSupport.PostgreSQLParserDialect,
   [DatabaseClientType.ORACLE]: SQLDialectSupport.PLSQL,
 } as const;
 

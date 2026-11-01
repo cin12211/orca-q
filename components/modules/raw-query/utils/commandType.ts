@@ -245,6 +245,14 @@ class Sqlite3CommandResultHandler extends BaseCommandResultHandler {
 
 class BetterSqlite3CommandResultHandler extends Sqlite3CommandResultHandler {}
 
+class DuckDbCommandResultHandler extends BaseCommandResultHandler {
+  protected override isMutation(): boolean {
+    if (['TRUNCATE', 'COPY', 'VACUUM', 'CHECKPOINT'].includes(this.commandKey))
+      return true;
+    return super.isMutation();
+  }
+}
+
 class GenericCommandResultHandler extends BaseCommandResultHandler {}
 
 class MssqlCommandResultHandler extends BaseCommandResultHandler {
@@ -284,6 +292,7 @@ const HANDLER_REGISTRY: Record<
   [DatabaseClientType.SQLITE3]: Sqlite3CommandResultHandler,
   [DatabaseClientType.SNOWFLAKE]: GenericCommandResultHandler,
   [DatabaseClientType.BETTER_SQLITE3]: BetterSqlite3CommandResultHandler,
+  [DatabaseClientType.DUCKDB]: DuckDbCommandResultHandler,
   [DatabaseClientType.MSSQL]: MssqlCommandResultHandler,
   [DatabaseClientType.ORACLE]: OracleCommandResultHandler,
   [DatabaseClientType.RABBITMQ]: GenericCommandResultHandler,

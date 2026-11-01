@@ -86,7 +86,7 @@ const handleCancel = () => {
 
 <template>
   <Dialog :open="open" @update:open="!$event && handleCancel()" v-if="open">
-    <DialogContent class="max-w-md">
+    <DialogContent data-testid="missing-variables-dialog" class="max-w-md">
       <DialogHeader>
         <DialogTitle class="flex items-center gap-2">
           <Icon name="hugeicons:alert-02" class="size-5 text-amber-500" />
@@ -106,6 +106,7 @@ const handleCancel = () => {
         >
           <Label :for="variable" class="text-right"> :{{ variable }} </Label>
           <Input
+            :data-testid="`missing-variable-input-${variable}`"
             :ref="
               el => {
                 if (el) inputRefs[index] = el as InstanceType<typeof Input>;
@@ -139,6 +140,7 @@ const handleCancel = () => {
         <Button
           size="sm"
           ref="executeButtonRef"
+          data-testid="missing-variables-execute"
           class="gap-1"
           @click="handleConfirm"
           @keydown.enter.prevent="handleConfirm"

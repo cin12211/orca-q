@@ -2,6 +2,7 @@
 import {
   LazyFunctionDetail,
   LazyFunctionOverview,
+  LazyMacroDetail,
   LazyQuickQuery,
   LazyTableOverview,
   LazyViewOverview,
@@ -58,6 +59,12 @@ watchEffect(() => {
   );
 });
 
+const isDuckDbTab = computed(
+  () =>
+    connectionStore.connections.find(c => c.id === tabInfo.value?.connectionId)
+      ?.type === DatabaseClientType.DUCKDB
+);
+
 const activeComponent = computed(() => {
   if (!tabInfo.value || !isSqlFamily.value) return null;
 
@@ -73,7 +80,7 @@ const activeComponent = computed(() => {
     case TabViewType.ViewOverview:
       return LazyViewOverview;
     case TabViewType.FunctionsDetail:
-      return LazyFunctionDetail;
+      return isDuckDbTab.value ? LazyMacroDetail : LazyFunctionDetail;
     default:
       return null;
   }

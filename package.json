@@ -9,7 +9,7 @@
     "url": "https://github.com/cin12211"
   },
   "license": "MIT",
-  "version": "1.1.15",
+  "version": "1.1.16",
   "main": "out/electron/main.js",
   "scripts": {
     "dev": "npm run nuxt:dev",
@@ -43,12 +43,14 @@
     "test:api:raw": "vitest --run --project integration",
     "test:e2e": "bash scripts/test-services/run-tests.sh --fixtures=all -- playwright test",
     "test:e2e:raw": "playwright test",
+    "test:e2e:duckdb": "bash scripts/test-services/run-tests.sh --fixtures=duckdb -- cross-env PLAYWRIGHT_BASE_URL=http://localhost:3222 \"PLAYWRIGHT_WEB_SERVER_COMMAND=cross-env ORCAQ_DESKTOP_RUNTIME=1 nuxt dev --port 3222\" playwright test --project duckdb",
     "test:coverage": "vitest run --coverage",
     "test:watch": "vitest --watch",
     "test:fixtures:up": "bash scripts/test-services/start-fixtures.sh",
     "test:fixtures:down": "bash scripts/test-services/stop-fixtures.sh"
   },
   "dependencies": {
+    "@duckdb/node-api": "^2.0.0-r.1",
     "@libsql/client": "^0.15.15",
     "@platformatic/kafka": "^2.14.0",
     "better-sqlite3": "^12.9.0",

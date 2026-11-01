@@ -11,6 +11,7 @@ import { CreateConnectionModal } from '../connection';
 import {
   getDatabaseSupportByType,
   isSqlite3ConnectionsEnabled,
+  getConnectionDisabledLabel,
   isSqliteConnectionDisabled,
 } from '../connection';
 
@@ -158,6 +159,7 @@ const getConnectionSupportIconProps = (connection?: Connection) => {
 
         <SelectItem
           class="cursor-pointer"
+          :data-testid="`connection-option-${connection.name}`"
           :value="connection.id"
           :disabled="isConnectionDisabled(connection)"
           v-for="connection in connections"
@@ -189,7 +191,7 @@ const getConnectionSupportIconProps = (connection?: Connection) => {
                   connection,
                   sqlite3ConnectionsEnabled
                 )
-                  ? 'Disabled'
+                  ? getConnectionDisabledLabel(connection)
                   : 'Not allowed'
               }}
             </span>

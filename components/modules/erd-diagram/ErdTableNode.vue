@@ -126,7 +126,7 @@ const onFocusNode = (
 </script>
 
 <template>
-  <div class="table-node text-foreground">
+  <div data-testid="erd-table-node" class="table-node text-foreground">
     <div
       class="flex flex-col rounded-md bg-card overflow-hidden"
       :style="{ width: ROW_WIDTH + 'px' }"

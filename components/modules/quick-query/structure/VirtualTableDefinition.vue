@@ -41,6 +41,7 @@ const formattedSql = computed(() => {
 <template>
   <div
     :key="`${props.viewId}-${props.viewName}-${props.schema}`"
+    data-testid="view-definition"
     class="relative"
   >
     <LoadingOverlay :visible="status === 'pending'" />

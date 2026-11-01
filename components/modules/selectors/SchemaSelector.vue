@@ -40,7 +40,10 @@ const systemSchemas = computed(() =>
     :model-value="schemaId"
     size="sm"
   >
-    <SelectTrigger :class="cn(props.class, 'w-48 cursor-pointer')">
+    <SelectTrigger
+      data-testid="schema-selector"
+      :class="cn(props.class, 'w-48 cursor-pointer')"
+    >
       <div class="flex items-center gap-2 w-44 truncate" v-if="activeSchema">
         {{ activeSchema?.name }}
       </div>
@@ -52,6 +55,7 @@ const systemSchemas = computed(() =>
           :value="schema.name"
           v-for="schema in userSchemas"
           :key="schema.id"
+          :data-testid="`schema-option-${schema.name}`"
           class="cursor-pointer"
         >
           {{ schema.name }}

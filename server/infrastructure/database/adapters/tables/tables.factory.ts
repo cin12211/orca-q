@@ -1,5 +1,6 @@
 import { DatabaseClientType } from '~/core/constants/database-client-type';
 import { createDomainAdapter } from '../shared';
+import { DuckDbTableAdapter } from './duckdb/duckdb-table.adapter';
 import { MysqlTableAdapter } from './mysql/mysql-table.adapter';
 import { OracleTableAdapter } from './oracle/oracle-table.adapter';
 import { PostgresTableAdapter } from './postgres/postgres-table.adapter';
@@ -25,6 +26,7 @@ export async function createTableAdapter(
         MysqlTableAdapter.create(params, DatabaseClientType.MARIADB),
       oracledb: OracleTableAdapter.create,
       sqlite3: SqliteTableAdapter.create,
+      duckdb: DuckDbTableAdapter.create,
     }
   );
 }

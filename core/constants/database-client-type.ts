@@ -18,6 +18,7 @@ export enum DatabaseClientType {
   SQLITE3 = 'sqlite3',
   SNOWFLAKE = 'snowflake',
   BETTER_SQLITE3 = 'better-sqlite3',
+  DUCKDB = 'duckdb',
   MSSQL = 'mssql',
   ORACLE = 'oracledb',
   RABBITMQ = 'rabbitmq',
@@ -31,6 +32,7 @@ export const SQL_DATABASE_CLIENT_TYPES = [
   DatabaseClientType.MYSQL2,
   DatabaseClientType.SQLITE3,
   DatabaseClientType.BETTER_SQLITE3,
+  DatabaseClientType.DUCKDB,
   DatabaseClientType.MSSQL,
   DatabaseClientType.ORACLE,
 ] as const;

@@ -66,6 +66,7 @@ bash scripts/test-services/run-tests.sh --fixtures=postgres -- playwright test -
 bash scripts/test-services/run-tests.sh --fixtures=mysql   -- playwright test --project mysql
 bash scripts/test-services/run-tests.sh --fixtures=redis   -- playwright test --project redis
 bash scripts/test-services/run-tests.sh --fixtures=sqlite  -- playwright test --project sqlite
+bun test:e2e:duckdb # DuckDB needs a server in desktop mode, so it has its own script
 bash scripts/test-services/run-tests.sh --fixtures=all     -- playwright test --project common
 ```
 
@@ -96,6 +97,7 @@ Fixtures are Docker containers (PostgreSQL 16, MySQL 8.4, MariaDB 11.4, Redis 7.
 | `redis`    | Redis only                                         |
 | `mongodb`  | MongoDB only                                       |
 | `sqlite`   | SQLite prep only (no Docker)                       |
+| `duckdb`   | DuckDB prep only (no Docker)                       |
 | `rabbitmq` | RabbitMQ only (opt-in)                             |
 | `kafka`    | Kafka only (opt-in)                                |
 | `all`      | Everything above except the opt-in broker profiles |
@@ -171,13 +173,14 @@ ORCAQ_POSTGRES_PORT=5433 bun test:api
 
 When running locally with the default fixture setup, you can connect to the databases using the following full connection strings:
 
-| Database       | Connection String / File Path                                                                                                                                        |
-| -------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **PostgreSQL** | `postgresql://orcaq:orcaq@127.0.0.1:5432/pagila`                                                                                                                     |
-| **MySQL**      | `mysql://orcaq:orcaq@127.0.0.1:3306/sakila`                                                                                                                          |
-| **MariaDB**    | `mysql://orcaq:orcaq@127.0.0.1:3307/sakila` (Note: Uses `mysql` protocol)                                                                                            |
-| **Redis**      | `redis://127.0.0.1:6379/0`                                                                                                                                           |
-| **SQLite**     | `test/fixtures/datasets/.tmp/sqlite/sakila.sqlite` (Relative to repo root)<br>Or absolute: `sqlite:///path/to/repo/test/fixtures/datasets/.tmp/sqlite/sakila.sqlite` |
+| Database       | Connection String / File Path                                                                                                                                            |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **PostgreSQL** | `postgresql://orcaq:orcaq@127.0.0.1:5432/pagila`                                                                                                                         |
+| **MySQL**      | `mysql://orcaq:orcaq@127.0.0.1:3306/sakila`                                                                                                                              |
+| **MariaDB**    | `mysql://orcaq:orcaq@127.0.0.1:3307/sakila` (Note: Uses `mysql` protocol)                                                                                                |
+| **Redis**      | `redis://127.0.0.1:6379/0`                                                                                                                                               |
+| **SQLite**     | `test/fixtures/datasets/.tmp/sqlite/sakila.sqlite` (Relative to repo root)<br>Or absolute: `sqlite:///path/to/repo/test/fixtures/datasets/.tmp/sqlite/sakila.sqlite`     |
+| **DuckDB**     | `test/fixtures/datasets/.tmp/duckdb/shop.duckdb` and `shop-staging.duckdb` (Relative to repo root). Build with `bun test:fixtures:up --profile duckdb`; desktop app only |
 
 ### Message Broker Fixtures (RabbitMQ, Kafka)
 

@@ -5,7 +5,7 @@
 # Usage:
 #   bash scripts/test-services/start-fixtures.sh --profile <profile>
 #
-# Profiles: postgres | mysql | mariadb | sql | redis | mongodb | sqlite | all
+# Profiles: postgres | mysql | mariadb | sql | redis | mongodb | sqlite | duckdb | all
 #           rabbitmq | kafka (opt-in, not part of all)
 # ──────────────────────────────────────────────────────────────────────────────
 
@@ -254,7 +254,19 @@ start_sqlite() {
   echo "SQLite fixture is ready"
 }
 
+start_duckdb() {
+  echo "Preparing DuckDB fixture"
+  node "${script_dir}/prepare-duckdb-sample.mjs"
+  echo "DuckDB fixture is ready"
+}
+
 # ─── Main ────────────────────────────────────────────────────────────────────
+if [ "${profile}" = "duckdb" ]; then
+  # Embedded database: no containers, so Docker is not required.
+  start_duckdb
+  exit 0
+fi
+
 resolve_compose_cmd
 
 case "${profile}" in
@@ -285,6 +297,7 @@ case "${profile}" in
   all)
     node "${script_dir}/generate-optimized-sql-fixtures.mjs" 2>/dev/null || true
     start_sqlite
+    start_duckdb
     start_sql_profile "all"
     start_redis
     start_mongo

@@ -10,3 +10,4 @@ export { PostgresTableAdapter } from './postgres/postgres-table.adapter';
 export { MysqlTableAdapter } from './mysql/mysql-table.adapter';
 export { OracleTableAdapter } from './oracle/oracle-table.adapter';
 export { SqliteTableAdapter } from './sqlite/sqlite-table.adapter';
+export { DuckDbTableAdapter } from './duckdb/duckdb-table.adapter';
