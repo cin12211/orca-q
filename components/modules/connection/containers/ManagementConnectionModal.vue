@@ -14,13 +14,15 @@ const emit = defineEmits(['update:open']);
 
 <template>
   <Dialog :open="!!open" @update:open="emit('update:open', $event)">
-    <DialogContent size="preview">
-      <div class="w-full overflow-x-auto">
-        <ManagementConnection
-          :connections="connections"
-          :workspace-id="workspaceId"
-        />
-      </div>
+    <DialogContent
+      size="preview"
+      class="max-w-[60vw]! w-full max-h-[90vh] flex flex-col overflow-hidden"
+      data-testid="management-connection-modal"
+    >
+      <ManagementConnection
+        :connections="connections"
+        :workspace-id="workspaceId"
+      />
     </DialogContent>
   </Dialog>
 </template>

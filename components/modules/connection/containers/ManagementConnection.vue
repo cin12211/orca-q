@@ -43,9 +43,11 @@ const handleDeleteConnection = (id: string) => {
 </script>
 
 <template>
-  <div class="flex flex-col items-center">
-    <div class="w-full">
-      <div class="flex items-center justify-between rounded-md bg-card py-4">
+  <div class="flex min-h-0 flex-col items-center">
+    <div class="flex min-h-0 w-full flex-col">
+      <div
+        class="flex shrink-0 items-center justify-between rounded-md bg-card py-4"
+      >
         <div>
           <h1 class="text-xl font-medium">Management Connections</h1>
           <p class="text-muted-foreground">
