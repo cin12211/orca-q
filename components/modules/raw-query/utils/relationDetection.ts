@@ -1,5 +1,5 @@
 import type { ReservedTableSchemas } from '~/core/types/database-tables.types';
-import type { MappedRawColumn } from '../interfaces';
+import type { MappedRawColumn } from '../types';
 
 /**
  * Returns true if `column` is referenced from another table (i.e. is the target

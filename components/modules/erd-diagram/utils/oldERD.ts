@@ -1,6 +1,6 @@
 import type { TableMetadata } from '~/core/types';
 import { DEFAULT_VUE_FLOW_LAYOUT_CONFIG } from '../constants';
-import type { NodePosition } from '../type';
+import type { NodePosition } from '../types';
 import {
   buildTableNodeId,
   calcTableHeight,

@@ -8,7 +8,7 @@ import {
   type RowData,
 } from '~/components/base/data-grid/utils';
 import type { ReservedTableSchemas } from '~/core/types/database-tables.types';
-import type { MappedRawColumn } from '../interfaces';
+import type { MappedRawColumn } from '../types';
 import { isRelationColumn } from './relationDetection';
 
 const SAMPLE_ROW_COUNT = 10;

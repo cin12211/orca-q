@@ -5,7 +5,7 @@ import {
   HEAD_ROW_HEIGHT,
   ROW_HEIGHT,
 } from '../constants';
-import type { NodePosition, TableNode } from '../type';
+import type { NodePosition, TableNode } from '../types';
 import {
   buildTableNodeId,
   createEdges,

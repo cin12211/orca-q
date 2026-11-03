@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ref, toRef } from 'vue';
-import type { ExecutedResultItem, MappedRawColumn } from '../../../interfaces';
+import type { ExecutedResultItem, MappedRawColumn } from '../../../types';
 import { ChartSettingsSidebar, ChartRenderer } from '../components';
 import { useChartBuilder, useChartData, useChartOption } from '../hooks';
 

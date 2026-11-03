@@ -6,7 +6,7 @@ import type {
   GraphNode,
 } from '@vue-flow/core';
 import { DEFAULT_FOCUS_DURATION } from '../constants';
-import type { ActiveTable, ActiveEdge, LabelTableNode } from '../type';
+import type { ActiveTable, ActiveEdge, LabelTableNode } from '../types';
 
 export const buildNodeHandId = (id: string, handle: string) =>
   `${id}-${handle}`;

@@ -314,7 +314,7 @@ components/modules/raw-query/
 ├── hooks/
 │   ├── useRawQueryEditor.ts   # Editor logic
 │   └── useRawQueryFileContent.ts # File content
-├── interfaces/
+├── types/
 ├── constants/
 └── utils/
 ```

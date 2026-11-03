@@ -13,9 +13,9 @@ import {
   ViewMode,
   type ExecutedResultItem,
   type MappedRawColumn,
-} from '../interfaces';
-import { ChartBuilder } from '../modules/chart-builder';
-import { ExplainQuery } from '../modules/explain-query';
+} from '../types';
+import { ChartBuilder } from '../features/chart-builder';
+import { ExplainQuery } from '../features/explain-query';
 import { formatColumnsInfo } from '../utils/formatColumnsInfo';
 import { normalizeResultRows } from '../utils/normalizeResultRows';
 import ResultTabErrorView from './result-tab/ResultTabErrorView.vue';

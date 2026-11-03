@@ -12,7 +12,7 @@ import { uuidv4 } from '~/core/helpers';
 import { getConnectionParams } from '~/core/helpers/connection-helper';
 import type { Connection } from '~/core/stores';
 import type { DatabaseDriverError } from '~/core/types';
-import { ViewMode, type ExecutedResultItem } from '../interfaces';
+import { ViewMode, type ExecutedResultItem } from '../types';
 import { extractParamsFromSql } from '../utils';
 import type { ResultTabsReturn } from './useResultTabs';
 import { executeStreamingQuery } from './useStreamingQuery';

@@ -11,7 +11,7 @@ import {
   ROW_HEIGHT,
   ROW_WIDTH,
 } from './constants';
-import type { ErdTableNodeData, LabelTableNode } from './type';
+import type { ErdTableNodeData, LabelTableNode } from './types';
 import { buildTableNodeId, focusNodeById, getHandPosition } from './utils';
 
 export interface ErdTableNodeProps extends NodeProps<ErdTableNodeData> {

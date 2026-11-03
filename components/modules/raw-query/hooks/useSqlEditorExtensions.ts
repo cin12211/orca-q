@@ -31,7 +31,7 @@ import {
 } from '~/core/constants/database-client-type';
 import { useSchemaStore } from '~/core/stores';
 import type { Connection } from '~/core/stores';
-import type { EditorCursor } from '../interfaces';
+import type { EditorCursor } from '../types';
 import { createCteAwareCompletionSource } from '../utils/cteAwareCompletionSource';
 import { mappedSchemaSuggestion } from '../utils/getMappedSchemaSuggestion';
 

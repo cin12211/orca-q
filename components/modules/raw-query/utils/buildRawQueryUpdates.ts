@@ -3,7 +3,7 @@ import {
   buildDeleteStatements,
   buildUpdateStatements,
 } from '~/core/helpers/sql-mutation-statements';
-import type { MappedRawColumn } from '../interfaces';
+import type { MappedRawColumn } from '../types';
 import {
   groupColumnsByTable,
   isCellEditable,

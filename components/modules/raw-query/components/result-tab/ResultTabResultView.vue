@@ -14,7 +14,7 @@ import {
   useRawQueryMutation,
   useRawQueryRelationPreview,
 } from '../../hooks';
-import type { ExecutedResultItem, MappedRawColumn } from '../../interfaces';
+import type { ExecutedResultItem, MappedRawColumn } from '../../types';
 import {
   buildRawQueryColumnDefs,
   type RawQueryDirtyTracker,

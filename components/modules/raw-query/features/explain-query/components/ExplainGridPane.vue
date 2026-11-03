@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import type { ColDef } from 'ag-grid-community';
-import type { ExplainPlanNode } from '../../../interfaces/explainAnalyzeResult';
+import type { ExplainPlanNode } from '../../../types/explainAnalyzeResult';
 import {
   mapGridRowsToTableRows,
   mapPlanNodesToGridRows,

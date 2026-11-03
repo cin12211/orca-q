@@ -1,4 +1,4 @@
-import type { ExplainAnalyzeOptionKey } from '../interfaces';
+import type { ExplainAnalyzeOptionKey } from '../types';
 
 export enum RawQueryEditorLayout {
   horizontal = 'horizontal',

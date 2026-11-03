@@ -2,7 +2,7 @@ import { computed, ref, watch, type ComputedRef, type Ref } from 'vue';
 import type { Edge } from '@vue-flow/core';
 import type { TableMetadata } from '~/core/types';
 import { DEFAULT_VUE_FLOW_LAYOUT_CONFIG } from '../constants';
-import type { MatrixTablePosition, NodePosition, TableNode } from '../type';
+import type { MatrixTablePosition, NodePosition, TableNode } from '../types';
 import {
   buildTableNodeId,
   createEdges,

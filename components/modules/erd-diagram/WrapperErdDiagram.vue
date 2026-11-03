@@ -4,7 +4,7 @@ import ErdDiagram from '~/components/modules/erd-diagram/ErdDiagram.vue';
 import { uuidv4 } from '~/core/helpers';
 import { useErdQueryTables } from './hooks/useErdGetAllTablesData';
 import { useExpandableErd } from './hooks/useExpandableErd';
-import type { NodePosition } from './type';
+import type { NodePosition } from './types';
 import { buildTableNodeId } from './utils';
 
 const props = defineProps<{

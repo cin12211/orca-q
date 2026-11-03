@@ -2,7 +2,7 @@
 import { computed, nextTick, ref, watch } from 'vue';
 import type { DecorationItem } from 'shiki';
 import { Button } from '~/components/ui/button';
-import type { ExecutedResultItem } from '../../interfaces';
+import type { ExecutedResultItem } from '../../types';
 
 const props = defineProps<{
   activeTab: ExecutedResultItem;

@@ -16,8 +16,8 @@ import {
   MIN_ZOOM,
   ROW_HEIGHT,
 } from '~/components/modules/erd-diagram/constants/index';
-import '~/components/modules/erd-diagram/style/vue-flow.css';
-import type { MatrixTablePosition } from '~/components/modules/erd-diagram/type';
+import '~/components/modules/erd-diagram/styles/vue-flow.css';
+import type { MatrixTablePosition } from '~/components/modules/erd-diagram/types';
 import { buildFullERDDiagram } from '~/components/modules/erd-diagram/utils/buildFullERDDiagram';
 import type { AgentRenderErdResult } from '../../types';
 import { mapAgentErdToTableMetadata } from '../../utils/mapAgentErdToTableMetadata';

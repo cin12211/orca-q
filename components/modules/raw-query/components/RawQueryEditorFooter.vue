@@ -18,7 +18,7 @@ import type {
   ExplainAnalyzeOptionItem,
   ExplainAnalyzeSerializeMode,
   ExplainAnalyzeToggleOptionKey,
-} from '../interfaces';
+} from '../types';
 
 const isExplainAnalyzeMenuOpen = ref(false);
 

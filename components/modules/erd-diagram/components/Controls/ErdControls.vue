@@ -10,7 +10,7 @@ import {
 import { useVueFlow } from '@vue-flow/core';
 import { Kbd, KbdGroup } from '~/components/ui/kbd';
 import { DEFAULT_ZOOM_DURATION } from '../../constants';
-import type { BackGroundGridStatus } from '../../type';
+import type { BackGroundGridStatus } from '../../types';
 
 const props = defineProps<{
   isHand: boolean;

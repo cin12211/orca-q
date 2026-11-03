@@ -4,7 +4,7 @@ import type {
   ExplainRoot,
   ParsedExplainPlan,
   PlanNode,
-} from '../interfaces/explainAnalyzeResult';
+} from '../types/explainAnalyzeResult';
 
 let nodeIdCounter = 0;
 

@@ -7,7 +7,7 @@ import type {
   ISSHConfig,
   ISSLConfig,
 } from '~/core/types/entities/connection.entity';
-import type { ExecutedResultItem } from '../interfaces';
+import type { ExecutedResultItem } from '../types';
 
 /**
  * NDJSON message types sent by the streaming endpoint.

@@ -5,7 +5,7 @@ import type {
   TableDetailMetadata,
   SchemaColumnMetadata as ColumnShortMetadata,
 } from '~/core/types';
-import type { MappedRawColumn } from '../interfaces';
+import type { MappedRawColumn } from '../types';
 import { inferFieldMetadataFromStatement } from './inferFieldMetadataFromStatement';
 import { findTableInfoByName, type ResolvedTableInfo } from './sqlMetadata';
 

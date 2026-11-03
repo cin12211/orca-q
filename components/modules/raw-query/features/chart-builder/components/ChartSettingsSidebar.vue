@@ -10,7 +10,7 @@ import {
   Button,
 } from '#components';
 import { Input } from '@/components/ui/input';
-import type { MappedRawColumn } from '../../../interfaces';
+import type { MappedRawColumn } from '../../../types';
 import { CHART_TYPE_META } from '../constants';
 import { ChartType, AggregationType, SortByType } from '../types';
 import ChartTypeSelector from './ChartTypeSelector.vue';

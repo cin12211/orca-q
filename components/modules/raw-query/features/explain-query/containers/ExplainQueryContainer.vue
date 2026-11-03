@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
-import type { ExecutedResultItem } from '../../../interfaces';
+import type { ExecutedResultItem } from '../../../types';
 import {
   extractExplainPayload,
   extractExplainText,

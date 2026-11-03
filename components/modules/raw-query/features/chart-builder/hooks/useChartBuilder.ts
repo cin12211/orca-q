@@ -1,5 +1,5 @@
 import { ref, watch, type Ref } from 'vue';
-import type { ExecutedResultItem, MappedRawColumn } from '../../../interfaces';
+import type { ExecutedResultItem, MappedRawColumn } from '../../../types';
 import { CHART_TYPE_META } from '../constants';
 import { ChartType, AggregationType, SortByType } from '../types';
 

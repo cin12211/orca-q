@@ -16,11 +16,11 @@ import {
   MIN_ZOOM,
   ROW_WIDTH,
 } from '~/components/modules/erd-diagram/constants/index';
-import '~/components/modules/erd-diagram/style/vue-flow.css';
+import '~/components/modules/erd-diagram/styles/vue-flow.css';
 import type {
   ErdDiagramProps,
   NodePosition,
-} from '~/components/modules/erd-diagram/type';
+} from '~/components/modules/erd-diagram/types';
 import ErdControls from './components/Controls/ErdControls.vue';
 import CustomEdge from './components/CustomEdge.vue';
 import ErdFilterPanal from './components/ErdFilterPanal.vue';

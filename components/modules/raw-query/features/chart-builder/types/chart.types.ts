@@ -1,4 +1,4 @@
-import type { ExecutedResultItem, MappedRawColumn } from '../../../interfaces';
+import type { ExecutedResultItem, MappedRawColumn } from '../../../types';
 
 export enum ChartType {
   LINE = 'line',

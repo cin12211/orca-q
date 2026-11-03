@@ -2,7 +2,7 @@
 import { computed } from 'vue';
 import { formatBytes } from '~/core/helpers';
 import { formatNumber, formatQueryTime } from '~/core/helpers/format';
-import type { ExecutedResultItem } from '../../interfaces';
+import type { ExecutedResultItem } from '../../types';
 
 const props = defineProps<{
   activeTab: ExecutedResultItem;
