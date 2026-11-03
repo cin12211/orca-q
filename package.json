@@ -43,6 +43,7 @@
     "test:api:raw": "vitest --run --project integration",
     "test:e2e": "bash scripts/test-services/run-tests.sh --fixtures=all -- playwright test",
     "test:e2e:raw": "playwright test",
+    "test:e2e:mongodb": "bash scripts/test-services/run-tests.sh --fixtures=mongodb -- playwright test --project mongodb",
     "test:e2e:duckdb": "bash scripts/test-services/run-tests.sh --fixtures=duckdb -- cross-env PLAYWRIGHT_BASE_URL=http://localhost:3222 \"PLAYWRIGHT_WEB_SERVER_COMMAND=cross-env ORCAQ_DESKTOP_RUNTIME=1 nuxt dev --port 3222\" playwright test --project duckdb",
     "test:coverage": "vitest run --coverage",
     "test:watch": "vitest --watch",

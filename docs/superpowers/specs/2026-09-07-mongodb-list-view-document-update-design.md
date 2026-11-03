@@ -41,7 +41,7 @@ Currently, `MongoCollectionListView.vue` renders documents inside a virtualized 
 Following `module-architecture.md` (Clean Architecture, Single Responsibility, folder `index.ts` exports):
 
 ```
-components/modules/quick-query/mongodb/
+components/modules/mongodb-workspace/
 ├── components/
 │   ├── MongoCollectionListItem.vue     — NEW: Single document card (Header actions, VueJsonPretty / BaseCodeEditor toggle, dirty tracking)
 │   ├── MongoCollectionListView.vue     — UPDATED: Manages TanStack virtualizer, activeEditDocId, and passes mutation handler
@@ -117,10 +117,10 @@ Switching between `VueJsonPretty` and `BaseCodeEditor` changes DOM height:
 
 ## Testing Strategy
 
-1. **Unit Tests (`test/unit/components/modules/quick-query/mongodb/useMongoDocumentMutation.test.ts`):**
+1. **Unit Tests (`test/unit/components/modules/mongodb-workspace/useMongoDocumentMutation.test.ts`):**
    - Tests successful update calling `/api/mongodb/quick-query-mutation` and verifying in-place replacement of the document inside `documents` ref.
    - Tests error handling when fetch throws, verifying toast error and `false` return value.
-2. **Component Tests (`test/unit/components/modules/quick-query/mongodb/MongoCollectionListItem.test.ts`):**
+2. **Component Tests (`test/unit/components/modules/mongodb-workspace/MongoCollectionListItem.test.ts`):**
    - Tests rendering of `_id`, Edit, Expand, Copy buttons in read mode.
    - Tests transition into edit mode upon clicking Edit.
    - Tests dirty state detection: Save button absent initially, appears when text changes.

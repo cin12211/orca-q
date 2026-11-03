@@ -3,7 +3,7 @@ import type { FileNode } from '~/components/base/tree-folder/types';
 import type {
   MongoCollectionName,
   MongoCollectionStatItem,
-} from '~/components/modules/quick-query/mongodb/types';
+} from '~/components/modules/mongodb-workspace';
 import { getConnectionParams } from '~/core/helpers/connection-helper';
 import type { Connection } from '~/core/stores';
 import { TabViewType } from '~/core/types/entities/tab-view.entity';

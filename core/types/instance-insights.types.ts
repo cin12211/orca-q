@@ -431,3 +431,64 @@ export interface RedisInstanceInsights {
   replication: RedisReplicationInsight;
   config: RedisConfigEntry[];
 }
+
+export interface MongoOpcounters {
+  insert: number;
+  query: number;
+  update: number;
+  delete: number;
+  getmore: number;
+  command: number;
+}
+
+export interface MongoOverviewInsight {
+  version: string | null;
+  host: string | null;
+  process: string | null;
+  storageEngine: string | null;
+  uptimeSeconds: number | null;
+  connections: {
+    current: number;
+    available: number;
+    totalCreated: number;
+  } | null;
+  /** Cumulative counters since server start; rates are derived client-side. */
+  opcounters: MongoOpcounters | null;
+  memory: {
+    residentMb: number | null;
+    virtualMb: number | null;
+  } | null;
+  network: {
+    bytesIn: number;
+    bytesOut: number;
+    numRequests: number;
+  } | null;
+  capturedAt: string;
+  /** Set when `serverStatus` is not permitted (needs the clusterMonitor role). */
+  serverStatusError: string | null;
+}
+
+export type MongoTopology = 'standalone' | 'replicaSet' | 'sharded';
+
+export interface MongoReplicaMemberInsight {
+  name: string;
+  stateStr: string;
+  health: number | null;
+  uptimeSeconds: number | null;
+  optimeDate: string | null;
+  lagSeconds: number | null;
+  pingMs: number | null;
+  self: boolean;
+}
+
+export interface MongoReplicationInsight {
+  topology: MongoTopology;
+  role: string;
+  setName: string | null;
+  primary: string | null;
+  me: string | null;
+  hosts: string[];
+  members: MongoReplicaMemberInsight[];
+  /** Set when `replSetGetStatus` is not permitted or not applicable. */
+  membersError: string | null;
+}

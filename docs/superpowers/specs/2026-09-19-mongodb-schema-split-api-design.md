@@ -126,7 +126,7 @@ In `server/infrastructure/nosql/mongodb/mongodb-quick-query.ts`:
 
 ## Frontend Changes
 
-1. `components/modules/quick-query/mongodb/types/mongo-quick-query.types.ts`:
+1. `components/modules/mongodb-workspace/types/mongo-quick-query.types.ts`:
    - Define `MongoCollectionItemInfo`: `{ name: string; properties: string[] }`
    - Define `MongoCollectionStatItem`: `{ name: string; size: number; count: number }`
 2. `components/modules/management/schemas/mongodb/hooks/useMongoSchemaTreeData.ts`:

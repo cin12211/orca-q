@@ -109,6 +109,19 @@ flowchart TD
 | Drop slot     | `/api/instance-insights/drop-slot`            |
 | Toggle slot   | `/api/instance-insights/toggle-slot-status`   |
 
+### Frontend Structure
+
+The route `/[workspaceId]/[connectionId]/instance-insights` renders `InstanceInsightsHost` from `components/modules/instance-insights`. The host picks a panel by connection family through `constants/insightsPanelRegistry.ts`, and every panel takes the same `connection` prop.
+
+| Family                     | Panel                                                  | Module                                                                      |
+| -------------------------- | ------------------------------------------------------ | --------------------------------------------------------------------------- |
+| SQL (and MongoDB fallback) | `SqlInstanceInsightsPanel` (PostgreSQL or generic SQL) | `components/modules/sql-family-workspace` (`instance-insights/` sub-module) |
+| Redis                      | `RedisInstanceInsightsPanel`                           | `components/modules/redis-workspace`                                        |
+| RabbitMQ                   | `RabbitInstanceInsightsPanel`                          | `components/modules/rabbitmq-workspace`                                     |
+| Kafka                      | `KafkaInstanceInsightsPanel`                           | `components/modules/kafka-workspace`                                        |
+
+UI shared by several families (`InsightKpiCard`, `InsightScopeBadge`, number/date/byte formatters) lives in `components/modules/shared/instance-insights-kit`.
+
 ## 9. Business Rules
 
 | ID        | Rule                                                              |

@@ -1,10 +1,12 @@
 <script setup lang="ts">
-import InsightKpiCard from '~/components/modules/instance-insights/components/InsightKpiCard.vue';
-import InsightScopeBadge from '~/components/modules/instance-insights/components/InsightScopeBadge.vue';
 import {
   getRedisKeyIcon,
   getRedisKeyIconClass,
 } from '~/components/modules/management/redis-browser/hooks/useRedisTreeData';
+import {
+  InsightKpiCard,
+  InsightScopeBadge,
+} from '~/components/modules/shared/instance-insights-kit';
 import type { RedisKeyspaceInsight } from '~/core/types/instance-insights.types';
 
 const props = defineProps<{

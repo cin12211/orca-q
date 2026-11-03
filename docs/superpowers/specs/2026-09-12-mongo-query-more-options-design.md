@@ -37,7 +37,7 @@ The panel is toggled via a "More options" button placed next to the pagination c
     - Tooltip: `Toggle query options (Project, Sort, Collation, Hint, MaxTimeMS)`
 
 - `MongoQueryMoreOptions.vue` (New Component):
-  - Located at `components/modules/quick-query/mongodb/components/MongoQueryMoreOptions.vue`.
+  - Located at `components/modules/mongodb-workspace/components/MongoQueryMoreOptions.vue`.
   - Props:
     - `modelValue?: MongoQueryMoreOptionsPayload`
     - `isLoading?: boolean`
@@ -63,7 +63,7 @@ The panel is toggled via a "More options" button placed next to the pagination c
 
 ### 3.1 Type Definitions
 
-In `components/modules/quick-query/mongodb/types/mongo-quick-query.types.ts`:
+In `components/modules/mongodb-workspace/types/mongo-quick-query.types.ts`:
 
 ```typescript
 export interface MongoQueryMoreOptionsPayload {
@@ -77,7 +77,7 @@ export interface MongoQueryMoreOptionsPayload {
 
 ### 3.2 Parsing & Validation Utility
 
-In `components/modules/quick-query/mongodb/utils/mongoMoreOptionsUtils.ts`:
+In `components/modules/mongodb-workspace/utils/mongoMoreOptionsUtils.ts`:
 
 - `parseMongoMoreOptionsInput(raw: { project?: string; sort?: string; collation?: string; hint?: string; maxTimeMS?: string | number }): MongoQueryMoreOptionsPayload`
   - Parses JSON strings using EJSON/JSON parser.
@@ -142,13 +142,13 @@ In `components/modules/quick-query/mongodb/utils/mongoMoreOptionsUtils.ts`:
 
 ## 5. Testing Plan
 
-- `test/unit/components/modules/quick-query/mongodb/mongoMoreOptionsUtils.spec.ts`:
+- `test/unit/components/modules/mongodb-workspace/mongoMoreOptionsUtils.spec.ts`:
   - Verify parsing of valid JSON for project, sort, collation, hint.
   - Verify hint string vs hint JSON object handling.
   - Verify error formatting for malformed JSON inputs.
-- `test/nuxt/components/modules/quick-query/mongodb/MongoQuickQueryControlBar.test.ts`:
+- `test/nuxt/components/modules/mongodb-workspace/MongoQuickQueryControlBar.test.ts`:
   - Verify "More options" button renders next to pagination and toggles state when clicked.
-- `test/nuxt/components/modules/quick-query/mongodb/MongoQueryMoreOptions.test.ts`:
+- `test/nuxt/components/modules/mongodb-workspace/MongoQueryMoreOptions.test.ts`:
   - Verify 5 inputs render with placeholders.
   - Verify Reset clears inputs.
   - Verify Apply emits parsed payload.

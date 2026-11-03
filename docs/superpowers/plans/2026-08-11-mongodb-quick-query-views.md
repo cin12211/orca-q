@@ -9,7 +9,7 @@ display modes — without adding any MongoDB branch into the existing SQL
 Quick Query components.
 
 **Architecture:** All new code lives in two new flat sub-modules:
-`components/modules/quick-query/mongodb/` (views) and
+`components/modules/mongodb-workspace/` (views) and
 `components/modules/management/schemas/mongodb/` (sidebar tree). Both are
 wired in at the same seams the codebase already uses per connection family
 (tab-type enum, `useTabManagement`, `PrimarySideBar`), mirroring the
@@ -154,13 +154,13 @@ git commit -m "feat(mongodb): add MongoDatabaseOverview and MongoCollectionDetai
 
 **Files:**
 
-- Create: `components/modules/quick-query/mongodb/utils/buildMongoColumnDefs.ts`
-- Create: `components/modules/quick-query/mongodb/utils/buildMongoPreviewFields.ts`
-- Create: `components/modules/quick-query/mongodb/utils/index.ts`
-- Create: `components/modules/quick-query/mongodb/types/mongo-quick-query.types.ts`
-- Create: `components/modules/quick-query/mongodb/types/index.ts`
-- Test: `test/unit/components/modules/quick-query/mongodb/buildMongoColumnDefs.spec.ts`
-- Test: `test/unit/components/modules/quick-query/mongodb/buildMongoPreviewFields.spec.ts`
+- Create: `components/modules/mongodb-workspace/utils/buildMongoColumnDefs.ts`
+- Create: `components/modules/mongodb-workspace/utils/buildMongoPreviewFields.ts`
+- Create: `components/modules/mongodb-workspace/utils/index.ts`
+- Create: `components/modules/mongodb-workspace/types/mongo-quick-query.types.ts`
+- Create: `components/modules/mongodb-workspace/types/index.ts`
+- Test: `test/unit/components/modules/mongodb-workspace/buildMongoColumnDefs.spec.ts`
+- Test: `test/unit/components/modules/mongodb-workspace/buildMongoPreviewFields.spec.ts`
 
 **Interfaces:**
 
@@ -168,11 +168,11 @@ git commit -m "feat(mongodb): add MongoDatabaseOverview and MongoCollectionDetai
 
 - [ ] **Step 1: Write the failing tests**
 
-`test/unit/components/modules/quick-query/mongodb/buildMongoColumnDefs.spec.ts`:
+`test/unit/components/modules/mongodb-workspace/buildMongoColumnDefs.spec.ts`:
 
 ```ts
 import { describe, expect, it } from 'vitest';
-import { buildMongoColumnDefs } from '~/components/modules/quick-query/mongodb/utils/buildMongoColumnDefs';
+import { buildMongoColumnDefs } from '~/components/modules/mongodb-workspace/utils/buildMongoColumnDefs';
 
 describe('buildMongoColumnDefs', () => {
   it('puts _id first and orders remaining keys by first appearance', () => {
@@ -209,11 +209,11 @@ describe('buildMongoColumnDefs', () => {
 });
 ```
 
-`test/unit/components/modules/quick-query/mongodb/buildMongoPreviewFields.spec.ts`:
+`test/unit/components/modules/mongodb-workspace/buildMongoPreviewFields.spec.ts`:
 
 ```ts
 import { describe, expect, it } from 'vitest';
-import { buildMongoPreviewFields } from '~/components/modules/quick-query/mongodb/utils/buildMongoPreviewFields';
+import { buildMongoPreviewFields } from '~/components/modules/mongodb-workspace/utils/buildMongoPreviewFields';
 
 describe('buildMongoPreviewFields', () => {
   it('returns up to maxFields scalar top-level fields, excluding _id', () => {
@@ -254,12 +254,12 @@ describe('buildMongoPreviewFields', () => {
 
 - [ ] **Step 2: Run tests to verify they fail**
 
-Run: `bun vitest --run --project unit test/unit/components/modules/quick-query/mongodb/`
-Expected: FAIL — modules under `components/modules/quick-query/mongodb/utils/` do not exist yet.
+Run: `bun vitest --run --project unit test/unit/components/modules/mongodb-workspace/`
+Expected: FAIL — modules under `components/modules/mongodb-workspace/utils/` do not exist yet.
 
 - [ ] **Step 3: Write the types**
 
-`components/modules/quick-query/mongodb/types/mongo-quick-query.types.ts`:
+`components/modules/mongodb-workspace/types/mongo-quick-query.types.ts`:
 
 ```ts
 export interface MongoDocument {
@@ -275,7 +275,7 @@ export interface MongoCollectionSummary {
 export type MongoCollectionViewMode = 'table' | 'list' | 'object-list';
 ```
 
-`components/modules/quick-query/mongodb/types/index.ts`:
+`components/modules/mongodb-workspace/types/index.ts`:
 
 ```ts
 export * from './mongo-quick-query.types';
@@ -283,7 +283,7 @@ export * from './mongo-quick-query.types';
 
 - [ ] **Step 4: Implement the utilities**
 
-`components/modules/quick-query/mongodb/utils/buildMongoColumnDefs.ts`:
+`components/modules/mongodb-workspace/utils/buildMongoColumnDefs.ts`:
 
 ```ts
 import type { ColDef } from 'ag-grid-community';
@@ -319,7 +319,7 @@ export function buildMongoColumnDefs(documents: MongoDocument[]): ColDef[] {
 }
 ```
 
-`components/modules/quick-query/mongodb/utils/buildMongoPreviewFields.ts`:
+`components/modules/mongodb-workspace/utils/buildMongoPreviewFields.ts`:
 
 ```ts
 import type { MongoDocument } from '../types';
@@ -341,7 +341,7 @@ export function buildMongoPreviewFields(
 }
 ```
 
-`components/modules/quick-query/mongodb/utils/index.ts`:
+`components/modules/mongodb-workspace/utils/index.ts`:
 
 ```ts
 export * from './buildMongoColumnDefs';
@@ -350,13 +350,13 @@ export * from './buildMongoPreviewFields';
 
 - [ ] **Step 5: Run tests to verify they pass**
 
-Run: `bun vitest --run --project unit test/unit/components/modules/quick-query/mongodb/`
+Run: `bun vitest --run --project unit test/unit/components/modules/mongodb-workspace/`
 Expected: PASS (6 tests)
 
 - [ ] **Step 6: Commit**
 
 ```bash
-git add components/modules/quick-query/mongodb/utils components/modules/quick-query/mongodb/types test/unit/components/modules/quick-query/mongodb
+git add components/modules/mongodb-workspace/utils components/modules/mongodb-workspace/types test/unit/components/modules/mongodb-workspace
 git commit -m "feat(mongodb): add pure column-def and preview-field builders for Quick Query views"
 ```
 
@@ -492,11 +492,11 @@ git commit -m "feat(mongodb): add collections.post endpoint listing collections 
 
 **Files:**
 
-- Create: `components/modules/quick-query/mongodb/hooks/useMongoDatabaseCollections.ts`
-- Create: `components/modules/quick-query/mongodb/hooks/useMongoCollectionQuery.ts`
-- Create: `components/modules/quick-query/mongodb/hooks/index.ts`
-- Test: `test/nuxt/components/modules/quick-query/mongodb/useMongoDatabaseCollections.test.ts`
-- Test: `test/nuxt/components/modules/quick-query/mongodb/useMongoCollectionQuery.test.ts`
+- Create: `components/modules/mongodb-workspace/hooks/useMongoDatabaseCollections.ts`
+- Create: `components/modules/mongodb-workspace/hooks/useMongoCollectionQuery.ts`
+- Create: `components/modules/mongodb-workspace/hooks/index.ts`
+- Test: `test/nuxt/components/modules/mongodb-workspace/useMongoDatabaseCollections.test.ts`
+- Test: `test/nuxt/components/modules/mongodb-workspace/useMongoCollectionQuery.test.ts`
 
 **Interfaces:**
 
@@ -508,12 +508,12 @@ git commit -m "feat(mongodb): add collections.post endpoint listing collections 
 
 - [ ] **Step 1: Write the failing tests**
 
-`test/nuxt/components/modules/quick-query/mongodb/useMongoDatabaseCollections.test.ts`:
+`test/nuxt/components/modules/mongodb-workspace/useMongoDatabaseCollections.test.ts`:
 
 ```ts
 import { ref } from 'vue';
 import { describe, expect, it, vi } from 'vitest';
-import { useMongoDatabaseCollections } from '~/components/modules/quick-query/mongodb/hooks/useMongoDatabaseCollections';
+import { useMongoDatabaseCollections } from '~/components/modules/mongodb-workspace/hooks/useMongoDatabaseCollections';
 
 describe('useMongoDatabaseCollections', () => {
   it('fetches collections for the given connection and stores the result', async () => {
@@ -556,12 +556,12 @@ describe('useMongoDatabaseCollections', () => {
 });
 ```
 
-`test/nuxt/components/modules/quick-query/mongodb/useMongoCollectionQuery.test.ts`:
+`test/nuxt/components/modules/mongodb-workspace/useMongoCollectionQuery.test.ts`:
 
 ```ts
 import { ref } from 'vue';
 import { describe, expect, it, vi } from 'vitest';
-import { useMongoCollectionQuery } from '~/components/modules/quick-query/mongodb/hooks/useMongoCollectionQuery';
+import { useMongoCollectionQuery } from '~/components/modules/mongodb-workspace/hooks/useMongoCollectionQuery';
 
 describe('useMongoCollectionQuery', () => {
   it('fetches the first page of documents for the collection', async () => {
@@ -619,7 +619,7 @@ describe('useMongoCollectionQuery', () => {
 
 - [ ] **Step 2: Run tests to verify they fail**
 
-Run: `bun vitest --run --project nuxt test/nuxt/components/modules/quick-query/mongodb/`
+Run: `bun vitest --run --project nuxt test/nuxt/components/modules/mongodb-workspace/`
 Expected: FAIL — hook modules do not exist yet.
 
 - [ ] **Step 3: Implement `useMongoDatabaseCollections`**
@@ -751,7 +751,7 @@ not redefine a new default page size.
 
 - [ ] **Step 5: Barrel export**
 
-`components/modules/quick-query/mongodb/hooks/index.ts`:
+`components/modules/mongodb-workspace/hooks/index.ts`:
 
 ```ts
 export * from './useMongoDatabaseCollections';
@@ -760,13 +760,13 @@ export * from './useMongoCollectionQuery';
 
 - [ ] **Step 6: Run tests to verify they pass**
 
-Run: `bun vitest --run --project nuxt test/nuxt/components/modules/quick-query/mongodb/`
+Run: `bun vitest --run --project nuxt test/nuxt/components/modules/mongodb-workspace/`
 Expected: PASS (4 tests)
 
 - [ ] **Step 7: Commit**
 
 ```bash
-git add components/modules/quick-query/mongodb/hooks test/nuxt/components/modules/quick-query/mongodb
+git add components/modules/mongodb-workspace/hooks test/nuxt/components/modules/mongodb-workspace
 git commit -m "feat(mongodb): add useMongoDatabaseCollections and useMongoCollectionQuery hooks"
 ```
 
@@ -776,10 +776,10 @@ git commit -m "feat(mongodb): add useMongoDatabaseCollections and useMongoCollec
 
 **Files:**
 
-- Create: `components/modules/quick-query/mongodb/components/MongoViewModeSwitcher.vue`
-- Create: `components/modules/quick-query/mongodb/components/MongoQuickQueryControlBar.vue`
-- Create: `components/modules/quick-query/mongodb/components/index.ts`
-- Test: `test/nuxt/components/modules/quick-query/mongodb/MongoViewModeSwitcher.test.ts`
+- Create: `components/modules/mongodb-workspace/components/MongoViewModeSwitcher.vue`
+- Create: `components/modules/mongodb-workspace/components/MongoQuickQueryControlBar.vue`
+- Create: `components/modules/mongodb-workspace/components/index.ts`
+- Test: `test/nuxt/components/modules/mongodb-workspace/MongoViewModeSwitcher.test.ts`
 
 **Interfaces:**
 
@@ -788,12 +788,12 @@ git commit -m "feat(mongodb): add useMongoDatabaseCollections and useMongoCollec
 
 - [ ] **Step 1: Write the failing test**
 
-`test/nuxt/components/modules/quick-query/mongodb/MongoViewModeSwitcher.test.ts`:
+`test/nuxt/components/modules/mongodb-workspace/MongoViewModeSwitcher.test.ts`:
 
 ```ts
 import { mount } from '@vue/test-utils';
 import { describe, expect, it } from 'vitest';
-import MongoViewModeSwitcher from '~/components/modules/quick-query/mongodb/components/MongoViewModeSwitcher.vue';
+import MongoViewModeSwitcher from '~/components/modules/mongodb-workspace/components/MongoViewModeSwitcher.vue';
 
 describe('MongoViewModeSwitcher', () => {
   it('emits update:modelValue with the clicked mode', async () => {
@@ -822,7 +822,7 @@ describe('MongoViewModeSwitcher', () => {
 
 - [ ] **Step 2: Run test to verify it fails**
 
-Run: `bun vitest --run --project nuxt test/nuxt/components/modules/quick-query/mongodb/MongoViewModeSwitcher.test.ts`
+Run: `bun vitest --run --project nuxt test/nuxt/components/modules/mongodb-workspace/MongoViewModeSwitcher.test.ts`
 Expected: FAIL — component file does not exist.
 
 - [ ] **Step 3: Implement `MongoViewModeSwitcher.vue`**
@@ -870,7 +870,7 @@ const MODES: { value: MongoCollectionViewMode; label: string }[] = [
 
 - [ ] **Step 4: Run test to verify it passes**
 
-Run: `bun vitest --run --project nuxt test/nuxt/components/modules/quick-query/mongodb/MongoViewModeSwitcher.test.ts`
+Run: `bun vitest --run --project nuxt test/nuxt/components/modules/mongodb-workspace/MongoViewModeSwitcher.test.ts`
 Expected: PASS
 
 - [ ] **Step 5: Implement `MongoQuickQueryControlBar.vue`** (no new test — thin presentational wrapper, exercised indirectly by Task 6's `MongoCollectionDetail` test)
@@ -946,7 +946,7 @@ to confirm the exact import path before using it here).
 
 - [ ] **Step 6: Barrel export**
 
-`components/modules/quick-query/mongodb/components/index.ts`:
+`components/modules/mongodb-workspace/components/index.ts`:
 
 ```ts
 export { default as MongoViewModeSwitcher } from './MongoViewModeSwitcher.vue';
@@ -958,7 +958,7 @@ export { default as MongoQuickQueryControlBar } from './MongoQuickQueryControlBa
 Run: `bun run typecheck`
 
 ```bash
-git add components/modules/quick-query/mongodb/components test/nuxt/components/modules/quick-query/mongodb/MongoViewModeSwitcher.test.ts
+git add components/modules/mongodb-workspace/components test/nuxt/components/modules/mongodb-workspace/MongoViewModeSwitcher.test.ts
 git commit -m "feat(mongodb): add view-mode switcher and Quick Query toolbar for Mongo"
 ```
 
@@ -968,13 +968,13 @@ git commit -m "feat(mongodb): add view-mode switcher and Quick Query toolbar for
 
 **Files:**
 
-- Create: `components/modules/quick-query/mongodb/components/MongoCollectionTableView.vue`
-- Create: `components/modules/quick-query/mongodb/components/MongoCollectionListView.vue`
-- Create: `components/modules/quick-query/mongodb/components/MongoCollectionObjectListView.vue`
-- Create: `components/modules/quick-query/mongodb/containers/MongoCollectionDetail.vue`
-- Create: `components/modules/quick-query/mongodb/containers/index.ts`
-- Modify: `components/modules/quick-query/mongodb/components/index.ts`
-- Test: `test/nuxt/components/modules/quick-query/mongodb/MongoCollectionDetail.test.ts`
+- Create: `components/modules/mongodb-workspace/components/MongoCollectionTableView.vue`
+- Create: `components/modules/mongodb-workspace/components/MongoCollectionListView.vue`
+- Create: `components/modules/mongodb-workspace/components/MongoCollectionObjectListView.vue`
+- Create: `components/modules/mongodb-workspace/containers/MongoCollectionDetail.vue`
+- Create: `components/modules/mongodb-workspace/containers/index.ts`
+- Modify: `components/modules/mongodb-workspace/components/index.ts`
+- Test: `test/nuxt/components/modules/mongodb-workspace/MongoCollectionDetail.test.ts`
 
 **Interfaces:**
 
@@ -983,12 +983,12 @@ git commit -m "feat(mongodb): add view-mode switcher and Quick Query toolbar for
 
 - [ ] **Step 1: Write the failing test**
 
-`test/nuxt/components/modules/quick-query/mongodb/MongoCollectionDetail.test.ts`:
+`test/nuxt/components/modules/mongodb-workspace/MongoCollectionDetail.test.ts`:
 
 ```ts
 import { mount } from '@vue/test-utils';
 import { describe, expect, it, vi } from 'vitest';
-import MongoCollectionDetail from '~/components/modules/quick-query/mongodb/containers/MongoCollectionDetail.vue';
+import MongoCollectionDetail from '~/components/modules/mongodb-workspace/containers/MongoCollectionDetail.vue';
 
 vi.stubGlobal(
   '$fetch',
@@ -1033,7 +1033,7 @@ file for the import source and mirror it exactly).
 
 - [ ] **Step 2: Run test to verify it fails**
 
-Run: `bun vitest --run --project nuxt test/nuxt/components/modules/quick-query/mongodb/MongoCollectionDetail.test.ts`
+Run: `bun vitest --run --project nuxt test/nuxt/components/modules/mongodb-workspace/MongoCollectionDetail.test.ts`
 Expected: FAIL — `MongoCollectionDetail.vue` does not exist.
 
 - [ ] **Step 3: Implement the three view components**
@@ -1189,7 +1189,7 @@ watch(collectionName, fetchDocuments, { immediate: true });
 
 - [ ] **Step 5: Barrel exports**
 
-Add to `components/modules/quick-query/mongodb/components/index.ts`:
+Add to `components/modules/mongodb-workspace/components/index.ts`:
 
 ```ts
 export { default as MongoCollectionTableView } from './MongoCollectionTableView.vue';
@@ -1197,7 +1197,7 @@ export { default as MongoCollectionListView } from './MongoCollectionListView.vu
 export { default as MongoCollectionObjectListView } from './MongoCollectionObjectListView.vue';
 ```
 
-`components/modules/quick-query/mongodb/containers/index.ts`:
+`components/modules/mongodb-workspace/containers/index.ts`:
 
 ```ts
 export { default as MongoCollectionDetail } from './MongoCollectionDetail.vue';
@@ -1205,13 +1205,13 @@ export { default as MongoCollectionDetail } from './MongoCollectionDetail.vue';
 
 - [ ] **Step 6: Run test to verify it passes**
 
-Run: `bun vitest --run --project nuxt test/nuxt/components/modules/quick-query/mongodb/MongoCollectionDetail.test.ts`
+Run: `bun vitest --run --project nuxt test/nuxt/components/modules/mongodb-workspace/MongoCollectionDetail.test.ts`
 Expected: PASS
 
 - [ ] **Step 7: Commit**
 
 ```bash
-git add components/modules/quick-query/mongodb/components components/modules/quick-query/mongodb/containers test/nuxt/components/modules/quick-query/mongodb/MongoCollectionDetail.test.ts
+git add components/modules/mongodb-workspace/components components/modules/mongodb-workspace/containers test/nuxt/components/modules/mongodb-workspace/MongoCollectionDetail.test.ts
 git commit -m "feat(mongodb): add Collection Detail container with Table/List/Object List views"
 ```
 
@@ -1221,9 +1221,9 @@ git commit -m "feat(mongodb): add Collection Detail container with Table/List/Ob
 
 **Files:**
 
-- Create: `components/modules/quick-query/mongodb/containers/MongoDatabaseOverview.vue`
-- Modify: `components/modules/quick-query/mongodb/containers/index.ts`
-- Test: `test/nuxt/components/modules/quick-query/mongodb/MongoDatabaseOverview.test.ts`
+- Create: `components/modules/mongodb-workspace/containers/MongoDatabaseOverview.vue`
+- Modify: `components/modules/mongodb-workspace/containers/index.ts`
+- Test: `test/nuxt/components/modules/mongodb-workspace/MongoDatabaseOverview.test.ts`
 
 **Interfaces:**
 
@@ -1232,12 +1232,12 @@ git commit -m "feat(mongodb): add Collection Detail container with Table/List/Ob
 
 - [ ] **Step 1: Write the failing test**
 
-`test/nuxt/components/modules/quick-query/mongodb/MongoDatabaseOverview.test.ts`:
+`test/nuxt/components/modules/mongodb-workspace/MongoDatabaseOverview.test.ts`:
 
 ```ts
 import { mount } from '@vue/test-utils';
 import { describe, expect, it, vi } from 'vitest';
-import MongoDatabaseOverview from '~/components/modules/quick-query/mongodb/containers/MongoDatabaseOverview.vue';
+import MongoDatabaseOverview from '~/components/modules/mongodb-workspace/containers/MongoDatabaseOverview.vue';
 
 const openMongoCollectionTab = vi.fn();
 vi.mock('~/core/composables/useTabManagement', () => ({
@@ -1282,7 +1282,7 @@ logic, and every other grid consumer keeps working unchanged.
 
 - [ ] **Step 2: Run test to verify it fails**
 
-Run: `bun vitest --run --project nuxt test/nuxt/components/modules/quick-query/mongodb/MongoDatabaseOverview.test.ts`
+Run: `bun vitest --run --project nuxt test/nuxt/components/modules/mongodb-workspace/MongoDatabaseOverview.test.ts`
 Expected: FAIL — component does not exist.
 
 - [ ] **Step 3: Implement `MongoDatabaseOverview.vue`**
@@ -1339,7 +1339,7 @@ watch(() => props.databaseName, fetchCollections, { immediate: true });
 
 - [ ] **Step 4: Barrel export**
 
-Add to `components/modules/quick-query/mongodb/containers/index.ts`:
+Add to `components/modules/mongodb-workspace/containers/index.ts`:
 
 ```ts
 export { default as MongoDatabaseOverview } from './MongoDatabaseOverview.vue';
@@ -1347,7 +1347,7 @@ export { default as MongoDatabaseOverview } from './MongoDatabaseOverview.vue';
 
 - [ ] **Step 5: Run test to verify it passes**
 
-Run: `bun vitest --run --project nuxt test/nuxt/components/modules/quick-query/mongodb/MongoDatabaseOverview.test.ts`
+Run: `bun vitest --run --project nuxt test/nuxt/components/modules/mongodb-workspace/MongoDatabaseOverview.test.ts`
 Expected: PASS — this will only go green once Task 8 has added
 `openMongoCollectionTab` to `useTabManagement`, since the test mocks that
 composable's shape. If Task 8 has not run yet, this is expected to fail on
@@ -1358,7 +1358,7 @@ mock fully replaces the module). Run it now; it must pass standalone.
 - [ ] **Step 6: Commit**
 
 ```bash
-git add components/modules/quick-query/mongodb/containers components/base/data-grid/BaseDataGrid.vue test/nuxt/components/modules/quick-query/mongodb/MongoDatabaseOverview.test.ts
+git add components/modules/mongodb-workspace/containers components/base/data-grid/BaseDataGrid.vue test/nuxt/components/modules/mongodb-workspace/MongoDatabaseOverview.test.ts
 git commit -m "feat(mongodb): add Database Overview container listing collections"
 ```
 
@@ -1527,7 +1527,7 @@ import { computed } from 'vue';
 import {
   MongoCollectionDetail,
   MongoDatabaseOverview,
-} from '~/components/modules/quick-query/mongodb/containers';
+} from '~/components/modules/mongodb-workspace/containers';
 import { DEFAULT_MAX_KEEP_ALIVE } from '~/core/constants';
 import { useManagementConnectionStore } from '~/core/stores/managementConnectionStore';
 import { TabViewType, useTabViewsStore } from '~/core/stores/useTabViewsStore';
@@ -1677,7 +1677,7 @@ Expected: FAIL — module does not exist.
 ```ts
 import { computed, toRef, watch, type Ref } from 'vue';
 import type { FileNode } from '~/components/base/tree-folder/types';
-import { useMongoDatabaseCollections } from '~/components/modules/quick-query/mongodb/hooks';
+import { useMongoDatabaseCollections } from '~/components/modules/mongodb-workspace/hooks';
 import type { Connection } from '~/core/stores';
 import { TabViewType } from '~/core/types/entities/tab-view.entity';
 

@@ -7,7 +7,7 @@ import {
 } from '~/components/base/context-menu/menuContext.type';
 import FileTree from '~/components/base/tree-folder/FileTree.vue';
 import type { FileNode } from '~/components/base/tree-folder/types';
-import { useMongoCollectionMutation } from '~/components/modules/quick-query/mongodb/hooks';
+import { useMongoCollectionMutation } from '~/components/modules/mongodb-workspace';
 import { useTabManagement } from '~/core/composables/useTabManagement';
 import { useWorkspaceConnectionRoute } from '~/core/composables/useWorkspaceConnectionRoute';
 import { DEFAULT_DEBOUNCE_INPUT } from '~/core/constants';

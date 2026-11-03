@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-11-01T18:42:46.558Z",
+  "generatedAt": "2026-11-03T16:42:31.922Z",
   "baseURL": "http://localhost:3000",
   "projects": [
     "common",
@@ -10,6 +10,7 @@
     "mssql",
     "cockroachdb",
     "redis",
+    "mongodb",
     "sqlite",
     "duckdb"
   ],
