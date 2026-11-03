@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-05-20T03:43:08.096Z",
+  "generatedAt": "2026-11-01T18:42:46.558Z",
   "baseURL": "http://localhost:3000",
   "projects": [
     "common",
@@ -7,8 +7,11 @@
     "mysql",
     "mariadb",
     "oracle",
+    "mssql",
+    "cockroachdb",
     "redis",
-    "sqlite"
+    "sqlite",
+    "duckdb"
   ],
   "liveConnections": {
     "postgres": false,

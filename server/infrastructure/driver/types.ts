@@ -29,6 +29,11 @@ export interface IDatabaseAdapter {
    * swallowing it — used so connection failures can be reported with detail.
    */
   verifyConnection(): Promise<void>;
+  /**
+   * Rejects servers older than the minimum version OrcaQ supports for this
+   * engine (see `server-version.ts`). A no-op for engines without a minimum.
+   */
+  assertSupportedServerVersion(): Promise<void>;
   getNativeSql(sql: string, bindings: Knex.RawBinding): Knex.SqlNative;
   destroy(): Promise<void>;
 }

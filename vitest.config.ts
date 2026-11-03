@@ -22,6 +22,13 @@ export default defineConfig(async () => {
           },
         },
         {
+          // Executor-level integration tests import app code directly.
+          resolve: {
+            alias: {
+              '~': path.resolve(__dirname, './'),
+              '@': path.resolve(__dirname, './'),
+            },
+          },
           test: {
             name: 'integration',
             include: ['test/api/**/*.{test,spec}.ts'],

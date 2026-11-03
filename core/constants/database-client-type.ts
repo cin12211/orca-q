@@ -21,6 +21,7 @@ export enum DatabaseClientType {
   DUCKDB = 'duckdb',
   MSSQL = 'mssql',
   ORACLE = 'oracledb',
+  COCKROACHDB = 'cockroachdb',
   RABBITMQ = 'rabbitmq',
   KAFKA = 'kafka',
 }
@@ -35,7 +36,41 @@ export const SQL_DATABASE_CLIENT_TYPES = [
   DatabaseClientType.DUCKDB,
   DatabaseClientType.MSSQL,
   DatabaseClientType.ORACLE,
+  DatabaseClientType.COCKROACHDB,
 ] as const;
+
+/**
+ * Client types that speak the PostgreSQL wire protocol and SQL dialect closely
+ * enough to share Postgres code paths (quoting, `$n` placeholders, ILIKE,
+ * RETURNING, NULLS FIRST/LAST, pg result shapes).
+ */
+export const POSTGRES_COMPATIBLE_CLIENT_TYPES = [
+  DatabaseClientType.POSTGRES,
+  DatabaseClientType.COCKROACHDB,
+] as const;
+
+export function isPostgresCompatibleClientType(
+  type?: DatabaseClientType | string | null
+): boolean {
+  return (POSTGRES_COMPATIBLE_CLIENT_TYPES as readonly string[]).includes(
+    type ?? ''
+  );
+}
+
+/** SQL client types without Backup & Restore in the Database Tools panel. */
+export const BACKUP_UNSUPPORTED_CLIENT_TYPES = [
+  DatabaseClientType.MSSQL,
+  DatabaseClientType.COCKROACHDB,
+  DatabaseClientType.ORACLE,
+] as const;
+
+export function isBackupSupportedClientType(
+  type?: DatabaseClientType | string | null
+): boolean {
+  return !(BACKUP_UNSUPPORTED_CLIENT_TYPES as readonly string[]).includes(
+    type ?? ''
+  );
+}
 
 export const NOSQL_DATABASE_CLIENT_TYPES = [
   DatabaseClientType.REDIS,

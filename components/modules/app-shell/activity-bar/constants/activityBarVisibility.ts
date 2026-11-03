@@ -62,6 +62,8 @@ export const AGENT_HIDDEN_CONNECTION_TYPES = new Set<DatabaseClientType>([
   DatabaseClientType.BETTER_SQLITE3,
   DatabaseClientType.DUCKDB,
   DatabaseClientType.REDIS,
+  DatabaseClientType.MSSQL,
+  DatabaseClientType.COCKROACHDB,
 ]);
 
 export const USERS_ROLES_HIDDEN_CONNECTION_TYPES = new Set<DatabaseClientType>([
@@ -72,4 +74,7 @@ export const USERS_ROLES_HIDDEN_CONNECTION_TYPES = new Set<DatabaseClientType>([
   DatabaseClientType.BETTER_SQLITE3,
   DatabaseClientType.DUCKDB,
   DatabaseClientType.REDIS,
+  DatabaseClientType.MSSQL,
+  DatabaseClientType.COCKROACHDB,
+  DatabaseClientType.ORACLE,
 ]);

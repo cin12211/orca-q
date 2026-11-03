@@ -1,4 +1,5 @@
 import { DatabaseClientType } from '~/core/constants/database-client-type';
+import { UNSUPPORTED_SERVER_VERSION_CODE } from './server-version';
 
 /**
  * A user-facing description of a failed database connection attempt.
@@ -187,6 +188,9 @@ const RULES: Rule[] = [
       lower.includes('authentication required') ||
       // Oracle invalid credentials
       lower.includes('ora-01017') ||
+      // MSSQL login failed (a missing database also says "login failed")
+      (lower.includes('login failed for user') &&
+        !lower.includes('cannot open database')) ||
       // MSSQL login failed
       lower.includes('login failed for user') ||
       // Kafka SASL
@@ -202,7 +206,9 @@ const RULES: Rule[] = [
       code === '3D000' ||
       code === 'ER_BAD_DB_ERROR' ||
       lower.includes('does not exist') ||
-      lower.includes('unknown database'),
+      lower.includes('unknown database') ||
+      // MSSQL: Cannot open database "x" requested by the login
+      lower.includes('cannot open database'),
     build: ctx => ({
       message: `The target ${ctx.type === DatabaseClientType.ORACLE ? 'service' : 'database'} was not found.`,
       hint: 'Check the database/service name is spelled correctly and exists on the server.',
@@ -265,6 +271,16 @@ export function normalizeConnectionError(
   const code = getErrorCode(error);
   const text = getErrorText(error);
   const lower = text.toLowerCase();
+
+  // Our own version gate already carries a user-facing message.
+  if (code === UNSUPPORTED_SERVER_VERSION_CODE) {
+    return {
+      message: text,
+      hint: 'Upgrade the database server, or connect to a server that meets the minimum version.',
+      code,
+      detail: text,
+    };
+  }
 
   for (const rule of RULES) {
     if (rule.when({ code, text, lower })) {

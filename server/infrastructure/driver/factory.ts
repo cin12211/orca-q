@@ -7,7 +7,9 @@ import {
 } from '~/server/infrastructure/driver/managed-sqlite';
 import { isDesktopRuntime } from '~/server/infrastructure/mcp/desktop-store';
 import { isNoSqlClientType } from '~/server/infrastructure/nosql';
+import { CockroachAdapter } from './cockroachdb.adapter';
 import { DuckDbAdapter } from './duckdb.adapter';
+import { MssqlAdapter } from './mssql.adapter';
 import { MysqlAdapter } from './mysql.adapter';
 import { OracleAdapter } from './oracle.adapter';
 import { PostgresAdapter } from './postgres.adapter';
@@ -28,6 +30,9 @@ const ADAPTER_FACTORIES: Partial<Record<DatabaseClientType, AdapterFactory>> = {
     new MysqlAdapter(connection, DatabaseClientType.MARIADB),
   [DatabaseClientType.ORACLE]: connection => new OracleAdapter(connection),
   [DatabaseClientType.SQLITE3]: connection => new SqliteAdapter(connection),
+  [DatabaseClientType.COCKROACHDB]: connection =>
+    new CockroachAdapter(connection),
+  [DatabaseClientType.MSSQL]: connection => new MssqlAdapter(connection),
   [DatabaseClientType.DUCKDB]: connection => new DuckDbAdapter(connection),
 };
 

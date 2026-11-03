@@ -7,8 +7,19 @@ import type { IDatabaseAdapter } from '~/server/infrastructure/driver';
 const BATCH_SIZE = 10_000;
 const SQL_BATCH_SIZE = 1_0000;
 
+export interface PostgresTableExportOptions {
+  /**
+   * Extra predicate on `information_schema.columns` (CockroachDB uses it to
+   * skip hidden columns such as the implicit `rowid`).
+   */
+  columnFilter?: string;
+}
+
 export class PostgresTableExportAdapter {
-  constructor(private readonly adapter: IDatabaseAdapter) {}
+  constructor(
+    private readonly adapter: IDatabaseAdapter,
+    private readonly options: PostgresTableExportOptions = {}
+  ) {}
 
   async exportTableData(
     schema: string,
@@ -16,7 +27,7 @@ export class PostgresTableExportAdapter {
     format: string
   ): Promise<any> {
     const columnsResult = await this.adapter.rawQuery(
-      `SELECT column_name FROM information_schema.columns WHERE table_schema = ? AND table_name = ? ORDER BY ordinal_position`,
+      `SELECT column_name FROM information_schema.columns WHERE table_schema = ? AND table_name = ?${this.options.columnFilter ? ` AND ${this.options.columnFilter}` : ''} ORDER BY ordinal_position`,
       [schema, tableName]
     );
 

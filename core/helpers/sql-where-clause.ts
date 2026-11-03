@@ -5,7 +5,10 @@ import {
   OperatorSet,
   operatorSets,
 } from '~/core/constants';
-import { DatabaseClientType } from '~/core/constants/database-client-type';
+import {
+  DatabaseClientType,
+  isPostgresCompatibleClientType,
+} from '~/core/constants/database-client-type';
 import { getSqlDialect } from '~/core/sql-dialect';
 import type { SqlDialect } from '~/core/sql-dialect';
 
@@ -323,7 +326,7 @@ export function buildWhereClause<F extends readonly FilterSchema[]>({
   };
 
   const allowedOps = new Set(
-    (db === DatabaseClientType.POSTGRES
+    (isPostgresCompatibleClientType(db)
       ? postgresFilterOperators
       : (
           operatorSets[db as keyof typeof operatorSets] ??
@@ -411,35 +414,29 @@ export function formatWhereClause<F extends readonly FilterSchema[]>({
 
   const dialect = getSqlDialect(db);
 
-  const toLiteral = (value: FilterSearchValue): string => {
-    if (Array.isArray(value)) {
-      return dialect.toLiteral(value);
-    }
+  const toLiteral = (value: FilterSearchValue): string =>
+    dialect.toLiteral(value);
 
-    return value === null
-      ? 'NULL'
-      : typeof value === 'boolean'
-        ? value
-          ? 'TRUE'
-          : 'FALSE'
-        : typeof value === 'number'
-          ? String(value)
-          : `'${String(value).replace(/'/g, "''")}'`;
-  };
+  const firstPlaceholder = dialect.makePlaceholder(1);
 
-  if (db === DatabaseClientType.POSTGRES) {
-    let output = where;
-    params.forEach((value, index) => {
-      output = output.replace(
-        new RegExp(`\\$${index + 1}\\b`, 'g'),
-        toLiteral(value)
-      );
-    });
-    return output;
+  if (firstPlaceholder === '?') {
+    let parameterIndex = 0;
+    return where.replace(/\?/g, () => toLiteral(params[parameterIndex++]));
   }
 
-  let parameterIndex = 0;
-  return where.replace(/\?/g, () => toLiteral(params[parameterIndex++]));
+  // Indexed placeholders ($1 for Postgres, :1 for Oracle, @p1 for SQL Server):
+  // substitute in a single pass so a literal that happens to contain a
+  // placeholder-like token is never re-substituted.
+  const prefix = firstPlaceholder
+    .slice(0, -1)
+    .replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  return where.replace(
+    new RegExp(`${prefix}(\\d+)\\b`, 'g'),
+    (match, index) => {
+      const paramIndex = Number(index) - 1;
+      return paramIndex < params.length ? toLiteral(params[paramIndex]) : match;
+    }
+  );
 }
 
 export function getPlaceholderSearchByOperator(raw: string): string {

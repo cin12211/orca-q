@@ -1,9 +1,10 @@
 import knex, { type Knex } from 'knex';
 import type { Readable } from 'node:stream';
-import * as oracledb from 'oracledb';
+import oracledb from 'oracledb';
 import { DatabaseClientType } from '~/core/constants/database-client-type';
 import type { DatabaseField } from '~/core/types';
 import { BaseDatabaseAdapter } from './base.adapter';
+import { assertMinimumServerVersion } from './server-version';
 import type { RawQueryResult } from './types';
 
 const DEFAULT_ORACLE_PORT = 1521;
@@ -86,6 +87,9 @@ export class OracleAdapter extends BaseDatabaseAdapter {
     const knexInstance = knex({
       client: DatabaseClientType.ORACLE,
       connection: normalizedConnection,
+      // LOB columns otherwise arrive as stream objects that cannot be sent as
+      // JSON. knex applies this to the driver on every connection.
+      fetchAsString: ['clob'],
       pool: {
         min: 1,
         max: 10,
@@ -128,6 +132,16 @@ export class OracleAdapter extends BaseDatabaseAdapter {
 
   override async verifyConnection(): Promise<void> {
     await this.knex.raw('SELECT 1 FROM DUAL');
+    await this.assertSupportedServerVersion();
+  }
+
+  override async assertSupportedServerVersion(): Promise<void> {
+    const [row] = await this.rawQuery<{ VERSION: string }>(
+      `SELECT version FROM product_component_version
+       WHERE product LIKE 'Oracle%' AND ROWNUM = 1`
+    );
+
+    assertMinimumServerVersion(DatabaseClientType.ORACLE, row?.VERSION ?? '');
   }
 
   protected async _rawQuery<T = any>(

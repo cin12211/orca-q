@@ -295,6 +295,7 @@ const HANDLER_REGISTRY: Record<
   [DatabaseClientType.DUCKDB]: DuckDbCommandResultHandler,
   [DatabaseClientType.MSSQL]: MssqlCommandResultHandler,
   [DatabaseClientType.ORACLE]: OracleCommandResultHandler,
+  [DatabaseClientType.COCKROACHDB]: PostgresCommandResultHandler,
   [DatabaseClientType.RABBITMQ]: GenericCommandResultHandler,
   [DatabaseClientType.KAFKA]: GenericCommandResultHandler,
 };

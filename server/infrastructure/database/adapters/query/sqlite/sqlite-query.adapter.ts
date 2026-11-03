@@ -7,6 +7,10 @@ import type {
   QueryResult,
   RawQueryResultWithMetadata,
 } from '~/core/types';
+import {
+  createSyntheticFields,
+  mapArrayRowsToObjects,
+} from '~/server/infrastructure/driver/result-rows';
 import { BaseDomainAdapter } from '../../shared';
 import type {
   DatabaseQueryAdapterParams,
@@ -14,18 +18,6 @@ import type {
 } from '../types';
 
 const STREAM_BATCH_SIZE = 10_000;
-
-function createSyntheticFields(columnNames: string[]): DatabaseField[] {
-  return columnNames.map((name, index) => ({
-    name,
-    tableID: 0,
-    columnID: index,
-    dataTypeID: 0,
-    dataTypeSize: 0,
-    dataTypeModifier: 0,
-    format: 'text',
-  }));
-}
 
 /**
  * Serialize a single SQLite row (named object) for JSON transport.
@@ -42,15 +34,6 @@ function serializeSqliteRow(
       : value;
   }
   return out;
-}
-
-function arrayRowsToObjects(
-  rows: unknown[][],
-  fields: DatabaseField[]
-): Record<string, unknown>[] {
-  return rows.map(row =>
-    Object.fromEntries(fields.map((field, index) => [field.name, row[index]]))
-  );
 }
 
 export class SqliteQueryAdapter
@@ -112,7 +95,7 @@ export class SqliteQueryAdapter
     const fields = (result.fields ?? []) as DatabaseField[];
 
     return {
-      rows: arrayRowsToObjects(result.rows, fields).map(serializeSqliteRow),
+      rows: mapArrayRowsToObjects(result.rows, fields).map(serializeSqliteRow),
       fields,
       queryTime,
     };

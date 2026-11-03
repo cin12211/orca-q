@@ -18,6 +18,7 @@ const dialectRegistry: Partial<Record<DatabaseClientType, SqlDialect>> = {
   [DatabaseClientType.DUCKDB]: duckdbDialect,
   [DatabaseClientType.ORACLE]: oracleDialect,
   [DatabaseClientType.MSSQL]: mssqlDialect,
+  [DatabaseClientType.COCKROACHDB]: postgresDialect,
 };
 
 /**

@@ -1,9 +1,12 @@
 # graphify
+
 - **graphify** (`.claude/skills/graphify/SKILL.md`) - any input to knowledge graph. Trigger: `/graphify`
-When the user types `/graphify`, invoke the Skill tool with `skill: "graphify"` before doing anything else.
+  When the user types `/graphify`, invoke the Skill tool with `skill: "graphify"` before doing anything else.
 
 # Agent Rules (.claude/rules/)
+
 Rules in `.claude/rules/` are loaded according to Claude Code standards:
+
 - `01-identity.md` — Full-stack engineer, scope-bound, clarify-first, quality-over-speed.
 - `02-task-classification.md` — Classify request as CONSULT / BUILD / DEBUG / OPTIMIZE before acting.
 - `03-mode-consulting.md` — Mode-specific behavior for CONSULT.
@@ -17,4 +20,5 @@ Rules in `.claude/rules/` are loaded according to Claude Code standards:
 - `module-architecture.md` — Architecture rules (path-scoped to `components/modules/**`, `core/**`, `server/**`, `pages/**`).
 
 # Skills
+
 Skills available in `.claude/skills/`. Trigger the matching one when the request matches its description (vue, nuxt, pinia, testing-orcaq, settings-flow, primary-sidebar, etc.). Run `ls .claude/skills/` to enumerate.

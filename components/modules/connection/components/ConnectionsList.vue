@@ -196,9 +196,13 @@ const onConnectConnection = async (connection: Connection) => {
     </Button>
   </BaseEmpty>
 
-  <div v-else class="rounded-md border border-border w-full">
+  <div
+    v-else
+    data-testid="connections-table"
+    class="min-h-0 w-full rounded-md border border-border [&>[data-slot=table-container]]:max-h-[60vh]"
+  >
     <Table>
-      <TableHeader>
+      <TableHeader class="sticky top-0 z-10 bg-background">
         <TableRow class="hover:bg-transparent">
           <TableHead>Name</TableHead>
           <!-- <TableHead>Type</TableHead> -->
@@ -215,9 +219,9 @@ const onConnectConnection = async (connection: Connection) => {
           class="hover:bg-muted/30 w-full"
         >
           <TableCell>
-            <div class="flex items-center gap-2 truncate">
-              <component :is="item.icon" class="size-5!" />
-              {{ item.connection.name }}
+            <div class="flex max-w-[15vw] items-center gap-2">
+              <component :is="item.icon" class="size-5! shrink-0" />
+              <span class="truncate">{{ item.connection.name }}</span>
             </div>
           </TableCell>
           <!-- <TableCell>
@@ -228,7 +232,7 @@ const onConnectConnection = async (connection: Connection) => {
           <TableCell>
             <Tooltip>
               <TooltipTrigger as-child>
-                <div class="w-80">
+                <div class="max-w-[17vw]">
                   <div class="text-muted-foreground truncate">
                     {{ item.details.summary }}
                   </div>

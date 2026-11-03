@@ -69,7 +69,12 @@ watch(
       <template #actions>
         <Tooltip>
           <TooltipTrigger as-child>
-            <Button size="iconSm" variant="ghost" @click="onAddFile">
+            <Button
+              size="iconSm"
+              variant="ghost"
+              data-testid="explorer-new-file"
+              @click="onAddFile"
+            >
               <Icon name="hugeicons:file-add" class="size-4! min-w-4" />
             </Button>
           </TooltipTrigger>
@@ -78,7 +83,12 @@ watch(
 
         <Tooltip>
           <TooltipTrigger as-child>
-            <Button size="iconSm" variant="ghost" @click="onAddFolder">
+            <Button
+              size="iconSm"
+              variant="ghost"
+              data-testid="explorer-new-folder"
+              @click="onAddFolder"
+            >
               <Icon name="hugeicons:folder-add" class="size-4! min-w-4" />
             </Button>
           </TooltipTrigger>

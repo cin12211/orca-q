@@ -13,6 +13,8 @@ describe('assertReadOnlySql', () => {
     'EXPLAIN SELECT 1',
     'PRAGMA table_info(users)',
     'SELECT "update" FROM audit -- insert comment',
+    'SELECT TOP 5 [order].[delete] FROM [order]',
+    'SELECT * FROM film OFFSET 10 ROWS FETCH NEXT 10 ROWS ONLY',
   ])('allows read statement: %s', sql => {
     expect(() => assertReadOnlySql(sql)).not.toThrow();
   });
@@ -27,6 +29,9 @@ describe('assertReadOnlySql', () => {
     'SELECT * FROM users FOR UPDATE',
     'SELECT 1; DROP TABLE users',
     'PRAGMA journal_mode = WAL',
+    "EXEC xp_cmdshell 'dir'",
+    "SELECT * FROM OPENROWSET('SQLNCLI', 'Server=x;', 'SELECT 1')",
+    "SELECT * FROM OPENQUERY(linked, 'SELECT 1')",
     '',
   ])('rejects: %s', sql => {
     expect(() => assertReadOnlySql(sql)).toThrow(ReadOnlySqlError);

@@ -1,9 +1,9 @@
 ---
 paths:
-  - "components/modules/**"
-  - "core/**"
-  - "server/**"
-  - "pages/**"
+  - 'components/modules/**'
+  - 'core/**'
+  - 'server/**'
+  - 'pages/**'
 ---
 
 # Module Architecture Guide

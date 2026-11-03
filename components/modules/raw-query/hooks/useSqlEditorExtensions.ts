@@ -25,7 +25,10 @@ import {
   sqlParserConfigField,
   updateSqlParserConfigEffect,
 } from '~/components/base/code-editor/utils';
-import { DatabaseClientType } from '~/core/constants/database-client-type';
+import {
+  DatabaseClientType,
+  isPostgresCompatibleClientType,
+} from '~/core/constants/database-client-type';
 import { useSchemaStore } from '~/core/stores';
 import type { Connection } from '~/core/stores';
 import type { EditorCursor } from '../interfaces';
@@ -102,7 +105,7 @@ export function useSqlEditorExtensions({
       upperCaseKeywords: true,
       keywordCompletion:
         !connection?.value?.type ||
-        connection.value.type === DatabaseClientType.POSTGRES
+        isPostgresCompatibleClientType(connection.value.type)
           ? pgKeywordCompletion
           : undefined,
       schema: schemaConfig.value.schema,

@@ -94,6 +94,7 @@ const onCancel = () => {
         </AlertDialogCancel>
         <AlertDialogAction
           class="border font-normal flex gap-1"
+          data-testid="safe-mode-confirm-button"
           @click="onConfirm"
         >
           <Icon

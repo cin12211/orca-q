@@ -7,7 +7,6 @@ import type { IDatabaseAdapter } from '~/server/infrastructure/driver';
 import { getDatabaseSource } from '~/server/infrastructure/driver/db-connection';
 import { BaseUnsupportedInstanceInsightsAdapter } from '../shared/base-unsupported-instance-insights.adapter';
 import {
-  createActionCapability,
   createInsightsCapabilities,
   createTable,
   createUnavailableSection,
@@ -71,15 +70,7 @@ export class OracleInstanceInsightsAdapter extends BaseUnsupportedInstanceInsigh
         supportsDataGuard: true,
         supportsMemoryLimits: true,
       }),
-      actions: [
-        createActionCapability({
-          id: 'kill-session',
-          label: 'Kill Session',
-          state: 'unsupported',
-          description:
-            'Oracle session termination is reserved for a later phase.',
-        }),
-      ],
+      actions: [],
       sections: [overview, sessions, memoryLimits, configuration, dataGuard],
     };
   }

@@ -1,7 +1,10 @@
 <script setup lang="ts">
 import { useTabManagement } from '~/core/composables/useTabManagement';
 import { useWorkspaceConnectionRoute } from '~/core/composables/useWorkspaceConnectionRoute';
-import { DatabaseClientType } from '~/core/constants/database-client-type';
+import {
+  DatabaseClientType,
+  isBackupSupportedClientType,
+} from '~/core/constants/database-client-type';
 import { useManagementConnectionStore } from '~/core/stores/managementConnectionStore';
 import { EConnectionProviderKind } from '~/core/types/entities/connection.entity';
 import { ManagementSidebarHeader } from '../shared';
@@ -31,6 +34,10 @@ const isManagedSqliteLimited = computed(() => {
     connectionData.value?.providerKind === EConnectionProviderKind.TURSO
   );
 });
+
+const isBackupSupported = computed(() =>
+  isBackupSupportedClientType(connectionData.value?.type)
+);
 
 const isDuckDbConnection = computed(
   () => connectionData.value?.type === DatabaseClientType.DUCKDB
@@ -83,6 +90,7 @@ const openDatabaseTools = async () => {
       <div class="space-y-2 mt-3">
         <!-- Dump & Restore -->
         <button
+          v-if="isBackupSupported"
           data-testid="database-tool-backup"
           class="w-full flex items-center gap-3 rounded-lg border bg-background p-3 text-left transition-colors hover:bg-muted/20 disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
           :disabled="isManagedSqliteLimited || isDuckDbConnection"

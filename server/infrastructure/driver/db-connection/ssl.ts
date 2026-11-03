@@ -1,5 +1,8 @@
 import { createHash } from 'node:crypto';
-import { DatabaseClientType } from '~/core/constants/database-client-type';
+import {
+  DatabaseClientType,
+  isPostgresCompatibleClientType,
+} from '~/core/constants/database-client-type';
 import {
   ESSLMode,
   type ISSLConfig,
@@ -142,7 +145,7 @@ export function applyConnectionStringSsl({
   // node-postgres ignores SSL options embedded only as a raw string, so pass a
   // config object with an explicit `ssl` block. Previously the plain string was
   // returned unchanged and SSL was silently dropped on the string path.
-  if (type === DatabaseClientType.POSTGRES) {
+  if (isPostgresCompatibleClientType(type)) {
     return {
       connectionString: stripSslQueryParams(connection),
       ssl: createSslConnectionOptions(effectiveSsl),

@@ -9,7 +9,7 @@ const READ_ONLY_LEADING_PATTERN =
  * False positives are acceptable: the caller can enable write access.
  */
 const WRITE_KEYWORD_PATTERN =
-  /\b(insert|update|delete|merge|upsert|drop|truncate|alter|create|grant|revoke|rename|call|exec|execute|copy|lock|vacuum|attach|detach|reindex|set|reset|comment|refresh|load|handler|into|analyze)\b/i;
+  /\b(insert|update|delete|merge|upsert|drop|truncate|alter|create|grant|revoke|rename|call|exec|execute|copy|lock|vacuum|attach|detach|reindex|set|reset|comment|refresh|load|handler|into|analyze|openrowset|opendatasource|openquery|bulk|waitfor)\b/i;
 
 /** Replace string literals and quoted identifiers so keyword checks only see SQL. */
 function blankQuotedSections(sql: string) {

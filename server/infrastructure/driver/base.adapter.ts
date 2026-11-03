@@ -65,6 +65,8 @@ export abstract class BaseDatabaseAdapter implements IDatabaseAdapter {
     await this.knex.raw('SELECT 1');
   }
 
+  async assertSupportedServerVersion(): Promise<void> {}
+
   async healthCheck(): Promise<boolean> {
     try {
       await this.verifyConnection();

@@ -1,5 +1,6 @@
 import {
   MariaSQL,
+  MSSQL,
   MySQL,
   PLSQL,
   PostgreSQL as PostgreSQLDialect,
@@ -128,4 +129,5 @@ export const SQLDialectSupport = {
   MariaSQL,
   SQLite,
   PLSQL,
+  MSSQL,
 };

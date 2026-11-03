@@ -73,6 +73,48 @@ services:
       timeout: 5s
       retries: 30
 
+  # Heavy images: part of `all` but not `sql`; start one with --profile cockroachdb|mssql|oracle.
+  cockroachdb:
+    profiles: [cockroachdb, all]
+    image: docker.io/cockroachdb/cockroach:v24.3.5
+    command: start-single-node --insecure
+    ports:
+      - '${ORCAQ_COCKROACHDB_PORT:-26257}:26257'
+    volumes:
+      - ./sql-init/cockroachdb:/fixtures:ro
+
+  mssql:
+    profiles: [mssql, all]
+    # SQL Server images are amd64-only; Apple Silicon runs them under Rosetta.
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    platform: linux/amd64
+    ports:
+      - '${ORCAQ_MSSQL_PORT:-1433}:1433'
+    environment:
+      ACCEPT_EULA: 'Y'
+      MSSQL_SA_PASSWORD: '${ORCAQ_MSSQL_PASSWORD:-OrcaQ_Passw0rd!}'
+    volumes:
+      - ../datasets/sql-server:/fixtures:ro
+
+  oracle:
+    profiles: [oracle, all]
+    image: docker.io/gvenzl/oracle-free:23-slim
+    ports:
+      - '${ORCAQ_ORACLE_PORT:-1521}:1521'
+    environment:
+      ORACLE_PASSWORD: '${ORCAQ_ORACLE_PASSWORD:-orcaq}'
+      APP_USER: '${ORCAQ_ORACLE_USER:-orcaq}'
+      APP_USER_PASSWORD: '${ORCAQ_ORACLE_PASSWORD:-orcaq}'
+    volumes:
+      - ../datasets/oracle/oracle-sakila-schema.sql:/container-entrypoint-initdb.d/10-schema.sql:ro
+      - ../datasets/oracle/oracle-sakila-insert-data-optimized.sql:/container-entrypoint-initdb.d/20-data.sql:ro
+      - ./sql-init/oracle/30-reset-sequences.sql:/container-entrypoint-initdb.d/30-reset-sequences.sql:ro
+    healthcheck:
+      test: ['CMD', 'healthcheck.sh']
+      interval: 10s
+      timeout: 10s
+      retries: 60
+
 volumes:
   postgres-data:
   mysql-data:

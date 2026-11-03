@@ -42,7 +42,13 @@ export type MongoFixtureConfig = {
   source: FixtureSource;
 };
 
-export type SqlFixtureEngine = 'postgres' | 'mysql' | 'mariadb';
+export type SqlFixtureEngine =
+  | 'postgres'
+  | 'mysql'
+  | 'mariadb'
+  | 'cockroachdb'
+  | 'mssql'
+  | 'oracle';
 
 export type SqlFixtureConfig = {
   engine: SqlFixtureEngine;
@@ -125,9 +131,21 @@ function buildSqlUrl(config: {
   username: string;
   password: string;
 }) {
-  const protocol = config.engine === 'postgres' ? 'postgresql' : 'mysql';
   const username = encodeAuthSegment(config.username);
   const password = encodeAuthSegment(config.password);
+
+  if (config.engine === 'cockroachdb') {
+    // The fixture runs in insecure mode: no password, no TLS.
+    const auth = password ? `${username}:${password}` : username;
+    return `postgresql://${auth}@${config.host}:${config.port}/${config.database}?sslmode=disable`;
+  }
+
+  const protocols: Partial<Record<SqlFixtureEngine, string>> = {
+    postgres: 'postgresql',
+    mssql: 'sqlserver',
+    oracle: 'oracledb',
+  };
+  const protocol = protocols[config.engine] ?? 'mysql';
 
   return `${protocol}://${username}:${password}@${config.host}:${config.port}/${config.database}`;
 }
@@ -222,6 +240,39 @@ export function getMariaDbFixtureConfig() {
     envPrefixes: ['ORCAQ_MARIADB'],
     defaultPort: 3307,
     defaultDatabase: 'sakila',
+    defaultUsername: 'orcaq',
+    defaultPassword: 'orcaq',
+  });
+}
+
+export function getCockroachFixtureConfig() {
+  return buildSqlFixtureConfig({
+    engine: 'cockroachdb',
+    envPrefixes: ['ORCAQ_COCKROACHDB'],
+    defaultPort: 26257,
+    defaultDatabase: 'sakila',
+    defaultUsername: 'root',
+    defaultPassword: '',
+  });
+}
+
+export function getMssqlFixtureConfig() {
+  return buildSqlFixtureConfig({
+    engine: 'mssql',
+    envPrefixes: ['ORCAQ_MSSQL'],
+    defaultPort: 1433,
+    defaultDatabase: 'sakila',
+    defaultUsername: 'sa',
+    defaultPassword: 'OrcaQ_Passw0rd!',
+  });
+}
+
+export function getOracleFixtureConfig() {
+  return buildSqlFixtureConfig({
+    engine: 'oracle',
+    envPrefixes: ['ORCAQ_ORACLE_FIXTURE'],
+    defaultPort: 1521,
+    defaultDatabase: 'FREEPDB1',
     defaultUsername: 'orcaq',
     defaultPassword: 'orcaq',
   });

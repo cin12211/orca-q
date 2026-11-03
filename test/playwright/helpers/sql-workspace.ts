@@ -22,7 +22,15 @@ export type FixtureSqlWorkspaceFlowOptions = {
   rawQueryAssertions: string[];
   tableName: string;
   viewName: string;
-  functionName: string;
+  /** Omit for engines without a function detail view. */
+  functionName?: string;
+  /** Defaults to Postgres/MySQL syntax with `limit`. */
+  variableRawQuery?: string;
+  /** Column names as the engine reports them (Oracle upper-cases). */
+  firstNameColumn?: string;
+  lastNameColumn?: string;
+  /** False for engines whose Database Tools omit Backup & Restore. */
+  backupSupported?: boolean;
   quickQueryTableName?: string;
   quickQueryRelationTableName?: string;
   nullOrderTableName?: string;
@@ -55,11 +63,13 @@ type CreateOracleConnectionOptions = {
 };
 
 const SQL_FAMILY_SHELL_TEXT = 'No table is open';
-const SQL_SIDEBAR_BUTTON_INDEX: Record<SqlSidebarActivity, number> = {
-  Explorer: 0,
-  Schemas: 1,
-  ERD: 2,
-  DatabaseTools: 4,
+// Positions shift per engine (Users & Roles and Agent can be hidden), so
+// activities are addressed by their test id.
+const SQL_SIDEBAR_ITEM_ID: Record<SqlSidebarActivity, string> = {
+  Explorer: 'Explorer',
+  Schemas: 'Schemas',
+  ERD: 'ERDiagram',
+  DatabaseTools: 'DatabaseTools',
 };
 const RAW_QUERY_FORMATTER_CONFIG = {
   language: 'postgresql' as const,
@@ -69,10 +79,6 @@ const RAW_QUERY_FORMATTER_CONFIG = {
   newlineBeforeSemicolon: true,
   paramTypes: { named: [':'] },
 };
-const EXPLORER_ACTION_BUTTON_INDEX = {
-  newFile: 0,
-  newFolder: 1,
-} as const;
 const DEFAULT_QUICK_QUERY_TABLE_NAME = 'actor';
 const DEFAULT_QUICK_QUERY_RELATION_TABLE_NAME = 'film_actor';
 const DEFAULT_NULL_ORDER_TABLE_NAME = 'address';
@@ -92,13 +98,6 @@ export async function setPersistedSqlActivityBar(
   await page.reload({ waitUntil: 'domcontentloaded' });
 }
 
-function activityBarButtons(page: Page) {
-  return page
-    .getByRole('button', { name: 'New SQL file' })
-    .locator('xpath=ancestor::div[6]/preceding-sibling::div[1]')
-    .locator('button');
-}
-
 function sidebarReadyIndicator(page: Page, activity: SqlSidebarActivity) {
   switch (activity) {
     case 'Explorer':
@@ -108,7 +107,7 @@ function sidebarReadyIndicator(page: Page, activity: SqlSidebarActivity) {
     case 'ERD':
       return page.getByText('ERD Diagram', { exact: true }).first();
     case 'DatabaseTools':
-      return page.getByText('Backup & Restore', { exact: true }).first();
+      return page.getByTestId('database-tool-instance-insights');
     default:
       return page.getByText(SQL_FAMILY_SHELL_TEXT, { exact: true });
   }
@@ -118,8 +117,8 @@ export async function switchSqlSidebar(
   page: Page,
   activity: SqlSidebarActivity
 ) {
-  const button = activityBarButtons(page).nth(
-    SQL_SIDEBAR_BUTTON_INDEX[activity]
+  const button = page.getByTestId(
+    `activity-item-${SQL_SIDEBAR_ITEM_ID[activity]}`
   );
   const indicator = sidebarReadyIndicator(page, activity);
 
@@ -252,13 +251,6 @@ function rawQueryEditorContent(page: Page) {
 
 function escapeRegExp(value: string) {
   return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-}
-
-function explorerHeaderActionButtons(page: Page) {
-  return page
-    .getByText('Explorer', { exact: true })
-    .locator('xpath=following-sibling::div[1]')
-    .locator('button');
 }
 
 function resultTab(page: Page, label: string) {
@@ -395,7 +387,14 @@ async function expandFolderForItem(
 
   await schemaSearchInput(page).fill(getSchemaSearchTerm(itemName));
 
-  if (await item.isVisible().catch(() => false)) {
+  // Searching auto-expands matching folders; clicking the chevron too early
+  // would collapse the folder again.
+  const isRevealedBySearch = await item
+    .waitFor({ state: 'visible', timeout: 3_000 })
+    .then(() => true)
+    .catch(() => false);
+
+  if (isRevealedBySearch) {
     return;
   }
 
@@ -410,9 +409,7 @@ export async function openExplorerRawQueryFile(page: Page, fileName: string) {
     timeout: 30_000,
   });
 
-  const newFileButton = explorerHeaderActionButtons(page).nth(
-    EXPLORER_ACTION_BUTTON_INDEX.newFile
-  );
+  const newFileButton = page.getByTestId('explorer-new-file');
 
   await expect(newFileButton).toBeVisible({ timeout: 30_000 });
   await newFileButton.click();
@@ -435,9 +432,7 @@ export async function createExplorerFolder(page: Page, folderName: string) {
     timeout: 30_000,
   });
 
-  const newFolderButton = explorerHeaderActionButtons(page).nth(
-    EXPLORER_ACTION_BUTTON_INDEX.newFolder
-  );
+  const newFolderButton = page.getByTestId('explorer-new-folder');
 
   await expect(newFolderButton).toBeVisible({ timeout: 30_000 });
   await newFolderButton.click();
@@ -462,9 +457,7 @@ export async function openExplorerRawQueryFileInFolder(
   });
   await treeName(page, folderName).click();
 
-  const newFileButton = explorerHeaderActionButtons(page).nth(
-    EXPLORER_ACTION_BUTTON_INDEX.newFile
-  );
+  const newFileButton = page.getByTestId('explorer-new-file');
 
   await expect(newFileButton).toBeVisible({ timeout: 30_000 });
   await newFileButton.click();
@@ -641,7 +634,7 @@ export async function executeRawQuery(
   assertions: string[]
 ) {
   await setRawQueryEditorContent(page, query);
-  await page.getByRole('button', { name: 'Execute current' }).click();
+  await page.getByTestId('raw-query-execute-button').click();
 
   await expect(page.getByText(/Query success:\s*1 rows/i)).toBeVisible({
     timeout: 30_000,
@@ -703,25 +696,18 @@ export async function getOpenQuickQueryTableTabs(
 }
 
 export async function getActiveSchemaTables(page: Page): Promise<string[]> {
-  await page.waitForFunction(() => {
+  // Schema names load first; tables arrive with the lazy per-schema fetch.
+  const handle = await page.waitForFunction(() => {
     const pinia = globalThis.useNuxtApp?.()?.$pinia;
     const schemaState = pinia?.state?.value?.['schema-store'];
+    const schemas = Object.values(schemaState?.schemas || {}).flat() as Array<{
+      tables?: string[];
+    }>;
 
-    return Object.values(schemaState?.schemas || {}).some(
-      schemaEntries => Array.isArray(schemaEntries) && schemaEntries.length > 0
-    );
+    return schemas.find(schema => schema?.tables?.length)?.tables;
   });
 
-  return page.evaluate(() => {
-    const pinia = globalThis.useNuxtApp?.()?.$pinia;
-    const schemaState = pinia?.state?.value?.['schema-store'];
-    const schemaEntries = Object.values(schemaState?.schemas || {}).find(
-      value => Array.isArray(value) && value.length > 0
-    ) as Array<any> | undefined;
-    const schema = schemaEntries?.[0];
-
-    return (schema?.tables || []) as string[];
-  });
+  return (await handle.jsonValue()) as string[];
 }
 
 export async function applyQuickQueryContainsFilter(
@@ -1015,10 +1001,18 @@ export async function expectFunctionDetail(
   ).toBeVisible({ timeout: 30_000 });
 }
 
+async function confirmSafeModeDialog(
+  page: Page,
+  title: 'Confirm Save' | 'Confirm Delete'
+) {
+  const dialog = page.getByRole('alertdialog');
+
+  await expect(dialog).toContainText(title, { timeout: 30_000 });
+  await dialog.getByTestId('safe-mode-confirm-button').click();
+}
+
 export async function refreshQuickQueryTable(page: Page) {
-  const refreshButton = page
-    .getByRole('button', { name: /refresh table/i })
-    .first();
+  const refreshButton = page.getByTestId('quick-query-refresh');
 
   await page
     .locator('div.absolute.inset-0.z-20.flex.items-center')
@@ -1061,17 +1055,15 @@ export async function expectInstanceInsightsFromSidebar(
     'Replication',
   ];
 
-  const instanceInsightCard = page
-    .getByRole('button', { name: /^Instance Insight/i })
-    .first();
+  const instanceInsightCard = page.getByTestId(
+    'database-tool-instance-insights'
+  );
 
   await expect(instanceInsightCard).toBeVisible();
   await instanceInsightCard.click();
 
   await expect(page).toHaveURL(/\/instance-insights$/, { timeout: 30_000 });
-  await expect(
-    page.getByText('Instance Insights', { exact: true })
-  ).toBeVisible();
+  await expect(page.getByTestId('instance-insights-title')).toBeVisible();
 
   for (const tabName of expectedTabs) {
     await expect(
@@ -1081,37 +1073,48 @@ export async function expectInstanceInsightsFromSidebar(
 
   await expect(page.getByRole('button', { name: 'Refresh All' })).toBeVisible();
   await expect(page.getByText('Auto refresh', { exact: true })).toBeVisible();
+  await expect(page.getByText(/· unsupported/)).toHaveCount(0);
 }
 
-export async function expectDatabaseToolsLaunchers(page: Page) {
+export async function expectDatabaseToolsLaunchers(
+  page: Page,
+  options: { backupSupported?: boolean } = {}
+) {
   await openDatabaseToolsSidebar(page);
 
-  const backupRestoreCard = page
-    .getByRole('button', { name: /^Backup & Restore/i })
-    .first();
-  const instanceInsightCard = page
-    .getByRole('button', { name: /^Instance Insight/i })
-    .first();
-  const schemaDiffCard = page
-    .getByRole('button', { name: /^Schema Diff/i })
-    .first();
+  const backupRestoreCard = page.getByTestId('database-tool-backup');
+  const instanceInsightCard = page.getByTestId(
+    'database-tool-instance-insights'
+  );
+  const schemaDiffCard = page.getByTestId('database-tool-schema-diff');
 
-  await expect(backupRestoreCard).toBeVisible();
   await expect(instanceInsightCard).toBeVisible();
   await expect(schemaDiffCard).toBeVisible();
 
-  await backupRestoreCard.click();
-  await expect(page).toHaveURL(/\/database-tools\/backup-restore\//, {
-    timeout: 30_000,
-  });
-  await expect(
-    page.getByRole('heading', { name: 'Backup & Restore' })
-  ).toBeVisible();
-  await expect(page.getByText('Create Backup', { exact: true })).toBeVisible();
-  await expect(page.getByText('Restore Backup', { exact: true })).toBeVisible();
+  if (options.backupSupported === false) {
+    await expect(backupRestoreCard).toHaveCount(0);
+    await expect(page.getByText(/not available for this database/)).toHaveCount(
+      0
+    );
+  } else {
+    await expect(backupRestoreCard).toBeVisible();
+    await backupRestoreCard.click();
+    await expect(page).toHaveURL(/\/database-tools\/backup-restore\//, {
+      timeout: 30_000,
+    });
+    await expect(
+      page.getByRole('heading', { name: 'Backup & Restore' })
+    ).toBeVisible();
+    await expect(
+      page.getByText('Create Backup', { exact: true }).first()
+    ).toBeVisible();
+    await expect(
+      page.getByText('Restore Backup', { exact: true }).first()
+    ).toBeVisible();
 
-  await page.goBack({ waitUntil: 'domcontentloaded' });
-  await openDatabaseToolsSidebar(page);
+    await page.goBack({ waitUntil: 'domcontentloaded' });
+    await openDatabaseToolsSidebar(page);
+  }
 
   await expect(schemaDiffCard).toBeVisible({ timeout: 30_000 });
   await schemaDiffCard.click();
@@ -1216,6 +1219,8 @@ export function defineFixtureSqlWorkspaceFlowTests(
     options.nullOrderTableName ?? DEFAULT_NULL_ORDER_TABLE_NAME;
   const nullOrderColumnName =
     options.nullOrderColumnName ?? DEFAULT_NULL_ORDER_COLUMN_NAME;
+  const firstNameColumn = options.firstNameColumn ?? 'first_name';
+  const lastNameColumn = options.lastNameColumn ?? 'last_name';
 
   test.describe(`${options.title} workspace flows`, () => {
     test.beforeEach(async ({ page }, testInfo) => {
@@ -1270,7 +1275,8 @@ export function defineFixtureSqlWorkspaceFlowTests(
       await setRawQueryVariables(page, JSON.stringify({ filmId: 1 }, null, 2));
       await executeRawQuery(
         page,
-        `select title from ${options.tableName} where film_id = :filmId order by film_id limit 1;`,
+        options.variableRawQuery ??
+          `select title from ${options.tableName} where film_id = :filmId order by film_id limit 1;`,
         [options.rawQueryAssertions[0]]
       );
     });
@@ -1312,14 +1318,16 @@ export function defineFixtureSqlWorkspaceFlowTests(
       });
       await expectViewStructure(page);
 
-      await openSchemasSidebar(page);
-      await openSchemaItem(page, {
-        folderName: 'Functions',
-        itemName: new RegExp(options.functionName, 'i'),
-      });
-      await expectFunctionDetail(page, options.functionName, {
-        expectDefinitionBody: options.fixture.engine === 'postgres',
-      });
+      if (options.functionName) {
+        await openSchemasSidebar(page);
+        await openSchemaItem(page, {
+          folderName: 'Functions',
+          itemName: new RegExp(options.functionName, 'i'),
+        });
+        await expectFunctionDetail(page, options.functionName, {
+          expectDefinitionBody: options.fixture.engine === 'postgres',
+        });
+      }
     });
 
     test('opens multiple quick query tables, filters data, and inspects ERD views', async ({
@@ -1366,7 +1374,7 @@ export function defineFixtureSqlWorkspaceFlowTests(
 
       await openQuickQueryTable(page, quickQueryTableName);
       await setQuickQuerySafeMode(page, true);
-      await page.getByRole('button', { name: 'Row', exact: true }).click();
+      await page.getByTestId('quick-query-add-row').click();
 
       await expect(
         quickQueryGrid(page).locator('.ag-row-selected').last()
@@ -1374,21 +1382,18 @@ export function defineFixtureSqlWorkspaceFlowTests(
 
       await editQuickQueryCell(page, {
         selectedRow: true,
-        columnName: 'first_name',
+        columnName: firstNameColumn,
         value: insertFirstName,
       });
       await editQuickQueryCell(page, {
         selectedRow: true,
-        columnName: 'last_name',
+        columnName: lastNameColumn,
         value: uniqueLastName,
       });
 
       await quickQueryGrid(page).click();
       await page.keyboard.press('Meta+S');
-      await expect(
-        page.getByText('Confirm Save Operation', { exact: true })
-      ).toBeVisible({ timeout: 30_000 });
-      await page.getByRole('button', { name: 'Save', exact: true }).click();
+      await confirmSafeModeDialog(page, 'Confirm Save');
       await expect(
         page.getByText('Data saved successfully!', { exact: true }).last()
       ).toBeVisible({ timeout: 30_000 });
@@ -1399,16 +1404,13 @@ export function defineFixtureSqlWorkspaceFlowTests(
 
       await editQuickQueryCell(page, {
         rowText: uniqueLastName,
-        columnName: 'first_name',
+        columnName: firstNameColumn,
         value: updatedFirstName,
       });
 
       await quickQueryGrid(page).click();
       await page.keyboard.press('Meta+S');
-      await expect(
-        page.getByText('Confirm Save Operation', { exact: true })
-      ).toBeVisible({ timeout: 30_000 });
-      await page.getByRole('button', { name: 'Save', exact: true }).click();
+      await confirmSafeModeDialog(page, 'Confirm Save');
       await expect(
         page.getByText('Data saved successfully!', { exact: true }).last()
       ).toBeVisible({ timeout: 30_000 });
@@ -1419,13 +1421,10 @@ export function defineFixtureSqlWorkspaceFlowTests(
 
       await quickQueryCell(page, {
         rowText: uniqueLastName,
-        columnName: 'first_name',
+        columnName: firstNameColumn,
       }).click();
-      await page.getByRole('button', { name: '⌥⌘⌫' }).first().click();
-      await expect(
-        page.getByText('Confirm Delete Operation', { exact: true })
-      ).toBeVisible({ timeout: 30_000 });
-      await page.getByRole('button', { name: 'Delete', exact: true }).click();
+      await page.getByTestId('quick-query-delete-rows').click();
+      await confirmSafeModeDialog(page, 'Confirm Delete');
       await expect(
         page.getByText('Rows deleted successfully!', { exact: true })
       ).toBeVisible({ timeout: 30_000 });
@@ -1475,7 +1474,9 @@ export function defineFixtureSqlWorkspaceFlowTests(
     test('opens Database Tools launchers for the SQL family', async ({
       page,
     }) => {
-      await expectDatabaseToolsLaunchers(page);
+      await expectDatabaseToolsLaunchers(page, {
+        backupSupported: options.backupSupported,
+      });
     });
   });
 

@@ -10,6 +10,7 @@ import type {
   ViewSchema,
 } from '~/core/types';
 import { FunctionSchemaEnum, ViewSchemaEnum } from '~/core/types';
+import { lowerCaseRowKeys } from '~/server/infrastructure/driver/result-rows';
 import { BaseDomainAdapter } from '../../shared';
 import { resolveMetadataTypeAlias } from '../type-alias.constants';
 import type {
@@ -17,34 +18,6 @@ import type {
   IDatabaseMetadataAdapter,
   SchemaMetadataQueryOptions,
 } from '../types';
-
-const SYSTEM_SCHEMAS = [
-  'ANONYMOUS',
-  'APPQOSSYS',
-  'AUDSYS',
-  'CTXSYS',
-  'DBSNMP',
-  'DVSYS',
-  'GSMADMIN_INTERNAL',
-  'LBACSYS',
-  'MDSYS',
-  'OJVMSYS',
-  'ORDSYS',
-  'OUTLN',
-  'SYS',
-  'SYSBACKUP',
-  'SYSDG',
-  'SYSKM',
-  'SYSTEM',
-  'WMSYS',
-  'XDB',
-];
-
-function buildBindPlaceholders(count: number, start = 1) {
-  return Array.from({ length: count }, (_, index) => `:${index + start}`).join(
-    ', '
-  );
-}
 
 function formatOracleType(column: {
   data_type: string;
@@ -138,6 +111,16 @@ export class OracleMetadataAdapter
     return new OracleMetadataAdapter(adapter);
   }
 
+  // Catalog queries alias columns in lower case; see lowerCaseRowKeys.
+  private async catalogQuery<T>(sql: string, bindings: unknown[] = []) {
+    return lowerCaseRowKeys<T>(
+      await this.adapter.rawQuery<Record<string, unknown>>(
+        sql,
+        bindings as any[]
+      )
+    );
+  }
+
   private buildSchemaCondition(
     column: string,
     options?: SchemaMetadataQueryOptions
@@ -147,20 +130,33 @@ export class OracleMetadataAdapter
     }
 
     return {
-      condition: `${column} NOT IN (${buildBindPlaceholders(SYSTEM_SCHEMAS.length)})`,
-      bindings: SYSTEM_SCHEMAS,
+      condition: `${column} IN (SELECT username FROM all_users WHERE oracle_maintained = 'N')`,
+      bindings: [],
     };
   }
 
   private async loadMetadataRows(options?: SchemaMetadataQueryOptions) {
-    const schemaFilter = this.buildSchemaCondition('username', options);
+    // The connected user's schema comes first: it becomes the default schema
+    // in the UI. Oracle-maintained schemas stay selectable as system schemas.
+    const schemaFilter = options?.namesOnly
+      ? { condition: '1 = 1', bindings: [] as string[] }
+      : this.buildSchemaCondition('username', options);
 
-    const schemas = await this.adapter.rawQuery<{ schema_name: string }>(
+    const schemas = await this.catalogQuery<{
+      schema_name: string;
+      oracle_maintained: string;
+    }>(
       `
-            SELECT username AS schema_name
+            SELECT username AS schema_name, oracle_maintained
             FROM all_users
             WHERE ${schemaFilter.condition}
-            ORDER BY username
+            ORDER BY
+              CASE
+                WHEN username = USER THEN 0
+                WHEN oracle_maintained = 'N' THEN 1
+                ELSE 2
+              END,
+              username
           `,
       schemaFilter.bindings
     );
@@ -186,7 +182,7 @@ export class OracleMetadataAdapter
 
     const [tables, views, columns, primaryKeys, foreignKeys, routines] =
       await Promise.all([
-        this.adapter.rawQuery<OracleTableRow>(
+        this.catalogQuery<OracleTableRow>(
           `
             SELECT t.owner, t.table_name, t.num_rows, c.comments
             FROM all_tables t
@@ -198,7 +194,7 @@ export class OracleMetadataAdapter
           `,
           ownerFilter.bindings
         ),
-        this.adapter.rawQuery<OracleViewRow>(
+        this.catalogQuery<OracleViewRow>(
           `
             SELECT owner, view_name
             FROM all_views
@@ -207,7 +203,7 @@ export class OracleMetadataAdapter
           `,
           viewOwnerFilter.bindings
         ),
-        this.adapter.rawQuery<OracleColumnRow>(
+        this.catalogQuery<OracleColumnRow>(
           `
             SELECT
               owner,
@@ -219,14 +215,14 @@ export class OracleMetadataAdapter
               data_precision,
               data_scale,
               nullable,
-              TRIM(data_default) AS data_default
+              data_default
             FROM all_tab_columns
             WHERE ${columnOwnerFilter.condition}
             ORDER BY owner, table_name, column_id
           `,
           columnOwnerFilter.bindings
         ),
-        this.adapter.rawQuery<OraclePrimaryKeyRow>(
+        this.catalogQuery<OraclePrimaryKeyRow>(
           `
             SELECT acc.owner, acc.table_name, acc.column_name
             FROM all_constraints ac
@@ -239,7 +235,7 @@ export class OracleMetadataAdapter
           `,
           pkOwnerFilter.bindings
         ),
-        this.adapter.rawQuery<OracleForeignKeyRow>(
+        this.catalogQuery<OracleForeignKeyRow>(
           `
             SELECT
               acc.owner,
@@ -265,7 +261,7 @@ export class OracleMetadataAdapter
           `,
           fkOwnerFilter.bindings
         ),
-        this.adapter.rawQuery<OracleRoutineRow>(
+        this.catalogQuery<OracleRoutineRow>(
           `
             SELECT owner, object_name, object_type
             FROM all_objects
@@ -302,8 +298,9 @@ export class OracleMetadataAdapter
     } = await this.loadMetadataRows(options);
 
     if (options?.namesOnly) {
-      return schemas.map(({ schema_name }) => ({
+      return schemas.map(({ schema_name, oracle_maintained }) => ({
         name: schema_name,
+        is_system: oracle_maintained === 'Y',
         tables: null,
         views: null,
         functions: null,
@@ -334,7 +331,7 @@ export class OracleMetadataAdapter
                 formatOracleType(column)
               ),
               is_nullable: column.nullable === 'Y',
-              default_value: column.data_default,
+              default_value: column.data_default?.trim() ?? null,
             }));
 
           const tablePrimaryKeys = primaryKeys
@@ -388,7 +385,7 @@ export class OracleMetadataAdapter
                 formatOracleType(column)
               ),
               is_nullable: column.nullable === 'Y',
-              default_value: column.data_default,
+              default_value: column.data_default?.trim() ?? null,
             }));
 
           return [
@@ -432,7 +429,7 @@ export class OracleMetadataAdapter
   }
 
   async getErdData(): Promise<DatabaseMetadata> {
-    const [databaseInfo] = await this.adapter.rawQuery<OracleDatabaseInfoRow>(
+    const [databaseInfo] = await this.catalogQuery<OracleDatabaseInfoRow>(
       `
         SELECT
           SYS_CONTEXT('USERENV', 'DB_NAME') AS database_name,

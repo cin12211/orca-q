@@ -79,6 +79,10 @@ export const postgresDialect: SqlDialect = {
     return caseInsensitive ? 'ILIKE' : 'LIKE';
   },
 
+  supportsNullsOrdering(): boolean {
+    return true;
+  },
+
   supportsReturning(): boolean {
     return true;
   },

@@ -9,6 +9,8 @@ import type {
   DiffStatus,
   SQLStatement,
 } from '~/components/modules/database-tools';
+import { DatabaseClientType } from '~/core/constants/database-client-type';
+import { getSqlDialect } from '~/core/sql-dialect';
 import type {
   SchemaMetaData,
   SchemaColumnMetadata,
@@ -233,25 +235,96 @@ function diffFunctions(
 
 // ─── SQL generation ────────────────────────────────────────────────────────────
 
-function buildColumnDefinition(col: SchemaColumnMetadata): string {
-  const nullable = col.is_nullable ? '' : ' NOT NULL';
-  const def = col.default_value ? ` DEFAULT ${col.default_value}` : '';
-  return `  "${col.name}" ${col.type}${nullable}${def}`;
+interface SchemaDiffSqlSyntax {
+  quote(name: string): string;
+  createTable(table: string, columns: string): string;
+  dropTable(table: string): string;
+  addColumn(table: string, column: string): string;
+  changeType(table: string, col: SchemaColumnMetadata): string;
+  changeNullable(table: string, col: SchemaColumnMetadata): string;
 }
 
-function generateTableSQL(table: TableDiff, safeMode: boolean): SQLStatement[] {
+const nullability = (col: SchemaColumnMetadata) =>
+  col.is_nullable ? 'NULL' : 'NOT NULL';
+
+function createDiffSqlSyntax(dbType?: DatabaseClientType): SchemaDiffSqlSyntax {
+  const dialect = getSqlDialect(dbType);
+  const quote = (name: string) => dialect.quoteIdentifier(name);
+
+  const standard: SchemaDiffSqlSyntax = {
+    quote,
+    createTable: (table, columns) =>
+      `CREATE TABLE IF NOT EXISTS ${table} (\n${columns}\n);`,
+    dropTable: table => `DROP TABLE IF EXISTS ${table};`,
+    addColumn: (table, column) => `ALTER TABLE ${table} ADD COLUMN ${column};`,
+    changeType: (table, col) =>
+      `ALTER TABLE ${table} ALTER COLUMN ${quote(col.name)} TYPE ${col.type};`,
+    changeNullable: (table, col) =>
+      `ALTER TABLE ${table} ALTER COLUMN ${quote(col.name)} ${col.is_nullable ? 'DROP NOT NULL' : 'SET NOT NULL'};`,
+  };
+
+  if (dbType === DatabaseClientType.MSSQL) {
+    // T-SQL restates the type and nullability in ALTER COLUMN and has no
+    // CREATE TABLE IF NOT EXISTS.
+    const alterColumn = (table: string, col: SchemaColumnMetadata) =>
+      `ALTER TABLE ${table} ALTER COLUMN ${quote(col.name)} ${col.type} ${nullability(col)};`;
+
+    return {
+      ...standard,
+      createTable: (table, columns) =>
+        `CREATE TABLE ${table} (\n${columns}\n);`,
+      addColumn: (table, column) => `ALTER TABLE ${table} ADD ${column};`,
+      changeType: alterColumn,
+      changeNullable: alterColumn,
+    };
+  }
+
+  if (dbType === DatabaseClientType.ORACLE) {
+    // 19c, the oldest supported version, has no IF [NOT] EXISTS.
+    return {
+      ...standard,
+      createTable: (table, columns) =>
+        `CREATE TABLE ${table} (\n${columns}\n);`,
+      dropTable: table => `DROP TABLE ${table};`,
+      addColumn: (table, column) => `ALTER TABLE ${table} ADD (${column});`,
+      changeType: (table, col) =>
+        `ALTER TABLE ${table} MODIFY (${quote(col.name)} ${col.type});`,
+      changeNullable: (table, col) =>
+        `ALTER TABLE ${table} MODIFY (${quote(col.name)} ${nullability(col)});`,
+    };
+  }
+
+  return standard;
+}
+
+function buildColumnDefinition(
+  col: SchemaColumnMetadata,
+  syntax: SchemaDiffSqlSyntax
+): string {
+  const def = col.default_value ? ` DEFAULT ${col.default_value}` : '';
+  const nullable = col.is_nullable ? '' : ' NOT NULL';
+  return `${syntax.quote(col.name)} ${col.type}${def}${nullable}`;
+}
+
+function generateTableSQL(
+  table: TableDiff,
+  safeMode: boolean,
+  syntax: SchemaDiffSqlSyntax
+): SQLStatement[] {
   const stmts: SQLStatement[] = [];
-  const qualifiedName = `"${table.schema}"."${table.name}"`;
+  const qualifiedName = `${syntax.quote(table.schema)}.${syntax.quote(table.name)}`;
 
   if (table.status === 'added') {
     const colDefs = table.columns
-      .map(c => (c.source ? buildColumnDefinition(c.source) : ''))
+      .map(c =>
+        c.source ? `  ${buildColumnDefinition(c.source, syntax)}` : ''
+      )
       .filter(Boolean)
       .join(',\n');
     stmts.push({
       type: 'CREATE_TABLE',
       destructive: false,
-      sql: `CREATE TABLE IF NOT EXISTS ${qualifiedName} (\n${colDefs}\n);`,
+      sql: syntax.createTable(qualifiedName, colDefs),
       description: `Create table ${table.name}`,
     });
     return stmts;
@@ -263,7 +336,7 @@ function generateTableSQL(table: TableDiff, safeMode: boolean): SQLStatement[] {
       destructive: true,
       sql: safeMode
         ? `-- SKIPPED (safe mode): DROP TABLE ${qualifiedName};`
-        : `DROP TABLE IF EXISTS ${qualifiedName};`,
+        : syntax.dropTable(qualifiedName),
       description: `Drop table ${table.name}`,
     });
     return stmts;
@@ -275,7 +348,10 @@ function generateTableSQL(table: TableDiff, safeMode: boolean): SQLStatement[] {
         stmts.push({
           type: 'ADD_COLUMN',
           destructive: false,
-          sql: `ALTER TABLE ${qualifiedName} ADD COLUMN "${col.name}" ${col.source.type}${col.source.is_nullable ? '' : ' NOT NULL'}${col.source.default_value ? ` DEFAULT ${col.source.default_value}` : ''};`,
+          sql: syntax.addColumn(
+            qualifiedName,
+            buildColumnDefinition(col.source, syntax)
+          ),
           description: `Add column ${table.name}.${col.name}`,
         });
       } else if (col.status === 'removed') {
@@ -283,8 +359,8 @@ function generateTableSQL(table: TableDiff, safeMode: boolean): SQLStatement[] {
           type: 'DROP_COLUMN',
           destructive: true,
           sql: safeMode
-            ? `-- SKIPPED (safe mode): ALTER TABLE ${qualifiedName} DROP COLUMN "${col.name}";`
-            : `ALTER TABLE ${qualifiedName} DROP COLUMN "${col.name}";`,
+            ? `-- SKIPPED (safe mode): ALTER TABLE ${qualifiedName} DROP COLUMN ${syntax.quote(col.name)};`
+            : `ALTER TABLE ${qualifiedName} DROP COLUMN ${syntax.quote(col.name)};`,
           description: `Drop column ${table.name}.${col.name}`,
         });
       } else if (col.status === 'modified' && col.changes && col.source) {
@@ -292,18 +368,15 @@ function generateTableSQL(table: TableDiff, safeMode: boolean): SQLStatement[] {
           stmts.push({
             type: 'MODIFY_COLUMN',
             destructive: false,
-            sql: `ALTER TABLE ${qualifiedName} ALTER COLUMN "${col.name}" TYPE ${col.source.type};`,
+            sql: syntax.changeType(qualifiedName, col.source),
             description: `Change type of ${table.name}.${col.name} to ${col.source.type}`,
           });
         }
         if (col.changes.nullable !== undefined) {
-          const constraint = col.source!.is_nullable
-            ? 'DROP NOT NULL'
-            : 'SET NOT NULL';
           stmts.push({
             type: 'MODIFY_COLUMN',
             destructive: !col.source!.is_nullable,
-            sql: `ALTER TABLE ${qualifiedName} ALTER COLUMN "${col.name}" ${constraint};`,
+            sql: syntax.changeNullable(qualifiedName, col.source),
             description: `Set nullable=${col.source!.is_nullable} for ${table.name}.${col.name}`,
           });
         }
@@ -319,8 +392,10 @@ function generateTableSQL(table: TableDiff, safeMode: boolean): SQLStatement[] {
 export function computeSchemaDiff(
   source: SchemaMetaData[],
   target: SchemaMetaData[],
-  safeMode: boolean
+  safeMode: boolean,
+  targetDbType?: DatabaseClientType
 ): SchemaDiffResponse {
+  const syntax = createDiffSqlSyntax(targetDbType);
   const tgtMap = new Map(target.map(s => [s.name, s]));
   const srcMap = new Map(source.map(s => [s.name, s]));
   const allSchemas = new Set([...srcMap.keys(), ...tgtMap.keys()]);
@@ -364,7 +439,7 @@ export function computeSchemaDiff(
       else if (t.status === 'removed') removed++;
       else if (t.status === 'modified') modified++;
       else unchanged++;
-      statements.push(...generateTableSQL(t, safeMode));
+      statements.push(...generateTableSQL(t, safeMode, syntax));
     }
     for (const v of views) {
       if (v.status === 'added') added++;

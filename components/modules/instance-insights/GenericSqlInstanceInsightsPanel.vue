@@ -62,7 +62,12 @@ const actionBadgeClass = (
         <div class="space-y-1">
           <div class="flex items-center gap-2">
             <Icon name="hugeicons:database" class="size-5 text-primary" />
-            <h2 class="text-base font-medium">Instance Insights</h2>
+            <h2
+              data-testid="instance-insights-title"
+              class="text-base font-medium"
+            >
+              Instance Insights
+            </h2>
           </div>
 
           <div class="text-sm text-muted-foreground flex items-center gap-0.5">
@@ -87,17 +92,7 @@ const actionBadgeClass = (
               variant="outline"
               class="text-xxs h-5 px-1.5 font-normal"
             >
-              {{
-                dbType === DatabaseClientType.MARIADB
-                  ? 'MariaDB'
-                  : dbType === DatabaseClientType.ORACLE
-                    ? 'Oracle'
-                    : dbType === DatabaseClientType.SQLITE3
-                      ? 'SQLite'
-                      : dbType === DatabaseClientType.DUCKDB
-                        ? 'DuckDB'
-                        : 'MySQL'
-              }}
+              {{ dbType ? getDatabaseSupportByType(dbType)?.name : '' }}
               {{ view.version }}
             </Badge>
           </div>

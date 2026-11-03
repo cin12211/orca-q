@@ -47,6 +47,8 @@ export default defineConfig({
     createDbProject('mysql', 'mysql'),
     createDbProject('mariadb', 'mariadb'),
     createDbProject('oracle', 'oracle'),
+    createDbProject('mssql', 'mssql'),
+    createDbProject('cockroachdb', 'cockroachdb'),
     createDbProject('redis', 'redis'),
     createDbProject('sqlite', 'sqlite'),
     createDbProject('duckdb', 'duckdb'),

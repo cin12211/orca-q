@@ -35,6 +35,22 @@ export interface SqlDialect {
    */
   likeOperator(caseInsensitive: boolean): string;
 
+  /**
+   * Build the row-limiting tail of a SELECT (e.g. `LIMIT 100 OFFSET 0`).
+   * Dialects that need an ORDER BY for paging (SQL Server) rely on the caller
+   * passing one; see `requiresOrderByForPagination`.
+   */
+  buildPagination(limit: number, offset: number): string;
+
+  /**
+   * Whether `buildPagination` is only valid after an ORDER BY clause
+   * (SQL Server `OFFSET … FETCH`). Callers fall back to `ORDER BY (SELECT NULL)`.
+   */
+  requiresOrderByForPagination(): boolean;
+
+  /** Whether the dialect supports `NULLS FIRST` / `NULLS LAST` in ORDER BY. */
+  supportsNullsOrdering(): boolean;
+
   /** Whether the dialect supports `RETURNING *` on INSERT/UPDATE/DELETE. */
   supportsReturning(): boolean;
 

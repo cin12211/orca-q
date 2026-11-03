@@ -16,6 +16,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { DatabaseClientType } from '~/core/constants/database-client-type';
+import { getMinimumServerVersionNote } from '~/core/constants/minimum-server-versions';
 import type { Connection } from '~/core/stores';
 import {
   databaseSupports,
@@ -164,6 +165,10 @@ const handleSubmit = () => {
     handleCreateConnection();
   }
 };
+
+const minimumVersionNote = computed(() =>
+  getMinimumServerVersionNote(dbType.value)
+);
 
 const statusSectionRef = ref<HTMLElement | null>(null);
 
@@ -613,6 +618,14 @@ watch(testStatus, status => {
                 </p>
               </TabsContent>
             </Tabs>
+
+            <BaseNotice
+              v-if="minimumVersionNote"
+              data-testid="connection-minimum-version-note"
+              variant="secondary"
+            >
+              {{ minimumVersionNote }}
+            </BaseNotice>
 
             <Accordion
               v-if="canUseNetworkOptions"

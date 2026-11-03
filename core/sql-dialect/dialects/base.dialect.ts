@@ -64,6 +64,18 @@ export const baseDialect: SqlDialect = {
     return 'LIKE';
   },
 
+  buildPagination(limit: number, offset: number): string {
+    return `LIMIT ${limit} OFFSET ${offset}`;
+  },
+
+  requiresOrderByForPagination(): boolean {
+    return false;
+  },
+
+  supportsNullsOrdering(): boolean {
+    return false;
+  },
+
   supportsReturning(): boolean {
     return false;
   },

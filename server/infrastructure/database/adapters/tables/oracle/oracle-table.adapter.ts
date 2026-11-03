@@ -1,6 +1,7 @@
 import { createError } from 'h3';
-import * as oracledb from 'oracledb';
+import oracledb from 'oracledb';
 import { DatabaseClientType, BULK_CHUNK_SIZE } from '~/core/constants';
+import { getSqlDialect } from '~/core/sql-dialect';
 import type {
   BulkUpdateResponse,
   RLSPolicy,
@@ -13,11 +14,17 @@ import type {
   TableStructure,
   TableTrigger,
 } from '~/core/types';
+import { lowerCaseRowKeys } from '~/server/infrastructure/driver/result-rows';
 import { BaseDomainAdapter } from '../../shared';
+import { buildExportContent } from '../shared/export-content';
 import type {
   DatabaseTableAdapterParams,
   IDatabaseTableAdapter,
 } from '../types';
+
+// all_segments does not exist and dba_segments needs a privilege most users
+// lack, so sizes are only known for the connected user's own objects.
+const OWN_SEGMENTS = `(SELECT USER AS owner, segment_name, segment_type, bytes FROM user_segments)`;
 
 function formatBytes(value?: number | null) {
   return `${Number(value || 0)} B`;
@@ -105,8 +112,18 @@ export class OracleTableAdapter
     return new OracleTableAdapter(adapter);
   }
 
+  // Catalog queries alias columns in lower case; see lowerCaseRowKeys.
+  private async catalogQuery<T>(sql: string, bindings: unknown[] = []) {
+    return lowerCaseRowKeys<T>(
+      await this.adapter.rawQuery<Record<string, unknown>>(
+        sql,
+        bindings as any[]
+      )
+    );
+  }
+
   async getOverviewTables(schema: string): Promise<TableOverviewMetadata[]> {
-    return this.adapter.rawQuery<TableOverviewMetadata>(
+    return this.catalogQuery<TableOverviewMetadata>(
       `
         SELECT
           t.table_name AS name,
@@ -117,11 +134,11 @@ export class OracleTableAdapter
           TO_CHAR(NVL(tb.table_bytes, 0) + NVL(ix.index_bytes, 0)) || ' B' AS total_size,
           TO_CHAR(NVL(tb.table_bytes, 0)) || ' B' AS data_size,
           TO_CHAR(NVL(ix.index_bytes, 0)) || ' B' AS index_size,
-          c.comments AS comment
+          c.comments AS "comment"
         FROM all_tables t
         LEFT JOIN (
           SELECT owner, segment_name, SUM(bytes) AS table_bytes
-          FROM all_segments
+          FROM ${OWN_SEGMENTS}
           WHERE segment_type LIKE 'TABLE%'
           GROUP BY owner, segment_name
         ) tb
@@ -130,7 +147,7 @@ export class OracleTableAdapter
         LEFT JOIN (
           SELECT ai.table_owner AS owner, ai.table_name, SUM(NVL(s.bytes, 0)) AS index_bytes
           FROM all_indexes ai
-          LEFT JOIN all_segments s
+          LEFT JOIN ${OWN_SEGMENTS} s
             ON s.owner = ai.owner
             AND s.segment_name = ai.index_name
           GROUP BY ai.table_owner, ai.table_name
@@ -148,7 +165,7 @@ export class OracleTableAdapter
   }
 
   private async getForeignKeyConstraints(schema: string, tableName: string) {
-    return this.adapter.rawQuery<OracleForeignKeyConstraintRow>(
+    return this.catalogQuery<OracleForeignKeyConstraintRow>(
       `
         SELECT
           ac.constraint_name,
@@ -178,7 +195,7 @@ export class OracleTableAdapter
   }
 
   private async getPrimaryKeyColumns(schema: string, tableName: string) {
-    return this.adapter.rawQuery<OraclePrimaryKeyRow>(
+    return this.catalogQuery<OraclePrimaryKeyRow>(
       `
         SELECT acc.column_name
         FROM all_constraints ac
@@ -199,7 +216,7 @@ export class OracleTableAdapter
     tableName: string
   ): Promise<TableStructure[]> {
     const [columns, foreignKeys] = await Promise.all([
-      this.adapter.rawQuery<OracleColumnRow>(
+      this.catalogQuery<OracleColumnRow>(
         `
           SELECT
             c.column_name,
@@ -209,7 +226,7 @@ export class OracleTableAdapter
             c.data_precision,
             c.data_scale,
             c.nullable,
-            TRIM(c.data_default) AS default_value,
+            c.data_default AS default_value,
             col.comments AS column_comment
           FROM all_tab_columns c
           LEFT JOIN all_col_comments col
@@ -237,7 +254,7 @@ export class OracleTableAdapter
       column_name: column.column_name,
       data_type: formatOracleType(column),
       is_nullable: column.nullable === 'Y' ? 'YES' : 'NO',
-      default_value: column.default_value,
+      default_value: column.default_value?.trim() ?? null,
       foreign_keys: (foreignKeyMap.get(column.column_name) || [])
         .map(
           foreignKey =>
@@ -250,7 +267,7 @@ export class OracleTableAdapter
   }
 
   async getTableSize(schema: string, tableName: string): Promise<TableSize> {
-    const [row] = await this.adapter.rawQuery<{
+    const [row] = await this.catalogQuery<{
       table_bytes: number | null;
       index_bytes: number | null;
     }>(
@@ -261,7 +278,7 @@ export class OracleTableAdapter
         FROM dual
         LEFT JOIN (
           SELECT SUM(bytes) AS table_bytes
-          FROM all_segments
+          FROM ${OWN_SEGMENTS}
           WHERE owner = :1
             AND segment_name = :2
             AND segment_type LIKE 'TABLE%'
@@ -269,14 +286,14 @@ export class OracleTableAdapter
         LEFT JOIN (
           SELECT SUM(NVL(s.bytes, 0)) AS index_bytes
           FROM all_indexes ai
-          LEFT JOIN all_segments s
+          LEFT JOIN ${OWN_SEGMENTS} s
             ON s.owner = ai.owner
             AND s.segment_name = ai.index_name
-          WHERE ai.table_owner = :1
-            AND ai.table_name = :2
+          WHERE ai.table_owner = :3
+            AND ai.table_name = :4
         ) ix ON 1 = 1
       `,
-      [schema, tableName]
+      [schema, tableName, schema, tableName]
     );
 
     if (!row) {
@@ -291,7 +308,7 @@ export class OracleTableAdapter
   }
 
   async getTableMeta(schema: string, tableName: string): Promise<TableMeta> {
-    const [row] = await this.adapter.rawQuery<{
+    const [row] = await this.catalogQuery<{
       owner: string;
       num_rows: number | null;
       table_bytes: number | null;
@@ -306,7 +323,7 @@ export class OracleTableAdapter
         FROM all_tables t
         LEFT JOIN (
           SELECT owner, segment_name, SUM(bytes) AS table_bytes
-          FROM all_segments
+          FROM ${OWN_SEGMENTS}
           WHERE segment_type LIKE 'TABLE%'
           GROUP BY owner, segment_name
         ) tb
@@ -315,7 +332,7 @@ export class OracleTableAdapter
         LEFT JOIN (
           SELECT ai.table_owner AS owner, ai.table_name, SUM(NVL(s.bytes, 0)) AS index_bytes
           FROM all_indexes ai
-          LEFT JOIN all_segments s
+          LEFT JOIN ${OWN_SEGMENTS} s
             ON s.owner = ai.owner
             AND s.segment_name = ai.index_name
           GROUP BY ai.table_owner, ai.table_name
@@ -357,7 +374,7 @@ export class OracleTableAdapter
       let line = `  ${escapeOracleIdentifier(column.column_name)} ${column.data_type}`;
 
       if (column.default_value) {
-        line += ` DEFAULT ${column.default_value}`;
+        line += ` DEFAULT ${column.default_value.trim()}`;
       }
 
       if (column.is_nullable === 'NO') {
@@ -400,7 +417,7 @@ export class OracleTableAdapter
     schema: string,
     tableName: string
   ): Promise<TableIndex[]> {
-    const rows = await this.adapter.rawQuery<{
+    const rows = await this.catalogQuery<{
       index_name: string;
       is_unique: number;
       is_primary: number;
@@ -467,7 +484,7 @@ export class OracleTableAdapter
     schema: string,
     tableName: string
   ): Promise<TableTrigger[]> {
-    const rows = await this.adapter.rawQuery<{
+    const rows = await this.catalogQuery<{
       trigger_name: string;
       status: string;
       trigger_type: string;
@@ -554,9 +571,22 @@ export class OracleTableAdapter
     return this.executeStatements(statements);
   }
 
-  async exportTableData(schema: string, tableName: string): Promise<any> {
-    return this.adapter.rawQuery(
+  async exportTableData(
+    schema: string,
+    tableName: string,
+    format: string
+  ): Promise<string> {
+    const result = await this.adapter.rawOut<unknown[]>(
       `SELECT * FROM ${buildQualifiedTable(schema, tableName)}`
     );
+
+    return buildExportContent({
+      dialect: getSqlDialect(this.dbType),
+      schema,
+      tableName,
+      columns: (result.fields ?? []).map(field => field.name),
+      rows: result.rows,
+      format,
+    });
   }
 }

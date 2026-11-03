@@ -48,15 +48,17 @@ bun vitest --run test/unit/core/helpers/deepUnRef.spec.ts
 
 ### Playwright — Seven Projects
 
-| Project name | DB required        |
-| ------------ | ------------------ |
-| `common`     | all                |
-| `postgres`   | PostgreSQL         |
-| `mysql`      | MySQL              |
-| `mariadb`    | MariaDB            |
-| `oracle`     | Oracle             |
-| `redis`      | Redis              |
-| `sqlite`     | SQLite (no Docker) |
+| Project name  | DB required        |
+| ------------- | ------------------ |
+| `common`      | all                |
+| `postgres`    | PostgreSQL         |
+| `mysql`       | MySQL              |
+| `mariadb`     | MariaDB            |
+| `oracle`      | Oracle             |
+| `mssql`       | SQL Server         |
+| `cockroachdb` | CockroachDB        |
+| `redis`       | Redis              |
+| `sqlite`      | SQLite (no Docker) |
 
 **Run a single Playwright project:**
 
@@ -88,20 +90,23 @@ Fixtures are Docker containers (PostgreSQL 16, MySQL 8.4, MariaDB 11.4, Redis 7.
 
 ### Profiles
 
-| Profile    | What starts                                        |
-| ---------- | -------------------------------------------------- |
-| `postgres` | PostgreSQL only                                    |
-| `mysql`    | MySQL only                                         |
-| `mariadb`  | MariaDB only                                       |
-| `sql`      | PostgreSQL + MySQL + MariaDB                       |
-| `redis`    | Redis only                                         |
-| `mongodb`  | MongoDB only                                       |
-| `sqlite`   | SQLite prep only (no Docker)                       |
-| `duckdb`   | DuckDB prep only (no Docker)                       |
-| `rabbitmq` | RabbitMQ only (opt-in)                             |
-| `kafka`    | Kafka only (opt-in)                                |
-| `all`      | Everything above except the opt-in broker profiles |
-| `none`     | Nothing — fixtures skipped                         |
+| Profile       | What starts                                        |
+| ------------- | -------------------------------------------------- |
+| `postgres`    | PostgreSQL only                                    |
+| `mysql`       | MySQL only                                         |
+| `mariadb`     | MariaDB only                                       |
+| `sql`         | PostgreSQL + MySQL + MariaDB                       |
+| `cockroachdb` | CockroachDB only (seeded on start)                 |
+| `mssql`       | SQL Server only (seeded on start, amd64 image)     |
+| `oracle`      | Oracle only (first start seeds for a few minutes)  |
+| `redis`       | Redis only                                         |
+| `mongodb`     | MongoDB only                                       |
+| `sqlite`      | SQLite prep only (no Docker)                       |
+| `duckdb`      | DuckDB prep only (no Docker)                       |
+| `rabbitmq`    | RabbitMQ only (opt-in)                             |
+| `kafka`       | Kafka only (opt-in)                                |
+| `all`         | Everything above except the opt-in broker profiles |
+| `none`        | Nothing — fixtures skipped                         |
 
 ### Manual fixture control
 
@@ -173,14 +178,17 @@ ORCAQ_POSTGRES_PORT=5433 bun test:api
 
 When running locally with the default fixture setup, you can connect to the databases using the following full connection strings:
 
-| Database       | Connection String / File Path                                                                                                                                            |
-| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| **PostgreSQL** | `postgresql://orcaq:orcaq@127.0.0.1:5432/pagila`                                                                                                                         |
-| **MySQL**      | `mysql://orcaq:orcaq@127.0.0.1:3306/sakila`                                                                                                                              |
-| **MariaDB**    | `mysql://orcaq:orcaq@127.0.0.1:3307/sakila` (Note: Uses `mysql` protocol)                                                                                                |
-| **Redis**      | `redis://127.0.0.1:6379/0`                                                                                                                                               |
-| **SQLite**     | `test/fixtures/datasets/.tmp/sqlite/sakila.sqlite` (Relative to repo root)<br>Or absolute: `sqlite:///path/to/repo/test/fixtures/datasets/.tmp/sqlite/sakila.sqlite`     |
-| **DuckDB**     | `test/fixtures/datasets/.tmp/duckdb/shop.duckdb` and `shop-staging.duckdb` (Relative to repo root). Build with `bun test:fixtures:up --profile duckdb`; desktop app only |
+| Database        | Connection String / File Path                                                                                                                                            |
+| --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **PostgreSQL**  | `postgresql://orcaq:orcaq@127.0.0.1:5432/pagila`                                                                                                                         |
+| **MySQL**       | `mysql://orcaq:orcaq@127.0.0.1:3306/sakila`                                                                                                                              |
+| **MariaDB**     | `mysql://orcaq:orcaq@127.0.0.1:3307/sakila` (Note: Uses `mysql` protocol)                                                                                                |
+| **Redis**       | `redis://127.0.0.1:6379/0`                                                                                                                                               |
+| **SQLite**      | `test/fixtures/datasets/.tmp/sqlite/sakila.sqlite` (Relative to repo root)<br>Or absolute: `sqlite:///path/to/repo/test/fixtures/datasets/.tmp/sqlite/sakila.sqlite`     |
+| **SQL Server**  | `sqlserver://sa:OrcaQ_Passw0rd%21@127.0.0.1:1433/sakila`                                                                                                                 |
+| **CockroachDB** | `postgresql://root@127.0.0.1:26257/sakila?sslmode=disable` (insecure mode, no password)                                                                                  |
+| **Oracle**      | `oracledb://orcaq:orcaq@127.0.0.1:1521/FREEPDB1` (schema `ORCAQ`)                                                                                                        |
+| **DuckDB**      | `test/fixtures/datasets/.tmp/duckdb/shop.duckdb` and `shop-staging.duckdb` (Relative to repo root). Build with `bun test:fixtures:up --profile duckdb`; desktop app only |
 
 ### Message Broker Fixtures (RabbitMQ, Kafka)
 

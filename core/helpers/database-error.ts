@@ -20,6 +20,7 @@ export class DatabaseDriverNormalizerError {
 
     switch (this.rawError.dbType) {
       case DatabaseClientType.POSTGRES:
+      case DatabaseClientType.COCKROACHDB:
         return this.normalizePostgresError(fallbackMessage);
       case DatabaseClientType.MYSQL:
         return this.normalizeMysqlError(fallbackMessage);

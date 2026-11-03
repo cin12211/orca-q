@@ -27,7 +27,7 @@ export class PostgresTableAdapter
   extends BaseDomainAdapter
   implements IDatabaseTableAdapter
 {
-  readonly dbType = DatabaseClientType.POSTGRES;
+  readonly dbType: DatabaseClientType = DatabaseClientType.POSTGRES;
   private readonly metadataAdapter: PostgresTableMetadataAdapter;
   private readonly structureAdapter: PostgresTableStructureAdapter;
   private readonly mutationAdapter: PostgresTableMutationAdapter;

@@ -42,6 +42,7 @@ useHotkeys(
       <Button
         variant="outline"
         size="xxs"
+        data-testid="quick-query-refresh"
         @click="handleRefreshClick"
         aria-label="Refresh table"
       >
