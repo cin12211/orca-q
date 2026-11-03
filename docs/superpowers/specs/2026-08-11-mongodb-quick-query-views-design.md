@@ -64,7 +64,7 @@ New MongoDB-only sub-module, following the flat-sub-module pattern already
 documented for `quick-query/` in `module-architecture.md`:
 
 ```
-components/modules/quick-query/mongodb/
+components/modules/mongodb-workspace/
 ├── containers/
 │   ├── MongoDatabaseOverview.vue   — lists collections via useMongoDatabaseCollections + BaseDataGrid
 │   ├── MongoCollectionDetail.vue   — owns the Table/List/Object List switch, composes the three view components

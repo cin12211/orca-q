@@ -22,23 +22,23 @@
 
 **Files:**
 
-- Modify: `components/modules/quick-query/mongodb/types/mongo-quick-query.types.ts`
-- Create: `components/modules/quick-query/mongodb/utils/mongoMoreOptionsUtils.ts`
-- Modify: `components/modules/quick-query/mongodb/utils/index.ts`
-- Create: `test/unit/components/modules/quick-query/mongodb/mongoMoreOptionsUtils.spec.ts`
+- Modify: `components/modules/mongodb-workspace/types/mongo-quick-query.types.ts`
+- Create: `components/modules/mongodb-workspace/utils/mongoMoreOptionsUtils.ts`
+- Modify: `components/modules/mongodb-workspace/utils/index.ts`
+- Create: `test/unit/components/modules/mongodb-workspace/mongoMoreOptionsUtils.spec.ts`
 
 **Interfaces:**
 
-- Consumes: `parseMongoDocumentInput` from `components/modules/quick-query/mongodb/utils/mongoEjsonUtils.ts`
+- Consumes: `parseMongoDocumentInput` from `components/modules/mongodb-workspace/utils/mongoEjsonUtils.ts`
 - Produces: `MongoQueryMoreOptionsPayload`, `parseMongoMoreOptionsInput`
 
 - [x] **Step 1: Write failing unit test for parseMongoMoreOptionsInput**
 
-Create `test/unit/components/modules/quick-query/mongodb/mongoMoreOptionsUtils.spec.ts`:
+Create `test/unit/components/modules/mongodb-workspace/mongoMoreOptionsUtils.spec.ts`:
 
 ```typescript
 import { describe, expect, it } from 'vitest';
-import { parseMongoMoreOptionsInput } from '~/components/modules/quick-query/mongodb/utils/mongoMoreOptionsUtils';
+import { parseMongoMoreOptionsInput } from '~/components/modules/mongodb-workspace/utils/mongoMoreOptionsUtils';
 
 describe('parseMongoMoreOptionsInput', () => {
   it('parses valid JSON fields correctly', () => {
@@ -98,12 +98,12 @@ describe('parseMongoMoreOptionsInput', () => {
 
 - [x] **Step 2: Run test to verify it fails**
 
-Run: `bun test test/unit/components/modules/quick-query/mongodb/mongoMoreOptionsUtils.spec.ts`
+Run: `bun test test/unit/components/modules/mongodb-workspace/mongoMoreOptionsUtils.spec.ts`
 Expected: FAIL (module not found)
 
 - [x] **Step 3: Define types in `mongo-quick-query.types.ts`**
 
-Add to `components/modules/quick-query/mongodb/types/mongo-quick-query.types.ts`:
+Add to `components/modules/mongodb-workspace/types/mongo-quick-query.types.ts`:
 
 ```typescript
 export interface MongoQueryMoreOptionsPayload {
@@ -125,7 +125,7 @@ export interface MongoQueryMoreOptionsRawInput {
 
 - [x] **Step 4: Implement `mongoMoreOptionsUtils.ts`**
 
-Create `components/modules/quick-query/mongodb/utils/mongoMoreOptionsUtils.ts`:
+Create `components/modules/mongodb-workspace/utils/mongoMoreOptionsUtils.ts`:
 
 ```typescript
 import type {
@@ -238,7 +238,7 @@ export function parseMongoMoreOptionsInput(
 
 - [x] **Step 5: Export from `utils/index.ts`**
 
-In `components/modules/quick-query/mongodb/utils/index.ts`, add:
+In `components/modules/mongodb-workspace/utils/index.ts`, add:
 
 ```typescript
 export * from './mongoMoreOptionsUtils';
@@ -246,7 +246,7 @@ export * from './mongoMoreOptionsUtils';
 
 - [x] **Step 6: Run test to verify it passes**
 
-Run: `bun test test/unit/components/modules/quick-query/mongodb/mongoMoreOptionsUtils.spec.ts`
+Run: `bun test test/unit/components/modules/mongodb-workspace/mongoMoreOptionsUtils.spec.ts`
 Expected: PASS (4 tests passed)
 
 ---
@@ -256,7 +256,7 @@ Expected: PASS (4 tests passed)
 **Files:**
 
 - Modify: `server/api/mongodb/quick-query.post.ts`
-- Modify: `components/modules/quick-query/mongodb/hooks/useMongoCollectionQuery.ts`
+- Modify: `components/modules/mongodb-workspace/hooks/useMongoCollectionQuery.ts`
 
 **Interfaces:**
 
@@ -316,7 +316,7 @@ const [documents, total] = await Promise.all([
 
 - [x] **Step 2: Update `useMongoCollectionQuery.ts`**
 
-In `components/modules/quick-query/mongodb/hooks/useMongoCollectionQuery.ts`:
+In `components/modules/mongodb-workspace/hooks/useMongoCollectionQuery.ts`:
 
 - Import `MongoQueryMoreOptionsPayload` from `../types`.
 - Add state: `const activeMoreOptionsPayload = ref<MongoQueryMoreOptionsPayload | undefined>();`.
@@ -349,8 +349,8 @@ Expected: PASS
 
 **Files:**
 
-- Modify: `components/modules/quick-query/mongodb/components/MongoQuickQueryControlBar.vue`
-- Modify: `test/nuxt/components/modules/quick-query/mongodb/MongoQuickQueryControlBar.test.ts`
+- Modify: `components/modules/mongodb-workspace/components/MongoQuickQueryControlBar.vue`
+- Modify: `test/nuxt/components/modules/mongodb-workspace/MongoQuickQueryControlBar.test.ts`
 
 **Interfaces:**
 
@@ -359,7 +359,7 @@ Expected: PASS
 
 - [x] **Step 1: Write test for More options button**
 
-In `test/nuxt/components/modules/quick-query/mongodb/MongoQuickQueryControlBar.test.ts`, add:
+In `test/nuxt/components/modules/mongodb-workspace/MongoQuickQueryControlBar.test.ts`, add:
 
 ```typescript
 it('renders More options button and emits onToggleMoreOptions when clicked', async () => {
@@ -376,7 +376,7 @@ it('renders More options button and emits onToggleMoreOptions when clicked', asy
 
 - [x] **Step 2: Run test to verify it fails**
 
-Run: `bun test:nuxt test/nuxt/components/modules/quick-query/mongodb/MongoQuickQueryControlBar.test.ts`
+Run: `bun test:nuxt test/nuxt/components/modules/mongodb-workspace/MongoQuickQueryControlBar.test.ts`
 Expected: FAIL (button with 'More options' not found)
 
 - [x] **Step 3: Add More options button to `MongoQuickQueryControlBar.vue`**
@@ -442,7 +442,7 @@ In template, right beside `<QuickPagination ... />`:
 
 - [x] **Step 4: Run test to verify it passes**
 
-Run: `bun test:nuxt test/nuxt/components/modules/quick-query/mongodb/MongoQuickQueryControlBar.test.ts`
+Run: `bun test:nuxt test/nuxt/components/modules/mongodb-workspace/MongoQuickQueryControlBar.test.ts`
 Expected: PASS
 
 ---
@@ -451,9 +451,9 @@ Expected: PASS
 
 **Files:**
 
-- Create: `components/modules/quick-query/mongodb/components/MongoQueryMoreOptions.vue`
-- Modify: `components/modules/quick-query/mongodb/components/index.ts`
-- Create: `test/nuxt/components/modules/quick-query/mongodb/MongoQueryMoreOptions.test.ts`
+- Create: `components/modules/mongodb-workspace/components/MongoQueryMoreOptions.vue`
+- Modify: `components/modules/mongodb-workspace/components/index.ts`
+- Create: `test/nuxt/components/modules/mongodb-workspace/MongoQueryMoreOptions.test.ts`
 
 **Interfaces:**
 
@@ -462,12 +462,12 @@ Expected: PASS
 
 - [x] **Step 1: Write test for `MongoQueryMoreOptions.vue`**
 
-Create `test/nuxt/components/modules/quick-query/mongodb/MongoQueryMoreOptions.test.ts`:
+Create `test/nuxt/components/modules/mongodb-workspace/MongoQueryMoreOptions.test.ts`:
 
 ```typescript
 import { mount } from '@vue/test-utils';
 import { describe, expect, it } from 'vitest';
-import MongoQueryMoreOptions from '~/components/modules/quick-query/mongodb/components/MongoQueryMoreOptions.vue';
+import MongoQueryMoreOptions from '~/components/modules/mongodb-workspace/components/MongoQueryMoreOptions.vue';
 
 describe('MongoQueryMoreOptions', () => {
   it('renders all 5 fields with placeholders', () => {
@@ -513,12 +513,12 @@ describe('MongoQueryMoreOptions', () => {
 
 - [x] **Step 2: Run test to verify it fails**
 
-Run: `bun test:nuxt test/nuxt/components/modules/quick-query/mongodb/MongoQueryMoreOptions.test.ts`
+Run: `bun test:nuxt test/nuxt/components/modules/mongodb-workspace/MongoQueryMoreOptions.test.ts`
 Expected: FAIL (component not found)
 
 - [x] **Step 3: Implement `MongoQueryMoreOptions.vue`**
 
-Create `components/modules/quick-query/mongodb/components/MongoQueryMoreOptions.vue`:
+Create `components/modules/mongodb-workspace/components/MongoQueryMoreOptions.vue`:
 
 ```vue
 <script setup lang="ts">
@@ -761,7 +761,7 @@ const onKeydown = (e: KeyboardEvent) => {
 
 - [x] **Step 4: Export from `components/index.ts`**
 
-In `components/modules/quick-query/mongodb/components/index.ts`:
+In `components/modules/mongodb-workspace/components/index.ts`:
 
 ```typescript
 export { default as MongoQueryMoreOptions } from './MongoQueryMoreOptions.vue';
@@ -769,7 +769,7 @@ export { default as MongoQueryMoreOptions } from './MongoQueryMoreOptions.vue';
 
 - [x] **Step 5: Run component test to verify it passes**
 
-Run: `bun test:nuxt test/nuxt/components/modules/quick-query/mongodb/MongoQueryMoreOptions.test.ts`
+Run: `bun test:nuxt test/nuxt/components/modules/mongodb-workspace/MongoQueryMoreOptions.test.ts`
 Expected: PASS
 
 ---
@@ -778,7 +778,7 @@ Expected: PASS
 
 **Files:**
 
-- Modify: `components/modules/quick-query/mongodb/containers/MongoCollectionDetail.vue`
+- Modify: `components/modules/mongodb-workspace/containers/MongoCollectionDetail.vue`
 - Verify with test suites and typecheck
 
 - [x] **Step 1: Wire `isShowMoreOptions` in `MongoCollectionDetail.vue`**
@@ -842,8 +842,8 @@ In `MongoCollectionDetail.vue`:
 
 Run:
 
-1. `bun test:nuxt test/nuxt/components/modules/quick-query/mongodb/MongoQuickQueryControlBar.test.ts`
-2. `bun test:nuxt test/nuxt/components/modules/quick-query/mongodb/MongoQueryMoreOptions.test.ts`
+1. `bun test:nuxt test/nuxt/components/modules/mongodb-workspace/MongoQuickQueryControlBar.test.ts`
+2. `bun test:nuxt test/nuxt/components/modules/mongodb-workspace/MongoQueryMoreOptions.test.ts`
 3. `bun test:unit`
 
 - [x] **Step 3: Run Typecheck**

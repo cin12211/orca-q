@@ -10,7 +10,7 @@
 
 ## Global Constraints
 
-- Follow `components/modules/quick-query/mongodb/` flat sub-module architecture; every folder must have an `index.ts`.
+- Follow `components/modules/mongodb-workspace/` flat sub-module architecture; every folder must have an `index.ts`.
 - Prefer Hugeicons (`hugeicons:` collection); verified icons: `hugeicons:pencil-edit-02` (edit), `hugeicons:cancel-01` (cancel), `hugeicons:floppy-disk` (save), `hugeicons:files-01` (doc id), `hugeicons:unfold-more` / `hugeicons:unfold-less` (expand/collapse), `hugeicons:copy-01` (copy).
 - Immutable `_id` protection: Never send modified `_id` in update `$set` payload; always use the original document `_id` as the selector.
 - Single active editor at a time: Entering edit mode on document B cancels/closes editing on document A.
@@ -22,9 +22,9 @@
 
 **Files:**
 
-- Create: `components/modules/quick-query/mongodb/hooks/useMongoDocumentMutation.ts`
-- Modify: `components/modules/quick-query/mongodb/hooks/index.ts`
-- Create: `test/nuxt/components/modules/quick-query/mongodb/useMongoDocumentMutation.test.ts`
+- Create: `components/modules/mongodb-workspace/hooks/useMongoDocumentMutation.ts`
+- Modify: `components/modules/mongodb-workspace/hooks/index.ts`
+- Create: `test/nuxt/components/modules/mongodb-workspace/useMongoDocumentMutation.test.ts`
 
 **Interfaces:**
 
@@ -39,12 +39,12 @@
 
 - [ ] **Step 1: Write the failing test**
 
-Create `test/nuxt/components/modules/quick-query/mongodb/useMongoDocumentMutation.test.ts`:
+Create `test/nuxt/components/modules/mongodb-workspace/useMongoDocumentMutation.test.ts`:
 
 ```typescript
 import { ref } from 'vue';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { useMongoDocumentMutation } from '~/components/modules/quick-query/mongodb/hooks/useMongoDocumentMutation';
+import { useMongoDocumentMutation } from '~/components/modules/mongodb-workspace/hooks/useMongoDocumentMutation';
 
 const mockFetch = vi.fn();
 vi.stubGlobal('$fetch', mockFetch);
@@ -139,12 +139,12 @@ describe('useMongoDocumentMutation', () => {
 
 - [ ] **Step 2: Run test to verify it fails**
 
-Run: `bun test:nuxt test/nuxt/components/modules/quick-query/mongodb/useMongoDocumentMutation.test.ts`
-Expected: FAIL with "Cannot find module '~/components/modules/quick-query/mongodb/hooks/useMongoDocumentMutation'"
+Run: `bun test:nuxt test/nuxt/components/modules/mongodb-workspace/useMongoDocumentMutation.test.ts`
+Expected: FAIL with "Cannot find module '~/components/modules/mongodb-workspace/hooks/useMongoDocumentMutation'"
 
 - [ ] **Step 3: Implement `useMongoDocumentMutation.ts` and update `hooks/index.ts`**
 
-Create `components/modules/quick-query/mongodb/hooks/useMongoDocumentMutation.ts`:
+Create `components/modules/mongodb-workspace/hooks/useMongoDocumentMutation.ts`:
 
 ```typescript
 import { ref, type Ref } from 'vue';
@@ -232,7 +232,7 @@ export function useMongoDocumentMutation(params: {
 }
 ```
 
-Update `components/modules/quick-query/mongodb/hooks/index.ts` to add:
+Update `components/modules/mongodb-workspace/hooks/index.ts` to add:
 
 ```typescript
 export * from './useMongoDocumentMutation';
@@ -240,13 +240,13 @@ export * from './useMongoDocumentMutation';
 
 - [ ] **Step 4: Run test to verify it passes**
 
-Run: `bun test:nuxt test/nuxt/components/modules/quick-query/mongodb/useMongoDocumentMutation.test.ts`
+Run: `bun test:nuxt test/nuxt/components/modules/mongodb-workspace/useMongoDocumentMutation.test.ts`
 Expected: PASS
 
 - [ ] **Step 5: Commit Task 1**
 
 ```bash
-git add components/modules/quick-query/mongodb/hooks/useMongoDocumentMutation.ts components/modules/quick-query/mongodb/hooks/index.ts test/nuxt/components/modules/quick-query/mongodb/useMongoDocumentMutation.test.ts
+git add components/modules/mongodb-workspace/hooks/useMongoDocumentMutation.ts components/modules/mongodb-workspace/hooks/index.ts test/nuxt/components/modules/mongodb-workspace/useMongoDocumentMutation.test.ts
 git commit -m "feat(mongodb): add useMongoDocumentMutation hook and unit tests"
 ```
 
@@ -256,9 +256,9 @@ git commit -m "feat(mongodb): add useMongoDocumentMutation hook and unit tests"
 
 **Files:**
 
-- Create: `components/modules/quick-query/mongodb/components/MongoCollectionListItem.vue`
-- Modify: `components/modules/quick-query/mongodb/components/index.ts`
-- Create: `test/nuxt/components/modules/quick-query/mongodb/MongoCollectionListItem.test.ts`
+- Create: `components/modules/mongodb-workspace/components/MongoCollectionListItem.vue`
+- Modify: `components/modules/mongodb-workspace/components/index.ts`
+- Create: `test/nuxt/components/modules/mongodb-workspace/MongoCollectionListItem.test.ts`
 
 **Interfaces:**
 
@@ -275,13 +275,13 @@ git commit -m "feat(mongodb): add useMongoDocumentMutation hook and unit tests"
 
 - [ ] **Step 1: Write the failing test**
 
-Create `test/nuxt/components/modules/quick-query/mongodb/MongoCollectionListItem.test.ts`:
+Create `test/nuxt/components/modules/mongodb-workspace/MongoCollectionListItem.test.ts`:
 
 ```typescript
 import { flushPromises, mount } from '@vue/test-utils';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import VueJsonPretty from 'vue-json-pretty';
-import MongoCollectionListItem from '~/components/modules/quick-query/mongodb/components/MongoCollectionListItem.vue';
+import MongoCollectionListItem from '~/components/modules/mongodb-workspace/components/MongoCollectionListItem.vue';
 import TooltipProvider from '~/components/ui/tooltip/TooltipProvider.vue';
 
 const mockToastError = vi.fn();
@@ -420,12 +420,12 @@ describe('MongoCollectionListItem', () => {
 
 - [ ] **Step 2: Run test to verify it fails**
 
-Run: `bun test:nuxt test/nuxt/components/modules/quick-query/mongodb/MongoCollectionListItem.test.ts`
-Expected: FAIL with "Cannot find module '~/components/modules/quick-query/mongodb/components/MongoCollectionListItem.vue'"
+Run: `bun test:nuxt test/nuxt/components/modules/mongodb-workspace/MongoCollectionListItem.test.ts`
+Expected: FAIL with "Cannot find module '~/components/modules/mongodb-workspace/components/MongoCollectionListItem.vue'"
 
 - [ ] **Step 3: Implement `MongoCollectionListItem.vue` and update `components/index.ts`**
 
-Create `components/modules/quick-query/mongodb/components/MongoCollectionListItem.vue`:
+Create `components/modules/mongodb-workspace/components/MongoCollectionListItem.vue`:
 
 ```vue
 <script setup lang="ts">
@@ -694,7 +694,7 @@ const onSave = () => {
 </template>
 ```
 
-Update `components/modules/quick-query/mongodb/components/index.ts` to add:
+Update `components/modules/mongodb-workspace/components/index.ts` to add:
 
 ```typescript
 export { default as MongoCollectionListItem } from './MongoCollectionListItem.vue';
@@ -702,13 +702,13 @@ export { default as MongoCollectionListItem } from './MongoCollectionListItem.vu
 
 - [ ] **Step 4: Run test to verify it passes**
 
-Run: `bun test:nuxt test/nuxt/components/modules/quick-query/mongodb/MongoCollectionListItem.test.ts`
+Run: `bun test:nuxt test/nuxt/components/modules/mongodb-workspace/MongoCollectionListItem.test.ts`
 Expected: PASS
 
 - [ ] **Step 5: Commit Task 2**
 
 ```bash
-git add components/modules/quick-query/mongodb/components/MongoCollectionListItem.vue components/modules/quick-query/mongodb/components/index.ts test/nuxt/components/modules/quick-query/mongodb/MongoCollectionListItem.test.ts
+git add components/modules/mongodb-workspace/components/MongoCollectionListItem.vue components/modules/mongodb-workspace/components/index.ts test/nuxt/components/modules/mongodb-workspace/MongoCollectionListItem.test.ts
 git commit -m "feat(mongodb): add MongoCollectionListItem component and tests"
 ```
 
@@ -718,8 +718,8 @@ git commit -m "feat(mongodb): add MongoCollectionListItem component and tests"
 
 **Files:**
 
-- Modify: `components/modules/quick-query/mongodb/components/MongoCollectionListView.vue`
-- Modify: `test/nuxt/components/modules/quick-query/mongodb/MongoCollectionListView.test.ts`
+- Modify: `components/modules/mongodb-workspace/components/MongoCollectionListView.vue`
+- Modify: `test/nuxt/components/modules/mongodb-workspace/MongoCollectionListView.test.ts`
 
 **Interfaces:**
 
@@ -733,13 +733,13 @@ git commit -m "feat(mongodb): add MongoCollectionListItem component and tests"
 
 - [ ] **Step 1: Write the updated/failing test**
 
-Update `test/nuxt/components/modules/quick-query/mongodb/MongoCollectionListView.test.ts`:
+Update `test/nuxt/components/modules/mongodb-workspace/MongoCollectionListView.test.ts`:
 
 ```typescript
 import { flushPromises, mount } from '@vue/test-utils';
 import { describe, expect, it, vi } from 'vitest';
-import MongoCollectionListItem from '~/components/modules/quick-query/mongodb/components/MongoCollectionListItem.vue';
-import MongoCollectionListView from '~/components/modules/quick-query/mongodb/components/MongoCollectionListView.vue';
+import MongoCollectionListItem from '~/components/modules/mongodb-workspace/components/MongoCollectionListItem.vue';
+import MongoCollectionListView from '~/components/modules/mongodb-workspace/components/MongoCollectionListView.vue';
 import TooltipProvider from '~/components/ui/tooltip/TooltipProvider.vue';
 
 const mockMeasureElement = vi.fn();
@@ -806,12 +806,12 @@ describe('MongoCollectionListView', () => {
 
 - [ ] **Step 2: Run test to verify it fails**
 
-Run: `bun test:nuxt test/nuxt/components/modules/quick-query/mongodb/MongoCollectionListView.test.ts`
+Run: `bun test:nuxt test/nuxt/components/modules/mongodb-workspace/MongoCollectionListView.test.ts`
 Expected: FAIL (until MongoCollectionListView is updated)
 
 - [ ] **Step 3: Update `MongoCollectionListView.vue`**
 
-Update `components/modules/quick-query/mongodb/components/MongoCollectionListView.vue`:
+Update `components/modules/mongodb-workspace/components/MongoCollectionListView.vue`:
 
 ```vue
 <script setup lang="ts">
@@ -976,13 +976,13 @@ defineExpose({ scrollToTop, onExitEditMode });
 
 - [ ] **Step 4: Run test to verify it passes**
 
-Run: `bun test:nuxt test/nuxt/components/modules/quick-query/mongodb/MongoCollectionListView.test.ts`
+Run: `bun test:nuxt test/nuxt/components/modules/mongodb-workspace/MongoCollectionListView.test.ts`
 Expected: PASS
 
 - [ ] **Step 5: Commit Task 3**
 
 ```bash
-git add components/modules/quick-query/mongodb/components/MongoCollectionListView.vue test/nuxt/components/modules/quick-query/mongodb/MongoCollectionListView.test.ts
+git add components/modules/mongodb-workspace/components/MongoCollectionListView.vue test/nuxt/components/modules/mongodb-workspace/MongoCollectionListView.test.ts
 git commit -m "feat(mongodb): integrate MongoCollectionListItem into MongoCollectionListView"
 ```
 
@@ -992,8 +992,8 @@ git commit -m "feat(mongodb): integrate MongoCollectionListItem into MongoCollec
 
 **Files:**
 
-- Modify: `components/modules/quick-query/mongodb/containers/MongoCollectionDetail.vue`
-- Test: `test/nuxt/components/modules/quick-query/mongodb/MongoCollectionDetail.test.ts`
+- Modify: `components/modules/mongodb-workspace/containers/MongoCollectionDetail.vue`
+- Test: `test/nuxt/components/modules/mongodb-workspace/MongoCollectionDetail.test.ts`
 
 **Interfaces:**
 
@@ -1005,11 +1005,11 @@ git commit -m "feat(mongodb): integrate MongoCollectionListItem into MongoCollec
 
 - [ ] **Step 1: Inspect and update container test**
 
-Review `test/nuxt/components/modules/quick-query/mongodb/MongoCollectionDetail.test.ts` and verify it continues passing.
+Review `test/nuxt/components/modules/mongodb-workspace/MongoCollectionDetail.test.ts` and verify it continues passing.
 
 - [ ] **Step 2: Update `MongoCollectionDetail.vue`**
 
-In `components/modules/quick-query/mongodb/containers/MongoCollectionDetail.vue`:
+In `components/modules/mongodb-workspace/containers/MongoCollectionDetail.vue`:
 Import `useMongoDocumentMutation`:
 
 ```typescript
@@ -1055,7 +1055,7 @@ In template for `MongoCollectionListView`:
 
 - [ ] **Step 3: Run all targeted tests**
 
-Run: `bun test:nuxt test/nuxt/components/modules/quick-query/mongodb/`
+Run: `bun test:nuxt test/nuxt/components/modules/mongodb-workspace/`
 Expected: ALL 7 test files pass.
 
 - [ ] **Step 4: Run full project verification**
@@ -1069,7 +1069,7 @@ Expected: All unit tests pass.
 - [ ] **Step 5: Commit Task 4**
 
 ```bash
-git add components/modules/quick-query/mongodb/containers/MongoCollectionDetail.vue
+git add components/modules/mongodb-workspace/containers/MongoCollectionDetail.vue
 git commit -m "feat(mongodb): wire document mutation into MongoCollectionDetail"
 ```
 

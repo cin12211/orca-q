@@ -1,7 +1,8 @@
 <script setup lang="ts">
+import { storeToRefs } from 'pinia';
 import { DatabaseClientType } from '~/core/constants/database-client-type';
-import { useManagementConnectionStore } from '~/core/stores/managementConnectionStore';
-import type { RedisDatabaseOption } from '~/core/types/redis-workspace.types';
+import type { Connection } from '~/core/stores';
+import { useTabViewsStore } from '~/core/stores/useTabViewsStore';
 import {
   RedisClientsSection,
   RedisConfigSection,
@@ -13,16 +14,10 @@ import {
   RedisReplicationSection,
 } from '../components/insights';
 import { useRedisInstanceInsights } from '../hooks/useRedisInstanceInsights';
+import { useRedisWorkspace } from '../hooks/useRedisWorkspace';
 
 const props = defineProps<{
-  databaseName: string;
-  databaseIndex: number;
-  databases: RedisDatabaseOption[];
-  dbType?: DatabaseClientType;
-}>();
-
-const emit = defineEmits<{
-  (e: 'update:databaseIndex', value: number): void;
+  connection: Connection;
 }>();
 
 const sections = [
@@ -36,8 +31,28 @@ const sections = [
   { id: 'config', label: 'Config' },
 ] as const;
 
-const connectionStore = useManagementConnectionStore();
-const connection = computed(() => connectionStore.selectedConnection);
+const tabViewStore = useTabViewsStore();
+const { activeTab } = storeToRefs(tabViewStore);
+
+const connection = computed(() => props.connection);
+const dbType = computed(() => props.connection.type);
+
+const redisWorkspace = useRedisWorkspace({
+  connection,
+  mode: 'meta',
+});
+const { selectedDatabaseIndex: databaseIndex } = redisWorkspace;
+
+// Sync the selected DB from the tab before the insights hook starts fetching.
+watch(
+  () => activeTab.value?.metadata?.databaseIndex,
+  value => {
+    if (typeof value === 'number') {
+      databaseIndex.value = value;
+    }
+  },
+  { immediate: true }
+);
 
 const {
   activeSection,
@@ -52,7 +67,7 @@ const {
   killClient,
 } = useRedisInstanceInsights({
   connection,
-  databaseIndex: computed(() => props.databaseIndex),
+  databaseIndex,
 });
 
 // Flips on every completed fetch (including silent auto-refresh) so the
@@ -153,7 +168,7 @@ watch(refreshSignal, () => {
           :keyspace="insights?.keyspace"
           :db-index="databaseIndex"
           :is-initial-loading="isInitialLoading"
-          @select-db="emit('update:databaseIndex', $event)"
+          @select-db="databaseIndex = $event"
         />
       </TabsContent>
 

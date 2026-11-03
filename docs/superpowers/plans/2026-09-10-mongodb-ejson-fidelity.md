@@ -73,11 +73,11 @@ Expected: PASS.
 
 **Files:**
 
-- Modify: `components/modules/quick-query/mongodb/utils/mongoFilterUtils.ts`
-- Create: `components/modules/quick-query/mongodb/utils/mongoEjsonUtils.ts`
-- Modify: `components/modules/quick-query/mongodb/utils/index.ts`
-- Test: `test/unit/components/modules/quick-query/mongodb/mongoFilterUtils.spec.ts`
-- Create: `test/unit/components/modules/quick-query/mongodb/mongoEjsonUtils.spec.ts`
+- Modify: `components/modules/mongodb-workspace/utils/mongoFilterUtils.ts`
+- Create: `components/modules/mongodb-workspace/utils/mongoEjsonUtils.ts`
+- Modify: `components/modules/mongodb-workspace/utils/index.ts`
+- Test: `test/unit/components/modules/mongodb-workspace/mongoFilterUtils.spec.ts`
+- Create: `test/unit/components/modules/mongodb-workspace/mongoEjsonUtils.spec.ts`
 
 **Consumes:** Canonical EJSON transport values and raw filter text.
 
@@ -101,7 +101,7 @@ expect(formatMongoEjsonValue({ $numberDecimal: '1.50' })).toBe(
 
 - [ ] **Step 2: Run the focused tests to verify they fail**
 
-Run: `bun vitest --run test/unit/components/modules/quick-query/mongodb/mongoFilterUtils.spec.ts test/unit/components/modules/quick-query/mongodb/mongoEjsonUtils.spec.ts`
+Run: `bun vitest --run test/unit/components/modules/mongodb-workspace/mongoFilterUtils.spec.ts test/unit/components/modules/mongodb-workspace/mongoEjsonUtils.spec.ts`
 
 Expected: FAIL because raw filters call `JSON.parse` directly and no EJSON display
 formatter exists.
@@ -122,7 +122,7 @@ objects unchanged.
 
 - [ ] **Step 4: Run the focused tests to verify they pass**
 
-Run: `bun vitest --run test/unit/components/modules/quick-query/mongodb/mongoFilterUtils.spec.ts test/unit/components/modules/quick-query/mongodb/mongoEjsonUtils.spec.ts`
+Run: `bun vitest --run test/unit/components/modules/mongodb-workspace/mongoFilterUtils.spec.ts test/unit/components/modules/mongodb-workspace/mongoEjsonUtils.spec.ts`
 
 Expected: PASS.
 
@@ -130,13 +130,13 @@ Expected: PASS.
 
 **Files:**
 
-- Modify: `components/modules/quick-query/mongodb/types/mongo-quick-query.types.ts`
-- Modify: `components/modules/quick-query/mongodb/hooks/useMongoDocumentMutation.ts`
-- Modify: `components/modules/quick-query/mongodb/components/MongoCollectionListItem.vue`
-- Modify: `components/modules/quick-query/mongodb/components/MongoCollectionObjectListView.vue`
-- Modify: `components/modules/quick-query/mongodb/utils/buildMongoColumnDefs.ts`
-- Test: `test/nuxt/components/modules/quick-query/mongodb/useMongoDocumentMutation.test.ts`
-- Test: `test/nuxt/components/modules/quick-query/mongodb/MongoCollectionListItem.test.ts`
+- Modify: `components/modules/mongodb-workspace/types/mongo-quick-query.types.ts`
+- Modify: `components/modules/mongodb-workspace/hooks/useMongoDocumentMutation.ts`
+- Modify: `components/modules/mongodb-workspace/components/MongoCollectionListItem.vue`
+- Modify: `components/modules/mongodb-workspace/components/MongoCollectionObjectListView.vue`
+- Modify: `components/modules/mongodb-workspace/utils/buildMongoColumnDefs.ts`
+- Test: `test/nuxt/components/modules/mongodb-workspace/useMongoDocumentMutation.test.ts`
+- Test: `test/nuxt/components/modules/mongodb-workspace/MongoCollectionListItem.test.ts`
 
 **Consumes:** Canonical EJSON documents and `getMongoDocumentKey` from Task 2.
 
@@ -162,7 +162,7 @@ expect(
 
 - [ ] **Step 2: Run the focused tests to verify they fail**
 
-Run: `bun vitest --run --project nuxt test/nuxt/components/modules/quick-query/mongodb/useMongoDocumentMutation.test.ts test/nuxt/components/modules/quick-query/mongodb/MongoCollectionListItem.test.ts`
+Run: `bun vitest --run --project nuxt test/nuxt/components/modules/mongodb-workspace/useMongoDocumentMutation.test.ts test/nuxt/components/modules/mongodb-workspace/MongoCollectionListItem.test.ts`
 
 Expected: FAIL because mutations require a string ID and the renderer recognizes
 only ObjectId and ISODate.
@@ -176,7 +176,7 @@ linter and round-trips safely.
 
 - [ ] **Step 4: Run the focused tests to verify they pass**
 
-Run: `bun vitest --run --project nuxt test/nuxt/components/modules/quick-query/mongodb/useMongoDocumentMutation.test.ts test/nuxt/components/modules/quick-query/mongodb/MongoCollectionListItem.test.ts`
+Run: `bun vitest --run --project nuxt test/nuxt/components/modules/mongodb-workspace/useMongoDocumentMutation.test.ts test/nuxt/components/modules/mongodb-workspace/MongoCollectionListItem.test.ts`
 
 Expected: PASS.
 

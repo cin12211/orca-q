@@ -50,6 +50,7 @@ export default defineConfig({
     createDbProject('mssql', 'mssql'),
     createDbProject('cockroachdb', 'cockroachdb'),
     createDbProject('redis', 'redis'),
+    createDbProject('mongodb', 'mongodb'),
     createDbProject('sqlite', 'sqlite'),
     createDbProject('duckdb', 'duckdb'),
   ],

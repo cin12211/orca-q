@@ -15,10 +15,10 @@
 //   TableHeader,
 //   TableRow,
 // } from '~/components/ui/table';
-import InsightKpiCard from '~/components/modules/instance-insights/components/InsightKpiCard.vue';
+import { InsightKpiCard } from '~/components/modules/shared/instance-insights-kit';
 import type { RedisMemoryInsight } from '~/core/types/instance-insights.types';
 
-// import InsightScopeBadge from '~/components/modules/instance-insights/components/InsightScopeBadge.vue';
+// import { InsightScopeBadge } from '~/components/modules/shared/instance-insights-kit';
 
 const props = defineProps<{
   memory: RedisMemoryInsight | undefined;

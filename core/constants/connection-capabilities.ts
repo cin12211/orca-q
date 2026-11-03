@@ -81,6 +81,7 @@ const MONGODB_TAB_TYPES = [
   TabViewType.MongoDatabaseOverview,
   TabViewType.MongoCollectionDetail,
   TabViewType.Connection,
+  TabViewType.InstanceInsights,
   TabViewType.Explorer,
   TabViewType.AgentChat,
 ] as const;

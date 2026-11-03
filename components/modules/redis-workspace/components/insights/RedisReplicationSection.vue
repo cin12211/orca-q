@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import InsightKpiCard from '~/components/modules/instance-insights/components/InsightKpiCard.vue';
+import { InsightKpiCard } from '~/components/modules/shared/instance-insights-kit';
 import {
   Table,
   TableBody,

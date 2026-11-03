@@ -130,7 +130,7 @@ git commit -m "feat: support batch collection names and add collection-stats api
 
 **Files:**
 
-- Modify: `components/modules/quick-query/mongodb/types/mongo-quick-query.types.ts`
+- Modify: `components/modules/mongodb-workspace/types/mongo-quick-query.types.ts`
 - Modify: `components/modules/management/schemas/mongodb/hooks/useMongoSchemaTreeData.ts`
 
 **Interfaces:**
@@ -178,7 +178,7 @@ Expected: PASS
 - [ ] **Step 5: Commit**
 
 ```bash
-git add components/modules/quick-query/mongodb/types/ components/modules/management/schemas/mongodb/hooks/ test/nuxt/components/modules/management/schemas/mongodb/
+git add components/modules/mongodb-workspace/types/ components/modules/management/schemas/mongodb/hooks/ test/nuxt/components/modules/management/schemas/mongodb/
 git commit -m "feat: implement 2-phase schema loading and totalCollections tracking"
 ```
 

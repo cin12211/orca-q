@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { MongoDatabaseStats } from '~/components/modules/quick-query/mongodb/types';
+import type { MongoDatabaseStats } from '~/components/modules/mongodb-workspace';
 import { formatBytes } from '~/core/helpers/bytes-formatter';
 
 interface Props {

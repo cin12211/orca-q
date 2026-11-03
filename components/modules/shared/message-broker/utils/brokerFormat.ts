@@ -1,9 +1,11 @@
+// Import the kit's utils index, not its root: the root also exports .vue
+// components, which pure-logic consumers and unit tests must not load.
 import {
   formatBytes,
   formatDateTime,
   formatDuration,
   formatNumber,
-} from '~/components/modules/instance-insights/utils/formatters';
+} from '~/components/modules/shared/instance-insights-kit/utils';
 
 export { formatBytes, formatDateTime, formatNumber };
 

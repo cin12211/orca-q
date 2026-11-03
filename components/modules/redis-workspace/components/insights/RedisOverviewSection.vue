@@ -1,6 +1,8 @@
 <script setup lang="ts">
-import InsightKpiCard from '~/components/modules/instance-insights/components/InsightKpiCard.vue';
-import { formatDuration } from '~/components/modules/instance-insights/utils/formatters';
+import {
+  formatDuration,
+  InsightKpiCard,
+} from '~/components/modules/shared/instance-insights-kit';
 import type {
   RedisKeyspaceInsight,
   RedisOverviewMetrics,
