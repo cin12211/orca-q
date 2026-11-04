@@ -2,6 +2,12 @@ appId: com.cinny.orcaq
 productName: orcaq
 copyright: Copyright © 2025–2026 Cinny. All rights reserved.
 
+# The workspace package is `@orcaq/desktop`; keep the packaged app's `name`
+# as `orcaq` so the Linux executable, deb package, updater cache dir and
+# NSIS archive names stay what they were before the monorepo move.
+extraMetadata:
+  name: orcaq
+
 nativeRebuilder: sequential
 
 directories:
@@ -14,13 +20,15 @@ forceCodeSigning: true
 compression: maximum
 
 # Files to bundle into the app
+# tsc emits with rootDir = apps/, so electron lands in out/desktop/electron
+# and the apps/web/core files it requires land in out/web/core.
 files:
-  - out/electron/**/*
-  - out/core/**/*
-  - '!out/electron/**/*.d.ts'
-  - '!out/electron/**/*.map'
-  - '!out/core/**/*.d.ts'
-  - '!out/core/**/*.map'
+  - out/desktop/electron/**/*
+  - out/web/core/**/*
+  - '!out/desktop/electron/**/*.d.ts'
+  - '!out/desktop/electron/**/*.map'
+  - '!out/web/core/**/*.d.ts'
+  - '!out/web/core/**/*.map'
 
 # Bundle the Nitro runtime binary as extra resource
 extraResources:
@@ -39,7 +47,7 @@ publish:
 # ─── macOS ───────────────────────────────────────────────────────────────────
 mac:
   category: public.app-category.developer-tools
-  icon: assets/logos/icon.icns
+  icon: ../web/assets/logos/icon.icns
   hardenedRuntime: true
   gatekeeperAssess: false
   notarize: true
@@ -67,7 +75,7 @@ dmg:
 
 # ─── Windows ────────────────────────────────────────────────────────────────
 win:
-  icon: assets/logos/icon.ico
+  icon: ../web/assets/logos/icon.ico
   target:
     - target: nsis
       arch:
@@ -85,7 +93,7 @@ nsis:
 
 # ─── Linux ───────────────────────────────────────────────────────────────────
 linux:
-  icon: assets/logos/
+  icon: ../web/assets/logos/
   category: Development
   maintainer: Cinny <chinhkhacnguyen29@gmail.com>
   target:

@@ -7,11 +7,11 @@
       "ES2022"
     ],
     "outDir": "../out",
-    "rootDir": "..",
+    "rootDir": "../..",
     "baseUrl": "..",
     "paths": {
       "~/*": [
-        "./*"
+        "../web/*"
       ]
     },
     "strict": true,

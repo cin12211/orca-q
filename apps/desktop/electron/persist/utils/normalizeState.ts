@@ -1,7 +1,9 @@
 /**
  * Re-export from the shared normalize module.
  *
- * All normalize logic lives in core/persist/normalize.ts (zero browser deps).
+ * All normalize logic lives in apps/web/core/persist/normalize.ts (zero browser deps).
+ * It must stay a relative import: tsc does not rewrite `~/` aliases, and the
+ * compiled out/desktop/electron/** requires out/web/core/** at runtime.
  * This file is the Electron-side entry point — electron/persist/entities/ files
  * import from here so their import path stays within electron/persist/.
  *
@@ -21,7 +23,7 @@ export {
   createDefaultAgentState,
   normalizeAgentState,
   normalizeMcpSession,
-} from '../../../core/persist/normalize';
+} from '../../../../web/core/persist/normalize';
 
 export type {
   AppConfigPersistedState,
@@ -34,4 +36,4 @@ export type {
   CustomLayoutSizeEntry,
   CustomLayoutDefinition,
   McpSession,
-} from '../../../core/persist/normalize';
+} from '../../../../web/core/persist/normalize';

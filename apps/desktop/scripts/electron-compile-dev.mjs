@@ -2,9 +2,11 @@
 import { execSync } from 'node:child_process';
 import { existsSync } from 'node:fs';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
-const ROOT = process.cwd();
-const outputEntry = path.join(ROOT, 'out', 'electron', 'main.js');
+// apps/desktop — independent of the cwd the script is launched from.
+const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), '..');
+const outputEntry = path.join(ROOT, 'out', 'desktop', 'electron', 'main.js');
 
 try {
   execSync('npx tsc -p electron/tsconfig.json', {
@@ -17,6 +19,6 @@ try {
   }
 
   console.warn(
-    '\n[electron:dev] Electron TypeScript reported diagnostics, but updated output was emitted. Continuing with refreshed out/electron artifacts.\n'
+    '\n[electron:dev] Electron TypeScript reported diagnostics, but updated output was emitted. Continuing with refreshed out/desktop/electron artifacts.\n'
   );
 }

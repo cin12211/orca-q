@@ -1,5 +1,6 @@
 import log from 'electron-log/main';
 import path from 'node:path';
+import { getDevRepoRoot } from './utils/dev-paths';
 
 const IS_DEV = process.env.NODE_ENV === 'development';
 
@@ -17,7 +18,7 @@ export function initializeElectronLogger(): void {
   if (IS_DEV) {
     log.transports.file.resolvePathFn = variables =>
       path.join(
-        process.cwd(),
+        getDevRepoRoot(),
         '.electron-logs',
         variables.fileName ?? 'main.log'
       );

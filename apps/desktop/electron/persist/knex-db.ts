@@ -3,6 +3,7 @@ import knexLib from 'knex';
 import type { Knex } from 'knex';
 import fs from 'node:fs';
 import path from 'node:path';
+import { getDevRepoRoot } from '../utils/dev-paths';
 
 let _knex: Knex | null = null;
 
@@ -40,7 +41,7 @@ function camelizeResult<T>(value: T): T {
 export function getPersistDbPath(): string {
   const IS_DEV = process.env.NODE_ENV === 'development';
   const dir = IS_DEV
-    ? path.join(process.cwd(), '.sqlite3')
+    ? path.join(getDevRepoRoot(), '.sqlite3')
     : app.getPath('userData');
   fs.mkdirSync(dir, { recursive: true });
   return path.join(dir, 'orcaq.db');

@@ -95,8 +95,8 @@ export function getRuntimeBinaryPath(): string {
 
   if (process.env.NODE_ENV === 'development') {
     // Dev mode: use the one built by scripts/electron-before-build.mjs
-    // __dirname = out/electron/utils/ → ../../runtime = out/runtime/
-    return path.join(__dirname, '..', '..', 'runtime', scriptName);
+    // __dirname = out/desktop/electron/utils/ → ../../../runtime = out/runtime/
+    return path.join(__dirname, '..', '..', '..', 'runtime', scriptName);
   }
 
   // Production: extraResources unpacks to process.resourcesPath/runtime/

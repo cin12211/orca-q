@@ -4,9 +4,10 @@
  * Runs before electron-builder packages the app.
  *
  * Steps:
- *   1. nuxt generate → .output/public (static SPA)
- *   2. Build Nitro server binary → out/runtime/
- *   3. tsc → compile electron/ TypeScript → out/electron/
+ *   1. nuxt build in apps/web → apps/web/.output (SPA + Nitro server)
+ *   2. Copy apps/web/.output → apps/desktop/out/runtime/
+ *   3. tsc → compile electron/ TypeScript → out/desktop/electron/
+ *      (+ the apps/web/core files it imports → out/web/core/)
  */
 import { execSync } from 'node:child_process';
 import {
@@ -23,6 +24,7 @@ import { fileURLToPath } from 'node:url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const ROOT = join(__dirname, '..');
+const WEB_ROOT = join(ROOT, '..', 'web');
 
 const ELECTRON_RUNTIME_DIR = join(ROOT, 'out', 'runtime');
 
@@ -37,7 +39,7 @@ function run(cmd, cwd = ROOT) {
 
 // ─── Step 1: Generate Nuxt SPA and Nitro server ───────────────────────────
 log('Step 1/3: Building Nuxt static SPA and Nitro server...');
-run('bun run nuxt:build-web');
+run('bun run nuxt:build-web', WEB_ROOT);
 
 // ─── Step 2: Copy server to out/runtime ──────────────────────────────────
 log('Step 2/3: Staging Nuxt output into electron runtime...');
@@ -70,7 +72,7 @@ function copyResolvedDirectory(source, target) {
 
 // Copy the full `.output` (server/ and public/) into out/runtime/
 // We MUST use copyResolvedDirectory, otherwise macOS codesign fails due to pnpm virtual stores
-copyResolvedDirectory(join(ROOT, '.output'), ELECTRON_RUNTIME_DIR);
+copyResolvedDirectory(join(WEB_ROOT, '.output'), ELECTRON_RUNTIME_DIR);
 
 log(`  Runtime server scripts ready at ${ELECTRON_RUNTIME_DIR}/`);
 

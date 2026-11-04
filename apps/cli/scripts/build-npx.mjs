@@ -3,8 +3,9 @@
  * Build script for the npx package
  *
  * This script:
- * 1. Copies .output to npx-package/
- * 2. Syncs version from main package.json
+ * 1. Copies apps/web/.output to apps/cli/.output
+ * 2. Syncs version from the root package.json and runtime dependencies
+ *    (database drivers) from apps/web/package.json
  * 3. Prepares the package for npm publishing
  */
 import {
@@ -22,7 +23,10 @@ import { fileURLToPath } from 'node:url';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
-const projectRoot = join(__dirname, '..');
+// apps/cli — the npm package itself
+const npxPackageDir = join(__dirname, '..');
+const webRoot = join(npxPackageDir, '..', 'web');
+const repoRoot = join(npxPackageDir, '..', '..');
 
 const colors = {
   green: '\x1b[32m',
@@ -67,26 +71,29 @@ function materializeSymlinks(directoryPath) {
 
 // Step 1: Check if .output exists
 log(1, 'Checking for .output directory...');
-const outputDir = join(projectRoot, '.output');
-const npxPackageDir = join(projectRoot, 'npx-package');
+const outputDir = join(webRoot, '.output');
 
 if (!existsSync(outputDir)) {
-  error('.output directory not found. Run "npm run nuxt:build-web" first.');
+  error(
+    'apps/web/.output directory not found. Run "bun run nuxt:build-web" first.'
+  );
 }
 
 if (!existsSync(join(outputDir, 'server', 'index.mjs'))) {
-  error('.output/server/index.mjs not found. Build may be incomplete.');
+  error(
+    'apps/web/.output/server/index.mjs not found. Build may be incomplete.'
+  );
 }
 
-// Step 2: Clean existing .output in npx-package
-log(2, 'Cleaning npx-package/.output...');
+// Step 2: Clean existing .output in apps/cli
+log(2, 'Cleaning apps/cli/.output...');
 const npxOutputDir = join(npxPackageDir, '.output');
 if (existsSync(npxOutputDir)) {
   rmSync(npxOutputDir, { recursive: true, force: true });
 }
 
-// Step 3: Copy .output to npx-package
-log(3, 'Copying .output to npx-package...');
+// Step 3: Copy apps/web/.output to apps/cli
+log(3, 'Copying apps/web/.output to apps/cli/.output...');
 cpSync(outputDir, npxOutputDir, { recursive: true, dereference: true });
 
 // Step 4: Replace symlinks so npm pack keeps Nitro runtime aliases intact
@@ -95,19 +102,22 @@ materializeSymlinks(npxOutputDir);
 
 // Step 5: Sync version and dependencies from main package.json
 log(5, 'Syncing version and dependencies...');
-const mainPackageJson = JSON.parse(
-  readFileSync(join(projectRoot, 'package.json'), 'utf-8')
+const rootPackageJson = JSON.parse(
+  readFileSync(join(repoRoot, 'package.json'), 'utf-8')
+);
+const webPackageJson = JSON.parse(
+  readFileSync(join(webRoot, 'package.json'), 'utf-8')
 );
 const npxPackageJsonPath = join(npxPackageDir, 'package.json');
 const npxPackageJson = JSON.parse(readFileSync(npxPackageJsonPath, 'utf-8'));
 
-npxPackageJson.version = mainPackageJson.version;
+npxPackageJson.version = rootPackageJson.version;
 
 // Ensure database drivers are in npx dependencies so they are installed for the target platform
 npxPackageJson.dependencies =
   {
     ...(npxPackageJson.dependencies || {}),
-    ...(mainPackageJson.dependencies || {}),
+    ...(webPackageJson.dependencies || {}),
   } || {};
 
 // skip dependencies with prefix name = 'electron-'
@@ -128,9 +138,9 @@ console.log(`
 ${colors.green}NPX package ready at: ${npxPackageDir}${colors.reset}
 
 To test locally:
-  cd npx-package && npm pack
+  cd apps/cli && npm pack
   npx ./orcaq-${npxPackageJson.version}.tgz
 
 To publish:
-  cd npx-package && npm publish
+  cd apps/cli && npm publish
 `);
