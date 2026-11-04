@@ -24,8 +24,6 @@
     "docs",
     "specs",
     "out",
-    "electron",
-    "npx-package",
     "test",
     ".output",
     "dist",

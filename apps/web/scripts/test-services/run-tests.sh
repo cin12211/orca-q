@@ -121,7 +121,8 @@ cd "${repo_root}"
 
 # Ensure node_modules binaries (playwright, vitest, etc.) are resolvable
 # even when this script is invoked directly via bash rather than via bun run.
-export PATH="${repo_root}/node_modules/.bin:${PATH}"
+# repo_root is apps/web; Bun workspaces hoist most binaries to the monorepo root.
+export PATH="${repo_root}/node_modules/.bin:${repo_root}/../../node_modules/.bin:${PATH}"
 
 if [ "${fixture_profile}" != "none" ]; then
   echo "Bootstrapping fixtures (profile: ${fixture_profile})"

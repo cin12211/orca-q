@@ -1,5 +1,5 @@
 import { readFileSync } from 'node:fs';
-import { resolve } from 'node:path';
+import { createRequire } from 'node:module';
 import { describe, expect, it } from 'vitest';
 import {
   RABBIT_DEFINITIONS_SECTIONS,
@@ -13,12 +13,14 @@ import {
   getRabbitUserGroupId,
 } from '~/components/modules/rabbitmq-workspace/utils';
 
-const hugeicons = JSON.parse(
-  readFileSync(
-    resolve(process.cwd(), 'node_modules/@iconify-json/hugeicons/icons.json'),
-    'utf8'
-  )
-) as { icons: Record<string, unknown>; aliases?: Record<string, unknown> };
+// Resolve through Node so the hoisted workspace node_modules is found.
+const hugeiconsPath = createRequire(import.meta.url).resolve(
+  '@iconify-json/hugeicons/icons.json'
+);
+const hugeicons = JSON.parse(readFileSync(hugeiconsPath, 'utf8')) as {
+  icons: Record<string, unknown>;
+  aliases?: Record<string, unknown>;
+};
 
 const hasHugeicon = (name: string) => {
   const key = name.replace('hugeicons:', '');

@@ -21,7 +21,11 @@ const colors = {
   reset: '\x1b[0m',
 };
 
-const JSON_VERSION_TARGETS = ['npx-package/package.json'];
+const JSON_VERSION_TARGETS = [
+  'apps/web/package.json',
+  'apps/desktop/package.json',
+  'apps/cli/package.json',
+];
 
 function log(message, color = 'cyan') {
   console.log(`${colors[color]}${message}${colors.reset}`);

@@ -50,7 +50,7 @@ const devWatchIgnored = [
   '**/playwright-report/**',
   '**/test-results/**',
   '**/storybook-static/**',
-  '**/npx-package/.output/**',
+  '**/apps/cli/.output/**',
   '**/orcaq-mcp/dist/**',
 ];
 

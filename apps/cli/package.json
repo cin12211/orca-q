@@ -15,6 +15,10 @@
   "bin": {
     "orcaq": "./bin/cli.mjs"
   },
+  "scripts": {
+    "npx:build": "bun run --cwd ../web nuxt:build-web && node scripts/build-npx.mjs",
+    "npx:pack": "npm pack"
+  },
   "files": [
     ".output",
     "bin"
