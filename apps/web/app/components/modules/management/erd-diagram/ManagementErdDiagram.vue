@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { refDebounced } from '@vueuse/core';
 import { storeToRefs } from 'pinia';
+import { DEFAULT_DEBOUNCE_INPUT } from '#shared/constants';
 import FileTree from '~/components/base/tree-folder/FileTree.vue';
 import type { FileNode } from '~/components/base/tree-folder/types';
 import { useWorkspaceConnectionRoute } from '~/core/composables/useWorkspaceConnectionRoute';
-import { DEFAULT_DEBOUNCE_INPUT } from '~/core/constants';
 import { useAppContext } from '~/core/contexts/useAppContext';
 import { useSchemaStore, useWSStateStore } from '~/core/stores';
 import { TabViewType } from '~/core/stores/useTabViewsStore';

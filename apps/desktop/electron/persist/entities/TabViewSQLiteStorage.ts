@@ -1,4 +1,4 @@
-import type { TabView } from '~/core/types/entities/tab-view.entity';
+import type { TabView } from '#shared/types/entities/tab-view.entity';
 import { SQLite3Storage } from '../SQLite3Storage';
 import { getKnex } from '../knex-db';
 import type { TabViewRow } from '../schema';

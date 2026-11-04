@@ -1,12 +1,12 @@
-import { getConnectionParams } from '@/core/helpers/connection-helper';
-import { getDatabaseClientLabel } from '~/core/constants/database-backup';
-import type { Connection } from '~/core/stores';
+import { getDatabaseClientLabel } from '#shared/constants/database-backup';
+import { getConnectionParams } from '#shared/helpers/connection-helper';
 import type {
   ImportOptions,
   NativeBackupRuntimeCapability,
   NativeBackupRuntimeSelection,
   StartDatabaseTransferResponse,
-} from '~/core/types';
+} from '#shared/types';
+import type { Connection } from '~/core/stores';
 import { useDatabaseTransferJob } from './useDatabaseTransferJob';
 
 export const useDatabaseImport = (

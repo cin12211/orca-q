@@ -1,5 +1,5 @@
-import type { TableMetadata } from '~/core/types';
-import type { AgentRenderErdResult } from '../types';
+import type { TableMetadata } from '#shared/types';
+import type { AgentRenderErdResult } from '#shared/types/agent.types';
 
 /**
  * Converts the agent's lightweight ERD result into the full `TableMetadata[]`

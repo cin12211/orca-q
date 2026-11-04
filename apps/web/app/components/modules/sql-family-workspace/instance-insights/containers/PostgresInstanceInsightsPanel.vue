@@ -1,8 +1,8 @@
 <script setup lang="ts">
+import type { ReplicationSlotDesiredStatus } from '#shared/types';
 import { getDatabaseSupportByType } from '~/components/modules/connection';
 import { formatDateTime } from '~/components/modules/shared/instance-insights-kit';
 import type { Connection } from '~/core/stores';
-import type { ReplicationSlotDesiredStatus } from '~/core/types';
 import {
   InstanceInsightsActivitySection,
   InstanceInsightsConfigurationSection,

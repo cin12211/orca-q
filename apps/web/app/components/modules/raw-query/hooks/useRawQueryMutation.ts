@@ -1,7 +1,7 @@
 import { computed, ref, type Ref } from 'vue';
+import { DatabaseClientType } from '#shared/constants/database-client-type';
+import { getConnectionParams } from '#shared/helpers/connection-helper';
 import { toast } from 'vue-sonner';
-import { DatabaseClientType } from '~/core/constants/database-client-type';
-import { getConnectionParams } from '~/core/helpers/connection-helper';
 import type { Connection } from '~/core/stores';
 import type { MappedRawColumn } from '../types';
 import {

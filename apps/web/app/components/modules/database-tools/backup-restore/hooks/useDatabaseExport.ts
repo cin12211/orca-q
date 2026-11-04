@@ -1,8 +1,6 @@
-import { getConnectionParams } from '@/core/helpers/connection-helper';
-import { useStreamingDownload } from '~/core/composables/useStreamingDownload';
-import { getNativeBackupExtension } from '~/core/constants/database-backup';
-import { formatBytes } from '~/core/helpers';
-import { type Connection } from '~/core/stores';
+import { getNativeBackupExtension } from '#shared/constants/database-backup';
+import { formatBytes } from '#shared/helpers';
+import { getConnectionParams } from '#shared/helpers/connection-helper';
 import type {
   ExportDatabaseRequest,
   ExportFormat,
@@ -10,7 +8,9 @@ import type {
   NativeBackupRuntimeCapability,
   NativeBackupRuntimeSelection,
   StartDatabaseTransferResponse,
-} from '~/core/types';
+} from '#shared/types';
+import { useStreamingDownload } from '~/core/composables/useStreamingDownload';
+import { type Connection } from '~/core/stores';
 import { useDatabaseTransferJob } from './useDatabaseTransferJob';
 
 interface ExportExecutionRequest {

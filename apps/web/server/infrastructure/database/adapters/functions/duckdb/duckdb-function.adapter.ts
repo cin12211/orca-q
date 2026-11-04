@@ -1,7 +1,7 @@
+import { DatabaseClientType } from '#shared/constants/database-client-type';
+import { duckdbDialect } from '#shared/sql-dialect';
+import type { FunctionSignature, RoutineMetadata } from '#shared/types';
 import { createError } from 'h3';
-import { DatabaseClientType } from '~~/app/core/constants/database-client-type';
-import { duckdbDialect } from '~~/app/core/sql-dialect';
-import type { FunctionSignature, RoutineMetadata } from '~~/app/core/types';
 import type { IDatabaseAdapter } from '~~/server/infrastructure/driver';
 import { getDatabaseSource } from '~~/server/infrastructure/driver/db-connection';
 import { BaseUnsupportedFunctionAdapter } from '../shared/base-unsupported-function.adapter';

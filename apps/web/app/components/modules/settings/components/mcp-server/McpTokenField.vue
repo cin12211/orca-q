@@ -1,6 +1,6 @@
 <script setup lang="ts">
+import { maskMcpToken } from '#shared/helpers/mcp-token';
 import { Button } from '@/components/ui/button';
-import { maskMcpToken } from '~/core/helpers/mcp-token';
 
 const props = defineProps<{
   token: string;

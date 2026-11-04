@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { cn } from '@/lib/utils';
 import type {
   SchemaDiffResponse,
   DiffStatus,
-} from '../types/schema-diff.types';
+} from '#shared/types/schema-diff.types';
+import { cn } from '@/lib/utils';
 
 const { result } = defineProps<{
   result: SchemaDiffResponse;

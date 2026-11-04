@@ -1,5 +1,5 @@
+import type { TableMetadata } from '#shared/types';
 import { type Edge } from '@vue-flow/core';
-import type { TableMetadata } from '~/core/types';
 import {
   DEFAULT_VUE_FLOW_LAYOUT_CONFIG,
   ERD_HEADER_HANDLE_SOURCE_ID,

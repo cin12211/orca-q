@@ -1,11 +1,11 @@
-import type { ClusterTopicMetadata, Consumer } from '@platformatic/kafka';
 import type {
   KafkaMessagePage,
   KafkaMessageQuery,
   KafkaPartitionCursor,
   KafkaProduceInput,
   KafkaProduceResult,
-} from '~~/app/core/types/kafka.types';
+} from '#shared/types/kafka.types';
+import type { ClusterTopicMetadata, Consumer } from '@platformatic/kafka';
 import {
   BrokerConnectionError,
   type BrokerConnectionInput,

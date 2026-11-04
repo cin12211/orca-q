@@ -1,9 +1,9 @@
-import { PostgreSQL, type SQLDialect } from '@codemirror/lang-sql';
-import { StateEffect, StateField } from '@codemirror/state';
 import {
   DatabaseClientType,
   isPostgresCompatibleClientType,
-} from '~/core/constants/database-client-type';
+} from '#shared/constants/database-client-type';
+import { PostgreSQL, type SQLDialect } from '@codemirror/lang-sql';
+import { StateEffect, StateField } from '@codemirror/state';
 import { SQLDialectSupport } from '../constants';
 
 // ---------------------------------------------------------------------------

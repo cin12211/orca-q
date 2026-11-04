@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { RabbitUserPermission } from '#shared/types/rabbitmq.types';
 import {
   Dialog,
   DialogContent,
@@ -7,7 +8,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import type { RabbitUserPermission } from '~/core/types/rabbitmq.types';
 import {
   RABBIT_FULL_ACCESS_PATTERN,
   RABBIT_PERMISSION_DESCRIPTIONS,

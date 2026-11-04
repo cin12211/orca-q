@@ -1,7 +1,7 @@
+import { OperatorSet } from '#shared/constants';
+import { SqlFilterValueType } from '#shared/helpers/sql-where-clause';
 import { describe, expect, it } from 'vitest';
 import { buildFilterFromContextCell } from '~/components/modules/quick-query/hooks/useQuickQueryContextCellFilter';
-import { OperatorSet } from '~/core/constants';
-import { SqlFilterValueType } from '~/core/helpers/sql-where-clause';
 
 describe('buildFilterFromContextCell', () => {
   it('preserves Postgres array column values for equality filters', () => {

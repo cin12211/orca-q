@@ -1,5 +1,5 @@
+import { EConnectionMethod } from '#shared/types/entities/connection.entity';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { EConnectionMethod } from '~/core/types/entities/connection.entity';
 import browserHandler from '~~/server/api/redis/browser/index.post';
 import keysDeleteHandler from '~~/server/api/redis/browser/keys.delete';
 import valueDeleteHandler from '~~/server/api/redis/browser/value.delete';

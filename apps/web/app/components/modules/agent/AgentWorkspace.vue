@@ -10,6 +10,8 @@ import {
   watch,
 } from 'vue';
 import { ScrambleText } from '#components';
+import type { DbAgentMessage } from '#shared/types/agent.types';
+import type { AgentExportFileResult } from '#shared/types/agent.types';
 import { Badge } from '@/components/ui/badge';
 import { AIProvider, ThinkingStyle } from '~/components/modules/settings/types';
 import { useAppConfigStore } from '~/core/stores/appConfigStore';
@@ -22,12 +24,10 @@ import ResponseNavigator from './components/response-navigator/ResponseNavigator
 import type { ResponseNavigatorItem } from './components/response-navigator/types';
 import ExportPreviewPanel from './components/tool-message/ExportPreviewPanel.vue';
 import type { AgentCommandOptionId } from './constants/command-options';
+import { useDbAgentAttachments } from './hooks/useDbAgentAttachments';
 import { useAgentChat } from './hooks/useDbAgentChat';
 import { useAgentRenderer } from './hooks/useDbAgentRenderer';
 import { useAgentWorkspace } from './hooks/useDbAgentWorkspace';
-import { useDbAgentAttachments } from './hooks/useDbAgentAttachments';
-import type { DbAgentMessage } from './types';
-import type { AgentExportFileResult } from './types';
 
 const activeExportPreview = ref<AgentExportFileResult | null>(null);
 provide('activeExportPreview', activeExportPreview);

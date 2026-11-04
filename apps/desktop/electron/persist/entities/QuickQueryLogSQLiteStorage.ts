@@ -1,4 +1,4 @@
-import type { QuickQueryLog } from '~/core/types/entities/quick-query-log.entity';
+import type { QuickQueryLog } from '#shared/types/entities/quick-query-log.entity';
 import { SQLite3Storage } from '../SQLite3Storage';
 import { getKnex } from '../knex-db';
 import type { QuickQueryLogRow } from '../schema';

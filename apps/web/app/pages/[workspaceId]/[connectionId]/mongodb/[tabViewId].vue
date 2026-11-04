@@ -1,16 +1,16 @@
 <script setup lang="ts">
 import { storeToRefs } from 'pinia';
 import { computed } from 'vue';
+import { DEFAULT_MAX_KEEP_ALIVE } from '#shared/constants';
+import type {
+  MongoCollectionDetailMetadata,
+  MongoDatabaseOverviewMetadata,
+} from '#shared/types/entities/tab-view.entity';
 import {
   MongoCollectionDetail,
   MongoDatabaseOverview,
 } from '~/components/modules/mongodb-workspace';
-import { DEFAULT_MAX_KEEP_ALIVE } from '~/core/constants';
 import { TabViewType, useTabViewsStore } from '~/core/stores/useTabViewsStore';
-import type {
-  MongoCollectionDetailMetadata,
-  MongoDatabaseOverviewMetadata,
-} from '~/core/types/entities/tab-view.entity';
 
 definePageMeta({
   keepalive: {

@@ -1,5 +1,5 @@
-import { DatabaseClientType } from '~/core/constants/database-client-type';
-import { getSqlDialect } from '~/core/sql-dialect';
+import { DatabaseClientType } from '../constants/database-client-type';
+import { getSqlDialect } from '../sql-dialect';
 import { getSqlDataColumnNames } from './sql-metadata';
 
 type SqlRowValueMap = Record<string, unknown>;

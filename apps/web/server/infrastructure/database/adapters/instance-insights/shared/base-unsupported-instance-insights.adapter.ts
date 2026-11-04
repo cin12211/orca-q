@@ -1,5 +1,4 @@
-import { createError } from 'h3';
-import { DatabaseClientType } from '~~/app/core/constants/database-client-type';
+import { DatabaseClientType } from '#shared/constants/database-client-type';
 import type {
   InstanceActionResponse,
   InstanceInsightsConfiguration,
@@ -8,7 +7,8 @@ import type {
   InstanceInsightsState,
   InstanceInsightsView,
   ReplicationSlotDesiredStatus,
-} from '~~/app/core/types';
+} from '#shared/types';
+import { createError } from 'h3';
 import type { IDatabaseInstanceInsightsAdapter } from '../types';
 
 function getDatabaseLabel(dbType: DatabaseClientType): string {

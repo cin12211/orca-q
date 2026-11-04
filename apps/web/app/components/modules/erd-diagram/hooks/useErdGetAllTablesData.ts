@@ -1,8 +1,8 @@
+import { getConnectionParams } from '#shared/helpers/connection-helper';
+import type { TableMetadata } from '#shared/types';
 import { toast } from 'vue-sonner';
-import { getConnectionParams } from '@/core/helpers/connection-helper';
 import { useErdStore } from '~/core/stores/erdStore';
 import { useManagementConnectionStore } from '~/core/stores/managementConnectionStore';
-import type { TableMetadata } from '~/core/types';
 
 export const useErdQueryTables = () => {
   const connectionStore = useManagementConnectionStore();

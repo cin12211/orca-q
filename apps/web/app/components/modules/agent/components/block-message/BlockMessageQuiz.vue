@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
+import type { QuizQuestion } from '#shared/types/agent.types';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import type { QuizQuestion } from '../../types';
 
 const props = defineProps<{
   toolCallId: string;

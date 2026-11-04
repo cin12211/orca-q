@@ -1,5 +1,5 @@
-import type { WorkspaceState } from '~/core/types/entities';
-import { WORKSPACE_STATE_IDB } from '../idbRegistry';
+import { WORKSPACE_STATE_IDB } from '#shared/storage/idbRegistry';
+import type { WorkspaceState } from '#shared/types/entities';
 import { IDBStorage } from '../base/IDBStorage';
 
 class WorkspaceStateStorage extends IDBStorage<WorkspaceState> {

@@ -1,10 +1,10 @@
-import type { Knex } from 'knex';
-import { Readable } from 'node:stream';
-import { DatabaseClientType } from '~~/app/core/constants/database-client-type';
+import { DatabaseClientType } from '#shared/constants/database-client-type';
 import {
   EConnectionProviderKind,
   type IManagedSqliteConfig,
-} from '~~/app/core/types/entities/connection.entity';
+} from '#shared/types/entities/connection.entity';
+import type { Knex } from 'knex';
+import { Readable } from 'node:stream';
 import { BaseDatabaseAdapter } from '../base.adapter';
 import type { RawQueryResult } from '../types';
 import {

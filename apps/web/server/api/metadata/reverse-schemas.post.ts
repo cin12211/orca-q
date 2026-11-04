@@ -1,6 +1,6 @@
+import { DatabaseClientType } from '#shared/constants/database-client-type';
+import type { DatabaseMetadataRequestParams } from '#shared/types';
 import { defineEventHandler, readBody } from 'h3';
-import { DatabaseClientType } from '~~/app/core/constants/database-client-type';
-import type { DatabaseMetadataRequestParams } from '~~/app/core/types';
 import { createMetadataAdapter } from '~~/server/infrastructure/database/adapters/metadata';
 
 export default defineEventHandler(async event => {

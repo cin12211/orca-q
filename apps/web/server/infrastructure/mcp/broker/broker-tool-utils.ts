@@ -1,7 +1,7 @@
+import type { DatabaseClientType } from '#shared/constants/database-client-type';
+import type { BrokerMessage } from '#shared/types/broker-message.types';
+import type { Connection } from '#shared/types/entities/connection.entity';
 import { z } from 'zod';
-import type { DatabaseClientType } from '~~/app/core/constants/database-client-type';
-import type { BrokerMessage } from '~~/app/core/types/broker-message.types';
-import type { Connection } from '~~/app/core/types/entities/connection.entity';
 import type { BrokerConnectionInput } from '~~/server/infrastructure/nosql/broker/broker-connection';
 import { getMcpConnection } from '../desktop-store';
 

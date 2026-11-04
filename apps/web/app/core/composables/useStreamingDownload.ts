@@ -1,6 +1,6 @@
 import { ref } from 'vue';
+import { formatBytes } from '#shared/helpers';
 import { toast } from 'vue-sonner';
-import { formatBytes } from '~/core/helpers';
 
 export interface StreamingDownloadOptions {
   url: string;

@@ -1,12 +1,12 @@
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
+import { uuidv4 } from '#shared/helpers';
 import dayjs from 'dayjs';
 import {
   TreeManager,
   type TreeFileSystemItem,
 } from '~/components/base/tree-folder/treeManagement';
 import { useWorkspaceConnectionRoute } from '~/core/composables/useWorkspaceConnectionRoute';
-import { uuidv4 } from '~/core/helpers';
 import { createStorageApis } from '~/core/storage';
 import { useTabViewsStore } from './useTabViewsStore';
 

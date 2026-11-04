@@ -1,8 +1,8 @@
 <script setup lang="ts">
+import { DatabaseClientType } from '#shared/constants/database-client-type';
 import { Accordion } from '@/components/ui/accordion';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { DatabaseClientType } from '~/core/constants/database-client-type';
 import type { Connection } from '~/core/stores';
 import {
   BROKER_CONNECTION_STRING_EXAMPLE,

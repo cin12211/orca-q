@@ -1,9 +1,9 @@
 import { ref } from 'vue';
+import { TabViewType } from '#shared/types/entities/tab-view.entity';
 import { flushPromises } from '@vue/test-utils';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { useMongoSchemaTreeData } from '~/components/modules/management/schemas/mongodb/hooks/useMongoSchemaTreeData';
 import * as mongoSchemaTreeStorage from '~/components/modules/management/schemas/mongodb/utils';
-import { TabViewType } from '~/core/types/entities/tab-view.entity';
 
 const mockFetch = vi.fn(async (url: string) => {
   if (url === '/api/mongodb/schemas') {

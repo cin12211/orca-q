@@ -1,8 +1,8 @@
 import { reactive } from 'vue';
+import { DatabaseClientType } from '#shared/constants/database-client-type';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { EConnectionMethod } from '~/components/modules/connection/types';
 import { useWorkspaceCard } from '~/components/modules/workspace/hooks/useWorkspaceCard';
-import { DatabaseClientType } from '~/core/constants/database-client-type';
 import type { Connection, Workspace } from '~/core/stores';
 
 // ---------------------------------------------------------------------------

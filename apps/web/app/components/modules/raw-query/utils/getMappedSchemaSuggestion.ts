@@ -1,7 +1,3 @@
-import type { Completion } from '@codemirror/autocomplete';
-import type { SQLNamespace } from '@codemirror/lang-sql';
-import { CompletionIcon } from '~/components/base/code-editor/constants';
-import type { Schema } from '~/core/stores';
 import type {
   SchemaColumnMetadata as ColumnShortMetadata,
   SchemaForeignKeyMetadata as ForeignKeyMetadata,
@@ -10,7 +6,11 @@ import type {
   TableDetails,
   ViewDetailMetadata,
   ViewDetails,
-} from '~/core/types';
+} from '#shared/types';
+import type { Completion } from '@codemirror/autocomplete';
+import type { SQLNamespace } from '@codemirror/lang-sql';
+import { CompletionIcon } from '~/components/base/code-editor/constants';
+import type { Schema } from '~/core/stores';
 
 /**
  * Hierarchical schema structure for SQL completion

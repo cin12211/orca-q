@@ -1,9 +1,9 @@
+import { DatabaseClientType } from '#shared/constants/database-client-type';
+import type { DatabaseField } from '#shared/types';
 import knex, { type Knex } from 'knex';
 import type { Readable } from 'node:stream';
 import { Request, TYPES, type Connection as TediousConnection } from 'tedious';
 import type { ColumnMetadata } from 'tedious/lib/token/colmetadata-token-parser';
-import { DatabaseClientType } from '~~/app/core/constants/database-client-type';
-import type { DatabaseField } from '~~/app/core/types';
 import { BaseDatabaseAdapter } from './base.adapter';
 import { normalizeMssqlConnection } from './mssql/connection';
 import { mapArrayRowsToObjects } from './result-rows';

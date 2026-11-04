@@ -1,8 +1,11 @@
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
-import { generateMcpToken } from '~/core/helpers/mcp-token';
-import { uuidv4 } from '~/core/helpers/uuid';
-import type { McpConnectionAccess, McpSession } from '~/core/persist/normalize';
+import { generateMcpToken } from '#shared/helpers/mcp-token';
+import { uuidv4 } from '#shared/helpers/uuid';
+import type {
+  McpConnectionAccess,
+  McpSession,
+} from '#shared/persist/normalize';
 import { createStorageApis } from '~/core/storage';
 
 export interface McpSessionDraft {

@@ -1,7 +1,7 @@
 /**
  * Database backup/import types shared by server jobs and the UI.
  */
-import type { DatabaseClientType } from '~/core/constants/database-client-type';
+import type { DatabaseClientType } from '../constants/database-client-type';
 
 // ============================================================================
 // Export Configuration Types

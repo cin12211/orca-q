@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { computed, inject, type Ref } from 'vue';
-import { formatBytes } from '~/core/helpers';
+import { formatBytes } from '#shared/helpers';
+import type { AgentExportFileResult } from '#shared/types/agent.types';
 import { useFileDownload } from '../../hooks/useFileDownload';
-import type { AgentExportFileResult } from '../../types';
 
 const props = defineProps<{
   data: AgentExportFileResult;

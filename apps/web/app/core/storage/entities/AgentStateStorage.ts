@@ -1,6 +1,6 @@
+import { AGENT_STATE_IDB } from '#shared/storage/idbRegistry';
+import type { AgentPersistedState } from '#shared/types/entities';
 import { normalizeAgentState } from '~/core/persist/store-state';
-import type { AgentPersistedState } from '~/core/types/entities';
-import { AGENT_STATE_IDB } from '../idbRegistry';
 import { IDBStorage } from '../base/IDBStorage';
 
 interface AgentStateRecord {

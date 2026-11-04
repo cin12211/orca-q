@@ -21,14 +21,14 @@ compression: maximum
 
 # Files to bundle into the app
 # tsc emits with rootDir = apps/, so electron lands in out/desktop/electron
-# and the apps/web/app/core files it requires land in out/web/app/core.
+# and the apps/web/shared files it requires land in out/web/shared.
 files:
   - out/desktop/electron/**/*
-  - out/web/app/core/**/*
+  - out/web/shared/**/*
   - '!out/desktop/electron/**/*.d.ts'
   - '!out/desktop/electron/**/*.map'
-  - '!out/web/app/core/**/*.d.ts'
-  - '!out/web/app/core/**/*.map'
+  - '!out/web/shared/**/*.d.ts'
+  - '!out/web/shared/**/*.map'
 
 # Bundle the Nitro runtime binary as extra resource
 extraResources:

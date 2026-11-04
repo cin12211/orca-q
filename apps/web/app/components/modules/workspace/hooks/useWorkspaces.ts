@@ -1,6 +1,6 @@
 import { refDebounced } from '@vueuse/core';
 import { computed, ref, shallowRef } from 'vue';
-import { DEFAULT_DEBOUNCE_INPUT } from '~/core/constants';
+import { DEFAULT_DEBOUNCE_INPUT } from '#shared/constants';
 import { useWorkspacesStore } from '~/core/stores';
 import { useManagementConnectionStore } from '~/core/stores/managementConnectionStore';
 

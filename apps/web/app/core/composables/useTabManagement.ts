@@ -1,14 +1,14 @@
 import { storeToRefs } from 'pinia';
+import {
+  WorkspaceSqlFileSource,
+  WorkspaceTabOpenAction,
+} from '#shared/types/entities';
 import type { RoutesNamesList } from '@typed-router';
 import { useWorkspaceConnectionRoute } from '~/core/composables/useWorkspaceConnectionRoute';
 import { useManagementConnectionStore } from '~/core/stores/managementConnectionStore';
 import { useExplorerFileStore } from '~/core/stores/useExplorerFileStore';
 import { TabViewType, useTabViewsStore } from '~/core/stores/useTabViewsStore';
 import { useWSStateStore } from '~/core/stores/useWSStateStore';
-import {
-  WorkspaceSqlFileSource,
-  WorkspaceTabOpenAction,
-} from '~/core/types/entities';
 
 export interface OpenTabOptions {
   id: string;

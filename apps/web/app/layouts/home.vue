@@ -1,8 +1,8 @@
 <script setup lang="ts">
+import { isDesktopApp, isMacOS, isPWA, isElectron } from '#shared/helpers';
 import { cn } from '@/lib/utils';
 import ElectronUpdateIndicator from '~/components/modules/app-shell/status-bar/components/ElectronUpdateIndicator.vue';
 import { useSettingsModal } from '~/core/contexts/useSettingsModal';
-import { isDesktopApp, isMacOS, isPWA, isElectron } from '~/core/helpers';
 
 const isDesktopMacWindow = computed(() => isDesktopApp() && isMacOS());
 const config = useRuntimeConfig();

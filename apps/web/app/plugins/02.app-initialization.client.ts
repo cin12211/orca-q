@@ -1,4 +1,4 @@
-import { isDesktopApp } from '~/core/helpers/environment';
+import { isDesktopApp } from '#shared/helpers/environment';
 import {
   useAppConfigStore,
   useAgentStore,

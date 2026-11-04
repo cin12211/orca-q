@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
+import type { AgentRenderedMessage } from '#shared/types/agent.types';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -13,7 +14,6 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useDbAgentAttachments } from '../hooks/useDbAgentAttachments';
 import { useFileDownload } from '../hooks/useFileDownload';
-import type { AgentRenderedMessage } from '../types';
 import { BlockMessageCode } from './block-message';
 
 // TODO : open laster

@@ -1,11 +1,11 @@
 <script setup lang="ts">
+import { buildMappedColumnsFromRows as buildColumnsFromRows } from '#shared/helpers';
+import type { InstanceInsightsConfiguration } from '#shared/types';
 import {
   buildDynamicColumnDefs,
   buildDynamicRowData,
   DYNAMIC_COLUMN_TYPES,
 } from '~/components/base/data-grid/utils';
-import { buildMappedColumnsFromRows as buildColumnsFromRows } from '~/core/helpers';
-import type { InstanceInsightsConfiguration } from '~/core/types';
 
 const props = defineProps<{
   configuration: InstanceInsightsConfiguration | null;

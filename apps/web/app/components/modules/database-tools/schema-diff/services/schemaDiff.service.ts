@@ -1,7 +1,7 @@
 import type {
   SchemaDiffRequest,
   SchemaDiffResponse,
-} from '../types/schema-diff.types';
+} from '#shared/types/schema-diff.types';
 
 export const schemaDiffService = {
   diff: (body: SchemaDiffRequest): Promise<SchemaDiffResponse> =>

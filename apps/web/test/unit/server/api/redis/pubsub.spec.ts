@@ -1,5 +1,5 @@
+import { EConnectionMethod } from '#shared/types/entities/connection.entity';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { EConnectionMethod } from '~/core/types/entities/connection.entity';
 import messagesHandler from '~~/server/api/redis/pubsub/messages.post';
 import overviewHandler from '~~/server/api/redis/pubsub/overview.post';
 import publishHandler from '~~/server/api/redis/pubsub/publish.post';

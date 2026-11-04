@@ -1,10 +1,10 @@
 import { createPinia, setActivePinia } from 'pinia';
 import { nextTick } from 'vue';
+import type { Schema } from '#shared/types';
 import { mount } from '@vue/test-utils';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import RawQueryResultTabs from '~/components/modules/raw-query/components/RawQueryResultTabs.vue';
 import { useSchemaStore } from '~/core/stores';
-import type { Schema } from '~/core/types';
 
 const schema: Schema = {
   id: 'workspace-connection-public',

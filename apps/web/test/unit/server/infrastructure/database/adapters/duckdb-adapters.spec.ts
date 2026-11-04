@@ -1,5 +1,5 @@
+import { DatabaseClientType } from '#shared/constants/database-client-type';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
-import { DatabaseClientType } from '~/core/constants/database-client-type';
 import { DuckDbRoleAdapter } from '~~/server/infrastructure/database/adapters/database-roles/duckdb/duckdb-role.adapter';
 import { DuckDbFunctionAdapter } from '~~/server/infrastructure/database/adapters/functions/duckdb/duckdb-function.adapter';
 import { DuckDbInstanceInsightsAdapter } from '~~/server/infrastructure/database/adapters/instance-insights/duckdb/duckdb-instance-insights.adapter';

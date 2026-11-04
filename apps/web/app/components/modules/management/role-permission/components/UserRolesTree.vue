@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import type { DatabaseRole } from '#shared/types';
+import { RoleCategory } from '#shared/types';
 import BaseContextMenu from '~/components/base/context-menu/BaseContextMenu.vue';
 import {
   ContextMenuItemType,
@@ -10,8 +12,6 @@ import type { FileNode } from '~/components/base/tree-folder/types';
 import { useTabManagement } from '~/core/composables/useTabManagement';
 import { useWorkspaceConnectionRoute } from '~/core/composables/useWorkspaceConnectionRoute';
 import { useTabViewsStore, TabViewType } from '~/core/stores/useTabViewsStore';
-import type { DatabaseRole } from '~/core/types';
-import { RoleCategory } from '~/core/types';
 import DeleteUserDialog from './DeleteUserDialog.vue';
 
 interface Props {

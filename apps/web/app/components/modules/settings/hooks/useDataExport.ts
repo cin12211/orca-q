@@ -1,9 +1,9 @@
 import { ref } from 'vue';
-import { isElectron } from '~/core/helpers/environment';
+import { isElectron } from '#shared/helpers/environment';
+import { type PersistCollection } from '#shared/storage/idbRegistry';
 import { persistGetAll as electronPersistGetAll } from '~/core/persist/adapters/electron/primitives';
 import { idbGetAll } from '~/core/persist/adapters/idb/primitives';
 import { getApplied } from '~/core/persist/migration';
-import { type PersistCollection } from '~/core/storage/idbRegistry';
 import {
   collectBackupPersistData,
   createBackupData,

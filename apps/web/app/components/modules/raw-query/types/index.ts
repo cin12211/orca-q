@@ -1,8 +1,8 @@
+import type { DatabaseDriverError } from '#shared/types';
+import type { Connection } from '#shared/types/entities';
 import type { FieldDef } from 'pg';
-import type { DatabaseDriverError } from '~/core/types';
-import type { Connection } from '~/core/types/entities';
 
-export type { MappedRawColumn } from '~/core/types/mapped-column.types';
+export type { MappedRawColumn } from '#shared/types/mapped-column.types';
 
 // Defined inline to avoid importing from dynamic-table utils which has browser API dependencies
 type RowData = { [key: string]: unknown };

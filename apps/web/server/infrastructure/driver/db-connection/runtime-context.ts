@@ -1,14 +1,14 @@
 import {
   resolveConnectionFamily,
   resolveConnectionProviderKind,
-} from '~~/app/core/constants/connection-capabilities';
-import type { DatabaseClientType } from '~~/app/core/constants/database-client-type';
+} from '#shared/constants/connection-capabilities';
+import type { DatabaseClientType } from '#shared/constants/database-client-type';
 import type {
   EConnectionFamily,
   EConnectionMethod,
   EConnectionProviderKind,
   IManagedSqliteConfig,
-} from '~~/app/core/types/entities/connection.entity';
+} from '#shared/types/entities/connection.entity';
 
 export function resolveRuntimeContext(input: {
   type: DatabaseClientType;

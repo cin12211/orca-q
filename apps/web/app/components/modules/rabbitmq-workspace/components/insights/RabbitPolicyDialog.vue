@@ -1,4 +1,8 @@
 <script setup lang="ts">
+import type {
+  RabbitPolicy,
+  RabbitPolicyKind,
+} from '#shared/types/rabbitmq.types';
 import {
   Dialog,
   DialogContent,
@@ -7,10 +11,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import type {
-  RabbitPolicy,
-  RabbitPolicyKind,
-} from '~/core/types/rabbitmq.types';
 import {
   RABBIT_POLICY_APPLY_TO,
   RABBIT_POLICY_KEY_HINTS,

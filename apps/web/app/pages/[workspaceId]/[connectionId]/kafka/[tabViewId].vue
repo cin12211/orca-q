@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { storeToRefs } from 'pinia';
+import { DEFAULT_MAX_KEEP_ALIVE } from '#shared/constants';
 import { KafkaWorkspace } from '~/components/modules/kafka-workspace';
-import { DEFAULT_MAX_KEEP_ALIVE } from '~/core/constants';
 import { useManagementConnectionStore } from '~/core/stores/managementConnectionStore';
 import { useTabViewsStore } from '~/core/stores/useTabViewsStore';
 

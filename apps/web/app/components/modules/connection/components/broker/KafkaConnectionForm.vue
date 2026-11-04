@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { DatabaseClientType } from '#shared/constants/database-client-type';
 import { Accordion } from '@/components/ui/accordion';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -10,7 +11,6 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { DatabaseClientType } from '~/core/constants/database-client-type';
 import type { Connection } from '~/core/stores';
 import { KAFKA_SASL_MECHANISM_OPTIONS } from '../../constants';
 import {

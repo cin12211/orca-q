@@ -1,10 +1,10 @@
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
+import { uuidv4 } from '#shared/helpers';
 import dayjs from 'dayjs';
 import { DEFAULT_ENV_TAGS } from '~/components/modules/environment-tag/constants/DEFAULT_ENV_TAGS';
 import type { TagColor } from '~/components/modules/environment-tag/types/environmentTag.enums';
 import type { EnvironmentTag } from '~/components/modules/environment-tag/types/environmentTag.types';
-import { uuidv4 } from '~/core/helpers';
 import { createStorageApis } from '~/core/storage';
 import { useManagementConnectionStore } from './managementConnectionStore';
 

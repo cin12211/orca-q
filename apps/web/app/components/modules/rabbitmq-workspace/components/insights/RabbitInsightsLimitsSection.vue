@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import { useBrokerRequest } from '~/components/modules/shared/message-broker';
-import type { Connection } from '~/core/stores';
 import type {
   RabbitUserLimitName,
   RabbitVhostLimitName,
-} from '~/core/types/rabbitmq.types';
+} from '#shared/types/rabbitmq.types';
+import { useBrokerRequest } from '~/components/modules/shared/message-broker';
+import type { Connection } from '~/core/stores';
 import {
   RABBIT_USER_LIMIT_OPTIONS,
   RABBIT_VHOST_LIMIT_OPTIONS,

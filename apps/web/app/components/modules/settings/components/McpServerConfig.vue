@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { Switch } from '#components';
+import { DEFAULT_WORKSPACE_ICON } from '#shared/constants/workspace-icon-constants';
 import { toast } from 'vue-sonner';
 import { Badge } from '@/components/ui/badge';
-import { DEFAULT_WORKSPACE_ICON } from '~/core/constants/workspace-icon-constants';
 import { copyToClipboard } from '~/core/helpers/copyData';
 import {
   McpConnectionAccess,

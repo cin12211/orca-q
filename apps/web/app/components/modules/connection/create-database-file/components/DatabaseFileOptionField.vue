@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { DatabaseFileOptionField } from '#shared/constants/database-file-options';
 import { Label } from '@/components/ui/label';
 import {
   Select,
@@ -7,7 +8,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import type { DatabaseFileOptionField } from '~/core/constants/database-file-options';
 
 defineProps<{ field: DatabaseFileOptionField }>();
 

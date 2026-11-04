@@ -1,6 +1,6 @@
+import { DatabaseClientType } from '#shared/constants/database-client-type';
 import { describe, it, expect } from 'vitest';
 import { extractParamsFromSql } from '~/components/modules/raw-query/utils/extractVariables';
-import { DatabaseClientType } from '~/core/constants/database-client-type';
 
 describe('extractParamsFromSql', () => {
   describe('Standard Colon Extractor (Postgres, MySQL, Oracle, etc.)', () => {

@@ -2,9 +2,9 @@
  * Electron persist primitives.
  * All calls go through window.electronAPI.persist (contextBridge).
  */
+import { toRawJSON } from '#shared/helpers/jsonFormat';
+import type { PersistCollection } from '#shared/storage/idbRegistry';
 import dayjs from 'dayjs';
-import { toRawJSON } from '~/core/helpers/jsonFormat';
-import type { PersistCollection } from '~/core/storage/idbRegistry';
 
 export type { PersistCollection };
 

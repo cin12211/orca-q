@@ -1,8 +1,8 @@
-import { describe, it, expect } from 'vitest';
 import {
   buildMappedColumnsFromRows,
   buildMappedColumnsFromKeys,
-} from '@/core/helpers/mapped-columns';
+} from '#shared/helpers/mapped-columns';
+import { describe, it, expect } from 'vitest';
 
 describe('mapped-columns', () => {
   it('returns empty array for empty rows', () => {

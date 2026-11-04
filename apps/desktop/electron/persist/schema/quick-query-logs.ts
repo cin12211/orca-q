@@ -1,5 +1,5 @@
+import type { QuickQueryLog } from '#shared/types/entities/quick-query-log.entity';
 import type { Knex } from 'knex';
-import type { QuickQueryLog } from '~/core/types/entities/quick-query-log.entity';
 import { createTableIfMissing, type ToSQLiteRow } from './shared';
 
 export type QuickQueryLogRow = ToSQLiteRow<QuickQueryLog>;

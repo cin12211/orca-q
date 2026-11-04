@@ -94,7 +94,10 @@ import { useUserList } from '../hooks/useUserList'
 
 > **Monorepo note:** modules live in `apps/web/app/components/modules/`. If the Nitro
 > server (`apps/web/server/`) or electron (`apps/desktop/electron/`) needs a module's
-> types or utils, move them to `apps/web/shared/` and import them as `#shared/...`.
+> types or utils, move them to `apps/web/shared/` and import them as `#shared/...`
+> (e.g. agent types → `shared/types/agent.types.ts`, schema-diff types →
+> `shared/types/schema-diff.types.ts`, routine SQL generators →
+> `shared/helpers/generateFunctionSQL.ts`; the module barrel may re-export them).
 > Server and electron code never import `~/` (client `app/`) paths.
 
 ---

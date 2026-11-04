@@ -1,8 +1,8 @@
+import { DatabaseClientType } from '#shared/constants/database-client-type';
 import { randomUUID } from 'node:crypto';
 import { mkdtemp, stat, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { DatabaseClientType } from '~~/app/core/constants/database-client-type';
 import {
   assertNativeBackupSupported,
   buildNativeBackupFileName,

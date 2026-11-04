@@ -1,4 +1,5 @@
-import { isElectron } from '~/core/helpers/environment';
+import { isElectron } from '#shared/helpers/environment';
+import type { PersistCollection } from '#shared/storage/idbRegistry';
 import {
   persistGetAll as electronGetAll,
   persistReplaceAll as electronReplaceAll,
@@ -7,7 +8,6 @@ import {
   idbGetAll,
   idbReplaceAll,
 } from '~/core/persist/adapters/idb/primitives';
-import type { PersistCollection } from '~/core/storage/idbRegistry';
 
 export type GetAll = <T>(collection: PersistCollection) => Promise<T[]>;
 export type ReplaceAll = <T extends { id: string }>(

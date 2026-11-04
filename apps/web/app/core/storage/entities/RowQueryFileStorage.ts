@@ -1,8 +1,8 @@
-import type { RowQueryFile, RowQueryFileContent } from '~/core/types/entities';
 import {
   ROW_QUERY_FILE_CONTENT_IDB,
   ROW_QUERY_FILE_IDB,
-} from '../idbRegistry';
+} from '#shared/storage/idbRegistry';
+import type { RowQueryFile, RowQueryFileContent } from '#shared/types/entities';
 import { IDBStorage } from '../base/IDBStorage';
 
 class RowQueryFileIDB extends IDBStorage<RowQueryFile> {

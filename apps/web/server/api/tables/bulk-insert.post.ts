@@ -1,10 +1,10 @@
-import { defineEventHandler, readBody, createError } from 'h3';
-import { DatabaseClientType } from '~~/app/core/constants/database-client-type';
-import { buildInsertStatements } from '~~/app/core/helpers/sql-mutation-statements';
+import { DatabaseClientType } from '#shared/constants/database-client-type';
+import { buildInsertStatements } from '#shared/helpers/sql-mutation-statements';
 import type {
   BulkUpdateResponse,
   DatabaseMetadataRequestParams,
-} from '~~/app/core/types';
+} from '#shared/types';
+import { defineEventHandler, readBody, createError } from 'h3';
 import { createTableAdapter } from '~~/server/infrastructure/database/adapters/tables';
 import { assertBulkSuccess } from '~~/server/utils/assert-bulk-success';
 

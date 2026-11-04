@@ -1,6 +1,9 @@
 <script setup lang="ts">
 import { computed, h, ref } from 'vue';
 import { Icon, Tooltip, TooltipContent, TooltipTrigger } from '#components';
+import { DatabaseClientType } from '#shared/constants/database-client-type';
+import { parseConnectionString } from '#shared/helpers/parser-connection-string';
+import { EConnectionMethod } from '#shared/types/entities/connection.entity';
 import dayjs from 'dayjs';
 import {
   EnvTagBadge,
@@ -26,11 +29,8 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { DatabaseClientType } from '~/core/constants/database-client-type';
 import { useAppContext } from '~/core/contexts/useAppContext';
-import { parseConnectionString } from '~/core/helpers/parser-connection-string';
 import { type Connection } from '~/core/stores';
-import { EConnectionMethod } from '~/core/types/entities/connection.entity';
 import {
   getDatabaseSupportByType,
   isSqlite3ConnectionsEnabled,

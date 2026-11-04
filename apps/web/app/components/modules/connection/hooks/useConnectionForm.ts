@@ -6,10 +6,10 @@ import {
   toRef,
   type MaybeRefOrGetter,
 } from 'vue';
+import { DatabaseClientType } from '#shared/constants/database-client-type';
+import { uuidv4 } from '#shared/helpers';
+import { isElectron } from '#shared/helpers/environment';
 import dayjs from 'dayjs';
-import { DatabaseClientType } from '~/core/constants/database-client-type';
-import { uuidv4 } from '~/core/helpers';
-import { isElectron } from '~/core/helpers/environment';
 import type { Connection } from '~/core/stores';
 import { useEnvironmentTagStore } from '~/core/stores';
 import { DEFAULT_DB_PORTS } from '../constants';

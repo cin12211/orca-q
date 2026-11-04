@@ -1,6 +1,6 @@
+import { DatabaseClientType, BULK_CHUNK_SIZE } from '#shared/constants';
+import type { BulkUpdateResponse } from '#shared/types';
 import type { PoolClient, QueryResult } from 'pg';
-import { DatabaseClientType, BULK_CHUNK_SIZE } from '~~/app/core/constants';
-import type { BulkUpdateResponse } from '~~/app/core/types';
 import type { IDatabaseAdapter } from '~~/server/infrastructure/driver';
 import { createDatabaseHttpError } from '../../shared';
 

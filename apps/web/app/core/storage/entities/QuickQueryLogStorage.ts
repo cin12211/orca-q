@@ -1,6 +1,6 @@
+import { QUICK_QUERY_LOG_IDB } from '#shared/storage/idbRegistry';
+import type { QuickQueryLog } from '#shared/types/entities';
 import type { DeleteQQueryLogsProps } from '~/core/persist/types';
-import type { QuickQueryLog } from '~/core/types/entities';
-import { QUICK_QUERY_LOG_IDB } from '../idbRegistry';
 import { IDBStorage } from '../base/IDBStorage';
 
 class QuickQueryLogStorage extends IDBStorage<QuickQueryLog> {

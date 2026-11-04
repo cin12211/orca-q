@@ -1,3 +1,8 @@
+import {
+  isJsonColumnType,
+  isStructuredColumnType,
+} from '#shared/helpers/sql-column-type';
+import type { ReservedTableSchemas } from '#shared/types/database-tables.types';
 import type {
   CellClassParams,
   ColDef,
@@ -14,11 +19,6 @@ import {
   type RowData,
 } from '~/components/base/data-grid/utils';
 import { formatCellValue, setCellValue } from '~/core/helpers/cell-value';
-import {
-  isJsonColumnType,
-  isStructuredColumnType,
-} from '~/core/helpers/sql-column-type';
-import type { ReservedTableSchemas } from '~/core/types/database-tables.types';
 import type { MappedRawColumn } from '../types';
 import type { RawQueryEditedCell } from './buildRawQueryUpdates';
 import {

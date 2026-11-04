@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { RabbitQueueSummary } from '#shared/types/rabbitmq.types';
 import {
   Table,
   TableBody,
@@ -16,7 +17,6 @@ import {
   useBrokerRequest,
 } from '~/components/modules/shared/message-broker';
 import type { Connection } from '~/core/stores';
-import type { RabbitQueueSummary } from '~/core/types/rabbitmq.types';
 import { RABBIT_QUEUE_PAGE_SIZE } from '../constants';
 import { useRabbitTabs } from '../hooks';
 import { rabbitmqService } from '../services';

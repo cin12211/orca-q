@@ -1,4 +1,4 @@
-import type { CreateRoleRequest, GrantRevokeResponse } from '~~/app/core/types';
+import type { CreateRoleRequest, GrantRevokeResponse } from '#shared/types';
 import type { IDatabaseAdapter } from '~~/server/infrastructure/driver';
 
 export class PostgresRoleManagementAdapter {

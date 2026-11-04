@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { AgentExplainQueryResult } from '../../types';
+import type { AgentExplainQueryResult } from '#shared/types/agent.types';
 
 defineProps<{
   data: AgentExplainQueryResult;

@@ -1,9 +1,9 @@
-import type { Consumer } from '@platformatic/kafka';
-import type { BrokerMessage } from '~~/app/core/types/broker-message.types';
+import type { BrokerMessage } from '#shared/types/broker-message.types';
 import type {
   KafkaLivePollResult,
   KafkaLiveStatus,
-} from '~~/app/core/types/kafka.types';
+} from '#shared/types/kafka.types';
+import type { Consumer } from '@platformatic/kafka';
 import {
   BrokerConnectionError,
   type BrokerConnectionInput,

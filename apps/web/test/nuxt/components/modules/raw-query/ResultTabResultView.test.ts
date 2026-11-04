@@ -1,9 +1,9 @@
 import { createPinia, setActivePinia } from 'pinia';
 import { nextTick, ref } from 'vue';
+import { DatabaseClientType } from '#shared/constants/database-client-type';
 import { mount } from '@vue/test-utils';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { DEFAULT_HASH_INDEX_WIDTH } from '~/components/base/data-grid/constants';
-import { DatabaseClientType } from '~/core/constants/database-client-type';
 import { useSchemaStore } from '~/core/stores';
 
 const rawQueryMutationControls = vi.hoisted(() => {

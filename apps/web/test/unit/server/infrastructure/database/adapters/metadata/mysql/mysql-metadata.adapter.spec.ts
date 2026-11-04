@@ -1,5 +1,5 @@
+import { DatabaseClientType } from '#shared/constants/database-client-type';
 import { describe, expect, it, vi } from 'vitest';
-import { DatabaseClientType } from '~/core/constants/database-client-type';
 import { MysqlMetadataAdapter } from '~~/server/infrastructure/database/adapters/metadata/mysql/mysql-metadata.adapter';
 
 const buildAdapter = (

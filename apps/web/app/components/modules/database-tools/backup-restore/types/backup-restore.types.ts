@@ -1,4 +1,4 @@
-import type { NativeBackupToolName } from '~/core/types';
+import type { NativeBackupToolName } from '#shared/types';
 
 export type BackupRestoreTab = 'export' | 'import';
 

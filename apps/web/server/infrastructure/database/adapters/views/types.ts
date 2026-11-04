@@ -1,4 +1,4 @@
-import { DatabaseClientType } from '~~/app/core/constants/database-client-type';
+import { DatabaseClientType } from '#shared/constants/database-client-type';
 import type {
   ViewOverviewMetadata,
   ViewDefinitionResponse,
@@ -6,7 +6,7 @@ import type {
   ViewDependency,
   ViewColumn,
   TableIndex,
-} from '~~/app/core/types';
+} from '#shared/types';
 import type { BaseDatabaseAdapterParams } from '../shared';
 
 export type DatabaseViewAdapterParams = BaseDatabaseAdapterParams;

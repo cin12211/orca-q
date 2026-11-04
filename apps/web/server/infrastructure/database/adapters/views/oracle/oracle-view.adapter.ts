@@ -1,5 +1,4 @@
-import { createError } from 'h3';
-import { DatabaseClientType } from '~~/app/core/constants/database-client-type';
+import { DatabaseClientType } from '#shared/constants/database-client-type';
 import type {
   TableIndex,
   ViewColumn,
@@ -7,8 +6,9 @@ import type {
   ViewDependency,
   ViewMeta,
   ViewOverviewMetadata,
-} from '~~/app/core/types';
-import { ViewSchemaEnum } from '~~/app/core/types';
+} from '#shared/types';
+import { ViewSchemaEnum } from '#shared/types';
+import { createError } from 'h3';
 import { lowerCaseRowKeys } from '~~/server/infrastructure/driver/result-rows';
 import { BaseDomainAdapter } from '../../shared';
 import type { DatabaseViewAdapterParams, IDatabaseViewAdapter } from '../types';

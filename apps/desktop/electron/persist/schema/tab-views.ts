@@ -1,5 +1,5 @@
+import type { TabView } from '#shared/types/entities/tab-view.entity';
 import type { Knex } from 'knex';
-import type { TabView } from '~/core/types/entities/tab-view.entity';
 import { createTableIfMissing, type ToSQLiteRow } from './shared';
 
 export type TabViewRow = ToSQLiteRow<TabView>;

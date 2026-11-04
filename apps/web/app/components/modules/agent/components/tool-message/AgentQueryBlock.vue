@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { AgentGenerateQueryResult } from '../../types';
+import type { AgentGenerateQueryResult } from '#shared/types/agent.types';
 import AgentToolSqlPreview from './AgentToolSqlPreview.vue';
 
 const props = defineProps<{

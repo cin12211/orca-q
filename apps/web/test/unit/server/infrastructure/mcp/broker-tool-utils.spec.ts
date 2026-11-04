@@ -1,7 +1,7 @@
+import type { BrokerMessage } from '#shared/types/broker-message.types';
+import { EConnectionMethod } from '#shared/types/entities/connection.entity';
+import type { Connection } from '#shared/types/entities/connection.entity';
 import { describe, expect, it } from 'vitest';
-import type { BrokerMessage } from '~/core/types/broker-message.types';
-import { EConnectionMethod } from '~/core/types/entities/connection.entity';
-import type { Connection } from '~/core/types/entities/connection.entity';
 import {
   clampMessageCount,
   MCP_DEFAULT_MESSAGE_COUNT,

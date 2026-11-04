@@ -24,7 +24,7 @@ const {
   storageSetItemMock: vi.fn(),
 }));
 
-vi.mock('~/core/helpers/environment', () => ({
+vi.mock('#shared/helpers/environment', () => ({
   isElectron: () => false,
 }));
 

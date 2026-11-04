@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { resolveConnectionProviderKind } from '~/core/constants/connection-capabilities';
-import { DatabaseClientType } from '~/core/constants/database-client-type';
+import { resolveConnectionProviderKind } from '#shared/constants/connection-capabilities';
+import { DatabaseClientType } from '#shared/constants/database-client-type';
+import { EConnectionProviderKind } from '#shared/types/entities/connection.entity';
 import { useManagementConnectionStore } from '~/core/stores/managementConnectionStore';
-import { EConnectionProviderKind } from '~/core/types/entities/connection.entity';
 
 interface EmptyStateCopy {
   title: string;

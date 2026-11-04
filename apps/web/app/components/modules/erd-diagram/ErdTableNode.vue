@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue';
+import type { ColumnMetadata } from '#shared/types';
 import { Handle, Position, useVueFlow, type NodeProps } from '@vue-flow/core';
-import type { ColumnMetadata } from '~/core/types';
 import {
   ERD_HEADER_HANDLE_SOURCE_ID,
   ERD_HEADER_HANDLE_TARGET_ID,

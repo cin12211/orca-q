@@ -1,10 +1,10 @@
-import { describe, expect, it } from 'vitest';
-import { getVisibleActivityItems } from '~/components/modules/app-shell/activity-bar/utils/getVisibleActivityItems';
 import {
   DatabaseClientType,
   isBackupSupportedClientType,
   isPostgresCompatibleClientType,
-} from '~/core/constants/database-client-type';
+} from '#shared/constants/database-client-type';
+import { describe, expect, it } from 'vitest';
+import { getVisibleActivityItems } from '~/components/modules/app-shell/activity-bar/utils/getVisibleActivityItems';
 import { ActivityBarItemType } from '~/core/stores/useActivityBarStore';
 
 const ALL_ITEMS = [

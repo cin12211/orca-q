@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { formatQueryTime } from '~/core/helpers/format';
+import { formatQueryTime } from '#shared/helpers/format';
 import type { ExplainPlanNode } from '../../../types/explainAnalyzeResult';
 import { EXPLAIN_VIEW_MODE_OPTIONS } from '../constants';
 import { ExplainViewMode } from '../types';

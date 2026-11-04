@@ -1,4 +1,4 @@
-import { type ViewSchemaEnum } from '~/core/types/schemaMeta.type';
+import { type ViewSchemaEnum } from './schemaMeta.type';
 
 export interface ViewOverviewMetadata {
   name: string;

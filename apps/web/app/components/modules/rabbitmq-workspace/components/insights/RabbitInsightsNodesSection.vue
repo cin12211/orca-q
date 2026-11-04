@@ -1,10 +1,10 @@
 <script setup lang="ts">
+import type { RabbitNode, RabbitOverview } from '#shared/types/rabbitmq.types';
 import {
   formatBytes,
   formatNumber,
   formatSeconds,
 } from '~/components/modules/shared/message-broker';
-import type { RabbitNode, RabbitOverview } from '~/core/types/rabbitmq.types';
 import RabbitInsightsTable from './RabbitInsightsTable.vue';
 
 const props = defineProps<{ overview: RabbitOverview | null }>();

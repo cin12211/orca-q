@@ -1,4 +1,4 @@
-import { parseConnectionString } from '~/core/helpers/parser-connection-string';
+import { parseConnectionString } from '#shared/helpers/parser-connection-string';
 import { EKafkaSaslMechanism, type IBrokerConfig } from '../types';
 import { parseBrokerList } from './parseBrokerList';
 

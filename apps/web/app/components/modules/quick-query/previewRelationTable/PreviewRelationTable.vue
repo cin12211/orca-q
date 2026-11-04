@@ -6,7 +6,7 @@ import {
   Dialog,
   DialogContent,
 } from '#components';
-import type { PreviewRelationBreadcrumb } from '~/core/helpers/breadcrumb-builder';
+import type { PreviewRelationBreadcrumb } from '#shared/helpers/breadcrumb-builder';
 import BackReferencedTable from './BackReferencedTable.vue';
 import ForwardReferencedTable from './ForwardReferencedTable.vue';
 

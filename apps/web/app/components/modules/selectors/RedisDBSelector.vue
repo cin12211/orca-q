@@ -1,6 +1,6 @@
 <script setup lang="ts">
+import type { RedisDatabaseOption } from '#shared/types/redis-workspace.types';
 import { Label } from '@/components/ui/label';
-import type { RedisDatabaseOption } from '~/core/types/redis-workspace.types';
 
 const props = defineProps<{
   databases: RedisDatabaseOption[];

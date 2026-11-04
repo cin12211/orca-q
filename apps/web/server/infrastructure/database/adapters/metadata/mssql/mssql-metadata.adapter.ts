@@ -1,4 +1,4 @@
-import { DatabaseClientType } from '~~/app/core/constants/database-client-type';
+import { DatabaseClientType } from '#shared/constants/database-client-type';
 import type {
   DatabaseMetadata,
   FunctionSchema,
@@ -10,8 +10,8 @@ import type {
   TableMetadata,
   ViewDetailMetadata,
   ViewMetadata,
-} from '~~/app/core/types';
-import { FunctionSchemaEnum, ViewSchemaEnum } from '~~/app/core/types';
+} from '#shared/types';
+import { FunctionSchemaEnum, ViewSchemaEnum } from '#shared/types';
 import { BaseDomainAdapter } from '../../shared';
 import { resolveMetadataTypeAlias } from '../type-alias.constants';
 import type {
@@ -33,10 +33,7 @@ const objectKey = (schema: string, name: string) => `${schema}\u0000${name}`;
 
 // lodash-es is a frontend-only devDependency and is not bundled into the
 // server runtime, so the grouping stays local.
-function groupBy<T>(
-  rows: T[],
-  key: (row: T) => string
-): Record<string, T[]> {
+function groupBy<T>(rows: T[], key: (row: T) => string): Record<string, T[]> {
   const groups: Record<string, T[]> = {};
 
   for (const row of rows) {

@@ -1,7 +1,7 @@
-import type { Connection, TabView, Workspace } from '../types/entities';
-import type { RowQueryFile, RowQueryFileContent } from '../types/entities';
-import type { QuickQueryLog } from '../types/entities';
-import type { WorkspaceState } from '../types/entities';
+import type { Connection, TabView, Workspace } from '#shared/types/entities';
+import type { RowQueryFile, RowQueryFileContent } from '#shared/types/entities';
+import type { QuickQueryLog } from '#shared/types/entities';
+import type { WorkspaceState } from '#shared/types/entities';
 import type {
   AgentPersistedState,
   AppConfigPersistedState,

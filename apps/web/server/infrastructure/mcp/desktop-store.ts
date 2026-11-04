@@ -1,8 +1,5 @@
-import knex, { type Knex } from 'knex';
-import { timingSafeEqual } from 'node:crypto';
-import { existsSync } from 'node:fs';
-import { DatabaseClientType } from '~~/app/core/constants/database-client-type';
-import { hashMcpToken } from '~~/app/core/helpers/mcp-token';
+import { DatabaseClientType } from '#shared/constants/database-client-type';
+import { hashMcpToken } from '#shared/helpers/mcp-token';
 import {
   APP_CONFIG_PERSIST_ID,
   McpConnectionAccess,
@@ -11,8 +8,11 @@ import {
   resolveMcpConnectionAccess,
   type McpServerConfigs,
   type McpSession,
-} from '~~/app/core/persist/normalize';
-import type { Connection } from '~~/app/core/types/entities/connection.entity';
+} from '#shared/persist/normalize';
+import type { Connection } from '#shared/types/entities/connection.entity';
+import knex, { type Knex } from 'knex';
+import { timingSafeEqual } from 'node:crypto';
+import { existsSync } from 'node:fs';
 
 /**
  * Both variables are set only by the Electron app when it spawns the Nitro

@@ -1,6 +1,6 @@
 <script setup lang="ts">
+import type { Connection } from '#shared/types/entities/connection.entity';
 import { useWorkspaceConnectionRoute } from '~/core/composables/useWorkspaceConnectionRoute';
-import type { Connection } from '~/core/types/entities/connection.entity';
 import PureConnectionSelector from '../../../selectors/PureConnectionSelector.vue';
 
 const { workspaceId } = useWorkspaceConnectionRoute();

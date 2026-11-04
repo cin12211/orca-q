@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { DatabaseClientType } from '~/core/constants/database-client-type';
+import { DatabaseClientType } from '#shared/constants/database-client-type';
 import type { Connection } from '~/core/stores';
 import {
   GenericSqlInstanceInsightsPanel,

@@ -1,4 +1,4 @@
-import { DatabaseClientType } from '~/core/constants/database-client-type';
+import { DatabaseClientType } from '#shared/constants/database-client-type';
 
 interface ParameterExtractor {
   extract(sql: string): string[];

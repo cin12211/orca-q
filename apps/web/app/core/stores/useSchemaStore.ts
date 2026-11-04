@@ -1,8 +1,7 @@
 import { defineStore, storeToRefs } from 'pinia';
 import { ref, computed } from 'vue';
-import { getConnectionParams } from '@/core/helpers/connection-helper';
-import { useWorkspaceConnectionRoute } from '~/core/composables/useWorkspaceConnectionRoute';
-import { isSqlFamilyConnection } from '~/core/constants/connection-capabilities';
+import { isSqlFamilyConnection } from '#shared/constants/connection-capabilities';
+import { getConnectionParams } from '#shared/helpers/connection-helper';
 import type {
   ReservedTableSchemas,
   TableIndex,
@@ -10,7 +9,7 @@ import type {
   TableRule,
   TableTrigger,
   ViewMeta,
-} from '~/core/types';
+} from '#shared/types';
 import type {
   FunctionSchema,
   Schema,
@@ -18,7 +17,8 @@ import type {
   TableDetails,
   ViewSchema,
   ViewDetails,
-} from '~/core/types';
+} from '#shared/types';
+import { useWorkspaceConnectionRoute } from '~/core/composables/useWorkspaceConnectionRoute';
 import type { Connection } from './managementConnectionStore';
 import { useWSStateStore } from './useWSStateStore';
 

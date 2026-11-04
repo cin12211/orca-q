@@ -1,3 +1,4 @@
+import { DatabaseClientType } from '#shared/constants/database-client-type';
 import { DuckDBInstance } from '@duckdb/node-api';
 import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -11,7 +12,6 @@ import {
   it,
   vi,
 } from 'vitest';
-import { DatabaseClientType } from '~/core/constants/database-client-type';
 import { normalizeConnectionError } from '~~/server/infrastructure/driver/connection-error';
 import {
   DUCKDB_UNSUPPORTED_PLATFORM_MESSAGE,

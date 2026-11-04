@@ -1,17 +1,17 @@
-import { describe, expect, it } from 'vitest';
 import {
   getConnectionCapabilityProfile,
   resolveConnectionFamily,
-} from '~/core/constants/connection-capabilities';
+} from '#shared/constants/connection-capabilities';
 import {
   DatabaseClientType,
   isMessageBrokerClientType,
-} from '~/core/constants/database-client-type';
+} from '#shared/constants/database-client-type';
 import {
   EConnectionFamily,
   EConnectionMethod,
-} from '~/core/types/entities/connection.entity';
-import { TabViewType } from '~/core/types/entities/tab-view.entity';
+} from '#shared/types/entities/connection.entity';
+import { TabViewType } from '#shared/types/entities/tab-view.entity';
+import { describe, expect, it } from 'vitest';
 
 describe('message broker capabilities', () => {
   it.each([

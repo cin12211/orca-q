@@ -1,5 +1,5 @@
-import type { EnvironmentTag } from '~/core/types/entities';
-import { ENVIRONMENT_TAG_IDB } from '../idbRegistry';
+import { ENVIRONMENT_TAG_IDB } from '#shared/storage/idbRegistry';
+import type { EnvironmentTag } from '#shared/types/entities';
 import { IDBStorage } from '../base/IDBStorage';
 
 class EnvironmentTagStorage extends IDBStorage<EnvironmentTag> {

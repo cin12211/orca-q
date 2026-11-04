@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import { refDebounced } from '@vueuse/core';
+import { DEFAULT_DEBOUNCE_INPUT } from '#shared/constants';
+import { TabViewType } from '#shared/types/entities/tab-view.entity';
 import FileTree from '~/components/base/tree-folder/FileTree.vue';
 import type { FileNode } from '~/components/base/tree-folder/types';
 import {
@@ -13,9 +15,7 @@ import {
 } from '~/components/modules/shared/message-broker';
 import { useTabManagement } from '~/core/composables/useTabManagement';
 import { useWorkspaceConnectionRoute } from '~/core/composables/useWorkspaceConnectionRoute';
-import { DEFAULT_DEBOUNCE_INPUT } from '~/core/constants';
 import { useManagementConnectionStore } from '~/core/stores';
-import { TabViewType } from '~/core/types/entities/tab-view.entity';
 import { ManagementSidebarHeader } from '../shared';
 
 interface KafkaTreeData {

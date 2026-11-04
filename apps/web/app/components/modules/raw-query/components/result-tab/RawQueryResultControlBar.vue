@@ -6,13 +6,13 @@ import {
   DropdownMenuItem,
   Button,
 } from '#components';
+import { formatNumber, formatQueryTime } from '#shared/helpers/format';
 import { ContextMenuShortcut } from '@/components/ui/context-menu';
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
-import { formatNumber, formatQueryTime } from '~/core/helpers/format';
 
 defineProps<{
   pendingCount: number;

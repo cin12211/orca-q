@@ -1,4 +1,4 @@
-import type { ReservedTableSchemas } from '~/core/types/database-tables.types';
+import type { ReservedTableSchemas } from '#shared/types/database-tables.types';
 import type { MappedRawColumn } from '../types';
 
 /**

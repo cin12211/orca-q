@@ -1,6 +1,6 @@
 <script setup lang="ts">
+import { formatBytes } from '#shared/helpers';
 import { useElectronUpdater } from '~/core/composables/useElectronUpdater';
-import { formatBytes } from '~/core/helpers';
 
 withDefaults(
   defineProps<{

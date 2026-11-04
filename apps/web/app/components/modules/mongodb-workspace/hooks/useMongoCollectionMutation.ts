@@ -1,5 +1,5 @@
 import { ref, type Ref } from 'vue';
-import { getConnectionParams } from '~/core/helpers/connection-helper';
+import { getConnectionParams } from '#shared/helpers/connection-helper';
 import type { Connection } from '~/core/stores';
 
 export function useMongoCollectionMutation(params: {

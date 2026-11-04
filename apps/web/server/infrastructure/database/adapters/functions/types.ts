@@ -1,11 +1,11 @@
-import { DatabaseClientType } from '~~/app/core/constants/database-client-type';
+import { DatabaseClientType } from '#shared/constants/database-client-type';
 import type {
   FunctionSignature,
   RoutineMetadata,
   RenameFunctionResponse,
   UpdateFunctionResponse,
   DeleteFunctionResponse,
-} from '~~/app/core/types';
+} from '#shared/types';
 import type { BaseDatabaseAdapterParams } from '../shared';
 
 export type DatabaseFunctionAdapterParams = BaseDatabaseAdapterParams;

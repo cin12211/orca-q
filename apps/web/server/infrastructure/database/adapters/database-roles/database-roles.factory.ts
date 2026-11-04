@@ -2,7 +2,7 @@
  * Database Role Adapter Factory
  * Creates the appropriate adapter based on database type
  */
-import { DatabaseClientType } from '~~/app/core/constants/database-client-type';
+import { DatabaseClientType } from '#shared/constants/database-client-type';
 import { createDomainAdapter } from '../shared';
 import { DuckDbRoleAdapter } from './duckdb/duckdb-role.adapter';
 import { MysqlRoleAdapter } from './mysql/mysql-role.adapter';

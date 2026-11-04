@@ -1,6 +1,6 @@
 import type { Ref } from 'vue';
+import type { RedisKeyListItem } from '#shared/types/redis-workspace.types';
 import type { FileNode } from '~/components/base/tree-folder/types';
-import type { RedisKeyListItem } from '~/core/types/redis-workspace.types';
 
 export type RedisTreeNodeData = {
   kind: 'group' | 'key';

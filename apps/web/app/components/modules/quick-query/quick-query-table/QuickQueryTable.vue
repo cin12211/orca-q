@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import type { HTMLAttributes } from 'vue';
+import type { SchemaForeignKeyMetadata as ForeignKeyMetadata } from '#shared/types';
 import type { GridApi } from 'ag-grid-community';
 import BaseDataGrid from '~/components/base/data-grid/BaseDataGrid.vue';
 import type { RowData } from '~/components/base/data-grid/utils';
 import type { OrderBy } from '~/core/composables/useTableQueryBuilder';
-import type { SchemaForeignKeyMetadata as ForeignKeyMetadata } from '~/core/types';
 import {
   useQuickQueryColumnDefs,
   useQuickQueryEditedCells,

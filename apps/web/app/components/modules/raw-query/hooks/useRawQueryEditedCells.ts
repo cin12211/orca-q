@@ -1,7 +1,7 @@
 import { computed, ref, type Ref } from 'vue';
+import { isStructuredColumnType } from '#shared/helpers/sql-column-type';
 import type { CellValueChangedEvent } from 'ag-grid-community';
 import { normalizeEditedCellChange } from '~/core/helpers/cell-value';
-import { isStructuredColumnType } from '~/core/helpers/sql-column-type';
 import type { MappedRawColumn } from '../types';
 import type { RawQueryEditedCell } from '../utils/buildRawQueryUpdates';
 

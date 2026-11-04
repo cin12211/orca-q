@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { MongoOverviewInsight } from '#shared/types/instance-insights.types';
 import {
   InsightKpiCard,
   formatBytes,
@@ -6,7 +7,6 @@ import {
   formatNumber,
   formatRate,
 } from '~/components/modules/shared/instance-insights-kit';
-import type { MongoOverviewInsight } from '~/core/types/instance-insights.types';
 import type { MongoOpcounterRates } from '../../utils';
 
 const props = defineProps<{

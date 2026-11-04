@@ -5,7 +5,7 @@ import type {
   RedisPubSubSubscriptionMode,
   RedisPubSubSubscriptionStatus,
   RedisPubSubSubscriptionTarget,
-} from '~~/app/core/types/redis-workspace.types';
+} from '#shared/types/redis-workspace.types';
 import {
   createRedisRuntimeClient,
   parseRedisDatabaseIndex,
@@ -30,7 +30,10 @@ const MAX_MESSAGES = 200;
 const pubSubSessions = new Map<string, RedisPubSubSession>();
 
 const resolveDatabaseIndex = (input: RedisPubSubInput) => {
-  if (typeof input.databaseIndex === 'number' && Number.isFinite(input.databaseIndex)) {
+  if (
+    typeof input.databaseIndex === 'number' &&
+    Number.isFinite(input.databaseIndex)
+  ) {
     return input.databaseIndex;
   }
 

@@ -4,13 +4,13 @@ import {
   EExtendedField,
   OperatorSet,
   operatorSets,
-} from '~/core/constants';
+} from '../constants';
 import {
   DatabaseClientType,
   isPostgresCompatibleClientType,
-} from '~/core/constants/database-client-type';
-import { getSqlDialect } from '~/core/sql-dialect';
-import type { SqlDialect } from '~/core/sql-dialect';
+} from '../constants/database-client-type';
+import { getSqlDialect } from '../sql-dialect';
+import type { SqlDialect } from '../sql-dialect';
 
 export enum SqlFilterValueType {
   POSTGRES_ARRAY = 'postgres-array',

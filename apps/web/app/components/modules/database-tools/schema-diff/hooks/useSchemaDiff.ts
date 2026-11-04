@@ -1,13 +1,13 @@
-import { getConnectionParams } from '~/core/helpers/connection-helper';
+import { getConnectionParams } from '#shared/helpers/connection-helper';
 import {
   EConnectionMethod,
   type Connection,
-} from '~/core/types/entities/connection.entity';
-import { schemaDiffService } from '../services/schemaDiff.service';
+} from '#shared/types/entities/connection.entity';
 import type {
   SchemaDiffResponse,
   ConnectionParams,
-} from '../types/schema-diff.types';
+} from '#shared/types/schema-diff.types';
+import { schemaDiffService } from '../services/schemaDiff.service';
 
 export function useSchemaDiff() {
   const result = ref<SchemaDiffResponse | null>(null);

@@ -1,7 +1,7 @@
 import { defineAsyncComponent, type Component } from 'vue';
-import { getConnectionCapabilityProfile } from '~/core/constants';
+import { getConnectionCapabilityProfile } from '#shared/constants';
+import { EConnectionFamily } from '#shared/types/entities/connection.entity';
 import type { Connection } from '~/core/stores';
-import { EConnectionFamily } from '~/core/types/entities/connection.entity';
 
 // Exception to the constants layer rule: this registry is the host's only
 // link to the family modules, so it lazy-loads their public panels here.

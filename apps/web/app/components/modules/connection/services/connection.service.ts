@@ -2,8 +2,8 @@ import {
   getConnectionCapabilityProfile,
   resolveConnectionFamily,
   resolveConnectionProviderKind,
-} from '~/core/constants/connection-capabilities';
-import { DatabaseClientType } from '~/core/constants/database-client-type';
+} from '#shared/constants/connection-capabilities';
+import { DatabaseClientType } from '#shared/constants/database-client-type';
 import {
   EConnectionFamily,
   EConnectionMethod,

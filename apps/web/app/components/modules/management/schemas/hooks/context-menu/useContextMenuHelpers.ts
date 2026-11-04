@@ -1,13 +1,13 @@
 import { toRaw, toRef } from 'vue';
-import { toast } from 'vue-sonner';
-import { QuickQueryMutationAction } from '~/components/modules/quick-query/constants';
-import { useAppConfigStore } from '~/core/stores/appConfigStore';
 import type {
   SchemaColumnMetadata as ColumnShortMetadata,
   SchemaForeignKeyMetadata as ForeignKeyMetadata,
   SchemaPrimaryKey as PrimaryKey,
   TableDetailMetadata,
-} from '~/core/types';
+} from '#shared/types';
+import { toast } from 'vue-sonner';
+import { QuickQueryMutationAction } from '~/components/modules/quick-query/constants';
+import { useAppConfigStore } from '~/core/stores/appConfigStore';
 import type {
   ContextMenuState,
   SchemaContextMenuOptions,

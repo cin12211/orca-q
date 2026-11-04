@@ -1,12 +1,12 @@
 import { computed, ref, watch, type Ref } from 'vue';
+import { getConnectionParams } from '#shared/helpers/connection-helper';
+import { TabViewType } from '#shared/types/entities/tab-view.entity';
 import type { FileNode } from '~/components/base/tree-folder/types';
 import type {
   MongoCollectionName,
   MongoCollectionStatItem,
 } from '~/components/modules/mongodb-workspace';
-import { getConnectionParams } from '~/core/helpers/connection-helper';
 import type { Connection } from '~/core/stores';
-import { TabViewType } from '~/core/types/entities/tab-view.entity';
 import { getMongoSchemasTreeExpandedIds } from '../utils';
 
 interface MongoNodeData {

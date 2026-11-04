@@ -1,1 +1,1 @@
-export { TagColor } from '~/core/types/entities/environment-tag.entity';
+export { TagColor } from '#shared/types/entities/environment-tag.entity';

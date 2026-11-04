@@ -1,6 +1,11 @@
 import { ref } from 'vue';
+import { getConnectionParams } from '#shared/helpers/connection-helper';
+import {
+  buildDeleteStatements,
+  buildInsertStatements,
+  buildUpdateStatements,
+} from '#shared/helpers/sql-mutation-statements';
 import { toast } from 'vue-sonner';
-import { getConnectionParams } from '@/core/helpers/connection-helper';
 import {
   HASH_INDEX_ID,
   NEW_ROW_FLAG_ID,
@@ -8,11 +13,6 @@ import {
 import { cellValueFormatter } from '~/components/base/data-grid/utils';
 import { QuickQueryMutationAction } from '~/components/modules/quick-query/constants';
 import { copyRowsToClipboard } from '~/core/helpers';
-import {
-  buildDeleteStatements,
-  buildInsertStatements,
-  buildUpdateStatements,
-} from '~/core/helpers/sql-mutation-statements';
 import { type Connection } from '~/core/stores';
 import type QuickQueryTable from '../quick-query-table/QuickQueryTable.vue';
 

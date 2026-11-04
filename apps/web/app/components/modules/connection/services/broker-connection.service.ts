@@ -1,4 +1,4 @@
-import type { DatabaseClientType } from '~/core/constants/database-client-type';
+import type { DatabaseClientType } from '#shared/constants/database-client-type';
 import type {
   EConnectionMethod,
   IBrokerConfig,

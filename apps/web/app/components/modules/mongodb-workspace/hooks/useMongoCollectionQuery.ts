@@ -1,6 +1,6 @@
 import { ref, type Ref } from 'vue';
-import { DEFAULT_QUERY_SIZE } from '~/core/constants';
-import { getConnectionParams } from '~/core/helpers/connection-helper';
+import { DEFAULT_QUERY_SIZE } from '#shared/constants';
+import { getConnectionParams } from '#shared/helpers/connection-helper';
 import type { Connection } from '~/core/stores';
 import type { MongoDocument, MongoQueryMoreOptionsPayload } from '../types';
 import { getMongoErrorMessage } from '../utils';

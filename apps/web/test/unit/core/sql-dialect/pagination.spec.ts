@@ -1,6 +1,6 @@
+import { DatabaseClientType } from '#shared/constants/database-client-type';
+import { getSqlDialect } from '#shared/sql-dialect';
 import { describe, expect, it } from 'vitest';
-import { DatabaseClientType } from '~/core/constants/database-client-type';
-import { getSqlDialect } from '~/core/sql-dialect';
 
 describe('SqlDialect pagination and ordering', () => {
   it('uses LIMIT/OFFSET by default', () => {

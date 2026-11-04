@@ -1,16 +1,16 @@
-import { describe, expect, it } from 'vitest';
-import {
-  HASH_INDEX_ID,
-  NEW_ROW_FLAG_ID,
-} from '~/components/base/data-grid/constants';
-import { DatabaseClientType } from '~/core/constants/database-client-type';
-import { normalizeEditedCellValue } from '~/core/helpers/cell-value';
+import { DatabaseClientType } from '#shared/constants/database-client-type';
 import {
   buildDeleteStatements,
   buildInsertStatements,
   buildUpdateStatements,
   toSqlLiteral,
-} from '~/core/helpers/sql-mutation-statements';
+} from '#shared/helpers/sql-mutation-statements';
+import { describe, expect, it } from 'vitest';
+import {
+  HASH_INDEX_ID,
+  NEW_ROW_FLAG_ID,
+} from '~/components/base/data-grid/constants';
+import { normalizeEditedCellValue } from '~/core/helpers/cell-value';
 
 describe('QuickQuery value normalization and SQL builders', () => {
   describe('normalizeEditedCellValue', () => {

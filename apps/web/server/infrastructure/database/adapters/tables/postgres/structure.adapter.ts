@@ -1,6 +1,6 @@
+import { DatabaseClientType } from '#shared/constants/database-client-type';
+import type { TableSize, TableStructure } from '#shared/types';
 import { createError } from 'h3';
-import { DatabaseClientType } from '~~/app/core/constants/database-client-type';
-import type { TableSize, TableStructure } from '~~/app/core/types';
 import type { IDatabaseAdapter } from '~~/server/infrastructure/driver';
 import { resolveMetadataTypeAlias } from '../../metadata/type-alias.constants';
 

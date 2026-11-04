@@ -1,6 +1,9 @@
+import { DatabaseClientType } from '#shared/constants/database-client-type';
+import type {
+  DatabaseMetrics,
+  DatabaseMetadataRequestParams,
+} from '#shared/types';
 import { defineEventHandler, readBody, createError } from 'h3';
-import { DatabaseClientType } from '~~/app/core/constants/database-client-type';
-import type { DatabaseMetrics, DatabaseMetadataRequestParams } from '~~/app/core/types';
 import { createMetricsAdapter } from '~~/server/infrastructure/database/adapters/metrics';
 
 export default defineEventHandler(async (event): Promise<DatabaseMetrics> => {
@@ -14,10 +17,7 @@ export default defineEventHandler(async (event): Promise<DatabaseMetrics> => {
       });
     }
 
-    const adapter = await createMetricsAdapter(
-      body.type,
-      body
-    );
+    const adapter = await createMetricsAdapter(body.type, body);
 
     return await adapter.getMetrics();
   } catch (error: any) {

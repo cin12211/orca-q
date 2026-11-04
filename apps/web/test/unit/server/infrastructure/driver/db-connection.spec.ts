@@ -1,11 +1,11 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { DatabaseClientType } from '~/core/constants/database-client-type';
+import { DatabaseClientType } from '#shared/constants/database-client-type';
 import {
   EConnectionMethod,
   ESSLMode,
   ESSHAuthMethod,
   type ISSHConfig,
-} from '~/core/types/entities/connection.entity';
+} from '#shared/types/entities/connection.entity';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   getDatabaseSource,
   healthCheckConnection,

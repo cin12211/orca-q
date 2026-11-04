@@ -1,3 +1,4 @@
+import { DatabaseClientType } from '#shared/constants/database-client-type';
 import { mkdtempSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -10,7 +11,6 @@ import {
   it,
   vi,
 } from 'vitest';
-import { DatabaseClientType } from '~/core/constants/database-client-type';
 import { createDatabaseFile } from '~~/server/infrastructure/driver/db-connection/create-database-file';
 import { DuckDbAdapter } from '~~/server/infrastructure/driver/duckdb.adapter';
 import { SqliteAdapter } from '~~/server/infrastructure/driver/sqlite.adapter';

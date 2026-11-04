@@ -2,12 +2,12 @@
  * Context Menu Hook for User Management
  * Provides context menu actions for the UserRolesTree component
  */
+import type { DatabaseRole, GrantRevokeResponse } from '#shared/types';
+import { RoleCategory } from '#shared/types';
 import {
   ContextMenuItemType,
   type ContextMenuItem,
 } from '~/components/base/context-menu/menuContext.type';
-import type { DatabaseRole, GrantRevokeResponse } from '~/core/types';
-import { RoleCategory } from '~/core/types';
 
 export interface UserContextMenuParams {
   onViewPermissions: (role: DatabaseRole) => void;

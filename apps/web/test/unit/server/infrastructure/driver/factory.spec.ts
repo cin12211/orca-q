@@ -1,9 +1,9 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { DatabaseClientType } from '~/core/constants/database-client-type';
+import { DatabaseClientType } from '#shared/constants/database-client-type';
 import {
   EConnectionProviderKind,
   EManagedSqliteProvider,
-} from '~/core/types/entities/connection.entity';
+} from '#shared/types/entities/connection.entity';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { createDatabaseAdapter } from '~~/server/infrastructure/driver/factory';
 import { SqliteAdapter } from '~~/server/infrastructure/driver/sqlite.adapter';
 

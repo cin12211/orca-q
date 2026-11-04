@@ -1,4 +1,4 @@
-import type { ElectronPersistCollection } from '~/core/storage/idbRegistry';
+import type { ElectronPersistCollection } from '#shared/storage/idbRegistry';
 import {
   workspaceSQLiteStorage,
   connectionSQLiteStorage,

@@ -1,4 +1,4 @@
-import { DatabaseClientType } from '~/core/constants/database-client-type';
+import { DatabaseClientType } from '../../constants/database-client-type';
 
 export enum EConnectionMethod {
   STRING = 'string',

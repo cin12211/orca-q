@@ -3,7 +3,7 @@ import type {
   AgentAnomalyIssue,
   AgentAnomalySeverity,
   AgentDetectAnomalyResult,
-} from '../../types';
+} from '#shared/types/agent.types';
 
 defineProps<{
   data: AgentDetectAnomalyResult;

@@ -1,5 +1,5 @@
+import { DatabaseClientType } from '#shared/constants/database-client-type';
 import type { Knex } from 'knex';
-import { DatabaseClientType } from '~~/app/core/constants/database-client-type';
 import {
   createManagedSqliteAdapter,
   isManagedSqliteProviderKind,

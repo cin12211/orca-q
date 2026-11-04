@@ -1,5 +1,5 @@
+import { DatabaseClientType } from '#shared/constants/database-client-type';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { DatabaseClientType } from '~/core/constants/database-client-type';
 import { parseLogicalBackup } from '~~/server/infrastructure/database/backup/logical-backup';
 
 const {

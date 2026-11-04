@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { storeToRefs } from 'pinia';
+import { getConnectionParams } from '#shared/helpers/connection-helper';
 import {
   acceptCompletion,
   startCompletion,
@@ -25,7 +26,6 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { getConnectionParams } from '@/core/helpers/connection-helper';
 import BaseCodeEditor from '~/components/base/code-editor/BaseCodeEditor.vue';
 import { SQLDialectSupport } from '~/components/base/code-editor/constants';
 import {

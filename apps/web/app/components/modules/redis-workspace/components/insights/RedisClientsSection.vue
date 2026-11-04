@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { RedisClientInsight } from '#shared/types/instance-insights.types';
 import { InsightKpiCard } from '~/components/modules/shared/instance-insights-kit';
 import {
   Table,
@@ -9,7 +10,6 @@ import {
   TableHeader,
   TableRow,
 } from '~/components/ui/table';
-import type { RedisClientInsight } from '~/core/types/instance-insights.types';
 
 const props = defineProps<{
   clients: RedisClientInsight | undefined;

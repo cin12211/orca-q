@@ -1,21 +1,21 @@
-import debounce from 'lodash-es/debounce';
-import { toast } from 'vue-sonner';
-import { getConnectionParams } from '@/core/helpers/connection-helper';
-import { NullOrderPreference } from '~/components/modules/settings/types';
 import {
   ComposeOperator,
   DEFAULT_DEBOUNCE_INPUT,
   DEFAULT_QUERY,
   DEFAULT_QUERY_COUNT,
   DEFAULT_QUERY_SIZE,
-} from '~/core/constants';
-import { DatabaseClientType } from '~/core/constants/database-client-type';
+} from '#shared/constants';
+import { DatabaseClientType } from '#shared/constants/database-client-type';
+import { getConnectionParams } from '#shared/helpers/connection-helper';
 import {
   formatWhereClause,
   type FilterSchema,
-} from '~/core/helpers/sql-where-clause';
+} from '#shared/helpers/sql-where-clause';
+import { getSqlDialect } from '#shared/sql-dialect';
+import debounce from 'lodash-es/debounce';
+import { toast } from 'vue-sonner';
+import { NullOrderPreference } from '~/components/modules/settings/types';
 import { LocalStorageManager } from '~/core/persist/LocalStorageManager';
-import { getSqlDialect } from '~/core/sql-dialect';
 import { useQuickQueryLogs, type Connection } from '~/core/stores';
 import { useAppConfigStore } from '~/core/stores/appConfigStore';
 

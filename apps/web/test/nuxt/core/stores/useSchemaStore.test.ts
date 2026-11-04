@@ -1,13 +1,13 @@
 import { createPinia, setActivePinia } from 'pinia';
 import { ref } from 'vue';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { DatabaseClientType } from '~/core/constants/database-client-type';
-import { useSchemaStore } from '~/core/stores/useSchemaStore';
+import { DatabaseClientType } from '#shared/constants/database-client-type';
 import {
   EConnectionMethod,
   EConnectionProviderKind,
   EManagedSqliteProvider,
-} from '~/core/types/entities/connection.entity';
+} from '#shared/types/entities/connection.entity';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { useSchemaStore } from '~/core/stores/useSchemaStore';
 
 const mockFetch = vi.fn();
 

@@ -1,5 +1,5 @@
-import { DatabaseClientType } from '~~/app/core/constants/database-client-type';
-import type { SchemaMetaData } from '~~/app/core/types';
+import { DatabaseClientType } from '#shared/constants/database-client-type';
+import type { SchemaMetaData } from '#shared/types';
 import {
   PostgresMetadataAdapter,
   type PostgresMetadataQueries,

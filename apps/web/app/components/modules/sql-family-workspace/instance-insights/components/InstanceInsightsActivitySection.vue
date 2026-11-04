@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { InstanceInsightsDashboard } from '#shared/types';
 import type { EChartsOption } from 'echarts';
 import { BarChart, LineChart } from 'echarts/charts';
 import {
@@ -16,7 +17,6 @@ import {
   formatPercent,
   formatRate,
 } from '~/components/modules/shared/instance-insights-kit';
-import type { InstanceInsightsDashboard } from '~/core/types';
 
 useECharts([
   CanvasRenderer,

@@ -1,6 +1,6 @@
+import { TabViewType } from '#shared/types/entities/tab-view.entity';
 import { useTabManagement } from '~/core/composables/useTabManagement';
 import { useManagementConnectionStore } from '~/core/stores';
-import { TabViewType } from '~/core/types/entities/tab-view.entity';
 import { KAFKA_TAB_ICONS } from '../constants';
 
 export function useKafkaTabs() {

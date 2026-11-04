@@ -46,7 +46,7 @@ vi.mock('~/core/stores', () => ({
     },
   }),
 }));
-vi.mock('@/core/helpers/connection-helper', () => ({
+vi.mock('#shared/helpers/connection-helper', () => ({
   getConnectionParams: (conn: any) => ({
     host: conn?.host,
     port: conn?.port,

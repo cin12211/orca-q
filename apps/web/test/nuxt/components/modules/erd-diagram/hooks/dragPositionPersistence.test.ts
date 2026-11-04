@@ -1,9 +1,9 @@
 import { createApp, defineComponent, h, ref } from 'vue';
+import type { TableMetadata } from '#shared/types';
 import { describe, expect, it } from 'vitest';
 import { useErdFlow } from '~/components/modules/erd-diagram/hooks/useErdControl';
 import { useExpandableErd } from '~/components/modules/erd-diagram/hooks/useExpandableErd';
 import type { ErdDiagramProps } from '~/components/modules/erd-diagram/types';
-import type { TableMetadata } from '~/core/types';
 
 // ---------------------------------------------------------------------------
 // withSetup helper — provides component context for composables (useVueFlow)

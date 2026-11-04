@@ -1,9 +1,12 @@
+import { DatabaseClientType } from '#shared/constants/database-client-type';
+import { getConnectionParams } from '#shared/helpers/connection-helper';
+import {
+  McpConnectionAccess,
+  type McpSession,
+} from '#shared/persist/normalize';
+import type { Connection } from '#shared/types/entities/connection.entity';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
-import { DatabaseClientType } from '~~/app/core/constants/database-client-type';
-import { getConnectionParams } from '~~/app/core/helpers/connection-helper';
-import { McpConnectionAccess, type McpSession } from '~~/app/core/persist/normalize';
-import type { Connection } from '~~/app/core/types/entities/connection.entity';
 import {
   createMetadataAdapter,
   createTableAdapter,

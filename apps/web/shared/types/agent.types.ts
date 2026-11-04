@@ -8,8 +8,11 @@ import type {
   UITool,
   UserModelMessage,
 } from 'ai';
-import type { Schema, DatabaseMetadataRequestParams } from '~/core/types';
-import { DatabaseClientType } from '~/core/constants/database-client-type';
+import { DatabaseClientType } from '../constants/database-client-type';
+import type {
+  Schema,
+  DatabaseMetadataRequestParams,
+} from './database-schemas.types';
 
 // ─── Shared tool name enum (FE + BE) ─────────────────────────────────────────
 export const AgentToolName = {

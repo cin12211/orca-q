@@ -1,5 +1,14 @@
 <script setup lang="ts">
 import {
+  buildMappedColumnsFromKeys as buildColumnsFromKeys,
+  buildMappedColumnsFromRows as buildColumnsFromRows,
+} from '#shared/helpers';
+import type {
+  InstanceInsightsReplication,
+  ReplicationSlotDesiredStatus,
+  ReplicationSlotRow,
+} from '#shared/types';
+import {
   buildDynamicColumnDefs,
   buildDynamicRowData,
   DYNAMIC_COLUMN_TYPES,
@@ -8,15 +17,6 @@ import {
   formatBytes,
   formatDateTime,
 } from '~/components/modules/shared/instance-insights-kit';
-import {
-  buildMappedColumnsFromKeys as buildColumnsFromKeys,
-  buildMappedColumnsFromRows as buildColumnsFromRows,
-} from '~/core/helpers';
-import type {
-  InstanceInsightsReplication,
-  ReplicationSlotDesiredStatus,
-  ReplicationSlotRow,
-} from '~/core/types';
 
 const props = defineProps<{
   replication: InstanceInsightsReplication | null;

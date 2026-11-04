@@ -1,7 +1,7 @@
+import { ViewSchemaEnum, type SchemaColumnMetadata } from '#shared/types';
 import type { SchemaContextMenuItemValue } from '~/components/modules/management/schemas/hooks/context-menu/types';
 import type { Schema } from '~/core/stores/useSchemaStore';
 import { TabViewType } from '~/core/stores/useTabViewsStore';
-import { ViewSchemaEnum, type SchemaColumnMetadata } from '~/core/types';
 
 export const makeConnection = () =>
   ({

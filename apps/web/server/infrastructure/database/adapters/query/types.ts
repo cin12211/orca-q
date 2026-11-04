@@ -1,6 +1,6 @@
+import { DatabaseClientType } from '#shared/constants/database-client-type';
+import type { QueryResult, RawQueryResultWithMetadata } from '#shared/types';
 import type { H3Event } from 'h3';
-import { DatabaseClientType } from '~~/app/core/constants/database-client-type';
-import type { QueryResult, RawQueryResultWithMetadata } from '~~/app/core/types';
 import type { BaseDatabaseAdapterParams } from '../shared';
 
 export type DatabaseQueryAdapterParams = BaseDatabaseAdapterParams;

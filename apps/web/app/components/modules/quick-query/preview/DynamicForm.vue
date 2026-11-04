@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import type { HTMLAttributes } from 'vue';
+import { uuidv4 } from '#shared/helpers';
 import { toTypedSchema } from '@vee-validate/zod';
 import { Field, useForm } from 'vee-validate';
 import * as z from 'zod';
-import { uuidv4 } from '~/core/helpers';
 
 export interface ConfigFieldItem {
   name: string;

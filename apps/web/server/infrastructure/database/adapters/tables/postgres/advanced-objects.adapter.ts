@@ -4,7 +4,7 @@ import type {
   RLSStatus,
   TableRule,
   TableTrigger,
-} from '~~/app/core/types';
+} from '#shared/types';
 import type { IDatabaseAdapter } from '~~/server/infrastructure/driver';
 
 export class PostgresTableAdvancedObjectsAdapter {

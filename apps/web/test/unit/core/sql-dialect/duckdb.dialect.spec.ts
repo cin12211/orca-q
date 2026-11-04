@@ -1,6 +1,6 @@
+import { DatabaseClientType } from '#shared/constants/database-client-type';
+import { duckdbDialect, getSqlDialect } from '#shared/sql-dialect';
 import { describe, expect, it } from 'vitest';
-import { DatabaseClientType } from '~/core/constants/database-client-type';
-import { duckdbDialect, getSqlDialect } from '~/core/sql-dialect';
 
 describe('duckdbDialect', () => {
   it('is registered for the DuckDB client type', () => {

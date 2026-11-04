@@ -1,13 +1,13 @@
-import { createError, type H3Event } from 'h3';
-import oracledb from 'oracledb';
-import { DatabaseClientType } from '~~/app/core/constants/database-client-type';
-import { DatabaseDriverNormalizerError as ErrorNormalizer } from '~~/app/core/helpers';
+import { DatabaseClientType } from '#shared/constants/database-client-type';
+import { DatabaseDriverNormalizerError as ErrorNormalizer } from '#shared/helpers';
 import type {
   DatabaseDriverError,
   DatabaseField,
   QueryResult,
   RawQueryResultWithMetadata,
-} from '~~/app/core/types';
+} from '#shared/types';
+import { createError, type H3Event } from 'h3';
+import oracledb from 'oracledb';
 import { normalizeOracleFields } from '~~/server/infrastructure/driver/oracle.adapter';
 import {
   createSyntheticFields,

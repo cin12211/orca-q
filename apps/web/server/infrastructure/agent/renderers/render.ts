@@ -3,7 +3,7 @@ import type {
   AgentRenderTableResult,
   AgentVisualizePoint,
   AgentVisualizeTableResult,
-} from '~~/app/components/modules/agent/types';
+} from '#shared/types/agent.types';
 import {
   clampLimit,
   isSelectLikeSql,

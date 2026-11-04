@@ -1,15 +1,15 @@
 import { useEventListener } from '@vueuse/core';
 import type { ShallowRef } from 'vue';
 import {
+  DEFAULT_DEBOUNCE_RANGE_SELECTION,
+  DEFAULT_ROW_HEIGHT,
+} from '#shared/constants';
+import {
   type CellMouseDownEvent,
   type CellMouseOverEvent,
   type GridApi,
 } from 'ag-grid-community';
 import debounce from 'lodash-es/debounce';
-import {
-  DEFAULT_DEBOUNCE_RANGE_SELECTION,
-  DEFAULT_ROW_HEIGHT,
-} from '~/core/constants';
 
 /**
  * Hook hỗ trợ:

@@ -1,6 +1,6 @@
+import { operatorSets, separatorRow } from '#shared/constants';
+import { DatabaseClientType } from '#shared/constants/database-client-type';
 import { describe, expect, it } from 'vitest';
-import { operatorSets, separatorRow } from '~/core/constants';
-import { DatabaseClientType } from '~/core/constants/database-client-type';
 
 describe('operatorSets', () => {
   it('does not duplicate Postgres contains labels for case-insensitive variants', () => {

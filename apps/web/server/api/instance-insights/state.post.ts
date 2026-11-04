@@ -1,6 +1,9 @@
+import { DatabaseClientType } from '#shared/constants/database-client-type';
+import type {
+  InstanceInsightsState,
+  DatabaseMetadataRequestParams,
+} from '#shared/types';
 import { createError, defineEventHandler, readBody } from 'h3';
-import { DatabaseClientType } from '~~/app/core/constants/database-client-type';
-import type { InstanceInsightsState, DatabaseMetadataRequestParams } from '~~/app/core/types';
 import { createInstanceInsightsAdapter } from '~~/server/infrastructure/database/adapters/instance-insights';
 
 export default defineEventHandler(
@@ -15,10 +18,7 @@ export default defineEventHandler(
         });
       }
 
-      const adapter = await createInstanceInsightsAdapter(
-        body.type,
-        body
-      );
+      const adapter = await createInstanceInsightsAdapter(body.type, body);
 
       return await adapter.getState();
     } catch (error: any) {

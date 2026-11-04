@@ -180,6 +180,7 @@
 import { storeToRefs } from 'pinia';
 import { computed, ref } from 'vue';
 import { Tooltip, TooltipContent, TooltipTrigger } from '#components';
+import { formatQueryTime } from '#shared/helpers/format';
 import plsql from '@shikijs/langs/plsql';
 import catppuccinLatte from '@shikijs/themes/catppuccin-latte';
 import { useVirtualizer } from '@tanstack/vue-virtual';
@@ -189,7 +190,6 @@ import {
   type HighlighterCore,
 } from 'shiki';
 import { useCopyToClipboard } from '~/core/composables/useCopyToClipboard';
-import { formatQueryTime } from '~/core/helpers/format';
 import { useQuickQueryLogs } from '~/core/stores';
 import QuickQueryHistoryLogItem from './QuickQueryHistoryLogItem.vue';
 

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { useElementSize, type MaybeComputedElementRef } from '@vueuse/core';
 import { storeToRefs } from 'pinia';
+import { DEFAULT_DEBOUNCE_INPUT } from '#shared/constants';
 import {
   ActivityBar,
   PrimarySideBar,
@@ -8,7 +9,6 @@ import {
   StatusBar,
   TabViewContainer,
 } from '~/components/modules/app-shell';
-import { DEFAULT_DEBOUNCE_INPUT } from '~/core/constants';
 import { useAppConfigStore } from '~/core/stores/appConfigStore';
 
 const route = useRoute();

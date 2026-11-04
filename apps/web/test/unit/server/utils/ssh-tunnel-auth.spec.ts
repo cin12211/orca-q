@@ -1,8 +1,8 @@
-import { describe, expect, it } from 'vitest';
 import {
   ESSHAuthMethod,
   type ISSHConfig,
-} from '~/core/types/entities/connection.entity';
+} from '#shared/types/entities/connection.entity';
+import { describe, expect, it } from 'vitest';
 import { buildAuthConfig } from '~~/server/utils/ssh-tunnel';
 
 const base: ISSHConfig = {

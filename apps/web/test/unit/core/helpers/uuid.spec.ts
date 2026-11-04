@@ -1,5 +1,5 @@
+import { uuidv4 } from '#shared/helpers/uuid';
 import { describe, it, expect } from 'vitest';
-import { uuidv4 } from '@/core/helpers/uuid';
 
 describe('uuidv4', () => {
   it('generates a properly shaped UUID', () => {

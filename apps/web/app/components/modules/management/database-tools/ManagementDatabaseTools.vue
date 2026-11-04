@@ -1,12 +1,12 @@
 <script setup lang="ts">
-import { useTabManagement } from '~/core/composables/useTabManagement';
-import { useWorkspaceConnectionRoute } from '~/core/composables/useWorkspaceConnectionRoute';
 import {
   DatabaseClientType,
   isBackupSupportedClientType,
-} from '~/core/constants/database-client-type';
+} from '#shared/constants/database-client-type';
+import { EConnectionProviderKind } from '#shared/types/entities/connection.entity';
+import { useTabManagement } from '~/core/composables/useTabManagement';
+import { useWorkspaceConnectionRoute } from '~/core/composables/useWorkspaceConnectionRoute';
 import { useManagementConnectionStore } from '~/core/stores/managementConnectionStore';
-import { EConnectionProviderKind } from '~/core/types/entities/connection.entity';
 import { ManagementSidebarHeader } from '../shared';
 
 const connectionStore = useManagementConnectionStore();

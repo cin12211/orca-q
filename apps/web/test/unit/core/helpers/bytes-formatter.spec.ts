@@ -1,5 +1,5 @@
+import { formatBytes } from '#shared/helpers/bytes-formatter';
 import { describe, it, expect } from 'vitest';
-import { formatBytes } from '@/core/helpers/bytes-formatter';
 
 describe('bytes-formatter', () => {
   it('formats zero bytes', () => {

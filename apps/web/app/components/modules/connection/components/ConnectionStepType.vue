@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue';
+import { DatabaseClientType } from '#shared/constants/database-client-type';
 import { Button } from '@/components/ui/button';
 import {
   DialogDescription,
@@ -8,7 +9,6 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { useHotkeys } from '~/core/composables/useHotKeys';
-import { DatabaseClientType } from '~/core/constants/database-client-type';
 import type { IDBSupport } from '../constants';
 import DatabaseTypeCard from './DatabaseTypeCard.vue';
 

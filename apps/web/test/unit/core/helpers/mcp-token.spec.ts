@@ -1,15 +1,15 @@
-import { describe, expect, it } from 'vitest';
 import {
   generateMcpToken,
   hashMcpToken,
   maskMcpToken,
   MCP_TOKEN_PREFIX,
-} from '~/core/helpers/mcp-token';
+} from '#shared/helpers/mcp-token';
 import {
   McpConnectionAccess,
   normalizeMcpSession,
   resolveMcpConnectionAccess,
-} from '~/core/persist/normalize';
+} from '#shared/persist/normalize';
+import { describe, expect, it } from 'vitest';
 
 describe('mcp-token', () => {
   it('generates unique prefixed tokens', () => {

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { isElectron } from '#shared/helpers/environment';
 import {
   AlertDialog,
   AlertDialogCancel,
@@ -10,7 +11,6 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { isElectron } from '~/core/helpers/environment';
 
 const props = defineProps<{
   open: boolean;

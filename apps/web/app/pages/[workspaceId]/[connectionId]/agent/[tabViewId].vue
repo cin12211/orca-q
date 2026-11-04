@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { LazyAgentWorkspace } from '#components';
-import { DEFAULT_MAX_KEEP_ALIVE } from '~/core/constants';
+import { DEFAULT_MAX_KEEP_ALIVE } from '#shared/constants';
 import { useManagementConnectionStore } from '~/core/stores/managementConnectionStore';
 import { useTabViewsStore } from '~/core/stores/useTabViewsStore';
 import { TabViewType } from '~/core/stores/useTabViewsStore';

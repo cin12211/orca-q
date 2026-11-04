@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { RedisPerformanceInsight } from '#shared/types/instance-insights.types';
 import { toast } from 'vue-sonner';
 import { InsightKpiCard } from '~/components/modules/shared/instance-insights-kit';
 import {
@@ -14,7 +15,6 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '~/components/ui/tooltip';
-import type { RedisPerformanceInsight } from '~/core/types/instance-insights.types';
 
 const props = defineProps<{
   performance: RedisPerformanceInsight | undefined;

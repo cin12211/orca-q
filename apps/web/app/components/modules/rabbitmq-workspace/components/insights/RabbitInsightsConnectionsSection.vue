@@ -1,11 +1,11 @@
 <script setup lang="ts">
+import type { RabbitConnectionSummary } from '#shared/types/rabbitmq.types';
 import {
   formatBytes,
   formatDateTime,
   useBrokerRequest,
 } from '~/components/modules/shared/message-broker';
 import type { Connection } from '~/core/stores';
-import type { RabbitConnectionSummary } from '~/core/types/rabbitmq.types';
 import { useRabbitChange, useRabbitInsightsRefresh } from '../../hooks';
 import { rabbitmqService } from '../../services';
 import RabbitConfirmDialog from './RabbitConfirmDialog.vue';

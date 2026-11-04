@@ -1,6 +1,6 @@
+import { DatabaseClientType } from '#shared/constants/database-client-type';
 import { describe, expect, it } from 'vitest';
 import { createCommandResultFactory } from '~/components/modules/raw-query/utils/commandType';
-import { DatabaseClientType } from '~/core/constants/database-client-type';
 
 describe('createCommandResultFactory', () => {
   it('uses the MySQL-style handler for MariaDB mutations', () => {

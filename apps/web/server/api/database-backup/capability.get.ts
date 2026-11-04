@@ -1,5 +1,5 @@
+import { DatabaseClientType } from '#shared/constants/database-client-type';
 import { createError } from 'h3';
-import { DatabaseClientType } from '~~/app/core/constants/database-client-type';
 import { getNativeBackupRuntimeCapability } from '~~/server/infrastructure/database/backup/native-backup';
 
 export default defineEventHandler(async event => {

@@ -1,9 +1,9 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { DatabaseClientType } from '~/core/constants/database-client-type';
+import { DatabaseClientType } from '#shared/constants/database-client-type';
 import {
   EConnectionProviderKind,
   EManagedSqliteProvider,
-} from '~/core/types/entities/connection.entity';
+} from '#shared/types/entities/connection.entity';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import rawExecuteStreamHandler from '~~/server/api/query/raw-execute-stream.post';
 
 const { readBodyMock, createQueryAdapterMock, rawExecuteStreamMock } =

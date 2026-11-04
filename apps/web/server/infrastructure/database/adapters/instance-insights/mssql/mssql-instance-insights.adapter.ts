@@ -1,8 +1,8 @@
-import { DatabaseClientType } from '~~/app/core/constants/database-client-type';
+import { DatabaseClientType } from '#shared/constants/database-client-type';
 import type {
   InstanceInsightsSection,
   InstanceInsightsView,
-} from '~~/app/core/types';
+} from '#shared/types';
 import type { IDatabaseAdapter } from '~~/server/infrastructure/driver';
 import { getDatabaseSource } from '~~/server/infrastructure/driver/db-connection';
 import { BaseUnsupportedInstanceInsightsAdapter } from '../shared/base-unsupported-instance-insights.adapter';

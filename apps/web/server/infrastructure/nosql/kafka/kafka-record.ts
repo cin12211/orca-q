@@ -1,5 +1,5 @@
+import type { BrokerMessage } from '#shared/types/broker-message.types';
 import type { RecordsBatch } from '@platformatic/kafka';
-import type { BrokerMessage } from '~~/app/core/types/broker-message.types';
 
 export const KAFKA_PAYLOAD_TRUNCATE_BYTES = 256 * 1024;
 

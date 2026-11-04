@@ -23,7 +23,7 @@ export {
   normalizeAppConfigState,
   createDefaultAgentState,
   normalizeAgentState,
-} from './normalize';
+} from '#shared/persist/normalize';
 
 export type {
   AppConfigPersistedState,
@@ -37,7 +37,7 @@ export type {
   CustomLayoutDefinition,
   McpServerConfigs,
   McpSession,
-} from './normalize';
+} from '#shared/persist/normalize';
 
 // ── Web-renderer-only constants ───────────────────────────────────────────────
 // These are NOT in normalize.ts — they reference localStorage keys used by

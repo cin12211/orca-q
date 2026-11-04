@@ -1,7 +1,7 @@
 import { computed, ref } from 'vue';
+import type { DbAgentMessage } from '#shared/types/agent.types';
 import { describe, expect, it } from 'vitest';
 import { useAgentRenderer } from '~/components/modules/agent/hooks/useDbAgentRenderer';
-import type { DbAgentMessage } from '~/components/modules/agent/types';
 
 describe('useAgentRenderer', () => {
   it('splits text into markdown and code blocks', () => {

@@ -1,7 +1,6 @@
-import { createError } from 'h3';
-import { DatabaseClientType } from '~~/app/core/constants/database-client-type';
-import { formatBytes } from '~~/app/core/helpers/bytes-formatter';
-import { getSqlDialect } from '~~/app/core/sql-dialect';
+import { DatabaseClientType } from '#shared/constants/database-client-type';
+import { formatBytes } from '#shared/helpers/bytes-formatter';
+import { getSqlDialect } from '#shared/sql-dialect';
 import type {
   BulkUpdateResponse,
   RLSPolicy,
@@ -13,7 +12,8 @@ import type {
   TableSize,
   TableStructure,
   TableTrigger,
-} from '~~/app/core/types';
+} from '#shared/types';
+import { createError } from 'h3';
 import type { IDatabaseAdapter } from '~~/server/infrastructure/driver';
 import { MssqlAdapter } from '~~/server/infrastructure/driver/mssql.adapter';
 import { formatMssqlType } from '../../metadata/mssql/mssql-catalog';

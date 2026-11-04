@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue';
-import { formatBytes } from '~/core/helpers';
-import { formatNumber, formatQueryTime } from '~/core/helpers/format';
+import { formatBytes } from '#shared/helpers';
+import { formatNumber, formatQueryTime } from '#shared/helpers/format';
 import type { ExecutedResultItem } from '../../types';
 
 const props = defineProps<{

@@ -1,5 +1,5 @@
+import type { DatabaseMetadataRequestParams } from '#shared/types/database-schemas.types';
 import { MongoClient } from 'mongodb';
-import type { DatabaseMetadataRequestParams } from '~~/app/core/types/database-schemas.types';
 
 function getMongoUri(params: DatabaseMetadataRequestParams) {
   if (params.dbConnectionString) return params.dbConnectionString;

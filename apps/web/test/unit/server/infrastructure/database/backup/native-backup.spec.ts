@@ -1,10 +1,10 @@
+import { DatabaseClientType } from '#shared/constants/database-client-type';
 import { chmod, mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { delimiter, join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { afterEach } from 'vitest';
 import { vi } from 'vitest';
-import { DatabaseClientType } from '~/core/constants/database-client-type';
 import {
   assertNativeBackupSupported,
   buildNativeBackupFileName,

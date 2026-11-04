@@ -1,8 +1,8 @@
 import { defineComponent, h } from 'vue';
+import { DatabaseClientType } from '#shared/constants/database-client-type';
 import { flushPromises, mount } from '@vue/test-utils';
 import { describe, expect, it, vi } from 'vitest';
 import { InstanceInsightsHost } from '~/components/modules/instance-insights';
-import { DatabaseClientType } from '~/core/constants/database-client-type';
 import type { Connection } from '~/core/stores';
 
 const createPanelStub = (testId: string) =>

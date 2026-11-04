@@ -10,9 +10,9 @@ import {
   DialogContent,
   Icon,
 } from '#components';
+import { isDesktopApp } from '#shared/helpers/environment';
 import { TagManagementContainer } from '@/components/modules/environment-tag';
 import { useSettingsModal } from '~/core/contexts/useSettingsModal';
-import { isDesktopApp } from '~/core/helpers/environment';
 import {
   AgentConfig,
   AppearanceConfig,

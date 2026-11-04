@@ -3,16 +3,12 @@
     "target": "ES2022",
     "module": "CommonJS",
     "moduleResolution": "node",
-    "lib": [
-      "ES2022"
-    ],
+    "lib": ["ES2022"],
     "outDir": "../out",
     "rootDir": "../..",
     "baseUrl": "..",
     "paths": {
-      "~/*": [
-        "../web/app/*"
-      ]
+      "#shared/*": ["../web/shared/*"]
     },
     "strict": true,
     "esModuleInterop": true,
@@ -21,10 +17,6 @@
     "sourceMap": true,
     "declaration": false
   },
-  "include": [
-    "./**/*.ts"
-  ],
-  "exclude": [
-    "node_modules"
-  ]
+  "include": ["./**/*.ts"],
+  "exclude": ["node_modules"]
 }

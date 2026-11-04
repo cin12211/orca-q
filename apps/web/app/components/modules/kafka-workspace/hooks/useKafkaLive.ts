@@ -1,7 +1,7 @@
 import { computed, onBeforeUnmount, ref, shallowRef } from 'vue';
+import type { BrokerMessage } from '#shared/types/broker-message.types';
 import { getBrokerErrorMessage } from '~/components/modules/shared/message-broker';
 import type { Connection } from '~/core/stores';
-import type { BrokerMessage } from '~/core/types/broker-message.types';
 import { KAFKA_LIVE_MAX_ROWS, KAFKA_LIVE_POLL_MS } from '../constants';
 import { kafkaService } from '../services';
 

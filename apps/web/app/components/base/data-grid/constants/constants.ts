@@ -4,7 +4,7 @@ export {
   HASH_INDEX_HEADER,
   HASH_INDEX_ID,
   NEW_ROW_FLAG_ID,
-} from '~/core/constants/data-grid-row-metadata';
+} from '#shared/constants/data-grid-row-metadata';
 
 export const DEFAULT_COLUMN_MAX_WIDTH = 300;
 export const DEFAULT_COLUMN_MIN_WIDTH = 35;

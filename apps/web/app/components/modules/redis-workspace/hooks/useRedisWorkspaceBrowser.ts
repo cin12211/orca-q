@@ -1,9 +1,4 @@
 import type { ComputedRef, Ref } from 'vue';
-import { toast } from 'vue-sonner';
-import type { Connection } from '~/core/stores';
-import { useRedisWorkspaceStore } from '~/core/stores/useRedisWorkspaceStore';
-import type { RedisWorkspaceSession } from '~/core/stores/useRedisWorkspaceStore';
-import { useTabViewsStore } from '~/core/stores/useTabViewsStore';
 import type {
   RedisBrowserResponse,
   RedisDatabaseOption,
@@ -12,7 +7,12 @@ import type {
   RedisKeyInfo,
   RedisKeyListItem,
   RedisValueUpdatePayload,
-} from '~/core/types/redis-workspace.types';
+} from '#shared/types/redis-workspace.types';
+import { toast } from 'vue-sonner';
+import type { Connection } from '~/core/stores';
+import { useRedisWorkspaceStore } from '~/core/stores/useRedisWorkspaceStore';
+import type { RedisWorkspaceSession } from '~/core/stores/useRedisWorkspaceStore';
+import { useTabViewsStore } from '~/core/stores/useTabViewsStore';
 import {
   buildConnectionBody,
   getRedisUnavailableReason,

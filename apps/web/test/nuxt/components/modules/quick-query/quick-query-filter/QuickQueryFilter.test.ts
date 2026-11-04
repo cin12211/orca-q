@@ -1,10 +1,14 @@
 import { mockNuxtImport } from '@nuxt/test-utils/runtime';
 import { defineComponent, h, nextTick, ref } from 'vue';
+import {
+  ComposeOperator,
+  EExtendedField,
+  OperatorSet,
+} from '#shared/constants';
+import { DatabaseClientType } from '#shared/constants/database-client-type';
 import { mount } from '@vue/test-utils';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import QuickQueryFilter from '~/components/modules/quick-query/quick-query-filter/QuickQueryFilter.vue';
-import { ComposeOperator, EExtendedField, OperatorSet } from '~/core/constants';
-import { DatabaseClientType } from '~/core/constants/database-client-type';
 
 const { useHotkeysMock } = vi.hoisted(() => ({
   useHotkeysMock: vi.fn(),

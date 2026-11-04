@@ -1,5 +1,5 @@
-import { getConnectionCapabilityProfile } from '~/core/constants/connection-capabilities';
-import { DatabaseClientType } from '~/core/constants/database-client-type';
+import { getConnectionCapabilityProfile } from '#shared/constants/connection-capabilities';
+import { DatabaseClientType } from '#shared/constants/database-client-type';
 import { useManagementConnectionStore } from '~/core/stores';
 import { ActivityBarItemType, useActivityBarStore } from '~/core/stores';
 import { useAppConfigStore } from '~/core/stores/appConfigStore';

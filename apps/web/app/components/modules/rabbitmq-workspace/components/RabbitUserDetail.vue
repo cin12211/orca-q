@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import { useBrokerRequest } from '~/components/modules/shared/message-broker';
-import type { Connection } from '~/core/stores';
 import type {
   RabbitTopicPermission,
   RabbitUserLimitName,
   RabbitUserPermission,
-} from '~/core/types/rabbitmq.types';
+} from '#shared/types/rabbitmq.types';
+import { useBrokerRequest } from '~/components/modules/shared/message-broker';
+import type { Connection } from '~/core/stores';
 import {
   RABBIT_ADMINISTRATOR_TAG,
   RABBIT_TAB_ICONS,

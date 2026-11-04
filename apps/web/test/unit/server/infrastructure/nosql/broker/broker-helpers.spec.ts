@@ -1,5 +1,5 @@
+import { EConnectionMethod } from '#shared/types/entities/connection.entity';
 import { describe, expect, it } from 'vitest';
-import { EConnectionMethod } from '~/core/types/entities/connection.entity';
 import { compareVersions } from '~~/server/infrastructure/nosql/broker/broker-connection';
 import { lagOf } from '~~/server/infrastructure/nosql/kafka/kafka-offsets';
 import { decodeRecordBatches } from '~~/server/infrastructure/nosql/kafka/kafka-record';

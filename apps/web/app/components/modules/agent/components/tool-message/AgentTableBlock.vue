@@ -1,11 +1,11 @@
 <script setup lang="ts">
+import type { AgentRenderTableResult } from '#shared/types/agent.types';
+import type { MappedRawColumn } from '#shared/types/mapped-column.types';
 import {
   buildDynamicColumnDefs,
   buildDynamicRowData,
   DYNAMIC_COLUMN_TYPES,
 } from '~/components/base/data-grid/utils';
-import type { MappedRawColumn } from '~/core/types/mapped-column.types';
-import type { AgentRenderTableResult } from '../../types';
 import AgentToolSqlPreview from './AgentToolSqlPreview.vue';
 
 const props = defineProps<{

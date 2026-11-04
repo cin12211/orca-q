@@ -1,10 +1,10 @@
 import { defineStore } from 'pinia';
 import { computed, ref } from 'vue';
+import type { Connection } from '#shared/types/entities/connection.entity';
 import { useWorkspaceConnectionRoute } from '~/core/composables/useWorkspaceConnectionRoute';
 import { createStorageApis } from '~/core/storage';
-import type { Connection } from '~/core/types/entities/connection.entity';
 
-export type { Connection } from '~/core/types/entities/connection.entity';
+export type { Connection } from '#shared/types/entities/connection.entity';
 
 export const useManagementConnectionStore = defineStore(
   'management-connection',

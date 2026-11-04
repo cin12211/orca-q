@@ -1,4 +1,5 @@
 import { ref } from 'vue';
+import { ViewSchemaEnum } from '#shared/types';
 import { describe, expect, it, vi } from 'vitest';
 import {
   ContextMenuItemType,
@@ -9,7 +10,6 @@ import { buildTableMenuItems } from '~/components/modules/management/schemas/hoo
 import { buildViewMenuItems } from '~/components/modules/management/schemas/hooks/context-menu/menuItems/viewMenuItems';
 import { ExportDataFormatType } from '~/components/modules/management/schemas/hooks/context-menu/types';
 import { TabViewType } from '~/core/stores/useTabViewsStore';
-import { ViewSchemaEnum } from '~/core/types';
 import { makeSelectedItem } from './testUtils';
 
 const getTitle = (item: ContextMenuItem) =>

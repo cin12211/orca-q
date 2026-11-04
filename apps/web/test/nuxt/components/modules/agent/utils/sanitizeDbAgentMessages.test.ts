@@ -1,5 +1,5 @@
+import type { DbAgentMessage } from '#shared/types/agent.types';
 import { describe, expect, it } from 'vitest';
-import type { DbAgentMessage } from '~/components/modules/agent/types';
 import {
   hasIncompleteDbAgentMessages,
   sanitizeDbAgentMessages,

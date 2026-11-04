@@ -4,7 +4,7 @@ import {
   updatePreviewRelationBreadcrumbTab,
   type PreviewRelationBreadcrumb,
   type PreviewRelationPayload,
-} from '~/core/helpers/breadcrumb-builder';
+} from '#shared/helpers/breadcrumb-builder';
 
 export function usePreviewRelations() {
   const previewRelationBreadcrumbs = ref<PreviewRelationBreadcrumb[]>([]);

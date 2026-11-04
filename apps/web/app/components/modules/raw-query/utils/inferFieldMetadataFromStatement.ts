@@ -1,10 +1,10 @@
-import type { FieldDef } from 'pg';
-import type { Schema } from '~/core/stores';
 import type {
   DatabaseField,
   SchemaColumnMetadata as ColumnShortMetadata,
   TableDetailMetadata,
-} from '~/core/types';
+} from '#shared/types';
+import type { FieldDef } from 'pg';
+import type { Schema } from '~/core/stores';
 import {
   extractOrderedTableReferences,
   extractTableAliasMappings,

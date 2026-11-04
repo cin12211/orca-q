@@ -1,10 +1,10 @@
 import { useStorage } from '@vueuse/core';
 import { onMounted, type Ref, watch } from 'vue';
+import { uuidv4 } from '#shared/helpers';
 import dayjs from 'dayjs';
 import { driver } from 'driver.js';
 import 'driver.js/dist/driver.css';
 import { useChangelogModal } from '~/core/contexts/useChangelogModal';
-import { uuidv4 } from '~/core/helpers';
 import { LocalStorageKey } from '~/core/persist/LocalStorageManager';
 import { getPlatformStorage } from '~/core/persist/storage-adapter';
 import { DEFAULT_WORKSPACE_ICON } from '../constants';

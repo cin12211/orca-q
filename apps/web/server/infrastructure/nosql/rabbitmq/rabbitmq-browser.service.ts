@@ -4,7 +4,7 @@ import type {
   RabbitExchangeSummary,
   RabbitQueueDetail,
   RabbitQueuePage,
-} from '~~/app/core/types/rabbitmq.types';
+} from '#shared/types/rabbitmq.types';
 import type { BrokerConnectionInput } from '../broker/broker-connection';
 import {
   rabbitApiPath,

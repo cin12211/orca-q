@@ -1,5 +1,4 @@
-import type { McpSession } from '~/core/persist/normalize';
-import type { DeleteTabViewProps } from '~/core/persist/types';
+import type { McpSession } from '#shared/persist/normalize';
 import type {
   Workspace,
   Connection,
@@ -12,7 +11,8 @@ import type {
   AppConfigPersistedState,
   AgentPersistedState,
   MigrationState,
-} from '~/core/types/entities';
+} from '#shared/types/entities';
+import type { DeleteTabViewProps } from '~/core/persist/types';
 
 // ── 4.1 WorkspaceStorageApi ───────────────────────────────────────────────────
 

@@ -25,9 +25,13 @@ with Electron desktop and npx CLI wrappers around the same build.
     `middleware/`, `pages/`, `plugins/`, `lib/`, and `core/` (client-only
     stores, composables, contexts, ...).
   - `apps/web/server/` is the Nitro server.
-  - `apps/web/shared/` is code used by the client AND the server/electron
-    (types, constants, helpers, sql-dialect, and module types/utils the server
-    needs), imported as `#shared/...`.
+  - `apps/web/shared/` is code used by the client AND the server/electron,
+    imported as `#shared/...`: `types/` (incl. `agent.types.ts` and
+    `schema-diff.types.ts` for the agent and database-tools modules),
+    `constants/`, `helpers/` (incl. `generateFunctionSQL.ts` for the schemas
+    module), `sql-dialect/`, `persist/normalize.ts`, `storage/idbRegistry.ts`.
+    Inside `shared/` use relative imports. Nuxt auto-import of `shared/types`
+    and `shared/utils` is disabled in `nuxt.config.ts`.
 - `apps/desktop/` (`@orcaq/desktop`) holds `electron/` sources,
   `electron-builder.yml` and `scripts/electron-before-build.mjs`; it copies
   `apps/web/.output` into `apps/desktop/out/runtime` and packages to
@@ -57,8 +61,10 @@ Paths below are relative to `apps/web/app/` unless they start with `apps/`.
   extracted composables in its `hooks/` directory and pure helpers in its
   `utils/` directory.
 - `core/` contains client app logic used by the frontend, including composables,
-  stores, persistence abstractions, and contexts. Types, constants, helpers and
-  sql-dialect that the server or electron also use live in `apps/web/shared/`.
+  stores, persistence abstractions, and contexts, plus client-only helpers
+  (`core/helpers`: clipboard, copy-data, deepUnRef, cell-value) and
+  `core/constants/agent.ts`. Types, constants, helpers and sql-dialect that the
+  server or electron also use live in `apps/web/shared/`.
 - `apps/web/server/` contains Nuxt server API routes and backend infrastructure for
   database adapters, drivers, metadata, query execution, Redis, and AI features.
 - `apps/desktop/electron/` contains the Electron desktop wrapper, persistence schema, and

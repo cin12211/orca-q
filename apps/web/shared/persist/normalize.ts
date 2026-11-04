@@ -5,11 +5,12 @@
  * renderer context AND the Electron main process (electron/tsconfig.json).
  *
  * Consumers:
- *  - core/persist/store-state.ts  (web renderer — imports & re-exports)
- *  - electron/persist/utils/normalizeState.ts  (Electron main — thin re-export)
+ *  - app/core/persist/store-state.ts  (web renderer — imports & re-exports)
+ *  - server/infrastructure/mcp/**  (Nitro server)
+ *  - apps/desktop/electron/persist/utils/normalizeState.ts  (Electron main — thin re-export)
  *
  * ALL enums, interfaces, default constants, helpers, and normalize functions
- * are defined here. Do NOT import from ~/components/ or ~/core/stores/ —
+ * are defined here. Do NOT import from app/ (~/components/, ~/core/stores/) —
  * those pull in browser-bundled code that crashes the Electron main process.
  */
 
@@ -145,7 +146,7 @@ export interface CustomLayoutDefinition {
 /**
  * Loose-typed — avoids importing AI SDK message types that are
  * browser-bundled. Structurally compatible with the stricter
- * AgentHistorySession type in components/modules/agent/types/.
+ * AgentHistorySession type in shared/types/agent.types.ts.
  */
 export interface AgentHistorySession {
   id: string;

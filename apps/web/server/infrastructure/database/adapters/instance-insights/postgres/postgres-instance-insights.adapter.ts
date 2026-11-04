@@ -1,5 +1,4 @@
-import { createError } from 'h3';
-import { DatabaseClientType } from '~~/app/core/constants/database-client-type';
+import { DatabaseClientType } from '#shared/constants/database-client-type';
 import type {
   InstanceActionResponse,
   InstanceConfigurationRow,
@@ -13,7 +12,8 @@ import type {
   InstanceSessionRow,
   ReplicationSlotRow,
   ReplicationStatRow,
-} from '~~/app/core/types';
+} from '#shared/types';
+import { createError } from 'h3';
 import type { IDatabaseAdapter } from '~~/server/infrastructure/driver';
 import { BaseDomainAdapter, createDatabaseHttpError } from '../../shared';
 import {

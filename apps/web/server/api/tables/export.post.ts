@@ -1,7 +1,7 @@
+import { DatabaseClientType } from '#shared/constants/database-client-type';
+import type { DatabaseMetadataRequestParams } from '#shared/types';
 import dayjs from 'dayjs';
 import { defineEventHandler, readBody, setResponseHeaders } from 'h3';
-import { DatabaseClientType } from '~~/app/core/constants/database-client-type';
-import type { DatabaseMetadataRequestParams } from '~~/app/core/types';
 import { createTableAdapter } from '~~/server/infrastructure/database/adapters/tables';
 
 interface RequestBody extends DatabaseMetadataRequestParams {
@@ -14,10 +14,7 @@ export default defineEventHandler(async event => {
   const body = await readBody<RequestBody>(event);
   const { schemaName, tableName, format } = body;
 
-  const adapter = await createTableAdapter(
-    body.type,
-    body
-  );
+  const adapter = await createTableAdapter(body.type, body);
 
   const contentTypes: Record<string, string> = {
     sql: 'application/sql',

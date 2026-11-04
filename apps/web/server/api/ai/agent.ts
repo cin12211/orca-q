@@ -1,3 +1,5 @@
+import { DatabaseClientType } from '#shared/constants/database-client-type';
+import type { DbAgentRequestBody } from '#shared/types/agent.types';
 import {
   ToolLoopAgent,
   createAgentUIStreamResponse,
@@ -5,8 +7,6 @@ import {
   stepCountIs,
 } from 'ai';
 import { createError, defineEventHandler, readBody } from 'h3';
-import type { DbAgentRequestBody } from '~~/app/components/modules/agent/types';
-import { DatabaseClientType } from '~~/app/core/constants/database-client-type';
 import { createProviderModel } from '~~/server/infrastructure/agent/core/provider';
 import type {
   AIProvider,

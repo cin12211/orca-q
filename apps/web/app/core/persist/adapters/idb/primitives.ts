@@ -5,12 +5,12 @@
  * Each entry maps to the same registry used by browser entity storages,
  * so IDB collection names live in exactly one place.
  */
-import localforage from 'localforage';
 import {
   PERSIST_COLLECTIONS,
   PERSIST_IDB_STORES,
   type PersistCollection,
-} from '~/core/storage/idbRegistry';
+} from '#shared/storage/idbRegistry';
+import localforage from 'localforage';
 
 const IDB_STORES = Object.fromEntries(
   PERSIST_COLLECTIONS.map(collection => [

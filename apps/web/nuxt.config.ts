@@ -1,4 +1,5 @@
 import tailwindcss from '@tailwindcss/vite';
+import { fileURLToPath } from 'node:url';
 import type { DefineNuxtConfig, NuxtConfig } from 'nuxt/config';
 import pkg from './package.json';
 
@@ -65,6 +66,13 @@ const componentDirs = [
 const devWatchOptions = {
   ignored: devWatchIgnored,
 };
+
+// Nuxt 4 auto-imports every top-level export of shared/types and shared/utils
+// into the app and Nitro. Shared code is imported explicitly as `#shared/...`
+// (electron's tsc cannot see auto-imports), so keep shared/ out of auto-import.
+const sharedDir = fileURLToPath(new URL('./shared/', import.meta.url));
+const isSharedDir = (dir: unknown) =>
+  typeof dir === 'string' && `${dir}/`.startsWith(sharedDir);
 
 const sqlite3ConnectionsEnabled =
   process.env.NUXT_PUBLIC_SQLITE3_CONNECTIONS_ENABLED !== 'false' &&
@@ -186,6 +194,18 @@ export default defineNuxtConfig({
   },
   components: {
     dirs: componentDirs,
+  },
+  hooks: {
+    'imports:dirs'(dirs) {
+      dirs.splice(0, dirs.length, ...dirs.filter(dir => !isSharedDir(dir)));
+    },
+    'nitro:config'(nitroConfig) {
+      if (nitroConfig.imports && nitroConfig.imports.dirs) {
+        nitroConfig.imports.dirs = nitroConfig.imports.dirs.filter(
+          dir => !isSharedDir(dir)
+        );
+      }
+    },
   },
   nuxtTypedRouter: {
     // The repo .prettierrc loads @trivago/prettier-plugin-sort-imports, whose

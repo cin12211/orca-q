@@ -1,4 +1,4 @@
-import type { DatabaseClientType } from '~~/app/core/constants/database-client-type';
+import type { DatabaseClientType } from '#shared/constants/database-client-type';
 import {
   EConnectionFamily,
   EConnectionMethod,
@@ -7,7 +7,7 @@ import {
   type IManagedSqliteConfig,
   type ISSLConfig,
   type ISSHConfig,
-} from '~~/app/core/types/entities/connection.entity';
+} from '#shared/types/entities/connection.entity';
 import { BrokerConnectionError } from '~~/server/infrastructure/nosql/broker/broker-connection';
 import { verifyKafkaConnection } from '~~/server/infrastructure/nosql/kafka/kafka.client';
 import { pingMongoConnection } from '~~/server/infrastructure/nosql/mongodb/mongodb.client';

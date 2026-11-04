@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { RedisKeyspaceInsight } from '#shared/types/instance-insights.types';
 import {
   getRedisKeyIcon,
   getRedisKeyIconClass,
@@ -7,7 +8,6 @@ import {
   InsightKpiCard,
   InsightScopeBadge,
 } from '~/components/modules/shared/instance-insights-kit';
-import type { RedisKeyspaceInsight } from '~/core/types/instance-insights.types';
 
 const props = defineProps<{
   keyspace: RedisKeyspaceInsight | undefined;

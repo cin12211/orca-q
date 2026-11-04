@@ -1,4 +1,3 @@
-import { z } from 'zod';
 import {
   EConnectionMethod,
   EKafkaSaslMechanism,
@@ -6,7 +5,8 @@ import {
   type IBrokerConfig,
   type ISSHConfig,
   type ISSLConfig,
-} from '~~/app/core/types/entities/connection.entity';
+} from '#shared/types/entities/connection.entity';
+import { z } from 'zod';
 import {
   sshConfigSchema,
   sslConfigSchema,

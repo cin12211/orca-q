@@ -1,5 +1,5 @@
-import { DatabaseClientType } from '~/core/constants/database-client-type';
-import type { DatabaseDriverError as RawDatabaseDriverError } from '~/core/types';
+import { DatabaseClientType } from '../constants/database-client-type';
+import type { DatabaseDriverError as RawDatabaseDriverError } from '../types';
 
 export interface NormalizationError {
   position?: number;

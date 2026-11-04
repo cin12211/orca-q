@@ -1,5 +1,5 @@
+import type { Workspace } from '#shared/types/entities';
 import dayjs from 'dayjs';
-import type { Workspace } from '../../../types/entities';
 import type { WorkspacePersistApi } from '../../types';
 import {
   persistDelete,

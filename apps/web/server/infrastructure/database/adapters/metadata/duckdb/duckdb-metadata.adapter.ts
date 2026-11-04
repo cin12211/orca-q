@@ -1,4 +1,4 @@
-import { DatabaseClientType } from '~~/app/core/constants/database-client-type';
+import { DatabaseClientType } from '#shared/constants/database-client-type';
 import type {
   ConfigMetadata,
   DatabaseMetadata,
@@ -7,8 +7,8 @@ import type {
   SchemaMetaData,
   TableMetadata,
   ViewMetadata,
-} from '~~/app/core/types';
-import { FunctionSchemaEnum, ViewSchemaEnum } from '~~/app/core/types';
+} from '#shared/types';
+import { FunctionSchemaEnum, ViewSchemaEnum } from '#shared/types';
 import { BaseDomainAdapter } from '../../shared';
 import { resolveMetadataTypeAlias } from '../type-alias.constants';
 import type {

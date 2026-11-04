@@ -1,9 +1,9 @@
+import { DatabaseClientType } from '#shared/constants/database-client-type';
 import { describe, expect, it } from 'vitest';
 import {
   getDialectStyle,
   substituteParams,
 } from '~/components/base/code-editor/utils/sqlErrorDiagnostics';
-import { DatabaseClientType } from '~/core/constants/database-client-type';
 
 describe('sqlErrorDiagnostics', () => {
   describe('getDialectStyle', () => {

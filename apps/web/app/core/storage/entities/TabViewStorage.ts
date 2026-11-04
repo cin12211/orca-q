@@ -1,6 +1,6 @@
+import { TAB_VIEW_IDB } from '#shared/storage/idbRegistry';
+import type { TabView } from '#shared/types/entities';
 import type { DeleteTabViewProps } from '~/core/persist/types';
-import type { TabView } from '~/core/types/entities';
-import { TAB_VIEW_IDB } from '../idbRegistry';
 import { IDBStorage } from '../base/IDBStorage';
 
 class TabViewStorage extends IDBStorage<TabView> {

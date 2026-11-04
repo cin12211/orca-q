@@ -1,5 +1,10 @@
 <script setup lang="ts">
-import { getConnectionParams } from '@/core/helpers/connection-helper';
+import {
+  buildMappedColumnsFromKeys,
+  buildMappedColumnsFromRows,
+} from '#shared/helpers';
+import { getConnectionParams } from '#shared/helpers/connection-helper';
+import type { ViewDependency } from '#shared/types';
 import {
   buildDynamicColumnDefs,
   buildDynamicRowData,
@@ -7,12 +12,7 @@ import {
 } from '~/components/base/data-grid/utils';
 import { Alert, AlertDescription } from '~/components/ui/alert';
 import { Button } from '~/components/ui/button';
-import {
-  buildMappedColumnsFromKeys,
-  buildMappedColumnsFromRows,
-} from '~/core/helpers';
 import { useManagementConnectionStore } from '~/core/stores';
-import type { ViewDependency } from '~/core/types';
 import {
   getStructureTableHeightPx,
   STRUCTURE_TABLE_MAX_HEIGHT_PX,

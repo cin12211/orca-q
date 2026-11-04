@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { refDebounced } from '@vueuse/core';
+import { DEFAULT_DEBOUNCE_INPUT } from '#shared/constants';
 import FileTree from '~/components/base/tree-folder/FileTree.vue';
 import type { FileNode } from '~/components/base/tree-folder/types';
 import {
@@ -15,7 +16,6 @@ import {
   useBrokerRequest,
 } from '~/components/modules/shared/message-broker';
 import { useWorkspaceConnectionRoute } from '~/core/composables/useWorkspaceConnectionRoute';
-import { DEFAULT_DEBOUNCE_INPUT } from '~/core/constants';
 import { useManagementConnectionStore } from '~/core/stores';
 import { ManagementSidebarHeader } from '../shared';
 

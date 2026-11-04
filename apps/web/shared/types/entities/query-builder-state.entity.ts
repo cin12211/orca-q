@@ -1,5 +1,5 @@
-import type { ComposeOperator } from '~/core/constants/operatorSets';
-import type { FilterSchema } from '~/core/helpers/sql-where-clause';
+import type { ComposeOperator } from '../../constants/operatorSets';
+import type { FilterSchema } from '../../helpers/sql-where-clause';
 
 export type Order = 'ASC' | 'DESC';
 

@@ -1,5 +1,5 @@
+import type { DbAgentSchemaSnapshot } from '#shared/types/agent.types';
 import { describe, expect, it } from 'vitest';
-import type { DbAgentSchemaSnapshot } from '~/components/modules/agent/types';
 import { buildAgentSystemPrompt } from '~~/server/infrastructure/agent/systemPromt';
 
 const mockSnapshot: DbAgentSchemaSnapshot = {

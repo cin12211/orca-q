@@ -1,7 +1,7 @@
+import { DatabaseClientType } from '#shared/constants/database-client-type';
+import type { McpSession } from '#shared/persist/normalize';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
-import { DatabaseClientType } from '~~/app/core/constants/database-client-type';
-import type { McpSession } from '~~/app/core/persist/normalize';
 import {
   getKafkaConsumerGroupDetail,
   listKafkaConsumerGroups,

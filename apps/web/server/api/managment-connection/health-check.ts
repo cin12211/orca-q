@@ -1,16 +1,16 @@
-import { DatabaseClientType } from '~~/app/core/constants/database-client-type';
+import { DatabaseClientType } from '#shared/constants/database-client-type';
 import {
   EConnectionFamily,
   EConnectionProviderKind,
   EManagedSqliteProvider,
   type IBrokerConfig,
   type IManagedSqliteConfig,
-} from '~~/app/core/types/entities/connection.entity';
+} from '#shared/types/entities/connection.entity';
 import {
   EConnectionMethod,
   type ISSLConfig,
   type ISSHConfig,
-} from '~~/app/core/types/entities/connection.entity';
+} from '#shared/types/entities/connection.entity';
 import type { NormalizedConnectionError } from '~~/server/infrastructure/driver/connection-error';
 import { healthCheckConnection } from '~~/server/infrastructure/driver/db-connection';
 

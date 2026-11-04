@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { Tooltip, TooltipContent, TooltipTrigger } from '#components';
+import type { RedisDatabaseOption } from '#shared/types/redis-workspace.types';
 import RedisDBSelector from '~/components/modules/selectors/RedisDBSelector.vue';
 import { type Connection, type RowQueryFile } from '~/core/stores';
-import type { RedisDatabaseOption } from '~/core/types/redis-workspace.types';
 import PureConnectionSelector from '../../selectors/PureConnectionSelector.vue';
 import { RawQueryEditorLayout } from '../constants';
 import AddVariableModal from './AddVariableModal.vue';

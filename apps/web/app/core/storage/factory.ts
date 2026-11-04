@@ -5,7 +5,8 @@
  *   isElectron() == true  → IPC-proxy wrappers around existing electron adapters (renderer → main via IPC; main uses SQLite)
  *   isElectron() == false → IDB entity storage singletons (localforage / IndexedDB)
  */
-import { isElectron } from '~/core/helpers/environment';
+import { isElectron } from '#shared/helpers/environment';
+import type { MigrationState } from '#shared/types/entities/migration-state.entity';
 import {
   agentElectronAdapter,
   appConfigElectronAdapter,
@@ -29,7 +30,6 @@ import {
   normalizeAppConfigState,
   normalizeAgentState,
 } from '~/core/persist/store-state';
-import type { MigrationState } from '~/core/types/entities/migration-state.entity';
 import {
   workspaceStorage,
   connectionStorage,

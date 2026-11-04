@@ -1,4 +1,4 @@
-import { uuidv4 } from '~/core/helpers';
+import { uuidv4 } from './uuid';
 
 export type PreviewRelationBreadcrumbType =
   | 'backReferenced'

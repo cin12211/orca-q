@@ -1,14 +1,14 @@
 import { mockNuxtImport } from '@nuxt/test-utils/runtime';
 import { createPinia, setActivePinia } from 'pinia';
+import { DatabaseClientType } from '#shared/constants/database-client-type';
+import { EConnectionMethod } from '#shared/types/entities/connection.entity';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { useActivityMenu } from '~/components/modules/app-shell/activity-bar/hooks/useActivityMenu';
-import { DatabaseClientType } from '~/core/constants/database-client-type';
 import {
   ActivityBarItemType,
   useActivityBarStore,
   useManagementConnectionStore,
 } from '~/core/stores';
-import { EConnectionMethod } from '~/core/types/entities/connection.entity';
 
 const routeMock = vi.hoisted(() => ({
   params: {

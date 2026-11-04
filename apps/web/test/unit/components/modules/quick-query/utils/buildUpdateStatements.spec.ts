@@ -1,10 +1,10 @@
+import { DatabaseClientType } from '#shared/constants/database-client-type';
+import { buildUpdateStatements } from '#shared/helpers/sql-mutation-statements';
 import { describe, expect, it } from 'vitest';
 import {
   HASH_INDEX_ID,
   NEW_ROW_FLAG_ID,
 } from '~/components/base/data-grid/constants';
-import { DatabaseClientType } from '~/core/constants/database-client-type';
-import { buildUpdateStatements } from '~/core/helpers/sql-mutation-statements';
 
 describe('buildUpdateStatements', () => {
   it('builds a simple update statement with PK', () => {

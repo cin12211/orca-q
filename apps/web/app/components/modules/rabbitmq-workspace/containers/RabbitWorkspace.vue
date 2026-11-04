@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import type { Connection } from '~/core/stores';
 import {
   TabViewType,
   type TabView,
-} from '~/core/types/entities/tab-view.entity';
+} from '#shared/types/entities/tab-view.entity';
+import type { Connection } from '~/core/stores';
 import {
   RabbitConnectionsPanel,
   RabbitDefinitionsPanel,

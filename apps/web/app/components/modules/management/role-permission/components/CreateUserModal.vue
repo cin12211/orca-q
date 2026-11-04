@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { useCopyToClipboard } from '~/core/composables/useCopyToClipboard';
 import type {
   CreateRoleRequest,
   DatabaseInfo,
@@ -9,7 +8,8 @@ import type {
   ObjectGrant,
   PrivilegeType,
   ObjectType,
-} from '~/core/types';
+} from '#shared/types';
+import { useCopyToClipboard } from '~/core/composables/useCopyToClipboard';
 
 interface Props {
   open: boolean;

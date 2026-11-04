@@ -1,12 +1,12 @@
-import type { FieldDef } from 'pg';
-import type { RowData } from '~/components/base/data-grid/utils';
-import type { DatabaseDriverError } from '~/core/types';
+import type { DatabaseDriverError } from '#shared/types';
 import type {
   EConnectionProviderKind,
   IManagedSqliteConfig,
   ISSHConfig,
   ISSLConfig,
-} from '~/core/types/entities/connection.entity';
+} from '#shared/types/entities/connection.entity';
+import type { FieldDef } from 'pg';
+import type { RowData } from '~/components/base/data-grid/utils';
 import type { ExecutedResultItem } from '../types';
 
 /**

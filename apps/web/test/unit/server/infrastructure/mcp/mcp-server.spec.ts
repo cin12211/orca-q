@@ -1,3 +1,4 @@
+import type { McpSession } from '#shared/persist/normalize';
 import { DuckDBInstance } from '@duckdb/node-api';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { InMemoryTransport } from '@modelcontextprotocol/sdk/inMemory.js';
@@ -6,7 +7,6 @@ import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import type { McpSession } from '~/core/persist/normalize';
 import {
   createOrcaqMcpServer,
   DESKTOP_PERSIST_DB_PATH_ENV,

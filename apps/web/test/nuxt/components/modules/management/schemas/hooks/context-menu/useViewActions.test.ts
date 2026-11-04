@@ -1,9 +1,9 @@
 import { ref } from 'vue';
+import { ViewSchemaEnum } from '#shared/types';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { useViewActions } from '~/components/modules/management/schemas/hooks/context-menu/actions/useViewActions';
 import { useContextMenuState } from '~/components/modules/management/schemas/hooks/context-menu/useContextMenuState';
 import { TabViewType } from '~/core/stores/useTabViewsStore';
-import { ViewSchemaEnum } from '~/core/types';
 import {
   makeConnection,
   makeSchema,
@@ -26,7 +26,7 @@ vi.mock('vue-sonner', () => ({
   toast: mockToast,
 }));
 
-vi.mock('@/core/helpers/connection-helper', () => ({
+vi.mock('#shared/helpers/connection-helper', () => ({
   getConnectionParams: mockGetConnectionParams,
 }));
 

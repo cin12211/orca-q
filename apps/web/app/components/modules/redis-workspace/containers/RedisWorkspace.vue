@@ -1,7 +1,7 @@
 <script setup lang="ts">
+import type { RedisKeyListItem } from '#shared/types/redis-workspace.types';
 import type { Connection } from '~/core/stores';
 import { TabViewType, type TabView } from '~/core/stores/useTabViewsStore';
-import type { RedisKeyListItem } from '~/core/types/redis-workspace.types';
 import RedisDeleteKeyDialog from '../components/RedisDeleteKeyDialog.vue';
 import RedisGroupOverview from '../components/RedisGroupOverview.vue';
 import RedisKeyDetailPanel from '../components/RedisKeyDetailPanel.vue';

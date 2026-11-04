@@ -12,6 +12,10 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '#components';
+import { getConnectionCapabilityProfile } from '#shared/constants/connection-capabilities';
+import { DatabaseClientType } from '#shared/constants/database-client-type';
+import { isElectron } from '#shared/helpers';
+import { EConnectionMethod } from '#shared/types/entities/connection.entity';
 import { autoScrollForElements } from '@atlaskit/pragmatic-drag-and-drop-auto-scroll/element';
 import {
   type Edge,
@@ -24,15 +28,11 @@ import { useCommandPalette } from '~/components/modules/command-palette';
 import { useHotkeys } from '~/core/composables/useHotKeys';
 import { useTabManagement } from '~/core/composables/useTabManagement';
 import { useWorkspaceConnectionRoute } from '~/core/composables/useWorkspaceConnectionRoute';
-import { getConnectionCapabilityProfile } from '~/core/constants/connection-capabilities';
-import { DatabaseClientType } from '~/core/constants/database-client-type';
-import { isElectron } from '~/core/helpers';
 import {
   useManagementConnectionStore,
   useTabViewsStore,
   type TabView,
 } from '~/core/stores';
-import { EConnectionMethod } from '~/core/types/entities/connection.entity';
 import ElectronUpdateIndicator from '../../status-bar/components/ElectronUpdateIndicator.vue';
 import TabViewItem from './TabViewItem.vue';
 import TabViewOpenActions from './TabViewOpenActions.vue';

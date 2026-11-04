@@ -6,9 +6,9 @@ import {
   watch,
   type MaybeRefOrGetter,
 } from 'vue';
+import { DatabaseClientType } from '#shared/constants/database-client-type';
+import { uuidv4 } from '#shared/helpers';
 import dayjs from 'dayjs';
-import { DatabaseClientType } from '~/core/constants/database-client-type';
-import { uuidv4 } from '~/core/helpers';
 import type { Connection } from '~/core/stores';
 import { useEnvironmentTagStore } from '~/core/stores';
 import { DEFAULT_DB_PORTS } from '../constants';

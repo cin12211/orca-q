@@ -50,7 +50,8 @@ OrcaQ/
 │   │   │   └── core/         # Client-only: stores, composables, contexts, persist, ...
 │   │   ├── server/           # Nitro server (API routes, DB adapters, MCP, AI)
 │   │   ├── shared/           # Used by client + server + electron (`#shared/...`):
-│   │   │                     #   types, constants, helpers, sql-dialect, module types/utils
+│   │   │                     #   types, constants, helpers, sql-dialect, persist/normalize,
+│   │   │                     #   storage/idbRegistry
 │   │   ├── types/            # Ambient *.d.ts
 │   │   ├── public/           # Public static files
 │   │   ├── test/             # unit / nuxt / api / playwright suites + fixtures
@@ -131,7 +132,7 @@ Client-only stores, contexts and persistence. Types and constants that the
 server or electron also need live in `apps/web/shared/` (`#shared/...`).
 
 ```
-shared/
+core/
 ├── stores/                    # Pinia stores (12 stores)
 │   ├── index.ts               # Barrel export
 │   ├── useWorkspacesStore.ts  # Workspace CRUD
@@ -159,13 +160,34 @@ shared/
 │   ├── rowQueryFile.ts        # SQL file persistence
 │   └── workspaceStateIDBApi.ts # State persistence
 │
-├── types/                     # Shared TypeScript types
-│   ├── database-export.types.ts
-│   ├── database-roles.types.ts
-│   └── schemaMeta.type.ts
-│
-├── constants/                 # Shared constants
+├── helpers/                   # Client-only helpers: clipboard, copy-data
+│                              #   (file-saver/papaparse), deepUnRef (vue), cell-value (AG Grid)
+├── constants/agent.ts         # AI provider/model list (uses settings module types)
 └── data/                      # Static data (changelog)
+```
+
+---
+
+### `apps/web/shared` - Client + Server + Electron Code
+
+Environment-neutral code imported as `#shared/...` (relative imports inside
+`shared/`, so electron's tsc output needs no alias). It must not import `app/`
+or `server/`. Nuxt's auto-import of `shared/types` and `shared/utils` is turned
+off in `nuxt.config.ts`; import shared code explicitly.
+
+```
+shared/
+├── types/                     # Entity + API types (barrel: `#shared/types`)
+│   ├── entities/              # Workspace, connection, tab view, ... entities
+│   ├── agent.types.ts         # AI agent tool/message types (agent module + server)
+│   └── schema-diff.types.ts   # Schema diff request/response (database-tools + server)
+├── constants/                 # database-client-type, connection-capabilities, ...
+├── helpers/                   # Pure helpers (barrel: `#shared/helpers`): sql-*,
+│                              #   database-error, parser-connection-string, mcp-token,
+│                              #   environment, generateFunctionSQL (schemas module + server)
+├── sql-dialect/               # Per-database SQL dialects
+├── persist/normalize.ts       # AppConfig/AgentState normalize (web, server MCP, electron)
+└── storage/idbRegistry.ts     # Persist collection registry (web + electron)
 ```
 
 ---

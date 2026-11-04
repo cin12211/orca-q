@@ -1,14 +1,14 @@
 import { mockNuxtImport } from '@nuxt/test-utils/runtime';
 import { createPinia, setActivePinia } from 'pinia';
 import { ref } from 'vue';
+import { ComposeOperator, DEFAULT_DEBOUNCE_INPUT } from '#shared/constants';
+import { DatabaseClientType } from '#shared/constants/database-client-type';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { NullOrderPreference } from '~/components/modules/settings/types';
 import { useTableQueryBuilder } from '~/core/composables/useTableQueryBuilder';
-import { ComposeOperator, DEFAULT_DEBOUNCE_INPUT } from '~/core/constants';
-import { DatabaseClientType } from '~/core/constants/database-client-type';
 import { useAppConfigStore } from '~/core/stores/appConfigStore';
 
-vi.mock('~/core/helpers/sql-where-clause', () => ({
+vi.mock('#shared/helpers/sql-where-clause', () => ({
   formatWhereClause: vi.fn(() => 'WHERE "id" = 1'),
 }));
 

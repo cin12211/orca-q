@@ -1,4 +1,4 @@
-import type { MappedRawColumn } from '~/core/types/mapped-column.types';
+import type { MappedRawColumn } from '../types/mapped-column.types';
 
 export const buildMappedColumnsFromRows = (
   rows: Record<string, unknown>[]

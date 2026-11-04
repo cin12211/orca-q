@@ -1,4 +1,4 @@
-import type { DbAgentMessage } from '../types';
+import type { DbAgentMessage } from '#shared/types/agent.types';
 
 type DbAgentMessagePart = NonNullable<DbAgentMessage['parts']>[number];
 

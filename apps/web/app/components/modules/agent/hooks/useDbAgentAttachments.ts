@@ -1,5 +1,8 @@
 import { computed, type ComputedRef } from 'vue';
-import type { AgentRenderedMessage, AgentExportFileResult } from '../types';
+import type {
+  AgentRenderedMessage,
+  AgentExportFileResult,
+} from '#shared/types/agent.types';
 
 export type AttachmentType = 'file' | 'code' | 'source';
 

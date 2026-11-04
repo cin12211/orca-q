@@ -1,5 +1,5 @@
+import type { Connection } from '#shared/types/entities';
 import dayjs from 'dayjs';
-import type { Connection } from '../../../types/entities';
 import type { ConnectionPersistApi } from '../../types';
 import {
   persistDelete,

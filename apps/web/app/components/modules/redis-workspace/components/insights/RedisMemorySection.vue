@@ -15,8 +15,8 @@
 //   TableHeader,
 //   TableRow,
 // } from '~/components/ui/table';
+import type { RedisMemoryInsight } from '#shared/types/instance-insights.types';
 import { InsightKpiCard } from '~/components/modules/shared/instance-insights-kit';
-import type { RedisMemoryInsight } from '~/core/types/instance-insights.types';
 
 // import { InsightScopeBadge } from '~/components/modules/shared/instance-insights-kit';
 

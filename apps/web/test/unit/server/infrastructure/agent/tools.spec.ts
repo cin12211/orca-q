@@ -1,6 +1,6 @@
+import { AgentToolName } from '#shared/types/agent.types';
+import type { DbAgentSchemaSnapshot } from '#shared/types/agent.types';
 import { describe, expect, it } from 'vitest';
-import { AgentToolName } from '~/components/modules/agent/types';
-import type { DbAgentSchemaSnapshot } from '~/components/modules/agent/types';
 import type { DatabaseAdapter } from '~~/server/infrastructure/agent/core/types';
 import { resolveActiveTools } from '~~/server/infrastructure/agent/tools';
 

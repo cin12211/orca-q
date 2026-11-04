@@ -1,7 +1,7 @@
 <script setup lang="ts">
+import { extendedFields } from '#shared/constants';
 import Fuse from 'fuse.js';
 import type { AcceptableValue } from 'reka-ui';
-import { extendedFields } from '~/core/constants';
 
 const props = defineProps<{ columns: string[]; value: string }>();
 

@@ -1,11 +1,11 @@
 <script setup lang="ts">
+import type { RabbitOverview } from '#shared/types/rabbitmq.types';
 import { InsightKpiCard } from '~/components/modules/shared/instance-insights-kit';
 import {
   BrokerSparkline,
   formatMessageRate,
   formatNumber,
 } from '~/components/modules/shared/message-broker';
-import type { RabbitOverview } from '~/core/types/rabbitmq.types';
 import RabbitInsightsSectionTitle from './RabbitInsightsSectionTitle.vue';
 
 defineProps<{

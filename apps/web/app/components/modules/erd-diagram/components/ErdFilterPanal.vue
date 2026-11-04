@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { refDebounced } from '@vueuse/core';
 import { Icon } from '#components';
+import { DEFAULT_DEBOUNCE_INPUT } from '#shared/constants';
+import type { TableMetadata } from '#shared/types';
 import FileTree from '~/components/base/tree-folder/FileTree.vue';
 import type { FileNode } from '~/components/base/tree-folder/types';
-import { DEFAULT_DEBOUNCE_INPUT } from '~/core/constants';
-import type { TableMetadata } from '~/core/types';
 import { buildTableNodeId, detructTableNodeId } from '../utils';
 
 const props = defineProps<{

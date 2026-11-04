@@ -1,9 +1,9 @@
-import Papa from 'papaparse';
 import type {
   AgentExportFilePreview,
   AgentExportFileResult,
   AgentExportFormat,
-} from '~~/app/components/modules/agent/types';
+} from '#shared/types/agent.types';
+import Papa from 'papaparse';
 
 const PREVIEW_LIMIT = 20;
 

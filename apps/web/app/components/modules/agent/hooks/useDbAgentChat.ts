@@ -1,13 +1,13 @@
+import { getConnectionParams } from '#shared/helpers/connection-helper';
+import type { DbAgentMessage } from '#shared/types/agent.types';
 import { lastAssistantMessageIsCompleteWithApprovalResponses } from 'ai';
 import { useAiChat } from '~/core/composables/useAiChat';
-import { getConnectionParams } from '~/core/helpers/connection-helper';
 import { useSchemaStore } from '~/core/stores';
 import { useManagementConnectionStore } from '~/core/stores/managementConnectionStore';
 import {
   getAgentCommandOptionsByIds,
   type AgentCommandOptionId,
 } from '../constants/command-options';
-import type { DbAgentMessage } from '../types';
 import {
   hasIncompleteDbAgentMessages,
   sanitizeDbAgentMessages,

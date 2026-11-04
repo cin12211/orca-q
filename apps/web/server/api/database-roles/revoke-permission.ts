@@ -3,12 +3,12 @@
  * Revokes permissions from a role
  * Supports multiple database types via adapter pattern
  */
-import { DatabaseClientType } from '~~/app/core/constants/database-client-type';
+import { DatabaseClientType } from '#shared/constants/database-client-type';
 import type {
   GrantRevokeRequest,
   GrantRevokeResponse,
   DatabaseMetadataRequestParams,
-} from '~~/app/core/types';
+} from '#shared/types';
 import { createRoleAdapter } from '~~/server/infrastructure/database/adapters/database-roles';
 
 interface RequestBody

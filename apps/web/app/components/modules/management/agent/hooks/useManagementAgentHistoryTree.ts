@@ -1,5 +1,6 @@
 import { refDebounced } from '@vueuse/core';
 import type { ComputedRef } from 'vue';
+import { DEFAULT_DEBOUNCE_INPUT } from '#shared/constants';
 import {
   ContextMenuItemType,
   type ContextMenuItem,
@@ -7,7 +8,6 @@ import {
 import type { FileNode } from '~/components/base/tree-folder/types';
 import { useAgentWorkspace } from '~/components/modules/agent/hooks/useDbAgentWorkspace';
 import { useWorkspaceConnectionRoute } from '~/core/composables/useWorkspaceConnectionRoute';
-import { DEFAULT_DEBOUNCE_INPUT } from '~/core/constants';
 import { LocalStorageKey } from '~/core/persist/LocalStorageManager';
 import { useWSStateStore } from '~/core/stores';
 import { TabViewType, useTabViewsStore } from '~/core/stores/useTabViewsStore';

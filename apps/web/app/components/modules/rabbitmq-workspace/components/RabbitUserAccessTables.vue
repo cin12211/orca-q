@@ -1,4 +1,8 @@
 <script setup lang="ts">
+import type {
+  RabbitTopicPermission,
+  RabbitUserPermission,
+} from '#shared/types/rabbitmq.types';
 import {
   Table,
   TableBody,
@@ -7,10 +11,6 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import type {
-  RabbitTopicPermission,
-  RabbitUserPermission,
-} from '~/core/types/rabbitmq.types';
 import { RABBIT_PERMISSION_DESCRIPTIONS } from '../constants';
 
 defineProps<{

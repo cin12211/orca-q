@@ -1,10 +1,10 @@
 import { useIntervalFn } from '@vueuse/core';
-import { getConnectionParams } from '@/core/helpers/connection-helper';
-import type { Connection } from '~/core/stores';
+import { getConnectionParams } from '#shared/helpers/connection-helper';
 import type {
   InstanceInsightsSectionId,
   InstanceInsightsView,
-} from '~/core/types';
+} from '#shared/types';
+import type { Connection } from '~/core/stores';
 
 interface FetchOptions {
   silent?: boolean;

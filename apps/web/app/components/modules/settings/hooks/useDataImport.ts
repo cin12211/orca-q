@@ -1,5 +1,9 @@
 import { ref, shallowRef } from 'vue';
-import { isElectron } from '~/core/helpers/environment';
+import { isElectron } from '#shared/helpers/environment';
+import {
+  PERSIST_COLLECTIONS,
+  type PersistCollection,
+} from '#shared/storage/idbRegistry';
 import { persistMergeAll as electronPersistMergeAll } from '~/core/persist/adapters/electron/primitives';
 import { idbMergeAll } from '~/core/persist/adapters/idb/primitives';
 import {
@@ -7,10 +11,6 @@ import {
   runMigrations,
 } from '~/core/persist/migration';
 import { migrationStateStorage } from '~/core/storage/entities/MigrationStateStorage';
-import {
-  PERSIST_COLLECTIONS,
-  type PersistCollection,
-} from '~/core/storage/idbRegistry';
 import { useAgentStore } from '~/core/stores/agentStore';
 import { useAppConfigStore } from '~/core/stores/appConfigStore';
 import { useManagementConnectionStore } from '~/core/stores/managementConnectionStore';

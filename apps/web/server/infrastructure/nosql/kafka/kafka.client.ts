@@ -1,10 +1,10 @@
+import { EKafkaSaslMechanism } from '#shared/types/entities/connection.entity';
 import type {
   Admin,
   BaseOptions,
   Consumer,
   Producer,
 } from '@platformatic/kafka';
-import { EKafkaSaslMechanism } from '~~/app/core/types/entities/connection.entity';
 import {
   BrokerConnectionError,
   isBrokerTlsEnabled,

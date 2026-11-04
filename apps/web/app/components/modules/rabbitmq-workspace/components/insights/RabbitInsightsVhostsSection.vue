@@ -1,4 +1,8 @@
 <script setup lang="ts">
+import type {
+  RabbitVhostInput,
+  RabbitVhostSummary,
+} from '#shared/types/rabbitmq.types';
 import {
   formatBytes,
   formatMessageRate,
@@ -6,10 +10,6 @@ import {
   useBrokerRequest,
 } from '~/components/modules/shared/message-broker';
 import type { Connection } from '~/core/stores';
-import type {
-  RabbitVhostInput,
-  RabbitVhostSummary,
-} from '~/core/types/rabbitmq.types';
 import { useRabbitChange, useRabbitInsightsRefresh } from '../../hooks';
 import { rabbitmqService } from '../../services';
 import RabbitConfirmDialog from './RabbitConfirmDialog.vue';

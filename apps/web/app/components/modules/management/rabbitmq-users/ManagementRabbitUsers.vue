@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import { refDebounced } from '@vueuse/core';
+import { DEFAULT_DEBOUNCE_INPUT } from '#shared/constants';
+import type { RabbitUserSummary } from '#shared/types/rabbitmq.types';
 import BaseContextMenu from '~/components/base/context-menu/BaseContextMenu.vue';
 import {
   ContextMenuItemType,
@@ -24,10 +26,8 @@ import {
   useBrokerRequest,
 } from '~/components/modules/shared/message-broker';
 import { useWorkspaceConnectionRoute } from '~/core/composables/useWorkspaceConnectionRoute';
-import { DEFAULT_DEBOUNCE_INPUT } from '~/core/constants';
 import { copyToClipboard } from '~/core/helpers/copy-data/operations';
 import { useManagementConnectionStore } from '~/core/stores';
-import type { RabbitUserSummary } from '~/core/types/rabbitmq.types';
 import { ManagementSidebarHeader } from '../shared';
 
 interface RabbitUserTreeData {

@@ -1,16 +1,20 @@
 <script setup lang="ts">
 import { Icon, Tooltip, TooltipContent, TooltipTrigger } from '#components';
-import type { Input } from '~/components/ui/input';
-import { ComposeOperator, EExtendedField, OperatorSet } from '~/core/constants';
+import {
+  ComposeOperator,
+  EExtendedField,
+  OperatorSet,
+} from '#shared/constants';
 import {
   DatabaseClientType,
   isPostgresCompatibleClientType,
-} from '~/core/constants/database-client-type';
+} from '#shared/constants/database-client-type';
 import {
   formatWhereClause,
   getPlaceholderSearchByOperator,
   type FilterSchema,
-} from '~/core/helpers/sql-where-clause';
+} from '#shared/helpers/sql-where-clause';
+import type { Input } from '~/components/ui/input';
 import ColumnSelector from '../../selectors/ColumnSelector.vue';
 import OperatorSelector from '../../selectors/OperatorSelector.vue';
 import QuickQueryFilterGuide from './QuickQueryFilterGuide.vue';

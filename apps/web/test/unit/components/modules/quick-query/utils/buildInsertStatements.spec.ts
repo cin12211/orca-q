@@ -1,5 +1,5 @@
+import { buildInsertStatements } from '#shared/helpers/sql-mutation-statements';
 import { describe, expect, it } from 'vitest';
-import { buildInsertStatements } from '~/core/helpers/sql-mutation-statements';
 
 describe('buildInsertStatements', () => {
   it('builds DEFAULT VALUES insert for an empty new row', () => {

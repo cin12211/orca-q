@@ -1,11 +1,11 @@
-import type { DatabaseMetadataRequestParams } from '~~/app/core/types/database-schemas.types';
+import type { DatabaseMetadataRequestParams } from '#shared/types/database-schemas.types';
 import type {
   MongoOpcounters,
   MongoOverviewInsight,
   MongoReplicaMemberInsight,
   MongoReplicationInsight,
   MongoTopology,
-} from '~~/app/core/types/instance-insights.types';
+} from '#shared/types/instance-insights.types';
 import { withMongoClient } from './mongodb.client';
 
 type MongoCommandResult = Record<string, any>;

@@ -1,11 +1,14 @@
-import type { DatabaseClientType } from '~/core/constants/database-client-type';
-import { type FunctionSchemaEnum, type ViewSchemaEnum } from '~/core/types';
+import type { DatabaseClientType } from '../constants/database-client-type';
 import type {
   EConnectionProviderKind,
   IManagedSqliteConfig,
   ISSLConfig,
   ISSHConfig,
-} from '~/core/types/entities/connection.entity';
+} from './entities/connection.entity';
+import {
+  type FunctionSchemaEnum,
+  type ViewSchemaEnum,
+} from './schemaMeta.type';
 
 export interface DatabaseMetadataRequestParams {
   dbConnectionString?: string;

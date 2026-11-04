@@ -1,14 +1,14 @@
-import { DatabaseClientType } from '~~/app/core/constants/database-client-type';
+import { DatabaseClientType } from '#shared/constants/database-client-type';
 import type {
   DatabaseTransferJobSnapshot,
   ExportOptions,
   ImportOptions,
   NativeBackupRuntimeSelection,
-} from '~~/app/core/types';
+} from '#shared/types';
 import type {
   ISSLConfig,
   ISSHConfig,
-} from '~~/app/core/types/entities/connection.entity';
+} from '#shared/types/entities/connection.entity';
 import type { NativeBackupToolName } from '../../native-backup';
 
 export const NATIVE_BACKUP_TTL_MS = 30 * 60 * 1000;

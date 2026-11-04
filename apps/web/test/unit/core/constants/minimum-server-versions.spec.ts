@@ -1,6 +1,6 @@
+import { DatabaseClientType } from '#shared/constants/database-client-type';
+import { getMinimumServerVersionNote } from '#shared/constants/minimum-server-versions';
 import { describe, expect, it } from 'vitest';
-import { DatabaseClientType } from '~/core/constants/database-client-type';
-import { getMinimumServerVersionNote } from '~/core/constants/minimum-server-versions';
 
 describe('getMinimumServerVersionNote', () => {
   it('describes the minimum for gated engines', () => {

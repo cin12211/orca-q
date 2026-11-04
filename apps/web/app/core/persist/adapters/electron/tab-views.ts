@@ -1,4 +1,4 @@
-import type { TabView } from '../../../types/entities';
+import type { TabView } from '#shared/types/entities';
 import type {
   DeleteTabViewProps,
   GetTabViewsByContextProps,

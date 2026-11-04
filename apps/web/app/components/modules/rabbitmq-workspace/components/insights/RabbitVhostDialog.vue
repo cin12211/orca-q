@@ -1,4 +1,8 @@
 <script setup lang="ts">
+import type {
+  RabbitVhostInput,
+  RabbitVhostSummary,
+} from '#shared/types/rabbitmq.types';
 import {
   Dialog,
   DialogContent,
@@ -7,10 +11,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import type {
-  RabbitVhostInput,
-  RabbitVhostSummary,
-} from '~/core/types/rabbitmq.types';
 import { RABBIT_QUEUE_TYPES } from '../../constants';
 
 const props = defineProps<{

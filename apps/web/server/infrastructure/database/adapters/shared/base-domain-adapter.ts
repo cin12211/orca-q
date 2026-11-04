@@ -1,4 +1,4 @@
-import { DatabaseClientType } from '~~/app/core/constants/database-client-type';
+import { DatabaseClientType } from '#shared/constants/database-client-type';
 import type { IDatabaseAdapter } from '~~/server/infrastructure/driver';
 import { getDatabaseSource } from '~~/server/infrastructure/driver/db-connection';
 import type { BaseDatabaseAdapterParams } from './types';

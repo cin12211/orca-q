@@ -1,4 +1,4 @@
-import { DATA_GRID_ROW_METADATA_IDS } from '~/core/constants/data-grid-row-metadata';
+import { DATA_GRID_ROW_METADATA_IDS } from '../constants/data-grid-row-metadata';
 
 /**
  * Check whether a column name is a row-metadata column injected by the shared data grid

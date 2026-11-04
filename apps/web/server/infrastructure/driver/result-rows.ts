@@ -1,4 +1,4 @@
-import type { DatabaseField } from '~~/app/core/types';
+import type { DatabaseField } from '#shared/types';
 
 /** Field metadata for drivers that only report column names. */
 export function createSyntheticFields(columnNames: string[]): DatabaseField[] {

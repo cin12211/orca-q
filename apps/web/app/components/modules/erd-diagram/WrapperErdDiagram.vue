@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { computed, toRef } from 'vue';
+import { uuidv4 } from '#shared/helpers';
 import ErdDiagram from '~/components/modules/erd-diagram/ErdDiagram.vue';
-import { uuidv4 } from '~/core/helpers';
 import { useErdQueryTables } from './hooks/useErdGetAllTablesData';
 import { useExpandableErd } from './hooks/useExpandableErd';
 import type { NodePosition } from './types';

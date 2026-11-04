@@ -1,6 +1,9 @@
+import { DatabaseClientType } from '#shared/constants/database-client-type';
+import type {
+  InstanceInsightsConfiguration,
+  DatabaseMetadataRequestParams,
+} from '#shared/types';
 import { createError, defineEventHandler, readBody } from 'h3';
-import { DatabaseClientType } from '~~/app/core/constants/database-client-type';
-import type { InstanceInsightsConfiguration, DatabaseMetadataRequestParams } from '~~/app/core/types';
 import { createInstanceInsightsAdapter } from '~~/server/infrastructure/database/adapters/instance-insights';
 
 interface RequestBody extends DatabaseMetadataRequestParams {
@@ -20,10 +23,7 @@ export default defineEventHandler(
         });
       }
 
-      const adapter = await createInstanceInsightsAdapter(
-        body.type,
-        body
-      );
+      const adapter = await createInstanceInsightsAdapter(body.type, body);
 
       return await adapter.getConfiguration({
         search: body.search,

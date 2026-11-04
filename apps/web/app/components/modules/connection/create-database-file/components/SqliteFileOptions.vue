@@ -2,7 +2,7 @@
 import {
   SQLITE_FILE_OPTION_FIELDS,
   type DatabaseFileOptions,
-} from '~/core/constants/database-file-options';
+} from '#shared/constants/database-file-options';
 import DatabaseFileOptionField from './DatabaseFileOptionField.vue';
 
 const options = defineModel<DatabaseFileOptions>({ required: true });

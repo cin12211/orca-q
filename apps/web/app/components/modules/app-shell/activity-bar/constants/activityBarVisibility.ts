@@ -1,7 +1,7 @@
-import type { ConnectionActivityItem } from '~/core/constants/connection-capabilities';
-import { DatabaseClientType } from '~/core/constants/database-client-type';
+import type { ConnectionActivityItem } from '#shared/constants/connection-capabilities';
+import { DatabaseClientType } from '#shared/constants/database-client-type';
+import { EConnectionMethod } from '#shared/types/entities/connection.entity';
 import { ActivityBarItemType } from '~/core/stores/useActivityBarStore';
-import { EConnectionMethod } from '~/core/types/entities/connection.entity';
 
 export const BASE_ACTIVITY_ITEMS = [
   {

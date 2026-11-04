@@ -7,7 +7,7 @@
  *   1. nuxt build in apps/web → apps/web/.output (SPA + Nitro server)
  *   2. Copy apps/web/.output → apps/desktop/out/runtime/
  *   3. tsc → compile electron/ TypeScript → out/desktop/electron/
- *      (+ the apps/web/app/core files it imports → out/web/app/core/)
+ *      (+ the apps/web/shared files it imports → out/web/shared/)
  */
 import { execSync } from 'node:child_process';
 import {

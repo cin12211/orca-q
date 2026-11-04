@@ -1,6 +1,6 @@
 <script setup lang="ts">
+import { formatBytes } from '#shared/helpers/bytes-formatter';
 import type { MongoDatabaseStats } from '~/components/modules/mongodb-workspace';
-import { formatBytes } from '~/core/helpers/bytes-formatter';
 
 interface Props {
   open: boolean;

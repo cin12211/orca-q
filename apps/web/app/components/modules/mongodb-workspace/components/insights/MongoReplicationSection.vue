@@ -1,4 +1,8 @@
 <script setup lang="ts">
+import type {
+  MongoReplicationInsight,
+  MongoTopology,
+} from '#shared/types/instance-insights.types';
 import {
   InsightKpiCard,
   formatDuration,
@@ -11,10 +15,6 @@ import {
   TableHeader,
   TableRow,
 } from '~/components/ui/table';
-import type {
-  MongoReplicationInsight,
-  MongoTopology,
-} from '~/core/types/instance-insights.types';
 
 const props = defineProps<{
   replication: MongoReplicationInsight | undefined;

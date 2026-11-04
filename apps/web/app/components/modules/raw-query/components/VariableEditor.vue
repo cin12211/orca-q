@@ -1,10 +1,10 @@
 <script setup lang="ts">
+import { jsonFormat } from '#shared/helpers';
 import { json, jsonParseLinter } from '@codemirror/lang-json';
 import { linter, lintGutter } from '@codemirror/lint';
 import { placeholder } from '@codemirror/view';
 import BaseCodeEditor from '~/components/base/code-editor/BaseCodeEditor.vue';
 import { shortCutFormatOnSave } from '~/components/base/code-editor/extensions';
-import { jsonFormat } from '~/core/helpers';
 
 defineProps<{
   fileVariables: string;

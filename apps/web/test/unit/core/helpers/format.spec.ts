@@ -1,9 +1,9 @@
-import { describe, it, expect } from 'vitest';
 import {
   formatQueryTime,
   formatNumber,
   formatDuration,
-} from '@/core/helpers/format';
+} from '#shared/helpers/format';
+import { describe, it, expect } from 'vitest';
 
 describe('format utilities', () => {
   it('formatQueryTime uses μs for <1ms', () => {

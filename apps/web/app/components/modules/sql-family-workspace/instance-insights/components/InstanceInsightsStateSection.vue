@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { buildMappedColumnsFromRows as buildColumnsFromRows } from '#shared/helpers';
+import type { InstanceInsightsState, InstanceSessionRow } from '#shared/types';
 import {
   buildDynamicColumnDefs,
   buildDynamicRowData,
@@ -8,8 +10,6 @@ import {
   formatDateTime,
   formatDuration,
 } from '~/components/modules/shared/instance-insights-kit';
-import { buildMappedColumnsFromRows as buildColumnsFromRows } from '~/core/helpers';
-import type { InstanceInsightsState, InstanceSessionRow } from '~/core/types';
 import { compactSql, isIdleInTransaction } from '../utils';
 
 const props = defineProps<{

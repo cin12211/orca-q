@@ -1,4 +1,4 @@
-import type { RabbitDefinitionsSummary } from '~/core/types/rabbitmq.types';
+import type { RabbitDefinitionsSummary } from '#shared/types/rabbitmq.types';
 
 /** Sections of a definitions file worth counting before import/export. */
 const COUNTED_SECTIONS = [

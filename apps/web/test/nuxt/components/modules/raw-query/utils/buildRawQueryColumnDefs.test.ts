@@ -1,10 +1,10 @@
+import type { MappedRawColumn } from '#shared/types/mapped-column.types';
 import type { ValueFormatterParams } from 'ag-grid-community';
 import { describe, expect, it, vi } from 'vitest';
 import {
   buildRawQueryColumnDefs,
   type RawQueryDirtyTracker,
 } from '~/components/modules/raw-query/utils/buildRawQueryColumnDefs';
-import type { MappedRawColumn } from '~/core/types/mapped-column.types';
 
 const col = (overrides: Partial<MappedRawColumn> = {}): MappedRawColumn => {
   const originalName = overrides.originalName || 'col';

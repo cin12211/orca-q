@@ -1,9 +1,9 @@
-import { z } from 'zod';
 import {
   EConnectionMethod,
   ESSHAuthMethod,
   ESSLMode,
-} from '~~/app/core/types/entities/connection.entity';
+} from '#shared/types/entities/connection.entity';
+import { z } from 'zod';
 import type { RedisBrowserInput } from './redis-browser.service';
 
 export const sslConfigSchema = z.object({

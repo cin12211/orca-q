@@ -1,5 +1,4 @@
-import { createError } from 'h3';
-import { DatabaseClientType } from '~~/app/core/constants/database-client-type';
+import { DatabaseClientType } from '#shared/constants/database-client-type';
 import type {
   ViewOverviewMetadata,
   ViewDefinitionResponse,
@@ -8,7 +7,8 @@ import type {
   ViewDependency,
   ViewColumn,
   TableIndex,
-} from '~~/app/core/types';
+} from '#shared/types';
+import { createError } from 'h3';
 import { BaseDomainAdapter } from '../../shared';
 import type { IDatabaseViewAdapter, DatabaseViewAdapterParams } from '../types';
 

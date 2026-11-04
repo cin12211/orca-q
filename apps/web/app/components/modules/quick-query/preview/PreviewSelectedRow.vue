@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import { refDebounced } from '@vueuse/core';
 import { BaseEmpty, Textarea } from '#components';
+import { DEFAULT_DEBOUNCE_INPUT } from '#shared/constants';
+import { DatabaseClientType } from '#shared/constants/database-client-type';
+import { getSqlDialect } from '#shared/sql-dialect';
 import * as z from 'zod';
 import { cellValueFormatter } from '~/components/base/data-grid/utils';
-import { DEFAULT_DEBOUNCE_INPUT } from '~/core/constants';
-import { DatabaseClientType } from '~/core/constants/database-client-type';
-import { getSqlDialect } from '~/core/sql-dialect';
 import DynamicForm, { type ConfigFieldItem } from './DynamicForm.vue';
 
 const props = defineProps<{

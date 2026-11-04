@@ -1,9 +1,9 @@
-import type { Admin, ListConsumerGroupOffsetsGroup } from '@platformatic/kafka';
 import type {
   KafkaConsumerGroupDetail,
   KafkaConsumerGroupSummary,
   KafkaGroupMember,
-} from '~~/app/core/types/kafka.types';
+} from '#shared/types/kafka.types';
+import type { Admin, ListConsumerGroupOffsetsGroup } from '@platformatic/kafka';
 import {
   BrokerConnectionError,
   type BrokerConnectionInput,

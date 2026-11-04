@@ -1,11 +1,11 @@
 import {
+  PERSIST_COLLECTIONS,
+  type PersistCollection,
+} from '#shared/storage/idbRegistry';
+import {
   getPlatformStorage,
   type PlatformStorage,
 } from '~/core/persist/storage-adapter';
-import {
-  PERSIST_COLLECTIONS,
-  type PersistCollection,
-} from '~/core/storage/idbRegistry';
 
 type LocalStorageSnapshot = Record<string, string>;
 export type BackupPersistData = Partial<Record<PersistCollection, unknown[]>>;

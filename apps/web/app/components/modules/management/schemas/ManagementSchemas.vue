@@ -1,13 +1,13 @@
 <script setup lang="ts">
 import { refDebounced } from '@vueuse/core';
 import { storeToRefs } from 'pinia';
+import { DEFAULT_DEBOUNCE_INPUT } from '#shared/constants';
+import { DatabaseClientType } from '#shared/constants/database-client-type';
 import BaseContextMenu from '~/components/base/context-menu/BaseContextMenu.vue';
 import FileTree from '~/components/base/tree-folder/FileTree.vue';
 import { useSchemaTreeData } from '~/components/modules/management/schemas/hooks/useSchemaTreeData';
 import { useTabManagement } from '~/core/composables/useTabManagement';
 import { useWorkspaceConnectionRoute } from '~/core/composables/useWorkspaceConnectionRoute';
-import { DEFAULT_DEBOUNCE_INPUT } from '~/core/constants';
-import { DatabaseClientType } from '~/core/constants/database-client-type';
 import { useAppContext } from '~/core/contexts/useAppContext';
 import { useSchemaStore, useWSStateStore } from '~/core/stores';
 import { useManagementConnectionStore } from '~/core/stores/managementConnectionStore';

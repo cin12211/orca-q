@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { BrokerMessage } from '#shared/types/broker-message.types';
 import {
   BrokerMessageDetail,
   BrokerMessageTable,
@@ -6,7 +7,6 @@ import {
 } from '~/components/modules/shared/message-broker';
 import { useCopyToClipboard } from '~/core/composables/useCopyToClipboard';
 import type { Connection } from '~/core/stores';
-import type { BrokerMessage } from '~/core/types/broker-message.types';
 import { RABBIT_PEEK_COUNT_OPTIONS } from '../constants';
 import { rabbitmqService } from '../services';
 

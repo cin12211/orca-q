@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Input } from '#components';
-import { OperatorSet } from '~/core/constants';
-import type { FilterSchema } from '~/core/helpers/sql-where-clause';
+import { OperatorSet } from '#shared/constants';
+import type { FilterSchema } from '#shared/helpers/sql-where-clause';
 import { useReferencedTables } from '../hooks';
 import ReferencedTable from './ReferencedTable.vue';
 

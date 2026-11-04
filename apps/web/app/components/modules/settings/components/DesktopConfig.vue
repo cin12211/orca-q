@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { Switch } from '#components';
+import { formatBytes, isElectron } from '#shared/helpers';
 import { toast } from 'vue-sonner';
 import { useElectronUpdater } from '~/core/composables/useElectronUpdater';
-import { formatBytes, isElectron } from '~/core/helpers';
 import { useAppConfigStore } from '~/core/stores/appConfigStore';
 
 interface StoragePaths {

@@ -1,5 +1,8 @@
 <script setup lang="ts">
-import type { AgentToolInputMap, DbAgentToolName } from '../../types';
+import type {
+  AgentToolInputMap,
+  DbAgentToolName,
+} from '#shared/types/agent.types';
 
 const props = defineProps<{
   toolName: DbAgentToolName;

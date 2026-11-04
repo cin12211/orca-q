@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { useDropZone } from '@vueuse/core';
 import { ref, useTemplateRef, watch } from 'vue';
+import { formatBytes } from '#shared/helpers';
+import { getConnectionParams } from '#shared/helpers/connection-helper';
 import { json } from '@codemirror/lang-json';
 import { lintGutter } from '@codemirror/lint';
 import { toast } from 'vue-sonner';
@@ -15,8 +17,6 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import BaseCodeEditor from '~/components/base/code-editor/BaseCodeEditor.vue';
 import { currentStatementLineGutterExtension } from '~/components/base/code-editor/extensions';
-import { formatBytes } from '~/core/helpers';
-import { getConnectionParams } from '~/core/helpers/connection-helper';
 import type { Connection } from '~/core/stores';
 import { MongoInsertTab } from '../types';
 import { getMongoErrorMessage, parseMongoDocumentInput } from '../utils';

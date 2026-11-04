@@ -1,12 +1,12 @@
 <script setup lang="ts">
+import { DatabaseClientType } from '#shared/constants/database-client-type';
+import type { DatabaseFileOptions } from '#shared/constants/database-file-options';
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
 } from '@/components/ui/accordion';
-import { DatabaseClientType } from '~/core/constants/database-client-type';
-import type { DatabaseFileOptions } from '~/core/constants/database-file-options';
 import type { FileDatabaseType } from '../types';
 import DuckDbFileOptions from './DuckDbFileOptions.vue';
 import SqliteFileOptions from './SqliteFileOptions.vue';

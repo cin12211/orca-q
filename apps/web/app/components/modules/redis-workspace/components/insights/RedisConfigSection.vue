@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { RedisConfigEntry } from '#shared/types/instance-insights.types';
 import {
   Table,
   TableBody,
@@ -7,7 +8,6 @@ import {
   TableHeader,
   TableRow,
 } from '~/components/ui/table';
-import type { RedisConfigEntry } from '~/core/types/instance-insights.types';
 
 const props = defineProps<{
   config: RedisConfigEntry[] | undefined;

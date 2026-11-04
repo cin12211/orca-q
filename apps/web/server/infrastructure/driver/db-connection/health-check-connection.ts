@@ -1,4 +1,4 @@
-import type { DatabaseClientType } from '~~/app/core/constants/database-client-type';
+import type { DatabaseClientType } from '#shared/constants/database-client-type';
 import {
   EConnectionMethod,
   type EConnectionFamily,
@@ -6,7 +6,7 @@ import {
   type IManagedSqliteConfig,
   type ISSLConfig,
   type ISSHConfig,
-} from '~~/app/core/types/entities/connection.entity';
+} from '#shared/types/entities/connection.entity';
 import { assertSupportedConnectionRuntime } from '~~/server/infrastructure/nosql';
 import { createSshTunnel } from '~~/server/utils/ssh-tunnel';
 import {

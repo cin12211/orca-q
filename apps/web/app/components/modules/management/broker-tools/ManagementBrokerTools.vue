@@ -1,13 +1,13 @@
 <script setup lang="ts">
+import { DatabaseClientType } from '#shared/constants/database-client-type';
+import { TabViewType } from '#shared/types/entities/tab-view.entity';
 import {
   RABBIT_TAB_ICONS,
   useRabbitTabs,
 } from '~/components/modules/rabbitmq-workspace';
 import { useTabManagement } from '~/core/composables/useTabManagement';
 import { useWorkspaceConnectionRoute } from '~/core/composables/useWorkspaceConnectionRoute';
-import { DatabaseClientType } from '~/core/constants/database-client-type';
 import { useManagementConnectionStore } from '~/core/stores';
-import { TabViewType } from '~/core/types/entities/tab-view.entity';
 import { ManagementSidebarHeader } from '../shared';
 
 interface ToolItem {

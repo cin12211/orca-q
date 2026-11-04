@@ -1,12 +1,12 @@
 <script setup lang="ts">
 import { storeToRefs } from 'pinia';
 import { LoadingOverlay } from '#components';
+import { DatabaseClientType } from '#shared/constants/database-client-type';
 import type BaseDataGrid from '~/components/base/data-grid/BaseDataGrid.vue';
 import { HASH_INDEX_ID } from '~/components/base/data-grid/constants';
 import { buildDynamicRowData } from '~/components/base/data-grid/utils';
 import PreviewRelationTable from '~/components/modules/quick-query/previewRelationTable/PreviewRelationTable.vue';
 import { useHotkeys } from '~/core/composables/useHotKeys';
-import { DatabaseClientType } from '~/core/constants/database-client-type';
 import { exportData, ExportFormat } from '~/core/helpers/copyData';
 import { useSchemaStore } from '~/core/stores';
 import {

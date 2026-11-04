@@ -1,5 +1,5 @@
+import { DatabaseClientType } from '#shared/constants/database-client-type';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { DatabaseClientType } from '~/core/constants/database-client-type';
 import { createDatabaseAdapter } from '~~/server/infrastructure/driver';
 import type { IDatabaseAdapter } from '~~/server/infrastructure/driver';
 import {

@@ -1,4 +1,4 @@
-import { DatabaseClientType } from '~~/app/core/constants/database-client-type';
+import { DatabaseClientType } from '#shared/constants/database-client-type';
 
 const DEFAULT_PORTS: Partial<Record<DatabaseClientType, number>> = {
   [DatabaseClientType.POSTGRES]: 5432,

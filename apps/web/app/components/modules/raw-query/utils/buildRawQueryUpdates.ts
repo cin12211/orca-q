@@ -1,8 +1,8 @@
-import { DatabaseClientType } from '~/core/constants/database-client-type';
+import { DatabaseClientType } from '#shared/constants/database-client-type';
 import {
   buildDeleteStatements,
   buildUpdateStatements,
-} from '~/core/helpers/sql-mutation-statements';
+} from '#shared/helpers/sql-mutation-statements';
 import type { MappedRawColumn } from '../types';
 import {
   groupColumnsByTable,

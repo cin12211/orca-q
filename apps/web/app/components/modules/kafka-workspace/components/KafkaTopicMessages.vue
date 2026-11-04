@@ -1,4 +1,9 @@
 <script setup lang="ts">
+import type { BrokerMessage } from '#shared/types/broker-message.types';
+import type {
+  KafkaMessageStart,
+  KafkaPartitionCursor,
+} from '#shared/types/kafka.types';
 import {
   BrokerMessageDetail,
   BrokerMessageTable,
@@ -7,11 +12,6 @@ import {
 } from '~/components/modules/shared/message-broker';
 import { useCopyToClipboard } from '~/core/composables/useCopyToClipboard';
 import type { Connection } from '~/core/stores';
-import type { BrokerMessage } from '~/core/types/broker-message.types';
-import type {
-  KafkaMessageStart,
-  KafkaPartitionCursor,
-} from '~/core/types/kafka.types';
 import { KAFKA_PAGE_SIZE_OPTIONS, KAFKA_START_OPTIONS } from '../constants';
 import { kafkaService } from '../services';
 

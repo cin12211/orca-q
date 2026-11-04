@@ -1,5 +1,5 @@
+import { DatabaseClientType } from '#shared/constants/database-client-type';
 import { readFile, writeFile } from 'node:fs/promises';
-import { DatabaseClientType } from '~~/app/core/constants/database-client-type';
 import {
   getNativeBackupCapability,
   resolveNativeExportFormat,

@@ -20,7 +20,7 @@ vi.mock('vue-sonner', () => ({
   toast: mockToast,
 }));
 
-vi.mock('@/core/helpers/connection-helper', () => ({
+vi.mock('#shared/helpers/connection-helper', () => ({
   getConnectionParams: mockGetConnectionParams,
 }));
 

@@ -1,11 +1,11 @@
-import type { Diagnostic } from '@codemirror/lint';
-import type { EditorView } from '@codemirror/view';
 import {
   DatabaseClientType,
   isPostgresCompatibleClientType,
-} from '~/core/constants/database-client-type';
-import { DatabaseDriverNormalizerError as ErrorNormalizer } from '~/core/helpers';
-import type { DatabaseDriverError } from '~/core/types';
+} from '#shared/constants/database-client-type';
+import { DatabaseDriverNormalizerError as ErrorNormalizer } from '#shared/helpers';
+import type { DatabaseDriverError } from '#shared/types';
+import type { Diagnostic } from '@codemirror/lint';
+import type { EditorView } from '@codemirror/view';
 import { pushDiagnostics } from './diagnostic-lint';
 
 export interface ApplySqlErrorDiagnosticsOptions {

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { isElectron } from '~/core/helpers/environment';
+import { isElectron } from '#shared/helpers/environment';
 import {
   LocalStorageKey,
   LocalStorageManager,

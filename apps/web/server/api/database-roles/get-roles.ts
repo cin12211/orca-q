@@ -3,21 +3,24 @@
  * Fetches all database roles/users with metadata
  * Supports multiple database types via adapter pattern
  */
-import { DatabaseClientType } from '~~/app/core/constants/database-client-type';
-import type { DatabaseRole, GetDatabaseRolesRequest, DatabaseMetadataRequestParams } from '~~/app/core/types';
+import { DatabaseClientType } from '#shared/constants/database-client-type';
+import type {
+  DatabaseRole,
+  GetDatabaseRolesRequest,
+  DatabaseMetadataRequestParams,
+} from '#shared/types';
 import { createRoleAdapter } from '~~/server/infrastructure/database/adapters/database-roles';
 
-interface RequestBody extends GetDatabaseRolesRequest, DatabaseMetadataRequestParams {
+interface RequestBody
+  extends GetDatabaseRolesRequest,
+    DatabaseMetadataRequestParams {
   dbType?: DatabaseClientType;
 }
 
 export default defineEventHandler(async (event): Promise<DatabaseRole[]> => {
   const body: RequestBody = await readBody(event);
 
-  const adapter = await createRoleAdapter(
-    body.type || body.dbType,
-    body
-  );
+  const adapter = await createRoleAdapter(body.type || body.dbType, body);
 
   return adapter.getRoles();
 });

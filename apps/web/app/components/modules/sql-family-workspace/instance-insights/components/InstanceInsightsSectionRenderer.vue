@@ -1,16 +1,16 @@
 <script setup lang="ts">
-import {
-  buildDynamicColumnDefs,
-  buildDynamicRowData,
-  DYNAMIC_COLUMN_TYPES,
-} from '~/components/base/data-grid/utils';
-import { buildMappedColumnsFromKeys as buildColumnsFromKeys } from '~/core/helpers';
+import { buildMappedColumnsFromKeys as buildColumnsFromKeys } from '#shared/helpers';
 import type {
   InstanceInsightsActionState,
   InstanceInsightsSection,
   InstanceInsightsTable,
   InstanceInsightsTone,
-} from '~/core/types';
+} from '#shared/types';
+import {
+  buildDynamicColumnDefs,
+  buildDynamicRowData,
+  DYNAMIC_COLUMN_TYPES,
+} from '~/components/base/data-grid/utils';
 
 const props = defineProps<{
   section: InstanceInsightsSection | null;

@@ -2,7 +2,7 @@ import type {
   EConnectionMethod,
   ISSHConfig,
   ISSLConfig,
-} from '~/core/types/entities/connection.entity';
+} from './entities/connection.entity';
 
 export interface RedisDatabaseOption {
   index: number;

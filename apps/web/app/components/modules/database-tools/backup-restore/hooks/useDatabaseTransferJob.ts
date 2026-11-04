@@ -1,5 +1,5 @@
 import { useIntervalFn } from '@vueuse/core';
-import type { DatabaseTransferJobSnapshot } from '~/core/types';
+import type { DatabaseTransferJobSnapshot } from '#shared/types';
 
 function isSettled(snapshot: DatabaseTransferJobSnapshot | null) {
   return Boolean(

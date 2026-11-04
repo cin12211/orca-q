@@ -1,3 +1,4 @@
+import { HASH_INDEX_ID } from '#shared/constants/data-grid-row-metadata';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import {
   copyToClipboard,
@@ -6,7 +7,6 @@ import {
   copyRowsData,
   exportData,
 } from '@/core/helpers/copyData';
-import { HASH_INDEX_ID } from '~/core/constants/data-grid-row-metadata';
 
 describe('copyData helpers', () => {
   const originalNavigator = globalThis.navigator;

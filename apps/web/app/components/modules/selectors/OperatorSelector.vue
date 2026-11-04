@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { SelectSeparator } from '#components';
+import { separatorRow, operatorSets } from '#shared/constants';
+import { DatabaseClientType } from '#shared/constants/database-client-type';
 import type { AcceptableValue } from 'reka-ui';
-import { separatorRow, operatorSets } from '~/core/constants';
-import { DatabaseClientType } from '~/core/constants/database-client-type';
 
 const props = defineProps<{ dbType: DatabaseClientType; value?: string }>();
 

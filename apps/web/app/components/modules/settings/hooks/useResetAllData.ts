@@ -1,9 +1,9 @@
-import { isElectron } from '~/core/helpers/environment';
-import { idbReplaceAll } from '~/core/persist/adapters/idb/primitives';
+import { isElectron } from '#shared/helpers/environment';
 import {
   PERSIST_COLLECTIONS,
   type PersistCollection,
-} from '~/core/storage/idbRegistry';
+} from '#shared/storage/idbRegistry';
+import { idbReplaceAll } from '~/core/persist/adapters/idb/primitives';
 
 async function clearBrowserPersistedData(): Promise<void> {
   await Promise.all(

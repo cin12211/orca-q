@@ -1,10 +1,10 @@
-import type { FieldDef } from 'pg';
-import type { Schema } from '~/core/stores';
 import type {
   DatabaseField,
   TableDetailMetadata,
   SchemaColumnMetadata as ColumnShortMetadata,
-} from '~/core/types';
+} from '#shared/types';
+import type { FieldDef } from 'pg';
+import type { Schema } from '~/core/stores';
 import type { MappedRawColumn } from '../types';
 import { inferFieldMetadataFromStatement } from './inferFieldMetadataFromStatement';
 import { findTableInfoByName, type ResolvedTableInfo } from './sqlMetadata';

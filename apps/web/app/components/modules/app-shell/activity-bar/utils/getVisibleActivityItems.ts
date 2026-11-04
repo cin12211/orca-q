@@ -1,5 +1,5 @@
-import type { ConnectionActivityItem } from '~/core/constants/connection-capabilities';
-import { DatabaseClientType } from '~/core/constants/database-client-type';
+import type { ConnectionActivityItem } from '#shared/constants/connection-capabilities';
+import { DatabaseClientType } from '#shared/constants/database-client-type';
 import {
   ACTIVITY_ITEM_MAP,
   AGENT_HIDDEN_CONNECTION_TYPES,

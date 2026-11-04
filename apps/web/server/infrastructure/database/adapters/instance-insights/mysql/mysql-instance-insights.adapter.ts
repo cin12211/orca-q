@@ -1,10 +1,10 @@
-import { createError } from 'h3';
-import { DatabaseClientType } from '~~/app/core/constants/database-client-type';
+import { DatabaseClientType } from '#shared/constants/database-client-type';
 import type {
   InstanceActionResponse,
   InstanceInsightsSection,
   InstanceInsightsView,
-} from '~~/app/core/types';
+} from '#shared/types';
+import { createError } from 'h3';
 import type { IDatabaseAdapter } from '~~/server/infrastructure/driver';
 import { getDatabaseSource } from '~~/server/infrastructure/driver/db-connection';
 import { createDatabaseHttpError } from '../../shared';

@@ -1,9 +1,9 @@
 <script setup lang="ts">
+import type { BrokerMessage } from '#shared/types/broker-message.types';
 import VueJsonPretty from 'vue-json-pretty';
 import type { JSONDataType } from 'vue-json-pretty/types/utils';
 import { useCopyToClipboard } from '~/core/composables/useCopyToClipboard';
 import { useVueJsonPrettyTheme } from '~/core/composables/useVueJsonPrettyTheme';
-import type { BrokerMessage } from '~/core/types/broker-message.types';
 import { decodeBrokerPayload, formatBytes, formatDateTime } from '../utils';
 import BrokerKeyValueTable from './BrokerKeyValueTable.vue';
 

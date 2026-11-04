@@ -1,7 +1,7 @@
+import { ViewSchemaEnum } from '#shared/types';
 import { useWorkspaceConnectionRoute } from '~/core/composables/useWorkspaceConnectionRoute';
 import { useSchemaStore } from '~/core/stores/useSchemaStore';
 import { TabViewType, useTabViewsStore } from '~/core/stores/useTabViewsStore';
-import { ViewSchemaEnum } from '~/core/types';
 import type {
   CommandItem,
   CommandProvider,

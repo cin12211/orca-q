@@ -9,11 +9,11 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '#components';
+import { DEFAULT_DEBOUNCE_INPUT } from '#shared/constants';
 import debounce from 'lodash-es/debounce';
 import { Checkbox } from '~/components/ui/checkbox';
 import { Input } from '~/components/ui/input';
 import { useHotkeys } from '~/core/composables/useHotKeys';
-import { DEFAULT_DEBOUNCE_INPUT } from '~/core/constants';
 import { getPlatformStorage } from '~/core/persist/storage-adapter';
 import { MongoFilterMode } from '../types';
 import type {

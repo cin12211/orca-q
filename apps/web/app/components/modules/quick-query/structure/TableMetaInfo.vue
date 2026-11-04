@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import { getConnectionParams } from '@/core/helpers/connection-helper';
+import { getConnectionParams } from '#shared/helpers/connection-helper';
+import type { TableMeta } from '#shared/types';
 import { Alert, AlertDescription } from '~/components/ui/alert';
 import { Badge } from '~/components/ui/badge';
 import { Button } from '~/components/ui/button';
 import { useManagementConnectionStore } from '~/core/stores';
-import type { TableMeta } from '~/core/types';
 
 const props = defineProps<{
   schema: string;

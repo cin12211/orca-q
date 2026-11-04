@@ -1,6 +1,5 @@
-import { getBrokerConnectionPayload } from '~/core/helpers/broker-connection';
-import type { Connection } from '~/core/stores';
-import type { BrokerMessage } from '~/core/types/broker-message.types';
+import { getBrokerConnectionPayload } from '#shared/helpers/broker-connection';
+import type { BrokerMessage } from '#shared/types/broker-message.types';
 import type {
   RabbitConnectionDetail,
   RabbitConnectionsSnapshot,
@@ -26,7 +25,8 @@ import type {
   RabbitVhostInput,
   RabbitVhostLimitName,
   RabbitVhostSummary,
-} from '~/core/types/rabbitmq.types';
+} from '#shared/types/rabbitmq.types';
+import type { Connection } from '~/core/stores';
 
 const post = <T>(
   path: string,

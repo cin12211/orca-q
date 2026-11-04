@@ -1,4 +1,4 @@
-import { DatabaseClientType } from '~/core/constants/database-client-type';
+import { DatabaseClientType } from '../constants/database-client-type';
 import { baseDialect } from './dialects/base.dialect';
 import { duckdbDialect } from './dialects/duckdb.dialect';
 import { mssqlDialect } from './dialects/mssql.dialect';

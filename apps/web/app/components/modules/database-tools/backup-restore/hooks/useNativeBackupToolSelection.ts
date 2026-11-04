@@ -2,7 +2,7 @@ import type {
   NativeBackupRuntimeSelection,
   NativeBackupRuntimeToolPath,
   NativeBackupToolName,
-} from '~/core/types';
+} from '#shared/types';
 import type { BackupRestoreRuntimeToolSelection } from '../types/backup-restore.types';
 
 function createDefaultSelection(): BackupRestoreRuntimeToolSelection {

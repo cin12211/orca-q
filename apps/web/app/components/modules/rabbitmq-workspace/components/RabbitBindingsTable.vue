@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { RabbitBinding } from '#shared/types/rabbitmq.types';
 import {
   Table,
   TableBody,
@@ -7,7 +8,6 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import type { RabbitBinding } from '~/core/types/rabbitmq.types';
 import { RABBIT_DEFAULT_EXCHANGE_LABEL } from '../constants';
 
 defineProps<{

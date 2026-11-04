@@ -1,7 +1,7 @@
+import { OperatorSet } from '#shared/constants';
+import { DatabaseClientType } from '#shared/constants/database-client-type';
+import { formatWhereClause } from '#shared/helpers/sql-where-clause';
 import { describe, expect, it } from 'vitest';
-import { OperatorSet } from '~/core/constants';
-import { DatabaseClientType } from '~/core/constants/database-client-type';
-import { formatWhereClause } from '~/core/helpers/sql-where-clause';
 
 const filter = (fieldName: string, operator: OperatorSet, search: string) => ({
   isSelect: true,

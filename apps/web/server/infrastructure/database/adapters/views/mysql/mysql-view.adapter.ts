@@ -1,4 +1,4 @@
-import { DatabaseClientType } from '~~/app/core/constants/database-client-type';
+import { DatabaseClientType } from '#shared/constants/database-client-type';
 import { BaseUnsupportedViewAdapter } from '../shared/base-unsupported-view.adapter';
 import type { DatabaseViewAdapterParams } from '../types';
 

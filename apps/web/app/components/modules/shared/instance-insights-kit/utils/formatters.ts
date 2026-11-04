@@ -1,7 +1,7 @@
 import {
   formatBytes as formatCoreBytes,
   formatNumber as formatCoreNumber,
-} from '~/core/helpers';
+} from '#shared/helpers';
 
 export const formatNumber = (value: number | null | undefined) => {
   return formatCoreNumber(value ?? 0);

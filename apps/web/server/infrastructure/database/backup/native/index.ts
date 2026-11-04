@@ -2,7 +2,7 @@ import { applyPlatformPathFallbacks } from './constants';
 
 applyPlatformPathFallbacks();
 
-export type { NativeBackupToolName } from '~~/app/core/types';
+export type { NativeBackupToolName } from '#shared/types';
 export type {
   NativeBackupCapability,
   NativeBackupFormatOption,

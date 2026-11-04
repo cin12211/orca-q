@@ -2,8 +2,8 @@
  * API: Get Schemas
  * Fetches all schemas in the connected database
  */
-import { DatabaseClientType } from '~~/app/core/constants/database-client-type';
-import type { SchemaInfo, DatabaseMetadataRequestParams } from '~~/app/core/types';
+import { DatabaseClientType } from '#shared/constants/database-client-type';
+import type { SchemaInfo, DatabaseMetadataRequestParams } from '#shared/types';
 import { createRoleAdapter } from '~~/server/infrastructure/database/adapters/database-roles';
 
 interface RequestBody extends DatabaseMetadataRequestParams {
@@ -20,10 +20,7 @@ export default defineEventHandler(async (event): Promise<SchemaInfo[]> => {
     });
   }
 
-  const adapter = await createRoleAdapter(
-    body.type || body.dbType,
-    body
-  );
+  const adapter = await createRoleAdapter(body.type || body.dbType, body);
 
   return adapter.getSchemas();
 });

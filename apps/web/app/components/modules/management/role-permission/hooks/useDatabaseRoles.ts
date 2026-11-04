@@ -1,5 +1,4 @@
-import { getConnectionParams } from '@/core/helpers/connection-helper';
-import { type Connection } from '~/core/stores';
+import { getConnectionParams } from '#shared/helpers/connection-helper';
 import type {
   DatabaseRole,
   RolePermissions,
@@ -13,7 +12,8 @@ import type {
   SchemaObjects,
   BulkGrantRequest,
   BulkGrantResponse,
-} from '~/core/types';
+} from '#shared/types';
+import { type Connection } from '~/core/stores';
 
 /**
  * Composable for managing database roles data

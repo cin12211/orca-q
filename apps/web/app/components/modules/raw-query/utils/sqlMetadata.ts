@@ -1,5 +1,5 @@
+import type { TableDetailMetadata } from '#shared/types';
 import type { Schema } from '~/core/stores';
-import type { TableDetailMetadata } from '~/core/types';
 
 export type ResolvedTableInfo = {
   schemaName: string;

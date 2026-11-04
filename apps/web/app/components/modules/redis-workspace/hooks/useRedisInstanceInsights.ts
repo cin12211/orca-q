@@ -1,7 +1,5 @@
 import { useIntervalFn } from '@vueuse/core';
-import { toast } from 'vue-sonner';
-import { getConnectionParams } from '~/core/helpers/connection-helper';
-import type { Connection } from '~/core/stores';
+import { getConnectionParams } from '#shared/helpers/connection-helper';
 import type {
   InstanceActionResponse,
   RedisClientInsight,
@@ -13,7 +11,9 @@ import type {
   RedisPerformanceInsight,
   RedisPersistenceInsight,
   RedisReplicationInsight,
-} from '~/core/types';
+} from '#shared/types';
+import { toast } from 'vue-sonner';
+import type { Connection } from '~/core/stores';
 
 export type RedisInsightsSection =
   | 'overview'

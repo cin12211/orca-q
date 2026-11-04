@@ -1,4 +1,3 @@
-import type { Admin, ClusterMetadata } from '@platformatic/kafka';
 import type {
   KafkaClusterOverview,
   KafkaConfigEntry,
@@ -6,7 +5,8 @@ import type {
   KafkaTopicConsumerGroup,
   KafkaTopicDetail,
   KafkaTopicSummary,
-} from '~~/app/core/types/kafka.types';
+} from '#shared/types/kafka.types';
+import type { Admin, ClusterMetadata } from '@platformatic/kafka';
 import {
   BrokerConnectionError,
   type BrokerConnectionInput,

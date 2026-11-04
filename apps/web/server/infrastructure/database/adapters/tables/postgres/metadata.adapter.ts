@@ -1,5 +1,5 @@
+import type { TableMeta, TableOverviewMetadata } from '#shared/types';
 import { createError } from 'h3';
-import type { TableMeta, TableOverviewMetadata } from '~~/app/core/types';
 import type { IDatabaseAdapter } from '~~/server/infrastructure/driver';
 
 export class PostgresTableMetadataAdapter {

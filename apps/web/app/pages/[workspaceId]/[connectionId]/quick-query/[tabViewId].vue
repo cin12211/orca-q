@@ -7,13 +7,13 @@ import {
   LazyTableOverview,
   LazyViewOverview,
 } from '#components';
-import { DEFAULT_MAX_KEEP_ALIVE } from '~/core/constants';
-import { isSqlFamilyConnection } from '~/core/constants/connection-capabilities';
-import { DatabaseClientType } from '~/core/constants/database-client-type';
+import { DEFAULT_MAX_KEEP_ALIVE } from '#shared/constants';
+import { isSqlFamilyConnection } from '#shared/constants/connection-capabilities';
+import { DatabaseClientType } from '#shared/constants/database-client-type';
+import { EConnectionMethod } from '#shared/types/entities/connection.entity';
 import { useManagementConnectionStore } from '~/core/stores/managementConnectionStore';
 import { useTabViewsStore } from '~/core/stores/useTabViewsStore';
 import { TabViewType } from '~/core/stores/useTabViewsStore';
-import { EConnectionMethod } from '~/core/types/entities/connection.entity';
 
 definePageMeta({
   keepalive: {

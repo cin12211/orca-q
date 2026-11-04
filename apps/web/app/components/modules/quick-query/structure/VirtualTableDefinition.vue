@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { getConnectionParams } from '@/core/helpers/connection-helper';
+import { getConnectionParams } from '#shared/helpers/connection-helper';
+import type { ViewDefinitionResponse } from '#shared/types';
 import { formatStatementSql } from '~/components/base/code-editor/utils';
 import { useManagementConnectionStore } from '~/core/stores';
-import type { ViewDefinitionResponse } from '~/core/types';
 
 const props = defineProps<{
   schema: string;

@@ -1,10 +1,13 @@
-import type { ISSLConfig, ISSHConfig } from '~~/app/components/modules/connection';
-import { DatabaseClientType } from '~~/app/core/constants/database-client-type';
+import { DatabaseClientType } from '#shared/constants/database-client-type';
 import type {
   ImportOptions,
   NativeBackupRuntimeSelection,
   StartDatabaseTransferResponse,
-} from '~~/app/core/types';
+} from '#shared/types';
+import type {
+  ISSLConfig,
+  ISSHConfig,
+} from '#shared/types/entities/connection.entity';
 import { createDatabaseHttpError } from '~~/server/infrastructure/database/adapters/shared/error';
 import { startNativeImportJob } from '~~/server/infrastructure/database/backup/native-backup-jobs';
 

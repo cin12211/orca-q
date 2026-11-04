@@ -1,3 +1,4 @@
+import type { PersistCollection } from '#shared/storage/idbRegistry';
 import { describe, expect, it } from 'vitest';
 import {
   createEmptyPersistData,
@@ -10,7 +11,6 @@ import {
   snapshotLocalStorage,
   summarizeBackupData,
 } from '~/components/modules/settings/hooks/backupData';
-import type { PersistCollection } from '~/core/storage/idbRegistry';
 
 function createPersist(): Record<PersistCollection, unknown[]> {
   return {

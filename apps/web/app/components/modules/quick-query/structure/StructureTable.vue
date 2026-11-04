@@ -1,18 +1,18 @@
 <script setup lang="ts">
-import { getConnectionParams } from '@/core/helpers/connection-helper';
+import {
+  buildMappedColumnsFromKeys,
+  buildMappedColumnsFromRows,
+} from '#shared/helpers';
+import { getConnectionParams } from '#shared/helpers/connection-helper';
+import type { ViewMeta } from '#shared/types';
 import {
   buildDynamicColumnDefs,
   buildDynamicRowData,
   DYNAMIC_COLUMN_TYPES,
 } from '~/components/base/data-grid/utils';
 import { Badge } from '~/components/ui/badge';
-import {
-  buildMappedColumnsFromKeys,
-  buildMappedColumnsFromRows,
-} from '~/core/helpers';
 import { useManagementConnectionStore } from '~/core/stores';
 import { useSchemaStore } from '~/core/stores/useSchemaStore';
-import type { ViewMeta } from '~/core/types';
 import IndexesTab from './IndexesTab.vue';
 import RlsTab from './RlsTab.vue';
 import RulesTab from './RulesTab.vue';

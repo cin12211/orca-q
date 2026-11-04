@@ -1,9 +1,12 @@
-import type { ISSHConfig, ISSLConfig } from '~~/app/components/modules/connection';
-import { DatabaseClientType } from '~~/app/core/constants/database-client-type';
+import { DatabaseClientType } from '#shared/constants/database-client-type';
+import type {
+  ISSHConfig,
+  ISSLConfig,
+} from '#shared/types/entities/connection.entity';
 import type {
   EConnectionProviderKind,
   IManagedSqliteConfig,
-} from '~~/app/core/types/entities/connection.entity';
+} from '#shared/types/entities/connection.entity';
 
 export { DatabaseClientType };
 

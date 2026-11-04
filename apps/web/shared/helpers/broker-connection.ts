@@ -1,4 +1,4 @@
-import type { Connection } from '~/core/stores';
+import type { Connection } from '../types/entities/connection.entity';
 
 /** Connection fields sent to the /api/rabbitmq and /api/kafka routes. */
 export function getBrokerConnectionPayload(connection: Connection) {

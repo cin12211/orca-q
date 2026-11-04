@@ -1,4 +1,8 @@
 import { storeToRefs } from 'pinia';
+import {
+  DatabaseClientType,
+  isPostgresCompatibleClientType,
+} from '#shared/constants/database-client-type';
 import { acceptCompletion, startCompletion } from '@codemirror/autocomplete';
 import { sql } from '@codemirror/lang-sql';
 import { lintGutter } from '@codemirror/lint';
@@ -25,10 +29,6 @@ import {
   sqlParserConfigField,
   updateSqlParserConfigEffect,
 } from '~/components/base/code-editor/utils';
-import {
-  DatabaseClientType,
-  isPostgresCompatibleClientType,
-} from '~/core/constants/database-client-type';
 import { useSchemaStore } from '~/core/stores';
 import type { Connection } from '~/core/stores';
 import type { EditorCursor } from '../types';

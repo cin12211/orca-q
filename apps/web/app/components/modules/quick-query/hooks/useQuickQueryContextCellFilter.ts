@@ -1,9 +1,9 @@
-import { OperatorSet } from '~/core/constants';
+import { OperatorSet } from '#shared/constants';
 import {
   normalizeFilterSearchValue,
   SqlFilterValueType,
   type FilterSchema,
-} from '~/core/helpers/sql-where-clause';
+} from '#shared/helpers/sql-where-clause';
 import type QuickQueryFilter from '../quick-query-filter/QuickQueryFilter.vue';
 import type QuickQueryTable from '../quick-query-table/QuickQueryTable.vue';
 import type { QuickQueryColumnType } from '../utils/quickQueryTable';

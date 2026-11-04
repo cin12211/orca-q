@@ -1,5 +1,5 @@
+import { DatabaseClientType } from '#shared/constants/database-client-type';
 import QueryStream from 'pg-query-stream';
-import { DatabaseClientType } from '~~/app/core/constants/database-client-type';
 import type { IDatabaseAdapter } from '~~/server/infrastructure/driver';
 import { withDuckDbSandbox } from '~~/server/infrastructure/driver/duckdb.adapter';
 import { runMssqlRequest } from '~~/server/infrastructure/driver/mssql.adapter';

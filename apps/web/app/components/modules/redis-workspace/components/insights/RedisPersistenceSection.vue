@@ -1,6 +1,6 @@
 <script setup lang="ts">
+import type { RedisPersistenceInsight } from '#shared/types/instance-insights.types';
 import { InsightKpiCard } from '~/components/modules/shared/instance-insights-kit';
-import type { RedisPersistenceInsight } from '~/core/types/instance-insights.types';
 
 defineProps<{
   persistence: RedisPersistenceInsight | undefined;

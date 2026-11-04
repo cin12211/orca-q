@@ -1,3 +1,4 @@
+import type { ReservedTableSchemas } from '#shared/types/database-tables.types';
 import type { ColDef } from 'ag-grid-community';
 import DataGridRelationCell from '~/components/base/data-grid/components/cell-renderers/DataGridRelationCell.vue';
 import DataGridKeyHeader from '~/components/base/data-grid/headers/DataGridKeyHeader.vue';
@@ -7,7 +8,6 @@ import {
   formatGridCellValue,
   type RowData,
 } from '~/components/base/data-grid/utils';
-import type { ReservedTableSchemas } from '~/core/types/database-tables.types';
 import type { MappedRawColumn } from '../types';
 import { isRelationColumn } from './relationDetection';
 

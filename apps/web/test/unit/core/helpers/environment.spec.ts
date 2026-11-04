@@ -1,6 +1,6 @@
+import * as env from '#shared/helpers/environment';
+import { isDuckDbUnsupportedPlatform } from '#shared/helpers/environment';
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import * as env from '@/core/helpers/environment';
-import { isDuckDbUnsupportedPlatform } from '~/core/helpers/environment';
 
 const setNavigator = (value: any) => {
   Object.defineProperty(globalThis, 'navigator', {

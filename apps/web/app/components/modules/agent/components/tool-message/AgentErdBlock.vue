@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
+import type { AgentRenderErdResult } from '#shared/types/agent.types';
 import { Background } from '@vue-flow/background';
 import { VueFlow } from '@vue-flow/core';
 import '@vue-flow/core/dist/style.css';
@@ -19,7 +20,6 @@ import {
 import '~/components/modules/erd-diagram/styles/vue-flow.css';
 import type { MatrixTablePosition } from '~/components/modules/erd-diagram/types';
 import { buildFullERDDiagram } from '~/components/modules/erd-diagram/utils/buildFullERDDiagram';
-import type { AgentRenderErdResult } from '../../types';
 import { mapAgentErdToTableMetadata } from '../../utils/mapAgentErdToTableMetadata';
 
 const props = defineProps<{

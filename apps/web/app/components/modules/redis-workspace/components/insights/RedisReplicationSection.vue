@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { RedisReplicationInsight } from '#shared/types/instance-insights.types';
 import { InsightKpiCard } from '~/components/modules/shared/instance-insights-kit';
 import {
   Table,
@@ -8,7 +9,6 @@ import {
   TableHeader,
   TableRow,
 } from '~/components/ui/table';
-import type { RedisReplicationInsight } from '~/core/types/instance-insights.types';
 
 defineProps<{
   replication: RedisReplicationInsight | undefined;

@@ -1,5 +1,8 @@
+import {
+  normalizeMcpSession,
+  type McpSession,
+} from '#shared/persist/normalize';
 import type { McpSessionStorageApi } from '~/core/storage/types';
-import { normalizeMcpSession, type McpSession } from '../../normalize';
 import {
   persistDelete,
   persistGetAll,

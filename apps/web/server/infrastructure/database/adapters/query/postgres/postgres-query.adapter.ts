@@ -1,13 +1,13 @@
-import { createError, type H3Event } from 'h3';
-import QueryStream from 'pg-query-stream';
-import { DatabaseClientType } from '~~/app/core/constants/database-client-type';
-import { DatabaseDriverNormalizerError as ErrorNormalizer } from '~~/app/core/helpers';
+import { DatabaseClientType } from '#shared/constants/database-client-type';
+import { DatabaseDriverNormalizerError as ErrorNormalizer } from '#shared/helpers';
 import type {
   QueryResult,
   RawQueryResultWithMetadata,
   DatabaseField,
   DatabaseDriverError,
-} from '~~/app/core/types';
+} from '#shared/types';
+import { createError, type H3Event } from 'h3';
+import QueryStream from 'pg-query-stream';
 import { BaseDomainAdapter } from '../../shared';
 import type {
   IDatabaseQueryAdapter,

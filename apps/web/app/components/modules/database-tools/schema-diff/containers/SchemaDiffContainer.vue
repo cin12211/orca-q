@@ -1,6 +1,6 @@
 <script setup lang="ts">
+import type { Connection } from '#shared/types/entities/connection.entity';
 import { useManagementConnectionStore } from '~/core/stores/managementConnectionStore';
-import type { Connection } from '~/core/types/entities/connection.entity';
 import SchemaDiffConnectionSelector from '../components/SchemaDiffConnectionSelector.vue';
 import SchemaDiffSqlPanel from '../components/SchemaDiffSqlPanel.vue';
 import SchemaDiffTree from '../components/SchemaDiffTree.vue';

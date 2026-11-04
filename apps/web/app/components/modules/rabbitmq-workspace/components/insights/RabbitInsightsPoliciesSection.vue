@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import { useBrokerRequest } from '~/components/modules/shared/message-broker';
-import type { Connection } from '~/core/stores';
 import type {
   RabbitPolicy,
   RabbitPolicyKind,
-} from '~/core/types/rabbitmq.types';
+} from '#shared/types/rabbitmq.types';
+import { useBrokerRequest } from '~/components/modules/shared/message-broker';
+import type { Connection } from '~/core/stores';
 import { useRabbitChange, useRabbitInsightsRefresh } from '../../hooks';
 import { rabbitmqService } from '../../services';
 import RabbitConfirmDialog from './RabbitConfirmDialog.vue';

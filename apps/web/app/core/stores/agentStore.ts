@@ -1,6 +1,6 @@
 import { createGlobalState, useDebounceFn } from '@vueuse/core';
 import { computed, ref, watch } from 'vue';
-import type { AgentHistorySession } from '~/components/modules/agent/types';
+import type { AgentHistorySession } from '#shared/types/agent.types';
 import {
   hasIncompleteDbAgentMessages,
   sanitizeDbAgentMessages,

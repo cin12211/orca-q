@@ -1,6 +1,9 @@
-import { normalizeMcpSession, type McpSession } from '~/core/persist/normalize';
+import {
+  normalizeMcpSession,
+  type McpSession,
+} from '#shared/persist/normalize';
+import { MCP_SESSION_IDB } from '#shared/storage/idbRegistry';
 import { IDBStorage } from '../base/IDBStorage';
-import { MCP_SESSION_IDB } from '../idbRegistry';
 
 /** Web fallback only; the MCP server itself runs in the desktop app. */
 class McpSessionStorage extends IDBStorage<McpSession> {

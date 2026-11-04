@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { AgentVisualizeTableResult } from '#shared/types/agent.types';
 import type { EChartsOption } from 'echarts';
 import { BarChart, LineChart, PieChart, ScatterChart } from 'echarts/charts';
 import {
@@ -9,7 +10,6 @@ import {
 import { use as useECharts } from 'echarts/core';
 import { CanvasRenderer } from 'echarts/renderers';
 import VChart from 'vue-echarts';
-import type { AgentVisualizeTableResult } from '../../types';
 import AgentToolSqlPreview from './AgentToolSqlPreview.vue';
 
 useECharts([

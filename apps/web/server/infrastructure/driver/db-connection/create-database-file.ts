@@ -1,12 +1,12 @@
-import { createError } from 'h3';
-import { existsSync, rmSync, statSync, writeFileSync } from 'node:fs';
-import { basename, extname, join } from 'node:path';
-import { DatabaseClientType } from '~~/app/core/constants/database-client-type';
+import { DatabaseClientType } from '#shared/constants/database-client-type';
 import {
   getDatabaseFileOptionFields,
   getDefaultDatabaseFileOptions,
   type DatabaseFileOptions,
-} from '~~/app/core/constants/database-file-options';
+} from '#shared/constants/database-file-options';
+import { createError } from 'h3';
+import { existsSync, rmSync, statSync, writeFileSync } from 'node:fs';
+import { basename, extname, join } from 'node:path';
 import { isDesktopRuntime } from '~~/server/infrastructure/mcp/desktop-store';
 import { createDuckDbFile } from '../duckdb.adapter';
 import { SqliteAdapter } from '../sqlite.adapter';

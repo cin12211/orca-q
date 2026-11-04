@@ -1,10 +1,10 @@
-import type { ISSLConfig, ISSHConfig } from '~/components/modules/connection';
-import type { DatabaseClientType } from '~/core/constants/database-client-type';
+import type { DatabaseClientType } from '../constants/database-client-type';
 import type {
   SchemaColumnMetadata,
   SchemaForeignKeyMetadata,
   DatabaseMetadataRequestParams,
-} from '~/core/types';
+} from './database-schemas.types';
+import type { ISSLConfig, ISSHConfig } from './entities/connection.entity';
 
 // ─── Status ────────────────────────────────────────────────────────────────────
 

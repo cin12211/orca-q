@@ -1,6 +1,6 @@
+import type { MongoOverviewInsight } from '#shared/types/instance-insights.types';
 import { describe, expect, it } from 'vitest';
 import { computeMongoOpcounterRates } from '~/components/modules/mongodb-workspace/utils';
-import type { MongoOverviewInsight } from '~/core/types/instance-insights.types';
 
 function sample(
   capturedAt: string,

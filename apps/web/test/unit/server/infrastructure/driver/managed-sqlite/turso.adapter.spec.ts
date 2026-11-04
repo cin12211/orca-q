@@ -1,5 +1,5 @@
+import { EManagedSqliteProvider } from '#shared/types/entities/connection.entity';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { EManagedSqliteProvider } from '~/core/types/entities/connection.entity';
 import { TursoAdapter } from '~~/server/infrastructure/driver/managed-sqlite/turso.adapter';
 
 const { createClientMock, executeMock, closeMock } = vi.hoisted(() => ({

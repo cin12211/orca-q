@@ -1,6 +1,6 @@
+import { DatabaseClientType } from '#shared/constants/database-client-type';
+import type { DatabaseMetadataRequestParams } from '#shared/types';
 import { defineEventHandler, readBody, createError } from 'h3';
-import { DatabaseClientType } from '~~/app/core/constants/database-client-type';
-import type { DatabaseMetadataRequestParams } from '~~/app/core/types';
 import { createQueryAdapter } from '~~/server/infrastructure/database/adapters/query';
 
 interface RequestBody extends DatabaseMetadataRequestParams {
@@ -24,10 +24,7 @@ export default defineEventHandler(async event => {
     });
   }
 
-  const adapter = await createQueryAdapter(
-    body.type,
-    body
-  );
+  const adapter = await createQueryAdapter(body.type, body);
 
   return await adapter.rawExecuteStream(event, body.query, body.params);
 });

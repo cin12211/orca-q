@@ -1,9 +1,9 @@
+import type { MappedRawColumn } from '#shared/types/mapped-column.types';
 import { describe, expect, it, vi } from 'vitest';
 import { buildRawQueryUpdates } from '~/components/modules/raw-query/utils/buildRawQueryUpdates';
 import type { RawQueryEditedCell } from '~/components/modules/raw-query/utils/buildRawQueryUpdates';
-import type { MappedRawColumn } from '~/core/types/mapped-column.types';
 
-vi.mock('~/core/sql-dialect', () => ({
+vi.mock('#shared/sql-dialect', () => ({
   getSqlDialect: () => ({
     toLiteral: (v: unknown) => {
       if (v === null || v === undefined) return 'NULL';

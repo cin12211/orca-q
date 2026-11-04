@@ -1,9 +1,9 @@
-import { describe, expect, it } from 'vitest';
 import {
   EConnectionMethod,
   EKafkaSaslMechanism,
   ESSLMode,
-} from '~/core/types/entities/connection.entity';
+} from '#shared/types/entities/connection.entity';
+import { describe, expect, it } from 'vitest';
 import {
   BrokerConnectionError,
   isBrokerTlsEnabled,

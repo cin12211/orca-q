@@ -1,10 +1,10 @@
-import { defineEventHandler, readBody, createError } from 'h3';
+import { DatabaseClientType } from '#shared/constants/database-client-type';
 import {
   generateRoutineUpdateSQL,
   getRoutineDefinitionType,
-} from '~~/app/components/modules/management/schemas/utils';
-import { DatabaseClientType } from '~~/app/core/constants/database-client-type';
-import type { DatabaseMetadataRequestParams } from '~~/app/core/types';
+} from '#shared/helpers/generateFunctionSQL';
+import type { DatabaseMetadataRequestParams } from '#shared/types';
+import { defineEventHandler, readBody, createError } from 'h3';
 import { createFunctionAdapter } from '~~/server/infrastructure/database/adapters/functions';
 
 export default defineEventHandler(async event => {
@@ -32,10 +32,7 @@ export default defineEventHandler(async event => {
     });
   }
 
-  const adapter = await createFunctionAdapter(
-    body.type,
-    body
-  );
+  const adapter = await createFunctionAdapter(body.type, body);
 
   return await adapter.updateFunction(updateSql);
 });

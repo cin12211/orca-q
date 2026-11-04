@@ -1,7 +1,7 @@
 <script setup lang="ts">
+import { formatBytes } from '#shared/helpers/bytes-formatter';
+import type { RedisKeyListItem } from '#shared/types/redis-workspace.types';
 import { DYNAMIC_COLUMN_TYPES } from '~/components/base/data-grid/utils';
-import { formatBytes } from '~/core/helpers/bytes-formatter';
-import type { RedisKeyListItem } from '~/core/types/redis-workspace.types';
 import {
   buildRedisGroupOverviewColumnDefs,
   buildRedisGroupOverviewRows,

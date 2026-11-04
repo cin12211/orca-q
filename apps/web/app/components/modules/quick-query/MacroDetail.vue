@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { getConnectionParams } from '@/core/helpers/connection-helper';
+import { getConnectionParams } from '#shared/helpers/connection-helper';
 import { useManagementConnectionStore } from '~/core/stores/managementConnectionStore';
 
 const props = defineProps<{

@@ -1,12 +1,12 @@
 import { computed, ref, type Ref } from 'vue';
+import {
+  isJsonColumnType,
+  isStructuredColumnType,
+} from '#shared/helpers/sql-column-type';
 import type { CellValueChangedEvent } from 'ag-grid-community';
 import { NEW_ROW_FLAG_ID } from '~/components/base/data-grid/constants';
 import type { RowData } from '~/components/base/data-grid/utils';
 import { normalizeEditedCellChange } from '~/core/helpers/cell-value';
-import {
-  isJsonColumnType,
-  isStructuredColumnType,
-} from '~/core/helpers/sql-column-type';
 import {
   type QuickQueryColumnType,
   type QuickQueryEditedCell,

@@ -1,5 +1,7 @@
+import { getConnectionParams } from '#shared/helpers/connection-helper';
+import { ViewSchemaEnum } from '#shared/types';
+import type { ViewDefinitionResponse } from '#shared/types';
 import { toast } from 'vue-sonner';
-import { getConnectionParams } from '@/core/helpers/connection-helper';
 import {
   generateDropViewSQL,
   generateRenameViewSQL,
@@ -8,8 +10,6 @@ import {
 } from '~/components/modules/management/schemas/utils/generateViewSQL';
 import { QuickQueryMutationAction } from '~/components/modules/quick-query/constants';
 import { TabViewType } from '~/core/stores/useTabViewsStore';
-import { ViewSchemaEnum } from '~/core/types';
-import type { ViewDefinitionResponse } from '~/core/types';
 import type { ContextMenuState, SchemaContextMenuOptions } from '../types';
 import type { useContextMenuHelpers } from '../useContextMenuHelpers';
 

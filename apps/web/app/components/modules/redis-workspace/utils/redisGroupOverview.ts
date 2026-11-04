@@ -1,12 +1,12 @@
+import { buildMappedColumnsFromKeys } from '#shared/helpers';
+import { formatBytes } from '#shared/helpers/bytes-formatter';
+import type { RedisKeyListItem } from '#shared/types/redis-workspace.types';
 import type { ColDef, ValueFormatterParams } from 'ag-grid-community';
 import {
   buildDynamicColumnDefs,
   buildDynamicRowData,
   type RowData,
 } from '~/components/base/data-grid/utils';
-import { buildMappedColumnsFromKeys } from '~/core/helpers';
-import { formatBytes } from '~/core/helpers/bytes-formatter';
-import type { RedisKeyListItem } from '~/core/types/redis-workspace.types';
 
 export const REDIS_GROUP_OVERVIEW_COLUMN_LABELS = {
   key: 'Key',

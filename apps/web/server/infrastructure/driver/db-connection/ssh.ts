@@ -1,9 +1,9 @@
-import { DatabaseClientType } from '~~/app/core/constants/database-client-type';
+import { DatabaseClientType } from '#shared/constants/database-client-type';
 import {
   ESSHAuthMethod,
   type ISSHConfig,
   type ISSLConfig,
-} from '~~/app/core/types/entities/connection.entity';
+} from '#shared/types/entities/connection.entity';
 import { createSshTunnel } from '~~/server/utils/ssh-tunnel';
 import { toMssqlUri } from '../mssql/connection';
 import { getDefaultPort } from './ports';

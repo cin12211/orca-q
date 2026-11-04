@@ -1,7 +1,7 @@
+import { formatBytes } from '#shared/helpers';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { toast } from 'vue-sonner';
 import { useStreamingDownload } from '~/core/composables/useStreamingDownload';
-import { formatBytes } from '~/core/helpers';
 
 vi.mock('vue-sonner', () => ({
   toast: {
@@ -11,7 +11,7 @@ vi.mock('vue-sonner', () => ({
   },
 }));
 
-vi.mock('~/core/helpers', () => ({
+vi.mock('#shared/helpers', () => ({
   formatBytes: vi.fn((size: number) => `${size} B`),
 }));
 

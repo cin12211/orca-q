@@ -1,6 +1,9 @@
 <script setup lang="ts">
 import { refDebounced } from '@vueuse/core';
 import { computed, ref, shallowRef, toRef, useTemplateRef } from 'vue';
+import { DEFAULT_DEBOUNCE_INPUT } from '#shared/constants';
+import { formatBytes } from '#shared/helpers/bytes-formatter';
+import { TabViewType } from '#shared/types/entities/tab-view.entity';
 import {
   ContextMenuItemType,
   type ContextMenuItem,
@@ -10,10 +13,7 @@ import type { FileNode } from '~/components/base/tree-folder/types';
 import { useMongoCollectionMutation } from '~/components/modules/mongodb-workspace';
 import { useTabManagement } from '~/core/composables/useTabManagement';
 import { useWorkspaceConnectionRoute } from '~/core/composables/useWorkspaceConnectionRoute';
-import { DEFAULT_DEBOUNCE_INPUT } from '~/core/constants';
-import { formatBytes } from '~/core/helpers/bytes-formatter';
 import { useManagementConnectionStore } from '~/core/stores/managementConnectionStore';
-import { TabViewType } from '~/core/types/entities/tab-view.entity';
 import { ManagementSidebarHeader } from '../../shared';
 import {
   CreateCollectionDialog,

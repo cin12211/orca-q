@@ -1,6 +1,6 @@
+import { DatabaseClientType } from '#shared/constants/database-client-type';
 import type { Knex } from 'knex';
 import type { Readable } from 'node:stream';
-import { DatabaseClientType } from '~~/app/core/constants/database-client-type';
 import { maskNamedBindParametersInComments } from '~~/server/infrastructure/agent/core/sql';
 import type { IDatabaseAdapter, RawQueryResult } from './types';
 

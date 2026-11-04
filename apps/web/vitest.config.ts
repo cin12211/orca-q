@@ -7,10 +7,14 @@ import { defineConfig } from 'vitest/config';
 const envDir = __dirname;
 
 // Same alias semantics as Nuxt 4: `~` / `@` point at the client srcDir (app/),
-// `~~` / `@@` at the apps/web root (server/, scripts/, ...).
+// `~~` / `@@` at the apps/web root (server/, scripts/, ...), `#shared` at shared/.
 // Electron sources live in apps/desktop; unit tests import them as `~/electron/*`.
 // This entry must come before the generic `~` alias.
 const sharedAliases = [
+  {
+    find: /^#shared(?=\/|$)/,
+    replacement: path.resolve(__dirname, './shared'),
+  },
   {
     find: /^~\/electron\//,
     replacement: `${path.resolve(__dirname, '../desktop/electron')}/`,

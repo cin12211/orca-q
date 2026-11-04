@@ -1,10 +1,10 @@
 <script setup lang="ts">
+import { formatBytes } from '#shared/helpers/bytes-formatter';
+import type { RedisKeyListItem } from '#shared/types/redis-workspace.types';
 import BaseContextMenu from '~/components/base/context-menu/BaseContextMenu.vue';
 import FileTree from '~/components/base/tree-folder/FileTree.vue';
 import type { FileNode } from '~/components/base/tree-folder/types';
-import { formatBytes } from '~/core/helpers/bytes-formatter';
 import { RedisBrowserViewMode } from '~/core/stores/useRedisWorkspaceStore';
-import type { RedisKeyListItem } from '~/core/types/redis-workspace.types';
 import { useRedisTreeContextMenu } from '../hooks/useRedisTreeContextMenu';
 import {
   useRedisTreeData,

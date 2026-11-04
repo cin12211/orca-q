@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { OperatorSet } from '~/core/constants';
-import { uuidv4 } from '~/core/helpers';
-import type { FilterSchema } from '~/core/helpers/sql-where-clause';
+import { OperatorSet } from '#shared/constants';
+import { uuidv4 } from '#shared/helpers';
+import type { FilterSchema } from '#shared/helpers/sql-where-clause';
 import ReferencedTable from './ReferencedTable.vue';
 
 const props = defineProps<{

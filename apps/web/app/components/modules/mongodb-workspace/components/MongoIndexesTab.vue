@@ -1,16 +1,16 @@
 <script setup lang="ts">
 import { computed, onMounted } from 'vue';
 import {
+  buildMappedColumnsFromKeys,
+  buildMappedColumnsFromRows,
+} from '#shared/helpers';
+import {
   buildDynamicColumnDefs,
   buildDynamicRowData,
   DYNAMIC_COLUMN_TYPES,
 } from '~/components/base/data-grid/utils';
 import { Alert, AlertDescription } from '~/components/ui/alert';
 import { Button } from '~/components/ui/button';
-import {
-  buildMappedColumnsFromKeys,
-  buildMappedColumnsFromRows,
-} from '~/core/helpers';
 import type { Connection } from '~/core/stores';
 import { useMongoCollectionIndexes } from '../hooks';
 import {

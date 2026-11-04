@@ -1,5 +1,5 @@
-import { DatabaseClientType } from '~~/app/core/constants/database-client-type';
-import type { DatabaseMetrics } from '~~/app/core/types';
+import { DatabaseClientType } from '#shared/constants/database-client-type';
+import type { DatabaseMetrics } from '#shared/types';
 import type { IDatabaseAdapter } from '~~/server/infrastructure/driver';
 import { BaseDomainAdapter } from '../../shared';
 import type {

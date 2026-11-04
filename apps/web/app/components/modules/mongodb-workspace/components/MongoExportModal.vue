@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
+import { getConnectionParams } from '#shared/helpers/connection-helper';
 import { toast } from 'vue-sonner';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -15,7 +16,6 @@ import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { CodeHighlightPreview } from '~/components/base/code-highlight-preview';
 import { TooltipProvider } from '~/components/ui/tooltip';
-import { getConnectionParams } from '~/core/helpers/connection-helper';
 import type { Connection } from '~/core/stores';
 import {
   MongoExportFormat,

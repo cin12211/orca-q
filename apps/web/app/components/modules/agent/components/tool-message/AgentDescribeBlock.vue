@@ -1,11 +1,11 @@
 <script setup lang="ts">
+import type { AgentDescribeTableResult } from '#shared/types/agent.types';
+import type { MappedRawColumn } from '#shared/types/mapped-column.types';
 import {
   buildDynamicColumnDefs,
   buildDynamicRowData,
   DYNAMIC_COLUMN_TYPES,
 } from '~/components/base/data-grid/utils';
-import type { MappedRawColumn } from '~/core/types/mapped-column.types';
-import type { AgentDescribeTableResult } from '../../types';
 
 //TODO: this block not meaning must have same result with structure table
 const props = defineProps<{

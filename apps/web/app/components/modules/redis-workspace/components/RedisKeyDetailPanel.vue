@@ -1,15 +1,15 @@
 <script setup lang="ts">
 import { LoadingOverlay } from '#components';
-import {
-  getRedisKeyIcon,
-  getRedisKeyIconClass,
-} from '~/components/modules/management/redis-browser/hooks/useRedisTreeData';
 import type {
   RedisKeyDetail,
   RedisKeyInfo,
   RedisKeyTableRow,
   RedisValueUpdatePayload,
-} from '~/core/types/redis-workspace.types';
+} from '#shared/types/redis-workspace.types';
+import {
+  getRedisKeyIcon,
+  getRedisKeyIconClass,
+} from '~/components/modules/management/redis-browser/hooks/useRedisTreeData';
 import RedisKeyDetailHeader from './redis-key-detail/RedisKeyDetailHeader.vue';
 import RedisKeyMetadataBar from './redis-key-detail/RedisKeyMetadataBar.vue';
 import RedisKeyValueViewer from './redis-key-detail/RedisKeyValueViewer.vue';

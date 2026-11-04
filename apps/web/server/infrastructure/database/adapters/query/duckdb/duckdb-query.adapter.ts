@@ -1,11 +1,11 @@
-import type { H3Event } from 'h3';
-import { DatabaseClientType } from '~~/app/core/constants/database-client-type';
-import { DatabaseDriverNormalizerError as ErrorNormalizer } from '~~/app/core/helpers';
+import { DatabaseClientType } from '#shared/constants/database-client-type';
+import { DatabaseDriverNormalizerError as ErrorNormalizer } from '#shared/helpers';
 import type {
   DatabaseField,
   QueryResult,
   RawQueryResultWithMetadata,
-} from '~~/app/core/types';
+} from '#shared/types';
+import type { H3Event } from 'h3';
 import type { DuckDbAdapter } from '~~/server/infrastructure/driver/duckdb.adapter';
 import type { RawQueryResult } from '~~/server/infrastructure/driver/types';
 import { BaseDomainAdapter } from '../../shared';

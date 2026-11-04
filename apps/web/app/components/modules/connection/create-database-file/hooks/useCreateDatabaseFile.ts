@@ -2,7 +2,7 @@ import { computed, ref, toValue, watch, type MaybeRefOrGetter } from 'vue';
 import {
   getDefaultDatabaseFileOptions,
   type DatabaseFileOptions,
-} from '~/core/constants/database-file-options';
+} from '#shared/constants/database-file-options';
 import { CREATE_FILE_DEFAULT_ERROR } from '../constants';
 import { databaseFileService } from '../services';
 import type { FileDatabaseType } from '../types';

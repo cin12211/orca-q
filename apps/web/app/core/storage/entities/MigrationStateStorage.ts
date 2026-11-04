@@ -1,5 +1,5 @@
-import type { MigrationState } from '~/core/types/entities/migration-state.entity';
-import { MIGRATION_STATE_IDB } from '../idbRegistry';
+import { MIGRATION_STATE_IDB } from '#shared/storage/idbRegistry';
+import type { MigrationState } from '#shared/types/entities/migration-state.entity';
 import { IDBStorage } from '../base/IDBStorage';
 
 type MigrationStateRecord = MigrationState;

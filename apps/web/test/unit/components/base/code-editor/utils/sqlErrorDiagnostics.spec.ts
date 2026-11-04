@@ -5,6 +5,7 @@
  * The suite covers all branching paths and edge cases so the functions can be
  * safely extended without breaking existing behaviour.
  */
+import { DatabaseClientType } from '#shared/constants/database-client-type';
 import { describe, it, expect, vi } from 'vitest';
 import {
   substituteParams,
@@ -12,11 +13,10 @@ import {
   type SqlDialectStyle,
   type SubstituteParamsOptions,
 } from '@/components/base/code-editor/utils/sqlErrorDiagnostics';
-import { DatabaseClientType } from '@/core/constants/database-client-type';
 
 // The module imports ~ CodeMirror types and helpers that are irrelevant for
 // these unit tests. Mock them so the module evaluates cleanly in Node.
-vi.mock('@/core/helpers', () => ({
+vi.mock('#shared/helpers', () => ({
   DatabaseDriverNormalizerError: class {},
 }));
 vi.mock('@/components/base/code-editor/utils/diagnostic-lint', () => ({

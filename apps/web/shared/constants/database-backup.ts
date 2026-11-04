@@ -1,4 +1,4 @@
-import type { ExportFormat } from '~/core/types';
+import type { ExportFormat } from '../types';
 import { DatabaseClientType } from './database-client-type';
 
 export const LEGACY_LOGICAL_BACKUP_EXTENSION = '.heraq-db.json';

@@ -1,6 +1,6 @@
+import { APP_CONFIG_IDB } from '#shared/storage/idbRegistry';
+import type { AppConfigPersistedState } from '#shared/types/entities';
 import { normalizeAppConfigState } from '~/core/persist/store-state';
-import type { AppConfigPersistedState } from '~/core/types/entities';
-import { APP_CONFIG_IDB } from '../idbRegistry';
 import { IDBStorage } from '../base/IDBStorage';
 
 interface AppConfigRecord {

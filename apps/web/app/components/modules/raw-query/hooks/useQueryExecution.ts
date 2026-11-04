@@ -1,3 +1,7 @@
+import { DatabaseClientType } from '#shared/constants/database-client-type';
+import { uuidv4 } from '#shared/helpers';
+import { getConnectionParams } from '#shared/helpers/connection-helper';
+import type { DatabaseDriverError } from '#shared/types';
 import type { EditorView } from '@codemirror/view';
 import type { FieldDef } from 'pg';
 import type { SyntaxTreeNodeData } from '~/components/base/code-editor/extensions';
@@ -7,11 +11,7 @@ import {
   getCurrentStatement,
 } from '~/components/base/code-editor/utils';
 import type { RowData } from '~/components/base/data-grid/utils';
-import { DatabaseClientType } from '~/core/constants/database-client-type';
-import { uuidv4 } from '~/core/helpers';
-import { getConnectionParams } from '~/core/helpers/connection-helper';
 import type { Connection } from '~/core/stores';
-import type { DatabaseDriverError } from '~/core/types';
 import { ViewMode, type ExecutedResultItem } from '../types';
 import { extractParamsFromSql } from '../utils';
 import type { ResultTabsReturn } from './useResultTabs';

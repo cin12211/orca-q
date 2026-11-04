@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { getBrokerConnectionPayload } from '#shared/helpers/broker-connection';
+import type { RabbitDefinitionsSummary } from '#shared/types/rabbitmq.types';
 import dayjs from 'dayjs';
 import { toast } from 'vue-sonner';
 import {
@@ -18,9 +20,7 @@ import {
   useBrokerRequest,
 } from '~/components/modules/shared/message-broker';
 import { useStreamingDownload } from '~/core/composables/useStreamingDownload';
-import { getBrokerConnectionPayload } from '~/core/helpers/broker-connection';
 import type { Connection } from '~/core/stores';
-import type { RabbitDefinitionsSummary } from '~/core/types/rabbitmq.types';
 import {
   RABBIT_DEFINITIONS_SECTIONS,
   RABBIT_TAB_ICONS,

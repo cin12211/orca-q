@@ -1,7 +1,7 @@
 import type {
   MongoOpcounters,
   MongoOverviewInsight,
-} from '~/core/types/instance-insights.types';
+} from '#shared/types/instance-insights.types';
 
 export type MongoOpcounterRates = MongoOpcounters & { total: number };
 

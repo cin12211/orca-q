@@ -1,7 +1,10 @@
 <script setup lang="ts">
 import { computed, type Component } from 'vue';
+import type {
+  AgentRenderedMessage,
+  DbAgentToolName,
+} from '#shared/types/agent.types';
 import { useCopyToClipboard } from '~/core/composables/useCopyToClipboard';
-import type { AgentRenderedMessage, DbAgentToolName } from '../types';
 import {
   BlockMessageText,
   BlockMessageMarkdown,

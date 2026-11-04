@@ -17,15 +17,15 @@ import {
 import {
   getConnectionCapabilityProfile,
   resolveConnectionFamily,
-} from '~/core/constants/connection-capabilities';
-import { DatabaseClientType } from '~/core/constants/database-client-type';
+} from '#shared/constants/connection-capabilities';
+import { DatabaseClientType } from '#shared/constants/database-client-type';
+import { EConnectionFamily } from '#shared/types/entities/connection.entity';
 import { useManagementConnectionStore } from '~/core/stores';
 import { useAppConfigStore } from '~/core/stores/appConfigStore';
 import {
   ActivityBarItemType,
   useActivityBarStore,
 } from '~/core/stores/useActivityBarStore';
-import { EConnectionFamily } from '~/core/types/entities/connection.entity';
 import {
   ACTIVITY_ITEM_MAP,
   DEFAULT_CONNECTION_CONTEXT,

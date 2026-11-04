@@ -1,10 +1,10 @@
 import type { RendererElement, RendererNode } from 'vue';
 import { Icon } from '#components';
-import { DatabaseClientType } from '~/core/constants/database-client-type';
+import { DatabaseClientType } from '#shared/constants/database-client-type';
 import {
   isDuckDbUnsupportedPlatform,
   isElectron,
-} from '~/core/helpers/environment';
+} from '#shared/helpers/environment';
 import { EKafkaSaslMechanism, EManagedSqliteProvider } from '../types';
 
 export interface IDBSupport {

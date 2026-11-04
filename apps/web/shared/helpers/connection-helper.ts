@@ -1,5 +1,5 @@
-import type { Connection } from '~/core/stores';
-import { EConnectionMethod } from '~/core/types/entities/connection.entity';
+import type { Connection } from '../types/entities/connection.entity';
+import { EConnectionMethod } from '../types/entities/connection.entity';
 
 export function getConnectionParams(connection?: Connection) {
   if (!connection) return {};

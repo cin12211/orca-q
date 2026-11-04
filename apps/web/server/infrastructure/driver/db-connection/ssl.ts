@@ -1,12 +1,12 @@
-import { createHash } from 'node:crypto';
 import {
   DatabaseClientType,
   isPostgresCompatibleClientType,
-} from '~~/app/core/constants/database-client-type';
+} from '#shared/constants/database-client-type';
 import {
   ESSLMode,
   type ISSLConfig,
-} from '~~/app/core/types/entities/connection.entity';
+} from '#shared/types/entities/connection.entity';
+import { createHash } from 'node:crypto';
 import { isMysqlClient } from './ports';
 
 export function isSslEnabled(ssl?: ISSLConfig) {

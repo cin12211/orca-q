@@ -1,6 +1,6 @@
+import type { Schema } from '#shared/types';
 import { describe, expect, it } from 'vitest';
 import { formatColumnsInfo } from '~/components/modules/raw-query/utils/formatColumnsInfo';
-import type { Schema } from '~/core/types';
 
 const schema: Schema = {
   id: 'workspace-connection-public',

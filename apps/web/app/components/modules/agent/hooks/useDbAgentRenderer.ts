@@ -1,4 +1,11 @@
 import type { ComputedRef, Component } from 'vue';
+import type {
+  AgentBlock,
+  AgentRenderedMessage,
+  DbAgentMessage,
+  DbAgentToolName,
+} from '#shared/types/agent.types';
+import { AgentToolName, DB_AGENT_TOOL_NAMES } from '#shared/types/agent.types';
 import {
   AgentExportFileBlock,
   AgentQueryBlock,
@@ -9,13 +16,6 @@ import {
   AgentDescribeBlock,
   AgentErdBlock,
 } from '../components/tool-message';
-import type {
-  AgentBlock,
-  AgentRenderedMessage,
-  DbAgentMessage,
-  DbAgentToolName,
-} from '../types';
-import { AgentToolName, DB_AGENT_TOOL_NAMES } from '../types';
 
 const MARKDOWN_PATTERN =
   /^#{1,6}\s|(\*\*|__).+(\*\*|__)|^[-*]\s|^\d+\.\s|^\|.+\|/m;

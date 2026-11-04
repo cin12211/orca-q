@@ -1,6 +1,6 @@
+import { getConnectionParams } from '#shared/helpers/connection-helper';
 import dayjs from 'dayjs';
 import { toast } from 'vue-sonner';
-import { getConnectionParams } from '@/core/helpers/connection-helper';
 import {
   generateDropTableSQL,
   generateRenameTableSQL,

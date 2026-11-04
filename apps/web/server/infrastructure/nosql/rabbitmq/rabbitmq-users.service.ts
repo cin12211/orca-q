@@ -8,7 +8,7 @@ import type {
   RabbitUserPermission,
   RabbitUsersSnapshot,
   RabbitUserSummary,
-} from '~~/app/core/types/rabbitmq.types';
+} from '#shared/types/rabbitmq.types';
 import {
   BrokerConnectionError,
   type BrokerConnectionInput,

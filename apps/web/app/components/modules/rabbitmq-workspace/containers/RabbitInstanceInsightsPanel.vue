@@ -1,7 +1,7 @@
 <script setup lang="ts">
+import type { RabbitPolicyKind } from '#shared/types/rabbitmq.types';
 import { useBrokerRequest } from '~/components/modules/shared/message-broker';
 import type { Connection } from '~/core/stores';
-import type { RabbitPolicyKind } from '~/core/types/rabbitmq.types';
 import {
   RabbitConfirmDialog,
   RabbitInsightsChannelsSection,

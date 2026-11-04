@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia';
-import type { TableMetadata } from '~/core/types';
+import type { TableMetadata } from '#shared/types';
 
 export const useErdStore = defineStore(
   'erdStore',

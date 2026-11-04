@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { RabbitTopicPermission } from '#shared/types/rabbitmq.types';
 import {
   Dialog,
   DialogContent,
@@ -7,7 +8,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import type { RabbitTopicPermission } from '~/core/types/rabbitmq.types';
 import { RABBIT_FULL_ACCESS_PATTERN } from '../constants';
 
 const TOPIC_EXCHANGE_TYPE = 'topic';

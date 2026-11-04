@@ -1,8 +1,8 @@
-import { describe, expect, it } from 'vitest';
 import {
   createDefaultAppConfigState,
   normalizeAppConfigState,
-} from '~/core/persist/normalize';
+} from '#shared/persist/normalize';
+import { describe, expect, it } from 'vitest';
 
 describe('normalizeAppConfigState: MCP server settings', () => {
   it('keeps the MCP server switch through a save/load round trip', () => {

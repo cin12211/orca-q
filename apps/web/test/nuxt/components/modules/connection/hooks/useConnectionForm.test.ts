@@ -1,4 +1,5 @@
 import { isProxy, nextTick, ref } from 'vue';
+import { DatabaseClientType } from '#shared/constants/database-client-type';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { isSqliteConnectionDisabled } from '~/components/modules/connection/constants';
 import { useConnectionForm } from '~/components/modules/connection/hooks/useConnectionForm';
@@ -8,7 +9,6 @@ import {
   EConnectionProviderKind,
   EManagedSqliteProvider,
 } from '~/components/modules/connection/types';
-import { DatabaseClientType } from '~/core/constants/database-client-type';
 
 // ---------------------------------------------------------------------------
 // Mocks

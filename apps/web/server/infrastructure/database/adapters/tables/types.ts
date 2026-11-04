@@ -1,4 +1,4 @@
-import { DatabaseClientType } from '~~/app/core/constants/database-client-type';
+import { DatabaseClientType } from '#shared/constants/database-client-type';
 import type {
   TableOverviewMetadata,
   TableStructure,
@@ -10,7 +10,7 @@ import type {
   RLSStatus,
   TableRule,
   TableTrigger,
-} from '~~/app/core/types';
+} from '#shared/types';
 import type { BaseDatabaseAdapterParams } from '../shared';
 
 export type DatabaseTableAdapterParams = BaseDatabaseAdapterParams;

@@ -1,6 +1,6 @@
 <script setup lang="ts">
+import { DEFAULT_MAX_KEEP_ALIVE } from '#shared/constants';
 import { RedisWorkspace } from '~/components/modules/redis-workspace/containers';
-import { DEFAULT_MAX_KEEP_ALIVE } from '~/core/constants';
 import { useManagementConnectionStore } from '~/core/stores/managementConnectionStore';
 import { useTabViewsStore } from '~/core/stores/useTabViewsStore';
 

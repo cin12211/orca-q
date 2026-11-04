@@ -1,9 +1,5 @@
 import { defineStore, storeToRefs } from 'pinia';
 import { ref } from 'vue';
-import { reorder } from '@atlaskit/pragmatic-drag-and-drop/reorder';
-import type { RoutesNamesList } from '@typed-router';
-import { useWorkspaceConnectionRoute } from '~/core/composables/useWorkspaceConnectionRoute';
-import { createStorageApis } from '~/core/storage';
 import {
   TabViewType,
   type AgentChatMetadata,
@@ -17,7 +13,11 @@ import {
   type TabMetadata as SharedTabMetadata,
   type TabView as SharedTabView,
   type ViewDetailMetadata,
-} from '~/core/types/entities/tab-view.entity';
+} from '#shared/types/entities/tab-view.entity';
+import { reorder } from '@atlaskit/pragmatic-drag-and-drop/reorder';
+import type { RoutesNamesList } from '@typed-router';
+import { useWorkspaceConnectionRoute } from '~/core/composables/useWorkspaceConnectionRoute';
+import { createStorageApis } from '~/core/storage';
 import { useWSStateStore } from './useWSStateStore';
 
 export { TabViewType };

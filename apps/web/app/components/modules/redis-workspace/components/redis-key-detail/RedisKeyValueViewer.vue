@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import JsonEditorVue from 'json-editor-vue';
 import type {
   RedisKeyDetail,
   RedisKeyTableRow,
-} from '~/core/types/redis-workspace.types';
+} from '#shared/types/redis-workspace.types';
+import JsonEditorVue from 'json-editor-vue';
 
 const props = defineProps<{
   detail: RedisKeyDetail;

@@ -1,5 +1,4 @@
-import { getBrokerConnectionPayload } from '~/core/helpers/broker-connection';
-import type { Connection } from '~/core/stores';
+import { getBrokerConnectionPayload } from '#shared/helpers/broker-connection';
 import type {
   KafkaClusterOverview,
   KafkaConsumerGroupDetail,
@@ -12,7 +11,8 @@ import type {
   KafkaProduceResult,
   KafkaTopicDetail,
   KafkaTopicSummary,
-} from '~/core/types/kafka.types';
+} from '#shared/types/kafka.types';
+import type { Connection } from '~/core/stores';
 
 const post = <T>(
   path: string,

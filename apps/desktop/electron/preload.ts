@@ -1,6 +1,6 @@
+import type { ElectronPersistCollection as PersistCollection } from '#shared/storage/idbRegistry';
 import { contextBridge, ipcRenderer } from 'electron';
 import type { IpcRendererEvent } from 'electron';
-import type { ElectronPersistCollection as PersistCollection } from '~/core/storage/idbRegistry';
 
 interface PersistFilter {
   field: string;

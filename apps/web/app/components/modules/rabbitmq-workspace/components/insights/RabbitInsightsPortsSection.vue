@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { RabbitOverview } from '~/core/types/rabbitmq.types';
+import type { RabbitOverview } from '#shared/types/rabbitmq.types';
 import RabbitInsightsSectionTitle from './RabbitInsightsSectionTitle.vue';
 import RabbitInsightsTable from './RabbitInsightsTable.vue';
 

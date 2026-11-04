@@ -1,14 +1,14 @@
-import { toast } from 'vue-sonner';
-import { getConnectionParams } from '@/core/helpers/connection-helper';
+import { getConnectionParams } from '#shared/helpers/connection-helper';
 import {
   generateFunctionCallSQL,
   generateFunctionSelectSQL,
   generateDropFunctionSQL,
   generateRenameFunctionSQL,
-} from '~/components/modules/management/schemas/utils/generateFunctionSQL';
+} from '#shared/helpers/generateFunctionSQL';
+import type { FunctionSignature } from '#shared/types';
+import { toast } from 'vue-sonner';
 import { QuickQueryMutationAction } from '~/components/modules/quick-query/constants';
 import { TabViewType } from '~/core/stores/useTabViewsStore';
-import type { FunctionSignature } from '~/core/types';
 import type { ContextMenuState, SchemaContextMenuOptions } from '../types';
 import type { useContextMenuHelpers } from '../useContextMenuHelpers';
 

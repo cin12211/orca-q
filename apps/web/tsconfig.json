@@ -6,6 +6,7 @@
     ".nuxt/**/*.d.ts",
     "app/**/*",
     "server/**/*",
+    "shared/**/*",
     "types/**/*.d.ts",
     "*.d.ts",
     "*.ts"

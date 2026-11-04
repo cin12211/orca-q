@@ -1,12 +1,12 @@
 <script setup lang="ts">
+import { getDatabaseClientLabel } from '#shared/constants/database-backup';
+import { DatabaseClientType } from '#shared/constants/database-client-type';
+import { isDesktopApp } from '#shared/helpers/environment';
+import type { ExportOptions, NativeBackupToolName } from '#shared/types';
 import LoadingOverlay from '~/components/base/loading-overlay/LoadingOverlay.vue';
 import { useWorkspaceConnectionRoute } from '~/core/composables/useWorkspaceConnectionRoute';
-import { getDatabaseClientLabel } from '~/core/constants/database-backup';
-import { DatabaseClientType } from '~/core/constants/database-client-type';
-import { isDesktopApp } from '~/core/helpers/environment';
 import { useSchemaStore } from '~/core/stores';
 import { useManagementConnectionStore } from '~/core/stores/managementConnectionStore';
-import type { ExportOptions, NativeBackupToolName } from '~/core/types';
 import BackupProfileCard from '../components/BackupProfileCard.vue';
 import BackupRestoreUnsupportedAlert from '../components/BackupRestoreUnsupportedAlert.vue';
 import ExportOptionsForm from '../components/ExportOptionsForm.vue';

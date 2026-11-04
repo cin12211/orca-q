@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { ImportOptions } from '~/core/types';
+import type { ImportOptions } from '#shared/types';
 
 const model = defineModel<ImportOptions>({ required: true });
 

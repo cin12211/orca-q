@@ -1,7 +1,7 @@
+import { DatabaseClientType } from '#shared/constants/database-client-type';
+import { DatabaseDriverNormalizerError as ErrorNormalizer } from '#shared/helpers';
+import type { DatabaseDriverError } from '#shared/types';
 import { createError } from 'h3';
-import { DatabaseClientType } from '~~/app/core/constants/database-client-type';
-import { DatabaseDriverNormalizerError as ErrorNormalizer } from '~~/app/core/helpers';
-import type { DatabaseDriverError } from '~~/app/core/types';
 
 export function createDatabaseHttpError(
   dbType: DatabaseClientType | DatabaseClientType.POSTGRES,

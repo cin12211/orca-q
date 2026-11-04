@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import { Icon } from '#components';
+import { DatabaseClientType } from '#shared/constants/database-client-type';
+import { getMinimumServerVersionNote } from '#shared/constants/minimum-server-versions';
 import { EnvTagPicker } from '@/components/modules/environment-tag';
 import { Accordion } from '@/components/ui/accordion';
 import { Button } from '@/components/ui/button';
@@ -15,8 +17,6 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { DatabaseClientType } from '~/core/constants/database-client-type';
-import { getMinimumServerVersionNote } from '~/core/constants/minimum-server-versions';
 import type { Connection } from '~/core/stores';
 import {
   databaseSupports,

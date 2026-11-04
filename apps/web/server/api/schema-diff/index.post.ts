@@ -1,10 +1,13 @@
-import { defineEventHandler, readBody } from 'h3';
-import type { ISSLConfig, ISSHConfig } from '~~/app/components/modules/connection';
+import { DatabaseClientType } from '#shared/constants/database-client-type';
+import type {
+  ISSLConfig,
+  ISSHConfig,
+} from '#shared/types/entities/connection.entity';
 import type {
   SchemaDiffRequest,
   SchemaDiffResponse,
-} from '~~/app/components/modules/database-tools';
-import { DatabaseClientType } from '~~/app/core/constants/database-client-type';
+} from '#shared/types/schema-diff.types';
+import { defineEventHandler, readBody } from 'h3';
 import { createMetadataAdapter } from '~~/server/infrastructure/database/adapters/metadata';
 import { computeSchemaDiff } from '~~/server/utils/schema-diff.utils';
 

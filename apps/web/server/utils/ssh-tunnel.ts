@@ -1,7 +1,7 @@
+import type { ISSHConfig } from '#shared/types/entities/connection.entity';
+import { ESSHAuthMethod } from '#shared/types/entities/connection.entity';
 import { createServer, type Server } from 'node:net';
 import { Client, type ConnectConfig } from 'ssh2';
-import type { ISSHConfig } from '~~/app/components/modules/connection';
-import { ESSHAuthMethod } from '~~/app/core/types/entities/connection.entity';
 
 interface TunnelInstance {
   server: Server;

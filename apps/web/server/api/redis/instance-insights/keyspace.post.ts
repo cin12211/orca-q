@@ -1,9 +1,9 @@
-import { readBody } from 'h3';
 import {
   EConnectionMethod,
   type ISSHConfig,
   type ISSLConfig,
-} from '~~/app/core/types/entities/connection.entity';
+} from '#shared/types/entities/connection.entity';
+import { readBody } from 'h3';
 import { getRedisKeyspaceInsight } from '~~/server/infrastructure/nosql/redis/redis-instance-insights.service';
 
 export default defineEventHandler(async event => {

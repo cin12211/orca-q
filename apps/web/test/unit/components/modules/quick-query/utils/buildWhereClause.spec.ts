@@ -1,13 +1,17 @@
-import { describe, expect, it } from 'vitest';
-import { ComposeOperator, EExtendedField, OperatorSet } from '~/core/constants';
-import { DatabaseClientType } from '~/core/constants/database-client-type';
+import {
+  ComposeOperator,
+  EExtendedField,
+  OperatorSet,
+} from '#shared/constants';
+import { DatabaseClientType } from '#shared/constants/database-client-type';
 import {
   buildWhereClause,
   formatWhereClause,
   getPlaceholderSearchByOperator,
   normalizeFilterSearchValue,
   SqlFilterValueType,
-} from '~/core/helpers/sql-where-clause';
+} from '#shared/helpers/sql-where-clause';
+import { describe, expect, it } from 'vitest';
 
 const createFilter = (
   overrides: Partial<{

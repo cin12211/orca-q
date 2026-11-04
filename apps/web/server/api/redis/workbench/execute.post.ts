@@ -1,9 +1,9 @@
-import { readBody } from 'h3';
 import {
   EConnectionMethod,
   type ISSHConfig,
   type ISSLConfig,
-} from '~~/app/core/types/entities/connection.entity';
+} from '#shared/types/entities/connection.entity';
+import { readBody } from 'h3';
 import {
   createRedisRuntimeClient,
   parseRedisDatabaseIndex,
@@ -36,7 +36,8 @@ export default defineEventHandler(async event => {
   } = await readBody(event);
 
   const databaseIndex =
-    typeof body.databaseIndex === 'number' && Number.isFinite(body.databaseIndex)
+    typeof body.databaseIndex === 'number' &&
+    Number.isFinite(body.databaseIndex)
       ? body.databaseIndex
       : parseRedisDatabaseIndex(body.database, body.stringConnection);
 

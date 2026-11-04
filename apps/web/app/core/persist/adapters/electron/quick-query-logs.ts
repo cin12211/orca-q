@@ -1,4 +1,4 @@
-import type { QuickQueryLog } from '../../../types/entities';
+import type { QuickQueryLog } from '#shared/types/entities';
 import type {
   DeleteQQueryLogsProps,
   GetQQueryLogsProps,

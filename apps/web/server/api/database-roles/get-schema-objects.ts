@@ -2,8 +2,11 @@
  * API: Get Schema Objects
  * Fetches tables, views, functions, sequences in a schema
  */
-import { DatabaseClientType } from '~~/app/core/constants/database-client-type';
-import type { SchemaObjects, DatabaseMetadataRequestParams } from '~~/app/core/types';
+import { DatabaseClientType } from '#shared/constants/database-client-type';
+import type {
+  SchemaObjects,
+  DatabaseMetadataRequestParams,
+} from '#shared/types';
 import { createRoleAdapter } from '~~/server/infrastructure/database/adapters/database-roles';
 
 interface RequestBody extends DatabaseMetadataRequestParams {
@@ -28,10 +31,7 @@ export default defineEventHandler(async (event): Promise<SchemaObjects> => {
     });
   }
 
-  const adapter = await createRoleAdapter(
-    body.type || body.dbType,
-    body
-  );
+  const adapter = await createRoleAdapter(body.type || body.dbType, body);
 
   return adapter.getSchemaObjects(body.schemaName);
 });

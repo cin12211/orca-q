@@ -1,3 +1,4 @@
+import type { RedisKeyListItem } from '#shared/types/redis-workspace.types';
 import type { ValueFormatterParams } from 'ag-grid-community';
 import { describe, expect, it } from 'vitest';
 import {
@@ -5,7 +6,6 @@ import {
   buildRedisGroupOverviewRows,
   formatRedisTtl,
 } from '~/components/modules/redis-workspace/utils/redisGroupOverview';
-import type { RedisKeyListItem } from '~/core/types/redis-workspace.types';
 
 const item = (overrides: Partial<RedisKeyListItem> = {}): RedisKeyListItem => ({
   key: 'user:1',

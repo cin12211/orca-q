@@ -11,7 +11,7 @@ import type {
   RabbitQueueSummary,
   RabbitRateSample,
   RabbitWebContext,
-} from '~~/app/core/types/rabbitmq.types';
+} from '#shared/types/rabbitmq.types';
 
 /** Raw Management API JSON. Fields vary by version and stats mode. */
 export type RawRecord = Record<string, unknown>;

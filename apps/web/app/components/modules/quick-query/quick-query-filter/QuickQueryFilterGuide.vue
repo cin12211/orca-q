@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Separator } from '#components';
+import { ComposeOperator } from '#shared/constants';
 import { format } from 'sql-formatter';
-import { ComposeOperator } from '~/core/constants';
 import ViewParserFilterApply from './ViewParserFilterApply.vue';
 
 defineProps<{

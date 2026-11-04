@@ -1,5 +1,5 @@
-import type { DatabaseClientType } from '~/core/constants/database-client-type';
-import type { DatabaseFileOptions } from '~/core/constants/database-file-options';
+import type { DatabaseClientType } from '#shared/constants/database-client-type';
+import type { DatabaseFileOptions } from '#shared/constants/database-file-options';
 
 export type FileDatabaseType =
   | DatabaseClientType.SQLITE3

@@ -1,4 +1,4 @@
-import type { RabbitOverview } from '~~/app/core/types/rabbitmq.types';
+import type { RabbitOverview } from '#shared/types/rabbitmq.types';
 import {
   BrokerConnectionError,
   compareVersions,

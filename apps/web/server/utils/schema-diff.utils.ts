@@ -1,3 +1,10 @@
+import { DatabaseClientType } from '#shared/constants/database-client-type';
+import { getSqlDialect } from '#shared/sql-dialect';
+import type {
+  SchemaMetaData,
+  SchemaColumnMetadata,
+  SchemaForeignKeyMetadata,
+} from '#shared/types';
 import type {
   SchemaDiffResponse,
   SchemaGroupDiff,
@@ -8,14 +15,7 @@ import type {
   FunctionDiff,
   DiffStatus,
   SQLStatement,
-} from '~~/app/components/modules/database-tools';
-import { DatabaseClientType } from '~~/app/core/constants/database-client-type';
-import { getSqlDialect } from '~~/app/core/sql-dialect';
-import type {
-  SchemaMetaData,
-  SchemaColumnMetadata,
-  SchemaForeignKeyMetadata,
-} from '~~/app/core/types';
+} from '#shared/types/schema-diff.types';
 
 // ─── Normalisation ─────────────────────────────────────────────────────────────
 

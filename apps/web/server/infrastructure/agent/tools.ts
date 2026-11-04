@@ -1,5 +1,3 @@
-import { generateText, tool, Output, type LanguageModel } from 'ai';
-import { z } from 'zod/v4';
 import type {
   AgentDescribeTableResult,
   AgentExplainQueryResult,
@@ -10,8 +8,10 @@ import type {
   AgentVisualizeTableResult,
   DbAgentRequestBody,
   DbAgentSchemaSnapshot,
-} from '~~/app/components/modules/agent/types';
-import { AgentToolName } from '~~/app/components/modules/agent/types';
+} from '#shared/types/agent.types';
+import { AgentToolName } from '#shared/types/agent.types';
+import { generateText, tool, Output, type LanguageModel } from 'ai';
+import { z } from 'zod/v4';
 import {
   getQualifiedTableName,
   isMutationSql,

@@ -1,7 +1,7 @@
+import { DatabaseClientType } from '#shared/constants/database-client-type';
+import { getSqlDialect } from '#shared/sql-dialect';
+import type { ViewMeta, ViewOverviewMetadata } from '#shared/types';
 import { createError } from 'h3';
-import { DatabaseClientType } from '~~/app/core/constants/database-client-type';
-import { getSqlDialect } from '~~/app/core/sql-dialect';
-import type { ViewMeta, ViewOverviewMetadata } from '~~/app/core/types';
 import { PostgresViewAdapter } from '../postgres/postgres-view.adapter';
 import type { DatabaseViewAdapterParams } from '../types';
 

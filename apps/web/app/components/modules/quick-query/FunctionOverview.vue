@@ -1,15 +1,15 @@
 <script setup lang="ts">
 import { storeToRefs } from 'pinia';
-import { getConnectionParams } from '@/core/helpers/connection-helper';
+import {
+  buildMappedColumnsFromKeys,
+  buildMappedColumnsFromRows,
+} from '#shared/helpers';
+import { getConnectionParams } from '#shared/helpers/connection-helper';
 import {
   buildDynamicColumnDefs,
   buildDynamicRowData,
   DYNAMIC_COLUMN_TYPES,
 } from '~/components/base/data-grid/utils';
-import {
-  buildMappedColumnsFromKeys,
-  buildMappedColumnsFromRows,
-} from '~/core/helpers';
 import { useWSStateStore } from '~/core/stores';
 import { useManagementConnectionStore } from '~/core/stores/managementConnectionStore';
 

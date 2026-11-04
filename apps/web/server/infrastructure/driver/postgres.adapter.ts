@@ -1,7 +1,7 @@
+import { DatabaseClientType } from '#shared/constants/database-client-type';
 import knex, { type Knex } from 'knex';
 import type { Readable } from 'node:stream';
 import pg from 'pg';
-import { DatabaseClientType } from '~~/app/core/constants/database-client-type';
 import { BaseDatabaseAdapter } from './base.adapter';
 import type { RawQueryResult } from './types';
 

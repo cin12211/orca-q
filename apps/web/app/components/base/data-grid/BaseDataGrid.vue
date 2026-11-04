@@ -2,6 +2,7 @@
 import { onClickOutside } from '@vueuse/core';
 import type { HTMLAttributes } from 'vue';
 import { markRaw } from 'vue';
+import { DEFAULT_BUFFER_ROWS } from '#shared/constants';
 import type {
   CellContextMenuEvent,
   CellValueChangedEvent,
@@ -12,7 +13,6 @@ import type {
   RowClickedEvent,
 } from 'ag-grid-community';
 import { AgGridVue } from 'ag-grid-vue3';
-import { DEFAULT_BUFFER_ROWS } from '~/core/constants';
 import AgJsonCellEditor from './components/AgJsonCellEditor.vue';
 import BaseDataGridCopyContextMenu from './components/BaseDataGridCopyContextMenu.vue';
 import BaseDataGridEmptyOverlay from './components/BaseDataGridEmptyOverlay.vue';

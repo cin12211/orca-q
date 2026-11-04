@@ -1,4 +1,4 @@
-import type { KafkaMessageStart } from '~/core/types/kafka.types';
+import type { KafkaMessageStart } from '#shared/types/kafka.types';
 
 export const KAFKA_PAGE_SIZE_OPTIONS = [20, 50, 100] as const;
 export const KAFKA_LIVE_POLL_MS = 1000;

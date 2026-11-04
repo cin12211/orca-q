@@ -1,6 +1,6 @@
 import { ref, type Ref } from 'vue';
+import { getConnectionParams } from '#shared/helpers/connection-helper';
 import { toast } from 'vue-sonner';
-import { getConnectionParams } from '~/core/helpers/connection-helper';
 import type { Connection } from '~/core/stores';
 import type { MongoDocument } from '../types';
 import { getMongoDocumentKey, getMongoErrorMessage } from '../utils';

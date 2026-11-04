@@ -11,7 +11,7 @@
     "typecheck": "NODE_OPTIONS=--max-old-space-size=8192 nuxt typecheck",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build",
-    "depcruise:json": "depcruise app server --config ../../.dependency-cruiser.js --output-type json > ../../docs/dependency-graph.json",
+    "depcruise:json": "depcruise app server shared --config ../../.dependency-cruiser.js --output-type json > ../../docs/dependency-graph.json",
     "test:all": "vitest --run",
     "test:unit": "vitest --run --project unit",
     "test:nuxt": "vitest --run --project nuxt",

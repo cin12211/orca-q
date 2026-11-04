@@ -1,4 +1,11 @@
 import type {
+  SchemaColumnMetadata as ColumnShortMetadata,
+  SchemaForeignKeyMetadata as ForeignKeyMetadata,
+  TableDetailMetadata,
+  TableDetails,
+  ViewDetails,
+} from '#shared/types';
+import type {
   Completion,
   CompletionContext,
   CompletionResult,
@@ -9,13 +16,6 @@ import type { EditorState } from '@codemirror/state';
 import type { SyntaxNode } from '@lezer/common';
 import { CompletionIcon } from '~/components/base/code-editor/constants';
 import type { Schema } from '~/core/stores';
-import type {
-  SchemaColumnMetadata as ColumnShortMetadata,
-  SchemaForeignKeyMetadata as ForeignKeyMetadata,
-  TableDetailMetadata,
-  TableDetails,
-  ViewDetails,
-} from '~/core/types';
 import {
   createColumnCompletion,
   createVariableInfoTooltip,

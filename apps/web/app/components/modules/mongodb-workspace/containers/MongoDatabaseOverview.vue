@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import { computed, ref, toRef, watch } from 'vue';
+import { formatBytes } from '#shared/helpers';
 import type { ColDef, GridApi, RowClickedEvent } from 'ag-grid-community';
 import BaseDataGrid from '~/components/base/data-grid/BaseDataGrid.vue';
 import { useDataGridAutoSizing } from '~/components/base/data-grid/hooks';
 import { createHashIndexColumnDef } from '~/components/base/data-grid/utils/gridColumnDefs';
 import { useTabManagement } from '~/core/composables/useTabManagement';
-import { formatBytes } from '~/core/helpers';
 import { useManagementConnectionStore } from '~/core/stores/managementConnectionStore';
 import { useMongoDatabaseCollections } from '../hooks';
 import type { MongoCollectionSummary } from '../types';

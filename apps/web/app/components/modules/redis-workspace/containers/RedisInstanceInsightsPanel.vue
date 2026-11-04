@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { storeToRefs } from 'pinia';
-import { DatabaseClientType } from '~/core/constants/database-client-type';
+import { DatabaseClientType } from '#shared/constants/database-client-type';
 import type { Connection } from '~/core/stores';
 import { useTabViewsStore } from '~/core/stores/useTabViewsStore';
 import {

@@ -1,5 +1,5 @@
+import type { DatabaseMetadataRequestParams } from '#shared/types/database-schemas.types';
 import { defineEventHandler, readBody } from 'h3';
-import type { DatabaseMetadataRequestParams } from '~~/app/core/types/database-schemas.types';
 import { listMongoCollections } from '~~/server/infrastructure/nosql/mongodb/mongodb-quick-query';
 import { withMongoDatabase } from '~~/server/infrastructure/nosql/mongodb/mongodb.client';
 

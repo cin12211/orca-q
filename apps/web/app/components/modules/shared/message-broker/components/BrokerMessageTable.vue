@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { BrokerMessage } from '#shared/types/broker-message.types';
 import {
   Table,
   TableBody,
@@ -7,7 +8,6 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import type { BrokerMessage } from '~/core/types/broker-message.types';
 import { formatBytes, formatDateTime, previewBrokerPayload } from '../utils';
 
 const props = defineProps<{

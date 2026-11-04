@@ -1,5 +1,9 @@
+import * as sharedHelpers from '#shared/helpers';
 import { describe, it, expect } from 'vitest';
-import * as helpers from '@/core/helpers';
+import * as clientHelpers from '@/core/helpers';
+
+// Client-only helpers live in app/core/helpers, the rest in shared/helpers.
+const helpers = { ...sharedHelpers, ...clientHelpers };
 
 describe('core/helpers index exports', () => {
   it('exports main helper functions', () => {

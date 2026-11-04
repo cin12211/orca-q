@@ -1,5 +1,5 @@
+import { convertParameters } from '#shared/helpers/convertParameters';
 import { describe, it, expect } from 'vitest';
-import { convertParameters } from '@/core/helpers/convertParameters';
 
 describe('convertParameters', () => {
   it('parses object-like parameters with unquoted keys', () => {

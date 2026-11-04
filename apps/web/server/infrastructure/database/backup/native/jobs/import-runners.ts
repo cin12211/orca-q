@@ -1,5 +1,5 @@
+import { DatabaseClientType } from '#shared/constants/database-client-type';
 import { rm, stat } from 'node:fs/promises';
-import { DatabaseClientType } from '~~/app/core/constants/database-client-type';
 import {
   appendMysqlSslArgs,
   buildMysqlEnv,

@@ -1,12 +1,12 @@
 <script setup lang="ts">
+import type {
+  RedisKeyspaceInsight,
+  RedisOverviewMetrics,
+} from '#shared/types/instance-insights.types';
 import {
   formatDuration,
   InsightKpiCard,
 } from '~/components/modules/shared/instance-insights-kit';
-import type {
-  RedisKeyspaceInsight,
-  RedisOverviewMetrics,
-} from '~/core/types/instance-insights.types';
 
 const props = defineProps<{
   overview: RedisOverviewMetrics | undefined;

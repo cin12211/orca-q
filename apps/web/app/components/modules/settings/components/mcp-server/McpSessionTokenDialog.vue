@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { maskMcpToken } from '#shared/helpers/mcp-token';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -8,7 +9,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { maskMcpToken } from '~/core/helpers/mcp-token';
 import { buildMcpClientSnippets } from '../../constants';
 import McpTokenField from './McpTokenField.vue';
 

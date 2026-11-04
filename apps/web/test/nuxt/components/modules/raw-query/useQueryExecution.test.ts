@@ -1,9 +1,9 @@
 import { reactive, ref, shallowRef } from 'vue';
+import { DatabaseClientType } from '#shared/constants/database-client-type';
+import { EConnectionMethod } from '#shared/types/entities/connection.entity';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { useQueryExecution } from '~/components/modules/raw-query/hooks/useQueryExecution';
 import * as streamingQuery from '~/components/modules/raw-query/hooks/useStreamingQuery';
-import { DatabaseClientType } from '~/core/constants/database-client-type';
-import { EConnectionMethod } from '~/core/types/entities/connection.entity';
 
 // Mock dependencies
 vi.mock('~/components/modules/raw-query/hooks/useStreamingQuery', () => ({

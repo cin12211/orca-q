@@ -1,9 +1,6 @@
+import { toRawJSON } from '#shared/helpers/jsonFormat';
+import type { RowQueryFile, RowQueryFileContent } from '#shared/types/entities';
 import dayjs from 'dayjs';
-import { toRawJSON } from '~/core/helpers/jsonFormat';
-import type {
-  RowQueryFile,
-  RowQueryFileContent,
-} from '../../../types/entities';
 import type { RowQueryFilesPersistApi } from '../../types';
 import {
   persistDelete,

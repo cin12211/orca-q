@@ -2,8 +2,11 @@
  * API: Get Databases with Permissions
  * Fetches all databases and the role's permissions on each
  */
-import { DatabaseClientType } from '~~/app/core/constants/database-client-type';
-import type { DatabasePermission, DatabaseMetadataRequestParams } from '~~/app/core/types';
+import { DatabaseClientType } from '#shared/constants/database-client-type';
+import type {
+  DatabasePermission,
+  DatabaseMetadataRequestParams,
+} from '#shared/types';
 import { createRoleAdapter } from '~~/server/infrastructure/database/adapters/database-roles';
 
 interface RequestBody extends DatabaseMetadataRequestParams {
@@ -22,10 +25,7 @@ export default defineEventHandler(
       });
     }
 
-    const adapter = await createRoleAdapter(
-      body.type || body.dbType,
-      body
-    );
+    const adapter = await createRoleAdapter(body.type || body.dbType, body);
 
     return adapter.getDatabasePermissions(body.roleName);
   }

@@ -1,5 +1,5 @@
+import { jsonFormat, toRawJSON } from '#shared/helpers/jsonFormat';
 import { describe, it, expect } from 'vitest';
-import { jsonFormat, toRawJSON } from '@/core/helpers/jsonFormat';
 
 describe('jsonFormat utilities', () => {
   it('pretty prints JSON with spaces', () => {

@@ -1,7 +1,5 @@
-import type { DuckDBConnection } from '@duckdb/node-api';
-import { createError } from 'h3';
-import { DatabaseClientType, BULK_CHUNK_SIZE } from '~~/app/core/constants';
-import { duckdbDialect } from '~~/app/core/sql-dialect';
+import { DatabaseClientType, BULK_CHUNK_SIZE } from '#shared/constants';
+import { duckdbDialect } from '#shared/sql-dialect';
 import type {
   BulkUpdateResponse,
   RLSPolicy,
@@ -13,7 +11,9 @@ import type {
   TableSize,
   TableStructure,
   TableTrigger,
-} from '~~/app/core/types';
+} from '#shared/types';
+import type { DuckDBConnection } from '@duckdb/node-api';
+import { createError } from 'h3';
 import { resolveMetadataTypeAlias } from '../../metadata/type-alias.constants';
 import { BaseDomainAdapter } from '../../shared';
 import type {

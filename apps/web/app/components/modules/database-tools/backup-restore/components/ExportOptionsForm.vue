@@ -6,7 +6,7 @@ import type {
   ExportOptions,
   NativeBackupRuntimeFormat,
   NativeBackupRuntimeFormatOption,
-} from '~/core/types';
+} from '#shared/types';
 
 interface Props {
   schemas: string[];

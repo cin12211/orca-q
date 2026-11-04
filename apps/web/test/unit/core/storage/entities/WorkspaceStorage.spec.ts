@@ -1,7 +1,7 @@
+import type { Workspace } from '#shared/types/entities';
 import 'fake-indexeddb/auto';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { IDBStorage } from '~/core/storage/base/IDBStorage';
-import type { Workspace } from '~/core/types/entities';
 
 class WorkspaceTestStorage extends IDBStorage<Workspace> {
   readonly name = 'workspaceTest';

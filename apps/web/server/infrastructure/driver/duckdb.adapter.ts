@@ -1,3 +1,6 @@
+import { DatabaseClientType } from '#shared/constants/database-client-type';
+import { isDuckDbUnsupportedPlatform } from '#shared/helpers/environment';
+import type { DatabaseField } from '#shared/types';
 import type {
   DuckDBConnection,
   DuckDBInstance,
@@ -13,9 +16,6 @@ import {
   readSync,
 } from 'node:fs';
 import { Readable } from 'node:stream';
-import { DatabaseClientType } from '~~/app/core/constants/database-client-type';
-import { isDuckDbUnsupportedPlatform } from '~~/app/core/helpers/environment';
-import type { DatabaseField } from '~~/app/core/types';
 import { BaseDatabaseAdapter } from './base.adapter';
 import type { RawQueryResult } from './types';
 

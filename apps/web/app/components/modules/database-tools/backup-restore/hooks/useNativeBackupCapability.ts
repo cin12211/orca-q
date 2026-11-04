@@ -1,6 +1,6 @@
-import type { DatabaseClientType } from '~/core/constants/database-client-type';
-import { isDesktopApp } from '~/core/helpers/environment';
-import type { NativeBackupRuntimeCapability } from '~/core/types';
+import type { DatabaseClientType } from '#shared/constants/database-client-type';
+import { isDesktopApp } from '#shared/helpers/environment';
+import type { NativeBackupRuntimeCapability } from '#shared/types';
 
 export const useNativeBackupCapability = (
   connectionType: Ref<DatabaseClientType | null | undefined>

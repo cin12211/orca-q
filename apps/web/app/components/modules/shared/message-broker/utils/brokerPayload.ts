@@ -1,4 +1,4 @@
-import type { BrokerMessage } from '~/core/types/broker-message.types';
+import type { BrokerMessage } from '#shared/types/broker-message.types';
 
 export type BrokerPayloadKind = 'json' | 'text' | 'binary' | 'empty';
 

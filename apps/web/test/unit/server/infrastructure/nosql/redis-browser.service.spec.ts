@@ -1,5 +1,5 @@
+import { EConnectionMethod } from '#shared/types/entities/connection.entity';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { EConnectionMethod } from '~/core/types/entities/connection.entity';
 import {
   deleteRedisKeys,
   getRedisKeyDetail,

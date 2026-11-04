@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { storeToRefs } from 'pinia';
+import { isMacOS, isPWA, isElectron, isDesktopApp } from '#shared/helpers';
 import { useHotkeys } from '~/core/composables/useHotKeys';
-import { isMacOS, isPWA, isElectron, isDesktopApp } from '~/core/helpers';
 import { useAppConfigStore } from '~/core/stores/appConfigStore';
 import { useTabViewsStore } from '~/core/stores/useTabViewsStore';
 import { ActivityBarHorizontal } from '../../activity-bar';

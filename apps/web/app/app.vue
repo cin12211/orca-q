@@ -1,6 +1,7 @@
 <script setup lang="ts">
 // main.ts (or the entry that mounts Vue)
 import { LoadingOverlay, MigrationScreen, TooltipProvider } from '#components';
+import { DEFAULT_DEBOUNCE_INPUT } from '#shared/constants';
 import { CommandPaletteView } from '@/components/modules/command-palette';
 import { useMigrationState } from '~/core/composables/useMigrationState';
 import ElectronUpdateStartupDialog from './components/modules/app-shell/status-bar/components/ElectronUpdateStartupDialog.vue';
@@ -16,7 +17,6 @@ import {
   scheduleElectronStartupUpdateCheck,
   startElectronBackgroundUpdateChecks,
 } from './core/composables/useElectronUpdater';
-import { DEFAULT_DEBOUNCE_INPUT } from './core/constants';
 import { useAppContext } from './core/contexts';
 import { useChangelogModal } from './core/contexts/useChangelogModal';
 import { useSettingsModal } from './core/contexts/useSettingsModal';

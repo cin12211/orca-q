@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { LoadingOverlay } from '#components';
+import { DatabaseClientType } from '#shared/constants/database-client-type';
 import type { EditorView } from '@codemirror/view';
 import BaseCodeEditor from '~/components/base/code-editor/BaseCodeEditor.vue';
 import { useRedisWorkspace } from '~/components/modules/redis-workspace/hooks/useRedisWorkspace';
 import { useHotkeys } from '~/core/composables/useHotKeys';
-import { DatabaseClientType } from '~/core/constants/database-client-type';
 import { useEnvironmentTagStore } from '~/core/stores';
 import { useAppConfigStore } from '~/core/stores/appConfigStore';
 import IntroRawQuery from './components/IntroRawQuery.vue';

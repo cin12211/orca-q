@@ -1,7 +1,7 @@
+import { DatabaseClientType } from '#shared/constants/database-client-type';
+import { buildDeleteStatements } from '#shared/helpers/sql-mutation-statements';
+import type { DatabaseMetadataRequestParams } from '#shared/types';
 import { defineEventHandler, readBody, createError } from 'h3';
-import { DatabaseClientType } from '~~/app/core/constants/database-client-type';
-import { buildDeleteStatements } from '~~/app/core/helpers/sql-mutation-statements';
-import type { DatabaseMetadataRequestParams } from '~~/app/core/types';
 import { createTableAdapter } from '~~/server/infrastructure/database/adapters/tables';
 import { assertBulkSuccess } from '~~/server/utils/assert-bulk-success';
 

@@ -1,4 +1,4 @@
-import { getConnectionParams } from '~/core/helpers/connection-helper';
+import { getConnectionParams } from '#shared/helpers/connection-helper';
 import { useManagementConnectionStore } from '~/core/stores/managementConnectionStore';
 
 export const useTableSize = ({

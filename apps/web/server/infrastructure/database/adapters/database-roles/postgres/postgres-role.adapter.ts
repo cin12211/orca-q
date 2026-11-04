@@ -1,4 +1,4 @@
-import { DatabaseClientType } from '~~/app/core/constants/database-client-type';
+import { DatabaseClientType } from '#shared/constants/database-client-type';
 import type {
   DatabaseRole,
   ObjectType,
@@ -13,7 +13,7 @@ import type {
   SchemaObjects,
   BulkGrantRequest,
   BulkGrantResponse,
-} from '~~/app/core/types';
+} from '#shared/types';
 import type { IDatabaseAdapter } from '~~/server/infrastructure/driver';
 import { BaseDomainAdapter } from '../../shared';
 import type { IDatabaseRoleAdapter, DatabaseRoleAdapterParams } from '../types';

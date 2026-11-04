@@ -1,5 +1,5 @@
+import type { AgentExportFileResult } from '#shared/types/agent.types';
 import { toast } from 'vue-sonner';
-import type { AgentExportFileResult } from '../types';
 
 function decodeBase64(value: string) {
   const binary = window.atob(value);

@@ -5,7 +5,7 @@ import type {
   RoleInheritanceNode,
   SchemaInfo,
   SchemaObjects,
-} from '~~/app/core/types';
+} from '#shared/types';
 import type { IDatabaseAdapter } from '~~/server/infrastructure/driver';
 
 export class PostgresRoleQueryAdapter {

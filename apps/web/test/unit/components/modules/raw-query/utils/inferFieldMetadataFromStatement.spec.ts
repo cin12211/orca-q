@@ -1,6 +1,6 @@
+import type { Schema } from '#shared/types';
 import { describe, expect, it } from 'vitest';
 import { inferFieldMetadataFromStatement } from '~/components/modules/raw-query/utils/inferFieldMetadataFromStatement';
-import type { Schema } from '~/core/types';
 
 const schema: Schema = {
   id: 'workspace-connection-public',

@@ -1,9 +1,9 @@
 <script setup lang="ts">
+import { DEFAULT_QUERY_SIZE } from '#shared/constants';
+import { DatabaseClientType } from '#shared/constants/database-client-type';
 import QuickQueryTableSummary from '~/components/modules/quick-query/quick-query-table-summary/QuickQueryTableSummary.vue';
 import { usePreviewRelations } from '~/core/composables/usePreviewRelations';
 import { useTableQueryBuilder } from '~/core/composables/useTableQueryBuilder';
-import { DEFAULT_QUERY_SIZE } from '~/core/constants';
-import { DatabaseClientType } from '~/core/constants/database-client-type';
 import { useAppConfigStore } from '~/core/stores/appConfigStore';
 import { useManagementConnectionStore } from '~/core/stores/managementConnectionStore';
 import WrapperErdDiagram from '../erd-diagram/WrapperErdDiagram.vue';

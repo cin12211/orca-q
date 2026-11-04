@@ -1,4 +1,4 @@
-import { DatabaseClientType } from '~~/app/core/constants/database-client-type';
+import { DatabaseClientType } from '#shared/constants/database-client-type';
 import { createDomainAdapter } from '../shared';
 import { DuckDbFunctionAdapter } from './duckdb/duckdb-function.adapter';
 import { MysqlFunctionAdapter } from './mysql/mysql-function.adapter';

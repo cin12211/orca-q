@@ -1,14 +1,14 @@
 <script setup lang="ts">
-import { Badge } from '@/components/ui/badge';
-import RedisDBSelector from '~/components/modules/selectors/RedisDBSelector.vue';
-import type { Connection } from '~/core/stores';
 import type {
   RedisDatabaseOption,
   RedisPubSubMessage,
   RedisPubSubMessagesResponse,
   RedisPubSubOverview,
   RedisPubSubSubscriptionStatus,
-} from '~/core/types/redis-workspace.types';
+} from '#shared/types/redis-workspace.types';
+import { Badge } from '@/components/ui/badge';
+import RedisDBSelector from '~/components/modules/selectors/RedisDBSelector.vue';
+import type { Connection } from '~/core/stores';
 
 const props = defineProps<{
   connection?: Connection;

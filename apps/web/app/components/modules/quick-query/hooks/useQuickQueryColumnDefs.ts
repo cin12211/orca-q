@@ -1,4 +1,6 @@
 import { computed, type Ref } from 'vue';
+import { isStructuredColumnType } from '#shared/helpers/sql-column-type';
+import type { SchemaForeignKeyMetadata as ForeignKeyMetadata } from '#shared/types';
 import type {
   ColDef,
   ICellEditorParams,
@@ -13,8 +15,6 @@ import {
 } from '~/components/base/data-grid/constants';
 import type { OrderBy } from '~/core/composables/useTableQueryBuilder';
 import { formatCellValue, setCellValue } from '~/core/helpers/cell-value';
-import { isStructuredColumnType } from '~/core/helpers/sql-column-type';
-import type { SchemaForeignKeyMetadata as ForeignKeyMetadata } from '~/core/types';
 import { type QuickQueryColumnType } from '../utils/quickQueryTable';
 
 type RelationModalPayload = {

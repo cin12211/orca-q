@@ -1,11 +1,11 @@
 <script setup lang="ts">
+import type { RabbitChannelSummary } from '#shared/types/rabbitmq.types';
 import {
   formatMessageRate,
   formatNumber,
   useBrokerRequest,
 } from '~/components/modules/shared/message-broker';
 import type { Connection } from '~/core/stores';
-import type { RabbitChannelSummary } from '~/core/types/rabbitmq.types';
 import { useRabbitInsightsRefresh } from '../../hooks';
 import { rabbitmqService } from '../../services';
 import RabbitInsightsTable from './RabbitInsightsTable.vue';

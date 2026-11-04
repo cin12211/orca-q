@@ -1,5 +1,9 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted, ref, watch } from 'vue';
+import {
+  DEFAULT_DEBOUNCE_INPUT,
+  DEFAULT_DEBOUNCE_SCROLL,
+} from '#shared/constants';
 import { search } from '@codemirror/search';
 import {
   Compartment,
@@ -16,10 +20,6 @@ import { throttle } from 'lodash';
 import debounce from 'lodash/debounce';
 import { cn } from '@/lib/utils';
 import type { CodeEditorConfigs } from '~/components/modules/settings/types';
-import {
-  DEFAULT_DEBOUNCE_INPUT,
-  DEFAULT_DEBOUNCE_SCROLL,
-} from '~/core/constants';
 import { useAppConfigStore } from '~/core/stores/appConfigStore';
 import { EditorThemeMap, resolveEditorTheme } from './constants';
 import {

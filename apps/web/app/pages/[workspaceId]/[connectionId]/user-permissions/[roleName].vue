@@ -1,11 +1,6 @@
 <script setup lang="ts">
 import { LoadingOverlay } from '#components';
-import { getConnectionParams } from '@/core/helpers/connection-helper';
-import DatabasePermissionCard from '~/components/modules/management/role-permission/components/DatabasePermissionCard.vue';
-import GrantRevokeDialog from '~/components/modules/management/role-permission/components/GrantRevokeDialog.vue';
-import RoleAttributesCard from '~/components/modules/management/role-permission/components/RoleAttributesCard.vue';
-import { useDatabasePermissions } from '~/components/modules/management/role-permission/hooks/useDatabaseRoles';
-import { useManagementConnectionStore } from '~/core/stores/managementConnectionStore';
+import { getConnectionParams } from '#shared/helpers/connection-helper';
 import type {
   RolePermissions,
   ObjectPermission,
@@ -13,7 +8,12 @@ import type {
   PrivilegeType,
   RoleInheritanceNode,
   DatabaseRole,
-} from '~/core/types';
+} from '#shared/types';
+import DatabasePermissionCard from '~/components/modules/management/role-permission/components/DatabasePermissionCard.vue';
+import GrantRevokeDialog from '~/components/modules/management/role-permission/components/GrantRevokeDialog.vue';
+import RoleAttributesCard from '~/components/modules/management/role-permission/components/RoleAttributesCard.vue';
+import { useDatabasePermissions } from '~/components/modules/management/role-permission/hooks/useDatabaseRoles';
+import { useManagementConnectionStore } from '~/core/stores/managementConnectionStore';
 
 definePageMeta({
   keepalive: true,

@@ -1,5 +1,5 @@
-import type { Connection } from '~/core/types/entities';
-import { CONNECTION_IDB } from '../idbRegistry';
+import { CONNECTION_IDB } from '#shared/storage/idbRegistry';
+import type { Connection } from '#shared/types/entities';
 import { IDBStorage } from '../base/IDBStorage';
 
 class ConnectionStorage extends IDBStorage<Connection> {

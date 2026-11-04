@@ -1,10 +1,10 @@
+import type { MappedRawColumn } from '#shared/types/mapped-column.types';
 import { describe, expect, it } from 'vitest';
 import {
   groupColumnsByTable,
   isCellEditable,
   isColumnPotentiallyEditable,
 } from '~/components/modules/raw-query/utils/isCellEditable';
-import type { MappedRawColumn } from '~/core/types/mapped-column.types';
 
 const col = (overrides: Partial<MappedRawColumn> = {}): MappedRawColumn => {
   const originalName = overrides.originalName || 'col';
