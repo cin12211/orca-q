@@ -5,15 +5,50 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 # HeraQ / OrcaQ Agent Guide
 
 OrcaQ is a next-gen database client. Friendly, powerful.
-This repo is a Nuxt 3 + Vue 3 + TypeScript with Electron desktop support.
+This repo is a Bun-workspaces monorepo: a Nuxt 4 + Vue 3 + TypeScript web app
+with Electron desktop and npx CLI wrappers around the same build.
+
+## Monorepo Layout
+
+- Root `package.json` (private, `workspaces: ["apps/*"]`) proxies every script
+  (`bun run dev`, `bun run typecheck`, `bun test:unit`, `bun test:nuxt`,
+  `bun test:api`, `bun test:e2e`, `bun run electron:*`, `bun run npx:build`, ...),
+  so run commands from the repo root. Root also holds `bun.lock`, `.husky/`,
+  `.github/`, `docs/`, `Dockerfile`, `docker-compose.yml`, `SAC/` and
+  `.dependency-cruiser.js`.
+- `apps/web/` (`@orcaq/web`) is the Nuxt 4 app: `nuxt.config.ts`,
+  `vitest.config.ts`, `playwright.config.ts`, `components.json`, `.storybook/`,
+  `public/`, `types/` (ambient `*.d.ts`), `test/`, `scripts/test-services/`,
+  `ecosystem.config.js`. Builds to `apps/web/.output`.
+  - `apps/web/app/` is client code (`~/` alias): `app.vue`, `error.vue`,
+    `spa-loading-template.html`, `assets/`, `components/`, `layouts/`,
+    `middleware/`, `pages/`, `plugins/`, `lib/`, and `core/` (client-only
+    stores, composables, contexts, ...).
+  - `apps/web/server/` is the Nitro server.
+  - `apps/web/shared/` is code used by the client AND the server/electron
+    (types, constants, helpers, sql-dialect, and module types/utils the server
+    needs), imported as `#shared/...`.
+- `apps/desktop/` (`@orcaq/desktop`) holds `electron/` sources,
+  `electron-builder.yml` and `scripts/electron-before-build.mjs`; it copies
+  `apps/web/.output` into `apps/desktop/out/runtime` and packages to
+  `apps/desktop/out/packages`.
+- `apps/cli/` is the npx launcher published as `orcaq` (`bin/cli.mjs`,
+  `scripts/build-npx.mjs`); `npx:build` copies `apps/web/.output` into
+  `apps/cli/.output`.
+- Import boundaries: `apps/web/server/**`, `apps/web/shared/**` and
+  `apps/desktop/electron/**` must import shared code via `#shared/...`, never via
+  `~/` (that is the client `app/` directory). `shared/` must not import `app/`
+  or `server/`.
 
 ## Repo Layout And Important Directories
+
+Paths below are relative to `apps/web/app/` unless they start with `apps/`.
 
 - `components/` contains Vue UI. Reusable primitives live in `components/base`
   and shadcn-style components live in `components/ui`.
 - `components/base/data-grid/` contains the shared AG Grid wrapper, copy context
   menu, and reusable grid renderers/headers. Read
-  `components/base/data-grid/docs/USAGE_GUIDE.md` before changing shared grid
+  `apps/web/app/components/base/data-grid/docs/USAGE_GUIDE.md` before changing shared grid
   behavior or adding a new generic grid feature.
 - `components/modules/` contains feature modules. Important modules include
   `quick-query`, `raw-query`, `management-connection`, `management-schemas`,
@@ -21,22 +56,24 @@ This repo is a Nuxt 3 + Vue 3 + TypeScript with Electron desktop support.
 - `components/modules/quick-query/` is the table browsing/editing feature. Keep
   extracted composables in its `hooks/` directory and pure helpers in its
   `utils/` directory.
-- `core/` contains shared app logic used by the frontend, including composables,
-  helpers, constants, stores, types, persistence abstractions, and contexts.
-- `server/` contains Nuxt server API routes and backend infrastructure for
+- `core/` contains client app logic used by the frontend, including composables,
+  stores, persistence abstractions, and contexts. Types, constants, helpers and
+  sql-dialect that the server or electron also use live in `apps/web/shared/`.
+- `apps/web/server/` contains Nuxt server API routes and backend infrastructure for
   database adapters, drivers, metadata, query execution, Redis, and AI features.
-- `electron/` contains the Electron desktop wrapper, persistence schema, and
+- `apps/desktop/electron/` contains the Electron desktop wrapper, persistence schema, and
   desktop-specific implementation.
 - `pages/` contains Nuxt file-based routes for workspaces, connections, ERD,
   schema management, raw query, and quick query.
 - `plugins/` contains Nuxt plugins. Be careful changing app initialization or
   storage hydration because many Nuxt tests depend on those paths.
-- `test/unit`, `test/nuxt`, `test/e2e`, and `test/playwright` contain the test
+- `apps/web/test/unit`, `apps/web/test/nuxt`, `apps/web/test/e2e`, and
+  `apps/web/test/playwright` contain the test
   suites. Prefer the narrowest relevant suite first, then broaden.
-- `docs/` contains architecture, project structure, API, module flow, business
+- `docs/` (repo root) contains architecture, project structure, API, module flow, business
   rules, storage, and refactoring guidance. Read the specific doc that matches
   the task before changing broad behavior.
-- Shared grid usage notes live in `components/base/data-grid/docs/USAGE_GUIDE.md`.
+- Shared grid usage notes live in `apps/web/app/components/base/data-grid/docs/USAGE_GUIDE.md`.
 
 ## Code Patterns
 
@@ -64,18 +101,19 @@ Component file structure order: `<script setup>`, then `<template>`, then `<styl
 
 ### Imports & Path Aliases
 
-- Use `~/` path alias for src root: `import { useSchemaStore } from '~/shared/stores/useSchemaStore'`
+- Use `~/` path alias for the client root `apps/web/app/`: `import { useSchemaStore } from '~/core/stores/useSchemaStore'`
+- Use `#shared/` for code in `apps/web/shared/`: `import type { Connection } from '#shared/types'`. Server and electron code must use `#shared/...`, never `~/`
 - Avoid relative paths for cross-module imports (`../../../`)
 - Each module should have an `index.ts` barrel export
 
 ### State Management
 
-| State Type             | Use For                         | Location            |
-| ---------------------- | ------------------------------- | ------------------- |
-| Local `ref`/`reactive` | UI state (modals, forms, temp)  | Component           |
-| Pinia Store            | Shared state across components  | `/shared/stores/`   |
-| Composable             | Reusable logic with local state | `/composables/`     |
-| Provide/Inject         | Deep component tree data        | `/shared/contexts/` |
+| State Type             | Use For                         | Location                |
+| ---------------------- | ------------------------------- | ----------------------- |
+| Local `ref`/`reactive` | UI state (modals, forms, temp)  | Component               |
+| Pinia Store            | Shared state across components  | `app/core/stores/`      |
+| Composable             | Reusable logic with local state | `app/core/composables/` |
+| Provide/Inject         | Deep component tree data        | `app/core/contexts/`    |
 
 Use `storeToRefs()` when accessing store state for reactivity: `const { workspaceId } = storeToRefs(wsStateStore)`
 
@@ -156,7 +194,7 @@ Prefer Tailwind utilities. Use `<style scoped>` only for complex styles not achi
 
 ## How To Run The Project
 
-Commands are defined in `package.json`. This repo supports Bun, npm scripts, and
+Commands are defined in the root `package.json` (proxies to `apps/*/package.json`). This repo supports Bun, npm scripts, and
 Nuxt/Electron workflows.
 
 - Install dependencies: `bun install` or the package-manager equivalent already

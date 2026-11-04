@@ -1,3 +1,20 @@
+/**
+ * Monorepo note: this config lives at the repo root but is run from apps/web
+ * (`bun run depcruise:json` -> `bun run --cwd apps/web depcruise:json`), so every
+ * path below is relative to apps/web: app/ (client), server/ (Nitro),
+ * shared/ (client + server + electron, imported as `#shared/...`).
+ */
+const { existsSync } = require('node:fs');
+const { join } = require('node:path');
+
+// Nuxt 4's apps/web/tsconfig.json may only hold project references; aliases
+// (`~/`, `#shared/`) are then defined in the generated .nuxt/tsconfig.app.json.
+const tsConfigFileName = existsSync(
+  join(process.cwd(), '.nuxt/tsconfig.app.json')
+)
+  ? '.nuxt/tsconfig.app.json'
+  : 'tsconfig.json';
+
 /** @type {import('dependency-cruiser').IConfiguration} */
 module.exports = {
   forbidden: [
@@ -11,6 +28,24 @@ module.exports = {
       to: {
         circular: true,
       },
+    },
+    {
+      name: 'server-not-to-app',
+      severity: 'error',
+      comment:
+        'Nitro server code must not import client code from app/. Move code used by both ' +
+        'into shared/ and import it as `#shared/...`.',
+      from: { path: '^server/' },
+      to: { path: '^app/' },
+    },
+    {
+      name: 'shared-not-to-app-or-server',
+      severity: 'error',
+      comment:
+        'shared/ is used by the client, the Nitro server and electron; it must stay ' +
+        'environment-neutral and must not import app/ or server/.',
+      from: { path: '^shared/' },
+      to: { path: '^(app|server)/' },
     },
     {
       name: 'no-orphans',
@@ -140,7 +175,7 @@ module.exports = {
         'section of your package.json. If this module is development only - add it to the ' +
         'from.pathNot re of the not-to-dev-dep rule in the dependency-cruiser configuration',
       from: {
-        path: '^(app|lib)',
+        path: '^app/(lib/|app[.]vue$)',
         pathNot: '[.](?:spec|test)[.](?:js|mjs|cjs|jsx|ts|mts|cts|tsx)$',
       },
       to: {
@@ -187,7 +222,7 @@ module.exports = {
 
     // Which modules to exclude
     exclude: [
-      '^node_modules',
+      '(^|/)node_modules/',
       '^\\.nuxt',
       '^dist',
       '^\.output',
@@ -253,7 +288,7 @@ module.exports = {
     // dependency-cruiser's current working directory). When not provided
     // defaults to './tsconfig.json'.
     tsConfig: {
-      fileName: 'tsconfig.json',
+      fileName: tsConfigFileName,
     },
 
     // Webpack configuration to use to get resolve options from.

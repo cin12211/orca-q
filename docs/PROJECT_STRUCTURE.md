@@ -9,38 +9,72 @@ Complete folder structure and file responsibilities for the OrcaQ database edito
 
 ## Root Directory Overview
 
+OrcaQ is a Bun-workspaces monorepo (`workspaces: ["apps/*"]`). The root
+`package.json` proxies every script (`bun run dev`, `bun run typecheck`,
+`bun test:unit`, `bun run electron:*`, `bun run npx:build`, ...) to the app that
+owns it, so commands run from the repo root.
+
 ```
 OrcaQ/
-├── app.vue                    # Root Vue application entry
-├── error.vue                  # Global error page
-├── nuxt.config.ts            # Nuxt configuration (web mode)
-├── nuxt.config.electron.ts   # Nuxt configuration (Electron mode)
-├── components.json           # shadcn-vue configuration
-├── tailwind.config.ts        # Tailwind CSS configuration
-├── tsconfig.json             # TypeScript configuration
-├── package.json              # Dependencies & scripts
-│
-├── assets/                   # Static assets
-├── components/               # Vue components
-├── composables/              # Vue composables
+├── package.json              # Private workspace root + proxy scripts
+├── bun.lock
+├── .husky/                   # Pre-commit hooks (call root scripts)
+├── .github/                  # CI workflows
 ├── docs/                     # Documentation
-├── electron/                 # Electron desktop wrapper
-├── layouts/                  # Page layouts
-├── lib/                      # Library utilities
-├── pages/                    # File-based routing
-├── plugins/                  # Nuxt plugins
-├── public/                   # Public static files
-├── scripts/                  # Build scripts
-├── server/                   # Server API routes
-├── shared/                   # Shared application logic
-└── utils/                    # Utility functions
+├── Dockerfile                # Builds apps/web, runs apps/web/.output
+├── docker-compose.yml
+├── SAC/                      # Nginx load-balancer compose example
+├── .dependency-cruiser.js    # Run from apps/web (`bun run depcruise:json`)
+│
+├── apps/
+│   ├── web/                  # @orcaq/web — Nuxt 4 app (web build, used by desktop + cli)
+│   │   ├── nuxt.config.ts    # Nuxt configuration
+│   │   ├── components.json   # shadcn-vue configuration
+│   │   ├── tailwind.config.ts
+│   │   ├── tsconfig.json
+│   │   ├── vitest.config.ts
+│   │   ├── playwright.config.ts
+│   │   ├── ecosystem.config.js
+│   │   ├── .storybook/
+│   │   ├── app/              # Client code (`~/` alias)
+│   │   │   ├── app.vue       # Root Vue application entry
+│   │   │   ├── error.vue     # Global error page
+│   │   │   ├── spa-loading-template.html
+│   │   │   ├── assets/
+│   │   │   ├── components/
+│   │   │   ├── layouts/
+│   │   │   ├── middleware/
+│   │   │   ├── pages/
+│   │   │   ├── plugins/
+│   │   │   ├── lib/
+│   │   │   └── core/         # Client-only: stores, composables, contexts, persist, ...
+│   │   ├── server/           # Nitro server (API routes, DB adapters, MCP, AI)
+│   │   ├── shared/           # Used by client + server + electron (`#shared/...`):
+│   │   │                     #   types, constants, helpers, sql-dialect, module types/utils
+│   │   ├── types/            # Ambient *.d.ts
+│   │   ├── public/           # Public static files
+│   │   ├── test/             # unit / nuxt / api / playwright suites + fixtures
+│   │   └── scripts/test-services/  # Fixture start/stop/seed scripts
+│   │
+│   ├── desktop/              # @orcaq/desktop — Electron wrapper
+│   │   ├── electron/         # Main/preload sources, persistence, sidecar
+│   │   ├── electron-builder.yml
+│   │   └── scripts/electron-before-build.mjs  # apps/web/.output → apps/desktop/out/runtime
+│   │
+│   └── cli/                  # `orcaq` npx package
+│       ├── bin/cli.mjs
+│       └── scripts/build-npx.mjs  # apps/web/.output → apps/cli/.output
 ```
+
+Import rule: `apps/web/server/**`, `apps/web/shared/**` and `apps/desktop/electron/**`
+import shared code via `#shared/...`, never via `~/` (the client `app/` directory).
+`shared/` must not import `app/` or `server/`.
 
 ---
 
 ## Core Directories
 
-### `/components` - Vue Components
+### `apps/web/app/components` - Vue Components
 
 ```
 components/
@@ -91,7 +125,10 @@ components/
 
 ---
 
-### `/shared` - Shared Application Logic
+### `apps/web/app/core` - Client Application Logic
+
+Client-only stores, contexts and persistence. Types and constants that the
+server or electron also need live in `apps/web/shared/` (`#shared/...`).
 
 ```
 shared/
@@ -133,7 +170,7 @@ shared/
 
 ---
 
-### `/composables` - Vue Composables
+### `apps/web/app/core/composables` - Vue Composables
 
 ```
 composables/
@@ -152,7 +189,7 @@ composables/
 
 ---
 
-### `/server` - Nuxt Server API
+### `apps/web/server` - Nuxt Server API
 
 ```
 server/
@@ -188,7 +225,7 @@ server/
 
 ---
 
-### `/pages` - File-Based Routing
+### `apps/web/app/pages` - File-Based Routing
 
 ```
 pages/
@@ -248,7 +285,7 @@ utils/
 
 ---
 
-### `/assets` - Static Assets
+### `apps/web/app/assets` - Static Assets
 
 ```
 assets/
@@ -265,7 +302,7 @@ assets/
 
 ---
 
-### `/layouts` - Page Layouts
+### `apps/web/app/layouts` - Page Layouts
 
 ```
 layouts/
@@ -280,7 +317,7 @@ layouts/
 ### Quick Query Module
 
 ```
-components/modules/quick-query/
+apps/web/app/components/modules/quick-query/
 ├── QuickQuery.vue             # Main component (581 lines)
 ├── SafeModeConfirmDialog.vue  # Safe mode confirmation
 ├── QuickQueryErrorPopup.vue   # Error display
@@ -302,7 +339,7 @@ components/modules/quick-query/
 ### Raw Query Module
 
 ```
-components/modules/raw-query/
+apps/web/app/components/modules/raw-query/
 ├── RawQuery.vue               # Main component
 ├── components/
 │   ├── RawQueryLayout.vue     # Resizable layout
@@ -323,10 +360,10 @@ components/modules/raw-query/
 
 ## Key Configuration Files
 
-| File                 | Purpose                                      |
-| -------------------- | -------------------------------------------- |
-| `nuxt.config.ts`     | Nuxt modules, Tailwind, shadcn, Pinia config |
-| `components.json`    | shadcn-vue component settings                |
-| `tailwind.config.ts` | Tailwind theme extensions                    |
-| `tsconfig.json`      | TypeScript paths and settings                |
-| `.prettierrc`        | Code formatting rules                        |
+| File                          | Purpose                                      |
+| ----------------------------- | -------------------------------------------- |
+| `apps/web/nuxt.config.ts`     | Nuxt modules, Tailwind, shadcn, Pinia config |
+| `apps/web/components.json`    | shadcn-vue component settings                |
+| `apps/web/tailwind.config.ts` | Tailwind theme extensions                    |
+| `apps/web/tsconfig.json`      | TypeScript paths and settings                |
+| `.prettierrc`                 | Code formatting rules                        |

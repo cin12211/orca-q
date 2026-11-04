@@ -4,6 +4,10 @@ build
 .output
 coverage
 .nuxt
+apps/desktop/out
+apps/cli/.output
+apps/web/test-results
+apps/web/playwright-report
 .vscode
 *.min.*
 src-tauri

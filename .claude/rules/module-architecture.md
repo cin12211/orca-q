@@ -1,9 +1,10 @@
 ---
 paths:
-  - 'components/modules/**'
-  - 'core/**'
-  - 'server/**'
-  - 'pages/**'
+  - 'apps/web/app/components/modules/**'
+  - 'apps/web/app/core/**'
+  - 'apps/web/shared/**'
+  - 'apps/web/server/**'
+  - 'apps/web/app/pages/**'
 ---
 
 # Module Architecture Guide
@@ -90,6 +91,11 @@ import { useUserList } from '../hooks/useUserList'
 ```
 
 > **Rule:** If a folder has no `index.ts` → treat it as if it doesn't exist.
+
+> **Monorepo note:** modules live in `apps/web/app/components/modules/`. If the Nitro
+> server (`apps/web/server/`) or electron (`apps/desktop/electron/`) needs a module's
+> types or utils, move them to `apps/web/shared/` and import them as `#shared/...`.
+> Server and electron code never import `~/` (client `app/`) paths.
 
 ---
 
