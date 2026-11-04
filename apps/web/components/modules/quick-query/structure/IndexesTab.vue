@@ -64,7 +64,9 @@ const { data, status } = useFetch<TableIndex[]>('/api/tables/indexes', {
     }
   },
   onResponseError({ response }) {
-    error.value = response._data?.message || 'Failed to load indexes';
+    error.value =
+      (response._data as { message?: string } | undefined)?.message ||
+      'Failed to load indexes';
   },
 });
 

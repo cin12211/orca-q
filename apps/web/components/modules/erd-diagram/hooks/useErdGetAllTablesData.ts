@@ -29,7 +29,7 @@ export const useErdQueryTables = () => {
         toast(response?.statusText);
       },
       onResponse: ({ response }) => {
-        const tables = response._data.tables || ([] as TableMetadata[]);
+        const tables = response._data?.tables || ([] as TableMetadata[]);
 
         erdStore.setTables(tables);
         erdStore.setCurrentConnectionId(

@@ -38,7 +38,9 @@ const { data, status } = useFetch<TableMeta>('/api/tables/meta', {
   })),
   key: `table-meta-${cacheKey.value}`,
   onResponseError({ response }) {
-    error.value = response._data?.message || 'Failed to load table metadata';
+    error.value =
+      (response._data as { message?: string } | undefined)?.message ||
+      'Failed to load table metadata';
   },
 });
 

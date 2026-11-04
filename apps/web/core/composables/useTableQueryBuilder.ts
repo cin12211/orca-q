@@ -183,11 +183,14 @@ export const useTableQueryBuilder = ({
     key: tableName,
     cache: 'default',
     onResponseError: error => {
-      const errorData = error.response?._data?.data;
+      const errorBody = error.response?._data as
+        | { data?: Record<string, any>; message?: string }
+        | undefined;
+      const errorData = errorBody?.data;
 
       openErrorModal.value = true;
 
-      errorMessage.value = error.response?._data?.message || '';
+      errorMessage.value = errorBody?.message || '';
 
       // Log error to history
       addHistoryLog(queryString.value, 0, errorData, errorMessage.value);

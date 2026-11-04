@@ -73,6 +73,40 @@ const sqlite3ConnectionsEnabled =
 export default defineNuxtConfig({
   compatibilityDate: '2024-11-01',
 
+  // --- Nuxt 4 compat overrides (temporary, removed by the app/ layout move) ---
+  // Keep the flat Nuxt 3 layout: sources stay at the apps/web root, and
+  // apps/web/app/ only holds spa-loading-template.html.
+  srcDir: '.',
+  serverDir: 'server',
+  dir: {
+    app: 'app',
+    public: 'public',
+  },
+  // Keep Nuxt 3 runtime behaviour for data fetching, component names and the
+  // SPA loading template.
+  experimental: {
+    granularCachedData: false,
+    purgeCachedData: false,
+    pendingWhenIdle: true,
+    alwaysRunFetchOnKeyChange: true,
+    normalizeComponentNames: false,
+    normalizePageNames: false,
+    spaLoadingTemplateLocation: 'within',
+    defaults: {
+      useAsyncData: {
+        deep: true,
+      },
+    },
+  },
+  typescript: {
+    tsConfig: {
+      compilerOptions: {
+        noUncheckedIndexedAccess: false,
+      },
+    },
+  },
+  // --- end Nuxt 4 compat overrides ---
+
   ssr: false,
   telemetry: false,
 
@@ -158,6 +192,11 @@ export default defineNuxtConfig({
   },
   components: {
     dirs: componentDirs,
+  },
+  nuxtTypedRouter: {
+    // The repo .prettierrc loads @trivago/prettier-plugin-sort-imports, whose
+    // babel parser rejects the `const` type parameters in the generated files.
+    disablePrettier: true,
   },
   piniaPluginPersistedstate: {
     storage: 'localStorage',

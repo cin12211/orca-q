@@ -71,7 +71,9 @@ const { data, status } = useFetch<{
     }
   },
   onResponseError({ response }) {
-    error.value = response._data?.message || 'Failed to load RLS policies';
+    error.value =
+      (response._data as { message?: string } | undefined)?.message ||
+      'Failed to load RLS policies';
   },
 });
 

@@ -63,7 +63,9 @@ const { data, status } = useFetch<TableRule[]>('/api/tables/rules', {
     }
   },
   onResponseError({ response }) {
-    error.value = response._data?.message || 'Failed to load rules';
+    error.value =
+      (response._data as { message?: string } | undefined)?.message ||
+      'Failed to load rules';
   },
 });
 

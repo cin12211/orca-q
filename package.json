@@ -78,5 +78,12 @@
   },
   "bugs": {
     "url": "https://github.com/cin12211/orca-q/issues"
+  },
+  "overrides": {
+    "@vue/compiler-core": "3.5.44",
+    "@vue/compiler-sfc": "3.5.44",
+    "@vue/compiler-ssr": "3.5.44",
+    "@vue/runtime-core": "3.5.44",
+    "typescript": "~5.9.3"
   }
 }

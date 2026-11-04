@@ -56,7 +56,7 @@ const openConfigModal = () => {
         <BreadcrumbList class="gap-0!">
           <BreadcrumbItem>
             <BreadcrumbLink class="flex items-center gap-0.5">
-              <Icon :name="currentFileInfo?.icon" />
+              <Icon :name="currentFileInfo?.icon ?? ''" />
               {{ currentFileInfo?.title }}
             </BreadcrumbLink>
           </BreadcrumbItem>

@@ -1,7 +1,7 @@
 import { defineStore, storeToRefs } from 'pinia';
 import { ref } from 'vue';
 import { reorder } from '@atlaskit/pragmatic-drag-and-drop/reorder';
-import type { RoutesNamesList } from '@typed-router/__routes';
+import type { RoutesNamesList } from '@typed-router';
 import { useWorkspaceConnectionRoute } from '~/core/composables/useWorkspaceConnectionRoute';
 import { createStorageApis } from '~/core/storage';
 import {

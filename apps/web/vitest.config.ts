@@ -18,6 +18,34 @@ const sharedAliases = [
 ];
 
 export default defineConfig(async () => {
+  const nuxtProject = await defineVitestProject({
+    test: {
+      name: 'nuxt',
+      include: ['test/nuxt/**/*.{test,spec}.ts'],
+      exclude: ['test/api/**/*.{test,spec}.ts'],
+      environment: 'nuxt',
+      environmentOptions: {
+        nuxt: {
+          domEnvironment: 'happy-dom',
+        },
+      },
+      hookTimeout: 30_000,
+    },
+  });
+
+  // Must run before the Nuxt runtime entry (which defineVitestProject puts
+  // first) so the `#build/fetch` mock is in place when the app loads.
+  const nuxtSetupFiles = nuxtProject.test?.setupFiles;
+  nuxtProject.test = {
+    ...nuxtProject.test,
+    setupFiles: [
+      path.resolve(__dirname, 'test/support/nuxt-global-fetch.ts'),
+      ...(Array.isArray(nuxtSetupFiles)
+        ? nuxtSetupFiles
+        : [nuxtSetupFiles].filter((file): file is string => Boolean(file))),
+    ],
+  };
+
   return {
     test: {
       env: loadEnv('', envDir, ''),
@@ -49,20 +77,7 @@ export default defineConfig(async () => {
             testTimeout: 60_000,
           },
         },
-        await defineVitestProject({
-          test: {
-            name: 'nuxt',
-            include: ['test/nuxt/**/*.{test,spec}.ts'],
-            exclude: ['test/api/**/*.{test,spec}.ts'],
-            environment: 'nuxt',
-            environmentOptions: {
-              nuxt: {
-                domEnvironment: 'happy-dom',
-              },
-            },
-            hookTimeout: 30_000,
-          },
-        }),
+        nuxtProject,
       ],
     },
   };

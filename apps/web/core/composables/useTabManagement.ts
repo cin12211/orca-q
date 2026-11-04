@@ -1,5 +1,5 @@
 import { storeToRefs } from 'pinia';
-import type { RoutesNamesList } from '@typed-router/__routes';
+import type { RoutesNamesList } from '@typed-router';
 import { useWorkspaceConnectionRoute } from '~/core/composables/useWorkspaceConnectionRoute';
 import { useManagementConnectionStore } from '~/core/stores/managementConnectionStore';
 import { useExplorerFileStore } from '~/core/stores/useExplorerFileStore';

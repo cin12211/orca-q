@@ -44,7 +44,9 @@ const { data, status } = useFetch<ViewMeta>('/api/views/meta', {
     }
   },
   onResponseError({ response }) {
-    error.value = response._data?.message || 'Failed to load view metadata';
+    error.value =
+      (response._data as { message?: string } | undefined)?.message ||
+      'Failed to load view metadata';
   },
 });
 

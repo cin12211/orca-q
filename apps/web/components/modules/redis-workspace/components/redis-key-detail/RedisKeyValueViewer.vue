@@ -17,7 +17,12 @@ const emit = defineEmits<{
 }>();
 
 const textValue = defineModel<string>('textValue', { default: '' });
-const jsonValue = defineModel<unknown>('jsonValue', { default: null });
+const jsonValue = defineModel<unknown>('jsonValue', {
+  // Vue 3.5.44 types require a non-null default for an `unknown` model; keep
+  // the runtime default of `null`.
+  // @ts-expect-error -- null default is intended
+  default: null,
+});
 const jsonMode = defineModel<'tree' | 'text'>('jsonMode', { default: 'tree' });
 const tableRows = defineModel<RedisKeyTableRow[]>('tableRows', {
   default: () => [],
