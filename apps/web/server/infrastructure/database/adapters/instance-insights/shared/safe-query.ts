@@ -1,4 +1,4 @@
-import type { IDatabaseAdapter } from '~/server/infrastructure/driver';
+import type { IDatabaseAdapter } from '~~/server/infrastructure/driver';
 
 export interface SafeQueryOutcome<T> {
   rows: T[];

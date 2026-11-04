@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   assertReadOnlySql,
   ReadOnlySqlError,
-} from '~/server/infrastructure/mcp';
+} from '~~/server/infrastructure/mcp';
 
 describe('assertReadOnlySql', () => {
   it.each([

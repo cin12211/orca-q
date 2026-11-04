@@ -1,5 +1,5 @@
 import { createError } from 'h3';
-import { DatabaseClientType } from '~/core/constants/database-client-type';
+import { DatabaseClientType } from '~~/app/core/constants/database-client-type';
 import type {
   TableIndex,
   ViewColumn,
@@ -7,7 +7,7 @@ import type {
   ViewDependency,
   ViewMeta,
   ViewOverviewMetadata,
-} from '~/core/types';
+} from '~~/app/core/types';
 import type { IDatabaseViewAdapter } from '../types';
 
 function getDatabaseLabel(dbType: DatabaseClientType): string {

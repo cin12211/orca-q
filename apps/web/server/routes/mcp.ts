@@ -15,7 +15,7 @@ import {
   getMcpServerConfigs,
   isLocalMcpRequest,
   listMcpSessions,
-} from '~/server/infrastructure/mcp';
+} from '~~/server/infrastructure/mcp';
 
 /**
  * Built-in MCP endpoint (Streamable HTTP, stateless) served on the same port

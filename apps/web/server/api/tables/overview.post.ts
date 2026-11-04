@@ -1,7 +1,7 @@
 import { defineEventHandler, readBody } from 'h3';
-import { DatabaseClientType } from '~/core/constants/database-client-type';
-import type { DatabaseMetadataRequestParams } from '~/core/types';
-import { createTableAdapter } from '~/server/infrastructure/database/adapters/tables';
+import { DatabaseClientType } from '~~/app/core/constants/database-client-type';
+import type { DatabaseMetadataRequestParams } from '~~/app/core/types';
+import { createTableAdapter } from '~~/server/infrastructure/database/adapters/tables';
 
 interface RequestBody extends DatabaseMetadataRequestParams {
   schema: string;

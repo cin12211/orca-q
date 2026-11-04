@@ -1,7 +1,7 @@
 import { createError } from 'h3';
 import oracledb from 'oracledb';
-import { DatabaseClientType, BULK_CHUNK_SIZE } from '~/core/constants';
-import { getSqlDialect } from '~/core/sql-dialect';
+import { DatabaseClientType, BULK_CHUNK_SIZE } from '~~/app/core/constants';
+import { getSqlDialect } from '~~/app/core/sql-dialect';
 import type {
   BulkUpdateResponse,
   RLSPolicy,
@@ -13,8 +13,8 @@ import type {
   TableSize,
   TableStructure,
   TableTrigger,
-} from '~/core/types';
-import { lowerCaseRowKeys } from '~/server/infrastructure/driver/result-rows';
+} from '~~/app/core/types';
+import { lowerCaseRowKeys } from '~~/server/infrastructure/driver/result-rows';
 import { BaseDomainAdapter } from '../../shared';
 import { buildExportContent } from '../shared/export-content';
 import type {

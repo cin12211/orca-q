@@ -2,7 +2,7 @@ import { createError } from 'h3';
 import { Readable } from 'node:stream';
 import { to } from 'pg-copy-streams';
 import QueryStream from 'pg-query-stream';
-import type { IDatabaseAdapter } from '~/server/infrastructure/driver';
+import type { IDatabaseAdapter } from '~~/server/infrastructure/driver';
 
 const BATCH_SIZE = 10_000;
 const SQL_BATCH_SIZE = 1_0000;

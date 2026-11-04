@@ -1,10 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { EConnectionMethod } from '~/core/types/entities/connection.entity';
-import messagesHandler from '~/server/api/redis/pubsub/messages.post';
-import overviewHandler from '~/server/api/redis/pubsub/overview.post';
-import publishHandler from '~/server/api/redis/pubsub/publish.post';
-import subscribeHandler from '~/server/api/redis/pubsub/subscribe.post';
-import unsubscribeHandler from '~/server/api/redis/pubsub/unsubscribe.post';
+import messagesHandler from '~~/server/api/redis/pubsub/messages.post';
+import overviewHandler from '~~/server/api/redis/pubsub/overview.post';
+import publishHandler from '~~/server/api/redis/pubsub/publish.post';
+import subscribeHandler from '~~/server/api/redis/pubsub/subscribe.post';
+import unsubscribeHandler from '~~/server/api/redis/pubsub/unsubscribe.post';
 
 const {
   readBodyMock,
@@ -37,7 +37,7 @@ vi.mock('h3', async importOriginal => {
   };
 });
 
-vi.mock('~/server/infrastructure/nosql/redis/redis-pubsub.service', () => ({
+vi.mock('~~/server/infrastructure/nosql/redis/redis-pubsub.service', () => ({
   getRedisPubSubOverview: getRedisPubSubOverviewMock,
   subscribeRedisPubSub: subscribeRedisPubSubMock,
   getRedisPubSubMessages: getRedisPubSubMessagesMock,

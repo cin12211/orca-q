@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { DatabaseClientType } from '~/core/constants/database-client-type';
 import type { SchemaColumnMetadata, SchemaMetaData } from '~/core/types';
-import { computeSchemaDiff } from '~/server/utils/schema-diff.utils';
+import { computeSchemaDiff } from '~~/server/utils/schema-diff.utils';
 
 const column = (
   name: string,

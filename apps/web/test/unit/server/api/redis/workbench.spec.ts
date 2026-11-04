@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { EConnectionMethod } from '~/core/types/entities/connection.entity';
-import workbenchHandler from '~/server/api/redis/workbench/execute.post';
+import workbenchHandler from '~~/server/api/redis/workbench/execute.post';
 
 const { readBodyMock, createRedisRuntimeClientMock } = vi.hoisted(() => ({
   readBodyMock: vi.fn(),
@@ -21,11 +21,11 @@ vi.mock('h3', async importOriginal => {
 });
 
 vi.mock(
-  '~/server/infrastructure/nosql/redis/redis.client',
+  '~~/server/infrastructure/nosql/redis/redis.client',
   async importOriginal => {
     const actual =
       await importOriginal<
-        typeof import('~/server/infrastructure/nosql/redis/redis.client')
+        typeof import('~~/server/infrastructure/nosql/redis/redis.client')
       >();
 
     return {

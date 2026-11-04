@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { formatMssqlType } from '~/server/infrastructure/database/adapters/metadata/mssql/mssql-catalog';
+import { formatMssqlType } from '~~/server/infrastructure/database/adapters/metadata/mssql/mssql-catalog';
 
 const column = (
   type_name: string,

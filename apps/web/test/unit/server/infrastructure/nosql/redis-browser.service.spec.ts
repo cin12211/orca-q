@@ -5,7 +5,7 @@ import {
   getRedisKeyDetail,
   listRedisKeys,
   updateRedisKeyValue,
-} from '~/server/infrastructure/nosql/redis/redis-browser.service';
+} from '~~/server/infrastructure/nosql/redis/redis-browser.service';
 
 const { clientMock, closeMock, createRedisRuntimeClientMock } = vi.hoisted(
   () => {
@@ -43,11 +43,11 @@ const { clientMock, closeMock, createRedisRuntimeClientMock } = vi.hoisted(
 );
 
 vi.mock(
-  '~/server/infrastructure/nosql/redis/redis.client',
+  '~~/server/infrastructure/nosql/redis/redis.client',
   async importOriginal => {
     const actual =
       await importOriginal<
-        typeof import('~/server/infrastructure/nosql/redis/redis.client')
+        typeof import('~~/server/infrastructure/nosql/redis/redis.client')
       >();
 
     return {

@@ -2,9 +2,9 @@
  * API: Grant Bulk Permissions
  * Executes multiple permission grants in sequence (for wizard)
  */
-import { DatabaseClientType } from '~/core/constants/database-client-type';
-import type { BulkGrantRequest, BulkGrantResponse, DatabaseMetadataRequestParams } from '~/core/types';
-import { createRoleAdapter } from '~/server/infrastructure/database/adapters/database-roles';
+import { DatabaseClientType } from '~~/app/core/constants/database-client-type';
+import type { BulkGrantRequest, BulkGrantResponse, DatabaseMetadataRequestParams } from '~~/app/core/types';
+import { createRoleAdapter } from '~~/server/infrastructure/database/adapters/database-roles';
 
 interface RequestBody extends BulkGrantRequest, DatabaseMetadataRequestParams {
   dbType?: DatabaseClientType;

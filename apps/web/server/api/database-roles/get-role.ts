@@ -3,9 +3,9 @@
  * Fetches all database roles/users with metadata
  * Supports multiple database types via adapter pattern
  */
-import { DatabaseClientType } from '~/core/constants/database-client-type';
-import type { DatabaseRole, GetDatabaseRolesRequest, DatabaseMetadataRequestParams } from '~/core/types';
-import { createRoleAdapter } from '~/server/infrastructure/database/adapters/database-roles';
+import { DatabaseClientType } from '~~/app/core/constants/database-client-type';
+import type { DatabaseRole, GetDatabaseRolesRequest, DatabaseMetadataRequestParams } from '~~/app/core/types';
+import { createRoleAdapter } from '~~/server/infrastructure/database/adapters/database-roles';
 
 interface RequestBody extends GetDatabaseRolesRequest, DatabaseMetadataRequestParams {
   dbType?: DatabaseClientType;

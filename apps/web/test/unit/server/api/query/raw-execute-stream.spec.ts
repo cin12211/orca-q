@@ -4,7 +4,7 @@ import {
   EConnectionProviderKind,
   EManagedSqliteProvider,
 } from '~/core/types/entities/connection.entity';
-import rawExecuteStreamHandler from '~/server/api/query/raw-execute-stream.post';
+import rawExecuteStreamHandler from '~~/server/api/query/raw-execute-stream.post';
 
 const { readBodyMock, createQueryAdapterMock, rawExecuteStreamMock } =
   vi.hoisted(() => ({
@@ -26,7 +26,7 @@ vi.mock('h3', async importOriginal => {
   };
 });
 
-vi.mock('~/server/infrastructure/database/adapters/query', () => ({
+vi.mock('~~/server/infrastructure/database/adapters/query', () => ({
   createQueryAdapter: createQueryAdapterMock,
 }));
 

@@ -2,9 +2,9 @@ import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { SqliteTableAdapter } from '~/server/infrastructure/database/adapters/tables/sqlite/sqlite-table.adapter';
-import { SqliteAdapter } from '~/server/infrastructure/driver/sqlite.adapter';
-import { assertBulkSuccess } from '~/server/utils/assert-bulk-success';
+import { SqliteTableAdapter } from '~~/server/infrastructure/database/adapters/tables/sqlite/sqlite-table.adapter';
+import { SqliteAdapter } from '~~/server/infrastructure/driver/sqlite.adapter';
+import { assertBulkSuccess } from '~~/server/utils/assert-bulk-success';
 
 describe('assertBulkSuccess', () => {
   it('passes successful results through', () => {

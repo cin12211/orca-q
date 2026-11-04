@@ -3,9 +3,9 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { DatabaseClientType } from '~/core/constants/database-client-type';
-import { createDatabaseAdapter } from '~/server/infrastructure/driver';
-import type { IDatabaseAdapter } from '~/server/infrastructure/driver';
-import { executeReadOnlyQuery } from '~/server/infrastructure/mcp/query-executor';
+import { createDatabaseAdapter } from '~~/server/infrastructure/driver';
+import type { IDatabaseAdapter } from '~~/server/infrastructure/driver';
+import { executeReadOnlyQuery } from '~~/server/infrastructure/mcp/query-executor';
 
 const tempDir = mkdtempSync(path.join(tmpdir(), 'orcaq-mcp-exec-'));
 const dbPath = path.join(tempDir, 'data.sqlite');

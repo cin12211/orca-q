@@ -1,8 +1,8 @@
-import type { BrokerMessage } from '~/core/types/broker-message.types';
+import type { BrokerMessage } from '~~/app/core/types/broker-message.types';
 import type {
   RabbitPublishInput,
   RabbitPublishResult,
-} from '~/core/types/rabbitmq.types';
+} from '~~/app/core/types/rabbitmq.types';
 import type { BrokerConnectionInput } from '../broker/broker-connection';
 import { RABBIT_DEFAULT_EXCHANGE_PATH_NAME } from './rabbitmq-browser.service';
 import {

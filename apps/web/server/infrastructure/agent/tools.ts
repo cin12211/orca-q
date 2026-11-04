@@ -10,8 +10,8 @@ import type {
   AgentVisualizeTableResult,
   DbAgentRequestBody,
   DbAgentSchemaSnapshot,
-} from '~/components/modules/agent/types';
-import { AgentToolName } from '~/components/modules/agent/types';
+} from '~~/app/components/modules/agent/types';
+import { AgentToolName } from '~~/app/components/modules/agent/types';
 import {
   getQualifiedTableName,
   isMutationSql,

@@ -1,5 +1,5 @@
-import { DatabaseClientType } from '~/core/constants/database-client-type';
-import { MINIMUM_SERVER_VERSIONS } from '~/core/constants/minimum-server-versions';
+import { DatabaseClientType } from '~~/app/core/constants/database-client-type';
+import { MINIMUM_SERVER_VERSIONS } from '~~/app/core/constants/minimum-server-versions';
 
 export const UNSUPPORTED_SERVER_VERSION_CODE =
   'ORCAQ_UNSUPPORTED_SERVER_VERSION';

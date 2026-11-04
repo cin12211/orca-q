@@ -4,7 +4,7 @@ import {
   buildSchemaSummary,
   buildSchemaTableList,
   buildTableSchemaDetail,
-} from '~/server/infrastructure/agent/schema/schema';
+} from '~~/server/infrastructure/agent/schema/schema';
 
 const mockSnapshot: DbAgentSchemaSnapshot = {
   id: 'test-schema-1',

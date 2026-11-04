@@ -13,7 +13,7 @@ import type {
   RedisPrefixMetric,
   RedisReplicationInsight,
   RedisSlowlogEntry,
-} from '~/core/types';
+} from '~~/app/core/types';
 import {
   createRedisRuntimeClient,
   parseRedisDatabaseIndex,

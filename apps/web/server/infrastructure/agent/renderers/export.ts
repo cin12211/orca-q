@@ -3,7 +3,7 @@ import type {
   AgentExportFilePreview,
   AgentExportFileResult,
   AgentExportFormat,
-} from '~/components/modules/agent/types';
+} from '~~/app/components/modules/agent/types';
 
 const PREVIEW_LIMIT = 20;
 

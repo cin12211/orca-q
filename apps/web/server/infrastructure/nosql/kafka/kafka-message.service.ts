@@ -5,7 +5,7 @@ import type {
   KafkaPartitionCursor,
   KafkaProduceInput,
   KafkaProduceResult,
-} from '~/core/types/kafka.types';
+} from '~~/app/core/types/kafka.types';
 import {
   BrokerConnectionError,
   type BrokerConnectionInput,

@@ -1,5 +1,5 @@
 import type { CallToolResult } from '@modelcontextprotocol/sdk/types.js';
-import { BrokerConnectionError } from '~/server/infrastructure/nosql/broker/broker-connection';
+import { BrokerConnectionError } from '~~/server/infrastructure/nosql/broker/broker-connection';
 
 export function jsonResult(value: unknown): CallToolResult {
   return {

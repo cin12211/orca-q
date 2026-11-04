@@ -1,9 +1,9 @@
-import { DatabaseClientType } from '~/core/constants/database-client-type';
-import type { ExportOptions, ImportOptions } from '~/core/types';
+import { DatabaseClientType } from '~~/app/core/constants/database-client-type';
+import type { ExportOptions, ImportOptions } from '~~/app/core/types';
 import type {
   ISSLConfig,
   ISSHConfig,
-} from '~/core/types/entities/connection.entity';
+} from '~~/app/core/types/entities/connection.entity';
 
 export const SUPPORTED_LOGICAL_BACKUP_TYPES = new Set<DatabaseClientType>([
   DatabaseClientType.POSTGRES,

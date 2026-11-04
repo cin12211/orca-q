@@ -1,12 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import { DatabaseClientType } from '~/core/constants/database-client-type';
-import { normalizeConnectionError } from '~/server/infrastructure/driver/connection-error';
+import { normalizeConnectionError } from '~~/server/infrastructure/driver/connection-error';
 import {
   UNSUPPORTED_SERVER_VERSION_CODE,
   UnsupportedServerVersionError,
   assertMinimumServerVersion,
   parseServerVersion,
-} from '~/server/infrastructure/driver/server-version';
+} from '~~/server/infrastructure/driver/server-version';
 
 describe('server version gate', () => {
   it('parses major.minor from version strings', () => {

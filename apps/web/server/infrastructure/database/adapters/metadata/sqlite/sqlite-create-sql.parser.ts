@@ -1,12 +1,12 @@
-import { DatabaseClientType } from '~/core/constants/database-client-type';
+import { DatabaseClientType } from '~~/app/core/constants/database-client-type';
 import type {
   SchemaColumnMetadata,
   SchemaForeignKeyMetadata,
   SchemaPrimaryKey,
   TableDetailMetadata,
   ViewMetadata,
-} from '~/core/types';
-import { ViewSchemaEnum } from '~/core/types';
+} from '~~/app/core/types';
+import { ViewSchemaEnum } from '~~/app/core/types';
 import { resolveMetadataTypeAlias } from '../type-alias.constants';
 
 // ---------------------------------------------------------------------------

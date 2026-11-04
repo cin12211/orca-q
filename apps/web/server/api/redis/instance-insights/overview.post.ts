@@ -3,8 +3,8 @@ import {
   EConnectionMethod,
   type ISSHConfig,
   type ISSLConfig,
-} from '~/core/types/entities/connection.entity';
-import { getRedisOverviewInsight } from '~/server/infrastructure/nosql/redis/redis-instance-insights.service';
+} from '~~/app/core/types/entities/connection.entity';
+import { getRedisOverviewInsight } from '~~/server/infrastructure/nosql/redis/redis-instance-insights.service';
 
 export default defineEventHandler(async event => {
   const body: {

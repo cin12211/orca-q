@@ -8,7 +8,7 @@ import {
   MCP_MAX_PAYLOAD_CHARS,
   toBrokerInput,
   toMcpMessage,
-} from '~/server/infrastructure/mcp/broker/broker-tool-utils';
+} from '~~/server/infrastructure/mcp/broker/broker-tool-utils';
 
 function message(payload: string): BrokerMessage {
   return {

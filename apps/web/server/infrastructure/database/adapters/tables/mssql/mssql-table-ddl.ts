@@ -1,5 +1,5 @@
-import { DatabaseClientType } from '~/core/constants/database-client-type';
-import { getSqlDialect } from '~/core/sql-dialect';
+import { DatabaseClientType } from '~~/app/core/constants/database-client-type';
+import { getSqlDialect } from '~~/app/core/sql-dialect';
 import { formatMssqlType } from '../../metadata/mssql/mssql-catalog';
 
 export interface MssqlDdlColumn {

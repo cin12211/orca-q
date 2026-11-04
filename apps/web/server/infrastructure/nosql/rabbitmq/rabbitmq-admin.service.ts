@@ -11,7 +11,7 @@ import type {
   RabbitVhostInput,
   RabbitVhostLimitName,
   RabbitVhostSummary,
-} from '~/core/types/rabbitmq.types';
+} from '~~/app/core/types/rabbitmq.types';
 import {
   BrokerConnectionError,
   type BrokerConnectionInput,

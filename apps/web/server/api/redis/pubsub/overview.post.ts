@@ -3,8 +3,8 @@ import {
   EConnectionMethod,
   type ISSHConfig,
   type ISSLConfig,
-} from '~/core/types/entities/connection.entity';
-import { getRedisPubSubOverview } from '~/server/infrastructure/nosql/redis/redis-pubsub.service';
+} from '~~/app/core/types/entities/connection.entity';
+import { getRedisPubSubOverview } from '~~/server/infrastructure/nosql/redis/redis-pubsub.service';
 
 export default defineEventHandler(async event => {
   const body: {

@@ -1,8 +1,8 @@
 import knex, { type Knex } from 'knex';
 import type { Readable } from 'node:stream';
 import oracledb from 'oracledb';
-import { DatabaseClientType } from '~/core/constants/database-client-type';
-import type { DatabaseField } from '~/core/types';
+import { DatabaseClientType } from '~~/app/core/constants/database-client-type';
+import type { DatabaseField } from '~~/app/core/types';
 import { BaseDatabaseAdapter } from './base.adapter';
 import { assertMinimumServerVersion } from './server-version';
 import type { RawQueryResult } from './types';

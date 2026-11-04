@@ -1,6 +1,6 @@
 import { createError } from 'h3';
-import { DatabaseClientType } from '~/core/constants/database-client-type';
-import type { DatabaseMetrics } from '~/core/types';
+import { DatabaseClientType } from '~~/app/core/constants/database-client-type';
+import type { DatabaseMetrics } from '~~/app/core/types';
 import type { IDatabaseMetricsAdapter } from '../types';
 
 function getDatabaseLabel(dbType: DatabaseClientType): string {

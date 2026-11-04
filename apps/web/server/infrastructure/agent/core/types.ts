@@ -1,4 +1,4 @@
-import type { getDatabaseSource } from '~/server/infrastructure/driver/db-connection';
+import type { getDatabaseSource } from '~~/server/infrastructure/driver/db-connection';
 
 export type AIProvider =
   | 'openai'

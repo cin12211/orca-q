@@ -3,11 +3,11 @@ import {
   EConnectionMethod,
   type ISSHConfig,
   type ISSLConfig,
-} from '~/core/types/entities/connection.entity';
+} from '~~/app/core/types/entities/connection.entity';
 import {
   createRedisRuntimeClient,
   parseRedisDatabaseIndex,
-} from '~/server/infrastructure/nosql/redis/redis.client';
+} from '~~/server/infrastructure/nosql/redis/redis.client';
 
 const parseCommand = (command: string) => {
   const tokens: string[] = [];

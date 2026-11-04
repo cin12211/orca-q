@@ -1,7 +1,7 @@
 import { createError } from 'h3';
-import { DatabaseClientType } from '~/core/constants/database-client-type';
-import type { TableSize, TableStructure } from '~/core/types';
-import type { IDatabaseAdapter } from '~/server/infrastructure/driver';
+import { DatabaseClientType } from '~~/app/core/constants/database-client-type';
+import type { TableSize, TableStructure } from '~~/app/core/types';
+import type { IDatabaseAdapter } from '~~/server/infrastructure/driver';
 import { resolveMetadataTypeAlias } from '../../metadata/type-alias.constants';
 
 export class PostgresTableStructureAdapter {

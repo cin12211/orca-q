@@ -4,7 +4,7 @@ import {
   collectMongoReplication,
   describeMongoCommandError,
   mapReplicaMembers,
-} from '~/server/infrastructure/nosql/mongodb/mongodb-instance-insights.service';
+} from '~~/server/infrastructure/nosql/mongodb/mongodb-instance-insights.service';
 
 const unauthorized = Object.assign(new Error('not authorized'), {
   codeName: 'Unauthorized',

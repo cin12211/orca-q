@@ -6,7 +6,7 @@ import type {
   InstanceInsightsTable,
   InstanceInsightsTableColumn,
   InstanceInsightsTableValue,
-} from '~/core/types';
+} from '~~/app/core/types';
 
 const DEFAULT_CAPABILITIES: InstanceInsightsCapabilities = {
   supportsSessionInspection: false,

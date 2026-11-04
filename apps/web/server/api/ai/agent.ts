@@ -5,19 +5,19 @@ import {
   stepCountIs,
 } from 'ai';
 import { createError, defineEventHandler, readBody } from 'h3';
-import type { DbAgentRequestBody } from '~/components/modules/agent/types';
-import { DatabaseClientType } from '~/core/constants/database-client-type';
-import { createProviderModel } from '~/server/infrastructure/agent/core/provider';
+import type { DbAgentRequestBody } from '~~/app/components/modules/agent/types';
+import { DatabaseClientType } from '~~/app/core/constants/database-client-type';
+import { createProviderModel } from '~~/server/infrastructure/agent/core/provider';
 import type {
   AIProvider,
   DatabaseAdapter,
-} from '~/server/infrastructure/agent/core/types';
-import { buildAgentSystemPrompt } from '~/server/infrastructure/agent/systemPromt';
+} from '~~/server/infrastructure/agent/core/types';
+import { buildAgentSystemPrompt } from '~~/server/infrastructure/agent/systemPromt';
 import {
   createDbAgentTools,
   resolveActiveTools,
-} from '~/server/infrastructure/agent/tools';
-import { getDatabaseSource } from '~/server/infrastructure/driver/db-connection';
+} from '~~/server/infrastructure/agent/tools';
+import { getDatabaseSource } from '~~/server/infrastructure/driver/db-connection';
 
 /** Tool names whose output contains large data that should be stripped from context */
 const LARGE_OUTPUT_TOOL_NAMES = new Set([

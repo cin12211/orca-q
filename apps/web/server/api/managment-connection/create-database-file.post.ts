@@ -1,7 +1,7 @@
 import { createError, defineEventHandler, readBody } from 'h3';
-import { DatabaseClientType } from '~/core/constants/database-client-type';
-import type { DatabaseFileOptions } from '~/core/constants/database-file-options';
-import { createDatabaseFile } from '~/server/infrastructure/driver/db-connection/create-database-file';
+import { DatabaseClientType } from '~~/app/core/constants/database-client-type';
+import type { DatabaseFileOptions } from '~~/app/core/constants/database-file-options';
+import { createDatabaseFile } from '~~/server/infrastructure/driver/db-connection/create-database-file';
 
 interface RequestBody {
   type: DatabaseClientType;

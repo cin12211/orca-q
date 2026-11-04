@@ -1,11 +1,11 @@
 import { createError } from 'h3';
-import { DatabaseClientType } from '~/core/constants/database-client-type';
+import { DatabaseClientType } from '~~/app/core/constants/database-client-type';
 import {
   NativeBackupFileKind,
   NativeBackupTool,
   NativeExportFormat,
   type ExportFormat,
-} from '~/core/types';
+} from '~~/app/core/types';
 import {
   getMysqlFamilyCapability,
   type NativeBackupCapability,

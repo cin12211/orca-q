@@ -1,8 +1,8 @@
 import { createError } from 'h3';
 import { rm } from 'node:fs/promises';
 import { basename } from 'node:path';
-import { DatabaseClientType } from '~/core/constants/database-client-type';
-import type { DatabaseTransferJobSnapshot } from '~/core/types';
+import { DatabaseClientType } from '~~/app/core/constants/database-client-type';
+import type { DatabaseTransferJobSnapshot } from '~~/app/core/types';
 import { type NativeBackupJobRecord, NATIVE_BACKUP_TTL_MS } from './types';
 
 const nativeBackupJobs = new Map<string, NativeBackupJobRecord>();

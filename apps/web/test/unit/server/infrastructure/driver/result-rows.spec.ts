@@ -3,7 +3,7 @@ import {
   createSyntheticFields,
   lowerCaseRowKeys,
   mapArrayRowsToObjects,
-} from '~/server/infrastructure/driver/result-rows';
+} from '~~/server/infrastructure/driver/result-rows';
 
 describe('result rows helpers', () => {
   it('maps array rows onto field names', () => {

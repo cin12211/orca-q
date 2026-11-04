@@ -1,11 +1,11 @@
 import { createError, defineEventHandler, readBody } from 'h3';
-import { DatabaseClientType } from '~/core/constants/database-client-type';
+import { DatabaseClientType } from '~~/app/core/constants/database-client-type';
 import type {
   InstanceActionResponse,
   ReplicationSlotDesiredStatus,
   DatabaseMetadataRequestParams,
-} from '~/core/types';
-import { createInstanceInsightsAdapter } from '~/server/infrastructure/database/adapters/instance-insights';
+} from '~~/app/core/types';
+import { createInstanceInsightsAdapter } from '~~/server/infrastructure/database/adapters/instance-insights';
 
 interface RequestBody extends DatabaseMetadataRequestParams {
   slotName: string;

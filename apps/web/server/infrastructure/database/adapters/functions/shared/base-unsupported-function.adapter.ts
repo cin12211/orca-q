@@ -1,12 +1,12 @@
 import { createError } from 'h3';
-import { DatabaseClientType } from '~/core/constants/database-client-type';
+import { DatabaseClientType } from '~~/app/core/constants/database-client-type';
 import type {
   DeleteFunctionResponse,
   FunctionSignature,
   RenameFunctionResponse,
   RoutineMetadata,
   UpdateFunctionResponse,
-} from '~/core/types';
+} from '~~/app/core/types';
 import type { IDatabaseFunctionAdapter } from '../types';
 
 function getDatabaseLabel(dbType: DatabaseClientType): string {

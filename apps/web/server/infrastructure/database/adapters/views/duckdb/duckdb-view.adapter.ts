@@ -1,6 +1,6 @@
 import { createError } from 'h3';
-import { DatabaseClientType } from '~/core/constants/database-client-type';
-import { duckdbDialect } from '~/core/sql-dialect';
+import { DatabaseClientType } from '~~/app/core/constants/database-client-type';
+import { duckdbDialect } from '~~/app/core/sql-dialect';
 import {
   ViewSchemaEnum,
   type TableIndex,
@@ -9,9 +9,9 @@ import {
   type ViewDependency,
   type ViewMeta,
   type ViewOverviewMetadata,
-} from '~/core/types';
-import type { IDatabaseAdapter } from '~/server/infrastructure/driver';
-import { getDatabaseSource } from '~/server/infrastructure/driver/db-connection';
+} from '~~/app/core/types';
+import type { IDatabaseAdapter } from '~~/server/infrastructure/driver';
+import { getDatabaseSource } from '~~/server/infrastructure/driver/db-connection';
 import { BaseUnsupportedViewAdapter } from '../shared/base-unsupported-view.adapter';
 import type { DatabaseViewAdapterParams } from '../types';
 

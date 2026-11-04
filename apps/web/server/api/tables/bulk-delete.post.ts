@@ -1,9 +1,9 @@
 import { defineEventHandler, readBody, createError } from 'h3';
-import { DatabaseClientType } from '~/core/constants/database-client-type';
-import { buildDeleteStatements } from '~/core/helpers/sql-mutation-statements';
-import type { DatabaseMetadataRequestParams } from '~/core/types';
-import { createTableAdapter } from '~/server/infrastructure/database/adapters/tables';
-import { assertBulkSuccess } from '~/server/utils/assert-bulk-success';
+import { DatabaseClientType } from '~~/app/core/constants/database-client-type';
+import { buildDeleteStatements } from '~~/app/core/helpers/sql-mutation-statements';
+import type { DatabaseMetadataRequestParams } from '~~/app/core/types';
+import { createTableAdapter } from '~~/server/infrastructure/database/adapters/tables';
+import { assertBulkSuccess } from '~~/server/utils/assert-bulk-success';
 
 interface RequestBody extends DatabaseMetadataRequestParams {
   tableName: string;

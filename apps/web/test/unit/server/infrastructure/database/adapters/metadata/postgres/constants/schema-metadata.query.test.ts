@@ -3,7 +3,7 @@ import {
   buildSchemaMetaDataQuery,
   getSchemaMetaDataQuery,
   getSchemaNamesQuery,
-} from '~/server/infrastructure/database/adapters/metadata/postgres/constants/schema-metadata.query';
+} from '~~/server/infrastructure/database/adapters/metadata/postgres/constants/schema-metadata.query';
 
 describe('getSchemaMetaDataQuery', () => {
   it('joins routines to pg_proc using specific_name and oid', () => {

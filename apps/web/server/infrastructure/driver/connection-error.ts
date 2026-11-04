@@ -1,4 +1,4 @@
-import { DatabaseClientType } from '~/core/constants/database-client-type';
+import { DatabaseClientType } from '~~/app/core/constants/database-client-type';
 import { UNSUPPORTED_SERVER_VERSION_CODE } from './server-version';
 
 /**

@@ -1,6 +1,6 @@
 import { z } from 'zod';
-import { defineBrokerHandler } from '~/server/infrastructure/nosql/broker/broker-route';
-import { produceKafkaMessage } from '~/server/infrastructure/nosql/kafka/kafka-message.service';
+import { defineBrokerHandler } from '~~/server/infrastructure/nosql/broker/broker-route';
+import { produceKafkaMessage } from '~~/server/infrastructure/nosql/kafka/kafka-message.service';
 
 export default defineBrokerHandler(
   {

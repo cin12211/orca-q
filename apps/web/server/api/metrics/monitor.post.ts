@@ -1,7 +1,7 @@
 import { defineEventHandler, readBody, createError } from 'h3';
-import { DatabaseClientType } from '~/core/constants/database-client-type';
-import type { DatabaseMetrics, DatabaseMetadataRequestParams } from '~/core/types';
-import { createMetricsAdapter } from '~/server/infrastructure/database/adapters/metrics';
+import { DatabaseClientType } from '~~/app/core/constants/database-client-type';
+import type { DatabaseMetrics, DatabaseMetadataRequestParams } from '~~/app/core/types';
+import { createMetricsAdapter } from '~~/server/infrastructure/database/adapters/metrics';
 
 export default defineEventHandler(async (event): Promise<DatabaseMetrics> => {
   try {

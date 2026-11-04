@@ -1,12 +1,12 @@
 import { defineEventHandler, readBody } from 'h3';
-import type { ISSLConfig, ISSHConfig } from '~/components/modules/connection';
+import type { ISSLConfig, ISSHConfig } from '~~/app/components/modules/connection';
 import type {
   SchemaDiffRequest,
   SchemaDiffResponse,
-} from '~/components/modules/database-tools';
-import { DatabaseClientType } from '~/core/constants/database-client-type';
-import { createMetadataAdapter } from '~/server/infrastructure/database/adapters/metadata';
-import { computeSchemaDiff } from '~/server/utils/schema-diff.utils';
+} from '~~/app/components/modules/database-tools';
+import { DatabaseClientType } from '~~/app/core/constants/database-client-type';
+import { createMetadataAdapter } from '~~/server/infrastructure/database/adapters/metadata';
+import { computeSchemaDiff } from '~~/server/utils/schema-diff.utils';
 
 export default defineEventHandler(
   async (event): Promise<SchemaDiffResponse> => {

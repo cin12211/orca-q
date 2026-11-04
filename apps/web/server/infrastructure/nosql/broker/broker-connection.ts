@@ -6,7 +6,7 @@ import {
   type IBrokerConfig,
   type ISSHConfig,
   type ISSLConfig,
-} from '~/core/types/entities/connection.entity';
+} from '~~/app/core/types/entities/connection.entity';
 import {
   sshConfigSchema,
   sslConfigSchema,

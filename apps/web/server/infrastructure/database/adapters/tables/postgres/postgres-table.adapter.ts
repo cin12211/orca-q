@@ -1,4 +1,4 @@
-import { DatabaseClientType } from '~/core/constants/database-client-type';
+import { DatabaseClientType } from '~~/app/core/constants/database-client-type';
 import type {
   TableOverviewMetadata,
   TableStructure,
@@ -10,8 +10,8 @@ import type {
   RLSStatus,
   TableRule,
   TableTrigger,
-} from '~/core/types';
-import type { IDatabaseAdapter } from '~/server/infrastructure/driver';
+} from '~~/app/core/types';
+import type { IDatabaseAdapter } from '~~/server/infrastructure/driver';
 import { BaseDomainAdapter } from '../../shared';
 import type {
   IDatabaseTableAdapter,

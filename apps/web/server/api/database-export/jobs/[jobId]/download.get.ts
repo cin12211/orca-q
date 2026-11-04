@@ -1,6 +1,6 @@
 import { createReadStream } from 'node:fs';
 import { stat } from 'node:fs/promises';
-import { getNativeExportDownload } from '~/server/infrastructure/database/backup/native-backup-jobs';
+import { getNativeExportDownload } from '~~/server/infrastructure/database/backup/native-backup-jobs';
 
 export default defineEventHandler(async event => {
   const jobId = getRouterParam(event, 'jobId');

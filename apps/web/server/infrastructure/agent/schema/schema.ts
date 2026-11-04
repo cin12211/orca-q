@@ -2,8 +2,8 @@ import type {
   AgentAnomalyIssue,
   AgentDescribeColumn,
   DbAgentSchemaSnapshot,
-} from '~/components/modules/agent/types';
-import { FunctionSchemaEnum, ViewSchemaEnum } from '~/core/types';
+} from '~~/app/components/modules/agent/types';
+import { FunctionSchemaEnum, ViewSchemaEnum } from '~~/app/core/types';
 import { quoteIdentifier } from '../core/sql';
 import type { DatabaseAdapter } from '../core/types';
 

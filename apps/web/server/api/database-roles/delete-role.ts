@@ -2,9 +2,9 @@
  * API: Delete Role
  * Deletes a PostgreSQL role/user
  */
-import { DatabaseClientType } from '~/core/constants/database-client-type';
-import type { DeleteRoleRequest, GrantRevokeResponse, DatabaseMetadataRequestParams } from '~/core/types';
-import { createRoleAdapter } from '~/server/infrastructure/database/adapters/database-roles';
+import { DatabaseClientType } from '~~/app/core/constants/database-client-type';
+import type { DeleteRoleRequest, GrantRevokeResponse, DatabaseMetadataRequestParams } from '~~/app/core/types';
+import { createRoleAdapter } from '~~/server/infrastructure/database/adapters/database-roles';
 
 interface RequestBody extends DeleteRoleRequest, DatabaseMetadataRequestParams {
   dbType?: DatabaseClientType;

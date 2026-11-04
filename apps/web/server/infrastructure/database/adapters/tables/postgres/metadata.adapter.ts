@@ -1,6 +1,6 @@
 import { createError } from 'h3';
-import type { TableMeta, TableOverviewMetadata } from '~/core/types';
-import type { IDatabaseAdapter } from '~/server/infrastructure/driver';
+import type { TableMeta, TableOverviewMetadata } from '~~/app/core/types';
+import type { IDatabaseAdapter } from '~~/server/infrastructure/driver';
 
 export class PostgresTableMetadataAdapter {
   constructor(private readonly adapter: IDatabaseAdapter) {}

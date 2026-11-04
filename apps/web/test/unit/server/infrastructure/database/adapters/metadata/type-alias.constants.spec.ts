@@ -3,7 +3,7 @@ import { DatabaseClientType } from '~/core/constants/database-client-type';
 import {
   normalizeMetadataTypeAliasDatabaseFamily,
   resolveMetadataTypeAlias,
-} from '~/server/infrastructure/database/adapters/metadata';
+} from '~~/server/infrastructure/database/adapters/metadata';
 
 describe('metadata type alias resolver', () => {
   it('normalizes database aliases to a supported metadata family', () => {

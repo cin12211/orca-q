@@ -1,4 +1,4 @@
-import { getNativeBackupJobSnapshot } from '~/server/infrastructure/database/backup/native-backup-jobs';
+import { getNativeBackupJobSnapshot } from '~~/server/infrastructure/database/backup/native-backup-jobs';
 
 export default defineEventHandler(event => {
   const jobId = getRouterParam(event, 'jobId');

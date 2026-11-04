@@ -1,5 +1,5 @@
 import type { Knex } from 'knex';
-import { DatabaseClientType } from '~/core/constants/database-client-type';
+import { DatabaseClientType } from '~~/app/core/constants/database-client-type';
 import { PostgresAdapter } from './postgres.adapter';
 import { assertMinimumServerVersion } from './server-version';
 

@@ -1,12 +1,12 @@
 import type { Knex } from 'knex';
-import { DatabaseClientType } from '~/core/constants/database-client-type';
+import { DatabaseClientType } from '~~/app/core/constants/database-client-type';
 import {
   createManagedSqliteAdapter,
   isManagedSqliteProviderKind,
   type ManagedSqliteAdapterOptions,
-} from '~/server/infrastructure/driver/managed-sqlite';
-import { isDesktopRuntime } from '~/server/infrastructure/mcp/desktop-store';
-import { isNoSqlClientType } from '~/server/infrastructure/nosql';
+} from '~~/server/infrastructure/driver/managed-sqlite';
+import { isDesktopRuntime } from '~~/server/infrastructure/mcp/desktop-store';
+import { isNoSqlClientType } from '~~/server/infrastructure/nosql';
 import { CockroachAdapter } from './cockroachdb.adapter';
 import { DuckDbAdapter } from './duckdb.adapter';
 import { MssqlAdapter } from './mssql.adapter';

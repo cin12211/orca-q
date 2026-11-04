@@ -4,8 +4,8 @@ import type {
   RLSStatus,
   TableRule,
   TableTrigger,
-} from '~/core/types';
-import type { IDatabaseAdapter } from '~/server/infrastructure/driver';
+} from '~~/app/core/types';
+import type { IDatabaseAdapter } from '~~/server/infrastructure/driver';
 
 export class PostgresTableAdvancedObjectsAdapter {
   constructor(private readonly adapter: IDatabaseAdapter) {}

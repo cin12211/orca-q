@@ -1,4 +1,4 @@
-import { DatabaseClientType } from '~/core/constants/database-client-type';
+import { DatabaseClientType } from '~~/app/core/constants/database-client-type';
 import { BaseUnsupportedMetricsAdapter } from '../shared/base-unsupported-metrics.adapter';
 import type { DatabaseMetricsAdapterParams } from '../types';
 

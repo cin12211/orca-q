@@ -1,6 +1,6 @@
 import http from 'node:http';
 import https from 'node:https';
-import { createSshTunnel } from '~/server/utils/ssh-tunnel';
+import { createSshTunnel } from '~~/server/utils/ssh-tunnel';
 import {
   BrokerConnectionError,
   isBrokerTlsEnabled,

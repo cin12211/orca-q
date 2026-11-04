@@ -1,10 +1,10 @@
 import { defineEventHandler, readBody } from 'h3';
-import { DatabaseClientType } from '~/core/constants/database-client-type';
+import { DatabaseClientType } from '~~/app/core/constants/database-client-type';
 import type {
   SchemaMetaData,
   DatabaseMetadataRequestParams,
-} from '~/core/types';
-import { createMetadataAdapter } from '~/server/infrastructure/database/adapters/metadata';
+} from '~~/app/core/types';
+import { createMetadataAdapter } from '~~/server/infrastructure/database/adapters/metadata';
 
 export default defineEventHandler(async (event): Promise<SchemaMetaData[]> => {
   const body: DatabaseMetadataRequestParams = await readBody(event);

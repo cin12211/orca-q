@@ -5,7 +5,7 @@ import type {
   RedisPubSubSubscriptionMode,
   RedisPubSubSubscriptionStatus,
   RedisPubSubSubscriptionTarget,
-} from '~/core/types/redis-workspace.types';
+} from '~~/app/core/types/redis-workspace.types';
 import {
   createRedisRuntimeClient,
   parseRedisDatabaseIndex,

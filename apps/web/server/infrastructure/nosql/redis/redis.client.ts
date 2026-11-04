@@ -1,11 +1,11 @@
 import { createClient } from 'redis';
-import { parseConnectionString } from '~/core/helpers/parser-connection-string';
+import { parseConnectionString } from '~~/app/core/helpers/parser-connection-string';
 import {
   EConnectionMethod,
   type ISSLConfig,
   type ISSHConfig,
-} from '~/core/types/entities/connection.entity';
-import { createSshTunnel } from '~/server/utils/ssh-tunnel';
+} from '~~/app/core/types/entities/connection.entity';
+import { createSshTunnel } from '~~/server/utils/ssh-tunnel';
 
 const DEFAULT_REDIS_PORT = 6379;
 

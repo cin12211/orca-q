@@ -9,7 +9,7 @@ import {
 import {
   getDatabaseSource,
   healthCheckConnection,
-} from '~/server/infrastructure/driver/db-connection';
+} from '~~/server/infrastructure/driver/db-connection';
 
 const {
   closeTunnelMock,
@@ -27,11 +27,11 @@ const {
   verifyConnectionMock: vi.fn(),
 }));
 
-vi.mock('~/server/utils/ssh-tunnel', () => ({
+vi.mock('~~/server/utils/ssh-tunnel', () => ({
   createSshTunnel: createSshTunnelMock,
 }));
 
-vi.mock('~/server/infrastructure/driver/factory', () => ({
+vi.mock('~~/server/infrastructure/driver/factory', () => ({
   createDatabaseAdapter: createDatabaseAdapterMock,
 }));
 

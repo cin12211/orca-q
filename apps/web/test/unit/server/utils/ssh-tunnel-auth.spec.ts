@@ -3,7 +3,7 @@ import {
   ESSHAuthMethod,
   type ISSHConfig,
 } from '~/core/types/entities/connection.entity';
-import { buildAuthConfig } from '~/server/utils/ssh-tunnel';
+import { buildAuthConfig } from '~~/server/utils/ssh-tunnel';
 
 const base: ISSHConfig = {
   enabled: true,

@@ -14,7 +14,7 @@ import {
   normalizeMongoFilter,
   renameMongoCollection,
   serializeMongoDocument,
-} from '~/server/infrastructure/nosql/mongodb/mongodb-quick-query';
+} from '~~/server/infrastructure/nosql/mongodb/mongodb-quick-query';
 
 describe('MongoDB Quick Query request helpers', () => {
   it('converts a valid _id string in a filter into an ObjectId', () => {

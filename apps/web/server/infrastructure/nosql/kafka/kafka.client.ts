@@ -4,7 +4,7 @@ import type {
   Consumer,
   Producer,
 } from '@platformatic/kafka';
-import { EKafkaSaslMechanism } from '~/core/types/entities/connection.entity';
+import { EKafkaSaslMechanism } from '~~/app/core/types/entities/connection.entity';
 import {
   BrokerConnectionError,
   isBrokerTlsEnabled,

@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   normalizeMssqlConnection,
   toMssqlUri,
-} from '~/server/infrastructure/driver/mssql/connection';
+} from '~~/server/infrastructure/driver/mssql/connection';
 
 describe('normalizeMssqlConnection', () => {
   it('parses ADO.NET strings', () => {

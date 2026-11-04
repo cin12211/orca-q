@@ -1,8 +1,8 @@
-import { DatabaseClientType } from '~/core/constants/database-client-type';
+import { DatabaseClientType } from '~~/app/core/constants/database-client-type';
 import {
   EConnectionFamily,
   EConnectionProviderKind,
-} from '~/core/types/entities/connection.entity';
+} from '~~/app/core/types/entities/connection.entity';
 
 export function isNoSqlClientType(type: DatabaseClientType) {
   return type === DatabaseClientType.REDIS;

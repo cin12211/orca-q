@@ -15,7 +15,7 @@ import {
   findMcpSessionByToken,
   findTokenlessMcpSession,
   listMcpSessions,
-} from '~/server/infrastructure/mcp';
+} from '~~/server/infrastructure/mcp';
 
 const SESSION_TOKEN = 'orcaq_test-token';
 const OTHER_TOKEN = 'orcaq_other-token';

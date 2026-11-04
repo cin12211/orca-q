@@ -1,5 +1,5 @@
-import type { CreateRoleRequest, GrantRevokeResponse } from '~/core/types';
-import type { IDatabaseAdapter } from '~/server/infrastructure/driver';
+import type { CreateRoleRequest, GrantRevokeResponse } from '~~/app/core/types';
+import type { IDatabaseAdapter } from '~~/server/infrastructure/driver';
 
 export class PostgresRoleManagementAdapter {
   constructor(private readonly adapter: IDatabaseAdapter) {}

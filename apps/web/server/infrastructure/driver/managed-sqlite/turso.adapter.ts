@@ -1,8 +1,8 @@
 import { createClient, type Client } from '@libsql/client/http';
 import type { Knex } from 'knex';
 import { Readable } from 'node:stream';
-import { DatabaseClientType } from '~/core/constants/database-client-type';
-import type { IManagedSqliteConfig } from '~/core/types/entities/connection.entity';
+import { DatabaseClientType } from '~~/app/core/constants/database-client-type';
+import type { IManagedSqliteConfig } from '~~/app/core/types/entities/connection.entity';
 import { BaseDatabaseAdapter } from '../base.adapter';
 import type { RawQueryResult } from '../types';
 import {

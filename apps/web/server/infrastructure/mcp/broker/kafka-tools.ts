@@ -1,20 +1,20 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
-import { DatabaseClientType } from '~/core/constants/database-client-type';
-import type { McpSession } from '~/core/persist/normalize';
+import { DatabaseClientType } from '~~/app/core/constants/database-client-type';
+import type { McpSession } from '~~/app/core/persist/normalize';
 import {
   getKafkaConsumerGroupDetail,
   listKafkaConsumerGroups,
-} from '~/server/infrastructure/nosql/kafka/kafka-group.service';
+} from '~~/server/infrastructure/nosql/kafka/kafka-group.service';
 import {
   KAFKA_MAX_MESSAGES_PER_PAGE,
   readKafkaMessages,
-} from '~/server/infrastructure/nosql/kafka/kafka-message.service';
+} from '~~/server/infrastructure/nosql/kafka/kafka-message.service';
 import {
   getKafkaClusterOverview,
   getKafkaTopicDetail,
   listKafkaTopics,
-} from '~/server/infrastructure/nosql/kafka/kafka-topic.service';
+} from '~~/server/infrastructure/nosql/kafka/kafka-topic.service';
 import { jsonResult, withToolErrors } from '../mcp-tool-result';
 import {
   brokerConnectionIdSchema,

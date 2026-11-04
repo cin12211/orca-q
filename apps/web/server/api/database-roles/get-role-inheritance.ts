@@ -2,9 +2,9 @@
  * API: Get Role Inheritance Tree
  * Fetches inherited roles using recursive query
  */
-import { DatabaseClientType } from '~/core/constants/database-client-type';
-import type { RoleInheritanceNode, DatabaseMetadataRequestParams } from '~/core/types';
-import { createRoleAdapter } from '~/server/infrastructure/database/adapters/database-roles';
+import { DatabaseClientType } from '~~/app/core/constants/database-client-type';
+import type { RoleInheritanceNode, DatabaseMetadataRequestParams } from '~~/app/core/types';
+import { createRoleAdapter } from '~~/server/infrastructure/database/adapters/database-roles';
 
 interface RequestBody extends DatabaseMetadataRequestParams {
   roleName: string;

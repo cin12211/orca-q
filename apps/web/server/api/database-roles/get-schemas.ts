@@ -2,9 +2,9 @@
  * API: Get Schemas
  * Fetches all schemas in the connected database
  */
-import { DatabaseClientType } from '~/core/constants/database-client-type';
-import type { SchemaInfo, DatabaseMetadataRequestParams } from '~/core/types';
-import { createRoleAdapter } from '~/server/infrastructure/database/adapters/database-roles';
+import { DatabaseClientType } from '~~/app/core/constants/database-client-type';
+import type { SchemaInfo, DatabaseMetadataRequestParams } from '~~/app/core/types';
+import { createRoleAdapter } from '~~/server/infrastructure/database/adapters/database-roles';
 
 interface RequestBody extends DatabaseMetadataRequestParams {
   dbType?: DatabaseClientType;

@@ -1,5 +1,5 @@
 import { createError } from 'h3';
-import { DatabaseClientType, BULK_CHUNK_SIZE } from '~/core/constants';
+import { DatabaseClientType, BULK_CHUNK_SIZE } from '~~/app/core/constants';
 import type {
   BulkUpdateResponse,
   RLSPolicy,
@@ -11,7 +11,7 @@ import type {
   TableSize,
   TableStructure,
   TableTrigger,
-} from '~/core/types';
+} from '~~/app/core/types';
 import { BaseDomainAdapter } from '../../shared';
 import type {
   DatabaseTableAdapterParams,

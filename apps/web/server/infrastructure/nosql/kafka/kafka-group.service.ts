@@ -3,7 +3,7 @@ import type {
   KafkaConsumerGroupDetail,
   KafkaConsumerGroupSummary,
   KafkaGroupMember,
-} from '~/core/types/kafka.types';
+} from '~~/app/core/types/kafka.types';
 import {
   BrokerConnectionError,
   type BrokerConnectionInput,

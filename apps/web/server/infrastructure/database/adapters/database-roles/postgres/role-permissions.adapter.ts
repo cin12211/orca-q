@@ -7,8 +7,8 @@ import type {
   BulkGrantRequest,
   BulkGrantResponse,
   BulkGrantResult,
-} from '~/core/types';
-import type { IDatabaseAdapter } from '~/server/infrastructure/driver';
+} from '~~/app/core/types';
+import type { IDatabaseAdapter } from '~~/server/infrastructure/driver';
 
 export class PostgresRolePermissionsAdapter {
   constructor(private readonly adapter: IDatabaseAdapter) {}

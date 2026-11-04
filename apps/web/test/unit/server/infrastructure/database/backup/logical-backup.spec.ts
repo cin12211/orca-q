@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { DatabaseClientType } from '~/core/constants/database-client-type';
-import { parseLogicalBackup } from '~/server/infrastructure/database/backup/logical-backup';
+import { parseLogicalBackup } from '~~/server/infrastructure/database/backup/logical-backup';
 
 const {
   createTableAdapterMock,
@@ -38,11 +38,11 @@ const {
   };
 });
 
-vi.mock('~/server/infrastructure/database/adapters/tables', () => ({
+vi.mock('~~/server/infrastructure/database/adapters/tables', () => ({
   createTableAdapter: createTableAdapterMock,
 }));
 
-vi.mock('~/server/infrastructure/driver/db-connection', () => ({
+vi.mock('~~/server/infrastructure/driver/db-connection', () => ({
   getDatabaseSource: getDatabaseSourceMock,
 }));
 

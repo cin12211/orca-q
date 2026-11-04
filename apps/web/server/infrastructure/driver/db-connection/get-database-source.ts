@@ -1,5 +1,5 @@
-import { resolveConnectionProviderKind } from '~/core/constants/connection-capabilities';
-import { DatabaseClientType } from '~/core/constants/database-client-type';
+import { resolveConnectionProviderKind } from '~~/app/core/constants/connection-capabilities';
+import { DatabaseClientType } from '~~/app/core/constants/database-client-type';
 import {
   EConnectionMethod,
   type EConnectionFamily,
@@ -7,9 +7,9 @@ import {
   type IManagedSqliteConfig,
   type ISSLConfig,
   type ISSHConfig,
-} from '~/core/types/entities/connection.entity';
-import { assertSupportedConnectionRuntime } from '~/server/infrastructure/nosql';
-import { createSshTunnel } from '~/server/utils/ssh-tunnel';
+} from '~~/app/core/types/entities/connection.entity';
+import { assertSupportedConnectionRuntime } from '~~/server/infrastructure/nosql';
+import { createSshTunnel } from '~~/server/utils/ssh-tunnel';
 import { createDatabaseAdapter } from '../factory';
 import {
   createManagedSqliteConnectionString,

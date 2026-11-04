@@ -1,8 +1,8 @@
 import { defineEventHandler, readBody } from 'h3';
-import { DatabaseClientType } from '~/core/constants/database-client-type';
-import type { RawQueryResultWithMetadata, DatabaseMetadataRequestParams } from '~/core/types';
-import { createQueryAdapter } from '~/server/infrastructure/database/adapters/query';
-import { createDatabaseHttpError } from '~/server/infrastructure/database/adapters/shared/error';
+import { DatabaseClientType } from '~~/app/core/constants/database-client-type';
+import type { RawQueryResultWithMetadata, DatabaseMetadataRequestParams } from '~~/app/core/types';
+import { createQueryAdapter } from '~~/server/infrastructure/database/adapters/query';
+import { createDatabaseHttpError } from '~~/server/infrastructure/database/adapters/shared/error';
 
 interface RequestBody extends DatabaseMetadataRequestParams {
   query: string;

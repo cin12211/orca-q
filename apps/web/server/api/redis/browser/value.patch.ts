@@ -3,8 +3,8 @@ import { z } from 'zod';
 import {
   connectionBodySchema,
   parseConnectionBody,
-} from '~/server/infrastructure/nosql/redis/parse-connection-body';
-import { updateRedisKeyValue } from '~/server/infrastructure/nosql/redis/redis-browser.service';
+} from '~~/server/infrastructure/nosql/redis/parse-connection-body';
+import { updateRedisKeyValue } from '~~/server/infrastructure/nosql/redis/redis-browser.service';
 
 const valuePatchBodySchema = connectionBodySchema.extend({
   key: z.string().min(1),

@@ -1,7 +1,7 @@
 import { createError, defineEventHandler, readBody } from 'h3';
-import type { DatabaseMetadataRequestParams } from '~/core/types/database-schemas.types';
-import { createMongoCollection } from '~/server/infrastructure/nosql/mongodb/mongodb-quick-query';
-import { withMongoDatabase } from '~/server/infrastructure/nosql/mongodb/mongodb.client';
+import type { DatabaseMetadataRequestParams } from '~~/app/core/types/database-schemas.types';
+import { createMongoCollection } from '~~/server/infrastructure/nosql/mongodb/mongodb-quick-query';
+import { withMongoDatabase } from '~~/server/infrastructure/nosql/mongodb/mongodb.client';
 
 interface RequestBody extends DatabaseMetadataRequestParams {
   name: string;

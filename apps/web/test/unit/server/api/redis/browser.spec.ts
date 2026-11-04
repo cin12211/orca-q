@@ -1,9 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { EConnectionMethod } from '~/core/types/entities/connection.entity';
-import browserHandler from '~/server/api/redis/browser/index.post';
-import keysDeleteHandler from '~/server/api/redis/browser/keys.delete';
-import valueDeleteHandler from '~/server/api/redis/browser/value.delete';
-import valueHandler from '~/server/api/redis/browser/value.patch';
+import browserHandler from '~~/server/api/redis/browser/index.post';
+import keysDeleteHandler from '~~/server/api/redis/browser/keys.delete';
+import valueDeleteHandler from '~~/server/api/redis/browser/value.delete';
+import valueHandler from '~~/server/api/redis/browser/value.patch';
 
 const {
   readBodyMock,
@@ -37,7 +37,7 @@ vi.mock('h3', async importOriginal => {
   };
 });
 
-vi.mock('~/server/infrastructure/nosql/redis/redis-browser.service', () => ({
+vi.mock('~~/server/infrastructure/nosql/redis/redis-browser.service', () => ({
   listRedisKeys: listRedisKeysMock,
   listRedisDatabases: listRedisDatabasesMock,
   getRedisKeyDetail: getRedisKeyDetailMock,

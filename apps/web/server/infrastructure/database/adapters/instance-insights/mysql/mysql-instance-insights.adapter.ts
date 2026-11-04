@@ -1,12 +1,12 @@
 import { createError } from 'h3';
-import { DatabaseClientType } from '~/core/constants/database-client-type';
+import { DatabaseClientType } from '~~/app/core/constants/database-client-type';
 import type {
   InstanceActionResponse,
   InstanceInsightsSection,
   InstanceInsightsView,
-} from '~/core/types';
-import type { IDatabaseAdapter } from '~/server/infrastructure/driver';
-import { getDatabaseSource } from '~/server/infrastructure/driver/db-connection';
+} from '~~/app/core/types';
+import type { IDatabaseAdapter } from '~~/server/infrastructure/driver';
+import { getDatabaseSource } from '~~/server/infrastructure/driver/db-connection';
 import { createDatabaseHttpError } from '../../shared';
 import { BaseUnsupportedInstanceInsightsAdapter } from '../shared/base-unsupported-instance-insights.adapter';
 import {

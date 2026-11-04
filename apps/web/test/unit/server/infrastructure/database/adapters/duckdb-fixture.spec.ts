@@ -2,10 +2,10 @@ import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { buildDuckDbSamples } from '~/scripts/test-services/prepare-duckdb-sample.mjs';
-import { DuckDbMetadataAdapter } from '~/server/infrastructure/database/adapters/metadata/duckdb/duckdb-metadata.adapter';
-import { DuckDbAdapter } from '~/server/infrastructure/driver/duckdb.adapter';
-import { computeSchemaDiff } from '~/server/utils/schema-diff.utils';
+import { buildDuckDbSamples } from '~~/scripts/test-services/prepare-duckdb-sample.mjs';
+import { DuckDbMetadataAdapter } from '~~/server/infrastructure/database/adapters/metadata/duckdb/duckdb-metadata.adapter';
+import { DuckDbAdapter } from '~~/server/infrastructure/driver/duckdb.adapter';
+import { computeSchemaDiff } from '~~/server/utils/schema-diff.utils';
 
 function createMetadataAdapter(driver: DuckDbAdapter) {
   return new (DuckDbMetadataAdapter as unknown as new (

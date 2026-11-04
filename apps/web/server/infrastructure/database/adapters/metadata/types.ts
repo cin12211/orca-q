@@ -1,9 +1,9 @@
-import { DatabaseClientType } from '~/core/constants/database-client-type';
+import { DatabaseClientType } from '~~/app/core/constants/database-client-type';
 import type {
   SchemaMetaData,
   DatabaseMetadata,
   ReservedTableSchemas,
-} from '~/core/types';
+} from '~~/app/core/types';
 import type { BaseDatabaseAdapterParams } from '../shared';
 
 export type {

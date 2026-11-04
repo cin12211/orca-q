@@ -6,7 +6,7 @@ import {
 import {
   assertSupportedConnectionRuntime,
   buildUnsupportedConnectionMessage,
-} from '~/server/infrastructure/nosql';
+} from '~~/server/infrastructure/nosql';
 
 describe('NoSQL runtime guards', () => {
   it('explains that Redis cannot use the SQL adapter stack', () => {

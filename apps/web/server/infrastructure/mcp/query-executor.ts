@@ -1,9 +1,9 @@
 import QueryStream from 'pg-query-stream';
-import { DatabaseClientType } from '~/core/constants/database-client-type';
-import type { IDatabaseAdapter } from '~/server/infrastructure/driver';
-import { withDuckDbSandbox } from '~/server/infrastructure/driver/duckdb.adapter';
-import { runMssqlRequest } from '~/server/infrastructure/driver/mssql.adapter';
-import { mapArrayRowsToObjects } from '~/server/infrastructure/driver/result-rows';
+import { DatabaseClientType } from '~~/app/core/constants/database-client-type';
+import type { IDatabaseAdapter } from '~~/server/infrastructure/driver';
+import { withDuckDbSandbox } from '~~/server/infrastructure/driver/duckdb.adapter';
+import { runMssqlRequest } from '~~/server/infrastructure/driver/mssql.adapter';
+import { mapArrayRowsToObjects } from '~~/server/infrastructure/driver/result-rows';
 
 export const MCP_DEFAULT_ROW_LIMIT = 100;
 export const MCP_MAX_ROW_LIMIT = 500;

@@ -1,4 +1,4 @@
-import type { IDatabaseAdapter } from '~/server/infrastructure/driver';
+import type { IDatabaseAdapter } from '~~/server/infrastructure/driver';
 
 /**
  * Flat SQL Server catalog reads (sys.* views). Rows are grouped in Node rather

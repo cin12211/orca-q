@@ -2,8 +2,8 @@ import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { DuckDbAdapter } from '~/server/infrastructure/driver/duckdb.adapter';
-import { executeDuckDbSandboxedQuery } from '~/server/infrastructure/mcp/query-executor';
+import { DuckDbAdapter } from '~~/server/infrastructure/driver/duckdb.adapter';
+import { executeDuckDbSandboxedQuery } from '~~/server/infrastructure/mcp/query-executor';
 
 const tempDir = mkdtempSync(path.join(tmpdir(), 'orcaq-duckdb-mcp-'));
 const databasePath = path.join(tempDir, 'shop.duckdb');

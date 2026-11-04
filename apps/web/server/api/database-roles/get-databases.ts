@@ -2,9 +2,9 @@
  * API: Get Databases
  * Fetches all databases (no role-specific permissions)
  */
-import { DatabaseClientType } from '~/core/constants/database-client-type';
-import type { DatabaseInfo, DatabaseMetadataRequestParams } from '~/core/types';
-import { createRoleAdapter } from '~/server/infrastructure/database/adapters/database-roles';
+import { DatabaseClientType } from '~~/app/core/constants/database-client-type';
+import type { DatabaseInfo, DatabaseMetadataRequestParams } from '~~/app/core/types';
+import { createRoleAdapter } from '~~/server/infrastructure/database/adapters/database-roles';
 
 interface RequestBody extends DatabaseMetadataRequestParams {
   dbType?: DatabaseClientType;

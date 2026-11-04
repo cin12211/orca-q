@@ -1,6 +1,6 @@
 import { z } from 'zod';
-import { defineBrokerHandler } from '~/server/infrastructure/nosql/broker/broker-route';
-import { publishRabbitMessage } from '~/server/infrastructure/nosql/rabbitmq/rabbitmq-message.service';
+import { defineBrokerHandler } from '~~/server/infrastructure/nosql/broker/broker-route';
+import { publishRabbitMessage } from '~~/server/infrastructure/nosql/rabbitmq/rabbitmq-message.service';
 
 export default defineBrokerHandler(
   {

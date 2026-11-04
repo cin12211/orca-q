@@ -21,14 +21,14 @@ compression: maximum
 
 # Files to bundle into the app
 # tsc emits with rootDir = apps/, so electron lands in out/desktop/electron
-# and the apps/web/core files it requires land in out/web/core.
+# and the apps/web/app/core files it requires land in out/web/app/core.
 files:
   - out/desktop/electron/**/*
-  - out/web/core/**/*
+  - out/web/app/core/**/*
   - '!out/desktop/electron/**/*.d.ts'
   - '!out/desktop/electron/**/*.map'
-  - '!out/web/core/**/*.d.ts'
-  - '!out/web/core/**/*.map'
+  - '!out/web/app/core/**/*.d.ts'
+  - '!out/web/app/core/**/*.map'
 
 # Bundle the Nitro runtime binary as extra resource
 extraResources:
@@ -47,7 +47,7 @@ publish:
 # ─── macOS ───────────────────────────────────────────────────────────────────
 mac:
   category: public.app-category.developer-tools
-  icon: ../web/assets/logos/icon.icns
+  icon: ../web/app/assets/logos/icon.icns
   hardenedRuntime: true
   gatekeeperAssess: false
   notarize: true
@@ -75,7 +75,7 @@ dmg:
 
 # ─── Windows ────────────────────────────────────────────────────────────────
 win:
-  icon: ../web/assets/logos/icon.ico
+  icon: ../web/app/assets/logos/icon.ico
   target:
     - target: nsis
       arch:
@@ -93,7 +93,7 @@ nsis:
 
 # ─── Linux ───────────────────────────────────────────────────────────────────
 linux:
-  icon: ../web/assets/logos/
+  icon: ../web/app/assets/logos/
   category: Development
   maintainer: Cinny <chinhkhacnguyen29@gmail.com>
   target:

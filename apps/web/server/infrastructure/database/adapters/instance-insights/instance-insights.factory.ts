@@ -1,4 +1,4 @@
-import { DatabaseClientType } from '~/core/constants/database-client-type';
+import { DatabaseClientType } from '~~/app/core/constants/database-client-type';
 import { createDomainAdapter } from '../shared';
 import { CockroachInstanceInsightsAdapter } from './cockroachdb/cockroachdb-instance-insights.adapter';
 import { DuckDbInstanceInsightsAdapter } from './duckdb/duckdb-instance-insights.adapter';

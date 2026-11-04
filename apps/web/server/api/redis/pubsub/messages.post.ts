@@ -1,5 +1,5 @@
 import { readBody } from 'h3';
-import { getRedisPubSubMessages } from '~/server/infrastructure/nosql/redis/redis-pubsub.service';
+import { getRedisPubSubMessages } from '~~/server/infrastructure/nosql/redis/redis-pubsub.service';
 
 export default defineEventHandler(async event => {
   const body: {

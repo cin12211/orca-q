@@ -1,8 +1,8 @@
 import { createError } from 'h3';
 import { basename } from 'node:path';
 import { Readable } from 'node:stream';
-import { DatabaseClientType } from '~/core/constants/database-client-type';
-import type { ExportOptions, TableStructure } from '~/core/types';
+import { DatabaseClientType } from '~~/app/core/constants/database-client-type';
+import type { ExportOptions, TableStructure } from '~~/app/core/types';
 import {
   LOGICAL_BACKUP_KIND,
   LOGICAL_BACKUP_VERSION,

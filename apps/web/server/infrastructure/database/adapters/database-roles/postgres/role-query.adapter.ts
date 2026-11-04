@@ -5,8 +5,8 @@ import type {
   RoleInheritanceNode,
   SchemaInfo,
   SchemaObjects,
-} from '~/core/types';
-import type { IDatabaseAdapter } from '~/server/infrastructure/driver';
+} from '~~/app/core/types';
+import type { IDatabaseAdapter } from '~~/server/infrastructure/driver';
 
 export class PostgresRoleQueryAdapter {
   constructor(private readonly adapter: IDatabaseAdapter) {}

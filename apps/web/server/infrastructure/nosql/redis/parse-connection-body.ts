@@ -3,7 +3,7 @@ import {
   EConnectionMethod,
   ESSHAuthMethod,
   ESSLMode,
-} from '~/core/types/entities/connection.entity';
+} from '~~/app/core/types/entities/connection.entity';
 import type { RedisBrowserInput } from './redis-browser.service';
 
 export const sslConfigSchema = z.object({

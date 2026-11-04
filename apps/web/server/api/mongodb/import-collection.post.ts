@@ -1,6 +1,6 @@
 import { createError, defineEventHandler, readMultipartFormData } from 'h3';
 import { BSON } from 'mongodb';
-import { withMongoDatabase } from '~/server/infrastructure/nosql/mongodb/mongodb.client';
+import { withMongoDatabase } from '~~/server/infrastructure/nosql/mongodb/mongodb.client';
 
 function parseCsvLine(line: string): string[] {
   const result: string[] = [];

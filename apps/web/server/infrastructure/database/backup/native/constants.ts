@@ -1,11 +1,11 @@
 import { delimiter } from 'node:path';
-import { DatabaseClientType } from '~/core/constants/database-client-type';
+import { DatabaseClientType } from '~~/app/core/constants/database-client-type';
 import {
   NativeBackupFileKind,
   NativeBackupTool,
   NativeExportFormat,
   type NativeBackupToolName,
-} from '~/core/types';
+} from '~~/app/core/types';
 
 export interface NativeBackupFormatOption {
   format: NativeExportFormat;

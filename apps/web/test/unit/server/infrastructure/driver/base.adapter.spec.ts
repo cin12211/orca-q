@@ -1,9 +1,9 @@
 import type { Knex } from 'knex';
 import { describe, expect, it } from 'vitest';
 import { DatabaseClientType } from '~/core/constants/database-client-type';
-import { maskNamedBindParametersInComments } from '~/server/infrastructure/agent/core/sql';
-import { BaseDatabaseAdapter } from '~/server/infrastructure/driver/base.adapter';
-import type { RawQueryResult } from '~/server/infrastructure/driver/types';
+import { maskNamedBindParametersInComments } from '~~/server/infrastructure/agent/core/sql';
+import { BaseDatabaseAdapter } from '~~/server/infrastructure/driver/base.adapter';
+import type { RawQueryResult } from '~~/server/infrastructure/driver/types';
 
 class TestDatabaseAdapter extends BaseDatabaseAdapter {
   public lastRawQuery: { sql: string; bindings: any[] } | null = null;

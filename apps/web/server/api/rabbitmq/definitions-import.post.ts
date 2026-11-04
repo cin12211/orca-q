@@ -1,6 +1,6 @@
 import { z } from 'zod';
-import { defineBrokerHandler } from '~/server/infrastructure/nosql/broker/broker-route';
-import { importRabbitDefinitions } from '~/server/infrastructure/nosql/rabbitmq/rabbitmq-definitions.service';
+import { defineBrokerHandler } from '~~/server/infrastructure/nosql/broker/broker-route';
+import { importRabbitDefinitions } from '~~/server/infrastructure/nosql/rabbitmq/rabbitmq-definitions.service';
 
 export default defineBrokerHandler(
   {

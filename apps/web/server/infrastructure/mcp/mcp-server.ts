@@ -1,15 +1,15 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
-import { DatabaseClientType } from '~/core/constants/database-client-type';
-import { getConnectionParams } from '~/core/helpers/connection-helper';
-import { McpConnectionAccess, type McpSession } from '~/core/persist/normalize';
-import type { Connection } from '~/core/types/entities/connection.entity';
+import { DatabaseClientType } from '~~/app/core/constants/database-client-type';
+import { getConnectionParams } from '~~/app/core/helpers/connection-helper';
+import { McpConnectionAccess, type McpSession } from '~~/app/core/persist/normalize';
+import type { Connection } from '~~/app/core/types/entities/connection.entity';
 import {
   createMetadataAdapter,
   createTableAdapter,
-} from '~/server/infrastructure/database/adapters';
-import { getDatabaseSource } from '~/server/infrastructure/driver';
-import { DUCKDB_IN_MEMORY_PATH } from '~/server/infrastructure/driver/duckdb.adapter';
+} from '~~/server/infrastructure/database/adapters';
+import { getDatabaseSource } from '~~/server/infrastructure/driver';
+import { DUCKDB_IN_MEMORY_PATH } from '~~/server/infrastructure/driver/duckdb.adapter';
 import { registerKafkaTools, registerRabbitTools } from './broker';
 import {
   getMcpConnection,

@@ -1,7 +1,7 @@
 import { defineEventHandler, readBody } from 'h3';
-import { DatabaseClientType } from '~/core/constants/database-client-type';
-import type { DatabaseMetadataRequestParams } from '~/core/types';
-import { createMetadataAdapter } from '~/server/infrastructure/database/adapters/metadata';
+import { DatabaseClientType } from '~~/app/core/constants/database-client-type';
+import type { DatabaseMetadataRequestParams } from '~~/app/core/types';
+import { createMetadataAdapter } from '~~/server/infrastructure/database/adapters/metadata';
 
 export default defineEventHandler(async event => {
   const body = await readBody<DatabaseMetadataRequestParams>(event);

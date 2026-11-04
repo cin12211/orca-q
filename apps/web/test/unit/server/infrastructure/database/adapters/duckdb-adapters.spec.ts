@@ -1,13 +1,13 @@
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { DatabaseClientType } from '~/core/constants/database-client-type';
-import { DuckDbRoleAdapter } from '~/server/infrastructure/database/adapters/database-roles/duckdb/duckdb-role.adapter';
-import { DuckDbFunctionAdapter } from '~/server/infrastructure/database/adapters/functions/duckdb/duckdb-function.adapter';
-import { DuckDbInstanceInsightsAdapter } from '~/server/infrastructure/database/adapters/instance-insights/duckdb/duckdb-instance-insights.adapter';
-import { DuckDbMetadataAdapter } from '~/server/infrastructure/database/adapters/metadata/duckdb/duckdb-metadata.adapter';
-import { DuckDbQueryAdapter } from '~/server/infrastructure/database/adapters/query/duckdb/duckdb-query.adapter';
-import { DuckDbTableAdapter } from '~/server/infrastructure/database/adapters/tables/duckdb/duckdb-table.adapter';
-import { DuckDbViewAdapter } from '~/server/infrastructure/database/adapters/views/duckdb/duckdb-view.adapter';
-import { DuckDbAdapter } from '~/server/infrastructure/driver/duckdb.adapter';
+import { DuckDbRoleAdapter } from '~~/server/infrastructure/database/adapters/database-roles/duckdb/duckdb-role.adapter';
+import { DuckDbFunctionAdapter } from '~~/server/infrastructure/database/adapters/functions/duckdb/duckdb-function.adapter';
+import { DuckDbInstanceInsightsAdapter } from '~~/server/infrastructure/database/adapters/instance-insights/duckdb/duckdb-instance-insights.adapter';
+import { DuckDbMetadataAdapter } from '~~/server/infrastructure/database/adapters/metadata/duckdb/duckdb-metadata.adapter';
+import { DuckDbQueryAdapter } from '~~/server/infrastructure/database/adapters/query/duckdb/duckdb-query.adapter';
+import { DuckDbTableAdapter } from '~~/server/infrastructure/database/adapters/tables/duckdb/duckdb-table.adapter';
+import { DuckDbViewAdapter } from '~~/server/infrastructure/database/adapters/views/duckdb/duckdb-view.adapter';
+import { DuckDbAdapter } from '~~/server/infrastructure/driver/duckdb.adapter';
 
 const SEED_SQL = `
   CREATE SCHEMA sales;

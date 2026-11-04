@@ -2,9 +2,9 @@
  * API: Create Role
  * Creates a new PostgreSQL role/user
  */
-import { DatabaseClientType } from '~/core/constants/database-client-type';
-import type { CreateRoleRequest, GrantRevokeResponse, DatabaseMetadataRequestParams } from '~/core/types';
-import { createRoleAdapter } from '~/server/infrastructure/database/adapters/database-roles';
+import { DatabaseClientType } from '~~/app/core/constants/database-client-type';
+import type { CreateRoleRequest, GrantRevokeResponse, DatabaseMetadataRequestParams } from '~~/app/core/types';
+import { createRoleAdapter } from '~~/server/infrastructure/database/adapters/database-roles';
 
 interface RequestBody extends CreateRoleRequest, DatabaseMetadataRequestParams {
   dbType?: DatabaseClientType;

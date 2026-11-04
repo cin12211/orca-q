@@ -1,12 +1,12 @@
 import { defineEventHandler, readBody, createError } from 'h3';
-import { DatabaseClientType } from '~/core/constants/database-client-type';
-import { buildInsertStatements } from '~/core/helpers/sql-mutation-statements';
+import { DatabaseClientType } from '~~/app/core/constants/database-client-type';
+import { buildInsertStatements } from '~~/app/core/helpers/sql-mutation-statements';
 import type {
   BulkUpdateResponse,
   DatabaseMetadataRequestParams,
-} from '~/core/types';
-import { createTableAdapter } from '~/server/infrastructure/database/adapters/tables';
-import { assertBulkSuccess } from '~/server/utils/assert-bulk-success';
+} from '~~/app/core/types';
+import { createTableAdapter } from '~~/server/infrastructure/database/adapters/tables';
+import { assertBulkSuccess } from '~~/server/utils/assert-bulk-success';
 
 interface RequestBody extends DatabaseMetadataRequestParams {
   tableName: string;

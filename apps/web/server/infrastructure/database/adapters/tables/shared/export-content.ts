@@ -1,6 +1,6 @@
 import { createError } from 'h3';
 import Papa from 'papaparse';
-import type { SqlDialect } from '~/core/sql-dialect';
+import type { SqlDialect } from '~~/app/core/sql-dialect';
 
 interface ExportContentOptions {
   dialect: SqlDialect;

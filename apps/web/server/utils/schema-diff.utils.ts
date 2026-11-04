@@ -8,14 +8,14 @@ import type {
   FunctionDiff,
   DiffStatus,
   SQLStatement,
-} from '~/components/modules/database-tools';
-import { DatabaseClientType } from '~/core/constants/database-client-type';
-import { getSqlDialect } from '~/core/sql-dialect';
+} from '~~/app/components/modules/database-tools';
+import { DatabaseClientType } from '~~/app/core/constants/database-client-type';
+import { getSqlDialect } from '~~/app/core/sql-dialect';
 import type {
   SchemaMetaData,
   SchemaColumnMetadata,
   SchemaForeignKeyMetadata,
-} from '~/core/types';
+} from '~~/app/core/types';
 
 // ─── Normalisation ─────────────────────────────────────────────────────────────
 

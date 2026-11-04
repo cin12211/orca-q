@@ -1,5 +1,5 @@
 import type { Knex } from 'knex';
-import { parseConnectionString } from '~/core/helpers/parser-connection-string';
+import { parseConnectionString } from '~~/app/core/helpers/parser-connection-string';
 
 export const DEFAULT_MSSQL_PORT = 1433;
 

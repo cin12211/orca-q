@@ -3,9 +3,9 @@
  * Fetches permissions for a specific role
  * Supports multiple database types via adapter pattern
  */
-import { DatabaseClientType } from '~/core/constants/database-client-type';
-import type { GetRolePermissionsRequest, RolePermissions, DatabaseMetadataRequestParams } from '~/core/types';
-import { createRoleAdapter } from '~/server/infrastructure/database/adapters/database-roles';
+import { DatabaseClientType } from '~~/app/core/constants/database-client-type';
+import type { GetRolePermissionsRequest, RolePermissions, DatabaseMetadataRequestParams } from '~~/app/core/types';
+import { createRoleAdapter } from '~~/server/infrastructure/database/adapters/database-roles';
 
 interface RequestBody extends GetRolePermissionsRequest, DatabaseMetadataRequestParams {
   dbType?: DatabaseClientType;

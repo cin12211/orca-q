@@ -1,22 +1,22 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
-import { DatabaseClientType } from '~/core/constants/database-client-type';
-import type { McpSession } from '~/core/persist/normalize';
-import { listRabbitPolicies } from '~/server/infrastructure/nosql/rabbitmq/rabbitmq-admin.service';
+import { DatabaseClientType } from '~~/app/core/constants/database-client-type';
+import type { McpSession } from '~~/app/core/persist/normalize';
+import { listRabbitPolicies } from '~~/server/infrastructure/nosql/rabbitmq/rabbitmq-admin.service';
 import {
   getRabbitQueueDetail,
   listRabbitExchanges,
   listRabbitQueues,
-} from '~/server/infrastructure/nosql/rabbitmq/rabbitmq-browser.service';
+} from '~~/server/infrastructure/nosql/rabbitmq/rabbitmq-browser.service';
 import {
   peekRabbitMessages,
   RABBIT_MAX_PEEK_COUNT,
-} from '~/server/infrastructure/nosql/rabbitmq/rabbitmq-message.service';
-import { getRabbitOverview } from '~/server/infrastructure/nosql/rabbitmq/rabbitmq-overview.service';
+} from '~~/server/infrastructure/nosql/rabbitmq/rabbitmq-message.service';
+import { getRabbitOverview } from '~~/server/infrastructure/nosql/rabbitmq/rabbitmq-overview.service';
 import {
   getRabbitUserDetail,
   listRabbitUsers,
-} from '~/server/infrastructure/nosql/rabbitmq/rabbitmq-users.service';
+} from '~~/server/infrastructure/nosql/rabbitmq/rabbitmq-users.service';
 import { jsonResult, withToolErrors } from '../mcp-tool-result';
 import {
   brokerConnectionIdSchema,

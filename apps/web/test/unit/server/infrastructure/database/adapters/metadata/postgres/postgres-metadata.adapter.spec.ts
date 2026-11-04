@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { PostgresMetadataAdapter } from '~/server/infrastructure/database/adapters/metadata/postgres/postgres-metadata.adapter';
+import { PostgresMetadataAdapter } from '~~/server/infrastructure/database/adapters/metadata/postgres/postgres-metadata.adapter';
 
 describe('PostgresMetadataAdapter schema listing', () => {
   it('returns system schemas flagged as is_system when namesOnly is set', async () => {

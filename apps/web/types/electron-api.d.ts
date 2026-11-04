@@ -1,5 +1,5 @@
 type PersistCollection =
-  import('~/core/storage/idbRegistry').ElectronPersistCollection;
+  import('~~/app/core/storage/idbRegistry').ElectronPersistCollection;
 
 interface PersistFilter {
   field: string;

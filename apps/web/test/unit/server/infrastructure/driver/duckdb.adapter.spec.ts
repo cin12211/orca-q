@@ -12,16 +12,16 @@ import {
   vi,
 } from 'vitest';
 import { DatabaseClientType } from '~/core/constants/database-client-type';
-import { normalizeConnectionError } from '~/server/infrastructure/driver/connection-error';
+import { normalizeConnectionError } from '~~/server/infrastructure/driver/connection-error';
 import {
   DUCKDB_UNSUPPORTED_PLATFORM_MESSAGE,
   DuckDbAdapter,
-} from '~/server/infrastructure/driver/duckdb.adapter';
+} from '~~/server/infrastructure/driver/duckdb.adapter';
 import {
   createDatabaseAdapter,
   DUCKDB_DESKTOP_ONLY_MESSAGE,
-} from '~/server/infrastructure/driver/factory';
-import type { RawQueryResult } from '~/server/infrastructure/driver/types';
+} from '~~/server/infrastructure/driver/factory';
+import type { RawQueryResult } from '~~/server/infrastructure/driver/types';
 
 describe('DuckDbAdapter', () => {
   let adapter: DuckDbAdapter;

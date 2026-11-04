@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { splitSqlServerBatches } from '~/server/infrastructure/database/adapters/query/mssql/split-batches';
+import { splitSqlServerBatches } from '~~/server/infrastructure/database/adapters/query/mssql/split-batches';
 
 describe('splitSqlServerBatches', () => {
   it('splits on GO lines', () => {

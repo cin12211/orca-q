@@ -1,5 +1,5 @@
 import { createError } from 'h3';
-import type { BulkUpdateResponse } from '~/core/types';
+import type { BulkUpdateResponse } from '~~/app/core/types';
 
 const BULK_FAILED_STATUS = 422;
 

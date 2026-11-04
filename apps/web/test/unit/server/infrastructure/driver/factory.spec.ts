@@ -4,19 +4,19 @@ import {
   EConnectionProviderKind,
   EManagedSqliteProvider,
 } from '~/core/types/entities/connection.entity';
-import { createDatabaseAdapter } from '~/server/infrastructure/driver/factory';
-import { SqliteAdapter } from '~/server/infrastructure/driver/sqlite.adapter';
+import { createDatabaseAdapter } from '~~/server/infrastructure/driver/factory';
+import { SqliteAdapter } from '~~/server/infrastructure/driver/sqlite.adapter';
 
 const { createManagedSqliteAdapterMock } = vi.hoisted(() => ({
   createManagedSqliteAdapterMock: vi.fn(),
 }));
 
 vi.mock(
-  '~/server/infrastructure/driver/managed-sqlite',
+  '~~/server/infrastructure/driver/managed-sqlite',
   async importOriginal => {
     const actual =
       await importOriginal<
-        typeof import('~/server/infrastructure/driver/managed-sqlite')
+        typeof import('~~/server/infrastructure/driver/managed-sqlite')
       >();
 
     return {

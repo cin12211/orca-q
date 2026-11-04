@@ -6,7 +6,7 @@ import type {
   KafkaTopicConsumerGroup,
   KafkaTopicDetail,
   KafkaTopicSummary,
-} from '~/core/types/kafka.types';
+} from '~~/app/core/types/kafka.types';
 import {
   BrokerConnectionError,
   type BrokerConnectionInput,

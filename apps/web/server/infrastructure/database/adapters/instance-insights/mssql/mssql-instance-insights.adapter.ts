@@ -1,10 +1,10 @@
-import { DatabaseClientType } from '~/core/constants/database-client-type';
+import { DatabaseClientType } from '~~/app/core/constants/database-client-type';
 import type {
   InstanceInsightsSection,
   InstanceInsightsView,
-} from '~/core/types';
-import type { IDatabaseAdapter } from '~/server/infrastructure/driver';
-import { getDatabaseSource } from '~/server/infrastructure/driver/db-connection';
+} from '~~/app/core/types';
+import type { IDatabaseAdapter } from '~~/server/infrastructure/driver';
+import { getDatabaseSource } from '~~/server/infrastructure/driver/db-connection';
 import { BaseUnsupportedInstanceInsightsAdapter } from '../shared/base-unsupported-instance-insights.adapter';
 import { trySafeQuery } from '../shared/safe-query';
 import {

@@ -2,9 +2,9 @@
  * API: Get Schema Objects
  * Fetches tables, views, functions, sequences in a schema
  */
-import { DatabaseClientType } from '~/core/constants/database-client-type';
-import type { SchemaObjects, DatabaseMetadataRequestParams } from '~/core/types';
-import { createRoleAdapter } from '~/server/infrastructure/database/adapters/database-roles';
+import { DatabaseClientType } from '~~/app/core/constants/database-client-type';
+import type { SchemaObjects, DatabaseMetadataRequestParams } from '~~/app/core/types';
+import { createRoleAdapter } from '~~/server/infrastructure/database/adapters/database-roles';
 
 interface RequestBody extends DatabaseMetadataRequestParams {
   schemaName: string;

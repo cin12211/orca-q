@@ -1,6 +1,6 @@
 import { createError } from 'h3';
-import { DatabaseClientType } from '~/core/constants/database-client-type';
-import { getSqlDialect } from '~/core/sql-dialect';
+import { DatabaseClientType } from '~~/app/core/constants/database-client-type';
+import { getSqlDialect } from '~~/app/core/sql-dialect';
 import type {
   TableMeta,
   TableOverviewMetadata,
@@ -8,7 +8,7 @@ import type {
   TableSize,
   TableStructure,
   TableTrigger,
-} from '~/core/types';
+} from '~~/app/core/types';
 import { resolveMetadataTypeAlias } from '../../metadata/type-alias.constants';
 import { PostgresTableExportAdapter } from '../postgres/export.adapter';
 import { PostgresTableAdapter } from '../postgres/postgres-table.adapter';

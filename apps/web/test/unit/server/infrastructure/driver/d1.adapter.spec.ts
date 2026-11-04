@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { EManagedSqliteProvider } from '~/core/types/entities/connection.entity';
-import { D1Adapter } from '~/server/infrastructure/driver/managed-sqlite/d1.adapter';
+import { D1Adapter } from '~~/server/infrastructure/driver/managed-sqlite/d1.adapter';
 
 const fetchMock = vi.fn();
 

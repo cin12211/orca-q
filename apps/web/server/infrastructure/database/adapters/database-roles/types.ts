@@ -1,4 +1,4 @@
-import { DatabaseClientType } from '~/core/constants/database-client-type';
+import { DatabaseClientType } from '~~/app/core/constants/database-client-type';
 /**
  * Database Role Adapter Interface
  * Defines the contract for database-specific implementations
@@ -18,7 +18,7 @@ import type {
   SchemaObjects,
   BulkGrantRequest,
   BulkGrantResponse,
-} from '~/core/types';
+} from '~~/app/core/types';
 import type { BaseDatabaseAdapterParams } from '../shared';
 
 export interface IDatabaseRoleAdapter {

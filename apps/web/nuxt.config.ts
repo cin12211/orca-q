@@ -31,9 +31,9 @@ const shadcnConfig: Parameters<DefineNuxtConfig>[number]['shadcn'] = {
   prefix: '',
   /**
    * Directory that the component lives in.
-   * @default "./components/ui"
+   * Resolved from the apps/web root (shadcn-nuxt uses rootDir).
    */
-  componentDir: './components/ui',
+  componentDir: './app/components/ui',
 };
 
 const devWatchIgnored = [
@@ -73,17 +73,10 @@ const sqlite3ConnectionsEnabled =
 export default defineNuxtConfig({
   compatibilityDate: '2024-11-01',
 
-  // --- Nuxt 4 compat overrides (temporary, removed by the app/ layout move) ---
-  // Keep the flat Nuxt 3 layout: sources stay at the apps/web root, and
-  // apps/web/app/ only holds spa-loading-template.html.
-  srcDir: '.',
-  serverDir: 'server',
-  dir: {
-    app: 'app',
-    public: 'public',
-  },
-  // Keep Nuxt 3 runtime behaviour for data fetching, component names and the
-  // SPA loading template.
+  // --- Keep Nuxt 3 runtime behavior ---
+  // Nuxt 4 defaults (app/ srcDir, server/ at the root) apply to the layout.
+  // These flags keep the Nuxt 3 behavior for data fetching, component and
+  // page names, the SPA loading template and indexed access typing.
   experimental: {
     granularCachedData: false,
     purgeCachedData: false,
@@ -105,7 +98,7 @@ export default defineNuxtConfig({
       },
     },
   },
-  // --- end Nuxt 4 compat overrides ---
+  // --- end Keep Nuxt 3 runtime behavior ---
 
   ssr: false,
   telemetry: false,
@@ -182,12 +175,13 @@ export default defineNuxtConfig({
     customCollections: [
       {
         prefix: 'icons',
-        dir: './assets/icons',
+        dir: './app/assets/icons',
       },
     ],
   },
   imports: {
     autoImport: true,
+    // Resolved from srcDir (app/).
     dirs: ['core/composables'],
   },
   components: {
@@ -204,6 +198,7 @@ export default defineNuxtConfig({
   app: {
     head: appHeaderConfig,
   },
+  // Relative to srcDir (app/).
   watch: ['app.vue', 'nuxt.config.ts'],
   watchers: {
     chokidar: devWatchOptions,

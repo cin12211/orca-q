@@ -1,6 +1,6 @@
 import { createError } from 'h3';
-import { DatabaseClientType } from '~/core/constants/database-client-type';
-import { getNativeBackupRuntimeCapability } from '~/server/infrastructure/database/backup/native-backup';
+import { DatabaseClientType } from '~~/app/core/constants/database-client-type';
+import { getNativeBackupRuntimeCapability } from '~~/server/infrastructure/database/backup/native-backup';
 
 export default defineEventHandler(async event => {
   const rawType = getQuery(event).type;

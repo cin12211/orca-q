@@ -11,7 +11,7 @@
     "baseUrl": "..",
     "paths": {
       "~/*": [
-        "../web/*"
+        "../web/app/*"
       ]
     },
     "strict": true,

@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { SqliteMetadataAdapter } from '~/server/infrastructure/database/adapters/metadata/sqlite/sqlite-metadata.adapter';
+import { SqliteMetadataAdapter } from '~~/server/infrastructure/database/adapters/metadata/sqlite/sqlite-metadata.adapter';
 
 describe('SqliteMetadataAdapter', () => {
   it('falls back to the main schema for D1 when PRAGMA database_list is blocked', async () => {

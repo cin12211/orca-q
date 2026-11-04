@@ -1,7 +1,7 @@
 import { createError, defineEventHandler, readBody } from 'h3';
-import { DatabaseClientType } from '~/core/constants/database-client-type';
-import type { InstanceInsightsDashboard, DatabaseMetadataRequestParams } from '~/core/types';
-import { createInstanceInsightsAdapter } from '~/server/infrastructure/database/adapters/instance-insights';
+import { DatabaseClientType } from '~~/app/core/constants/database-client-type';
+import type { InstanceInsightsDashboard, DatabaseMetadataRequestParams } from '~~/app/core/types';
+import { createInstanceInsightsAdapter } from '~~/server/infrastructure/database/adapters/instance-insights';
 
 export default defineEventHandler(
   async (event): Promise<InstanceInsightsDashboard> => {

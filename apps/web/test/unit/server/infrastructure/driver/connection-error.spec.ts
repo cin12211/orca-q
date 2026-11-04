@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { DatabaseClientType } from '~/core/constants/database-client-type';
-import { normalizeConnectionError } from '~/server/infrastructure/driver/connection-error';
+import { normalizeConnectionError } from '~~/server/infrastructure/driver/connection-error';
 
 describe('normalizeConnectionError', () => {
   it('maps ECONNREFUSED to a reachability message', () => {

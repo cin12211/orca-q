@@ -1,6 +1,6 @@
 import { createError, readBody, type H3Event } from 'h3';
 import { z } from 'zod';
-import { normalizeConnectionError } from '~/server/infrastructure/driver/connection-error';
+import { normalizeConnectionError } from '~~/server/infrastructure/driver/connection-error';
 import {
   BrokerConnectionError,
   isBrokerTlsEnabled,

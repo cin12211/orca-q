@@ -1,4 +1,4 @@
-import { normalizeSql } from '~/server/infrastructure/agent/core/sql';
+import { normalizeSql } from '~~/server/infrastructure/agent/core/sql';
 
 const READ_ONLY_LEADING_PATTERN =
   /^(select|with|values|table|show|describe|desc|explain|pragma)\b/i;

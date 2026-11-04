@@ -1,17 +1,17 @@
 import { describe, expect, it } from 'vitest';
 import { EConnectionMethod } from '~/core/types/entities/connection.entity';
-import { compareVersions } from '~/server/infrastructure/nosql/broker/broker-connection';
-import { lagOf } from '~/server/infrastructure/nosql/kafka/kafka-offsets';
-import { decodeRecordBatches } from '~/server/infrastructure/nosql/kafka/kafka-record';
+import { compareVersions } from '~~/server/infrastructure/nosql/broker/broker-connection';
+import { lagOf } from '~~/server/infrastructure/nosql/kafka/kafka-offsets';
+import { decodeRecordBatches } from '~~/server/infrastructure/nosql/kafka/kafka-record';
 import {
   buildKafkaOptions,
   resolveKafkaBrokers,
-} from '~/server/infrastructure/nosql/kafka/kafka.client';
+} from '~~/server/infrastructure/nosql/kafka/kafka.client';
 import {
   mapQueueSummary,
   mapRateSamples,
-} from '~/server/infrastructure/nosql/rabbitmq/rabbitmq-mappers';
-import { assertSupportedRabbitVersion } from '~/server/infrastructure/nosql/rabbitmq/rabbitmq-overview.service';
+} from '~~/server/infrastructure/nosql/rabbitmq/rabbitmq-mappers';
+import { assertSupportedRabbitVersion } from '~~/server/infrastructure/nosql/rabbitmq/rabbitmq-overview.service';
 
 describe('compareVersions', () => {
   it('compares numerically, not as strings', () => {

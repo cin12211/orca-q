@@ -4,7 +4,7 @@ import {
   getErdDataQuery,
   getReverseSchemasQuery,
   getSchemaNamesQuery,
-} from '~/server/infrastructure/database/adapters/metadata/cockroachdb/constants';
+} from '~~/server/infrastructure/database/adapters/metadata/cockroachdb/constants';
 
 describe('CockroachDB metadata queries', () => {
   it('treats crdb_internal and pg_extension as system schemas', () => {

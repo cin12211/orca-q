@@ -1,11 +1,11 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { DatabaseClientType } from '~/core/constants/database-client-type';
-import { createDatabaseAdapter } from '~/server/infrastructure/driver';
-import type { IDatabaseAdapter } from '~/server/infrastructure/driver';
+import { createDatabaseAdapter } from '~~/server/infrastructure/driver';
+import type { IDatabaseAdapter } from '~~/server/infrastructure/driver';
 import {
   executeReadOnlyQuery,
   executeWriteQuery,
-} from '~/server/infrastructure/mcp/query-executor';
+} from '~~/server/infrastructure/mcp/query-executor';
 import { oracleStringBody } from '../support/oracle-connection';
 
 /**

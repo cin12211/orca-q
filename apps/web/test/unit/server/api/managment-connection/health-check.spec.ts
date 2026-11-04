@@ -6,7 +6,7 @@ import {
   EConnectionProviderKind,
   EManagedSqliteProvider,
 } from '~/core/types/entities/connection.entity';
-import healthCheckHandler from '~/server/api/managment-connection/health-check';
+import healthCheckHandler from '~~/server/api/managment-connection/health-check';
 
 const { readBodyMock, healthCheckConnectionMock } = vi.hoisted(() => ({
   readBodyMock: vi.fn(),
@@ -18,7 +18,7 @@ vi.hoisted(() => {
   vi.stubGlobal('readBody', readBodyMock);
 });
 
-vi.mock('~/server/infrastructure/driver/db-connection', () => ({
+vi.mock('~~/server/infrastructure/driver/db-connection', () => ({
   healthCheckConnection: healthCheckConnectionMock,
 }));
 

@@ -1,9 +1,9 @@
 import knex, { type Knex } from 'knex';
-import type { DatabaseField } from '~/core/types';
+import type { DatabaseField } from '~~/app/core/types';
 import {
   EConnectionProviderKind,
   type IManagedSqliteConfig,
-} from '~/core/types/entities/connection.entity';
+} from '~~/app/core/types/entities/connection.entity';
 import type { IDatabaseAdapter } from '../types';
 import { D1Adapter } from './d1.adapter';
 import { TursoAdapter } from './turso.adapter';

@@ -1,6 +1,6 @@
 import { z } from 'zod';
-import { defineBrokerHandler } from '~/server/infrastructure/nosql/broker/broker-route';
-import { clearRabbitTopicPermission } from '~/server/infrastructure/nosql/rabbitmq/rabbitmq-users.service';
+import { defineBrokerHandler } from '~~/server/infrastructure/nosql/broker/broker-route';
+import { clearRabbitTopicPermission } from '~~/server/infrastructure/nosql/rabbitmq/rabbitmq-users.service';
 
 export default defineBrokerHandler(
   {

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { parseRedisDatabaseIndex } from '~/server/infrastructure/nosql/redis/redis.client';
+import { parseRedisDatabaseIndex } from '~~/server/infrastructure/nosql/redis/redis.client';
 
 describe('parseRedisDatabaseIndex (server redis client)', () => {
   it('parses direct numeric database index string', () => {

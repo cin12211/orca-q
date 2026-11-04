@@ -1,4 +1,4 @@
-import { type DbAgentSchemaSnapshot } from '~/components/modules/agent/types';
+import { type DbAgentSchemaSnapshot } from '~~/app/components/modules/agent/types';
 import { buildSchemaSummary } from '../schema/schema';
 
 export function buildAgentSystemPrompt(

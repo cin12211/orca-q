@@ -2,13 +2,13 @@ import { createError } from 'h3';
 import { constants as fsConstants } from 'node:fs';
 import { access, readdir } from 'node:fs/promises';
 import { delimiter, extname, join } from 'node:path';
-import { DatabaseClientType } from '~/core/constants/database-client-type';
+import { DatabaseClientType } from '~~/app/core/constants/database-client-type';
 import type {
   NativeBackupRuntimeCapability,
   NativeBackupRuntimeSelection,
   NativeBackupRuntimeToolPath,
   NativeBackupToolName,
-} from '~/core/types';
+} from '~~/app/core/types';
 import {
   getNativeBackupCapability,
   getNativeBackupImportExtensions,

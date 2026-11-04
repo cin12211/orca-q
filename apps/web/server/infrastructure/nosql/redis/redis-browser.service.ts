@@ -7,7 +7,7 @@ import type {
   RedisKeyTableRow,
   RedisTableKind,
   RedisValueUpdatePayload,
-} from '~/core/types/redis-workspace.types';
+} from '~~/app/core/types/redis-workspace.types';
 import {
   createRedisRuntimeClient,
   parseRedisDatabaseIndex,

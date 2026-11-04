@@ -1,5 +1,5 @@
 import { createError } from 'h3';
-import { DatabaseClientType } from '~/core/constants/database-client-type';
+import { DatabaseClientType } from '~~/app/core/constants/database-client-type';
 import type {
   FunctionSignature,
   FunctionParameter,
@@ -7,7 +7,7 @@ import type {
   RenameFunctionResponse,
   UpdateFunctionResponse,
   DeleteFunctionResponse,
-} from '~/core/types';
+} from '~~/app/core/types';
 import { BaseDomainAdapter, createDatabaseHttpError } from '../../shared';
 import type {
   IDatabaseFunctionAdapter,

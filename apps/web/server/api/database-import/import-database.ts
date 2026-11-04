@@ -1,12 +1,12 @@
-import type { ISSLConfig, ISSHConfig } from '~/components/modules/connection';
-import { DatabaseClientType } from '~/core/constants/database-client-type';
+import type { ISSLConfig, ISSHConfig } from '~~/app/components/modules/connection';
+import { DatabaseClientType } from '~~/app/core/constants/database-client-type';
 import type {
   ImportOptions,
   NativeBackupRuntimeSelection,
   StartDatabaseTransferResponse,
-} from '~/core/types';
-import { createDatabaseHttpError } from '~/server/infrastructure/database/adapters/shared/error';
-import { startNativeImportJob } from '~/server/infrastructure/database/backup/native-backup-jobs';
+} from '~~/app/core/types';
+import { createDatabaseHttpError } from '~~/server/infrastructure/database/adapters/shared/error';
+import { startNativeImportJob } from '~~/server/infrastructure/database/backup/native-backup-jobs';
 
 export default defineEventHandler(async event => {
   // Read multipart form data

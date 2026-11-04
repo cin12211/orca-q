@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { buildExportFileResult } from '~/server/infrastructure/agent/renderers/export';
+import { buildExportFileResult } from '~~/server/infrastructure/agent/renderers/export';
 
 describe('buildExportFileResult', () => {
   const rows = [

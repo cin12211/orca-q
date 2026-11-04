@@ -1,5 +1,5 @@
 import { createError } from 'h3';
-import { DatabaseClientType } from '~/core/constants/database-client-type';
+import { DatabaseClientType } from '~~/app/core/constants/database-client-type';
 import type {
   TableIndex,
   ViewColumn,
@@ -7,8 +7,8 @@ import type {
   ViewDependency,
   ViewMeta,
   ViewOverviewMetadata,
-} from '~/core/types';
-import { ViewSchemaEnum } from '~/core/types';
+} from '~~/app/core/types';
+import { ViewSchemaEnum } from '~~/app/core/types';
 import { formatMssqlType } from '../../metadata/mssql/mssql-catalog';
 import { BaseDomainAdapter } from '../../shared';
 import type { DatabaseViewAdapterParams, IDatabaseViewAdapter } from '../types';

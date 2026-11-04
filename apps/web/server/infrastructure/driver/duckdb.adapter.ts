@@ -13,9 +13,9 @@ import {
   readSync,
 } from 'node:fs';
 import { Readable } from 'node:stream';
-import { DatabaseClientType } from '~/core/constants/database-client-type';
-import { isDuckDbUnsupportedPlatform } from '~/core/helpers/environment';
-import type { DatabaseField } from '~/core/types';
+import { DatabaseClientType } from '~~/app/core/constants/database-client-type';
+import { isDuckDbUnsupportedPlatform } from '~~/app/core/helpers/environment';
+import type { DatabaseField } from '~~/app/core/types';
 import { BaseDatabaseAdapter } from './base.adapter';
 import type { RawQueryResult } from './types';
 
