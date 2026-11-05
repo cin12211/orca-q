@@ -1,0 +1,11 @@
+import type { RedisConnectionRequestBody } from '#shared/types/redis-workspace.types';
+import { readBody } from 'h3';
+import { parseConnectionBody } from '~~/server/infrastructure/nosql/redis/parse-connection-body';
+import { getRedisKeyInfo } from '~~/server/infrastructure/nosql/redis/redis-browser.service';
+
+export default defineEventHandler(async event => {
+  const body: RedisConnectionRequestBody & { key: string } =
+    await readBody(event);
+
+  return getRedisKeyInfo(parseConnectionBody(body), body.key);
+});

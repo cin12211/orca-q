@@ -17,7 +17,7 @@ Rules in `.claude/rules/` are loaded according to Claude Code standards:
 - `08-communication.md` — Tone, response format, language.
 - `09-checklist.md` — Pre-completion verification checklist.
 - `10-special-situations.md` — Edge cases and special situations.
-- `module-architecture.md` — Architecture rules (path-scoped to `components/modules/**`, `core/**`, `server/**`, `pages/**`).
+- `module-architecture.md` — Architecture rules (path-scoped to `apps/web/app/components/modules/**`, `apps/web/app/core/**`, `apps/web/shared/**`, `apps/web/server/**`, `apps/web/app/pages/**`).
 
 # Skills
 

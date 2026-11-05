@@ -1,0 +1,483 @@
+import {
+  ComposeOperator,
+  DEFAULT_DEBOUNCE_INPUT,
+  DEFAULT_QUERY,
+  DEFAULT_QUERY_COUNT,
+  DEFAULT_QUERY_SIZE,
+} from '#shared/constants';
+import { DatabaseClientType } from '#shared/constants/database-client-type';
+import { getConnectionParams } from '#shared/helpers/connection-helper';
+import {
+  formatWhereClause,
+  type FilterSchema,
+} from '#shared/helpers/sql-where-clause';
+import { getSqlDialect } from '#shared/sql-dialect';
+import debounce from 'lodash-es/debounce';
+import { toast } from 'vue-sonner';
+import { NullOrderPreference } from '~/components/modules/settings/types';
+import { LocalStorageManager } from '~/core/persist/LocalStorageManager';
+import { useQuickQueryLogs, type Connection } from '~/core/stores';
+import { useAppConfigStore } from '~/core/stores/appConfigStore';
+
+export interface OrderBy {
+  columnName?: string;
+  order?: 'ASC' | 'DESC';
+}
+
+export const useTableQueryBuilder = ({
+  tableName,
+  connection,
+  primaryKeys,
+  columns,
+  isPersist = true,
+  schemaName,
+  workspaceId,
+  connectionId,
+  initFilters,
+  initComposeWith,
+}: {
+  connection: Ref<Connection | undefined>;
+  tableName: string;
+  primaryKeys: Ref<string[]>;
+  columns: Ref<string[]>;
+  isPersist?: boolean;
+  schemaName: string;
+  workspaceId: Ref<string | undefined, string | undefined>;
+  connectionId: Ref<string | undefined, string | undefined>;
+  initFilters?: FilterSchema[];
+  initComposeWith?: ComposeOperator;
+}) => {
+  const appConfigStore = useAppConfigStore();
+  const qqLogStore = useQuickQueryLogs();
+
+  const openErrorModal = ref(false);
+
+  const errorMessage = ref('');
+
+  const pagination = reactive({
+    limit: DEFAULT_QUERY_SIZE,
+    offset: 0,
+  });
+
+  const filters = ref<FilterSchema[]>([]);
+
+  const orderBy = reactive<OrderBy>({});
+
+  const isShowFilters = ref(false);
+
+  const composeWith = ref<ComposeOperator>(ComposeOperator.AND);
+
+  const nullOrderClause = computed(() => {
+    const preference =
+      appConfigStore.tableAppearanceConfigs.nullOrderPreference;
+    const dbType = connection.value?.type;
+
+    if (
+      preference === NullOrderPreference.Unset ||
+      !getSqlDialect(dbType).supportsNullsOrdering()
+    ) {
+      return '';
+    }
+
+    return preference === NullOrderPreference.NullsFirst
+      ? 'NULLS FIRST'
+      : 'NULLS LAST';
+  });
+
+  const sqlDialect = computed(() => getSqlDialect(connection.value?.type));
+
+  // Quoting follows the active connection's dialect: backticks for MySQL/MariaDB,
+  // brackets for SQL Server, double-quotes for the rest.
+  const quoteIdent = computed(
+    () => (name: string) => sqlDialect.value.quoteIdentifier(name)
+  );
+
+  const baseQueryString = computed(() => {
+    const q = quoteIdent.value;
+    return `${DEFAULT_QUERY} ${q(schemaName)}.${q(tableName)}`;
+  });
+
+  const whereClauses = computed(() => {
+    //if don't apply filter
+    if (!isShowFilters.value) {
+      return '';
+    }
+
+    return formatWhereClause({
+      columns: columns.value,
+      db:
+        (connection.value?.type as DatabaseClientType) ||
+        DatabaseClientType.POSTGRES,
+      filters: filters.value,
+      composeWith: composeWith.value,
+    });
+  });
+
+  // A persisted sort can point at a column that was dropped since it was saved.
+  // Only trust it once the column list is known and still contains it.
+  const isKnownColumn = (columnName?: string): columnName is string =>
+    !!columnName &&
+    (columns.value.length === 0 || columns.value.includes(columnName));
+
+  const queryString = computed(() => {
+    let orderClauses = '';
+    const hasValidOrderColumn = isKnownColumn(orderBy?.columnName);
+    const resolvedOrder = (hasValidOrderColumn && orderBy?.order) || 'ASC';
+    const orderColumn = hasValidOrderColumn
+      ? orderBy.columnName
+      : primaryKeys.value[0] || columns.value[0];
+    const q = quoteIdent.value;
+
+    if (orderColumn) {
+      orderClauses = `ORDER BY ${q(orderColumn)} ${resolvedOrder}`;
+
+      if (nullOrderClause.value) {
+        orderClauses = `${orderClauses} ${nullOrderClause.value}`;
+      }
+    } else if (sqlDialect.value.requiresOrderByForPagination()) {
+      // SQL Server rejects OFFSET/FETCH without an ORDER BY.
+      orderClauses = 'ORDER BY (SELECT NULL)';
+    }
+
+    const paginationClause = sqlDialect.value.buildPagination(
+      pagination.limit,
+      pagination.offset
+    );
+
+    return `${DEFAULT_QUERY} ${q(schemaName)}.${q(tableName)} ${whereClauses.value || ''} ${orderClauses} ${paginationClause}`;
+  });
+
+  const queryCountString = computed(() => {
+    const q = quoteIdent.value;
+    return `${DEFAULT_QUERY_COUNT} ${q(schemaName)}.${q(tableName)} ${whereClauses.value || ''}`;
+  });
+
+  const addHistoryLog = (
+    log: string,
+    queryTime: number = 0,
+    error?: Record<string, any>,
+    errorMessage?: string
+  ) => {
+    qqLogStore.createLog({
+      tableName,
+      schemaName,
+      logs: log,
+      queryTime,
+      error,
+      errorMessage,
+    });
+  };
+
+  const {
+    data,
+    status: fetchingTableStatus,
+    refresh: refreshTableData,
+  } = useFetch('/api/query/execute', {
+    method: 'POST',
+    body: {
+      query: queryString,
+      ...getConnectionParams(connection.value),
+    },
+    watch: false,
+    immediate: false,
+    key: tableName,
+    cache: 'default',
+    onResponseError: error => {
+      const errorBody = error.response?._data as
+        | { data?: Record<string, any>; message?: string }
+        | undefined;
+      const errorData = errorBody?.data;
+
+      openErrorModal.value = true;
+
+      errorMessage.value = errorBody?.message || '';
+
+      // Log error to history
+      addHistoryLog(queryString.value, 0, errorData, errorMessage.value);
+    },
+    onResponse: ({ response }) => {
+      if (response.ok) {
+        addHistoryLog(queryString.value, response._data?.queryTime);
+      }
+    },
+  });
+
+  const {
+    refresh: refreshCount,
+    data: dataCount,
+    status: fetchCountStatus,
+  } = useFetch('/api/query/execute', {
+    method: 'POST',
+    body: {
+      query: queryCountString,
+      ...getConnectionParams(connection.value),
+    },
+    watch: false,
+    immediate: false,
+    key: `${tableName}-count`,
+    cache: 'default',
+    onResponse: ({ response }) => {
+      if (response.ok) {
+        addHistoryLog(queryCountString.value, response._data?.queryTime);
+      }
+    },
+  });
+
+  const totalRows = computed(() => {
+    // Oracle upper-cases unquoted aliases.
+    const row = dataCount.value?.result?.[0];
+    return Number(row?.count ?? row?.COUNT ?? 0);
+  });
+
+  const isAllowNextPage = computed(() => {
+    return pagination.offset + pagination.limit < totalRows.value;
+  });
+
+  const isAllowPreviousPage = computed(() => {
+    return pagination.offset > 0;
+  });
+
+  const onUpdatePagination = ({
+    limit,
+    offset,
+  }: {
+    limit: number;
+    offset: number;
+  }) => {
+    // validate
+    if (limit <= 0 || offset < 0) {
+      return;
+    }
+
+    pagination.limit = limit;
+    pagination.offset = offset;
+
+    refreshTableData();
+  };
+
+  const onUpdateOrderBy = ({ columnName, order }: OrderBy) => {
+    orderBy.columnName = columnName;
+    orderBy.order = order;
+
+    refreshTableData();
+  };
+
+  const onNextPage = () => {
+    if (!isAllowNextPage) {
+      return;
+    }
+
+    pagination.offset += pagination.limit;
+
+    refreshTableData();
+  };
+
+  const onPreviousPage = () => {
+    if (!isAllowPreviousPage) {
+      return;
+    }
+
+    const newOffset = pagination.offset - pagination.limit;
+
+    if (newOffset < 0) {
+      pagination.offset = 0;
+    } else {
+      pagination.offset = newOffset;
+    }
+
+    refreshTableData();
+  };
+
+  const onChangeComposeWith = (value: ComposeOperator) => {
+    composeWith.value = value;
+    pagination.offset = 0;
+
+    refreshTableData();
+    refreshCount();
+  };
+
+  const onApplyNewFilter = () => {
+    pagination.offset = 0;
+
+    refreshTableData();
+    refreshCount();
+  };
+
+  const getPersistedKey = () => {
+    // Query Builder state is UI-only and intentionally bypasses the backup /
+    // Electron persist contract. It stays in renderer localStorage on all platforms.
+    return LocalStorageManager.queryBuilderKey(
+      workspaceId?.value ?? '',
+      connectionId?.value ?? '',
+      schemaName,
+      tableName
+    );
+  };
+
+  watch(
+    [filters, pagination, orderBy, isShowFilters, composeWith],
+    debounce(() => {
+      if (!isPersist) {
+        return;
+      }
+
+      const persistedKey = getPersistedKey();
+
+      localStorage.setItem(
+        persistedKey,
+        JSON.stringify({
+          filters: filters.value,
+          pagination: { ...pagination },
+          orderBy: { ...orderBy },
+          isShowFilters: isShowFilters.value,
+          composeWith: composeWith.value,
+        })
+      );
+    }, DEFAULT_DEBOUNCE_INPUT),
+    { deep: true }
+  );
+
+  const onLoadPersistedState = () => {
+    if (!isPersist) {
+      if (initFilters) {
+        filters.value = initFilters;
+        isShowFilters.value = true;
+      }
+
+      if (initComposeWith) {
+        composeWith.value = initComposeWith;
+      }
+
+      return;
+    }
+
+    const persistedKey = getPersistedKey();
+
+    const raw = localStorage.getItem(persistedKey);
+    const persistedState = raw
+      ? (JSON.parse(raw) as {
+          filters?: typeof filters.value;
+          pagination?: { limit: number; offset: number };
+          orderBy?: { columnName?: string; order?: 'ASC' | 'DESC' };
+          isShowFilters?: boolean;
+          composeWith?: typeof composeWith.value;
+        })
+      : null;
+
+    if (persistedState) {
+      const {
+        filters: _filters,
+        pagination: _pagination,
+        orderBy: _orderBy,
+        isShowFilters: _isShowFilters,
+        composeWith: _composeWith,
+      } = persistedState;
+
+      if (_orderBy) {
+        orderBy.columnName = _orderBy.columnName;
+        orderBy.order = _orderBy.order;
+      }
+
+      if (_pagination) {
+        pagination.limit = _pagination.limit;
+        pagination.offset = _pagination.offset;
+      }
+
+      if (_filters) {
+        filters.value = _filters;
+      }
+
+      if (_composeWith) {
+        composeWith.value = _composeWith;
+      }
+
+      isShowFilters.value = !!_isShowFilters;
+    }
+  };
+
+  onLoadPersistedState();
+
+  // Clear a stale sort so the header indicator and persisted state stop
+  // referencing a column that no longer exists.
+  watch(
+    columns,
+    () => {
+      if (orderBy.columnName && !isKnownColumn(orderBy.columnName)) {
+        orderBy.columnName = undefined;
+        orderBy.order = undefined;
+      }
+    },
+    { immediate: true }
+  );
+
+  const isFetchingTableData = computed(() => {
+    return (
+      //TODO: open when then disable pagination
+      // fetchCountStatus.value === 'pending' ||
+      fetchingTableStatus.value === 'pending'
+    );
+  });
+
+  const getFormattedRow = (content: unknown, type?: string): string => {
+    const isJsonType = type === 'jsonb' || type === 'json';
+    const isObjectType =
+      (typeof content === 'object' ||
+        Object.prototype.toString.call(content) === '[object Object]') &&
+      content !== null;
+
+    if (isJsonType || isObjectType) {
+      return content ? JSON.stringify(content, null, 2) : '';
+    }
+
+    return content as string;
+  };
+
+  const tableData = computed(() => {
+    return data.value?.result || [];
+
+    // if (!data.value?.result || !Array.isArray(data.value.result)) {
+    //   return [];
+    // }
+
+    // const mappedRows = data.value.result.map((row: any) => {
+    //   const formattedRow: Record<string, string> = {};
+
+    //   Object.keys(row).forEach(key => {
+    //     const value = row[key];
+    //     formattedRow[key] = getFormattedRow(value);
+    //   });
+
+    //   return formattedRow;
+    // });
+
+    // return mappedRows || [];
+  });
+
+  return {
+    whereClauses,
+    pagination,
+    queryString,
+    onUpdatePagination,
+    isAllowNextPage,
+    isAllowPreviousPage,
+    onNextPage,
+    onPreviousPage,
+    queryCountString,
+    data: tableData,
+    isFetchingTableData,
+    refreshTableData,
+    refreshCount,
+    totalRows,
+    onApplyNewFilter,
+    baseQueryString,
+    openErrorModal,
+    onUpdateOrderBy,
+    orderBy,
+    errorMessage,
+    filters,
+    addHistoryLog,
+    isShowFilters,
+    onChangeComposeWith,
+    composeWith,
+  };
+};

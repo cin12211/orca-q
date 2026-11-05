@@ -1,0 +1,60 @@
+{
+  "name": "@orcaq/desktop",
+  "productName": "orcaq",
+  "private": true,
+  "description": "The open source | Next Generation database editor",
+  "homepage": "https://orca-q.com/",
+  "author": {
+    "name": "Cinny",
+    "email": "chinhkhacnguyen29@gmail.com",
+    "url": "https://github.com/cin12211"
+  },
+  "license": "MIT",
+  "version": "1.1.17",
+  "main": "out/desktop/electron/main.js",
+  "scripts": {
+    "postinstall": "electron-builder install-app-deps",
+    "electron:dev": "node scripts/electron-compile-dev.mjs && concurrently -n nuxt,electron -c cyan,yellow \"cross-env ORCAQ_DESKTOP_RUNTIME=1 ORCAQ_PERSIST_DB_PATH=../../.sqlite3/orcaq.db bun run --cwd ../web nuxt:dev\" \"wait-on http://localhost:3000 out/desktop/electron/main.js && cross-env NODE_ENV=development ELECTRON_DEV_SERVER_URL=http://localhost:3000 electron out/desktop/electron/main.js\"",
+    "electron:compile": "tsc -p electron/tsconfig.json",
+    "electron:build": "node scripts/electron-before-build.mjs && electron-builder",
+    "electron:build:mac-m": "node scripts/electron-before-build.mjs && electron-builder --mac --arm64",
+    "electron:pack": "node scripts/electron-before-build.mjs && electron-builder --dir"
+  },
+  "dependencies": {
+    "@duckdb/node-api": "^2.0.0-r.1",
+    "@libsql/client": "^0.15.15",
+    "@platformatic/kafka": "^2.14.0",
+    "better-sqlite3": "^12.9.0",
+    "electron-log": "^5.4.3",
+    "electron-store": "^11.0.2",
+    "electron-updater": "^6.8.3",
+    "knex": "^3.1.0",
+    "mongodb": "^7.5.0",
+    "mysql2": "^3.22.2",
+    "oracledb": "^6.10.0",
+    "redis": "^5.9.0",
+    "tedious": "^18.6.1"
+  },
+  "devDependencies": {
+    "@electron/rebuild": "^4.0.3",
+    "@types/better-sqlite3": "^7.6.13",
+    "@types/node": "^22.15.19",
+    "concurrently": "^9.2.1",
+    "cross-env": "^10.1.0",
+    "electron": "41.1.0",
+    "electron-builder": "^26.8.1",
+    "typescript": "~5.6.3",
+    "wait-on": "^9.0.4"
+  },
+  "engines": {
+    "bun": ">=1.2.0",
+    "node": ">=18.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/cin12211/orca-q.git"
+  },
+  "bugs": {
+    "url": "https://github.com/cin12211/orca-q/issues"
+  }
+}

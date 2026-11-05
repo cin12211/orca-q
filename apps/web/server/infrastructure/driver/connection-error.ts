@@ -1,0 +1,298 @@
+import { DatabaseClientType } from '#shared/constants/database-client-type';
+import { UNSUPPORTED_SERVER_VERSION_CODE } from './server-version';
+
+/**
+ * A user-facing description of a failed database connection attempt.
+ * `message` says what went wrong in plain language; `hint` says how to fix it;
+ * `detail` carries the raw driver error for power users / bug reports.
+ */
+export interface NormalizedConnectionError {
+  message: string;
+  hint?: string;
+  code?: string;
+  detail?: string;
+}
+
+interface NormalizeContext {
+  type?: DatabaseClientType;
+  sslEnabled?: boolean;
+  sshEnabled?: boolean;
+}
+
+function getErrorCode(error: unknown): string | undefined {
+  if (error && typeof error === 'object' && 'code' in error) {
+    const code = (error as { code?: unknown }).code;
+    if (typeof code === 'string') return code;
+    if (typeof code === 'number') return String(code);
+  }
+  return undefined;
+}
+
+function getErrorText(error: unknown): string {
+  if (error instanceof Error) return error.message;
+  if (typeof error === 'string') return error;
+  if (error && typeof error === 'object') {
+    const msg = (error as { message?: unknown }).message;
+    if (typeof msg === 'string') return msg;
+  }
+  return 'Unknown error';
+}
+
+type Rule = {
+  when: (ctx: { code?: string; text: string; lower: string }) => boolean;
+  build: (ctx: NormalizeContext) => { message: string; hint?: string };
+};
+
+// Ordered most-specific first. SSL/SSH rules come before generic network rules
+// so a TLS or tunnel failure is reported as such instead of "host unreachable".
+const RULES: Rule[] = [
+  // ---- DuckDB file --------------------------------------------------------
+  {
+    when: ({ lower }) => lower.includes('duckdb is not available on intel mac'),
+    build: () => ({
+      message: 'DuckDB is not available on Intel Mac yet.',
+      hint: 'Use OrcaQ on an Apple Silicon Mac, Linux, or connect to another database.',
+    }),
+  },
+  {
+    when: ({ lower }) =>
+      lower.includes('duckdb connections are available only in the desktop'),
+    build: () => ({
+      message: 'DuckDB connections are available only in the desktop app.',
+      hint: 'Open this connection from the OrcaQ desktop app.',
+    }),
+  },
+  {
+    when: ({ lower }) =>
+      lower.includes('duckdb database file was not found') ||
+      lower.includes('duckdb database file is not readable'),
+    build: () => ({
+      message: 'The DuckDB file could not be opened.',
+      hint: 'Check the file path and that this app can read the file.',
+    }),
+  },
+  {
+    when: ({ lower }) => lower.includes('failed to load the duckdb driver'),
+    build: () => ({
+      message: 'DuckDB is not available on this platform.',
+      hint: 'The native DuckDB driver could not be loaded. See the details below.',
+    }),
+  },
+  {
+    when: ({ lower }) => lower.includes('could not set lock on file'),
+    build: () => ({
+      message: 'The DuckDB file is locked by another program.',
+      hint: 'Close the other process using this file (for example the DuckDB CLI), then try again.',
+    }),
+  },
+  {
+    when: ({ lower }) => lower.includes('not a valid duckdb database file'),
+    build: () => ({
+      message: 'This file is not a DuckDB database.',
+      hint: 'Choose a file created by DuckDB (.duckdb or .ddb).',
+    }),
+  },
+
+  // ---- SSH tunnel ---------------------------------------------------------
+  {
+    when: ({ lower }) =>
+      lower.includes('all configured authentication methods failed'),
+    build: () => ({
+      message: 'SSH authentication failed.',
+      hint: 'Check the SSH username, and the password or private key (and its passphrase).',
+    }),
+  },
+  {
+    when: ({ lower }) =>
+      lower.includes('no private key was provided') ||
+      lower.includes('cannot parse privatekey') ||
+      lower.includes('unsupported key format') ||
+      (lower.includes('privatekey') && lower.includes('encrypted')),
+    build: () => ({
+      message: 'The SSH private key could not be used.',
+      hint: 'Verify the private key is valid and, if it is encrypted, provide the correct passphrase.',
+    }),
+  },
+  {
+    when: ({ lower }) =>
+      lower.includes('timed out while waiting for handshake') ||
+      lower.includes('ssh tunnel requires') ||
+      lower.includes('missing host in ssh'),
+    build: () => ({
+      message: 'Could not establish the SSH tunnel.',
+      hint: 'Check the SSH host, port, and that the SSH server is reachable.',
+    }),
+  },
+
+  // ---- SSL / TLS ----------------------------------------------------------
+  {
+    when: ({ code, lower }) =>
+      code === 'ER_SECURE_TRANSPORT_REQUIRED' ||
+      lower.includes('insecure transport are prohibited') ||
+      lower.includes('no pg_hba.conf entry') ||
+      (lower.includes('no encryption') && lower.includes('server')),
+    build: () => ({
+      message: 'The server requires an SSL/TLS connection.',
+      hint: 'Enable SSL for this connection (mode "require" or stricter).',
+    }),
+  },
+  {
+    when: ({ code, lower }) =>
+      code === 'SELF_SIGNED_CERT_IN_CHAIN' ||
+      code === 'DEPTH_ZERO_SELF_SIGNED_CERT' ||
+      code === 'UNABLE_TO_VERIFY_LEAF_SIGNATURE' ||
+      code === 'UNABLE_TO_GET_ISSUER_CERT_LOCALLY' ||
+      lower.includes('self-signed certificate') ||
+      lower.includes('self signed certificate') ||
+      lower.includes('unable to verify the first certificate'),
+    build: () => ({
+      message: 'The server SSL certificate could not be verified.',
+      hint: 'Provide the CA certificate for "verify-ca"/"verify-full", or use SSL mode "require" to skip verification.',
+    }),
+  },
+  {
+    when: ({ code, lower }) =>
+      code === 'ERR_TLS_CERT_ALTNAME_INVALID' ||
+      lower.includes('altname') ||
+      lower.includes('hostname/ip does not match') ||
+      lower.includes("does not match certificate's"),
+    build: () => ({
+      message: 'The server hostname does not match its SSL certificate.',
+      hint: 'Use SSL mode "verify-ca" instead of "verify-full", or connect using the hostname on the certificate.',
+    }),
+  },
+  {
+    when: ({ lower }) =>
+      lower.includes('wrong version number') ||
+      lower.includes('packets out of order') ||
+      lower.includes('ssl routines'),
+    build: () => ({
+      message: 'SSL negotiation with the server failed.',
+      hint: 'The server may not support SSL, or SSL is misconfigured. Try disabling SSL or check the server settings.',
+    }),
+  },
+
+  // ---- Authentication / database ------------------------------------------
+  {
+    when: ({ code, lower }) =>
+      code === '28P01' ||
+      code === '28000' ||
+      code === 'ER_ACCESS_DENIED_ERROR' ||
+      code === 'ER_DBACCESS_DENIED_ERROR' ||
+      lower.includes('password authentication failed') ||
+      lower.includes('access denied for user') ||
+      // Redis auth failures
+      lower.includes('wrongpass') ||
+      lower.includes('noauth') ||
+      lower.includes('invalid username-password') ||
+      lower.includes('authentication required') ||
+      // Oracle invalid credentials
+      lower.includes('ora-01017') ||
+      // MSSQL login failed (a missing database also says "login failed")
+      (lower.includes('login failed for user') &&
+        !lower.includes('cannot open database')) ||
+      // MSSQL login failed
+      lower.includes('login failed for user') ||
+      // Kafka SASL
+      lower.includes('sasl authentication failed') ||
+      lower.includes('authentication failed during authentication'),
+    build: () => ({
+      message: 'Authentication failed — wrong username or password.',
+      hint: 'Double-check the database username and password.',
+    }),
+  },
+  {
+    when: ({ code, lower }) =>
+      code === '3D000' ||
+      code === 'ER_BAD_DB_ERROR' ||
+      lower.includes('does not exist') ||
+      lower.includes('unknown database') ||
+      // MSSQL: Cannot open database "x" requested by the login
+      lower.includes('cannot open database'),
+    build: ctx => ({
+      message: `The target ${ctx.type === DatabaseClientType.ORACLE ? 'service' : 'database'} was not found.`,
+      hint: 'Check the database/service name is spelled correctly and exists on the server.',
+    }),
+  },
+
+  // ---- Network ------------------------------------------------------------
+  {
+    when: ({ code }) => code === 'ECONNREFUSED',
+    build: ctx => ({
+      message: 'Connection refused by the server.',
+      hint: ctx.sshEnabled
+        ? 'The SSH host is reachable but the database host/port (as seen from the SSH server) refused the connection. Check the database host and port.'
+        : 'Check the host and port, that the database is running, and that it accepts remote connections.',
+    }),
+  },
+  {
+    when: ({ code, lower }) =>
+      code === 'ENOTFOUND' ||
+      code === 'EAI_AGAIN' ||
+      lower.includes('getaddrinfo'),
+    build: ctx => ({
+      message: 'The host could not be resolved.',
+      hint: ctx.sshEnabled
+        ? 'Check the SSH host name, and the database host name as resolvable from the SSH server.'
+        : 'Check the host name for typos and that DNS can resolve it.',
+    }),
+  },
+  {
+    when: ({ code, lower }) =>
+      code === 'ETIMEDOUT' ||
+      code === 'ESOCKETTIMEDOUT' ||
+      lower.includes('timeout') ||
+      lower.includes('timed out'),
+    build: ctx => ({
+      message: 'The connection timed out.',
+      hint: ctx.sshEnabled
+        ? 'Check the SSH host is reachable and the database port is open from the SSH server (firewall/security group).'
+        : 'Check the host/port, firewall or security-group rules, and any required VPN.',
+    }),
+  },
+  {
+    when: ({ code }) => code === 'ECONNRESET' || code === 'EPIPE',
+    build: () => ({
+      message: 'The connection was reset by the server.',
+      hint: 'This often means an SSL mismatch or the server closed the connection. Verify the SSL settings and server availability.',
+    }),
+  },
+];
+
+/**
+ * Turn a raw connection/driver error into a clear, actionable message the
+ * connection form can show, so users are not stuck on a bare "connection
+ * failed" with no idea what to fix.
+ */
+export function normalizeConnectionError(
+  error: unknown,
+  ctx: NormalizeContext = {}
+): NormalizedConnectionError {
+  const code = getErrorCode(error);
+  const text = getErrorText(error);
+  const lower = text.toLowerCase();
+
+  // Our own version gate already carries a user-facing message.
+  if (code === UNSUPPORTED_SERVER_VERSION_CODE) {
+    return {
+      message: text,
+      hint: 'Upgrade the database server, or connect to a server that meets the minimum version.',
+      code,
+      detail: text,
+    };
+  }
+
+  for (const rule of RULES) {
+    if (rule.when({ code, text, lower })) {
+      const { message, hint } = rule.build(ctx);
+      return { message, hint, code, detail: text };
+    }
+  }
+
+  return {
+    message: 'Could not connect to the database.',
+    hint: 'Check the connection details and try again. See the details below for the exact error.',
+    code,
+    detail: text,
+  };
+}

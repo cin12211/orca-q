@@ -1,0 +1,794 @@
+import {
+  reactive,
+  ref,
+  watch,
+  computed,
+  toRef,
+  type MaybeRefOrGetter,
+} from 'vue';
+import { DatabaseClientType } from '#shared/constants/database-client-type';
+import { uuidv4 } from '#shared/helpers';
+import { isElectron } from '#shared/helpers/environment';
+import dayjs from 'dayjs';
+import type { Connection } from '~/core/stores';
+import { useEnvironmentTagStore } from '~/core/stores';
+import { DEFAULT_DB_PORTS } from '../constants';
+import {
+  connectionService,
+  type ConnectionHealthCheckBody,
+} from '../services/connection.service';
+import {
+  EConnectionMethod,
+  EConnectionProviderKind,
+  EManagedSqliteProvider,
+  ESSLMode,
+  ESSHAuthMethod,
+  type IManagedSqliteConfig,
+} from '../types';
+
+type FormHealthCheckBody = Extract<
+  ConnectionHealthCheckBody,
+  { method: EConnectionMethod.FORM }
+>;
+type FormConnectionPayload = Omit<FormHealthCheckBody, 'type' | 'method'>;
+type FileDatabaseClientType =
+  | DatabaseClientType.SQLITE3
+  | DatabaseClientType.DUCKDB;
+type ManagedConnectionProviderKind = Extract<
+  ConnectionHealthCheckBody,
+  { method: EConnectionMethod.MANAGED }
+>['providerKind'];
+
+const DEFAULT_CONNECTION_NAME = 'my-abc-db';
+
+const NETWORK_CONNECTION_METHODS = new Set([
+  EConnectionMethod.STRING,
+  EConnectionMethod.FORM,
+]);
+
+const getSupportedConnectionMethods = (
+  type: DatabaseClientType | null
+): EConnectionMethod[] => {
+  if (!type) return [];
+
+  if (type === DatabaseClientType.SQLITE3) {
+    return [EConnectionMethod.FILE, EConnectionMethod.MANAGED];
+  }
+
+  if (type === DatabaseClientType.DUCKDB) {
+    return [EConnectionMethod.FILE];
+  }
+
+  return [EConnectionMethod.STRING, EConnectionMethod.FORM];
+};
+
+const createManagedSqliteState = (): IManagedSqliteConfig => ({
+  provider: EManagedSqliteProvider.CLOUDFLARE_D1,
+  accountId: '',
+  databaseId: '',
+  databaseName: '',
+  apiToken: '',
+  url: '',
+  authToken: '',
+  branchName: '',
+});
+
+const getManagedSqliteProviderKind = (
+  provider: EManagedSqliteProvider
+): ManagedConnectionProviderKind => {
+  return provider === EManagedSqliteProvider.TURSO
+    ? EConnectionProviderKind.TURSO
+    : EConnectionProviderKind.CLOUDFLARE_D1;
+};
+
+const getStructuredTargetKey = (type: DatabaseClientType | null) => {
+  return type === DatabaseClientType.ORACLE ? 'serviceName' : 'database';
+};
+
+const getConnectionStringScheme = (type: DatabaseClientType | null) => {
+  switch (type) {
+    case DatabaseClientType.POSTGRES:
+    case DatabaseClientType.COCKROACHDB:
+      return 'postgresql';
+    case DatabaseClientType.MSSQL:
+      return 'sqlserver';
+    case DatabaseClientType.MARIADB:
+      return 'mariadb';
+    case DatabaseClientType.ORACLE:
+      return 'oracledb';
+    case DatabaseClientType.REDIS:
+      return 'redis';
+    case DatabaseClientType.MONGODB:
+      return 'mongodb';
+    case DatabaseClientType.SNOWFLAKE:
+      return 'snowflake';
+    case DatabaseClientType.MYSQL:
+    case DatabaseClientType.MYSQL2:
+      return 'mysql';
+    default:
+      return '';
+  }
+};
+
+const buildFileConnectionString = (
+  type: FileDatabaseClientType,
+  filePath: string
+) => {
+  const normalizedPath = filePath.replace(/\\/g, '/');
+  const prefix = normalizedPath.startsWith('/') ? '' : '/';
+  return `${type}://${prefix}${normalizedPath}`;
+};
+
+const getFileNameStem = (filePath: string) => {
+  const name = filePath.split(/[\\/]/).pop() || '';
+  return name.replace(/\.(sqlite3?|db3?|duckdb|ddb)$/i, '') || name;
+};
+
+export function useConnectionForm(props: {
+  open: MaybeRefOrGetter<boolean>;
+  editingConnection: MaybeRefOrGetter<Connection | null>;
+  workspaceId: MaybeRefOrGetter<string>;
+  onAddNew: (connection: Connection) => void;
+  onUpdate: (connection: Connection) => void;
+  onClose: () => void;
+}) {
+  const isOpen = toRef(props.open);
+  const editingConnection = toRef(props.editingConnection);
+  const workspaceId = toRef(props.workspaceId);
+
+  const step = ref<1 | 2>(1);
+  const dbType = ref<DatabaseClientType | null>(DatabaseClientType.POSTGRES);
+  const connectionName = ref(DEFAULT_CONNECTION_NAME);
+  const connectionMethod = ref<EConnectionMethod>(EConnectionMethod.STRING);
+  const connectionString = ref('');
+  const formData = reactive({
+    host: '',
+    port: '',
+    username: '',
+    password: '',
+    database: '',
+    serviceName: '',
+    filePath: '',
+    // SSL
+    sslEnabled: false,
+    sslMode: ESSLMode.DISABLE,
+    sslCA: '',
+    sslCert: '',
+    sslKey: '',
+    sslRejectUnauthorized: false,
+    // SSH
+    sshEnabled: false,
+    sshHost: '',
+    sshPort: 22,
+    sshUsername: '',
+    sshAuthMethod: ESSHAuthMethod.PASSWORD,
+    sshPassword: '',
+    sshPrivateKey: '',
+    sshStoreInKeychain: true,
+    sshUseKey: false,
+  });
+  const managedSqlite = reactive(createManagedSqliteState());
+  const tagIds = ref<string[]>([]);
+  const testStatus = ref<'idle' | 'testing' | 'success' | 'error'>('idle');
+  const testErrorMessage = ref('');
+  const testErrorHint = ref('');
+  const testErrorDetail = ref('');
+
+  const resetTestState = () => {
+    testStatus.value = 'idle';
+    testErrorMessage.value = '';
+    testErrorHint.value = '';
+    testErrorDetail.value = '';
+  };
+
+  const tagStore = useEnvironmentTagStore();
+
+  const availableConnectionMethods = computed(() =>
+    getSupportedConnectionMethods(dbType.value)
+  );
+  const isElectronRuntime = computed(() => isElectron());
+  const isFileMethod = computed(
+    () => connectionMethod.value === EConnectionMethod.FILE
+  );
+  const isDuckDb = computed(() => dbType.value === DatabaseClientType.DUCKDB);
+  const fileDatabaseLabel = computed(() =>
+    isDuckDb.value ? 'DuckDB' : 'SQLite'
+  );
+  const pickDatabaseFilePath = () => {
+    const electronWindow = window.electronAPI?.window;
+
+    return isDuckDb.value
+      ? electronWindow?.pickDuckdbFile?.()
+      : electronWindow?.pickSqliteFile?.();
+  };
+  const canPickDatabaseFile = computed(() => {
+    if (!isElectronRuntime.value || typeof window === 'undefined') {
+      return false;
+    }
+
+    const electronWindow = window.electronAPI?.window;
+
+    if (isDuckDb.value) {
+      return typeof electronWindow?.pickDuckdbFile === 'function';
+    }
+
+    return (
+      dbType.value === DatabaseClientType.SQLITE3 &&
+      typeof electronWindow?.pickSqliteFile === 'function'
+    );
+  });
+  const usesServiceName = computed(
+    () => getStructuredTargetKey(dbType.value) === 'serviceName'
+  );
+  const structuredTargetLabel = computed(() =>
+    usesServiceName.value ? 'Service Name' : 'Database'
+  );
+  const structuredTargetPlaceholder = computed(() =>
+    usesServiceName.value ? 'ORCLPDB1' : 'my_database'
+  );
+  const canUseNetworkOptions = computed(() =>
+    NETWORK_CONNECTION_METHODS.has(connectionMethod.value)
+  );
+  const isSSHConfigValid = computed(() => {
+    if (!formData.sshEnabled || !canUseNetworkOptions.value) {
+      return true;
+    }
+
+    return Boolean(
+      formData.sshHost &&
+        formData.sshUsername &&
+        (formData.sshUseKey ? formData.sshPrivateKey : formData.sshPassword)
+    );
+  });
+
+  const getDefaultPort = (type: DatabaseClientType | null) => {
+    if (!type) return '';
+    return DEFAULT_DB_PORTS[type] || '';
+  };
+
+  const getDefaultTagIds = (): string[] => {
+    const devTag = tagStore.tags.find(t => t.name === 'dev');
+    return devTag ? [devTag.id] : [];
+  };
+
+  const buildSSLConfig = () => {
+    if (!formData.sslEnabled || !canUseNetworkOptions.value) {
+      return undefined;
+    }
+
+    return {
+      mode: formData.sslMode,
+      ca: formData.sslCA,
+      cert: formData.sslCert,
+      key: formData.sslKey,
+      rejectUnauthorized: formData.sslRejectUnauthorized,
+    };
+  };
+
+  const buildSSHConfig = () => {
+    if (!formData.sshEnabled || !canUseNetworkOptions.value) {
+      return undefined;
+    }
+
+    return {
+      enabled: true,
+      host: formData.sshHost,
+      port: formData.sshPort,
+      username: formData.sshUsername,
+      authMethod: formData.sshUseKey
+        ? ESSHAuthMethod.KEY
+        : ESSHAuthMethod.PASSWORD,
+      password: formData.sshPassword,
+      privateKey: formData.sshPrivateKey,
+      storeInKeychain: formData.sshStoreInKeychain,
+      useSshKey: formData.sshUseKey,
+    };
+  };
+
+  const buildFormConnectionPayload = (): FormConnectionPayload => {
+    const payload: FormConnectionPayload = {
+      host: formData.host,
+      port: formData.port || getDefaultPort(dbType.value),
+      username: formData.username,
+      password: formData.password,
+      ssl: buildSSLConfig(),
+      ssh: buildSSHConfig(),
+    };
+
+    if (usesServiceName.value) {
+      payload.serviceName = formData.serviceName;
+    } else {
+      payload.database = formData.database;
+    }
+
+    return payload;
+  };
+
+  const buildManagedSqlitePayload = () => {
+    if (managedSqlite.provider === EManagedSqliteProvider.TURSO) {
+      return {
+        provider: EManagedSqliteProvider.TURSO,
+        url: managedSqlite.url,
+        authToken: managedSqlite.authToken,
+        branchName: managedSqlite.branchName,
+      } satisfies IManagedSqliteConfig;
+    }
+
+    return {
+      provider: EManagedSqliteProvider.CLOUDFLARE_D1,
+      accountId: managedSqlite.accountId,
+      databaseId: managedSqlite.databaseId,
+      databaseName: managedSqlite.databaseName,
+      apiToken: managedSqlite.apiToken,
+    } satisfies IManagedSqliteConfig;
+  };
+
+  const buildGeneratedConnectionString = () => {
+    const scheme = getConnectionStringScheme(dbType.value);
+    const port = formData.port || getDefaultPort(dbType.value);
+    const target = usesServiceName.value
+      ? formData.serviceName
+      : formData.database;
+
+    if (!scheme || !formData.host || !formData.username || !target) {
+      return undefined;
+    }
+
+    const credentials = formData.password
+      ? `${formData.username}:${formData.password}`
+      : formData.username;
+
+    return `${scheme}://${credentials}@${formData.host}${port ? `:${port}` : ''}/${target}`;
+  };
+
+  const buildHealthCheckBody = (): ConnectionHealthCheckBody => {
+    const type = dbType.value;
+
+    if (!type) {
+      throw new Error('Database type is required.');
+    }
+
+    if (connectionMethod.value === EConnectionMethod.STRING) {
+      return {
+        type,
+        method: EConnectionMethod.STRING,
+        stringConnection: connectionString.value,
+        ssl: buildSSLConfig(),
+        ssh: buildSSHConfig(),
+      };
+    }
+
+    if (connectionMethod.value === EConnectionMethod.FILE) {
+      return {
+        type: isDuckDb.value
+          ? DatabaseClientType.DUCKDB
+          : DatabaseClientType.SQLITE3,
+        method: EConnectionMethod.FILE,
+        filePath: formData.filePath,
+      };
+    }
+
+    if (connectionMethod.value === EConnectionMethod.MANAGED) {
+      return {
+        type: DatabaseClientType.SQLITE3,
+        method: EConnectionMethod.MANAGED,
+        providerKind: getManagedSqliteProviderKind(managedSqlite.provider),
+        managedSqlite: buildManagedSqlitePayload(),
+      };
+    }
+
+    return {
+      type,
+      method: EConnectionMethod.FORM,
+      ...buildFormConnectionPayload(),
+    };
+  };
+
+  const resetForm = () => {
+    step.value = 1;
+    dbType.value = DatabaseClientType.POSTGRES;
+    connectionName.value = DEFAULT_CONNECTION_NAME;
+    connectionMethod.value = EConnectionMethod.STRING;
+    connectionString.value = '';
+
+    formData.host = '';
+    formData.port = getDefaultPort(DatabaseClientType.POSTGRES);
+    formData.username = '';
+    formData.password = '';
+    formData.database = '';
+    formData.serviceName = '';
+    formData.filePath = '';
+
+    formData.sslEnabled = false;
+    formData.sslMode = ESSLMode.DISABLE;
+    formData.sslCA = '';
+    formData.sslCert = '';
+    formData.sslKey = '';
+    formData.sslRejectUnauthorized = false;
+
+    formData.sshEnabled = false;
+    formData.sshHost = '';
+    formData.sshPort = 22;
+    formData.sshUsername = '';
+    formData.sshAuthMethod = ESSHAuthMethod.PASSWORD;
+    formData.sshPassword = '';
+    formData.sshPrivateKey = '';
+    formData.sshStoreInKeychain = true;
+    formData.sshUseKey = false;
+
+    Object.assign(managedSqlite, createManagedSqliteState());
+
+    tagIds.value = getDefaultTagIds();
+    resetTestState();
+  };
+
+  const handleNext = () => {
+    if (step.value === 1 && dbType.value) {
+      step.value = 2;
+    }
+  };
+
+  const handleBack = () => {
+    step.value = 1;
+    resetTestState();
+  };
+
+  const DEFAULT_ERROR_MESSAGE =
+    'Connection failed. Please check your details and try again.';
+
+  const handleTestConnection = async () => {
+    if (
+      connectionMethod.value === EConnectionMethod.FILE &&
+      !isElectronRuntime.value
+    ) {
+      testStatus.value = 'error';
+      testErrorMessage.value = `${fileDatabaseLabel.value} file connections are available only in the desktop app.`;
+      testErrorHint.value = '';
+      testErrorDetail.value = '';
+      return false;
+    }
+
+    resetTestState();
+    testStatus.value = 'testing';
+
+    try {
+      const result = await connectionService.healthCheck(
+        buildHealthCheckBody()
+      );
+
+      if (result.isConnectedSuccess) {
+        resetTestState();
+        testStatus.value = 'success';
+        return true;
+      }
+
+      testStatus.value = 'error';
+      testErrorMessage.value = result.message || DEFAULT_ERROR_MESSAGE;
+      testErrorHint.value = result.hint || '';
+      testErrorDetail.value = result.detail || '';
+      return false;
+    } catch (error: any) {
+      // Network-level failure before the API could respond (server error body
+      // still carries the normalized fields when available).
+      testStatus.value = 'error';
+      testErrorMessage.value =
+        error?.data?.message || error?.message || DEFAULT_ERROR_MESSAGE;
+      testErrorHint.value = error?.data?.hint || '';
+      testErrorDetail.value = error?.data?.detail || '';
+      return false;
+    }
+  };
+
+  const handleCreateConnection = async () => {
+    const isEdit = !!editingConnection.value;
+    const isCreate = !isEdit;
+
+    if (isCreate) {
+      const isConnectedSuccess = await handleTestConnection();
+
+      if (!isConnectedSuccess) {
+        return;
+      }
+    }
+
+    const connection: Connection = {
+      workspaceId: workspaceId.value,
+      id: editingConnection.value?.id || uuidv4(),
+      name: connectionName.value,
+      type: dbType.value as DatabaseClientType,
+      method: connectionMethod.value,
+      createdAt: editingConnection.value?.createdAt || dayjs().toISOString(),
+      tagIds: [...tagIds.value],
+    };
+
+    if (connectionMethod.value === EConnectionMethod.STRING) {
+      connection.connectionString = connectionString.value;
+      connection.ssl = buildSSLConfig();
+      connection.ssh = buildSSHConfig();
+    } else if (connectionMethod.value === EConnectionMethod.FILE) {
+      connection.filePath = formData.filePath;
+      connection.connectionString = buildFileConnectionString(
+        isDuckDb.value ? DatabaseClientType.DUCKDB : DatabaseClientType.SQLITE3,
+        formData.filePath
+      );
+      connection.providerKind = isDuckDb.value
+        ? EConnectionProviderKind.DUCKDB_FILE
+        : EConnectionProviderKind.SQLITE_FILE;
+    } else if (connectionMethod.value === EConnectionMethod.MANAGED) {
+      connection.providerKind = getManagedSqliteProviderKind(
+        managedSqlite.provider
+      );
+      connection.managedSqlite = buildManagedSqlitePayload();
+    } else {
+      const payload = buildFormConnectionPayload();
+
+      connection.host = payload.host as string;
+      connection.port = payload.port as string;
+      connection.username = payload.username as string;
+      connection.password = payload.password as string;
+      connection.database = payload.database as string | undefined;
+      connection.serviceName = payload.serviceName as string | undefined;
+      connection.ssl = payload.ssl as Connection['ssl'];
+      connection.ssh = payload.ssh as Connection['ssh'];
+      connection.connectionString = buildGeneratedConnectionString();
+    }
+
+    if (isCreate) {
+      props.onAddNew(connection);
+    } else {
+      props.onUpdate(connection);
+    }
+
+    props.onClose();
+  };
+
+  const getConnectionPlaceholder = () => {
+    switch (dbType.value) {
+      case DatabaseClientType.POSTGRES:
+        return 'postgresql://username:password@localhost:5432/database';
+      case DatabaseClientType.MYSQL:
+      case DatabaseClientType.MYSQL2:
+        return 'mysql://username:password@localhost:3306/database';
+      case DatabaseClientType.MARIADB:
+        return 'mariadb://username:password@localhost:3306/database';
+      case DatabaseClientType.ORACLE:
+        return 'oracledb://username:password@localhost:1521/ORCLPDB1';
+      case DatabaseClientType.COCKROACHDB:
+        return 'postgresql://username:password@localhost:26257/defaultdb?sslmode=verify-full';
+      case DatabaseClientType.MSSQL:
+        return 'Server=localhost,1433;Database=master;User Id=sa;Password=…;TrustServerCertificate=true';
+      case DatabaseClientType.REDIS:
+        return 'redis://username:password@localhost:6379';
+      case DatabaseClientType.MONGODB:
+        return 'mongodb://username:password@localhost:27017/database';
+      case DatabaseClientType.SNOWFLAKE:
+        return 'snowflake://username:password@account.snowflakecomputing.com:443/database';
+      case DatabaseClientType.SQLITE3:
+        return '/Users/you/data/app.sqlite';
+      case DatabaseClientType.DUCKDB:
+        return '/Users/you/data/analytics.duckdb';
+      default:
+        return '';
+    }
+  };
+
+  const applyDatabaseFilePath = (filePath: string, suggestedName: string) => {
+    formData.filePath = filePath;
+
+    if (
+      !editingConnection.value &&
+      connectionName.value === DEFAULT_CONNECTION_NAME
+    ) {
+      connectionName.value = suggestedName;
+    }
+
+    resetTestState();
+  };
+
+  const pickDatabaseFile = async () => {
+    if (!canPickDatabaseFile.value) {
+      return;
+    }
+
+    const selectedPath = await pickDatabaseFilePath();
+
+    if (!selectedPath) {
+      return;
+    }
+
+    applyDatabaseFilePath(selectedPath, getFileNameStem(selectedPath));
+  };
+
+  const canCreateDatabaseFile = computed(
+    () =>
+      canPickDatabaseFile.value &&
+      typeof window.electronAPI?.window.pickDirectory === 'function'
+  );
+
+  const applyCreatedDatabaseFile = (filePath: string) => {
+    applyDatabaseFilePath(filePath, getFileNameStem(filePath));
+  };
+
+  const isFormValid = computed(() => {
+    if (!connectionName.value) return false;
+
+    if (connectionMethod.value === EConnectionMethod.STRING) {
+      return !!connectionString.value && isSSHConfigValid.value;
+    }
+
+    if (connectionMethod.value === EConnectionMethod.FILE) {
+      return isElectronRuntime.value && !!formData.filePath;
+    }
+
+    if (connectionMethod.value === EConnectionMethod.MANAGED) {
+      if (managedSqlite.provider === EManagedSqliteProvider.TURSO) {
+        return !!(managedSqlite.url && managedSqlite.authToken);
+      }
+
+      return !!(
+        managedSqlite.accountId &&
+        managedSqlite.databaseId &&
+        managedSqlite.apiToken
+      );
+    }
+
+    if (usesServiceName.value) {
+      return !!(
+        formData.host &&
+        (formData.port || getDefaultPort(dbType.value)) &&
+        formData.username &&
+        formData.password &&
+        formData.serviceName &&
+        isSSHConfigValid.value
+      );
+    }
+
+    return !!(
+      formData.host &&
+      (formData.port || getDefaultPort(dbType.value)) &&
+      formData.username &&
+      formData.database &&
+      isSSHConfigValid.value
+    );
+  });
+
+  watch(dbType, newType => {
+    const supportedMethods = getSupportedConnectionMethods(newType);
+
+    if (
+      supportedMethods.length > 0 &&
+      !supportedMethods.includes(connectionMethod.value)
+    ) {
+      connectionMethod.value = supportedMethods[0];
+    }
+
+    if (
+      newType === DatabaseClientType.SQLITE3 ||
+      newType === DatabaseClientType.DUCKDB
+    ) {
+      formData.host = '';
+      formData.port = '';
+      formData.username = '';
+      formData.password = '';
+      formData.database = '';
+      formData.serviceName = '';
+      formData.sslEnabled = false;
+      formData.sshEnabled = false;
+    } else {
+      formData.filePath = '';
+      Object.assign(managedSqlite, createManagedSqliteState());
+
+      if (newType !== DatabaseClientType.ORACLE) {
+        formData.serviceName = '';
+      }
+
+      if (!editingConnection.value) {
+        formData.port = getDefaultPort(newType);
+      }
+    }
+
+    resetTestState();
+  });
+
+  watch(connectionMethod, method => {
+    if (method !== EConnectionMethod.FILE) {
+      formData.filePath = '';
+    }
+
+    if (method !== EConnectionMethod.MANAGED) {
+      Object.assign(managedSqlite, createManagedSqliteState());
+    }
+
+    resetTestState();
+  });
+
+  watch(
+    isOpen,
+    open => {
+      if (!open) return;
+
+      if (editingConnection.value) {
+        const conn = editingConnection.value;
+        connectionName.value = conn.name;
+        dbType.value = conn.type as DatabaseClientType;
+        connectionMethod.value = conn.method;
+        connectionString.value = conn.connectionString || '';
+
+        formData.host = conn.host || '';
+        formData.port = conn.port || '';
+        formData.username = conn.username || '';
+        formData.password = conn.password || '';
+        formData.database = conn.database || '';
+        formData.serviceName = conn.serviceName || '';
+        formData.filePath = conn.filePath || '';
+        Object.assign(managedSqlite, {
+          ...createManagedSqliteState(),
+          ...(conn.managedSqlite ?? {}),
+        });
+
+        formData.sslEnabled = !!conn.ssl;
+        if (conn.ssl) {
+          formData.sslMode = conn.ssl.mode;
+          formData.sslCA = conn.ssl.ca || '';
+          formData.sslCert = conn.ssl.cert || '';
+          formData.sslKey = conn.ssl.key || '';
+          formData.sslRejectUnauthorized = conn.ssl.rejectUnauthorized ?? false;
+        }
+
+        formData.sshEnabled = !!conn.ssh?.enabled;
+        if (conn.ssh) {
+          formData.sshHost = conn.ssh.host || '';
+          formData.sshPort = conn.ssh.port || 22;
+          formData.sshUsername = conn.ssh.username || '';
+          formData.sshAuthMethod =
+            conn.ssh.authMethod || ESSHAuthMethod.PASSWORD;
+          formData.sshPassword = conn.ssh.password || '';
+          formData.sshPrivateKey = conn.ssh.privateKey || '';
+          formData.sshStoreInKeychain = conn.ssh.storeInKeychain ?? true;
+          formData.sshUseKey =
+            conn.ssh.useSshKey ?? conn.ssh.authMethod === ESSHAuthMethod.KEY;
+        }
+
+        tagIds.value = [...(conn.tagIds ?? [])];
+        step.value = 2;
+      } else {
+        resetForm();
+      }
+    },
+    { immediate: true }
+  );
+
+  return {
+    step,
+    dbType,
+    connectionName,
+    connectionMethod,
+    connectionString,
+    formData,
+    managedSqlite,
+    tagIds,
+    testStatus,
+    testErrorMessage,
+    testErrorHint,
+    testErrorDetail,
+    handleNext,
+    handleBack,
+    handleTestConnection,
+    handleCreateConnection,
+    getDefaultPort: () => getDefaultPort(dbType.value),
+    getConnectionPlaceholder,
+    availableConnectionMethods,
+    structuredTargetLabel,
+    structuredTargetPlaceholder,
+    canUseNetworkOptions,
+    canCreateDatabaseFile,
+    canPickDatabaseFile,
+    applyCreatedDatabaseFile,
+    fileDatabaseLabel,
+    isDuckDb,
+    isFileMethod,
+    isFormValid,
+    pickDatabaseFile,
+    resetForm,
+  };
+}

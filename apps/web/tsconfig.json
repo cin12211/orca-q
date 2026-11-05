@@ -1,0 +1,34 @@
+{
+  // https://nuxt.com/docs/guide/concepts/typescript
+  "extends": "./.nuxt/tsconfig.json",
+  // "extends": "../.nuxt/tsconfig.server.json",
+  "include": [
+    ".nuxt/**/*.d.ts",
+    "app/**/*",
+    "server/**/*",
+    "shared/**/*",
+    "types/**/*.d.ts",
+    "*.d.ts",
+    "*.ts"
+  ],
+  "exclude": [
+    "docs",
+    "specs",
+    "out",
+    "test",
+    ".output",
+    "dist",
+    "build",
+    "coverage",
+    "storybook-static"
+  ],
+  "compilerOptions": {
+    "useDefineForClassFields": true, // Default true if target is "ES2022" or "ESNext"
+    "experimentalDecorators": true,
+    "incremental": true,
+    "tsBuildInfoFile": ".tsbuildinfo"
+  },
+  "vueCompilerOptions": {
+    "checkUnknownComponents": true
+  }
+}

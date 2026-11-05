@@ -1,0 +1,41 @@
+{
+  "name": "orcaq",
+  "version": "1.1.17",
+  "description": "The open source | Next Generation database editor - run locally via npx",
+  "author": "Cinny",
+  "license": "MIT",
+  "homepage": "https://orca-q.com/",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/cin12211/orca-q.git"
+  },
+  "bugs": {
+    "url": "https://github.com/cin12211/orca-q/issues"
+  },
+  "bin": {
+    "orcaq": "./bin/cli.mjs"
+  },
+  "scripts": {
+    "npx:build": "bun run --cwd ../web nuxt:build-web && node scripts/build-npx.mjs",
+    "npx:pack": "npm pack"
+  },
+  "files": [
+    ".output",
+    "bin"
+  ],
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "keywords": [
+    "database",
+    "query",
+    "sql",
+    "postgresql",
+    "mysql",
+    "editor",
+    "gui"
+  ],
+  "dependencies": {
+    "commander": "^14.0.2"
+  }
+}

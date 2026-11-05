@@ -49,6 +49,7 @@ jobs:
           path: |
             ~/.bun/install/cache
             node_modules
+            apps/*/node_modules
           key: ${{ runner.os }}-bun-full-${{ hashFiles('bun.lock') }}
           restore-keys: |
             ${{ runner.os }}-bun-full-
@@ -59,7 +60,7 @@ jobs:
           path: |
             ${{ env.ELECTRON_CACHE }}
             ${{ env.ELECTRON_BUILDER_CACHE }}
-          key: ${{ runner.os }}-electron-tooling-${{ hashFiles('bun.lock', 'electron-builder.yml', 'package.json') }}
+          key: ${{ runner.os }}-electron-tooling-${{ hashFiles('bun.lock', 'apps/desktop/electron-builder.yml', 'apps/desktop/package.json') }}
           restore-keys: |
             ${{ runner.os }}-electron-tooling-
 
@@ -67,7 +68,7 @@ jobs:
         run: bun install
 
       - name: Pre-build (Nuxt generate + Nitro binary + compile TS)
-        run: node scripts/electron-before-build.mjs
+        run: node apps/desktop/scripts/electron-before-build.mjs
 
       - name: Validate macOS signing and notarization secrets
         if: matrix.os == 'macos-15'
@@ -97,6 +98,7 @@ jobs:
           echo "APPLE_API_KEY=$APPLE_API_KEY_PATH" >> "$GITHUB_ENV"
 
       - name: Build Electron packages
+        working-directory: apps/desktop
         run: npx electron-builder --publish always
         env:
           # Required for electron-updater to publish to GitHub Releases
@@ -122,9 +124,9 @@ jobs:
             codesign -d --verbose=4 -r- "$app_path"
             spctl --assess --type execute --verbose=4 "$app_path"
             xcrun stapler validate "$app_path"
-          done < <(find out/packages -type d -name 'orcaq.app' -print0)
+          done < <(find apps/desktop/out/packages -type d -name 'orcaq.app' -print0)
 
           if [ "$found_app" = false ]; then
-            echo "::error::No packaged macOS app found under out/packages"
+            echo "::error::No packaged macOS app found under apps/desktop/out/packages"
             exit 1
           fi

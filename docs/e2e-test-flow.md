@@ -9,6 +9,11 @@ This document explains the current end-to-end and integration test flow in HeraQ
 - which parts run inside containers and which parts run on the local host
 - how Vitest and Playwright fit together
 
+> **Monorepo:** all test tooling lives in `apps/web/`. Paths in this document
+> (`test/...`, `scripts/test-services/...`, `vitest.config.ts`,
+> `playwright.config.ts`, `package.json`) are relative to `apps/web/`. The root
+> `package.json` proxies every `test:*` script to `apps/web`.
+
 ## High-Level Summary
 
 The repository currently has three main test layers:
@@ -30,9 +35,9 @@ One important rule:
 
 Sources:
 
-- [package.json](/Volumes/Cinny/Cinny/Project/HeraQ/package.json:39)
-- [vitest.config.ts](/Volumes/Cinny/Cinny/Project/HeraQ/vitest.config.ts:1)
-- [playwright.config.ts](/Volumes/Cinny/Cinny/Project/HeraQ/playwright.config.ts:1)
+- [package.json](../apps/web/package.json:39)
+- [vitest.config.ts](../apps/web/vitest.config.ts:1)
+- [playwright.config.ts](../apps/web/playwright.config.ts:1)
 
 ### Vitest
 
@@ -89,7 +94,7 @@ Sources:
 
 ## Vitest Project Layout
 
-Source: [vitest.config.ts](/Volumes/Cinny/Cinny/Project/HeraQ/vitest.config.ts:1)
+Source: [vitest.config.ts](../apps/web/vitest.config.ts:1)
 
 ### `unit`
 
@@ -115,7 +120,7 @@ This is different from Playwright:
 
 ## Playwright Project Layout
 
-Source: [playwright.config.ts](/Volumes/Cinny/Cinny/Project/HeraQ/playwright.config.ts:1)
+Source: [playwright.config.ts](../apps/web/playwright.config.ts:1)
 
 The current Playwright projects are:
 
@@ -129,7 +134,7 @@ The current Playwright projects are:
 
 Playwright also uses:
 
-- `globalSetup`: [test/playwright/global-setup.ts](/Volumes/Cinny/Cinny/Project/HeraQ/test/playwright/global-setup.ts:1)
+- `globalSetup`: [test/playwright/global-setup.ts](../apps/web/test/playwright/global-setup.ts:1)
 - `webServer.command`: defaults to `npm run nuxt:dev`
 - `baseURL`: defaults to `http://localhost:3000`
 - `workers`: read from `PLAYWRIGHT_WORKERS`
@@ -141,7 +146,7 @@ Important note:
 
 ## Main Orchestrator Flow
 
-Source: [scripts/test-services/run-e2e-tests.sh](/Volumes/Cinny/Cinny/Project/HeraQ/scripts/test-services/run-e2e-tests.sh:1)
+Source: [scripts/test-services/run-e2e-tests.sh](../apps/web/scripts/test-services/run-e2e-tests.sh:1)
 
 `run-e2e-tests.sh` is the orchestration entrypoint for tests that need fixtures.
 
@@ -162,8 +167,8 @@ It does the following:
 
 Sources:
 
-- [scripts/test-services/start-sql-fixtures.sh](/Volumes/Cinny/Cinny/Project/HeraQ/scripts/test-services/start-sql-fixtures.sh:1)
-- [test/fixtures/containers/sql-services.compose.yml](/Volumes/Cinny/Cinny/Project/HeraQ/test/fixtures/containers/sql-services.compose.yml:1)
+- [scripts/test-services/start-sql-fixtures.sh](../apps/web/scripts/test-services/start-sql-fixtures.sh:1)
+- [test/fixtures/containers/sql-services.compose.yml](../apps/web/test/fixtures/containers/sql-services.compose.yml:1)
 
 ### Engines Started
 
@@ -188,10 +193,10 @@ This is the easiest part to misunderstand.
 
 The SQL fixture files live on the local filesystem:
 
-- [test/fixtures/datasets/postgres/postgres-sakila-schema.sql](/Volumes/Cinny/Cinny/Project/HeraQ/test/fixtures/datasets/postgres/postgres-sakila-schema.sql:1)
-- [test/fixtures/datasets/postgres/postgres-sakila-insert-data-optimized.sql](/Volumes/Cinny/Cinny/Project/HeraQ/test/fixtures/datasets/postgres/postgres-sakila-insert-data-optimized.sql:1)
-- [test/fixtures/datasets/mysql/mysql-sakila-schema.sql](/Volumes/Cinny/Cinny/Project/HeraQ/test/fixtures/datasets/mysql/mysql-sakila-schema.sql:1)
-- [test/fixtures/datasets/mysql/mysql-sakila-insert-data-optimized.sql](/Volumes/Cinny/Cinny/Project/HeraQ/test/fixtures/datasets/mysql/mysql-sakila-insert-data-optimized.sql:1)
+- [test/fixtures/datasets/postgres/postgres-sakila-schema.sql](../apps/web/test/fixtures/datasets/postgres/postgres-sakila-schema.sql:1)
+- [test/fixtures/datasets/postgres/postgres-sakila-insert-data-optimized.sql](../apps/web/test/fixtures/datasets/postgres/postgres-sakila-insert-data-optimized.sql:1)
+- [test/fixtures/datasets/mysql/mysql-sakila-schema.sql](../apps/web/test/fixtures/datasets/mysql/mysql-sakila-schema.sql:1)
+- [test/fixtures/datasets/mysql/mysql-sakila-insert-data-optimized.sql](../apps/web/test/fixtures/datasets/mysql/mysql-sakila-insert-data-optimized.sql:1)
 
 However, the actual schema and data import happens inside the database containers, because the Compose file mounts those files into:
 
@@ -199,9 +204,9 @@ However, the actual schema and data import happens inside the database container
 
 Examples:
 
-- PostgreSQL: [sql-services.compose.yml](/Volumes/Cinny/Cinny/Project/HeraQ/test/fixtures/containers/sql-services.compose.yml:12)
-- MySQL: [sql-services.compose.yml](/Volumes/Cinny/Cinny/Project/HeraQ/test/fixtures/containers/sql-services.compose.yml:33)
-- MariaDB: [sql-services.compose.yml](/Volumes/Cinny/Cinny/Project/HeraQ/test/fixtures/containers/sql-services.compose.yml:60)
+- PostgreSQL: [sql-services.compose.yml](../apps/web/test/fixtures/containers/sql-services.compose.yml:12)
+- MySQL: [sql-services.compose.yml](../apps/web/test/fixtures/containers/sql-services.compose.yml:33)
+- MariaDB: [sql-services.compose.yml](../apps/web/test/fixtures/containers/sql-services.compose.yml:60)
 
 In short:
 
@@ -216,7 +221,7 @@ The readiness check uses:
 
 - `docker compose exec -T postgres psql ...`
 
-Source: [start-sql-fixtures.sh](/Volumes/Cinny/Cinny/Project/HeraQ/scripts/test-services/start-sql-fixtures.sh:78)
+Source: [start-sql-fixtures.sh](../apps/web/scripts/test-services/start-sql-fixtures.sh:78)
 
 That means:
 
@@ -231,7 +236,7 @@ The readiness check uses:
 - `mysql2/promise`
 - a connection to `127.0.0.1:<published-port>`
 
-Source: [start-sql-fixtures.sh](/Volumes/Cinny/Cinny/Project/HeraQ/scripts/test-services/start-sql-fixtures.sh:100)
+Source: [start-sql-fixtures.sh](../apps/web/scripts/test-services/start-sql-fixtures.sh:100)
 
 That means:
 
@@ -256,8 +261,8 @@ The script only:
 
 Sources:
 
-- [scripts/test-services/start-nosql-fixtures.sh](/Volumes/Cinny/Cinny/Project/HeraQ/scripts/test-services/start-nosql-fixtures.sh:1)
-- [scripts/test-services/seed-nosql-fixtures.sh](/Volumes/Cinny/Cinny/Project/HeraQ/scripts/test-services/seed-nosql-fixtures.sh:1)
+- [scripts/test-services/start-nosql-fixtures.sh](../apps/web/scripts/test-services/start-nosql-fixtures.sh:1)
+- [scripts/test-services/seed-nosql-fixtures.sh](../apps/web/scripts/test-services/seed-nosql-fixtures.sh:1)
 
 ### Start Flow
 
@@ -266,7 +271,7 @@ Sources:
 3. waits for the Redis TCP port
 4. calls `seed-nosql-fixtures.sh`
 5. the seed script runs:
-   - [seed-redis-fixture.mjs](/Volumes/Cinny/Cinny/Project/HeraQ/scripts/test-services/seed-redis-fixture.mjs:1)
+   - [seed-redis-fixture.mjs](../apps/web/scripts/test-services/seed-redis-fixture.mjs:1)
 
 ### Where Seeding Runs
 
@@ -278,7 +283,7 @@ That script connects to the Redis container through the published port.
 
 ## SQLite Fixture Flow
 
-Source: [scripts/test-services/prepare-sample-data.sh](/Volumes/Cinny/Cinny/Project/HeraQ/scripts/test-services/prepare-sample-data.sh:1)
+Source: [scripts/test-services/prepare-sample-data.sh](../apps/web/scripts/test-services/prepare-sample-data.sh:1)
 
 This script prepares local sample assets before the SQL fixtures boot:
 
@@ -364,9 +369,9 @@ This is another common source of confusion:
 This is true because:
 
 - `docker compose up` is part of the shell wrapper:
-  - [run-e2e-tests.sh](/Volumes/Cinny/Cinny/Project/HeraQ/scripts/test-services/run-e2e-tests.sh:1)
+  - [run-e2e-tests.sh](../apps/web/scripts/test-services/run-e2e-tests.sh:1)
 - workers only exist inside:
-  - [playwright.config.ts](/Volumes/Cinny/Cinny/Project/HeraQ/playwright.config.ts:9)
+  - [playwright.config.ts](../apps/web/playwright.config.ts:9)
 
 So if increasing workers causes failures, the more likely reasons are:
 
@@ -383,7 +388,7 @@ It is not because each worker starts Docker independently.
 
 The Vitest integration project calls `loadEnv('e2e', ...)`, so it can read `.env.e2e`.
 
-Source: [vitest.config.ts](/Volumes/Cinny/Cinny/Project/HeraQ/vitest.config.ts:20)
+Source: [vitest.config.ts](../apps/web/vitest.config.ts:20)
 
 ### Playwright
 
@@ -395,8 +400,8 @@ The current Playwright config:
 
 Sources:
 
-- [playwright.config.ts](/Volumes/Cinny/Cinny/Project/HeraQ/playwright.config.ts:7)
-- [test/playwright/global-setup.ts](/Volumes/Cinny/Cinny/Project/HeraQ/test/playwright/global-setup.ts:95)
+- [playwright.config.ts](../apps/web/playwright.config.ts:7)
+- [test/playwright/global-setup.ts](../apps/web/test/playwright/global-setup.ts:95)
 
 That means if Playwright is expected to use `.env.e2e` or `.env.test`, something else must load those variables before the Playwright process starts.
 
@@ -412,12 +417,12 @@ When reading the HeraQ test flow, the cleanest model is:
 
 ## References
 
-- [package.json](/Volumes/Cinny/Cinny/Project/HeraQ/package.json:39)
-- [vitest.config.ts](/Volumes/Cinny/Cinny/Project/HeraQ/vitest.config.ts:1)
-- [playwright.config.ts](/Volumes/Cinny/Cinny/Project/HeraQ/playwright.config.ts:1)
-- [scripts/test-services/run-e2e-tests.sh](/Volumes/Cinny/Cinny/Project/HeraQ/scripts/test-services/run-e2e-tests.sh:1)
-- [scripts/test-services/start-sql-fixtures.sh](/Volumes/Cinny/Cinny/Project/HeraQ/scripts/test-services/start-sql-fixtures.sh:1)
-- [scripts/test-services/start-nosql-fixtures.sh](/Volumes/Cinny/Cinny/Project/HeraQ/scripts/test-services/start-nosql-fixtures.sh:1)
-- [scripts/test-services/prepare-sample-data.sh](/Volumes/Cinny/Cinny/Project/HeraQ/scripts/test-services/prepare-sample-data.sh:1)
-- [test/fixtures/containers/sql-services.compose.yml](/Volumes/Cinny/Cinny/Project/HeraQ/test/fixtures/containers/sql-services.compose.yml:1)
-- [test/fixtures/containers/nosql-services.compose.yml](/Volumes/Cinny/Cinny/Project/HeraQ/test/fixtures/containers/nosql-services.compose.yml:1)
+- [package.json](../apps/web/package.json:39)
+- [vitest.config.ts](../apps/web/vitest.config.ts:1)
+- [playwright.config.ts](../apps/web/playwright.config.ts:1)
+- [scripts/test-services/run-e2e-tests.sh](../apps/web/scripts/test-services/run-e2e-tests.sh:1)
+- [scripts/test-services/start-sql-fixtures.sh](../apps/web/scripts/test-services/start-sql-fixtures.sh:1)
+- [scripts/test-services/start-nosql-fixtures.sh](../apps/web/scripts/test-services/start-nosql-fixtures.sh:1)
+- [scripts/test-services/prepare-sample-data.sh](../apps/web/scripts/test-services/prepare-sample-data.sh:1)
+- [test/fixtures/containers/sql-services.compose.yml](../apps/web/test/fixtures/containers/sql-services.compose.yml:1)
+- [test/fixtures/containers/nosql-services.compose.yml](../apps/web/test/fixtures/containers/nosql-services.compose.yml:1)

@@ -1,0 +1,46 @@
+/**
+ * store-state.ts — backward-compat re-export layer.
+ *
+ * All normalize logic now lives in ./normalize.ts (zero browser deps).
+ * This file re-exports everything for backward compat with the many
+ * files that import from '~/core/persist/store-state', and adds the
+ * legacy storage key constants that are specific to the web renderer.
+ */
+
+// Re-export all shared normalize exports for backward compat.
+export {
+  APP_CONFIG_PERSIST_ID,
+  AGENT_STATE_PERSIST_ID,
+  AIProvider,
+  SpaceDisplay,
+  EditorTheme,
+  RawQueryEditorLayout,
+  ThinkingStyle,
+  McpConnectionAccess,
+  normalizeMcpSession,
+  resolveMcpConnectionAccess,
+  createDefaultAppConfigState,
+  normalizeAppConfigState,
+  createDefaultAgentState,
+  normalizeAgentState,
+} from '#shared/persist/normalize';
+
+export type {
+  AppConfigPersistedState,
+  AgentPersistedState,
+  AgentHistorySession,
+  CodeEditorConfigs,
+  ChatUiConfigs,
+  AgentApiKeyConfigs,
+  TableAppearanceConfigs,
+  CustomLayoutSizeEntry,
+  CustomLayoutDefinition,
+  McpServerConfigs,
+  McpSession,
+} from '#shared/persist/normalize';
+
+// ── Web-renderer-only constants ───────────────────────────────────────────────
+// These are NOT in normalize.ts — they reference localStorage keys used by
+// the legacy migration system and are meaningless in the Electron main process.
+
+export const LEGACY_APP_CONFIG_STORAGE_KEY = 'app-config-store';

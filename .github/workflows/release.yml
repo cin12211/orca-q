@@ -110,6 +110,7 @@ jobs:
           path: |
             ~/.bun/install/cache
             node_modules
+            apps/*/node_modules
           key: ${{ runner.os }}-bun-full-${{ hashFiles('bun.lock') }}
           restore-keys: |
             ${{ runner.os }}-bun-full-
@@ -123,16 +124,16 @@ jobs:
       - name: Verify generated package version
         shell: bash
         run: |
-          NPX_VERSION="$(node -p "require('./npx-package/package.json').version")"
-          echo "npx-package version: $NPX_VERSION"
+          NPX_VERSION="$(node -p "require('./apps/cli/package.json').version")"
+          echo "apps/cli (orcaq) version: $NPX_VERSION"
 
           if [ "$NPX_VERSION" != "${{ needs.prepare-release.outputs.version }}" ]; then
-            echo "npx-package version does not match release version."
+            echo "apps/cli (orcaq) version does not match release version."
             exit 1
           fi
 
       - name: Publish to npm
-        working-directory: npx-package
+        working-directory: apps/cli
         run: npm publish --access public --provenance
 
       - name: NPM release summary

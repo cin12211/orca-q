@@ -1,0 +1,105 @@
+appId: com.cinny.orcaq
+productName: orcaq
+copyright: Copyright © 2025–2026 Cinny. All rights reserved.
+
+# The workspace package is `@orcaq/desktop`; keep the packaged app's `name`
+# as `orcaq` so the Linux executable, deb package, updater cache dir and
+# NSIS archive names stay what they were before the monorepo move.
+extraMetadata:
+  name: orcaq
+
+nativeRebuilder: sequential
+
+directories:
+  output: out/packages
+  buildResources: build
+
+forceCodeSigning: true
+
+# Optimize bundle size
+compression: maximum
+
+# Files to bundle into the app
+# tsc emits with rootDir = apps/, so electron lands in out/desktop/electron
+# and the apps/web/shared files it requires land in out/web/shared.
+files:
+  - out/desktop/electron/**/*
+  - out/web/shared/**/*
+  - '!out/desktop/electron/**/*.d.ts'
+  - '!out/desktop/electron/**/*.map'
+  - '!out/web/shared/**/*.d.ts'
+  - '!out/web/shared/**/*.map'
+
+# Bundle the Nitro runtime binary as extra resource
+extraResources:
+  - from: out/runtime/
+    to: runtime/
+    filter:
+      - '**'
+
+# Auto-update: publish to GitHub Releases
+publish:
+  provider: github
+  owner: cin12211
+  repo: orca-q
+  releaseType: release
+
+# ─── macOS ───────────────────────────────────────────────────────────────────
+mac:
+  category: public.app-category.developer-tools
+  icon: ../web/app/assets/logos/icon.icns
+  hardenedRuntime: true
+  gatekeeperAssess: false
+  notarize: true
+  preAutoEntitlements: true
+  entitlements: build/entitlements.mac.plist
+  entitlementsInherit: build/entitlements.mac.inherit.plist
+  target:
+    - target: dmg
+      arch:
+        - arm64
+        - x64
+    - target: zip
+      arch:
+        - arm64
+        - x64
+
+dmg:
+  contents:
+    - x: 130
+      y: 220
+    - x: 410
+      y: 220
+      type: link
+      path: /Applications
+
+# ─── Windows ────────────────────────────────────────────────────────────────
+win:
+  icon: ../web/app/assets/logos/icon.ico
+  target:
+    - target: nsis
+      arch:
+        - x64
+  # Uncomment when Windows EV cert is configured:
+  # certificateSubjectName: "Your Company Name"
+  # signingHashAlgorithms:
+  #   - sha256
+
+nsis:
+  oneClick: true
+  perMachine: false
+  allowToChangeInstallationDirectory: false
+  deleteAppDataOnUninstall: false
+
+# ─── Linux ───────────────────────────────────────────────────────────────────
+linux:
+  icon: ../web/app/assets/logos/
+  category: Development
+  maintainer: Cinny <chinhkhacnguyen29@gmail.com>
+  target:
+    - target: AppImage
+      arch:
+        - x64
+    - target: deb
+      arch:
+        - x64

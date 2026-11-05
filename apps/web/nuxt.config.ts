@@ -1,0 +1,228 @@
+import tailwindcss from '@tailwindcss/vite';
+import { fileURLToPath } from 'node:url';
+import type { DefineNuxtConfig, NuxtConfig } from 'nuxt/config';
+import pkg from './package.json';
+
+// https://nuxt.com/docs/api/configuration/nuxt-config
+
+const appHeaderConfig: NonNullable<NuxtConfig['app']>['head'] = {
+  htmlAttrs: {
+    lang: 'en',
+  },
+  meta: [
+    {
+      name: 'viewport',
+      content:
+        'width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover',
+    },
+    { name: 'theme-color', content: '#FAFAFA' },
+    // Apple PWA
+    { name: 'apple-mobile-web-app-capable', content: 'no' },
+    { name: 'apple-mobile-web-app-status-bar-style', content: 'default' },
+    { name: 'apple-mobile-web-app-title', content: 'OrcaQ' },
+  ],
+
+  link: [{ rel: 'manifest', href: '/manifest.json' }],
+};
+
+const shadcnConfig: Parameters<DefineNuxtConfig>[number]['shadcn'] = {
+  /**
+   * Prefix for all the imported component
+   */
+  prefix: '',
+  /**
+   * Directory that the component lives in.
+   * Resolved from the apps/web root (shadcn-nuxt uses rootDir).
+   */
+  componentDir: './app/components/ui',
+};
+
+const devWatchIgnored = [
+  '**/.git/**',
+  '**/node_modules/**',
+  '**/.nuxt/**',
+  '**/.output/**',
+  '**/.data/**',
+  '**/.sqlite3/**',
+  '**/.cache/**',
+  '**/.vite/**',
+  '**/dist/**',
+  '**/coverage/**',
+  '**/playwright-report/**',
+  '**/test-results/**',
+  '**/storybook-static/**',
+  '**/apps/cli/.output/**',
+  '**/orcaq-mcp/dist/**',
+];
+
+const componentDirs = [
+  {
+    path: '~/components',
+    pathPrefix: false,
+    extensions: ['vue'],
+  },
+];
+
+const devWatchOptions = {
+  ignored: devWatchIgnored,
+};
+
+// Nuxt 4 auto-imports every top-level export of shared/types and shared/utils
+// into the app and Nitro. Shared code is imported explicitly as `#shared/...`
+// (electron's tsc cannot see auto-imports), so keep shared/ out of auto-import.
+const sharedDir = fileURLToPath(new URL('./shared/', import.meta.url));
+const isSharedDir = (dir: unknown) =>
+  typeof dir === 'string' && `${dir}/`.startsWith(sharedDir);
+
+const sqlite3ConnectionsEnabled =
+  process.env.NUXT_PUBLIC_SQLITE3_CONNECTIONS_ENABLED !== 'false' &&
+  process.env.NUXT_PUBLIC_SQLITE3_CONNECTIONS_ENABLED !== '0';
+
+export default defineNuxtConfig({
+  compatibilityDate: '2024-11-01',
+
+  // --- Keep Nuxt 3 runtime behavior ---
+  // Nuxt 4 defaults (app/ srcDir, server/ at the root) apply to the layout.
+  // These flags keep the Nuxt 3 behavior for data fetching, component and
+  // page names, the SPA loading template and indexed access typing.
+  experimental: {
+    granularCachedData: false,
+    purgeCachedData: false,
+    pendingWhenIdle: true,
+    alwaysRunFetchOnKeyChange: true,
+    normalizeComponentNames: false,
+    normalizePageNames: false,
+    spaLoadingTemplateLocation: 'within',
+    defaults: {
+      useAsyncData: {
+        deep: true,
+      },
+    },
+  },
+  typescript: {
+    tsConfig: {
+      compilerOptions: {
+        noUncheckedIndexedAccess: false,
+      },
+    },
+  },
+  // --- end Keep Nuxt 3 runtime behavior ---
+
+  ssr: false,
+  telemetry: false,
+
+  devServer: {
+    host: '0.0.0.0',
+    port: 3000,
+  },
+
+  runtimeConfig: {
+    public: {
+      amplitudeApiKey: process.env.NUXT_AMPLITUDE_API_KEY,
+      ggFormLink: process.env.NUXT_GG_FORM_LINK,
+      githubLink:
+        process.env.NUXT_GITHUB_LINK ?? 'https://github.com/cin12211/orca-q',
+      isDev: process.env.NODE_ENV !== 'production',
+      sqlite3ConnectionsEnabled,
+      version: pkg.version,
+      showDownloadBanner:
+        process.env.NUXT_PUBLIC_SHOW_DOWNLOAD_BANNER === 'true',
+      downloadLink:
+        process.env.NUXT_PUBLIC_DOWNLOAD_LINK ??
+        'https://github.com/cin12211/orca-q/releases',
+      discordLink: process.env.NUXT_DISCORD_LINK ?? 'https://discord.gg/orcaq',
+      donateLink: process.env.NUXT_DONATE_LINK ?? 'https://ko-fi.com/ynnic',
+    },
+  },
+
+  devtools: {
+    enabled: true,
+
+    timeline: {
+      enabled: true,
+    },
+  },
+  modules: [
+    // '@nuxt/test-utils/module',
+    'shadcn-nuxt',
+    '@nuxt/icon',
+    '@nuxtjs/color-mode',
+    '@pinia/nuxt',
+    'pinia-plugin-persistedstate/nuxt',
+    'nuxt-typed-router',
+    '@formkit/auto-animate',
+    // '@nuxtjs/storybook',
+    // 'nuxt-mcp-dev',
+  ],
+  css: ['~/assets/css/tailwind.css', 'vue-json-pretty/lib/styles.css'],
+  colorMode: {
+    preference: 'light',
+    fallback: 'light',
+    classSuffix: '',
+    globalName: '__NUXT_COLOR_MODE__',
+    componentName: 'ColorScheme',
+    storage: 'localStorage',
+    storageKey: 'nuxt-color-mode',
+  },
+  vite: {
+    clearScreen: false,
+    envPrefix: ['VITE_'],
+    plugins: [tailwindcss()],
+    server: {
+      strictPort: true,
+      watch: devWatchOptions,
+    },
+  },
+  shadcn: shadcnConfig,
+  icon: {
+    serverBundle: 'local',
+    clientBundle: {
+      scan: true,
+    },
+    provider: 'iconify',
+    customCollections: [
+      {
+        prefix: 'icons',
+        dir: './app/assets/icons',
+      },
+    ],
+  },
+  imports: {
+    autoImport: true,
+    // Resolved from srcDir (app/).
+    dirs: ['core/composables'],
+  },
+  components: {
+    dirs: componentDirs,
+  },
+  hooks: {
+    'imports:dirs'(dirs) {
+      dirs.splice(0, dirs.length, ...dirs.filter(dir => !isSharedDir(dir)));
+    },
+    'nitro:config'(nitroConfig) {
+      if (nitroConfig.imports && nitroConfig.imports.dirs) {
+        nitroConfig.imports.dirs = nitroConfig.imports.dirs.filter(
+          dir => !isSharedDir(dir)
+        );
+      }
+    },
+  },
+  nuxtTypedRouter: {
+    // The repo .prettierrc loads @trivago/prettier-plugin-sort-imports, whose
+    // babel parser rejects the `const` type parameters in the generated files.
+    disablePrettier: true,
+  },
+  piniaPluginPersistedstate: {
+    storage: 'localStorage',
+  },
+  app: {
+    head: appHeaderConfig,
+  },
+  // Relative to srcDir (app/).
+  watch: ['app.vue', 'nuxt.config.ts'],
+  watchers: {
+    chokidar: devWatchOptions,
+  },
+  ignore: ['**/docs/**', '**/.sqlite3/**'],
+  spaLoadingTemplate: true,
+});
