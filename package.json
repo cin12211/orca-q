@@ -80,6 +80,7 @@
     "url": "https://github.com/cin12211/orca-q/issues"
   },
   "overrides": {
+    "@shikijs/core": "^4.6.0",
     "@vue/compiler-core": "3.5.44",
     "@vue/compiler-sfc": "3.5.44",
     "@vue/compiler-ssr": "3.5.44",

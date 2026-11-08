@@ -80,4 +80,13 @@ log(`  Runtime server scripts ready at ${ELECTRON_RUNTIME_DIR}/`);
 log('Step 3/3: Compiling Electron TypeScript...');
 run(`npx tsc -p electron/tsconfig.json`);
 
+const splashSrc = join(ROOT, 'electron', 'splash.html');
+const splashDestDir = join(ROOT, 'out', 'desktop', 'electron');
+const splashDest = join(splashDestDir, 'splash.html');
+if (existsSync(splashSrc)) {
+  mkdirSync(splashDestDir, { recursive: true });
+  copyFileSync(splashSrc, splashDest);
+  log(`  Copied splash screen to ${splashDest}`);
+}
+
 log('\n✅ Electron pre-build complete! Ready for electron-builder.\n');
