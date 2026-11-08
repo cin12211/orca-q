@@ -22,25 +22,25 @@ The Activity Bar (the narrow icon strip on the far left) calls `setActivityActiv
 
 ## File Locations
 
-| Purpose                  | File                                                                          |
-| ------------------------ | ----------------------------------------------------------------------------- |
-| Tab type enum + store    | `core/stores/useActivityBarStore.ts`                                          |
-| Sidebar shell (switcher) | `components/modules/app-shell/primary-side-bar/components/PrimarySideBar.vue` |
-| Sidebar public API       | `components/modules/app-shell/primary-side-bar/index.ts`                      |
-| All management panels    | `components/modules/management/`                                              |
-| Management public API    | `components/modules/management/index.ts`                                      |
-| Shared header component  | `components/modules/management/shared/components/ManagementSidebarHeader.vue` |
+| Purpose                  | File                                                                                       |
+| ------------------------ | ------------------------------------------------------------------------------------------ |
+| Tab type enum + store    | `apps/web/app/core/stores/useActivityBarStore.ts`                                          |
+| Sidebar shell (switcher) | `apps/web/app/components/modules/app-shell/primary-side-bar/components/PrimarySideBar.vue` |
+| Sidebar public API       | `apps/web/app/components/modules/app-shell/primary-side-bar/index.ts`                      |
+| All management panels    | `apps/web/app/components/modules/management/`                                              |
+| Management public API    | `apps/web/app/components/modules/management/index.ts`                                      |
+| Shared header component  | `apps/web/app/components/modules/management/shared/components/ManagementSidebarHeader.vue` |
 
 ### Management panel locations
 
-| Tab           | Panel component file                                                             |
-| ------------- | -------------------------------------------------------------------------------- |
-| Explorer      | `components/modules/management/explorer/ManagementExplorer.vue`                  |
-| Schemas       | `components/modules/management/schemas/ManagementSchemas.vue`                    |
-| ERD Diagram   | `components/modules/management/erd-diagram/ManagementErdDiagram.vue`             |
-| Users & Roles | `components/modules/management/role-permission/ManagementUsersAndPermission.vue` |
-| Export        | `components/modules/management/export/ManagementExport.vue`                      |
-| Agent         | `components/modules/management/agent/ManagementAgent.vue`                        |
+| Tab           | Panel component file                                                                          |
+| ------------- | --------------------------------------------------------------------------------------------- |
+| Explorer      | `apps/web/app/components/modules/management/explorer/ManagementExplorer.vue`                  |
+| Schemas       | `apps/web/app/components/modules/management/schemas/ManagementSchemas.vue`                    |
+| ERD Diagram   | `apps/web/app/components/modules/management/erd-diagram/ManagementErdDiagram.vue`             |
+| Users & Roles | `apps/web/app/components/modules/management/role-permission/ManagementUsersAndPermission.vue` |
+| Export        | `apps/web/app/components/modules/management/export/ManagementExport.vue`                      |
+| Agent         | `apps/web/app/components/modules/management/agent/ManagementAgent.vue`                        |
 
 ---
 
@@ -86,7 +86,7 @@ Key points:
 
 ### Step 1 — Add enum value
 
-In `core/stores/useActivityBarStore.ts`:
+In `apps/web/app/core/stores/useActivityBarStore.ts`:
 
 ```ts
 export enum ActivityBarItemType {
@@ -102,7 +102,7 @@ export enum ActivityBarItemType {
 
 ### Step 2 — Create the management panel module
 
-Create the folder `components/modules/management/my-new-tab/` with this structure:
+Create the folder `apps/web/app/components/modules/management/my-new-tab/` with this structure:
 
 ```
 my-new-tab/
@@ -136,7 +136,7 @@ export { default as ManagementMyNewTab } from './ManagementMyNewTab.vue';
 
 ### Step 3 — Export from the management module
 
-In `components/modules/management/index.ts`:
+In `apps/web/app/components/modules/management/index.ts`:
 
 ```ts
 export * from './my-new-tab'; // ← add this line
@@ -144,7 +144,7 @@ export * from './my-new-tab'; // ← add this line
 
 ### Step 4 — Register in PrimarySideBar
 
-In `components/modules/app-shell/primary-side-bar/components/PrimarySideBar.vue`:
+In `apps/web/app/components/modules/app-shell/primary-side-bar/components/PrimarySideBar.vue`:
 
 ```ts
 // 1. Import the component
@@ -174,7 +174,7 @@ activityStore.setActivityActive(ActivityBarItemType.MyNewTab);
 
 ## How to Update an Existing Panel
 
-1. **Find the panel** in `components/modules/management/<tab-name>/Management<Tab>.vue`.
+1. **Find the panel** in `apps/web/app/components/modules/management/<tab-name>/Management<Tab>.vue`.
 2. **Business logic** (API calls, state) belongs in a hook under `<tab-name>/hooks/`.
 3. **Static structure** (sub-components) belongs in `<tab-name>/components/`.
 4. **Persisted UI state** (expanded nodes, scroll position) goes into `useActivityBarStore` — see `schemasExpandedState`, `schemaCurrentScrollTop` as examples.
@@ -283,4 +283,4 @@ const { treeData, searchInput, onClickNode } = useMyPanelTree({
 - **Always wrap the `<component :is="current">` in `<KeepAlive>`** — this preserves scroll position and tree expand state when switching tabs.
 - **Persisted tree state** (expanded keys, scroll positions) goes into `useActivityBarStore`, not into local component state.
 - **Imports in `PrimarySideBar.vue` use `#components`** (Nuxt auto-import barrel) — not direct relative paths.
-- **Each management sub-module** must have its own `index.ts` exporting its root component, and be re-exported from `components/modules/management/index.ts`.
+- **Each management sub-module** must have its own `index.ts` exporting its root component, and be re-exported from `apps/web/app/components/modules/management/index.ts`.

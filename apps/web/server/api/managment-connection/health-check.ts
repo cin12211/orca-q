@@ -1,0 +1,67 @@
+import { DatabaseClientType } from '#shared/constants/database-client-type';
+import {
+  EConnectionFamily,
+  EConnectionProviderKind,
+  EManagedSqliteProvider,
+  type IBrokerConfig,
+  type IManagedSqliteConfig,
+} from '#shared/types/entities/connection.entity';
+import {
+  EConnectionMethod,
+  type ISSLConfig,
+  type ISSHConfig,
+} from '#shared/types/entities/connection.entity';
+import type { NormalizedConnectionError } from '~~/server/infrastructure/driver/connection-error';
+import { healthCheckConnection } from '~~/server/infrastructure/driver/db-connection';
+
+export default defineEventHandler(
+  async (
+    event
+  ): Promise<
+    { isConnectedSuccess: boolean } & Partial<NormalizedConnectionError>
+  > => {
+    const body: {
+      method?: EConnectionMethod;
+      stringConnection?: string;
+      host?: string;
+      port?: string;
+      username?: string;
+      password?: string;
+      database?: string;
+      serviceName?: string;
+      filePath?: string;
+      type?: DatabaseClientType;
+      providerKind?: EConnectionProviderKind;
+      family?: EConnectionFamily;
+      managedSqlite?: IManagedSqliteConfig;
+      broker?: IBrokerConfig;
+      ssl?: ISSLConfig;
+      ssh?: ISSHConfig;
+    } = await readBody(event);
+
+    if (!body.type || !body.method) {
+      return { isConnectedSuccess: false };
+    }
+
+    const result = await healthCheckConnection({
+      url: body.stringConnection || '',
+      method: body.method,
+      host: body.host,
+      port: body.port,
+      username: body.username,
+      password: body.password,
+      database: body.database,
+      serviceName: body.serviceName,
+      filePath: body.filePath,
+      type: body.type,
+      providerKind: body.providerKind,
+      family: body.family,
+      managedSqlite: body.managedSqlite,
+      broker: body.broker,
+      ssl: body.ssl,
+      ssh: body.ssh,
+    });
+
+    return result;
+  }
+);

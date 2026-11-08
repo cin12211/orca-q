@@ -243,7 +243,7 @@ Headless UI components from shadcn-vue library.
 
 ```mermaid
 graph TD
-    A[app.vue] --> B[layouts/default.vue]
+    A[app.vue] --> B[apps/web/app/layouts/default.vue]
     B --> C[ActivityBar]
     B --> D[PrimarySidebar]
     B --> E[TabViewContainer]

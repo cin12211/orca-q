@@ -15,7 +15,7 @@
 
 services:
   # ---------------------------------------------------------------------------
-  # OrcaQ Application (Nuxt 3 SPA + H3/Nitro backend)
+  # OrcaQ Application (Nuxt 4 SPA + H3/Nitro backend, built from apps/web)
   # ---------------------------------------------------------------------------
   orcaq:
     build:

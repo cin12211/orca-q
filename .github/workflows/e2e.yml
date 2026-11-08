@@ -32,6 +32,7 @@ jobs:
           path: |
             ~/.bun/install/cache
             node_modules
+            apps/*/node_modules
           key: ${{ runner.os }}-bun-ignore-scripts-${{ hashFiles('bun.lock') }}
           restore-keys: |
             ${{ runner.os }}-bun-ignore-scripts-
@@ -46,7 +47,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: app-build-${{ github.sha }}
-          path: .output
+          path: apps/web/.output
           retention-days: 1
           if-no-files-found: error
           include-hidden-files: true
@@ -97,6 +98,7 @@ jobs:
           path: |
             ~/.bun/install/cache
             node_modules
+            apps/*/node_modules
           key: ${{ runner.os }}-bun-ignore-scripts-${{ hashFiles('bun.lock') }}
           restore-keys: |
             ${{ runner.os }}-bun-ignore-scripts-
@@ -113,22 +115,26 @@ jobs:
             ${{ runner.os }}-playwright-chromium-
 
       - name: Install Playwright browsers
+        working-directory: apps/web
         run: bunx playwright install chromium --with-deps
 
       - name: Download build artifact
         uses: actions/download-artifact@v4
         with:
           name: app-build-${{ github.sha }}
-          path: .output/
+          path: apps/web/.output/
 
       - name: Start all fixtures
+        working-directory: apps/web
         run: bash scripts/test-services/start-fixtures.sh --profile all
 
       - name: Run E2E — common
+        working-directory: apps/web
         run: bunx playwright test --project common
 
       - name: Stop fixtures
         if: always()
+        working-directory: apps/web
         run: bash scripts/test-services/stop-fixtures.sh --profile all
 
       - name: Upload Playwright report
@@ -137,8 +143,8 @@ jobs:
         with:
           name: playwright-report-common-${{ github.sha }}
           path: |
-            playwright-report/
-            test-results/playwright/
+            apps/web/playwright-report/
+            apps/web/test-results/playwright/
           retention-days: 14
 
   # ─────────────────────────────────────────────────────────────────────────
@@ -170,6 +176,7 @@ jobs:
           path: |
             ~/.bun/install/cache
             node_modules
+            apps/*/node_modules
           key: ${{ runner.os }}-bun-ignore-scripts-${{ hashFiles('bun.lock') }}
           restore-keys: |
             ${{ runner.os }}-bun-ignore-scripts-
@@ -186,18 +193,21 @@ jobs:
             ${{ runner.os }}-playwright-chromium-
 
       - name: Install Playwright browsers
+        working-directory: apps/web
         run: bunx playwright install chromium --with-deps
 
       - name: Download build artifact
         uses: actions/download-artifact@v4
         with:
           name: app-build-${{ github.sha }}
-          path: .output/
+          path: apps/web/.output/
 
       - name: Prepare SQLite fixture
+        working-directory: apps/web
         run: bash scripts/test-services/start-fixtures.sh --profile sqlite
 
       - name: Run E2E — SQLite
+        working-directory: apps/web
         run: bunx playwright test --project sqlite
 
       - name: Upload Playwright report
@@ -206,8 +216,8 @@ jobs:
         with:
           name: playwright-report-sqlite-${{ github.sha }}
           path: |
-            playwright-report/
-            test-results/playwright/
+            apps/web/playwright-report/
+            apps/web/test-results/playwright/
           retention-days: 14
 
   # ─────────────────────────────────────────────────────────────────────────
@@ -243,6 +253,7 @@ jobs:
           path: |
             ~/.bun/install/cache
             node_modules
+            apps/*/node_modules
           key: ${{ runner.os }}-bun-ignore-scripts-${{ hashFiles('bun.lock') }}
           restore-keys: |
             ${{ runner.os }}-bun-ignore-scripts-
@@ -259,22 +270,26 @@ jobs:
             ${{ runner.os }}-playwright-chromium-
 
       - name: Install Playwright browsers
+        working-directory: apps/web
         run: bunx playwright install chromium --with-deps
 
       - name: Download build artifact
         uses: actions/download-artifact@v4
         with:
           name: app-build-${{ github.sha }}
-          path: .output/
+          path: apps/web/.output/
 
       - name: Start PostgreSQL fixture only
+        working-directory: apps/web
         run: bash scripts/test-services/start-fixtures.sh --profile postgres
 
       - name: Run E2E — PostgreSQL
+        working-directory: apps/web
         run: bunx playwright test --project postgres
 
       - name: Stop fixtures
         if: always()
+        working-directory: apps/web
         run: bash scripts/test-services/stop-fixtures.sh --profile postgres
 
       - name: Upload Playwright report
@@ -283,8 +298,8 @@ jobs:
         with:
           name: playwright-report-postgres-${{ github.sha }}
           path: |
-            playwright-report/
-            test-results/playwright/
+            apps/web/playwright-report/
+            apps/web/test-results/playwright/
           retention-days: 14
 
   # ─────────────────────────────────────────────────────────────────────────
@@ -321,6 +336,7 @@ jobs:
           path: |
             ~/.bun/install/cache
             node_modules
+            apps/*/node_modules
           key: ${{ runner.os }}-bun-ignore-scripts-${{ hashFiles('bun.lock') }}
           restore-keys: |
             ${{ runner.os }}-bun-ignore-scripts-
@@ -337,22 +353,26 @@ jobs:
             ${{ runner.os }}-playwright-chromium-
 
       - name: Install Playwright browsers
+        working-directory: apps/web
         run: bunx playwright install chromium --with-deps
 
       - name: Download build artifact
         uses: actions/download-artifact@v4
         with:
           name: app-build-${{ github.sha }}
-          path: .output/
+          path: apps/web/.output/
 
       - name: Start MySQL fixture only
+        working-directory: apps/web
         run: bash scripts/test-services/start-fixtures.sh --profile mysql
 
       - name: Run E2E — MySQL
+        working-directory: apps/web
         run: bunx playwright test --project mysql
 
       - name: Stop fixtures
         if: always()
+        working-directory: apps/web
         run: bash scripts/test-services/stop-fixtures.sh --profile mysql
 
       - name: Upload Playwright report
@@ -361,8 +381,8 @@ jobs:
         with:
           name: playwright-report-mysql-${{ github.sha }}
           path: |
-            playwright-report/
-            test-results/playwright/
+            apps/web/playwright-report/
+            apps/web/test-results/playwright/
           retention-days: 14
 
   # ─────────────────────────────────────────────────────────────────────────
@@ -399,6 +419,7 @@ jobs:
           path: |
             ~/.bun/install/cache
             node_modules
+            apps/*/node_modules
           key: ${{ runner.os }}-bun-ignore-scripts-${{ hashFiles('bun.lock') }}
           restore-keys: |
             ${{ runner.os }}-bun-ignore-scripts-
@@ -415,22 +436,26 @@ jobs:
             ${{ runner.os }}-playwright-chromium-
 
       - name: Install Playwright browsers
+        working-directory: apps/web
         run: bunx playwright install chromium --with-deps
 
       - name: Download build artifact
         uses: actions/download-artifact@v4
         with:
           name: app-build-${{ github.sha }}
-          path: .output/
+          path: apps/web/.output/
 
       - name: Start MariaDB fixture only
+        working-directory: apps/web
         run: bash scripts/test-services/start-fixtures.sh --profile mariadb
 
       - name: Run E2E — MariaDB
+        working-directory: apps/web
         run: bunx playwright test --project mariadb
 
       - name: Stop fixtures
         if: always()
+        working-directory: apps/web
         run: bash scripts/test-services/stop-fixtures.sh --profile mariadb
 
       - name: Upload Playwright report
@@ -439,8 +464,8 @@ jobs:
         with:
           name: playwright-report-mariadb-${{ github.sha }}
           path: |
-            playwright-report/
-            test-results/playwright/
+            apps/web/playwright-report/
+            apps/web/test-results/playwright/
           retention-days: 14
 
   # ─────────────────────────────────────────────────────────────────────────
@@ -473,6 +498,7 @@ jobs:
           path: |
             ~/.bun/install/cache
             node_modules
+            apps/*/node_modules
           key: ${{ runner.os }}-bun-ignore-scripts-${{ hashFiles('bun.lock') }}
           restore-keys: |
             ${{ runner.os }}-bun-ignore-scripts-
@@ -489,22 +515,26 @@ jobs:
             ${{ runner.os }}-playwright-chromium-
 
       - name: Install Playwright browsers
+        working-directory: apps/web
         run: bunx playwright install chromium --with-deps
 
       - name: Download build artifact
         uses: actions/download-artifact@v4
         with:
           name: app-build-${{ github.sha }}
-          path: .output/
+          path: apps/web/.output/
 
       - name: Start Redis fixture only
+        working-directory: apps/web
         run: bash scripts/test-services/start-fixtures.sh --profile redis
 
       - name: Run E2E — Redis
+        working-directory: apps/web
         run: bunx playwright test --project redis
 
       - name: Stop Redis fixture
         if: always()
+        working-directory: apps/web
         run: bash scripts/test-services/stop-fixtures.sh --profile redis
 
       - name: Upload Playwright report
@@ -513,6 +543,6 @@ jobs:
         with:
           name: playwright-report-redis-${{ github.sha }}
           path: |
-            playwright-report/
-            test-results/playwright/
+            apps/web/playwright-report/
+            apps/web/test-results/playwright/
           retention-days: 14

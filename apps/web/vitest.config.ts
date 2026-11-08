@@ -1,0 +1,92 @@
+import { defineVitestProject } from '@nuxt/test-utils/config';
+import path from 'path';
+import { loadEnv } from 'vite';
+import { defineConfig } from 'vitest/config';
+
+// Env files live next to this config (apps/web), whatever the cwd is.
+const envDir = __dirname;
+
+// Same alias semantics as Nuxt 4: `~` / `@` point at the client srcDir (app/),
+// `~~` / `@@` at the apps/web root (server/, scripts/, ...), `#shared` at shared/.
+// Electron sources live in apps/desktop; unit tests import them as `~/electron/*`.
+// This entry must come before the generic `~` alias.
+const sharedAliases = [
+  {
+    find: /^#shared(?=\/|$)/,
+    replacement: path.resolve(__dirname, './shared'),
+  },
+  {
+    find: /^~\/electron\//,
+    replacement: `${path.resolve(__dirname, '../desktop/electron')}/`,
+  },
+  { find: '~~', replacement: path.resolve(__dirname, './') },
+  { find: '@@', replacement: path.resolve(__dirname, './') },
+  { find: '~', replacement: path.resolve(__dirname, './app') },
+  { find: '@', replacement: path.resolve(__dirname, './app') },
+];
+
+export default defineConfig(async () => {
+  const nuxtProject = await defineVitestProject({
+    test: {
+      name: 'nuxt',
+      include: ['test/nuxt/**/*.{test,spec}.ts'],
+      exclude: ['test/api/**/*.{test,spec}.ts'],
+      environment: 'nuxt',
+      environmentOptions: {
+        nuxt: {
+          domEnvironment: 'happy-dom',
+        },
+      },
+      hookTimeout: 30_000,
+    },
+  });
+
+  // Must run before the Nuxt runtime entry (which defineVitestProject puts
+  // first) so the `#build/fetch` mock is in place when the app loads.
+  const nuxtSetupFiles = nuxtProject.test?.setupFiles;
+  nuxtProject.test = {
+    ...nuxtProject.test,
+    setupFiles: [
+      path.resolve(__dirname, 'test/support/nuxt-global-fetch.ts'),
+      ...(Array.isArray(nuxtSetupFiles)
+        ? nuxtSetupFiles
+        : [nuxtSetupFiles].filter((file): file is string => Boolean(file))),
+    ],
+  };
+
+  return {
+    test: {
+      env: loadEnv('', envDir, ''),
+      projects: [
+        {
+          resolve: {
+            alias: sharedAliases,
+          },
+          test: {
+            name: 'unit',
+            include: ['test/unit/**/*.{test,spec}.ts'],
+            environment: 'node',
+          },
+        },
+        {
+          // Executor-level integration tests import app code directly.
+          resolve: {
+            alias: sharedAliases,
+          },
+          test: {
+            name: 'integration',
+            include: ['test/api/**/*.{test,spec}.ts'],
+            environment: 'node',
+            env: loadEnv('e2e', envDir, ''),
+            // Each test file starts its own Nuxt server via @nuxt/test-utils setup().
+            // Run files one-at-a-time to avoid port / resource contention.
+            fileParallelism: false,
+            hookTimeout: 240_000,
+            testTimeout: 60_000,
+          },
+        },
+        nuxtProject,
+      ],
+    },
+  };
+});

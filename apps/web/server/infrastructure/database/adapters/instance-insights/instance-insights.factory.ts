@@ -1,0 +1,36 @@
+import { DatabaseClientType } from '#shared/constants/database-client-type';
+import { createDomainAdapter } from '../shared';
+import { CockroachInstanceInsightsAdapter } from './cockroachdb/cockroachdb-instance-insights.adapter';
+import { DuckDbInstanceInsightsAdapter } from './duckdb/duckdb-instance-insights.adapter';
+import { MssqlInstanceInsightsAdapter } from './mssql/mssql-instance-insights.adapter';
+import { MysqlInstanceInsightsAdapter } from './mysql/mysql-instance-insights.adapter';
+import { OracleInstanceInsightsAdapter } from './oracle/oracle-instance-insights.adapter';
+import { PostgresInstanceInsightsAdapter } from './postgres/postgres-instance-insights.adapter';
+import { SqliteInstanceInsightsAdapter } from './sqlite/sqlite-instance-insights.adapter';
+import type {
+  IDatabaseInstanceInsightsAdapter,
+  InstanceInsightsAdapterParams,
+} from './types';
+
+export async function createInstanceInsightsAdapter(
+  dbType: DatabaseClientType | undefined,
+  params: InstanceInsightsAdapterParams
+): Promise<IDatabaseInstanceInsightsAdapter> {
+  return createDomainAdapter<
+    IDatabaseInstanceInsightsAdapter,
+    InstanceInsightsAdapterParams
+  >(dbType, params, 'instance insights', {
+    postgres: PostgresInstanceInsightsAdapter.create,
+    mysql: createParams => MysqlInstanceInsightsAdapter.create(createParams),
+    mariadb: createParams =>
+      MysqlInstanceInsightsAdapter.create(
+        createParams,
+        DatabaseClientType.MARIADB
+      ),
+    oracledb: OracleInstanceInsightsAdapter.create,
+    sqlite3: SqliteInstanceInsightsAdapter.create,
+    cockroachdb: CockroachInstanceInsightsAdapter.create,
+    mssql: MssqlInstanceInsightsAdapter.create,
+    duckdb: DuckDbInstanceInsightsAdapter.create,
+  });
+}

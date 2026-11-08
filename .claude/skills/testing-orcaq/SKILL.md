@@ -9,13 +9,17 @@ tools: Read, Edit, Bash, Grep, Glob
 category: testing
 color: blue
 displayName: OrcaQ Testing
-applyTo: 'test/**,scripts/test-services/**,.github/workflows/**'
+applyTo: 'apps/web/test/**,apps/web/scripts/test-services/**,.github/workflows/**'
 ---
 
 # OrcaQ Testing — Agent Skill
 
 > Read `docs/TESTING_GUIDE.md` for the full reference. This skill encodes the
 > decision rules so you choose the right command without checking every time.
+>
+> Run `bun test:*` from the repo root (root `package.json` proxies to `apps/web`).
+> Test files live in `apps/web/test/`, fixture scripts in
+> `apps/web/scripts/test-services/`, and Vitest/Playwright configs in `apps/web/`.
 
 ---
 
@@ -36,7 +40,7 @@ Is the test purely logic / no DB / no browser?
               └─ NO →
                   It is a Playwright E2E test.
                   Do you need a specific DB only?
-                    └─ YES → bash scripts/test-services/run-tests.sh --fixtures=<profile> -- playwright test --project <db>
+                    └─ YES → bash apps/web/scripts/test-services/run-tests.sh --fixtures=<profile> -- playwright test --project <db>
                     └─ NO  → bun test:e2e          ← all fixtures, all projects
 ```
 
@@ -47,8 +51,8 @@ Is the test purely logic / no DB / no browser?
 | Script                   | What it does                                    | Needs Docker? |
 | ------------------------ | ----------------------------------------------- | ------------- |
 | `bun test:all`           | All Vitest suites (unit + nuxt + integration)   | No            |
-| `bun test:unit`          | Unit tests only (`test/unit/`)                  | No            |
-| `bun test:nuxt`          | Nuxt component tests (`test/nuxt/`)             | No            |
+| `bun test:unit`          | Unit tests only (`apps/web/test/unit/`)         | No            |
+| `bun test:nuxt`          | Nuxt component tests (`apps/web/test/nuxt/`)    | No            |
 | `bun test:api`           | Integration tests — auto starts all fixtures    | Yes           |
 | `bun test:api:raw`       | Integration tests — fixtures must already be up | Yes           |
 | `bun test:e2e`           | Playwright — auto starts all fixtures           | Yes           |
@@ -62,6 +66,8 @@ Is the test purely logic / no DB / no browser?
 
 ## 3. Vitest Projects
 
+Paths are relative to `apps/web/` (where `vitest.config.ts` lives).
+
 | Project flag            | Files                           | Notes                    |
 | ----------------------- | ------------------------------- | ------------------------ |
 | `--project unit`        | `test/unit/**/*.{test,spec}.ts` | Pure logic, no framework |
@@ -71,7 +77,7 @@ Is the test purely logic / no DB / no browser?
 Run one file:
 
 ```bash
-bun vitest --run test/unit/core/helpers/myHelper.spec.ts
+cd apps/web && bun vitest --run test/unit/core/helpers/myHelper.spec.ts
 ```
 
 ---
@@ -91,9 +97,9 @@ bun vitest --run test/unit/core/helpers/myHelper.spec.ts
 Run isolated by DB:
 
 ```bash
-bash scripts/test-services/run-tests.sh --fixtures=postgres -- playwright test --project postgres
-bash scripts/test-services/run-tests.sh --fixtures=redis   -- playwright test --project redis
-bash scripts/test-services/run-tests.sh --fixtures=sqlite  -- playwright test --project sqlite
+bash apps/web/scripts/test-services/run-tests.sh --fixtures=postgres -- playwright test --project postgres
+bash apps/web/scripts/test-services/run-tests.sh --fixtures=redis   -- playwright test --project redis
+bash apps/web/scripts/test-services/run-tests.sh --fixtures=sqlite  -- playwright test --project sqlite
 ```
 
 ---
@@ -119,8 +125,8 @@ bash scripts/test-services/run-tests.sh --fixtures=sqlite  -- playwright test --
 Manual fixture control:
 
 ```bash
-bash scripts/test-services/start-fixtures.sh --profile <profile>
-bash scripts/test-services/stop-fixtures.sh  --profile <profile>
+bash apps/web/scripts/test-services/start-fixtures.sh --profile <profile>
+bash apps/web/scripts/test-services/stop-fixtures.sh  --profile <profile>
 ```
 
 ---

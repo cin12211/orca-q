@@ -29,6 +29,7 @@ jobs:
           path: |
             ~/.bun/install/cache
             node_modules
+            apps/*/node_modules
           key: ${{ runner.os }}-bun-full-${{ hashFiles('bun.lock') }}
           restore-keys: |
             ${{ runner.os }}-bun-full-
@@ -37,7 +38,8 @@ jobs:
         run: bun install --frozen-lockfile
 
       - name: Run Nuxt prepare
-        run: bun nuxt prepare
+        working-directory: apps/web
+        run: bunx nuxt prepare
 
       - name: Run unit tests
         run: bun test:unit

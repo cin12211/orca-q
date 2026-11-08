@@ -1,22 +1,23 @@
 # Logs
-logs
-*.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-pnpm-debug.log*
-lerna-debug.log*
+**/logs
+**/*.log
+**/npm-debug.log*
+**/yarn-debug.log*
+**/yarn-error.log*
+**/pnpm-debug.log*
+**/lerna-debug.log*
 
-node_modules
-dist
-dist-ssr
-*.local
+# Dependencies (root and every workspace: apps/*/node_modules)
+**/node_modules
+**/dist
+**/dist-ssr
+**/*.local
 
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
 .idea
-.DS_Store
+**/.DS_Store
 *.suo
 *.ntvs*
 *.njsproj
@@ -25,32 +26,32 @@ dist-ssr
 
 
 
-# Nuxt dev/build outputs
-.output
-.data
-.nuxt
-.nitro
-.cache
-.vite
-dist
+# Nuxt dev/build outputs (apps/web/.output, apps/web/.nuxt, ...)
+**/.output
+**/.data
+**/.nuxt
+**/.nitro
+**/.cache
+**/.vite
 
-# Node dependencies
-node_modules
-build
+# Desktop build output and npx bundle
+apps/desktop/out
+apps/desktop/build
+apps/cli/.output
 
-# Logs
-logs
-*.log
-
-# Misc
-.DS_Store
+# Test output
+**/coverage
+**/test-results
+**/playwright-report
+**/storybook-static
 
 # Local env files
-.env
-.env.*
-!.env.example
+**/.env
+**/.env.*
+!**/.env.example
 
-tsconfig.tsbuildinfo
+**/tsconfig.tsbuildinfo
+**/.tsbuildinfo
 
 
 # when build , copy all file in nuxt gen + electron-app 
@@ -58,7 +59,7 @@ tsconfig.tsbuildinfo
 .electron-build
 .electron-out
 .db
+.sqlite3
 .git
 Dockerfile*
 .dockerignore
-coverage

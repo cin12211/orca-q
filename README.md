@@ -56,6 +56,8 @@ bun install
 npm run nuxt:dev
 ```
 
+The repo is a Bun-workspaces monorepo: `apps/web` (Nuxt app), `apps/desktop` (Electron) and `apps/cli` (the `orcaq` npx package). Run scripts from the repo root; it proxies them to the right app.
+
 #### <img src="https://api.iconify.design/logos:docker-icon.svg" width="22" alt="Docker icon" /> Docker
 
 Best for a clean local deployment without installing Node.js tooling.

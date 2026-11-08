@@ -53,6 +53,7 @@ jobs:
           path: |
             ~/.bun/install/cache
             node_modules
+            apps/*/node_modules
           key: ${{ runner.os }}-bun-full-${{ hashFiles('bun.lock') }}
           restore-keys: |
             ${{ runner.os }}-bun-full-
@@ -61,12 +62,15 @@ jobs:
         run: bun install --frozen-lockfile
 
       - name: Run Nuxt prepare
-        run: bun nuxt prepare
+        working-directory: apps/web
+        run: bunx nuxt prepare
 
       - name: Generate optimized SQL fixtures
+        working-directory: apps/web
         run: node scripts/test-services/generate-optimized-sql-fixtures.mjs
 
       - name: Start all database fixtures
+        working-directory: apps/web
         run: bash scripts/test-services/start-fixtures.sh --profile all
 
       - name: Run API tests
@@ -74,4 +78,5 @@ jobs:
 
       - name: Stop all database fixtures
         if: always()
+        working-directory: apps/web
         run: bash scripts/test-services/stop-fixtures.sh --profile all

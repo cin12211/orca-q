@@ -43,11 +43,11 @@ Reviewed the desktop updater flow across Electron main process, preload IPC, ren
 
 ## Files Changed
 
-- `electron/updater/index.ts`
-- `electron/main.ts`
-- `core/composables/useElectronUpdater.ts`
+- `apps/desktop/electron/updater/index.ts`
+- `apps/desktop/electron/main.ts`
+- `apps/web/app/core/composables/useElectronUpdater.ts`
 - `app.vue`
-- `components/modules/app-shell/status-bar/components/ElectronUpdateStartupDialog.vue`
+- `apps/web/app/components/modules/app-shell/status-bar/components/ElectronUpdateStartupDialog.vue`
 - `.github/workflows/electron-release.yml`
 
 ## Verification

@@ -1,0 +1,15 @@
+import type { WorkspaceState } from '#shared/types/entities/workspace-state.entity';
+import type { Knex } from 'knex';
+import { createTableIfMissing, type ToSQLiteRow } from './shared';
+
+export type WorkspaceStateRow = ToSQLiteRow<WorkspaceState>;
+
+export async function createWorkspaceStatesTable(knex: Knex): Promise<void> {
+  await createTableIfMissing(knex, 'workspace_states', t => {
+    t.text('id').primary();
+    t.text('connection_id').nullable();
+    t.text('connection_states').nullable();
+    t.text('opened_at').nullable();
+    t.text('updated_at').nullable();
+  });
+}

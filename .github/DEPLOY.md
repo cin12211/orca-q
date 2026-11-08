@@ -73,7 +73,7 @@ The workflow automatically runs when:
 2. Installs Bun runtime
 3. Installs dependencies with `bun install`
 4. Builds Nuxt web app (`bun run nuxt:build-web`)
-5. Runs NPX build script (`node scripts/build-npx.mjs`)
+5. Runs NPX build script (`node apps/cli/scripts/build-npx.mjs`, copies `apps/web/.output` into `apps/cli/.output`)
 6. Publishes to npm as public package
 
 ## Version Management
@@ -93,12 +93,12 @@ npm run version:minor
 npm run version:major
 
 # Commit and push to trigger deployment
-git add package.json
+git add package.json apps/*/package.json
 git commit -m "chore: bump version to $(node -p "require('./package.json').version")"
 git push origin main
 ```
 
-The `build-npx.mjs` script automatically syncs the version to `npx-package/package.json`.
+`npm run version:*` syncs the version to every `apps/*/package.json`; the `build-npx.mjs` script also syncs it to `apps/cli/package.json`.
 
 ## Monitoring Deployments
 
@@ -191,7 +191,7 @@ docker push <your-username>/orcaq:$(node -p "require('./package.json').version")
 ```bash
 # Build and publish manually
 npm run npx:build
-cd npx-package
+cd apps/cli
 npm publish --access public
 ```
 

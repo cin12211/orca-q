@@ -1,6 +1,13 @@
 # Testing Guide — OrcaQ
 
 > All test commands use **Bun** as the task runner. Replace `bun` with `npm run` or `npx` if needed.
+>
+> **Monorepo:** tests belong to the web app. `bun test:*` scripts run from the repo root
+> (the root `package.json` proxies them to `apps/web`). Test files live in `apps/web/test/`,
+> fixture scripts in `apps/web/scripts/test-services/`, and `vitest.config.ts` /
+> `playwright.config.ts` in `apps/web/`. Every raw command below (`bash scripts/...`,
+> `bunx vitest ...`, `bunx playwright ...`, `docker compose -f test/...`) and every path in
+> this guide is relative to `apps/web/` — run `cd apps/web` first.
 
 ---
 
@@ -178,17 +185,17 @@ ORCAQ_POSTGRES_PORT=5433 bun test:api
 
 When running locally with the default fixture setup, you can connect to the databases using the following full connection strings:
 
-| Database        | Connection String / File Path                                                                                                                                            |
-| --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| **PostgreSQL**  | `postgresql://orcaq:orcaq@127.0.0.1:5432/pagila`                                                                                                                         |
-| **MySQL**       | `mysql://orcaq:orcaq@127.0.0.1:3306/sakila`                                                                                                                              |
-| **MariaDB**     | `mysql://orcaq:orcaq@127.0.0.1:3307/sakila` (Note: Uses `mysql` protocol)                                                                                                |
-| **Redis**       | `redis://127.0.0.1:6379/0`                                                                                                                                               |
-| **SQLite**      | `test/fixtures/datasets/.tmp/sqlite/sakila.sqlite` (Relative to repo root)<br>Or absolute: `sqlite:///path/to/repo/test/fixtures/datasets/.tmp/sqlite/sakila.sqlite`     |
-| **SQL Server**  | `sqlserver://sa:OrcaQ_Passw0rd%21@127.0.0.1:1433/sakila`                                                                                                                 |
-| **CockroachDB** | `postgresql://root@127.0.0.1:26257/sakila?sslmode=disable` (insecure mode, no password)                                                                                  |
-| **Oracle**      | `oracledb://orcaq:orcaq@127.0.0.1:1521/FREEPDB1` (schema `ORCAQ`)                                                                                                        |
-| **DuckDB**      | `test/fixtures/datasets/.tmp/duckdb/shop.duckdb` and `shop-staging.duckdb` (Relative to repo root). Build with `bun test:fixtures:up --profile duckdb`; desktop app only |
+| Database        | Connection String / File Path                                                                                                                                                  |
+| --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **PostgreSQL**  | `postgresql://orcaq:orcaq@127.0.0.1:5432/pagila`                                                                                                                               |
+| **MySQL**       | `mysql://orcaq:orcaq@127.0.0.1:3306/sakila`                                                                                                                                    |
+| **MariaDB**     | `mysql://orcaq:orcaq@127.0.0.1:3307/sakila` (Note: Uses `mysql` protocol)                                                                                                      |
+| **Redis**       | `redis://127.0.0.1:6379/0`                                                                                                                                                     |
+| **SQLite**      | `test/fixtures/datasets/.tmp/sqlite/sakila.sqlite` (Relative to `apps/web`)<br>Or absolute: `sqlite:///path/to/repo/apps/web/test/fixtures/datasets/.tmp/sqlite/sakila.sqlite` |
+| **SQL Server**  | `sqlserver://sa:OrcaQ_Passw0rd%21@127.0.0.1:1433/sakila`                                                                                                                       |
+| **CockroachDB** | `postgresql://root@127.0.0.1:26257/sakila?sslmode=disable` (insecure mode, no password)                                                                                        |
+| **Oracle**      | `oracledb://orcaq:orcaq@127.0.0.1:1521/FREEPDB1` (schema `ORCAQ`)                                                                                                              |
+| **DuckDB**      | `test/fixtures/datasets/.tmp/duckdb/shop.duckdb` and `shop-staging.duckdb` (Relative to `apps/web`). Build with `bun test:fixtures:up --profile duckdb`; desktop app only      |
 
 ### Message Broker Fixtures (RabbitMQ, Kafka)
 
@@ -247,7 +254,7 @@ For external/live databases (enabled when environment variables are set):
 Each CI E2E job starts only the fixture it needs:
 
 ```yaml
-# e.g. e2e-postgres job
+# e.g. e2e-postgres job (steps use working-directory: apps/web)
 - bash scripts/test-services/start-fixtures.sh --profile postgres
 - playwright test --project postgres
 - bash scripts/test-services/stop-fixtures.sh --profile postgres

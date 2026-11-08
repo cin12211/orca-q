@@ -1,0 +1,266 @@
+import { mockNuxtImport } from '@nuxt/test-utils/runtime';
+import { createPinia, setActivePinia } from 'pinia';
+import { ref } from 'vue';
+import { ComposeOperator, DEFAULT_DEBOUNCE_INPUT } from '#shared/constants';
+import { DatabaseClientType } from '#shared/constants/database-client-type';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { NullOrderPreference } from '~/components/modules/settings/types';
+import { useTableQueryBuilder } from '~/core/composables/useTableQueryBuilder';
+import { useAppConfigStore } from '~/core/stores/appConfigStore';
+
+vi.mock('#shared/helpers/sql-where-clause', () => ({
+  formatWhereClause: vi.fn(() => 'WHERE "id" = 1'),
+}));
+
+vi.mock('~/core/stores', async importOriginal => {
+  const actual = await importOriginal<typeof import('~/core/stores')>();
+
+  return {
+    ...actual,
+    useQuickQueryLogs: vi.fn(() => ({
+      createLog: vi.fn(),
+    })),
+  };
+});
+
+const { useFetchMock, refreshTableDataMock, refreshCountMock } = vi.hoisted(
+  () => ({
+    useFetchMock: vi.fn(),
+    refreshTableDataMock: vi.fn(),
+    refreshCountMock: vi.fn(),
+  })
+);
+
+mockNuxtImport('useFetch', () => useFetchMock);
+
+const createComposable = ({
+  primaryKeys = ['id'],
+  columns = ['id', 'name'],
+  isPersist = false,
+  connectionType = DatabaseClientType.POSTGRES,
+}: {
+  primaryKeys?: string[];
+  columns?: string[];
+  isPersist?: boolean;
+  connectionType?: DatabaseClientType;
+} = {}) => {
+  useFetchMock.mockReset();
+
+  useFetchMock
+    .mockReturnValueOnce({
+      data: ref({ result: [{ id: 1, name: 'A' }] }),
+      status: ref('success'),
+      refresh: refreshTableDataMock,
+    })
+    .mockReturnValueOnce({
+      data: ref({ result: [{ count: '42' }] }),
+      status: ref('success'),
+      refresh: refreshCountMock,
+    });
+
+  return useTableQueryBuilder({
+    connection: ref({ type: connectionType } as any),
+    tableName: 'users',
+    primaryKeys: ref(primaryKeys),
+    columns: ref(columns),
+    schemaName: 'public',
+    workspaceId: ref('ws-1'),
+    connectionId: ref('conn-1'),
+    isPersist,
+  });
+};
+
+describe('useTableQueryBuilder', () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+    vi.clearAllMocks();
+    setActivePinia(createPinia());
+    localStorage.clear();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it('builds base query string from schema and table', () => {
+    const composable = createComposable();
+
+    expect(composable.baseQueryString.value).toContain('from "public"."users"');
+  });
+
+  it('builds main query string with default limit and offset', () => {
+    const composable = createComposable();
+
+    expect(composable.queryString.value).toContain('LIMIT 100');
+    expect(composable.queryString.value).toContain('OFFSET 0');
+  });
+
+  it('uses primary key for default order by when present', () => {
+    const composable = createComposable({
+      primaryKeys: ['id'],
+      columns: ['id', 'name'],
+    });
+
+    expect(composable.queryString.value).toContain('ORDER BY "id" ASC');
+  });
+
+  it('falls back to first column when no primary key exists', () => {
+    const composable = createComposable({
+      primaryKeys: [],
+      columns: ['name', 'email'],
+    });
+
+    expect(composable.queryString.value).toContain('ORDER BY "name" ASC');
+  });
+
+  it('ignores a persisted order column that no longer exists in the table', async () => {
+    localStorage.setItem(
+      'ws-1-conn-1-public-users',
+      JSON.stringify({
+        orderBy: { columnName: 'deleted_col', order: 'DESC' },
+      })
+    );
+
+    const composable = createComposable({
+      isPersist: true,
+      primaryKeys: ['id'],
+      columns: ['id', 'name'],
+    });
+
+    expect(composable.queryString.value).toContain('ORDER BY "id" ASC');
+    expect(composable.queryString.value).not.toContain('deleted_col');
+    expect(composable.orderBy.columnName).toBeUndefined();
+    expect(composable.orderBy.order).toBeUndefined();
+
+    await vi.advanceTimersByTimeAsync(DEFAULT_DEBOUNCE_INPUT + 1);
+
+    expect(
+      JSON.parse(localStorage.getItem('ws-1-conn-1-public-users') || '{}')
+        .orderBy
+    ).toEqual({});
+  });
+
+  it('keeps a persisted order column that still exists', () => {
+    localStorage.setItem(
+      'ws-1-conn-1-public-users',
+      JSON.stringify({
+        orderBy: { columnName: 'name', order: 'DESC' },
+      })
+    );
+
+    const composable = createComposable({
+      isPersist: true,
+      columns: ['id', 'name'],
+    });
+
+    expect(composable.queryString.value).toContain('ORDER BY "name" DESC');
+  });
+
+  it('appends NULLS LAST when the global preference is enabled for postgres', () => {
+    const store = useAppConfigStore();
+    store.tableAppearanceConfigs.nullOrderPreference =
+      NullOrderPreference.NullsLast;
+
+    const composable = createComposable();
+
+    expect(composable.queryString.value).toContain(
+      'ORDER BY "id" ASC NULLS LAST'
+    );
+  });
+
+  it('does not append explicit null ordering for unsupported database families', () => {
+    const store = useAppConfigStore();
+    store.tableAppearanceConfigs.nullOrderPreference =
+      NullOrderPreference.NullsFirst;
+
+    const composable = createComposable({
+      connectionType: DatabaseClientType.MYSQL,
+    });
+
+    expect(composable.queryString.value).not.toContain('NULLS FIRST');
+  });
+
+  it('has empty where clause when filter UI is hidden', () => {
+    const composable = createComposable();
+
+    expect(composable.whereClauses.value).toBe('');
+  });
+
+  it('uses formatted where clause when filters are visible', () => {
+    const composable = createComposable();
+
+    composable.isShowFilters.value = true;
+    composable.filters.value = [{ field: 'id', value: 1 } as any];
+    composable.composeWith.value = ComposeOperator.AND;
+
+    expect(composable.whereClauses.value).toBe('WHERE "id" = 1');
+  });
+
+  it('does not update pagination for invalid values', () => {
+    const composable = createComposable();
+
+    composable.onUpdatePagination({ limit: -1, offset: -5 });
+
+    expect(composable.pagination.limit).toBe(100);
+    expect(composable.pagination.offset).toBe(0);
+    expect(refreshTableDataMock).not.toHaveBeenCalled();
+  });
+
+  it('does not go below zero when moving to previous page from zero', () => {
+    const composable = createComposable();
+
+    composable.onPreviousPage();
+
+    expect(composable.pagination.offset).toBe(0);
+    expect(refreshTableDataMock).toHaveBeenCalledTimes(1);
+  });
+
+  it('computes total rows from count query result', () => {
+    const composable = createComposable();
+
+    expect(composable.totalRows.value).toBe(42);
+  });
+
+  it('exposes table data from query response', () => {
+    const composable = createComposable();
+
+    expect(composable.data.value).toEqual([{ id: 1, name: 'A' }]);
+  });
+
+  it('computes previous page availability from offset', () => {
+    const composable = createComposable();
+
+    expect(composable.isAllowPreviousPage.value).toBe(false);
+
+    composable.pagination.offset = 100;
+
+    expect(composable.isAllowPreviousPage.value).toBe(true);
+  });
+
+  it('persists composeWith updates when it is the only changed state', async () => {
+    localStorage.setItem(
+      'ws-1-conn-1-public-users',
+      JSON.stringify({
+        filters: [],
+        pagination: {
+          limit: 100,
+          offset: 0,
+        },
+        orderBy: {},
+        isShowFilters: false,
+        composeWith: ComposeOperator.AND,
+      })
+    );
+
+    const composable = createComposable({ isPersist: true });
+
+    composable.onChangeComposeWith(ComposeOperator.OR);
+    await vi.advanceTimersByTimeAsync(DEFAULT_DEBOUNCE_INPUT + 1);
+
+    expect(
+      JSON.parse(localStorage.getItem('ws-1-conn-1-public-users') || '{}')
+    ).toMatchObject({
+      composeWith: ComposeOperator.OR,
+    });
+  });
+});

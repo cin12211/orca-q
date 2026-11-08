@@ -23,27 +23,27 @@ Tất cả store Pinia giờ chỉ gọi **một entry point duy nhất**: `crea
 ## 2. Class Hierarchy
 
 ```
-BaseStorage<T>                    ← core/storage/base/BaseStorage.ts
+BaseStorage<T>                    ← apps/web/app/core/storage/base/BaseStorage.ts
 │   abstract: name, getOne, getMany, create, update, delete, upsert
 │
-├── IDBStorage<T>                 ← core/storage/base/IDBStorage.ts
+├── IDBStorage<T>                 ← apps/web/app/core/storage/base/IDBStorage.ts
 │   │   localforage-backed (Web + Electron renderer)
 │   │   constructor(options: { dbName, storeName })
 │   │
-│   ├── WorkspaceStorage          ← core/storage/entities/WorkspaceStorage.ts
-│   ├── ConnectionStorage         ← core/storage/entities/ConnectionStorage.ts
-│   ├── WorkspaceStateStorage     ← core/storage/entities/WorkspaceStateStorage.ts
-│   ├── TabViewStorage            ← core/storage/entities/TabViewStorage.ts
-│   ├── QuickQueryLogStorage      ← core/storage/entities/QuickQueryLogStorage.ts
+│   ├── WorkspaceStorage          ← apps/web/app/core/storage/entities/WorkspaceStorage.ts
+│   ├── ConnectionStorage         ← apps/web/app/core/storage/entities/ConnectionStorage.ts
+│   ├── WorkspaceStateStorage     ← apps/web/app/core/storage/entities/WorkspaceStateStorage.ts
+│   ├── TabViewStorage            ← apps/web/app/core/storage/entities/TabViewStorage.ts
+│   ├── QuickQueryLogStorage      ← apps/web/app/core/storage/entities/QuickQueryLogStorage.ts
 │   ├── RowQueryFileIDB           ← (internal, part of RowQueryFileStorage.ts)
 │   ├── RowQueryFileContentIDB    ← (internal, part of RowQueryFileStorage.ts)
-│   ├── EnvironmentTagStorage     ← core/storage/entities/EnvironmentTagStorage.ts
-│   ├── AppConfigStorage          ← core/storage/entities/AppConfigStorage.ts
-│   ├── AgentStateStorage         ← core/storage/entities/AgentStateStorage.ts
-│   ├── QueryBuilderStateStorage  ← core/storage/entities/QueryBuilderStateStorage.ts
-│   └── MigrationStateStorage     ← core/storage/entities/MigrationStateStorage.ts
+│   ├── EnvironmentTagStorage     ← apps/web/app/core/storage/entities/EnvironmentTagStorage.ts
+│   ├── AppConfigStorage          ← apps/web/app/core/storage/entities/AppConfigStorage.ts
+│   ├── AgentStateStorage         ← apps/web/app/core/storage/entities/AgentStateStorage.ts
+│   ├── QueryBuilderStateStorage  ← apps/web/app/core/storage/entities/QueryBuilderStateStorage.ts
+│   └── MigrationStateStorage     ← apps/web/app/core/storage/entities/MigrationStateStorage.ts
 │
-└── SQLite3Storage<T>             ← electron/persist/SQLite3Storage.ts
+└── SQLite3Storage<T>             ← apps/desktop/electron/persist/SQLite3Storage.ts
     │   better-sqlite3-backed (Electron main process ONLY)
     │   constructor(db: Database)
     │
@@ -70,7 +70,7 @@ BaseStorage<T>                    ← core/storage/base/BaseStorage.ts
 ```
 Pinia Store
     │
-    │  createStorageApis()              ← core/storage/factory.ts
+    │  createStorageApis()              ← apps/web/app/core/storage/factory.ts
     │  (isElectron() = false)
     ▼
 StorageApis {
@@ -94,7 +94,7 @@ IndexedDB (browser native)
 ```
 Pinia Store
     │
-    │  createStorageApis()              ← core/storage/factory.ts
+    │  createStorageApis()              ← apps/web/app/core/storage/factory.ts
     │  (isElectron() = true)
     ▼
 StorageApis {
@@ -106,10 +106,10 @@ StorageApis {
     │  window.electronAPI.persist.*
     │  (contextBridge / preload.ts)
     ▼
-electron/ipc/persist.ts (IPC handlers)
+apps/desktop/electron/ipc/persist.ts (IPC handlers)
     │
     ▼
-electron/persist/store.ts
+apps/desktop/electron/persist/store.ts
     │
     ▼
 SQLite3Storage<T> singletons
@@ -122,8 +122,13 @@ better-sqlite3  →  {userData}/orcaq.db
 
 ## 4. Folder Structure
 
+> **Monorepo:** `types/` below lives in `apps/web/shared/types/` (imported as `#shared/types/...`,
+> because electron and the server use the entity types); `storage/` and `persist/` live in
+> `apps/web/app/core/`, except the pieces electron imports (e.g. `storage/idbRegistry`,
+> `persist/normalize`), which are in `apps/web/shared/`. Electron sources are in `apps/desktop/electron/`.
+
 ```
-core/
+apps/web/app/core/
 ├── types/
 │   └── entities/                       ← Entity TypeScript interfaces (source of truth)
 │       ├── workspace.entity.ts
@@ -181,7 +186,7 @@ core/
         ├── idb/                        ← Low-level IDB primitives + PersistCollection type
         └── electron/                   ← IPC proxy adapters (renderer → main)
 
-electron/
+apps/desktop/electron/
 └── persist/
     ├── db.ts                           ← getDB(): Database (singleton, WAL + FK on)
     ├── schema.ts                       ← TypeScript types for SQLite row shapes
@@ -211,7 +216,7 @@ electron/
 ## 5. StorageApis Interface
 
 ```typescript
-// core/storage/types.ts
+// apps/web/app/core/storage/types.ts
 export interface StorageApis {
   workspaceStorage:         WorkspaceStorageApi;
   connectionStorage:        ConnectionStorageApi;
@@ -246,13 +251,13 @@ Feature này có **2 migration systems riêng biệt**, phục vụ 2 mục đí
 ### 6.1 Electron SQLite Schema Migrations
 
 **Mục đích**: Tạo schema SQLite khi Electron app khởi động lần đầu.  
-**Trigger**: `runMigrations(getDB())` trong `electron/main.ts bootstrap()`, trước `createWindow()`.  
+**Trigger**: `runMigrations(getDB())` trong `apps/desktop/electron/main.ts bootstrap()`, trước `createWindow()`.  
 **Tracking**: Version number lưu trong bảng `_schema_versions` trong SQLite DB.
 
 ```
-electron/main.ts
+apps/desktop/electron/main.ts
     └── bootstrap()
-            ├── runMigrations(getDB())          ← electron/persist/migration/runner.ts
+            ├── runMigrations(getDB())          ← apps/desktop/electron/persist/migration/runner.ts
             │       └── v001-initial-schema.ts  ← CREATE TABLE IF NOT EXISTS cho tất cả 11 bảng
             └── createWindow(serverUrl)
 ```
@@ -266,13 +271,13 @@ electron/main.ts
 ### 6.2 Web Data Migrations (IDB)
 
 **Mục đích**: Migrate dữ liệu user trong IDB/localStorage sang schema mới.  
-**Trigger**: `runMigrations()` trong Nuxt plugin `plugins/01.migration.client.ts`.  
+**Trigger**: `runMigrations()` trong Nuxt plugin `apps/web/app/plugins/01.migration.client.ts`.  
 **Tracking**: Tên migration đã chạy lưu vào `MigrationState` entity trong IDB (`migrationStateStorage`).  
 **Pattern**: Name-sorted (timestamp prefix), idempotent per business logic, re-runnable on failure.
 
 ```
-plugins/01.migration.client.ts
-    └── runMigrations({ onStep })       ← core/persist/migration/index.ts
+apps/web/app/plugins/01.migration.client.ts
+    └── runMigrations({ onStep })       ← apps/web/app/core/persist/migration/index.ts
             └── executeMigrations(ALL_MIGRATIONS)
                     ├── sort by name ascending (timestamp prefix đảm bảo thứ tự)
                     ├── skip already-applied (check migrationStateStorage IDB entity)
@@ -313,7 +318,7 @@ async function saveApplied(names: Set<string>): Promise<void> {
 
 ## 7. Export Flow
 
-**Entry**: `useDataExport()` trong `components/modules/settings/hooks/useDataExport.ts`  
+**Entry**: `useDataExport()` trong `apps/web/app/components/modules/settings/hooks/useDataExport.ts`  
 **Output**: File `orcaq-backup-YYYY-MM-DD.json` được download về máy.
 
 ### Backup Format (v1)
@@ -362,7 +367,7 @@ useDataExport.exportData()
 
 ## 8. Import Flow
 
-**Entry**: `useDataImport()` trong `components/modules/settings/hooks/useDataImport.ts`  
+**Entry**: `useDataImport()` trong `apps/web/app/components/modules/settings/hooks/useDataImport.ts`  
 **Input**: File `.json` hoặc JSON string từ clipboard.
 
 ### Import Flow Diagram
@@ -412,7 +417,7 @@ useDataImport.importFromFile(file)
 ### Compatibility Check Logic
 
 ```typescript
-// core/persist/migration/compatibility.ts
+// apps/web/app/core/persist/migration/compatibility.ts
 function checkImportCompatibility(backupSchemaVersion: string[]) {
   const appKnownNames = new Set(ALL_MIGRATIONS.map(m => m.name));
   const unknownMigrations = backupSchemaVersion.filter(
@@ -440,7 +445,7 @@ Sau khi import xong, `runMigrations()` được gọi. Kịch bản:
 Entity mới (feature 023) dùng để lưu danh sách migration đã applied. Thay thế localStorage làm storage chính.
 
 ```typescript
-// core/types/entities/migration-state.entity.ts
+// apps/web/shared/types/entities/migration-state.entity.ts
 export interface MigrationState {
   id: 'applied-migrations';  // singleton — luôn chỉ có 1 record
   names: string[];            // tên các migration đã applied
@@ -570,14 +575,14 @@ Các Pinia store đã chuyển từ `window.xxxApi.*` sang `createStorageApis()`
 
 | Store | File | Thay đổi |
 |---|---|---|
-| Workspaces | `core/stores/useWorkspacesStore.ts` | `window.workspaceApi.*` → `storageApis.workspaceStorage.*` |
-| Connections | `core/stores/managementConnectionStore.ts` | `window.connectionApi.*` → `storageApis.connectionStorage.*` |
-| WS State | `core/stores/useWSStateStore.ts` | `window.workspaceStateApi.*` → `storageApis.workspaceStateStorage.*` |
-| Tab Views | `core/stores/useTabViewsStore.ts` | `window.tabViewsApi.*` → `storageApis.tabViewStorage.*` |
-| Query Logs | `core/stores/useQuickQueryLogs.ts` | `window.quickQueryLogsApi.*` → `storageApis.quickQueryLogStorage.*` |
-| Explorer Files | `core/stores/useExplorerFileStore.ts` | `window.rowQueryFilesApi.*` → `storageApis.rowQueryFileStorage.*` |
-| App Config | `core/stores/appConfigStore.ts` | `window.appConfigApi.*` → `storageApis.appConfigStorage.*` |
-| Agent State | `core/stores/agentStore.ts` | `window.agentApi.*` → `storageApis.agentStorage.*` |
+| Workspaces | `apps/web/app/core/stores/useWorkspacesStore.ts` | `window.workspaceApi.*` → `storageApis.workspaceStorage.*` |
+| Connections | `apps/web/app/core/stores/managementConnectionStore.ts` | `window.connectionApi.*` → `storageApis.connectionStorage.*` |
+| WS State | `apps/web/app/core/stores/useWSStateStore.ts` | `window.workspaceStateApi.*` → `storageApis.workspaceStateStorage.*` |
+| Tab Views | `apps/web/app/core/stores/useTabViewsStore.ts` | `window.tabViewsApi.*` → `storageApis.tabViewStorage.*` |
+| Query Logs | `apps/web/app/core/stores/useQuickQueryLogs.ts` | `window.quickQueryLogsApi.*` → `storageApis.quickQueryLogStorage.*` |
+| Explorer Files | `apps/web/app/core/stores/useExplorerFileStore.ts` | `window.rowQueryFilesApi.*` → `storageApis.rowQueryFileStorage.*` |
+| App Config | `apps/web/app/core/stores/appConfigStore.ts` | `window.appConfigApi.*` → `storageApis.appConfigStorage.*` |
+| Agent State | `apps/web/app/core/stores/agentStore.ts` | `window.agentApi.*` → `storageApis.agentStorage.*` |
 
 ---
 
@@ -587,8 +592,8 @@ Các Pinia store đã chuyển từ `window.xxxApi.*` sang `createStorageApis()`
 `createStorageApis()` trả về cùng một interface `StorageApis` bất kể platform. Store không cần `if (isElectron())`.
 
 ### Browser Safety Boundary
-- `IDBStorage<T>` và các entity class trong `core/storage/` không import bất kỳ thứ gì từ `electron/` hoặc Node.js.
-- `SQLite3Storage<T>` chỉ tồn tại trong `electron/persist/` — không bao giờ bundle vào web build.
+- `IDBStorage<T>` và các entity class trong `apps/web/app/core/storage/` không import bất kỳ thứ gì từ `apps/desktop/electron/` hoặc Node.js.
+- `SQLite3Storage<T>` chỉ tồn tại trong `apps/desktop/electron/persist/` — không bao giờ bundle vào web build.
 
 ### Cascade Delete
 `workspaceStorage.delete(id)` trong browser path thực hiện cascade thủ công: xóa connections, tabViews, rowQueryFiles, workspaceState, quickQueryLogs thuộc workspace đó trước khi xóa workspace.
@@ -608,10 +613,10 @@ Applied migration set được lưu trong `MigrationState` entity (IDB / SQLite)
 
 | File | Loại | Số test |
 |---|---|---|
-| `test/unit/core/storage/base/IDBStorage.spec.ts` | Unit | 11 |
-| `test/unit/core/storage/entities/WorkspaceStorage.spec.ts` | Unit | 5 |
-| `test/unit/core/storage/entities/QueryBuilderStateStorage.spec.ts` | Unit | 5 |
-| `test/unit/core/persist/migration/MigrationRunner.spec.ts` | Unit | 6 |
+| `apps/web/test/unit/core/storage/base/IDBStorage.spec.ts` | Unit | 11 |
+| `apps/web/test/unit/core/storage/entities/WorkspaceStorage.spec.ts` | Unit | 5 |
+| `apps/web/test/unit/core/storage/entities/QueryBuilderStateStorage.spec.ts` | Unit | 5 |
+| `apps/web/test/unit/core/persist/migration/MigrationRunner.spec.ts` | Unit | 6 |
 | **Total** | | **27** |
 
 Tất cả 27 test đều pass. Dùng `fake-indexeddb` cho IDB tests và `vi.stubGlobal('localStorage', ...)` cho migration runner tests.
@@ -634,4 +639,4 @@ electron/persist/migration/versions/v002-migrate-electron-store.ts  ← đã xó
 electron/persist/migration/versions/v003-add-migration-state.ts     ← không bao giờ đăng ký (024), đã xóa
 ```
 
-`MigrationStepInfo` (dùng bởi `useMigrationState.ts`) đã được chuyển sang `core/persist/migration/MigrationRunner.ts` và export qua `core/persist/migration/index.ts`.
+`MigrationStepInfo` (dùng bởi `useMigrationState.ts`) đã được chuyển sang `apps/web/app/core/persist/migration/MigrationRunner.ts` và export qua `apps/web/app/core/persist/migration/index.ts`.

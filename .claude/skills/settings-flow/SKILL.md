@@ -12,8 +12,8 @@ Settings in OrcaQ follow a strict 4-layer flow:
 ```
 types/settings.types.ts          ← Define the shape / enum
 constants/settings.constants.ts  ← Default values & UI option arrays
-core/stores/appConfigStore.ts    ← Reactive state + reset actions (persisted)
-components/modules/settings/     ← UI panels that read/write the store
+apps/web/app/core/stores/appConfigStore.ts    ← Reactive state + reset actions (persisted)
+apps/web/app/components/modules/settings/     ← UI panels that read/write the store
 ```
 
 All state is persisted automatically via `{ persist: true }` on the Pinia store — no manual localStorage calls needed.
@@ -22,19 +22,19 @@ All state is persisted automatically via `{ persist: true }` on the Pinia store 
 
 ## File Locations
 
-| Purpose                   | File                                                               |
-| ------------------------- | ------------------------------------------------------------------ |
-| Types & enums             | `components/modules/settings/types/settings.types.ts`              |
-| Constants & defaults      | `components/modules/settings/constants/settings.constants.ts`      |
-| Pinia store               | `core/stores/appConfigStore.ts`                                    |
-| Settings modal controller | `core/contexts/useSettingsModal.ts`                                |
-| Container (modal shell)   | `components/modules/settings/containers/SettingsContainer.vue`     |
-| Appearance panel          | `components/modules/settings/components/AppearanceConfig.vue`      |
-| Editor panel              | `components/modules/settings/components/EditorConfig.vue`          |
-| Quick Query panel         | `components/modules/settings/components/QuickQueryConfig.vue`      |
-| Agent panel               | `components/modules/settings/components/AgentConfig.vue`           |
-| Table Appearance panel    | `components/modules/settings/components/TableAppearanceConfig.vue` |
-| Public module API         | `components/modules/settings/index.ts`                             |
+| Purpose                   | File                                                                            |
+| ------------------------- | ------------------------------------------------------------------------------- |
+| Types & enums             | `apps/web/app/components/modules/settings/types/settings.types.ts`              |
+| Constants & defaults      | `apps/web/app/components/modules/settings/constants/settings.constants.ts`      |
+| Pinia store               | `apps/web/app/core/stores/appConfigStore.ts`                                    |
+| Settings modal controller | `apps/web/app/core/contexts/useSettingsModal.ts`                                |
+| Container (modal shell)   | `apps/web/app/components/modules/settings/containers/SettingsContainer.vue`     |
+| Appearance panel          | `apps/web/app/components/modules/settings/components/AppearanceConfig.vue`      |
+| Editor panel              | `apps/web/app/components/modules/settings/components/EditorConfig.vue`          |
+| Quick Query panel         | `apps/web/app/components/modules/settings/components/QuickQueryConfig.vue`      |
+| Agent panel               | `apps/web/app/components/modules/settings/components/AgentConfig.vue`           |
+| Table Appearance panel    | `apps/web/app/components/modules/settings/components/TableAppearanceConfig.vue` |
+| Public module API         | `apps/web/app/components/modules/settings/index.ts`                             |
 
 ---
 
@@ -42,7 +42,7 @@ All state is persisted automatically via `{ persist: true }` on the Pinia store 
 
 ### Step 1 — Define the type
 
-In `components/modules/settings/types/settings.types.ts`:
+In `apps/web/app/components/modules/settings/types/settings.types.ts`:
 
 ```ts
 // For a simple value — add a field to an existing interface
@@ -64,7 +64,7 @@ export enum WordWrapMode {
 
 ### Step 2 — Add default value and options constant
 
-In `components/modules/settings/constants/settings.constants.ts`:
+In `apps/web/app/components/modules/settings/constants/settings.constants.ts`:
 
 ```ts
 // Default value (used in store initialisation and reset)
@@ -84,7 +84,7 @@ export const WORD_WRAP_OPTIONS: Array<{ label: string; value: WordWrapMode }> =
 
 ### Step 3 — Add to the Pinia store
 
-In `core/stores/appConfigStore.ts`:
+In `apps/web/app/core/stores/appConfigStore.ts`:
 
 ```ts
 // Inside the store factory function, add the reactive field
@@ -106,7 +106,7 @@ const resetCodeEditorConfigs = () => {
 
 ### Step 4 — Add UI in the correct panel component
 
-In the relevant `*Config.vue` under `components/modules/settings/components/`:
+In the relevant `*Config.vue` under `apps/web/app/components/modules/settings/components/`:
 
 ```vue
 <script setup lang="ts">
@@ -182,11 +182,11 @@ export const SETTINGS_NAV_ITEMS: SettingsNavItem[] = [
 
 ### Step 3 — Create the panel component
 
-Create `components/modules/settings/components/MyNewConfig.vue` following the standard visual pattern (see Standard UI Pattern below).
+Create `apps/web/app/components/modules/settings/components/MyNewConfig.vue` following the standard visual pattern (see Standard UI Pattern below).
 
 ### Step 4 — Register in the container
 
-In `components/modules/settings/containers/SettingsContainer.vue`:
+In `apps/web/app/components/modules/settings/containers/SettingsContainer.vue`:
 
 ```ts
 import MyNewConfig from '../components/MyNewConfig.vue';
@@ -200,7 +200,7 @@ const SETTINGS_COMPONENTS: Record<SettingsComponentKey, Component> = {
 ### Step 5 — Export from index
 
 ```ts
-// components/modules/settings/components/index.ts
+// apps/web/app/components/modules/settings/components/index.ts
 export { default as MyNewConfig } from './MyNewConfig.vue';
 ```
 
@@ -219,7 +219,7 @@ export { default as MyNewConfig } from './MyNewConfig.vue';
 
 ## How to Open Settings Programmatically
 
-Use the `useSettingsModal` composable from `core/contexts/useSettingsModal.ts`:
+Use the `useSettingsModal` composable from `apps/web/app/core/contexts/useSettingsModal.ts`:
 
 ```ts
 const { openSettings, closeSettings, isSettingsOpen } = useSettingsModal();

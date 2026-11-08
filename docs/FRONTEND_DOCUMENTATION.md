@@ -32,7 +32,7 @@
 
 ### Core Framework
 
-- **Nuxt 3** (v3.16.2) - Vue.js meta-framework with SSR disabled (SPA mode)
+- **Nuxt 4** (v4.6.4) - Vue.js meta-framework with SSR disabled (SPA mode)
 - **Vue 3** (v3.5.13) - Composition API with TypeScript
 - **TypeScript** (v5.6.3) - Type-safe development
 
@@ -100,7 +100,7 @@
 
 ### Desktop Integration
 
-- **Electron** - Desktop application wrapper (separate electron/ folder)
+- **Electron** - Desktop application wrapper (separate apps/desktop/electron/ folder)
 
 ### Analytics & Monitoring
 
@@ -1272,7 +1272,7 @@ interface Connection {
 #### Runtime Configuration
 
 ```typescript
-// nuxt.config.ts
+// apps/web/nuxt.config.ts
 runtimeConfig: {
   public: {
     amplitudeApiKey: process.env.NUXT_AMPLITUDE_API_KEY,
@@ -1286,7 +1286,7 @@ runtimeConfig: {
 
 ### Build-Time Configuration
 
-#### Nuxt Config (`nuxt.config.ts`)
+#### Nuxt Config (`apps/web/nuxt.config.ts`)
 
 ```typescript
 export default defineNuxtConfig({
@@ -2003,8 +2003,8 @@ npm run version:minor  # 1.0.0 -> 1.1.0
 npm run version:major  # 1.0.0 -> 2.0.0
 
 # Auto-syncs version across:
-# - package.json
-# - electron/package.json
+# - package.json (root)
+# - apps/web/package.json, apps/desktop/package.json, apps/cli/package.json
 # - Changelog
 ```
 
@@ -2019,7 +2019,7 @@ npm run version:major  # 1.0.0 -> 2.0.0
 #### Nuxt Devtools
 
 ```typescript
-// Enabled in nuxt.config.ts
+// Enabled in apps/web/nuxt.config.ts
 devtools: {
   enabled: true,
   timeline: { enabled: true }
@@ -2030,7 +2030,7 @@ devtools: {
 
 ```bash
 # Node.js inspector
-node --inspect server/api/execute.ts
+node --inspect apps/web/server/api/execute.ts
 ```
 
 ---

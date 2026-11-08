@@ -1,0 +1,494 @@
+import { DatabaseClientType } from '../constants/database-client-type';
+
+export interface SessionSummaryMetrics {
+  total: number;
+  active: number;
+  idle: number;
+  maxConnections: number;
+  usagePercent: number;
+  exceedsThreshold: boolean;
+}
+
+export interface TransactionSummaryMetrics {
+  tps: number;
+  commitsPerSec: number;
+  rollbacksPerSec: number;
+  totalCommits: number;
+  totalRollbacks: number;
+}
+
+export interface TupleSummaryMetrics {
+  insertsPerSec: number;
+  updatesPerSec: number;
+  deletesPerSec: number;
+  fetchedPerSec: number;
+  returnedPerSec: number;
+  totalInserts: number;
+  totalUpdates: number;
+  totalDeletes: number;
+  totalFetched: number;
+  totalReturned: number;
+}
+
+export interface BlockIOSummaryMetrics {
+  readsPerSec: number;
+  hitsPerSec: number;
+  totalReads: number;
+  totalHits: number;
+  bufferHitRatio: number;
+}
+
+export interface InstanceInsightsDashboard {
+  capturedAt: string;
+  intervalSeconds: number;
+  version: string;
+  sessions: SessionSummaryMetrics;
+  transactions: TransactionSummaryMetrics;
+  tuples: TupleSummaryMetrics;
+  blockIO: BlockIOSummaryMetrics;
+}
+
+export interface InstanceSessionRow {
+  pid: number;
+  user: string;
+  application: string | null;
+  client: string | null;
+  backendStart: string | null;
+  transactionStart: string | null;
+  state: string | null;
+  waitEvent: string | null;
+  blockingPids: number[];
+  sql: string | null;
+  queryStart: string | null;
+  durationSeconds: number | null;
+}
+
+export interface InstanceLockRow {
+  pid: number | null;
+  lockType: string;
+  targetRelation: string | null;
+  mode: string;
+  granted: boolean;
+  state: string | null;
+  user: string | null;
+  sql: string | null;
+}
+
+export interface InstancePreparedTransactionRow {
+  transaction: string;
+  gid: string;
+  prepared: string;
+  owner: string;
+  database: string;
+}
+
+export interface InstanceInsightsState {
+  capturedAt: string;
+  sessions: InstanceSessionRow[];
+  locks: InstanceLockRow[];
+  preparedTransactions: InstancePreparedTransactionRow[];
+}
+
+export interface InstanceConfigurationRow {
+  name: string;
+  category: string;
+  value: string;
+  unit: string | null;
+  description: string;
+  pendingRestart: boolean;
+}
+
+export interface InstanceInsightsConfiguration {
+  capturedAt: string;
+  total: number;
+  rows: InstanceConfigurationRow[];
+}
+
+export interface ReplicationStatRow {
+  pid: number;
+  clientAddr: string | null;
+  applicationName: string | null;
+  state: string | null;
+  syncState: string | null;
+  replyTime: string | null;
+  writeLag: string | null;
+  flushLag: string | null;
+  replayLag: string | null;
+  sentLsn: string | null;
+  writeLsn: string | null;
+  flushLsn: string | null;
+  replayLsn: string | null;
+}
+
+export interface ReplicationSlotRow {
+  slotName: string;
+  slotType: string;
+  active: boolean;
+  activePid: number | null;
+  restartLsn: string | null;
+  confirmedFlushLsn: string | null;
+  retainedBytes: number;
+  temporary: boolean;
+}
+
+export interface InstanceInsightsReplication {
+  capturedAt: string;
+  replicationStats: ReplicationStatRow[];
+  replicationSlots: ReplicationSlotRow[];
+  staleSlotWarning: string | null;
+}
+
+export interface InstanceActionResponse {
+  success: boolean;
+  message: string;
+}
+
+export type ReplicationSlotDesiredStatus = 'on' | 'off';
+
+export type InstanceInsightsSectionId =
+  | 'overview'
+  | 'sessions-locks'
+  | 'configuration'
+  | 'replication'
+  | 'memory-limits'
+  | 'data-guard'
+  | 'storage-health'
+  | 'integrity';
+
+export type InstanceInsightsActionState =
+  | 'supported'
+  | 'unsupported'
+  | 'conditional';
+
+export type InstanceInsightsSectionStatus =
+  | 'ready'
+  | 'unsupported'
+  | 'unavailable';
+
+export type InstanceInsightsTone =
+  | 'default'
+  | 'success'
+  | 'warning'
+  | 'danger'
+  | 'info';
+
+export type InstanceInsightsCheckStatus = 'pass' | 'warn' | 'fail' | 'info';
+
+export type InstanceInsightsTableValue = string | number | boolean | null;
+
+export interface InstanceInsightsMetricCard {
+  id: string;
+  label: string;
+  value: string;
+  helperText?: string | null;
+  tone?: InstanceInsightsTone;
+}
+
+export interface InstanceInsightsDetailItem {
+  label: string;
+  value: string;
+  helperText?: string | null;
+  tone?: InstanceInsightsTone;
+}
+
+export interface InstanceInsightsTableColumn {
+  key: string;
+  label: string;
+}
+
+export interface InstanceInsightsTable {
+  id: string;
+  title: string;
+  description?: string | null;
+  emptyMessage?: string | null;
+  columns: InstanceInsightsTableColumn[];
+  rows: Record<string, InstanceInsightsTableValue>[];
+}
+
+export interface InstanceInsightsCheck {
+  id: string;
+  label: string;
+  detail: string;
+  status: InstanceInsightsCheckStatus;
+  tone?: InstanceInsightsTone;
+}
+
+export interface InstanceInsightsActionCapability {
+  id: string;
+  label: string;
+  state: InstanceInsightsActionState;
+  description?: string | null;
+  reason?: string | null;
+}
+
+export interface InstanceInsightsCapabilities {
+  supportsSessionInspection: boolean;
+  supportsLockInspection: boolean;
+  supportsConfiguration: boolean;
+  supportsReplication: boolean;
+  supportsDataGuard: boolean;
+  supportsStorageHealth: boolean;
+  supportsIntegrityChecks: boolean;
+  supportsMemoryLimits: boolean;
+  supportsCancelQuery: boolean;
+  supportsTerminateConnection: boolean;
+  supportsReplicationActions: boolean;
+}
+
+export interface InstanceInsightsSection {
+  id: InstanceInsightsSectionId;
+  title: string;
+  subtitle: string;
+  status: InstanceInsightsSectionStatus;
+  statusMessage?: string | null;
+  capturedAt: string;
+  cards?: InstanceInsightsMetricCard[];
+  details?: InstanceInsightsDetailItem[];
+  tables?: InstanceInsightsTable[];
+  checks?: InstanceInsightsCheck[];
+  actions?: InstanceInsightsActionCapability[];
+  searchable?: boolean;
+  searchPlaceholder?: string | null;
+}
+
+export interface InstanceInsightsView {
+  dbType: DatabaseClientType;
+  title: string;
+  databaseName: string | null;
+  version: string | null;
+  capturedAt: string;
+  capabilities: InstanceInsightsCapabilities;
+  actions: InstanceInsightsActionCapability[];
+  sections: InstanceInsightsSection[];
+}
+
+export interface RedisOverviewMetrics {
+  redisVersion: string;
+  mode: string;
+  uptimeSeconds: number;
+  connectedClients: number;
+  usedMemory: number;
+  usedMemoryHuman: string;
+  maxmemory?: number;
+  maxmemoryHuman?: string;
+  maxmemoryPolicy?: string;
+  totalSystemMemory?: number;
+  totalSystemMemoryHuman?: string;
+  totalKeys: number;
+  hitRate: number;
+  opsPerSec: number;
+  evictedKeys: number;
+  expiredKeys: number;
+  rejectedConnections: number;
+}
+
+export interface RedisPrefixMetric {
+  prefix: string;
+  keyCount: number;
+  memoryBytes: number;
+}
+
+export interface RedisBigKeyMetric {
+  key: string;
+  type: string;
+  ttl: number;
+  memoryBytes: number;
+}
+
+export interface RedisMemoryInsight {
+  usedMemory: number;
+  usedMemoryHuman: string;
+  usedMemoryPeak: number;
+  usedMemoryPeakHuman: string;
+  memoryFragmentationRatio: number;
+  maxmemory: number;
+  maxmemoryHuman: string;
+  maxmemoryPolicy: string;
+  totalSystemMemory?: number;
+  totalSystemMemoryHuman?: string;
+  topPrefixesByMemory: RedisPrefixMetric[];
+  bigKeys: RedisBigKeyMetric[];
+  warnings: string[];
+}
+
+export interface RedisSlowlogEntry {
+  id: string;
+  timestamp: string;
+  durationMicros: number;
+  command: string;
+  clientAddr: string | null;
+  clientName: string | null;
+}
+
+export interface RedisCommandStat {
+  command: string;
+  calls: number;
+  usecPerCall: number;
+}
+
+export interface RedisClientSummary {
+  id: string;
+  addr: string;
+  name: string;
+  ageSeconds: number;
+  idleSeconds: number;
+  db: number;
+  cmd: string;
+  flags: string;
+}
+
+export interface RedisPerformanceInsight {
+  instantaneousOpsPerSec: number;
+  totalCommandsProcessed: number;
+  latencyDoctor: string | null;
+  slowlog: RedisSlowlogEntry[];
+  commandStats: RedisCommandStat[];
+  blockedClients: number;
+  longRunningLuaScripts: RedisClientSummary[];
+}
+
+export interface RedisKeyspaceDbInsight {
+  database: string;
+  keyCount: number;
+  expires: number;
+  avgTtl: number;
+}
+
+export interface RedisKeyTypeDistribution {
+  type: string;
+  count: number;
+}
+
+export interface RedisKeyspaceInsight {
+  databases: RedisKeyspaceDbInsight[];
+  expiredKeyCount: number;
+  avgTtl: number;
+  keyTypeDistribution: RedisKeyTypeDistribution[];
+  topPrefixes: Array<Pick<RedisPrefixMetric, 'prefix' | 'keyCount'>>;
+  keysWithoutTtl: number;
+  hotKeysNote: string;
+  sampledKeys: number;
+}
+
+export interface RedisClientWarning {
+  clientId: string;
+  reason: string;
+}
+
+export interface RedisClientInsight {
+  connectedClients: number;
+  clients: RedisClientSummary[];
+  suspiciousClients: RedisClientWarning[];
+}
+
+export interface RedisPersistenceInsight {
+  rdbEnabled: boolean;
+  lastSaveStatus: string | null;
+  lastSaveTime: string | null;
+  aofEnabled: boolean;
+  aofRewriteInProgress: boolean;
+  aofLastRewriteStatus: string | null;
+  lastBgsaveError: string | null;
+  changesSinceLastSave: number;
+  warnings: string[];
+}
+
+export interface RedisReplicaSummary {
+  id: string;
+  addr: string;
+  state: string;
+  lag: number | null;
+  offset: string | null;
+}
+
+export interface RedisReplicationInsight {
+  role: string;
+  connectedReplicas: number;
+  replicas: RedisReplicaSummary[];
+  replicationLag: number | null;
+  masterLinkStatus: string | null;
+  sentinelMasters: number | null;
+  clusterEnabled: boolean;
+  clusterState: string | null;
+  clusterSlotsAssigned: number | null;
+  clusterKnownNodes: number | null;
+}
+
+export interface RedisConfigEntry {
+  name: string;
+  value: string;
+}
+
+export interface RedisInstanceInsights {
+  capturedAt: string;
+  databaseIndex: number;
+  overview: RedisOverviewMetrics;
+  memory: RedisMemoryInsight;
+  performance: RedisPerformanceInsight;
+  keyspace: RedisKeyspaceInsight;
+  clients: RedisClientInsight;
+  persistence: RedisPersistenceInsight;
+  replication: RedisReplicationInsight;
+  config: RedisConfigEntry[];
+}
+
+export interface MongoOpcounters {
+  insert: number;
+  query: number;
+  update: number;
+  delete: number;
+  getmore: number;
+  command: number;
+}
+
+export interface MongoOverviewInsight {
+  version: string | null;
+  host: string | null;
+  process: string | null;
+  storageEngine: string | null;
+  uptimeSeconds: number | null;
+  connections: {
+    current: number;
+    available: number;
+    totalCreated: number;
+  } | null;
+  /** Cumulative counters since server start; rates are derived client-side. */
+  opcounters: MongoOpcounters | null;
+  memory: {
+    residentMb: number | null;
+    virtualMb: number | null;
+  } | null;
+  network: {
+    bytesIn: number;
+    bytesOut: number;
+    numRequests: number;
+  } | null;
+  capturedAt: string;
+  /** Set when `serverStatus` is not permitted (needs the clusterMonitor role). */
+  serverStatusError: string | null;
+}
+
+export type MongoTopology = 'standalone' | 'replicaSet' | 'sharded';
+
+export interface MongoReplicaMemberInsight {
+  name: string;
+  stateStr: string;
+  health: number | null;
+  uptimeSeconds: number | null;
+  optimeDate: string | null;
+  lagSeconds: number | null;
+  pingMs: number | null;
+  self: boolean;
+}
+
+export interface MongoReplicationInsight {
+  topology: MongoTopology;
+  role: string;
+  setName: string | null;
+  primary: string | null;
+  me: string | null;
+  hosts: string[];
+  members: MongoReplicaMemberInsight[];
+  /** Set when `replSetGetStatus` is not permitted or not applicable. */
+  membersError: string | null;
+}

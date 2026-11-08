@@ -21,11 +21,15 @@ RUN if ! command -v bun > /dev/null 2>&1; then \
 ENV BUN_INSTALL="/root/.bun"
 ENV PATH="$BUN_INSTALL/bin:$PATH"
 
-# Copy and install dependencies with Bun
-COPY bun.lock package.json ecosystem.config.js ./
+# Copy workspace manifests first so the install layer is cached
+# until a package.json or the lockfile changes.
+COPY bun.lock package.json ./
+COPY apps/web/package.json apps/web/package.json
+COPY apps/desktop/package.json apps/desktop/package.json
+COPY apps/cli/package.json apps/cli/package.json
 RUN bun install --frozen-lockfile --ignore-scripts
 
-# Copy app code and build
+# Copy app code and build (root proxy -> apps/web nuxt build)
 COPY . .
 RUN bun run nuxt:build-web
 
@@ -43,9 +47,10 @@ RUN apk add --no-cache \
   mariadb-client \
   sqlite
 
-COPY --from=builder /app/.output .output
+# Bun workspaces hoist every dependency into the root node_modules
+COPY --from=builder /app/apps/web/.output .output
 COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/package.json .
+COPY --from=builder /app/apps/web/package.json .
 
 ENV NODE_ENV=production
 ENV NITRO_HOST=0.0.0.0

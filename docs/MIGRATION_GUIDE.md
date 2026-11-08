@@ -1,7 +1,7 @@
 # Migration Guide
 
 > **System:** Schema-version migration for OrcaQ persist collections
-> **Location:** `core/persist/adapters/migration/`
+> **Location:** `apps/web/app/core/persist/adapters/migration/`
 
 ---
 
@@ -39,7 +39,7 @@ This guide covers **schema migrations only**.
 ## 2. Architecture
 
 ```
-core/persist/adapters/migration/
+apps/web/app/core/persist/adapters/migration/
 ├── types.ts                 ← VersionedMigration interface
 ├── migrationRunner.ts       ← runSchemaMigrations() — groups, sorts, applies
 ├── schemaVersionStore.ts    ← reads/writes per-collection version in KV
@@ -55,9 +55,9 @@ core/persist/adapters/migration/
     ├── platformMigrationFlag.ts
     └── platformMigrationService.ts
 
-plugins/01.migration.client.ts   ← runs migrations at app boot; drives MigrationScreen
-components/base/MigrationScreen.vue  ← full-page blocking overlay during migration
-core/composables/useMigrationState.ts  ← reactive state shared between plugin and screen
+apps/web/app/plugins/01.migration.client.ts   ← runs migrations at app boot; drives MigrationScreen
+apps/web/app/components/base/MigrationScreen.vue  ← full-page blocking overlay during migration
+apps/web/app/core/composables/useMigrationState.ts  ← reactive state shared between plugin and screen
 ```
 
 ### Data flow at boot
@@ -120,7 +120,7 @@ Create `versions/{collection}/v{NNN}-{short-slug}.ts`, using three-digit zero-pa
 **Example: rename `desc` → `description` in workspaces**
 
 ```
-core/persist/adapters/migration/versions/workspaces/v002-rename-desc.ts
+apps/web/app/core/persist/adapters/migration/versions/workspaces/v002-rename-desc.ts
 ```
 
 ```ts
@@ -206,10 +206,10 @@ Order inside `ALL_MIGRATIONS` does **not** matter.
 
 ## 6. Testing the Migration
 
-Create (or add to) `test/unit/core/persist/` a spec file:
+Create (or add to) `apps/web/test/unit/core/persist/` a spec file:
 
 ```ts
-// test/unit/core/persist/migrationRunner.spec.ts
+// apps/web/test/unit/core/persist/migrationRunner.spec.ts
 import { describe, expect, it } from 'vitest';
 import workspaceV2 from '~/core/persist/adapters/migration/versions/workspaces/v002-rename-desc';
 
@@ -231,7 +231,7 @@ describe('workspaceV2 up()', () => {
 
 Test the `up()` function in isolation — it's a pure function, no mocks needed.
 
-For runner-level tests (correct version gating, onStep callbacks, multi-collection), see `test/unit/core/persist/migrationRunner.spec.ts`.
+For runner-level tests (correct version gating, onStep callbacks, multi-collection), see `apps/web/test/unit/core/persist/migrationRunner.spec.ts`.
 
 ---
 
@@ -261,7 +261,7 @@ pending  →  running  →  done
 
 In the `error` phase, the app still mounts — the screen does not remain blocking. The error is logged and the app attempts to run with whatever data is present. This prevents a migration bug from hard-locking the app.
 
-**Customizing the screen:** Edit `components/base/MigrationScreen.vue`. The `state.currentStep` object provides `collection`, `version`, and `description` for live progress text.
+**Customizing the screen:** Edit `apps/web/app/components/base/MigrationScreen.vue`. The `state.currentStep` object provides `collection`, `version`, and `description` for live progress text.
 
 ---
 
@@ -306,7 +306,7 @@ Before shipping a release that includes a schema migration:
 
 ## 10. Reference: Available Collections
 
-Defined in `core/persist/adapters/tauri/primitives.ts`:
+Defined in `apps/web/app/core/persist/adapters/tauri/primitives.ts`:
 
 | Collection | Description |
 |---|---|
@@ -331,6 +331,6 @@ Defined in `core/persist/adapters/tauri/primitives.ts`:
 | `migration/versions/index.ts` | **Edit here** to register a new step |
 | `migration/versions/{col}/v{NNN}-{slug}.ts` | One migration step (create per step) |
 | `migration/versions/{col}/types.ts` | Historic document shapes for that collection |
-| `plugins/01.migration.client.ts` | Nuxt plugin that runs migrations at boot |
-| `core/composables/useMigrationState.ts` | Reactive migration phase state |
-| `components/base/MigrationScreen.vue` | Full-page loading overlay during migration |
+| `apps/web/app/plugins/01.migration.client.ts` | Nuxt plugin that runs migrations at boot |
+| `apps/web/app/core/composables/useMigrationState.ts` | Reactive migration phase state |
+| `apps/web/app/components/base/MigrationScreen.vue` | Full-page loading overlay during migration |

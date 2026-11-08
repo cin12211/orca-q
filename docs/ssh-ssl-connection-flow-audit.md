@@ -17,12 +17,12 @@ Review the connection flows that should support SSH tunnel and SSL:
 
 `useConnectionForm` builds SSH and SSL config in `buildFormConnectionPayload`, then uses that payload only when the selected method is `FORM`.
 
-- `components/modules/connection/hooks/useConnectionForm.ts:197` builds SSL config.
-- `components/modules/connection/hooks/useConnectionForm.ts:211` builds SSH config.
-- `components/modules/connection/hooks/useConnectionForm.ts:231` attaches both configs to form payload.
-- `components/modules/connection/hooks/useConnectionForm.ts:294` returns string health-check payload without SSH/SSL.
-- `components/modules/connection/hooks/useConnectionForm.ts:439` stores string connections without SSH/SSL.
-- `components/modules/connection/hooks/useConnectionForm.ts:461` stores SSH/SSL only for form connections.
+- `apps/web/app/components/modules/connection/hooks/useConnectionForm.ts:197` builds SSL config.
+- `apps/web/app/components/modules/connection/hooks/useConnectionForm.ts:211` builds SSH config.
+- `apps/web/app/components/modules/connection/hooks/useConnectionForm.ts:231` attaches both configs to form payload.
+- `apps/web/app/components/modules/connection/hooks/useConnectionForm.ts:294` returns string health-check payload without SSH/SSL.
+- `apps/web/app/components/modules/connection/hooks/useConnectionForm.ts:439` stores string connections without SSH/SSL.
+- `apps/web/app/components/modules/connection/hooks/useConnectionForm.ts:461` stores SSH/SSL only for form connections.
 
 Impact:
 
@@ -34,10 +34,10 @@ Impact:
 
 `resolveHealthCheckConnection` receives `ssl` and `ssh`, but its string-method branch returns the URL unchanged before tunnel or SSL object construction.
 
-- `server/infrastructure/driver/db-connection.ts:181` handles `EConnectionMethod.STRING`.
-- `server/infrastructure/driver/db-connection.ts:188` returns `connection: url`.
-- `server/infrastructure/driver/db-connection.ts:239` creates SSH tunnel only after the string branch.
-- `server/infrastructure/driver/db-connection.ts:260` adds SSL only after the string branch.
+- `apps/web/server/infrastructure/driver/db-connection.ts:181` handles `EConnectionMethod.STRING`.
+- `apps/web/server/infrastructure/driver/db-connection.ts:188` returns `connection: url`.
+- `apps/web/server/infrastructure/driver/db-connection.ts:239` creates SSH tunnel only after the string branch.
+- `apps/web/server/infrastructure/driver/db-connection.ts:260` adds SSL only after the string branch.
 
 Impact:
 
@@ -49,12 +49,12 @@ Impact:
 
 Most feature APIs eventually resolve adapters through `getDatabaseSource`. That function chooses `STRING` mode whenever `dbConnectionString` is present, and the tunnel/SSL construction only runs in the `!dbConnectionString && host` branch.
 
-- `core/helpers/connection-helper.ts:8` sends `dbConnectionString` only for string connections.
-- `core/helpers/connection-helper.ts:22` also passes `ssl`.
-- `core/helpers/connection-helper.ts:23` also passes `ssh`.
-- `server/infrastructure/driver/db-connection.ts:326` selects `STRING` when `dbConnectionString` exists.
-- `server/infrastructure/driver/db-connection.ts:340` initializes `finalConnection` directly from the string.
-- `server/infrastructure/driver/db-connection.ts:361` applies host/port, SSH, and SSL only when no `dbConnectionString` exists.
+- `apps/web/shared/helpers/connection-helper.ts:8` sends `dbConnectionString` only for string connections.
+- `apps/web/shared/helpers/connection-helper.ts:22` also passes `ssl`.
+- `apps/web/shared/helpers/connection-helper.ts:23` also passes `ssh`.
+- `apps/web/server/infrastructure/driver/db-connection.ts:326` selects `STRING` when `dbConnectionString` exists.
+- `apps/web/server/infrastructure/driver/db-connection.ts:340` initializes `finalConnection` directly from the string.
+- `apps/web/server/infrastructure/driver/db-connection.ts:361` applies host/port, SSH, and SSL only when no `dbConnectionString` exists.
 
 Impact:
 
@@ -65,12 +65,12 @@ Impact:
 
 Raw query has additional bypasses that can drop network options even before the server receives the request.
 
-- `components/modules/raw-query/hooks/useQueryExecution.ts:295` EXPLAIN branch calls `/api/query/raw-execute`.
-- `components/modules/raw-query/hooks/useQueryExecution.ts:298` sends only `dbConnectionString`.
-- `components/modules/raw-query/hooks/useQueryExecution.ts:352` streaming branch calls `executeStreamingQuery`.
-- `components/modules/raw-query/hooks/useQueryExecution.ts:354` sends only `dbConnectionString`.
-- `components/modules/raw-query/hooks/useStreamingQuery.ts:77` has no `ssl`/`ssh` input.
-- `components/modules/raw-query/hooks/useStreamingQuery.ts:93` serializes no `ssl`/`ssh`.
+- `apps/web/app/components/modules/raw-query/hooks/useQueryExecution.ts:295` EXPLAIN branch calls `/api/query/raw-execute`.
+- `apps/web/app/components/modules/raw-query/hooks/useQueryExecution.ts:298` sends only `dbConnectionString`.
+- `apps/web/app/components/modules/raw-query/hooks/useQueryExecution.ts:352` streaming branch calls `executeStreamingQuery`.
+- `apps/web/app/components/modules/raw-query/hooks/useQueryExecution.ts:354` sends only `dbConnectionString`.
+- `apps/web/app/components/modules/raw-query/hooks/useStreamingQuery.ts:77` has no `ssl`/`ssh` input.
+- `apps/web/app/components/modules/raw-query/hooks/useStreamingQuery.ts:93` serializes no `ssl`/`ssh`.
 
 Impact:
 
@@ -81,9 +81,9 @@ Impact:
 
 `createSshTunnel` reuses active tunnels by key, but reused tunnel close is a no-op.
 
-- `server/utils/ssh-tunnel.ts:24` reuses existing tunnels.
-- `server/utils/ssh-tunnel.ts:29` returns a no-op close function.
-- `server/utils/ssh-tunnel.ts:60` closes only the original tunnel owner.
+- `apps/web/server/utils/ssh-tunnel.ts:24` reuses existing tunnels.
+- `apps/web/server/utils/ssh-tunnel.ts:29` returns a no-op close function.
+- `apps/web/server/utils/ssh-tunnel.ts:60` closes only the original tunnel owner.
 
 Impact:
 
@@ -162,7 +162,7 @@ Redis:
 ## Commands Run
 
 ```bash
-bun vitest --run test/unit/server/api/managment-connection/health-check.spec.ts test/nuxt/components/modules/connection/hooks/useConnectionForm.test.ts
+cd apps/web && bun vitest --run test/unit/server/api/managment-connection/health-check.spec.ts test/nuxt/components/modules/connection/hooks/useConnectionForm.test.ts
 ```
 
 Result:
