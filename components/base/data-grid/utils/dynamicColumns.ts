@@ -14,6 +14,7 @@ import type {
   ValueSetterParams,
 } from 'ag-grid-community';
 import DataGridKeyHeader from '~/components/base/data-grid/headers/DataGridKeyHeader.vue';
+import { isPlaceholderCellValue } from '~/core/helpers/cell-value';
 import type { MappedRawColumn } from '~/core/types/mapped-column.types';
 import { HASH_INDEX_ID } from '../constants';
 import type { RowData } from './cellValueFormatter';
@@ -152,7 +153,7 @@ export const DYNAMIC_COLUMN_TYPES: Record<string, ColTypeDef> = {
 
       const style: { backgroundColor?: string; color?: string } = {};
 
-      if (value === null) {
+      if (isPlaceholderCellValue(value)) {
         style.color = 'var(--muted-foreground)';
       }
 

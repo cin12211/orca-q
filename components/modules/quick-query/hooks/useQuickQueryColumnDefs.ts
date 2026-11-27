@@ -11,9 +11,15 @@ import {
   HASH_INDEX_HEADER,
   HASH_INDEX_ID,
 } from '~/components/base/data-grid/constants';
+import { selectSafeCellEditor } from '~/components/base/data-grid/utils';
 import type { OrderBy } from '~/core/composables/useTableQueryBuilder';
-import { formatCellValue, setCellValue } from '~/core/helpers/cell-value';
-import { isStructuredColumnType } from '~/core/helpers/sql-column-type';
+import {
+  formatCellValue,
+  isObjectCell,
+  passThroughCellValueParser,
+  setCellValue,
+} from '~/core/helpers/cell-value';
+import { isBinaryColumnType } from '~/core/helpers/sql-column-type';
 import type { SchemaForeignKeyMetadata as ForeignKeyMetadata } from '~/core/types';
 import { type QuickQueryColumnType } from '../utils/quickQueryTable';
 
@@ -93,7 +99,11 @@ export const useQuickQueryColumnDefs = ({
       const isShowCustomCellUuid =
         (isPrimaryKey && haveRelationByFieldName) ||
         (isForeignKey && foreignKey);
-      const isStructuredColumn = isStructuredColumnType(type);
+      // Per-cell: object values (BLOB Buffers, decoded arrays, ...) in a
+      // non-structured column still need the JSON editor/formatter/parser.
+      const isObjectFieldValue = (value: unknown) =>
+        isObjectCell({ fieldType: type, value });
+      const isBinaryColumn = isBinaryColumnType(type);
 
       columns.push({
         headerName: fieldId,
@@ -134,22 +144,21 @@ export const useQuickQueryColumnDefs = ({
             });
           },
         },
-        cellEditorSelector: (_params: ICellEditorParams) => {
-          if (isStructuredColumn) {
-            return {
-              component: 'AgJsonCellEditor',
-              popup: true,
-              popupPosition: 'under',
-            };
-          }
-        },
+        cellEditorSelector: (params: ICellEditorParams) =>
+          selectSafeCellEditor({
+            value: params.value,
+            isJsonCell: isObjectFieldValue(params.value),
+            isBinaryColumn,
+          }),
+        valueParser: passThroughCellValueParser,
         valueFormatter: (params: ValueFormatterParams) =>
-          formatCellValue(params, isStructuredColumn),
+          formatCellValue(params, isObjectFieldValue(params.value)),
         valueSetter: (params: ValueSetterParams) =>
           setCellValue({
             params,
             fieldId,
-            isObjectColumn: isStructuredColumn,
+            isObjectColumn: isObjectFieldValue(params.oldValue),
+            isBinaryColumn,
             isViewOnly: isViewOnly.value,
           }),
       });

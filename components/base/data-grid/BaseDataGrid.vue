@@ -14,8 +14,10 @@ import type {
 import { AgGridVue } from 'ag-grid-vue3';
 import { DEFAULT_BUFFER_ROWS } from '~/core/constants';
 import AgJsonCellEditor from './components/AgJsonCellEditor.vue';
+import AgTextCellEditor from './components/AgTextCellEditor.vue';
 import BaseDataGridCopyContextMenu from './components/BaseDataGridCopyContextMenu.vue';
 import BaseDataGridEmptyOverlay from './components/BaseDataGridEmptyOverlay.vue';
+import { BASE_DATA_GRID_DATA_TYPE_DEFINITIONS } from './constants';
 import {
   useAgGridApi,
   useDataGridContextMenu,
@@ -174,6 +176,9 @@ const mergedGridOptions = computed<GridOptions>(() => {
     rowBuffer: DEFAULT_BUFFER_ROWS,
     // Prevent AG Grid from parsing dots in flat field keys (e.g. 'table.column') as deep object access
     suppressFieldDotNotation: true,
+    // Keep object-valued cells (BLOB Buffers, arrays, ...) from being parsed
+    // to null on edit — see BASE_DATA_GRID_DATA_TYPE_DEFINITIONS.
+    dataTypeDefinitions: BASE_DATA_GRID_DATA_TYPE_DEFINITIONS,
     rowClass: 'class-row-border-none',
 
     getRowStyle: params => {
@@ -204,6 +209,7 @@ const mergedGridOptions = computed<GridOptions>(() => {
     components: {
       BaseDataGridEmptyOverlay: markRaw(BaseDataGridEmptyOverlay),
       AgJsonCellEditor: markRaw(AgJsonCellEditor),
+      AgTextCellEditor: markRaw(AgTextCellEditor),
     },
   };
 

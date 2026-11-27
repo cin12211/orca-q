@@ -77,6 +77,43 @@ export function normalizeOracleFields(
   }));
 }
 
+/**
+ * Session formats used to print and parse dates. node-oracledb fetches DATE /
+ * TIMESTAMP as JS `Date`s by default, which reach the browser as UTC ISO
+ * strings that Oracle cannot read back (ORA-01861) and that shift the
+ * displayed time. Fetching them as strings in these full-precision formats
+ * shows the stored value, and the same formats let Oracle convert the edited
+ * text back implicitly in UPDATE / WHERE.
+ *
+ * `TZR` prints the stored region or offset, so a round trip keeps it.
+ */
+export const ORACLE_SESSION_DATE_FORMATS = {
+  NLS_DATE_FORMAT: 'YYYY-MM-DD HH24:MI:SS',
+  NLS_TIMESTAMP_FORMAT: 'YYYY-MM-DD HH24:MI:SS.FF',
+  NLS_TIMESTAMP_TZ_FORMAT: 'YYYY-MM-DD HH24:MI:SS.FF TZR',
+} as const;
+
+export const ORACLE_SET_SESSION_DATE_FORMATS_SQL = `ALTER SESSION SET ${Object.entries(
+  ORACLE_SESSION_DATE_FORMATS
+)
+  .map(([name, format]) => `${name} = '${format}'`)
+  .join(' ')}`;
+
+interface OracleSessionConnection {
+  execute: (sql: string) => Promise<unknown>;
+}
+
+/** knex pool hook: apply the date formats to every new session. */
+export const applyOracleSessionDateFormats = (
+  connection: OracleSessionConnection,
+  done: (error: Error | null, connection: OracleSessionConnection) => void
+) => {
+  connection
+    .execute(ORACLE_SET_SESSION_DATE_FORMATS_SQL)
+    .then(() => done(null, connection))
+    .catch((error: Error) => done(error, connection));
+};
+
 function inferOracleCommand(sql: string) {
   return sql.trim().split(/\s+/, 1)[0]?.toUpperCase() || '';
 }
@@ -88,12 +125,15 @@ export class OracleAdapter extends BaseDatabaseAdapter {
       client: DatabaseClientType.ORACLE,
       connection: normalizedConnection,
       // LOB columns otherwise arrive as stream objects that cannot be sent as
-      // JSON. knex applies this to the driver on every connection.
-      fetchAsString: ['clob'],
+      // JSON. DATE, TIMESTAMP and TIMESTAMP WITH (LOCAL) TIME ZONE come back as
+      // strings in the session formats above, never as JS `Date`s. knex
+      // applies this to the driver on every connection.
+      fetchAsString: ['clob', 'date'],
       pool: {
         min: 1,
         max: 10,
         idleTimeoutMillis: 5 * 60 * 1000,
+        afterCreate: applyOracleSessionDateFormats,
       },
       log: {
         warn(message) {

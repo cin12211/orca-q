@@ -64,7 +64,7 @@ export const postgresDialect: SqlDialect = {
       }
       return `ARRAY[${value.map(item => this.toLiteral(item)).join(', ')}]`;
     }
-    return baseToLiteral(value);
+    return baseToLiteral(value, hex => `decode('${hex}', 'hex')`);
   },
 
   makePlaceholder(index: number): string {

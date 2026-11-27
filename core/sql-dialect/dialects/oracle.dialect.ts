@@ -66,7 +66,7 @@ export const oracleDialect: SqlDialect = {
       const fractional = isoText.includes('.') ? '.FF' : '';
       return `TO_TIMESTAMP_TZ('${isoText}', 'YYYY-MM-DD"T"HH24:MI:SS${fractional}"Z"')`;
     }
-    return baseToLiteral(value);
+    return baseToLiteral(value, hex => `HEXTORAW('${hex}')`);
   },
 
   makePlaceholder(index: number): string {

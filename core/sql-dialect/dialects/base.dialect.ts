@@ -1,13 +1,33 @@
+import {
+  binaryValueToHex,
+  isSerializedBinaryValue,
+} from '~/core/helpers/binary-value';
 import type { SqlDialect } from '../sql-dialect.interface';
+
+/** Builds a dialect's binary literal from lower-case hex digits. */
+export type BinaryLiteralBuilder = (hex: string) => string;
+
+/** SQL-standard hex literal, understood by MySQL, MariaDB and SQLite. */
+export const hexBinaryLiteral: BinaryLiteralBuilder = hex => `X'${hex}'`;
 
 /**
  * Helper shared by all dialects: converts a JS value to a SQL literal.
  * Dialect-specific overrides (e.g. Postgres ARRAY syntax) should call
  * this for non-overridden branches.
  */
-export function baseToLiteral(value: unknown): string {
+export function baseToLiteral(
+  value: unknown,
+  toBinaryLiteral: BinaryLiteralBuilder = hexBinaryLiteral
+): string {
   if (value === null || value === undefined) {
     return 'NULL';
+  }
+
+  // Binary values arrive as the JSON shape of a Node.js Buffer. Without this
+  // branch they would fall through to the JSON-string case and write the
+  // text `{"type":"Buffer",...}` into a BLOB/BYTEA column.
+  if (isSerializedBinaryValue(value)) {
+    return toBinaryLiteral(binaryValueToHex(value));
   }
 
   if (typeof value === 'boolean') {

@@ -27,6 +27,7 @@ import {
   buildMongoFilterPayload,
   extractFieldsFromDocuments,
   formatMongoFilterToRaw,
+  mergeMongoFieldNames,
   MONGO_FILTER_OPERATORS,
 } from '../utils/mongoFilterUtils';
 import { parseMongoMoreOptionsInput } from '../utils/mongoMoreOptionsUtils';
@@ -75,13 +76,23 @@ const filterErrorMessage = computed(
   () => rawJsonError.value || (isShowFilters.value ? props.error : undefined)
 );
 
-const availableFields = computed(() =>
-  extractFieldsFromDocuments(props.documents)
-);
-
 const filterRows = ref<MongoFilterRow[]>([
   { isSelect: true, field: '_id', operator: '$eq', value: '' },
 ]);
+
+// Fields seen in any page of this collection so far. The selectors must not
+// be derived from the current page alone: a filter that matches zero
+// documents would otherwise wipe every field option, leaving the user unable
+// to pick another field to fix the filter.
+const knownFields = ref<string[]>([]);
+
+const availableFields = computed(() =>
+  mergeMongoFieldNames(
+    knownFields.value,
+    extractFieldsFromDocuments(props.documents),
+    filterRows.value.map(row => row.field)
+  )
+);
 
 interface PersistedMongoFilterState {
   filterRows?: MongoFilterRow[];
@@ -89,6 +100,7 @@ interface PersistedMongoFilterState {
   rawJsonQuery?: string;
   isShowFilters?: boolean;
   rawMoreOptionsInput?: MongoQueryMoreOptionsRawInput;
+  knownFields?: string[];
 }
 
 // Filter state is UI-only and intentionally bypasses the backup / Electron
@@ -116,6 +128,9 @@ const loadPersistedState = () => {
     }
     if (persisted.isShowFilters) {
       isShowFilters.value = true;
+    }
+    if (Array.isArray(persisted.knownFields)) {
+      knownFields.value = mergeMongoFieldNames(persisted.knownFields);
     }
   } catch {
     // Ignore corrupted persisted state
@@ -326,7 +341,14 @@ watch(
 );
 
 watch(
-  [filterRows, mode, rawJsonQuery, isShowFilters, rawMoreOptionsInput],
+  [
+    filterRows,
+    mode,
+    rawJsonQuery,
+    isShowFilters,
+    rawMoreOptionsInput,
+    knownFields,
+  ],
   debounce(() => {
     if (!props.persistKey) return;
 
@@ -338,10 +360,25 @@ watch(
         rawJsonQuery: rawJsonQuery.value,
         isShowFilters: isShowFilters.value,
         rawMoreOptionsInput: rawMoreOptionsInput.value,
+        knownFields: knownFields.value,
       })
     );
   }, DEFAULT_DEBOUNCE_INPUT),
   { deep: true }
+);
+
+// Registered after the persist watcher so the first page's fields are saved
+// too, letting a remount on an empty result restore the field selectors.
+watch(
+  () => props.documents,
+  documents => {
+    if (!documents?.length) return;
+    knownFields.value = mergeMongoFieldNames(
+      knownFields.value,
+      extractFieldsFromDocuments(documents)
+    );
+  },
+  { immediate: true }
 );
 
 onMounted(() => {
