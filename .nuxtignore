@@ -1,0 +1,14 @@
+.claude
+.claude/**
+.sqlite3
+.sqlite3/**
+docs/**
+playwright-report/**
+test-results/**
+.scratch/**
+.superpowers/**
+graphify-out/**
+out/**
+build/**
+SAC/**
+npx-package/.output/**

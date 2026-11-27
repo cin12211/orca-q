@@ -13,6 +13,7 @@ export {
   AGENT_STATE_PERSIST_ID,
   AIProvider,
   SpaceDisplay,
+  ErdLayoutAlgorithm,
   EditorTheme,
   RawQueryEditorLayout,
   ThinkingStyle,

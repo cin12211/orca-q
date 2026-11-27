@@ -3,3 +3,4 @@ export * from './buildFullERDDiagram';
 export * from './oldERD';
 export * from './active-edge';
 export * from './calcValueNode';
+export * from './layoutAlgorithms';

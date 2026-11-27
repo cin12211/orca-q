@@ -5,6 +5,7 @@ import {
   shell,
   type MenuItemConstructorOptions,
 } from 'electron';
+import fs from 'node:fs';
 import path from 'node:path';
 import { registerAllIpcHandlers } from './ipc';
 import { createLogger, initializeElectronLogger } from './logger';
@@ -32,6 +33,25 @@ const logger = createLogger('main');
 let mainWindow: BrowserWindow | null = null;
 let appServerUrl: string | null = null;
 
+function getSplashPath(): string {
+  const candidate1 = path.join(__dirname, 'splash.html');
+  if (fs.existsSync(candidate1)) {
+    return candidate1;
+  }
+  // Fallback to the source file: out/electron/main.js → <repo>/electron/splash.html
+  const candidate2 = path.join(
+    __dirname,
+    '..',
+    '..',
+    'electron',
+    'splash.html'
+  );
+  if (fs.existsSync(candidate2)) {
+    return candidate2;
+  }
+  return candidate1;
+}
+
 function buildAppUrl(serverUrl: string, routePath = '/'): string {
   const normalizedPath = routePath.startsWith('/')
     ? routePath
@@ -51,7 +71,7 @@ function focusWindow(win: BrowserWindow): void {
   win.focus();
 }
 
-function createWindow(serverUrl: string, routePath = '/'): BrowserWindow {
+function createWindow(serverUrl?: string, routePath = '/'): BrowserWindow {
   const win = new BrowserWindow({
     width: 1440,
     height: 960,
@@ -59,6 +79,7 @@ function createWindow(serverUrl: string, routePath = '/'): BrowserWindow {
     minHeight: MIN_HEIGHT,
     center: true,
     show: false,
+    backgroundColor: '#000000',
     titleBarStyle: process.platform === 'darwin' ? 'hiddenInset' : 'default',
     trafficLightPosition: { x: 10, y: 10 },
     webPreferences: {
@@ -79,7 +100,12 @@ function createWindow(serverUrl: string, routePath = '/'): BrowserWindow {
     return { action: 'deny' };
   });
 
-  void win.loadURL(buildAppUrl(serverUrl, routePath));
+  if (serverUrl) {
+    void win.loadURL(buildAppUrl(serverUrl, routePath));
+  } else {
+    void win.loadFile(getSplashPath());
+  }
+
   return win;
 }
 
@@ -332,6 +358,10 @@ async function bootstrap(): Promise<void> {
     logsPath: app.getPath('logs'),
   });
 
+  // Hiện cửa sổ ngay: mở một splash.html cục bộ ngay khi whenReady
+  attachMainWindow(createWindow());
+  logger.info('Main window opened with splash screen');
+
   if (IS_DEV) {
     appServerUrl = DEV_SERVER_URL;
     logger.info('Using Electron dev server URL', { url: appServerUrl });
@@ -356,15 +386,21 @@ async function bootstrap(): Promise<void> {
   );
   logger.info('Electron IPC handlers registered');
 
-  attachMainWindow(createWindow(appServerUrl));
-  logger.info('Main window attached');
   await refreshNativeMenus();
   logger.info('Native application menus refreshed');
+
+  // Chuyển sang URL của sidecar khi nó sẵn sàng
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    logger.info('Transitioning main window from splash to sidecar URL', {
+      url: appServerUrl,
+    });
+    void mainWindow.loadURL(buildAppUrl(appServerUrl, '/'));
+  }
 
   app.on('activate', () => {
     logger.info('App activate event received');
     if (BrowserWindow.getAllWindows().length === 0) {
-      attachMainWindow(createWindow(appServerUrl!));
+      attachMainWindow(createWindow(appServerUrl ?? undefined));
       logger.info('Recreated main window after activate');
     }
 

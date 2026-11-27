@@ -1,5 +1,8 @@
+import { app } from 'electron';
 import { spawn } from 'node:child_process';
 import type { ChildProcess } from 'node:child_process';
+import fs from 'node:fs';
+import path from 'node:path';
 import { createLogger } from '../logger';
 import { getPersistDbPath } from '../persist/knex-db';
 import {
@@ -26,22 +29,39 @@ function logSidecarStream(level: 'info' | 'warn', data: Buffer): void {
 }
 
 /**
+ * Returns the V8 module compile cache directory inside Electron's userData folder.
+ */
+export function getSidecarCompileCacheDir(): string {
+  const cacheDir = path.join(app.getPath('userData'), 'cc');
+  try {
+    fs.mkdirSync(cacheDir, { recursive: true });
+  } catch {
+    // Directory creation failed or already exists
+  }
+  return cacheDir;
+}
+
+/**
  * Spawn the Nitro runtime sidecar and wait for it to be ready.
  * Returns the URL the sidecar is listening on.
  */
 export async function spawnSidecar(): Promise<string> {
   const port = await findFreePort(RUNTIME_PORT);
   const serverPath = getRuntimeBinaryPath();
+  const compileCacheDir = getSidecarCompileCacheDir();
+
   logger.info('Starting Nitro runtime sidecar', {
     host: RUNTIME_HOST,
     port,
     serverPath,
+    compileCacheDir,
   });
 
   sidecarProcess = spawn(process.execPath, [serverPath], {
     env: {
       ...process.env,
       ELECTRON_RUN_AS_NODE: '1',
+      NODE_COMPILE_CACHE: compileCacheDir,
       HOST: RUNTIME_HOST,
       PORT: String(port),
       NITRO_HOST: RUNTIME_HOST,

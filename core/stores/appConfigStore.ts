@@ -22,6 +22,7 @@ import {
   type TableAppearanceConfigs,
 } from '~/components/modules/settings/types';
 import {
+  ErdLayoutAlgorithm,
   normalizeAppConfigState,
   type AppConfigPersistedState,
   type McpServerConfigs,
@@ -187,6 +188,11 @@ export const useAppConfigStore = defineStore('app-config-store', () => {
   // Space display setting
   const spaceDisplay = ref<SpaceDisplay>(SpaceDisplay.Default);
 
+  // ERD auto-arrange algorithm (chosen from the diagram toolbar)
+  const erdLayoutAlgorithm = ref<ErdLayoutAlgorithm>(
+    ErdLayoutAlgorithm.Default
+  );
+
   // Table appearance settings
   const tableAppearanceConfigs = reactive<TableAppearanceConfigs>({
     ...DEFAULT_TABLE_APPEARANCE_CONFIGS,
@@ -316,6 +322,7 @@ export const useAppConfigStore = defineStore('app-config-store', () => {
       quickQuerySafeModeEnabled: quickQuerySafeModeEnabled.value,
       autoDownloadUpdates: autoDownloadUpdates.value,
       spaceDisplay: spaceDisplay.value,
+      erdLayoutAlgorithm: erdLayoutAlgorithm.value,
       tableAppearanceConfigs,
       customLayouts: customLayouts.value,
       activeCustomLayoutId: activeCustomLayoutId.value,
@@ -342,6 +349,7 @@ export const useAppConfigStore = defineStore('app-config-store', () => {
     quickQuerySafeModeEnabled.value = normalized.quickQuerySafeModeEnabled;
     autoDownloadUpdates.value = normalized.autoDownloadUpdates;
     spaceDisplay.value = normalized.spaceDisplay;
+    erdLayoutAlgorithm.value = normalized.erdLayoutAlgorithm;
     Object.assign(tableAppearanceConfigs, normalized.tableAppearanceConfigs);
     customLayouts.value = normalized.customLayouts as CustomLayoutDefinition[];
     activeCustomLayoutId.value = normalized.activeCustomLayoutId;
@@ -423,6 +431,7 @@ export const useAppConfigStore = defineStore('app-config-store', () => {
     resetCodeEditorConfigs,
     resetChatUiConfigs,
     spaceDisplay,
+    erdLayoutAlgorithm,
     loadPersistData,
   };
 });

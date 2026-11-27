@@ -54,3 +54,5 @@ export type ActiveTable = {
 export type MatrixTablePosition = Record<string, NodePosition>;
 
 export type BackGroundGridStatus = BackgroundVariantType | false;
+
+export { ErdLayoutAlgorithm } from '~/core/persist/store-state';

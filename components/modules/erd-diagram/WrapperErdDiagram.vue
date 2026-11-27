@@ -1,15 +1,20 @@
 <script lang="ts" setup>
+import { storeToRefs } from 'pinia';
 import { computed, toRef } from 'vue';
 import ErdDiagram from '~/components/modules/erd-diagram/ErdDiagram.vue';
 import { uuidv4 } from '~/core/helpers';
+import { useAppConfigStore } from '~/core/stores/appConfigStore';
 import { useErdQueryTables } from './hooks/useErdGetAllTablesData';
 import { useExpandableErd } from './hooks/useExpandableErd';
-import type { NodePosition } from './types';
+import type { ErdLayoutAlgorithm, NodePosition } from './types';
 import { buildTableNodeId } from './utils';
 
 const props = defineProps<{
   tableId: string | undefined;
 }>();
+
+const appConfigStore = useAppConfigStore();
+const { erdLayoutAlgorithm } = storeToRefs(appConfigStore);
 
 const wrapperRef = ref<HTMLDivElement>();
 
@@ -51,6 +56,7 @@ const {
   isExpanded,
   hasRelations,
   matrixPosition,
+  relayout,
   toggleCollapseHeader,
   collapseAllVisibleTables,
   expandAllVisibleTables,
@@ -61,6 +67,7 @@ const {
   allTables,
   initialTableId, // Pass as Ref for reactivity
   autoExpandInitial: true, // Show related tables by default
+  layoutAlgorithm: erdLayoutAlgorithm,
 });
 
 // Get list of tables for filter panel
@@ -108,6 +115,11 @@ const onResetPositionOverrides = () => {
   clearDraggedPositions();
 };
 
+const onChangeLayoutAlgorithm = (algorithm: ErdLayoutAlgorithm) => {
+  erdLayoutAlgorithm.value = algorithm;
+  relayout();
+};
+
 useHotkeys(
   [
     {
@@ -137,6 +149,7 @@ useHotkeys(
       :isExpanded="isExpanded"
       :hasRelations="hasRelations"
       :areAllCollapsed="areAllVisibleTablesCollapsed"
+      :layoutAlgorithm="erdLayoutAlgorithm"
       v-model:isShowFilter="isShowFilter"
       @expand="onExpandTable"
       @collapse="onCollapseTable"
@@ -144,6 +157,8 @@ useHotkeys(
       @toggleCollapseAll="onToggleCollapseAll"
       @updateNodePosition="onUpdateNodePosition"
       @resetPositionOverrides="onResetPositionOverrides"
+      @relayout="relayout"
+      @changeLayoutAlgorithm="onChangeLayoutAlgorithm"
     />
   </div>
 </template>
