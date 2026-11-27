@@ -2,7 +2,10 @@ import { computed, ref, type Ref } from 'vue';
 import type { CellValueChangedEvent } from 'ag-grid-community';
 import { NEW_ROW_FLAG_ID } from '~/components/base/data-grid/constants';
 import type { RowData } from '~/components/base/data-grid/utils';
-import { normalizeEditedCellChange } from '~/core/helpers/cell-value';
+import {
+  isObjectCell,
+  normalizeEditedCellChange,
+} from '~/core/helpers/cell-value';
 import {
   isJsonColumnType,
   isStructuredColumnType,
@@ -50,10 +53,12 @@ export const useQuickQueryEditedCells = ({
       return;
     }
 
-    const isObjectColumn = isStructuredColumn(fieldId);
     const fieldType = mapColumnDef.value.get(fieldId)?.type || '';
     const isNewRow = !!event.node.data?.[NEW_ROW_FLAG_ID];
     const oldFieldValue = isNewRow ? undefined : data.value?.[rowId]?.[fieldId];
+    const isObjectColumn =
+      isStructuredColumn(fieldId) ||
+      isObjectCell({ fieldType, value: oldFieldValue });
     const { hasChanged, normalizedValue } = normalizeEditedCellChange({
       fieldType,
       isObjectColumn,

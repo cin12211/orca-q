@@ -1,7 +1,9 @@
 import { computed, ref, type Ref } from 'vue';
 import type { CellValueChangedEvent } from 'ag-grid-community';
-import { normalizeEditedCellChange } from '~/core/helpers/cell-value';
-import { isStructuredColumnType } from '~/core/helpers/sql-column-type';
+import {
+  isObjectCell,
+  normalizeEditedCellChange,
+} from '~/core/helpers/cell-value';
 import type { MappedRawColumn } from '../interfaces';
 import type { RawQueryEditedCell } from '../utils/buildRawQueryUpdates';
 
@@ -42,8 +44,8 @@ export const useRawQueryEditedCells = ({
     if (!column) return;
 
     const fieldType = resolveFieldType(fieldId);
-    const isObjectColumn = isStructuredColumnType(fieldType);
     const originalValue = originalRows.value[rowId]?.[fieldId];
+    const isObjectColumn = isObjectCell({ fieldType, value: originalValue });
     const { hasChanged, normalizedValue } = normalizeEditedCellChange({
       fieldType,
       isObjectColumn,

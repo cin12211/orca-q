@@ -4,6 +4,7 @@ import {
   buildMongoFilterPayload,
   extractFieldsFromDocuments,
   formatMongoFilterToRaw,
+  mergeMongoFieldNames,
 } from '~/components/modules/mongodb-workspace/utils/mongoFilterUtils';
 
 describe('mongoFilterUtils', () => {
@@ -139,6 +140,27 @@ describe('mongoFilterUtils', () => {
     const filter = buildMongoFilterPayload(rows, '', MongoFilterMode.Visual);
     expect(filter).toEqual({
       _id: '507f1f77bcf86cd799439011',
+    });
+  });
+
+  describe('mergeMongoFieldNames', () => {
+    it('unions, dedupes and sorts with _id first', () => {
+      expect(
+        mergeMongoFieldNames(['name', '_id'], ['age', 'name'], ['meta.a'])
+      ).toEqual(['_id', 'age', 'meta.a', 'name']);
+    });
+
+    it('keeps known fields when the current page is empty', () => {
+      expect(
+        mergeMongoFieldNames(['_id', 'name'], extractFieldsFromDocuments([]))
+      ).toEqual(['_id', 'name']);
+    });
+
+    it('ignores empty names and missing lists', () => {
+      expect(mergeMongoFieldNames(undefined, ['', 'name'], [])).toEqual([
+        'name',
+      ]);
+      expect(mergeMongoFieldNames()).toEqual([]);
     });
   });
 });

@@ -20,18 +20,29 @@ import type {
 const STREAM_BATCH_SIZE = 10_000;
 
 /**
- * Serialize a single SQLite row (named object) for JSON transport.
- * Node.js Buffer values (BLOB columns) are converted to hex strings so they
- * survive JSON.stringify without turning into {"type":"Buffer","data":[...]} objects.
+ * Binary value as a Node.js `Buffer`, whatever the SQLite driver returned:
+ * `sqlite3` / `better-sqlite3` give a `Buffer`, `@libsql/client` (Turso) an
+ * `ArrayBuffer`, which JSON would turn into `{}` and lose the bytes.
+ * A `Buffer` reaches the browser as `{ type: 'Buffer', data: [...] }`, the
+ * same shape as pg / mysql binary columns, so the grid shows `BINARY - n
+ * bytes`, edits it in the binary editor and saves it as an `X'…'` literal.
  */
-function serializeSqliteRow(
+export function toTransportSqliteValue(value: unknown): unknown {
+  if (Buffer.isBuffer(value)) return value;
+  if (value instanceof ArrayBuffer) return Buffer.from(value);
+  if (ArrayBuffer.isView(value)) {
+    return Buffer.from(value.buffer, value.byteOffset, value.byteLength);
+  }
+  return value;
+}
+
+/** Serialize a single SQLite row (named object) for JSON transport. */
+export function serializeSqliteRow(
   row: Record<string, unknown>
 ): Record<string, unknown> {
   const out: Record<string, unknown> = {};
   for (const [key, value] of Object.entries(row)) {
-    out[key] = Buffer.isBuffer(value)
-      ? (value as Buffer).toString('hex')
-      : value;
+    out[key] = toTransportSqliteValue(value);
   }
   return out;
 }
@@ -59,7 +70,8 @@ export class SqliteQueryAdapter
     );
 
     return {
-      result,
+      // Quick Query reads through here: same binary shape as rawExecute.
+      result: result.map(serializeSqliteRow),
       queryTime,
     };
   }

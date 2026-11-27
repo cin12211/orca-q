@@ -14,6 +14,15 @@ export interface ConfigFieldItem {
   as: Component;
   placeholder?: string;
   isShow?: boolean;
+  /**
+   * Render this component instead of a form field, for values a text input
+   * cannot show faithfully (e.g. binary). It is display-only and not part of
+   * the form values.
+   */
+  component?: Component;
+  componentProps?: Record<string, unknown>;
+  /** Remount key for `component`, so it re-reads a changed value. */
+  componentKey?: string;
 }
 
 export interface DynamicFormProps {
@@ -47,7 +56,14 @@ defineExpose({
         }}</label>
       </div>
 
+      <component
+        :is="field.component"
+        v-if="field.component"
+        :key="field.componentKey"
+        v-bind="field.componentProps"
+      />
       <Field
+        v-else
         :as="field.as"
         :id="field.name"
         :name="field.name"

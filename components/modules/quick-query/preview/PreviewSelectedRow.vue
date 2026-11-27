@@ -2,9 +2,12 @@
 import { refDebounced } from '@vueuse/core';
 import { BaseEmpty, Textarea } from '#components';
 import * as z from 'zod';
+import AgTextCellEditor from '~/components/base/data-grid/components/AgTextCellEditor.vue';
 import { cellValueFormatter } from '~/components/base/data-grid/utils';
 import { DEFAULT_DEBOUNCE_INPUT } from '~/core/constants';
 import { DatabaseClientType } from '~/core/constants/database-client-type';
+import { isSerializedBinaryValue } from '~/core/helpers/binary-value';
+import { isBinaryColumnType } from '~/core/helpers/sql-column-type';
 import { getSqlDialect } from '~/core/sql-dialect';
 import DynamicForm, { type ConfigFieldItem } from './DynamicForm.vue';
 
@@ -40,6 +43,8 @@ const rowSchema = computed<
 });
 
 const searchInput = shallowRef('');
+// Bumped per selected row so binary viewers re-read the new row's bytes.
+const selectedRowVersion = ref(0);
 const debouncedSearch = refDebounced(searchInput, DEFAULT_DEBOUNCE_INPUT);
 
 const configFields = computed<ConfigFieldItem[]>(() => {
@@ -50,6 +55,11 @@ const configFields = computed<ConfigFieldItem[]>(() => {
   props.columnTypes.forEach(column => {
     const columnName = column.name.toLowerCase();
     const isShow = search ? columnName.includes(search) : true;
+    const value = props.selectedRow?.[column.name];
+    // Binary is decoded by the same viewer the grid editor uses, instead of
+    // showing the raw `{ type: 'Buffer', data: [...] }` JSON.
+    const isBinary =
+      isBinaryColumnType(column.type) || isSerializedBinaryValue(value);
 
     fields.push({
       label: column.name,
@@ -59,6 +69,11 @@ const configFields = computed<ConfigFieldItem[]>(() => {
       class: 'px-1 py-0.5 h-fit min-h-6! text-primary/80 font-normal!',
       placeholder: 'NULL',
       isShow,
+      ...(isBinary && {
+        component: AgTextCellEditor,
+        componentProps: { value, valueKind: 'binary', readonly: true },
+        componentKey: `${column.name}-${selectedRowVersion.value}`,
+      }),
     });
   });
 
@@ -97,6 +112,7 @@ watch(
   () => [props.selectedRow, dynamicForm],
   ([selectedRow]) => {
     if (selectedRow) {
+      selectedRowVersion.value += 1;
       setFormValues(selectedRow as Record<string, unknown>);
     }
   },

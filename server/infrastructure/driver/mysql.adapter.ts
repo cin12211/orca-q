@@ -25,6 +25,38 @@ export function normalizeMysqlFields(
   }));
 }
 
+/**
+ * mysql2 turns DATE / DATETIME / TIMESTAMP into JS `Date`s by default. Those
+ * reach the browser as UTC ISO strings (`2024-01-15T03:20:30.000Z` for a
+ * `2024-01-15 10:20:30` value at +07, a DATE as the previous day at UTC+),
+ * and any edit or WHERE clause built from them no longer matches the stored
+ * value. `dateStrings` returns them exactly as MySQL prints them, which is
+ * also the literal MySQL accepts back.
+ */
+const MYSQL_TYPE_OPTIONS = { dateStrings: true } as const;
+
+export function withMysqlTypeOptions(
+  connection: string | Knex.Config['connection']
+): string | Knex.Config['connection'] {
+  if (typeof connection === 'string') {
+    // knex JSON-parses URL query params into the mysql2 connection options.
+    const url = new URL(connection);
+    for (const [key, value] of Object.entries(MYSQL_TYPE_OPTIONS)) {
+      url.searchParams.set(key, String(value));
+    }
+    return url.toString();
+  }
+
+  if (typeof connection === 'object' && connection !== null) {
+    return {
+      ...(connection as object),
+      ...MYSQL_TYPE_OPTIONS,
+    } as Knex.Config['connection'];
+  }
+
+  return connection;
+}
+
 function inferMysqlCommand(sql: string) {
   return sql.trim().split(/\s+/, 1)[0]?.toUpperCase() || '';
 }
@@ -36,7 +68,7 @@ export class MysqlAdapter extends BaseDatabaseAdapter {
   ) {
     const knexInstance = knex({
       client: DatabaseClientType.MYSQL2,
-      connection,
+      connection: withMysqlTypeOptions(connection),
       pool: {
         min: 1,
         max: 10,

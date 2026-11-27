@@ -269,11 +269,32 @@ export function extractFieldsFromDocuments(
       }
     }
   }
-  return Array.from(fieldSet).sort((a, b) => {
+  return sortMongoFieldNames(Array.from(fieldSet));
+}
+
+const sortMongoFieldNames = (fields: string[]): string[] =>
+  fields.sort((a, b) => {
     if (a === '_id') return -1;
     if (b === '_id') return 1;
     return a.localeCompare(b);
   });
+
+/**
+ * Union of every field list passed in, deduped and sorted the same way as
+ * `extractFieldsFromDocuments` (`_id` first). Used by the filter bar so its
+ * field selectors keep the collection's known fields when a filter returns
+ * zero documents, instead of collapsing to an empty list.
+ */
+export function mergeMongoFieldNames(
+  ...fieldLists: (readonly string[] | undefined)[]
+): string[] {
+  const fieldSet = new Set<string>();
+  for (const fields of fieldLists) {
+    for (const field of fields ?? []) {
+      if (field) fieldSet.add(field);
+    }
+  }
+  return sortMongoFieldNames(Array.from(fieldSet));
 }
 
 /**

@@ -1,6 +1,8 @@
-import { mount } from '@vue/test-utils';
-import { describe, expect, it } from 'vitest';
+import { flushPromises, mount } from '@vue/test-utils';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import MongoCollectionFilter from '~/components/modules/mongodb-workspace/components/MongoCollectionFilter.vue';
+import MongoColumnSelector from '~/components/modules/mongodb-workspace/components/MongoColumnSelector.vue';
+import { getPlatformStorage } from '~/core/persist/storage-adapter';
 
 const defaultProps = {
   documents: [{ _id: '1', name: 'Product A' }],
@@ -110,5 +112,54 @@ describe('MongoCollectionFilter', () => {
       name: 'MongoQueryMoreOptions',
     });
     expect(moreOptions.exists()).toBe(false);
+  });
+
+  describe('field selectors when the filter matches no documents', () => {
+    const PERSIST_KEY = 'test-mongo-filter-known-fields';
+    const documents = [
+      { _id: '1', name: 'Product A', price: 10, meta: { color: 'red' } },
+    ];
+    const expectedFields = ['_id', 'meta', 'meta.color', 'name', 'price'];
+
+    const selectorColumns = (wrapper: ReturnType<typeof mountFilter>) =>
+      wrapper.findComponent(MongoColumnSelector).props('columns');
+
+    afterEach(() => {
+      getPlatformStorage().removeItem(PERSIST_KEY);
+    });
+
+    it('keeps the known fields after the result becomes empty', async () => {
+      const wrapper = mountFilter({ documents });
+      expect(selectorColumns(wrapper)).toEqual(expectedFields);
+
+      await wrapper.setProps({ documents: [] });
+
+      expect(selectorColumns(wrapper)).toEqual(expectedFields);
+    });
+
+    it('adds fields from later pages without dropping earlier ones', async () => {
+      const wrapper = mountFilter({ documents });
+
+      await wrapper.setProps({ documents: [{ _id: '2', stock: 3 }] });
+
+      expect(selectorColumns(wrapper)).toEqual([...expectedFields, 'stock']);
+    });
+
+    it('restores known fields when remounted on an empty result', async () => {
+      const first = mountFilter({ documents, persistKey: PERSIST_KEY });
+      // Persistence is debounced by DEFAULT_DEBOUNCE_INPUT.
+      await vi.waitFor(() => {
+        const persisted = getPlatformStorage().getItem(PERSIST_KEY);
+        expect(JSON.parse(persisted ?? '{}').knownFields).toEqual(
+          expectedFields
+        );
+      });
+      first.unmount();
+
+      const second = mountFilter({ documents: [], persistKey: PERSIST_KEY });
+      await flushPromises();
+
+      expect(selectorColumns(second)).toEqual(expectedFields);
+    });
   });
 });

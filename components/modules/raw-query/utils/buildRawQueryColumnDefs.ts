@@ -11,12 +11,21 @@ import DataGridKeyHeader from '~/components/base/data-grid/headers/DataGridKeyHe
 import {
   createHashIndexColumnDef,
   estimateGridColumnWidth,
+  selectSafeCellEditor,
   type RowData,
 } from '~/components/base/data-grid/utils';
-import { formatCellValue, setCellValue } from '~/core/helpers/cell-value';
 import {
+  formatCellValue,
+  isObjectCell,
+  isObjectCellValue,
+  isPlaceholderCellValue,
+  isSerializedBinaryValue,
+  passThroughCellValueParser,
+  setCellValue,
+} from '~/core/helpers/cell-value';
+import {
+  isBinaryColumnType,
   isJsonColumnType,
-  isStructuredColumnType,
 } from '~/core/helpers/sql-column-type';
 import type { ReservedTableSchemas } from '~/core/types/database-tables.types';
 import type { MappedRawColumn } from '../interfaces';
@@ -57,8 +66,7 @@ const formatRawQueryCellValue = (
 ) => {
   const { value } = params;
   const isObjectColumn =
-    isJsonColumnType(fieldType) ||
-    (typeof value === 'object' && value !== null);
+    isJsonColumnType(fieldType) || isObjectCellValue(value);
 
   if (isObjectColumn && typeof value === 'string') {
     try {
@@ -123,6 +131,12 @@ export const buildRawQueryColumnDefs = ({
     });
 
     const fieldType = column.short_type_name || column.type || '';
+    const isBinaryColumn =
+      isBinaryColumnType(fieldType) ||
+      isBinaryColumnType(column.type || '') ||
+      sampleRows.some(row =>
+        isSerializedBinaryValue(row[column.aliasFieldName])
+      );
 
     const canEditCell = (row: Record<string, unknown> | undefined) =>
       columnEditable && isCellEditable({ column, row, tableGroups });
@@ -132,10 +146,7 @@ export const buildRawQueryColumnDefs = ({
     // Writes are still blocked in `valueSetter` via `canEditCell`.
     const isJsonCell = (row: Record<string, unknown> | undefined) => {
       const value = row?.[column.aliasFieldName];
-      return (
-        isJsonColumnType(fieldType) ||
-        (typeof value === 'object' && value !== null)
-      );
+      return isJsonColumnType(fieldType) || isObjectCellValue(value);
     };
 
     const editable: ColDef['editable'] = (params: EditableCallbackParams) => {
@@ -165,7 +176,7 @@ export const buildRawQueryColumnDefs = ({
         return style;
       }
 
-      if (params.value === null) {
+      if (isPlaceholderCellValue(params.value)) {
         style.color = 'var(--muted-foreground)';
       }
 
@@ -182,22 +193,24 @@ export const buildRawQueryColumnDefs = ({
       type: 'editableColumn',
       editable,
       cellStyle,
-      cellEditorSelector: (params: ICellEditorParams) => {
-        if (isJsonCell(params.data)) {
-          return {
-            component: 'AgJsonCellEditor',
-            popup: true,
-            popupPosition: 'under',
-          };
-        }
-      },
+      cellEditorSelector: (params: ICellEditorParams) =>
+        selectSafeCellEditor({
+          value: params.value,
+          isJsonCell: isJsonCell(params.data),
+          isBinaryColumn,
+        }),
+      valueParser: passThroughCellValueParser,
       valueSetter: (params: ValueSetterParams) => {
         if (!canEditCell(params.data)) return false;
 
         return setCellValue({
           params,
           fieldId: column.aliasFieldName,
-          isObjectColumn: isStructuredColumnType(fieldType),
+          // Per-cell: an object value (BLOB Buffer, decoded array, ...) in a
+          // column whose declared type is not structured still arrives from
+          // the JSON editor as a JSON string and must be parsed back.
+          isObjectColumn: isObjectCell({ fieldType, value: params.oldValue }),
+          isBinaryColumn,
           emptyAsNull: true,
         });
       },

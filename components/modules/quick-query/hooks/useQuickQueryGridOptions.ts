@@ -9,7 +9,10 @@ import AgJsonCellEditor from '~/components/base/data-grid/components/AgJsonCellE
 import { useTableTheme } from '~/components/base/data-grid/hooks';
 import type { RowData } from '~/components/base/data-grid/utils';
 import { DEFAULT_BUFFER_ROWS, DEFAULT_QUERY_SIZE } from '~/core/constants';
-import { areCellValuesDifferent } from '~/core/helpers/cell-value';
+import {
+  areCellValuesDifferent,
+  isPlaceholderCellValue,
+} from '~/core/helpers/cell-value';
 import CustomHeaderTable from '../quick-query-table/CustomHeaderTable.vue';
 import { suppressDeleteKeyboardEvent } from '../utils/quickQueryTable';
 
@@ -62,7 +65,7 @@ export const useQuickQueryGridOptions = ({
         const originalFieldValue = originalRowData[field];
         const newValue = params.value;
 
-        if (originalFieldValue === null || newValue === null) {
+        if (originalFieldValue === null || isPlaceholderCellValue(newValue)) {
           style.color = 'var(--muted-foreground)';
         }
 

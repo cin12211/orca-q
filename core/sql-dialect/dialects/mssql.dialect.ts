@@ -68,7 +68,7 @@ export const mssqlDialect: SqlDialect = {
     if (typeof value === 'string') {
       return `N'${value.replace(/'/g, "''")}'`;
     }
-    return baseToLiteral(value);
+    return baseToLiteral(value, hex => `0x${hex}`);
   },
 
   makePlaceholder(index: number): string {
