@@ -79,7 +79,7 @@ bash scripts/test-services/run-tests.sh --fixtures=all     -- playwright test --
 **Run a specific spec file (fixtures already up):**
 
 ```bash
-bunx playwright test test/e2e/postgres/table-browser.spec.ts
+bunx playwright test test/playwright/postgres/connection-form-live.spec.ts
 ```
 
 ---
@@ -284,5 +284,5 @@ bun test:fixtures:down        # cleanup when done
 **Playwright debug mode**
 
 ```bash
-PWDEBUG=1 bunx playwright test --project postgres test/e2e/postgres/my-test.spec.ts
+PWDEBUG=1 bunx playwright test --project postgres test/playwright/postgres/my-test.spec.ts
 ```
