@@ -27,3 +27,13 @@ The `raw-query` module is built to provide a powerful, IDE-like experience for w
 
 - **Native Underline Tracebacks**: Instead of a generic "Query Failed" toast, the query engine extracts precise `DatabaseError` properties from the Postgres AST.
 - **Offset Mapping**: The CodeMirror interface automatically draws a squiggly red line exactly underneath the faulty syntax (shifted mapped coordinates), accompanied by detailed hover hints containing the `Code`, `Position`, and Postgres `Hint`.
+
+## 6. Running Several Statements
+
+- **Selection runs every statement**: When the selection spans several statements, Execute / `⌘↵` runs all of them (the statements the selection touches, whole). Without a selection only the statement under the cursor runs, as before.
+- **Splitting**: Statements are split on `;` by the CodeMirror parser for every SQL database (strings, comments and Postgres dollar quotes are respected). SQL Server `GO` and Oracle PL/SQL blocks are not treated specially. Redis runs one command per line.
+- **Sequential, stop on error**: Statements run one after another, each as its own request. The first error stops the run: the rest are marked `skipped`, and the error is underlined at the failing statement. Nothing is wrapped in a transaction, so statements that already ran stay applied.
+- **One result tab**: The run gets a single tab listing every statement as a collapsible block (status, SQL preview, rows or rows affected, error, time). Blocks with data or an error start open, and a block's grid renders only once it scrolls into view, so large runs stay light. There is no limit on the number of statements.
+- **View only**: Blocks cannot be edited. "Open in its own tab" copies a finished statement's stored result into a regular tab (nothing runs again), with the full Result / Raw / Info / Chart views and cell editing.
+- **Stop**: Cancels the running statement; it and the statements after it are marked `cancelled`.
+- **Unchanged**: The connection-switch confirm and the missing-variables prompt are asked once for the whole selection. EXPLAIN (`⌘E`, footer button, context menu) is disabled while the selection spans several statements.
