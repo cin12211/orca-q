@@ -44,19 +44,21 @@ Is the test purely logic / no DB / no browser?
 
 ## 2. npm Script Reference
 
-| Script                   | What it does                                    | Needs Docker? |
-| ------------------------ | ----------------------------------------------- | ------------- |
-| `bun test:all`           | All Vitest suites (unit + nuxt + integration)   | No            |
-| `bun test:unit`          | Unit tests only (`test/unit/`)                  | No            |
-| `bun test:nuxt`          | Nuxt component tests (`test/nuxt/`)             | No            |
-| `bun test:api`           | Integration tests — auto starts all fixtures    | Yes           |
-| `bun test:api:raw`       | Integration tests — fixtures must already be up | Yes           |
-| `bun test:e2e`           | Playwright — auto starts all fixtures           | Yes           |
-| `bun test:e2e:raw`       | Playwright — fixtures must already be up        | Yes           |
-| `bun test:coverage`      | Full coverage report                            | No            |
-| `bun test:watch`         | Watch mode (development)                        | No            |
-| `bun test:fixtures:up`   | Start all Docker fixtures                       | Yes           |
-| `bun test:fixtures:down` | Stop and remove all Docker fixtures             | Yes           |
+| Script                   | What it does                                             | Needs Docker? |
+| ------------------------ | -------------------------------------------------------- | ------------- |
+| `bun test:all`           | All Vitest suites (unit + nuxt + integration)            | No            |
+| `bun test:unit`          | Unit tests only (`test/unit/`)                           | No            |
+| `bun test:nuxt`          | Nuxt component tests (`test/nuxt/`)                      | No            |
+| `bun test:api`           | Integration tests — auto starts all fixtures             | Yes           |
+| `bun test:api:raw`       | Integration tests — fixtures must already be up          | Yes           |
+| `bun test:e2e`           | Playwright — auto starts all fixtures                    | Yes           |
+| `bun test:e2e:raw`       | Playwright — fixtures must already be up                 | Yes           |
+| `bun test:e2e:mongodb`   | Playwright `mongodb` project with its fixture            | Yes           |
+| `bun test:e2e:duckdb`    | Playwright `duckdb` project (desktop runtime, port 3222) | No            |
+| `bun test:coverage`      | Full coverage report                                     | No            |
+| `bun test:watch`         | Watch mode (development)                                 | No            |
+| `bun test:fixtures:up`   | Start all Docker fixtures                                | Yes           |
+| `bun test:fixtures:down` | Stop and remove all Docker fixtures                      | Yes           |
 
 ---
 
@@ -78,15 +80,19 @@ bun vitest --run test/unit/core/helpers/myHelper.spec.ts
 
 ## 4. Playwright Projects & Fixture Profiles
 
-| Playwright project | Fixture profile to use             |
-| ------------------ | ---------------------------------- |
-| `common`           | `all`                              |
-| `postgres`         | `postgres`                         |
-| `mysql`            | `mysql`                            |
-| `mariadb`          | `mariadb`                          |
-| `redis`            | `redis`                            |
-| `sqlite`           | `sqlite`                           |
-| `oracle`           | manual (no Docker compose profile) |
+| Playwright project | Fixture profile to use                                                                              |
+| ------------------ | --------------------------------------------------------------------------------------------------- |
+| `common`           | `all`                                                                                               |
+| `postgres`         | `postgres`                                                                                          |
+| `mysql`            | `mysql`                                                                                             |
+| `mariadb`          | `mariadb`                                                                                           |
+| `oracle`           | `oracle`                                                                                            |
+| `mssql`            | `mssql`                                                                                             |
+| `cockroachdb`      | `cockroachdb`                                                                                       |
+| `redis`            | `redis`                                                                                             |
+| `mongodb`          | `mongodb` (or `bun test:e2e:mongodb`)                                                               |
+| `sqlite`           | `sqlite`                                                                                            |
+| `duckdb`           | `duckdb` — use `bun test:e2e:duckdb`, which starts Nuxt with `ORCAQ_DESKTOP_RUNTIME=1` on port 3222 |
 
 Run isolated by DB:
 
@@ -100,21 +106,26 @@ bash scripts/test-services/run-tests.sh --fixtures=sqlite  -- playwright test --
 
 ## 5. Fixture Profile Reference
 
-| Profile       | Containers started           |
-| ------------- | ---------------------------- |
-| `postgres`    | PostgreSQL 16 only           |
-| `mysql`       | MySQL 8.4 only               |
-| `mariadb`     | MariaDB 11.4 only            |
-| `sql`         | PostgreSQL + MySQL + MariaDB |
-| `cockroachdb` | CockroachDB v24.3 only       |
-| `mssql`       | SQL Server 2022 only         |
-| `oracle`      | Oracle Free 23 only          |
-| `redis`       | Redis 7.4 only               |
-| `mongodb`     | MongoDB 7 only               |
-| `sqlite`      | File prep only (no Docker)   |
-| `duckdb`      | File prep only (no Docker)   |
-| `all`         | All of the above             |
-| `none`        | Nothing                      |
+| Profile       | Containers started                                                                                              |
+| ------------- | --------------------------------------------------------------------------------------------------------------- |
+| `postgres`    | PostgreSQL 16 only                                                                                              |
+| `mysql`       | MySQL 8.4 only                                                                                                  |
+| `mariadb`     | MariaDB 11.4 only                                                                                               |
+| `sql`         | PostgreSQL + MySQL + MariaDB                                                                                    |
+| `cockroachdb` | CockroachDB v24.3 only                                                                                          |
+| `mssql`       | SQL Server 2022 only                                                                                            |
+| `oracle`      | Oracle Free 23 only                                                                                             |
+| `redis`       | Redis 7.4 only                                                                                                  |
+| `mongodb`     | MongoDB 7 only                                                                                                  |
+| `rabbitmq`    | RabbitMQ 4 (management) only — `start-fixtures.sh` only                                                         |
+| `kafka`       | Kafka 3.9 only — `start-fixtures.sh` only                                                                       |
+| `sqlite`      | File prep only (no Docker)                                                                                      |
+| `duckdb`      | File prep only (no Docker)                                                                                      |
+| `all`         | SQL engines (incl. CockroachDB, SQL Server, Oracle) + Redis + MongoDB + SQLite/DuckDB files; not RabbitMQ/Kafka |
+| `none`        | Nothing                                                                                                         |
+
+`run-tests.sh` does not accept `rabbitmq` or `kafka`; start those with
+`start-fixtures.sh` and run the `:raw` script.
 
 Manual fixture control:
 
@@ -133,7 +144,9 @@ All use `ORCAQ_` prefix. Defaults are set by `start-fixtures.sh` automatically.
 ORCAQ_POSTGRES_PORT=5432      ORCAQ_POSTGRES_DATABASE=pagila
 ORCAQ_MYSQL_PORT=3306         ORCAQ_MYSQL_DATABASE=sakila
 ORCAQ_MARIADB_PORT=3307       ORCAQ_MARIADB_DATABASE=sakila
-ORCAQ_REDIS_PORT=6379
+ORCAQ_COCKROACHDB_PORT=26257  ORCAQ_MSSQL_PORT=1433   ORCAQ_ORACLE_PORT=1521
+ORCAQ_REDIS_PORT=6379         ORCAQ_MONGODB_PORT=27017 ORCAQ_MONGODB_DATABASE=orcaq_fixture
+ORCAQ_RABBITMQ_MANAGEMENT_PORT=15672                   ORCAQ_KAFKA_PORT=9092
 ORCAQ_KEEP_FIXTURES=1         # keep containers alive after run
 ORCAQ_FIXTURE_PROFILE=all     # override profile via env
 ```

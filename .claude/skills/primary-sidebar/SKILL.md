@@ -1,46 +1,61 @@
 ---
 name: primary-sidebar
-description: Complete guide for adding, updating, and removing tabs in the Primary Sidebar of OrcaQ. Covers the full flow — ActivityBarItemType enum → useActivityBarStore → PrimarySideBar component → Management panel component. Load this skill for any task involving the left sidebar, activity bar tabs, or management panels (Explorer, Schemas, ERD, Roles, Export, Agent).
+description: Complete guide for adding, updating, and removing tabs in the Primary Sidebar of OrcaQ. Covers the full flow — ActivityBarItemType enum → connection capability profile (which tabs each family shows) → activity bar items → PrimarySideBar switcher → Management panel component. Load this skill for any task involving the left sidebar, activity bar tabs, or management panels (Explorer, Schemas, ERD, Users & Roles, Database Tools, Agent, and the Redis/MongoDB/RabbitMQ/Kafka variants).
 ---
 
 # Primary Sidebar Flow — OrcaQ
 
 ## Architecture Overview
 
-The Primary Sidebar is driven by a single active tab value in a Pinia store. The flow is:
+The Primary Sidebar shows one panel at a time, chosen from the active tab in a Pinia store and the selected connection's family:
 
 ```
-ActivityBarItemType (enum)           ← Tab identity
-useActivityBarStore.activityActive   ← Which tab is currently active (persisted)
-PrimarySideBar.vue                   ← Watches activityActive, renders the matching component
-Management***.vue                    ← The actual panel content (KeepAlive'd)
+ActivityBarItemType (enum)                     ← Tab identity
+CONNECTION_CAPABILITY_REGISTRY[family]         ← Which tabs a family shows + default tab
+  .visibleActivityItems / .defaultActivityItem
+getVisibleActivityItems()                      ← Extra per-type hiding (Agent, Users & Roles)
+useActivityBarStore.activityActive             ← Which tab is active (persisted)
+useActivityMenu / BASE_ACTIVITY_ITEMS          ← Activity Bar icons (filtered to visible tabs)
+PrimarySideBar.vue                             ← computed `current`: family + tab → panel
+Management***.vue                              ← The panel content (KeepAlive'd)
 ```
 
-The Activity Bar (the narrow icon strip on the far left) calls `setActivityActive(type)`. The Primary Sidebar reacts to the change and swaps the rendered panel — all panels are wrapped in `<KeepAlive>` so their state is preserved when the user switches tabs.
+The Activity Bar (narrow icon strip on the far left) calls `onChangeActivity(type)` from `useActivityMenu`, which ignores hidden tabs and calls `setActivityActive(type)`. When the selected connection changes, `PrimarySideBar.vue` calls `ensureActivityVisible()` so the active tab falls back to the family's default if it is no longer visible.
 
 ---
 
 ## File Locations
 
-| Purpose                  | File                                                                          |
-| ------------------------ | ----------------------------------------------------------------------------- |
-| Tab type enum + store    | `core/stores/useActivityBarStore.ts`                                          |
-| Sidebar shell (switcher) | `components/modules/app-shell/primary-side-bar/components/PrimarySideBar.vue` |
-| Sidebar public API       | `components/modules/app-shell/primary-side-bar/index.ts`                      |
-| All management panels    | `components/modules/management/`                                              |
-| Management public API    | `components/modules/management/index.ts`                                      |
-| Shared header component  | `components/modules/management/shared/components/ManagementSidebarHeader.vue` |
+| Purpose                                   | File                                                                           |
+| ----------------------------------------- | ------------------------------------------------------------------------------ |
+| Tab type enum + store                     | `core/stores/useActivityBarStore.ts`                                           |
+| Family capability profiles (visible tabs) | `core/constants/connection-capabilities.ts`                                    |
+| Activity Bar items, icons, hidden types   | `components/modules/app-shell/activity-bar/constants/activityBarVisibility.ts` |
+| Visible-tab filter                        | `components/modules/app-shell/activity-bar/utils/getVisibleActivityItems.ts`   |
+| Activity Bar menu hook                    | `components/modules/app-shell/activity-bar/hooks/useActivityMenu.ts`           |
+| Sidebar shell (switcher)                  | `components/modules/app-shell/primary-side-bar/components/PrimarySideBar.vue`  |
+| All management panels                     | `components/modules/management/`                                               |
+| Shared header component                   | `components/modules/management/shared/components/ManagementSidebarHeader.vue`  |
 
 ### Management panel locations
 
-| Tab           | Panel component file                                                             |
-| ------------- | -------------------------------------------------------------------------------- |
-| Explorer      | `components/modules/management/explorer/ManagementExplorer.vue`                  |
-| Schemas       | `components/modules/management/schemas/ManagementSchemas.vue`                    |
-| ERD Diagram   | `components/modules/management/erd-diagram/ManagementErdDiagram.vue`             |
-| Users & Roles | `components/modules/management/role-permission/ManagementUsersAndPermission.vue` |
-| Export        | `components/modules/management/export/ManagementExport.vue`                      |
-| Agent         | `components/modules/management/agent/ManagementAgent.vue`                        |
+| Family         | Tab            | Panel component file                                                             |
+| -------------- | -------------- | -------------------------------------------------------------------------------- |
+| SQL, Redis     | Explorer       | `components/modules/management/explorer/ManagementExplorer.vue`                  |
+| SQL            | Schemas        | `components/modules/management/schemas/ManagementSchemas.vue`                    |
+| SQL            | ERD Diagram    | `components/modules/management/erd-diagram/ManagementErdDiagram.vue`             |
+| SQL            | Users & Roles  | `components/modules/management/role-permission/ManagementUsersAndPermission.vue` |
+| SQL            | Database Tools | `components/modules/management/database-tools/ManagementDatabaseTools.vue`       |
+| SQL, Redis     | Agent          | `components/modules/management/agent/ManagementAgent.vue`                        |
+| Redis          | Schemas        | `components/modules/management/redis-browser/ManagementRedisBrowser.vue`         |
+| Redis          | Database Tools | `components/modules/management/redis-tools/ManagementRedisTools.vue`             |
+| MongoDB        | Schemas        | `components/modules/management/schemas/mongodb/ManagementMongoSchemas.vue`       |
+| RabbitMQ       | Schemas        | `components/modules/management/rabbitmq-browser/ManagementRabbitBrowser.vue`     |
+| Kafka          | Schemas        | `components/modules/management/kafka-browser/ManagementKafkaBrowser.vue`         |
+| RabbitMQ/Kafka | Database Tools | `components/modules/management/broker-tools/ManagementBrokerTools.vue`           |
+| RabbitMQ       | Users & Roles  | `components/modules/management/rabbitmq-users/ManagementRabbitUsers.vue`         |
+
+Per-type hiding on top of the family profile lives in `activityBarVisibility.ts`: `AGENT_HIDDEN_CONNECTION_TYPES` and `USERS_ROLES_HIDDEN_CONNECTION_TYPES` (e.g. MySQL, SQLite, DuckDB, SQL Server, CockroachDB, Oracle hide Users & Roles).
 
 ---
 
@@ -48,25 +63,40 @@ The Activity Bar (the narrow icon strip on the far left) calls `setActivityActiv
 
 ```vue
 <script setup lang="ts">
-const activityStore = useActivityBarStore();
-const current = shallowRef();
+const currentFamily = computed(() =>
+  resolveConnectionFamily(
+    managementConnectionStore.selectedConnection ?? DEFAULT_CONNECTION_CONTEXT
+  )
+);
 
 watch(
-  () => activityStore.activityActive,
-  () => {
-    if (activityStore.activityActive === ActivityBarItemType.Explorer)
-      current.value = ManagementExplorer;
-    if (activityStore.activityActive === ActivityBarItemType.Schemas)
-      current.value = ManagementSchemas;
-    // ... one branch per tab
+  capabilityProfile,
+  profile => {
+    activityStore.ensureActivityVisible(
+      visibleActivityItems.value,
+      ACTIVITY_ITEM_MAP[profile.defaultActivityItem]
+    );
   },
   { immediate: true }
 );
+
+const current = computed(() => {
+  if (currentFamily.value === EConnectionFamily.MONGODB) {
+    if (activityStore.activityActive === ActivityBarItemType.Schemas)
+      return ManagementMongoSchemas;
+    return null;
+  }
+  // ... RabbitMQ/Kafka branch, Redis branch ...
+  if (activityStore.activityActive === ActivityBarItemType.Explorer)
+    return ManagementExplorer;
+  // ... one branch per SQL tab
+  return null;
+});
 </script>
 
 <template>
   <div class="w-full h-full flex flex-col" v-if="appConfigStore.layoutSize[0]">
-    <KeepAlive>
+    <KeepAlive v-if="current">
       <component :is="current" />
     </KeepAlive>
   </div>
@@ -75,8 +105,7 @@ watch(
 
 Key points:
 
-- Uses `shallowRef` (not `ref`) for the component — avoids deep reactivity on component objects.
-- `immediate: true` so the correct panel is rendered on first mount.
+- `current` is a `computed` over family + active tab; non-SQL families return early.
 - `<KeepAlive>` preserves scroll position and internal state when switching tabs.
 - The panel is only mounted when the sidebar is open (`layoutSize[0] > 0`).
 
@@ -94,13 +123,19 @@ export enum ActivityBarItemType {
   Schemas = 'Schemas',
   ErdDiagram = 'ERDiagram',
   UsersRoles = 'UsersRoles',
-  DatabaseExport = 'DatabaseExport',
+  DatabaseTools = 'DatabaseTools',
   Agent = 'Agent',
   MyNewTab = 'MyNewTab', // ← new
 }
 ```
 
-### Step 2 — Create the management panel module
+### Step 2 — Make it visible for the right families
+
+1. In `core/constants/connection-capabilities.ts`, add `'MyNewTab'` to the `ConnectionActivityItem` union and to `visibleActivityItems` of each family profile in `CONNECTION_CAPABILITY_REGISTRY` that should show it. Families that hide it can give a reason in `hiddenFeatureReasons`.
+2. In `activityBarVisibility.ts`, add the mapping to `ACTIVITY_ITEM_MAP` and an entry (id, title, `hugeicons:*` icon — verify it exists) to `BASE_ACTIVITY_ITEMS`. `useActivityMenu` renders the Activity Bar button from that list; no separate button code is needed.
+3. If only some connection types of a family should hide it, add a hidden-types set next to `AGENT_HIDDEN_CONNECTION_TYPES` and filter it in `getVisibleActivityItems.ts`.
+
+### Step 3 — Create the management panel module
 
 Create the folder `components/modules/management/my-new-tab/` with this structure:
 
@@ -134,40 +169,18 @@ import { ManagementSidebarHeader } from '../shared';
 export { default as ManagementMyNewTab } from './ManagementMyNewTab.vue';
 ```
 
-### Step 3 — Export from the management module
-
-In `components/modules/management/index.ts`:
-
-```ts
-export * from './my-new-tab'; // ← add this line
-```
+Optionally re-export it from `components/modules/management/index.ts` (the SQL panels are; the Redis/broker panels are not, since `#components` resolves them anyway).
 
 ### Step 4 — Register in PrimarySideBar
 
-In `components/modules/app-shell/primary-side-bar/components/PrimarySideBar.vue`:
+In `components/modules/app-shell/primary-side-bar/components/PrimarySideBar.vue`, import from `#components` and add a branch to `current` inside the family branch where the tab belongs (SQL branches are at the bottom, after the early-return family branches):
 
 ```ts
-// 1. Import the component
 import { ManagementMyNewTab } from '#components';
 
-// 2. Add a branch in the watch
-watch(
-  () => activityStore.activityActive,
-  () => {
-    // ... existing branches ...
-    if (activityStore.activityActive === ActivityBarItemType.MyNewTab)
-      current.value = ManagementMyNewTab;
-  },
-  { immediate: true }
-);
-```
-
-### Step 5 — Add Activity Bar button
-
-The Activity Bar icon strip that calls `setActivityActive` is separate from the management module. Find the component that renders the icon list and add a button:
-
-```ts
-activityStore.setActivityActive(ActivityBarItemType.MyNewTab);
+if (activityStore.activityActive === ActivityBarItemType.MyNewTab) {
+  return ManagementMyNewTab;
+}
 ```
 
 ---
@@ -194,7 +207,7 @@ All panels use the shared header. Props:
 | `showSearch`        | `boolean` | `false`       | Show search input                      |
 | `searchPlaceholder` | `string`  | `'Search...'` | Input placeholder                      |
 
-It also accepts a `v-model:search` for two-way search binding and an `#actions` slot for icon buttons in the title bar.
+It also accepts a `v-model:search` for two-way search binding, an `#actions` slot for icon buttons in the title bar, and a `#details` slot below the selectors.
 
 **Standard usage:**
 
@@ -278,9 +291,9 @@ const { treeData, searchInput, onClickNode } = useMyPanelTree({
 
 ## Key Constraints
 
-- **Never add business logic directly in `PrimarySideBar.vue`** — it is a pure switcher. All logic lives in the management panel or its hooks.
-- **Always use `shallowRef` for the `current` component** — `ref()` causes deep reactivity overhead on component objects.
+- **Never add business logic directly in `PrimarySideBar.vue`** — it only maps family + tab to a panel. All logic lives in the management panel or its hooks.
+- **Visibility comes from the capability profile**, not from ad-hoc checks in the Activity Bar: update `visibleActivityItems` (and the hidden-type sets) so `useActivityMenu`, `onChangeActivity` and `ensureActivityVisible` all agree.
 - **Always wrap the `<component :is="current">` in `<KeepAlive>`** — this preserves scroll position and tree expand state when switching tabs.
 - **Persisted tree state** (expanded keys, scroll positions) goes into `useActivityBarStore`, not into local component state.
 - **Imports in `PrimarySideBar.vue` use `#components`** (Nuxt auto-import barrel) — not direct relative paths.
-- **Each management sub-module** must have its own `index.ts` exporting its root component, and be re-exported from `components/modules/management/index.ts`.
+- **Each management sub-module** has its own `index.ts` exporting its root component.
