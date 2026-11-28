@@ -11,6 +11,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { useCopyToClipboard } from '~/core/composables/useCopyToClipboard';
 import type { EnvironmentTag } from '../types/environmentTag.types';
 import EnvTagBadge from './EnvTagBadge.vue';
 
@@ -25,6 +26,9 @@ const emit = defineEmits<{
   confirm: [];
   cancel: [];
 }>();
+
+const { copied, handleCopy, getCopyIcon, getCopyIconClass, getCopyTooltip } =
+  useCopyToClipboard();
 
 const inputValue = ref('');
 
@@ -76,6 +80,19 @@ const handleCancel = () => {
             <code class="rounded bg-muted px-1 py-0.5 text-xs font-mono">
               {{ CONFIRM_PHRASE }}
             </code>
+            <button
+              type="button"
+              class="inline-flex size-5 items-center justify-center rounded text-muted-foreground hover:bg-muted hover:text-foreground"
+              :title="getCopyTooltip(copied)"
+              :aria-label="getCopyTooltip(copied, 'Copy confirmation phrase')"
+              @click.prevent="handleCopy(CONFIRM_PHRASE)"
+            >
+              <Icon
+                :name="getCopyIcon(copied)"
+                class="size-3.5"
+                :class="getCopyIconClass(copied)"
+              />
+            </button>
             to continue:
           </Label>
           <Input
