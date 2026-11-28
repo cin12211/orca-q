@@ -9,6 +9,7 @@ import {
   StrictModeConfirmDialog,
   useStrictModeGuardState,
 } from './components/modules/environment-tag';
+import { GithubStarPromptContainer } from './components/modules/github-star';
 import Settings from './components/modules/settings';
 import { Toaster } from './components/ui/sonner';
 import { useAppearance } from './core/composables/useAppearance';
@@ -107,6 +108,7 @@ onBeforeUnmount(() => {
     <Settings />
     <ChangelogPopup />
     <ElectronUpdateStartupDialog />
+    <GithubStarPromptContainer />
     <StrictModeConfirmDialog
       :open="strictModeDialogOpen"
       :strict-tags="activeStrictModeTags"

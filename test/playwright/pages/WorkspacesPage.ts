@@ -7,6 +7,7 @@ import { getLatestVersion } from '../../../core/data/changelogs/changelog';
 // keeps tests stable across version bumps.
 const CHANGELOG_KEY = 'orcaq-last-seen-version';
 const CHANGELOG_SEEN_VERSION = getLatestVersion();
+const GITHUB_STAR_STATUS_KEY = 'orcaq-github-star-status';
 const PERSISTED_IDB_NAMES = [
   'appConfigIDB',
   'agentStateIDB',
@@ -48,7 +49,7 @@ export class WorkspacesPage {
 
   private async resetClientStorage() {
     await this.page.evaluate(
-      async ({ changelogKey, changelogVersion, dbNames }) => {
+      async ({ changelogKey, changelogVersion, githubStarKey, dbNames }) => {
         localStorage.clear();
         sessionStorage.clear();
 
@@ -65,10 +66,13 @@ export class WorkspacesPage {
         );
 
         localStorage.setItem(changelogKey, changelogVersion);
+        // Keep the GitHub star prompt from covering the UI in long tests.
+        localStorage.setItem(githubStarKey, 'declined');
       },
       {
         changelogKey: CHANGELOG_KEY,
         changelogVersion: CHANGELOG_SEEN_VERSION,
+        githubStarKey: GITHUB_STAR_STATUS_KEY,
         dbNames: PERSISTED_IDB_NAMES,
       }
     );

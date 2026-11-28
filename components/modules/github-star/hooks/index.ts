@@ -1,0 +1,1 @@
+export { useGithubStarPrompt } from './useGithubStarPrompt';

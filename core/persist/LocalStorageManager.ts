@@ -10,6 +10,12 @@ export enum LocalStorageKey {
   AGENT_HISTORY_TREE = 'agent-history-tree',
   /** Whether the download banner has been dismissed. Value: 'true'|'false'. */
   DOWNLOAD_BANNER_DISMISSED = 'orcaq_download_banner_dismissed',
+  /** Number of times the app has been opened. Value: integer string. */
+  APP_LAUNCH_COUNT = 'orcaq-app-launch-count',
+  /** Answer to the GitHub star prompt. Value: 'starred'|'declined'|'later'. */
+  GITHUB_STAR_STATUS = 'orcaq-github-star-status',
+  /** App version when the user picked "Later" on the star prompt. Value: version string. */
+  GITHUB_STAR_LATER_VERSION = 'orcaq-github-star-later-version',
 }
 
 /** Manages all localStorage interactions with typed keys and dynamic key builders. */
