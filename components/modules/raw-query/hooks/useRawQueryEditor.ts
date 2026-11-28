@@ -85,6 +85,7 @@ export function useRawQueryEditor({
     setSerializeMode,
     reloadSqlCompartment: sqlEditor.reloadSqlCompartment,
     cancelStreamingQuery: queryExecution.cancelStreamingQuery,
+    openStatementInTab: queryExecution.openStatementInTab,
 
     // Results tab management
     executedResults: resultTabs.executedResults,
