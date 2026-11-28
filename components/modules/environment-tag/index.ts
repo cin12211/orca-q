@@ -17,7 +17,9 @@ export { useEnvironmentTagStore } from '~/core/stores';
 export {
   useStrictModeGuard,
   useStrictModeGuardState,
-} from './hooks/useStrictModeGuard';
+  useEffectiveSafeMode,
+  useIsStrictConnection,
+} from './hooks';
 
 // Components
 export { default as EnvTagColorDot } from './components/EnvTagColorDot.vue';

@@ -35,6 +35,7 @@ vi.mock('~/core/stores/appConfigStore', () => ({
   useAppConfigStore: () => ({ quickQuerySafeModeEnabled: false }),
 }));
 vi.mock('~/core/stores', () => ({
+  useEnvironmentTagStore: () => ({ getTagsByIds: () => [] }),
   useManagementConnectionStore: () => ({
     selectedConnection: {
       id: 'conn-1',
