@@ -7,7 +7,6 @@ playwright-report/**
 test-results/**
 .scratch/**
 .superpowers/**
-graphify-out/**
 out/**
 build/**
 SAC/**
