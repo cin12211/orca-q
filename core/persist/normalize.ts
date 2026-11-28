@@ -54,6 +54,14 @@ export enum SpaceDisplay {
   Spacious = 'spacious',
 }
 
+export enum ErdLayoutAlgorithm {
+  Default = 'default',
+  LeftRight = 'left-right',
+  Pipeline = 'pipeline',
+  Snowflake = 'snowflake',
+  Compact = 'compact',
+}
+
 export enum NullOrderPreference {
   Unset = 'unset',
   NullsFirst = 'nulls-first',
@@ -177,6 +185,7 @@ export interface AppConfigPersistedState {
   quickQuerySafeModeEnabled: boolean;
   autoDownloadUpdates: boolean;
   spaceDisplay: SpaceDisplay;
+  erdLayoutAlgorithm: ErdLayoutAlgorithm;
   tableAppearanceConfigs: TableAppearanceConfigs;
   customLayouts: CustomLayoutDefinition[];
   activeCustomLayoutId: string | null;
@@ -447,6 +456,7 @@ export const createDefaultAppConfigState = (): AppConfigPersistedState => ({
   quickQuerySafeModeEnabled: false,
   autoDownloadUpdates: true,
   spaceDisplay: SpaceDisplay.Default,
+  erdLayoutAlgorithm: ErdLayoutAlgorithm.Default,
   tableAppearanceConfigs: { ...DEFAULT_TABLE_APPEARANCE_CONFIGS },
   customLayouts: [],
   activeCustomLayoutId: null,
@@ -477,6 +487,12 @@ export const normalizeAppConfigState = (
   )
     ? (source.spaceDisplay as SpaceDisplay)
     : fallback.spaceDisplay;
+
+  const erdLayoutAlgorithm = Object.values(ErdLayoutAlgorithm).includes(
+    source.erdLayoutAlgorithm as ErdLayoutAlgorithm
+  )
+    ? (source.erdLayoutAlgorithm as ErdLayoutAlgorithm)
+    : fallback.erdLayoutAlgorithm;
 
   const customLayoutSizes = isRecord(source.customLayoutSizes)
     ? Object.fromEntries(
@@ -545,6 +561,7 @@ export const normalizeAppConfigState = (
         ? source.autoDownloadUpdates
         : fallback.autoDownloadUpdates,
     spaceDisplay,
+    erdLayoutAlgorithm,
     tableAppearanceConfigs: normalizeObject(
       source.tableAppearanceConfigs,
       fallback.tableAppearanceConfigs

@@ -52,6 +52,13 @@ const devWatchIgnored = [
   '**/storybook-static/**',
   '**/npx-package/.output/**',
   '**/orcaq-mcp/dist/**',
+  '**/.claude/**',
+  '**/.claude',
+  '**/.scratch/**',
+  '**/.superpowers/**',
+  '**/docs/**',
+  '**/build/**',
+  '**/SAC/**',
 ];
 
 const componentDirs = [
@@ -118,7 +125,13 @@ export default defineNuxtConfig({
     '@formkit/auto-animate',
     // '@nuxtjs/storybook',
     // 'nuxt-mcp-dev',
+    (_options, nuxt) => {
+      nuxt.options.ignore.push(...devWatchIgnored);
+    },
   ],
+  nitro: {
+    watchOptions: devWatchOptions,
+  },
   css: ['~/assets/css/tailwind.css', 'vue-json-pretty/lib/styles.css'],
   colorMode: {
     preference: 'light',
@@ -169,6 +182,6 @@ export default defineNuxtConfig({
   watchers: {
     chokidar: devWatchOptions,
   },
-  ignore: ['**/docs/**', '**/.sqlite3/**'],
+  ignore: ['**/docs/**', '**/.sqlite3/**', '**/.claude/**'],
   spaLoadingTemplate: true,
 });

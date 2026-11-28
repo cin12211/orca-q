@@ -15,7 +15,7 @@ import type {
   BackGroundGridStatus,
   ErdDiagramProps,
   NodePosition,
-} from '../type';
+} from '../types';
 import { activeEdgeAnimated, buildNodeHandId, focusNodeById } from '../utils';
 
 export interface UseErdFlowOptions {

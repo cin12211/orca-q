@@ -19,7 +19,7 @@ import {
   isStructuredColumnType,
 } from '~/core/helpers/sql-column-type';
 import type { ReservedTableSchemas } from '~/core/types/database-tables.types';
-import type { MappedRawColumn } from '../interfaces';
+import type { MappedRawColumn } from '../types';
 import type { RawQueryEditedCell } from './buildRawQueryUpdates';
 import {
   groupColumnsByTable,

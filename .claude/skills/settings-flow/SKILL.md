@@ -1,40 +1,51 @@
 ---
 name: settings-flow
-description: Complete guide for adding, updating, and removing settings in OrcaQ. Covers the full data flow — type → constant → store → component — for all settings panels (Appearance, Editor, Quick Query, Agent). Load this skill for any task involving user preferences, persistent configs, or the settings modal.
+description: Complete guide for adding, updating, and removing settings in OrcaQ. Covers the full data flow — type → constant → store → component — for all settings panels (Appearance, Editor, Quick Query, Agent, Desktop, MCP Server, Environment Tags, Backup & Restore). Load this skill for any task involving user preferences, persistent configs, or the settings modal.
 ---
 
 # Settings Flow — OrcaQ
 
 ## Architecture Overview
 
-Settings in OrcaQ follow a strict 4-layer flow:
+Settings in OrcaQ follow a strict 5-layer flow:
 
 ```
 types/settings.types.ts          ← Define the shape / enum
 constants/settings.constants.ts  ← Default values & UI option arrays
-core/stores/appConfigStore.ts    ← Reactive state + reset actions (persisted)
+core/persist/normalize.ts        ← Persisted shape, defaults and normalization
+core/stores/appConfigStore.ts    ← Reactive state + reset actions
 components/modules/settings/     ← UI panels that read/write the store
 ```
 
-All state is persisted automatically via `{ persist: true }` on the Pinia store — no manual localStorage calls needed.
+Persistence is not the Pinia `persist` plugin. `appConfigStore` builds a
+snapshot with `getPersistedState()`, watches it deeply and saves it (debounced)
+through `storageApis.appConfigStorage` (IndexedDB on web, a JSON blob in SQLite
+on desktop). On load, `loadPersistData()` reads it back and
+`applyPersistedState()` runs it through `normalizeAppConfigState()`, which
+fills missing fields from `createDefaultAppConfigState()`.
 
 ---
 
 ## File Locations
 
-| Purpose                   | File                                                               |
-| ------------------------- | ------------------------------------------------------------------ |
-| Types & enums             | `components/modules/settings/types/settings.types.ts`              |
-| Constants & defaults      | `components/modules/settings/constants/settings.constants.ts`      |
-| Pinia store               | `core/stores/appConfigStore.ts`                                    |
-| Settings modal controller | `core/contexts/useSettingsModal.ts`                                |
-| Container (modal shell)   | `components/modules/settings/containers/SettingsContainer.vue`     |
-| Appearance panel          | `components/modules/settings/components/AppearanceConfig.vue`      |
-| Editor panel              | `components/modules/settings/components/EditorConfig.vue`          |
-| Quick Query panel         | `components/modules/settings/components/QuickQueryConfig.vue`      |
-| Agent panel               | `components/modules/settings/components/AgentConfig.vue`           |
-| Table Appearance panel    | `components/modules/settings/components/TableAppearanceConfig.vue` |
-| Public module API         | `components/modules/settings/index.ts`                             |
+| Purpose                    | File                                                                                                         |
+| -------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| Types & enums              | `components/modules/settings/types/settings.types.ts`                                                        |
+| Constants & defaults       | `components/modules/settings/constants/settings.constants.ts`                                                |
+| Pinia store                | `core/stores/appConfigStore.ts`                                                                              |
+| Persisted shape/normalize  | `core/persist/normalize.ts` (`AppConfigPersistedState`)                                                      |
+| Settings modal controller  | `core/contexts/useSettingsModal.ts`                                                                          |
+| Container (modal shell)    | `components/modules/settings/containers/SettingsContainer.vue`                                               |
+| Appearance panel           | `components/modules/settings/components/AppearanceConfig.vue`                                                |
+| Editor panel               | `components/modules/settings/components/EditorConfig.vue`                                                    |
+| Quick Query panel          | `components/modules/settings/components/QuickQueryConfig.vue`                                                |
+| Agent panel                | `components/modules/settings/components/AgentConfig.vue`                                                     |
+| Table Appearance section   | `components/modules/settings/components/TableAppearanceConfig.vue` (rendered inside Appearance, no nav item) |
+| Desktop panel (desktop)    | `components/modules/settings/components/DesktopConfig.vue`                                                   |
+| MCP Server panel (desktop) | `components/modules/settings/components/McpServerConfig.vue` (+ `components/mcp-server/`)                    |
+| Environment Tags panel     | `TagManagementContainer` from `components/modules/environment-tag`                                           |
+| Backup & Restore panel     | `components/modules/settings/components/BackupRestoreConfig.vue` (+ `components/backup-restore/`)            |
+| Public module API          | `components/modules/settings/index.ts`                                                                       |
 
 ---
 
@@ -104,6 +115,19 @@ const resetCodeEditorConfigs = () => {
 // Make sure it is included in the return object (it already is if using the reactive object)
 ```
 
+### Step 3b — Make it persist
+
+In `core/persist/normalize.ts`:
+
+- **Field inside an existing object** (e.g. `codeEditorConfigs`): add its default
+  to that object in `createDefaultAppConfigState()`. `normalizeObject` then fills
+  it for users whose saved state predates the field.
+- **New top-level value** (a new `ref` in the store): add it to
+  `AppConfigPersistedState`, `createDefaultAppConfigState()` and
+  `normalizeAppConfigState()`, then to `getPersistedState()` and
+  `applyPersistedState()` in `appConfigStore.ts`. A value missing from
+  `getPersistedState()` is never saved.
+
 ### Step 4 — Add UI in the correct panel component
 
 In the relevant `*Config.vue` under `components/modules/settings/components/`:
@@ -157,11 +181,15 @@ const appConfigStore = useAppConfigStore();
 ```ts
 // settings.types.ts
 export enum SettingsComponentKey {
+  DesktopConfig = 'DesktopConfig',
   EditorConfig = 'EditorConfig',
   QuickQueryConfig = 'QuickQueryConfig',
   AgentConfig = 'AgentConfig',
   AppearanceConfig = 'AppearanceConfig',
   TableAppearanceConfig = 'TableAppearanceConfig',
+  BackupRestoreConfig = 'BackupRestoreConfig',
+  EnvironmentTagsConfig = 'EnvironmentTagsConfig',
+  McpServerConfig = 'McpServerConfig',
   MyNewConfig = 'MyNewConfig', // ← new
 }
 ```
@@ -176,6 +204,7 @@ export const SETTINGS_NAV_ITEMS: SettingsNavItem[] = [
     name: 'My New Section',
     icon: 'hugeicons:some-icon',
     componentKey: SettingsComponentKey.MyNewConfig,
+    // desktopOnly: true,  ← hide it in the web build (Desktop, MCP Server do this)
   },
 ];
 ```
@@ -213,7 +242,7 @@ export { default as MyNewConfig } from './MyNewConfig.vue';
 3. **Update the reset action** in `appConfigStore.ts` to include the new default.
 4. **Update the UI** in the relevant `*Config.vue`.
 
-> The store uses `{ persist: true }` (Pinia plugin). Changing a field name requires a migration or the old persisted value will be ignored and the new default will apply automatically on next load.
+> Renaming a persisted field drops the old saved value: `normalizeAppConfigState()` only keeps known fields, so users get the new default unless you map the old name in `normalizeAppConfigState()`.
 
 ---
 
@@ -298,11 +327,12 @@ All panels use these exact CSS patterns for visual consistency:
 
 ## Key Constraints
 
-- **Never call localStorage directly** — Pinia `persist: true` handles storage.
+- **Never call localStorage directly** — `appConfigStore` persists through `storageApis.appConfigStorage`; add new values to the persisted state instead (Step 3b).
 - **Never import the store in `components/`** — only `containers/` and `hooks/` may import the store; settings panels are exceptions because they ARE the settings UI (they act as containers).
 - **Defaults must live in `constants/`** — not inlined in the store or component.
 - **Reset actions must use `Object.assign`** on the reactive object — not reassigning the ref.
 - **Disabled nav items** use `disable: true` in `SETTINGS_NAV_ITEMS` — no `componentKey` needed.
+- **Desktop-only nav items** use `desktopOnly: true`; `SettingsContainer` filters them out unless `isDesktopApp()`.
 - **Nav tab names** in `useSettingsModal().openSettings(tab)` are matched by string equality to `SettingsNavItem.name`.
 
 ---

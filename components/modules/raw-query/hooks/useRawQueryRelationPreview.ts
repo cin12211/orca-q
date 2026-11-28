@@ -1,6 +1,6 @@
 import { ref } from 'vue';
 import { usePreviewRelations } from '~/core/composables/usePreviewRelations';
-import type { MappedRawColumn } from '../interfaces';
+import type { MappedRawColumn } from '../types';
 
 /**
  * Wraps the generic preview-relation breadcrumb store with raw-query specific

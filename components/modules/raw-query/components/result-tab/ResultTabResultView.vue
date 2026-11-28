@@ -14,7 +14,7 @@ import {
   useRawQueryMutation,
   useRawQueryRelationPreview,
 } from '../../hooks';
-import type { ExecutedResultItem, MappedRawColumn } from '../../interfaces';
+import type { ExecutedResultItem, MappedRawColumn } from '../../types';
 import {
   buildRawQueryColumnDefs,
   type RawQueryDirtyTracker,
@@ -32,6 +32,8 @@ const props = defineProps<{
   formattedData: Record<string, any>[];
   executeLoading: boolean;
   isStreaming: boolean;
+  /** Turns off cell editing (multi-statement results are view only). */
+  readOnly?: boolean;
 }>();
 
 const rawQueryTableRef = ref<InstanceType<typeof BaseDataGrid>>();
@@ -99,7 +101,7 @@ const reservedTables = computed(() => {
 const tableGroups = computed(() => groupColumnsByTable(props.activeTabColumns));
 
 const isEditingEnabled = computed(() => {
-  if (props.isStreaming) return false;
+  if (props.readOnly || props.isStreaming) return false;
   for (const [, group] of tableGroups.value) {
     if (group.primaryKeyFields.length > 0) return true;
   }

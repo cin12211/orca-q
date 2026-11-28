@@ -76,6 +76,8 @@ export function useRawQueryEditor({
     extensions: sqlEditor.extensions,
     sqlCompartment: sqlEditor.sqlCompartment,
     cursorInfo: sqlEditor.cursorInfo,
+    selectedStatementCount: sqlEditor.selectedStatementCount,
+    hasMultipleStatementsSelected: sqlEditor.hasMultipleStatementsSelected,
     onHandleFormatCode: sqlEditor.onHandleFormatCode,
     onHandleFormatCurrentStatement: sqlEditor.onHandleFormatCurrentStatement,
     onExplainAnalyzeCurrent: queryExecution.onExplainAnalyzeCurrent,
@@ -85,6 +87,7 @@ export function useRawQueryEditor({
     setSerializeMode,
     reloadSqlCompartment: sqlEditor.reloadSqlCompartment,
     cancelStreamingQuery: queryExecution.cancelStreamingQuery,
+    openStatementInTab: queryExecution.openStatementInTab,
 
     // Results tab management
     executedResults: resultTabs.executedResults,

@@ -1,4 +1,4 @@
-import type { ExecutedResultItem } from '../interfaces';
+import type { ExecutedResultItem } from '../types';
 
 /**
  * Manages executed result tabs — pure state management hook.

@@ -11,7 +11,7 @@ import {
   ROW_HEIGHT,
   ROW_WIDTH,
 } from './constants';
-import type { ErdTableNodeData, LabelTableNode } from './type';
+import type { ErdTableNodeData, LabelTableNode } from './types';
 import { buildTableNodeId, focusNodeById, getHandPosition } from './utils';
 
 export interface ErdTableNodeProps extends NodeProps<ErdTableNodeData> {
@@ -291,9 +291,9 @@ const onFocusNode = (
 
 <style scoped>
 .table-node {
-  will-change: transform;
-  transform: translateZ(0);
+  /* No per-node compositing layer (will-change/translateZ): with hundreds of
+     tables those layers cost more GPU memory and re-rasterising on zoom than
+     they save. */
   contain: content;
-  backface-visibility: hidden;
 }
 </style>

@@ -40,6 +40,8 @@ export function useRawQueryEditorContextMenu(
   // Validation state — updated each time context menu opens
   const hasStatement = ref(false);
   const hasContent = ref(false);
+  // EXPLAIN works on a single statement only
+  const hasMultipleStatements = ref(false);
   /**
    * Copy the current SQL statement(s) under the cursor to clipboard.
    */
@@ -123,7 +125,7 @@ export function useRawQueryEditorContextMenu(
               icon: 'hugeicons:analytics-01',
               shortcut: '⌘E',
               select: actions.onExplainAnalyzeCurrent,
-              disabled: noStatement,
+              disabled: noStatement || hasMultipleStatements.value,
             } satisfies ContextMenuItem,
           ]
         : []),
@@ -181,11 +183,14 @@ export function useRawQueryEditorContextMenu(
     if (!view) {
       hasStatement.value = false;
       hasContent.value = false;
+      hasMultipleStatements.value = false;
       return;
     }
 
+    const { currentStatements } = getCurrentStatement(view);
     hasContent.value = view.state.doc.length > 0;
-    hasStatement.value = !!resolveCurrentStatements(view);
+    hasStatement.value = currentStatements.length > 0;
+    hasMultipleStatements.value = currentStatements.length > 1;
   };
 
   return {

@@ -1,0 +1,1 @@
+export { GithubStarPromptContainer } from './containers';

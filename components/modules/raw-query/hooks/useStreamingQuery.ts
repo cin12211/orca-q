@@ -7,7 +7,7 @@ import type {
   ISSHConfig,
   ISSLConfig,
 } from '~/core/types/entities/connection.entity';
-import type { ExecutedResultItem } from '../interfaces';
+import type { ExecutedResultItem } from '../types';
 
 /**
  * NDJSON message types sent by the streaming endpoint.
@@ -46,6 +46,8 @@ export interface StreamingQueryCallbacks {
   onRows?: (rows: RowData[], totalSoFar: number) => void;
   onDone?: (rowCount: number, queryTime: number) => void;
   onError?: (message: string, errorDetail?: DatabaseDriverError) => void;
+  /** Called once the request is over, whatever the outcome (not on abort). */
+  onEnd?: () => void;
 }
 
 /**
@@ -88,6 +90,7 @@ export function executeStreamingQuery({
   onRows,
   onDone,
   onError,
+  onEnd,
 }: {
   query: string;
   dbConnectionString?: string;
@@ -214,6 +217,10 @@ export function executeStreamingQuery({
         return;
       }
       onError?.(error.message || 'Stream connection failed');
+    }
+
+    if (!controller.signal.aborted) {
+      onEnd?.();
     }
   };
 

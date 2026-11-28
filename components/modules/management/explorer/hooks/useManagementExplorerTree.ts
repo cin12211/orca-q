@@ -133,8 +133,9 @@ export const useManagementExplorerTree = ({
 
     const item = isFolder ? defaultFolder : defaultFile;
 
+    // No sort here: an untitled item would jump to the top of its folder
+    // while the user types. It is sorted into place once named (onRenameFile).
     treeNodeRef.value.insertNode(parentNode?.id || null, item);
-    treeNodeRef.value.sortByTitle();
 
     await nextTick();
     focusNode(item.id);
@@ -212,6 +213,7 @@ export const useManagementExplorerTree = ({
     }
 
     treeNodeRef.value.updateNode(node.id, { title: trimmedName });
+    treeNodeRef.value.sortByTitle();
     nextTick(() => {
       focusNode(node.id);
     });

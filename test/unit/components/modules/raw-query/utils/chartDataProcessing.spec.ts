@@ -4,7 +4,7 @@ import {
   processPieChartData,
   processHeatmapChartData,
   processRadarChartData,
-} from '~/components/modules/raw-query/modules/chart-builder/utils/chartDataProcessing';
+} from '~/components/modules/raw-query/features/chart-builder/utils/chartDataProcessing';
 
 describe('Chart Data Processing Utilities', () => {
   const sampleData = [

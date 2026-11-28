@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import { LoadingOverlay } from '#components';
+import { useEffectiveSafeMode } from '~/components/modules/environment-tag';
 import { useTableQueryBuilder } from '~/core/composables/useTableQueryBuilder';
 import { ComposeOperator, DEFAULT_QUERY_SIZE } from '~/core/constants';
 import { DatabaseClientType } from '~/core/constants/database-client-type';
 import type { FilterSchema } from '~/core/helpers/sql-where-clause';
 import { TabViewType } from '~/core/stores';
-import { useAppConfigStore } from '~/core/stores/appConfigStore';
 import { useManagementConnectionStore } from '~/core/stores/managementConnectionStore';
 import WrapperErdDiagram from '../../erd-diagram/WrapperErdDiagram.vue';
 import { buildTableNodeId } from '../../erd-diagram/utils';
@@ -62,7 +62,6 @@ const emit = defineEmits<{
 const { quickQueryFilterRef, quickQueryTableRef, selectedRows, focusedCell } =
   useQuickQuery();
 
-const appConfigStore = useAppConfigStore();
 const connectionStore = useManagementConnectionStore();
 
 // Safe mode confirmation dialog state
@@ -176,7 +175,7 @@ const {
   refreshCount,
   focusedCell,
   connection,
-  safeModeEnabled: toRef(appConfigStore, 'quickQuerySafeModeEnabled'),
+  safeModeEnabled: useEffectiveSafeMode(connection),
   onRequestSafeModeConfirm,
 });
 

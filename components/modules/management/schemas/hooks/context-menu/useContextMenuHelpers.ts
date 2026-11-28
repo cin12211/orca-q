@@ -1,7 +1,7 @@
-import { toRaw, toRef } from 'vue';
+import { toRaw } from 'vue';
 import { toast } from 'vue-sonner';
+import { useEffectiveSafeMode } from '~/components/modules/environment-tag';
 import { QuickQueryMutationAction } from '~/components/modules/quick-query/constants';
-import { useAppConfigStore } from '~/core/stores/appConfigStore';
 import type {
   SchemaColumnMetadata as ColumnShortMetadata,
   SchemaForeignKeyMetadata as ForeignKeyMetadata,
@@ -18,8 +18,7 @@ export function useContextMenuHelpers(
   options: SchemaContextMenuOptions,
   state: ContextMenuState
 ) {
-  const appConfigStore = useAppConfigStore();
-  const safeModeEnabled = toRef(appConfigStore, 'quickQuerySafeModeEnabled');
+  const safeModeEnabled = useEffectiveSafeMode(options.connection);
   const safeModeLoading = ref(false);
 
   /**

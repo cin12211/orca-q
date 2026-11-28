@@ -12,7 +12,7 @@ import type {
   MatrixTablePosition,
   NodePosition,
   TableNode,
-} from '../type';
+} from '../types';
 
 export const calcTableHeight = (columnsLength?: number): number =>
   (columnsLength || 0) * ROW_HEIGHT + HEAD_ROW_HEIGHT;

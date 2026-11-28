@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { useEffectiveSafeMode } from '~/components/modules/environment-tag';
 import QuickQueryTableSummary from '~/components/modules/quick-query/quick-query-table-summary/QuickQueryTableSummary.vue';
 import { usePreviewRelations } from '~/core/composables/usePreviewRelations';
 import { useTableQueryBuilder } from '~/core/composables/useTableQueryBuilder';
@@ -170,7 +171,9 @@ const {
   quickQueryTableRef,
   refreshCount,
   focusedCell,
-  safeModeEnabled: toRef(appConfigStore, 'quickQuerySafeModeEnabled'),
+  safeModeEnabled: useEffectiveSafeMode(
+    toRef(connectionStore, 'selectedConnection')
+  ),
   onRequestSafeModeConfirm,
   connection: toRef(connectionStore, 'selectedConnection'),
 });

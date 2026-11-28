@@ -1,28 +1,13 @@
 {
-  "servers": {
+  "mcpServers": {
     "shadcnVue": {
+      "type": "stdio",
       "command": "npx",
-      "args": ["shadcn-vue@latest", "mcp"],
-      "type": "stdio"
+      "args": ["shadcn-vue@latest", "mcp"]
     },
     "nuxt": {
       "type": "http",
       "url": "https://nuxt.com/mcp"
-    },
-    "context7": {
-      "type": "http",
-      "url": "https://mcp.context7.com/mcp",
-      "headers": {
-        "X-API-Key": "${input:context7-api-key}"
-      }
     }
-  },
-  "inputs": [
-    {
-      "id": "context7-api-key",
-      "type": "promptString",
-      "description": "API key for Context7 (get it from context7.com/dashboard)",
-      "password": true
-    }
-  ]
+  }
 }

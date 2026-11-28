@@ -18,7 +18,7 @@ import type {
   ExplainAnalyzeOptionItem,
   ExplainAnalyzeSerializeMode,
   ExplainAnalyzeToggleOptionKey,
-} from '../interfaces';
+} from '../types';
 
 const isExplainAnalyzeMenuOpen = ref(false);
 
@@ -32,6 +32,10 @@ defineProps<{
   isSupportFormat?: boolean;
   isSupportVariable?: boolean;
   isExplainSupported?: boolean;
+  /** EXPLAIN works on a single statement; disabled for a multi selection. */
+  isExplainDisabled?: boolean;
+  /** Statements the selection touches; above 1, Execute runs all of them. */
+  selectedStatementCount?: number;
 }>();
 
 defineEmits<{
@@ -46,16 +50,27 @@ defineEmits<{
 }>();
 </script>
 <template>
-  <div class="h-fit py-1 flex items-center justify-between px-2">
+  <div
+    class="h-fit py-1 flex flex-wrap items-center justify-between gap-x-2 gap-y-1 px-2"
+  >
     <div class="flex items-center gap-2">
-      <div class="font-normal text-xs text-muted-foreground">
+      <div class="font-normal text-xs text-muted-foreground whitespace-nowrap">
         Ln {{ cursorInfo.line }}, Col {{ cursorInfo.column }}
+      </div>
+
+      <div
+        v-if="(selectedStatementCount ?? 0) > 1"
+        data-testid="raw-query-selected-statement-count"
+        class="flex items-center gap-1 font-normal text-xs text-muted-foreground whitespace-nowrap"
+      >
+        <Icon name="hugeicons:layers-01" class="size-3.5!" />
+        {{ selectedStatementCount }} Statements
       </div>
 
       <RawQueryVariableUsageGuidePopover v-if="isSupportVariable" />
     </div>
 
-    <div class="flex gap-1">
+    <div class="flex gap-1 ml-auto">
       <Tooltip v-if="isSupportFormat">
         <TooltipTrigger>
           <div class="flex items-center">
@@ -117,7 +132,9 @@ defineEmits<{
         <TooltipTrigger>
           <div class="flex items-center">
             <Button
+              data-testid="raw-query-explain-button"
               @click="$emit('onExplainAnalyzeCurrent')"
+              :disabled="isExplainDisabled"
               variant="outline"
               size="xxs"
               class="rounded-r-none"
@@ -130,6 +147,7 @@ defineEmits<{
             <DropdownMenu v-model:open="isExplainAnalyzeMenuOpen">
               <DropdownMenuTrigger as-child>
                 <Button
+                  :disabled="isExplainDisabled"
                   variant="outline"
                   size="iconSm"
                   class="rounded-l-none border-l-0 px-2"
@@ -188,7 +206,10 @@ defineEmits<{
           </div>
         </TooltipTrigger>
         <TooltipContent>
-          <p>Run Explain Analyze (⌘E) or open options</p>
+          <p v-if="isExplainDisabled">
+            Explain works on a single statement. Select one statement.
+          </p>
+          <p v-else>Run Explain Analyze (⌘E) or open options</p>
         </TooltipContent>
       </Tooltip>
 
@@ -211,12 +232,20 @@ defineEmits<{
             size="xxs"
           >
             <Icon name="hugeicons:play" />
-            Execute current
+            {{
+              (selectedStatementCount ?? 0) > 1
+                ? `Execute ${selectedStatementCount} statements`
+                : 'Execute current'
+            }}
             <ContextMenuShortcut>⌘↵</ContextMenuShortcut>
           </Button>
         </TooltipTrigger>
         <TooltipContent>
           <p v-if="isStreaming || executeLoading">Cancel query</p>
+          <p v-else-if="(selectedStatementCount ?? 0) > 1">
+            Execute the {{ selectedStatementCount }} selected statements one by
+            one (⌘↵)
+          </p>
           <p v-else>Execute Query (⌘↵)</p>
         </TooltipContent>
       </Tooltip>

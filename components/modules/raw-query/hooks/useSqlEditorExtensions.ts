@@ -20,6 +20,7 @@ import {
   resolveHighlightDialect,
 } from '~/components/base/code-editor/states/sqlParserConfig';
 import {
+  getCurrentStatement,
   pgKeywordCompletion,
   rawQueryEditorFormat,
   sqlParserConfigField,
@@ -31,7 +32,7 @@ import {
 } from '~/core/constants/database-client-type';
 import { useSchemaStore } from '~/core/stores';
 import type { Connection } from '~/core/stores';
-import type { EditorCursor } from '../interfaces';
+import type { EditorCursor } from '../types';
 import { createCteAwareCompletionSource } from '../utils/cteAwareCompletionSource';
 import { mappedSchemaSuggestion } from '../utils/getMappedSchemaSuggestion';
 
@@ -72,6 +73,12 @@ export function useSqlEditorExtensions({
     storeToRefs(schemaStore);
 
   const cursorInfo = ref<EditorCursor>({ line: 1, column: 1 });
+  /** Statements the selection touches (0 without a selection). */
+  const selectedStatementCount = ref(0);
+  /** True while the selection spans more than one statement. */
+  const hasMultipleStatementsSelected = computed(
+    () => selectedStatementCount.value > 1
+  );
 
   const getEditorView = () =>
     codeEditorRef.value?.editorView as EditorView | null;
@@ -207,7 +214,10 @@ export function useSqlEditorExtensions({
       {
         key: 'Mod-e',
         run: () => {
-          if (!isExplainSupported.value) {
+          if (
+            !isExplainSupported.value ||
+            hasMultipleStatementsSelected.value
+          ) {
             return true;
           }
 
@@ -228,6 +238,13 @@ export function useSqlEditorExtensions({
     lintGutter(),
     sqlHoverCompartment.of(buildHoverExtension()),
     sqlParserConfigField,
+    EditorView.updateListener.of(update => {
+      if (!update.selectionSet && !update.docChanged) return;
+
+      selectedStatementCount.value = update.state.selection.main.empty
+        ? 0
+        : getCurrentStatement(update.view).currentStatements.length;
+    }),
   ];
 
   /**
@@ -293,6 +310,8 @@ export function useSqlEditorExtensions({
     extensions,
     sqlCompartment,
     cursorInfo,
+    selectedStatementCount,
+    hasMultipleStatementsSelected,
     onHandleFormatCode,
     onHandleFormatCurrentStatement,
     reloadSqlCompartment,

@@ -9,6 +9,7 @@ Rather than blindly running the whole file string:
 - `getCurrentStatement(editorView)` dynamically reads the user's text cursor position.
 - CodeMirror AST boundaries are resolved into `treeNodes`.
 - The hook safely resolves what exact semantic bounds constitute the intended SQL operation without requiring manual text highlighting.
+- A range selection returns every `Statement` node it overlaps. With more than one, `executeCurrentStatement` hands them to `executeMultipleStatements`, which runs them one by one (`runStatementsSequentially` in `utils/multiStatementRun.ts`) into a single result tab whose `statements` array holds one `StatementResultItem` per statement. The first error stops the run (the rest become `skipped`), Stop marks the current statement and the rest `cancelled`, and EXPLAIN is refused for a multi-statement selection.
 
 ## 2. Parameter Replacement
 

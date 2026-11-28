@@ -9,17 +9,18 @@ import {
 } from '#components';
 import { cn } from '@/lib/utils';
 import { useSchemaStore } from '~/core/stores';
+import { ChartBuilder } from '../features/chart-builder';
+import { ExplainQuery } from '../features/explain-query';
 import {
   ViewMode,
   type ExecutedResultItem,
   type MappedRawColumn,
-} from '../interfaces';
-import { ChartBuilder } from '../modules/chart-builder';
-import { ExplainQuery } from '../modules/explain-query';
+} from '../types';
 import { formatColumnsInfo } from '../utils/formatColumnsInfo';
 import { normalizeResultRows } from '../utils/normalizeResultRows';
 import ResultTabErrorView from './result-tab/ResultTabErrorView.vue';
 import ResultTabInfoView from './result-tab/ResultTabInfoView.vue';
+import ResultTabMultiStatementView from './result-tab/ResultTabMultiStatementView.vue';
 import ResultTabRawView from './result-tab/ResultTabRawView.vue';
 import ResultTabResultView from './result-tab/ResultTabResultView.vue';
 
@@ -40,6 +41,7 @@ const emit = defineEmits<{
   (e: 'close-other-tabs', id: string): void;
   (e: 'close-tabs-to-right', id: string): void;
   (e: 'update:view', tabId: string, view: ExecutedResultItem['view']): void;
+  (e: 'open-statement', tabId: string, statementId: string): void;
 }>();
 
 // Context menu state
@@ -194,6 +196,13 @@ const setViewMode = (view: ViewMode) => {
 const hasErrors = (tab: ExecutedResultItem) => {
   return !!tab.metadata.executeErrors;
 };
+
+const isMultiStatementTab = (tab: ExecutedResultItem) => !!tab.statements;
+
+const getTabLabel = (tab: ExecutedResultItem) =>
+  tab.statements
+    ? `${tab.statements.length} statements`
+    : tab.metadata.statementQuery;
 </script>
 
 <template>
@@ -206,7 +215,10 @@ const hasErrors = (tab: ExecutedResultItem) => {
     "
   >
     <!-- Vertical view tabs (left side) -->
-    <div class="flex mt-7 [writing-mode:vertical-rl]" v-if="activeTab">
+    <div
+      class="flex mt-7 [writing-mode:vertical-rl]"
+      v-if="activeTab && !isMultiStatementTab(activeTab)"
+    >
       <div
         v-for="mode in viewModes"
         :key="mode.value"
@@ -299,7 +311,7 @@ const hasErrors = (tab: ExecutedResultItem) => {
 
                     <div class="truncate text-xs font-medium">
                       Query {{ tab.seqIndex }} -
-                      {{ tab.metadata.statementQuery }}
+                      {{ getTabLabel(tab) }}
                     </div>
 
                     <div
@@ -312,7 +324,9 @@ const hasErrors = (tab: ExecutedResultItem) => {
                 </TooltipTrigger>
 
                 <TooltipContent class="max-w-xl">
-                  <p>{{ tab.metadata.statementQuery }}</p>
+                  <p class="whitespace-pre-line">
+                    {{ tab.metadata.statementQuery }}
+                  </p>
                 </TooltipContent>
               </Tooltip>
             </ContextMenuTrigger>
@@ -377,6 +391,14 @@ const hasErrors = (tab: ExecutedResultItem) => {
           v-if="!activeTab"
           title="No results"
           desc="Execute a query to see results"
+        />
+
+        <!-- Multi-statement run: every statement stacked in one tab -->
+        <ResultTabMultiStatementView
+          v-else-if="isMultiStatementTab(activeTab)"
+          :key="activeTab.id"
+          :active-tab="activeTab"
+          @open-statement="$emit('open-statement', activeTab.id, $event)"
         />
 
         <!-- Result View -->

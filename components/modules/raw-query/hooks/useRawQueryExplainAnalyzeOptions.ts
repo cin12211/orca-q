@@ -2,7 +2,7 @@ import { EXPLAIN_ANALYZE_OPTIONS } from '../constants';
 import type {
   ExplainAnalyzeSerializeMode,
   ExplainAnalyzeToggleOptionKey,
-} from '../interfaces';
+} from '../types';
 
 export function useRawQueryExplainAnalyzeOptions() {
   const explainAnalyzeOptions = ref<

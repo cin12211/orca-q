@@ -1,4 +1,4 @@
-import type { ExplainAnalyzeOptionKey } from '../interfaces';
+import { StatementRunStatus, type ExplainAnalyzeOptionKey } from '../types';
 
 export enum RawQueryEditorLayout {
   horizontal = 'horizontal',
@@ -71,3 +71,47 @@ export interface CustomLayoutDefinition {
 }
 
 export const MAX_CUSTOM_LAYOUTS = 10;
+
+// --- Multi-statement run ---
+
+export const STATEMENT_STATUS_CONFIG: Record<
+  StatementRunStatus,
+  { label: string; icon: string; iconClass: string; hint?: string }
+> = {
+  [StatementRunStatus.PENDING]: {
+    label: 'Pending',
+    icon: 'hugeicons:clock-01',
+    iconClass: 'text-muted-foreground',
+    hint: 'Waiting for the previous statements.',
+  },
+  [StatementRunStatus.RUNNING]: {
+    label: 'Running',
+    icon: 'hugeicons:loading-03',
+    iconClass: 'text-primary animate-spin',
+  },
+  [StatementRunStatus.SUCCESS]: {
+    label: 'Done',
+    icon: 'hugeicons:checkmark-circle-02',
+    iconClass: 'text-green-600',
+  },
+  [StatementRunStatus.ERROR]: {
+    label: 'Failed',
+    icon: 'hugeicons:alert-02',
+    iconClass: 'text-red-500',
+  },
+  [StatementRunStatus.SKIPPED]: {
+    label: 'Skipped',
+    icon: 'hugeicons:minus-sign-circle',
+    iconClass: 'text-muted-foreground',
+    hint: 'Not run because a previous statement failed.',
+  },
+  [StatementRunStatus.CANCELLED]: {
+    label: 'Cancelled',
+    icon: 'hugeicons:stop-circle',
+    iconClass: 'text-muted-foreground',
+    hint: 'Cancelled before it finished.',
+  },
+};
+
+export const MULTI_STATEMENT_VIEW_ONLY_NOTE =
+  'View only: editing is not supported when several statements run together. Open a statement in its own tab to edit its rows.';

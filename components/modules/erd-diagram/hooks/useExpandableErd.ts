@@ -2,7 +2,12 @@ import { computed, ref, watch, type ComputedRef, type Ref } from 'vue';
 import type { Edge } from '@vue-flow/core';
 import type { TableMetadata } from '~/core/types';
 import { DEFAULT_VUE_FLOW_LAYOUT_CONFIG } from '../constants';
-import type { MatrixTablePosition, NodePosition, TableNode } from '../type';
+import {
+  ErdLayoutAlgorithm,
+  type MatrixTablePosition,
+  type NodePosition,
+  type TableNode,
+} from '../types';
 import {
   buildTableNodeId,
   createEdges,
@@ -11,6 +16,7 @@ import {
   getTablesByTableCenterId,
   buildERDWithPrimaryTables,
   buildFullERDDiagram,
+  computeErdLayout,
 } from '../utils';
 
 const { HORIZONTAL_STEP, VERTICAL_STEP } = DEFAULT_VUE_FLOW_LAYOUT_CONFIG;
@@ -19,6 +25,8 @@ export interface UseExpandableErdOptions {
   allTables: Ref<TableMetadata[]>;
   initialTableId: Ref<string | undefined>;
   autoExpandInitial?: boolean;
+  /** Auto-arrange algorithm; defaults to the original center-table layout */
+  layoutAlgorithm?: Ref<ErdLayoutAlgorithm>;
 }
 
 export interface ExpandableErdReturn {
@@ -30,7 +38,8 @@ export interface ExpandableErdReturn {
   collapseTable: (tableId: string) => void;
   isExpanded: (tableId: string) => boolean;
   hasRelations: (tableId: string) => boolean;
-  matrixPosition: Ref<MatrixTablePosition>;
+  matrixPosition: ComputedRef<MatrixTablePosition>;
+  relayout: () => void;
   toggleCollapseHeader: (tableId: string) => void;
   collapseAllVisibleTables: () => void;
   expandAllVisibleTables: () => void;
@@ -95,6 +104,43 @@ export const getDirectRelatedTables = (
   }
 
   return { leftTables, rightTables };
+};
+
+/**
+ * Ids of tables that reference, or are referenced by, another table in the
+ * list. One pass over all foreign keys, so `hasRelations` stays O(1) per node
+ * instead of rescanning every table on each render.
+ */
+export const buildTablesWithRelations = (
+  allTables: TableMetadata[]
+): Set<string> => {
+  const tableIds = new Set(
+    allTables.map(t =>
+      buildTableNodeId({ schemaName: t.schema, tableName: t.table })
+    )
+  );
+  const related = new Set<string>();
+
+  for (const table of allTables) {
+    const tId = buildTableNodeId({
+      schemaName: table.schema,
+      tableName: table.table,
+    });
+
+    for (const fk of table.foreign_keys) {
+      const refId = buildTableNodeId({
+        schemaName: fk.reference_schema,
+        tableName: fk.reference_table,
+      });
+
+      if (refId !== tId && tableIds.has(refId)) {
+        related.add(tId);
+        related.add(refId);
+      }
+    }
+  }
+
+  return related;
 };
 
 /**
@@ -188,7 +234,12 @@ const classifyLayerTablesRight = ({
 export function useExpandableErd(
   options: UseExpandableErdOptions
 ): ExpandableErdReturn {
-  const { allTables, initialTableId, autoExpandInitial = true } = options;
+  const {
+    allTables,
+    initialTableId,
+    autoExpandInitial = true,
+    layoutAlgorithm = ref(ErdLayoutAlgorithm.Default),
+  } = options;
 
   // Track which tables have been expanded
   const expandedTables = ref(new Set<string>());
@@ -201,8 +252,13 @@ export function useExpandableErd(
   // Track who added each table (for collapse logic)
   const addedByMap = ref(new Map<string, Set<string>>());
 
-  // Matrix position for layout using original algorithm
-  const matrixPosition = ref<MatrixTablePosition>({});
+  // Positions from the original center-table algorithm. Kept up to date even
+  // while another arrange algorithm is active, so switching back to
+  // "Default" and incremental expand placement keep working.
+  const defaultMatrixPosition = ref<MatrixTablePosition>({});
+
+  // Positions from the selected auto-arrange algorithm (non-default only)
+  const algorithmPosition = ref<MatrixTablePosition>({});
 
   // Live position overrides for tables the user has manually dragged.
   // Kept separate from `matrixPosition` so the "Arrange" action can still
@@ -226,7 +282,7 @@ export function useExpandableErd(
     visibleTableIds.value.clear();
     expandedTables.value.clear();
     addedByMap.value.clear();
-    matrixPosition.value = {};
+    defaultMatrixPosition.value = {};
     draggedPositions.value = {};
     layerNextY.value.clear();
     // Single-table mode: default all tables expanded (fewer tables, easier to read)
@@ -235,7 +291,7 @@ export function useExpandableErd(
     if (!autoExpandInitial) {
       // Just show center table
       visibleTableIds.value.add(centerId);
-      matrixPosition.value[centerId] = { x: 0, y: 0 };
+      defaultMatrixPosition.value[centerId] = { x: 0, y: 0 };
       return;
     }
 
@@ -253,7 +309,7 @@ export function useExpandableErd(
     // Copy positions from original algorithm
     for (const node of nodes) {
       visibleTableIds.value.add(node.id);
-      matrixPosition.value[node.id] = node.position;
+      defaultMatrixPosition.value[node.id] = node.position;
 
       // Track as added by initial
       addedByMap.value.set(node.id, new Set(['__initial__']));
@@ -275,7 +331,7 @@ export function useExpandableErd(
     visibleTableIds.value.clear();
     expandedTables.value.clear();
     addedByMap.value.clear();
-    matrixPosition.value = {};
+    defaultMatrixPosition.value = {};
     draggedPositions.value = {};
     layerNextY.value.clear();
     collapsedHeaderTables.value = new Set<string>();
@@ -288,7 +344,7 @@ export function useExpandableErd(
     // Copy positions from full ERD algorithm
     for (const node of nodes) {
       visibleTableIds.value.add(node.id);
-      matrixPosition.value[node.id] = node.position;
+      defaultMatrixPosition.value[node.id] = node.position;
 
       // Track as added by initial
       addedByMap.value.set(node.id, new Set(['__initial__']));
@@ -313,7 +369,7 @@ export function useExpandableErd(
     // Group tables by X position (which represents layer/depth)
     const tablesByX = new Map<number, { y: number; height: number }[]>();
 
-    for (const [tableId, pos] of Object.entries(matrixPosition.value)) {
+    for (const [tableId, pos] of Object.entries(defaultMatrixPosition.value)) {
       const table = allTables.value.find(t => {
         const tId = buildTableNodeId({
           schemaName: t.schema,
@@ -385,7 +441,10 @@ export function useExpandableErd(
     }
 
     // Get parent position
-    const parentPos = matrixPosition.value[expandingFromId] || { x: 0, y: 0 };
+    const parentPos = defaultMatrixPosition.value[expandingFromId] || {
+      x: 0,
+      y: 0,
+    };
     const parentXLayer = Math.round(parentPos.x / HORIZONTAL_STEP);
 
     // Calculate X based on depth and direction
@@ -431,6 +490,33 @@ export function useExpandableErd(
     });
   });
 
+  /**
+   * Re-run the selected auto-arrange algorithm over the visible tables.
+   * Uses the current header-collapse state so collapsed tables pack tighter.
+   */
+  const relayout = () => {
+    algorithmPosition.value =
+      computeErdLayout(layoutAlgorithm.value, {
+        tables: visibleTablesData.value,
+        collapsedHeaderTables: collapsedHeaderTables.value,
+      }) ?? {};
+  };
+
+  // Re-arrange when the algorithm changes or tables are added/removed.
+  // Header collapse toggles intentionally don't re-arrange (nodes would jump);
+  // the explicit "Arrange" action calls relayout() for that.
+  watch(
+    [layoutAlgorithm, () => [...visibleTableIds.value].sort().join('|')],
+    relayout,
+    { immediate: true }
+  );
+
+  const matrixPosition = computed<MatrixTablePosition>(() =>
+    layoutAlgorithm.value === ErdLayoutAlgorithm.Default
+      ? defaultMatrixPosition.value
+      : { ...defaultMatrixPosition.value, ...algorithmPosition.value }
+  );
+
   // Compute visible nodes
   // Dragged positions take priority over the computed layout so that
   // recomputes triggered by unrelated state (e.g. collapsedHeaderTables via
@@ -462,13 +548,12 @@ export function useExpandableErd(
     });
   });
 
-  const hasRelations = (tableId: string): boolean => {
-    const { leftTables, rightTables } = getDirectRelatedTables(
-      tableId,
-      allTables.value
-    );
-    return leftTables.length > 0 || rightTables.length > 0;
-  };
+  const tablesWithRelations = computed(() =>
+    buildTablesWithRelations(allTables.value)
+  );
+
+  const hasRelations = (tableId: string): boolean =>
+    tablesWithRelations.value.has(tableId);
 
   const isExpanded = (tableId: string): boolean => {
     return expandedTables.value.has(tableId);
@@ -503,7 +588,7 @@ export function useExpandableErd(
       if (visibleTableIds.value.has(tId)) return;
 
       visibleTableIds.value.add(tId);
-      matrixPosition.value[tId] = calculatePositionForTable(
+      defaultMatrixPosition.value[tId] = calculatePositionForTable(
         table,
         tableId,
         'left'
@@ -527,7 +612,7 @@ export function useExpandableErd(
       if (visibleTableIds.value.has(tId)) return;
 
       visibleTableIds.value.add(tId);
-      matrixPosition.value[tId] = calculatePositionForTable(
+      defaultMatrixPosition.value[tId] = calculatePositionForTable(
         table,
         tableId,
         'right'
@@ -564,7 +649,7 @@ export function useExpandableErd(
         // Only remove if no other table is keeping it visible
         if (addedBy.size === 0 && tId !== initialTableId.value) {
           visibleTableIds.value.delete(tId);
-          delete matrixPosition.value[tId];
+          delete defaultMatrixPosition.value[tId];
           delete draggedPositions.value[tId];
           addedByMap.value.delete(tId);
 
@@ -637,6 +722,7 @@ export function useExpandableErd(
     isExpanded,
     hasRelations,
     matrixPosition,
+    relayout,
     toggleCollapseHeader,
     collapseAllVisibleTables,
     expandAllVisibleTables,

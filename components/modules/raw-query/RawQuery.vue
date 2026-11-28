@@ -145,6 +145,8 @@ const {
   queryProcessState,
   executedResults,
   activeResultTabId,
+  selectedStatementCount,
+  hasMultipleStatementsSelected,
 } = rawQueryEditor;
 
 const { contextMenuItems, onContextMenuOpen } = useRawQueryEditorContextMenu({
@@ -357,6 +359,8 @@ onBeforeUnmount(() => {
             :is-support-format="isFormatSupported"
             :is-support-variable="isVariableSupported"
             :is-explain-supported="isExplainSupported"
+            :is-explain-disabled="hasMultipleStatementsSelected"
+            :selected-statement-count="selectedStatementCount"
             @on-format-current-statement="onHandleFormatCurrentStatement"
             @on-format-all="onHandleFormatCode"
             @on-explain-analyze-current="onExplainAnalyzeCurrent"
@@ -409,6 +413,7 @@ onBeforeUnmount(() => {
         @close-other-tabs="rawQueryEditor.closeOtherResultTabs"
         @close-tabs-to-right="rawQueryEditor.closeResultTabsToRight"
         @update:view="rawQueryEditor.updateResultTabView"
+        @open-statement="rawQueryEditor.openStatementInTab"
       />
     </template>
   </RawQueryLayout>

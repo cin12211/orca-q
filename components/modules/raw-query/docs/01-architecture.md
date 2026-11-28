@@ -10,7 +10,7 @@ raw-query/
 ├── components/           # Presentation UI components (Header, Footer, CodeMirror wrappers)
 ├── constants/            # Enum definitions (Explain serialization types)
 ├── hooks/                # The business logic engines
-├── interfaces/           # Types specific strictly to the UI boundaries (Mapped columns, Tab Items)
+├── types/                # Types specific strictly to the UI boundaries (Mapped columns, Tab Items)
 ├── utils/                # Helper formatting services
 └── RawQuery.vue          # The main Entrypoint Orchestrator
 ```

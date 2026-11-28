@@ -1,4 +1,4 @@
-import type { MappedRawColumn } from '../interfaces';
+import type { MappedRawColumn } from '../types';
 
 /**
  * Group columns by their owning table. A column has an "owning table" when
