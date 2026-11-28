@@ -17,6 +17,11 @@ import { toStatementPreview } from '../../utils/multiStatementRun';
 import { normalizeResultRows } from '../../utils/normalizeResultRows';
 import ResultTabResultView from './ResultTabResultView.vue';
 
+const GRID_ROW_HEIGHT = 28;
+const GRID_CHROME_HEIGHT = 80;
+const GRID_MIN_HEIGHT = 120;
+const GRID_MAX_HEIGHT = 288;
+
 const props = defineProps<{
   statement: StatementResultItem;
   executedAt: Date;
@@ -42,6 +47,9 @@ const statusConfig = computed(
 );
 const isRunning = computed(
   () => props.statement.status === StatementRunStatus.RUNNING
+);
+const isSucceeded = computed(
+  () => props.statement.status === StatementRunStatus.SUCCESS
 );
 const isFinished = computed(
   () =>
@@ -131,6 +139,16 @@ const statementAsTab = computed<ExecutedResultItem>(() => ({
   seqIndex: props.seqIndex,
 }));
 
+/**
+ * Grid area height: fits short results (control bar + header + rows) and
+ * caps long ones, so a 2-row result does not take a full-height block.
+ */
+const gridHeight = computed(() => {
+  const rows = Math.max(props.statement.result.length, 1);
+  const height = GRID_CHROME_HEIGHT + rows * GRID_ROW_HEIGHT;
+  return `${Math.min(Math.max(height, GRID_MIN_HEIGHT), GRID_MAX_HEIGHT)}px`;
+});
+
 const toggleExpanded = () => {
   userExpanded.value = !isExpanded.value;
 };
@@ -191,7 +209,7 @@ watch(
       </span>
 
       <span
-        v-if="isFinished"
+        v-if="isSucceeded"
         class="text-muted-foreground tabular-nums whitespace-nowrap"
       >
         {{ statement.queryTime }}ms
@@ -223,7 +241,7 @@ watch(
       <div
         v-else-if="showsGrid"
         data-testid="raw-query-statement-grid"
-        class="h-72"
+        :style="{ height: gridHeight }"
       >
         <ResultTabResultView
           v-if="hasBeenVisible"

@@ -50,25 +50,36 @@ defineEmits<{
 }>();
 </script>
 <template>
-  <div class="h-fit py-1 flex items-center justify-between px-2">
+  <div
+    class="h-fit py-1 flex flex-wrap items-center justify-between gap-x-2 gap-y-1 px-2"
+  >
     <div class="flex items-center gap-2">
-      <div class="font-normal text-xs text-muted-foreground">
+      <div class="font-normal text-xs text-muted-foreground whitespace-nowrap">
         Ln {{ cursorInfo.line }}, Col {{ cursorInfo.column }}
       </div>
 
-      <div
-        v-if="(selectedStatementCount ?? 0) > 1"
-        data-testid="raw-query-selected-statement-count"
-        class="flex items-center gap-1 rounded border px-1.5 text-xs font-normal text-primary bg-primary/10 border-primary/30"
-      >
-        <Icon name="hugeicons:layers-01" class="size-3.5!" />
-        {{ selectedStatementCount }} statements selected
-      </div>
+      <Tooltip v-if="(selectedStatementCount ?? 0) > 1">
+        <TooltipTrigger as-child>
+          <div
+            data-testid="raw-query-selected-statement-count"
+            class="flex items-center gap-1 shrink-0 whitespace-nowrap rounded border px-1.5 text-xs font-normal text-primary bg-primary/10 border-primary/30"
+          >
+            <Icon name="hugeicons:layers-01" class="size-3.5!" />
+            {{ selectedStatementCount }} statements
+          </div>
+        </TooltipTrigger>
+        <TooltipContent>
+          <p>
+            {{ selectedStatementCount }} statements selected. Execute runs them
+            one by one.
+          </p>
+        </TooltipContent>
+      </Tooltip>
 
       <RawQueryVariableUsageGuidePopover v-if="isSupportVariable" />
     </div>
 
-    <div class="flex gap-1">
+    <div class="flex gap-1 ml-auto">
       <Tooltip v-if="isSupportFormat">
         <TooltipTrigger>
           <div class="flex items-center">
