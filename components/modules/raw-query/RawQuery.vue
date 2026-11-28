@@ -409,6 +409,7 @@ onBeforeUnmount(() => {
         @close-other-tabs="rawQueryEditor.closeOtherResultTabs"
         @close-tabs-to-right="rawQueryEditor.closeResultTabsToRight"
         @update:view="rawQueryEditor.updateResultTabView"
+        @open-statement="rawQueryEditor.openStatementInTab"
       />
     </template>
   </RawQueryLayout>
