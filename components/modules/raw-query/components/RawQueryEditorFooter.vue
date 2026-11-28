@@ -56,12 +56,15 @@ defineEmits<{
     <div class="flex items-center gap-2">
       <div class="font-normal text-xs text-muted-foreground whitespace-nowrap">
         Ln {{ cursorInfo.line }}, Col {{ cursorInfo.column }}
-        <span
-          v-if="(selectedStatementCount ?? 0) > 1"
-          data-testid="raw-query-selected-statement-count"
-        >
-          · {{ selectedStatementCount }} statements selected
-        </span>
+      </div>
+
+      <div
+        v-if="(selectedStatementCount ?? 0) > 1"
+        data-testid="raw-query-selected-statement-count"
+        class="flex items-center gap-1 font-normal text-xs text-muted-foreground whitespace-nowrap"
+      >
+        <Icon name="hugeicons:layers-01" class="size-3.5!" />
+        {{ selectedStatementCount }} Statements
       </div>
 
       <RawQueryVariableUsageGuidePopover v-if="isSupportVariable" />
