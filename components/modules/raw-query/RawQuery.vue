@@ -145,6 +145,7 @@ const {
   queryProcessState,
   executedResults,
   activeResultTabId,
+  selectedStatementCount,
   hasMultipleStatementsSelected,
 } = rawQueryEditor;
 
@@ -359,6 +360,7 @@ onBeforeUnmount(() => {
             :is-support-variable="isVariableSupported"
             :is-explain-supported="isExplainSupported"
             :is-explain-disabled="hasMultipleStatementsSelected"
+            :selected-statement-count="selectedStatementCount"
             @on-format-current-statement="onHandleFormatCurrentStatement"
             @on-format-all="onHandleFormatCode"
             @on-explain-analyze-current="onExplainAnalyzeCurrent"

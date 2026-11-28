@@ -34,6 +34,8 @@ defineProps<{
   isExplainSupported?: boolean;
   /** EXPLAIN works on a single statement; disabled for a multi selection. */
   isExplainDisabled?: boolean;
+  /** Statements the selection touches; above 1, Execute runs all of them. */
+  selectedStatementCount?: number;
 }>();
 
 defineEmits<{
@@ -52,6 +54,15 @@ defineEmits<{
     <div class="flex items-center gap-2">
       <div class="font-normal text-xs text-muted-foreground">
         Ln {{ cursorInfo.line }}, Col {{ cursorInfo.column }}
+      </div>
+
+      <div
+        v-if="(selectedStatementCount ?? 0) > 1"
+        data-testid="raw-query-selected-statement-count"
+        class="flex items-center gap-1 rounded border px-1.5 text-xs font-normal text-primary bg-primary/10 border-primary/30"
+      >
+        <Icon name="hugeicons:layers-01" class="size-3.5!" />
+        {{ selectedStatementCount }} statements selected
       </div>
 
       <RawQueryVariableUsageGuidePopover v-if="isSupportVariable" />
@@ -219,12 +230,20 @@ defineEmits<{
             size="xxs"
           >
             <Icon name="hugeicons:play" />
-            Execute current
+            {{
+              (selectedStatementCount ?? 0) > 1
+                ? `Execute ${selectedStatementCount} statements`
+                : 'Execute current'
+            }}
             <ContextMenuShortcut>⌘↵</ContextMenuShortcut>
           </Button>
         </TooltipTrigger>
         <TooltipContent>
           <p v-if="isStreaming || executeLoading">Cancel query</p>
+          <p v-else-if="(selectedStatementCount ?? 0) > 1">
+            Execute the {{ selectedStatementCount }} selected statements one by
+            one (⌘↵)
+          </p>
           <p v-else>Execute Query (⌘↵)</p>
         </TooltipContent>
       </Tooltip>

@@ -73,8 +73,12 @@ export function useSqlEditorExtensions({
     storeToRefs(schemaStore);
 
   const cursorInfo = ref<EditorCursor>({ line: 1, column: 1 });
+  /** Statements the selection touches (0 without a selection). */
+  const selectedStatementCount = ref(0);
   /** True while the selection spans more than one statement. */
-  const hasMultipleStatementsSelected = ref(false);
+  const hasMultipleStatementsSelected = computed(
+    () => selectedStatementCount.value > 1
+  );
 
   const getEditorView = () =>
     codeEditorRef.value?.editorView as EditorView | null;
@@ -237,9 +241,9 @@ export function useSqlEditorExtensions({
     EditorView.updateListener.of(update => {
       if (!update.selectionSet && !update.docChanged) return;
 
-      hasMultipleStatementsSelected.value =
-        !update.state.selection.main.empty &&
-        getCurrentStatement(update.view).currentStatements.length > 1;
+      selectedStatementCount.value = update.state.selection.main.empty
+        ? 0
+        : getCurrentStatement(update.view).currentStatements.length;
     }),
   ];
 
@@ -306,6 +310,7 @@ export function useSqlEditorExtensions({
     extensions,
     sqlCompartment,
     cursorInfo,
+    selectedStatementCount,
     hasMultipleStatementsSelected,
     onHandleFormatCode,
     onHandleFormatCurrentStatement,

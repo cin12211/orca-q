@@ -76,6 +76,7 @@ export function useRawQueryEditor({
     extensions: sqlEditor.extensions,
     sqlCompartment: sqlEditor.sqlCompartment,
     cursorInfo: sqlEditor.cursorInfo,
+    selectedStatementCount: sqlEditor.selectedStatementCount,
     hasMultipleStatementsSelected: sqlEditor.hasMultipleStatementsSelected,
     onHandleFormatCode: sqlEditor.onHandleFormatCode,
     onHandleFormatCurrentStatement: sqlEditor.onHandleFormatCurrentStatement,

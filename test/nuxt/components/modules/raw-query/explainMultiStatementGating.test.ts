@@ -102,4 +102,51 @@ describe('EXPLAIN with a multi-statement selection', () => {
       'Explain works on a single statement. Select one statement.'
     );
   });
+
+  describe('selected statement count in the footer', () => {
+    const mountFooter = (selectedStatementCount: number) =>
+      mount(RawQueryEditorFooter, {
+        props: {
+          cursorInfo: { line: 1, column: 1 },
+          executeLoading: false,
+          isStreaming: false,
+          explainAnalyzeOptionItems: [],
+          serializeMode: 'NONE',
+          selectedStatementCount,
+        },
+        global: {
+          stubs: {
+            Icon: true,
+            RawQueryVariableUsageGuidePopover: true,
+            Tooltip: { template: '<div><slot /></div>' },
+            TooltipTrigger: { template: '<div><slot /></div>' },
+            TooltipContent: { template: '<div><slot /></div>' },
+          },
+        },
+      });
+
+    it('shows how many statements are selected and what Execute will run', () => {
+      const wrapper = mountFooter(3);
+
+      expect(
+        wrapper.get('[data-testid="raw-query-selected-statement-count"]').text()
+      ).toBe('3 statements selected');
+      expect(
+        wrapper.get('[data-testid="raw-query-execute-button"]').text()
+      ).toContain('Execute 3 statements');
+    });
+
+    it.each([0, 1])('keeps the single-statement footer for %i', count => {
+      const wrapper = mountFooter(count);
+
+      expect(
+        wrapper
+          .find('[data-testid="raw-query-selected-statement-count"]')
+          .exists()
+      ).toBe(false);
+      expect(
+        wrapper.get('[data-testid="raw-query-execute-button"]').text()
+      ).toContain('Execute current');
+    });
+  });
 });
