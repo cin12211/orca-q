@@ -291,9 +291,9 @@ const onFocusNode = (
 
 <style scoped>
 .table-node {
-  will-change: transform;
-  transform: translateZ(0);
+  /* No per-node compositing layer (will-change/translateZ): with hundreds of
+     tables those layers cost more GPU memory and re-rasterising on zoom than
+     they save. */
   contain: content;
-  backface-visibility: hidden;
 }
 </style>

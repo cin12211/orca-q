@@ -4,3 +4,4 @@ export * from './oldERD';
 export * from './active-edge';
 export * from './calcValueNode';
 export * from './layoutAlgorithms';
+export * from './edge-markers';

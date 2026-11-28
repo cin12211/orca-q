@@ -107,6 +107,43 @@ export const getDirectRelatedTables = (
 };
 
 /**
+ * Ids of tables that reference, or are referenced by, another table in the
+ * list. One pass over all foreign keys, so `hasRelations` stays O(1) per node
+ * instead of rescanning every table on each render.
+ */
+export const buildTablesWithRelations = (
+  allTables: TableMetadata[]
+): Set<string> => {
+  const tableIds = new Set(
+    allTables.map(t =>
+      buildTableNodeId({ schemaName: t.schema, tableName: t.table })
+    )
+  );
+  const related = new Set<string>();
+
+  for (const table of allTables) {
+    const tId = buildTableNodeId({
+      schemaName: table.schema,
+      tableName: table.table,
+    });
+
+    for (const fk of table.foreign_keys) {
+      const refId = buildTableNodeId({
+        schemaName: fk.reference_schema,
+        tableName: fk.reference_table,
+      });
+
+      if (refId !== tId && tableIds.has(refId)) {
+        related.add(tId);
+        related.add(refId);
+      }
+    }
+  }
+
+  return related;
+};
+
+/**
  * BFS to classify tables by depth following FK chain (left side - tables being referenced)
  * From startId, follow FKs to find depth of each table
  */
@@ -511,13 +548,12 @@ export function useExpandableErd(
     });
   });
 
-  const hasRelations = (tableId: string): boolean => {
-    const { leftTables, rightTables } = getDirectRelatedTables(
-      tableId,
-      allTables.value
-    );
-    return leftTables.length > 0 || rightTables.length > 0;
-  };
+  const tablesWithRelations = computed(() =>
+    buildTablesWithRelations(allTables.value)
+  );
+
+  const hasRelations = (tableId: string): boolean =>
+    tablesWithRelations.value.has(tableId);
 
   const isExpanded = (tableId: string): boolean => {
     return expandedTables.value.has(tableId);

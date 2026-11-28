@@ -24,11 +24,15 @@ import type {
 } from '~/components/modules/erd-diagram/types';
 import ErdControls from './components/Controls/ErdControls.vue';
 import CustomEdge from './components/CustomEdge.vue';
+import ErdEdgeMarkerDefs from './components/ErdEdgeMarkerDefs.vue';
 import ErdFilterPanal from './components/ErdFilterPanal.vue';
 import { useErdFlow } from './hooks/useErdControl';
 import { buildTableNodeId } from './utils';
 
 const { width, height } = useWindowSize();
+
+// Unique per diagram so two ERDs on one page don't share marker ids.
+const edgeMarkerPrefix = `erd-marker-${useId()}`;
 
 export interface ErdDiagramAdditionalProps {
   isExpanded?: (tableId: string) => boolean;
@@ -117,6 +121,7 @@ const onChangeLayoutAlgorithm = async (algorithm: ErdLayoutAlgorithm) => {
     }"
     :min-zoom="MIN_ZOOM"
     :max-zoom="MAX_ZOOM"
+    :only-render-visible-elements="true"
     v-on:init="onInitVueFlow"
     @node-mouse-enter="onNodeMouseEnter"
     @node-mouse-leave="onNodeMouseLeave"
@@ -126,8 +131,10 @@ const onChangeLayoutAlgorithm = async (algorithm: ErdLayoutAlgorithm) => {
     @edges-change="onEdgesChange"
     @edge-double-click="onDoubleClickEdge"
   >
+    <ErdEdgeMarkerDefs :prefix="edgeMarkerPrefix" />
+
     <template #edge-custom="edgeProps">
-      <CustomEdge v-bind="edgeProps" />
+      <CustomEdge v-bind="edgeProps" :marker-prefix="edgeMarkerPrefix" />
     </template>
     <template #node-value="nodeProps">
       <ErdTableNode
