@@ -130,7 +130,7 @@ describe('EXPLAIN with a multi-statement selection', () => {
 
       expect(
         wrapper.get('[data-testid="raw-query-selected-statement-count"]').text()
-      ).toBe('3 statements');
+      ).toBe('· 3 statements selected');
       expect(
         wrapper.get('[data-testid="raw-query-execute-button"]').text()
       ).toContain('Execute 3 statements');
