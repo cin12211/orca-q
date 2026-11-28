@@ -81,6 +81,9 @@ const focusInput = async () => {
 };
 
 // Watch for editing mode changes and node name changes
+// Immediate: a row can mount already in editing mode (e.g. a new item inside
+// a folder that only just expanded, or a row scrolled back into view), and it
+// still needs its input focused.
 watch(
   () => props.isEditing,
   newVal => {
@@ -88,7 +91,8 @@ watch(
       editingName.value = props.node.name;
       focusInput();
     }
-  }
+  },
+  { immediate: true }
 );
 
 watch(

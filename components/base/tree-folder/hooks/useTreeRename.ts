@@ -92,18 +92,27 @@ export function useTreeRename(
   const handleEditingChange = (nodeId: string, newName: string) => {
     if (!props.validateRename) return;
 
-    const result = props.validateRename(nodeId, newName);
-    const hasError = !!renameErrors.value[nodeId];
+    // An empty name while typing is not an error yet (the user may be about
+    // to type): submitting it cancels the edit instead. Skipping it keeps the
+    // error tooltip from flashing on every new item and every cleared field.
+    const result = newName.trim()
+      ? props.validateRename(nodeId, newName)
+      : true;
+    const currentError = renameErrors.value[nodeId];
 
     if (result !== true) {
-      renameErrors.value = {
-        ...renameErrors.value,
-        [nodeId]: result,
-      };
+      // Only replace the errors map when the message actually changes, so
+      // each keystroke does not re-render the tree.
+      if (currentError !== result) {
+        renameErrors.value = {
+          ...renameErrors.value,
+          [nodeId]: result,
+        };
+      }
       return;
     }
 
-    if (result === true && hasError) {
+    if (currentError) {
       const nextErrors = { ...renameErrors.value };
       delete nextErrors[nodeId];
       renameErrors.value = nextErrors;

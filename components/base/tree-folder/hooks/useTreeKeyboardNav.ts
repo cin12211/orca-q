@@ -15,6 +15,17 @@ interface UseTreeKeyboardNavDeps {
   scrollToItem: (nodeId: string) => void;
 }
 
+const isEditableTarget = (target: EventTarget | null): boolean => {
+  if (!(target instanceof HTMLElement)) return false;
+
+  return (
+    target instanceof HTMLInputElement ||
+    target instanceof HTMLTextAreaElement ||
+    target instanceof HTMLSelectElement ||
+    target.isContentEditable
+  );
+};
+
 /**
  * Owns arrow-key/Enter/Delete navigation over the flattened, visible node
  * list, moving focus and expanding/collapsing folders as needed.
@@ -31,6 +42,11 @@ export function useTreeKeyboardNav(
   }: UseTreeKeyboardNavDeps
 ) {
   const handleKeyDown = (event: KeyboardEvent) => {
+    // Keys typed into the inline rename input (or any other editable field
+    // inside the tree) belong to that field: Backspace/Delete must edit text
+    // and arrows must move the caret, not navigate or delete nodes.
+    if (isEditableTarget(event.target)) return;
+
     if (!focusedId.value) return;
 
     const currentIdx = visibleNodeIds.value.indexOf(focusedId.value);
