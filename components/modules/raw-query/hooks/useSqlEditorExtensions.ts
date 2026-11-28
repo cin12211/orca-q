@@ -20,6 +20,7 @@ import {
   resolveHighlightDialect,
 } from '~/components/base/code-editor/states/sqlParserConfig';
 import {
+  getCurrentStatement,
   pgKeywordCompletion,
   rawQueryEditorFormat,
   sqlParserConfigField,
@@ -72,6 +73,8 @@ export function useSqlEditorExtensions({
     storeToRefs(schemaStore);
 
   const cursorInfo = ref<EditorCursor>({ line: 1, column: 1 });
+  /** True while the selection spans more than one statement. */
+  const hasMultipleStatementsSelected = ref(false);
 
   const getEditorView = () =>
     codeEditorRef.value?.editorView as EditorView | null;
@@ -207,7 +210,10 @@ export function useSqlEditorExtensions({
       {
         key: 'Mod-e',
         run: () => {
-          if (!isExplainSupported.value) {
+          if (
+            !isExplainSupported.value ||
+            hasMultipleStatementsSelected.value
+          ) {
             return true;
           }
 
@@ -228,6 +234,13 @@ export function useSqlEditorExtensions({
     lintGutter(),
     sqlHoverCompartment.of(buildHoverExtension()),
     sqlParserConfigField,
+    EditorView.updateListener.of(update => {
+      if (!update.selectionSet && !update.docChanged) return;
+
+      hasMultipleStatementsSelected.value =
+        !update.state.selection.main.empty &&
+        getCurrentStatement(update.view).currentStatements.length > 1;
+    }),
   ];
 
   /**
@@ -293,6 +306,7 @@ export function useSqlEditorExtensions({
     extensions,
     sqlCompartment,
     cursorInfo,
+    hasMultipleStatementsSelected,
     onHandleFormatCode,
     onHandleFormatCurrentStatement,
     reloadSqlCompartment,

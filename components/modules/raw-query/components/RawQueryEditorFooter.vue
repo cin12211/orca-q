@@ -32,6 +32,8 @@ defineProps<{
   isSupportFormat?: boolean;
   isSupportVariable?: boolean;
   isExplainSupported?: boolean;
+  /** EXPLAIN works on a single statement; disabled for a multi selection. */
+  isExplainDisabled?: boolean;
 }>();
 
 defineEmits<{
@@ -117,7 +119,9 @@ defineEmits<{
         <TooltipTrigger>
           <div class="flex items-center">
             <Button
+              data-testid="raw-query-explain-button"
               @click="$emit('onExplainAnalyzeCurrent')"
+              :disabled="isExplainDisabled"
               variant="outline"
               size="xxs"
               class="rounded-r-none"
@@ -130,6 +134,7 @@ defineEmits<{
             <DropdownMenu v-model:open="isExplainAnalyzeMenuOpen">
               <DropdownMenuTrigger as-child>
                 <Button
+                  :disabled="isExplainDisabled"
                   variant="outline"
                   size="iconSm"
                   class="rounded-l-none border-l-0 px-2"
@@ -188,7 +193,10 @@ defineEmits<{
           </div>
         </TooltipTrigger>
         <TooltipContent>
-          <p>Run Explain Analyze (⌘E) or open options</p>
+          <p v-if="isExplainDisabled">
+            Explain works on a single statement. Select one statement.
+          </p>
+          <p v-else>Run Explain Analyze (⌘E) or open options</p>
         </TooltipContent>
       </Tooltip>
 

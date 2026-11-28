@@ -145,6 +145,7 @@ const {
   queryProcessState,
   executedResults,
   activeResultTabId,
+  hasMultipleStatementsSelected,
 } = rawQueryEditor;
 
 const { contextMenuItems, onContextMenuOpen } = useRawQueryEditorContextMenu({
@@ -357,6 +358,7 @@ onBeforeUnmount(() => {
             :is-support-format="isFormatSupported"
             :is-support-variable="isVariableSupported"
             :is-explain-supported="isExplainSupported"
+            :is-explain-disabled="hasMultipleStatementsSelected"
             @on-format-current-statement="onHandleFormatCurrentStatement"
             @on-format-all="onHandleFormatCode"
             @on-explain-analyze-current="onExplainAnalyzeCurrent"
