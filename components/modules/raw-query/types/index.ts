@@ -46,6 +46,42 @@ export enum ViewMode {
   CHART = 'chart',
 }
 
+export enum StatementRunStatus {
+  PENDING = 'pending',
+  RUNNING = 'running',
+  SUCCESS = 'success',
+  ERROR = 'error',
+  SKIPPED = 'skipped',
+  CANCELLED = 'cancelled',
+}
+
+/** Final state of one statement run by the sequential runner. */
+export type StatementRunOutcome =
+  | StatementRunStatus.SUCCESS
+  | StatementRunStatus.ERROR
+  | StatementRunStatus.CANCELLED;
+
+/**
+ * Result of one statement inside a multi-statement run. Every statement of the
+ * run lives in a single result tab, stacked vertically.
+ */
+export interface StatementResultItem {
+  id: string;
+  /** 0-based position in the selection. */
+  index: number;
+  /** Start offset of the statement in the editor, for error diagnostics. */
+  from: number;
+  statementQuery: string;
+  status: StatementRunStatus;
+  queryTime: number;
+  rowCount?: number;
+  command?: string;
+  fieldDefs?: FieldDef[];
+  connection?: Connection | undefined;
+  executeErrors?: ExecutedResultItem['metadata']['executeErrors'];
+  result: RowData[];
+}
+
 export interface ExecutedResultItem {
   id: string;
   metadata: {
@@ -66,6 +102,8 @@ export interface ExecutedResultItem {
   result: RowData[];
   seqIndex: number;
   view: ViewMode;
+  /** Set when the tab holds a multi-statement run (one entry per statement). */
+  statements?: StatementResultItem[];
 }
 
 export enum ChartType {
